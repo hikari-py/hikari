@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+bandit = "*"
+pylint = "*"
+nose = "*"
+rednose = "*"
+
+[packages]
+aiohttp = "~=3.5.4"
+websockets = "~=7.0"

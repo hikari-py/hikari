@@ -1,0 +1,32 @@
+stages:
+  - test
+  - sast
+
+.base:
+  image: python:3.7-alpine
+  before_script:
+    - python -m pip install pipenv
+    - pipenv install --dev
+    - pipenv graph
+  cache:
+    key: ${CI_JOB_NAME}
+
+Test:
+  extends: .base
+  stage: test
+  script:
+    - nosetests --rednose --force-color -c nose.cfg
+  coverage: &cov '/TOTAL:\s+\d+\%/'
+  artifacts:
+    paths:
+      - public/coverage
+
+Test-3.8:
+  extends: Test
+  image: python:3.8-rc-alpine
+
+SAST:
+  extends: .base
+  stage: sast
+  script:
+    bandit -r nekokattpy -n 3

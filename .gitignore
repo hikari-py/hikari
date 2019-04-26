@@ -1,0 +1,13 @@
+# Python cached sources
+**/__pycache__
+
+# Test-generated caches
+.noseids
+.coverage
+
+# CI pages and reports
+public/
+
+# PyCharm
+*.iml
+.idea/
