@@ -4,8 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
-bandit = "*"
-pylint = "*"
+coverage = "*"
 nose = "*"
 rednose = "*"
 
