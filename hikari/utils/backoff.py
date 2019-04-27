@@ -28,7 +28,7 @@ class RetryExpiredError(RuntimeError):
 def retry(*,
           backoff_base: float = 2,
           transform: Callable[[float, int], float] = lambda base, increment: base ** increment,
-          jitter: Callable[[float], float] = lambda backoff: ((random.random() * 2) - 1) * 0.1 * backoff,
+          jitter: Callable[[float], float] = lambda backoff: ((random.random() * 2) - 1) * 0.1 * backoff,  # nosec
           max_retries: Optional[int] = float('inf'),
           timeout: Optional[float] = float('inf'),
           retry_on: Collection[Type[Exception]] = (Exception,),
