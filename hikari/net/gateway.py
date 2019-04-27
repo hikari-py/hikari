@@ -19,12 +19,15 @@ class _Heartbeat:
     #: If a ping task takes longer than this to perform, we have potentially got
     #: issues with something being a blocking task, or the event loop is overloaded.
     DANGER_LATENCY = 4.0
+    
+    __slots__ = ['stop_flag', 'ws', '_last_ping', '_last_ack']
 
-    def __init__(self, websocket: websockets.WebSocketClientProtocol) -> None:
+    def __init__(self, websocket: Gateway) -> None:
         self.stop_flag = asyncio.Event(loop=websocket.loop)
         self.ws: Gateway = weakref.proxy(websocket)
         self._last_ping = float('nan')
         self._last_ack = float('nan')
+        self.latency = float('nan')
 
     async def run(self):
         """Heartbeat timing logic."""
@@ -64,15 +67,11 @@ class _Heartbeat:
     def handle_gateway_ack(self):
         """Register an acknowledgement from the gateway..."""
         self._last_ack = time.perf_counter()
-        latency = self.latency
-        if latency >= self.DANGER_LATENCY:
+        self.latency = self._last_ack - self._last_ping
+        if self.latency >= self.DANGER_LATENCY:
             _LOGGER.warning("Gateway for shard %s took %s to acknowledge most recent heartbeat. Your connection may be "
-                            "poor or Discord may be having serverside issues.", self.ws.shard_id, latency)
+                            "poor or Discord may be having serverside issues.", self.ws.shard_id, self.latency)
         _LOGGER.debug("Received heartbeat ack from gateway for shard %s in approx %ss", self.ws.shard_id, self.latency)
-
-    @property
-    def latency(self) -> float:
-        return self._last_ack - self._last_ping
 
 
 class Gateway(websockets.WebSocketClientProtocol):
