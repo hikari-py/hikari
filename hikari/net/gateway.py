@@ -22,7 +22,7 @@ class _Heartbeat:
     
     __slots__ = ['stop_flag', 'ws', '_last_ping', '_last_ack']
 
-    def __init__(self, websocket: Gateway) -> None:
+    def __init__(self, websocket: 'Gateway') -> None:
         self.stop_flag = asyncio.Event(loop=websocket.loop)
         self.ws: Gateway = weakref.proxy(websocket)
         self._last_ping = float('nan')
