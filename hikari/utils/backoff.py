@@ -140,7 +140,7 @@ def default_network_connectivity_backoff(**kwargs):
     Returns:
          A decorator.
     """
-    for k, v in dict(backoff_base=0.02, backoff_unit=0.01, max_retries=10, 
+    for k, v in dict(backoff_base=0.02, max_retries=10, 
                      timeout=10, transform=centisecond_transform).items(): 
         kwargs.setdefault(k, v)
         
