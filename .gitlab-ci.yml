@@ -37,4 +37,4 @@ SAST:
   stage: sast
   script:
     - ${PIPENV_INSTALL} bandit
-    - bandit -r nekokattpy -n 3
+    - bandit -r hikari -n 3
