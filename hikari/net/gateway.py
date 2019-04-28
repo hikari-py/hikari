@@ -287,6 +287,6 @@ class GatewayConnection:
 
                 await asyncio.sleep(2)
 
-    async def close(self):
+    async def close(self) -> None:
         self._closed_event.set()
         await self.ws.wait_closed()
