@@ -11,5 +11,4 @@ rednose = "*"
 
 [packages]
 aiohttp = "~=3.5.4"
-async_timeout = "~=3.0.1"
 websockets = "~=7.0"
