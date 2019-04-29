@@ -211,10 +211,8 @@ class GatewayConnection:
     async def _keep_alive(self) -> None:
         while True:
             try:
-                if (
-                    self._last_ack_received
-                    < self._last_heartbeat_sent - self._heartbeat_interval
-                ):
+                earliest_ack_allowed = self._last_heartbeat_sent - self._heartbeat_interval
+                if self._last_ack_received < earliest_ack_allowed:
                     last_sent = time.perf_counter() - self._last_heartbeat_sent
                     msg = f"Failed to receive an acknowledgement from the previous heartbeat sent ~{last_sent}s ago"
                     return await self._force_resume(code=1008, reason=msg)
