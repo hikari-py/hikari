@@ -30,14 +30,14 @@ class GatewayRequestedReconnection(websockets.ConnectionClosed):
     """Request by the gateway to completely reconnect using a fresh connection."""
 
 
-def _get_lib_version() -> str:
+def _lib_ver() -> str:
     # Get the version number of the lib. Done here to prevent circular references later.
     import hikari
 
     return f"{hikari.__name__} v{hikari.__version__}"
 
 
-def _get_python_version() -> str:
+def _python_ver() -> str:
     # Produce a signature of the python build being used.
     attrs = [
         platform.python_implementation(),
@@ -295,10 +295,8 @@ class GatewayConnection:
                 "large_threshold": self.large_threshold,
                 "properties": {
                     "$os": self.incognito and self.REDACTED or platform.system(),
-                    "$browser": self.incognito and self.REDACTED or _get_lib_version(),
-                    "$device": self.incognito
-                    and self.REDACTED
-                    or _get_python_version(),
+                    "$browser": self.incognito and self.REDACTED or _lib_ver(),
+                    "$device": self.incognito and self.REDACTED or _py_ver(),
                 },
             },
         }
