@@ -37,7 +37,7 @@ def _lib_ver() -> str:
     return f"{hikari.__name__} v{hikari.__version__}"
 
 
-def _python_ver() -> str:
+def _py_ver() -> str:
     # Produce a signature of the python build being used.
     attrs = [
         platform.python_implementation(),
