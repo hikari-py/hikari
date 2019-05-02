@@ -12,6 +12,4 @@ __version__ = "0.0.1a"
 __ci__ = "https://gitlab.com/nekoka.tt/hikari/pipelines"
 __url__ = "https://gitlab.com/nekoka.tt/hikari"
 
-__contributors__ = {
-    "LunarCoffee"
-}
+__contributors__ = {"LunarCoffee"}
