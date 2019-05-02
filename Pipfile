@@ -8,6 +8,9 @@ asynctest = "*"
 coverage = "*"
 nose = "*"
 rednose = "*"
+sphinx = "*"
+sphinxcontrib-asyncio = "*"
+sphinx_bootstrap_theme = "*"
 
 [packages]
 aiohttp = "~=3.5.4"

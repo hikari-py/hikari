@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css?family=Kalam|Montserrat:300');
+@import url('https://fonts.googleapis.com/css?family=Permanent+Marker');
+@import url('https://cdn.jsdelivr.net/gh/tonsky/FiraCode@1.206/distr/fira_code.css');
+
+.navbar-brand > a {
+    display: block;
+    vertical-align: center;
+}
+
+.nav a {
+    font-weight: bold;
+}
+
+a {
+    color: #772953 !important;
+}
+
+a:hover {
+    color: #511c39 !important;
+}
+
+.navbar a, .footer a {
+    color: #ccc !important;
+}
+
+.navbar a:hover, .footer a:active {
+    color: #fff !important;
+}
+
+.dropdown-menu a {
+    color: #772953 !important;
+}
+
+.dropdown-menu a:hover {
+    color: #511c39 !important;
+}
+
+p, h1, h2, h3, h4, h5, h6, .nav {
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+footer:before {
+    margin-bottom: 1em;
+}
+
+footer.footer {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    font-weight: bold;
+    border: 0;
+    color: white;
+}
+
+code {
+    font-family: 'Fira Code', monospace;
+    font-feature-settings: "calt" 1;
+    font-variant-ligatures: contextual;
+}
+
+.navbar-brand, h1 {
+    font-family: 'Permanent Marker', cursive !important;
+}

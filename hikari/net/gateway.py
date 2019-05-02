@@ -4,9 +4,9 @@
 Single-threaded asyncio V7 Gateway implementation with enforced ratelimits.
 
 References:
-    IANA WS closure code standards: https://www.iana.org/assignments/websocket/websocket.xhtml
-    Gateway documentation: https://discordapp.com/developers/docs/topics/gateway
-    Opcode documentation: https://discordapp.com/developers/docs/topics/opcodes-and-status-codes
+    - IANA WS closure code standards: https://www.iana.org/assignments/websocket/websocket.xhtml
+    - Gateway documentation: https://discordapp.com/developers/docs/topics/gateway
+    - Opcode documentation: https://discordapp.com/developers/docs/topics/opcodes-and-status-codes
 """
 
 import asyncio
@@ -31,14 +31,12 @@ class GatewayRequestedReconnection(websockets.ConnectionClosed):
 
 
 def _lib_ver() -> str:
-    # Get the version number of the lib. Done here to prevent circular references later.
     import hikari
 
     return f"{hikari.__name__} v{hikari.__version__}"
 
 
 def _py_ver() -> str:
-    # Produce a signature of the python build being used.
     attrs = [
         platform.python_implementation(),
         platform.python_version(),
@@ -153,11 +151,9 @@ class GatewayConnection:
         raise GatewayRequestedReconnection(code=code, reason=reason)
 
     async def _send_json(self, payload: Any) -> None:
-        # Schedule to send a JSON payload to the gateway without awaiting completion.
         self.loop.create_task(self._send_json_now(payload))
 
     async def _send_json_now(self, payload: Any) -> None:
-        # Send a JSON payload and await the completion, taking into account queueing if rate-limited.
         if self.rate_limit.locked():
             self.logger.debug("Shard %s: now being rate-limited", self.shard_id)
 
@@ -168,7 +164,6 @@ class GatewayConnection:
             await asyncio.sleep(self.RATELIMIT_COOLDOWN)
 
     async def _receive_json(self) -> Dict[str, Any]:
-        # Consumes a message from the gateway and decodes it as JSON before returning it.
         msg = await self.ws.recv()
 
         if type(msg) is bytes:
@@ -195,7 +190,6 @@ class GatewayConnection:
         return payload
 
     async def _hello(self) -> None:
-        # Send the HELLO payload
         hello = await self._receive_json()
         op = hello["op"]
         if op != int(self.HELLO_OP):
@@ -349,6 +343,7 @@ class GatewayConnection:
                 )
 
     async def run(self) -> None:
+        """Run the gateway and attempt to keep it alive for as long as possible using restarts and resumes if needed."""
         while True:
             try:
                 kwargs = {"loop": self.loop, "uri": self.uri, "compression": None}
@@ -366,11 +361,18 @@ class GatewayConnection:
                 )
 
                 if isinstance(ex, GatewayRequestedReconnection):
-                    self._seq = None
-                    self._session_id = None
-                    self.trace = None
+                    self._seq, self._session_id, self.trace = None, None, None
                 await asyncio.sleep(2)
 
-    async def close(self) -> None:
+    async def close(self, block=True) -> None:
+        """
+        Request that the gateway gracefully shuts down.
+
+        Args:
+            block:
+                await the closure of the websocket connection. Defaults to `True`. If `False`, then nothing is waited
+                for.
+        """
         self._closed_event.set()
-        await self.ws.wait_closed()
+        if block:
+            await self.ws.wait_closed()
