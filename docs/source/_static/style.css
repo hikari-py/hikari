@@ -2,11 +2,6 @@
 @import url('https://fonts.googleapis.com/css?family=Permanent+Marker');
 @import url('https://cdn.jsdelivr.net/gh/tonsky/FiraCode@1.206/distr/fira_code.css');
 
-.navbar-brand > a {
-    display: block;
-    vertical-align: center;
-}
-
 .nav a {
     font-weight: bold;
 }
@@ -35,7 +30,7 @@ a:hover {
     color: #511c39 !important;
 }
 
-p, h1, h2, h3, h4, h5, h6, .nav {
+.nav {
     font-family: 'Montserrat', sans-serif !important;
 }
 
@@ -57,6 +52,6 @@ code {
     font-variant-ligatures: contextual;
 }
 
-.navbar-brand, h1 {
+.navbar-brand, h1, h2, h3, h4, h5, h6 {
     font-family: 'Permanent Marker', cursive !important;
 }
