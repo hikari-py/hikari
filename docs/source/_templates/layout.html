@@ -1,0 +1,9 @@
+{# Import the theme's layout. #}
+{% extends "!layout.html" %}
+
+{# Add some extra stuff before and use existing with 'super()' call. #}
+{% block footer %}
+<div class="container-fluid navbar-inverse navbar-expand-lg">
+  {{ super() }}
+</div>
+{% endblock %}
