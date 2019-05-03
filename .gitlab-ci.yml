@@ -1,6 +1,5 @@
 stages:
   - test
-  - sast
   - pages
 
 cache:
@@ -41,21 +40,35 @@ test-3.8:
 
 sast:
   extends: .base
-  stage: sast
+  stage: test
   script:
     - ${PIPENV_INSTALL} bandit
     - bandit -r hikari -n 3
 
-pages:
-  stage: pages
+.pages:
   extends: .base
   script:
+    - python docs/generate_rst.py . hikari docs/source docs/source/index.rst
     - cd docs
     - make clean html
     - cd ..
-    - mv docs/build/html/* public -v
+    - mkdir public/test-pages -v
+    - mv docs/build/html/* public/test-pages -v
+
+pages:
+  stage: pages
+  extends: .pages
   artifacts:
     paths:
       - public
   only:
+    - master
+
+test-pages:
+  stage: test
+  extends: .pages
+  artifacts:
+    paths:
+      - public
+  except:
     - master
