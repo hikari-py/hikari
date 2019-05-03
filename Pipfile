@@ -9,6 +9,7 @@ coverage = "*"
 nose = "*"
 rednose = "*"
 sphinx = "*"
+sphinx-autodoc-typehints = "*"
 sphinxcontrib-asyncio = "*"
 sphinx_bootstrap_theme = "*"
 
