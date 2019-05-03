@@ -78,7 +78,7 @@ def auto_doc(out_dir, name):
 
         print('Wrote', fp.write(content), 'bytes to', path)
 
-        return name.replace('.', '/')
+        return name
 
 
 def make_toc(toc_file, entries):

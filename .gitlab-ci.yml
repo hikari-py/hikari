@@ -53,11 +53,12 @@ sast:
     - make clean html
     - cd ..
     - mkdir public/test-pages -v
-    - mv docs/build/html/* public/test-pages -v
 
 pages:
   stage: pages
   extends: .pages
+  after_script:
+    - mv docs/build/html/* public/ -v
   artifacts:
     paths:
       - public
@@ -67,6 +68,8 @@ pages:
 test-pages:
   stage: test
   extends: .pages
+  after_script:
+    - mv docs/build/html/* public/test-pages -v
   artifacts:
     paths:
       - public
