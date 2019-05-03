@@ -17,6 +17,7 @@ import aiohttp
 @dataclass(frozen=True)
 class DataCenter:
     """Represents a data center. These are represented by an IATA airport code."""
+
     #: Airport code
     iata_code: str
     #: Data center location
@@ -30,6 +31,7 @@ class DataCenter:
 @dataclass(frozen=True)
 class DebugData:
     """The response provided from Discord's CGI trace."""
+
     #: Data center location being used. Determined from an IATA airport code.
     data_center: DataCenter
     #: Unknown, possibly some form of correlation ID.
@@ -69,7 +71,7 @@ async def get_debug_data() -> DebugData:
     This will then query `http://airlinecodes.co.uk` to determine the data center location from the provided
     airport code in this response.
     """
-    async with aiohttp.request('get', 'https://discordapp.com/cdn-cgi/trace') as resp:
+    async with aiohttp.request("get", "https://discordapp.com/cdn-cgi/trace") as resp:
         resp.raise_for_status()
         content = await resp.text()
 
@@ -77,26 +79,36 @@ async def get_debug_data() -> DebugData:
     for line in content.splitlines(False):
         line = line.strip()
         if line:
-            k, _, v = line.partition('=')
+            k, _, v = line.partition("=")
             pairs[k] = v
 
-    async with aiohttp.request('post', 'http://www.airlinecodes.co.uk/aptcoderes.asp',
-                               data={'iatacode': pairs['colo']}) as resp:
+    async with aiohttp.request(
+        "post",
+        "http://www.airlinecodes.co.uk/aptcoderes.asp",
+        data={"iatacode": pairs["colo"]},
+    ) as resp:
         resp.raise_for_status()
         content = await resp.text()
 
-    location_match = re.search(r'<td.*?>Location:</td>\s*?<td>(.*?)</td>', content, re.I | re.M)
-    airport_match = re.search(r'<td.*?>Airport:</td>\s*?<td>(.*?)</td>', content, re.I | re.M)
-    country_match = re.search(r'<td.*?>Country:</td>\s*?<td>(.*?)</td>', content, re.I | re.M)
+    location_match = re.search(
+        r"<td.*?>Location:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
+    )
+    airport_match = re.search(
+        r"<td.*?>Airport:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
+    )
+    country_match = re.search(
+        r"<td.*?>Country:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
+    )
 
-    location = location_match and location_match.group(1).strip() or 'Unknown'
-    airport = airport_match and airport_match.group(1).strip() or 'Unknown'
-    country = country_match and country_match.group(1).strip() or 'Unknown'
+    location = location_match and location_match.group(1).strip() or "Unknown"
+    airport = airport_match and airport_match.group(1).strip() or "Unknown"
+    country = country_match and country_match.group(1).strip() or "Unknown"
 
-    pairs['data_center'] = DataCenter(pairs['colo'], location, airport, country)
+    pairs["data_center"] = DataCenter(pairs["colo"], location, airport, country)
     return DebugData(**pairs)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import asyncio
+
     print(asyncio.run(get_debug_data()))
