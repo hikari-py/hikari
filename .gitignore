@@ -1,9 +1,15 @@
 # Python cached sources
 **/__pycache__
 
+# Virtual environments
+.venv/
+
 # Test-generated caches
 .noseids
 .coverage
+cover/
+.tox/
+.pytest_cache/
 
 # CI pages and reports
 public/
@@ -11,3 +17,6 @@ public/
 # PyCharm
 *.iml
 .idea/
+
+# Pipenv
+Pipfile.lock
