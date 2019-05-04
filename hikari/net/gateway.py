@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Single-threaded asyncio V7 Gateway implementation with enforced ratelimits.
+Single-threaded asyncio V7 Gateway implementation with enforced rate limits to prevent disconnects, and basic
+reconnection logic to handle reconnection and resume operations. Handles regular heartbeating in a background task
+on the same event loop. Implements zlib transport compression only.
+
+Can be used as the main gateway connection for a single-sharded bot, or the gateway connection for a specific shard
+in a swarm of shards making up a larger bot.
 
 References:
     - IANA WS closure code standards: https://www.iana.org/assignments/websocket/websocket.xhtml
@@ -17,7 +22,6 @@ import time
 import zlib
 
 from typing import Any, Callable, Dict, List, NoReturn, Optional
-from urllib import parse as urlparse
 
 import websockets
 
@@ -54,32 +58,26 @@ class GatewayConnection:
     an un-sharded bot, or for a specific gateway shard. This does not implement voice activity.
 
     Args:
-        uri:
-            the URI to connect to.
-        shard_id:
-            the shard ID to use, or `None` if sharding is to be disabled (default).
-        shard_count:
-            the shard count to use, or `None` if sharding is to be disabled (default).
-        loop:
-            the event loop to run on. Required.
-        token:
-            the token to use to authenticate with the gateway.
-        incognito:
-            defaults to `False`. If `True`, then the platform, library version, and python version information in the
-            `IDENTIFY` header will be redacted.
-        large_threshold:
-            the large threshold limit. Defaults to 50.
-        initial_presence:
-            A JSON-serializable dict containing the initial presence to set, or `None` to just appear `online`.
-        dispatch:
-            A non-coroutine function that consumes a string event name and a JSON dispatch event payload consumed from
-            the gateway to call each time a dispatch occurs. This payload will be a dict as described on the Gateway
-            documentation.
-        max_persistent_buffer_size:
-            Max size to allow the zlib buffer to grow to before recreating it. This defaults to 3MiB. A larger value
-            favours a slight (most likely unnoticeable) overall performance increase, at the cost of memory usage, since
-            the gateway can send payloads tens of megabytes in size potentially. Without truncating, the payload will
-            remain at the largest allocated size even when no longer required to provide that capacity.
+        host: the host to connect to, in the format `wss://gateway.net` or `wss://gateway.net:port` without a query
+            fragment.
+        shard_id: the shard ID to use, or `None` if sharding is to be disabled (default).
+        shard_count: the shard count to use, or `None` if sharding is to be disabled (default).
+        loop: the event loop to run on. Required.
+        token: the token to use to authenticate with the gateway.
+        incognito: defaults to `False`. If `True`, then the platform, library version, and python version information
+            in the `IDENTIFY` header will be redacted.
+        large_threshold: the large threshold limit. Defaults to 50.
+        initial_presence: A JSON-serializable dict containing the initial presence to set, or `None` to just appear
+            `online`. See https://discordapp.com/developers/docs/topics/gateway#update-status for a description
+            of this `update-status` payload object.
+        dispatch: A non-coroutine function that consumes a string event name and a JSON dispatch event payload consumed
+            from the gateway to call each time a dispatch occurs. This payload will be a dict as described on the
+            Gateway documentation.
+        max_persistent_buffer_size: Max size to allow the zlib buffer to grow to before recreating it. This defaults to
+            3MiB. A larger value favours a slight (most likely unnoticeable) overall performance increase, at the cost
+            of memory usage, since the gateway can send payloads tens of megabytes in size potentially. Without
+            truncating, the payload will remain at the largest allocated size even when no longer required to provide
+            that capacity.
     """
 
     API_VERSION = 7
@@ -95,7 +93,6 @@ class GatewayConnection:
     INVALID_SESSION_OP = 9
     HELLO_OP = 10
     HEARTBEAT_ACK_OP = 11
-    GUILD_SYNC_OP = 12  # Awaiting proper documentation!
 
     REDACTED = "redacted"
     RATELIMIT_TOLERANCE = 119
@@ -104,7 +101,7 @@ class GatewayConnection:
     def __init__(
         self,
         *,
-        uri: str,
+        host: str,
         shard_id: Optional[int] = None,
         shard_count: Optional[int] = None,
         loop: asyncio.AbstractEventLoop,
@@ -136,17 +133,16 @@ class GatewayConnection:
         self.shard_count = shard_count
         self.shard_id = shard_id
         self.token = token
-        uri = urlparse.splitquery(uri)[0]
-        self.uri = f"{uri}?v={self.API_VERSION}&encoding=json&compression=zlib-stream"
+        self.uri = f"{host}?v={self.API_VERSION}&encoding=json&compression=zlib-stream"
 
         # Populated as needed...
         self.ws: Optional[websockets.WebSocketClientProtocol] = None
 
-    async def _force_resume(self, code: int, reason: str) -> NoReturn:
+    async def _do_resume(self, code: int, reason: str) -> NoReturn:
         await self.ws.close(code=code, reason=reason)
         raise ResumableConnectionClosed(code=code, reason=reason)
 
-    async def _force_reidentify(self, code: int, reason: str) -> NoReturn:
+    async def _do_reidentify(self, code: int, reason: str) -> NoReturn:
         await self.ws.close(code=code, reason=reason)
         raise GatewayRequestedReconnection(code=code, reason=reason)
 
@@ -159,6 +155,16 @@ class GatewayConnection:
 
         async with self.rate_limit:
             raw = json.dumps(payload)
+
+            if len(raw) > 4096:
+                self.logger.error(
+                    "Shard %s: Failed to send payload as it was too large. Sending this would result in "
+                    "a disconnect. Payload was: %s",
+                    self.shard_id,
+                    payload,
+                )
+                return
+
             await self.ws.send(raw)
             # 1 second + a slight overhead to prevent time differences ever causing an issue where we still get kicked.
             await asyncio.sleep(self.RATELIMIT_COOLDOWN)
@@ -183,9 +189,7 @@ class GatewayConnection:
         payload = json.loads(msg, encoding="utf-8")
 
         if not isinstance(payload, dict):
-            return await self._force_reidentify(
-                code=1007, reason="Expected JSON object."
-            )
+            return await self._do_reidentify(code=1007, reason="Expected JSON object.")
 
         return payload
 
@@ -193,7 +197,7 @@ class GatewayConnection:
         hello = await self._receive_json()
         op = hello["op"]
         if op != int(self.HELLO_OP):
-            return await self._force_resume(
+            return await self._do_resume(
                 code=1002, reason=f'Expected a "HELLO" opcode but got {op}'
             )
 
@@ -203,20 +207,20 @@ class GatewayConnection:
         self.logger.info(
             "Shard %s: received HELLO from %s with heartbeat interval %ss",
             self.shard_id,
-            ", ".join(self.trace),
+            self.trace,
             self._heartbeat_interval,
         )
 
     async def _keep_alive(self) -> None:
         while True:
             try:
-                earliest_ack_allowed = (
-                    self._last_heartbeat_sent - self._heartbeat_interval
-                )
-                if self._last_ack_received < earliest_ack_allowed:
+                if (
+                    self._last_heartbeat_sent + self._heartbeat_interval
+                    < time.perf_counter()
+                ):
                     last_sent = time.perf_counter() - self._last_heartbeat_sent
                     msg = f"Failed to receive an acknowledgement from the previous heartbeat sent ~{last_sent}s ago"
-                    return await self._force_resume(code=1008, reason=msg)
+                    return await self._do_resume(code=1008, reason=msg)
 
                 await asyncio.wait_for(
                     self._closed_event.wait(), timeout=self._heartbeat_interval
@@ -229,7 +233,7 @@ class GatewayConnection:
 
                 if time_taken > 0.15 * self.heartbeat_latency:
                     self.logger.warning(
-                        "Shard %s took %sms to send HEARTBEAT, which is more than 15% of the heartbeat interval. "
+                        "Shard %s took %sms to send HEARTBEAT, which is more than 15%% of the heartbeat interval. "
                         "Your connection may be poor or the event loop may be blocking",
                         self.shard_id,
                         time_taken * 1_000,
@@ -320,11 +324,10 @@ class GatewayConnection:
             elif op == self.RECONNECT_OP:
                 self.logger.warning(
                     "Shard %s: instructed to disconnect and RESUME with gateway",
-                    self._session_id,
                     self.shard_id,
                 )
-                return await self._force_reidentify(
-                    code=1003, reason="Reconnect opcode was received"
+                return await self._do_reidentify(
+                    code=1003, reason="Reconnect opcode was received, will reconnect"
                 )
             elif op == self.INVALID_SESSION_OP:
                 self.logger.warning(
@@ -332,15 +335,104 @@ class GatewayConnection:
                     self.shard_id,
                     self._session_id,
                 )
-                return await self._force_reidentify(
-                    code=1003, reason="Session ID invalid"
-                )
+
+                if d is False:
+                    return await self._do_reidentify(
+                        code=1003, reason="Session ID reported invalid, will disconnect"
+                    )
+                else:
+                    return await self._do_resume(
+                        code=1003, reason="Session ID reported invalid, will resume"
+                    )
+
             elif op == self.HEARTBEAT_ACK_OP:
                 await self._handle_ack()
             else:
                 self.logger.warning(
-                    "Shard %s: received unrecognised opcode %s", self.shard_id, hex(op)
+                    "Shard %s: received unrecognised opcode %s", self.shard_id, op
                 )
+
+    async def request_guild_members(self, guild_id: int) -> None:
+        """
+        Requests guild members from the given Guild ID. This can be used to retrieve all members available in a guild.
+
+        Args:
+            guild_id: the guild ID to request members from.
+
+        Warning:
+            Results will be dispatched as events in chunks of 1000 members per guild.
+        """
+        self.logger.debug(
+            "Shard %s: requesting members in guild %s", self.shard_id, guild_id
+        )
+        await self._send_json(
+            {
+                "op": self.REQUEST_GUILD_MEMBERS_OP,
+                "d": {"guild_id": guild_id, "query": "", "limit": 0},
+            }
+        )
+
+    async def update_status(
+        self, idle_since: Optional[int], game: Optional[dict], status: str, afk: bool
+    ) -> None:
+        """
+        Updates the bot user's status in this shard.
+
+        Args:
+            idle_since: unix timestamp in milliseconds that the user has been idle for, or `None` if not idle.
+            game: an activity object representing the activity, or `None` if no activity is set.
+            status: the status string to set.
+            afk: True if the client is AFK, false otherwise.
+        See:
+            - Activity objects: https://discordapp.com/developers/docs/topics/gateway#activity-object
+            - Valid statuses: https://discordapp.com/developers/docs/topics/gateway#update-status-status-types
+        """
+        self.logger.debug(
+            "Shard %s: updating status to idle=%s, game=%s, status=%s, afk=%s",
+            self.shard_id,
+            idle_since,
+            game,
+            status,
+            afk,
+        )
+        await self._send_json(
+            {
+                "op": self.VOICE_STATE_UPDATE_OP,
+                "d": {"idle": idle_since, "game": game, "status": status, "afk": afk},
+            }
+        )
+
+    async def update_voice_state(
+        self, guild_id: int, channel_id: Optional[int], self_mute: bool, self_deaf: bool
+    ) -> None:
+        """
+        Updates the given shard's voice state (used to connect to/disconnect from/move between voice channels.
+
+        Args:
+            guild_id: the guild ID.
+            channel_id: the channel ID, or `None` if you wish to disconnect.
+            self_mute: if `True`, mute the bot, else if `False` keep the bot unmuted.
+            self_deaf: if `True`, deafen the bot, else if `False`, keep the bot listening.
+        """
+        self.logger.debug(
+            "Shard %s: updating voice state in guild %s, channel %s, mute: %s, deaf: %s",
+            self.shard_id,
+            guild_id,
+            channel_id,
+            self_mute,
+            self_deaf,
+        )
+        await self._send_json(
+            {
+                "op": self.VOICE_STATE_UPDATE_OP,
+                "d": {
+                    "guild_id": guild_id,
+                    "channel_id": channel_id,
+                    "self_mute": self_mute,
+                    "self_deaf": self_deaf,
+                },
+            }
+        )
 
     async def run(self) -> None:
         """Run the gateway and attempt to keep it alive for as long as possible using restarts and resumes if needed."""
@@ -369,9 +461,8 @@ class GatewayConnection:
         Request that the gateway gracefully shuts down.
 
         Args:
-            block:
-                await the closure of the websocket connection. Defaults to `True`. If `False`, then nothing is waited
-                for.
+            block: await the closure of the websocket connection. Defaults to `True`. If `False`, then nothing is
+                waited for.
         """
         self._closed_event.set()
         if block:
