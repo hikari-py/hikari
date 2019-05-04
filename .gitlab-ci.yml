@@ -9,10 +9,11 @@ cache:
       - .cache/pip
 
 variables:
-  DOCKER_DRIVER: overlay2
+  DOCKER_DRIVER: "overlay2"
+  PACKAGE: "hikari"
+  PIP_CACHE_DIR: "${CI_PROJECT_DIR}/.cache/pip"
   PIPENV_INSTALL: "pipenv install --skip-lock"
   PIPENV_VENV_IN_PROJECT: "yes"
-  PIP_CACHE_DIR: "${CI_PROJECT_DIR}/.cache/pip"
 
 .base:
   image: python:3.7-alpine
@@ -28,6 +29,7 @@ test-3.7:
   extends: .base
   stage: test
   script:
+    - ${PIPENV_INSTALL} rednose
     - nosetests --rednose --force-color -c nose.cfg
   coverage: &cov '/TOTAL:\s+\d+\%/'
   artifacts:
@@ -43,16 +45,24 @@ sast:
   stage: test
   script:
     - ${PIPENV_INSTALL} bandit
-    - bandit -r hikari -n 3
+    - bandit -r ${PACKAGE} -n 3
+
+black:
+  extends: .base
+  stage: test
+  allow_failure: true
+  script:
+    - pip install black
+    - python -m black ${PACKAGE} --verbose --py36 --check
 
 .pages:
   extends: .base
   script:
-    - python docs/generate_rst.py . hikari docs/source docs/source/index.rst
+    - ${PIPENV_INSTALL} sphinx sphinx-autodoc-typehints sphinxcontrib-asyncio sphinx_bootstrap_theme
+    - python docs/generate_rst.py . ${PACKAGE} docs/source docs/source/index.rst
     - cd docs
     - make clean html
     - cd ..
-    - mkdir public/test-pages -v
 
 pages:
   stage: pages
@@ -69,6 +79,8 @@ test-pages:
   stage: test
   extends: .pages
   after_script:
+    - mkdir public -v || true
+    - mkdir public/test-pages -v || true
     - mv docs/build/html/* public/test-pages -v
   artifacts:
     paths:
