@@ -16,7 +16,7 @@ from hikari.net import gateway
 
 class MockGateway(gateway.GatewayConnection):
     def __init__(self, **kwargs):
-        gateway.GatewayConnection.__init__(**kwargs)
+        gateway.GatewayConnection.__init__(self, **kwargs)
 
         self.ws = asynctest.MagicMock()
         self.ws.close = asynctest.CoroutineMock()
