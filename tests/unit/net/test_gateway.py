@@ -13,6 +13,7 @@ import pytest
 from hikari.net import gateway
 
 
+
 class MockGateway(gateway.GatewayConnection):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -21,9 +22,10 @@ class MockGateway(gateway.GatewayConnection):
         self.ws.close = asynctest.CoroutineMock()
         self.ws.send = asynctest.CoroutineMock()
         self.ws.recv = asynctest.CoroutineMock()
+        self.ws.wait_closed = self._wait_closed
 
-    async def _acquire_websocket_connection(self, **kwargs):
-        return self.ws
+    async def _wait_closed(self):
+        await asyncio.sleep(0.1)
 
 
 def teardown_function(event_loop):
@@ -36,7 +38,8 @@ async def duff_consumer_coro(*_, **__):
 
 @pytest.mark.asyncio
 async def test_init_produces_valid_url(event_loop):
-    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234')
+    """GatewayConnection.__init__ should produce a valid query fragment for the URL."""
+    gw = gateway.GatewayConnection(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234')
     bits: urlparse.ParseResult = urlparse.urlparse(gw.uri)
 
     assert bits.scheme == 'wss'
@@ -53,7 +56,7 @@ async def test__do_resume_triggers_correct_signals(event_loop):
     try:
         await gw._do_resume(69, 'boom')
         assert False, 'No exception raised'
-    except gateway.ResumableConnectionClosed:
+    except gateway.ResumeConnection:
         gw.ws.close.assert_awaited_once_with(code=69, reason='boom')
 
 
@@ -64,7 +67,7 @@ async def test__do_reidentify_triggers_correct_signals(event_loop):
     try:
         await gw._do_reidentify(69, 'boom')
         assert False, 'No exception raised'
-    except gateway.GatewayRequestedReconnection:
+    except gateway.RestartConnection:
         gw.ws.close.assert_awaited_once_with(code=69, reason='boom')
 
 
@@ -97,7 +100,7 @@ async def test__send_json_calls_websocket(event_loop):
 async def test__send_json_eventually_gets_ratelimited(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._logger = asynctest.MagicMock()
-    gw.RATELIMIT_COOLDOWN = 0.25
+    gw.RATELIMIT_COOLDOWN = 0.1
 
     futures = []
 
@@ -229,14 +232,28 @@ async def test_massive_zlib_payloads_cause_buffer_replacement(event_loop):
 @pytest.mark.asyncio
 async def test_heartbeat_beats_at_interval(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
-    gw._heartbeat_interval = 0.1
+    gw._heartbeat_interval = 0.05
 
     task = asyncio.create_task(gw._keep_alive())
     try:
-        await asyncio.sleep(0.3)
+        await asyncio.sleep(0.2)
     finally:
         task.cancel()
         gw.ws.send.assert_awaited_with('{"op": 1, "d": null}')
+
+
+@pytest.mark.asyncio
+async def test_heartbeat_shuts_down_when_closure_request(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
+    gw._heartbeat_interval = 0.05
+
+    with async_timeout.timeout(5):
+        task = asyncio.create_task(gw._keep_alive())
+        try:
+            await asyncio.sleep(0.2)
+        finally:
+            await gw.close(True)
+            await task
 
 
 @pytest.mark.asyncio
@@ -272,7 +289,7 @@ async def test_slow_loop_produces_warning(event_loop):
 @pytest.mark.asyncio
 async def test__send_heartbeat(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
-    gw._send_json_async = asynctest.CoroutineMock()
+    gw._send_json_async = asynctest.MagicMock()
     await gw._send_heartbeat()
     gw._send_json_async.assert_called_with({"op": 1, "d": None})
 
@@ -280,7 +297,7 @@ async def test__send_heartbeat(event_loop):
 @pytest.mark.asyncio
 async def test__send_ack(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
-    gw._send_json_async = asynctest.CoroutineMock()
+    gw._send_json_async = asynctest.MagicMock()
     await gw._send_ack()
     gw._send_json_async.assert_called_with({"op": 11})
 
@@ -320,7 +337,7 @@ async def test__send_resume(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._session_id = 1234321
     gw._seq = 69_420
-    gw._send_json_async = asynctest.CoroutineMock()
+    gw._send_json_async = asynctest.MagicMock()
     await gw._send_resume()
     gw._send_json_async.assert_called_with({
         "op": 6,
@@ -338,7 +355,7 @@ async def test__send_identify_when_not_redacted_default_behaviour(event_loop):
                      large_threshold=69, incognito=False)
     gw._session_id = 1234321
     gw._seq = 69_420
-    gw._send_json_async = asynctest.CoroutineMock()
+    gw._send_json_async = asynctest.MagicMock()
 
     with asynctest.patch("hikari.net.gateway.python_version", new=lambda: "python3"), \
          asynctest.patch("hikari.net.gateway.library_version", new=lambda: "vx.y.z"), \
@@ -365,7 +382,7 @@ async def test__send_identify_when_redacted(event_loop):
                      large_threshold=69, incognito=True)
     gw._session_id = 1234321
     gw._seq = 69_420
-    gw._send_json_async = asynctest.CoroutineMock()
+    gw._send_json_async = asynctest.MagicMock()
 
     with asynctest.patch("hikari.net.gateway.python_version", new=lambda: "python3"), \
          asynctest.patch("hikari.net.gateway.library_version", new=lambda: "vx.y.z"), \
@@ -390,7 +407,7 @@ async def test__send_identify_when_redacted(event_loop):
 async def test__send_identify_includes_sharding_info_if_present(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
-    gw._send_json_async = asynctest.CoroutineMock()
+    gw._send_json_async = asynctest.MagicMock()
 
     await gw._send_identify()
     payload = gw._send_json_async.call_args[0][0]
@@ -404,7 +421,7 @@ async def test__send_identify_includes_sharding_info_if_present(event_loop):
 async def test__send_identify_includes_status_info_if_present(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False, initial_presence={'foo': 'bar'})
-    gw._send_json_async = asynctest.CoroutineMock()
+    gw._send_json_async = asynctest.MagicMock()
 
     await gw._send_identify()
     payload = gw._send_json_async.call_args[0][0]
@@ -412,3 +429,173 @@ async def test__send_identify_includes_status_info_if_present(event_loop):
     assert 'd' in payload
     assert 'status' in payload['d']
     assert payload['d']['status'] == {'foo': 'bar'}
+
+
+@pytest.mark.asyncio
+async def test__process_events_halts_if_closed_event_is_set(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+    gw._receive_json = asynctest.CoroutineMock()
+    gw.closed_event.set()
+    await gw._process_events()
+    gw._receive_json.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test__process_events_updates_seq_if_provided_from_payload(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+    gw._receive_json = asynctest.CoroutineMock(return_value={'op': 0, 'd': {}, 's': 69})
+    t = asyncio.create_task(gw._process_events())
+    await asyncio.sleep(0.1)
+    await gw.close(block=True)
+    t.cancel()
+    assert gw._seq == 69
+
+
+@pytest.mark.asyncio
+async def test__process_events_does_not_update_seq_if_not_provided_from_payload(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+
+    gw._seq = 123
+    gw._receive_json = asynctest.CoroutineMock(return_value={'op': 0, 'd': {}})
+    t = asyncio.create_task(gw._process_events())
+    await asyncio.sleep(0.1)
+    await gw.close(block=True)
+    await t
+    assert gw._seq == 123
+
+
+@pytest.mark.asyncio
+async def test__process_events_on_dispatch_opcode(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+    gw._receive_json = asynctest.CoroutineMock(return_value={'op': 0, 'd': {}, 't': 'explosion'})
+    gw.dispatch = asynctest.CoroutineMock()
+    t = asyncio.create_task(gw._process_events())
+    await asyncio.sleep(0.1)
+    await gw.close(block=True)
+    await t
+    gw.dispatch.assert_awaited_with('explosion', {})
+
+
+@pytest.mark.asyncio
+async def test__process_events_on_heartbeat_opcode(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+    gw._receive_json = asynctest.CoroutineMock(return_value={'op': 1, 'd': {}})
+    gw._send_ack = asynctest.CoroutineMock()
+    t = asyncio.create_task(gw._process_events())
+    await asyncio.sleep(0.1)
+    await gw.close(block=True)
+    await t
+    gw._send_ack.assert_any_await()
+
+
+@pytest.mark.asyncio
+async def test__process_events_on_heartbeat_ack_opcode(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+    gw._receive_json = asynctest.CoroutineMock(return_value={'op': 11, 'd': {}})
+    gw._handle_ack = asynctest.CoroutineMock()
+    t = asyncio.create_task(gw._process_events())
+    await asyncio.sleep(0.1)
+    await gw.close(block=True)
+    await t
+    gw._handle_ack.assert_any_await()
+
+
+@pytest.mark.asyncio
+async def test__process_events_on_reconnect_opcode(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+    gw._receive_json = asynctest.CoroutineMock(return_value={'op': 7, 'd': {}})
+
+    try:
+        with async_timeout.timeout(1):
+            await gw._process_events()
+        assert False, 'No error raised'
+    except gateway.RestartConnection as ex:
+        assert ex.code == 1003
+        assert ex.reason.startswith('Reconnect opcode was received')
+
+
+@pytest.mark.asyncio
+async def test__process_events_on_resumable_invalid_session_opcode(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+    gw._receive_json = asynctest.CoroutineMock(return_value={'op': 9, 'd': True})
+
+    try:
+        with async_timeout.timeout(1):
+            await gw._process_events()
+        assert False, 'No error raised'
+    except gateway.ResumeConnection as ex:
+        assert ex.code == 1003
+
+
+@pytest.mark.asyncio
+async def test__process_events_on_non_resumable_invalid_session_opcode(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+    gw._receive_json = asynctest.CoroutineMock(return_value={'op': 69, 'd': 'lmao'})
+
+    try:
+        with async_timeout.timeout(1):
+            await gw._process_events()
+        assert False, 'Unknown opcodes should not cause the loop to stop'
+    except asyncio.TimeoutError:
+        assert True, 'Expected happy path'
+
+
+@pytest.mark.asyncio
+async def test_request_guild_members(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+    gw._send_json_async = asynctest.MagicMock()
+    await gw.request_guild_members(1234)
+    gw._send_json_async.assert_called_with({
+        'op': 8,
+        "d": {
+            "guild_id": "1234",
+            "query": "",
+            "limit": 0,
+        }
+    })
+
+
+@pytest.mark.asyncio
+async def test_update_status(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+    gw._send_json_async = asynctest.MagicMock()
+    await gw.update_status(1234, {'name': 'boom'}, 'dead', True)
+    gw._send_json_async.assert_called_with({
+        'op': 3,
+        "d": {
+            "idle": 1234,
+            "game": {
+                "name": "boom"
+            },
+            "status": "dead",
+            "afk": True,
+        }
+    })
+
+
+@pytest.mark.asyncio
+async def test_update_voice_state(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+    gw._send_json_async = asynctest.MagicMock()
+    await gw.update_voice_state(1234, 5678, False, True)
+    gw._send_json_async.assert_called_with({
+        'op': 4,
+        "d": {
+            "guild_id": "1234",
+            "channel_id": "5678",
+            "self_mute": False,
+            "self_deaf": True,
+        }
+    })

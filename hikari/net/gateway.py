@@ -26,11 +26,11 @@ from typing import Any, Awaitable, Callable, Dict, List, NoReturn, Optional, Uni
 import websockets
 
 
-class ResumableConnectionClosed(websockets.ConnectionClosed):
+class ResumeConnection(websockets.ConnectionClosed):
     """Request to restart the client connection using a resume. This is only used internally."""
 
 
-class GatewayRequestedReconnection(websockets.ConnectionClosed):
+class RestartConnection(websockets.ConnectionClosed):
     """Request by the gateway to completely reconnect using a fresh connection. This is only used internally."""
 
 
@@ -169,12 +169,12 @@ class GatewayConnection:
     async def _do_resume(self, code: int, reason: str) -> NoReturn:
         """Trigger a `RESUME` operation. This will raise a :class:`ResumableConnectionClosed` exception."""
         await self.ws.close(code=code, reason=reason)
-        raise ResumableConnectionClosed(code=code, reason=reason)
+        raise ResumeConnection(code=code, reason=reason)
 
     async def _do_reidentify(self, code: int, reason: str) -> NoReturn:
         """Trigger a re-`IDENTIFY` operation. This will raise a :class:`GatewayRequestedReconnection` exception."""
         await self.ws.close(code=code, reason=reason)
-        raise GatewayRequestedReconnection(code=code, reason=reason)
+        raise RestartConnection(code=code, reason=reason)
 
     def _send_json_async(self, payload: GatewayPayload) -> asyncio.Future:
         """Sends a JSON payload asynchronously."""
@@ -232,7 +232,7 @@ class GatewayConnection:
         Runs the gateway client and attempts to keep it alive for as long as possible,
         handling restarts where appropriate.
         """
-        while True:
+        while not self.closed_event.is_set():
             try:
                 if (
                     self._last_heartbeat_sent + self._heartbeat_interval
@@ -351,8 +351,8 @@ class GatewayConnection:
         self._send_json_async(payload)
 
     async def _process_events(self) -> None:
-        """Continuously polls the gateway for new packets and handles dispatching the results."""
-        while True:
+        """Polls the gateway for new packets and handles dispatching the results."""
+        while not self.closed_event.is_set():
             message = await self._receive_json()
             op = message["op"]
             d = message["d"]
@@ -367,12 +367,14 @@ class GatewayConnection:
                 await self.dispatch(t, d)
             elif op == self.HEARTBEAT_OP:
                 await self._send_ack()
+            elif op == self.HEARTBEAT_ACK_OP:
+                await self._handle_ack()
             elif op == self.RECONNECT_OP:
                 self._logger.warning(
                     "Shard %s: instructed to disconnect and RESUME with gateway",
                     self.shard_id,
                 )
-                return await self._do_reidentify(
+                await self._do_reidentify(
                     code=1003, reason="Reconnect opcode was received, will reconnect"
                 )
             elif op == self.INVALID_SESSION_OP:
@@ -382,21 +384,21 @@ class GatewayConnection:
                     self._session_id,
                 )
 
-                if d is False:
-                    return await self._do_reidentify(
-                        code=1003, reason="Session ID reported invalid, will disconnect"
-                    )
-                else:
-                    return await self._do_resume(
+                if d:
+                    await self._do_resume(
                         code=1003, reason="Session ID reported invalid, will resume"
                     )
-
-            elif op == self.HEARTBEAT_ACK_OP:
-                await self._handle_ack()
+                else:
+                    await self._do_reidentify(
+                        code=1003, reason="Session ID reported invalid, will disconnect"
+                    )
             else:
                 self._logger.warning(
                     "Shard %s: received unrecognised opcode %s", self.shard_id, op
                 )
+
+            # Yield to the event loop to prevent blocking it if we only logged.
+            await asyncio.sleep(0)
 
     async def request_guild_members(self, guild_id: int) -> None:
         """
@@ -414,7 +416,7 @@ class GatewayConnection:
         self._send_json_async(
             {
                 "op": self.REQUEST_GUILD_MEMBERS_OP,
-                "d": {"guild_id": guild_id, "query": "", "limit": 0},
+                "d": {"guild_id": str(guild_id), "query": "", "limit": 0},
             }
         )
 
@@ -447,7 +449,7 @@ class GatewayConnection:
         )
         self._send_json_async(
             {
-                "op": self.VOICE_STATE_UPDATE_OP,
+                "op": self.STATUS_UPDATE_OP,
                 "d": {"idle": idle_since, "game": game, "status": status, "afk": afk},
             }
         )
@@ -476,8 +478,8 @@ class GatewayConnection:
             {
                 "op": self.VOICE_STATE_UPDATE_OP,
                 "d": {
-                    "guild_id": guild_id,
-                    "channel_id": channel_id,
+                    "guild_id": str(guild_id),
+                    "channel_id": str(channel_id),
                     "self_mute": self_mute,
                     "self_deaf": self_deaf,
                 },
@@ -486,15 +488,15 @@ class GatewayConnection:
 
     async def run(self) -> None:
         """Run the gateway and attempt to keep it alive for as long as possible using restarts and resumes if needed."""
-        while True:
+        while not self.closed_event.is_set():
             try:
                 kwargs = {"loop": self.loop, "uri": self.uri, "compression": None}
-                async with self._acquire_websocket_connection(**kwargs) as self.ws:
+                async with websockets.connect(**kwargs) as self.ws:
                     await self._recv_hello()
                     is_resume = self._seq is None and self._session_id is None
                     await (self._send_identify() if is_resume else self._send_resume())
                     await asyncio.gather(self._keep_alive(), self._process_events())
-            except (GatewayRequestedReconnection, ResumableConnectionClosed) as ex:
+            except (RestartConnection, ResumeConnection) as ex:
                 self._logger.warning(
                     "Shard %s: reconnecting after %s [%s]",
                     self.shard_id,
@@ -502,9 +504,10 @@ class GatewayConnection:
                     ex.code,
                 )
 
-                if isinstance(ex, GatewayRequestedReconnection):
+                if isinstance(ex, RestartConnection):
                     self._seq, self._session_id, self.trace = None, None, None
                 await asyncio.sleep(2)
+            self._logger.info("Shard %s: gateway client shutting down", self.shard_id)
 
     async def close(self, block=True) -> None:
         """
@@ -518,8 +521,3 @@ class GatewayConnection:
         self.closed_event.set()
         if block:
             await self.ws.wait_closed()
-
-    @staticmethod
-    def _acquire_websocket_connection(**kwargs) -> Any:
-        # Useful in testing to mock the gateway connection object.
-        return websockets.connect(**kwargs)
