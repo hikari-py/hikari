@@ -5,22 +5,25 @@ import functools
 import inspect
 import logging
 
+import asynctest
 import pytest
 import async_timeout
 
 from hikari.net import gateway
-from tests.net.gateway_integration_test import gateway_mock
+from . import gateway_mock
 
 
 def timeout_after(time: float):
     def decorator(coro):
         if inspect.iscoroutinefunction(coro):
+
             @functools.wraps(coro)
             async def call(*args, **kwargs):
                 async with async_timeout.timeout(time):
                     return await coro(*args, **kwargs)
+
         else:
-            raise TypeError('Need async')
+            raise TypeError("Need async")
 
         return call
 
@@ -31,6 +34,10 @@ HOST, PORT = "localhost", 9876
 URI = f"ws://{HOST}:{PORT}/api/v7/gateway"
 LOGGER = logging.getLogger("GatewayTest")
 VALID_TOKEN = "test_token"
+
+
+def teardown_function(event_loop):
+    asynctest.helpers.exhaust_callbacks(event_loop)
 
 
 @pytest.fixture
@@ -48,26 +55,24 @@ async def server(event_loop):
 @timeout_after(15)
 @pytest.mark.asyncio
 async def test_client_attempts_to_identify_once_connected(event_loop, server):
-    gw = gateway.GatewayConnection(
-        host=URI, loop=event_loop, token=VALID_TOKEN
-    )
+    gw = gateway.GatewayConnection(host=URI, loop=event_loop, token=VALID_TOKEN)
     asyncio.create_task(gw.run())
     await server.connection_made.wait()
     await server.send_hello()
     identify = await server.wait_for(lambda p: p["op"] == server.IDENTIFY_OP)
 
-    assert identify['op'] == 2
+    assert identify["op"] == 2
 
-    d = identify['d']
-    assert d['token'] == VALID_TOKEN
-    assert d['compress'] is False
-    assert isinstance(d['large_threshold'], int)
-    assert 0 <= d['large_threshold'] <= 200
+    d = identify["d"]
+    assert d["token"] == VALID_TOKEN
+    assert d["compress"] is False
+    assert isinstance(d["large_threshold"], int)
+    assert 0 <= d["large_threshold"] <= 200
 
-    properties = d['properties']
-    assert '$os' in properties
-    assert '$browser' in properties
-    assert '$device' in properties
+    properties = d["properties"]
+    assert "$os" in properties
+    assert "$browser" in properties
+    assert "$device" in properties
 
     await gw.close(True)
 
@@ -75,9 +80,7 @@ async def test_client_attempts_to_identify_once_connected(event_loop, server):
 @timeout_after(30)
 @pytest.mark.asyncio
 async def test_client_starts_heartbeating(event_loop, server):
-    gw = gateway.GatewayConnection(
-        host=URI, loop=event_loop, token=VALID_TOKEN
-    )
+    gw = gateway.GatewayConnection(host=URI, loop=event_loop, token=VALID_TOKEN)
     asyncio.create_task(gw.run())
 
     # Really short interval just for testing sanity...
@@ -94,9 +97,7 @@ async def test_client_starts_heartbeating(event_loop, server):
 @timeout_after(30)
 @pytest.mark.asyncio
 async def test_client_acknowledges_heart_beat(event_loop, server):
-    gw = gateway.GatewayConnection(
-        host=URI, loop=event_loop, token=VALID_TOKEN
-    )
+    gw = gateway.GatewayConnection(host=URI, loop=event_loop, token=VALID_TOKEN)
     asyncio.create_task(gw.run())
     server.heartbeat_interval = 40_000
     await server.connection_made.wait()
@@ -116,9 +117,7 @@ async def test_client_acknowledges_heart_beat(event_loop, server):
 @timeout_after(30)
 @pytest.mark.asyncio
 async def test_client_acknowledges_heart_beat(event_loop, server):
-    gw = gateway.GatewayConnection(
-        host=URI, loop=event_loop, token=VALID_TOKEN
-    )
+    gw = gateway.GatewayConnection(host=URI, loop=event_loop, token=VALID_TOKEN)
     asyncio.create_task(gw.run())
     server.heartbeat_interval = 40_000
     await server.connection_made.wait()
@@ -154,12 +153,12 @@ async def test_client_can_resume(event_loop, server):
     await server.send_hello()
     resume = await server.wait_for(lambda p: p["op"] == server.RESUME_OP)
 
-    assert resume['op'] == 6
+    assert resume["op"] == 6
 
-    d = resume['d']
-    assert d['token'] == VALID_TOKEN
-    assert d['seq'] == seq
-    assert d['session_id'] == session_id
+    d = resume["d"]
+    assert d["token"] == VALID_TOKEN
+    assert d["seq"] == seq
+    assert d["session_id"] == session_id
 
     await gw.close(True)
 
@@ -180,17 +179,17 @@ async def test_client_understands_small_zlib_payloads(event_loop, server):
     await server.send_compressed_json(hello_payload)
     identify = await server.wait_for(lambda p: p["op"] == server.IDENTIFY_OP)
 
-    assert identify['op'] == 2
+    assert identify["op"] == 2
 
-    d = identify['d']
-    assert d['token'] == VALID_TOKEN
-    assert d['compress'] is False
-    assert isinstance(d['large_threshold'], int)
-    assert 0 <= d['large_threshold'] <= 200
+    d = identify["d"]
+    assert d["token"] == VALID_TOKEN
+    assert d["compress"] is False
+    assert isinstance(d["large_threshold"], int)
+    assert 0 <= d["large_threshold"] <= 200
 
-    properties = d['properties']
-    assert '$os' in properties
-    assert '$browser' in properties
-    assert '$device' in properties
+    properties = d["properties"]
+    assert "$os" in properties
+    assert "$browser" in properties
+    assert "$device" in properties
 
     await gw.close(True)
