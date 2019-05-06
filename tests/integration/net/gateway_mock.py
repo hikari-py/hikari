@@ -79,13 +79,12 @@ class MockGatewayServerV7:
             await self.server.wait_closed()
 
     async def send_compressed_json(self, body):
-        payload = json.dumps(body).encode('utf-8')
-        print(payload)
+        payload = json.dumps(body).encode("utf-8")
         payload = zlib.compress(payload) + b"\x00\x00\xff\xff"
 
         chunk_size = 16
         for i in range(0, len(payload), chunk_size):
-            chunk = payload[i:i+chunk_size]
+            chunk = payload[i : i + chunk_size]
             self.LOGGER.info("Sending chunk %s", chunk)
             await self.protocol.send(chunk)
 

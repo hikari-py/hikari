@@ -23,15 +23,8 @@ test-3.7:
   extends: .base
   stage: test
   script:
-    - >
-      pytest -l -v --color=yes \
-                   --cov-report term-missing \
-                   --cov-report annotate:public/coverage-src \
-                   --cov-report html:public/coverage \
-                   --cov-branch \
-                   --cov=${PACKAGE} tests/
-
-  coverage: '/TOTAL:\s+\d+\%/'
+    - python pipelines.py tests
+  coverage: /^TOTAL[\s\d%]+\s(\d+\%)$/
   artifacts:
     paths:
       - public/coverage
@@ -44,25 +37,19 @@ sast:
   extends: .base
   stage: test
   script:
-    - pip install bandit
-    - bandit -r ${PACKAGE} -n 3
+    - python pipelines.py sast
 
 black:
   extends: .base
   stage: test
   allow_failure: true
   script:
-    - pip install black
-    - python -m black ${PACKAGE} --verbose --py36 --check
+    - python pipelines.py black --check
 
 .pages:
   extends: .base
   script:
-    - pip install sphinx sphinx-autodoc-typehints sphinxcontrib-asyncio sphinx_bootstrap_theme
-    - python docs/generate_rst.py . ${PACKAGE} docs/source docs/source/index.rst
-    - cd docs
-    - make clean html
-    - cd ..
+    - python pipelines.py docs
 
 pages:
   stage: pages
