@@ -65,7 +65,7 @@ footer.footer {
     color: white;
 }
 
-code {
+code, .highlight {
     font-family: 'Fira Code', monospace;
     font-feature-settings: "calt" 1;
     font-variant-ligatures: contextual;
