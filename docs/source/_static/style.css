@@ -41,10 +41,9 @@ a:hover {
     background-color: #fff !important;
 }
 
-/*.dropdown-menu a, .dropdown-menu .caption {
+.dropdown-menu a, .dropdown-menu .caption {
     color: #772953 !important;
-    background-color: #fff !important;
-}*/
+}
 
 .dropdown-menu a:hover {
     color: #511c39 !important;
