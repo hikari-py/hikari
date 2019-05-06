@@ -111,10 +111,5 @@ def make_toc(toc_file, entries):
     print('TOC complete.')
 
 
-def main():
-    pkg, out, toc_file = parse_argv()
-    make_toc(toc_file, (auto_doc(out, src_file) for src_file in mk_tree(pkg)))
-
-
-if __name__ == '__main__':
-    main()
+pkg, out, toc_file = parse_argv()
+make_toc(toc_file, (auto_doc(out, src_file) for src_file in mk_tree(pkg)))
