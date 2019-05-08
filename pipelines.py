@@ -81,7 +81,7 @@ def docs(*_):
     pip('sphinx_autodoc_typehints', 'install', 'sphinx-autodoc-typehints')
     pip('sphinxcontrib.asyncio', 'install', 'sphinxcontrib-asyncio')
     pip('sphinx_bootstrap_theme', 'install', 'sphinx_bootstrap_theme')
-    sp_run('python docs/generate_rst.py . {PACKAGE} docs/source docs/source/index.rst')
+    sp_run(f'python docs/generate_rst.py . {PACKAGE} docs/source docs/source/index.rst')
     os.chdir('docs')
     sp_run('make clean html')
     os.chdir('..')
