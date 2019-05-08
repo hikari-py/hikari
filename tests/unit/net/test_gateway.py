@@ -139,13 +139,13 @@ async def test__receive_json_calls_recv_at_least_once(event_loop):
 
 
 @pytest.mark.asyncio
-async def test__receive_json_tries_to_reidentify_if_payload_was_not_a_dict(event_loop):
+async def test__receive_json_closes_connection_if_payload_was_not_a_dict(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._do_reidentify = asynctest.CoroutineMock()
     gw.ws.recv = asynctest.CoroutineMock(return_value='[]')
     await gw._receive_json()
     gw.ws.recv.assert_any_call()
-    gw._do_reidentify.assert_awaited_once_with(code=1007, reason="Expected JSON object.")
+    gw._do_reidentify.assert_awaited_once_with(code=MockGateway.TYPE_ERROR, reason="Expected JSON object.")
 
 
 @pytest.mark.asyncio
@@ -471,7 +471,13 @@ async def test__process_events_does_not_update_seq_if_not_provided_from_payload(
 async def test__process_events_on_dispatch_opcode(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
-    gw._receive_json = asynctest.CoroutineMock(return_value={'op': 0, 'd': {}, 't': 'explosion'})
+
+    async def flag_death_on_call():
+        gw.closed_event.set()
+        return {'op': 0, 'd': {}, 't': 'explosion'}
+
+    gw._receive_json = flag_death_on_call
+
     gw.dispatch = asynctest.CoroutineMock()
     t = asyncio.create_task(gw._process_events())
     await asyncio.sleep(0.1)
@@ -484,7 +490,13 @@ async def test__process_events_on_dispatch_opcode(event_loop):
 async def test__process_events_on_heartbeat_opcode(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
-    gw._receive_json = asynctest.CoroutineMock(return_value={'op': 1, 'd': {}})
+
+    async def flag_death_on_call():
+        gw.closed_event.set()
+        return {'op': 1, 'd': {}}
+
+    gw._receive_json = flag_death_on_call
+
     gw._send_ack = asynctest.CoroutineMock()
     t = asyncio.create_task(gw._process_events())
     await asyncio.sleep(0.1)
@@ -497,7 +509,13 @@ async def test__process_events_on_heartbeat_opcode(event_loop):
 async def test__process_events_on_heartbeat_ack_opcode(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
-    gw._receive_json = asynctest.CoroutineMock(return_value={'op': 11, 'd': {}})
+
+    async def flag_death_on_call():
+        gw.closed_event.set()
+        return {'op': 11, 'd': {}}
+
+    gw._receive_json = flag_death_on_call
+
     gw._handle_ack = asynctest.CoroutineMock()
     t = asyncio.create_task(gw._process_events())
     await asyncio.sleep(0.1)
@@ -510,43 +528,72 @@ async def test__process_events_on_heartbeat_ack_opcode(event_loop):
 async def test__process_events_on_reconnect_opcode(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
-    gw._receive_json = asynctest.CoroutineMock(return_value={'op': 7, 'd': {}})
+
+    async def flag_death_on_call():
+        gw.closed_event.set()
+        return {'op': 7, 'd': {}}
+
+    gw._receive_json = flag_death_on_call
 
     try:
         with async_timeout.timeout(1):
             await gw._process_events()
         assert False, 'No error raised'
-    except gateway.RestartConnection as ex:
-        assert ex.code == 1003
-        assert ex.reason.startswith('Reconnect opcode was received')
+    except gateway.RestartConnection:
+        pass
 
 
 @pytest.mark.asyncio
 async def test__process_events_on_resumable_invalid_session_opcode(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
-    gw._receive_json = asynctest.CoroutineMock(return_value={'op': 9, 'd': True})
+
+    async def flag_death_on_call():
+        gw.closed_event.set()
+        return {'op': 9, 'd': True}
+
+    gw._receive_json = flag_death_on_call
 
     try:
         with async_timeout.timeout(1):
             await gw._process_events()
         assert False, 'No error raised'
-    except gateway.ResumeConnection as ex:
-        assert ex.code == 1003
+    except gateway.ResumeConnection:
+        pass
 
 
 @pytest.mark.asyncio
 async def test__process_events_on_non_resumable_invalid_session_opcode(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
-    gw._receive_json = asynctest.CoroutineMock(return_value={'op': 69, 'd': 'lmao'})
+
+    async def flag_death_on_call():
+        gw.closed_event.set()
+        return {'op': 9, 'd': False}
+
+    gw._receive_json = flag_death_on_call
 
     try:
         with async_timeout.timeout(1):
             await gw._process_events()
-        assert False, 'Unknown opcodes should not cause the loop to stop'
-    except asyncio.TimeoutError:
-        assert True, 'Expected happy path'
+        assert False, 'No error raised'
+    except gateway.RestartConnection:
+        pass
+
+
+@pytest.mark.asyncio
+async def test__process_events_on_unrecognised_opcode_passes_silently(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+
+    async def flag_death_on_call():
+        gw.closed_event.set()
+        return {'op': -1, 'd': False}
+
+    gw._receive_json = flag_death_on_call
+
+    with async_timeout.timeout(1):
+        await gw._process_events()
 
 
 @pytest.mark.asyncio
@@ -599,3 +646,19 @@ async def test_update_voice_state(event_loop):
             "self_deaf": True,
         }
     })
+
+
+@pytest.mark.asyncio
+async def test_no_blocking_close(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+    await gw.close()
+    assert gw.closed_event.is_set()
+
+
+@pytest.mark.asyncio
+async def test_blocking_close(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+    await gw.close(True)
+    assert gw.closed_event.is_set()

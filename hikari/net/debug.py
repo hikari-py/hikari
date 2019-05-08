@@ -32,22 +32,20 @@ class DataCenter:
 class DebugData:
     """The response provided from Discord's CGI trace."""
 
-    #: Data center location being used. Determined from an IATA airport code.
-    data_center: DataCenter
     #: Unknown, possibly some form of correlation ID.
     fl: str
     #: Your IP
     ip: str
     #: UTC unix timestamp.
-    ts: str
+    ts: datetime.datetime
     #: The host that was hit.
     h: str
     #: Scheme used
     visit_scheme: str
     #: User agent used
     uag: str
-    #: Airport code of datacenter.
-    colo: str
+    #: Data Center info.
+    colo: DataCenter
     #: HTTP version used.
     http: str
     #: Apparent location
@@ -58,11 +56,6 @@ class DebugData:
     sni: str
     #: Unknown.
     warp: str
-
-    @property
-    def timestamp(self) -> datetime.datetime:
-        """The timestamp of the request."""
-        return datetime.datetime.fromtimestamp(float(self.ts), datetime.timezone.utc)
 
 
 async def get_debug_data() -> DebugData:
@@ -104,11 +97,6 @@ async def get_debug_data() -> DebugData:
     airport = airport_match and airport_match.group(1).strip() or "Unknown"
     country = country_match and country_match.group(1).strip() or "Unknown"
 
-    pairs["data_center"] = DataCenter(pairs["colo"], location, airport, country)
+    pairs["colo"] = DataCenter(pairs["colo"], location, airport, country)
+    pairs["ts"] = datetime.datetime.fromtimestamp(float(pairs['ts']), datetime.timezone.utc)
     return DebugData(**pairs)
-
-
-if __name__ == "__main__":
-    import asyncio
-
-    print(asyncio.run(get_debug_data()))

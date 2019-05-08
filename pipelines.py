@@ -9,8 +9,8 @@ import sys
 
 
 PACKAGE = 'hikari'
-PYTEST_ARGS = '-l -v --color=yes --cov-report term-missing --cov-report annotate:public/coverage-src --cov-report ' \
-              f'html:public/coverage --cov-branch --cov={PACKAGE} tests/'.split()
+COVERAGE_ARGS = f'--branch --concurrency=thread --source={PACKAGE} --timid -m'
+PYTEST_ARGS = '-l -v --color=yes tests/'
 
 dispatcher = {}
 
@@ -32,9 +32,9 @@ def option(description):
     return decorator
 
 
-def sp_run(executable, *args):
-    print('$', executable, *args)
-    os.system(' '.join((executable, *args)))
+def sp_run(executable):
+    print('$', executable)
+    os.system(executable)
 
 
 def pip(package, *args):
@@ -42,43 +42,55 @@ def pip(package, *args):
         importlib.import_module(package)
         print('Found', package)
     except ImportError:
-        sp_run('python', '-m', 'pip', *args)
+        sp_run('python -m pip ' + ' '.join(args))
     finally:
         return importlib.import_module(package)
 
 
 @option("Run unit tests only")
-def unit_tests(*args):
-    sp_run('pytest', '--deselect', 'tests/integration', *PYTEST_ARGS, *args)
+def uts(*_):
+    sp_run(f'coverage run {COVERAGE_ARGS} pytest --deselect tests/integration {PYTEST_ARGS}')
+    sp_run('coverage report -m')
+
+
+@option("Run integration tests only")
+def its(*_):
+    sp_run(f'coverage run {COVERAGE_ARGS} pytest --deselect tests/unit {PYTEST_ARGS}')
+    sp_run('coverage report -m')
 
 
 @option("Run unit tests and integration tests")
-def tests(*args):
-    sp_run('pytest', *PYTEST_ARGS, *args)
+def tests(*_):
+    sp_run(f'coverage run {COVERAGE_ARGS} pytest {PYTEST_ARGS}')
+    sp_run('coverage report -m --fail-under=90')
 
 
 @option("Run black code formatter. Pass --check to only check, not fix.")
 def black(*args):
+    if '--check' in args:
+        flags = '--check'
+    else:
+        flags = ''
     pip('black', 'install', 'black')
-    sp_run('python', '-m', 'black', PACKAGE, '--verbose', *args)
+    sp_run(f'python -m black {PACKAGE} --verbose {flags}')
 
 
 @option("Create Sphinx documentation")
-def docs(*args):
+def docs(*_):
     pip('sphinx', 'install', 'sphinx')
     pip('sphinx_autodoc_typehints', 'install', 'sphinx-autodoc-typehints')
     pip('sphinxcontrib.asyncio', 'install', 'sphinxcontrib-asyncio')
     pip('sphinx_bootstrap_theme', 'install', 'sphinx_bootstrap_theme')
-    sp_run('python', 'docs/generate_rst.py', '.', PACKAGE, 'docs/source', 'docs/source/index.rst')
+    sp_run('python docs/generate_rst.py . {PACKAGE} docs/source docs/source/index.rst')
     os.chdir('docs')
-    sp_run('make', 'clean', 'html')
+    sp_run('make clean html')
     os.chdir('..')
 
 
 @option("Run static code analysis")
-def sast(*args):
+def sast(*_):
     pip('bandit', 'install', 'bandit')
-    sp_run('bandit', '-r', PACKAGE, '-n', '3', *args)
+    sp_run(f'bandit -r {PACKAGE} -n 3')
 
 
 if __name__ == '__main__':
