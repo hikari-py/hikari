@@ -82,9 +82,7 @@ def docs(*_):
     pip('sphinxcontrib.asyncio', 'install', 'sphinxcontrib-asyncio')
     pip('sphinx_bootstrap_theme', 'install', 'sphinx_bootstrap_theme')
     sp_run(f'python docs/generate_rst.py . {PACKAGE} docs/source docs/source/index.rst')
-    os.chdir('docs')
-    sp_run('make clean html')
-    os.chdir('..')
+    sp_run('cd docs && make clean html && cd ..')
 
 
 @option("Run static code analysis")
