@@ -55,7 +55,9 @@ pages:
   stage: pages
   extends: .pages
   after_script:
-    - mv docs/build/html/* public/ -v
+    - mkdir public -v || true
+    - mkdir public/pages -v || true
+    - cp docs/build/html/* public/ -v -a
   artifacts:
     paths:
       - public
@@ -67,8 +69,8 @@ test-pages:
   extends: .pages
   after_script:
     - mkdir public -v || true
-    - mkdir public/test-pages -v || true
-    - mv docs/build/html/* public/test-pages -v
+    - mkdir public/pages -v || true
+    - cp docs/build/html/* public/pages -v -a
   artifacts:
     paths:
       - public
