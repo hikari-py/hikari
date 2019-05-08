@@ -115,6 +115,12 @@ class GatewayConnection:
     HELLO_OP = 10
     HEARTBEAT_ACK_OP = 11
 
+    NORMAL_CLOSURE = 1000
+    GOING_AWAY = 1001
+    PROTOCOL_VIOLATION = 1002
+    TYPE_ERROR = 1003
+    INTERNAL_ERROR = 1011
+
     _REDACTED = "redacted"
 
     def __init__(
@@ -131,8 +137,7 @@ class GatewayConnection:
         dispatch: DispatchHandler = lambda t, d: None,
         max_persistent_buffer_size: int = 3 * 1024 ** 2,
     ) -> None:
-        if not asyncio.iscoroutinefunction(dispatch):
-            dispatch = asyncio.coroutine(dispatch)
+        dispatch = asyncio.coroutine(dispatch)
 
         self._heartbeat_interval = float("nan")
         self._in_buffer: bytearray = bytearray()
@@ -223,7 +228,7 @@ class GatewayConnection:
         payload = json.loads(msg, encoding="utf-8")
 
         if not isinstance(payload, dict):
-            return await self._do_reidentify(code=1007, reason="Expected JSON object.")
+            return await self._do_reidentify(code=self.TYPE_ERROR, reason="Expected JSON object.")
 
         return payload
 
@@ -240,7 +245,7 @@ class GatewayConnection:
                 ):
                     last_sent = time.perf_counter() - self._last_heartbeat_sent
                     msg = f"Failed to receive an acknowledgement from the previous heartbeat sent ~{last_sent}s ago"
-                    return await self._do_resume(code=1008, reason=msg)
+                    return await self._do_resume(code=self.PROTOCOL_VIOLATION, reason=msg)
 
                 await asyncio.wait_for(
                     self.closed_event.wait(), timeout=self._heartbeat_interval
@@ -258,7 +263,7 @@ class GatewayConnection:
                         time_taken * 1_000,
                     )
             else:
-                await self.ws.close(code=1000, reason="User requested shutdown")
+                await self.ws.close(code=self.GOING_AWAY, reason="User requested shutdown")
 
     async def _send_heartbeat(self) -> None:
         """Sends a `HEARTBEAT` payload."""
@@ -375,7 +380,7 @@ class GatewayConnection:
                     self.shard_id,
                 )
                 await self._do_reidentify(
-                    code=1003, reason="Reconnect opcode was received, will reconnect"
+                    code=self.NORMAL_CLOSURE, reason="Reconnect opcode was received, will reconnect"
                 )
             elif op == self.INVALID_SESSION_OP:
                 self._logger.warning(
@@ -386,11 +391,11 @@ class GatewayConnection:
 
                 if d:
                     await self._do_resume(
-                        code=1003, reason="Session ID reported invalid, will resume"
+                        code=self.NORMAL_CLOSURE, reason="Session ID reported invalid, will resume"
                     )
                 else:
                     await self._do_reidentify(
-                        code=1003, reason="Session ID reported invalid, will disconnect"
+                        code=self.NORMAL_CLOSURE, reason="Session ID reported invalid, will disconnect"
                     )
             else:
                 self._logger.warning(
@@ -488,25 +493,29 @@ class GatewayConnection:
 
     async def run(self) -> None:
         """Run the gateway and attempt to keep it alive for as long as possible using restarts and resumes if needed."""
+        kwargs = {"loop": self.loop, "uri": self.uri, "compression": None}
+
         while not self.closed_event.is_set():
-            try:
-                kwargs = {"loop": self.loop, "uri": self.uri, "compression": None}
-                async with websockets.connect(**kwargs) as self.ws:
+            async with websockets.connect(**kwargs) as self.ws:
+                try:
                     await self._recv_hello()
                     is_resume = self._seq is not None and self._session_id is not None
                     await (self._send_resume() if is_resume else self._send_identify())
                     await asyncio.gather(self._keep_alive(), self._process_events())
-            except (RestartConnection, ResumeConnection) as ex:
-                self._logger.warning(
-                    "Shard %s: reconnecting after %s [%s]", 
-                    self.shard_id,
-                    ex.reason,
-                    ex.code,
-                )
+                except (RestartConnection, ResumeConnection) as ex:
+                    self._logger.warning(
+                        "Shard %s: reconnecting after %s [%s]",
+                        self.shard_id,
+                        ex.reason,
+                        ex.code,
+                    )
 
-                if isinstance(ex, RestartConnection):
-                    self._seq, self._session_id, self.trace = None, None, None
-                await asyncio.sleep(2)
+                    if isinstance(ex, RestartConnection):
+                        self._seq, self._session_id, self.trace = None, None, None
+                    await asyncio.sleep(2)
+
+                # Other errors should propagate with a 1011 INTERNAL ERROR (websockets does this for us).
+
             self._logger.info("Shard %s: gateway client shutting down", self.shard_id)
 
     async def close(self, block=True) -> None:

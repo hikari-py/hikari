@@ -193,3 +193,29 @@ async def test_client_understands_small_zlib_payloads(event_loop, server):
     assert "$device" in properties
 
     await gw.close(True)
+
+
+@timeout_after(15)
+@pytest.mark.asyncio
+async def test_server_gives_resumable_reconnect_stops(event_loop, server: gateway_mock.MockGatewayServerV7):
+    gw = gateway.GatewayConnection(host=URI, loop=event_loop, token=VALID_TOKEN)
+    asyncio.create_task(gw.run())
+    await server.connection_made.wait()
+    await server.send_hello()
+    await server.send_invalid_session(True)
+    await asyncio.sleep(1)
+    await server.connection_made.wait()
+    await gw.close()
+
+
+@timeout_after(15)
+@pytest.mark.asyncio
+async def test_server_gives_non_resumable_reconnect_stops(event_loop, server: gateway_mock.MockGatewayServerV7):
+    gw = gateway.GatewayConnection(host=URI, loop=event_loop, token=VALID_TOKEN)
+    asyncio.create_task(gw.run())
+    await server.connection_made.wait()
+    await server.send_hello()
+    await server.send_invalid_session(False)
+    await asyncio.sleep(1)
+    await server.connection_made.wait()
+    await gw.close()

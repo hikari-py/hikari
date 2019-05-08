@@ -56,6 +56,7 @@ class MockGatewayServerV7:
         self.protocol = None
         self.connection_made = asyncio.Event()
         self.ready = asyncio.Event()
+        self.closures = []
         self.loop = loop
         self.seq = 0
         self.valid_token = valid_token
@@ -69,14 +70,23 @@ class MockGatewayServerV7:
 
     async def start(self, host, port):
         self.task = self.loop.create_task(self.run(host, port))
+
         await self.ready.wait()
 
     async def run(self, host, port):
+
         async with websockets.serve(
             self.handler, host, port, loop=self.loop
         ) as self.server:
-            self.ready.set()
-            await self.server.wait_closed()
+            try:
+                self.ready.set()
+                await self.server.closed_waiter
+            except Exception as ex:
+                self.LOGGER.critical("%s %s", type(ex).__name__, ex)
+                self.closures.append(ex)
+            finally:
+                self.ready.clear()
+                self.protocol = None
 
     async def send_compressed_json(self, body):
         payload = json.dumps(body).encode("utf-8")
@@ -154,11 +164,11 @@ class MockGatewayServerV7:
         )
         await self.send_json(pl)
 
-    async def send_invalid_session(self):
-        pl = self.make_payload(self.INVALID_SESSION_OP, None)
+    async def send_invalid_session(self, can_resume=False):
+        pl = self.make_payload(self.INVALID_SESSION_OP, can_resume)
         await self.send_json(pl)
 
-    async def reconnect(self):
+    async def send_reconnect(self):
         pl = self.make_payload(self.RECONNECT_OP, None)
         await self.send_json(pl)
 
