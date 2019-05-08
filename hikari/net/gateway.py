@@ -493,12 +493,12 @@ class GatewayConnection:
                 kwargs = {"loop": self.loop, "uri": self.uri, "compression": None}
                 async with websockets.connect(**kwargs) as self.ws:
                     await self._recv_hello()
-                    is_resume = self._seq is None and self._session_id is None
-                    await (self._send_identify() if is_resume else self._send_resume())
+                    is_resume = self._seq is not None and self._session_id is not None
+                    await (self._send_resume() if is_resume else self._send_identify())
                     await asyncio.gather(self._keep_alive(), self._process_events())
             except (RestartConnection, ResumeConnection) as ex:
                 self._logger.warning(
-                    "Shard %s: reconnecting after %s [%s]",
+                    "Shard %s: reconnecting after %s [%s]", 
                     self.shard_id,
                     ex.reason,
                     ex.code,
