@@ -11,17 +11,17 @@ from hikari.net import debug
 
 @pytest.mark.asyncio
 async def test_get_debug_data():
-    with asynctest.patch('aiohttp.request', new=prepare_mock_response()):
+    with asynctest.patch("aiohttp.request", new=prepare_mock_response()):
         data = await debug.get_debug_data()
-        assert data.fl == 'abc123'
-        assert data.ip == '127.0.0.1'
-        assert data.h == 'discordapp.com'
-        assert data.visit_scheme == 'https'
-        assert data.uag == 'ayylmao browser inc'
-        assert data.http == '2'
-        assert data.tls == 'henlo yes ssl here'
-        assert data.sni == 'plaintext'
-        assert data.warp == 'back to the futureee'
+        assert data.fl == "abc123"
+        assert data.ip == "127.0.0.1"
+        assert data.h == "discordapp.com"
+        assert data.visit_scheme == "https"
+        assert data.uag == "ayylmao browser inc"
+        assert data.http == "2"
+        assert data.tls == "henlo yes ssl here"
+        assert data.sni == "plaintext"
+        assert data.warp == "back to the futureee"
 
         ts = data.ts
         assert ts.day == 8
@@ -31,10 +31,10 @@ async def test_get_debug_data():
         assert ts.minute == 0
 
         airport = data.colo
-        assert airport.airport == 'Heathrow Airport'
-        assert airport.iata_code == 'LHR'
-        assert airport.country == 'England'
-        assert airport.location == 'London'
+        assert airport.airport == "Heathrow Airport"
+        assert airport.iata_code == "LHR"
+        assert airport.country == "England"
+        assert airport.location == "London"
 
 
 def prepare_mock_response():
@@ -49,8 +49,11 @@ def prepare_mock_response():
             self.text = asyncio.coroutine(lambda: text)
             self.raise_for_status = lambda: None
 
-    request_method = asynctest.Mock(side_effect=[
-        Response(textwrap.dedent('''
+    request_method = asynctest.Mock(
+        side_effect=[
+            Response(
+                textwrap.dedent(
+                    """
                 fl=abc123
                 ip=127.0.0.1
                 ts=1557338434
@@ -64,9 +67,12 @@ def prepare_mock_response():
                 tls=henlo yes ssl here
                 sni=plaintext
                 warp=back to the futureee
-            ''')),
-
-        Response(textwrap.dedent('''
+            """
+                )
+            ),
+            Response(
+                textwrap.dedent(
+                    """
                 <!doctype html>
                 <html>
                     <head>
@@ -85,7 +91,10 @@ def prepare_mock_response():
                         </table>
                     </body>
                 </html>
-            '''))
-        ])
+            """
+                )
+            ),
+        ]
+    )
 
     return request_method

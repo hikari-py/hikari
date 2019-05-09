@@ -98,5 +98,7 @@ async def get_debug_data() -> DebugData:
     country = country_match and country_match.group(1).strip() or "Unknown"
 
     pairs["colo"] = DataCenter(pairs["colo"], location, airport, country)
-    pairs["ts"] = datetime.datetime.fromtimestamp(float(pairs['ts']), datetime.timezone.utc)
+    pairs["ts"] = datetime.datetime.fromtimestamp(
+        float(pairs["ts"]), datetime.timezone.utc
+    )
     return DebugData(**pairs)
