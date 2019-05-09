@@ -495,7 +495,7 @@ class GatewayConnection:
         """Run the gateway and attempt to keep it alive for as long as possible using restarts and resumes if needed."""
         kwargs = {"loop": self.loop, "uri": self.uri, "compression": None}
     
-        while not self.closed_event.is_set()
+        while not self.closed_event.is_set():
             try:
                 async with websockets.connect(**kwargs) as self.ws:
                     try:
