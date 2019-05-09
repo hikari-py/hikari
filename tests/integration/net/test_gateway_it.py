@@ -197,7 +197,9 @@ async def test_client_understands_small_zlib_payloads(event_loop, server):
 
 @timeout_after(15)
 @pytest.mark.asyncio
-async def test_server_gives_resumable_reconnect_stops(event_loop, server: gateway_mock.MockGatewayServerV7):
+async def test_server_gives_resumable_reconnect_stops(
+    event_loop, server: gateway_mock.MockGatewayServerV7
+):
     gw = gateway.GatewayConnection(host=URI, loop=event_loop, token=VALID_TOKEN)
     asyncio.create_task(gw.run())
     await server.connection_made.wait()
@@ -210,7 +212,9 @@ async def test_server_gives_resumable_reconnect_stops(event_loop, server: gatewa
 
 @timeout_after(15)
 @pytest.mark.asyncio
-async def test_server_gives_non_resumable_reconnect_stops(event_loop, server: gateway_mock.MockGatewayServerV7):
+async def test_server_gives_non_resumable_reconnect_stops(
+    event_loop, server: gateway_mock.MockGatewayServerV7
+):
     gw = gateway.GatewayConnection(host=URI, loop=event_loop, token=VALID_TOKEN)
     asyncio.create_task(gw.run())
     await server.connection_made.wait()
