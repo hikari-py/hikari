@@ -494,29 +494,30 @@ class GatewayConnection:
     async def run(self) -> None:
         """Run the gateway and attempt to keep it alive for as long as possible using restarts and resumes if needed."""
         kwargs = {"loop": self.loop, "uri": self.uri, "compression": None}
+    
+        while not self.closed_event.is_set()
+            try:
+                async with websockets.connect(**kwargs) as self.ws:
+                    try:
+                        await self._recv_hello()
+                        is_resume = self._seq is not None and self._session_id is not None
+                        await (self._send_resume() if is_resume else self._send_identify())
+                        await asyncio.gather(self._keep_alive(), self._process_events())
+                    except (RestartConnection, ResumeConnection) as ex:
+                        self._logger.warning(
+                            "Shard %s: reconnecting after %s [%s]",
+                            self.shard_id,
+                            ex.reason,
+                            ex.code,
+                        )
 
-        while not self.closed_event.is_set():
-            async with websockets.connect(**kwargs) as self.ws:
-                try:
-                    await self._recv_hello()
-                    is_resume = self._seq is not None and self._session_id is not None
-                    await (self._send_resume() if is_resume else self._send_identify())
-                    await asyncio.gather(self._keep_alive(), self._process_events())
-                except (RestartConnection, ResumeConnection) as ex:
-                    self._logger.warning(
-                        "Shard %s: reconnecting after %s [%s]",
-                        self.shard_id,
-                        ex.reason,
-                        ex.code,
-                    )
+                        if isinstance(ex, RestartConnection):
+                            self._seq, self._session_id, self.trace = None, None, None
+                        await asyncio.sleep(2)
 
-                    if isinstance(ex, RestartConnection):
-                        self._seq, self._session_id, self.trace = None, None, None
-                    await asyncio.sleep(2)
-
-                # Other errors should propagate with a 1011 INTERNAL ERROR (websockets does this for us).
-
-            self._logger.info("Shard %s: gateway client shutting down", self.shard_id)
+                    # Other errors should propagate with a 1011 INTERNAL ERROR (websockets does this for us).
+            finally: 
+                self._logger.info("Shard %s: gateway client shutting down", self.shard_id)
 
     async def close(self, block=True) -> None:
         """
