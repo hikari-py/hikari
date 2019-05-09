@@ -23,11 +23,16 @@ test-3.7:
   extends: .base
   stage: test
   script:
-    - python pipelines.py tests
+    - coverage run --rcfile=.coveragerc -m pytest -l --color=yes tests/
+    - coverage report -m --rcfile=.coveragerc
+    - coverage html --rcfile=.coveragerc
+    - coverage xml --rcfile=.coveragerc
+    - coverage annotate --rcfile=.coveragerc -d public/coverage-annotated
+
   coverage: /^TOTAL[\s\d%]+\s(\d+\%)$/
   artifacts:
     paths:
-      - public/coverage
+      - public/
 
 test-3.8:
   extends: test-3.7
@@ -37,14 +42,16 @@ sast:
   extends: .base
   stage: test
   script:
-    - python pipelines.py sast
+    - pip install bandit
+    - bandit ${PACKAGE}
 
 black:
   extends: .base
   stage: test
   allow_failure: true
   script:
-    - python pipelines.py black --check
+    - pip install black
+    - black ${PACKAGE} -v --check
 
 .pages:
   extends: .base

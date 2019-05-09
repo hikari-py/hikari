@@ -6,10 +6,11 @@ Makes running stuff on CI and locally in the same way easier for me.
 import importlib
 import os
 import sys
+import subprocess
 
 
 PACKAGE = 'hikari'
-COVERAGE_ARGS = f'--branch --concurrency=thread --source={PACKAGE} --timid -m'
+COVERAGE_ARGS = f' -m'
 PYTEST_ARGS = '-l -v --color=yes tests/'
 
 dispatcher = {}
@@ -34,7 +35,7 @@ def option(description):
 
 def sp_run(executable):
     print('$', executable)
-    os.system(executable)
+    return subprocess.check_call(executable, stdout=sys.stdout, stderr=sys.stderr, cwd=os.getcwd(), env=os.environ, shell=True)
 
 
 def pip(package, *args):
