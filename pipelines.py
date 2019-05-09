@@ -47,22 +47,30 @@ def pip(package, *args):
         return importlib.import_module(package)
 
 
+@option("Generate a coverage report only")
+def report(*_):
+    sp_run('coverage report -m --rcfile=.coveragerc')
+    sp_run('coverage html --rcfile=.coveragerc')
+    sp_run('coverage xml --rcfile=.coveragerc')
+    sp_run('coverage annotate --rcfile=.coveragerc -d public/coverage-annotated')
+
+
 @option("Run unit tests only")
 def uts(*_):
     sp_run(f'coverage run {COVERAGE_ARGS} pytest --deselect tests/integration {PYTEST_ARGS}')
-    sp_run('coverage report -m')
+    report()
 
 
 @option("Run integration tests only")
 def its(*_):
     sp_run(f'coverage run {COVERAGE_ARGS} pytest --deselect tests/unit {PYTEST_ARGS}')
-    sp_run('coverage report -m')
+    report()
 
 
 @option("Run unit tests and integration tests")
 def tests(*_):
     sp_run(f'coverage run {COVERAGE_ARGS} pytest {PYTEST_ARGS}')
-    sp_run('coverage report -m --fail-under=90')
+    report()
 
 
 @option("Run black code formatter. Pass --check to only check, not fix.")
