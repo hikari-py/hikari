@@ -905,7 +905,7 @@ async def test_no_blocking_close(event_loop):
         large_threshold=69,
         incognito=False,
     )
-    await gw.close()
+    await gw.close(False)
     assert gw.closed_event.is_set()
 
 
