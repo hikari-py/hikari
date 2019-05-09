@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import asyncio
+import functools
 import json
 import math
 import urllib.parse as urlparse
@@ -12,6 +13,14 @@ import pytest
 
 from hikari.net import gateway
 
+
+def non_zombified_test(coro):
+    @functools.wraps(coro)
+    async def wrapper(event_loop):
+        async with async_timeout.timeout(10):
+            await coro(event_loop)
+
+    return pytest.mark.asyncio(wrapper)
 
 
 class MockGateway(gateway.GatewayConnection):
@@ -36,7 +45,7 @@ async def duff_consumer_coro(*_, **__):
     pass
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test_init_produces_valid_url(event_loop):
     """GatewayConnection.__init__ should produce a valid query fragment for the URL."""
     gw = gateway.GatewayConnection(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234')
@@ -49,7 +58,7 @@ async def test_init_produces_valid_url(event_loop):
     assert not bits.fragment
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__do_resume_triggers_correct_signals(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234')
 
@@ -60,7 +69,7 @@ async def test__do_resume_triggers_correct_signals(event_loop):
         gw.ws.close.assert_awaited_once_with(code=69, reason='boom')
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__do_reidentify_triggers_correct_signals(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234')
 
@@ -71,7 +80,7 @@ async def test__do_reidentify_triggers_correct_signals(event_loop):
         gw.ws.close.assert_awaited_once_with(code=69, reason='boom')
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__send_json_async_calls__send_json_asynchronously(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234')
 
@@ -81,7 +90,7 @@ async def test__send_json_async_calls__send_json_asynchronously(event_loop):
     gw._send_json.assert_awaited_once_with({})
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__send_json_calls_websocket(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._logger = asynctest.MagicMock()
@@ -96,7 +105,7 @@ async def test__send_json_calls_websocket(event_loop):
     gw._logger.debug.assert_not_called()
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__send_json_eventually_gets_ratelimited(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._logger = asynctest.MagicMock()
@@ -112,7 +121,7 @@ async def test__send_json_eventually_gets_ratelimited(event_loop):
     gw._logger.debug.assert_called_with('Shard %s: now being rate-limited', None)
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__send_json_wont_send_massive_payloads(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._logger = asynctest.MagicMock()
@@ -130,7 +139,7 @@ async def test__send_json_wont_send_massive_payloads(event_loop):
                                         "result in a disconnect. Payload was: %s", None, payload)
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__receive_json_calls_recv_at_least_once(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw.ws.recv = asynctest.CoroutineMock(return_value='{}')
@@ -138,7 +147,7 @@ async def test__receive_json_calls_recv_at_least_once(event_loop):
     gw.ws.recv.assert_any_call()
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__receive_json_closes_connection_if_payload_was_not_a_dict(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._do_reidentify = asynctest.CoroutineMock()
@@ -148,7 +157,7 @@ async def test__receive_json_closes_connection_if_payload_was_not_a_dict(event_l
     gw._do_reidentify.assert_awaited_once_with(code=MockGateway.TYPE_ERROR, reason="Expected JSON object.")
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__receive_json_when_receiving_string_decodes_immediately(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
 
@@ -163,7 +172,7 @@ async def test__receive_json_when_receiving_string_decodes_immediately(event_loo
         json.loads.assert_called_with(recv_value, encoding='utf-8')
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__receive_json_when_receiving_zlib_payloads_collects_before_decoding(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
 
@@ -184,7 +193,7 @@ async def test__receive_json_when_receiving_zlib_payloads_collects_before_decodi
         json.loads.assert_called_with(recv_value.decode('utf-8'), encoding='utf-8')
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test_small_zlib_payloads_leave_buffer_alone(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
 
@@ -206,7 +215,7 @@ async def test_small_zlib_payloads_leave_buffer_alone(event_loop):
         assert gw._in_buffer is first_array
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test_massive_zlib_payloads_cause_buffer_replacement(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
 
@@ -229,7 +238,7 @@ async def test_massive_zlib_payloads_cause_buffer_replacement(event_loop):
         assert gw._in_buffer is not first_array
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test_heartbeat_beats_at_interval(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._heartbeat_interval = 0.05
@@ -242,7 +251,7 @@ async def test_heartbeat_beats_at_interval(event_loop):
         gw.ws.send.assert_awaited_with('{"op": 1, "d": null}')
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test_heartbeat_shuts_down_when_closure_request(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._heartbeat_interval = 0.05
@@ -256,7 +265,7 @@ async def test_heartbeat_shuts_down_when_closure_request(event_loop):
             await task
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test_heartbeat_if_not_acknowledged_in_time_closes_connection_with_resume(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._last_heartbeat_sent = -float('inf')
@@ -271,7 +280,7 @@ async def test_heartbeat_if_not_acknowledged_in_time_closes_connection_with_resu
     gw.ws.close.assert_awaited_once()
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test_slow_loop_produces_warning(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._heartbeat_interval = 0
@@ -286,7 +295,7 @@ async def test_slow_loop_produces_warning(event_loop):
     gw._logger.warning.assert_called_once()
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__send_heartbeat(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._send_json_async = asynctest.MagicMock()
@@ -294,7 +303,7 @@ async def test__send_heartbeat(event_loop):
     gw._send_json_async.assert_called_with({"op": 1, "d": None})
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__send_ack(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._send_json_async = asynctest.MagicMock()
@@ -302,7 +311,7 @@ async def test__send_ack(event_loop):
     gw._send_json_async.assert_called_with({"op": 11})
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__handle_ack(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._last_heartbeat_sent = 0
@@ -310,7 +319,7 @@ async def test__handle_ack(event_loop):
     assert not math.isnan(gw.heartbeat_latency) and not math.isinf(gw.heartbeat_latency)
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__recv_hello_when_is_hello(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._receive_json = asynctest.CoroutineMock(
@@ -321,7 +330,7 @@ async def test__recv_hello_when_is_hello(event_loop):
     assert gw._heartbeat_interval == 12.345
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__recv_hello_when_is_not_hello_causes_resume(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._receive_json = asynctest.CoroutineMock(
@@ -332,7 +341,7 @@ async def test__recv_hello_when_is_not_hello_causes_resume(event_loop):
     gw._do_resume.assert_awaited()
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__send_resume(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None)
     gw._session_id = 1234321
@@ -349,7 +358,7 @@ async def test__send_resume(event_loop):
     })
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__send_identify_when_not_redacted_default_behaviour(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None,
                      large_threshold=69, incognito=False)
@@ -376,7 +385,7 @@ async def test__send_identify_when_not_redacted_default_behaviour(event_loop):
         })
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__send_identify_when_redacted(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=None,
                      large_threshold=69, incognito=True)
@@ -403,7 +412,7 @@ async def test__send_identify_when_redacted(event_loop):
         })
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__send_identify_includes_sharding_info_if_present(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -417,7 +426,7 @@ async def test__send_identify_includes_sharding_info_if_present(event_loop):
     assert payload['d']['shard'] == [917, 1234]
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__send_identify_includes_status_info_if_present(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False, initial_presence={'foo': 'bar'})
@@ -431,7 +440,7 @@ async def test__send_identify_includes_status_info_if_present(event_loop):
     assert payload['d']['status'] == {'foo': 'bar'}
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__process_events_halts_if_closed_event_is_set(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -441,7 +450,7 @@ async def test__process_events_halts_if_closed_event_is_set(event_loop):
     gw._receive_json.assert_not_awaited()
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__process_events_updates_seq_if_provided_from_payload(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -453,7 +462,7 @@ async def test__process_events_updates_seq_if_provided_from_payload(event_loop):
     assert gw._seq == 69
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__process_events_does_not_update_seq_if_not_provided_from_payload(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -467,7 +476,7 @@ async def test__process_events_does_not_update_seq_if_not_provided_from_payload(
     assert gw._seq == 123
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__process_events_on_dispatch_opcode(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -486,7 +495,7 @@ async def test__process_events_on_dispatch_opcode(event_loop):
     gw.dispatch.assert_awaited_with('explosion', {})
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__process_events_on_heartbeat_opcode(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -505,7 +514,7 @@ async def test__process_events_on_heartbeat_opcode(event_loop):
     gw._send_ack.assert_any_await()
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__process_events_on_heartbeat_ack_opcode(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -524,7 +533,7 @@ async def test__process_events_on_heartbeat_ack_opcode(event_loop):
     gw._handle_ack.assert_any_await()
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__process_events_on_reconnect_opcode(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -543,7 +552,7 @@ async def test__process_events_on_reconnect_opcode(event_loop):
         pass
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__process_events_on_resumable_invalid_session_opcode(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -562,7 +571,7 @@ async def test__process_events_on_resumable_invalid_session_opcode(event_loop):
         pass
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__process_events_on_non_resumable_invalid_session_opcode(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -581,7 +590,7 @@ async def test__process_events_on_non_resumable_invalid_session_opcode(event_loo
         pass
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test__process_events_on_unrecognised_opcode_passes_silently(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -596,7 +605,7 @@ async def test__process_events_on_unrecognised_opcode_passes_silently(event_loop
         await gw._process_events()
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test_request_guild_members(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -612,7 +621,7 @@ async def test_request_guild_members(event_loop):
     })
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test_update_status(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -631,7 +640,7 @@ async def test_update_status(event_loop):
     })
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test_update_voice_state(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -648,7 +657,7 @@ async def test_update_voice_state(event_loop):
     })
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test_no_blocking_close(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
@@ -656,9 +665,18 @@ async def test_no_blocking_close(event_loop):
     assert gw.closed_event.is_set()
 
 
-@pytest.mark.asyncio
+@non_zombified_test
 async def test_blocking_close(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
                      shard_count=1234, large_threshold=69, incognito=False)
     await gw.close(True)
     assert gw.closed_event.is_set()
+
+
+@non_zombified_test
+async def test_shut_down_run_does_not_loop(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token='1234', shard_id=917,
+                     shard_count=1234, large_threshold=69, incognito=False)
+    gw._receive_json = asynctest.CoroutineMock()
+    gw.closed_event.set()
+    await gw.run()
