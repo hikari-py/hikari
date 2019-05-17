@@ -14,7 +14,7 @@ class HTTP:
     #: The API version to use.
     VERSION = 7
     #: The base Discord URI to use for the HTTP API.
-    BASE_URI = ''
+    BASE_URI = ""
 
     def __init__(self, loop: asyncio.AbstractEventLoop):
         self._buckets = {}
@@ -25,10 +25,12 @@ class HTTP:
         self.loop = loop
 
     @staticmethod
-    def _bucket_name_for(uri_format: str,
-                         guild_id: Optional[int] = None,
-                         channel_id: Optional[int] = None,
-                         webhook_id: Optional[int] = None) -> str:
+    def _bucket_name_for(
+        uri_format: str,
+        guild_id: Optional[int] = None,
+        channel_id: Optional[int] = None,
+        webhook_id: Optional[int] = None,
+    ) -> str:
         """
         Generates a unique bucket name for the ratelimit bucket representable by the given arguments.
 
@@ -38,4 +40,6 @@ class HTTP:
             channel_id: optional channel_id for the request.
             webhook_id: optional webhook_id for the request.
         """
-        return uri_format.format(guild_id=guild_id, channel_id=channel_id, webhook_id=webhook_id)
+        return uri_format.format(
+            guild_id=guild_id, channel_id=channel_id, webhook_id=webhook_id
+        )
