@@ -76,7 +76,7 @@ pages:
     - pip install tox
   script:
     - tox -e docs
-    - cd public && mv -a html/* . -v -a
+    - cd public && mv -a html/* .
     # - cd latex
     # - latexmk
   only:
