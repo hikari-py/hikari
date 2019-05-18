@@ -1,2 +1,21 @@
-aiohttp==3.5.4
-websockets==7.0
+aiohttp
+websockets
+
+# Testing
+asynctest
+pytest
+pytest-asyncio
+pytest-cov
+tox
+
+# SAST
+bandit
+
+# Style
+black
+
+# Docs
+sphinx
+sphinx-autodoc-typehints
+sphinxcontrib-asyncio
+sphinx-bootstrap-theme

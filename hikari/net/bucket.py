@@ -17,15 +17,7 @@ class LeakyBucket:
 
     __slots__ = ["logging_method", "semaphore", "delay", "loop", "ratelimited_event"]
 
-    def __init__(
-        self,
-        limit: int,
-        delay: float,
-        loop: asyncio.AbstractEventLoop,
-        logging_method=lambda *a, **k: None,
-    ):
-        assert limit > 0, "Limit must be greater than zero"
-        assert delay > 0, "Delay must be greater than zero"
+    def __init__(self, limit: int, delay: float, loop: asyncio.AbstractEventLoop, logging_method=lambda *a, **k: None):
         self.semaphore = asyncio.BoundedSemaphore(limit, loop=loop)
         self.logging_method = logging_method
         self.delay = delay
