@@ -8,7 +8,6 @@ This API is not officially documented.
 """
 import datetime
 import re
-
 from dataclasses import dataclass
 
 import aiohttp
@@ -76,29 +75,19 @@ async def get_debug_data() -> DebugData:
             pairs[k] = v
 
     async with aiohttp.request(
-        "post",
-        "http://www.airlinecodes.co.uk/aptcoderes.asp",
-        data={"iatacode": pairs["colo"]},
+        "post", "http://www.airlinecodes.co.uk/aptcoderes.asp", data={"iatacode": pairs["colo"]}
     ) as resp:
         resp.raise_for_status()
         content = await resp.text()
 
-    location_match = re.search(
-        r"<td.*?>Location:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
-    )
-    airport_match = re.search(
-        r"<td.*?>Airport:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
-    )
-    country_match = re.search(
-        r"<td.*?>Country:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
-    )
+    location_match = re.search(r"<td.*?>Location:</td>\s*?<td>(.*?)</td>", content, re.I | re.M)
+    airport_match = re.search(r"<td.*?>Airport:</td>\s*?<td>(.*?)</td>", content, re.I | re.M)
+    country_match = re.search(r"<td.*?>Country:</td>\s*?<td>(.*?)</td>", content, re.I | re.M)
 
     location = location_match and location_match.group(1).strip() or "Unknown"
     airport = airport_match and airport_match.group(1).strip() or "Unknown"
     country = country_match and country_match.group(1).strip() or "Unknown"
 
     pairs["colo"] = DataCenter(pairs["colo"], location, airport, country)
-    pairs["ts"] = datetime.datetime.fromtimestamp(
-        float(pairs["ts"]), datetime.timezone.utc
-    )
+    pairs["ts"] = datetime.datetime.fromtimestamp(float(pairs["ts"]), datetime.timezone.utc)
     return DebugData(**pairs)
