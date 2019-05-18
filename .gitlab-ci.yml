@@ -72,13 +72,13 @@ pages:
   stage: pages
   image: python:3-stretch
   before_script:
-    - apt-get install python3 texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk  -y
+    # - apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk  -y
     - pip install tox
   script:
     - tox -e docs
     - cd public && mv -a html/* . -v -a
-    - cd latex
-    - latexmk
+    # - cd latex
+    # - latexmk
   only:
     - master
   except:
