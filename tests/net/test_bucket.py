@@ -2,11 +2,15 @@
 # -*- coding: utf-8 -*-
 import asyncio
 
-import pytest
 from hikari.net import bucket
+from tests import _helpers
 
 
-@pytest.mark.asyncio
+def teardown_function():
+    _helpers.purge_loop()
+
+
+@_helpers.non_zombified_async_test()
 async def test_submit_returns_task(event_loop):
     b = bucket.LeakyBucket(1, 1, event_loop)
 
@@ -18,7 +22,7 @@ async def test_submit_returns_task(event_loop):
     assert isinstance(f, asyncio.Future)
 
 
-@pytest.mark.asyncio
+@_helpers.non_zombified_async_test()
 async def test_submit_doesnt_ratelimits_after_given_number_of_stacked_calls(event_loop):
     b = bucket.LeakyBucket(10, 10, event_loop)
 

@@ -3,13 +3,13 @@
 """
 A lightweight, flexible, customizable Discord API wrapper for Python.
 """
+import setuptools_scm as __setuptools_scm
 
-__author__ = "Nekoka.tt"
+__author__ = "Nekokatt"
 __copyright__ = f"© 2019 {__author__}"
 __license__ = "MIT"
-__version__ = "0.0.1a"
-
-__ci__ = "https://gitlab.com/nekoka.tt/hikari/pipelines"
-__url__ = "https://gitlab.com/nekoka.tt/hikari"
-
+__version__ = __setuptools_scm.get_version(version_scheme=__setuptools_scm.version.guess_next_dev_version)
 __contributors__ = {"LunarCoffee"}
+
+# Apply compatibility monkey patching.
+from . import _compat
