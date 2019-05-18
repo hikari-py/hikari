@@ -370,19 +370,21 @@ class GatewayConnection:
             # Yield to the event loop to prevent blocking it if we only logged.
             await asyncio.sleep(0)
 
-    async def request_guild_members(self, guild_id: int) -> None:
+    async def request_guild_members(self, guild_id: int, query: str = "", limit: int = 0) -> None:
         """
         Requests guild members from the given Guild ID. This can be used to retrieve all members available in a guild.
 
         Args:
             guild_id: the guild ID to request members from.
+            query: member names to search for, or empty string to remove the constraint.
+            limit: max number of members to retrieve, or zero to remove the constraint.
 
         Warning:
             Results will be dispatched as events in chunks of 1000 members per guild.
         """
         self._logger.debug("Shard %s: requesting members in guild %s", self.shard_id, guild_id)
         self._send_json(
-            {"op": self.REQUEST_GUILD_MEMBERS_OP, "d": {"guild_id": str(guild_id), "query": "", "limit": 0}}
+            {"op": self.REQUEST_GUILD_MEMBERS_OP, "d": {"guild_id": str(guild_id), "query": query, "limit": limit}}
         )
 
     async def update_status(
