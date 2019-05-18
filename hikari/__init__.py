@@ -7,7 +7,7 @@ import setuptools_scm as __setuptools_scm
 
 __author__ = "Nekokatt"
 __copyright__ = f"© 2019 {__author__}"
-__license__ = "MIT"
+__license__ = "zlib"
 __version__ = __setuptools_scm.get_version(version_scheme=__setuptools_scm.version.guess_next_dev_version)
 __contributors__ = {"LunarCoffee"}
 
