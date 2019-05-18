@@ -13,73 +13,77 @@ variables:
   PACKAGE: "hikari"
   PIP_CACHE_DIR: "${CI_PROJECT_DIR}/.cache/pip"
 
-.base:
+cpython3.6:
+  stage: test
+  image: python:3.6-alpine
+  before_script:
+    - python -V
+    - apk add git
+    - pip install tox
+    - tox -avv
+  script:
+    - tox
+    - tox -e formatcheck
+  coverage: /^TOTAL[\s\d%]+\s(\d+\%)$/
+
+cpython3.7:
+  stage: test
   image: python:3.7-alpine
   before_script:
-    - apk add --no-cache --update python3-dev gcc build-base
-    - pip install -r requirements.txt -r test-requirements.txt
-
-test-3.7:
-  extends: .base
-  stage: test
+    - python -V
+    - apk add git
+    - pip install tox
+    - tox -avv
   script:
-    - coverage run --rcfile=.coveragerc -m pytest -l --color=yes tests/
-    - coverage report -m --rcfile=.coveragerc
-    - coverage html --rcfile=.coveragerc
-    - coverage xml --rcfile=.coveragerc
-    - coverage annotate --rcfile=.coveragerc -d public/coverage-annotated
-
+    - tox
+    - tox -e formatcheck
   coverage: /^TOTAL[\s\d%]+\s(\d+\%)$/
-  artifacts:
-    paths:
-      - public/
 
-test-3.8:
-  extends: test-3.7
+cpython3.8:
+  stage: test
   image: python:3.8-rc-alpine
+  before_script:
+    - python -V
+    - apk add git
+    - pip install tox
+    - tox -avv
+  script:
+    - tox
+    - tox -e formatcheck
+  coverage: /^TOTAL[\s\d%]+\s(\d+\%)$/
 
-sast:
-  extends: .base
+pypy3.6:
   stage: test
+  image: pypy:3.6-slim
+  before_script:
+    - pypy3 -V
+    - apt-get update
+    - apt-get install git -y
+    - pip install tox
+    - tox -avv
   script:
-    - pip install bandit
-    - bandit ${PACKAGE}
-
-black:
-  extends: .base
-  stage: test
-  allow_failure: true
-  script:
-    - pip install black
-    - black ${PACKAGE} -v --check
-
-.pages:
-  extends: .base
-  script:
-    - python pipelines.py docs
+    - tox
+    # Black fails on PyPy, I don't care that much.
+    # BUG: https://bitbucket.org/pypy/pypy/issues/2985/pypy36-osreplace-pathlike-typeerror
+    # - tox -e formatcheck
+  coverage: /^TOTAL[\s\d%]+\s(\d+\%)$/
 
 pages:
   stage: pages
-  extends: .pages
-  after_script:
-    - mkdir public -v || true
-    - mkdir public/pages -v || true
-    - cp docs/build/html/* public/ -v -a
-  artifacts:
-    paths:
-      - public
+  image: python:3-stretch
+  before_script:
+    - apt-get install python3 texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk  -y
+    - pip install tox
+  script:
+    - tox -e docs
+    - cd public && mv -a html/* . -v -a
+    - cd latex
+    - latexmk
   only:
     - master
-
-test-pages:
-  stage: test
-  extends: .pages
-  after_script:
-    - mkdir public -v || true
-    - mkdir public/pages -v || true
-    - cp docs/build/html/* public/pages -v -a
+  except:
+    - schedules
   artifacts:
     paths:
       - public
-  except:
-    - master
+      - public/latex

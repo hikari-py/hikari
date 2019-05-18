@@ -40,6 +40,4 @@ class HTTP:
             channel_id: optional channel_id for the request.
             webhook_id: optional webhook_id for the request.
         """
-        return uri_format.format(
-            guild_id=guild_id, channel_id=channel_id, webhook_id=webhook_id
-        )
+        return uri_format.format(guild_id=guild_id, channel_id=channel_id, webhook_id=webhook_id)

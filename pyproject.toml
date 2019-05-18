@@ -1,0 +1,12 @@
+[build-system]
+requires = [
+    "setuptools >= 40.0.4",
+    "setuptools_scm >= 2.0.0, <4",
+    "wheel >= 0.29.0",
+]
+build-backend = 'setuptools.build_meta'
+
+[tool.black]
+line-length = 120
+target_version = ['py36', 'py37', 'py38']
+include = ".*py$"
