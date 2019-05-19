@@ -34,6 +34,7 @@ extensions = [
     "sphinxcontrib.asyncio",
     "sphinx.ext.autodoc",
     "sphinx_autodoc_typehints",
+    "sphinx.ext.intersphinx",
 ]
 
 templates_path = ["_templates"]
@@ -109,7 +110,12 @@ html_theme_options = {
 # -- Autodoc options ---------------------------------------------------------
 autoclass_content = "both"
 
-# -- Autoapi options ---------------------------------------------------------
+# -- Intersphinx options -----------------------------------------------------
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'aiohttp': ('https://aiohttp.readthedocs.io/en/stable/', None),
+    'websockets': ('https://websockets.readthedocs.io/en/stable/', None)
+}
 
 
 def setup(app):
