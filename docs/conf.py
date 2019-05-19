@@ -21,10 +21,11 @@ from pkg_resources import get_distribution
 distribution = get_distribution("hikari")
 
 release = distribution.version
+copyright = "Nekoka.tt"
 # for example take major/minor
 version = ".".join(release.split(".")[:3])
 project = distribution.project_name
-
+ 
 # -- General configuration ---------------------------------------------------
 
 extensions = [
