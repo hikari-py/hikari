@@ -34,7 +34,11 @@ class LeakyBucket:
             self.ratelimited_event.set()
             self.ratelimited_event.clear()
 
-        async with self.semaphore:
-            result = await coroutine(*args, **kwargs)
-            await asyncio.sleep(self.delay)
-            return result
+        try:
+            async with self.semaphore:
+                result = await coroutine(*args, **kwargs)
+                await asyncio.sleep(self.delay)
+                return result
+        except RuntimeError:
+            # May get thrown if the loop is "murdered" mid-context, so we don't really care.
+            pass

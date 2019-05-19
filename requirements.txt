@@ -1,8 +1,10 @@
+# Main requirements...
 aiohttp
 websockets
 
 # Testing
 asynctest
+async_timeout
 pytest
 pytest-asyncio
 pytest-cov
