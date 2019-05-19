@@ -63,8 +63,7 @@ pypy3.6:
     - tox
   coverage: /^TOTAL[\s\d%]+\s(\d+\%)$/
 
-pages:
-  stage: pages
+.pages:
   image: python:3-stretch
   before_script:
     # - apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk  -y
@@ -74,14 +73,25 @@ pages:
     - cd public && mv html/* .
     # - cd latex
     # - latexmk
-  only:
-    - master
-  except:
-    - schedules
   artifacts:
     paths:
       - public
       - public/latex
+
+pages:
+  stage: pages
+  extends: .pages
+  only:
+    - master
+  except:
+    - schedules
+
+
+pages-test:
+  stage: pages
+  extends: .pages
+  except:
+    - master
 
 black:
   stage: verify
