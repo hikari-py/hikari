@@ -223,7 +223,7 @@ class GatewayConnection:
             else:
                 self._in_buffer.clear()
 
-        payload = json.loads(msg, encoding="utf-8")
+        payload = json.loads(msg)
 
         if not isinstance(payload, dict):
             return await self._do_reidentify(code=self.TYPE_ERROR, reason="Expected JSON object.")
