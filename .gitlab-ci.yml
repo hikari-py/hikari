@@ -3,16 +3,9 @@ stages:
   - verify
   - pages
 
-cache:
-    key: ${CI_JOB_NAME}
-    paths:
-      - .venv/
-      - .cache/
-
 variables:
   DOCKER_DRIVER: "overlay2"
   PACKAGE: "hikari"
-  PIP_CACHE_DIR: "${CI_PROJECT_DIR}/.cache/pip"
 
 cpython3.6:
   stage: test
