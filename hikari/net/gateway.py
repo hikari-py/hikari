@@ -86,7 +86,7 @@ class GatewayLogger(logging.LoggerAdapter):
 
 class Opcode(enum.IntEnum):
     """Gateway opcodes."""
-
+    #: An event was dispatched.
     DISPATCH = 0
     #: Used for ping checking.
     HEARTBEAT = 1
