@@ -88,13 +88,11 @@ pages-test:
 
 black:
   stage: verify
-  allow_failure: true
+  allow_failure: false
   image: python:3-alpine
   before_script:
     - pip install tox
   script:
     - tox -e formatcheck
   only:
-    - master
-  except:
-    - schedules
+    - merge_requests
