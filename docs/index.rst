@@ -8,3 +8,4 @@ hikari
     hikari.net.debug
     hikari.net.gateway
     hikari.net.http
+    hikari.compat
