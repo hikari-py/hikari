@@ -94,5 +94,5 @@ black:
     - pip install tox
   script:
     - tox -e formatcheck
-  only:
-    - merge_requests
+  except:
+    - master
