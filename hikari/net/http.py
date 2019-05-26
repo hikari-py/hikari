@@ -4,20 +4,27 @@
 Implementation of the V7 HTTP REST API with rate-limiting.
 """
 import asyncio
+import collections
 import logging
-from typing import Optional
+import typing
 
 import aiohttp
 
+from hikari.net import bucket
+
 
 class HTTP:
+    """
+
+    """
+
     #: The API version to use.
     VERSION = 7
     #: The base Discord URI to use for the HTTP API.
-    BASE_URI = ""
+    BASE_URI = f"https://discordapp.com/api/v{VERSION}"
 
     def __init__(self, loop: asyncio.AbstractEventLoop):
-        self._buckets = {}
+        self._buckets = collections.defaultdict(bucket.LeakyBucket)
         self._logger = logging.getLogger(type(self).__name__)
         self._session = aiohttp.ClientSession(loop=loop)
 
@@ -27,9 +34,9 @@ class HTTP:
     @staticmethod
     def _bucket_name_for(
         uri_format: str,
-        guild_id: Optional[int] = None,
-        channel_id: Optional[int] = None,
-        webhook_id: Optional[int] = None,
+        guild_id: typing.Optional[int] = None,
+        channel_id: typing.Optional[int] = None,
+        webhook_id: typing.Optional[int] = None,
     ) -> str:
         """
         Generates a unique bucket name for the ratelimit bucket representable by the given arguments.

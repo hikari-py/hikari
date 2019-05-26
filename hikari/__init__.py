@@ -8,6 +8,3 @@ __copyright__ = f"© 2019 {__author__}"
 __version__ = "0.0.1a"
 __license__ = "zlib"
 __contributors__ = {"LunarCoffee"}
-
-# Apply compatibility monkey patching.
-from . import _compat
