@@ -68,18 +68,6 @@ async def test_do_reidentify_triggers_correct_signals(event_loop):
 
 
 @_helpers.non_zombified_async_test()
-async def test_send_json_async_calls__send_json_asynchronously(event_loop):
-    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
-
-    gw.ws.send = asynctest.CoroutineMock()
-    gw._send_json({})
-    gw.ws.send.assert_not_awaited()
-    # Assumes 1 await in implementation.
-    await asyncio.sleep(0)
-    gw.ws.send.assert_awaited_once_with("{}")
-
-
-@_helpers.non_zombified_async_test()
 async def test_send_json_calls_websocket(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
     gw._logger = asynctest.MagicMock()
@@ -102,10 +90,10 @@ async def test_send_json_eventually_gets_ratelimited(event_loop):
     futures = []
 
     for i in range(130):
-        futures.append(gw._send_json({}))
+        futures.append(asyncio.create_task(gw._send_json({})))
 
     try:
-        await gw._rate_limit.ratelimited_event.wait()
+        await gw._rate_limit._full_event.wait()
     finally:
         [f.cancel() for f in futures]
 
@@ -207,11 +195,11 @@ async def test_massive_zlib_payloads_cause_buffer_replacement(event_loop):
 @_helpers.non_zombified_async_test()
 async def test_heartbeat_beats_at_interval(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-    gw._heartbeat_interval = 0.05
+    gw._heartbeat_interval = 0.01
 
     task = asyncio.create_task(gw._keep_alive())
     try:
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.1)
     finally:
         task.cancel()
         gw.ws.send.assert_awaited_with('{"op": 1, "d": null}')
@@ -220,12 +208,12 @@ async def test_heartbeat_beats_at_interval(event_loop):
 @_helpers.non_zombified_async_test()
 async def test_heartbeat_shuts_down_when_closure_request(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-    gw._heartbeat_interval = 0.05
+    gw._heartbeat_interval = 0.01
 
     with async_timeout.timeout(5):
         task = asyncio.create_task(gw._keep_alive())
         try:
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.1)
         finally:
             await gw.close(True)
             await task
@@ -264,7 +252,7 @@ async def test_slow_loop_produces_warning(event_loop):
 @_helpers.non_zombified_async_test()
 async def test_send_heartbeat(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-    gw._send_json = asynctest.MagicMock()
+    gw._send_json = asynctest.CoroutineMock()
     await gw._send_heartbeat()
     gw._send_json.assert_called_with({"op": 1, "d": None})
 
@@ -272,7 +260,7 @@ async def test_send_heartbeat(event_loop):
 @_helpers.non_zombified_async_test()
 async def test_send_ack(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-    gw._send_json = asynctest.MagicMock()
+    gw._send_json = asynctest.CoroutineMock()
     await gw._send_ack()
     gw._send_json.assert_called_with({"op": 11})
 
@@ -314,7 +302,7 @@ async def test_send_resume(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
     gw._session_id = 1234321
     gw._seq = 69_420
-    gw._send_json = asynctest.MagicMock()
+    gw._send_json = asynctest.CoroutineMock()
     await gw._send_resume()
     gw._send_json.assert_called_with({"op": 6, "d": {"token": "1234", "session_id": 1234321, "seq": 69_420}})
 
@@ -331,7 +319,7 @@ async def test_send_identify_when_not_redacted_default_behaviour(event_loop):
     )
     gw._session_id = 1234321
     gw._seq = 69_420
-    gw._send_json = asynctest.MagicMock()
+    gw._send_json = asynctest.CoroutineMock()
 
     with asynctest.patch("hikari.net.gateway.python_version", new=lambda: "python3"), asynctest.patch(
         "hikari.net.gateway.library_version", new=lambda: "vx.y.z"
@@ -362,7 +350,7 @@ async def test_send_identify_when_redacted(event_loop):
     )
     gw._session_id = 1234321
     gw._seq = 69_420
-    gw._send_json = asynctest.MagicMock()
+    gw._send_json = asynctest.CoroutineMock()
 
     with asynctest.patch("hikari.net.gateway.python_version", new=lambda: "python3"), asynctest.patch(
         "hikari.net.gateway.library_version", new=lambda: "vx.y.z"
@@ -392,7 +380,7 @@ async def test_send_identify_includes_sharding_info_if_present(event_loop):
         large_threshold=69,
         incognito=False,
     )
-    gw._send_json = asynctest.MagicMock()
+    gw._send_json = asynctest.CoroutineMock()
 
     await gw._send_identify()
     payload = gw._send_json.call_args[0][0]
@@ -414,7 +402,7 @@ async def test_send_identify_includes_status_info_if_present(event_loop):
         incognito=False,
         initial_presence={"foo": "bar"},
     )
-    gw._send_json = asynctest.MagicMock()
+    gw._send_json = asynctest.CoroutineMock()
 
     await gw._send_identify()
     payload = gw._send_json.call_args[0][0]
@@ -650,7 +638,7 @@ async def test_request_guild_members(event_loop):
         large_threshold=69,
         incognito=False,
     )
-    gw._send_json = asynctest.MagicMock()
+    gw._send_json = asynctest.CoroutineMock()
     await gw.request_guild_members(1234)
     gw._send_json.assert_called_with({"op": 8, "d": {"guild_id": "1234", "query": "", "limit": 0}})
 
@@ -666,7 +654,7 @@ async def test_update_status(event_loop):
         large_threshold=69,
         incognito=False,
     )
-    gw._send_json = asynctest.MagicMock()
+    gw._send_json = asynctest.CoroutineMock()
     await gw.update_status(1234, {"name": "boom"}, "dead", True)
     gw._send_json.assert_called_with(
         {"op": 3, "d": {"idle": 1234, "game": {"name": "boom"}, "status": "dead", "afk": True}}
@@ -684,7 +672,7 @@ async def test_update_voice_state(event_loop):
         large_threshold=69,
         incognito=False,
     )
-    gw._send_json = asynctest.MagicMock()
+    gw._send_json = asynctest.CoroutineMock()
     await gw.update_voice_state(1234, 5678, False, True)
     gw._send_json.assert_called_with(
         {"op": 4, "d": {"guild_id": "1234", "channel_id": "5678", "self_mute": False, "self_deaf": True}}
