@@ -15,6 +15,7 @@ References:
 """
 
 import asyncio
+import contextlib
 import enum
 import json
 import logging
@@ -426,10 +427,8 @@ class GatewayConnection:
         seq = message.get("s", None)
         t = message.get("t", None)
 
-        try:
+        with contextlib.suppress(ValueError):
             op = Opcode(op)
-        except ValueError:
-            pass
 
         if seq is not None:
             self._seq = seq
