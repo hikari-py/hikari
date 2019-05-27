@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import asyncio
+import contextlib
 import json
 import math
 import urllib.parse as urlparse
@@ -550,11 +551,9 @@ async def test_process_events_on_reconnect_opcode(event_loop):
 
     gw._recv_json = flag_death_on_call
 
-    try:
+    with contextlib.suppress(gateway.RestartConnection):
         await gw._process_one_event()
         assert False, "No error raised"
-    except gateway.RestartConnection:
-        pass
 
 
 @_helpers.non_zombified_async_test()
@@ -575,11 +574,9 @@ async def test_process_events_on_resumable_invalid_session_opcode(event_loop):
 
     gw._recv_json = flag_death_on_call
 
-    try:
+    with contextlib.suppress(gateway.ResumeConnection):
         await gw._process_one_event()
         assert False, "No error raised"
-    except gateway.ResumeConnection:
-        pass
 
 
 @_helpers.non_zombified_async_test()
@@ -600,11 +597,9 @@ async def test_process_events_on_non_resumable_invalid_session_opcode(event_loop
 
     gw._recv_json = flag_death_on_call
 
-    try:
+    with contextlib.suppress(gateway.RestartConnection):
         await gw._process_one_event()
         assert False, "No error raised"
-    except gateway.RestartConnection:
-        pass
 
 
 @_helpers.non_zombified_async_test()
@@ -745,11 +740,9 @@ async def test_invalid_session_when_cannot_resume_does_not_resume(event_loop):
     pl = {"op": gateway.Opcode.INVALID_SESSION.value, "d": False}
     gw._recv_json = asynctest.CoroutineMock(return_value=pl)
 
-    try:
+    with contextlib.suppress(gateway.RestartConnection):
         await gw._process_one_event()
         assert False, "No exception raised"
-    except gateway.RestartConnection:
-        pass
 
     gw._trigger_reidentify.assert_awaited_once()
     gw._trigger_resume.assert_not_awaited()
@@ -771,11 +764,9 @@ async def test_invalid_session_when_can_resume_does_resume(event_loop):
     pl = {"op": gateway.Opcode.INVALID_SESSION.value, "d": True}
     gw._recv_json = asynctest.CoroutineMock(return_value=pl)
 
-    try:
+    with contextlib.suppress(gateway.ResumeConnection):
         await gw._process_one_event()
         assert False, "No exception raised"
-    except gateway.ResumeConnection:
-        pass
 
     gw._trigger_resume.assert_awaited_once()
     gw._trigger_reidentify.assert_not_awaited()
