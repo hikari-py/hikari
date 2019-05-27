@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import collections
+import contextlib
 import time
 import typing
 
@@ -107,13 +108,11 @@ class LeakyBucket(compat.contextlib.AbstractAsyncContextManager):
             future = self.loop.create_future()
             self._queue[task] = future
 
-            try:
+            with contextlib.suppress(asyncio.TimeoutError):
                 shielded_future = asyncio.shield(future)
                 # We wait for the estimated time for the bucket to empty, or wait until the future gets notified
                 # if it empties quicker than expected.
                 await asyncio.wait_for(shielded_future, amount / self._empty_rate, loop=self.loop)
-            except asyncio.TimeoutError:
-                pass
 
             future.cancel()
 
