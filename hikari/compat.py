@@ -44,7 +44,6 @@ class typing:
     NoReturn = getattr(_typing, "NoReturn", None)
 
     #: Type of a traceback.
-    TracebackType = ...
     try:
         raise RuntimeError
     except RuntimeError as __ex:
