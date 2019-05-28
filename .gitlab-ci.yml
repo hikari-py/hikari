@@ -88,10 +88,10 @@ pages-test:
 
 black:
   stage: verify
-  allow_failure: false
+  allow_failure: true
   image: python:3-alpine
   before_script:
-    - pip install tox
+    - pip install tox 
   script:
     - tox -e formatcheck
   except:
