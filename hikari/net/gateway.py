@@ -40,6 +40,7 @@ class RestartConnection(websockets.ConnectionClosed):
 def library_version() -> str:
     """Creates a string that is representative of the version of this library. This is only used internally."""
     from hikari import __version__
+
     return f"hikari v{__version__}"
 
 
