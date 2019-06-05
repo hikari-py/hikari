@@ -18,14 +18,24 @@ import sphinx_bootstrap_theme
 
 from pkg_resources import get_distribution
 
-distribution = get_distribution("hikari")
+copyright = "Nekokatt"
 
-release = distribution.version
-copyright = "Nekoka.tt"
-# for example take major/minor
-version = ".".join(release.split(".")[:3])
-project = distribution.project_name
- 
+try:
+    distribution = get_distribution("hikari")
+
+    release = distribution.version
+    # for example take major/minor
+    version = ".".join(release.split(".")[:3])
+    project = distribution.project_name
+except Exception:
+    import traceback
+
+    traceback.print_exc()
+
+    release = "-"
+    version = "dev"
+    project = "Hikari"
+
 # -- General configuration ---------------------------------------------------
 
 extensions = [
@@ -51,7 +61,7 @@ html_theme_options = {
     # Navigation bar title. (Default: ``project`` value)
     # 'navbar_title': "",
     # Tab name for entire site. (Default: "Site")
-    "navbar_site_name": "Docs",
+    "navbar_site_name": "Modules",
     # A list of tuples containing pages or urls to link to.
     # Valid tuples should be in the following forms:
     #    (name, page)                 # a link to a page
@@ -72,7 +82,7 @@ html_theme_options = {
     "navbar_pagenav_name": "This page",
     # Global TOC depth for "site" navbar tab. (Default: 1)
     # Switching to -1 shows all levels.
-    "globaltoc_depth": 3,
+    "globaltoc_depth": 6,
     # Include hidden TOCs in Site navbar?
     #
     # Note: If this is "false", you cannot have mixed ``:hidden:`` and
@@ -112,11 +122,7 @@ autoclass_content = "both"
 
 # -- Intersphinx options -----------------------------------------------------
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
-    'aiohttp': ('https://aiohttp.readthedocs.io/en/stable/', None),
-    'websockets': ('https://websockets.readthedocs.io/en/stable/', None)
+    "python": ("https://docs.python.org/3", None),
+    "aiohttp": ("https://aiohttp.readthedocs.io/en/stable/", None),
+    "websockets": ("https://websockets.readthedocs.io/en/stable/", None),
 }
-
-
-def setup(app):
-    app.add_stylesheet("style.css")
