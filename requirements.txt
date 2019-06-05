@@ -2,22 +2,5 @@
 aiohttp
 websockets
 
-# Testing
-asynctest
-async_timeout
-pytest
-pytest-asyncio
-pytest-cov
+# CI
 tox
-
-# SAST
-bandit
-
-# Style
-black
-
-# Docs
-sphinx
-sphinx-autodoc-typehints
-sphinxcontrib-asyncio
-sphinx-bootstrap-theme

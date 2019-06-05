@@ -7,4 +7,4 @@ __author__ = "Nekokatt"
 __copyright__ = f"© 2019 {__author__}"
 __version__ = "0.0.1a"
 __license__ = "zlib"
-__contributors__ = {"LunarCoffee"}
+__contributors__ = {"LunarCoffee", "raatty"}

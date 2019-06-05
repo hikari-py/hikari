@@ -1,50 +1,64 @@
 stages:
   - test
+  - cover
   - verify
   - pages
 
 variables:
   DOCKER_DRIVER: "overlay2"
-  PACKAGE: "hikari"
 
-cpython3.6:
+###
+### TEMPLATE TO RUN PYTEST.
+###
+.pytest:
+  allow_failure: false
   stage: test
+  script:
+    - mkdir public || true
+    - tox -avv
+    - tox -e ${CI_JOB_NAME}
+  coverage: /^TOTAL[\s\d%]+\s(\d+\%)$/
+  artifacts:
+    paths:
+      - public
+
+###
+### TEMPLATE TO INITIALIZE CPYTHON ENVIRONMENTS AND THEN RUN PYTEST.
+###
+.cpython-pytest:
+  stage: test
+  extends: .pytest
+  before_script:
+    - python -V
+    - apk add git
+    - pip install tox
+
+###
+### TEST IN PYTHON 3.6
+###
+py36:
   image: python:3.6-alpine
-  before_script:
-    - python -V
-    - apk add git
-    - pip install tox
-    - tox -avv
-  script:
-    - tox
-  coverage: /^TOTAL[\s\d%]+\s(\d+\%)$/
+  extends: .cpython-pytest
 
-cpython3.7:
-  stage: test
+###
+### TEST IN PYTHON 3.7
+###
+py37:
   image: python:3.7-alpine
-  before_script:
-    - python -V
-    - apk add git
-    - pip install tox
-    - tox -avv
-  script:
-    - tox
-  coverage: /^TOTAL[\s\d%]+\s(\d+\%)$/
+  extends: .cpython-pytest
 
-cpython3.8:
-  stage: test
+###
+### TEST IN PYTHON 3.8
+###
+py38:
   image: python:3.8-rc-alpine
-  before_script:
-    - python -V
-    - apk add git
-    - pip install tox
-    - tox -avv
-  script:
-    - tox
-  coverage: /^TOTAL[\s\d%]+\s(\d+\%)$/
+  extends: .cpython-pytest
 
-pypy3.6:
-  stage: test
+###
+### TEST IN PYPY3.6.
+###
+pypy3:
+  extends: .pytest
   image: pypy:3.6-slim
   before_script:
     - pypy3 -V
@@ -52,25 +66,49 @@ pypy3.6:
     - apt-get install git -y
     - pip install tox
     - tox -avv
-  script:
-    - tox
-  coverage: /^TOTAL[\s\d%]+\s(\d+\%)$/
 
-.pages:
-  image: python:3-stretch
+###
+### PRODUCE SEVERAL INFORMATIVE REPORTS REGARDING TEST COVERAGE
+###
+aggregate-coverage:
+  allow_failure: true
+  dependencies:
+    - pypy3
+    - py36
+    - py37
+    - py38
+  stage: cover
+  image: python:3-alpine
   before_script:
-    # - apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk  -y
+    - apk add git
     - pip install tox
+    - tox -avv
   script:
-    - tox -e docs
-    - cd public && mv html/* .
-    # - cd latex
-    # - latexmk
+    - tox -e report
   artifacts:
     paths:
       - public
-      - public/latex
 
+###
+### TEMPLATE FOR TEST AND PROD DOCUMENTATION GENERATION JOBS.
+###
+.pages:
+  dependencies:
+    - aggregate-coverage
+    - bandit
+  allow_failure: false
+  image: python:3-stretch
+  before_script:
+    - pip install tox
+  script:
+    - tox -e docs
+  artifacts:
+    paths:
+      - public
+
+###
+### PRODUCE PRODUCTION DOCUMENTATION.
+###
 pages:
   stage: pages
   extends: .pages
@@ -79,13 +117,19 @@ pages:
   except:
     - schedules
 
-
+###
+### GENERATE DOCUMENTATION WITHOUT DEPLOYING PAGES TO GITLAB PAGES.
+###
 pages-test:
   stage: pages
   extends: .pages
   except:
     - master
 
+###
+### FAIL WITH WARNING IF CODE DOES NOT MATCH DESIRED FORMAT.
+### This only runs for merge requests.
+###
 black:
   stage: verify
   allow_failure: true
@@ -93,6 +137,40 @@ black:
   before_script:
     - pip install tox 
   script:
-    - tox -e formatcheck
+    - tox -e black-check
   except:
     - master
+
+###
+### RUN STATIC APPLICATION SECURITY TESTING.
+###
+bandit:
+  stage: verify
+  allow_failure: false
+  image: python:3-alpine
+  before_script:
+    - pip install tox
+  script:
+    - bandit --ini=tox.ini -f html -o public/bandit.html -r || true
+    - tox -e bandit
+  artifacts:
+    paths:
+      - public
+
+###
+### VERIFY THAT SETUP.PY IS VALID.
+setup.py:
+  stage: verify
+  allow_failure: false
+  image: python:3-alpine
+  variables:
+    GIT_STRATEGY: none
+    PACKAGE_SLUG: git+${CI_PROJECT_URL}.git@${CI_COMMIT_REF_NAME}
+  before_script:
+    - apk add git gcc make
+    - pip install -U pip
+    - python -V
+    - echo "Testing setup.py for ${PACKAGE_SLUG}"
+  script:
+    - pip install -U ${PACKAGE_SLUG}
+    - python -c "import hikari; print(hikari.__version__)"

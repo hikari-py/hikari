@@ -2,6 +2,34 @@
 @import url('https://fonts.googleapis.com/css?family=Permanent+Marker');
 @import url('https://cdn.jsdelivr.net/gh/tonsky/FiraCode@1.206/distr/fira_code.css');
 
+/*
+ * Make body fill the viewport always
+ */
+body {
+    position: relative;
+    min-height: 100vh;
+    height: 100%;
+}
+
+/*
+ * Make the footer sticky to the bottom of the body.
+ */
+div.container-fluid.navbar-inverse.navbar-expand-lg, .navbar {
+    min-height: auto;
+    position: sticky;
+    box-sizing: border-box;
+    width: 100%;
+    z-index: 9999999999999;
+}
+
+div.container-fluid.navbar-inverse.navbar-expand-lg {
+    bottom: 0;
+}
+
+.navbar {
+    top: 0;
+}
+
 .nav a {
     font-weight: bold;
 }
