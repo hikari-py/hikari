@@ -5,12 +5,11 @@ import collections
 import datetime
 import email
 import platform
-import time
-
-from hikari.compat import typing
 
 #: Generic type variable describing "something or other". No one knows for sure what that something is. Perhaps no one
 #: even cares...
+from hikari.compat import typing
+
 AnyT = typing.TypeVar("AnyT")
 
 
@@ -125,3 +124,13 @@ def python_version() -> str:
 #: module does not enforce concrete models for values sent and received, mappings are passed around to represent request
 #: and response data. This allows an implementation to use this layer as desired.
 RequestBody = typing.Dict[str, typing.Any]
+
+
+#: The signature of an event dispatcher function. Consumes two arguments. The first is an event name from the gateway,
+#: the second is the payload which is assumed to always be a :class:`dict` with :class:`str` keys. This should be
+#: a coroutine function; if it is not, it should be expected to be promoted to a coroutine function internally.
+#:
+#: Example:
+#:     >>> async def on_dispatch(event: str, payload: Dict[str, Any]) -> None:
+#:     ...     logger.info("Dispatching %s with payload %r", event, payload)
+DispatchHandler = typing.Callable[[str, typing.Dict[str, typing.Any]], typing.Union[None, typing.Awaitable[None]]]

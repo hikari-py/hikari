@@ -3,7 +3,6 @@
 """
 Rate-limiting adherence logic.
 """
-import abc
 import collections
 import time
 
@@ -36,14 +35,19 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
         self._queue: typing.Deque[asyncio.Future] = collections.deque()
         self.loop = loop
 
-    async def acquire(self) -> None:
+    async def acquire(self, on_rate_limit: typing.Callable[[], None] = None) -> None:
         """
         Acquire a slice of time in this bucket. This may return immediately, or it may wait for a slot to become
         available.
+
+        Args:
+            on_rate_limit:
+                Optional callback to invoke if we are being rate-limited.
         """
         future = self._enqueue()
         try:
-            self._maybe_awaken_and_reset(future)
+            if not self._maybe_awaken_and_reset(future) and on_rate_limit is not None:
+                on_rate_limit()
             await future
         finally:
             future.cancel()
@@ -68,8 +72,13 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
             self._remaining -= 1
             next_future.set_result(None)
 
-    def _maybe_awaken_and_reset(self, this_future: asyncio.Future):
-        """Potentially reset the rate-limits and awaken waiting futures, and reschedule this call if needed later."""
+    def _maybe_awaken_and_reset(self, this_future: asyncio.Future) -> bool:
+        """
+        Potentially reset the rate-limits and awaken waiting futures, and reschedule this call if needed later.
+
+        Returns:
+            True if this future can run immediately, or False if it is rate limited.
+        """
         self._reassess()
 
         # We can't really use call_at here, since that assumes perf_counter and loop.time produce the same
@@ -79,6 +88,9 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
             now = time.perf_counter()
             delay = max(0.0, self._reset_at - now)
             self.loop.call_later(delay, self._maybe_awaken_and_reset, this_future)
+            return False
+        else:
+            return True
 
     async def __aenter__(self):
         await self.acquire()
@@ -112,19 +124,25 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
         real_now = time.perf_counter()
         self._last_reset_at = real_now
         self._reset_at = (reset_at - now) + real_now
+        self._per = reset_at - now
         # We repeatedly push to the rear and pop from the front, and iterate. We don't need random access, and O(k)
         # pushes and shifts are more desirable given this is a doubly linked list underneath.
         self._queue: typing.Deque[asyncio.Future] = collections.deque()
         self.loop = loop
 
-    async def acquire(self) -> None:
+    async def acquire(self, on_rate_limit: typing.Callable[[], None] = None) -> None:
         """
         Acquire a slice of time in this bucket. This may return immediately, or it may wait for a slot to become
         available.
+
+        Args:
+            on_rate_limit:
+                Optional callback to invoke if we are being rate-limited.
         """
         future = self._enqueue()
         try:
-            self._maybe_awaken_and_reset(future)
+            if not self._maybe_awaken_and_reset(future) and on_rate_limit is not None:
+                on_rate_limit()
             await future
         finally:
             future.cancel()
@@ -141,19 +159,21 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
         if self._reset_at < now:
             # Reset the time-slice.
             now = time.perf_counter()
-            self.update(self._total, self._total, now, self._reset_at - self._last_reset_at)
+            self.update(self._total, self._total, now, self._per, is_nested_call=True)
 
         while self._remaining > 0 and self._queue:
             # Wake up some older tasks while/if we can.
             next_future = self._queue.popleft()
+            self._remaining -= 1
+            next_future.set_result(None)
 
-            if not next_future.done():
-                self._remaining -= 1
-                next_future.set_result(None)
-                self._queue.append(next_future)
+    def _maybe_awaken_and_reset(self, this_future: asyncio.Future) -> bool:
+        """
+        Potentially reset the rate-limits and awaken waiting futures, and reschedule this call if needed later.
 
-    def _maybe_awaken_and_reset(self, this_future: asyncio.Future):
-        """Potentially reset the rate-limits and awaken waiting futures, and reschedule this call if needed later."""
+        Returns:
+            True if this future can run immediately, or False if it is rate limited.
+        """
         self._reassess()
 
         # We can't really use call_at here, since that assumes perf_counter and loop.time produce the same
@@ -163,8 +183,11 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
             now = time.perf_counter()
             delay = max(0.0, self._reset_at - now)
             self.loop.call_later(delay, self._maybe_awaken_and_reset, this_future)
+            return False
+        else:
+            return True
 
-    def update(self, total: int, remaining: int, now: float, reset_at: float):
+    def update(self, total: int, remaining: int, now: float, reset_at: float, is_nested_call: bool = False):
         """
         Reset the limit data.
 
@@ -177,6 +200,8 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
                 The current :func:`time.perf_counter` value.
             reset_at:
                 The time to reset the limit again.
+            is_nested_call:
+                Should always be false, this is only set to `True` internally.
         """
         should_reassess = remaining > self._remaining
 
@@ -186,7 +211,7 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
         self._reset_at = (reset_at - now) + real_now
         self._last_reset_at = real_now
 
-        if should_reassess:
+        if should_reassess and not is_nested_call:
             self._reassess()
 
     async def __aenter__(self):

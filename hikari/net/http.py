@@ -9,7 +9,9 @@ import time
 import aiohttp
 
 from hikari.compat import asyncio
+from hikari.compat import contextlib
 from hikari.compat import typing
+from hikari.net import opcodes
 from hikari.net import rates
 
 #: Format string for the default Discord API URL.
@@ -60,13 +62,12 @@ class HTTP:
         base_uri: str = DISCORD_API_URI_FORMAT.format(VERSION=VERSION),
         **aiohttp_arguments,
     ) -> None:
-        self._buckets: typing.Dict[str, rates.VariableTokenBucket] = {}
-        self._base_uri = base_uri
+        self.buckets: typing.Dict[str, rates.VariableTokenBucket] = {}
+        self.base_uri = base_uri
         # Identifies each request made for logging purposes.
-        self._correlation_id = 0
-        self._logger = logging.getLogger(type(self).__name__)
-        self._session = aiohttp.ClientSession(loop=loop, **aiohttp_arguments)
-        self._token = "Bot " + token
+        self.session = aiohttp.ClientSession(loop=loop, **aiohttp_arguments)
+        self.token = "Bot " + token
+        self.logger = logging.getLogger(type(self).__name__)
 
         #: The asyncio event loop to run on.
         self.loop = loop
@@ -88,19 +89,40 @@ class HTTP:
         json_body: dict = None,
         **kwargs,
     ) -> None:
+        """
+
+        Args:
+            method:
+                the HTTP method to use.
+            path_format:
+                the HTTP path to use, as a python format string.
+            headers:
+                any additional headers to use.
+            params:
+                an optional dict of parameters to interpolate into the `path_format`.
+            json_body:
+                an optional JSON body to send.
+            **kwargs:
+                any additional arguments to pass to `aiohttp.request`.
+
+        Returns:
+            The response.
+
+        """
         headers = headers if headers is None else {}
         params = params if isinstance(params, dict) else {}
         method = method.upper()
-        uri = self._base_uri + path_format.format(**params)
+        uri = self.base_uri + path_format.format(**params)
         bucket_id = self._get_bucket_id(method, path_format, **params)
 
-        if bucket_id not in self._buckets:
+        if bucket_id not in self.buckets:
             # For now, we don't know what our first limit is, so make an estimate and update it once we have more info.
             # 10 seems like a good number to me. If we get 429'ed then we can amend ourselves then...
-            self._buckets[bucket_id] = rates.VariableTokenBucket(10, 10, time.perf_counter() + 10, self.loop)
+            now = time.perf_counter()
+            self.buckets[bucket_id] = rates.VariableTokenBucket(10, 10, now, now + 10, self.loop)
 
-        bucket = self._buckets[bucket_id]
+        bucket = self.buckets[bucket_id]
 
-        async with bucket:
-            async with self._session.request(method, uri, headers=headers, json=json_body, **kwargs) as resp:
-                resp_headers = resp.headers
+        await bucket.acquire()
+        async with self.session.request(method, uri, headers=headers, json=json_body, **kwargs) as resp:
+            pass

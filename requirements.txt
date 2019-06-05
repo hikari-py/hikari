@@ -1,5 +1,7 @@
+async_timeout
 # Main requirements...
 aiohttp
+dataclasses  # py36 only
 websockets
 
 # CI

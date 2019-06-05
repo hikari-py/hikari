@@ -128,8 +128,8 @@ bandit:
   before_script:
     - pip install tox
   script:
-    - bandit --ini=tox.ini -f html -o public/bandit.html -r || true
-    - tox -e bandit
+    - tox -e bandit || true
+    - tox -e bandit-report
   artifacts:
     paths:
       - public
