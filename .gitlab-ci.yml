@@ -1,6 +1,5 @@
 stages:
   - test
-  - cover
   - verify
   - pages
 
@@ -66,28 +65,6 @@ pypy3:
     - apt-get install git -y
     - pip install tox
     - tox -avv
-
-###
-### PRODUCE SEVERAL INFORMATIVE REPORTS REGARDING TEST COVERAGE
-###
-aggregate-coverage:
-  allow_failure: true
-  dependencies:
-    - pypy3
-    - py36
-    - py37
-    - py38
-  stage: cover
-  image: python:3-alpine
-  before_script:
-    - apk add git
-    - pip install tox
-    - tox -avv
-  script:
-    - tox -e report
-  artifacts:
-    paths:
-      - public
 
 ###
 ### TEMPLATE FOR TEST AND PROD DOCUMENTATION GENERATION JOBS.
@@ -159,6 +136,7 @@ bandit:
 
 ###
 ### VERIFY THAT SETUP.PY IS VALID.
+###
 setup.py:
   stage: verify
   allow_failure: false
@@ -174,3 +152,25 @@ setup.py:
   script:
     - pip install -U ${PACKAGE_SLUG}
     - python -c "import hikari; print(hikari.__version__)"
+
+###
+### PRODUCE SEVERAL INFORMATIVE REPORTS REGARDING TEST COVERAGE
+###
+aggregate-coverage:
+  allow_failure: true
+  stage: verify
+  dependencies:
+    - pypy3
+    - py36
+    - py37
+    - py38
+  image: python:3-alpine
+  before_script:
+    - apk add git
+    - pip install tox
+    - tox -avv
+  script:
+    - tox -e report
+  artifacts:
+    paths:
+      - public
