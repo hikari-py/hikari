@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import http
 import logging
 import traceback
 
@@ -16,12 +17,12 @@ _LOGGER = logging.getLogger(__name__)
     "ex",
     [
         errors.DiscordGatewayError(opcodes.GatewayServerExit(4003), "broken"),
-        errors.DiscordGatewayError(opcodes.GatewayServerExit.SHARDING_REQUIRED, "Shard plez"),
-        errors.DiscordUnauthorized("you cant do that u are not allowed"),
-        errors.DiscordForbidden("idfk where it is fam"),
-        errors.DiscordBadRequest("fix yo code fam"),
-        errors.DiscordHTTPError(404, "Not found innit"),
-        errors.DiscordHTTPError(None, "Something unspecified occurred"),
+        errors.DiscordGatewayError(opcodes.GatewayServerExit.SHARDING_REQUIRED, "Shard me"),
+        errors.DiscordUnauthorized(http.HTTPStatus.UNAUTHORIZED, opcodes.JSONErrorCode.UNAUTHORIZED, "Bad token"),
+        errors.DiscordForbidden(http.HTTPStatus.FORBIDDEN, opcodes.JSONErrorCode.MISSING_PERMISSIONS, "Forbidden"),
+        errors.DiscordBadRequest(http.HTTPStatus.BAD_REQUEST, opcodes.JSONErrorCode.INVALID_FORM_BODY, "Bad form body"),
+        errors.DiscordHTTPError(http.HTTPStatus.NOT_FOUND, opcodes.JSONErrorCode.UNKNOWN_CHANNEL, "Channel not found"),
+        errors.DiscordHTTPError(http.HTTPStatus.BAD_REQUEST, opcodes.JSONErrorCode.INVALID_FORM_BODY, "Bad form body"),
         errors.HikariError("eee"),
         errors.ClientError("aaa"),
     ],

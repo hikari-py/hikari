@@ -87,12 +87,35 @@ async def test_send_json_calls_websocket(event_loop):
 
     # pretend to sleep only
     with asynctest.patch("asyncio.sleep", new=asyncio.coroutine(lambda _: None)):
-        await gw._send_json({})
+        await gw._send_json({}, False)
 
     gw.ws.send.assert_awaited_once_with("{}")
 
-    # Ensure we didn't get ratelimited on a single call.
-    gw._logger.debug.assert_not_called()
+
+@_helpers.mark_asyncio_with_timeout()
+async def test_ratelimiting_on_send(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+    gw._warn_about_internal_rate_limit = asynctest.MagicMock(wraps=gw._warn_about_internal_rate_limit)
+    gw.rate_limit._per = 1.5
+    gw.rate_limit._reset_at = time.perf_counter() + 1.5
+
+    for i in range(121):
+        await gw._send_json({}, False)
+
+    gw._warn_about_internal_rate_limit.assert_called()
+
+
+@_helpers.mark_asyncio_with_timeout()
+async def test_ratelimiting_on_send_can_be_overridden(event_loop):
+    gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+    gw._warn_about_internal_rate_limit = asynctest.MagicMock(wraps=gw._warn_about_internal_rate_limit)
+    gw.rate_limit._per = 3
+    gw.rate_limit._reset_at = time.perf_counter() + 3
+
+    for i in range(121):
+        await gw._send_json({}, True)
+
+    gw._warn_about_internal_rate_limit.assert_not_called()
 
 
 @_helpers.mark_asyncio_with_timeout()
@@ -100,7 +123,7 @@ async def test_send_json_wont_send_massive_payloads(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
     gw._handle_payload_oversize = asynctest.MagicMock(wraps=gw._handle_payload_oversize)
     pl = {"d": {"lolololilolo": "lol" * 4096}, "op": "1", "blah": 2}
-    await gw._send_json(pl)
+    await gw._send_json(pl, False)
     gw._handle_payload_oversize.assert_called_once_with(pl)
 
 
@@ -194,7 +217,7 @@ async def test_massive_zlib_payloads_cause_buffer_replacement(event_loop):
 @_helpers.mark_asyncio_with_timeout()
 async def test_heartbeat_beats_at_interval(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-    gw._heartbeat_interval = 0.01
+    gw.heartbeat_interval = 0.01
 
     task = asyncio.create_task(gw._keep_alive())
     try:
@@ -207,7 +230,7 @@ async def test_heartbeat_beats_at_interval(event_loop):
 @_helpers.mark_asyncio_with_timeout()
 async def test_heartbeat_shuts_down_when_closure_request(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-    gw._heartbeat_interval = 0.01
+    gw.heartbeat_interval = 0.01
 
     with async_timeout.timeout(5):
         task = asyncio.create_task(gw._keep_alive())
@@ -221,8 +244,8 @@ async def test_heartbeat_shuts_down_when_closure_request(event_loop):
 @_helpers.mark_asyncio_with_timeout()
 async def test_heartbeat_if_not_acknowledged_in_time_closes_connection_with_resume(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-    gw._last_heartbeat_sent = -float("inf")
-    gw._heartbeat_interval = 0
+    gw.last_heartbeat_sent = -float("inf")
+    gw.heartbeat_interval = 0
 
     task = asyncio.create_task(gw._keep_alive())
 
@@ -236,16 +259,16 @@ async def test_heartbeat_if_not_acknowledged_in_time_closes_connection_with_resu
 @_helpers.mark_asyncio_with_timeout()
 async def test_slow_loop_produces_warning(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-    gw._heartbeat_interval = 0
+    gw.heartbeat_interval = 0
     gw.heartbeat_latency = 0
-    gw._logger = asynctest.MagicMock()
+    gw._handle_slow_client = asynctest.MagicMock(wraps=gw._handle_slow_client)
     task = asyncio.create_task(gw._keep_alive())
 
     with async_timeout.timeout(1):
         await asyncio.sleep(0.1)
 
     task.cancel()
-    gw._logger.warning.assert_called_once()
+    gw._handle_slow_client.assert_called_once()
 
 
 @_helpers.mark_asyncio_with_timeout()
@@ -253,7 +276,7 @@ async def test_send_heartbeat(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
     gw._send_json = asynctest.CoroutineMock()
     await gw._send_heartbeat()
-    gw._send_json.assert_called_with({"op": 1, "d": None})
+    gw._send_json.assert_called_with({"op": 1, "d": None}, True)
 
 
 @_helpers.mark_asyncio_with_timeout()
@@ -261,13 +284,13 @@ async def test_send_ack(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
     gw._send_json = asynctest.CoroutineMock()
     await gw._send_ack()
-    gw._send_json.assert_called_with({"op": 11})
+    gw._send_json.assert_called_with({"op": 11}, True)
 
 
 @_helpers.mark_asyncio_with_timeout()
 async def test_handle_ack(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-    gw._last_heartbeat_sent = 0
+    gw.last_heartbeat_sent = 0
     await gw._handle_ack()
     assert not math.isnan(gw.heartbeat_latency) and not math.isinf(gw.heartbeat_latency)
 
@@ -278,10 +301,10 @@ async def test_recv_hello_when_is_hello(event_loop):
     gw._receive_json = asynctest.CoroutineMock(
         return_value={"op": 10, "d": {"heartbeat_interval": 12345, "_trace": ["foo"]}}
     )
-    await gw._recv_hello()
+    await gw._receive_hello()
 
     assert gw.trace == ["foo"]
-    assert gw._heartbeat_interval == 12.345
+    assert gw.heartbeat_interval == 12.345
 
 
 @_helpers.mark_asyncio_with_timeout()
@@ -292,18 +315,18 @@ async def test_recv_hello_when_is_not_hello_causes_resume(event_loop):
     )
 
     gw._trigger_resume = asynctest.CoroutineMock()
-    await gw._recv_hello()
+    await gw._receive_hello()
     gw._trigger_resume.assert_awaited()
 
 
 @_helpers.mark_asyncio_with_timeout()
 async def test_send_resume(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-    gw._session_id = 1234321
-    gw._seq = 69_420
+    gw.session_id = 1234321
+    gw.seq = 69_420
     gw._send_json = asynctest.CoroutineMock()
     await gw._send_resume()
-    gw._send_json.assert_called_with({"op": 6, "d": {"token": "1234", "session_id": 1234321, "seq": 69_420}})
+    gw._send_json.assert_called_with({"op": 6, "d": {"token": "1234", "session_id": 1234321, "seq": 69_420}}, False)
 
 
 @_helpers.mark_asyncio_with_timeout()
@@ -316,8 +339,8 @@ async def test_send_identify_when_not_redacted_default_behaviour(event_loop):
         large_threshold=69,
         incognito=False,
     )
-    gw._session_id = 1234321
-    gw._seq = 69_420
+    gw.session_id = 1234321
+    gw.seq = 69_420
     gw._send_json = asynctest.CoroutineMock()
 
     with asynctest.patch("hikari.net.utils.python_version", new=lambda: "python3"), asynctest.patch(
@@ -333,7 +356,8 @@ async def test_send_identify_when_not_redacted_default_behaviour(event_loop):
                     "large_threshold": 69,
                     "properties": {"$os": "leenuks", "$browser": "vx.y.z", "$device": "python3"},
                 },
-            }
+            },
+            False,
         )
 
 
@@ -347,8 +371,8 @@ async def test_send_identify_when_redacted(event_loop):
         large_threshold=69,
         incognito=True,
     )
-    gw._session_id = 1234321
-    gw._seq = 69_420
+    gw.session_id = 1234321
+    gw.seq = 69_420
     gw._send_json = asynctest.CoroutineMock()
 
     with asynctest.patch("hikari.net.utils.python_version", new=lambda: "python3"), asynctest.patch(
@@ -364,7 +388,8 @@ async def test_send_identify_when_redacted(event_loop):
                     "large_threshold": 69,
                     "properties": {"$os": "os", "$browser": "browser", "$device": "device"},
                 },
-            }
+            },
+            False,
         )
 
 
@@ -441,7 +466,7 @@ async def test_process_one_event_updates_seq_if_provided_from_payload(event_loop
     )
     gw._receive_json = asynctest.CoroutineMock(return_value={"op": 0, "d": {}, "s": 69})
     await gw._process_one_event()
-    assert gw._seq == 69
+    assert gw.seq == 69
 
 
 @_helpers.mark_asyncio_with_timeout()
@@ -456,10 +481,10 @@ async def test_process_events_does_not_update_seq_if_not_provided_from_payload(e
         incognito=False,
     )
 
-    gw._seq = 123
+    gw.seq = 123
     gw._receive_json = asynctest.CoroutineMock(return_value={"op": 0, "d": {}})
     await gw._process_one_event()
-    assert gw._seq == 123
+    assert gw.seq == 123
 
 
 @_helpers.mark_asyncio_with_timeout()
@@ -633,7 +658,7 @@ async def test_request_guild_members(event_loop):
     )
     gw._send_json = asynctest.CoroutineMock()
     await gw.request_guild_members(1234)
-    gw._send_json.assert_called_with({"op": 8, "d": {"guild_id": "1234", "query": "", "limit": 0}})
+    gw._send_json.assert_called_with({"op": 8, "d": {"guild_id": "1234", "query": "", "limit": 0}}, False)
 
 
 @_helpers.mark_asyncio_with_timeout()
@@ -650,7 +675,7 @@ async def test_update_status(event_loop):
     gw._send_json = asynctest.CoroutineMock()
     await gw.update_status(1234, {"name": "boom"}, "dead", True)
     gw._send_json.assert_called_with(
-        {"op": 3, "d": {"idle": 1234, "game": {"name": "boom"}, "status": "dead", "afk": True}}
+        {"op": 3, "d": {"idle": 1234, "game": {"name": "boom"}, "status": "dead", "afk": True}}, False
     )
 
 
@@ -668,7 +693,7 @@ async def test_update_voice_state(event_loop):
     gw._send_json = asynctest.CoroutineMock()
     await gw.update_voice_state(1234, 5678, False, True)
     gw._send_json.assert_called_with(
-        {"op": 4, "d": {"guild_id": "1234", "channel_id": "5678", "self_mute": False, "self_deaf": True}}
+        {"op": 4, "d": {"guild_id": "1234", "channel_id": "5678", "self_mute": False, "self_deaf": True}}, False
     )
 
 
@@ -937,7 +962,7 @@ def mock_run_once_parts(timeout=10):
                 large_threshold=69,
                 incognito=False,
             )
-            gw._recv_hello = asynctest.CoroutineMock()
+            gw._receive_hello = asynctest.CoroutineMock()
             gw._send_resume = asynctest.CoroutineMock()
             gw._send_identify = asynctest.CoroutineMock()
             gw._keep_alive = asynctest.CoroutineMock()
@@ -960,7 +985,7 @@ async def test_run_once_opens_connection(_, gw):
 @mock_run_once_parts()
 async def test_run_once_waits_for_hello(_, gw):
     await gw.run_once()
-    gw._recv_hello.assert_awaited_once()
+    gw._receive_hello.assert_awaited_once()
 
 
 @mock_run_once_parts()
@@ -972,8 +997,8 @@ async def test_run_once_identifies_normally(_, gw):
 
 @mock_run_once_parts()
 async def test_run_once_resumes_when_seq_and_session_id_set(_, gw):
-    gw._seq = 59
-    gw._session_id = 1234
+    gw.seq = 59
+    gw.session_id = 1234
     await gw.run_once()
     gw._send_resume.assert_awaited_once()
     gw._send_identify.assert_not_awaited()
@@ -1021,12 +1046,12 @@ async def test_run_once_RestartConnection(_, gw):
         side_effect=gateway.RestartConnection(hikari.net.opcodes.GatewayServerExit.INVALID_SEQ, "some lazy message")
     )
     start = 1, 2, ["foo"]
-    gw._seq, gw._session_id, gw.trace = start
+    gw.seq, gw.session_id, gw.trace = start
     # Speed up the test by mocking asyncio.sleep
     await gw.run_once()
 
-    assert gw._seq is None, "seq was not reset"
-    assert gw._session_id is None, "session_id was not reset"
+    assert gw.seq is None, "seq was not reset"
+    assert gw.session_id is None, "session_id was not reset"
     assert gw.trace == [], "trace was not cleared"
 
 
@@ -1070,6 +1095,6 @@ async def test_up_time_when_running(event_loop):
         incognito=False,
     )
 
-    gw._started_at = time.monotonic() - 15
+    gw.started_at = time.monotonic() - 15
 
     assert gw.up_time.total_seconds() > 15

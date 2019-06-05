@@ -122,9 +122,9 @@ autoclass_content = "both"
 
 # -- Intersphinx options -----------------------------------------------------
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
-    'aiohttp': ('https://aiohttp.readthedocs.io/en/stable/', None),
-    'websockets': ('https://websockets.readthedocs.io/en/stable/', None)
+    "python": ("https://docs.python.org/3", None),
+    "aiohttp": ("https://aiohttp.readthedocs.io/en/stable/", None),
+    "websockets": ("https://websockets.readthedocs.io/en/stable/", None),
 }
 
 
