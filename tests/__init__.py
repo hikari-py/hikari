@@ -10,4 +10,4 @@ except (AssertionError, AttributeError):
     asyncio.create_task = lambda coro, **_: asyncio.get_event_loop().create_task(coro)
 
 
-logging.basicConfig(level='DEBUG')
+logging.basicConfig(level="DEBUG")

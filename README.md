@@ -14,14 +14,11 @@ to do. This will run all tasks except the reformatter, repeating for every Pytho
 
 ### Running jobs separately
 
-| Command                           | Description                                                                      |
-|:----------------------------------|:---------------------------------------------------------------------------------|
-| `tox`                             | Run all jobs.                                                                    |
-| `tox -e py`                       | Run unit tests for the default system Python (use py37 or py38 for specificity). |
-| `tox -e docs`                     | Generate documentation in `/public/html` and `/public/latex`                     |
-| `tox -e sast`                     | Run static application security tests.                                           |
-| `tox -e formatcheck`              | Ensure code is formatted correctly, or error.                                    |
-| `tox -e reformat`                 | Reformat all source files, tests, and Python configurations.                     |                                                     
+Run `tox -lv` to see the jobs that can be run.                                               
+
+> Tox is failing regarding some file with an arbitrary name not existing!
+
+Make sure a directory called `public` exists and try again.
 
 ### Pytest without tox
 

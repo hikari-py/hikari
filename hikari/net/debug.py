@@ -18,6 +18,8 @@ import aiohttp
 class DataCenter:
     """Represents a data center. These are represented by an IATA airport code."""
 
+    __slots__ = ("iata_code", "location", "airport", "country")
+
     #: Airport code
     iata_code: str
     #: Data center location
@@ -31,6 +33,8 @@ class DataCenter:
 @dataclass(frozen=True)
 class DebugData:
     """The response provided from Discord's CGI trace."""
+
+    __slots__ = ("fl", "ip", "ts", "h", "visit_scheme", "uag", "colo", "http", "loc", "tls", "sni", "warp")
 
     #: Unknown, possibly some form of correlation ID.
     fl: str

@@ -21,10 +21,11 @@ def purge_loop():
         item.cancel()
     loop._scheduled.clear()
     loop._ready.clear()
+    loop.close()
 
 
-def non_zombified_async_test(timeout=10):
-    """Marks a test as an asyncio pytest, but also fails the test if it runs for more than the given timeout."""
+def mark_asyncio_with_timeout(timeout=10):
+    """Marks a test as an asyncio py-test, but also fails the test if it runs for more than the given timeout."""
 
     def decorator(coro):
         @functools.wraps(coro)
@@ -35,3 +36,13 @@ def non_zombified_async_test(timeout=10):
         return pytest.mark.asyncio(wrapper)
 
     return decorator
+
+
+mark_asyncio = pytest.mark.asyncio
+
+
+def mark_only_if_slow_testing(item):
+    return pytest.mark.skipif(
+        '__import__("os").getenv("RUN_SLOW_TESTS", "false") == "false"',
+        reason="Slow tests are skipped. Set RUN_SLOW_TESTS to 'true' to enable this",
+    )(item)
