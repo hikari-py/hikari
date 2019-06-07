@@ -14,7 +14,7 @@ import asynctest
 import hikari.net.opcodes
 from hikari import errors
 from hikari.net import gateway
-from tests import _helpers
+from hikari_tests import _helpers
 
 
 def teardown_function():
