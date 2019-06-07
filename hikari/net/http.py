@@ -5,6 +5,7 @@ Implementation of the V7 HTTP REST API with rate-limiting.
 """
 import http
 import logging
+import string
 
 import aiohttp
 
@@ -34,6 +35,7 @@ class HTTPLogger(logging.LoggerAdapter):
         return f"{extra}{msg}", kwargs
 
 
+# Headers for rate limiting
 _DATE = "Date"
 _X_RATELIMIT_GLOBAL = "X-RateLimit-Global"
 _X_RATELIMIT_LIMIT = "X-RateLimit-Limit"
@@ -42,7 +44,11 @@ _X_RATELIMIT_RESET = "X-RateLimit-Reset"
 _X_RATELIMIT_LOCALS = [_X_RATELIMIT_LIMIT, _X_RATELIMIT_REMAINING, _X_RATELIMIT_RESET, _DATE]
 
 
-class HTTP:
+# Used as a return type if we got rate limited and interrupted.
+_RATE_LIMITED_SENTINEL = object()
+
+
+class HTTPConnection:
     """
     Args:
         loop:
@@ -63,10 +69,11 @@ class HTTP:
     """
 
     VERSION = 7
+
     # Number of times to wait for a rate limit and then try again before giving up. This should never happen unless
     # the user is doing something mad enough to cause rate limits to immediately occur again after finishing
     # repeatedly.
-    _RATELIMIT_RETRIES = 5
+    RATELIMIT_RETRIES = 5
 
     def __init__(
         self,
@@ -80,7 +87,7 @@ class HTTP:
         # Used for internal bookkeeping
         self._correlation_id = 0
         self.allow_redirects = allow_redirects
-        self.buckets: typing.Dict[str, rates.VariableTokenBucket] = {}
+        self.buckets: typing.Dict[typing.Any, rates.VariableTokenBucket] = {}
         self.base_uri = base_uri
         self.global_rate_limit = rates.TimedLatchBucket(loop=loop)
         self.session = aiohttp.ClientSession(loop=loop, **aiohttp_arguments)
@@ -91,12 +98,15 @@ class HTTP:
         #: The asyncio event loop to run on.
         self.loop = loop
 
+    async def close(self):
+        """
+        Close the HTTP connection.
+        """
+        await self.session.close()
+
     @staticmethod
-    def _get_bucket_id(
-        method: str, path: str, *, channel_id: int = None, guild_id: int = None, webhook_id: int = None, **_
-    ):
-        path = path.format(channel_id=channel_id, guild_id=guild_id, webhook_id=webhook_id)
-        return f"{method}:{path}"
+    def _get_bucket_key(method: str, path: str, **kwargs):
+        return method, path, kwargs.get('channel_id'), kwargs.get('guild_id'), kwargs.get('webhook_id')
 
     async def _request(
         self,
@@ -107,7 +117,7 @@ class HTTP:
         params: dict = None,
         json_body: dict = None,
         **kwargs,
-    ) -> None:
+    ):
         """
 
         Args:
@@ -131,7 +141,6 @@ class HTTP:
             :class:`errors.DiscordHTTPError`:
                 if the response retries too many times (e.g. after repeated rate-limits. This is very unlikely to ever
                 occur directly.
-
         """
         kwargs.setdefault("allow_redirects", self.allow_redirects)
 
@@ -139,43 +148,44 @@ class HTTP:
         params = params if isinstance(params, dict) else {}
         method = method.upper()
         uri = self.base_uri + path_format.format(**params)
-        bucket_id = self._get_bucket_id(method, path_format, **params)
+        bucket_id = self._get_bucket_key(method, path_format, **params)
 
-        for i in range(self._RATELIMIT_RETRIES):
-            # Wait on the global bucket
-            await self.global_rate_limit.acquire(self._log_rate_limit_already_in_progress, bucket_id=None)
-
-            if bucket_id in self.buckets:
-                await self.buckets[bucket_id].acquire(self._log_rate_limit_already_in_progress, bucket_id=bucket_id)
-
-            action = f"retrying {i + 1}/{self._RATELIMIT_RETRIES} " if i else ""
-            self._correlation_id += 1
-            self.logger.debug("%s%s %s", action, method, uri)
-
-            async with self.session.request(method, uri, headers=headers, json=json_body, **kwargs) as resp:
-                self.logger.debug(
-                    "%s responded with %s %s containing %s (%s bytes)",
-                    resp.status,
-                    resp.reason,
-                    resp.content_type,
-                    resp.content_length,
-                )
-
-                headers = resp.headers
-
-                if resp.content_type != "application/json":
-                    body = await resp.read()
-                    raise NotImplementedError(
-                        f"Responding to {resp.content_type} is not implemented. Status was {resp.status}, "
-                        f"body was {body}"
-                    )
-                else:
-                    body = await resp.json()
-
-                if not self._handle_rate_limiting(bucket_id, resp.status, headers, body):
-                    break
+        for retry in range(self.RATELIMIT_RETRIES):
+            result = await self._request_once(retry, bucket_id, uri, method, params, headers, json_body, **kwargs)
+            if result is not _RATE_LIMITED_SENTINEL:
+                break
         else:
             raise errors.DiscordHTTPError("the request failed too many times and thus was discarded. Try again later.")
+
+        return result
+
+    async def _request_once(self, retry, bucket_id, uri, method, params, headers, json_body, **kwargs):
+        # Wait on the global bucket
+        await self.global_rate_limit.acquire(self._log_rate_limit_already_in_progress, bucket_id=None)
+
+        if bucket_id in self.buckets:
+            await self.buckets[bucket_id].acquire(self._log_rate_limit_already_in_progress, bucket_id=bucket_id)
+
+        self._correlation_id += 1
+        self.logger.debug("%s %s", method, uri, extra={'try': f'{retry + 1}/{self.RATELIMIT_RETRIES}'})
+
+        async with self.session.request(method, uri, headers=headers, json=json_body, **kwargs) as resp:
+            self.logger.debug(
+                "%s responded with %s %s containing %s (%s bytes)",
+                resp.status,
+                resp.reason,
+                resp.content_type,
+                resp.content_length,
+            )
+
+            headers = resp.headers
+
+            # Expect JSON for now...
+            body = await resp.json()
+
+        # Do this pre-emptively before anything else can fail.
+        if self._handle_rate_limiting(bucket_id, resp.status, headers, body):
+            return _RATE_LIMITED_SENTINEL
 
     def _log_rate_limit_already_in_progress(self, bucket_id):
         if bucket_id is None:

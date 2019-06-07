@@ -8,14 +8,14 @@ import asynctest
 import pytest
 
 from hikari.net import rates
-from tests import _helpers
+from hikari_tests import _helpers
 
 
 # Easier to test this on the underlying implementation than mock a bunch of stuff, and this ensures the correct
 # behaviour anyway.
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_TimedTokenBucket_acquire(event_loop):
+async def test_TimedTokenBucket_acquire_should_decrease_remaining_count_by_1(event_loop):
     b = rates.TimedTokenBucket(10, 0.25, event_loop)
     b.ENQUEUE_FUTURE_IS_ALREADY_COMPLETED = True
     await b.acquire()
@@ -24,7 +24,7 @@ async def test_TimedTokenBucket_acquire(event_loop):
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_VariableTokenBucket_acquire(event_loop):
+async def test_VariableTokenBucket_acquire_should_decrease_remaining_count_by_1(event_loop):
     b = rates.VariableTokenBucket(10, 10, 35, 36, event_loop)
     b.ENQUEUE_FUTURE_IS_ALREADY_COMPLETED = True
     await b.acquire()
@@ -33,7 +33,7 @@ async def test_VariableTokenBucket_acquire(event_loop):
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_TimedTokenBucket_acquire_with_callback(event_loop):
+async def test_TimedTokenBucket_acquire_when_not_rate_limited_with_callback_does_not_call_it(event_loop):
     b = rates.TimedTokenBucket(10, 0.25, event_loop)
     callback = asynctest.MagicMock()
     await b.acquire(callback)
@@ -43,7 +43,7 @@ async def test_TimedTokenBucket_acquire_with_callback(event_loop):
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_VariableTokenBucket_acquire_with_callback(event_loop):
+async def test_VariableTokenBucket_acquire_when_not_rate_limited_with_callback_does_not_call_it(event_loop):
     now = time.perf_counter()
     b = rates.VariableTokenBucket(10, 10, now, now + 3, event_loop)
     callback = asynctest.MagicMock()
@@ -54,7 +54,7 @@ async def test_VariableTokenBucket_acquire_with_callback(event_loop):
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_TimedTokenBucket_acquire_when_empty(event_loop):
+async def test_TimedTokenBucket_acquire_when_rate_limiting_without_callback_functions_correctly(event_loop):
     b = rates.TimedTokenBucket(1, 3, event_loop)
     await b.acquire()
     start = time.perf_counter()
@@ -66,7 +66,7 @@ async def test_TimedTokenBucket_acquire_when_empty(event_loop):
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_VariableTokenBucket_acquire_when_empty(event_loop):
+async def test_VariableTokenBucket_acquire_when_rate_limiting_without_callback_functions_correctly(event_loop):
     now = time.perf_counter()
     b = rates.VariableTokenBucket(1, 1, now, now + 3, event_loop)
     await b.acquire()
@@ -80,7 +80,7 @@ async def test_VariableTokenBucket_acquire_when_empty(event_loop):
 # If this begins to fail, change the time to 2s, with abs_tol=1, or something
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_TimedTokenBucket_acquire_when_empty_with_callback(event_loop):
+async def test_TimedTokenBucket_acquire_when_rate_limiting_with_callback_should_invoke_the_callback_once(event_loop):
     b = rates.TimedTokenBucket(1, 3, event_loop)
     await b.acquire()
     start = time.perf_counter()
@@ -95,7 +95,7 @@ async def test_TimedTokenBucket_acquire_when_empty_with_callback(event_loop):
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_VariableTokenBucket_acquire_when_empty_with_callback(event_loop):
+async def test_VariableTokenBucket_acquire_when_rate_limiting_with_callback_should_invoke_the_callback_once(event_loop):
     now = time.perf_counter()
     b = rates.VariableTokenBucket(1, 1, now, now + 3, event_loop)
     await b.acquire()
@@ -111,25 +111,27 @@ async def test_VariableTokenBucket_acquire_when_empty_with_callback(event_loop):
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_TimedTokenBucket_queue(event_loop):
+async def test_TimedTokenBucket_queue_should_make_an_incomplete_future(event_loop):
     b = rates.TimedTokenBucket(10, 1, event_loop)
     assert not b._queue
     b._enqueue()
     assert len(b._queue) == 1
+    assert isinstance(b._queue.pop(), asyncio.Future)
 
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_VariableTokenBucket_queue(event_loop):
+async def test_VariableTokenBucket_queue_should_make_an_incomplete_future(event_loop):
     b = rates.VariableTokenBucket(10, 1, 7, 12, event_loop)
     assert not b._queue
     b._enqueue()
     assert len(b._queue) == 1
+    assert isinstance(b._queue.pop(), asyncio.Future)
 
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_TimedTokenBucket_async_ctx(event_loop):
+async def test_TimedTokenBucket_async_with_context_manager(event_loop):
     b = rates.TimedTokenBucket(10, 1, event_loop)
     b.acquire = asynctest.CoroutineMock()
     async with b:
@@ -140,7 +142,7 @@ async def test_TimedTokenBucket_async_ctx(event_loop):
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_VariableTokenBucket_async_ctx(event_loop):
+async def test_VariableTokenBucket_async_with_context_manager(event_loop):
     b = rates.VariableTokenBucket(10, 1, 7, 12, event_loop)
     b.acquire = asynctest.CoroutineMock()
     async with b:
@@ -151,7 +153,9 @@ async def test_VariableTokenBucket_async_ctx(event_loop):
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_VariableTokenBucket_update_when_still_under_limit_but_remaining_did_not_change(event_loop):
+async def test_VariableTokenBucket_update_when_still_under_limit_but_remaining_did_not_change_should_not_reassess(
+    event_loop
+):
     now = time.perf_counter()
     b = rates.VariableTokenBucket(10, 1, now - 5, now + 5, event_loop)
     b._reassess = asynctest.MagicMock()
@@ -166,7 +170,7 @@ async def test_VariableTokenBucket_update_when_still_under_limit_but_remaining_d
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_VariableTokenBucket_update_when_still_under_limit_but_remaining_did_change(event_loop):
+async def test_VariableTokenBucket_update_when_still_under_limit_but_remaining_did_change_should_reassess(event_loop):
     now = time.perf_counter()
     b = rates.VariableTokenBucket(10, 1, now - 5, now + 5, event_loop)
     b._reassess = asynctest.MagicMock()
@@ -181,7 +185,9 @@ async def test_VariableTokenBucket_update_when_still_under_limit_but_remaining_d
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_VariableTokenBucket_update_when_not_under_limit_but_remaining_did_not_change(event_loop):
+async def test_VariableTokenBucket_update_when_not_under_limit_but_remaining_did_not_change_should_not_reassess(
+    event_loop
+):
     now = time.perf_counter()
     b = rates.VariableTokenBucket(10, 1, now - 5, now - 1, event_loop)
     b._reassess = asynctest.MagicMock()
@@ -196,7 +202,7 @@ async def test_VariableTokenBucket_update_when_not_under_limit_but_remaining_did
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_VariableTokenBucket_update_when_not_under_limit_but_remaining_did_change(event_loop):
+async def test_VariableTokenBucket_update_when_not_under_limit_but_remaining_did_change_should_reassess(event_loop):
     now = time.perf_counter()
     b = rates.VariableTokenBucket(10, 1, now - 5, now - 1, event_loop)
     b._reassess = asynctest.MagicMock()
@@ -211,7 +217,9 @@ async def test_VariableTokenBucket_update_when_not_under_limit_but_remaining_did
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_TimedTokenBucket_reassess_when_reset_at_is_in_past(event_loop):
+async def test_TimedTokenBucket_reassess_when_reset_at_attribute_is_in_the_past_should_update_internal_state(
+    event_loop
+):
     with asynctest.patch("time.perf_counter", new=lambda: 10):
         b = rates.TimedTokenBucket(10, 1, event_loop)
         b._total = 100
@@ -226,7 +234,9 @@ async def test_TimedTokenBucket_reassess_when_reset_at_is_in_past(event_loop):
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_VariableTokenBucket_reassess_when_reset_at_is_in_past(event_loop):
+async def test_VariableTokenBucket_reassess_when_reset_at_attribute_is_in_the_past_should_update_internal_state(
+    event_loop
+):
     now = time.perf_counter()
     b = rates.VariableTokenBucket(10, 1, now, now + 3, event_loop)
 
@@ -240,7 +250,7 @@ async def test_VariableTokenBucket_reassess_when_reset_at_is_in_past(event_loop)
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_TimedTokenBucket_reassess_runs_as_many_tasks_as_possible_in_expected_time(event_loop):
+async def test_TimedTokenBucket_reassess_must_run_as_many_tasks_as_possible_in_expected_time(event_loop):
     b = rates.TimedTokenBucket(10, 3, event_loop)
 
     checked = False
@@ -266,7 +276,7 @@ async def test_TimedTokenBucket_reassess_runs_as_many_tasks_as_possible_in_expec
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_VariableTokenBucket_reassess_runs_as_many_tasks_as_possible_in_expected_time(event_loop):
+async def test_VariableTokenBucket_must_run_as_many_tasks_as_possible_in_expected_time(event_loop):
     now = time.perf_counter()
     b = rates.VariableTokenBucket(10, 10, now, now + 3, event_loop)
 
@@ -298,7 +308,7 @@ async def test_VariableTokenBucket_reassess_runs_as_many_tasks_as_possible_in_ex
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_TimedLatchBucket_when_not_locked(event_loop):
+async def test_TimedLatchBucket_when_not_locked_will_return_immediately(event_loop):
     latch = rates.TimedLatchBucket(event_loop)
 
     start = time.perf_counter()
@@ -313,7 +323,7 @@ async def test_TimedLatchBucket_when_not_locked(event_loop):
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_TimedLatchBucket_when_locked(event_loop):
+async def test_TimedLatchBucket_when_locked_will_return_after_a_cooldown(event_loop):
     latch = rates.TimedLatchBucket(event_loop)
 
     checked = False
@@ -357,7 +367,7 @@ async def test_TimedLatchBucket_when_locked_no_args(event_loop):
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
-async def test_TimedLatchBucket_async_context(event_loop):
+async def test_TimedLatchBucket_async_with_context_manager(event_loop):
     latch = rates.TimedLatchBucket(event_loop)
     latch.acquire = asynctest.CoroutineMock()
     async with latch:

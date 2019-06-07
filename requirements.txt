@@ -1,4 +1,3 @@
-async_timeout
 # Main requirements...
 aiohttp
 dataclasses  # py36 only
@@ -6,3 +5,13 @@ websockets
 
 # CI
 tox
+
+# Tests
+asynctest==0.12.4
+async-timeout==3.0.1
+coverage==4.5.3
+pytest==4.4.1
+pytest-asyncio==0.10.0
+pytest-cov==2.7.1
+pytest-html==1.20.0
+pytest-testdox==1.1.1

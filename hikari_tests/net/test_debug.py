@@ -6,7 +6,7 @@ import textwrap
 import asynctest
 
 from hikari.net import debug
-from tests import _helpers
+from hikari_tests import _helpers
 
 
 def teardown_function():

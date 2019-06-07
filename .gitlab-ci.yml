@@ -16,7 +16,7 @@ variables:
   script:
     - mkdir public || true
     - tox -avv
-    - tox --pastebin=all -e ${CI_JOB_NAME}
+    - tox -e ${CI_JOB_NAME}
   coverage: /^TOTAL[\s\d%]+\s(\d+\%)$/
   artifacts:
     paths:
