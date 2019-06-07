@@ -13,7 +13,16 @@ python -m coverage combine $(find $DIR -type f -iname $PATTERN)
 python -m coverage xml -o public/coverage.xml
 python -m coverage html -d public/coverage
 rm .coverage public/*.dat || true
-diff-cover --compare-branch origin/master $DIR/coverage.xml --html-report=$TARGET_DIR/.diff-cover.html
+
+CURRENT_BRANCH="$(git symbolic-ref --short HEAD || git symbolic-ref --short master)"
+if [ "$CURRENT_BRANCH" = "master" ]; then
+    PREVIOUS_BRANCH='${CURRENT_BRANCH}^'
+else
+    PREVIOUS_BRANCH="master"
+fi
+
+diff-cover --compare-branch origin/$PREVIOUS_BRANCH $DIR/coverage.xml --html-report=$TARGET_DIR/.diff-cover.html || true
+
 echo "<link rel=\"stylesheet\" href=\"_static/bootstrap-sphinx.css\"/><ol>" > public/diff-cover.html
 cat public/.diff-cover.html >> public/diff-cover.html
 rm public/.diff-cover.html
