@@ -21,8 +21,12 @@ _LOGGER = logging.getLogger(__name__)
         errors.DiscordUnauthorized(http.HTTPStatus.UNAUTHORIZED, opcodes.JSONErrorCode.UNAUTHORIZED, "Bad token"),
         errors.DiscordForbidden(http.HTTPStatus.FORBIDDEN, opcodes.JSONErrorCode.MISSING_PERMISSIONS, "Forbidden"),
         errors.DiscordBadRequest(http.HTTPStatus.BAD_REQUEST, opcodes.JSONErrorCode.INVALID_FORM_BODY, "Bad form body"),
-        errors.DiscordHTTPError(http.HTTPStatus.NOT_FOUND, opcodes.JSONErrorCode.UNKNOWN_CHANNEL, "Channel not found"),
-        errors.DiscordHTTPError(http.HTTPStatus.BAD_REQUEST, opcodes.JSONErrorCode.INVALID_FORM_BODY, "Bad form body"),
+        errors.DiscordHTTPResponseError(
+            http.HTTPStatus.NOT_FOUND, opcodes.JSONErrorCode.UNKNOWN_CHANNEL, "Channel not found"
+        ),
+        errors.DiscordHTTPResponseError(
+            http.HTTPStatus.BAD_REQUEST, opcodes.JSONErrorCode.INVALID_FORM_BODY, "Bad form body"
+        ),
         errors.HikariError("eee"),
         errors.ClientError("aaa"),
     ],

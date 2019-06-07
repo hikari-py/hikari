@@ -35,7 +35,12 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
         self._queue: typing.Deque[asyncio.Future] = collections.deque()
         self.loop = loop
 
-    async def acquire(self, on_rate_limit: typing.Callable[[], None] = None) -> None:
+    @property
+    def is_limiting(self) -> bool:
+        """True if the rate limit is preventing any requests for now, or False if it is yet to lock down."""
+        return not self._remaining
+
+    async def acquire(self, on_rate_limit: typing.Callable[[], None] = None, *args, **kwargs) -> None:
         """
         Acquire a slice of time in this bucket. This may return immediately, or it may wait for a slot to become
         available.
@@ -43,11 +48,15 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
         Args:
             on_rate_limit:
                 Optional callback to invoke if we are being rate-limited.
+            *args:
+                arguments to call the callback with.
+            **kwargs:
+                kwargs to call the callback with.
         """
         future = self._enqueue()
         try:
             if not self._maybe_awaken_and_reset(future) and on_rate_limit is not None:
-                on_rate_limit()
+                on_rate_limit(*args, **kwargs)
             await future
         finally:
             future.cancel()
@@ -130,7 +139,12 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
         self._queue: typing.Deque[asyncio.Future] = collections.deque()
         self.loop = loop
 
-    async def acquire(self, on_rate_limit: typing.Callable[[], None] = None) -> None:
+    @property
+    def is_limiting(self) -> bool:
+        """True if the rate limit is preventing any requests for now, or False if it is yet to lock down."""
+        return not self._remaining
+
+    async def acquire(self, on_rate_limit: typing.Callable[[], None] = None, *args, **kwargs) -> None:
         """
         Acquire a slice of time in this bucket. This may return immediately, or it may wait for a slot to become
         available.
@@ -138,11 +152,15 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
         Args:
             on_rate_limit:
                 Optional callback to invoke if we are being rate-limited.
+            *args:
+                arguments to call the callback with.
+            **kwargs:
+                kwargs to call the callback with.
         """
         future = self._enqueue()
         try:
             if not self._maybe_awaken_and_reset(future) and on_rate_limit is not None:
-                on_rate_limit()
+                on_rate_limit(*args, **kwargs)
             await future
         finally:
             future.cancel()
@@ -159,12 +177,12 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
         if self._reset_at < now:
             # Reset the time-slice.
             now = time.perf_counter()
-            self.update(self._total, self._total, now, self._per, is_nested_call=True)
+            self.update(self._total, self._total, now, now + self._per, is_nested_call=True)
 
         while self._remaining > 0 and self._queue:
             # Wake up some older tasks while/if we can.
-            next_future = self._queue.popleft()
             self._remaining -= 1
+            next_future = self._queue.popleft()
             next_future.set_result(None)
 
     def _maybe_awaken_and_reset(self, this_future: asyncio.Future) -> bool:
@@ -208,7 +226,8 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
         real_now = time.perf_counter()
         self._total = total
         self._remaining = remaining
-        self._reset_at = (reset_at - now) + real_now
+        self._per = reset_at - now
+        self._reset_at = real_now + self._per
         self._last_reset_at = real_now
 
         if should_reassess and not is_nested_call:
@@ -219,3 +238,59 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         pass
+
+
+class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
+    """
+    A global latch that can be locked for a given time. If the latch is open, then
+    acquiring the latch does not do anything and finishes immediately. If the latch is
+    locked, then acquiring the latch will force the caller to wait until it is unlocked.
+
+    Args:
+        loop:
+            The loop to run on.
+    """
+
+    def __init__(self, loop: asyncio.AbstractEventLoop) -> None:
+        self._locked = False
+        self._unlock_event = asyncio.Event(loop=loop)
+        self.loop = loop
+
+    @property
+    def is_limiting(self) -> bool:
+        """True if the latch is preventing any requests for now, or False if it is yet to lock down."""
+        return self._locked
+
+    async def acquire(self, if_locked: typing.Callable[..., None] = None, *args, **kwargs):
+        """
+        Either continue silently if the latch is unlocked, or wait for it to unlock first if locked.
+
+        Args:
+            if_locked:
+                callback to invoke when the latch is locked.
+            *args:
+                arguments to call the callback with.
+            **kwargs:
+                kwargs to call the callback with.
+
+        """
+        if self._locked:
+            if if_locked is not None:
+                if_locked(*args, **kwargs)
+            await self._unlock_event.wait()
+
+    async def __aenter__(self) -> None:
+        await self.acquire()
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        pass
+
+    def lock(self, unlock_after: float) -> None:
+        self._locked = True
+        self._unlock_event.clear()
+        task = asyncio.shield(asyncio.sleep(unlock_after), loop=self.loop)
+        task.add_done_callback(lambda *_: self.unlock())
+
+    def unlock(self) -> None:
+        self._locked = False
+        self._unlock_event.set()

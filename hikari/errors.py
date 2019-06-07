@@ -72,6 +72,15 @@ class DiscordGatewayError(DiscordError):
 
 class DiscordHTTPError(DiscordError):
     """
+    A generic HTTP-based error occurred. This should be enforced by subclasses of this exception unless a rare
+    outlier occasion occurs where it is appropriate to throw this directly.
+    """
+
+    __slots__ = ()
+
+
+class DiscordHTTPResponseError(DiscordHTTPError):
+    """
     Raised if an error occurs server-side on the RESTful API. This indicates a problem with Discord, not your code.
 
     Args:
@@ -93,7 +102,7 @@ class DiscordHTTPError(DiscordError):
         super().__init__(error_reason or self.http_status.description or self.http_status.phrase)
 
 
-class DiscordBadRequest(DiscordHTTPError):
+class DiscordBadRequest(DiscordHTTPResponseError):
     """
     Occurs when the request was improperly formatted, or the server couldn't understand it.
     """
@@ -101,7 +110,7 @@ class DiscordBadRequest(DiscordHTTPError):
     __slots__ = ()
 
 
-class DiscordUnauthorized(DiscordHTTPError):
+class DiscordUnauthorized(DiscordHTTPResponseError):
     """
     Occurs when the request is unauthorized. This means the Authorization header or token is invalid/missing, or some
     other credential is incorrect.
@@ -110,13 +119,13 @@ class DiscordUnauthorized(DiscordHTTPError):
     __slots__ = ()
 
 
-class DiscordForbidden(DiscordHTTPError):
+class DiscordForbidden(DiscordHTTPResponseError):
     """Occurs when authorization is correct, but you do not have permission to access the resource."""
 
     __slots__ = ()
 
 
-class DiscordNotFound(DiscordHTTPError):
+class DiscordNotFound(DiscordHTTPResponseError):
     """Occurs when an accessed resource does not exist, or is hidden from the user."""
 
     __slots__ = ()

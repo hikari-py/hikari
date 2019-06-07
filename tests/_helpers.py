@@ -37,12 +37,3 @@ def mark_asyncio_with_timeout(timeout=10):
 
     return decorator
 
-
-mark_asyncio = pytest.mark.asyncio
-
-
-def mark_only_if_slow_testing(item):
-    return pytest.mark.skipif(
-        '__import__("os").getenv("RUN_SLOW_TESTS", "false") == "false"',
-        reason="Slow tests are skipped. Set RUN_SLOW_TESTS to 'true' to enable this",
-    )(item)
