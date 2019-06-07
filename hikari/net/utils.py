@@ -125,7 +125,6 @@ def python_version() -> str:
 #: and response data. This allows an implementation to use this layer as desired.
 RequestBody = typing.Dict[str, typing.Any]
 
-
 #: The signature of an event dispatcher function. Consumes two arguments. The first is an event name from the gateway,
 #: the second is the payload which is assumed to always be a :class:`dict` with :class:`str` keys. This should be
 #: a coroutine function; if it is not, it should be expected to be promoted to a coroutine function internally.
