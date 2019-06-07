@@ -10,6 +10,7 @@ Packages and submodules
     :toctree: modules
 
     hikari
+    hikari.compat
     hikari.errors
     hikari.net.debug
     hikari.net.gateway
@@ -17,7 +18,6 @@ Packages and submodules
     hikari.net.opcodes
     hikari.net.rates
     hikari.net.utils
-    hikari.compat
 
 * `Changelog, code quality statistics and reports for this release <quality_assurance.html>`_
 * :ref:`genindex`

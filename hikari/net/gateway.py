@@ -29,6 +29,7 @@ from hikari.compat import typing
 from hikari.net import opcodes
 from hikari.net import rates
 from hikari.net import utils
+from hikari.net.utils import DispatchHandler
 from hikari.net.utils import RequestBody
 
 
@@ -40,48 +41,18 @@ class RestartConnection(websockets.ConnectionClosed):
     """Request by the gateway to completely reconnect using a fresh connection. This is only used internally."""
 
 
-#: The signature of an event dispatcher function. Consumes two arguments. The first is an event name from the gateway,
-#: the second is the payload which is assumed to always be a :class:`dict` with :class:`str` keys. This should be
-#: a coroutine function; if it is not, it should be expected to be promoted to a coroutine function internally.
-#:
-#: Example:
-#:     >>> async def on_dispatch(event: str, payload: Dict[str, Any]) -> None:
-#:     ...     logger.info("Dispatching %s with payload %r", event, payload)
-DispatchHandler = typing.Callable[[str, typing.Dict[str, typing.Any]], typing.Union[None, typing.Awaitable[None]]]
-
-#: A payload received from the gateway or sent to the gateway.
-
-
-class GatewayLogger(logging.LoggerAdapter):
-    """Formatting shim for the logger API for gateway logging logic."""
-
-    #: Format string for log entries from a sharded Gateway client.
-    SHARDED_FORMAT = (
-        "[uptime: {uptime} shard:{shard_id}/{total_shards} seq:{seq} session:{session_id} trace:{trace}] {msg}"
-    )
-    #: Format string for log entries from a single gateway client that is not sharded.
-    NORMAL_FORMAT = "[uptime: {uptime} seq:{seq} session:{session_id} trace:{trace}] {msg}"
-
-    def __init__(self, logger, extra, sharded: bool) -> None:
-        super().__init__(logger, extra)
-        self.__fmt = self.SHARDED_FORMAT if sharded else self.NORMAL_FORMAT
-
-    def process(self, msg, kwargs):
-        args = {k: v() if callable(v) else v for k, v in self.extra.items()}
-        return self.__fmt.format(**args, msg=msg), kwargs
-
-
-# noinspection PyAsyncCall
 class GatewayConnection:
     """
     Implementation of the gateway communication layer. This is single threaded and can represent the connection for
     an un-sharded bot, or for a specific gateway shard. This does not implement voice activity.
 
     Args:
+        connector:
+            the method used to create a websockets connection. You usually don't want to change this.
         dispatch:
-            A non-coroutine function that consumes a string event name and a JSON dispatch event payload consumed
+            A coroutine function that consumes a string event name and a JSON dispatch event payload consumed
             from the gateway to call each time a dispatch occurs. This payload will be a dict as described on the
-            Gateway documentation.
+            Gateway documentation. If it is not a coroutine function, it will get cast to a coroutine function first.
         host:
             the host to connect to, in the format `wss://gateway.net` or `wss://gateway.net:port` without a query
             fragment.
@@ -108,8 +79,11 @@ class GatewayConnection:
             the shard ID to use, or `None` if sharding is to be disabled (default).
         token:
             the token to use to authenticate with the gateway.
-        connector:
-            the method used to create a websockets connection.
+
+    Warning:
+        It is highly recommended to not alter any attributes of this object whilst the gateway is running unless clearly
+        specified otherwise. Any change to internal state may result in undefined behaviour or effects. This is designed
+        to be a low-level interface to the gateway, and not a general-use object.
     """
 
     #: The API version we should request the use of.
@@ -119,64 +93,73 @@ class GatewayConnection:
         opcodes.GatewayServerExit.INVALID_SHARD,
         opcodes.GatewayServerExit.SHARDING_REQUIRED,
     )
-    _LOGGER = logging.getLogger(__name__)
 
     def __init__(
         self,
         host: str,
         *,
-        token: str,
+        connector=websockets.connect,
+        dispatch: DispatchHandler = lambda t, d: None,
+        incognito: bool = False,
+        initial_presence: typing.Optional[RequestBody] = None,
+        large_threshold: int = 50,
         loop: asyncio.AbstractEventLoop,
+        max_persistent_buffer_size: int = 3 * 1024 ** 2,
         shard_id: typing.Optional[int] = None,
         shard_count: typing.Optional[int] = None,
-        incognito: bool = False,
-        large_threshold: int = 50,
-        initial_presence: typing.Optional[RequestBody] = None,
-        dispatch: DispatchHandler = lambda t, d: None,
-        max_persistent_buffer_size: int = 3 * 1024 ** 2,
-        connector=websockets.connect,
+        token: str,
     ) -> None:
-        # Sharding info
-        self.shard_count = shard_count
-        self.shard_id = shard_id
-
-        # Set up logging.
-        extra = dict(
-            shard_id=shard_id,
-            total_shards=shard_count,
-            seq=lambda: self._seq,
-            trace=lambda: self.trace,
-            session_id=lambda: self._session_id,
-            uptime=lambda: self.up_time,
-        )
-        self._logger = GatewayLogger(self._LOGGER, extra, self.is_shard)
-
-        dispatch = asyncio.coroutine(dispatch)
+        #: The coroutine function to dispatch any events to.
+        self.dispatch = asyncio.coroutine(dispatch)
 
         self._connector = connector
-        self._heartbeat_interval = float("nan")
         self._in_buffer: bytearray = bytearray()
-        self._initial_presence = initial_presence
-        self._last_ack_received = float("nan")
-        self._last_heartbeat_sent = float("nan")
-        self._rate_limit = rates.TimedTokenBucket(120, 60, loop)
-        self._seq = None
-        self._session_id = None
         self._zlib_decompressor: typing.Any = zlib.decompressobj()
 
+        #: Number of shards in use, or `None` if not sharded.
+        self.shard_count = shard_count
+        #: Current shard ID, or `None` if not sharded.
+        self.shard_id = shard_id
+
+        #: The heartbeat interval. This is `float('nan')` until the gateway provides us a value to use on startup.
+        self.heartbeat_interval = float("nan")
         #: An :class:`asyncio.Event` that will be triggered whenever the gateway disconnects.
         self.closed_event = asyncio.Event(loop=loop)
-        #: The coroutine function to dispatch any events to.
-        self.dispatch = dispatch
         #: The time period in seconds that the last heartbeat we sent took to be acknowledged by the gateway. This
-        #: will be `float('nan')` until the first heartbeat is performed and acknowledged.
-        self.heartbeat_latency = float("nan")
+        #: will be `float('inf')` until the first heartbeat is performed and acknowledged.
+        self.heartbeat_latency = float("inf")
+        #: Number of packets that have been received since startup.
+        self.in_cid = 0
+        #: If `True`, we don't send correct system info to Discord in the user agent payload.
         self.incognito = incognito
+        #: The initial presence to use for the bot status once IDENTIFYing with the shard.
+        self.initial_presence = initial_presence
+        #: What we regard to be a large guild in member numbers.
         self.large_threshold = large_threshold
+        #: The :func:`time.perf_counter` that the last heartbeat was acknowledged at. Is `float('nan')` until then.
+        self.last_ack_received = float("nan")
+        #: The :func:`time.perf_counter` that the last heartbeat was sent at. Is `float('nan')` until then.
+        self.last_heartbeat_sent = float("nan")
+        #: Logger adapter used to dump information to the console.
+        self.logger = logging.getLogger(type(self).__name__)
+        #: The event loop to use.
         self.loop = loop
+        #: What we consider to be a large size for the internal buffer. Any packet over this size results in the buffer
+        #: being completely recreated.
         self.max_persistent_buffer_size = max_persistent_buffer_size
+        #: Number of packets that have been sent since startup.
+        self.out_cid = 0
+        #: Rate limit bucket for the gateway.
+        self.rate_limit = rates.TimedTokenBucket(120, 60, loop)
+        #: The `seq` flag value, if there is one set.
+        self.seq = None
+        #: The session ID in use, if there is one set.
+        self.session_id = None
+        #: When the gateway connection was started
+        self.started_at: typing.Optional[int] = None
         #: A list of gateway servers that are connected to, once connected.
         self.trace: typing.List[str] = []
+        #: Token used to authenticate with the gateway.
         self.token = token
         #: The URI being connected to.
         self.uri = f"{host}?v={self._REQUESTED_VERSION}&encoding=json&compression=zlib-stream"
@@ -187,16 +170,13 @@ class GatewayConnection:
         #: used.
         self.version = self._REQUESTED_VERSION
 
-        #: When this gateway instance was started as monotonic system time.
-        self._started_at: typing.Optional[int] = None
-
     @property
     def up_time(self) -> datetime.timedelta:
         """The length of time the gateway has been connected for, or 0 seconds if the client has not yet started."""
-        if self._started_at is None:
+        if self.started_at is None:
             return datetime.timedelta(seconds=0)
         else:
-            return datetime.timedelta(seconds=time.perf_counter() - self._started_at)
+            return datetime.timedelta(seconds=time.perf_counter() - self.started_at)
 
     @property
     def is_shard(self) -> bool:
@@ -213,25 +193,25 @@ class GatewayConnection:
         await self.ws.close(code=code, reason=reason)
         raise RestartConnection(code=code, reason=reason)
 
-    async def _send_json(self, payload) -> None:
-        async with self._rate_limit:
-            raw = json.dumps(payload)
-            if len(raw) > 4096:
-                self._handle_payload_oversize(payload)
-            else:
-                await self.ws.send(raw)
-
-    def _handle_payload_oversize(self, payload) -> None:
-        self._logger.error(
-            "refusing to send payload as it is too large. Sending this would result in "
-            "a disconnect. Payload was: %s",
-            payload,
+    async def _send_json(self, payload, skip_rate_limit) -> None:
+        self.logger.debug(
+            "sending payload %s and %s rate limit", payload, "skipping" if skip_rate_limit else "not skipping"
         )
+
+        if not skip_rate_limit:
+            await self.rate_limit.acquire(self._warn_about_internal_rate_limit)
+
+        raw = json.dumps(payload)
+        if len(raw) > 4096:
+            self._handle_payload_oversize(payload)
+        else:
+            self.out_cid += 1
+            await self.ws.send(raw)
 
     async def _receive_json(self) -> RequestBody:
         msg = await self.ws.recv()
 
-        if type(msg) is bytes:
+        if isinstance(msg, (bytes, bytearray)):
             self._in_buffer.extend(msg)
             while not self._in_buffer.endswith(b"\x00\x00\xff\xff"):
                 msg = await self.ws.recv()
@@ -252,17 +232,56 @@ class GatewayConnection:
                 code=opcodes.GatewayClientExit.TYPE_ERROR, reason="Expected JSON object."
             )
 
+        self.logger.debug("received payload %s", payload)
+        self.in_cid += 1
+
         return payload
+
+    def _warn_about_internal_rate_limit(self):
+        delta = self.rate_limit._reset_at - time.perf_counter()
+        self.logger.warning(
+            "you are being rate limited internally to prevent the gateway from disconnecting you. "
+            "The current rate limit ends in %.2f seconds",
+            delta,
+        )
+
+    def _handle_payload_oversize(self, payload) -> None:
+        self.logger.error(
+            "refusing to send payload as it is too large and sending this would result in a disconnect. "
+            "Payload was: %s",
+            payload,
+        )
+
+    def _handle_slow_client(self, time_taken) -> None:
+        self.logger.warning(
+            "took %sms to send HEARTBEAT, which is more than 15%% of the heartbeat interval. "
+            "Your connection may be poor or the event loop may be blocked or under excessive load",
+            time_taken * 1_000,
+        )
+
+    async def _send_heartbeat(self) -> None:
+        await self._send_json({"op": opcodes.GatewayOpcode.HEARTBEAT, "d": self.seq}, True)
+        self.logger.debug("sent HEARTBEAT")
+        self.last_heartbeat_sent = time.perf_counter()
+
+    async def _send_ack(self) -> None:
+        await self._send_json({"op": opcodes.GatewayOpcode.HEARTBEAT_ACK}, True)
+        self.logger.debug("sent HEARTBEAT_ACK")
+
+    async def _handle_ack(self) -> None:
+        self.last_ack_received = time.perf_counter()
+        self.heartbeat_latency = self.last_ack_received - self.last_heartbeat_sent
+        self.logger.debug("received HEARTBEAT_ACK after %sms", round(self.heartbeat_latency * 1000))
 
     async def _keep_alive(self) -> None:
         while not self.closed_event.is_set():
             try:
-                if self._last_heartbeat_sent + self._heartbeat_interval < time.perf_counter():
-                    last_sent = time.perf_counter() - self._last_heartbeat_sent
+                if self.last_heartbeat_sent + self.heartbeat_interval < time.perf_counter():
+                    last_sent = time.perf_counter() - self.last_heartbeat_sent
                     msg = f"Failed to receive an acknowledgement from the previous heartbeat sent ~{last_sent}s ago"
                     return await self._trigger_resume(code=opcodes.GatewayClientExit.PROTOCOL_VIOLATION, reason=msg)
 
-                await asyncio.wait_for(self.closed_event.wait(), timeout=self._heartbeat_interval)
+                await asyncio.wait_for(self.closed_event.wait(), timeout=self.heartbeat_interval)
             except asyncio.TimeoutError:
                 start = time.perf_counter()
                 await self._send_heartbeat()
@@ -271,28 +290,7 @@ class GatewayConnection:
                 if time_taken > 0.15 * self.heartbeat_latency:
                     self._handle_slow_client(time_taken)
 
-    def _handle_slow_client(self, time_taken) -> None:
-        self._logger.warning(
-            "took %sms to send HEARTBEAT, which is more than 15%% of the heartbeat interval. "
-            "Your connection may be poor or the event loop may be blocked or under excessive load",
-            time_taken * 1_000,
-        )
-
-    async def _send_heartbeat(self) -> None:
-        await self._send_json({"op": opcodes.GatewayOpcode.HEARTBEAT, "d": self._seq})
-        self._logger.debug("sent HEARTBEAT")
-        self._last_heartbeat_sent = time.perf_counter()
-
-    async def _send_ack(self) -> None:
-        await self._send_json({"op": opcodes.GatewayOpcode.HEARTBEAT_ACK})
-        self._logger.debug("sent HEARTBEAT_ACK")
-
-    async def _handle_ack(self) -> None:
-        self._last_ack_received = time.perf_counter()
-        self.heartbeat_latency = self._last_ack_received - self._last_heartbeat_sent
-        self._logger.debug("received HEARTBEAT_ACK after %sms", round(self.heartbeat_latency * 1000))
-
-    async def _recv_hello(self) -> None:
+    async def _receive_hello(self) -> None:
         hello = await self._receive_json()
         op = hello["op"]
         if op != opcodes.GatewayOpcode.HELLO:
@@ -302,16 +300,17 @@ class GatewayConnection:
 
         d = hello["d"]
         self.trace = d["_trace"]
-        self._heartbeat_interval = d["heartbeat_interval"] / 1_000.0
-        self._logger.info("received HELLO. heartbeat interval is %ss", self._heartbeat_interval)
+        hb = d["heartbeat_interval"]
+        self.heartbeat_interval = hb / 1_000.0
+        self.logger.info("received HELLO. heartbeat interval is %sms", hb)
 
     async def _send_resume(self) -> None:
         payload = {
             "op": opcodes.GatewayOpcode.RESUME,
-            "d": {"token": self.token, "session_id": self._session_id, "seq": self._seq},
+            "d": {"token": self.token, "session_id": self.session_id, "seq": self.seq},
         }
-        await self._send_json(payload)
-        self._logger.info("sent RESUME")
+        await self._send_json(payload, False)
+        self.logger.info("sent RESUME")
 
     async def _send_identify(self) -> None:
         payload = {
@@ -328,37 +327,31 @@ class GatewayConnection:
             },
         }
 
-        if self._initial_presence is not None:
-            payload["d"]["status"] = self._initial_presence
+        if self.initial_presence is not None:
+            payload["d"]["status"] = self.initial_presence
 
         if self.is_shard:
             # noinspection PyTypeChecker
             payload["d"]["shard"] = [self.shard_id, self.shard_count]
 
-        self._logger.info("sent IDENTIFY")
-        await self._send_json(payload)
+        self.logger.info("sent IDENTIFY")
+        await self._send_json(payload, False)
 
     async def _handle_dispatch(self, event: str, payload: RequestBody) -> None:
         event == "READY" and await self._handle_ready(payload)
         event == "RESUMED" and await self._handle_resumed(payload)
-        self._logger.debug("DISPATCH %s", event)
+        self.logger.debug("DISPATCH %s", event)
         await self.dispatch(event, payload)
 
     async def _handle_ready(self, ready: RequestBody) -> None:
         self.trace = ready["_trace"]
-        self._session_id = ready["session_id"]
+        self.session_id = ready["session_id"]
         self.version = ready["v"]
-        self._logger.info(
-            "Now READY. Gateway v%s, user is %s#%s (%s)",
-            self.version,
-            ready["user"]["username"],
-            ready["user"]["discriminator"],
-            ready["user"]["id"],
-        )
+        self.logger.info("session %s is READY (trace: %s)", self.session_id, self.trace)
 
     async def _handle_resumed(self, resumed: RequestBody) -> None:
         self.trace = resumed["_trace"]
-        self._logger.info("RESUMED successfully")
+        self.logger.info("RESUMED successfully")
 
     async def _process_events(self) -> None:
         """Polls the gateway for new packets and handles dispatching the results."""
@@ -366,7 +359,6 @@ class GatewayConnection:
             await self._process_one_event()
 
     async def _process_one_event(self) -> None:
-        """Processes a single event."""
         message = await self._receive_json()
         op = message["op"]
         d = message["d"]
@@ -377,7 +369,7 @@ class GatewayConnection:
             op = opcodes.GatewayOpcode(op)
 
         if seq is not None:
-            self._seq = seq
+            self.seq = seq
         if op == opcodes.GatewayOpcode.DISPATCH:
             await self._handle_dispatch(t, d)
         elif op == opcodes.GatewayOpcode.HEARTBEAT:
@@ -385,24 +377,23 @@ class GatewayConnection:
         elif op == opcodes.GatewayOpcode.HEARTBEAT_ACK:
             await self._handle_ack()
         elif op == opcodes.GatewayOpcode.RECONNECT:
-            self._logger.warning("instructed to disconnect and %s with gateway", op.name)
+            self.logger.warning("instructed to disconnect and RECONNECT with gateway")
             await self._trigger_identify(
                 code=opcodes.GatewayClientExit.NORMAL_CLOSURE, reason="you requested me to reconnect"
             )
         elif op == opcodes.GatewayOpcode.INVALID_SESSION:
             if d is True:
-                self._logger.warning("%s (id: %s), will try to disconnect and RESUME", op.name, self._session_id)
+                self.logger.warning("will try to disconnect and RESUME")
                 await self._trigger_resume(
                     code=opcodes.GatewayClientExit.NORMAL_CLOSURE, reason="invalid session id so will resume"
                 )
             else:
-                self._logger.warning("%s (id: %s), will try to re-IDENTIFY", op.name, self._session_id)
+                self.logger.warning("will try to re-IDENTIFY")
                 await self._trigger_identify(
                     code=opcodes.GatewayClientExit.NORMAL_CLOSURE, reason="invalid session id so will close"
                 )
         else:
-            self._logger.warning("received unrecognised opcode %s", op)
-            return
+            self.logger.warning("received unrecognised opcode %s", op)
 
     async def request_guild_members(self, guild_id: int, query: str = "", limit: int = 0) -> None:
         """
@@ -416,12 +407,13 @@ class GatewayConnection:
         Warning:
             Results will be dispatched as events in chunks of 1000 members per guild.
         """
-        self._logger.debug("requesting members in guild %s", guild_id)
+        self.logger.debug("requesting members for guild %r with query %r and limit %r", guild_id, query, limit)
         await self._send_json(
             {
                 "op": opcodes.GatewayOpcode.REQUEST_GUILD_MEMBERS,
                 "d": {"guild_id": str(guild_id), "query": query, "limit": limit},
-            }
+            },
+            False,
         )
 
     async def update_status(
@@ -439,13 +431,12 @@ class GatewayConnection:
             - Activity objects: https://discordapp.com/developers/docs/topics/gateway#activity-object
             - Valid statuses: https://discordapp.com/developers/docs/topics/gateway#update-status-status-types
         """
-        self._logger.debug("updating status idle=%s, game=%s, status=%s, afk=%s", idle_since, game, status, afk)
-        await self._send_json(
-            {
-                "op": opcodes.GatewayOpcode.STATUS_UPDATE,
-                "d": {"idle": idle_since, "game": game, "status": status, "afk": afk},
-            }
+        d = {"idle": idle_since, "game": game, "status": status, "afk": afk}
+
+        self.logger.debug(
+            "updating status to idle since %r with game %r with status %r and afk %r", idle_since, game, status, afk
         )
+        await self._send_json({"op": opcodes.GatewayOpcode.STATUS_UPDATE, "d": d}, False)
 
     async def update_voice_state(
         self, guild_id: int, channel_id: typing.Optional[int], self_mute: bool, self_deaf: bool
@@ -459,20 +450,10 @@ class GatewayConnection:
             self_mute: if `True`, mute the bot, else if `False` keep the bot unmuted.
             self_deaf: if `True`, deafen the bot, else if `False`, keep the bot listening.
         """
-        self._logger.debug(
-            "updating voice state guild %s, channel %s, mute: %s, deaf: %s", guild_id, channel_id, self_mute, self_deaf
-        )
-        await self._send_json(
-            {
-                "op": opcodes.GatewayOpcode.VOICE_STATE_UPDATE,
-                "d": {
-                    "guild_id": str(guild_id),
-                    "channel_id": str(channel_id),
-                    "self_mute": self_mute,
-                    "self_deaf": self_deaf,
-                },
-            }
-        )
+        d = {"guild_id": str(guild_id), "channel_id": str(channel_id), "self_mute": self_mute, "self_deaf": self_deaf}
+
+        self.logger.debug("updating voice state %s", d)
+        await self._send_json({"op": opcodes.GatewayOpcode.VOICE_STATE_UPDATE, "d": d}, False)
 
     async def run(self) -> None:
         """
@@ -511,28 +492,28 @@ class GatewayConnection:
         kwargs.setdefault("compression", None)
 
         try:
-            self._started_at = time.perf_counter()
+            self.started_at = time.perf_counter()
 
             async with self._connector(**kwargs) as self.ws:
                 try:
-                    await self._recv_hello()
-                    is_resume = self._seq is not None and self._session_id is not None
+                    await self._receive_hello()
+                    is_resume = self.seq is not None and self.session_id is not None
                     await (self._send_resume() if is_resume else self._send_identify())
                     await asyncio.gather(self._keep_alive(), self._process_events())
                 except (RestartConnection, ResumeConnection, websockets.ConnectionClosed) as ex:
                     code, reason = opcodes.GatewayServerExit(ex.code), ex.reason or "no reason"
 
                     if ex.code in self._NEVER_RECONNECT_CODES:
-                        self._logger.critical("disconnected after %s [%s]. Please rectify issue manually", reason, code)
+                        self.logger.critical("disconnected after %s [%s]. Please rectify issue manually", reason, code)
                         raise errors.DiscordGatewayError(code, reason) from ex
 
                     else:
-                        self._logger.warning("reconnecting after %s [%s]", reason, code)
+                        self.logger.warning("reconnecting after %s [%s]", reason, code)
                         if isinstance(ex, RestartConnection):
-                            self._seq, self._session_id, self.trace = None, None, []
+                            self.seq, self.session_id, self.trace = None, None, []
 
         finally:
-            self._logger.info("gateway client shutting down")
+            self.logger.info("gateway client shutting down")
 
     async def close(self, block=True) -> None:
         """
