@@ -217,13 +217,14 @@ class HTTPConnection:
         is_global = headers.get(_X_RATELIMIT_GLOBAL) == "true"
         is_being_rate_limited = response_code == http.HTTPStatus.TOO_MANY_REQUESTS
 
+        # Retry-after is always in milliseconds.
         if is_global and is_being_rate_limited:
             # assume that is_global only ever occurs on TOO_MANY_REQUESTS response codes.
-            retry_after = utils.get_from_map_as(body, "retry_after", float)
+            retry_after = (utils.get_from_map_as(body, "retry_after", float) or 0) / 1_000
             self.global_rate_limit.lock(retry_after)
             self._log_rate_limit_starting(None, retry_after)
 
-        if all(headers[k] is not None for k in _X_RATELIMIT_LOCALS):
+        if all(header in headers for header in _X_RATELIMIT_LOCALS):
             # If we don't get all the info we need, just forget about the rate limit as we can't act on missing
             # information.
             now = utils.parse_http_date(headers[_DATE]).timestamp()
@@ -231,8 +232,9 @@ class HTTPConnection:
             reset_at = utils.get_from_map_as(headers, _X_RATELIMIT_RESET, float)
             remaining = utils.get_from_map_as(headers, _X_RATELIMIT_REMAINING, int)
 
-            # This header only exists if we get a TOO_MANY_REQUESTS first.
-            retry_after = headers.get("Retry-After", reset_at - now)
+            # This header only exists if we get a TOO_MANY_REQUESTS first, annoyingly.
+            retry_after = utils.get_from_map_as(headers, "Retry-After", float)
+            retry_after = retry_after / 1_000 if retry_after is not None else reset_at - now
 
             if resource not in self.buckets:
                 # Make new bucket first
@@ -245,6 +247,6 @@ class HTTPConnection:
             if bucket.is_limiting:
                 self._log_rate_limit_starting(resource, retry_after)
 
-            is_being_rate_limited = True
+            is_being_rate_limited |= remaining == 0
 
         return is_being_rate_limited
