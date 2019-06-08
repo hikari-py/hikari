@@ -161,10 +161,7 @@ class HTTPConnection:
         self._correlation_id += 1
         self.logger.debug("[%s/%s - %s] %s %s", retry, self._RATELIMIT_RETRIES, self._correlation_id, uri)
 
-        resp = await self.session.request(resource.method, uri=uri, headers=headers, json=json_body, **kwargs)
-
-        try:
-            # Could use async-with, but this is easier to mock without context managers.
+        async with self.session.request(resource.method, uri=uri, headers=headers, json=json_body, **kwargs) as resp:
             self.logger.debug(
                 "[%s/%s - %s] %s responded with %s %s containing %s (%s bytes)",
                 retry,
@@ -181,8 +178,6 @@ class HTTPConnection:
 
             # Expect JSON for now...
             body = await resp.json()
-        finally:
-            await resp.close()
 
         # Do this pre-emptively before anything else can fail.
         if self._is_rate_limited(resource, resp.status, headers, body):
