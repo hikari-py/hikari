@@ -7,16 +7,24 @@
 set -x
 
 DIR=public
-PATTERN='coverage-*'
+# Skip PyPy for now in aggregation, as it appears to give impossible uncovered line numbers (e.g. line negative 13 (-13) on rates.py)
+#PATTERN='coverage-*'
+PATTERN='coverage-py3*'
 TARGET_DIR=$DIR
+DEBUG=no
+
 python -m coverage combine $(find $DIR -type f -iname $PATTERN)
+python -m coverage report
 python -m coverage xml -o public/coverage.xml
 python -m coverage html -d public/coverage
-rm .coverage public/*.dat || true
+
+if [ "$DEBUG" = "no" ]; then
+    rm .coverage public/*.dat || true
+fi
 
 CURRENT_BRANCH="$(git symbolic-ref --short HEAD || git symbolic-ref --short master)"
 if [ "$CURRENT_BRANCH" = "master" ]; then
-    PREVIOUS_BRANCH='${CURRENT_BRANCH}^'
+    PREVIOUS_BRANCH=$(git rev-list origin | head -n 2 | tail -n 1)
 else
     PREVIOUS_BRANCH="master"
 fi

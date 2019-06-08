@@ -3,8 +3,8 @@ __pycache__/
 *.pyc
 
 # Virtual environments
-.venv/
-venv/
+.venv*/
+venv*/
 
 # CI pages, coverage reports, etc
 public/
@@ -26,6 +26,7 @@ vscode/
 
 # Coverage-generated files
 .coverage
+**/*,cover
 
 # PyTest-generated files
 .pytest/

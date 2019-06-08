@@ -45,7 +45,7 @@ async def test_TimedTokenBucket_acquire_when_not_rate_limited_with_callback_does
 @pytest.mark.slow
 async def test_VariableTokenBucket_acquire_when_not_rate_limited_with_callback_does_not_call_it(event_loop):
     now = time.perf_counter()
-    b = rates.VariableTokenBucket(10, 10, now, now + 3, event_loop)
+    b = rates.VariableTokenBucket(10, 10, now, now + 1, event_loop)
     callback = asynctest.MagicMock()
     await b.acquire(callback)
     assert b._remaining == 9
@@ -55,33 +55,33 @@ async def test_VariableTokenBucket_acquire_when_not_rate_limited_with_callback_d
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
 async def test_TimedTokenBucket_acquire_when_rate_limiting_without_callback_functions_correctly(event_loop):
-    b = rates.TimedTokenBucket(1, 3, event_loop)
+    b = rates.TimedTokenBucket(1, 1, event_loop)
     await b.acquire()
     start = time.perf_counter()
     await b.acquire()
     time_taken = time.perf_counter() - start
     assert b._remaining == 0
-    assert math.isclose(time_taken, 3, abs_tol=0.25)
+    assert math.isclose(time_taken, 1, abs_tol=0.25)
 
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
 async def test_VariableTokenBucket_acquire_when_rate_limiting_without_callback_functions_correctly(event_loop):
     now = time.perf_counter()
-    b = rates.VariableTokenBucket(1, 1, now, now + 3, event_loop)
+    b = rates.VariableTokenBucket(1, 1, now, now + 1, event_loop)
     await b.acquire()
     start = time.perf_counter()
     await b.acquire()
     time_taken = time.perf_counter() - start
     assert b._remaining == 0
-    assert math.isclose(time_taken, 3, abs_tol=0.25)
+    assert math.isclose(time_taken, 1, abs_tol=0.25)
 
 
 # If this begins to fail, change the time to 2s, with abs_tol=1, or something
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
 async def test_TimedTokenBucket_acquire_when_rate_limiting_with_callback_should_invoke_the_callback_once(event_loop):
-    b = rates.TimedTokenBucket(1, 3, event_loop)
+    b = rates.TimedTokenBucket(1, 1, event_loop)
     await b.acquire()
     start = time.perf_counter()
     callback = asynctest.MagicMock()
@@ -89,7 +89,7 @@ async def test_TimedTokenBucket_acquire_when_rate_limiting_with_callback_should_
     time_taken = time.perf_counter() - start
     assert b._remaining == 0
 
-    assert math.isclose(time_taken, 3, abs_tol=0.25)
+    assert math.isclose(time_taken, 1, abs_tol=0.25)
     callback.assert_called_once()
 
 
@@ -97,7 +97,7 @@ async def test_TimedTokenBucket_acquire_when_rate_limiting_with_callback_should_
 @pytest.mark.slow
 async def test_VariableTokenBucket_acquire_when_rate_limiting_with_callback_should_invoke_the_callback_once(event_loop):
     now = time.perf_counter()
-    b = rates.VariableTokenBucket(1, 1, now, now + 3, event_loop)
+    b = rates.VariableTokenBucket(1, 1, now, now + 1, event_loop)
     await b.acquire()
     start = time.perf_counter()
     callback = asynctest.MagicMock()
@@ -105,7 +105,7 @@ async def test_VariableTokenBucket_acquire_when_rate_limiting_with_callback_shou
     time_taken = time.perf_counter() - start
     assert b._remaining == 0
     # We should have been rate limited by 1 second.
-    assert math.isclose(time_taken, 3, abs_tol=0.25)
+    assert math.isclose(time_taken, 1, abs_tol=0.25)
     callback.assert_called_once()
 
 
@@ -238,20 +238,20 @@ async def test_VariableTokenBucket_reassess_when_reset_at_attribute_is_in_the_pa
     event_loop
 ):
     now = time.perf_counter()
-    b = rates.VariableTokenBucket(10, 1, now, now + 3, event_loop)
+    b = rates.VariableTokenBucket(10, 1, now, now + 1, event_loop)
 
     b._remaining = 0
     b._reset_at = -1
 
     b._reassess()
     assert b._remaining == b._total
-    assert math.isclose(b._reset_at, now + 3, abs_tol=0.25)
+    assert math.isclose(b._reset_at, now + 1, abs_tol=0.25)
 
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
 async def test_TimedTokenBucket_reassess_must_run_as_many_tasks_as_possible_in_expected_time(event_loop):
-    b = rates.TimedTokenBucket(10, 3, event_loop)
+    b = rates.TimedTokenBucket(10, 1, event_loop)
 
     checked = False
 
@@ -271,14 +271,14 @@ async def test_TimedTokenBucket_reassess_must_run_as_many_tasks_as_possible_in_e
     elapsed = time.perf_counter() - start
     callback.assert_called()
     assert checked
-    assert math.isclose(elapsed, 6, abs_tol=0.25)
+    assert math.isclose(elapsed, 2, abs_tol=0.25)
 
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
 async def test_VariableTokenBucket_must_run_as_many_tasks_as_possible_in_expected_time(event_loop):
     now = time.perf_counter()
-    b = rates.VariableTokenBucket(10, 10, now, now + 3, event_loop)
+    b = rates.VariableTokenBucket(10, 10, now, now + 1, event_loop)
 
     checked = False
 
@@ -303,7 +303,7 @@ async def test_VariableTokenBucket_must_run_as_many_tasks_as_possible_in_expecte
 
     callback.assert_called()
     assert checked
-    assert math.isclose(elapsed, 6, abs_tol=0.25)
+    assert math.isclose(elapsed, 2, abs_tol=0.25)
 
 
 @_helpers.mark_asyncio_with_timeout()
@@ -338,7 +338,7 @@ async def test_TimedLatchBucket_when_locked_will_return_after_a_cooldown(event_l
         assert latch.is_limiting
 
     callback = asynctest.MagicMock(wraps=assert_locked)
-    latch.lock(3)
+    latch.lock(1)
     # Yield for a moment to ensure the routine is triggered before we try to acquire.
     await asyncio.sleep(0.05)
     start = time.perf_counter()
@@ -348,21 +348,21 @@ async def test_TimedLatchBucket_when_locked_will_return_after_a_cooldown(event_l
     callback.assert_called_with(9, 18, foo=27)
     assert checked
     # Assert we waited for about 3 seconds.
-    assert math.isclose(end - start, 3, abs_tol=0.25)
+    assert math.isclose(end - start, 1, abs_tol=0.25)
 
 
 @_helpers.mark_asyncio_with_timeout()
 @pytest.mark.slow
 async def test_TimedLatchBucket_when_locked_no_args(event_loop):
     latch = rates.TimedLatchBucket(event_loop)
-    latch.lock(3)
+    latch.lock(1)
     # Yield for a moment to ensure the routine is triggered before we try to acquire.
     await asyncio.sleep(0.05)
     start = time.perf_counter()
     await latch.acquire()
     end = time.perf_counter()
     # Assert we waited for about 3 seconds.
-    assert math.isclose(end - start, 3, abs_tol=0.25)
+    assert math.isclose(end - start, 1, abs_tol=0.25)
 
 
 @_helpers.mark_asyncio_with_timeout()

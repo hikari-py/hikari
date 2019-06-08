@@ -104,9 +104,6 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
     async def __aenter__(self):
         await self.acquire()
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        pass
-
 
 class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
     """
@@ -236,9 +233,6 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
     async def __aenter__(self):
         await self.acquire()
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        pass
-
 
 class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
     """
@@ -279,12 +273,6 @@ class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
                 if_locked(*args, **kwargs)
             await self._unlock_event.wait()
 
-    async def __aenter__(self) -> None:
-        await self.acquire()
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
-        pass
-
     def lock(self, unlock_after: float) -> None:
         self._locked = True
         self._unlock_event.clear()
@@ -294,3 +282,6 @@ class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
     def unlock(self) -> None:
         self._locked = False
         self._unlock_event.set()
+
+    async def __aenter__(self) -> None:
+        await self.acquire()

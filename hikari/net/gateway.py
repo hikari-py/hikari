@@ -275,20 +275,25 @@ class GatewayConnection:
 
     async def _keep_alive(self) -> None:
         while not self.closed_event.is_set():
+            now = time.perf_counter()
             try:
-                if self.last_heartbeat_sent + self.heartbeat_interval < time.perf_counter():
-                    last_sent = time.perf_counter() - self.last_heartbeat_sent
+                if self.last_heartbeat_sent + self.heartbeat_interval < now:
+                    last_sent = now - self.last_heartbeat_sent
                     msg = f"Failed to receive an acknowledgement from the previous heartbeat sent ~{last_sent}s ago"
                     return await self._trigger_resume(code=opcodes.GatewayClientExit.PROTOCOL_VIOLATION, reason=msg)
 
                 await asyncio.wait_for(self.closed_event.wait(), timeout=self.heartbeat_interval)
             except asyncio.TimeoutError:
-                start = time.perf_counter()
+                start = now
                 await self._send_heartbeat()
                 time_taken = time.perf_counter() - start
 
                 if time_taken > 0.15 * self.heartbeat_latency:
                     self._handle_slow_client(time_taken)
+            finally:
+                # Yield to the event loop for a little while. Prevents some buggy behaviour with PyPy, and prevents
+                # any mutation of the heartbeat interval immediately tanking the CPU, so may as well keep it here.
+                await asyncio.sleep(1)
 
     async def _receive_hello(self) -> None:
         hello = await self._receive_json()

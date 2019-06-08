@@ -8,7 +8,6 @@ import time
 import urllib.parse as urlparse
 import zlib
 
-import async_timeout
 import asynctest
 
 import hikari.net.opcodes
@@ -42,7 +41,7 @@ class MockGateway(gateway.GatewayConnection):
 
     @staticmethod
     async def _wait_closed():
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.5)
 
 
 @_helpers.mark_asyncio_with_timeout()
@@ -221,7 +220,7 @@ async def test_heartbeat_beats_at_interval(event_loop):
 
     task = asyncio.create_task(gw._keep_alive())
     try:
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.5)
     finally:
         task.cancel()
         gw.ws.send.assert_awaited_with('{"op": 1, "d": null}')
@@ -232,13 +231,12 @@ async def test_heartbeat_shuts_down_when_closure_request(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
     gw.heartbeat_interval = 0.01
 
-    with async_timeout.timeout(5):
-        task = asyncio.create_task(gw._keep_alive())
-        try:
-            await asyncio.sleep(0.1)
-        finally:
-            await gw.close(True)
-            await task
+    task = asyncio.create_task(gw._keep_alive())
+    try:
+        await asyncio.sleep(0.5)
+    finally:
+        await gw.close(True)
+        await task
 
 
 @_helpers.mark_asyncio_with_timeout()
@@ -249,8 +247,7 @@ async def test_heartbeat_if_not_acknowledged_in_time_closes_connection_with_resu
 
     task = asyncio.create_task(gw._keep_alive())
 
-    with async_timeout.timeout(0.1):
-        await asyncio.sleep(0)
+    await asyncio.sleep(0.5)
 
     task.cancel()
     gw.ws.close.assert_awaited_once()
@@ -264,8 +261,7 @@ async def test_slow_loop_produces_warning(event_loop):
     gw._handle_slow_client = asynctest.MagicMock(wraps=gw._handle_slow_client)
     task = asyncio.create_task(gw._keep_alive())
 
-    with async_timeout.timeout(1):
-        await asyncio.sleep(0.1)
+    await asyncio.sleep(0.5)
 
     task.cancel()
     gw._handle_slow_client.assert_called_once()
