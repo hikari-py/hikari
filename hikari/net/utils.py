@@ -13,7 +13,7 @@ from hikari.compat import typing
 AnyT = typing.TypeVar("AnyT")
 
 
-def get_from_map_as(mapping: dict, key: typing.Any, klazz: typing.Type[AnyT]) -> typing.Optional[AnyT]:
+def get_from_map_as(mapping: dict, key: typing.Any, klazz: typing.Type[AnyT], default=None) -> typing.Optional[AnyT]:
     """
     Get from a map and perform a type cast where possible.
 
@@ -24,6 +24,8 @@ def get_from_map_as(mapping: dict, key: typing.Any, klazz: typing.Type[AnyT]) ->
             key to access.
         klazz:
             type to cast to if required.
+        default:
+            default value to return, or `None` if unspecified.
 
     Returns:
         An optional casted value, or `None` if it wasn't in the `mapping` at the start.
@@ -32,7 +34,7 @@ def get_from_map_as(mapping: dict, key: typing.Any, klazz: typing.Type[AnyT]) ->
     if isinstance(raw, klazz):
         return raw
     elif raw is None:
-        return None
+        return default
     else:
         return klazz(raw)
 

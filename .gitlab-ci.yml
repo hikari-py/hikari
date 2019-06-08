@@ -17,7 +17,6 @@ variables:
     - mkdir public || true
     - tox -avv
     - tox -e ${CI_JOB_NAME}
-  coverage: /^TOTAL[\s\d%]+\s(\d+\%)$/
   artifacts:
     paths:
       - public
@@ -165,6 +164,7 @@ aggregate-coverage:
     - py37
     - py38
   image: python:3-alpine
+  coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
   before_script:
     - apk add git
     - pip install tox
