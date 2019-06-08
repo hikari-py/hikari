@@ -5,6 +5,7 @@ import copy
 import functools
 import inspect
 import logging
+import threading
 
 import async_timeout
 import asynctest
@@ -27,14 +28,22 @@ def purge_loop():
     loop.close()
 
 
+def _terminate_in_10_thread(event: threading.Event, timeout, loop):
+    if not event.wait(timeout):
+        loop.close()
+
+
 def mark_asyncio_with_timeout(timeout=10):
     """Marks a test as an asyncio py-test, but also fails the test if it runs for more than the given timeout."""
 
     def decorator(coro):
         @functools.wraps(coro)
         async def wrapper(event_loop):
-            async with async_timeout.timeout(timeout):
-                await coro(event_loop)
+            event = threading.Event()
+            t = threading.Thread(target=_terminate_in_10_thread, args=[event, timeout, event_loop], daemon=True)
+            t.start()
+            await coro(event_loop)
+            event.set()
 
         return pytest.mark.asyncio(wrapper)
 
