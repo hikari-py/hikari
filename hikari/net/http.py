@@ -61,6 +61,9 @@ class Resource:
     def __hash__(self):
         return hash(self.bucket)
 
+    def __eq__(self, other) -> bool:
+        return isinstance(other, Resource) and hash(self) == hash(other)
+
     def get_uri(self, base_uri):
         """Return the interpolated path concatenated onto the end of the `base_uri` parameter."""
         return base_uri + self.path.format(**self.params)
