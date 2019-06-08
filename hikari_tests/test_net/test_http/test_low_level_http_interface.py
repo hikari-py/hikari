@@ -1,11 +1,51 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Tests the low level handler logic all endpoints will be expected to use.
+"""
+import asyncio
+
 import asynctest
 import pytest
 
 from hikari import errors
 from hikari.net import http
 from hikari_tests._helpers import _mock_methods_on
+
+
+########################################################################################################################
+
+
+class MockAiohttpResponse:
+    __aenter__ = asyncio.coroutine(lambda self: self)
+    __aexit__ = asyncio.coroutine(lambda self, *_, **__: None)
+    json = asynctest.CoroutineMock()
+    close = asynctest.CoroutineMock()
+    status = 200
+    reason = "OK"
+    headers = {}
+    content_length = 500
+
+    @property
+    def content_type(self):
+        return self.headers.get("Content-Type", "application/json")
+
+
+def _mock_for_request_once(event_loop) -> http.HTTPConnection:
+    with asynctest.patch("aiohttp.ClientSession", new=asynctest.MagicMock()):
+        mock = _mock_methods_on(
+            HTTPContext(loop=event_loop, token="xxx"),
+            except_=["_request_once", "_get_bucket_key"],
+            also_mock=["global_rate_limit.acquire"],
+        )
+
+        mock.session = asynctest.MagicMock()
+        mock.session.___response = MockAiohttpResponse()
+        mock.session.request = asynctest.MagicMock(return_value=mock.session.___response)
+        return mock
+
+
+########################################################################################################################
 
 
 def test_resource_bucket():
@@ -74,21 +114,6 @@ async def test_request_does_not_retry_on_success(event_loop):
         actual_result = await h._request(method="get", path="/foo/bar")
         assert h._request_once.call_count == 3
         assert actual_result is expected_result
-
-
-def _mock_for_request_once(event_loop) -> http.HTTPConnection:
-    with asynctest.patch("aiohttp.ClientSession", new=asynctest.MagicMock()):
-        mock = _mock_methods_on(
-            HTTPContext(loop=event_loop, token="xxx"),
-            except_=["_request_once", "_get_bucket_key"],
-            also_mock=["global_rate_limit.acquire"],
-        )
-
-        mock.session.___response = asynctest.MagicMock()
-        mock.session.request = asynctest.CoroutineMock(return_value=mock.session.___response)
-        mock.session.___response.json = asynctest.CoroutineMock()
-        mock.session.___response.close = asynctest.CoroutineMock()
-        return mock
 
 
 @pytest.mark.asyncio
