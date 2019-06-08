@@ -65,7 +65,7 @@ def mock_http_connection(event_loop):
 ########################################################################################################################
 
 
-def test_resource_bucket():
+def test_Resource_bucket():
     a = http.Resource("get", "/foo/bar", channel_id="1234", potatos="spaghetti", guild_id="5678", webhook_id="91011")
     b = http.Resource("GET", "/foo/bar", channel_id="1234", potatos="spaghetti", guild_id="5678", webhook_id="91011")
     c = http.Resource("get", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011")
@@ -79,7 +79,7 @@ def test_resource_bucket():
     assert b.bucket != d.bucket
 
 
-def test_resource_hash():
+def test_Resource_hash():
     a = http.Resource("get", "/foo/bar", channel_id="1234", potatos="spaghetti", guild_id="5678", webhook_id="91011")
     b = http.Resource("GET", "/foo/bar", channel_id="1234", potatos="spaghetti", guild_id="5678", webhook_id="91011")
     c = http.Resource("get", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011")
@@ -91,6 +91,21 @@ def test_resource_hash():
     assert hash(b) == hash(c)
     assert hash(a) != hash(d)
     assert hash(b) != hash(d)
+
+
+def test_Resource_equality():
+    a = http.Resource("get", "/foo/bar", channel_id="1234", potatos="spaghetti", guild_id="5678", webhook_id="91011")
+    b = http.Resource("GET", "/foo/bar", channel_id="1234", potatos="spaghetti", guild_id="5678", webhook_id="91011")
+    c = http.Resource("get", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011")
+    d = http.Resource("post", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011")
+
+    assert a == b
+    assert b == a
+    assert c != d
+    assert a == c
+    assert b == c
+    assert a != d
+    assert b != d
 
 
 def test_resource_get_uri():
