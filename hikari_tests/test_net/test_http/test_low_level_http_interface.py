@@ -281,9 +281,7 @@ async def test_is_rate_limited_does_not_lock_global_rate_limit_if_not_a_429_resp
 
 
 @pytest.mark.asyncio
-async def test_is_rate_limited_does_not_lock_global_rate_limit_if_XRateLimitGlobal_is_not_present(
-    mock_http_connection
-):
+async def test_is_rate_limited_does_not_lock_global_rate_limit_if_XRateLimitGlobal_is_not_present(mock_http_connection):
     res = http.Resource("get", "/foo/bar")
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
