@@ -162,7 +162,7 @@ async def test_VariableTokenBucket_update_when_still_under_limit_but_remaining_d
     b.update(15, 1, now, now + 10, False)
     assert b._total == 15
     assert b._remaining == 1
-    assert b._per == 10
+    assert math.isclose(b._per, 10, rel_tol=0.1)
     assert math.isclose(b._reset_at, now + 10, abs_tol=0.25)
     assert math.isclose(b._last_reset_at, now, abs_tol=0.25)
     b._reassess.assert_not_called()
@@ -177,7 +177,7 @@ async def test_VariableTokenBucket_update_when_still_under_limit_but_remaining_d
     b.update(15, 15, now, now + 10, False)
     assert b._total == 15
     assert b._remaining == 15
-    assert b._per == 10
+    assert math.isclose(b._per, 10, rel_tol=0.1)
     assert math.isclose(b._reset_at, now + 10, abs_tol=0.25)
     assert math.isclose(b._last_reset_at, now, abs_tol=0.25)
     b._reassess.assert_called_once()
@@ -194,7 +194,7 @@ async def test_VariableTokenBucket_update_when_not_under_limit_but_remaining_did
     b.update(15, 1, now, now + 10, False)
     assert b._total == 15
     assert b._remaining == 1
-    assert b._per == 10
+    assert math.isclose(b._per, 10, rel_tol=0.1)
     assert math.isclose(b._reset_at, now + 10, abs_tol=0.25)
     assert math.isclose(b._last_reset_at, now, abs_tol=0.25)
     b._reassess.assert_not_called()
@@ -209,7 +209,7 @@ async def test_VariableTokenBucket_update_when_not_under_limit_but_remaining_did
     b.update(15, 15, now, now + 10, False)
     assert b._total == 15
     assert b._remaining == 15
-    assert b._per == 10
+    assert math.isclose(b._per, 10, rel_tol=0.1)
     assert math.isclose(b._reset_at, now + 10, abs_tol=0.25)
     assert math.isclose(b._last_reset_at, now, abs_tol=0.25)
     b._reassess.assert_called_once()
