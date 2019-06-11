@@ -1025,6 +1025,6 @@ async def test_up_time_when_running(event_loop):
         large_threshold=69,
     )
 
-    gw.started_at = time.monotonic() - 15
+    gw.started_at = time.perf_counter() - 15
 
     assert gw.up_time.total_seconds() > 15
