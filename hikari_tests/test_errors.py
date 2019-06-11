@@ -1,36 +1,35 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import http
 import logging
 import traceback
+from http import HTTPStatus as HTTP
 
 import pytest
 
 from hikari import errors
-from hikari.net import opcodes
-
+from hikari.net import utils
+from hikari.net.opcodes import GatewayClosure as GSE
+from hikari.net.opcodes import JSONErrorCode as JSON
 
 _LOGGER = logging.getLogger(__name__)
+
+res = utils.Resource("http://you.local", "get", "/it/now")
 
 
 @pytest.mark.parametrize(
     "ex",
     [
-        errors.DiscordGatewayError(opcodes.GatewayServerExit(4003), "broken"),
-        errors.DiscordGatewayError(opcodes.GatewayServerExit.SHARDING_REQUIRED, "Shard me"),
-        errors.DiscordUnauthorized(http.HTTPStatus.UNAUTHORIZED, opcodes.JSONErrorCode.UNAUTHORIZED, "Bad token"),
-        errors.DiscordForbidden(http.HTTPStatus.FORBIDDEN, opcodes.JSONErrorCode.MISSING_PERMISSIONS, "Forbidden"),
-        errors.DiscordBadRequest(http.HTTPStatus.BAD_REQUEST, opcodes.JSONErrorCode.INVALID_FORM_BODY, "Bad form body"),
-        errors.DiscordHTTPResponseError(
-            http.HTTPStatus.NOT_FOUND, opcodes.JSONErrorCode.UNKNOWN_CHANNEL, "Channel not found"
-        ),
-        errors.DiscordHTTPResponseError(
-            http.HTTPStatus.BAD_REQUEST, opcodes.JSONErrorCode.INVALID_FORM_BODY, "Bad form body"
-        ),
-        errors.HikariError("eee"),
-        errors.ClientError("aaa"),
+        errors.GatewayError(GSE(4000), "broken"),
+        errors.GatewayError(GSE.SHARDING_REQUIRED, "Shard me"),
+        errors.ServerError(res, HTTP.SERVICE_UNAVAILABLE),
+        errors.ServerError(res, HTTP.SERVICE_UNAVAILABLE, "Service Unavailable!"),
+        errors.ClientError(res, HTTP.TOO_MANY_REQUESTS, None, "You are being rate limited"),
+        errors.BadRequest(res, JSON.INVALID_FORM_BODY, "Bad body"),
+        errors.Unauthorized(res, JSON.UNAUTHORIZED, "Who are you"),
+        errors.Forbidden(res, JSON.MISSING_PERMISSIONS, "You cant do this"),
+        errors.NotFound(res, JSON.UNKNOWN_CHANNEL, "Channel was not found"),
     ],
-    ids=lambda ex: type(ex),
+    ids=type,
 )
 def test_error(ex):
     try:
@@ -39,3 +38,12 @@ def test_error(ex):
         traceback.format_exception(type(ex), ex, ex.__traceback__)
         assert repr(ex) != ""
         assert str(ex) != ""
+
+
+@pytest.mark.parametrize("ex_t", [errors.HikariError, errors.DiscordError, errors.HTTPError], ids=lambda t: t.__name__)
+def test_cannot_initialize_base_exception(ex_t):
+    try:
+        ex_t()
+        assert False, "No error was raised"
+    except NotImplementedError:
+        pass

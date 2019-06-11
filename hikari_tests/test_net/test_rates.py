@@ -256,7 +256,6 @@ async def test_TimedTokenBucket_reassess_must_run_as_many_tasks_as_possible_in_e
     checked = False
 
     def assert_locked():
-        print("You are being ratelimited")
         nonlocal checked
         checked = True
         assert b.is_limiting
@@ -283,7 +282,6 @@ async def test_VariableTokenBucket_must_run_as_many_tasks_as_possible_in_expecte
     checked = False
 
     def assert_locked():
-        print("You are being ratelimited", b.is_limiting, b._per, b._remaining, b._last_reset_at, b._reset_at, b._total)
         nonlocal checked
         checked = True
         assert b.is_limiting

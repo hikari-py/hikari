@@ -7,7 +7,6 @@ import inspect
 import logging
 import threading
 
-import async_timeout
 import asynctest
 import pytest
 
@@ -55,10 +54,19 @@ def _mock_methods_on(obj, except_=(), also_mock=()):
     # and mock specific components with a coroutine mock to mock other external components quickly :)
     magics = ["__enter__", "__exit__", "__aenter__", "__aexit__", "__iter__", "__aiter__"]
 
+    except_ = set(except_)
+    also_mock = set(also_mock)
+
+    checked = set()
+
     def predicate(name, member):
         is_callable = callable(member)
         has_name = bool(name)
         name_is_allowed = name not in except_
+
+        if not name_is_allowed:
+            checked.add(name)
+
         is_not_disallowed_magic = not name.startswith("__") or name in magics
         # print(name, is_callable, has_name, name_is_allowed, is_not_disallowed_magic)
         return is_callable and has_name and name_is_allowed and is_not_disallowed_magic
@@ -80,5 +88,7 @@ def _mock_methods_on(obj, except_=(), also_mock=()):
         # sue me.
         owner = eval(owner)
         setattr(owner, attr, asynctest.CoroutineMock())
+
+    assert not (except_ - checked), f"Some attributes didn't exist, so were not mocked: {except_ - checked}"
 
     return copy_
