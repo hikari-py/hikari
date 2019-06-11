@@ -31,10 +31,12 @@ except Exception:
     import traceback
 
     traceback.print_exc()
+    
+    import hikari
 
     release = "-"
-    version = "dev"
-    project = "Hikari"
+    version = hikari.__version__
+    project = hikari.__name__
 
 # -- General configuration ---------------------------------------------------
 

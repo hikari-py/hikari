@@ -3,6 +3,24 @@
 @import url('https://cdn.jsdelivr.net/gh/tonsky/FiraCode@1.206/distr/fira_code.css');
 
 /*
+ * Apparently if it is too thin in width on display: block, it makes the html
+ * element not fit the window, and then the text just flows off the viewport,
+ * making the viewport only 2/3 of the screen and looking rediculous. If we use
+ * flex, it mediates this but then on large devices the viewport snaps rather
+ * than being responsive.
+ */
+html {
+    display: flex !important;
+}
+
+@media screen and (min-width: 430px){
+    html {
+        display: block !important;
+    }    
+}
+
+
+/*
  * Make body fill the viewport always
  */
 body {
