@@ -6,14 +6,14 @@ import datetime
 import email
 import platform
 
-#: Generic type variable describing "something or other". No one knows for sure what that something is. Perhaps no one
-#: even cares...
 from hikari.compat import typing
 
-AnyT = typing.TypeVar("AnyT")
+_T = typing.TypeVar("_T")
 
 
-def get_from_map_as(mapping: dict, key: typing.Any, klazz: typing.Type[AnyT], default=None) -> typing.Optional[AnyT]:
+def get_from_map_as(
+    mapping: dict, key: typing.Any, klazz: typing.Type[_T], default=None, *, default_on_error=False
+) -> typing.Optional[_T]:
     """
     Get from a map and perform a type cast where possible.
 
@@ -26,6 +26,9 @@ def get_from_map_as(mapping: dict, key: typing.Any, klazz: typing.Type[AnyT], de
             type to cast to if required.
         default:
             default value to return, or `None` if unspecified.
+        default_on_error:
+            If `True`, any error occuring whilst casting will be suppressed and the default value will be returned.
+            If `False`, as per the default, it will raise the error.
 
     Returns:
         An optional casted value, or `None` if it wasn't in the `mapping` at the start.
@@ -35,6 +38,11 @@ def get_from_map_as(mapping: dict, key: typing.Any, klazz: typing.Type[AnyT], de
         return raw
     elif raw is None:
         return default
+    elif default_on_error:
+        try:
+            return klazz(raw)
+        except Exception:
+            return default
     else:
         return klazz(raw)
 
@@ -120,6 +128,31 @@ def python_version() -> str:
     return " ".join(a for a in attrs if a.strip())
 
 
+def system_type() -> str:
+    """
+    Get a string representing the system type.
+    """
+    # Might change this eventually to be more detailed, who knows.
+    return platform.system()
+
+
+def user_agent() -> str:
+    """
+    Creates a User-Agent header string acceptable by the API.
+
+    Examples:
+        CPython3.7:
+            DiscordBot (https://gitlab.com/nekokatt/hikari, 0.0.1a) CPython 3.7.3 GCC 8.2.1 20181127 Linux
+        PyPy3.6:
+            DiscordBot (https://gitlab.com/nekokatt/hikari, 0.0.1a) PyPy 3.6.1 release-pypy3.6-v7.1.1 Linux
+    """
+    from hikari import __version__, __url__
+
+    system = system_type()
+    python = python_version()
+    return f"DiscordBot ({__url__}, {__version__}) {python} {system}"
+
+
 #: Type type of a body for a Gateway or HTTP request and response.
 #:
 #: This is a :class:`builtins.dict` of :class:`builtins.str` keys that map to any value. Since the :module:`hikari.net`
@@ -135,3 +168,43 @@ RequestBody = typing.Dict[str, typing.Any]
 #:     >>> async def on_dispatch(event: str, payload: Dict[str, Any]) -> None:
 #:     ...     logger.info("Dispatching %s with payload %r", event, payload)
 DispatchHandler = typing.Callable[[str, typing.Dict[str, typing.Any]], typing.Union[None, typing.Awaitable[None]]]
+
+
+class Resource:
+    """
+    Represents an HTTP request in a format that can be passed around atomically.
+
+    Also provides a mechanism to handle producing a rate limit identifier.
+
+    Note:
+        Comparisons of this object occur on the bucket
+    """
+
+    __slots__ = ("method", "path", "params", "bucket", "uri")
+
+    def __init__(self, base_uri, method, path, **kwargs):
+        #: The HTTP method to use (always upper-case)
+        self.method = method.upper()
+        #: The HTTP path to use (this can contain format-string style placeholders).
+        self.path = path
+        #: Any parameters to later interpolate into `path`.
+        self.params = kwargs
+        #: The bucket. This is a combination of the method, uninterpolated path, and optional `webhook_id`, `guild_id`
+        #: and `channel_id`, and is how the hash code for this route is produced. The hash code is used to determine
+        #: the bucket to use for local rate limiting in the HTTP component.
+        self.bucket = "{0.method} {0.path} {0.webhook_id} {0.guild_id} {0.channel_id}".format(self)
+        #: The full URI to use.
+        self.uri = base_uri + path.format(**kwargs)
+
+    #: The webhook ID, or `None` if it is not present.
+    webhook_id = property(lambda self: self.params.get("webhook_id"))
+    #: The guild ID, or `None` if it is not present.
+    guild_id = property(lambda self: self.params.get("guild_id"))
+    #: The channel ID, or `None` if it is not present.
+    channel_id = property(lambda self: self.params.get("channel_id"))
+
+    def __hash__(self):
+        return hash(self.bucket)
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, Resource) and hash(self) == hash(other)

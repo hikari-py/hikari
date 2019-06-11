@@ -3,12 +3,12 @@
 import asyncio
 import contextlib
 import json
-import math
 import time
 import urllib.parse as urlparse
 import zlib
 
 import asynctest
+import math
 
 import hikari.net.opcodes
 from hikari import errors
@@ -64,7 +64,7 @@ async def test_do_resume_triggers_correct_signals(event_loop):
     try:
         await gw._trigger_resume(69, "boom")
         assert False, "No exception raised"
-    except gateway.ResumeConnection:
+    except gateway._ResumeConnection:
         gw.ws.close.assert_awaited_once_with(code=69, reason="boom")
 
 
@@ -75,7 +75,7 @@ async def test_do_reidentify_triggers_correct_signals(event_loop):
     try:
         await gw._trigger_identify(69, "boom")
         assert False, "No exception raised"
-    except gateway.RestartConnection:
+    except gateway._RestartConnection:
         gw.ws.close.assert_awaited_once_with(code=69, reason="boom")
 
 
@@ -142,7 +142,7 @@ async def test_receive_json_closes_connection_if_payload_was_not_a_dict(event_lo
     await gw._receive_json()
     gw.ws.recv.assert_any_call()
     gw._trigger_identify.assert_awaited_once_with(
-        code=hikari.net.opcodes.GatewayClientExit.TYPE_ERROR, reason="Expected JSON object."
+        code=hikari.net.opcodes.GatewayClosure.TYPE_ERROR, reason="Expected JSON object."
     )
 
 
@@ -326,14 +326,9 @@ async def test_send_resume(event_loop):
 
 
 @_helpers.mark_asyncio_with_timeout()
-async def test_send_identify_when_not_redacted_default_behaviour(event_loop):
+async def test_send_identify(event_loop):
     gw = MockGateway(
-        host="wss://gateway.discord.gg:4949/",
-        loop=event_loop,
-        token="1234",
-        shard_id=None,
-        large_threshold=69,
-        incognito=False,
+        host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None, large_threshold=69
     )
     gw.session_id = 1234321
     gw.seq = 69_420
@@ -358,38 +353,6 @@ async def test_send_identify_when_not_redacted_default_behaviour(event_loop):
 
 
 @_helpers.mark_asyncio_with_timeout()
-async def test_send_identify_when_redacted(event_loop):
-    gw = MockGateway(
-        host="wss://gateway.discord.gg:4949/",
-        loop=event_loop,
-        token="1234",
-        shard_id=None,
-        large_threshold=69,
-        incognito=True,
-    )
-    gw.session_id = 1234321
-    gw.seq = 69_420
-    gw._send_json = asynctest.CoroutineMock()
-
-    with asynctest.patch("hikari.net.utils.python_version", new=lambda: "python3"), asynctest.patch(
-        "hikari.net.utils.library_version", new=lambda: "vx.y.z"
-    ), asynctest.patch("platform.system", new=lambda: "leenuks"):
-        await gw._send_identify()
-        gw._send_json.assert_called_with(
-            {
-                "op": 2,
-                "d": {
-                    "token": "1234",
-                    "compress": False,
-                    "large_threshold": 69,
-                    "properties": {"$os": "os", "$browser": "browser", "$device": "device"},
-                },
-            },
-            False,
-        )
-
-
-@_helpers.mark_asyncio_with_timeout()
 async def test_send_identify_includes_sharding_info_if_present(event_loop):
     gw = MockGateway(
         host="wss://gateway.discord.gg:4949/",
@@ -398,7 +361,6 @@ async def test_send_identify_includes_sharding_info_if_present(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     gw._send_json = asynctest.CoroutineMock()
 
@@ -419,7 +381,6 @@ async def test_send_identify_includes_status_info_if_present(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
         initial_presence={"foo": "bar"},
     )
     gw._send_json = asynctest.CoroutineMock()
@@ -441,7 +402,6 @@ async def test_process_events_halts_if_closed_event_is_set(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     gw._process_one_event = asynctest.CoroutineMock()
     gw.closed_event.set()
@@ -458,7 +418,6 @@ async def test_process_one_event_updates_seq_if_provided_from_payload(event_loop
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     gw._receive_json = asynctest.CoroutineMock(return_value={"op": 0, "d": {}, "s": 69})
     await gw._process_one_event()
@@ -474,7 +433,6 @@ async def test_process_events_does_not_update_seq_if_not_provided_from_payload(e
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
 
     gw.seq = 123
@@ -492,7 +450,6 @@ async def test_process_events_on_dispatch_opcode(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
 
     async def flag_death_on_call():
@@ -515,7 +472,6 @@ async def test_process_events_on_heartbeat_opcode(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
 
     async def flag_death_on_call():
@@ -538,7 +494,6 @@ async def test_process_events_on_heartbeat_ack_opcode(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
 
     async def flag_death_on_call():
@@ -561,7 +516,6 @@ async def test_process_events_on_reconnect_opcode(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
 
     async def flag_death_on_call():
@@ -570,7 +524,7 @@ async def test_process_events_on_reconnect_opcode(event_loop):
 
     gw._receive_json = flag_death_on_call
 
-    with contextlib.suppress(gateway.RestartConnection):
+    with contextlib.suppress(gateway._RestartConnection):
         await gw._process_one_event()
         assert False, "No error raised"
 
@@ -584,7 +538,6 @@ async def test_process_events_on_resumable_invalid_session_opcode(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
 
     async def flag_death_on_call():
@@ -593,7 +546,7 @@ async def test_process_events_on_resumable_invalid_session_opcode(event_loop):
 
     gw._receive_json = flag_death_on_call
 
-    with contextlib.suppress(gateway.ResumeConnection):
+    with contextlib.suppress(gateway._ResumeConnection):
         await gw._process_one_event()
         assert False, "No error raised"
 
@@ -607,7 +560,6 @@ async def test_process_events_on_non_resumable_invalid_session_opcode(event_loop
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
 
     async def flag_death_on_call():
@@ -616,7 +568,7 @@ async def test_process_events_on_non_resumable_invalid_session_opcode(event_loop
 
     gw._receive_json = flag_death_on_call
 
-    with contextlib.suppress(gateway.RestartConnection):
+    with contextlib.suppress(gateway._RestartConnection):
         await gw._process_one_event()
         assert False, "No error raised"
 
@@ -630,7 +582,6 @@ async def test_process_events_on_unrecognised_opcode_passes_silently(event_loop)
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
 
     async def flag_death_on_call():
@@ -650,7 +601,6 @@ async def test_request_guild_members(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     gw._send_json = asynctest.CoroutineMock()
     await gw.request_guild_members(1234)
@@ -666,7 +616,6 @@ async def test_update_status(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     gw._send_json = asynctest.CoroutineMock()
     await gw.update_status(1234, {"name": "boom"}, "dead", True)
@@ -684,7 +633,6 @@ async def test_update_voice_state(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     gw._send_json = asynctest.CoroutineMock()
     await gw.update_voice_state(1234, 5678, False, True)
@@ -702,7 +650,6 @@ async def test_no_blocking_close(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     gw.ws.wait_closed = asynctest.CoroutineMock()
     await gw.close(False)
@@ -719,7 +666,6 @@ async def test_blocking_close(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     gw.ws.wait_closed = asynctest.CoroutineMock()
     await gw.close(True)
@@ -736,7 +682,6 @@ async def test_shut_down_run_does_not_loop(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     gw._receive_json = asynctest.CoroutineMock()
     gw.closed_event.set()
@@ -752,14 +697,13 @@ async def test_invalid_session_when_cannot_resume_does_not_resume(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     gw._trigger_resume = asynctest.CoroutineMock(wraps=gw._trigger_resume)
     gw._trigger_identify = asynctest.CoroutineMock(wraps=gw._trigger_identify)
     pl = {"op": hikari.net.opcodes.GatewayOpcode.INVALID_SESSION.value, "d": False}
     gw._receive_json = asynctest.CoroutineMock(return_value=pl)
 
-    with contextlib.suppress(gateway.RestartConnection):
+    with contextlib.suppress(gateway._RestartConnection):
         await gw._process_one_event()
         assert False, "No exception raised"
 
@@ -776,14 +720,13 @@ async def test_invalid_session_when_can_resume_does_resume(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     gw._trigger_resume = asynctest.CoroutineMock(wraps=gw._trigger_resume)
     gw._trigger_identify = asynctest.CoroutineMock(wraps=gw._trigger_identify)
     pl = {"op": hikari.net.opcodes.GatewayOpcode.INVALID_SESSION.value, "d": True}
     gw._receive_json = asynctest.CoroutineMock(return_value=pl)
 
-    with contextlib.suppress(gateway.ResumeConnection):
+    with contextlib.suppress(gateway._ResumeConnection):
         await gw._process_one_event()
         assert False, "No exception raised"
 
@@ -800,7 +743,6 @@ async def test_dispatch_ready(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     #  *sweats furiously*
     pl = {
@@ -844,7 +786,6 @@ async def test_dispatch_resume(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     pl = {"op": 0, "t": "RESUMED", "d": {"_trace": ["potato.com", "tomato.net"]}}
 
@@ -863,7 +804,6 @@ async def test_handle_ready(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     #  *sweats furiously*
     pl = {
@@ -904,7 +844,6 @@ async def test_handle_resume(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
     pl = {"op": 0, "t": "RESUMED", "d": {"_trace": ["potato.com", "tomato.net"]}}
     await gw._handle_resumed(pl["d"])
@@ -919,7 +858,6 @@ async def test_process_events_calls_process_one_event(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
 
     gw._process_one_event = asynctest.CoroutineMock(
@@ -938,7 +876,6 @@ async def test_run_calls_run_once(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
 
     gw.run_once = asynctest.CoroutineMock(side_effect=asyncio.coroutine(lambda *_, **__: gw.closed_event.set()))
@@ -956,7 +893,6 @@ def mock_run_once_parts(timeout=10):
                 shard_id=917,
                 shard_count=1234,
                 large_threshold=69,
-                incognito=False,
             )
             gw._receive_hello = asynctest.CoroutineMock()
             gw._send_resume = asynctest.CoroutineMock()
@@ -1015,31 +951,31 @@ async def test_run_once_spins_up_event_processing_task(_, gw):
 @mock_run_once_parts()
 async def test_run_once_never_reconnect_is_raised_via_RestartConnection(_, gw):
     gw._process_events = asynctest.CoroutineMock(
-        side_effect=gateway.RestartConnection(gw._NEVER_RECONNECT_CODES[0], "some lazy message")
+        side_effect=gateway._RestartConnection(gw._NEVER_RECONNECT_CODES[0], "some lazy message")
     )
     try:
         await gw.run_once()
         assert False, "no runtime error raised"
-    except errors.DiscordGatewayError as ex:
-        assert isinstance(ex.__cause__, gateway.RestartConnection)
+    except errors.GatewayError as ex:
+        assert isinstance(ex.__cause__, gateway._RestartConnection)
 
 
 @mock_run_once_parts()
 async def test_run_once_never_reconnect_is_raised_via_ResumeConnection(_, gw):
     gw._process_events = asynctest.CoroutineMock(
-        side_effect=gateway.ResumeConnection(gw._NEVER_RECONNECT_CODES[0], "some lazy message")
+        side_effect=gateway._ResumeConnection(gw._NEVER_RECONNECT_CODES[0], "some lazy message")
     )
     try:
         await gw.run_once()
         assert False, "no runtime error raised"
-    except errors.DiscordGatewayError as ex:
-        assert isinstance(ex.__cause__, gateway.ResumeConnection)
+    except errors.GatewayError as ex:
+        assert isinstance(ex.__cause__, gateway._ResumeConnection)
 
 
 @mock_run_once_parts()
 async def test_run_once_RestartConnection(_, gw):
     gw._process_events = asynctest.CoroutineMock(
-        side_effect=gateway.RestartConnection(hikari.net.opcodes.GatewayServerExit.INVALID_SEQ, "some lazy message")
+        side_effect=gateway._RestartConnection(hikari.net.opcodes.GatewayClosure.INVALID_SEQ, "some lazy message")
     )
     start = 1, 2, ["foo"]
     gw.seq, gw.session_id, gw.trace = start
@@ -1054,7 +990,7 @@ async def test_run_once_RestartConnection(_, gw):
 @mock_run_once_parts()
 async def test_run_once_ResumeConnection(_, gw):
     gw._process_events = asynctest.CoroutineMock(
-        side_effect=gateway.ResumeConnection(hikari.net.opcodes.GatewayServerExit.RATE_LIMITED, "some lazy message")
+        side_effect=gateway._ResumeConnection(hikari.net.opcodes.GatewayClosure.RATE_LIMITED, "some lazy message")
     )
     start = 1, 2, ["foo"]
     gw._seq, gw._session_id, gw.trace = start
@@ -1073,7 +1009,6 @@ async def test_up_time_when_not_running(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
 
     assert gw.up_time.total_seconds() == 0
@@ -1088,7 +1023,6 @@ async def test_up_time_when_running(event_loop):
         shard_id=917,
         shard_count=1234,
         large_threshold=69,
-        incognito=False,
     )
 
     gw.started_at = time.monotonic() - 15
