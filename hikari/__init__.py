@@ -4,7 +4,8 @@
 A lightweight, flexible, customizable Discord API wrapper for Python.
 """
 __author__ = "Nekokatt"
-__copyright__ = f"© 2019 {__author__}"
-__version__ = "0.0.1a"
-__license__ = "zlib"
 __contributors__ = {"LunarCoffee", "raatty"}
+__copyright__ = f"© {__import__('datetime').datetime.now().year} {__author__}"
+__license__ = "zlib"
+__version__ = "0.0.1a"
+__url__ = "https://gitlab.com/nekokatt/hikari"

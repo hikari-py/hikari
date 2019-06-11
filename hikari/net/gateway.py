@@ -16,7 +16,6 @@ References:
 import datetime
 import json
 import logging
-import platform
 import time
 import zlib
 
@@ -33,12 +32,16 @@ from hikari.net.utils import DispatchHandler
 from hikari.net.utils import RequestBody
 
 
-class ResumeConnection(websockets.ConnectionClosed):
+class _ResumeConnection(websockets.ConnectionClosed):
     """Request to restart the client connection using a resume. This is only used internally."""
 
+    __slots__ = ()
 
-class RestartConnection(websockets.ConnectionClosed):
+
+class _RestartConnection(websockets.ConnectionClosed):
     """Request by the gateway to completely reconnect using a fresh connection. This is only used internally."""
+
+    __slots__ = ()
 
 
 class GatewayConnection:
@@ -56,9 +59,6 @@ class GatewayConnection:
         host:
             the host to connect to, in the format `wss://gateway.net` or `wss://gateway.net:port` without a query
             fragment.
-        incognito:
-            defaults to `False`. If `True`, then the platform, library version, and python version information
-            in the `IDENTIFY` header will be redacted.
         initial_presence:
             A JSON-serializable dict containing the initial presence to set, or `None` to just appear
             `online`. See https://discordapp.com/developers/docs/topics/gateway#update-status for a description
@@ -89,9 +89,9 @@ class GatewayConnection:
     #: The API version we should request the use of.
     _REQUESTED_VERSION = 7
     _NEVER_RECONNECT_CODES = (
-        opcodes.GatewayServerExit.AUTHENTICATION_FAILED,
-        opcodes.GatewayServerExit.INVALID_SHARD,
-        opcodes.GatewayServerExit.SHARDING_REQUIRED,
+        opcodes.GatewayClosure.AUTHENTICATION_FAILED,
+        opcodes.GatewayClosure.INVALID_SHARD,
+        opcodes.GatewayClosure.SHARDING_REQUIRED,
     )
 
     def __init__(
@@ -100,7 +100,6 @@ class GatewayConnection:
         *,
         connector=websockets.connect,
         dispatch: DispatchHandler = lambda t, d: None,
-        incognito: bool = False,
         initial_presence: typing.Optional[RequestBody] = None,
         large_threshold: int = 50,
         loop: asyncio.AbstractEventLoop,
@@ -130,8 +129,6 @@ class GatewayConnection:
         self.heartbeat_latency = float("inf")
         #: Number of packets that have been received since startup.
         self.in_cid = 0
-        #: If `True`, we don't send correct system info to Discord in the user agent payload.
-        self.incognito = incognito
         #: The initial presence to use for the bot status once IDENTIFYing with the shard.
         self.initial_presence = initial_presence
         #: What we regard to be a large guild in member numbers.
@@ -186,12 +183,12 @@ class GatewayConnection:
     async def _trigger_resume(self, code: int, reason: str) -> "typing.NoReturn":
         """Trigger a `RESUME` operation. This will raise a :class:`ResumableConnectionClosed` exception."""
         await self.ws.close(code=code, reason=reason)
-        raise ResumeConnection(code=code, reason=reason)
+        raise _ResumeConnection(code=code, reason=reason)
 
     async def _trigger_identify(self, code: int, reason: str) -> "typing.NoReturn":
         """Trigger a re-`IDENTIFY` operation. This will raise a :class:`GatewayRequestedReconnection` exception."""
         await self.ws.close(code=code, reason=reason)
-        raise RestartConnection(code=code, reason=reason)
+        raise _RestartConnection(code=code, reason=reason)
 
     async def _send_json(self, payload, skip_rate_limit) -> None:
         self.logger.debug(
@@ -228,9 +225,7 @@ class GatewayConnection:
         payload = json.loads(msg)
 
         if not isinstance(payload, dict):
-            return await self._trigger_identify(
-                code=opcodes.GatewayClientExit.TYPE_ERROR, reason="Expected JSON object."
-            )
+            return await self._trigger_identify(code=opcodes.GatewayClosure.TYPE_ERROR, reason="Expected JSON object.")
 
         self.logger.debug("received payload %s", payload)
         self.in_cid += 1
@@ -280,7 +275,7 @@ class GatewayConnection:
                 if self.last_heartbeat_sent + self.heartbeat_interval < now:
                     last_sent = now - self.last_heartbeat_sent
                     msg = f"Failed to receive an acknowledgement from the previous heartbeat sent ~{last_sent}s ago"
-                    return await self._trigger_resume(code=opcodes.GatewayClientExit.PROTOCOL_VIOLATION, reason=msg)
+                    return await self._trigger_resume(code=opcodes.GatewayClosure.PROTOCOL_VIOLATION, reason=msg)
 
                 await asyncio.wait_for(self.closed_event.wait(), timeout=self.heartbeat_interval)
             except asyncio.TimeoutError:
@@ -300,7 +295,7 @@ class GatewayConnection:
         op = hello["op"]
         if op != opcodes.GatewayOpcode.HELLO:
             return await self._trigger_resume(
-                code=opcodes.GatewayClientExit.PROTOCOL_VIOLATION, reason=f"Expected HELLO but got {op}"
+                code=opcodes.GatewayClosure.PROTOCOL_VIOLATION, reason=f"Expected HELLO but got {op}"
             )
 
         d = hello["d"]
@@ -325,9 +320,9 @@ class GatewayConnection:
                 "compress": False,
                 "large_threshold": self.large_threshold,
                 "properties": {
-                    "$os": "os" if self.incognito else platform.system(),
-                    "$browser": "browser" if self.incognito else utils.library_version(),
-                    "$device": "device" if self.incognito else utils.python_version(),
+                    "$os": utils.system_type(),
+                    "$browser": utils.library_version(),
+                    "$device": utils.python_version(),
                 },
             },
         }
@@ -384,18 +379,18 @@ class GatewayConnection:
         elif op == opcodes.GatewayOpcode.RECONNECT:
             self.logger.warning("instructed to disconnect and RECONNECT with gateway")
             await self._trigger_identify(
-                code=opcodes.GatewayClientExit.NORMAL_CLOSURE, reason="you requested me to reconnect"
+                code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="you requested me to reconnect"
             )
         elif op == opcodes.GatewayOpcode.INVALID_SESSION:
             if d is True:
                 self.logger.warning("will try to disconnect and RESUME")
                 await self._trigger_resume(
-                    code=opcodes.GatewayClientExit.NORMAL_CLOSURE, reason="invalid session id so will resume"
+                    code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="invalid session id so will resume"
                 )
             else:
                 self.logger.warning("will try to re-IDENTIFY")
                 await self._trigger_identify(
-                    code=opcodes.GatewayClientExit.NORMAL_CLOSURE, reason="invalid session id so will close"
+                    code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="invalid session id so will close"
                 )
         else:
             self.logger.warning("received unrecognised opcode %s", op)
@@ -505,16 +500,16 @@ class GatewayConnection:
                     is_resume = self.seq is not None and self.session_id is not None
                     await (self._send_resume() if is_resume else self._send_identify())
                     await asyncio.gather(self._keep_alive(), self._process_events())
-                except (RestartConnection, ResumeConnection, websockets.ConnectionClosed) as ex:
-                    code, reason = opcodes.GatewayServerExit(ex.code), ex.reason or "no reason"
+                except (_RestartConnection, _ResumeConnection, websockets.ConnectionClosed) as ex:
+                    code, reason = opcodes.GatewayClosure(ex.code), ex.reason or "no reason"
 
                     if ex.code in self._NEVER_RECONNECT_CODES:
                         self.logger.critical("disconnected after %s [%s]. Please rectify issue manually", reason, code)
-                        raise errors.DiscordGatewayError(code, reason) from ex
+                        raise errors.GatewayError(code, reason) from ex
 
                     else:
                         self.logger.warning("reconnecting after %s [%s]", reason, code)
-                        if isinstance(ex, RestartConnection):
+                        if isinstance(ex, _RestartConnection):
                             self.seq, self.session_id, self.trace = None, None, []
 
         finally:

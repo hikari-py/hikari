@@ -3,25 +3,28 @@
 """
 Core errors that may be raised by this API implementation.
 """
-import http
-
+from hikari.compat import typing
 from hikari.net import opcodes
+from hikari.net import utils
+
+
+def _abstract_constructor(*_, **__):
+    raise NotImplementedError(
+        "This type is not implemented. Please derive a class from it with a custom __init__ defined "
+        "and initialize with that."
+    )
 
 
 class HikariError(RuntimeError):
     """
     Base for an error raised by this API. Any errors should derive from this.
 
-    Args:
-        message:
-            The message to show.
+    Warning:
+        You may not initialize this exception directly.
     """
 
     __slots__ = ("message",)
-
-    def __init__(self, message: str) -> None:
-        #: The message to show.
-        self.message: str = message
+    __init__ = _abstract_constructor
 
     def __str__(self):
         return self.message
@@ -30,23 +33,33 @@ class HikariError(RuntimeError):
         return f"{type(self).__qualname__}: {self}"
 
 
-class ClientError(HikariError):
-    """Base for an error that occurs in this codebase specifically."""
-
-    __slots__ = ()
-
-
 class DiscordError(HikariError):
     """
     Base for an error that occurs with the Discord API somewhere.
 
     May also be used for edge cases where a custom error implementation does not exist.
+
+    Warning:
+        You may not initialize this exception directly.
     """
 
     __slots__ = ()
+    __init__ = _abstract_constructor
 
 
-class DiscordGatewayError(DiscordError):
+class HTTPError(DiscordError):
+    """
+    An error that occurred within the HTTP component of the API from the result of a response, or during processing.
+
+    Warning:
+        You may not initialize this exception directly.
+    """
+
+    __slots__ = ()
+    __init__ = _abstract_constructor
+
+
+class GatewayError(DiscordError):
     """
     Occurs if Hikari encounters a gateway error and has to close. This may be caused by an error occurring in the
     gateway logic, causing a malformed payload to be sent. It may also be triggered if the client fails to send a
@@ -55,77 +68,165 @@ class DiscordGatewayError(DiscordError):
 
     Args:
         code:
-            The websocket code that was returned.
+            The web-socket code that was returned.
         reason:
             The reason that the connection was closed.
     """
 
-    __slots__ = ("code", "reason")
+    __slots__ = ("code", "reason", "message")
 
-    def __init__(self, code: opcodes.GatewayServerExit, reason: str) -> None:
-        #: The websocket code that was returned.
-        self.code: opcodes.GatewayServerExit = code
+    def __init__(self, code: opcodes.GatewayClosure, reason: str) -> None:
+        #: The web socket code that was returned.
+        self.code: opcodes.GatewayClosure = code
         #: The reason that the connection was closed.
         self.reason: str = reason
-        super().__init__(f"{self.code.name} ({self.code.value}): {self.reason}")
+        self.message: str = f"{self.code.name} ({self.code.value}): {self.reason}"
 
 
-class DiscordHTTPError(DiscordError):
+class ServerError(HTTPError):
     """
-    A generic HTTP-based error occurred. This should be enforced by subclasses of this exception unless a rare
-    outlier occasion occurs where it is appropriate to throw this directly.
-    """
-
-    __slots__ = ()
-
-
-class DiscordHTTPResponseError(DiscordHTTPError):
-    """
-    Raised if an error occurs server-side on the RESTful API. This indicates a problem with Discord, not your code.
+    Raised if an error occurs server-side on the RESTful API due to errors in Discord. This is not your code, but a
+    problem with Discord itself.
 
     Args:
+        resource:
+            The HTTP resource that was accessed.
         http_status:
-            The HTTP status code that triggered this error.
-        error_code:
-            The JSON error code that was provided with this error.
-        error_reason:
-            Any additional message that was provided with this error.
-
+            The HTTP status code this represents.
+        message:
+            The error message provided with the error, if there is one, otherwise this is the name of the HTTP status
+            code.
     """
 
-    __slots__ = ("http_status", "error_code", "error_reason")
+    __slots__ = ("resource", "http_status", "message")
 
-    def __init__(self, http_status: http.HTTPStatus, error_code: opcodes.JSONErrorCode, error_reason: str = "") -> None:
-        self.http_status: http.HTTPStatus = http_status
-        self.error_code: opcodes.JSONErrorCode = error_code
-        self.error_reason: str = error_reason
-        super().__init__(error_reason or self.http_status.description or self.http_status.phrase)
+    def __init__(
+        self, resource: utils.Resource, http_status: opcodes.HTTPStatus, message: typing.Optional[str] = None
+    ) -> None:
+        self.resource: utils.Resource = resource
+        self.http_status: opcodes.HTTPStatus = http_status
+        self.message: str = message or http_status.name.replace("_", " ").title()
 
 
-class DiscordBadRequest(DiscordHTTPResponseError):
+class ClientError(HTTPError):
+    """
+    Raised if an error occurs server-side on the RESTful API due to bad input. This is an indication of a problem with
+    your logic or input.
+
+    Args:
+        resource:
+            The HTTP resource that was accessed, if available.
+        http_status:
+            The HTTP status code provided, if available.
+        json_error_code:
+            The JSON error code that was provided with this error, or `None` if no error was available.
+        message:
+            Any additional message that was provided with this error.
+    """
+
+    __slots__ = ("resource", "http_status", "json_error_code", "message")
+
+    def __init__(
+        self,
+        resource: typing.Optional[utils.Resource],
+        http_status: typing.Optional[opcodes.HTTPStatus],
+        json_error_code: typing.Optional[opcodes.JSONErrorCode],
+        message: str,
+    ) -> None:
+        self.resource: typing.Optional[utils.Resource] = resource
+        self.http_status: typing.Optional[opcodes.HTTPStatus] = http_status
+        self.json_error_code: typing.Optional[opcodes.JSONErrorCode] = json_error_code
+        self.message: str = message
+
+
+class BadRequest(ClientError):
     """
     Occurs when the request was improperly formatted, or the server couldn't understand it.
+
+    Args:
+        resource:
+            The HTTP resource that was accessed.
+        json_error_code:
+            The JSON error code that was provided with this error.
+        message:
+            Any additional message that was provided with this error.
+
+    Note:
+        Unlike in the base class :class:`ClientResponseError`, you can assume that :attr:`json_error_code`,
+        :attr:`resource`, and :attr:`http_status` are always populated if this exception is raised.
     """
 
     __slots__ = ()
 
+    def __init__(self, resource: utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
+        super().__init__(resource, opcodes.HTTPStatus.BAD_REQUEST, json_error_code, message)
 
-class DiscordUnauthorized(DiscordHTTPResponseError):
+
+class Unauthorized(ClientError):
     """
     Occurs when the request is unauthorized. This means the Authorization header or token is invalid/missing, or some
     other credential is incorrect.
+
+    Args:
+        resource:
+            The HTTP resource that was accessed.
+        json_error_code:
+            The JSON error code that was provided with this error.
+        message:
+            Any additional message that was provided with this error.
+
+    Note:
+        Unlike in the base class :class:`ClientResponseError`, you can assume that :attr:`json_error_code`,
+        :attr:`resource`, and :attr:`http_status` are always populated if this exception is raised.
     """
 
     __slots__ = ()
 
+    def __init__(self, resource: utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
+        super().__init__(resource, opcodes.HTTPStatus.UNAUTHORIZED, json_error_code, message)
 
-class DiscordForbidden(DiscordHTTPResponseError):
-    """Occurs when authorization is correct, but you do not have permission to access the resource."""
+
+class Forbidden(ClientError):
+    """
+    Occurs when authorization is correct, but you do not have permission to access the resource.
+
+    Args:
+        resource:
+            The HTTP resource that was accessed.
+        json_error_code:
+            The JSON error code that was provided with this error.
+        message:
+            Any additional message that was provided with this error.
+
+    Note:
+        Unlike in the base class :class:`ClientResponseError`, you can assume that :attr:`json_error_code`,
+        :attr:`resource`, and :attr:`http_status` are always populated if this exception is raised.
+    """
 
     __slots__ = ()
 
+    def __init__(self, resource: utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
+        super().__init__(resource, opcodes.HTTPStatus.FORBIDDEN, json_error_code, message)
 
-class DiscordNotFound(DiscordHTTPResponseError):
-    """Occurs when an accessed resource does not exist, or is hidden from the user."""
+
+class NotFound(ClientError):
+    """
+    Occurs when an accessed resource does not exist, or is hidden from the user.
+
+    Args:
+        resource:
+            The HTTP resource that was accessed.
+        json_error_code:
+            The JSON error code that was provided with this error.
+        message:
+            Any additional message that was provided with this error.
+
+    Note:
+        Unlike in the base class :class:`ClientResponseError`, you can assume that :attr:`json_error_code`,
+        :attr:`resource`, and :attr:`http_status` are always populated if this exception is raised.
+    """
 
     __slots__ = ()
+
+    def __init__(self, resource: utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
+        super().__init__(resource, opcodes.HTTPStatus.NOT_FOUND, json_error_code, message)
