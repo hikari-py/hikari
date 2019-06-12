@@ -27,7 +27,7 @@ class HikariError(RuntimeError):
     __init__ = _abstract_constructor
 
     def __str__(self):
-        return self.message
+        return self.message or ""
 
     def __repr__(self):
         return f"{type(self).__qualname__}: {self}"
@@ -124,7 +124,7 @@ class ClientError(HTTPError):
             Any additional message that was provided with this error.
     """
 
-    __slots__ = ("resource", "http_status", "json_error_code", "message")
+    __slots__ = ("resource", "status", "error_code", "message")
 
     def __init__(
         self,
@@ -134,8 +134,8 @@ class ClientError(HTTPError):
         message: str,
     ) -> None:
         self.resource: typing.Optional[utils.Resource] = resource
-        self.http_status: typing.Optional[opcodes.HTTPStatus] = http_status
-        self.json_error_code: typing.Optional[opcodes.JSONErrorCode] = json_error_code
+        self.status: typing.Optional[opcodes.HTTPStatus] = http_status
+        self.error_code: typing.Optional[opcodes.JSONErrorCode] = json_error_code
         self.message: str = message
 
 

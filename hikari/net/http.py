@@ -171,10 +171,10 @@ class HTTPConnection:
             return status, headers, body
         if 400 <= status < 500:
             return self._handle_client_error_response(resource, status, body)
-        elif 500 <= status:
-            return self._handle_server_error_response(resource, status, body)
         else:
-            raise errors.ClientError(resource, status, None, "Unknown status code")
+            # The server returned something we didn't understand and thus was not in the documentation. Treat it as a
+            # server error.
+            return self._handle_server_error_response(resource, status, body)
 
     def _log_rate_limit_already_in_progress(self, resource):
         name = f"local rate limit for {resource.bucket}" if resource is not None else "global rate limit"
@@ -241,16 +241,20 @@ class HTTPConnection:
     @staticmethod
     def _handle_client_error_response(resource, status, body) -> typing.NoReturn:
         # Assume Discord's spec is right and they don't send us random codes we don't know about...
-        error_code = utils.get_from_map_as(body, "code", opcodes.JSONErrorCode, None)
-        error_message = body.get("message")
+        try:
+            error_code = utils.get_from_map_as(body, "code", opcodes.JSONErrorCode, None)
+            error_message = body.get("message")
+        except AttributeError:
+            error_code = None
+            error_message = str(body)
 
-        if error_code == opcodes.HTTPStatus.BAD_REQUEST:
+        if status == opcodes.HTTPStatus.BAD_REQUEST:
             raise errors.BadRequest(resource, error_code, error_message)
-        elif error_code == opcodes.HTTPStatus.UNAUTHORIZED:
+        elif status == opcodes.HTTPStatus.UNAUTHORIZED:
             raise errors.Unauthorized(resource, error_code, error_message)
-        elif error_code == opcodes.HTTPStatus.FORBIDDEN:
+        elif status == opcodes.HTTPStatus.FORBIDDEN:
             raise errors.Forbidden(resource, error_code, error_message)
-        elif error_code == opcodes.HTTPStatus.NOT_FOUND:
+        elif status == opcodes.HTTPStatus.NOT_FOUND:
             raise errors.NotFound(resource, error_code, error_message)
         else:
             raise errors.ClientError(resource, status, error_code, error_message)
@@ -260,6 +264,6 @@ class HTTPConnection:
         if isinstance(body, dict):
             error_message = body.get("message")
         else:
-            error_message = body
+            error_message = str(body)
 
         raise errors.ServerError(resource, status, error_message)
