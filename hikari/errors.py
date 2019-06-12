@@ -152,7 +152,7 @@ class BadRequest(ClientError):
             Any additional message that was provided with this error.
 
     Note:
-        Unlike in the base class :class:`ClientResponseError`, you can assume that :attr:`json_error_code`,
+        Unlike in the base class :class:`ClientError`, you can assume that :attr:`json_error_code`,
         :attr:`resource`, and :attr:`http_status` are always populated if this exception is raised.
     """
 
@@ -176,7 +176,7 @@ class Unauthorized(ClientError):
             Any additional message that was provided with this error.
 
     Note:
-        Unlike in the base class :class:`ClientResponseError`, you can assume that :attr:`json_error_code`,
+        Unlike in the base class :class:`ClientError`, you can assume that :attr:`json_error_code`,
         :attr:`resource`, and :attr:`http_status` are always populated if this exception is raised.
     """
 
@@ -199,7 +199,7 @@ class Forbidden(ClientError):
             Any additional message that was provided with this error.
 
     Note:
-        Unlike in the base class :class:`ClientResponseError`, you can assume that :attr:`json_error_code`,
+        Unlike in the base class :class:`ClientError`, you can assume that :attr:`json_error_code`,
         :attr:`resource`, and :attr:`http_status` are always populated if this exception is raised.
     """
 
@@ -222,7 +222,7 @@ class NotFound(ClientError):
             Any additional message that was provided with this error.
 
     Note:
-        Unlike in the base class :class:`ClientResponseError`, you can assume that :attr:`json_error_code`,
+        Unlike in the base class :class:`ClientError`, you can assume that :attr:`json_error_code`,
         :attr:`resource`, and :attr:`http_status` are always populated if this exception is raised.
     """
 
