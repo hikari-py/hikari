@@ -6,6 +6,7 @@ Tests the low level handler logic all endpoints will be expected to use.
 import asyncio
 import datetime
 import email
+import re
 import time
 
 import asynctest
@@ -65,6 +66,11 @@ def mock_http_connection(event_loop):
     return MockHTTPConnection(loop=event_loop, token="xxx")
 
 
+@pytest.fixture
+def res():
+    return hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
+
+
 ########################################################################################################################
 
 
@@ -98,12 +104,11 @@ async def test_request_does_not_retry_on_success(mock_http_connection):
 
 
 @pytest.mark.asyncio
-async def test_request_once_acquires_global_rate_limit_bucket(mock_http_connection):
+async def test_request_once_acquires_global_rate_limit_bucket(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit.acquire"]
     )
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     try:
         await mock_http_connection._request_once(retry=0, resource=res, json_body={})
         assert False
@@ -112,12 +117,11 @@ async def test_request_once_acquires_global_rate_limit_bucket(mock_http_connecti
 
 
 @pytest.mark.asyncio
-async def test_request_once_acquires_local_rate_limit_bucket(mock_http_connection):
+async def test_request_once_acquires_local_rate_limit_bucket(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit.acquire"]
     )
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     bucket = asynctest.MagicMock()
     bucket.acquire = asynctest.CoroutineMock()
     mock_http_connection.buckets[res] = bucket
@@ -129,12 +133,11 @@ async def test_request_once_acquires_local_rate_limit_bucket(mock_http_connectio
 
 
 @pytest.mark.asyncio
-async def test_request_once_calls_rate_limit_handler(mock_http_connection):
+async def test_request_once_calls_rate_limit_handler(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit.acquire"]
     )
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     try:
         await mock_http_connection._request_once(retry=0, resource=res)
         assert False
@@ -143,12 +146,11 @@ async def test_request_once_calls_rate_limit_handler(mock_http_connection):
 
 
 @pytest.mark.asyncio
-async def test_request_once_raises_RateLimited_if_rate_limit_handler_returned_true(mock_http_connection):
+async def test_request_once_raises_RateLimited_if_rate_limit_handler_returned_true(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit.acquire"]
     )
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=True)
     try:
         await mock_http_connection._request_once(retry=0, resource=res)
@@ -158,35 +160,31 @@ async def test_request_once_raises_RateLimited_if_rate_limit_handler_returned_tr
 
 
 @pytest.mark.asyncio
-async def test_request_once_does_not_raise_RateLimited_if_rate_limit_handler_returned_false(mock_http_connection):
+async def test_request_once_does_not_raise_RateLimited_if_rate_limit_handler_returned_false(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit.acquire"]
     )
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
     await mock_http_connection._request_once(retry=0, resource=res)
 
 
 @pytest.mark.asyncio
-async def test_log_rate_limit_already_in_progress_logs_something(mock_http_connection):
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
+async def test_log_rate_limit_already_in_progress_logs_something(mock_http_connection, res):
     mock_http_connection.logger = asynctest.MagicMock(wraps=mock_http_connection.logger)
     mock_http_connection._log_rate_limit_already_in_progress(res)
     mock_http_connection.logger.debug.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_log_rate_limit_starting_logs_something(mock_http_connection):
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
+async def test_log_rate_limit_starting_logs_something(mock_http_connection, res):
     mock_http_connection.logger = asynctest.MagicMock(wraps=mock_http_connection.logger)
     mock_http_connection._log_rate_limit_starting(res, 123.45)
     mock_http_connection.logger.debug.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_is_rate_limited_locks_global_rate_limit_if_set(mock_http_connection):
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
+async def test_is_rate_limited_locks_global_rate_limit_if_set(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
@@ -201,8 +199,7 @@ async def test_is_rate_limited_locks_global_rate_limit_if_set(mock_http_connecti
 
 
 @pytest.mark.asyncio
-async def test_is_rate_limited_returns_True_when_globally_rate_limited(mock_http_connection):
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
+async def test_is_rate_limited_returns_True_when_globally_rate_limited(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
@@ -217,8 +214,7 @@ async def test_is_rate_limited_returns_True_when_globally_rate_limited(mock_http
 
 
 @pytest.mark.asyncio
-async def test_is_rate_limited_calls_log_rate_limit_starting(mock_http_connection):
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
+async def test_is_rate_limited_calls_log_rate_limit_starting(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
@@ -233,8 +229,7 @@ async def test_is_rate_limited_calls_log_rate_limit_starting(mock_http_connectio
 
 
 @pytest.mark.asyncio
-async def test_is_rate_limited_does_not_lock_global_rate_limit_if_XRateLimitGlobal_is_false(mock_http_connection):
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
+async def test_is_rate_limited_does_not_lock_global_rate_limit_if_XRateLimitGlobal_is_false(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
@@ -249,8 +244,7 @@ async def test_is_rate_limited_does_not_lock_global_rate_limit_if_XRateLimitGlob
 
 
 @pytest.mark.asyncio
-async def test_is_rate_limited_does_not_lock_global_rate_limit_if_not_a_429_response(mock_http_connection):
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
+async def test_is_rate_limited_does_not_lock_global_rate_limit_if_not_a_429_response(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
@@ -265,8 +259,9 @@ async def test_is_rate_limited_does_not_lock_global_rate_limit_if_not_a_429_resp
 
 
 @pytest.mark.asyncio
-async def test_is_rate_limited_does_not_lock_global_rate_limit_if_XRateLimitGlobal_is_not_present(mock_http_connection):
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
+async def test_is_rate_limited_does_not_lock_global_rate_limit_if_XRateLimitGlobal_is_not_present(
+    mock_http_connection, res
+):
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
@@ -282,12 +277,11 @@ async def test_is_rate_limited_does_not_lock_global_rate_limit_if_XRateLimitGlob
 
 @pytest.mark.asyncio
 async def test_is_rate_limited_creates_a_local_bucket_if_one_does_not_exist_for_the_current_resource_locally(
-    mock_http_connection
+    mock_http_connection, res
 ):
     mock_http_connection.buckets.clear()
     now = time.time()
     now_dt = email.utils.format_datetime(datetime.datetime.utcnow())
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
@@ -306,12 +300,11 @@ async def test_is_rate_limited_creates_a_local_bucket_if_one_does_not_exist_for_
 
 @pytest.mark.asyncio
 async def test_is_rate_limited_updates_existing_bucket_if_one_already_exists_for_the_current_resource_locally(
-    mock_http_connection
+    mock_http_connection, res
 ):
     mock_http_connection.buckets.clear()
     now = time.time()
     now_dt = email.utils.format_datetime(datetime.datetime.utcnow())
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
@@ -331,11 +324,10 @@ async def test_is_rate_limited_updates_existing_bucket_if_one_already_exists_for
 
 
 @pytest.mark.asyncio
-async def test_is_rate_limited_doesnt_call_log_rate_limit_starting_if_not_locking_locally(mock_http_connection):
+async def test_is_rate_limited_doesnt_call_log_rate_limit_starting_if_not_locking_locally(mock_http_connection, res):
     mock_http_connection.buckets.clear()
     now = time.time()
     now_dt = email.utils.format_datetime(datetime.datetime.utcnow())
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
@@ -351,11 +343,10 @@ async def test_is_rate_limited_doesnt_call_log_rate_limit_starting_if_not_lockin
 
 
 @pytest.mark.asyncio
-async def test_is_rate_limited_calls_log_rate_limit_starting_if_locking_locally(mock_http_connection):
+async def test_is_rate_limited_calls_log_rate_limit_starting_if_locking_locally(mock_http_connection, res):
     mock_http_connection.buckets.clear()
     now = time.time()
     now_dt = email.utils.format_datetime(datetime.datetime.utcnow())
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
@@ -371,11 +362,10 @@ async def test_is_rate_limited_calls_log_rate_limit_starting_if_locking_locally(
 
 
 @pytest.mark.asyncio
-async def test_is_rate_limited_returns_True_if_local_rate_limit(mock_http_connection):
+async def test_is_rate_limited_returns_True_if_local_rate_limit(mock_http_connection, res):
     mock_http_connection.buckets.clear()
     now = time.time()
     now_dt = email.utils.format_datetime(datetime.datetime.utcnow())
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
@@ -391,11 +381,10 @@ async def test_is_rate_limited_returns_True_if_local_rate_limit(mock_http_connec
 
 
 @pytest.mark.asyncio
-async def test_is_rate_limited_returns_False_if_not_local_or_global_rate_limit(mock_http_connection):
+async def test_is_rate_limited_returns_False_if_not_local_or_global_rate_limit(mock_http_connection, res):
     mock_http_connection.buckets.clear()
     now = time.time()
     now_dt = email.utils.format_datetime(datetime.datetime.utcnow())
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     mock_http_connection = _mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
@@ -411,33 +400,47 @@ async def test_is_rate_limited_returns_False_if_not_local_or_global_rate_limit(m
 
 
 @pytest.mark.asyncio
-async def test_some_response_that_has_a_json_object_body_gets_decoded_as_expected(mock_http_connection):
+async def test_HTTP_request_has_User_Agent_header_as_expected(mock_http_connection, res):
+    # This is a requirement from Discord or they can ban accounts.
+    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
+    mock_http_connection.session.request = asynctest.MagicMock(wraps=mock_http_connection.session.request)
+    mock_http_connection.session.mock_response.headers["Content-Type"] = "application/json"
+    mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.OK)
+    mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
+    await mock_http_connection._request_once(retry=0, resource=res)
+    assert mock_http_connection.session.request.call_count == 1
+    args, kwargs = mock_http_connection.session.request.call_args_list[0]
+    headers = kwargs["headers"]
+    user_agent = headers["User-Agent"]
+    assert re.match(r"^DiscordBot \(.*?, .*?\).*$", user_agent)
+
+
+@pytest.mark.asyncio
+async def test_some_response_that_has_a_json_object_body_gets_decoded_as_expected(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.OK)
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     status, headers, body = await mock_http_connection._request_once(retry=0, resource=res)
     assert status is opcodes.HTTPStatus.OK
     assert body == {"foo": "bar"}
 
 
 @pytest.mark.asyncio
-async def test_plain_text_gets_decoded_as_unicode(mock_http_connection):
+async def test_plain_text_gets_decoded_as_unicode(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = "text/plain"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.OK)
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     status, headers, body = await mock_http_connection._request_once(retry=0, resource=res)
     assert status is opcodes.HTTPStatus.OK
     assert body == '{"foo": "bar"}'
 
 
 @pytest.mark.asyncio
-async def test_html_gets_decoded_as_unicode(mock_http_connection):
+async def test_html_gets_decoded_as_unicode(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = "text/html"
@@ -445,14 +448,13 @@ async def test_html_gets_decoded_as_unicode(mock_http_connection):
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(
         return_value=b"<!doctype html><html></html>"
     )
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     status, headers, body = await mock_http_connection._request_once(retry=0, resource=res)
     assert status is opcodes.HTTPStatus.OK
     assert body == "<!doctype html><html></html>"
 
 
 @pytest.mark.asyncio
-async def test_NO_CONTENT_response_with_no_body_present(mock_http_connection):
+async def test_NO_CONTENT_response_with_no_body_present(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = None
@@ -464,25 +466,23 @@ async def test_NO_CONTENT_response_with_no_body_present(mock_http_connection):
 
 
 @pytest.mark.asyncio
-async def test_some_response_that_has_an_unrecognised_content_type_returns_bytes(mock_http_connection):
+async def test_some_response_that_has_an_unrecognised_content_type_returns_bytes(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = "mac-and/cheese"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.CREATED)
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     status, headers, body = await mock_http_connection._request_once(retry=0, resource=res)
     assert isinstance(body, bytes)
 
 
 @pytest.mark.asyncio
-async def test_4xx_hits_handle_client_error_response(mock_http_connection):
+async def test_4xx_hits_handle_client_error_response(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.BAD_REQUEST)
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     await mock_http_connection._request_once(retry=0, resource=res)
     mock_http_connection._handle_client_error_response.assert_called_once_with(
         res, opcodes.HTTPStatus.BAD_REQUEST, {"foo": "bar"}
@@ -490,14 +490,205 @@ async def test_4xx_hits_handle_client_error_response(mock_http_connection):
 
 
 @pytest.mark.asyncio
-async def test_5xx_hits_handle_server_error_response(mock_http_connection):
+async def test_5xx_hits_handle_server_error_response(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.GATEWAY_TIMEOUT)
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
     await mock_http_connection._request_once(retry=0, resource=res)
     mock_http_connection._handle_server_error_response.assert_called_once_with(
         res, opcodes.HTTPStatus.GATEWAY_TIMEOUT, {"foo": "bar"}
     )
+
+
+@pytest.mark.asyncio
+async def test_ValueError_on_unrecognised_HTTP_status(mock_http_connection, res):
+    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
+    mock_http_connection.session.mock_response.status = 669
+    mock_http_connection.session.mock_response.headers = {"foo": "bar", "baz": "bork"}
+    mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"lorem":"ipsum"}')
+    try:
+        await mock_http_connection._request_once(retry=0, resource=res)
+        assert False, "No exception raised"
+    except ValueError:
+        pass
+
+
+@pytest.mark.asyncio
+async def test_2xx_returns_tuple(mock_http_connection, res):
+    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
+    mock_http_connection.session.mock_response.status = 201
+    mock_http_connection.session.mock_response.headers = {"foo": "bar", "baz": "bork"}
+    mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"lorem":"ipsum"}')
+    result = await mock_http_connection._request_once(retry=0, resource=res)
+    # Assert we can unpack as tuple
+    status, headers, body = result
+
+    assert status == 201
+    assert headers == {"foo": "bar", "baz": "bork"}
+    assert body == {"lorem": "ipsum"}
+
+
+@pytest.mark.asyncio
+async def test_3xx_returns_tuple(mock_http_connection, res):
+    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
+    mock_http_connection.session.mock_response.status = 304
+    mock_http_connection.session.mock_response.headers = {"foo": "bar", "baz": "bork"}
+    mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"lorem":"ipsum"}')
+    result = await mock_http_connection._request_once(retry=0, resource=res)
+    # Assert we can unpack as tuple
+    status, headers, body = result
+
+    assert status == 304
+    assert headers == {"foo": "bar", "baz": "bork"}
+    assert body == {"lorem": "ipsum"}
+
+
+@pytest.mark.asyncio
+async def test_4xx_is_handled_as_4xx_error_response(mock_http_connection, res):
+    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
+    mock_http_connection.session.mock_response.status = 401
+    mock_http_connection.session.mock_response.headers = {"foo": "bar", "baz": "bork"}
+    mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"lorem":"ipsum"}')
+    await mock_http_connection._request_once(retry=0, resource=res)
+    mock_http_connection._handle_client_error_response.assert_called_once_with(
+        res, opcodes.HTTPStatus(401), {"lorem": "ipsum"}
+    )
+
+
+@pytest.mark.asyncio
+async def test_5xx_is_handled_as_5xx_error_response(mock_http_connection, res):
+    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
+    mock_http_connection.session.mock_response.status = 501
+    mock_http_connection.session.mock_response.headers = {"foo": "bar", "baz": "bork"}
+    mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"lorem":"ipsum"}')
+    await mock_http_connection._request_once(retry=0, resource=res)
+    mock_http_connection._handle_server_error_response.assert_called_once_with(
+        res, opcodes.HTTPStatus(501), {"lorem": "ipsum"}
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ["status", "exception_type"],
+    [
+        (opcodes.HTTPStatus.BAD_REQUEST, errors.BadRequest),
+        (opcodes.HTTPStatus.UNAUTHORIZED, errors.Unauthorized),
+        (opcodes.HTTPStatus.FORBIDDEN, errors.Forbidden),
+        (opcodes.HTTPStatus.NOT_FOUND, errors.NotFound),
+        (opcodes.HTTPStatus.TOO_MANY_REQUESTS, errors.ClientError),
+        (opcodes.HTTPStatus.NO_CONTENT, errors.ClientError),  # I know this isn't a 4xx.
+    ],
+    ids=lambda status: f" considering {status} ",
+)
+async def test_handle_client_error_response_when_no_error_in_json(status, exception_type, mock_http_connection, res):
+    try:
+        mock_http_connection._handle_client_error_response(res, status, {"foo": "bar"})
+        assert False, "No exception was raised"
+    except exception_type as ex:
+        assert ex.status == status
+        assert ex.error_code is None
+        assert ex.message is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ["status", "exception_type"],
+    [
+        (opcodes.HTTPStatus.BAD_REQUEST, errors.BadRequest),
+        (opcodes.HTTPStatus.UNAUTHORIZED, errors.Unauthorized),
+        (opcodes.HTTPStatus.FORBIDDEN, errors.Forbidden),
+        (opcodes.HTTPStatus.NOT_FOUND, errors.NotFound),
+        (opcodes.HTTPStatus.TOO_MANY_REQUESTS, errors.ClientError),
+        (opcodes.HTTPStatus.NO_CONTENT, errors.ClientError),  # I know this isn't a 4xx.
+    ],
+)
+async def test_handle_client_error_response_when_only_message_in_json_body(
+    status, exception_type, mock_http_connection, res
+):
+    try:
+        mock_http_connection._handle_client_error_response(res, status, {"foo": "bar", "message": "foo"})
+        assert False, "No exception was raised"
+    except exception_type as ex:
+        assert ex.status == status
+        assert ex.error_code is None
+        assert ex.message == "foo"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ["status", "exception_type"],
+    [
+        (opcodes.HTTPStatus.BAD_REQUEST, errors.BadRequest),
+        (opcodes.HTTPStatus.UNAUTHORIZED, errors.Unauthorized),
+        (opcodes.HTTPStatus.FORBIDDEN, errors.Forbidden),
+        (opcodes.HTTPStatus.NOT_FOUND, errors.NotFound),
+        (opcodes.HTTPStatus.TOO_MANY_REQUESTS, errors.ClientError),
+        (opcodes.HTTPStatus.NO_CONTENT, errors.ClientError),  # I know this isn't a 4xx.
+    ],
+)
+async def test_handle_client_error_response_when_only_error_code_in_json_body(
+    status, exception_type, mock_http_connection, res
+):
+    try:
+        mock_http_connection._handle_client_error_response(res, status, {"foo": "bar", "code": 10_001})
+        assert False, "No exception was raised"
+    except exception_type as ex:
+        assert ex.status == status
+        assert ex.error_code is opcodes.JSONErrorCode.UNKNOWN_ACCOUNT
+        assert ex.message is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ["status", "exception_type"],
+    [
+        (opcodes.HTTPStatus.BAD_REQUEST, errors.BadRequest),
+        (opcodes.HTTPStatus.UNAUTHORIZED, errors.Unauthorized),
+        (opcodes.HTTPStatus.FORBIDDEN, errors.Forbidden),
+        (opcodes.HTTPStatus.NOT_FOUND, errors.NotFound),
+        (opcodes.HTTPStatus.TOO_MANY_REQUESTS, errors.ClientError),
+        (opcodes.HTTPStatus.NO_CONTENT, errors.ClientError),  # I know this isn't a 4xx.
+    ],
+)
+async def test_handle_client_error_response_when_not_json_body(status, exception_type, mock_http_connection, res):
+    try:
+        mock_http_connection._handle_client_error_response(res, status, "potato")
+        assert False, "No exception was raised"
+    except exception_type as ex:
+        assert ex.status == status
+        assert ex.error_code is None
+        assert ex.message == "potato"
+
+
+@pytest.mark.asyncio
+async def test_handle_server_error_response_when_body_has_a_message_and_is_a_dict(mock_http_connection, res):
+    try:
+        mock_http_connection._handle_server_error_response(res, opcodes.HTTPStatus.GATEWAY_TIMEOUT, {"message": "aaah"})
+        assert False, "No exception was raised"
+    except errors.ServerError as ex:
+        assert ex.message == "aaah"
+
+
+@pytest.mark.asyncio
+async def test_handle_server_error_response_when_body_has_a_dict_without_a_message(mock_http_connection, res):
+    try:
+        mock_http_connection._handle_server_error_response(res, opcodes.HTTPStatus.GATEWAY_TIMEOUT, {"foo": "bar"})
+        assert False, "No exception was raised"
+    except errors.ServerError as ex:
+        assert ex.message == opcodes.HTTPStatus.GATEWAY_TIMEOUT.name.replace("_", " ").title()
+
+
+@pytest.mark.asyncio
+async def test_handle_server_error_response_when_body_is_not_a_dict(mock_http_connection, res):
+    try:
+        mock_http_connection._handle_server_error_response(res, opcodes.HTTPStatus.GATEWAY_TIMEOUT, "errrooorr")
+        assert False, "No exception was raised"
+    except errors.ServerError as ex:
+        assert ex.message == "errrooorr"
