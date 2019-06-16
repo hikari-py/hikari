@@ -54,6 +54,14 @@ py38:
   extends: .cpython-pytest
 
 ###
+### TEST IN PYTHON 3.9
+###
+py39:
+  image: bash
+  script:
+    - echo "Image not yet on Docker-Hub. Watch this space."
+
+###
 ### TEST IN PYPY3.6.
 ###
 pypy3:
