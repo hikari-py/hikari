@@ -86,6 +86,36 @@ class GatewayConnection:
         to be a low-level interface to the gateway, and not a general-use object.
     """
 
+    __slots__ = [
+        "dispatch",
+        "_connector",
+        "_in_buffer",
+        "_zlib_decompressor",
+        "shard_count",
+        "shard_id",
+        "heartbeat_interval",
+        "closed_event",
+        "heartbeat_latency",
+        "in_cid",
+        "initial_presence",
+        "large_threshold",
+        "last_ack_received",
+        "last_heartbeat_sent",
+        "logger",
+        "loop",
+        "max_persistent_buffer_size",
+        "out_cid",
+        "rate_limit",
+        "seq",
+        "session_id",
+        "started_at",
+        "trace",
+        "token",
+        "uri",
+        "ws",
+        "version",
+    ]
+
     #: The API version we should request the use of.
     _REQUESTED_VERSION = 7
     _NEVER_RECONNECT_CODES = (

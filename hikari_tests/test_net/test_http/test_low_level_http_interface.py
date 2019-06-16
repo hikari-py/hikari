@@ -23,6 +23,10 @@ from hikari_tests._helpers import _mock_methods_on
 ########################################################################################################################
 
 
+class UnslottedGlobalRateLimit(rates.TimedLatchBucket):
+    """This has no slots so allows injection of mocks, et cetera."""
+
+
 class MockAiohttpResponse:
     __aenter__ = asyncio.coroutine(lambda self: self)
     __aexit__ = asyncio.coroutine(lambda self, *_, **__: None)
@@ -53,6 +57,7 @@ class MockHTTPConnection(http.HTTPConnection):
     def __init__(self, *a, **k):
         with asynctest.patch("aiohttp.ClientSession", new=MockAiohttpSession):
             super().__init__(*a, **k)
+        self.global_rate_limit = UnslottedGlobalRateLimit(self.loop)
 
     async def __aenter__(self):
         return self
@@ -106,7 +111,7 @@ async def test_request_does_not_retry_on_success(mock_http_connection):
 @pytest.mark.asyncio
 async def test_request_once_acquires_global_rate_limit_bucket(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
-        mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit.acquire"]
+        mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit", "global_rate_limit.acquire"]
     )
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     try:
@@ -119,7 +124,7 @@ async def test_request_once_acquires_global_rate_limit_bucket(mock_http_connecti
 @pytest.mark.asyncio
 async def test_request_once_acquires_local_rate_limit_bucket(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
-        mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit.acquire"]
+        mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit", "global_rate_limit.acquire"]
     )
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     bucket = asynctest.MagicMock()
@@ -135,7 +140,7 @@ async def test_request_once_acquires_local_rate_limit_bucket(mock_http_connectio
 @pytest.mark.asyncio
 async def test_request_once_calls_rate_limit_handler(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
-        mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit.acquire"]
+        mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit", "global_rate_limit.acquire"]
     )
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     try:
@@ -148,7 +153,7 @@ async def test_request_once_calls_rate_limit_handler(mock_http_connection, res):
 @pytest.mark.asyncio
 async def test_request_once_raises_RateLimited_if_rate_limit_handler_returned_true(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
-        mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit.acquire"]
+        mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit", "global_rate_limit.acquire"]
     )
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=True)
@@ -162,7 +167,7 @@ async def test_request_once_raises_RateLimited_if_rate_limit_handler_returned_tr
 @pytest.mark.asyncio
 async def test_request_once_does_not_raise_RateLimited_if_rate_limit_handler_returned_false(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(
-        mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit.acquire"]
+        mock_http_connection, except_=["_request_once"], also_mock=["global_rate_limit", "global_rate_limit.acquire"]
     )
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)

@@ -25,6 +25,8 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
             Event loop to run on.
     """
 
+    __slots__ = ["_total", "_per", "_remaining", "_reset_at", "_queue", "loop"]
+
     def __init__(self, total: int, per: float, loop: asyncio.AbstractEventLoop) -> None:
         self._total = total
         self._per = per
@@ -121,6 +123,8 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
         loop:
             Event loop to run on.
     """
+
+    __slots__ = ["_total", "_remaining", "_last_reset_at", "_reset_at", "_per", "_queue", "loop"]
 
     def __init__(
         self, total: int, remaining: int, now: float, reset_at: float, loop: asyncio.AbstractEventLoop
@@ -244,6 +248,8 @@ class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
         loop:
             The loop to run on.
     """
+
+    __slots__ = ["_locked", "_unlock_event", "loop"]
 
     def __init__(self, loop: asyncio.AbstractEventLoop) -> None:
         self._locked = False
