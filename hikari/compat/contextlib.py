@@ -11,6 +11,8 @@ from contextlib import *
 class AbstractAsyncContextManager:
     """An abstract base class for asynchronous context managers."""
 
+    __slots__ = ()
+
     async def __aenter__(self):
         return self
 
