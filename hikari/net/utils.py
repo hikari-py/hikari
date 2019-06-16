@@ -155,10 +155,17 @@ def user_agent() -> str:
 
 #: Type type of a body for a Gateway or HTTP request and response.
 #:
-#: This is a :class:`builtins.dict` of :class:`builtins.str` keys that map to any value. Since the :module:`hikari.net`
+#: This is a :class:`builtins.dict` of :class:`builtins.str` keys that map to any value. Since the :mod:`hikari.net`
 #: module does not enforce concrete models for values sent and received, mappings are passed around to represent request
 #: and response data. This allows an implementation to use this layer as desired.
 RequestBody = typing.Dict[str, typing.Any]
+
+#: Type type of a body for a Gateway or HTTP request and response.
+#:
+#: This is a :class:`builtins.dict` of :class:`builtins.str` keys that map to any value. Since the :mod:`hikari.net`
+#: module does not enforce concrete models for values sent and received, mappings are passed around to represent request
+#: and response data. This allows an implementation to use this layer as desired.
+ResponseBody = typing.Dict[str, typing.Any]
 
 #: The signature of an event dispatcher function. Consumes two arguments. The first is an event name from the gateway,
 #: the second is the payload which is assumed to always be a :class:`dict` with :class:`str` keys. This should be
@@ -168,6 +175,13 @@ RequestBody = typing.Dict[str, typing.Any]
 #:     >>> async def on_dispatch(event: str, payload: Dict[str, Any]) -> None:
 #:     ...     logger.info("Dispatching %s with payload %r", event, payload)
 DispatchHandler = typing.Callable[[str, typing.Dict[str, typing.Any]], typing.Union[None, typing.Awaitable[None]]]
+
+#: Discord will return Snowflakes as :class:`str`.
+RawSnowflake = str
+
+#: Discord uses :class:`str` to pass snowflakes around. We should usually allow either-or to be passed around
+#: for ease of use.
+RawSnowflakeish = typing.Union[int, RawSnowflake]
 
 
 class Resource:

@@ -425,7 +425,7 @@ class GatewayClient:
         else:
             self.logger.warning("received unrecognised opcode %s", op)
 
-    async def request_guild_members(self, guild_id: int, query: str = "", limit: int = 0) -> None:
+    async def request_guild_members(self, guild_id: utils.RawSnowflakeish, query: str = "", limit: int = 0) -> None:
         """
         Requests guild members from the given Guild ID. This can be used to retrieve all members available in a guild.
 
@@ -469,7 +469,7 @@ class GatewayClient:
         await self._send_json({"op": opcodes.GatewayOpcode.STATUS_UPDATE, "d": d}, False)
 
     async def update_voice_state(
-        self, guild_id: int, channel_id: typing.Optional[int], self_mute: bool, self_deaf: bool
+        self, guild_id: utils.RawSnowflakeish, channel_id: typing.Optional[int], self_mute: bool, self_deaf: bool
     ) -> None:
         """
         Updates the given shard's voice state (used to connect to/disconnect from/move between voice channels.

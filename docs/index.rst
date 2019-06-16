@@ -22,6 +22,7 @@ Packages and submodules
     hikari.net.http.emoji
     hikari.net.http.guild
     hikari.net.http.invite
+    hikari.net.http.oauth2
     hikari.net.http.user
     hikari.net.http.webhook
     hikari.net.opcodes

@@ -29,6 +29,8 @@ _X_RATELIMIT_REMAINING = "X-RateLimit-Remaining"
 _X_RATELIMIT_RESET = "X-RateLimit-Reset"
 _X_RATELIMIT_LOCALS = [_X_RATELIMIT_LIMIT, _X_RATELIMIT_REMAINING, _X_RATELIMIT_RESET, _DATE]
 
+_RequestReturnSignature = typing.Tuple[opcodes.HTTPStatus, typing.Mapping, typing.Any]
+
 
 class _RateLimited(Exception):
     """Used as an internal flag. This should not ever be used outside this API."""
@@ -43,14 +45,10 @@ class MixinBase(metaclass=abc.ABCMeta):
     """
 
     __slots__ = []
-
-    @property
-    @abc.abstractmethod
-    def logger(self):
-        pass
+    logger: logging.Logger
 
     @abc.abstractmethod
-    async def _request(self, method, path, params=None, **kwargs):
+    async def request(self, method, path, params=None, **kwargs) -> _RequestReturnSignature:
         pass
 
     @abc.abstractmethod
@@ -98,8 +96,8 @@ class BaseHTTPClient:
             loop:
                 the asyncio event loop to run on.
             token:
-                the token to use for authentication. This should not start with `Bearer ` or `Bot ` and will always have
-                `Bot ` prepended to it in requests.
+                the token to use for authentication. This should not start with `Bearer` or `Bot` and will always have
+                `Bot` prepended to it in requests.
             allow_redirects:
                 defaults to False for security reasons. If you find you are receiving multiple redirection responses
                 causing requests to fail, it is probably worth enabling this.
@@ -143,7 +141,7 @@ class BaseHTTPClient:
         """
         await self.session.close()
 
-    async def _request(self, method, path, params=None, **kwargs):
+    async def request(self, method, path, params=None, **kwargs) -> _RequestReturnSignature:
         """
         See _request_once for signature.
         """
@@ -164,7 +162,7 @@ class BaseHTTPClient:
 
     async def _request_once(
         self, *, retry=0, resource, headers=None, json_body=None, **kwargs
-    ) -> typing.Tuple[opcodes.HTTPStatus, typing.Mapping, typing.Any]:
+    ) -> _RequestReturnSignature:
         headers = headers if headers else {}
 
         headers.setdefault("Authorization", self.authorization)
@@ -182,7 +180,7 @@ class BaseHTTPClient:
         self._correlation_id += 1
         self.logger.debug("[try %s - %s] %s %s", retry + 1, self._correlation_id, uri)
 
-        async with self.session.request(resource.method, uri=uri, headers=headers, json=json_body, **kwargs) as resp:
+        async with self.session.request(resource.method, url=uri, headers=headers, json=json_body, **kwargs) as resp:
             self.logger.debug(
                 "[try %s - %s] %s responded with %s %s containing %s (%s bytes)",
                 retry,

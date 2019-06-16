@@ -122,6 +122,18 @@ html_theme_options = {
 # -- Autodoc options ---------------------------------------------------------
 autoclass_content = "both"
 
+autodoc_default_options = {
+    'member-order': 'bysource',
+    'undoc-members': True,
+    'exclude-members': '__weakref__',
+    'show_inheritance': True,
+    'inherited_members': True,
+}
+
+autodoc_default_flags = [
+    'members', 'show_inheritance', 'inherited_members',
+]
+
 # -- Intersphinx options -----------------------------------------------------
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
