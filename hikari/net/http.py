@@ -58,6 +58,20 @@ class HTTPConnection:
             HTTP requests.
     """
 
+    __slots__ = [
+        "_correlation_id",
+        "allow_redirects",
+        "buckets",
+        "base_uri",
+        "global_rate_limit",
+        "max_retries",
+        "session",
+        "authorization",
+        "logger",
+        "loop",
+        "user_agent",
+    ]
+
     #: The target API version.
     VERSION = 7
 
@@ -71,7 +85,7 @@ class HTTPConnection:
         base_uri: str = DISCORD_API_URI_FORMAT.format(VERSION=VERSION),
         **aiohttp_arguments,
     ) -> None:
-        # Used for internal bookkeeping
+        #: Used for internal bookkeeping
         self._correlation_id = 0
         #: Whether to allow redirects or not.
         self.allow_redirects = allow_redirects

@@ -37,11 +37,11 @@ def mark_asyncio_with_timeout(timeout=10):
 
     def decorator(coro):
         @functools.wraps(coro)
-        async def wrapper(event_loop):
+        async def wrapper(event_loop, *args, **kwargs):
             event = threading.Event()
             t = threading.Thread(target=_terminate_in_10_thread, args=[event, timeout, event_loop], daemon=True)
             t.start()
-            await coro(event_loop)
+            await coro(event_loop, *args, **kwargs)
             event.set()
 
         return pytest.mark.asyncio(wrapper)
