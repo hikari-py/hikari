@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-
 from hikari.net import http
 
 
