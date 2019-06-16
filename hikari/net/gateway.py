@@ -305,7 +305,7 @@ class GatewayConnection:
                 if self.last_heartbeat_sent + self.heartbeat_interval < now:
                     last_sent = now - self.last_heartbeat_sent
                     msg = f"Failed to receive an acknowledgement from the previous heartbeat sent ~{last_sent}s ago"
-                    return await self._trigger_resume(code=opcodes.GatewayClosure.PROTOCOL_VIOLATION, reason=msg)
+                    await self._trigger_resume(code=opcodes.GatewayClosure.PROTOCOL_VIOLATION, reason=msg)
 
                 await asyncio.wait_for(self.closed_event.wait(), timeout=self.heartbeat_interval)
             except asyncio.TimeoutError:
