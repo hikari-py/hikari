@@ -263,7 +263,7 @@ class GatewayClient:
         return payload
 
     def _warn_about_internal_rate_limit(self):
-        delta = self.rate_limit._reset_at - time.perf_counter()
+        delta = self.rate_limit.reset_at - time.perf_counter()
         self.logger.warning(
             "you are being rate limited internally to prevent the gateway from disconnecting you. "
             "The current rate limit ends in %.2f seconds",
@@ -300,8 +300,8 @@ class GatewayClient:
 
     async def _keep_alive(self) -> None:
         while not self.closed_event.is_set():
-            now = time.perf_counter()
             try:
+                now = time.perf_counter()
                 if self.last_heartbeat_sent + self.heartbeat_interval < now:
                     last_sent = now - self.last_heartbeat_sent
                     msg = f"Failed to receive an acknowledgement from the previous heartbeat sent ~{last_sent}s ago"
@@ -309,7 +309,7 @@ class GatewayClient:
 
                 await asyncio.wait_for(self.closed_event.wait(), timeout=self.heartbeat_interval)
             except asyncio.TimeoutError:
-                start = now
+                start = time.perf_counter()
                 await self._send_heartbeat()
                 time_taken = time.perf_counter() - start
 
@@ -377,7 +377,8 @@ class GatewayClient:
         self.trace = ready["_trace"]
         self.session_id = ready["session_id"]
         self.version = ready["v"]
-        self.logger.info("session %s is READY (trace: %s)", self.session_id, self.trace)
+        self.logger.info("session %s is READY", self.session_id)
+        self.logger.debug("trace for session %s is %s", self.session_id, self.trace)
 
     async def _handle_resumed(self, resumed: RequestBody) -> None:
         self.trace = resumed["_trace"]
