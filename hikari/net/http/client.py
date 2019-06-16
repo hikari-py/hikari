@@ -4,6 +4,7 @@
 Implementation of the HTTP Client mix of all mixin components.
 """
 from . import audit_log
+from . import base
 from . import channel
 from . import emoji
 from . import guild
@@ -13,7 +14,7 @@ from . import webhook
 
 
 class HTTPClient(
-    webhook.base.BaseHTTPClient,
+    base.BaseHTTPClient,
     audit_log.AuditLogMixin,
     channel.ChannelMixin,
     emoji.EmojiMixin,
