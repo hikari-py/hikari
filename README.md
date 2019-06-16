@@ -20,6 +20,31 @@ Run `tox -lv` to see the jobs that can be run.
 
 Make sure a directory called `public` exists and try again.
 
+### Testing all environments
+
+If you don't want to have several versions of Python installed, I have added a set of Dockerfiles in `.ci/local-test-runners` 
+to do this for you. Just `cd` into that directory and run the container. An example of running the Python3.6 test suite
+for Hikari would be:
+
+```bash
+docker-compose build py36
+docker-compose run py36
+```
+
+The environments supported are listed in the `docker-compose.yml`.
+
+One can run all suites at once using the following:
+
+```bash
+docker-compose build --parallel
+docker-compose up
+docker-compose down
+```
+
+It is worth noting that the `hikari` and `hikari_tests` are mounted as read-only volumes. If you change the
+code, you do not need to rebuild: just restart the container. This has the side effect that tests may not
+create `__pycache__` or write out files.
+
 ### Pytest without tox
 
 If you want to run Pytest alone, that is fine too. Just run `pytest`.
