@@ -263,11 +263,11 @@ async def test_TimedTokenBucket_reassess_when_reset_at_attribute_is_in_the_past_
         b._total = 100
         b._per = 100
         b._remaining = 10
-        b._reset_at = -1
+        b.reset_at = -1
 
         b._reassess()
         assert b._remaining == b._total
-        assert b._reset_at == 110
+        assert b.reset_at == 110
 
 
 @_helpers.mark_asyncio_with_timeout()
