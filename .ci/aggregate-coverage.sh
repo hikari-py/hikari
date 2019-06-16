@@ -10,7 +10,7 @@ DIR=public
 TARGET_DIR=$DIR
 DEBUG=no
 
-python -m coverage combine $(find $DIR -type f -iname "py36" -o -iname "py37")
+python -m coverage combine $(find $DIR -type f -iname "coverage-py36" -o -iname "coverage-py37")
 python -m coverage report
 python -m coverage xml -o public/coverage.xml
 python -m coverage html -d public/coverage
