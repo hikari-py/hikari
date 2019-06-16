@@ -96,7 +96,7 @@ async def test_ratelimiting_on_send(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
     gw._warn_about_internal_rate_limit = asynctest.MagicMock(wraps=gw._warn_about_internal_rate_limit)
     gw.rate_limit._per = 1.5
-    gw.rate_limit._reset_at = time.perf_counter() + 1.5
+    gw.rate_limit.reset_at = time.perf_counter() + 1.5
 
     for i in range(121):
         await gw._send_json({}, False)
@@ -109,7 +109,7 @@ async def test_ratelimiting_on_send_can_be_overridden(event_loop):
     gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
     gw._warn_about_internal_rate_limit = asynctest.MagicMock(wraps=gw._warn_about_internal_rate_limit)
     gw.rate_limit._per = 3
-    gw.rate_limit._reset_at = time.perf_counter() + 3
+    gw.rate_limit.reset_at = time.perf_counter() + 3
 
     for i in range(121):
         await gw._send_json({}, True)

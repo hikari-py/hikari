@@ -25,13 +25,13 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
             Event loop to run on.
     """
 
-    __slots__ = ["_total", "_per", "_remaining", "_reset_at", "_queue", "loop"]
+    __slots__ = ["_total", "_per", "_remaining", "reset_at", "_queue", "loop"]
 
     def __init__(self, total: int, per: float, loop: asyncio.AbstractEventLoop) -> None:
         self._total = total
         self._per = per
         self._remaining = total
-        self._reset_at = time.perf_counter() + per
+        self.reset_at = time.perf_counter() + per
         # We repeatedly push to the rear and pop from the front, and iterate. We don't need random access, and O(k)
         # pushes and shifts are more desirable given this is a doubly linked list underneath.
         self._queue: typing.Deque[asyncio.Future] = collections.deque()
@@ -72,10 +72,10 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
         """Potentially reset the rate limit if we are able to, and possibly reawaken some futures in the process."""
         now = time.perf_counter()
 
-        if self._reset_at < now:
+        if self.reset_at < now:
             # Reset the time-slice.
             self._remaining = self._total
-            self._reset_at = now + self._per
+            self.reset_at = now + self._per
 
         while self._remaining > 0 and self._queue:
             # Wake up some older tasks while/if we can.
@@ -97,7 +97,7 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
         # We "recursively" recall later to prevent busy-waiting.
         if not this_future.done():
             now = time.perf_counter()
-            delay = max(0.0, self._reset_at - now)
+            delay = max(0.0, self.reset_at - now)
             self.loop.call_later(delay, self._maybe_awaken_and_reset, this_future)
             return False
         else:
