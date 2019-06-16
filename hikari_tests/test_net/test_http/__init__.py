@@ -4,15 +4,15 @@ import asynctest
 
 from hikari.net import opcodes
 from hikari.net.http import client
-from hikari.net.http.base import _RequestReturnSignature
 
 
 class ClientMock(client.HTTPClient):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        with asynctest.patch("aiohttp.ClientSession", new=asynctest.MagicMock()):
+            super().__init__(*args, **kwargs)
         self.set_response()
 
-    async def request(self, method, path, params=None, **kwargs) -> _RequestReturnSignature:
+    async def request(self, method, path, params=None, **kwargs):
         pass
 
     def set_response(self, status=opcodes.HTTPStatus.OK, headers=..., body=...) -> None:
