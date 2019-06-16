@@ -20,9 +20,9 @@ def teardown_function():
     _helpers.purge_loop()
 
 
-class MockGateway(gateway.GatewayConnection):
+class MockGateway(gateway.GatewayClient):
     def __init__(self, **kwargs):
-        gateway.GatewayConnection.__init__(self, **kwargs)
+        gateway.GatewayClient.__init__(self, **kwargs)
 
         class Context(asynctest.MagicMock):
             async def __aenter__(self):
@@ -47,7 +47,7 @@ class MockGateway(gateway.GatewayConnection):
 @_helpers.mark_asyncio_with_timeout()
 async def test_init_produces_valid_url(event_loop):
     """GatewayConnection.__init__ should produce a valid query fragment for the URL."""
-    gw = gateway.GatewayConnection(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
+    gw = gateway.GatewayClient(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
     bits: urlparse.ParseResult = urlparse.urlparse(gw.uri)
 
     assert bits.scheme == "wss"

@@ -14,7 +14,7 @@ import pytest
 
 import hikari.net.utils
 from hikari import errors
-from hikari.net import http
+from hikari.net.http import base
 from hikari.net import opcodes
 from hikari.net import rates
 from hikari_tests._helpers import _mock_methods_on
@@ -25,6 +25,7 @@ from hikari_tests._helpers import _mock_methods_on
 
 class UnslottedMockedGlobalRateLimitFacade(rates.TimedLatchBucket):
     """This has no slots so allows injection of mocks, et cetera."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Apparently an issue on CPython3.6 where it can't determine if this is a coroutine or not.
@@ -57,7 +58,7 @@ class MockAiohttpSession:
     close = asynctest.CoroutineMock()
 
 
-class MockHTTPConnection(http.HTTPConnection):
+class MockBaseHTTPClient(base.BaseHTTPClient):
     def __init__(self, *a, **k):
         with asynctest.patch("aiohttp.ClientSession", new=MockAiohttpSession):
             super().__init__(*a, **k)
@@ -72,7 +73,7 @@ class MockHTTPConnection(http.HTTPConnection):
 
 @pytest.fixture
 def mock_http_connection(event_loop):
-    return MockHTTPConnection(loop=event_loop, token="xxx")
+    return MockBaseHTTPClient(loop=event_loop, token="xxx")
 
 
 @pytest.fixture
@@ -91,7 +92,7 @@ async def test_close_will_close_session(mock_http_connection):
 
 @pytest.mark.asyncio
 async def test_request_retries_then_errors(mock_http_connection):
-    mock_http_connection._request_once = asynctest.CoroutineMock(side_effect=http._RateLimited)
+    mock_http_connection._request_once = asynctest.CoroutineMock(side_effect=base._RateLimited)
     try:
         await mock_http_connection._request(method="get", path="/foo/bar")
         assert False, "No error was thrown but it was expected!"
@@ -105,7 +106,7 @@ async def test_request_retries_then_errors(mock_http_connection):
 async def test_request_does_not_retry_on_success(mock_http_connection):
     expected_result = object()
     mock_http_connection._request_once = asynctest.CoroutineMock(
-        side_effect=[http._RateLimited(), http._RateLimited(), expected_result]
+        side_effect=[base._RateLimited(), base._RateLimited(), expected_result]
     )
     actual_result = await mock_http_connection._request(method="get", path="/foo/bar")
     assert mock_http_connection._request_once.call_count == 3
@@ -114,22 +115,18 @@ async def test_request_does_not_retry_on_success(mock_http_connection):
 
 @pytest.mark.asyncio
 async def test_request_once_acquires_global_rate_limit_bucket(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(
-        mock_http_connection, except_=["_request_once"]
-    )
+    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     try:
         await mock_http_connection._request_once(retry=0, resource=res, json_body={})
         assert False
-    except http._RateLimited:
+    except base._RateLimited:
         mock_http_connection.global_rate_limit.acquire.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_request_once_acquires_local_rate_limit_bucket(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(
-        mock_http_connection, except_=["_request_once"]
-    )
+    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     bucket = asynctest.MagicMock()
     bucket.acquire = asynctest.CoroutineMock()
@@ -137,42 +134,36 @@ async def test_request_once_acquires_local_rate_limit_bucket(mock_http_connectio
     try:
         await mock_http_connection._request_once(retry=0, resource=res, json_body={})
         assert False
-    except http._RateLimited:
+    except base._RateLimited:
         bucket.acquire.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_request_once_calls_rate_limit_handler(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(
-        mock_http_connection, except_=["_request_once"]
-    )
+    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     try:
         await mock_http_connection._request_once(retry=0, resource=res)
         assert False
-    except http._RateLimited:
+    except base._RateLimited:
         mock_http_connection._is_rate_limited.assert_called_once()
 
 
 @pytest.mark.asyncio
 async def test_request_once_raises_RateLimited_if_rate_limit_handler_returned_true(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(
-        mock_http_connection, except_=["_request_once"]
-    )
+    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=True)
     try:
         await mock_http_connection._request_once(retry=0, resource=res)
         assert False
-    except http._RateLimited:
+    except base._RateLimited:
         pass
 
 
 @pytest.mark.asyncio
 async def test_request_once_does_not_raise_RateLimited_if_rate_limit_handler_returned_false(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(
-        mock_http_connection, except_=["_request_once"]
-    )
+    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
     await mock_http_connection._request_once(retry=0, resource=res)

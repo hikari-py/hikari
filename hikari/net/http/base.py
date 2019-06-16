@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Implementation of the V7 HTTP REST API with rate-limiting.
+Implementation of the base components required for working with the V7 HTTP REST API with consistent rate-limiting.
 """
+import abc
 import json
 import logging
 
 import aiohttp
-import multidict
 
 from hikari import errors
 from hikari.compat import asyncio
@@ -33,29 +33,37 @@ _X_RATELIMIT_LOCALS = [_X_RATELIMIT_LIMIT, _X_RATELIMIT_REMAINING, _X_RATELIMIT_
 class _RateLimited(Exception):
     """Used as an internal flag. This should not ever be used outside this API."""
 
-    __slots__ = ()
+    __slots__ = []
 
 
-class HTTPConnection:
+class MixinBase(metaclass=abc.ABCMeta):
     """
-    Args:
-        loop:
-            the asyncio event loop to run on.
-        token:
-            the token to use for authentication. This should not start with `Bearer ` or `Bot ` and will always have
-            `Bot ` prepended to it in requests.
-        allow_redirects:
-            defaults to False for security reasons. If you find you are receiving multiple redirection responses causing
-            requests to fail, it is probably worth enabling this.
-        max_retries:
-            The max number of times to retry in certain scenarios before giving up on making the request.
-        base_uri:
-            optional HTTP API base URI to hit. If unspecified, this defaults to Discord's API URI. This exists for the
-            purpose of mocking for functional testing. Any URI should NOT end with a trailing forward slash, and any
-            instance of `{VERSION}` in the URL will be replaced.
-        **aiohttp_arguments:
-            additional arguments to pass to the internal :class:`aiohttp.ClientSession` constructor used for making
-            HTTP requests.
+    Base for mixin components. This purely exists for type checking and should not be used unless you are extending
+    this API.
+    """
+
+    __slots__ = []
+
+    @property
+    @abc.abstractmethod
+    def logger(self):
+        pass
+
+    @abc.abstractmethod
+    async def _request(self, method, path, params=None, **kwargs):
+        pass
+
+    @abc.abstractmethod
+    async def close(self):
+        pass
+
+
+class BaseHTTPClient:
+    """
+    The core low level logic for any HTTP components that require rate-limiting and consistent logging to be
+    implemented.
+
+    Any HTTP components should derive their implementation from this class.
     """
 
     __slots__ = [
@@ -85,6 +93,27 @@ class HTTPConnection:
         base_uri: str = DISCORD_API_URI_FORMAT.format(VERSION=VERSION),
         **aiohttp_arguments,
     ) -> None:
+        """
+        Args:
+            loop:
+                the asyncio event loop to run on.
+            token:
+                the token to use for authentication. This should not start with `Bearer ` or `Bot ` and will always have
+                `Bot ` prepended to it in requests.
+            allow_redirects:
+                defaults to False for security reasons. If you find you are receiving multiple redirection responses
+                causing requests to fail, it is probably worth enabling this.
+            max_retries:
+                The max number of times to retry in certain scenarios before giving up on making the request.
+            base_uri:
+                optional HTTP API base URI to hit. If unspecified, this defaults to Discord's API URI. This exists for
+                the purpose of mocking for functional testing. Any URI should NOT end with a trailing forward slash, and
+                any instance of `{VERSION}` in the URL will be replaced.
+            **aiohttp_arguments:
+                additional arguments to pass to the internal :class:`aiohttp.ClientSession` constructor used for making
+                HTTP requests.
+        """
+
         #: Used for internal bookkeeping
         self._correlation_id = 0
         #: Whether to allow redirects or not.
@@ -135,7 +164,7 @@ class HTTPConnection:
 
     async def _request_once(
         self, *, retry=0, resource, headers=None, json_body=None, **kwargs
-    ) -> typing.Tuple[opcodes.HTTPStatus, multidict.CIMultiDictProxy, typing.Any]:
+    ) -> typing.Tuple[opcodes.HTTPStatus, typing.Mapping, typing.Any]:
         headers = headers if headers else {}
 
         headers.setdefault("Authorization", self.authorization)
