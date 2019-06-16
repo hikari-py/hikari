@@ -31,7 +31,7 @@ except Exception:
     import traceback
 
     traceback.print_exc()
-    
+
     import hikari
 
     release = "-"
@@ -123,16 +123,14 @@ html_theme_options = {
 autoclass_content = "both"
 
 autodoc_default_options = {
-    'member-order': 'bysource',
-    'undoc-members': True,
-    'exclude-members': '__weakref__',
-    'show_inheritance': True,
-    'inherited_members': True,
+    "member-order": "bysource",
+    "undoc-members": True,
+    "exclude-members": "__weakref__",
+    "show_inheritance": True,
+    "inherited_members": True,
 }
 
-autodoc_default_flags = [
-    'members', 'show_inheritance', 'inherited_members',
-]
+autodoc_default_flags = ["members", "show_inheritance", "inherited_members"]
 
 # -- Intersphinx options -----------------------------------------------------
 intersphinx_mapping = {
