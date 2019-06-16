@@ -14,9 +14,9 @@ import pytest
 
 import hikari.net.utils
 from hikari import errors
-from hikari.net.http import base
 from hikari.net import opcodes
 from hikari.net import rates
+from hikari.net.http import base
 from hikari_tests._helpers import _mock_methods_on
 
 
@@ -94,7 +94,7 @@ async def test_close_will_close_session(mock_http_connection):
 async def test_request_retries_then_errors(mock_http_connection):
     mock_http_connection._request_once = asynctest.CoroutineMock(side_effect=base._RateLimited)
     try:
-        await mock_http_connection._request(method="get", path="/foo/bar")
+        await mock_http_connection.request(method="get", path="/foo/bar")
         assert False, "No error was thrown but it was expected!"
     except errors.ClientError:
         pass
@@ -108,7 +108,7 @@ async def test_request_does_not_retry_on_success(mock_http_connection):
     mock_http_connection._request_once = asynctest.CoroutineMock(
         side_effect=[base._RateLimited(), base._RateLimited(), expected_result]
     )
-    actual_result = await mock_http_connection._request(method="get", path="/foo/bar")
+    actual_result = await mock_http_connection.request(method="get", path="/foo/bar")
     assert mock_http_connection._request_once.call_count == 3
     assert actual_result is expected_result
 

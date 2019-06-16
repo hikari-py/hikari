@@ -3,12 +3,12 @@
 import asyncio
 import contextlib
 import json
+import math
 import time
 import urllib.parse as urlparse
 import zlib
 
 import asynctest
-import math
 
 import hikari.net.opcodes
 from hikari import errors
