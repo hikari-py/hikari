@@ -15,6 +15,15 @@ Packages and submodules
     hikari.net.debug
     hikari.net.gateway
     hikari.net.http
+    hikari.net.http.audit_log
+    hikari.net.http.base
+    hikari.net.http.channel
+    hikari.net.http.client
+    hikari.net.http.emoji
+    hikari.net.http.guild
+    hikari.net.http.invite
+    hikari.net.http.user
+    hikari.net.http.webhook
     hikari.net.opcodes
     hikari.net.rates
     hikari.net.utils

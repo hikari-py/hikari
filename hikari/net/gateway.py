@@ -44,7 +44,7 @@ class _RestartConnection(websockets.ConnectionClosed):
     __slots__ = ()
 
 
-class GatewayConnection:
+class GatewayClient:
     """
     Implementation of the gateway communication layer. This is single threaded and can represent the connection for
     an un-sharded bot, or for a specific gateway shard. This does not implement voice activity.
