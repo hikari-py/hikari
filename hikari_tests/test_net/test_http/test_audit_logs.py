@@ -17,15 +17,13 @@ def http_client(event_loop):
 async def test_audit_log_request_layout(http_client):
     http_client.request = asynctest.CoroutineMock(return_value=(..., ..., {}))
 
-    result = await http_client.get_guild_audit_log(
-        1234, user_id=5678, action=action_type.ActionType.MEMBER_KICK, limit=18
-    )
+    result = await http_client.get_guild_audit_log(1234, user_id=5678, action=20, limit=18)
 
     http_client.request.assert_awaited_once_with(
         "get",
         "/guilds/{guild_id}/audit-logs",
         params={"guild_id": 1234},
-        query={"user_id": 5678, "action_type": action_type.ActionType.MEMBER_KICK.value, "limit": 18},
+        query={"user_id": 5678, "action_type": 20, "limit": 18},
     )
 
     assert result == {}
@@ -42,14 +40,3 @@ async def test_audit_log_request_default_args(http_client):
     )
 
     assert result == {}
-
-
-@pytest.mark.asyncio
-async def test_audit_log_request_with_bad_limit(http_client):
-    http_client.request = asynctest.CoroutineMock(return_value=(..., ..., {}))
-
-    try:
-        await http_client.get_guild_audit_log(1234, limit=-17)
-        assert False
-    except ValueError:
-        assert True
