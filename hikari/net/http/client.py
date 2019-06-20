@@ -41,8 +41,12 @@ def _rtfm(scope: _Scope, *see):
     return decorator
 
 
-#: Internal flag used to represent an unspecified field.
-unspecified = object()
+class _Unspecified:
+    __str__ = lambda s: "unspecified"
+    __repr__ = __str__
+    
+
+unspecified = _Unspecified()
 
 
 class HTTPClient(base.BaseHTTPClient):
