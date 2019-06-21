@@ -3,50 +3,9 @@
 """
 Implementation of the HTTP Client mix of all mixin components.
 """
-import enum
-import inspect
-
+from hikari import _utils
 from hikari.compat import typing
-from hikari.net import utils
-
 from . import base
-
-
-class _Scope(enum.Enum):
-    AUDIT_LOG = "/resources/audit-log"
-    CHANNEL = "/resources/channel"
-    EMOJI = "/resources/emoji"
-    GUILD = "/resources/guild"
-    INVITE = "/resources/invite"
-    OAUTH2 = "/topics/oauth2"
-    USER = "/resources/user"
-    VOICE = "/resources/voice"
-    WEBHOOK = "/resources/webhook"
-
-
-def _rtfm(scope: _Scope, *see):
-    """Injects some common documentation into the given member's docstring."""
-
-    def decorator(obj):
-        BASE_URL = "https://discordapp.com/developers/docs"
-        doc = inspect.cleandoc(inspect.getdoc(obj) or "")
-        name, url = scope.name.replace("_", " ").title(), BASE_URL + scope.value
-        doc = f"This is part of the `{name} <{url}>`_ API.\n\n{doc}\n\nSee:\n"
-        for url in see:
-            doc += f"  - {BASE_URL}{url}"
-
-        setattr(obj, "__doc__", doc)
-        return obj
-
-    return decorator
-
-
-class _Unspecified:
-    __str__ = lambda s: "unspecified"
-    __repr__ = __str__
-    
-
-unspecified = _Unspecified()
 
 
 class HTTPClient(base.BaseHTTPClient):
@@ -60,20 +19,15 @@ class HTTPClient(base.BaseHTTPClient):
     # AUDIT LOGS #
     ##############
 
-    @_rtfm(
-        _Scope.AUDIT_LOG,
-        "/resources/audit-log#get-guild-audit-log",
-        "/resources/audit-log#audit-log-entry-object-audit-log-events",
-        "/resources/audit-log#audit-log-object",
-    )
+    @_utils.link_developer_portal(_utils.APIResource.AUDIT_LOG)
     async def get_guild_audit_log(
         self,
-        guild_id: utils.RawSnowflakeish,
+        guild_id: str,
         *,
-        user_id: utils.RawSnowflakeish = unspecified,
-        action: int = unspecified,
-        limit: int = unspecified,
-    ) -> utils.ResponseBody:
+        user_id: str = _utils.unspecified,
+        action: int = _utils.unspecified,
+        limit: int = _utils.unspecified,
+    ) -> _utils.DiscordObject:
         """
         Get an audit log object for the given guild.
 
@@ -98,12 +52,12 @@ class HTTPClient(base.BaseHTTPClient):
         """
         query = {}
 
-        if limit is not unspecified:
+        if limit is not _utils.unspecified:
             query["limit"] = limit
-        if user_id is not unspecified:
+        if user_id is not _utils.unspecified:
             query["user_id"] = user_id
 
-        if action is not unspecified:
+        if action is not _utils.unspecified:
             query["action_type"] = action
 
         params = {"guild_id": guild_id}
@@ -116,8 +70,8 @@ class HTTPClient(base.BaseHTTPClient):
     # CHANNELS #
     ############
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#get-channel")
-    async def get_channel(self, channel_id: utils.RawSnowflakeish) -> utils.ResponseBody:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
+    async def get_channel(self, channel_id: str) -> _utils.DiscordObject:
         """
         Get a channel object from a given channel ID.
 
@@ -129,24 +83,25 @@ class HTTPClient(base.BaseHTTPClient):
             The channel object that has been found.
 
         Raises:
-            :class:`hikari.errors.NotFound` if the channel does not exist.
+            hikari.errors.NotFound:
+                if the channel does not exist.
         """
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#modify-channel")
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def modify_channel(
         self,
-        channel_id: utils.RawSnowflakeish,
+        channel_id: str,
         *,
-        position: int = unspecified,
-        topic: str = unspecified,
-        nsfw: bool = unspecified,
-        rate_limit_per_user: int = unspecified,
-        bitrate: int = unspecified,
-        user_limit: int = unspecified,
-        permission_overwrites: typing.List[utils.RequestBody] = unspecified,
-        parent_id: utils.RawSnowflakeish = unspecified,
-    ) -> utils.ResponseBody:
+        position: int = _utils.unspecified,
+        topic: str = _utils.unspecified,
+        nsfw: bool = _utils.unspecified,
+        rate_limit_per_user: int = _utils.unspecified,
+        bitrate: int = _utils.unspecified,
+        user_limit: int = _utils.unspecified,
+        permission_overwrites: typing.List[_utils.DiscordObject] = _utils.unspecified,
+        parent_id: str = _utils.unspecified,
+    ) -> _utils.DiscordObject:
         """
         Update one or more aspects of a given channel ID.
 
@@ -177,221 +132,407 @@ class HTTPClient(base.BaseHTTPClient):
                 The optional parent category ID to set for the channel.
 
         Raises:
-            :class:`hikari.errors.NotFound` if the channel does not exist.
-            :class:`hikari.errors.Forbidden` if you lack the permission to make the change.
+            hikari.errors.NotFound:
+                if the channel does not exist.
+            hikari.errors.Forbidden:
+                if you lack the permission to make the change.
         """
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#deleteclose-channel")
-    async def delete_close_channel(self, channel_id: utils.RawSnowflakeish) -> utils.ResponseBody:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL, "deleteclose-channel")
+    async def delete_close_channel(self, channel_id: str) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#get-channel-messages")
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def get_channel_messages(
         self,
-        channel_id: utils.RawSnowflakeish,
+        channel_id: str,
         *,
-        limit: int = unspecified,
-        after: utils.RawSnowflakeish = unspecified,
-        before: utils.RawSnowflakeish = unspecified,
-        around: utils.RawSnowflakeish = unspecified,
-    ) -> typing.List[utils.ResponseBody]:
+        limit: int = _utils.unspecified,
+        after: str = _utils.unspecified,
+        before: str = _utils.unspecified,
+        around: str = _utils.unspecified,
+    ) -> typing.List[_utils.DiscordObject]:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#get-channel-message")
-    async def get_channel_message(
-        self, channel_id: utils.RawSnowflakeish, message_id: utils.RawSnowflakeish
-    ) -> utils.ResponseBody:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
+    async def get_channel_message(self, channel_id: str, message_id: str) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#create-message")
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def create_message(
         self,
-        channel_id: utils.RawSnowflakeish,
+        channel_id: str,
         *,
-        content: str = unspecified,
-        nonce: utils.RawSnowflakeish = unspecified,
-        tts: bool = unspecified,
-        file: bytes = unspecified,
-        embed: utils.RequestBody = unspecified,
-    ) -> utils.ResponseBody:
+        content: str = _utils.unspecified,
+        nonce: str = _utils.unspecified,
+        tts: bool = _utils.unspecified,
+        file: bytes = _utils.unspecified,
+        embed: _utils.DiscordObject = _utils.unspecified,
+    ) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#create-reaction")
-    async def create_reaction(
-        self,
-        channel_id: utils.RawSnowflakeish,
-        message_id: utils.RawSnowflakeish,
-        emoji: typing.Union[utils.RawSnowflakeish, str],
-    ) -> None:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
+    async def create_reaction(self, channel_id: str, message_id: str, emoji: typing.Union[str, str]) -> None:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#delete-own-reaction")
-    async def delete_own_reaction(
-        self,
-        channel_id: utils.RawSnowflakeish,
-        message_id: utils.RawSnowflakeish,
-        emoji: typing.Union[utils.RawSnowflakeish, str],
-    ) -> None:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
+    async def delete_own_reaction(self, channel_id: str, message_id: str, emoji: typing.Union[str, str]) -> None:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#delete-user-reaction")
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def delete_user_reaction(
-        self,
-        channel_id: utils.RawSnowflakeish,
-        message_id: utils.RawSnowflakeish,
-        emoji: typing.Union[utils.RawSnowflakeish, str],
-        user_id: utils.RawSnowflakeish,
+        self, channel_id: str, message_id: str, emoji: typing.Union[str, str], user_id: str
     ) -> None:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#get-reactions")
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def get_reactions(
-        self,
-        channel_id: utils.RawSnowflakeish,
-        message_id: utils.RawSnowflakeish,
-        emoji: typing.Union[utils.RawSnowflakeish, str],
-    ) -> typing.List[utils.ResponseBody]:
+        self, channel_id: str, message_id: str, emoji: typing.Union[str, str]
+    ) -> typing.List[_utils.DiscordObject]:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#delete-all-reactions")
-    async def delete_all_reactions(self, channel_id: utils.RawSnowflakeish, message_id: utils.RawSnowflakeish) -> None:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL, "/resources/channel#delete-all-reactions")
+    async def delete_all_reactions(self, channel_id: str, message_id: str) -> None:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#edit-message")
-    async def edit_message(
-        self, channel_id: utils.RawSnowflakeish, message_id: utils.RawSnowflakeish
-    ) -> utils.ResponseBody:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
+    async def edit_message(self, channel_id: str, message_id: str) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#delete-message")
-    async def delete_message(self, channel_id: utils.RawSnowflakeish, message_id: utils.RawSnowflakeish) -> None:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
+    async def delete_message(self, channel_id: str, message_id: str) -> None:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#bulk-delete-messages")
-    async def bulk_delete_messages(
-        self, channel_id: utils.RawSnowflakeish, messages: typing.List[utils.RawSnowflakeish]
-    ) -> None:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
+    async def bulk_delete_messages(self, channel_id: str, messages: typing.List[str]) -> None:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#edit-channel-permissions")
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def edit_channel_permissions(
-        self, channel_id: utils.RawSnowflakeish, overwrite_id: utils.RawSnowflakeish, allow: int, deny: int, type: str
+        self, channel_id: str, overwrite_id: str, allow: int, deny: int, type: str
     ) -> None:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#get-channel-invites")
-    async def get_channel_invites(self, channel_id: utils.RawSnowflakeish) -> typing.List[utils.ResponseBody]:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
+    async def get_channel_invites(self, channel_id: str) -> typing.List[_utils.DiscordObject]:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#create-channel-invite")
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def create_channel_invite(
         self,
-        channel_id: utils.RawSnowflakeish,
+        channel_id: str,
         *,
-        max_age: int = unspecified,
-        max_uses: int = unspecified,
-        temporary: bool = unspecified,
-        unique: bool = unspecified,
-    ) -> utils.ResponseBody:
+        max_age: int = _utils.unspecified,
+        max_uses: int = _utils.unspecified,
+        temporary: bool = _utils.unspecified,
+        unique: bool = _utils.unspecified,
+    ) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#delete-channel-permission")
-    async def delete_channel_permission(
-        self, channel_id: utils.RawSnowflakeish, overwrite_id: utils.RawSnowflakeish
-    ) -> None:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
+    async def delete_channel_permission(self, channel_id: str, overwrite_id: str) -> None:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#trigger-typing-indicator")
-    async def trigger_typing_indicator(self, channel_id: utils.RawSnowflakeish) -> None:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
+    async def trigger_typing_indicator(self, channel_id: str) -> None:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#get-pinned-messages")
-    async def get_pinned_messages(self, channel_id: utils.RawSnowflakeish) -> None:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
+    async def get_pinned_messages(self, channel_id: str) -> None:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#add-pinned-channel-message")
-    async def add_pinned_channel_message(
-        self, channel_id: utils.RawSnowflakeish, message_id: utils.RawSnowflakeish
-    ) -> None:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
+    async def add_pinned_channel_message(self, channel_id: str, message_id: str) -> None:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#delete-pinned-channel-message")
-    async def delete_pinned_channel_message(
-        self, channel_id: utils.RawSnowflakeish, message_id: utils.RawSnowflakeish
-    ) -> None:
-        raise NotImplementedError  # TODO: implement this endpoint and write tests
-
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#group-dm-add-recipient")
-    async def group_dm_add_recipient(
-        self, channel_id: utils.RawSnowflakeish, user_id: utils.RawSnowflakeish, access_token: str, nick: str
-    ) -> None:
-        raise NotImplementedError  # TODO: implement this endpoint and write tests
-
-    @_rtfm(_Scope.CHANNEL, "/resources/channel#group-dm-remove-recipient")
-    async def group_dm_remove_recipient(
-        self, channel_id: utils.RawSnowflakeish, user_id: utils.RawSnowflakeish
-    ) -> None:
+    @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
+    async def delete_pinned_channel_message(self, channel_id: str, message_id: str) -> None:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
     ##########
     # EMOJIS #
     ##########
 
-    @_rtfm(_Scope.EMOJI, "/resources/emoji#list-guild-emojis")
-    async def list_guild_emojis(self, guild_id: utils.RawSnowflakeish) -> typing.List[utils.ResponseBody]:
+    @_utils.link_developer_portal(_utils.APIResource.EMOJI)
+    async def list_guild_emojis(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.EMOJI, "/resources/emoji#get-guild-emoji")
-    async def get_guild_emoji(
-        self, guild_id: utils.RawSnowflakeish, emoji_id: utils.RawSnowflakeish
-    ) -> utils.ResponseBody:
+    @_utils.link_developer_portal(_utils.APIResource.EMOJI)
+    async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.EMOJI, "/resources/emoji#create-guild-emoji")
+    @_utils.link_developer_portal(_utils.APIResource.EMOJI)
     async def create_guild_emoji(
-        self, guild_id: utils.RawSnowflakeish, name: str, image: bytes, roles: typing.List[utils.RawSnowflakeish]
-    ) -> utils.ResponseBody:
+        self, guild_id: str, name: str, image: bytes, roles: typing.List[str]
+    ) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.EMOJI, "/resources/emoji#modify-guild-emoji")
+    @_utils.link_developer_portal(_utils.APIResource.EMOJI)
     async def modify_guild_emoji(
-        self,
-        guild_id: utils.RawSnowflakeish,
-        emoji_id: utils.RawSnowflakeish,
-        name: str,
-        roles: typing.List[utils.RawSnowflakeish],
-    ) -> utils.ResponseBody:
+        self, guild_id: str, emoji_id: str, name: str, roles: typing.List[str]
+    ) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.EMOJI, "/resources/emoji#delete-guild-emoji")
-    async def delete_guild_emoji(self, guild_id: utils.RawSnowflakeish, emoji_id: utils.RawSnowflakeish) -> None:
+    @_utils.link_developer_portal(_utils.APIResource.EMOJI)
+    async def delete_guild_emoji(self, guild_id: str, emoji_id: str) -> None:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
     ##########
     # GUILDS #
     ##########
-    
-    # TODO: guild endpoints here
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def create_guild(
+        self,
+        name: str,
+        region: str,
+        icon: bytes,
+        verification_level: int,
+        default_message_notifications: int,
+        explicit_content_filter: int,
+        roles: typing.List[_utils.DiscordObject],
+        channels: typing.List[_utils.DiscordObject],
+    ) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def get_guild(self, guild_id: str) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def modify_guild(
+        self,
+        guild_id: str,
+        *,
+        name: str = _utils.unspecified,
+        region: str = _utils.unspecified,
+        verification_level: str = _utils.unspecified,
+        default_message_notifications: str = _utils.unspecified,
+        explicit_content_filter: int = _utils.unspecified,
+        afk_channel_id: str = _utils.unspecified,
+        icon: bytes = _utils.unspecified,
+        owner_id: str = _utils.unspecified,
+        splash: bytes = _utils.unspecified,
+        system_channel_id: str = _utils.unspecified,
+    ) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def delete_guild(self, guild_id: str) -> None:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def get_guild_channels(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def create_guild_channel(
+        self,
+        guild_id: str,
+        name: str,
+        *,
+        type: int = _utils.unspecified,
+        topic: str = _utils.unspecified,
+        bitrate: int = _utils.unspecified,
+        user_limit: int = _utils.unspecified,
+        rate_limit_per_user: int = _utils.unspecified,
+        position: int = _utils.unspecified,
+        permission_overwrites: typing.List[_utils.DiscordObject] = _utils.unspecified,
+        parent_id: str = _utils.unspecified,
+        nsfw: bool = _utils.unspecified,
+    ) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def modify_guild_channel_positions(
+        self, guild_id: str, channel: typing.Tuple[str, int], *channels: typing.Tuple[str, int]
+    ) -> None:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def get_guild_member(self, guild_id: str, user_id: str) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def list_guild_members(
+        self, guild_id: str, *, limit: int = _utils.unspecified, after: str = _utils.unspecified
+    ) -> typing.List[_utils.DiscordObject]:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def modify_guild_member(
+        self,
+        guild_id: str,
+        user_id: str,
+        *,
+        nick: typing.Optional[str] = _utils.unspecified,
+        roles: typing.List[str] = _utils.unspecified,
+        mute: bool = _utils.unspecified,
+        deaf: bool = _utils.unspecified,
+        channel_id: typing.Optional[str] = _utils.unspecified,
+    ) -> None:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def modify_current_user_nick(self, guild_id: str, nick: typing.Optional[str]) -> str:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def add_guild_member_role(self, guild_id: str, user_id: str, role_id: str) -> None:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def remove_guild_member_role(self, guild_id: str, user_id: str, role_id: str) -> None:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def remove_guild_member(self, guild_id: str, user_id: str) -> None:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def get_guild_bans(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def get_guild_ban(self, guild_id: str, user_id: str) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def create_guild_ban(
+        self,
+        guild_id: str,
+        user_id: str,
+        *,
+        delete_message_days: int = _utils.unspecified,
+        reason: str = _utils.unspecified,
+    ) -> None:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def remove_guild_ban(self, guild_id: str, user_id: str) -> None:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def get_guild_roles(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def create_guild_role(
+        self,
+        guild_id: str,
+        *,
+        name: str = _utils.unspecified,
+        permissions: int = _utils.unspecified,
+        color: int = _utils.unspecified,
+        hoist: bool = _utils.unspecified,
+        mentionable: bool = _utils.unspecified,
+    ) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def delete_guild_role(self, guild_id: str, role_id: str) -> None:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def get_guild_prune_count(self, guild_id: str, days: int) -> int:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def begin_guild_prune(
+        self, guild_id: str, days: int, compute_prune_count: bool = False
+    ) -> typing.Optional[int]:
+        # NOTE: they politely ask to not call compute_prune_count unless necessary.
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def get_guild_voice_regions(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def get_guild_invites(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def get_guild_integrations(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def create_guild_integration(self, guild_id: str, type: str, integration_id: str) -> None:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def modify_guild_integration(
+        self,
+        guild_id: str,
+        integration_id: str,
+        *,
+        expire_behaviour: int = _utils.unspecified,
+        expire_grace_period: int = _utils.unspecified,
+        enable_emoticons: bool = _utils.unspecified,
+    ) -> None:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def delete_guild_integration(self, guild_id: str, integration_id: str) -> None:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def sync_guild_integration(self, guild_id: str, integration_id: str) -> None:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def get_guild_embed(self, guild_id: str) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def modify_guild_embed(self, guild_id: str, embed: _utils.DiscordObject) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def get_guild_vanity_url(self, guild_id: str) -> str:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    def get_guild_widget_image(self, guild_id: str, style: str) -> str:
+        """
+        Get the URL for a guild widget.
+
+        Args:
+            guild_id:
+                The guild ID to use for the widget.
+            style:
+                One of "shield", "banner1", "banner2", "banner3" or "banner4".
+
+        Returns:
+            A URL to retrieve a PNG widget for your guild.
+
+        Note:
+            This does not actually make any form of request, and shouldn't be awaited.
+
+        Warning:
+            The guild must have the widget enabled in the guild settings for this to be valid.
+        """
+        return f"{self.base_uri}/guilds/{guild_id}/widget.png?style={style}"
 
     ###############
     # INVITATIONS #
     ###############
 
-    @_rtfm(_Scope.INVITE, "/resources/invite#get-invite")
-    async def get_invite(self, invite_code: str, *, with_counts: bool = unspecified) -> utils.ResponseBody:
+    @_utils.link_developer_portal(_utils.APIResource.INVITE)
+    async def get_invite(self, invite_code: str, *, with_counts: bool = _utils.unspecified) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
-    @_rtfm(_Scope.INVITE, "/resources/invite#delete-invite")
-    async def delete_invite(self, invite_code: str) -> utils.ResponseBody:
+    @_utils.link_developer_portal(_utils.APIResource.INVITE)
+    async def delete_invite(self, invite_code: str) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this endpoint and write tests
 
     ##########
     # OAUTH2 #
     ##########
 
-    @_rtfm(_Scope.OAUTH2, "/topics/oauth2#get-current-application-information")
-    async def application_info(self) -> utils.ResponseBody:
+    @_utils.link_developer_portal(_utils.APIResource.OAUTH2)
+    async def get_current_application_info(self) -> _utils.DiscordObject:
         """
         Get the current application information.
 
@@ -404,20 +545,67 @@ class HTTPClient(base.BaseHTTPClient):
     #########
     # USERS #
     #########
-    
-    # TODO: user endpoints here
-    
+
+    @_utils.link_developer_portal(_utils.APIResource.USER)
+    async def get_current_user(self) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.USER)
+    async def get_user(self, user_id: str) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.USER)
+    async def modify_current_user(
+        self, *, username: str = _utils.unspecified, avatar: bytes = _utils.unspecified
+    ) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.USER)
+    async def get_current_user_guilds(self) -> typing.List[_utils.DiscordObject]:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.USER)
+    async def leave_guild(self, guild_id: str) -> None:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.USER)
+    async def create_dm(self, recipient_id: str) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
     #########
     # VOICE #
     #########
-    
-    #: TODO: voice endpoints here
+
+    @_utils.link_developer_portal(_utils.APIResource.VOICE)
+    async def list_voice_regions(self) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
 
     ############
     # WEBHOOKS #
     ############
-    
-    #: TODO: webhooks here
 
+    @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
+    async def create_webhook(
+        self, channel_id: str, name: str, *, avatar: bytes = _utils.unspecified
+    ) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
 
-del _Scope, _rtfm
+    @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
+    async def get_channel_webhooks(self, channel_id: str) -> typing.List[_utils.DiscordObject]:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
+    async def get_guild_webhooks(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
+    async def get_webhook(self, webhook_id: str) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
+    async def modify_webhook(self, webhook_id: str) -> _utils.DiscordObject:
+        raise NotImplementedError  # TODO: implement this
+
+    @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
+    async def delete_webhook(self, webhook_id: str) -> None:
+        raise NotImplementedError  # TODO: implement this

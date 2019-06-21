@@ -370,7 +370,6 @@ async def test_TimedLatchBucket_when_locked_will_return_after_a_cooldown(event_l
 
     def assert_locked(nine, eighteen, foo):
         nonlocal checked
-        print("You are being ratelimitied")
         checked = True
         assert nine == 9
         assert eighteen == 18

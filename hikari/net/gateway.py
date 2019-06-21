@@ -27,9 +27,9 @@ from hikari.compat import contextlib
 from hikari.compat import typing
 from hikari.net import opcodes
 from hikari.net import rates
-from hikari.net import utils
-from hikari.net.utils import DispatchHandler
-from hikari.net.utils import RequestBody
+from hikari import _utils
+from hikari._utils import DispatchHandler
+from hikari._utils import DiscordObject
 
 
 class _ResumeConnection(websockets.ConnectionClosed):
@@ -130,7 +130,7 @@ class GatewayClient:
         *,
         connector=websockets.connect,
         dispatch: DispatchHandler = lambda t, d: None,
-        initial_presence: typing.Optional[RequestBody] = None,
+        initial_presence: typing.Optional[DiscordObject] = None,
         large_threshold: int = 50,
         loop: asyncio.AbstractEventLoop,
         max_persistent_buffer_size: int = 3 * 1024 ** 2,
@@ -235,7 +235,7 @@ class GatewayClient:
             self.out_cid += 1
             await self.ws.send(raw)
 
-    async def _receive_json(self) -> RequestBody:
+    async def _receive_json(self) -> DiscordObject:
         msg = await self.ws.recv()
 
         if isinstance(msg, (bytes, bytearray)):
@@ -350,9 +350,9 @@ class GatewayClient:
                 "compress": False,
                 "large_threshold": self.large_threshold,
                 "properties": {
-                    "$os": utils.system_type(),
-                    "$browser": utils.library_version(),
-                    "$device": utils.python_version(),
+                    "$os": _utils.system_type(),
+                    "$browser": _utils.library_version(),
+                    "$device": _utils.python_version(),
                 },
             },
         }
@@ -367,20 +367,20 @@ class GatewayClient:
         self.logger.info("sent IDENTIFY")
         await self._send_json(payload, False)
 
-    async def _handle_dispatch(self, event: str, payload: RequestBody) -> None:
+    async def _handle_dispatch(self, event: str, payload: DiscordObject) -> None:
         event == "READY" and await self._handle_ready(payload)
         event == "RESUMED" and await self._handle_resumed(payload)
         self.logger.debug("DISPATCH %s", event)
         await self.dispatch(event, payload)
 
-    async def _handle_ready(self, ready: RequestBody) -> None:
+    async def _handle_ready(self, ready: DiscordObject) -> None:
         self.trace = ready["_trace"]
         self.session_id = ready["session_id"]
         self.version = ready["v"]
         self.logger.info("session %s is READY", self.session_id)
         self.logger.debug("trace for session %s is %s", self.session_id, self.trace)
 
-    async def _handle_resumed(self, resumed: RequestBody) -> None:
+    async def _handle_resumed(self, resumed: DiscordObject) -> None:
         self.trace = resumed["_trace"]
         self.logger.info("RESUMED successfully")
 
@@ -426,7 +426,7 @@ class GatewayClient:
         else:
             self.logger.warning("received unrecognised opcode %s", op)
 
-    async def request_guild_members(self, guild_id: utils.RawSnowflakeish, query: str = "", limit: int = 0) -> None:
+    async def request_guild_members(self, guild_id: str, query: str = "", limit: int = 0) -> None:
         """
         Requests guild members from the given Guild ID. This can be used to retrieve all members available in a guild.
 
@@ -442,13 +442,13 @@ class GatewayClient:
         await self._send_json(
             {
                 "op": opcodes.GatewayOpcode.REQUEST_GUILD_MEMBERS,
-                "d": {"guild_id": str(guild_id), "query": query, "limit": limit},
+                "d": {"guild_id": guild_id, "query": query, "limit": limit},
             },
             False,
         )
 
     async def update_status(
-        self, idle_since: typing.Optional[int], game: typing.Optional[RequestBody], status: str, afk: bool
+        self, idle_since: typing.Optional[int], game: typing.Optional[DiscordObject], status: str, afk: bool
     ) -> None:
         """
         Updates the bot user's status in this shard.
@@ -470,7 +470,7 @@ class GatewayClient:
         await self._send_json({"op": opcodes.GatewayOpcode.STATUS_UPDATE, "d": d}, False)
 
     async def update_voice_state(
-        self, guild_id: utils.RawSnowflakeish, channel_id: typing.Optional[int], self_mute: bool, self_deaf: bool
+        self, guild_id: str, channel_id: typing.Optional[int], self_mute: bool, self_deaf: bool
     ) -> None:
         """
         Updates the given shard's voice state (used to connect to/disconnect from/move between voice channels.
