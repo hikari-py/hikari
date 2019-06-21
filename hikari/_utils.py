@@ -4,6 +4,8 @@
 import collections
 import datetime
 import email
+import enum
+import inspect
 import platform
 
 from hikari.compat import typing
@@ -158,14 +160,7 @@ def user_agent() -> str:
 #: This is a :class:`builtins.dict` of :class:`builtins.str` keys that map to any value. Since the :mod:`hikari.net`
 #: module does not enforce concrete models for values sent and received, mappings are passed around to represent request
 #: and response data. This allows an implementation to use this layer as desired.
-RequestBody = typing.Dict[str, typing.Any]
-
-#: Type type of a body for a Gateway or HTTP request and response.
-#:
-#: This is a :class:`builtins.dict` of :class:`builtins.str` keys that map to any value. Since the :mod:`hikari.net`
-#: module does not enforce concrete models for values sent and received, mappings are passed around to represent request
-#: and response data. This allows an implementation to use this layer as desired.
-ResponseBody = typing.Dict[str, typing.Any]
+DiscordObject = typing.Dict[str, typing.Any]
 
 #: The signature of an event dispatcher function. Consumes two arguments. The first is an event name from the gateway,
 #: the second is the payload which is assumed to always be a :class:`dict` with :class:`str` keys. This should be
@@ -176,12 +171,10 @@ ResponseBody = typing.Dict[str, typing.Any]
 #:     ...     logger.info("Dispatching %s with payload %r", event, payload)
 DispatchHandler = typing.Callable[[str, typing.Dict[str, typing.Any]], typing.Union[None, typing.Awaitable[None]]]
 
-#: Discord will return Snowflakes as :class:`str`.
-RawSnowflake = str
 
-#: Discord uses :class:`str` to pass snowflakes around. We should usually allow either-or to be passed around
-#: for ease of use.
-RawSnowflakeish = typing.Union[int, RawSnowflake]
+#: Discord uses :class:`str` to pass snowflakes around. We should usually allow :class:`int` or :class:`str` to be
+#: passed around for ease of use. If this is returned from a `net` component, always assume it is a :class:`str`
+InternalSnowflake = typing.Union[int, str]
 
 
 class Resource:
@@ -222,3 +215,46 @@ class Resource:
 
     def __eq__(self, other) -> bool:
         return isinstance(other, Resource) and hash(self) == hash(other)
+
+
+class APIResource(enum.Enum):
+    """A documentation resource for the underlying API."""
+
+    AUDIT_LOG = "/resources/audit-log"
+    CHANNEL = "/resources/channel"
+    EMOJI = "/resources/emoji"
+    GUILD = "/resources/guild"
+    INVITE = "/resources/invite"
+    OAUTH2 = "/topics/oauth2"
+    USER = "/resources/user"
+    VOICE = "/resources/voice"
+    WEBHOOK = "/resources/webhook"
+
+
+def link_developer_portal(scope: APIResource, specific_resource: str = None):
+    """Injects some common documentation into the given member's docstring."""
+
+    def decorator(obj):
+        BASE_URL = "https://discordapp.com/developers/docs"
+        doc = inspect.cleandoc(inspect.getdoc(obj) or "")
+        base_resource = BASE_URL + scope.value
+        frag = obj.__name__.lower().replace("_", "-") if specific_resource is None else specific_resource
+        uri = base_resource + "#" + frag
+
+        setattr(obj, "__doc__", f"Read the documentation on `Discord's developer portal <{uri}>`_.\n\n{doc}")
+        return obj
+
+    return decorator
+
+
+class _Unspecified:
+    __slots__ = ()
+
+    def __str__(self):
+        return "unspecified"
+
+    __repr__ = __str__
+
+
+#: An attribute that is unspecified by default.
+unspecified = _Unspecified()
