@@ -4,20 +4,19 @@
 Implementation of the base components required for working with the V7 HTTP REST API with consistent rate-limiting.
 """
 import abc
-import json
+import json as libjson
 import logging
 
 import aiohttp
 
+#: Format string for the default Discord API URL.
+from hikari import _utils
 from hikari import errors
+from hikari._utils import Resource
 from hikari.compat import asyncio
 from hikari.compat import typing
 from hikari.net import opcodes
 from hikari.net import rates
-
-#: Format string for the default Discord API URL.
-from hikari import _utils
-from hikari._utils import Resource
 
 DISCORD_API_URI_FORMAT = "https://discordapp.com/api/v{VERSION}"
 
@@ -141,11 +140,11 @@ class BaseHTTPClient:
         """
         await self.session.close()
 
-    async def request(self, method, path, params=None, **kwargs) -> _RequestReturnSignature:
+    async def request(self, method, path, params=None, re_seekable_resources=(), **kwargs) -> _RequestReturnSignature:
         """
-        See _request_once for signature.
+        Send a request to the given path using the given method, parameters, and keyword arguments. If a failure occurs
+        that is able to be retried, this will be retried up to 5 times before failing.
         """
-        kwargs.setdefault("allow_redirects", self.allow_redirects)
         params = params if params else {}
         resource = Resource(self.base_uri, method, path, **params)
 
@@ -153,7 +152,10 @@ class BaseHTTPClient:
             try:
                 result = await self._request_once(retry=retry, resource=resource, **kwargs)
             except _RateLimited:
-                continue
+                # If we are uploading files with io objects in a form body, we need to reset the seeks to 0 to ensure
+                # we can re-read the buffer...
+                for seekable_resource in re_seekable_resources:
+                    seekable_resource.seek(0)
             else:
                 return result
         raise errors.ClientError(
@@ -161,10 +163,11 @@ class BaseHTTPClient:
         )
 
     async def _request_once(
-        self, *, retry=0, resource, headers=None, json_body=None, **kwargs
+        self, *, retry=0, resource, headers=None, data=None, json=None, **kwargs
     ) -> _RequestReturnSignature:
         headers = headers if headers else {}
 
+        kwargs.setdefault("allow_redirects", self.allow_redirects)
         headers.setdefault("Authorization", self.authorization)
         headers.setdefault("User-Agent", self.user_agent)
         headers.setdefault("Accept", "application/json")
@@ -180,30 +183,30 @@ class BaseHTTPClient:
         self._correlation_id += 1
         self.logger.debug("[try %s - %s] %s %s", retry + 1, self._correlation_id, resource.method, uri)
 
-        async with self.session.request(resource.method, url=uri, headers=headers, json=json_body, **kwargs) as resp:
+        async with self.session.request(resource.method, url=uri, headers=headers, data=data, json=json, **kwargs) as r:
             self.logger.debug(
                 "[try %s - %s] %s responded with %s %s containing %s (%s bytes)",
                 retry,
                 self._correlation_id,
                 uri,
-                resp.status,
-                resp.reason,
-                resp.content_type,
-                resp.content_length,
+                r.status,
+                r.reason,
+                r.content_type,
+                r.content_length,
             )
 
-            headers = resp.headers
-            status = opcodes.HTTPStatus(resp.status)
-            body = await resp.read()
+            headers = r.headers
+            status = opcodes.HTTPStatus(r.status)
+            body = await r.read()
 
-            if resp.content_type == "application/json":
-                body = json.loads(body)
-            elif resp.content_type in ("text/plain", "text/html"):
+            if r.content_type == "application/json":
+                body = libjson.loads(body)
+            elif r.content_type in ("text/plain", "text/html"):
                 # Cloudflare commonly will cause text/html (e.g. Discord is down)
                 body = body.decode()
 
         # Do this pre-emptively before anything else can fail.
-        if self._is_rate_limited(resource, resp.status, headers, body):
+        if self._is_rate_limited(resource, r.status, headers, body):
             raise _RateLimited()
 
         # 2xx, 3xx do not indicate errors. 4xx indicates an error our side, 5xx is usually the server unable to
