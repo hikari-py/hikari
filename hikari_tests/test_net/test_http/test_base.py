@@ -103,6 +103,20 @@ async def test_request_retries_then_errors(mock_http_connection):
 
 
 @pytest.mark.asyncio
+async def test_request_seeks_to_zero_on_each_error_for_each_reseekable_resource_given(mock_http_connection):
+    mock_http_connection._request_once = asynctest.CoroutineMock(
+        side_effect=[base._RateLimited, base._RateLimited, base._RateLimited, None]
+    )
+
+    re_seekable_resources = [asynctest.MagicMock(), asynctest.MagicMock(), asynctest.MagicMock()]
+
+    await mock_http_connection.request(method="get", path="/foo/bar", re_seekable_resources=re_seekable_resources)
+
+    for re_seekable_resource in re_seekable_resources:
+        re_seekable_resource.assert_has_calls([asynctest.call.seek(0)] * 3)
+
+
+@pytest.mark.asyncio
 async def test_request_does_not_retry_on_success(mock_http_connection):
     expected_result = object()
     mock_http_connection._request_once = asynctest.CoroutineMock(
@@ -118,7 +132,7 @@ async def test_request_once_acquires_global_rate_limit_bucket(mock_http_connecti
     mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     try:
-        await mock_http_connection._request_once(retry=0, resource=res, json_body={})
+        await mock_http_connection._request_once(retry=0, resource=res, data={})
         assert False
     except base._RateLimited:
         mock_http_connection.global_rate_limit.acquire.assert_awaited_once()
@@ -132,7 +146,7 @@ async def test_request_once_acquires_local_rate_limit_bucket(mock_http_connectio
     bucket.acquire = asynctest.CoroutineMock()
     mock_http_connection.buckets[res] = bucket
     try:
-        await mock_http_connection._request_once(retry=0, resource=res, json_body={})
+        await mock_http_connection._request_once(retry=0, resource=res, data={})
         assert False
     except base._RateLimited:
         bucket.acquire.assert_awaited_once()

@@ -6,6 +6,7 @@ import datetime
 import email
 import enum
 import inspect
+import io
 import platform
 
 from hikari.compat import typing
@@ -172,9 +173,8 @@ DiscordObject = typing.Dict[str, typing.Any]
 DispatchHandler = typing.Callable[[str, typing.Dict[str, typing.Any]], typing.Union[None, typing.Awaitable[None]]]
 
 
-#: Discord uses :class:`str` to pass snowflakes around. We should usually allow :class:`int` or :class:`str` to be
-#: passed around for ease of use. If this is returned from a `net` component, always assume it is a :class:`str`
-InternalSnowflake = typing.Union[int, str]
+#: An object that can be considered to be file-like.
+FileLike = typing.Union[bytes, bytearray, memoryview, str, io.IOBase]
 
 
 class Resource:
