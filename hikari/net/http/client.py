@@ -3,6 +3,11 @@
 """
 Implementation of the HTTP Client mix of all mixin components.
 """
+import io
+import json
+
+import aiohttp
+
 from hikari import _utils
 from hikari.compat import typing
 from . import base
@@ -166,11 +171,74 @@ class HTTPClient(base.BaseHTTPClient):
         *,
         content: str = _utils.unspecified,
         nonce: str = _utils.unspecified,
-        tts: bool = _utils.unspecified,
-        file: bytes = _utils.unspecified,
+        tts: bool = False,
+        files: typing.List[typing.Tuple[str, _utils.FileLike]] = _utils.unspecified,
         embed: _utils.DiscordObject = _utils.unspecified,
     ) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this endpoint and write tests
+        """
+        Create a message in the given channel or DM.
+
+        Args:
+            channel_id:
+                The channel or user ID to send to.
+            content:
+                The message content to send.
+            nonce:
+                an optional ID to send for opportunistic message creation. This doesn't serve any real purpose for
+                general use, and can usually be ignored.
+            tts:
+                if specified and `True`, then the message will be sent.
+            files:
+                if specified, this should be a list of between 1 and 5 tuples. Each tuple should consist of the
+                file name, and either raw :class:`bytes` or an :class:`io.IOBase` derived object with a seek that
+                points to a buffer containing said file.
+            embed:
+                if specified, this embed will be sent with the message.
+
+        Raises:
+            hikari.errors.NotFound:
+                if the channel ID is not found.
+            hikari.errors.BadRequest:
+                if the file is too large, the embed exceeds the defined limits, if the message content is specified and
+                empty or greater than 2000 characters, or if neither of content, file or embed are specified.
+            hikari.errors.Forbidden:
+                if you lack permissions to send to this channel.
+
+        Returns:
+            The created message object.
+        """
+        form = aiohttp.FormData()
+
+        json_payload = {"tts": tts}
+        if content is not _utils.unspecified:
+            json_payload["content"] = content
+        if nonce is not _utils.unspecified:
+            json_payload["nonce"] = nonce
+        if embed is not _utils.unspecified:
+            json_payload["embed"] = embed
+
+        form.add_field("payload_json", json.dumps(json_payload), content_type="application/json")
+
+        re_seekable_resources = []
+        if files is not _utils.unspecified:
+            for i, (file_name, file) in enumerate(files):
+                if isinstance(file, (bytes, bytearray)):
+                    file = io.BytesIO(file)
+                elif isinstance(file, memoryview):
+                    file = io.BytesIO(file.tobytes())
+
+                re_seekable_resources.append(file)
+                form.add_field(f"file{i}", file, filename=file_name, content_type="application/octet-stream")
+
+        _, _, message = await self.request(
+            "post",
+            "/channels/{channel_id}/messages",
+            {"channel_id": channel_id},
+            re_seekable_resources=re_seekable_resources,
+            data=form,
+        )
+
+        return message
 
     @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def create_reaction(self, channel_id: str, message_id: str, emoji: typing.Union[str, str]) -> None:
