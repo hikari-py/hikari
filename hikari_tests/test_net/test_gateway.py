@@ -334,9 +334,11 @@ async def test_send_identify(event_loop):
     gw.seq = 69_420
     gw._send_json = asynctest.CoroutineMock()
 
-    with asynctest.patch("hikari.net.utils.python_version", new=lambda: "python3"), asynctest.patch(
-        "hikari.net.utils.library_version", new=lambda: "vx.y.z"
-    ), asynctest.patch("platform.system", new=lambda: "leenuks"):
+    with contextlib.ExitStack() as stack:
+        stack.enter_context(asynctest.patch("hikari._utils.python_version", new=lambda: "python3"))
+        stack.enter_context(asynctest.patch("hikari._utils.library_version", new=lambda: "vx.y.z"))
+        stack.enter_context(asynctest.patch("platform.system", new=lambda: "leenuks"))
+
         await gw._send_identify()
         gw._send_json.assert_called_with(
             {
@@ -603,7 +605,7 @@ async def test_request_guild_members(event_loop):
         large_threshold=69,
     )
     gw._send_json = asynctest.CoroutineMock()
-    await gw.request_guild_members(1234)
+    await gw.request_guild_members("1234")
     gw._send_json.assert_called_with({"op": 8, "d": {"guild_id": "1234", "query": "", "limit": 0}}, False)
 
 
