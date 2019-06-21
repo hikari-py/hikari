@@ -12,7 +12,7 @@ def http_client(event_loop):
 
 
 @pytest.mark.asyncio
-async def test_application_info_returns_a_dict_that_was_the_response_body(http_client):
+async def test_get_current_application_info_returns_a_dict_that_was_the_response_body(http_client):
     resp = {
         "id": "9182736",
         "name": "hikari",
@@ -25,5 +25,5 @@ async def test_application_info_returns_a_dict_that_was_the_response_body(http_c
     }
     http_client.request = asynctest.CoroutineMock(return_value=(200, {}, resp))
 
-    info = await http_client.application_info()
+    info = await http_client.get_current_application_info()
     assert info == resp

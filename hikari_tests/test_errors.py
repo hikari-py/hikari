@@ -7,13 +7,13 @@ from http import HTTPStatus as HTTP
 import pytest
 
 from hikari import errors
-from hikari.net import utils
+from hikari import _utils
 from hikari.net.opcodes import GatewayClosure as GSE
 from hikari.net.opcodes import JSONErrorCode as JSON
 
 _LOGGER = logging.getLogger(__name__)
 
-res = utils.Resource("http://you.local", "get", "/it/now")
+res = _utils.Resource("http://you.local", "get", "/it/now")
 
 
 @pytest.mark.parametrize(

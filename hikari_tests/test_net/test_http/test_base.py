@@ -12,7 +12,7 @@ import time
 import asynctest
 import pytest
 
-import hikari.net.utils
+import hikari._utils
 from hikari import errors
 from hikari.net import opcodes
 from hikari.net import rates
@@ -78,7 +78,7 @@ def mock_http_connection(event_loop):
 
 @pytest.fixture
 def res():
-    return hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
+    return hikari._utils.Resource("http://test.lan", "get", "/foo/bar")
 
 
 ########################################################################################################################
@@ -459,7 +459,7 @@ async def test_NO_CONTENT_response_with_no_body_present(mock_http_connection, re
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = None
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.NO_CONTENT)
-    res = hikari.net.utils.Resource("http://test.lan", "get", "/foo/bar")
+    res = hikari._utils.Resource("http://test.lan", "get", "/foo/bar")
     status, headers, body = await mock_http_connection._request_once(retry=0, resource=res)
     assert status is opcodes.HTTPStatus.NO_CONTENT
     assert body is None
