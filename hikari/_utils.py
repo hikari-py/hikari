@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Internal utilities and helper methods for network logic."""
+import _io
 import collections
 import datetime
 import email
@@ -174,7 +175,18 @@ DispatchHandler = typing.Callable[[str, typing.Dict[str, typing.Any]], typing.Un
 
 
 #: An object that can be considered to be file-like.
-FileLike = typing.Union[bytes, bytearray, memoryview, str, io.IOBase]
+FileLike = typing.Union[
+    bytes,
+    bytearray,
+    memoryview,
+    str,
+    io.IOBase,
+    io.StringIO,
+    io.BytesIO,
+    io.BufferedRandom,
+    io.BufferedReader,
+    io.BufferedRWPair,
+]
 
 
 class Resource:
