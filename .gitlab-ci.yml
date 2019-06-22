@@ -1,6 +1,7 @@
 stages:
   - test
   - verify
+  - deploy
   - pages
 
 variables:
@@ -182,3 +183,64 @@ aggregate-coverage:
   artifacts:
     paths:
       - public
+
+
+###
+### HANDLE DEPLOYING TO PYPI REPOSITORIES
+###
+.deploy:
+  allow_failure: true
+  stage: deploy
+  image: python:3
+  script:
+    - pip install -U setuptools wheel twine requests
+    - cat $PYPIRC > $HOME/.pypirc
+    - version="$(date +%Y.%m.%d).${PREFIX}${CI_PIPELINE_IID}"
+    - echo "Version will become ${version}"
+    - sed "s/^__version__.*/__version__ = \"${version}\"/g" -i hikari/__init__.py
+    - sed "s/^version.*/version = ${version}/g" -i setup.cfg
+    - sed "0,/^version.*$/s//version = \"${version}\"/g" -i docs/conf.py
+    - python setup.py sdist bdist_wheel
+    - twine upload --repository pypi dist/*
+    - python .ci/notify.py "$version"
+
+###
+### HANDLE DEPLOYING TO OUR STAGING ENVIRONMENT ON test.pypi.org
+###
+deploy-to-staging:
+  extends: .deploy
+  only:
+    - staging
+    - prod
+  except:
+    - tags
+    - merge_requests
+    - schedules
+  variables:
+    PREFIX: "dev"
+    RELEASE_WEBHOOK_NAME: "staging"
+    RELEASE_WEBHOOK_DESCRIPTION: "It is now available on https://test.pypi.org/"
+    RELEASE_WEBHOOK_COLOUR: "0xFFBF00"
+  environment:
+    name:
+      staging
+
+###
+### HANDLE DEPLOYING TO OUR PRODUCTION ENVIRONMENT ON pypi.org
+###
+deploy-to-prod:
+  extends: .deploy
+  only:
+    - prod
+  except:
+    - tags
+    - merge_requests
+    - schedules
+  variables:
+    PREFIX: ""
+    RELEASE_WEBHOOK_NAME: "prod"
+    RELEASE_WEBHOOK_DESCRIPTION: "pip install it from https://pypi.python.org/ now"
+    RELEASE_WEBHOOK_COLOUR: "0x00FF00"
+  environment:
+    name:
+      prod
