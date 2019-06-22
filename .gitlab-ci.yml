@@ -231,7 +231,7 @@ deploy-to-staging:
 deploy-to-prod:
   extends: .deploy
   only:
-    - prod
+    - master
   except:
     - tags
     - merge_requests
