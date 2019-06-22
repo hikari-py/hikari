@@ -226,6 +226,8 @@ class HTTPClient(base.BaseHTTPClient):
                     file = io.BytesIO(file)
                 elif isinstance(file, memoryview):
                     file = io.BytesIO(file.tobytes())
+                elif isinstance(file, str):
+                    file = io.StringIO(file)
 
                 re_seekable_resources.append(file)
                 form.add_field(f"file{i}", file, filename=file_name, content_type="application/octet-stream")
