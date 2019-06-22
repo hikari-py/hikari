@@ -32,7 +32,7 @@ async def test_create_message_sends_to_expected_endpoint(http_client):
 
     args, kwargs = http_client.request.await_args
     assert "/channels/{channel_id}/messages" in args
-    assert {"channel_id": "123456"} in args
+    assert kwargs["channel_id"] == "123456"
 
 
 @pytest.mark.asyncio
