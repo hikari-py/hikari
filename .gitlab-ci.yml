@@ -1,6 +1,7 @@
 stages:
   - test
   - verify
+  - deploy
   - pages
 
 variables:
@@ -182,3 +183,46 @@ aggregate-coverage:
   artifacts:
     paths:
       - public
+
+.deploy:
+  allow_failure: true
+  stage: deploy
+  image: python:3
+  script:
+    - pip install -U setuptools wheel twine
+    - python setup.py sdist bdist_wheel
+    - cat $PYPIRC > $HOME/.pypirc
+    - version="$(date +%Y.%m.%d).${PREFIX}${CI_PIPELINE_IID}"
+    - echo "Version will become ${version}"
+    - sed "s/^__version__.*/__version__ = \"${version}\"/g" -i hikari/__init__.py
+    - sed "s/^version.*/version = ${version}/g" -i setup.cfg
+    - sed "0,/^version.*$/s//version = \"${version}\"/g" -i docs/conf.py
+    - twine upload --repository pypi dist/*
+
+deploy-to-staging:
+  extends: .deploy
+  only:
+    - staging
+  except:
+    - tags
+    - merge_requests
+    - schedules
+  variables:
+    PREFIX: "dev"
+  environment:
+    name:
+      staging
+
+deploy-to-prod:
+  extends: .deploy
+  only:
+    - staging
+  except:
+    - tags
+    - merge_requests
+    - schedules
+  variables:
+    PREFIX: ""
+  environment:
+    name:
+      prod

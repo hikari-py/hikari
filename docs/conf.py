@@ -16,27 +16,10 @@ import sphinx_bootstrap_theme
 
 # -- Project information -----------------------------------------------------
 
-from pkg_resources import get_distribution
-
-copyright = "Nekokatt"
-
-try:
-    distribution = get_distribution("hikari")
-
-    release = distribution.version
-    # for example take major/minor
-    version = ".".join(release.split(".")[:3])
-    project = distribution.project_name
-except Exception:
-    import traceback
-
-    traceback.print_exc()
-
-    import hikari
-
-    release = "-"
-    version = hikari.__version__
-    project = hikari.__name__
+project = "Hikari"
+author = "Nekokatt"
+version = "0.0.1"
+release = "-SNAPSHOT"
 
 # -- General configuration ---------------------------------------------------
 
