@@ -20,7 +20,6 @@ Packages and submodules
     hikari.net.http.client
     hikari.net.opcodes
     hikari.net.rates
-    hikari._utils 
 
 * `Changelog, code quality statistics and reports for this release <quality_assurance.html>`_
 * :ref:`genindex`
