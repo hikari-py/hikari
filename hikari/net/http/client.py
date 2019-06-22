@@ -91,7 +91,8 @@ class HTTPClient(base.BaseHTTPClient):
             hikari.errors.NotFound:
                 if the channel does not exist.
         """
-        raise NotImplementedError  # TODO: implement this endpoint and write tests
+        _, _, channel = await self.request('get', '/channels/{channel_id}', channel_id=channel_id)
+        return channel
 
     @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def modify_channel(
