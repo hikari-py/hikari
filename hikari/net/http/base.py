@@ -18,8 +18,6 @@ from hikari.compat import typing
 from hikari.net import opcodes
 from hikari.net import rates
 
-DISCORD_API_URI_FORMAT = "https://discordapp.com/api/v{VERSION}"
-
 # Headers for rate limiting
 _DATE = "Date"
 _X_RATELIMIT_GLOBAL = "X-RateLimit-Global"
@@ -35,24 +33,6 @@ class _RateLimited(Exception):
     """Used as an internal flag. This should not ever be used outside this API."""
 
     __slots__ = []
-
-
-class MixinBase(metaclass=abc.ABCMeta):
-    """
-    Base for mixin components. This purely exists for type checking and should not be used unless you are extending
-    this API.
-    """
-
-    __slots__ = []
-    logger: logging.Logger
-
-    @abc.abstractmethod
-    async def request(self, method, path, params=None, **kwargs) -> _RequestReturnSignature:
-        pass
-
-    @abc.abstractmethod
-    async def close(self):
-        pass
 
 
 class BaseHTTPClient:
@@ -87,8 +67,8 @@ class BaseHTTPClient:
         allow_redirects: bool = False,
         max_retries: int = 5,
         token: str = _utils.unspecified,
-        base_uri: str = DISCORD_API_URI_FORMAT.format(VERSION=VERSION),
-        **aiohttp_arguments,
+        base_uri: str = "https://discordapp.com/api/v{VERSION}".format(VERSION=VERSION),
+        **aiohttp_kwargs,
     ) -> None:
         """
         Args:
@@ -107,7 +87,7 @@ class BaseHTTPClient:
                 optional HTTP API base URI to hit. If unspecified, this defaults to Discord's API URI. This exists for
                 the purpose of mocking for functional testing. Any URI should NOT end with a trailing forward slash, and
                 any instance of `{VERSION}` in the URL will be replaced.
-            **aiohttp_arguments:
+            **aiohttp_kwargs:
                 additional arguments to pass to the internal :class:`aiohttp.ClientSession` constructor used for making
                 HTTP requests.
         """
@@ -125,7 +105,7 @@ class BaseHTTPClient:
         #: Max number of times to retry before giving up.
         self.max_retries = max_retries
         #: The HTTP session to target.
-        self.session = aiohttp.ClientSession(loop=loop, **aiohttp_arguments)
+        self.session = aiohttp.ClientSession(loop=loop, **aiohttp_kwargs)
         #: The session `Authorization` header to use.
         self.authorization = "Bot " + token if token is not _utils.unspecified else None
         #: The logger to use for this object.
