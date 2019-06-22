@@ -65,9 +65,7 @@ class HTTPClient(base.BaseHTTPClient):
         if action is not _utils.unspecified:
             query["action_type"] = action
 
-        params = {"guild_id": guild_id}
-
-        _, _, body = await self.request("get", "/guilds/{guild_id}/audit-logs", params=params, query=query)
+        _, _, body = await self.request("get", "/guilds/{guild_id}/audit-logs", query=query, guild_id=guild_id)
 
         return body
 
@@ -235,7 +233,7 @@ class HTTPClient(base.BaseHTTPClient):
         _, _, message = await self.request(
             "post",
             "/channels/{channel_id}/messages",
-            {"channel_id": channel_id},
+            channel_id=channel_id,
             re_seekable_resources=re_seekable_resources,
             data=form,
         )

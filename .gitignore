@@ -18,7 +18,12 @@ vscode/
 .settings/
 .project
 
-# Setuptools-generated files
+# Secrets
+.pypirc
+
+# Setuptools/twine-generated files
+build/
+dist/
 *.egg-info/
 
 # Tox-generated files
