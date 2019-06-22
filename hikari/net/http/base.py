@@ -18,6 +18,8 @@ from hikari.compat import typing
 from hikari.net import opcodes
 from hikari.net import rates
 
+DISCORD_API_URI_FORMAT = "https://discordapp.com/api/v{VERSION}"
+
 # Headers for rate limiting
 _DATE = "Date"
 _X_RATELIMIT_GLOBAL = "X-RateLimit-Global"
@@ -33,6 +35,24 @@ class _RateLimited(Exception):
     """Used as an internal flag. This should not ever be used outside this API."""
 
     __slots__ = []
+
+
+class MixinBase(metaclass=abc.ABCMeta):
+    """
+    Base for mixin components. This purely exists for type checking and should not be used unless you are extending
+    this API.
+    """
+
+    __slots__ = []
+    logger: logging.Logger
+
+    @abc.abstractmethod
+    async def request(self, method, path, params=None, **kwargs) -> _RequestReturnSignature:
+        pass
+
+    @abc.abstractmethod
+    async def close(self):
+        pass
 
 
 class BaseHTTPClient:
@@ -67,8 +87,8 @@ class BaseHTTPClient:
         allow_redirects: bool = False,
         max_retries: int = 5,
         token: str = _utils.unspecified,
-        base_uri: str = "https://discordapp.com/api/v{VERSION}".format(VERSION=VERSION),
-        **aiohttp_kwargs,
+        base_uri: str = DISCORD_API_URI_FORMAT.format(VERSION=VERSION),
+        **aiohttp_arguments,
     ) -> None:
         """
         Args:
@@ -87,7 +107,7 @@ class BaseHTTPClient:
                 optional HTTP API base URI to hit. If unspecified, this defaults to Discord's API URI. This exists for
                 the purpose of mocking for functional testing. Any URI should NOT end with a trailing forward slash, and
                 any instance of `{VERSION}` in the URL will be replaced.
-            **aiohttp_kwargs:
+            **aiohttp_arguments:
                 additional arguments to pass to the internal :class:`aiohttp.ClientSession` constructor used for making
                 HTTP requests.
         """
@@ -105,7 +125,7 @@ class BaseHTTPClient:
         #: Max number of times to retry before giving up.
         self.max_retries = max_retries
         #: The HTTP session to target.
-        self.session = aiohttp.ClientSession(loop=loop, **aiohttp_kwargs)
+        self.session = aiohttp.ClientSession(loop=loop, **aiohttp_arguments)
         #: The session `Authorization` header to use.
         self.authorization = "Bot " + token if token is not _utils.unspecified else None
         #: The logger to use for this object.
@@ -121,17 +141,37 @@ class BaseHTTPClient:
         """
         await self.session.close()
 
-    async def request(self, method, path, params=None, re_seekable_resources=(), **kwargs) -> _RequestReturnSignature:
+    async def request(
+        self, method, path, re_seekable_resources=(), headers=None, data=None, json=None, **kwargs
+    ) -> _RequestReturnSignature:
         """
         Send a request to the given path using the given method, parameters, and keyword arguments. If a failure occurs
         that is able to be retried, this will be retried up to 5 times before failing.
+
+        Args:
+            method:
+                The HTTP method to use.
+            path:
+                The format-string path to hit. Any `kwargs` will be interpolated into this when making the URL.
+            re_seekable_resources:
+                Any :class:`io.IOBase`-derived resources that will need their `seek` setting to `0` again before
+                retrying in the case of an error we can retry the request for occurring. This is necessary for uploading
+                files, etc so that we can read the file more than once without loading several megabytes into memory
+                directly.
+            headers:
+                Any additional headers to send.
+            data:
+                :class:`aiohttp.FormData` body to send.
+            json:
+                JSON body to send.
+            kwargs:
+                Any arguments to interpolate into the `path`.
         """
-        params = params if params else {}
-        resource = Resource(self.base_uri, method, path, **params)
+        resource = Resource(self.base_uri, method, path, **kwargs)
 
         for retry in range(5):
             try:
-                result = await self._request_once(retry=retry, resource=resource, **kwargs)
+                result = await self._request_once(retry=retry, resource=resource, headers=headers, data=data, json=json)
             except _RateLimited:
                 # If we are uploading files with io objects in a form body, we need to reset the seeks to 0 to ensure
                 # we can re-read the buffer...
@@ -143,12 +183,9 @@ class BaseHTTPClient:
             resource, None, None, "the request failed too many times and thus was discarded. Try again later."
         )
 
-    async def _request_once(
-        self, *, retry=0, resource, headers=None, data=None, json=None, **kwargs
-    ) -> _RequestReturnSignature:
+    async def _request_once(self, *, retry=0, resource, headers=None, data=None, json=None) -> _RequestReturnSignature:
         headers = headers if headers else {}
 
-        kwargs.setdefault("allow_redirects", self.allow_redirects)
         headers.setdefault("User-Agent", self.user_agent)
         headers.setdefault("Accept", "application/json")
 
@@ -166,7 +203,9 @@ class BaseHTTPClient:
         self._correlation_id += 1
         self.logger.debug("[try %s - %s] %s %s", retry + 1, self._correlation_id, resource.method, uri)
 
-        async with self.session.request(resource.method, url=uri, headers=headers, data=data, json=json, **kwargs) as r:
+        async with self.session.request(
+            resource.method, url=uri, headers=headers, data=data, json=json, allow_redirects=self.allow_redirects
+        ) as r:
             self.logger.debug(
                 "[try %s - %s] %s responded with %s %s containing %s (%s bytes)",
                 retry,
