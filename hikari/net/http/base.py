@@ -86,7 +86,7 @@ class BaseHTTPClient:
         loop: asyncio.AbstractEventLoop,
         allow_redirects: bool = False,
         max_retries: int = 5,
-        token: str,
+        token: str = _utils.unspecified,
         base_uri: str = DISCORD_API_URI_FORMAT.format(VERSION=VERSION),
         **aiohttp_arguments,
     ) -> None:
@@ -96,7 +96,8 @@ class BaseHTTPClient:
                 the asyncio event loop to run on.
             token:
                 the token to use for authentication. This should not start with `Bearer` or `Bot` and will always have
-                `Bot` prepended to it in requests.
+                `Bot` prepended to it in requests. If this is not specified, no Authentication is used by default. This
+                enables this client to be used by endpoints that do not require active authentication.
             allow_redirects:
                 defaults to False for security reasons. If you find you are receiving multiple redirection responses
                 causing requests to fail, it is probably worth enabling this.
@@ -126,7 +127,7 @@ class BaseHTTPClient:
         #: The HTTP session to target.
         self.session = aiohttp.ClientSession(loop=loop, **aiohttp_arguments)
         #: The session `Authorization` header to use.
-        self.authorization = "Bot " + token
+        self.authorization = "Bot " + token if token is not _utils.unspecified else None
         #: The logger to use for this object.
         self.logger = logging.getLogger(type(self).__name__)
         #: The asyncio event loop to run on.
@@ -168,9 +169,11 @@ class BaseHTTPClient:
         headers = headers if headers else {}
 
         kwargs.setdefault("allow_redirects", self.allow_redirects)
-        headers.setdefault("Authorization", self.authorization)
         headers.setdefault("User-Agent", self.user_agent)
         headers.setdefault("Accept", "application/json")
+
+        if self.authorization is not None:
+            headers.setdefault("Authorization", self.authorization)
 
         # Wait on the global bucket
         await self.global_rate_limit.acquire(self._log_rate_limit_already_in_progress, bucket_id=None)

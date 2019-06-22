@@ -3,8 +3,6 @@
 import asynctest
 import pytest
 
-from hikari.models.audit import action_type
-
 
 @pytest.fixture()
 def http_client(event_loop):
