@@ -287,3 +287,8 @@ class _Unspecified:
 
 #: An attribute that is unspecified by default.
 unspecified = _Unspecified()
+
+
+def put_if_specified(mapping, key, value) -> None:
+    if value is not unspecified:
+        mapping[key] = value

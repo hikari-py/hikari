@@ -32,7 +32,7 @@ class HTTPClient(base.BaseHTTPClient):
         guild_id: str,
         *,
         user_id: str = _utils.unspecified,
-        action: int = _utils.unspecified,
+        action_type: int = _utils.unspecified,
         limit: int = _utils.unspecified,
     ) -> _utils.DiscordObject:
         """
@@ -43,7 +43,7 @@ class HTTPClient(base.BaseHTTPClient):
                 The guild ID to look up.
             user_id:
                 Optional user ID to filter by.
-            action:
+            action_type:
                 Optional action type to look up.
             limit:
                 Optional limit to apply to the number of records. Defaults to 50. Must be between 1 and 100 inclusive.
@@ -58,15 +58,9 @@ class HTTPClient(base.BaseHTTPClient):
                 if the guild does not exist.
         """
         query = {}
-
-        if limit is not _utils.unspecified:
-            query["limit"] = limit
-        if user_id is not _utils.unspecified:
-            query["user_id"] = user_id
-
-        if action is not _utils.unspecified:
-            query["action_type"] = action
-
+        _utils.put_if_specified(query, "user_id", user_id)
+        _utils.put_if_specified(query, "action_type", action_type)
+        _utils.put_if_specified(query, "limit", limit)
         return await self.request("get", "/guilds/{guild_id}/audit-logs", query=query, guild_id=guild_id)
 
     ############
@@ -89,7 +83,7 @@ class HTTPClient(base.BaseHTTPClient):
             hikari.errors.NotFound:
                 if the channel does not exist.
         """
-        return await self.request('get', '/channels/{channel_id}', channel_id=channel_id)
+        return await self.request("get", "/channels/{channel_id}", channel_id=channel_id)
 
     @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def modify_channel(
@@ -139,8 +133,10 @@ class HTTPClient(base.BaseHTTPClient):
                 if the channel does not exist.
             hikari.errors.Forbidden:
                 if you lack the permission to make the change.
+            hikari.errors.BadRequest:
+                if you provide incorrect options for the corresponding channel type (e.g. a `bitrate` for a text
+                channel).
         """
-        raise NotImplementedError  # TODO: implement this endpoint and write tests
 
     @_utils.link_developer_portal(_utils.APIResource.CHANNEL, "deleteclose-channel")
     async def delete_close_channel(self, channel_id: str) -> _utils.DiscordObject:
@@ -208,12 +204,9 @@ class HTTPClient(base.BaseHTTPClient):
         form = aiohttp.FormData()
 
         json_payload = {"tts": tts}
-        if content is not _utils.unspecified:
-            json_payload["content"] = content
-        if nonce is not _utils.unspecified:
-            json_payload["nonce"] = nonce
-        if embed is not _utils.unspecified:
-            json_payload["embed"] = embed
+        _utils.put_if_specified(json_payload, "content", content)
+        _utils.put_if_specified(json_payload, "nonce", nonce)
+        _utils.put_if_specified(json_payload, "embed", embed)
 
         form.add_field("payload_json", json.dumps(json_payload), content_type="application/json")
 
