@@ -13,7 +13,7 @@ def http_client(event_loop):
 
 @pytest.mark.asyncio
 async def test_audit_log_request_layout(http_client):
-    http_client.request = asynctest.CoroutineMock(return_value=(..., ..., {}))
+    http_client.request = asynctest.CoroutineMock(return_value={"foo": "bar"})
 
     result = await http_client.get_guild_audit_log("1234", user_id="5678", action=20, limit=18)
 
@@ -24,12 +24,12 @@ async def test_audit_log_request_layout(http_client):
         guild_id="1234"
     )
 
-    assert result == {}
+    assert result == {"foo": "bar"}
 
 
 @pytest.mark.asyncio
 async def test_audit_log_request_default_args(http_client):
-    http_client.request = asynctest.CoroutineMock(return_value=(..., ..., {}))
+    http_client.request = asynctest.CoroutineMock(return_value={"foo": "bar"})
 
     result = await http_client.get_guild_audit_log("1234")
 
@@ -37,4 +37,4 @@ async def test_audit_log_request_default_args(http_client):
         "get", "/guilds/{guild_id}/audit-logs", guild_id="1234", query={}
     )
 
-    assert result == {}
+    assert result == {"foo": "bar"}

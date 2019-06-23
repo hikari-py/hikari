@@ -5,7 +5,6 @@ Implementation of the base components required for working with the V7 HTTP REST
 """
 __all__ = ("BaseHTTPClient",)
 
-import abc
 import json as libjson
 import logging
 
@@ -14,13 +13,12 @@ import aiohttp
 #: Format string for the default Discord API URL.
 from hikari import _utils
 from hikari import errors
-from hikari._utils import Resource
 from hikari.compat import asyncio
 from hikari.compat import typing
 from hikari.net import opcodes
 from hikari.net import rates
 
-DISCORD_API_URI_FORMAT = "https://discordapp.com/api/v{VERSION}"
+_DISCORD_API_URI_FORMAT = "https://discordapp.com/api/v{VERSION}"
 
 # Headers for rate limiting
 _DATE = "Date"
@@ -37,24 +35,6 @@ class _RateLimited(Exception):
     """Used as an internal flag. This should not ever be used outside this API."""
 
     __slots__ = []
-
-
-class MixinBase(metaclass=abc.ABCMeta):
-    """
-    Base for mixin components. This purely exists for type checking and should not be used unless you are extending
-    this API.
-    """
-
-    __slots__ = []
-    logger: logging.Logger
-
-    @abc.abstractmethod
-    async def request(self, method, path, params=None, **kwargs) -> _RequestReturnSignature:
-        pass
-
-    @abc.abstractmethod
-    async def close(self):
-        pass
 
 
 class BaseHTTPClient:
@@ -89,7 +69,7 @@ class BaseHTTPClient:
         allow_redirects: bool = False,
         max_retries: int = 5,
         token: str = _utils.unspecified,
-        base_uri: str = DISCORD_API_URI_FORMAT.format(VERSION=VERSION),
+        base_uri: str = _DISCORD_API_URI_FORMAT.format(VERSION=VERSION),
         **aiohttp_arguments,
     ) -> None:
         """
@@ -119,7 +99,7 @@ class BaseHTTPClient:
         #: Whether to allow redirects or not.
         self.allow_redirects = allow_redirects
         #: Local rate limit buckets.
-        self.buckets: typing.Dict[Resource, rates.VariableTokenBucket] = {}
+        self.buckets: typing.Dict[_utils.Resource, rates.VariableTokenBucket] = {}
         #: The base URI to target.
         self.base_uri = base_uri
         #: The global rate limit bucket.
@@ -145,7 +125,7 @@ class BaseHTTPClient:
 
     async def request(
         self, method, path, re_seekable_resources=(), headers=None, data=None, json=None, **kwargs
-    ) -> _RequestReturnSignature:
+    ) -> typing.Any:
         """
         Send a request to the given path using the given method, parameters, and keyword arguments. If a failure occurs
         that is able to be retried, this will be retried up to 5 times before failing.
@@ -169,7 +149,7 @@ class BaseHTTPClient:
             kwargs:
                 Any arguments to interpolate into the `path`.
         """
-        resource = Resource(self.base_uri, method, path, **kwargs)
+        resource = _utils.Resource(self.base_uri, method, path, **kwargs)
 
         for retry in range(5):
             try:
@@ -185,7 +165,7 @@ class BaseHTTPClient:
             resource, None, None, "the request failed too many times and thus was discarded. Try again later."
         )
 
-    async def _request_once(self, *, retry=0, resource, headers=None, data=None, json=None) -> _RequestReturnSignature:
+    async def _request_once(self, *, retry=0, resource, headers=None, data=None, json=None) -> typing.Any:
         headers = headers if headers else {}
 
         headers.setdefault("User-Agent", self.user_agent)
@@ -236,7 +216,7 @@ class BaseHTTPClient:
         # 2xx, 3xx do not indicate errors. 4xx indicates an error our side, 5xx is usually the server unable to
         # tell what went wrong.
         if 200 <= status < 400:
-            return status, headers, body
+            return body
         if 400 <= status < 500:
             return self._handle_client_error_response(resource, status, body)
         else:
