@@ -486,8 +486,7 @@ async def test_some_response_that_has_a_json_object_body_gets_decoded_as_expecte
     mock_http_connection.session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.OK)
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
-    status, headers, body = await mock_http_connection._request_once(retry=0, resource=res)
-    assert status is opcodes.HTTPStatus.OK
+    body = await mock_http_connection._request_once(retry=0, resource=res)
     assert body == {"foo": "bar"}
 
 
@@ -498,8 +497,7 @@ async def test_plain_text_gets_decoded_as_unicode(mock_http_connection, res):
     mock_http_connection.session.mock_response.headers["Content-Type"] = "text/plain"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.OK)
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
-    status, headers, body = await mock_http_connection._request_once(retry=0, resource=res)
-    assert status is opcodes.HTTPStatus.OK
+    body = await mock_http_connection._request_once(retry=0, resource=res)
     assert body == '{"foo": "bar"}'
 
 
@@ -512,8 +510,7 @@ async def test_html_gets_decoded_as_unicode(mock_http_connection, res):
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(
         return_value=b"<!doctype html><html></html>"
     )
-    status, headers, body = await mock_http_connection._request_once(retry=0, resource=res)
-    assert status is opcodes.HTTPStatus.OK
+    body = await mock_http_connection._request_once(retry=0, resource=res)
     assert body == "<!doctype html><html></html>"
 
 
@@ -524,8 +521,7 @@ async def test_NO_CONTENT_response_with_no_body_present(mock_http_connection, re
     mock_http_connection.session.mock_response.headers["Content-Type"] = None
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.NO_CONTENT)
     res = hikari._utils.Resource("http://test.lan", "get", "/foo/bar")
-    status, headers, body = await mock_http_connection._request_once(retry=0, resource=res)
-    assert status is opcodes.HTTPStatus.NO_CONTENT
+    body = await mock_http_connection._request_once(retry=0, resource=res)
     assert body is None
 
 
@@ -536,7 +532,7 @@ async def test_some_response_that_has_an_unrecognised_content_type_returns_bytes
     mock_http_connection.session.mock_response.headers["Content-Type"] = "mac-and/cheese"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.CREATED)
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
-    status, headers, body = await mock_http_connection._request_once(retry=0, resource=res)
+    body = await mock_http_connection._request_once(retry=0, resource=res)
     assert isinstance(body, bytes)
 
 
@@ -581,7 +577,7 @@ async def test_ValueError_on_unrecognised_HTTP_status(mock_http_connection, res)
 
 
 @pytest.mark.asyncio
-async def test_2xx_returns_tuple(mock_http_connection, res):
+async def test_2xx_returns_object(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
     mock_http_connection.session.mock_response.status = 201
@@ -589,11 +585,7 @@ async def test_2xx_returns_tuple(mock_http_connection, res):
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"lorem":"ipsum"}')
     result = await mock_http_connection._request_once(retry=0, resource=res)
     # Assert we can unpack as tuple
-    status, headers, body = result
-
-    assert status == 201
-    assert headers == {"foo": "bar", "baz": "bork"}
-    assert body == {"lorem": "ipsum"}
+    assert result == {"lorem": "ipsum"}
 
 
 @pytest.mark.asyncio
@@ -605,11 +597,8 @@ async def test_3xx_returns_tuple(mock_http_connection, res):
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"lorem":"ipsum"}')
     result = await mock_http_connection._request_once(retry=0, resource=res)
     # Assert we can unpack as tuple
-    status, headers, body = result
+    assert result == {"lorem": "ipsum"}
 
-    assert status == 304
-    assert headers == {"foo": "bar", "baz": "bork"}
-    assert body == {"lorem": "ipsum"}
 
 
 @pytest.mark.asyncio
