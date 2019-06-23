@@ -600,7 +600,6 @@ async def test_3xx_returns_tuple(mock_http_connection, res):
     assert result == {"lorem": "ipsum"}
 
 
-
 @pytest.mark.asyncio
 async def test_4xx_is_handled_as_4xx_error_response(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
