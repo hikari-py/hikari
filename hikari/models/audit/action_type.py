@@ -3,6 +3,8 @@
 """
 Audit log events that can be specified.
 """
+__all__ = ("ActionType", "ActionTypeCategory")
+
 import enum
 
 
