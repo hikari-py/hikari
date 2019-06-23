@@ -124,7 +124,7 @@ class BaseHTTPClient:
         await self.session.close()
 
     async def request(
-        self, method, path, re_seekable_resources=(), headers=None, data=None, json=None, **kwargs
+        self, method, path, re_seekable_resources=(), headers=None, query=None, data=None, json=None, **kwargs
     ) -> typing.Any:
         """
         Send a request to the given path using the given method, parameters, and keyword arguments. If a failure occurs
@@ -144,6 +144,8 @@ class BaseHTTPClient:
                 Any additional headers to send.
             data:
                 :class:`aiohttp.FormData` body to send.
+            query:
+                query-string args to use.
             json:
                 JSON body to send.
             kwargs:
@@ -153,10 +155,12 @@ class BaseHTTPClient:
 
         for retry in range(5):
             try:
-                result = await self._request_once(retry=retry, resource=resource, headers=headers, data=data, json=json)
+                result = await self._request_once(
+                    retry=retry, resource=resource, query=query, headers=headers, data=data, json=json
+                )
             except _RateLimited:
                 # If we are uploading files with io objects in a form body, we need to reset the seeks to 0 to ensure
-                # we can re-read the buffer...
+                # we can re-read the buffer
                 for seekable_resource in re_seekable_resources:
                     seekable_resource.seek(0)
             else:
@@ -165,8 +169,9 @@ class BaseHTTPClient:
             resource, None, None, "the request failed too many times and thus was discarded. Try again later."
         )
 
-    async def _request_once(self, *, retry=0, resource, headers=None, data=None, json=None) -> typing.Any:
+    async def _request_once(self, *, retry=0, resource, query=None, headers=None, data=None, json=None) -> typing.Any:
         headers = headers if headers else {}
+        query = query if query else {}
 
         headers.setdefault("User-Agent", self.user_agent)
         headers.setdefault("Accept", "application/json")
@@ -186,7 +191,13 @@ class BaseHTTPClient:
         self.logger.debug("[try %s - %s] %s %s", retry + 1, self._correlation_id, resource.method, uri)
 
         async with self.session.request(
-            resource.method, url=uri, headers=headers, data=data, json=json, allow_redirects=self.allow_redirects
+            resource.method,
+            url=uri,
+            headers=headers,
+            data=data,
+            json=json,
+            allow_redirects=self.allow_redirects,
+            query=query,
         ) as r:
             self.logger.debug(
                 "[try %s - %s] %s responded with %s %s containing %s (%s bytes)",
