@@ -12,6 +12,7 @@ References:
     - Gateway documentation: https://discordapp.com/developers/docs/topics/gateway
     - Opcode documentation: https://discordapp.com/developers/docs/topics/opcodes-and-status-codes
 """
+__all__ = ("GatewayClient",)
 
 import datetime
 import json

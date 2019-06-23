@@ -3,6 +3,8 @@
 """
 Implementation of the base components required for working with the V7 HTTP REST API with consistent rate-limiting.
 """
+__all__ = ("BaseHTTPClient",)
+
 import abc
 import json as libjson
 import logging
