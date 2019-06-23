@@ -3,6 +3,8 @@
 """
 Implementation of the HTTP Client mix of all mixin components.
 """
+__all__ = ("HTTPClient",)
+
 import io
 import json
 
@@ -65,11 +67,7 @@ class HTTPClient(base.BaseHTTPClient):
         if action is not _utils.unspecified:
             query["action_type"] = action
 
-        params = {"guild_id": guild_id}
-
-        _, _, body = await self.request("get", "/guilds/{guild_id}/audit-logs", params=params, query=query)
-
-        return body
+        return await self.request("get", "/guilds/{guild_id}/audit-logs", query=query, guild_id=guild_id)
 
     ############
     # CHANNELS #
@@ -91,7 +89,7 @@ class HTTPClient(base.BaseHTTPClient):
             hikari.errors.NotFound:
                 if the channel does not exist.
         """
-        raise NotImplementedError  # TODO: implement this endpoint and write tests
+        return await self.request('get', '/channels/{channel_id}', channel_id=channel_id)
 
     @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def modify_channel(
@@ -232,15 +230,13 @@ class HTTPClient(base.BaseHTTPClient):
                 re_seekable_resources.append(file)
                 form.add_field(f"file{i}", file, filename=file_name, content_type="application/octet-stream")
 
-        _, _, message = await self.request(
+        return await self.request(
             "post",
             "/channels/{channel_id}/messages",
-            {"channel_id": channel_id},
+            channel_id=channel_id,
             re_seekable_resources=re_seekable_resources,
             data=form,
         )
-
-        return message
 
     @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def create_reaction(self, channel_id: str, message_id: str, emoji: typing.Union[str, str]) -> None:
@@ -609,8 +605,7 @@ class HTTPClient(base.BaseHTTPClient):
         Returns:
              An application info object.
         """
-        _, _, body = await self.request("get", "/oauth2/applications/@me")
-        return body
+        return await self.request("get", "/oauth2/applications/@me")
 
     #########
     # USERS #
