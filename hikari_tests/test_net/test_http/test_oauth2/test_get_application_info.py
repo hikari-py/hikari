@@ -23,7 +23,7 @@ async def test_get_current_application_info_returns_a_dict_that_was_the_response
         "bot_require_code_grant": False,
         "owner": {"username": "nekoka.tt", "discriminator": "1234", "id": "123456789", "avatar": None},
     }
-    http_client.request = asynctest.CoroutineMock(return_value=(200, {}, resp))
+    http_client.request = asynctest.CoroutineMock(return_value=resp)
 
     info = await http_client.get_current_application_info()
     assert info == resp

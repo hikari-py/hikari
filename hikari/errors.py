@@ -3,6 +3,19 @@
 """
 Core errors that may be raised by this API implementation.
 """
+__all__ = (
+    "BadRequest",
+    "ClientError",
+    "DiscordError",
+    "Forbidden",
+    "GatewayError",
+    "HikariError",
+    "HTTPError",
+    "NotFound",
+    "ServerError",
+    "Unauthorized",
+)
+
 from hikari.compat import typing
 from hikari.net import opcodes
 from hikari import _utils

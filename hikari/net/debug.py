@@ -6,6 +6,8 @@ on the host running your code.
 
 This API is not officially documented.
 """
+__all__ = ("DataCenter", "DebugData", "get_debug_data")
+
 import datetime
 import re
 from dataclasses import dataclass
