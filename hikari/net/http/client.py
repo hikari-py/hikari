@@ -776,27 +776,129 @@ class HTTPClient(base.BaseHTTPClient):
 
     @_utils.link_developer_portal(_utils.APIResource.EMOJI)
     async def list_guild_emojis(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
-        raise NotImplementedError  # TODO: implement this endpoint and write tests
+        """
+        Gets emojis for a given guild ID.
+
+        Args:
+            guild_id:
+                The guild ID to get the emojis for.
+
+        Returns:
+            A list of emoji objects.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you aren't a member of said guild.
+        """
+        return await self.request(GET, "/guilds/{guild_id}/emojis", guild_id=guild_id)
 
     @_utils.link_developer_portal(_utils.APIResource.EMOJI)
     async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this endpoint and write tests
+        """
+        Gets an emoji from a given guild and emoji IDs
+
+        Args:
+            guild_id:
+                The ID of the guild to get the emoji from.
+            emoji_id:
+                The ID of the emoji to get.
+
+        Returns:
+            An emoji object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or the emoji aren't found.
+            hikari.errors.Forbidden:
+                If you aren't a member of said guild.
+        """
+        return await self.request(GET, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id)
 
     @_utils.link_developer_portal(_utils.APIResource.EMOJI)
     async def create_guild_emoji(
         self, guild_id: str, name: str, image: bytes, roles: typing.List[str]
     ) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this endpoint and write tests
+        """
+        Creates a new emoji for a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to create the emoji in.
+            name:
+                The new emoji's name.
+            image:
+                The 128x128 image in bytes form.
+            roles:
+                A list of roles for which the emoji will be whitelisted.
+
+        Returns:
+            The newly created emoji object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
+            hikari.errors.BadRequest:
+                If you attempt to upload an image larger than 256kb, an empty image or an invalid image format.
+        """
+        payload = {"name": name, "image": image, "roles": roles}
+        return await self.request(POST, "/guilds/{guild_id}/emojis", guild_id=guild_id, json=payload)
 
     @_utils.link_developer_portal(_utils.APIResource.EMOJI)
     async def modify_guild_emoji(
         self, guild_id: str, emoji_id: str, name: str, roles: typing.List[str]
     ) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this endpoint and write tests
+        """
+        Edits an emoji of a given guild
+
+        Args:
+            guild_id:
+                The ID of the guild to which the edited emoji belongs to.
+            emoji_id:
+                The ID of the edited emoji.
+            name:
+                The new emoji name string.
+            roles:
+                A list of IDs for the new whitelisted roles.
+
+        Returns:
+            The updated emoji object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or the emoji aren't found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_EMOJIS` permission or are not a member of the given guild.
+        """
+        payload = {"name": name, "roles": roles}
+        return await self.request(
+            PATCH, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id, json=payload
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.EMOJI)
     async def delete_guild_emoji(self, guild_id: str, emoji_id: str) -> None:
-        raise NotImplementedError  # TODO: implement this endpoint and write tests
+        """
+        Deletes an emoji from a given guild
+
+        Args:
+            guild_id:
+                The ID of the guild to delete the emoji from
+            emoji_id:
+                The ID of the emoji to be deleted
+
+        Returns:
+            None
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or the emoji aren't found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
+        """
+        return await self.request(DELETE, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def create_guild(
@@ -1034,11 +1136,44 @@ class HTTPClient(base.BaseHTTPClient):
 
     @_utils.link_developer_portal(_utils.APIResource.INVITE)
     async def get_invite(self, invite_code: str, *, with_counts: bool = _utils.unspecified) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this endpoint and write tests
+        """
+        Gets the given invite.
+
+        Args:
+            invite_code:
+                The ID for wanted invite.
+
+        Returns:
+            The requested invite object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the invite isn't found.
+        """
+        payload = {}
+        _utils.put_if_specified(payload, "with_counts", with_counts)
+        return await self.request(GET, "/invites/{invite_code}", invite_code=invite_code, query=payload)
 
     @_utils.link_developer_portal(_utils.APIResource.INVITE)
     async def delete_invite(self, invite_code: str) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this endpoint and write tests
+        """
+        Deletes a given invite.
+
+        Args:
+            invite_code:
+                The ID for the invite to be deleted.
+
+        Returns:
+            The deleted invite object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the invite isn't found.
+            hikari.errors.Forbidden
+                If you lack either `MANAGE_CHANNELS` on the channel the invite belongs to or `MANAGE_GUILD` for 
+                guild-global delete.
+        """
+        return await self.request(DELETE, "/invites/{invite_code}", invite_code=invite_code)
 
     ##########
     # OAUTH2 #
