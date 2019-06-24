@@ -220,3 +220,17 @@ def test_unspecified_str():
 
 def test_unspecified_repr():
     assert repr(_utils.unspecified) == "unspecified"
+
+
+def test_put_if_specified_when_specified():
+    d = {}
+    _utils.put_if_specified(d, "foo", 69)
+    _utils.put_if_specified(d, "bar", "hi")
+    _utils.put_if_specified(d, "bar", None)
+    assert d == {"foo": 69, "bar": None}
+
+
+def test_put_if_specified_when_unspecified():
+    d = {}
+    _utils.put_if_specified(d, "bar", _utils.unspecified)
+    assert d == {}

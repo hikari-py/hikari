@@ -11,6 +11,7 @@ __all__ = (
     "link_developer_portal",
     "parse_http_date",
     "parse_rate_limit_headers",
+    "put_if_specified",
     "python_version",
     "Resource",
     "system_type",
@@ -18,7 +19,6 @@ __all__ = (
     "user_agent",
 )
 
-import _io
 import collections
 import datetime
 import email
@@ -287,3 +287,8 @@ class _Unspecified:
 
 #: An attribute that is unspecified by default.
 unspecified = _Unspecified()
+
+
+def put_if_specified(mapping, key, value) -> None:
+    if value is not unspecified:
+        mapping[key] = value
