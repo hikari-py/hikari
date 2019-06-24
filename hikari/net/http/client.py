@@ -1223,24 +1223,136 @@ class HTTPClient(base.BaseHTTPClient):
     async def create_webhook(
         self, channel_id: str, name: str, *, avatar: bytes = _utils.unspecified
     ) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Creates a webhook for a given channel.
+
+        Args:
+            channel_id:
+                The ID of the channel for webhook to be created in.
+            name:
+                The webhook's name string.
+            avatar:
+                The avatar image in bytes form.
+
+        Returns:
+            The newly created webhook object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the channel isn't found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_WEBHOOKS` permission or can't see the given channel.
+            hikari.errors.BadRequest:
+                If the avatar image is too big or the format is invaid.
+        """
+        payload = {"name": name}
+        _utils.put_if_specified(payload, "avatar", avatar)
+        return await self.request(POST, "/channels/{channel_id}/webhooks", channel_id=channel_id, json=payload)
 
     @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
     async def get_channel_webhooks(self, channel_id: str) -> typing.List[_utils.DiscordObject]:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets all webhooks from a given channel.
+
+        Args:
+            channel_id:
+                The ID of the channel to get the webhooks from.
+
+        Returns:
+            A list of webhook objects for the give channel.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the channel isn't found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_WEBHOOKS` permission or can't see the given channel.
+        """
+        return await self.request(GET, "/channels/{channel_id}/webhooks", channel_id=channel_id)
 
     @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
     async def get_guild_webhooks(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets all webhooks for a given guild.
+
+        Args:
+            guild_id:
+                The ID for the guild to get the webhooks from.
+
+        Returns:
+            A list of webhook objects for the given guild.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the given guild.
+        """
+        return await self.request(GET, "/guilds/{guild_id}/webhooks", guild_id=guild_id)
 
     @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
     async def get_webhook(self, webhook_id: str) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets a given webhook.
+
+        Args:
+            webhook_id:
+                The ID of the webhook to get.
+
+        Returns:
+            The requested webhook object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the webhook isn't found.
+        """
+        return await self.request(GET, "/webhooks/{webhook_id}", webhook_id=webhook_id)
 
     @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
-    async def modify_webhook(self, webhook_id: str) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+    async def modify_webhook(self, webhook_id: str, name: str, avatar: bytes, channel_id: str) -> _utils.DiscordObject:
+        """
+        Edits a given webhook.
+
+        Args:
+            webhook_id:
+                The ID of the webhook to edit.
+            name:
+                The new name string.
+            avatar:
+                The new avatar image in bytes form.
+            channel_id:
+                The ID of the new channel the given webhook should be moved to.
+
+        Returns:
+            The updated webhook object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the webhook or the channel aren't found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook belongs to.
+        """
+        payload = {}
+        _utils.put_if_specified(payload, "name", name)
+        _utils.put_if_specified(payload, "avatar", avatar)
+        _utils.put_if_specified(payload, "channel_id", channel_id)
+        return await self.request(PATCH, "/webhooks/{webhook_id}", webhook_id=webhook_id, json=payload)
 
     @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
     async def delete_webhook(self, webhook_id: str) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Deletes a given webhook.
+
+        Args:
+            webhook_id:
+                The ID of the webhook to delete.
+
+        Returns:
+            None
+
+        Raises:
+            hikari.errors.NotFound:
+                If the webhook isn't found.
+            hikari.errors.Forbidden:
+                If you're not the webhook owner.
+        """
+        return await self.request(DELETE, "/webhooks/{webhook_id}", webhook_id=webhook_id)
