@@ -40,6 +40,8 @@ async def test_get_debug_data(event_loop):
         assert airport.country == "England"
         assert airport.location == "London"
 
+        assert str(airport) == f"{airport.airport} ({airport.iata_code}), {airport.location}, {airport.country}"
+
 
 def prepare_mock_response():
     class Response:
