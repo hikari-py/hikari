@@ -15,11 +15,12 @@ Packages and submodules
     hikari.models.audit.action_type
     hikari.net.debug
     hikari.net.gateway
-    hikari.net.http
-    hikari.net.http.base
-    hikari.net.http.client
     hikari.net.opcodes
     hikari.net.rates
+    hikari.net.rest
+    hikari.net.rest.base
+    hikari.net.rest.client
+    hikari.net.status
 
 * `Changelog, code quality statistics and reports for this release <quality_assurance.html>`_
 * :ref:`genindex`

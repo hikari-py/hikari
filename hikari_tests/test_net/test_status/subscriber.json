@@ -1,0 +1,11 @@
+{
+  "subscriber": {
+    "created_at": "2019-06-24T07:29:43.684-07:00",
+    "skip_confirmation_notification": false,
+    "quarantined_at": null,
+    "id": "82kp04j58dhm",
+    "mode": "email",
+    "purge_at": null,
+    "email": "xxx@yyy.com"
+  }
+}
