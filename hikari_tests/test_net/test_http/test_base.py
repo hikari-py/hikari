@@ -13,6 +13,7 @@ import asynctest
 import pytest
 
 import hikari._utils
+from hikari import _utils
 from hikari import errors
 from hikari.net import opcodes
 from hikari.net import rates
@@ -41,7 +42,7 @@ class MockAiohttpResponse:
     reason = "OK"
     headers = {}
     content_length = 500
-    read = asynctest.CoroutineMock(return_value=None)
+    read = asynctest.CoroutineMock(return_value='{"foo": "bar"}')
 
     @property
     def content_type(self):
@@ -91,6 +92,49 @@ async def test_close_will_close_session(mock_http_connection):
 
 
 @pytest.mark.asyncio
+async def test_request_forwards_known_arguments_to_request_once(mock_http_connection):
+    mock_http_connection._request_once = asynctest.CoroutineMock()
+    method = "get"
+    path = "/foo/bar/{channel_id}"
+    re_seekable_resources = ("foo", "bar", "baz")
+    headers = {"foo": "bar", "baz": "bork"}
+    query = {"potatos": "good", "spinach": "not so good"}
+    data = {"this": "is", "some": "form", "data": "lol"}
+    json = {"this": "will", "become": "a", "json": ["o", "b", "j", "e", "c", "t"]}
+
+    await mock_http_connection.request(
+        method=method,
+        path=path,
+        re_seekable_resources=re_seekable_resources,
+        headers=headers,
+        query=query,
+        data=data,
+        json=json,
+        this_should_not_be_passed=":-)",
+        neither_should_this=":-P",
+        channel_id="912000",
+    )
+
+    res = _utils.Resource(
+        mock_http_connection.base_uri,
+        "get",
+        "/foo/bar/{channel_id}",
+        this_should_not_be_passed=":-)",
+        neither_should_this=":-P",
+        channel_id="912000",
+    )
+
+    mock_http_connection._request_once.assert_awaited_once_with(
+        retry=0, resource=res, query=query, data=data, json=json, headers=headers
+    )
+
+    assert res.channel_id == "912000"
+    assert res.guild_id is None
+    assert res.webhook_id is None
+    assert " /foo/bar/{channel_id} " in res.bucket
+
+
+@pytest.mark.asyncio
 async def test_request_retries_then_errors(mock_http_connection):
     mock_http_connection._request_once = asynctest.CoroutineMock(side_effect=base._RateLimited)
     try:
@@ -125,6 +169,35 @@ async def test_request_does_not_retry_on_success(mock_http_connection):
     actual_result = await mock_http_connection.request(method="get", path="/foo/bar")
     assert mock_http_connection._request_once.call_count == 3
     assert actual_result is expected_result
+
+
+@pytest.mark.asyncio
+async def test_request_once_calls_session_request_with_expected_arguments(mock_http_connection):
+    mock_http_connection.session.request = asynctest.MagicMock(return_value=mock_http_connection.session.mock_response)
+    path = "/foo/bar/{channel_id}"
+    res = _utils.Resource(mock_http_connection.base_uri, "get", path, channel_id="12321")
+    headers = {
+        "foo": "bar",
+        "baz": "bork",
+        "User-Agent": "lol i overrode this",
+        "Accept": "application/json",
+        "Authorization": "lol i overrode this too",
+    }
+    query = {"potatos": "good", "spinach": "not so good"}
+    data = {"this": "is", "some": "form", "data": "lol"}
+    json = {"this": "will", "become": "a", "json": ["o", "b", "j", "e", "c", "t"]}
+
+    await mock_http_connection._request_once(retry=0, resource=res, query=query, data=data, json=json, headers=headers)
+
+    mock_http_connection.session.request.assert_called_once_with(
+        "GET",
+        url=f"{mock_http_connection.base_uri}/foo/bar/12321",
+        query=query,
+        data=data,
+        json=json,
+        headers=headers,
+        allow_redirects=mock_http_connection.allow_redirects,
+    )
 
 
 @pytest.mark.asyncio
@@ -517,12 +590,12 @@ async def test_html_gets_decoded_as_unicode(mock_http_connection, res):
 @pytest.mark.asyncio
 async def test_NO_CONTENT_response_with_no_body_present(mock_http_connection, res):
     mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
-
+    mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=None)
     mock_http_connection.session.mock_response.headers["Content-Type"] = None
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.NO_CONTENT)
     res = hikari._utils.Resource("http://test.lan", "get", "/foo/bar")
     body = await mock_http_connection._request_once(retry=0, resource=res)
-    assert body is None
+    assert not body
 
 
 @pytest.mark.asyncio
@@ -598,7 +671,6 @@ async def test_3xx_returns_tuple(mock_http_connection, res):
     result = await mock_http_connection._request_once(retry=0, resource=res)
     # Assert we can unpack as tuple
     assert result == {"lorem": "ipsum"}
-
 
 
 @pytest.mark.asyncio
