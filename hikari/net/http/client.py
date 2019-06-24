@@ -28,6 +28,27 @@ class HTTPClient(base.BaseHTTPClient):
 
     __slots__ = []
 
+    @_utils.link_developer_portal(_utils.APIResource.GATEWAY)
+    async def get_gateway(self) -> str:
+        """
+        Returns:
+            A static URL to use to connect to the gateway with.
+        """
+        result = await self.request(GET, "/gateway")
+        return result["url"]
+
+    @_utils.link_developer_portal(_utils.APIResource.GATEWAY)
+    async def get_gateway_bot(self) -> _utils.DiscordObject:
+        """
+        Returns:
+            An object containing a `url` to connect to, an :class:`int` number of shards recommended to use
+            for connecting, and a `session_start_limit` object.
+
+        Note:
+            Unlike `get_gateway`, this requires a valid token to work.
+        """
+        return await self.request(GET, "/gateway/bot")
+
     @_utils.link_developer_portal(_utils.APIResource.AUDIT_LOG)
     async def get_guild_audit_log(
         self,
