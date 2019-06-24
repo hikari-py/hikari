@@ -13,6 +13,7 @@ Packages and submodules
     hikari.compat
     hikari.errors
     hikari.models.audit.action_type
+    hikari.net.basic_bot
     hikari.net.debug
     hikari.net.gateway
     hikari.net.opcodes

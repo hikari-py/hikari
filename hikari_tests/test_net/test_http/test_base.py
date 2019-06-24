@@ -192,7 +192,7 @@ async def test_request_once_calls_session_request_with_expected_arguments(mock_h
     mock_http_connection.session.request.assert_called_once_with(
         "GET",
         url=f"{mock_http_connection.base_uri}/foo/bar/12321",
-        query=query,
+        params=query,
         data=data,
         json=json,
         headers=headers,

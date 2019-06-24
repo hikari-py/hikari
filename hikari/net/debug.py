@@ -30,6 +30,9 @@ class DataCenter:
     #: Data center country
     country: str
 
+    def __str__(self):
+        return f"{self.airport} ({self.iata_code}), {self.location}, {self.country}"
+
 
 @dataclass(frozen=True)
 class DebugData:
