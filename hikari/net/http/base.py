@@ -93,9 +93,12 @@ class BaseHTTPClient:
                 additional arguments to pass to the internal :class:`aiohttp.ClientSession` constructor used for making
                 HTTP requests.
         """
+        loop = _utils.assert_not_none(loop, "loop")
 
         #: Used for internal bookkeeping
         self._correlation_id = 0
+        #: The asyncio event loop to run on.
+        self.loop = loop
         #: Whether to allow redirects or not.
         self.allow_redirects = allow_redirects
         #: Local rate limit buckets.
@@ -109,11 +112,9 @@ class BaseHTTPClient:
         #: The HTTP session to target.
         self.session = aiohttp.ClientSession(loop=loop, **aiohttp_arguments)
         #: The session `Authorization` header to use.
-        self.authorization = "Bot " + token if token is not _utils.unspecified else None
+        self.authorization = "Bot " + token.strip() if token is not _utils.unspecified else None
         #: The logger to use for this object.
         self.logger = logging.getLogger(type(self).__name__)
-        #: The asyncio event loop to run on.
-        self.loop = loop
         #: User agent to use
         self.user_agent = _utils.user_agent()
 
@@ -197,7 +198,7 @@ class BaseHTTPClient:
             data=data,
             json=json,
             allow_redirects=self.allow_redirects,
-            query=query,
+            params=query,
         ) as r:
             self.logger.debug(
                 "[try %s - %s] %s responded with %s %s containing %s (%s bytes)",

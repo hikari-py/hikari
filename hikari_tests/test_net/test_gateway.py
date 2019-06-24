@@ -460,9 +460,9 @@ async def test_process_events_on_dispatch_opcode(event_loop):
 
     gw._receive_json = flag_death_on_call
 
-    gw.dispatch = asynctest.CoroutineMock()
+    gw._dispatch = asynctest.MagicMock()
     await gw._process_one_event()
-    gw.dispatch.assert_awaited_with("explosion", {})
+    gw._dispatch.assert_called_with("explosion", {})
 
 
 @_helpers.mark_asyncio_with_timeout()
@@ -1030,3 +1030,33 @@ async def test_up_time_when_running(event_loop):
     gw.started_at = time.perf_counter() - 15
 
     assert gw.up_time.total_seconds() > 15
+
+
+@_helpers.mark_asyncio_with_timeout()
+async def test_dispatch_invokes_dispatcher_as_task(event_loop):
+    callback_invoked_at = float("nan")
+
+    async def callback(*_, **__):
+        nonlocal callback_invoked_at
+        callback_invoked_at = time.perf_counter()
+
+    dispatch = asynctest.CoroutineMock(wraps=callback)
+    gw = MockGateway(
+        host="wss://gateway.discord.gg:4949/",
+        loop=event_loop,
+        token="1234",
+        shard_id=917,
+        shard_count=1234,
+        large_threshold=69,
+        dispatch=dispatch,
+    )
+
+    gw._dispatch("explosion", {"brains collected": 55})
+    dispatch_task_created_at = time.perf_counter()
+
+    await asyncio.sleep(0.1)
+
+    dispatch.assert_called_once_with("explosion", {"brains collected": 55})
+
+    # This implies the task wasn't directly awaited immediately
+    assert dispatch_task_created_at < callback_invoked_at
