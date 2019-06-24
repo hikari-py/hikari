@@ -139,6 +139,8 @@ class GatewayClient:
         shard_count: typing.Optional[int] = None,
         token: str,
     ) -> None:
+        loop = _utils.assert_not_none(loop, "loop")
+
         #: The coroutine function to dispatch any events to.
         self.dispatch = asyncio.coroutine(dispatch)
 
@@ -171,7 +173,7 @@ class GatewayClient:
         #: Logger adapter used to dump information to the console.
         self.logger = logging.getLogger(type(self).__name__)
         #: The event loop to use.
-        self.loop = loop
+        self.loop: asyncio.AbstractEventLoop = loop
         #: What we consider to be a large size for the internal buffer. Any packet over this size results in the buffer
         #: being completely recreated.
         self.max_persistent_buffer_size = max_persistent_buffer_size
@@ -188,7 +190,7 @@ class GatewayClient:
         #: A list of gateway servers that are connected to, once connected.
         self.trace: typing.List[str] = []
         #: Token used to authenticate with the gateway.
-        self.token = token
+        self.token = token.strip()
         #: The URI being connected to.
         self.uri = f"{host}?v={self._REQUESTED_VERSION}&encoding=json&compression=zlib-stream"
         #: The :class:`websockets.WebSocketClientProtocol` handling the low-level connection logic. Populated only while
@@ -334,6 +336,7 @@ class GatewayClient:
         hb = d["heartbeat_interval"]
         self.heartbeat_interval = hb / 1_000.0
         self.logger.info("received HELLO. heartbeat interval is %sms", hb)
+        self._dispatch("HELLO", d)
 
     async def _send_resume(self) -> None:
         payload = {
@@ -372,7 +375,7 @@ class GatewayClient:
         event == "READY" and await self._handle_ready(payload)
         event == "RESUMED" and await self._handle_resumed(payload)
         self.logger.debug("DISPATCH %s", event)
-        await self.dispatch(event, payload)
+        self._dispatch(event, payload)
 
     async def _handle_ready(self, ready: DiscordObject) -> None:
         self.trace = ready["_trace"]
@@ -384,6 +387,7 @@ class GatewayClient:
     async def _handle_resumed(self, resumed: DiscordObject) -> None:
         self.trace = resumed["_trace"]
         self.logger.info("RESUMED successfully")
+        self._dispatch("RESUME", None)
 
     async def _process_events(self) -> None:
         """Polls the gateway for new packets and handles dispatching the results."""
@@ -558,3 +562,7 @@ class GatewayClient:
         """
         self.closed_event.set()
         block and await self.ws.wait_closed()
+
+    def _dispatch(self, event_name: str, payload: typing.Optional[_utils.DiscordObject]) -> None:
+        # This prevents us blocking any task such as the READY handler.
+        self.loop.create_task(self.dispatch(event_name, payload))

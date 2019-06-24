@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 import datetime
 
+import pytest
+
 from hikari import _utils
 
 
@@ -234,3 +236,21 @@ def test_put_if_specified_when_unspecified():
     d = {}
     _utils.put_if_specified(d, "bar", _utils.unspecified)
     assert d == {}
+
+
+def test_assert_not_none_when_none():
+    try:
+        _utils.assert_not_none(None)
+        assert False, "No error raised"
+    except ValueError:
+        pass
+
+
+@pytest.mark.parametrize("arg", [9, "foo", False, 0, 0.0, "", [], {}, set(), ..., NotImplemented])
+def test_assert_not_none_when_not_none(arg):
+    _utils.assert_not_none(arg)
+
+
+def test_DiscordObjectProxy():
+    dop = _utils.ObjectProxy({"foo": "bar"})
+    assert dop["foo"] == dop.foo

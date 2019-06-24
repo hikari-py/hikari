@@ -3,6 +3,8 @@
 """
 Rate-limiting adherence logic.
 """
+from hikari import _utils
+
 __all__ = ("TimedLatchBucket", "TimedTokenBucket", "VariableTokenBucket")
 
 import collections
@@ -37,7 +39,7 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
         # We repeatedly push to the rear and pop from the front, and iterate. We don't need random access, and O(k)
         # pushes and shifts are more desirable given this is a doubly linked list underneath.
         self._queue: typing.Deque[asyncio.Future] = collections.deque()
-        self.loop = loop
+        self.loop = _utils.assert_not_none(loop)
 
     @property
     def is_limiting(self) -> bool:
@@ -140,7 +142,7 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
         # We repeatedly push to the rear and pop from the front, and iterate. We don't need random access, and O(k)
         # pushes and shifts are more desirable given this is a doubly linked list underneath.
         self._queue: typing.Deque[asyncio.Future] = collections.deque()
-        self.loop = loop
+        self.loop = _utils.assert_not_none(loop)
 
     @property
     def is_limiting(self) -> bool:
@@ -256,7 +258,7 @@ class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
     def __init__(self, loop: asyncio.AbstractEventLoop) -> None:
         self._locked = False
         self._unlock_event = asyncio.Event(loop=loop)
-        self.loop = loop
+        self.loop = _utils.assert_not_none(loop)
 
     @property
     def is_limiting(self) -> bool:

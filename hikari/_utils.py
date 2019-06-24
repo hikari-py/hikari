@@ -190,7 +190,6 @@ DiscordObject = typing.Dict[str, typing.Any]
 #:     ...     logger.info("Dispatching %s with payload %r", event, payload)
 DispatchHandler = typing.Callable[[str, typing.Dict[str, typing.Any]], typing.Union[None, typing.Awaitable[None]]]
 
-
 #: An object that can be considered to be file-like.
 FileLike = typing.Union[
     bytes,
@@ -258,6 +257,7 @@ class APIResource(enum.Enum):
     USER = "/resources/user"
     VOICE = "/resources/voice"
     WEBHOOK = "/resources/webhook"
+    GATEWAY = "/topics/gateway"
 
 
 def link_developer_portal(scope: APIResource, specific_resource: str = None):
@@ -292,3 +292,14 @@ unspecified = _Unspecified()
 def put_if_specified(mapping, key, value) -> None:
     if value is not unspecified:
         mapping[key] = value
+
+
+def assert_not_none(value: typing.Any, description: str = "value"):
+    if value is None:
+        raise ValueError(f"{description} must not be None")
+    return value
+
+
+class ObjectProxy(dict):
+    def __getattr__(self, item):
+        return self[item]
