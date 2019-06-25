@@ -22,7 +22,7 @@ class BasicBot:
     models. Every payload is a dict (or a dict wrapped within a :class:`DiscordObjectProxy`) and you have to implement
     event dispatching yourself.
 
-    Example:
+    .. code-block::
         import logging
         import os
 
