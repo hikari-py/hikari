@@ -603,7 +603,7 @@ class HTTPClient(base.BaseHTTPClient):
 
     @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def edit_channel_permissions(
-        self, channel_id: str, overwrite_id: str, allow: int, deny: int, type: str
+        self, channel_id: str, overwrite_id: str, allow: int, deny: int, type_: str
     ) -> None:
         """
         Edit permissions for a given channel.
@@ -617,10 +617,10 @@ class HTTPClient(base.BaseHTTPClient):
                 the bitwise value of all permissions to set to be allowed.
             deny:
                 the bitwise value of all permissions to set to be denied.
-            type:
+            type_:
                 "member" if it is for a member, or "role" if it is for a role.
         """
-        payload = {"allow": allow, "deny": deny, "type": type}
+        payload = {"allow": allow, "deny": deny, "type": type_}
         await self.request(
             PUT,
             "/channels/{channel_id}/permissions/{overwrite_id}",
@@ -971,7 +971,7 @@ class HTTPClient(base.BaseHTTPClient):
         guild_id: str,
         name: str,
         *,
-        type: int = _utils.unspecified,
+        type_: int = _utils.unspecified,
         topic: str = _utils.unspecified,
         bitrate: int = _utils.unspecified,
         user_limit: int = _utils.unspecified,
@@ -1097,7 +1097,7 @@ class HTTPClient(base.BaseHTTPClient):
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
-    async def create_guild_integration(self, guild_id: str, type: str, integration_id: str) -> None:
+    async def create_guild_integration(self, guild_id: str, type_: str, integration_id: str) -> None:
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
@@ -1163,6 +1163,9 @@ class HTTPClient(base.BaseHTTPClient):
         Args:
             invite_code:
                 The ID for wanted invite.
+            with_counts:
+                If `True`, attempt to count the number of times the invite has been used, otherwise (and as the
+                default), do not try to track this information.
 
         Returns:
             The requested invite object.
@@ -1360,7 +1363,8 @@ class HTTPClient(base.BaseHTTPClient):
             hikari.errors.NotFound:
                 If either the webhook or the channel aren't found.
             hikari.errors.Forbidden:
-                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook belongs to.
+                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook belongs
+                to.
         """
         payload = {}
         _utils.put_if_specified(payload, "name", name)
