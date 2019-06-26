@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Notify on Discord via a webhook that a new version has been released to PyPi.
+"""
 import os
-import requests
 import sys
+
+import requests
 
 WEBHOOK_URL = os.environ["RELEASE_WEBHOOK"]
 ENVIRONMENT = os.environ["RELEASE_WEBHOOK_NAME"]

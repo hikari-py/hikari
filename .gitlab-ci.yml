@@ -220,7 +220,7 @@ deploy-to-staging:
   variables:
     PREFIX: "dev"
     RELEASE_WEBHOOK_NAME: "staging"
-    RELEASE_WEBHOOK_DESCRIPTION: "It is now available on https://test.pypi.org/"
+    RELEASE_WEBHOOK_DESCRIPTION: "It is now available on https://test.pypi.org/ for testing"
     RELEASE_WEBHOOK_COLOUR: "0xFFBF00"
   environment:
     name:
