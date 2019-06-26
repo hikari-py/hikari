@@ -1238,7 +1238,7 @@ class HTTPClient(base.BaseHTTPClient):
 
     @_utils.link_developer_portal(_utils.APIResource.VOICE)
     async def list_voice_regions(self) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        return await self.request(GET, "/voice/regions")
 
     @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
     async def create_webhook(
