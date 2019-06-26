@@ -1237,7 +1237,17 @@ class HTTPClient(base.BaseHTTPClient):
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.VOICE)
-    async def list_voice_regions(self) -> _utils.DiscordObject:
+    async def list_voice_regions(self) -> typing.List[_utils.DiscordObject]:
+        """
+        Get the voice regions that are available.
+
+        Returns:
+            A list of voice regions available
+
+        Note:
+            This does not include VIP servers.
+        """
+
         return await self.request(GET, "/voice/regions")
 
     @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
