@@ -125,7 +125,7 @@ async def test_request_forwards_known_arguments_to_request_once(mock_http_connec
     )
 
     mock_http_connection._request_once.assert_awaited_once_with(
-        retry=0, resource=res, query=query, data=data, json=json, headers=headers
+        retry=0, resource=res, query=query, data=data, json=json, headers=headers, reason=None
     )
 
     assert res.channel_id == "912000"
@@ -169,6 +169,33 @@ async def test_request_does_not_retry_on_success(mock_http_connection):
     actual_result = await mock_http_connection.request(method="get", path="/foo/bar")
     assert mock_http_connection._request_once.call_count == 3
     assert actual_result is expected_result
+
+
+@pytest.mark.asyncio
+async def test_reason_header_is_not_added_if_None_during_request(mock_http_connection):
+    mock_http_connection.session.request = asynctest.MagicMock(return_value=mock_http_connection.session.mock_response)
+    await mock_http_connection.request("get", "/foo/bar", reason=None)
+    args, kwargs = mock_http_connection.session.request.call_args
+    headers = kwargs["headers"]
+    assert "X-Audit-Log-Reason" not in headers
+
+
+@pytest.mark.asyncio
+async def test_reason_header_is_not_added_if_unspecified_during_request(mock_http_connection):
+    mock_http_connection.session.request = asynctest.MagicMock(return_value=mock_http_connection.session.mock_response)
+    await mock_http_connection.request("get", "/foo/bar", reason=_utils.unspecified)
+    args, kwargs = mock_http_connection.session.request.call_args
+    headers = kwargs["headers"]
+    assert "X-Audit-Log-Reason" not in headers
+
+
+@pytest.mark.asyncio
+async def test_reason_header_is_added_if_provided_during_request(mock_http_connection):
+    mock_http_connection.session.request = asynctest.MagicMock(return_value=mock_http_connection.session.mock_response)
+    await mock_http_connection.request("get", "/foo/bar", reason="because i can")
+    args, kwargs = mock_http_connection.session.request.call_args
+    headers = kwargs["headers"]
+    assert headers["X-Audit-Log-Reason"] == "because i can"
 
 
 @pytest.mark.asyncio
