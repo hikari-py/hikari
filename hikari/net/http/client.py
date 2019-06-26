@@ -117,6 +117,7 @@ class HTTPClient(base.BaseHTTPClient):
         user_limit: int = _utils.unspecified,
         permission_overwrites: typing.List[_utils.DiscordObject] = _utils.unspecified,
         parent_id: str = _utils.unspecified,
+        reason: str = _utils.unspecified,
     ) -> _utils.DiscordObject:
         """
         Update one or more aspects of a given channel ID.
@@ -146,6 +147,8 @@ class HTTPClient(base.BaseHTTPClient):
                 with.
             parent_id:
                 The optional parent category ID to set for the channel.
+            reason:
+                an optional audit log reason explaining why the change was made.
 
         Raises:
             hikari.errors.NotFound:
@@ -165,16 +168,18 @@ class HTTPClient(base.BaseHTTPClient):
         _utils.put_if_specified(payload, "user_limit", user_limit)
         _utils.put_if_specified(payload, "permission_overwrites", permission_overwrites)
         _utils.put_if_specified(payload, "parent_id", parent_id)
-        return await self.request(PATCH, "/channels/{channel_id}", json=payload, channel_id=channel_id)
+        return await self.request(PATCH, "/channels/{channel_id}", json=payload, channel_id=channel_id, reason=reason)
 
     @_utils.link_developer_portal(_utils.APIResource.CHANNEL, "deleteclose-channel")  # nonstandard spelling in URI
-    async def delete_close_channel(self, channel_id: str) -> None:
+    async def delete_close_channel(self, channel_id: str, *, reason: str = _utils.unspecified) -> None:
         """
         Delete the given channel ID, or if it is a DM, close it.
 
         Args:
             channel_id:
                 The channel ID to delete, or the user ID of the direct message to close.
+            reason:
+                an optional audit log reason explaining why the change was made.
 
         Returns:
             Nothing, unlike what the API specifies. This is done to maintain consistency with other calls of a similar
@@ -189,7 +194,7 @@ class HTTPClient(base.BaseHTTPClient):
             hikari.errors.Forbidden:
                 if you do not have permission to delete the channel.
         """
-        await self.request(DELETE, "/channels/{channel_id}", channel_id=channel_id)
+        await self.request(DELETE, "/channels/{channel_id}", channel_id=channel_id, reason=reason)
 
     @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def get_channel_messages(
@@ -603,7 +608,7 @@ class HTTPClient(base.BaseHTTPClient):
 
     @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
     async def edit_channel_permissions(
-        self, channel_id: str, overwrite_id: str, allow: int, deny: int, type_: str
+        self, channel_id: str, overwrite_id: str, allow: int, deny: int, type_: str, reason: str = _utils.unspecified
     ) -> None:
         """
         Edit permissions for a given channel.
@@ -619,6 +624,8 @@ class HTTPClient(base.BaseHTTPClient):
                 the bitwise value of all permissions to set to be denied.
             type_:
                 "member" if it is for a member, or "role" if it is for a role.
+            reason:
+                an optional audit log reason explaining why the change was made.
         """
         payload = {"allow": allow, "deny": deny, "type": type_}
         await self.request(
@@ -627,6 +634,7 @@ class HTTPClient(base.BaseHTTPClient):
             channel_id=channel_id,
             overwrite_id=overwrite_id,
             json=payload,
+            reason=reason,
         )
 
     @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
@@ -658,6 +666,7 @@ class HTTPClient(base.BaseHTTPClient):
         max_uses: int = _utils.unspecified,
         temporary: bool = _utils.unspecified,
         unique: bool = _utils.unspecified,
+        reason: str = _utils.unspecified,
     ) -> _utils.DiscordObject:
         """
         Create a new invite for the given channel.
@@ -674,6 +683,8 @@ class HTTPClient(base.BaseHTTPClient):
                 are given a role. Defaults to `False`.
             unique:
                 if `True`, never reuse a similar invite. Defaults to `False`.
+            reason:
+                an optional audit log reason explaining why the change was made.
 
         Returns:
             An invite object.
@@ -691,10 +702,14 @@ class HTTPClient(base.BaseHTTPClient):
         _utils.put_if_specified(payload, "max_uses", max_uses)
         _utils.put_if_specified(payload, "temporary", temporary)
         _utils.put_if_specified(payload, "unique", unique)
-        return await self.request(POST, "/channels/{channel_id}/invites", json=payload, channel_id=channel_id)
+        return await self.request(
+            POST, "/channels/{channel_id}/invites", json=payload, channel_id=channel_id, reason=reason
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
-    async def delete_channel_permission(self, channel_id: str, overwrite_id: str) -> None:
+    async def delete_channel_permission(
+        self, channel_id: str, overwrite_id: str, *, reason: str = _utils.unspecified
+    ) -> None:
         """
         Delete a channel permission overwrite for a user or a role in a channel.
 
@@ -703,6 +718,8 @@ class HTTPClient(base.BaseHTTPClient):
                 the channel ID to delete from.
             overwrite_id:
                 the override ID to remove.
+            reason:
+                an optional audit log reason explaining why the change was made.
 
         Raises:
             hikari.errors.NotFound:
@@ -715,6 +732,7 @@ class HTTPClient(base.BaseHTTPClient):
             "/channels/{channel_id}/permissions/{overwrite_id}",
             channel_id=channel_id,
             overwrite_id=overwrite_id,
+            reason=reason,
         )
 
     @_utils.link_developer_portal(_utils.APIResource.CHANNEL)
@@ -839,7 +857,7 @@ class HTTPClient(base.BaseHTTPClient):
 
     @_utils.link_developer_portal(_utils.APIResource.EMOJI)
     async def create_guild_emoji(
-        self, guild_id: str, name: str, image: bytes, roles: typing.List[str]
+        self, guild_id: str, name: str, image: bytes, roles: typing.List[str], *, reason: str = _utils.unspecified
     ) -> _utils.DiscordObject:
         """
         Creates a new emoji for a given guild.
@@ -853,6 +871,8 @@ class HTTPClient(base.BaseHTTPClient):
                 The 128x128 image in bytes form.
             roles:
                 A list of roles for which the emoji will be whitelisted.
+            reason:
+                An optional audit log reason explaining why the change was made.
 
         Returns:
             The newly created emoji object.
@@ -866,11 +886,11 @@ class HTTPClient(base.BaseHTTPClient):
                 If you attempt to upload an image larger than 256kb, an empty image or an invalid image format.
         """
         payload = {"name": name, "image": image, "roles": roles}
-        return await self.request(POST, "/guilds/{guild_id}/emojis", guild_id=guild_id, json=payload)
+        return await self.request(POST, "/guilds/{guild_id}/emojis", guild_id=guild_id, json=payload, reason=reason)
 
     @_utils.link_developer_portal(_utils.APIResource.EMOJI)
     async def modify_guild_emoji(
-        self, guild_id: str, emoji_id: str, name: str, roles: typing.List[str]
+        self, guild_id: str, emoji_id: str, name: str, roles: typing.List[str], reason: str = _utils.unspecified
     ) -> _utils.DiscordObject:
         """
         Edits an emoji of a given guild
@@ -884,6 +904,8 @@ class HTTPClient(base.BaseHTTPClient):
                 The new emoji name string.
             roles:
                 A list of IDs for the new whitelisted roles.
+            reason:
+                an optional audit log reason explaining why the change was made.
 
         Returns:
             The updated emoji object.
@@ -896,11 +918,16 @@ class HTTPClient(base.BaseHTTPClient):
         """
         payload = {"name": name, "roles": roles}
         return await self.request(
-            PATCH, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id, json=payload
+            PATCH,
+            "/guilds/{guild_id}/emojis/{emoji_id}",
+            guild_id=guild_id,
+            emoji_id=emoji_id,
+            json=payload,
+            reason=reason,
         )
 
     @_utils.link_developer_portal(_utils.APIResource.EMOJI)
-    async def delete_guild_emoji(self, guild_id: str, emoji_id: str) -> None:
+    async def delete_guild_emoji(self, guild_id: str, emoji_id: str, *, reason: str = _utils.unspecified) -> None:
         """
         Deletes an emoji from a given guild
 
@@ -909,6 +936,8 @@ class HTTPClient(base.BaseHTTPClient):
                 The ID of the guild to delete the emoji from
             emoji_id:
                 The ID of the emoji to be deleted
+            reason:
+                an optional audit log reason explaining why the change was made.
 
         Returns:
             None
@@ -919,7 +948,9 @@ class HTTPClient(base.BaseHTTPClient):
             hikari.errors.Forbidden:
                 If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
         """
-        return await self.request(DELETE, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id)
+        return await self.request(
+            DELETE, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id, reason=reason
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def create_guild(
@@ -954,6 +985,7 @@ class HTTPClient(base.BaseHTTPClient):
         owner_id: str = _utils.unspecified,
         splash: bytes = _utils.unspecified,
         system_channel_id: str = _utils.unspecified,
+        reason: str = _utils.unspecified,
     ) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this
 
@@ -980,12 +1012,17 @@ class HTTPClient(base.BaseHTTPClient):
         permission_overwrites: typing.List[_utils.DiscordObject] = _utils.unspecified,
         parent_id: str = _utils.unspecified,
         nsfw: bool = _utils.unspecified,
+        reason: str = _utils.unspecified,
     ) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def modify_guild_channel_positions(
-        self, guild_id: str, channel: typing.Tuple[str, int], *channels: typing.Tuple[str, int]
+        self,
+        guild_id: str,
+        channel: typing.Tuple[str, int],
+        *channels: typing.Tuple[str, int],
+        reason: str = _utils.unspecified,
     ) -> None:
         raise NotImplementedError  # TODO: implement this
 
@@ -1010,23 +1047,30 @@ class HTTPClient(base.BaseHTTPClient):
         mute: bool = _utils.unspecified,
         deaf: bool = _utils.unspecified,
         channel_id: typing.Optional[str] = _utils.unspecified,
+        reason: str = _utils.unspecified,
     ) -> None:
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
-    async def modify_current_user_nick(self, guild_id: str, nick: typing.Optional[str]) -> str:
+    async def modify_current_user_nick(
+        self, guild_id: str, nick: typing.Optional[str], *, reason: str = _utils.unspecified
+    ) -> str:
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
-    async def add_guild_member_role(self, guild_id: str, user_id: str, role_id: str) -> None:
+    async def add_guild_member_role(
+        self, guild_id: str, user_id: str, role_id: str, *, reason: str = _utils.unspecified
+    ) -> None:
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
-    async def remove_guild_member_role(self, guild_id: str, user_id: str, role_id: str) -> None:
+    async def remove_guild_member_role(
+        self, guild_id: str, user_id: str, role_id: str, *, reason: str = _utils.unspecified
+    ) -> None:
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
-    async def remove_guild_member(self, guild_id: str, user_id: str) -> None:
+    async def remove_guild_member(self, guild_id: str, user_id: str, *, reason: str = _utils.unspecified) -> None:
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
@@ -1044,12 +1088,12 @@ class HTTPClient(base.BaseHTTPClient):
         user_id: str,
         *,
         delete_message_days: int = _utils.unspecified,
-        reason: str = _utils.unspecified,
+        reason: str = _utils.unspecified,  # Note: this should NOT be passed in the reason field like elsewhere
     ) -> None:
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
-    async def remove_guild_ban(self, guild_id: str, user_id: str) -> None:
+    async def remove_guild_ban(self, guild_id: str, user_id: str, *, reason: str = _utils.unspecified) -> None:
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
@@ -1066,11 +1110,12 @@ class HTTPClient(base.BaseHTTPClient):
         color: int = _utils.unspecified,
         hoist: bool = _utils.unspecified,
         mentionable: bool = _utils.unspecified,
+        reason: str = _utils.unspecified,
     ) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
-    async def delete_guild_role(self, guild_id: str, role_id: str) -> None:
+    async def delete_guild_role(self, guild_id: str, role_id: str, *, reason: str = _utils.unspecified) -> None:
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
@@ -1079,7 +1124,7 @@ class HTTPClient(base.BaseHTTPClient):
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def begin_guild_prune(
-        self, guild_id: str, days: int, compute_prune_count: bool = False
+        self, guild_id: str, days: int, compute_prune_count: bool = False, reason: str = _utils.unspecified
     ) -> typing.Optional[int]:
         # NOTE: they politely ask to not call compute_prune_count unless necessary.
         raise NotImplementedError  # TODO: implement this
@@ -1097,7 +1142,9 @@ class HTTPClient(base.BaseHTTPClient):
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
-    async def create_guild_integration(self, guild_id: str, type_: str, integration_id: str) -> None:
+    async def create_guild_integration(
+        self, guild_id: str, type_: str, integration_id: str, reason: str = _utils.unspecified
+    ) -> None:
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
@@ -1109,11 +1156,14 @@ class HTTPClient(base.BaseHTTPClient):
         expire_behaviour: int = _utils.unspecified,
         expire_grace_period: int = _utils.unspecified,
         enable_emoticons: bool = _utils.unspecified,
+        reason: str = _utils.unspecified,
     ) -> None:
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
-    async def delete_guild_integration(self, guild_id: str, integration_id: str) -> None:
+    async def delete_guild_integration(
+        self, guild_id: str, integration_id: str, *, reason: str = _utils.unspecified
+    ) -> None:
         raise NotImplementedError  # TODO: implement this
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
@@ -1124,6 +1174,7 @@ class HTTPClient(base.BaseHTTPClient):
     async def get_guild_embed(self, guild_id: str) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this
 
+    #: TODO: does this take a reason header?
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def modify_guild_embed(self, guild_id: str, embed: _utils.DiscordObject) -> _utils.DiscordObject:
         raise NotImplementedError  # TODO: implement this
@@ -1179,13 +1230,15 @@ class HTTPClient(base.BaseHTTPClient):
         return await self.request(GET, "/invites/{invite_code}", invite_code=invite_code, query=payload)
 
     @_utils.link_developer_portal(_utils.APIResource.INVITE)
-    async def delete_invite(self, invite_code: str) -> _utils.DiscordObject:
+    async def delete_invite(self, invite_code: str, *, reason: str = _utils.unspecified) -> _utils.DiscordObject:
         """
         Deletes a given invite.
 
         Args:
             invite_code:
                 The ID for the invite to be deleted.
+            reason:
+                an optional audit log reason explaining why the change was made.
 
         Returns:
             The deleted invite object.
@@ -1197,7 +1250,7 @@ class HTTPClient(base.BaseHTTPClient):
                 If you lack either `MANAGE_CHANNELS` on the channel the invite belongs to or `MANAGE_GUILD` for 
                 guild-global delete.
         """
-        return await self.request(DELETE, "/invites/{invite_code}", invite_code=invite_code)
+        return await self.request(DELETE, "/invites/{invite_code}", invite_code=invite_code, reason=reason)
 
     ##########
     # OAUTH2 #
@@ -1255,7 +1308,7 @@ class HTTPClient(base.BaseHTTPClient):
 
     @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
     async def create_webhook(
-        self, channel_id: str, name: str, *, avatar: bytes = _utils.unspecified
+        self, channel_id: str, name: str, *, avatar: bytes = _utils.unspecified, reason: str = _utils.unspecified
     ) -> _utils.DiscordObject:
         """
         Creates a webhook for a given channel.
@@ -1267,6 +1320,8 @@ class HTTPClient(base.BaseHTTPClient):
                 The webhook's name string.
             avatar:
                 The avatar image in bytes form.
+            reason:
+                an optional audit log reason explaining why the change was made.
 
         Returns:
             The newly created webhook object.
@@ -1281,7 +1336,9 @@ class HTTPClient(base.BaseHTTPClient):
         """
         payload = {"name": name}
         _utils.put_if_specified(payload, "avatar", avatar)
-        return await self.request(POST, "/channels/{channel_id}/webhooks", channel_id=channel_id, json=payload)
+        return await self.request(
+            POST, "/channels/{channel_id}/webhooks", channel_id=channel_id, json=payload, reason=reason
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
     async def get_channel_webhooks(self, channel_id: str) -> typing.List[_utils.DiscordObject]:
@@ -1342,7 +1399,9 @@ class HTTPClient(base.BaseHTTPClient):
         return await self.request(GET, "/webhooks/{webhook_id}", webhook_id=webhook_id)
 
     @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
-    async def modify_webhook(self, webhook_id: str, name: str, avatar: bytes, channel_id: str) -> _utils.DiscordObject:
+    async def modify_webhook(
+        self, webhook_id: str, name: str, avatar: bytes, channel_id: str, reason: str = _utils.unspecified
+    ) -> _utils.DiscordObject:
         """
         Edits a given webhook.
 
@@ -1355,6 +1414,8 @@ class HTTPClient(base.BaseHTTPClient):
                 The new avatar image in bytes form.
             channel_id:
                 The ID of the new channel the given webhook should be moved to.
+            reason:
+                an optional audit log reason explaining why the change was made.
 
         Returns:
             The updated webhook object.
@@ -1370,16 +1431,18 @@ class HTTPClient(base.BaseHTTPClient):
         _utils.put_if_specified(payload, "name", name)
         _utils.put_if_specified(payload, "avatar", avatar)
         _utils.put_if_specified(payload, "channel_id", channel_id)
-        return await self.request(PATCH, "/webhooks/{webhook_id}", webhook_id=webhook_id, json=payload)
+        return await self.request(PATCH, "/webhooks/{webhook_id}", webhook_id=webhook_id, json=payload, reason=reason)
 
     @_utils.link_developer_portal(_utils.APIResource.WEBHOOK)
-    async def delete_webhook(self, webhook_id: str) -> None:
+    async def delete_webhook(self, webhook_id: str, *, reason: str = _utils.unspecified) -> None:
         """
         Deletes a given webhook.
 
         Args:
             webhook_id:
-                The ID of the webhook to delete.
+                The ID of the webhook to delete
+            reason:
+                an optional audit log reason explaining why the change was made.
 
         Returns:
             None
@@ -1390,4 +1453,4 @@ class HTTPClient(base.BaseHTTPClient):
             hikari.errors.Forbidden:
                 If you're not the webhook owner.
         """
-        return await self.request(DELETE, "/webhooks/{webhook_id}", webhook_id=webhook_id)
+        return await self.request(DELETE, "/webhooks/{webhook_id}", webhook_id=webhook_id, reason=reason)

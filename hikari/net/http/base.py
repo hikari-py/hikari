@@ -125,7 +125,16 @@ class BaseHTTPClient:
         await self.session.close()
 
     async def request(
-        self, method, path, re_seekable_resources=(), headers=None, query=None, data=None, json=None, **kwargs
+        self,
+        method,
+        path,
+        re_seekable_resources=(),
+        headers=None,
+        query=None,
+        data=None,
+        json=None,
+        reason=None,
+        **kwargs,
     ) -> typing.Any:
         """
         Send a request to the given path using the given method, parameters, and keyword arguments. If a failure occurs
@@ -149,6 +158,8 @@ class BaseHTTPClient:
                 query-string args to use.
             json:
                 JSON body to send.
+            reason:
+                Audit-log reason.
             kwargs:
                 Any arguments to interpolate into the `path`.
         """
@@ -157,7 +168,7 @@ class BaseHTTPClient:
         for retry in range(5):
             try:
                 result = await self._request_once(
-                    retry=retry, resource=resource, query=query, headers=headers, data=data, json=json
+                    retry=retry, resource=resource, query=query, headers=headers, data=data, json=json, reason=reason
                 )
             except _RateLimited:
                 # If we are uploading files with io objects in a form body, we need to reset the seeks to 0 to ensure
@@ -170,12 +181,18 @@ class BaseHTTPClient:
             resource, None, None, "the request failed too many times and thus was discarded. Try again later."
         )
 
-    async def _request_once(self, *, retry=0, resource, query=None, headers=None, data=None, json=None) -> typing.Any:
+    async def _request_once(
+        self, *, retry=0, resource, query=None, headers=None, data=None, json=None, reason=None
+    ) -> typing.Any:
         headers = headers if headers else {}
         query = query if query else {}
 
         headers.setdefault("User-Agent", self.user_agent)
         headers.setdefault("Accept", "application/json")
+
+        # Prevent inconsistencies causing weird behaviour: check both args.
+        if reason is not None and reason is not _utils.unspecified:
+            headers.setdefault("X-Audit-Log-Reason", reason)
 
         if self.authorization is not None:
             headers.setdefault("Authorization", self.authorization)
