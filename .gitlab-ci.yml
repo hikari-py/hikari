@@ -7,6 +7,7 @@ stages:
 variables:
   DOCKER_DRIVER: "overlay2"
   RUN_SLOW_TESTS: "true"
+  OWNER: "nekokatt"
 
 ###
 ### TEMPLATE TO RUN PYTEST.
@@ -211,7 +212,7 @@ deploy-to-staging:
   extends: .deploy
   only:
     - staging
-    - prod
+    - $CI_PROJECT_NAMESPACE == $OWNER
   except:
     - tags
     - merge_requests
@@ -232,6 +233,7 @@ deploy-to-prod:
   extends: .deploy
   only:
     - master
+    - $CI_PROJECT_NAMESPACE == $OWNER
   except:
     - tags
     - merge_requests
