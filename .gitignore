@@ -17,6 +17,7 @@ public/
 vscode/
 .settings/
 .project
+.vscode/
 
 # Secrets
 .pypirc
