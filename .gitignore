@@ -14,9 +14,9 @@ public/
 .idea/
 
 # Visual Studio Code-generated files
-vscode/
 .settings/
 .project
+.vscode/
 
 # Secrets
 .pypirc
@@ -35,6 +35,7 @@ dist/
 
 # PyTest-generated files
 .pytest/
+.pytest_cache/
 
 # Pip stuff
 pip-wheel-metadata/

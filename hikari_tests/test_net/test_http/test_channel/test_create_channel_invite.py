@@ -3,6 +3,8 @@
 import asynctest
 import pytest
 
+from hikari import _utils
+
 
 @pytest.fixture()
 def http_client(event_loop):
@@ -15,7 +17,9 @@ def http_client(event_loop):
 async def test_without_optional_args_has_empty_payload(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.create_channel_invite("696969")
-    http_client.request.assert_awaited_once_with("post", "/channels/{channel_id}/invites", channel_id="696969", json={})
+    http_client.request.assert_awaited_once_with(
+        "post", "/channels/{channel_id}/invites", channel_id="696969", json={}, reason=_utils.unspecified
+    )
 
 
 @pytest.mark.asyncio
@@ -23,7 +27,7 @@ async def test_with_max_age(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.create_channel_invite("696969", max_age=10)
     http_client.request.assert_awaited_once_with(
-        "post", "/channels/{channel_id}/invites", channel_id="696969", json={"max_age": 10}
+        "post", "/channels/{channel_id}/invites", channel_id="696969", json={"max_age": 10}, reason=_utils.unspecified
     )
 
 
@@ -32,7 +36,7 @@ async def test_with_max_uses(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.create_channel_invite("696969", max_uses=10)
     http_client.request.assert_awaited_once_with(
-        "post", "/channels/{channel_id}/invites", channel_id="696969", json={"max_uses": 10}
+        "post", "/channels/{channel_id}/invites", channel_id="696969", json={"max_uses": 10}, reason=_utils.unspecified
     )
 
 
@@ -41,7 +45,11 @@ async def test_with_temporary(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.create_channel_invite("696969", temporary=True)
     http_client.request.assert_awaited_once_with(
-        "post", "/channels/{channel_id}/invites", channel_id="696969", json={"temporary": True}
+        "post",
+        "/channels/{channel_id}/invites",
+        channel_id="696969",
+        json={"temporary": True},
+        reason=_utils.unspecified,
     )
 
 
@@ -50,5 +58,13 @@ async def test_with_unique(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.create_channel_invite("696969", unique=True)
     http_client.request.assert_awaited_once_with(
-        "post", "/channels/{channel_id}/invites", channel_id="696969", json={"unique": True}
+        "post", "/channels/{channel_id}/invites", channel_id="696969", json={"unique": True}, reason=_utils.unspecified
     )
+
+
+@pytest.mark.asyncio
+async def test_optional_reason(http_client):
+    http_client.request = asynctest.CoroutineMock()
+    await http_client.create_channel_invite("696969", reason="because i can")
+    args, kwargs = http_client.request.call_args
+    assert kwargs["reason"] == "because i can"

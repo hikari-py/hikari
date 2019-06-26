@@ -9,5 +9,5 @@ __author__ = "Nekokatt"
 __contributors__ = {"LunarCoffee", "raatty", "Tmpod"}
 __copyright__ = f"© {__import__('datetime').datetime.now().year} {__author__}"
 __license__ = "zlib"
-__version__ = "0.0.1-SNAPSHOT"
+__version__ = "LATEST"
 __url__ = "https://gitlab.com/nekokatt/hikari"
