@@ -10,6 +10,7 @@ def http_client(event_loop):
 
     return ClientMock(token="foobarsecret", loop=event_loop)
 
+
 @pytest.mark.asyncio
 async def test_list_guild_regions(http_client):
     http_client.request = asynctest.CoroutineMock()
