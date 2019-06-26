@@ -282,6 +282,9 @@ class _Unspecified:
     def __str__(self):
         return "unspecified"
 
+    def __bool__(self):
+        return False
+
     __repr__ = __str__
 
 

@@ -3,6 +3,8 @@
 import asynctest
 import pytest
 
+from hikari import _utils
+
 
 @pytest.fixture()
 def http_client(event_loop):
@@ -21,4 +23,13 @@ async def test_modify_guild_emoji(http_client):
         guild_id="424242",
         emoji_id="696969",
         json={"name": "asdf", "roles": []},
+        reason=_utils.unspecified,
     )
+
+
+@pytest.mark.asyncio
+async def test_with_optional_reason(http_client):
+    http_client.request = asynctest.CoroutineMock()
+    await http_client.modify_guild_emoji("696969", "123456", "asdf", [], reason="because i can")
+    args, kwargs = http_client.request.call_args
+    assert kwargs["reason"] == "because i can"

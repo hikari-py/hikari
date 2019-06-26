@@ -224,6 +224,11 @@ def test_unspecified_repr():
     assert repr(_utils.unspecified) == "unspecified"
 
 
+def test_unspecified_bool():
+    assert not _utils.unspecified
+    assert bool(_utils.unspecified) is False
+
+
 def test_put_if_specified_when_specified():
     d = {}
     _utils.put_if_specified(d, "foo", 69)
