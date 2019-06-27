@@ -19,7 +19,7 @@ import sphinx_bootstrap_theme
 project = "Hikari"
 author = "Nekokatt"
 version = "LATEST"
-release = "-pages"
+release = "LATEST"
 
 # -- General configuration ---------------------------------------------------
 

@@ -146,6 +146,7 @@ setup.py:
     - sed "s/^__version__.*/__version__ = \"${full_version}\"/g" -i hikari/__init__.py
     - sed "s/^version.*/version = ${pep440_version}/g" -i setup.cfg
     - sed "0,/^version.*$/s//version = \"${full_version}\"/g" -i docs/conf.py
+    - sed "0,/^release.*$/s//release = \"${pep440_version}\"/g" -i docs/conf.py
     - python setup.py sdist bdist_wheel
     - twine upload --repository pypi dist/*
     - python .ci/notify.py "${full_version} (${pep440_version})"
