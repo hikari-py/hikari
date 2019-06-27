@@ -1,6 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Internal utilities and helper methods for network logic."""
+# Copyright © Nekoka.tt 2019
+#
+# This file is part of Hikari.
+#
+# Hikari is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Hikari is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""
+Internal utilities and helper methods for network logic.
+"""
 __all__ = (
     "APIResource",
     "DiscordObject",
@@ -29,12 +47,12 @@ import platform
 
 from hikari.compat import typing
 
-_T = typing.TypeVar("_T")
+T = typing.TypeVar("T")
 
 
 def get_from_map_as(
-    mapping: dict, key: typing.Any, klazz: typing.Type[_T], default=None, *, default_on_error=False
-) -> typing.Optional[_T]:
+    mapping: dict, key: typing.Any, klazz: typing.Type[T], default=None, *, default_on_error=False
+) -> typing.Optional[T]:
     """
     Get from a map and perform a type cast where possible.
 
