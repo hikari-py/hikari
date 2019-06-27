@@ -23,7 +23,6 @@ Packages and submodules
     hikari.net.rates
     hikari.net.status
 
-* `Changelog, code quality statistics and reports for this release <quality_assurance.html>`_
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
