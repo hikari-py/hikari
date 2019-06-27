@@ -23,10 +23,10 @@ try:
             "embeds": [
                 {
                     "title": f"[{VERSION}] New {ENVIRONMENT} deployment!",
-                    "description": f"Hikari v{VERSION} has just been put into {ENVIRONMENT}.",
+                    "footer": { "text": f"Hikari v{VERSION} has just been put into {ENVIRONMENT}." },
                     "color": int(COLOUR, 16),
                     "author": {"name": "Nekoka.tt"},
-                    "footer": {"text": DESCRIPTION}
+                    "description": DESCRIPTION,
                 }
             ]
         }
