@@ -88,8 +88,6 @@ black:
     - pip install tox 
   script:
     - tox -e black-check
-  only:
-    - merge_requests
   except:
     - master
     - staging
