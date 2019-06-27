@@ -47,6 +47,7 @@ py36:
 py37:
   image: python:3.7-alpine
   extends: .cpython-pytest
+  coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
 
 ###
 ### TEST IN PYTHON 3.8
@@ -76,56 +77,22 @@ pypy3:
     - pip install tox
 
 ###
-### TEMPLATE FOR TEST AND PROD DOCUMENTATION GENERATION JOBS.
-###
-.pages:
-  dependencies:
-    - aggregate-coverage
-    - bandit
-  allow_failure: false
-  image: python:3-stretch
-  before_script:
-    - pip install tox
-  script:
-    - tox -e docs
-  artifacts:
-    paths:
-      - public
-
-###
-### PRODUCE PRODUCTION DOCUMENTATION.
-###
-pages:
-  stage: pages
-  extends: .pages
-  only:
-    - master
-  except:
-    - schedules
-
-###
-### GENERATE DOCUMENTATION WITHOUT DEPLOYING PAGES TO GITLAB PAGES.
-###
-pages-test:
-  stage: pages
-  extends: .pages
-  except:
-    - master
-
-###
 ### FAIL WITH WARNING IF CODE DOES NOT MATCH DESIRED FORMAT.
 ### This only runs for merge requests.
 ###
 black:
   stage: verify
-  allow_failure: true
+  allow_failure: false
   image: python:3-alpine
   before_script:
     - pip install tox 
   script:
     - tox -e black-check
+  only:
+    - merge_requests
   except:
     - master
+    - staging
 
 ###
 ### RUN STATIC APPLICATION SECURITY TESTING.
@@ -163,30 +130,6 @@ setup.py:
     - python -c "import hikari; print(hikari.__version__)"
 
 ###
-### PRODUCE SEVERAL INFORMATIVE REPORTS REGARDING TEST COVERAGE
-###
-aggregate-coverage:
-  allow_failure: true
-  stage: verify
-  dependencies:
-    - pypy3
-    - py36
-    - py37
-    - py38
-  image: python:3-alpine
-  coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
-  before_script:
-    - apk add git
-    - pip install tox
-    - tox -avv
-  script:
-    - tox -e report
-  artifacts:
-    paths:
-      - public
-
-
-###
 ### HANDLE DEPLOYING TO PYPI REPOSITORIES
 ###
 .deploy:
@@ -196,14 +139,16 @@ aggregate-coverage:
   script:
     - pip install -U setuptools wheel twine requests
     - cat $PYPIRC > $HOME/.pypirc
-    - version="$(date +%Y.%m.%d).${PREFIX}${CI_PIPELINE_IID}"
-    - echo "Version will become ${version}"
-    - sed "s/^__version__.*/__version__ = \"${version}\"/g" -i hikari/__init__.py
-    - sed "s/^version.*/version = ${version}/g" -i setup.cfg
-    - sed "0,/^version.*$/s//version = \"${version}\"/g" -i docs/conf.py
+    - version="$(date +%Y.%m.%d).${PREFIX}"
+    - full_version="${version}-$(git show --format='%h' -s)"
+    - pep440_version="${version}.${CI_PIPELINE_IID}"
+    - echo "Version will become ${full_version} (pep440 compliant is ${pep440_version})"
+    - sed "s/^__version__.*/__version__ = \"${full_version}\"/g" -i hikari/__init__.py
+    - sed "s/^version.*/version = ${pep440_version}/g" -i setup.cfg
+    - sed "0,/^version.*$/s//version = \"${full_version}\"/g" -i docs/conf.py
     - python setup.py sdist bdist_wheel
     - twine upload --repository pypi dist/*
-    - python .ci/notify.py "$version"
+    - python .ci/notify.py "${full_version} (${pep440_version})"
 
 ###
 ### HANDLE DEPLOYING TO OUR STAGING ENVIRONMENT ON test.pypi.org
@@ -225,6 +170,9 @@ deploy-to-staging:
   environment:
     name:
       staging
+  artifacts:
+    paths:
+      - docs
 
 ###
 ### HANDLE DEPLOYING TO OUR PRODUCTION ENVIRONMENT ON pypi.org
@@ -246,3 +194,48 @@ deploy-to-prod:
   environment:
     name:
       prod
+  artifacts:
+    paths:
+      - docs
+
+
+###
+### TEMPLATE FOR TEST AND PROD DOCUMENTATION GENERATION JOBS.
+###
+.pages:
+  dependencies:
+    - aggregate-coverage
+    - bandit
+  allow_failure: false
+  image: python:3-stretch
+  before_script:
+    - pip install tox
+  script:
+    - tox -e docs
+  artifacts:
+    paths:
+      - public
+
+###
+### GENERATE DOCUMENTATION WITHOUT DEPLOYING PAGES TO GITLAB PAGES.
+###
+pages-test:
+  stage: pages
+  extends: .pages
+  except:
+    - master
+  dependencies:
+    - deploy-to-staging
+
+###
+### PRODUCE PRODUCTION DOCUMENTATION.
+###
+pages:
+  stage: pages
+  extends: .pages
+  only:
+    - master
+  except:
+    - schedules
+  dependencies:
+    - deploy-to-prod
