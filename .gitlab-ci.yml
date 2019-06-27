@@ -82,14 +82,17 @@ pypy3:
 ###
 black:
   stage: verify
-  allow_failure: true
+  allow_failure: false
   image: python:3-alpine
   before_script:
     - pip install tox 
   script:
     - tox -e black-check
+  only:
+    - merge_requests
   except:
     - master
+    - staging
 
 ###
 ### RUN STATIC APPLICATION SECURITY TESTING.
@@ -137,7 +140,7 @@ setup.py:
     - pip install -U setuptools wheel twine requests
     - cat $PYPIRC > $HOME/.pypirc
     - version="$(date +%Y.%m.%d).${PREFIX}"
-    - full_version="${version}-$(git show --format='%h' | xargs)"
+    - full_version="${version}-$(git show --format='%h' -s)"
     - pep440_version="${version}.${CI_PIPELINE_IID}"
     - echo "Version will become ${full_version} (pep440 compliant is ${pep440_version})"
     - sed "s/^__version__.*/__version__ = \"${full_version}\"/g" -i hikari/__init__.py
