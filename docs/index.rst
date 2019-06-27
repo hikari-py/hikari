@@ -1,7 +1,7 @@
 Hikari documentation
 ####################
 
-This is for version |version|
+This is for version |version| -- on PyPi, this is referred to as |release|
 
 Packages and submodules
 -----------------------
@@ -12,7 +12,7 @@ Packages and submodules
     hikari
     hikari.compat
     hikari.errors
-    hikari.models.audit.action_type
+    hikari.models
     hikari.net.basic_bot
     hikari.net.debug
     hikari.net.gateway
