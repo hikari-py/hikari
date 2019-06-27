@@ -139,7 +139,7 @@ setup.py:
   script:
     - pip install -U setuptools wheel twine requests
     - cat $PYPIRC > $HOME/.pypirc
-    - version="$(date +%Y.%m.%d).${PREFIX}"
+    - version="$(date +%Y.%m.%d)${PREFIX}"
     - full_version="${version}-$(git show --format='%h' -s)"
     - pep440_version="${version}.${CI_PIPELINE_IID}"
     - echo "Version will become ${full_version} (pep440 compliant is ${pep440_version})"
@@ -163,10 +163,10 @@ deploy-to-staging:
     - merge_requests
     - schedules
   variables:
-    PREFIX: "dev"
+    PREFIX: ".dev"
     RELEASE_WEBHOOK_NAME: "staging"
-    RELEASE_WEBHOOK_DESCRIPTION: "It is now available on https://test.pypi.org/ for testing"
-    RELEASE_WEBHOOK_COLOUR: "0xFFBF00"
+    RELEASE_WEBHOOK_DESCRIPTION: "You can install this version by running:\n```bash\npip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple\n```\n"
+    RELEASE_WEBHOOK_COLOUR: "0xd34615"
   environment:
     name:
       staging
@@ -189,8 +189,8 @@ deploy-to-prod:
   variables:
     PREFIX: ""
     RELEASE_WEBHOOK_NAME: "prod"
-    RELEASE_WEBHOOK_DESCRIPTION: "pip install it from https://pypi.python.org/ now"
-    RELEASE_WEBHOOK_COLOUR: "0x00FF00"
+    RELEASE_WEBHOOK_DESCRIPTION: "Install it with:\n```bash\npip install hikari\n```\n"
+    RELEASE_WEBHOOK_COLOUR: "0x5c2040"
   environment:
     name:
       prod
