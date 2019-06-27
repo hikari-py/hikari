@@ -137,7 +137,7 @@ setup.py:
   stage: deploy
   image: python:3
   script:
-    - pip install -U setuptools wheel twine requests
+    - pip install -U setuptools wheel twine
     - cat $PYPIRC > $HOME/.pypirc
     - version="$(date +%Y.%m.%d).${PREFIX}"
     - full_version="${version}-$(git show --format='%h' -s)"
@@ -148,7 +148,6 @@ setup.py:
     - sed "0,/^version.*$/s//version = \"${full_version}\"/g" -i docs/conf.py
     - python setup.py sdist bdist_wheel
     - twine upload --repository pypi dist/*
-    - python .ci/notify.py "${full_version} (${pep440_version})"
 
 ###
 ### HANDLE DEPLOYING TO OUR STAGING ENVIRONMENT ON test.pypi.org
@@ -164,9 +163,6 @@ deploy-to-staging:
     - schedules
   variables:
     PREFIX: "dev"
-    RELEASE_WEBHOOK_NAME: "staging"
-    RELEASE_WEBHOOK_DESCRIPTION: "It is now available on https://test.pypi.org/ for testing"
-    RELEASE_WEBHOOK_COLOUR: "0xFFBF00"
   environment:
     name:
       staging
@@ -188,9 +184,6 @@ deploy-to-prod:
     - schedules
   variables:
     PREFIX: ""
-    RELEASE_WEBHOOK_NAME: "prod"
-    RELEASE_WEBHOOK_DESCRIPTION: "pip install it from https://pypi.python.org/ now"
-    RELEASE_WEBHOOK_COLOUR: "0x00FF00"
   environment:
     name:
       prod
