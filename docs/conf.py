@@ -25,11 +25,12 @@ Sphinx documentation configuration.
 # list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 import os
+import shutil
 import sys
 
-sys.path.insert(0, os.path.abspath(".."))
-
 import sphinx_bootstrap_theme
+
+sys.path.insert(0, os.path.abspath(".."))
 
 # -- Project information -----------------------------------------------------
 
@@ -43,11 +44,17 @@ release = "LATEST"
 extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
-    "sphinxcontrib.asyncio",
     "sphinx.ext.autodoc",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
 ]
+
+if shutil.which("dot"):
+    print("GRAPHVIZ INSTALLED, WILL GENERATE PRETTY DIAGRAMS :)")
+
+    extensions += ("sphinx.ext.inheritance_diagram", "sphinx.ext.graphviz")
+else:
+    print("dot WAS NOT INSTALLED, PLEASE INSTALL GRAPHVIZ PROPERLY FOR dot DIAGRAMS TO RENDER")
 
 templates_path = ["_templates"]
 exclude_patterns = []
@@ -138,6 +145,29 @@ intersphinx_mapping = {
     "aiohttp": ("https://aiohttp.readthedocs.io/en/stable/", None),
     "websockets": ("https://websockets.readthedocs.io/en/stable/", None),
 }
+
+# -- Inheritance diagram options ---------------------------------------------
+
+# https://www.graphviz.org/doc/info/attrs.html
+# https://www.graphviz.org/doc/info/arrows.html
+inheritance_graph_attrs = dict(
+    layout="dot",  # dot neato twopi circo fdp
+    rankdir="LR",
+    fontsize=14,
+    ratio="compress",
+    splines="ortho",
+    pad=0.2,
+    nodesep=1,
+    ranksep=1,
+)
+
+inheritance_node_attrs = dict(
+    fontsize=10, fontname='"monospace"', color='"#772953"', style='"filled,rounded"', fontcolor="white"
+)
+
+inheritance_edge_attrs = dict(color='"#772953"', arrowhead="onormal", arrowsize=1)
+
+graphviz_output_format = "svg"
 
 
 def setup(app):
