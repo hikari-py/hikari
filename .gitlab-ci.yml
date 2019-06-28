@@ -152,6 +152,7 @@ setup.py:
   stage: deploy
   image: python:3
   script:
+    - apt-get install graphviz -y
     - pip install -U setuptools wheel twine requests
     - cat $PYPIRC > $HOME/.pypirc
     - version="$(date +%Y.%m.%d)${PREFIX}"
