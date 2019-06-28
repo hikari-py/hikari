@@ -148,7 +148,7 @@ setup.py:
 ### HANDLE DEPLOYING TO PYPI REPOSITORIES
 ###
 .deploy:
-  allow_failure: true
+  allow_failure: false
   stage: deploy
   image: python:3
   script:
