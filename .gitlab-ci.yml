@@ -152,8 +152,6 @@ setup.py:
   stage: deploy
   image: python:3
   script:
-    - apt-get update
-    - apt-get install graphviz -y
     - pip install -U setuptools wheel twine requests
     - cat $PYPIRC > $HOME/.pypirc
     - version="$(date +%Y.%m.%d)${PREFIX}"
@@ -227,6 +225,8 @@ deploy-to-prod:
   allow_failure: false
   image: python:3-stretch
   before_script:
+    - apt-get update
+    - apt-get install graphviz -y
     - pip install tox
   script:
     - tox -e docs
