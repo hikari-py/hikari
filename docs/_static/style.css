@@ -50,7 +50,7 @@ body {
 
 /*
  * Make the footer sticky to the bottom of the body.
- */
+ * /
 div.container-fluid.navbar-inverse.navbar-expand-lg, .navbar {
     min-height: auto;
     position: sticky;
@@ -66,6 +66,7 @@ div.container-fluid.navbar-inverse.navbar-expand-lg {
 .navbar {
     top: 0;
 }
+*/
 
 .nav a {
     font-weight: bold;
