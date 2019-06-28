@@ -23,7 +23,7 @@ from hikari import _utils
 
 
 @pytest.fixture()
-def http_client(event_loop):
+async def http_client(event_loop):
     from hikari_tests.test_net.test_http import ClientMock
 
     return ClientMock(token="foobarsecret", loop=event_loop)
