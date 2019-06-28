@@ -43,7 +43,6 @@ release = "LATEST"
 extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
-    "sphinxcontrib.asyncio",
     "sphinx.ext.autodoc",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
