@@ -161,7 +161,7 @@ setup.py:
     - echo "Version will become ${pep440_version}, release will be ${release}"
     - sed "s/^__version__.*/__version__ = \"${pep440_version}\"/g" -i hikari/__init__.py
     - sed "s/^__release__.*/__release__ = \"${release}\"/g" -i hikari/__init__.py
-    - sed "s/^version.*/version = ${pep440_version}/g" -i setup.cfg
+    - sed "0,/^version.*$/s//version = \"${pep440_version}\"/g" -i pyproject.toml
     - sed "0,/^version.*$/s//version = \"${pep440_version}\"/g" -i docs/conf.py
     - sed "0,/^release.*$/s//release = \"${release}\"/g" -i docs/conf.py
     - poetry build
