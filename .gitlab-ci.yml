@@ -155,6 +155,7 @@ setup.py:
     - pip install poetry
     - poetry install -v
   script:
+    - poetry config repositories.hikarirepo ${PYPI_REPO}
     - version="$(date +%Y.%m.%d)${PREFIX}"
     - release="$(git show --format='%h' -s)"
     - pep440_version="${version}.${CI_PIPELINE_IID}"
@@ -165,7 +166,7 @@ setup.py:
     - sed "0,/^version.*$/s//version = \"${pep440_version}\"/g" -i docs/conf.py
     - sed "0,/^release.*$/s//release = \"${release}\"/g" -i docs/conf.py
     - poetry build
-    - poetry publish --username=$PYPI_USER --password=$PYPI_PASS --repository=$PYPI_REPO
+    - poetry publish --username=$PYPI_USER --password=$PYPI_PASS --repository=hikarirepo
     - pip install requests
     - python .ci/notify.py "${pep440_version} (${release})"
 
