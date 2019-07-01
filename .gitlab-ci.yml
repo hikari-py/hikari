@@ -151,20 +151,23 @@ setup.py:
   allow_failure: false
   stage: deploy
   image: python:3
+  before_script:
+    - pip install poetry
+    - poetry install -v
   script:
-    - pip install -U setuptools wheel twine requests
-    - cat $PYPIRC > $HOME/.pypirc
     - version="$(date +%Y.%m.%d)${PREFIX}"
-    - full_version="${version}-$(git show --format='%h' -s)"
+    - release="$(git show --format='%h' -s)"
     - pep440_version="${version}.${CI_PIPELINE_IID}"
-    - echo "Version will become ${full_version} (pep440 compliant is ${pep440_version})"
-    - sed "s/^__version__.*/__version__ = \"${full_version}\"/g" -i hikari/__init__.py
+    - echo "Version will become ${pep440_version}, release will be ${release}"
+    - sed "s/^__version__.*/__version__ = \"${pep440_version}\"/g" -i hikari/__init__.py
+    - sed "s/^__release__.*/__release__ = \"${release}\"/g" -i hikari/__init__.py
     - sed "s/^version.*/version = ${pep440_version}/g" -i setup.cfg
-    - sed "0,/^version.*$/s//version = \"${full_version}\"/g" -i docs/conf.py
-    - sed "0,/^release.*$/s//release = \"${pep440_version}\"/g" -i docs/conf.py
-    - python setup.py sdist bdist_wheel
-    - twine upload --repository pypi dist/*
-    - python .ci/notify.py "${full_version} (${pep440_version})"
+    - sed "0,/^version.*$/s//version = \"${pep440_version}\"/g" -i docs/conf.py
+    - sed "0,/^release.*$/s//release = \"${release}\"/g" -i docs/conf.py
+    - poetry build
+    - poetry publish --username=$PYPI_USER --password=$PYPI_PASS --repository=$PYPI_REPO
+    - pip install requests
+    - python .ci/notify.py "${pep440_version} (${release})"
 
 ###
 ### HANDLE DEPLOYING TO OUR STAGING ENVIRONMENT ON test.pypi.org
