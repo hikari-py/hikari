@@ -20,7 +20,7 @@ services:
     build:
       context: ../..
       dockerfile: .ci/local-test-runners/cpython3.6.dockerfile
-    entrypoint: python -bbBm pytest hikari_tests
+    entrypoint: python -bbBm poetry run pytest hikari_tests
     volumes:
       - ../../hikari:/hikari:ro
       - ../../hikari_tests:/hikari_tests:ro
@@ -30,7 +30,7 @@ services:
     build:
       context: ../..
       dockerfile: .ci/local-test-runners/cpython3.7.dockerfile
-    entrypoint: python -bbBm pytest hikari_tests
+    entrypoint: python -bbBm poetry run pytest hikari_tests
     volumes:
       - ../../hikari:/hikari:ro
       - ../../hikari_tests:/hikari_tests:ro
@@ -40,7 +40,7 @@ services:
     build:
       context: ../..
       dockerfile: .ci/local-test-runners/cpython3.8.dockerfile
-    entrypoint: python -bbBm pytest hikari_tests
+    entrypoint: python -bbBm poetry run pytest hikari_tests
     volumes:
       - ../../hikari:/hikari:ro
       - ../../hikari_tests:/hikari_tests:ro
@@ -60,7 +60,7 @@ services:
     build:
       context: ../..
       dockerfile: .ci/local-test-runners/pypy3.6.dockerfile
-    entrypoint: pypy3 -bbBm pytest hikari_tests
+    entrypoint: pypy3 -bbBm poetry run pytest hikari_tests
     volumes:
       - ../../hikari:/hikari:ro
       - ../../hikari_tests:/hikari_tests:ro
