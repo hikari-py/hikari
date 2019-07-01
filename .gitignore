@@ -39,3 +39,6 @@ dist/
 
 # Pip stuff
 pip-wheel-metadata/
+
+# Poetry lockfile
+poetry.lock
