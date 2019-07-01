@@ -47,6 +47,8 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.inheritance_diagram",
+    "sphinx.ext.graphviz",
 ]
 
 if shutil.which("dot"):
