@@ -26,6 +26,23 @@ description     = "A sane Discord API for Python"
 authors         = ["Nekoka.tt <nekoka.tt@outlook.com>"]
 license         = "LGPL-3.0-ONLY"
 readme          = "README.md"
+classifiers     = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Communications :: Chat",
+    "Topic :: Communications :: Telephony",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
 
 [tool.poetry.dependencies]
 python          = ">=3.6,<3.9"
