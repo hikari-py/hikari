@@ -185,8 +185,8 @@ deploy-to-staging:
   variables:
     PREFIX: ".dev"
     RELEASE_WEBHOOK_NAME: "staging"
-    RELEASE_WEBHOOK_DESCRIPTION: "You can install this version by running:\n```bash\npip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple\n```\n"
-    RELEASE_WEBHOOK_COLOUR: "0xd34615"
+    RELEASE_WEBHOOK_DESCRIPTION: "You can install this version by running:\n```bash\npip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple hikari\n```\n"
+    RELEASE_WEBHOOK_COLOUR: "0xd34615" 
   environment:
     name:
       staging
