@@ -276,3 +276,43 @@ def test_assert_not_none_when_not_none(arg):
 def test_DiscordObjectProxy():
     dop = _utils.ObjectProxy({"foo": "bar"})
     assert dop["foo"] == dop.foo
+
+
+def test_parse_iso_8601_date_with_timezone():
+    string = "2019-10-10T05:22:33.023456-02:30"
+    date = _utils.parse_iso_8601_datetime(string)
+    assert date.year == 2019
+    assert date.month == 10
+    assert date.day == 10
+    assert date.hour == 5
+    assert date.minute == 22
+    assert date.second == 33
+    assert date.microsecond == 23456
+    offset = date.tzinfo.utcoffset(None)
+    assert offset == datetime.timedelta(hours=-2, minutes=-30)
+
+
+def test_parse_iso_8601_date_with_zulu():
+    string = "2019-10-10T05:22:33.023456Z"
+    date = _utils.parse_iso_8601_datetime(string)
+    assert date.year == 2019
+    assert date.month == 10
+    assert date.day == 10
+    assert date.hour == 5
+    assert date.minute == 22
+    assert date.second == 33
+    assert date.microsecond == 23456
+    offset = date.tzinfo.utcoffset(None)
+    assert offset == datetime.timedelta(seconds=0)
+
+
+def test_parse_iso_8601_date_with_milliseconds_instead_of_microseconds():
+    string = "2019-10-10T05:22:33.023Z"
+    date = _utils.parse_iso_8601_datetime(string)
+    assert date.year == 2019
+    assert date.month == 10
+    assert date.day == 10
+    assert date.hour == 5
+    assert date.minute == 22
+    assert date.second == 33
+    assert date.microsecond == 23000
