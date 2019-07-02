@@ -19,6 +19,8 @@
 """
 Internal utilities and helper methods for network logic.
 """
+import re
+
 __all__ = (
     "APIResource",
     "DiscordObject",
@@ -324,3 +326,31 @@ def assert_not_none(value: typing.Any, description: str = "value"):
 class ObjectProxy(dict):
     def __getattr__(self, item):
         return self[item]
+
+
+ISO_8601_DATE_PART = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
+ISO_8601_TIME_PART = re.compile(r"[Tt](\d{2}):(\d{2}):(\d{2})\.(\d{1,6})")
+ISO_8601_TZ_PART = re.compile(r"([+-])(\d{2}):(\d{2})$")
+
+
+def parse_iso_8601_datetime(date_string: str) -> datetime.datetime:
+    """
+    Parses an ISO 8601 date string into a datetime object
+
+    See:
+        https://en.wikipedia.org/wiki/ISO_8601
+    """
+    year, month, day = map(int, ISO_8601_DATE_PART.findall(date_string)[0])
+    hour, minute, second, partial = ISO_8601_TIME_PART.findall(date_string)[0]
+    partial = partial + (6 - len(partial)) * "0"
+    hour, minute, second, partial = int(hour), int(minute), int(second), int(partial)
+    if date_string.endswith(("Z", "z")):
+        offset = datetime.timedelta(seconds=0)
+    else:
+        sign, tz_hour, tz_minute = ISO_8601_TZ_PART.findall(date_string)[0]
+        tz_hour, tz_minute = int(tz_hour), int(tz_minute)
+        offset = datetime.timedelta(hours=tz_hour, minutes=tz_minute)
+        if sign == "-":
+            offset = -offset
+
+    return datetime.datetime(year, month, day, hour, minute, second, partial, datetime.timezone(offset))
