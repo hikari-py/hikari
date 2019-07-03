@@ -273,7 +273,7 @@ def test_assert_not_none_when_not_none(arg):
     _utils.assert_not_none(arg)
 
 
-def test_DiscordObjectProxy():
+def test_ObjectProxy():
     dop = _utils.ObjectProxy({"foo": "bar"})
     assert dop["foo"] == dop.foo
 
