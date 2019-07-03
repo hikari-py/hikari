@@ -46,11 +46,7 @@ async def test_create_guild_role_many_kwargs(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.create_guild_role("424242", **test_many_args)
     http_client.request.assert_awaited_once_with(
-        "post",
-        "/guilds/{guild_id}/roles",
-        guild_id="424242",
-        json=test_many_args,
-        reason=_utils.unspecified,
+        "post", "/guilds/{guild_id}/roles", guild_id="424242", json=test_many_args, reason=_utils.unspecified
     )
 
 

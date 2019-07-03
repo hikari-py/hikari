@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.abspath(".."))
 
 project = "Hikari"
 author = "Nekokatt"
+copyright = author
 version = "LATEST"
 release = "LATEST"
 
@@ -153,14 +154,14 @@ intersphinx_mapping = {
 # https://www.graphviz.org/doc/info/attrs.html
 # https://www.graphviz.org/doc/info/arrows.html
 inheritance_graph_attrs = dict(
-    layout="dot",  # dot neato twopi circo fdp
+    layout="twopi",  # dot neato twopi circo fdp
     rankdir="LR",
-    fontsize=14,
-    ratio="compress",
-    splines="ortho",
-    pad=0.2,
+    fontsize=12,
+    ratio="auto",
+    # splines="ortho",
+    pad=0.25,
     nodesep=1,
-    ranksep=1,
+    ranksep=2.4,
 )
 
 inheritance_node_attrs = dict(

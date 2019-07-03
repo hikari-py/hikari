@@ -19,6 +19,9 @@
 
 """
 Asyncio compatibility methods.
+
+This namespace contains the entirety of the :mod:`asyncio` module. Any members documented below are assumed to
+*override* the original implementation if it exists for your target platform implementation and Python version.
 """
 import asyncio as _asyncio
 
