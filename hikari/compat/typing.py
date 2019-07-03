@@ -19,6 +19,9 @@
 
 """
 Type checking compatibility.
+
+This namespace contains the entirety of the :mod:`typing` module. Any members documented below are assumed to
+*override* the original implementation if it exists for your target platform implementation and Python version.
 """
 import typing as _typing
 
