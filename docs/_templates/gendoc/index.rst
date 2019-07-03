@@ -9,7 +9,7 @@ Packages and submodules
 -----------------------
 
 .. autosummary::
-    :toctree: modules
+    :toctree: .
 
     {% for m in modules %}{{ m }}
     {% endfor %}
