@@ -980,11 +980,65 @@ class HTTPClient(base.BaseHTTPClient):
         roles: typing.List[_utils.DiscordObject],
         channels: typing.List[_utils.DiscordObject],
     ) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Creates a new guild. Can only be used by bots in less than 10 guilds.
+
+        Args:
+            name:
+                The name string for the new guild (2-100 characters).
+            region:
+                The voice region ID for new guild. You can use `list_voice_regions` to see which region IDs are available.
+            icon:
+                The guild icon image in bytes form.
+            verification_level:
+                The verification level integer (0-5).
+            default_message_notifications:
+                The default notification level integer (0-1).
+            explicit_content_filter:
+                The explicit content filter integer (0-2).
+            roles:
+                An array of role objects to be created alongside the guild. First element changes the `@everyone` role.
+            channels:
+                An array of channel objects to be created alongside the guild.
+
+        Returns:
+            The newly created guild object.
+
+        Raises:
+            hikari.errors.Forbidden:
+                If your bot is on 10 or more guilds.
+            hikari.errors.BadRequest:
+                If you provide unsupported fields like `parent_id` in channel objects.
+        """
+        payload = {
+            "name": name,
+            "region": region,
+            "icon": icon,
+            "verification_level": verification_level,
+            "default_message_notifications": default_message_notifications,
+            "explicit_content_filter": explicit_content_filter,
+            "roles": roles,
+            "channels": channels,
+        }
+        return await self.request(POST, "/guilds", json=payload)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def get_guild(self, guild_id: str) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets a given guild's object.
+
+        Args:
+            guild_id:
+                The ID of the guild to get.
+
+        Returns:
+            The requested guild object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+        """
+        return await self.request(GET, "/guilds/{guild_id}", guild_id=guild_id)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def modify_guild(
@@ -997,21 +1051,104 @@ class HTTPClient(base.BaseHTTPClient):
         default_message_notifications: str = _utils.unspecified,
         explicit_content_filter: int = _utils.unspecified,
         afk_channel_id: str = _utils.unspecified,
+        afk_timeout: int = _utils.unspecified,
         icon: bytes = _utils.unspecified,
         owner_id: str = _utils.unspecified,
         splash: bytes = _utils.unspecified,
         system_channel_id: str = _utils.unspecified,
         reason: str = _utils.unspecified,
     ) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Edits a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to be edited.
+            name:
+                The new name string.
+            region:
+                The voice region ID for new guild. You can use `list_voice_regions` to see which region IDs are available.
+            verification_level:
+                The verification level integer (0-5).
+            default_message_notifications:
+                The default notification level integer (0-1).
+            explicit_content_filter:
+                The explicit content filter integer (0-2).
+            afk_channel_id:
+                The ID for the AFK voice channel.
+            afk_timeout:
+                The AFK timeout period in seconds
+            icon:
+                The guild icon image in bytes form.
+            owner_id:
+                The ID of the new guild owner.
+            splash:
+                The new splash image in bytes form.
+            system_channel_id:
+                The ID of the new system channel.
+
+        Returns:
+            The edited guild object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isnt found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_GUILD` permission or are not in the guild.
+        """
+        payload = {}
+        _utils.put_if_specified(payload, "name", name)
+        _utils.put_if_specified(payload, "region", region)
+        _utils.put_if_specified(payload, "verification_level", verification_level)
+        _utils.put_if_specified(payload, "default_message_notifications", default_message_notifications)
+        _utils.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
+        _utils.put_if_specified(payload, "afk_channel_id", afk_channel_id)
+        _utils.put_if_specified(payload, "afk_timeout", afk_timeout)
+        _utils.put_if_specified(payload, "icon", icon)
+        _utils.put_if_specified(payload, "owner_id", owner_id)
+        _utils.put_if_specified(payload, "splash", splash)
+        _utils.put_if_specified(payload, "system_channel_id", system_channel_id)
+        return await self.request(PATCH, "/guilds/{guild_id}", guild_id=guild_id, json=payload, reason=reason)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def delete_guild(self, guild_id: str) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Permanently deletes the given guild. You must be owner.
+
+        Args:
+            guild_id:
+                The ID of the guild to be deleted.
+
+        Returns:
+            None.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you're not the guild owner.
+        """
+        return await self.request(DELETE, "/guilds/{guild_id}", guild_id=guild_id)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def get_guild_channels(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets all the channels for a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to get the channels from.
+
+        Returns:
+            A list of channel objects.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you're not in the guild.
+        """
+        return await self.request(GET, "/guilds/{guild_id}/channels", guild_id=guild_id)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def create_guild_channel(
@@ -1030,7 +1167,56 @@ class HTTPClient(base.BaseHTTPClient):
         nsfw: bool = _utils.unspecified,
         reason: str = _utils.unspecified,
     ) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Creates a channel in a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to create the channel in.
+            name:
+                The new channel name string (2-100 characters).
+            type:
+                The channel type integer (0-6).
+            topic:
+                The string for the channel topic (0-1024 characters).
+            bitrate:
+                The bitrate integer (in bits) for the voice channel, if applicable.
+            user_limit:
+                The maximum user count for the voice channel, if applicable.
+            rate_limit_per_user:
+                The seconds a user has to wait before posting another message (0-21600).
+                Having the `MANAGE_MESSAGES` or `MANAGE_CHANNELS` permissions gives you immunity.
+            position:
+                The sorting position for the channel.
+            permission_overwrites:
+                A list of overwrite objects to apply to the channel.
+            parent_id:
+                The ID of the parent category/
+            nsfw:
+                Marks the channel as NSFW if `True`.
+
+        Returns:
+            The newly created channel object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_CHANNEL` permision or are not in the target guild or are not in the guild.
+            hikari.errors.BadRequest:
+                If you ommit the `name` argument.
+        """
+        payload = {"name": name}
+        _utils.put_if_specified(payload, "type", type_)
+        _utils.put_if_specified(payload, "topic", topic)
+        _utils.put_if_specified(payload, "bitrate", bitrate)
+        _utils.put_if_specified(payload, "user_limit", user_limit)
+        _utils.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user)
+        _utils.put_if_specified(payload, "position", position)
+        _utils.put_if_specified(payload, "permission_overwrites", permission_overwrites)
+        _utils.put_if_specified(payload, "parent_id", parent_id)
+        _utils.put_if_specified(payload, "nsfw", nsfw)
+        return await self.request(POST, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload, reason=reason)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def modify_guild_channel_positions(
@@ -1040,17 +1226,79 @@ class HTTPClient(base.BaseHTTPClient):
         *channels: typing.Tuple[str, int],
         reason: str = _utils.unspecified,
     ) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Edits the position of two or more given channels.
+
+        Args:
+            guild_id:
+                The ID of the guild in which to edit the channels.
+            channel/channels:
+                At least two tuples with channel IDs and positions. # TODO: make line this better
+
+        Returns:
+            None.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or any of the channels aren't found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_CHANNELS` permission or are not a member of said guild or are not in the guild.
+            hikari.errors.BadRequest:
+                If you provide anything other than the `id` and `position` fields for the channels.
+        """
+        payload = [{"id": ch[0], "position": ch[1]} for ch in (channel, *channels)]
+        return await self.request(PATCH, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload, reason=reason)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def get_guild_member(self, guild_id: str, user_id: str) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets a given guild member.
+
+        Args:
+            guild_id:
+                The ID of the guild to get the member from.
+            user_id:
+                The ID of the member to get.
+
+        Returns:
+            The requested member object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or the member aren't found or are not in the guild.
+        """
+        return await self.request(GET, "/guilds/{guild_id}/members/{user_id}", guild_id=guild_id, user_id=user_id)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def list_guild_members(
         self, guild_id: str, *, limit: int = _utils.unspecified, after: str = _utils.unspecified
     ) -> typing.List[_utils.DiscordObject]:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Lists all members of a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to get the members from.
+            limit:
+                The maximum number of members to return (1-1000).
+            after:
+                The highest ID in the previous page.  # TODO: Not sure what this means...
+
+        Returns:
+            A list of member objects.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you are not in the guild.
+            hikari.errors.BadRequest:
+                If you provide invalid values for the `limit` and `after` fields or are not in the guild.
+        """
+        payload = {}
+        _utils.put_if_specified(payload, "limit", limit)
+        _utils.put_if_specified(payload, "after", after)
+        return await self.request(GET, "/guilds/{guild_id}/members", guild_id=guild_id, json=payload)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def modify_guild_member(
@@ -1065,37 +1313,209 @@ class HTTPClient(base.BaseHTTPClient):
         channel_id: typing.Optional[str] = _utils.unspecified,
         reason: str = _utils.unspecified,
     ) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Edits a member of a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to edit the member from.
+            user_id:
+                The ID of the member to edit.
+            nick:
+                The new nickname string.
+            roles:
+                A list of role IDs the member should have.
+            mute:
+                Whether the user should be muted in the voice channel or not, if applicable.
+            deaf:
+                Whether the user should be deafen in the voice channel or not, if applicable.
+            channel_id:
+                The ID of the channel to move the member to, if applicable. Pass None to disconnect the user.
+            
+        Returns:
+            None.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild, user, channel or any of the roles aren't found.
+            hikari.errors.Forbidden:
+                If you lack any of the applicable permissions 
+                (`MANAGE_NICKNAMES`, `MANAGE_ROLES`, `MUTE_MEMBERS`, `DEAFEN_MEMBERS` or `MOVE_MEMBERS`).
+                Note that to move a member you must also have permission to connect to the end channel.
+                This will also be raised if you're not in the guild.
+            hikari.errors.BadRequest:
+                If you pass `mute`, `deaf` or `channel_id` while the member isn't connected to a voice channel.
+        """
+        payload = {}
+        _utils.put_if_specified(payload, "nick", nick)
+        _utils.put_if_specified(payload, "roles", roles)
+        _utils.put_if_specified(payload, "mute", mute)
+        _utils.put_if_specified(payload, "deaf", deaf)
+        _utils.put_if_specified(payload, "channel_id", channel_id)
+        return await self.request(
+            PATCH,
+            "/guilds/{guild_id}/members/{user_id}",
+            guild_id=guild_id,
+            user_id=user_id,
+            json=payload,
+            reason=reason,
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def modify_current_user_nick(
         self, guild_id: str, nick: typing.Optional[str], *, reason: str = _utils.unspecified
     ) -> str:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Edits the current user's nick for a given guild.
+
+        Args:
+            guild_id:
+                The ID of th guild you want to change the nick on.
+            nick:
+                The new nick string.
+
+        Returns:
+            The new nick.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you lack the `CHANGE_NICKNAME` permission or are not in the guild.
+        """
+        return await self.request(
+            PATCH, "/guilds/{guild_id}/members/@me/nick", guild_id=guild_id, json={"nick": nick}, reason=reason
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def add_guild_member_role(
         self, guild_id: str, user_id: str, role_id: str, *, reason: str = _utils.unspecified
     ) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Adds a role to a given member.
+
+        Args:
+            guild_id:
+                The ID of the guild the member belongs to.
+            user_id:
+                The ID of the member you want to add the role to.
+            role_id:
+                The ID of the role you want to add.
+
+        Returns:
+            None.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild, member or role aren't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_ROLES` permission or are not in the guild.
+        """
+        return await self.request(
+            PUT,
+            "/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
+            guild_id=guild_id,
+            user_id=user_id,
+            role_id=role_id,
+            reason=reason,
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def remove_guild_member_role(
         self, guild_id: str, user_id: str, role_id: str, *, reason: str = _utils.unspecified
     ) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Removed a role from a given member.
+
+        Args:
+            guild_id:
+                The ID of the guild the member belongs to.
+            user_id:
+                The ID of the member you want to remove the role from.
+            role_id:
+                The ID of the role you want to remove.
+
+        Returns:
+            None.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild, member or role aren't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_ROLES` permission or are not in the guild.
+        """
+        return await self.request(
+            DELETE,
+            "/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
+            guild_id=guild_id,
+            user_id=user_id,
+            role_id=role_id,
+            reason=reason,
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def remove_guild_member(self, guild_id: str, user_id: str, *, reason: str = _utils.unspecified) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Kicks a user from a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild the member belongs to.
+            user_id:
+                The ID of the member you want to kick.
+
+        Returns:
+            None.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or member aren't found.
+            hikari.errors.Forbidden:
+                If you lack the `KICK_MEMBERS` permission or are not in the guild.
+        """
+        return await self.request(
+            DELETE, "/guilds/{guild_id}/members/{user_id}", guild_id=guild_id, user_id=user_id, reason=reason
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def get_guild_bans(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets the bans for a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild you want to get the bans from.
+
+        Returns:
+            A list of ban objects.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you lack the `BAN_MEMBERS` permission or are not in the guild.
+        """
+        return await self.request(GET, "/guilds/{guild_id}/bans", guild_id=guild_id)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def get_guild_ban(self, guild_id: str, user_id: str) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets a ban from a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild you want to get the bans from.
+
+        Returns:
+            A ban object for the requested user.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or the user aren't found, or if the user isn't banned.
+            hikari.errors.Forbidden:
+                If you lack the `BAN_MEMBERS` permission or are not in the guild.
+        """
+        return await self.request(GET, "/guilds/{guild_id}/bans/{user_id}", guild_id=guild_id, user_id=user_id)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def create_guild_ban(
@@ -1106,15 +1526,72 @@ class HTTPClient(base.BaseHTTPClient):
         delete_message_days: int = _utils.unspecified,
         reason: str = _utils.unspecified,  # Note: this should NOT be passed in the reason field like elsewhere
     ) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Bans a user from a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild the member belongs to.
+            user_id:
+                The ID of the member you want to ban.
+
+        Returns:
+            None.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or member aren't found.
+            hikari.errors.Forbidden:
+                If you lack the `BAN_MEMBERS` permission or are not in the guild.
+        """
+        query = {}
+        _utils.put_if_specified(query, "delete_message_days", delete_message_days)
+        _utils.put_if_specified(query, "reason", reason)
+        return await self.request(
+            PUT, "/guilds/{guild_id}/bans/{user_id}", guild_id=guild_id, user_id=user_id, query=query
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def remove_guild_ban(self, guild_id: str, user_id: str, *, reason: str = _utils.unspecified) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Unbans a user from a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild the member belongs to.
+            user_id:
+                The ID of the member you want to unban.
+
+        Returns:
+            None.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or member aren't found.
+            hikari.errors.Forbidden:
+                If you lack the `BAN_MEMBERS` permission or are not a in the guild.
+        """
+        return await self.request(DELETE, "/guilds/{guild_id}/bans/{user_id}", guild_id=guild_id, user_id=user_id, reason=reason)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def get_guild_roles(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets the roles for a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild you want to get the roles from.
+
+        Returns:
+            A list of role objects.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you're not in the guild.
+        """
+        return await self.request(GET, "/guilds/{guild_id}/roles", guild_id=guild_id)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def create_guild_role(
@@ -1128,40 +1605,291 @@ class HTTPClient(base.BaseHTTPClient):
         mentionable: bool = _utils.unspecified,
         reason: str = _utils.unspecified,
     ) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        payload = {}
+        _utils.put_if_specified(payload, "name", name)
+        _utils.put_if_specified(payload, "permissions", permissions)
+        _utils.put_if_specified(payload, "color", color)
+        _utils.put_if_specified(payload, "hoist", hoist)
+        _utils.put_if_specified(payload, "mentionable", mentionable)
+        """
+        Creates a new role for a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild you want to create the role on.
+            name:
+                The new role name string.
+            permissions:
+                The permissions integer for the role.
+            color:
+                The color for the new role.
+            hoist:
+                Whether the role should hoist or not.
+            mentionable:
+                Wheather the role should be pingable or not.
+
+        Returns:
+            The newly created role object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_ROLES` permission or you're not in the guild.
+            hikari.errors.BadRequest:
+                If you provide invalid values for the role attributes.
+        """
+        return await self.request(POST, "/guilds/{guild_id}/roles", guild_id=guild_id, json=payload, reason=reason)
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def modify_guild_role_positions(
+        self,
+        guild_id: str,
+        role: typing.Tuple[str, int],
+        *roles: typing.Tuple[str, int],
+        reason: str = _utils.unspecified,
+    ) -> None:
+        """
+        Edits the position of two or more roles in a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild the roles belong to.
+            role/roles:
+                One or more tuples containing the ID and new position of the affected roles.
+
+        Returns:
+            A list of all the guild roles.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or any of the roles aren't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_ROLES` permission or you're not in the guild.
+            hikari.errors.BadRequest:
+                If you provide invalid values for the `position` fields.
+        """
+        payload = [{"id": r[0], "position": r[1]} for r in (role, *roles)]
+        return await self.request(PATCH, "/guilds/{guild_id}/roles", guild_id=guild_id, json=payload, reason=reason)
+
+    @_utils.link_developer_portal(_utils.APIResource.GUILD)
+    async def modify_guild_role(
+        self,
+        guild_id: str,
+        role_id: str,
+        *,
+        name: str = _utils.unspecified,
+        permissions: int = _utils.unspecified,
+        color: int = _utils.unspecified,
+        hoist: bool = _utils.unspecified,
+        mentionable: bool = _utils.unspecified,
+        reason: str = _utils.unspecified,
+    ) -> None:
+        """
+        Edits a role in a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild the role belong to.
+            role_id:
+                The ID of the role you want to edit.
+            name:
+                THe new role's name string.
+            permissions:
+                The new permissions integer for the role.
+            color:
+                The new color for the new role.
+            hoist:
+                Whether the role should hoist or not.
+            mentionable:
+                Wheather the role should be pingable or not.
+
+        Returns:
+            The edited role object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or role aren't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_ROLES` permission or you're not in the guild.
+            hikari.errors.BadRequest:
+                If you provide invalid values for the role attributes.
+        """
+        payload = {}
+        _utils.put_if_specified(payload, "name", name)
+        _utils.put_if_specified(payload, "permissions", permissions)
+        _utils.put_if_specified(payload, "color", color)
+        _utils.put_if_specified(payload, "hoist", hoist)
+        _utils.put_if_specified(payload, "mentionable", mentionable)
+        return await self.request(
+            PATCH, "/guilds/{guild_id}/roles/{role_id}", guild_id=guild_id, role_id=role_id, json=payload, reason=reason
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def delete_guild_role(self, guild_id: str, role_id: str, *, reason: str = _utils.unspecified) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Deletes a role from a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild you want to remove the role from.
+            role_id:
+                The ID of the role you want to delete.
+
+        Returns:
+            None.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or the role aren't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_ROLES` permisssion or are not in the guild.
+        """
+        return await self.request(
+            DELETE, "/guilds/{guild_id}/roles/{role_id}", guild_id=guild_id, role_id=role_id, reason=reason
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def get_guild_prune_count(self, guild_id: str, days: int) -> int:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets the estimated prune count for a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild you want to get the count for.
+            days:
+                The number of days to count prune for (at least 1).
+
+        Returns:
+            A dict containing a `pruned` key which holds the estimated prune count.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you lack the `KICK_MEMBERS` or you are not in the guild.
+            hikari.errors.BadRequest:
+                If you pass an invalid ammount of days.
+        """
+        return await self.request(GET, "/guilds/{guild_id}/prune", guild_id=guild_id, query={"days": days})
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def begin_guild_prune(
         self, guild_id: str, days: int, compute_prune_count: bool = False, reason: str = _utils.unspecified
     ) -> typing.Optional[int]:
-        # NOTE: they politely ask to not call compute_prune_count unless necessary.
-        raise NotImplementedError  # TODO: implement this
+        """
+        Prunes members of a given guild based on the number of inative days.
+
+        Args:
+            guild_id:
+                The ID of the guild you want to prune member of.
+            days:
+                The number of inactivity days you want to use as filter.
+            compute_prune_count:
+                Whether a count of pruned members is returned or not. Discouraged for large guilds.
+
+        Returns:
+            Either None or an object containing a `pruned` key which holds the pruned member count.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found:
+            hikari.errors.Forbidden:
+                If you lack the `KICK_MEMBER` permission or are not in the guild.
+            hikari.errors.BadRequest:
+                If you provide invalid values for the `days` and `compute_prune_count` fields.
+        """
+        query = {"days": days, "compute_prune_count": compute_prune_count}
+        return await self.request(POST, "/guilds/{guild_id}/prune", guild_id=guild_id, query=query, reason=reason)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def get_guild_voice_regions(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets the voice regions for a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to get the voice regions for.
+
+        Returns:
+            A list of voice region objects.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found:
+            hikari.errors.Forbidden:
+                If you are not in the guild.
+        """
+        return await self.request(GET, "/guilds/{guild_id}/regions", guild_id=guild_id)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def get_guild_invites(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets the invites for a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to get the invites for.
+
+        Returns:
+            A list of invite objects (with metadata).
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_GUILD` permission or are not in the guild.
+        """
+        return await self.request(GET, "/guilds/{guild_id}/invites", guild_id=guild_id)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def get_guild_integrations(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets the integrations for a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to get the integrations for.
+
+        Returns:
+            A list of integration objects.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_GUILD` permission or are not in the guild.
+        """
+        return await self.request(GET, "/guilds/{guild_id}/integrations", guild_id=guild_id)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def create_guild_integration(
         self, guild_id: str, type_: str, integration_id: str, reason: str = _utils.unspecified
     ) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Creates an integrations for a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to create the integrations in.
+            type_:
+                The integration type string (e.g. "twitch").
+            integration_id:
+                The ID for the new integration.
+
+        Returns:
+            The newly created integration object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_GUILD` permission or are not in the guild.
+        """
+        payload = {"type": type_, "id": integration_id}
+        return await self.request(
+            POST, "/guilds/{guild_id}/integrations", guild_id=guild_id, json=payload, reason=reason
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def modify_guild_integration(
@@ -1174,30 +1902,163 @@ class HTTPClient(base.BaseHTTPClient):
         enable_emoticons: bool = _utils.unspecified,
         reason: str = _utils.unspecified,
     ) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Edits an integrations for a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to which the integration belongs to.
+            expire_behaviour:
+                The behaviour for when an integration subscription lapses.
+            expire_grace_period:
+                Time interval in seconds in which the integration will ingore lapsed subscriptions.
+            enable_emoticons:
+                Whether emoticons should be synced for this integration.
+
+        Returns:
+            None.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or the integration aren't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_GUILD` permission or are not in the guild.
+        """
+        payload = {
+            "expire_behaviour": expire_behaviour,
+            "expire_grace_period": expire_grace_period,
+            "enable_emoticons": enable_emoticons,
+        }
+        return await self.request(
+            PATCH,
+            "/guilds/{guild_id}/integrations/{integration_id}",
+            guild_id=guild_id,
+            integration_id=integration_id,
+            json=payload,
+            reason=reason,
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def delete_guild_integration(
         self, guild_id: str, integration_id: str, *, reason: str = _utils.unspecified
     ) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Deletes an integration for the given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild from which to delete an integration.
+            integration_id:
+                The ID of the integration to delete.
+
+        Returns:
+            None.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or the integration aren't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_GUILD` permission or are not in the guild.
+        """
+        return await self.request(
+            DELETE,
+            "/guilds/{guild_id}/integrations/{integration_id}",
+            guild_id=guild_id,
+            integration_id=integration_id,
+            reason=reason,
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def sync_guild_integration(self, guild_id: str, integration_id: str) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Syncs the given integration.
+
+        Args:
+            guild_id:
+                The ID of the guild to which the integration belongs to.
+            integration_id:
+                The ID of the integration to sync.
+
+        Returns:
+            None.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or the integration aren't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_GUILD` permission or are not in the guild.
+        """
+        return await self.request(
+            POST,
+            "/guilds/{guild_id}/integrations/{integration_id}/sync",
+            guild_id=guild_id,
+            integration_id=integration_id,
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def get_guild_embed(self, guild_id: str) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets the embed for a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to get the embed for.
+
+        Returns:
+            A guild embed object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_GUILD` permission or are not in the guild.
+        """
+        return await self.request(GET, "/guilds/{guild_id}/embed", guild_id=guild_id)
 
     #: TODO: does this take a reason header?
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
-    async def modify_guild_embed(self, guild_id: str, embed: _utils.DiscordObject) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+    async def modify_guild_embed(
+        self, guild_id: str, embed: _utils.DiscordObject, reason: str = _utils.unspecified
+    ) -> _utils.DiscordObject:
+        """
+        Edits the embed for a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to edit the embed for.
+            embed:
+                The new embed object to be set.
+
+        Returns:
+            The updated embed object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_GUILD` permission or are not in the guild.
+        """
+        return await self.request(PATCH, "/guilds/{guild_id}/embed", guild_id=guild_id, json=embed, reason=reason)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def get_guild_vanity_url(self, guild_id: str) -> str:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets the vanity URL for a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to get the vanity URL for.
+
+        Returns:
+            A partial invite object containing the vanity URL in the `code` field.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_GUILD` permission or are not in the guild.
+        """
+        return await self.request(GET, "/guilds/{guild_id}/vanity-url", guild_id=guild_id)
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     def get_guild_widget_image(self, guild_id: str, style: str) -> str:
