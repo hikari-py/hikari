@@ -50,11 +50,7 @@ async def test_modify_guild_no_kwargs(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.modify_guild("424242")
     http_client.request.assert_awaited_once_with(
-        "patch",
-        "/guilds/{guild_id}",
-        guild_id="424242",
-        json={},
-        reason=_utils.unspecified,
+        "patch", "/guilds/{guild_id}", guild_id="424242", json={}, reason=_utils.unspecified
     )
 
 

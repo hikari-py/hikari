@@ -1571,7 +1571,9 @@ class HTTPClient(base.BaseHTTPClient):
             hikari.errors.Forbidden:
                 If you lack the `BAN_MEMBERS` permission or are not a in the guild.
         """
-        return await self.request(DELETE, "/guilds/{guild_id}/bans/{user_id}", guild_id=guild_id, user_id=user_id, reason=reason)
+        return await self.request(
+            DELETE, "/guilds/{guild_id}/bans/{user_id}", guild_id=guild_id, user_id=user_id, reason=reason
+        )
 
     @_utils.link_developer_portal(_utils.APIResource.GUILD)
     async def get_guild_roles(self, guild_id: str) -> typing.List[_utils.DiscordObject]:
