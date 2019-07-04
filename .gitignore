@@ -26,8 +26,8 @@ build/
 dist/
 *.egg-info/
 
-# Tox-generated files
-.tox/
+# Tox/Nox-generated files
+.[nt]ox/
 
 # Coverage-generated files
 .coverage
