@@ -1,7 +1,13 @@
-# hikari
+# hikari core
 
-A Python Discord API framework for CPython 3.6, CPython 3.7, CPython 3.8, and PyPy 3.6. Designed for ease of use,
+A base Python Discord API framework for CPython 3.6, CPython 3.7, CPython 3.8, and PyPy 3.6. Designed for ease of use,
 customization, and sane defaults.
+
+This API is designed to provide the pure-python interface to the RESTful Discord API and the Gateway. This will provide
+a set of basic models and abstractions that can be used to build a basic Discord bot in Python with asyncio.
+
+It will __not__ provide a bot framework (e.g. basic IoC functionality, command routing, etc). This will be released as 
+a separate bundle once this package is completed.
 
 ----
 
