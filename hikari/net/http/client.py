@@ -2147,29 +2147,112 @@ class HTTPClient(base.BaseHTTPClient):
 
     @_utils.link_developer_portal(_utils.APIResource.USER)
     async def get_current_user(self) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets the currently the user that is represented by token given to the client.
+
+        Returns:
+            The current user object.
+        """
+        return await self.request(GET, "/users/@me")
 
     @_utils.link_developer_portal(_utils.APIResource.USER)
     async def get_user(self, user_id: str) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Gets a given user.
+
+        Args:
+            user_id:
+                The ID of the user to get.
+
+        Returns:
+            The requested user object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the user isn't found.
+        """
+        return await self.request(GET, "/users/{user_id}", user_id=user_id)
 
     @_utils.link_developer_portal(_utils.APIResource.USER)
     async def modify_current_user(
         self, *, username: str = _utils.unspecified, avatar: bytes = _utils.unspecified
     ) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Edtis the current user. If any arguments are unspecified, then that subject is not changed on Discord.
+
+        Args:
+            username:
+                The new username string.
+            avatar:
+                The new avatar image in bytes form.
+
+        Returns:
+            The updated user object.
+
+        Raises:
+            hikari.errors.BadRequest:
+                If you pass username longer than the limit (2-32) or an invalid image.
+        """
+        payload = {}
+        _utils.put_if_specified(payload, "username", username)
+        _utils.put_if_specified(payload, "avatar", avatar)
+        return await self.request(PATCH, "/users/@me", json=payload)
 
     @_utils.link_developer_portal(_utils.APIResource.USER)
-    async def get_current_user_guilds(self) -> typing.List[_utils.DiscordObject]:
-        raise NotImplementedError  # TODO: implement this
+    async def get_current_user_guilds(
+        self, *, before: str = _utils.unspecified, after: str = _utils.unspecified, limit: int = _utils.unspecified
+    ) -> typing.List[_utils.DiscordObject]:
+        """
+        Gets the guilds the current user is in.
+
+        Returns:
+            A list of partial guild objects.
+
+        Raises:
+            hikari.errors.BadRequest:
+                If you pass both `before` and `after`.
+        """
+        query = {}
+        _utils.put_if_specified(query, "before", before)
+        _utils.put_if_specified(query, "after", after)
+        _utils.put_if_specified(query, "limit", limit)
+        return await self.request(GET, "/users/@me/guilds", query=query)
 
     @_utils.link_developer_portal(_utils.APIResource.USER)
     async def leave_guild(self, guild_id: str) -> None:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Makes the current user leave a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild to leave.
+
+        Returns:
+            None.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild isn't found.
+        """
+        return await self.request(DELETE, "/users/@me/guilds/{guild_id}", guild_id=guild_id)
 
     @_utils.link_developer_portal(_utils.APIResource.USER)
     async def create_dm(self, recipient_id: str) -> _utils.DiscordObject:
-        raise NotImplementedError  # TODO: implement this
+        """
+        Creates a new DM channel with a given user.
+
+        Args:
+            recipient_id:
+                The ID of the user to create the new DM channel with.
+
+        Returns:
+            The newly created DM channel object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the recipient isn't found.
+        """
+        return await self.request(POST, "/users/@me/channels", json={"recipient_id": recipient_id})
 
     @_utils.link_developer_portal(_utils.APIResource.VOICE)
     async def list_voice_regions(self) -> typing.List[_utils.DiscordObject]:
