@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 test_args = {
@@ -47,7 +47,7 @@ async def test_create_guild_channel_no_kwars(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.create_guild_channel("424242", "asdf")
     http_client.request.assert_awaited_once_with(
-        "post", "/guilds/{guild_id}/channels", guild_id="424242", json={"name": "asdf"}, reason=_utils.unspecified
+        "post", "/guilds/{guild_id}/channels", guild_id="424242", json={"name": "asdf"}, reason=utils.UNSPECIFIED
     )
 
 
@@ -60,7 +60,7 @@ async def test_create_guild_channel_all_kwars(http_client):
         "/guilds/{guild_id}/channels",
         guild_id="424242",
         json=dict(name="asdf", type=1, **test_args),
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 

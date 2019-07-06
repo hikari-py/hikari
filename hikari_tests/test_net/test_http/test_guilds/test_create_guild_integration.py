@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -39,7 +39,7 @@ async def test_create_guild_integration(http_client):
         "/guilds/{guild_id}/integrations",
         guild_id="424242",
         json={"type": "twitch", "id": "696969"},
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 

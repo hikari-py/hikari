@@ -19,13 +19,13 @@
 """
 Rate-limiting adherence logic.
 """
-from hikari import _utils
 
 __all__ = ("TimedLatchBucket", "TimedTokenBucket", "VariableTokenBucket")
 
 import collections
 import time
 
+from hikari import utils
 from hikari.compat import asyncio
 from hikari.compat import contextlib
 from hikari.compat import typing
@@ -55,14 +55,14 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
         # We repeatedly push to the rear and pop from the front, and iterate. We don't need random access, and O(k)
         # pushes and shifts are more desirable given this is a doubly linked list underneath.
         self._queue: typing.Deque[asyncio.Future] = collections.deque()
-        self.loop = _utils.assert_not_none(loop)
+        self.loop = utils.assert_not_none(loop)
 
     @property
     def is_limiting(self) -> bool:
         """True if the rate limit is preventing any requests for now, or False if it is yet to lock down."""
         return not self._remaining
 
-    async def acquire(self, on_rate_limit: typing.Callable[[], None] = None, *args, **kwargs) -> None:
+    async def acquire(self, on_rate_limit: typing.Callable[[], None] = None, **kwargs) -> None:
         """
         Acquire a slice of time in this bucket. This may return immediately, or it may wait for a slot to become
         available.
@@ -70,15 +70,13 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
         Args:
             on_rate_limit:
                 Optional callback to invoke if we are being rate-limited.
-            *args:
-                arguments to call the callback with.
             **kwargs:
                 kwargs to call the callback with.
         """
         future = self._enqueue()
         try:
             if not self._maybe_awaken_and_reset(future) and on_rate_limit is not None:
-                on_rate_limit(*args, **kwargs)
+                on_rate_limit(**kwargs)
             await future
         finally:
             future.cancel()
@@ -120,11 +118,14 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
             delay = max(0.0, self.reset_at - now)
             self.loop.call_later(delay, self._maybe_awaken_and_reset, this_future)
             return False
-        else:
-            return True
+        return True
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "TimedTokenBucket":
         await self.acquire()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        pass
 
 
 class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
@@ -158,14 +159,14 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
         # We repeatedly push to the rear and pop from the front, and iterate. We don't need random access, and O(k)
         # pushes and shifts are more desirable given this is a doubly linked list underneath.
         self._queue: typing.Deque[asyncio.Future] = collections.deque()
-        self.loop = _utils.assert_not_none(loop)
+        self.loop = utils.assert_not_none(loop)
 
     @property
     def is_limiting(self) -> bool:
         """True if the rate limit is preventing any requests for now, or False if it is yet to lock down."""
         return not self._remaining
 
-    async def acquire(self, on_rate_limit: typing.Callable[[], None] = None, *args, **kwargs) -> None:
+    async def acquire(self, on_rate_limit: typing.Callable[[], None] = None, **kwargs) -> None:
         """
         Acquire a slice of time in this bucket. This may return immediately, or it may wait for a slot to become
         available.
@@ -173,15 +174,13 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
         Args:
             on_rate_limit:
                 Optional callback to invoke if we are being rate-limited.
-            *args:
-                arguments to call the callback with.
             **kwargs:
                 kwargs to call the callback with.
         """
         future = self._enqueue()
         try:
             if not self._maybe_awaken_and_reset(future) and on_rate_limit is not None:
-                on_rate_limit(*args, **kwargs)
+                on_rate_limit(**kwargs)
             await future
         finally:
             future.cancel()
@@ -223,8 +222,7 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
             delay = max(0.0, self._reset_at - now)
             self.loop.call_later(delay, self._maybe_awaken_and_reset, this_future)
             return False
-        else:
-            return True
+        return True
 
     def update(self, total: int, remaining: int, now: float, reset_at: float, is_nested_call: bool = False):
         """
@@ -254,8 +252,12 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
         if should_reassess and not is_nested_call:
             self._reassess()
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "VariableTokenBucket":
         await self.acquire()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        pass
 
 
 class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
@@ -274,40 +276,52 @@ class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
     def __init__(self, loop: asyncio.AbstractEventLoop) -> None:
         self._locked = False
         self._unlock_event = asyncio.Event(loop=loop)
-        self.loop = _utils.assert_not_none(loop)
+        self.loop = utils.assert_not_none(loop)
 
     @property
     def is_limiting(self) -> bool:
         """True if the latch is preventing any requests for now, or False if it is yet to lock down."""
         return self._locked
 
-    async def acquire(self, if_locked: typing.Callable[..., None] = None, *args, **kwargs):
+    async def acquire(self, if_locked: typing.Callable[..., None] = None, **kwargs):
         """
         Either continue silently if the latch is unlocked, or wait for it to unlock first if locked.
 
         Args:
             if_locked:
                 callback to invoke when the latch is locked.
-            *args:
-                arguments to call the callback with.
             **kwargs:
                 kwargs to call the callback with.
 
         """
         if self._locked:
             if if_locked is not None:
-                if_locked(*args, **kwargs)
+                if_locked(**kwargs)
             await self._unlock_event.wait()
 
     def lock(self, unlock_after: float) -> None:
+        """
+        Acquire the lock on the given TimedLatchBucket, and request that it is revoked after a given period of time.
+
+        Args:
+            unlock_after:
+                The time in seconds to remove the lock after.
+        """
         self._locked = True
         self._unlock_event.clear()
         task = asyncio.shield(asyncio.sleep(unlock_after), loop=self.loop)
         task.add_done_callback(lambda *_: self.unlock())
 
     def unlock(self) -> None:
+        """
+        Manually unlock the TimedLatchBucket.
+        """
         self._locked = False
         self._unlock_event.set()
 
-    async def __aenter__(self) -> None:
+    async def __aenter__(self) -> "TimedLatchBucket":
         await self.acquire()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass

@@ -109,9 +109,9 @@ async def get_debug_data() -> DebugData:
     airport_match = re.search(r"<td.*?>Airport:</td>\s*?<td>(.*?)</td>", content, re.I | re.M)
     country_match = re.search(r"<td.*?>Country:</td>\s*?<td>(.*?)</td>", content, re.I | re.M)
 
-    location = location_match and location_match.group(1).strip() or "Unknown"
-    airport = airport_match and airport_match.group(1).strip() or "Unknown"
-    country = country_match and country_match.group(1).strip() or "Unknown"
+    location = location_match.group(1).strip() if location_match else "Unknown"
+    airport = airport_match.group(1).strip() if airport_match else "Unknown"
+    country = country_match.group(1).strip() if country_match else "Unknown"
 
     pairs["colo"] = DataCenter(pairs["colo"], location, airport, country)
     pairs["ts"] = datetime.datetime.fromtimestamp(float(pairs["ts"]), datetime.timezone.utc)

@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -40,7 +40,7 @@ async def test_edit_channel_permissions(http_client):
         channel_id="69",
         overwrite_id="420",
         json={"allow": 192, "deny": 168, "type": "member"},
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 

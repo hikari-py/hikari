@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 test_many_args = {"name": "asdf", "permissions": 404, "hoist": True}
 
@@ -41,7 +41,7 @@ async def test_modify_current_user_nick_to_string(http_client):
         "/guilds/{guild_id}/members/@me/nick",
         guild_id="424242",
         json={"nick": "asdf"},
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 
@@ -50,11 +50,7 @@ async def test_modify_current_user_nick_to_none(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.modify_current_user_nick("424242", None)
     http_client.request.assert_awaited_once_with(
-        "patch",
-        "/guilds/{guild_id}/members/@me/nick",
-        guild_id="424242",
-        json={"nick": None},
-        reason=_utils.unspecified,
+        "patch", "/guilds/{guild_id}/members/@me/nick", guild_id="424242", json={"nick": None}, reason=utils.UNSPECIFIED
     )
 
 

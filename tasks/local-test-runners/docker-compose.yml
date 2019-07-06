@@ -19,53 +19,59 @@ services:
   py36:
     build:
       context: ../..
-      dockerfile: .ci/local-test-runners/cpython3.6.dockerfile
+      dockerfile: tasks/local-test-runners/cpython3.6.dockerfile
     entrypoint: python -bbBm poetry run pytest hikari_tests
     volumes:
       - ../../hikari:/hikari:ro
       - ../../hikari_tests:/hikari_tests:ro
+      - ../../docs:/docs:rw
     restart: 'no'
 
   py37:
     build:
       context: ../..
-      dockerfile: .ci/local-test-runners/cpython3.7.dockerfile
+      dockerfile: tasks/local-test-runners/cpython3.7.dockerfile
     entrypoint: python -bbBm poetry run pytest hikari_tests
     volumes:
       - ../../hikari:/hikari:ro
       - ../../hikari_tests:/hikari_tests:ro
+      - ../../docs:/docs:rw
     restart: 'no'
 
   py38:
     build:
       context: ../..
-      dockerfile: .ci/local-test-runners/cpython3.8.dockerfile
+      dockerfile: tasks/local-test-runners/cpython3.8.dockerfile
     entrypoint: python -bbBm poetry run pytest hikari_tests
     volumes:
       - ../../hikari:/hikari:ro
       - ../../hikari_tests:/hikari_tests:ro
+      - ../../docs:/docs:rw
     restart: 'no'
 
   py39:
     build:
       context: ../..
-      dockerfile: .ci/local-test-runners/cpython3.9.dockerfile
+      dockerfile: tasks/local-test-runners/cpython3.9.dockerfile
     # entrypoint: python -bbBm pytest hikari_tests
     volumes:
       - ../../hikari:/hikari:ro
       - ../../hikari_tests:/hikari_tests:ro
+      - ../../docs:/docs:rw
     restart: 'no'
 
   pypy3:
     build:
       context: ../..
-      dockerfile: .ci/local-test-runners/pypy3.6.dockerfile
+      dockerfile: tasks/local-test-runners/pypy3.6.dockerfile
     entrypoint: pypy3 -bbBm poetry run pytest hikari_tests
     volumes:
       - ../../hikari:/hikari:ro
       - ../../hikari_tests:/hikari_tests:ro
+      - ../../docs:/docs:rw
     restart: 'no'
 
 volumes:
   hikari:
   hikari_tests:
+  docs:
