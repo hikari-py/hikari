@@ -33,12 +33,13 @@ TEST_PACKAGE = "hikari_tests"
 COVERAGE_RC = ".coveragerc"
 ARTIFACT_DIR = "public"
 DOCUMENTATION_DIR = "docs"
-CI_SCRIPT_DIR = ".ci"
+CI_SCRIPT_DIR = "tasks"
 SPHINX_OPTS = "-WTvvn"
 BLACK_PATHS = [MAIN_PACKAGE, TEST_PACKAGE, pathify(DOCUMENTATION_DIR, "conf.py"), __file__]
 PYTHON_TARGETS = ["python3.6", "python3.7", "python3.8", "python3.9", "pypy3"]
 BLACK_SHIM_PATH = pathify(CI_SCRIPT_DIR, "black.py")
 GENDOC_PATH = pathify(CI_SCRIPT_DIR, "gendoc.py")
+PYLINTRC = ".pylintrc"
 
 
 class PoetryNoxSession(sessions.Session):
@@ -103,6 +104,12 @@ def pytest(session: PoetryNoxSession) -> None:
         *session.posargs,
         TEST_PACKAGE,
     )
+
+
+@nox_session(reuse_venv=True)
+@using_poetry
+def pylint(session: PoetryNoxSession):
+    session.run("pylint", MAIN_PACKAGE, f"--rcfile={PYLINTRC}")
 
 
 @nox_session(reuse_venv=True)

@@ -21,7 +21,7 @@ A basic HTTP/Gateway client for a simple lightweight bot. This does not use any 
 information, and provides no command subsystem.
 """
 import logging
-from hikari._utils import ObjectProxy
+from hikari import utils
 
 from hikari.compat import asyncio
 from hikari.compat import typing
@@ -29,7 +29,7 @@ from hikari.net import debug
 from hikari.net import http
 from hikari.net import gateway
 
-DispatchFunction = typing.Callable[[str, ObjectProxy], typing.Awaitable[None]]
+DispatchFunction = typing.Callable[[str, utils.ObjectProxy], typing.Awaitable[None]]
 
 
 class BasicBot:
@@ -39,11 +39,11 @@ class BasicBot:
     event dispatching yourself.
 
     .. code-block::
+
         import logging
         import os
 
         from hikari.net import basic_bot
-
 
         logging.basicConfig(level='INFO')
 
@@ -61,6 +61,16 @@ class BasicBot:
 
         bot = basic_bot.BasicBot(os.environ["TOKEN"], dispatch_event)
         bot.run()
+
+    Args:
+        token:
+            The token to use for authentication.
+        dispatch:
+            A :attr:`DispatchFunction` to invoke when an event occurs.
+        loop:
+            The :class:`asyncio.AbstractEventLoop` to use for the event loop.
+        **http_kwargs:
+            Arguments to pass to the :class:`http.HTTPClient` constructor.
 
     """
 
@@ -81,10 +91,7 @@ class BasicBot:
 
         Args:
             **gateway_kwargs:
-                any additional arguments to pass to the :class:`GatewayCLient`
-
-        Returns:
-
+                any additional arguments to pass to the :class:`gateway.GatewayClient`
         """
         data = await debug.get_debug_data()
         self.logger.info("Your data center is %s", data.colo)
@@ -94,6 +101,14 @@ class BasicBot:
         await self.gateway.run()
 
     def run(self, **gateway_kwargs):
+        """
+        Run the basic bot.
+
+        Args:
+            **gateway_kwargs:
+                any additional arguments to pass to the :class:`gateway.GatewayClient`
+
+        """
         self.loop.run_until_complete(self.start(**gateway_kwargs))
 
     def _init_gateway(self, url, **gateway_kwargs):
@@ -102,8 +117,10 @@ class BasicBot:
         )
 
     async def _dispatch(self, event_name: str, payload: dict):
+        # pylint: disable=broad-except
         try:
             self.logger.info("Handling incoming event %s", event_name)
-            await self.dispatch(event_name, ObjectProxy(payload))
+            await self.dispatch(event_name, utils.ObjectProxy(payload))
         except Exception as ex:
             self.logger.exception("An exception occurred in your event handler", exc_info=ex)
+        # pylint: enable=broad-except

@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 test_many_args = {"name": "asdf", "permissions": 404, "hoist": True}
 
@@ -37,7 +37,7 @@ async def test_create_guild_role_no_kwargs(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.create_guild_role("424242")
     http_client.request.assert_awaited_once_with(
-        "post", "/guilds/{guild_id}/roles", guild_id="424242", json={}, reason=_utils.unspecified
+        "post", "/guilds/{guild_id}/roles", guild_id="424242", json={}, reason=utils.UNSPECIFIED
     )
 
 
@@ -46,7 +46,7 @@ async def test_create_guild_role_many_kwargs(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.create_guild_role("424242", **test_many_args)
     http_client.request.assert_awaited_once_with(
-        "post", "/guilds/{guild_id}/roles", guild_id="424242", json=test_many_args, reason=_utils.unspecified
+        "post", "/guilds/{guild_id}/roles", guild_id="424242", json=test_many_args, reason=utils.UNSPECIFIED
     )
 
 

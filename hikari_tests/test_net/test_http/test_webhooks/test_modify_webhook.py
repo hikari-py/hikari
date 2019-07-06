@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -39,7 +39,7 @@ async def test_modify_webhook(http_client):
         "/webhooks/{webhook_id}",
         webhook_id="424242",
         json={"name": "asdf", "avatar": b"", "channel_id": "696969"},
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 

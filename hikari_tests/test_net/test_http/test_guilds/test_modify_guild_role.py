@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 test_args = {"name": "asdf", "permissions": 404, "color": 101, "hoist": True, "mentionable": False}
 
@@ -42,7 +42,7 @@ async def test_modify_guild_role_no_kwargs(http_client):
         guild_id="424242",
         role_id="696969",
         json={},
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 
@@ -56,7 +56,7 @@ async def test_modify_guild_role_all_kwargs(http_client):
         guild_id="424242",
         role_id="696969",
         json=test_args,
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 
