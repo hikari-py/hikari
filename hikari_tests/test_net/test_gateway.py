@@ -352,8 +352,8 @@ async def test_send_identify(event_loop):
     gw._send_json = asynctest.CoroutineMock()
 
     with contextlib.ExitStack() as stack:
-        stack.enter_context(asynctest.patch("hikari._utils.python_version", new=lambda: "python3"))
-        stack.enter_context(asynctest.patch("hikari._utils.library_version", new=lambda: "vx.y.z"))
+        stack.enter_context(asynctest.patch("hikari.utils.python_version", new=lambda: "python3"))
+        stack.enter_context(asynctest.patch("hikari.utils.library_version", new=lambda: "vx.y.z"))
         stack.enter_context(asynctest.patch("platform.system", new=lambda: "leenuks"))
 
         await gw._send_identify()

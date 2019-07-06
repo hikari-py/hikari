@@ -34,7 +34,7 @@ import typing
 import aiohttp
 import dacite
 
-from hikari import _utils
+from hikari import utils
 
 _BASE_URI = "https://status.discordapp.com/api/v2"
 
@@ -200,7 +200,7 @@ def _parse(data, to):
         config = dacite.Config(
             type_hooks={
                 # pypi doesn't support datetime.datetime.fromisoformat, nor does python3.6
-                datetime.datetime: _utils.parse_iso_8601_datetime
+                datetime.datetime: utils.parse_iso_8601_datetime
             }
         )
         return dacite.from_dict(to, data, config=config)

@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -35,7 +35,7 @@ async def test_modify_guild_embed_all_args(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.modify_guild_embed("424242")
     http_client.request.assert_awaited_once_with(
-        "patch", "/guilds/{guild_id}/embed", guild_id="424242", json={}, reason=_utils.unspecified
+        "patch", "/guilds/{guild_id}/embed", guild_id="424242", json={}, reason=utils.UNSPECIFIED
     )
 
 
@@ -48,7 +48,7 @@ async def test_modify_guild_embed_all_args(http_client):
         "/guilds/{guild_id}/embed",
         guild_id="424242",
         json={"enabled": True, "channel_id": "696969"},
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 

@@ -47,7 +47,7 @@ variables:
   extends: .pytest
   before_script:
     - python -V
-    - apk add git
+    - apk add git gcc g++ make
     - pip install nox
 
 ###
@@ -101,9 +101,10 @@ verify:
   allow_failure: false
   image: python:3-alpine
   before_script:
+    - apk add git gcc g++ make
     - pip install nox
   script:
-    - nox -s black_check bandit
+    - nox -s bandit black_check pylint
   except:
     - master
     - staging
@@ -119,7 +120,7 @@ setup.py:
     GIT_STRATEGY: none
     PACKAGE_SLUG: git+${CI_PROJECT_URL}.git@${CI_COMMIT_REF_NAME}
   before_script:
-    - apk add git gcc make
+    - apk add git gcc make g++
     - pip install -U pip
     - python -V
     - echo "Testing setup.py for ${PACKAGE_SLUG}"
@@ -151,7 +152,7 @@ setup.py:
     - poetry build
     - poetry publish --username=$PYPI_USER --password=$PYPI_PASS --repository=hikarirepo
     - pip install requests
-    - python .ci/notify.py "${pep440_version} (${release})"
+    - python tasks/notify.py "${pep440_version} (${release})"
 
 ###
 ### HANDLE DEPLOYING TO OUR STAGING ENVIRONMENT ON test.pypi.org
@@ -244,3 +245,5 @@ pages:
     - schedules
   dependencies:
     - deploy-to-prod
+
+

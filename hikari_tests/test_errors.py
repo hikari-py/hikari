@@ -24,13 +24,13 @@ from http import HTTPStatus as HTTP
 import pytest
 
 from hikari import errors
-from hikari import _utils
+from hikari import utils
 from hikari.net.opcodes import GatewayClosure as GSE
 from hikari.net.opcodes import JSONErrorCode as JSON
 
 _LOGGER = logging.getLogger(__name__)
 
-res = _utils.Resource("http://you.local", "get", "/it/now")
+res = utils.Resource("http://you.local", "get", "/it/now")
 
 
 @pytest.mark.parametrize(
@@ -55,12 +55,3 @@ def test_error(ex):
         traceback.format_exception(type(ex), ex, ex.__traceback__)
         assert repr(ex) != ""
         assert str(ex) != ""
-
-
-@pytest.mark.parametrize("ex_t", [errors.HikariError, errors.DiscordError, errors.HTTPError], ids=lambda t: t.__name__)
-def test_cannot_initialize_base_exception(ex_t):
-    try:
-        ex_t()
-        assert False, "No error was raised"
-    except NotImplementedError:
-        pass
