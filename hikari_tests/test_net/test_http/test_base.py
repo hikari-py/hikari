@@ -29,8 +29,8 @@ import time
 import asynctest
 import pytest
 
-import hikari._utils
-from hikari import _utils
+import hikari.utils
+from hikari import utils
 from hikari import errors
 from hikari.net import opcodes
 from hikari.net import rates
@@ -96,7 +96,7 @@ def mock_http_connection(event_loop):
 
 @pytest.fixture
 def res():
-    return hikari._utils.Resource("http://test.lan", "get", "/foo/bar")
+    return hikari.utils.Resource("http://test.lan", "get", "/foo/bar")
 
 
 ########################################################################################################################
@@ -132,7 +132,7 @@ async def test_request_forwards_known_arguments_to_request_once(mock_http_connec
         channel_id="912000",
     )
 
-    res = _utils.Resource(
+    res = utils.Resource(
         mock_http_connection.base_uri,
         "get",
         "/foo/bar/{channel_id}",
@@ -200,7 +200,7 @@ async def test_reason_header_is_not_added_if_None_during_request(mock_http_conne
 @pytest.mark.asyncio
 async def test_reason_header_is_not_added_if_unspecified_during_request(mock_http_connection):
     mock_http_connection.session.request = asynctest.MagicMock(return_value=mock_http_connection.session.mock_response)
-    await mock_http_connection.request("get", "/foo/bar", reason=_utils.unspecified)
+    await mock_http_connection.request("get", "/foo/bar", reason=utils.UNSPECIFIED)
     args, kwargs = mock_http_connection.session.request.call_args
     headers = kwargs["headers"]
     assert "X-Audit-Log-Reason" not in headers
@@ -219,7 +219,7 @@ async def test_reason_header_is_added_if_provided_during_request(mock_http_conne
 async def test_request_once_calls_session_request_with_expected_arguments(mock_http_connection):
     mock_http_connection.session.request = asynctest.MagicMock(return_value=mock_http_connection.session.mock_response)
     path = "/foo/bar/{channel_id}"
-    res = _utils.Resource(mock_http_connection.base_uri, "get", path, channel_id="12321")
+    res = utils.Resource(mock_http_connection.base_uri, "get", path, channel_id="12321")
     headers = {
         "foo": "bar",
         "baz": "bork",
@@ -637,7 +637,7 @@ async def test_NO_CONTENT_response_with_no_body_present(mock_http_connection, re
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=None)
     mock_http_connection.session.mock_response.headers["Content-Type"] = None
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.NO_CONTENT)
-    res = hikari._utils.Resource("http://test.lan", "get", "/foo/bar")
+    res = hikari.utils.Resource("http://test.lan", "get", "/foo/bar")
     body = await mock_http_connection._request_once(retry=0, resource=res)
     assert not body
 

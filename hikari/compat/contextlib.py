@@ -23,18 +23,20 @@ Contextlib compatibility methods.
 This namespace contains the entirety of the :mod:`contextlib` module. Any members documented below are assumed to
 *override* the original implementation if it exists for your target platform implementation and Python version.
 """
+import abc
+
 # noinspection PyUnresolvedReferences
 from contextlib import *
 
 
 # Not implemented in Python3.6, this one will provide aenter and aexit by default if unspecified.
-class AbstractAsyncContextManager:
+class AbstractAsyncContextManager(abc.ABC):
     """An abstract base class for asynchronous context managers."""
-
     __slots__ = ()
 
     async def __aenter__(self):
         return self
 
+    @abc.abstractmethod
     async def __aexit__(self, exc_type, exc_value, traceback):
-        return None
+        ...

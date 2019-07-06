@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -35,7 +35,7 @@ async def test_delete_close_channel(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.delete_close_channel("12345")
     http_client.request.assert_awaited_once_with(
-        "delete", "/channels/{channel_id}", channel_id="12345", reason=_utils.unspecified
+        "delete", "/channels/{channel_id}", channel_id="12345", reason=utils.UNSPECIFIED
     )
 
 

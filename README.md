@@ -1,7 +1,13 @@
-# hikari
+# hikari core
 
-A Python Discord API framework for CPython 3.6, CPython 3.7, CPython 3.8, and PyPy 3.6. Designed for ease of use,
+A base Python Discord API framework for CPython 3.6, CPython 3.7, CPython 3.8, and PyPy 3.6. Designed for ease of use,
 customization, and sane defaults.
+
+This API is designed to provide the pure-python interface to the RESTful Discord API and the Gateway. This will provide
+a set of basic models and abstractions that can be used to build a basic Discord bot in Python with asyncio.
+
+It will __not__ provide a bot framework (e.g. basic IoC functionality, command routing, etc). This will be released as 
+a separate bundle once this package is completed.
 
 ----
 
@@ -44,21 +50,21 @@ Hikari uses [Pytest](https://docs.pytest.org/en/latest/) for all testing, and us
 listed inside the [pyproject.toml](pyproject.toml) to enable coverage and other helpful bits and pieces. Mocking is done
 using [asynctest](https://github.com/Martiusweb/asynctest) to allow mocking of coroutines easily. 
 
-#### Tox
+#### Nox
 
-This project uses [tox](https://tox.readthedocs.io/en/latest/) to automate several things in CI in such a way that you 
+This project uses [nox](https://nox.thea.codes/en/stable/) to automate several things in CI in such a way that you 
 can replicate running the pipelines locally. This is a great way of running your tests in the exact same sandbox that is
 used during our CI pipelines!
 
-To run the pipeline, ensure you have an appropriate version of python installed, then install the dependencies for this
-project with `poetry install -E tox` and run `poetry run tox` from the command line. 
+To run the pipeline, ensure you have an appropriate version of python installed, then invoke 
+`poetry run nox` from the command line. 
 For basic testing, and before committing a change, this will most likely be all you need to run. 
 This will run all tasks except the reformatter, repeating for every Python environment that exists that is detected.
 
 ##### Running jobs separately
 
-Run `tox -lv` to see the jobs that can be run. For example, to only run documentation generation, one should run 
-`tox -e docs`.
+Run `nox -l` to see the jobs that can be run. For example, to only run documentation generation, one should run 
+`nox -s sphinx`.
 
 #### Testing all environments at once
 
@@ -85,7 +91,7 @@ It is worth noting that the `hikari` and `hikari_tests` are mounted as read-only
 code, you do not need to rebuild: just restart the container. This has the side effect that tests may not
 create `__pycache__` or write out files.
 
-#### Pytest without tox
+#### Pytest without nox
 
 If you want to run Pytest alone, that is fine too. Just run `poetry run pytest hikari_tests`.
 
@@ -103,9 +109,9 @@ Settings for black are specified in [pyproject.toml](pyproject.toml). You just n
 
 Static Application Security Testing is performed on every commit. This checks for common security risks in the code base
 and will abort the pipeline if any issue is found. We do this using [bandit](https://github.com/PyCQA/bandit). This tool
-can be run using `poetry install bandit`, followed by `poetry run bandit`. A tox pipeline also exists for this.
+can be run using `poetry install bandit`, followed by `poetry run bandit`. A nox pipeline also exists for this.
 
 ### Documentation
 
 Documentation is generated using [sphinx](http://www.sphinx-doc.org/en/master/). This can be run with 
-`poetry run tox -e docs`, and will produce HTML output in the `public` directory that will be created inside this repo.
+`poetry run nox -s sphinx`, and will produce HTML output in the `public` directory that will be created inside this repo.

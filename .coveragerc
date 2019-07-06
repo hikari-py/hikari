@@ -1,0 +1,19 @@
+[run]
+omit =
+    hikari/compat/*
+    hikari/__init__.py
+parallel = false
+branch = true
+
+[report]
+precision = 1
+show_missing = true
+skip_covered = False
+exclude_lines =
+    \#\s*pragma: no cover
+    ^\s*raise AssertionError\b
+    ^\s*raise NotImplementedError\b
+    ^\s*return NotImplemented\b
+    ^\s*raise$
+    ^\s*pass$
+    ^if __name__ == ['"]__main__['"]:$

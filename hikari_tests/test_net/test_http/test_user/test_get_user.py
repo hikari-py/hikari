@@ -17,14 +17,19 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-from hikari.models.audit import action_type
+import asynctest
+import pytest
 
 
-def test_get_category():
-    assert action_type.ActionType.MEMBER_KICK.category == action_type.ActionTypeCategory.MEMBER
+@pytest.fixture()
+async def http_client(event_loop):
+    from hikari_tests.test_net.test_http import ClientMock
+
+    return ClientMock(token="foobarsecret", loop=event_loop)
 
 
-def test_get_events():
-    member_events = {e for e in action_type.ActionType if e.name.startswith("MEMBER_")}
-    actual = action_type.ActionTypeCategory.MEMBER.events
-    assert member_events == actual
+@pytest.mark.asyncio
+async def test_get_user(http_client):
+    http_client.request = asynctest.CoroutineMock()
+    await http_client.get_user("424242")
+    http_client.request.assert_awaited_once_with("get", "/users/{user_id}", user_id="424242")

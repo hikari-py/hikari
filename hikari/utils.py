@@ -19,6 +19,7 @@
 """
 Internal utilities and helper methods for network logic.
 """
+import contextlib
 import re
 
 __all__ = (
@@ -35,7 +36,7 @@ __all__ = (
     "python_version",
     "Resource",
     "system_type",
-    "unspecified",
+    "UNSPECIFIED",
     "user_agent",
 )
 
@@ -77,15 +78,13 @@ def get_from_map_as(
     raw = mapping.get(key)
     if isinstance(raw, klazz):
         return raw
-    elif raw is None:
+    if raw is None:
         return default
-    elif default_on_error:
-        try:
+    if default_on_error:
+        with contextlib.suppress(Exception):
             return klazz(raw)
-        except Exception:
-            return default
-    else:
-        return klazz(raw)
+        return default
+    return klazz(raw)
 
 
 def parse_http_date(date_str: str) -> datetime.datetime:
@@ -284,9 +283,9 @@ def link_developer_portal(scope: APIResource, specific_resource: str = None):
     """Injects some common documentation into the given member's docstring."""
 
     def decorator(obj):
-        BASE_URL = "https://discordapp.com/developers/docs"
+        base_url = "https://discordapp.com/developers/docs"
         doc = inspect.cleandoc(inspect.getdoc(obj) or "")
-        base_resource = BASE_URL + scope.value
+        base_resource = base_url + scope.value
         frag = obj.__name__.lower().replace("_", "-") if specific_resource is None else specific_resource
         uri = base_resource + "#" + frag
 
@@ -309,21 +308,32 @@ class _Unspecified:
 
 
 #: An attribute that is unspecified by default.
-unspecified = _Unspecified()
+UNSPECIFIED = _Unspecified()
 
 
 def put_if_specified(mapping, key, value) -> None:
-    if value is not unspecified:
+    """Add a value to the mapping under the given key as long as the value is not :attr:`UNSPECIFIED`"""
+    if value is not UNSPECIFIED:
         mapping[key] = value
 
 
 def assert_not_none(value: typing.Any, description: str = "value"):
+    """Raises a value error with the optional description if the given value is None."""
     if value is None:
         raise ValueError(f"{description} must not be None")
     return value
 
 
 class ObjectProxy(dict):
+    """
+    A wrapper for a dict that enables accession of valid key names as if they were attributes.
+
+    Example:
+        >>> o = ObjectProxy({"foo": 10, "bar": 20})
+        >>> print(o["foo"], o.bar)  # 10 20
+
+    """
+
     def __getattr__(self, item):
         return self[item]
 

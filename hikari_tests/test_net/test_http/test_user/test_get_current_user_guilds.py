@@ -20,20 +20,6 @@
 import asynctest
 import pytest
 
-from hikari import utils
-
-
-test_args = {
-    "topic": "I like trains.",
-    "bitrate": 64000,
-    "user_limit": 10,
-    "rate_limit_per_user": 100,
-    "position": 2,
-    "permission_overwrites": [{"id": "404101", "type": "role", "allow": 666, "deny": 911}],
-    "parent_id": 404,
-    "nsfw": True,
-}
-
 
 @pytest.fixture()
 async def http_client(event_loop):
@@ -43,30 +29,28 @@ async def http_client(event_loop):
 
 
 @pytest.mark.asyncio
-async def test_create_guild_channel_no_kwars(http_client):
+async def test_get_current_user_guilds_no_args(http_client):
     http_client.request = asynctest.CoroutineMock()
-    await http_client.create_guild_channel("424242", "asdf")
-    http_client.request.assert_awaited_once_with(
-        "post", "/guilds/{guild_id}/channels", guild_id="424242", json={"name": "asdf"}, reason=utils.UNSPECIFIED
-    )
+    await http_client.get_current_user_guilds()
+    http_client.request.assert_awaited_once_with("get", "/users/@me/guilds", query={})
 
 
 @pytest.mark.asyncio
-async def test_create_guild_channel_all_kwars(http_client):
+async def test_get_current_user_guilds_with_before(http_client):
     http_client.request = asynctest.CoroutineMock()
-    await http_client.create_guild_channel("424242", "asdf", type_=1, **test_args)
-    http_client.request.assert_awaited_once_with(
-        "post",
-        "/guilds/{guild_id}/channels",
-        guild_id="424242",
-        json=dict(name="asdf", type=1, **test_args),
-        reason=utils.UNSPECIFIED,
-    )
+    await http_client.get_current_user_guilds(before="424242")
+    http_client.request.assert_awaited_once_with("get", "/users/@me/guilds", query={"before": "424242"})
 
 
 @pytest.mark.asyncio
-async def test_with_optional_reason(http_client):
+async def test_get_current_user_guilds_with_after(http_client):
     http_client.request = asynctest.CoroutineMock()
-    await http_client.create_guild_channel("424242", "asdf", reason="baz")
-    args, kwargs = http_client.request.call_args
-    assert kwargs["reason"] == "baz"
+    await http_client.get_current_user_guilds(after="696969")
+    http_client.request.assert_awaited_once_with("get", "/users/@me/guilds", query={"after": "696969"})
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_guilds_with_limit(http_client):
+    http_client.request = asynctest.CoroutineMock()
+    await http_client.get_current_user_guilds(limit=10)
+    http_client.request.assert_awaited_once_with("get", "/users/@me/guilds", query={"limit": 10})
