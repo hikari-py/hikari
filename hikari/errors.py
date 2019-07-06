@@ -34,14 +34,7 @@ __all__ = (
 
 from hikari.compat import typing
 from hikari.net import opcodes
-from hikari import _utils
-
-
-def _abstract_constructor(*_, **__):
-    raise NotImplementedError(
-        "This type is not implemented. Please derive a class from it with a custom __init__ defined "
-        "and initialize with that."
-    )
+from hikari import utils
 
 
 class HikariError(RuntimeError):
@@ -49,14 +42,15 @@ class HikariError(RuntimeError):
     Base for an error raised by this API. Any errors should derive from this.
 
     Warning:
-        You may not initialize this exception directly.
+        You should not initialize this exception directly.
     """
 
-    __slots__ = ("message",)
-    __init__ = _abstract_constructor
+    def __init__(self, message: str = ""):
+        super().__init__()
+        self.message: str = message
 
     def __str__(self):
-        return self.message or ""
+        return self.message
 
     def __repr__(self):
         return f"{type(self).__qualname__}: {self}"
@@ -69,11 +63,10 @@ class DiscordError(HikariError):
     May also be used for edge cases where a custom error implementation does not exist.
 
     Warning:
-        You may not initialize this exception directly.
+        You should not initialize this exception directly.
     """
 
     __slots__ = ()
-    __init__ = _abstract_constructor
 
 
 class HTTPError(DiscordError):
@@ -81,11 +74,10 @@ class HTTPError(DiscordError):
     An error that occurred within the HTTP component of the API from the result of a response, or during processing.
 
     Warning:
-        You may not initialize this exception directly.
+        You should not initialize this exception directly.
     """
 
     __slots__ = ()
-    __init__ = _abstract_constructor
 
 
 class GatewayError(DiscordError):
@@ -109,7 +101,7 @@ class GatewayError(DiscordError):
         self.code: opcodes.GatewayClosure = code
         #: The reason that the connection was closed.
         self.reason: str = reason
-        self.message: str = f"{self.code.name} ({self.code.value}): {self.reason}"
+        super().__init__(f"{self.code.name} ({self.code.value}): {self.reason}")
 
 
 class ServerError(HTTPError):
@@ -130,11 +122,11 @@ class ServerError(HTTPError):
     __slots__ = ("resource", "http_status", "message")
 
     def __init__(
-        self, resource: _utils.Resource, http_status: opcodes.HTTPStatus, message: typing.Optional[str] = None
+        self, resource: utils.Resource, http_status: opcodes.HTTPStatus, message: typing.Optional[str] = None
     ) -> None:
-        self.resource: _utils.Resource = resource
+        self.resource: utils.Resource = resource
         self.http_status: opcodes.HTTPStatus = http_status
-        self.message: str = message or http_status.name.replace("_", " ").title()
+        super().__init__(message or http_status.name.replace("_", " ").title())
 
 
 class ClientError(HTTPError):
@@ -157,15 +149,15 @@ class ClientError(HTTPError):
 
     def __init__(
         self,
-        resource: typing.Optional[_utils.Resource],
+        resource: typing.Optional[utils.Resource],
         http_status: typing.Optional[opcodes.HTTPStatus],
         json_error_code: typing.Optional[opcodes.JSONErrorCode],
         message: str,
     ) -> None:
-        self.resource: typing.Optional[_utils.Resource] = resource
+        self.resource: typing.Optional[utils.Resource] = resource
         self.status: typing.Optional[opcodes.HTTPStatus] = http_status
         self.error_code: typing.Optional[opcodes.JSONErrorCode] = json_error_code
-        self.message: str = message
+        super().__init__(message)
 
 
 class BadRequest(ClientError):
@@ -187,7 +179,7 @@ class BadRequest(ClientError):
 
     __slots__ = ()
 
-    def __init__(self, resource: _utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
+    def __init__(self, resource: utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
         super().__init__(resource, opcodes.HTTPStatus.BAD_REQUEST, json_error_code, message)
 
 
@@ -211,7 +203,7 @@ class Unauthorized(ClientError):
 
     __slots__ = ()
 
-    def __init__(self, resource: _utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
+    def __init__(self, resource: utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
         super().__init__(resource, opcodes.HTTPStatus.UNAUTHORIZED, json_error_code, message)
 
 
@@ -234,7 +226,7 @@ class Forbidden(ClientError):
 
     __slots__ = ()
 
-    def __init__(self, resource: _utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
+    def __init__(self, resource: utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
         super().__init__(resource, opcodes.HTTPStatus.FORBIDDEN, json_error_code, message)
 
 
@@ -257,5 +249,5 @@ class NotFound(ClientError):
 
     __slots__ = ()
 
-    def __init__(self, resource: _utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
+    def __init__(self, resource: utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
         super().__init__(resource, opcodes.HTTPStatus.NOT_FOUND, json_error_code, message)

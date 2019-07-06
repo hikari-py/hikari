@@ -27,7 +27,7 @@ import logging
 import aiohttp
 
 #: Format string for the default Discord API URL.
-from hikari import _utils
+from hikari import utils
 from hikari import errors
 from hikari.compat import asyncio
 from hikari.compat import typing
@@ -84,7 +84,7 @@ class BaseHTTPClient:
         loop: asyncio.AbstractEventLoop,
         allow_redirects: bool = False,
         max_retries: int = 5,
-        token: str = _utils.unspecified,
+        token: str = utils.UNSPECIFIED,
         base_uri: str = _DISCORD_API_URI_FORMAT.format(VERSION=VERSION),
         **aiohttp_arguments,
     ) -> None:
@@ -109,7 +109,7 @@ class BaseHTTPClient:
                 additional arguments to pass to the internal :class:`aiohttp.ClientSession` constructor used for making
                 HTTP requests.
         """
-        loop = _utils.assert_not_none(loop, "loop")
+        loop = utils.assert_not_none(loop, "loop")
 
         #: Used for internal bookkeeping
         self._correlation_id = 0
@@ -118,7 +118,7 @@ class BaseHTTPClient:
         #: Whether to allow redirects or not.
         self.allow_redirects = allow_redirects
         #: Local rate limit buckets.
-        self.buckets: typing.Dict[_utils.Resource, rates.VariableTokenBucket] = {}
+        self.buckets: typing.Dict[utils.Resource, rates.VariableTokenBucket] = {}
         #: The base URI to target.
         self.base_uri = base_uri
         #: The global rate limit bucket.
@@ -128,11 +128,11 @@ class BaseHTTPClient:
         #: The HTTP session to target.
         self.session = aiohttp.ClientSession(loop=loop, **aiohttp_arguments)
         #: The session `Authorization` header to use.
-        self.authorization = "Bot " + token.strip() if token is not _utils.unspecified else None
+        self.authorization = "Bot " + token.strip() if token is not utils.UNSPECIFIED else None
         #: The logger to use for this object.
         self.logger = logging.getLogger(type(self).__name__)
         #: User agent to use
-        self.user_agent = _utils.user_agent()
+        self.user_agent = utils.user_agent()
 
     async def close(self):
         """
@@ -179,7 +179,7 @@ class BaseHTTPClient:
             kwargs:
                 Any arguments to interpolate into the `path`.
         """
-        resource = _utils.Resource(self.base_uri, method, path, **kwargs)
+        resource = utils.Resource(self.base_uri, method, path, **kwargs)
 
         for retry in range(5):
             try:
@@ -207,7 +207,7 @@ class BaseHTTPClient:
         headers.setdefault("Accept", "application/json")
 
         # Prevent inconsistencies causing weird behaviour: check both args.
-        if reason is not None and reason is not _utils.unspecified:
+        if reason is not None and reason is not utils.UNSPECIFIED:
             headers.setdefault("X-Audit-Log-Reason", reason)
 
         if self.authorization is not None:
@@ -264,10 +264,10 @@ class BaseHTTPClient:
             return body
         if 400 <= status < 500:
             return self._handle_client_error_response(resource, status, body)
-        else:
-            # The server returned something we didn't understand and thus was not in the documentation. Treat it as a
-            # server error.
-            return self._handle_server_error_response(resource, status, body)
+
+        # The server returned something we didn't understand and thus was not in the documentation. Treat it as a
+        # server error.
+        return self._handle_server_error_response(resource, status, body)
 
     def _log_rate_limit_already_in_progress(self, resource):
         name = f"local rate limit for {resource.bucket}" if resource is not None else "global rate limit"
@@ -300,20 +300,20 @@ class BaseHTTPClient:
         # Retry-after is always in milliseconds.
         if is_global and is_being_rate_limited:
             # assume that is_global only ever occurs on TOO_MANY_REQUESTS response codes.
-            retry_after = (_utils.get_from_map_as(body, "retry_after", float) or 0) / 1_000
+            retry_after = (utils.get_from_map_as(body, "retry_after", float) or 0) / 1_000
             self.global_rate_limit.lock(retry_after)
             self._log_rate_limit_starting(None, retry_after)
 
         if all(header in headers for header in _X_RATELIMIT_LOCALS):
             # If we don't get all the info we need, just forget about the rate limit as we can't act on missing
             # information.
-            now = _utils.parse_http_date(headers[_DATE]).timestamp()
-            total = _utils.get_from_map_as(headers, _X_RATELIMIT_LIMIT, int)
-            reset_at = _utils.get_from_map_as(headers, _X_RATELIMIT_RESET, float)
-            remaining = _utils.get_from_map_as(headers, _X_RATELIMIT_REMAINING, int)
+            now = utils.parse_http_date(headers[_DATE]).timestamp()
+            total = utils.get_from_map_as(headers, _X_RATELIMIT_LIMIT, int)
+            reset_at = utils.get_from_map_as(headers, _X_RATELIMIT_RESET, float)
+            remaining = utils.get_from_map_as(headers, _X_RATELIMIT_REMAINING, int)
 
             # This header only exists if we get a TOO_MANY_REQUESTS first, annoyingly.
-            retry_after = _utils.get_from_map_as(headers, "Retry-After", float)
+            retry_after = utils.get_from_map_as(headers, "Retry-After", float)
             retry_after = retry_after / 1_000 if retry_after is not None else reset_at - now
 
             if resource not in self.buckets:
@@ -335,7 +335,7 @@ class BaseHTTPClient:
     def _handle_client_error_response(resource, status, body) -> typing.NoReturn:
         # Assume Discord's spec is right and they don't send us random codes we don't know about...
         try:
-            error_code = _utils.get_from_map_as(body, "code", opcodes.JSONErrorCode, None)
+            error_code = utils.get_from_map_as(body, "code", opcodes.JSONErrorCode, None)
             error_message = body.get("message")
         except AttributeError:
             error_code = None
@@ -343,14 +343,13 @@ class BaseHTTPClient:
 
         if status == opcodes.HTTPStatus.BAD_REQUEST:
             raise errors.BadRequest(resource, error_code, error_message)
-        elif status == opcodes.HTTPStatus.UNAUTHORIZED:
+        if status == opcodes.HTTPStatus.UNAUTHORIZED:
             raise errors.Unauthorized(resource, error_code, error_message)
-        elif status == opcodes.HTTPStatus.FORBIDDEN:
+        if status == opcodes.HTTPStatus.FORBIDDEN:
             raise errors.Forbidden(resource, error_code, error_message)
-        elif status == opcodes.HTTPStatus.NOT_FOUND:
+        if status == opcodes.HTTPStatus.NOT_FOUND:
             raise errors.NotFound(resource, error_code, error_message)
-        else:
-            raise errors.ClientError(resource, status, error_code, error_message)
+        raise errors.ClientError(resource, status, error_code, error_message)
 
     @staticmethod
     def _handle_server_error_response(resource, status, body) -> typing.NoReturn:

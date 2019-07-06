@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -39,7 +39,7 @@ async def test_begin_guild_prune(http_client):
         "/guilds/{guild_id}/prune",
         guild_id="424242",
         query={"days": 10, "compute_prune_count": False},
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 

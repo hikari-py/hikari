@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -39,7 +39,7 @@ async def test_create_guild_emoji(http_client):
         "/guilds/{guild_id}/emojis",
         guild_id="424242",
         json={"name": "asdf", "image": b"", "roles": []},
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 

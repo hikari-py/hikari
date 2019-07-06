@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -39,7 +39,7 @@ async def test_modify_guild_channel_positions(http_client):
         "/guilds/{guild_id}/channels",
         guild_id="424242",
         json=[{"id": "696969", "position": 1}, {"id": "404101", "position": 2}],
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 

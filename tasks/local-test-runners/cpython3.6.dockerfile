@@ -14,8 +14,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-FROM       pypy:3.6-slim
-VOLUME     ["/hikari", "/hikari_tests"]
-COPY       requirements.txt .
-COPY       tox.ini          .
-RUN        apt update && apt install git -y && pip install poetry && poetry install -vvv
+FROM       python:3.6-alpine
+VOLUME     ["/hikari", "/hikari_tests", "/docs"]
+COPY       pyproject.toml .
+COPY       tasks          .
+COPY       noxfile.py     .
+RUN        apk add git && pip install poetry && poetry install -vvv

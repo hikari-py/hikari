@@ -44,9 +44,9 @@ from hikari.compat import contextlib
 from hikari.compat import typing
 from hikari.net import opcodes
 from hikari.net import rates
-from hikari import _utils
-from hikari._utils import DispatchHandler
-from hikari._utils import DiscordObject
+from hikari import utils
+from hikari.utils import DispatchHandler
+from hikari.utils import DiscordObject
 
 
 class _ResumeConnection(websockets.ConnectionClosed):
@@ -155,7 +155,7 @@ class GatewayClient:
         shard_count: typing.Optional[int] = None,
         token: str,
     ) -> None:
-        loop = _utils.assert_not_none(loop, "loop")
+        loop = utils.assert_not_none(loop, "loop")
 
         #: The coroutine function to dispatch any events to.
         self.dispatch = asyncio.coroutine(dispatch)
@@ -221,8 +221,7 @@ class GatewayClient:
         """The length of time the gateway has been connected for, or 0 seconds if the client has not yet started."""
         if self.started_at is None:
             return datetime.timedelta(seconds=0)
-        else:
-            return datetime.timedelta(seconds=time.perf_counter() - self.started_at)
+        return datetime.timedelta(seconds=time.perf_counter() - self.started_at)
 
     @property
     def is_shard(self) -> bool:
@@ -370,9 +369,9 @@ class GatewayClient:
                 "compress": False,
                 "large_threshold": self.large_threshold,
                 "properties": {
-                    "$os": _utils.system_type(),
-                    "$browser": _utils.library_version(),
-                    "$device": _utils.python_version(),
+                    "$os": utils.system_type(),
+                    "$browser": utils.library_version(),
+                    "$device": utils.python_version(),
                 },
             },
         }
@@ -388,8 +387,10 @@ class GatewayClient:
         await self._send_json(payload, False)
 
     async def _handle_dispatch(self, event: str, payload: DiscordObject) -> None:
-        event == "READY" and await self._handle_ready(payload)
-        event == "RESUMED" and await self._handle_resumed(payload)
+        if event == "READY":
+            await self._handle_ready(payload)
+        if event == "RESUMED":
+            await self._handle_resumed(payload)
         self.logger.debug("DISPATCH %s", event)
         self._dispatch(event, payload)
 
@@ -559,10 +560,9 @@ class GatewayClient:
                         self.logger.critical("disconnected after %s [%s]. Please rectify issue manually", reason, code)
                         raise errors.GatewayError(code, reason) from ex
 
-                    else:
-                        self.logger.warning("reconnecting after %s [%s]", reason, code)
-                        if isinstance(ex, _RestartConnection):
-                            self.seq, self.session_id, self.trace = None, None, []
+                    self.logger.warning("reconnecting after %s [%s]", reason, code)
+                    if isinstance(ex, _RestartConnection):
+                        self.seq, self.session_id, self.trace = None, None, []
 
         finally:
             self.logger.info("gateway client shutting down")
@@ -577,8 +577,9 @@ class GatewayClient:
                 waited for.
         """
         self.closed_event.set()
-        block and await self.ws.wait_closed()
+        if block:
+            await self.ws.wait_closed()
 
-    def _dispatch(self, event_name: str, payload: typing.Optional[_utils.DiscordObject]) -> None:
+    def _dispatch(self, event_name: str, payload: typing.Optional[utils.DiscordObject]) -> None:
         # This prevents us blocking any task such as the READY handler.
         self.loop.create_task(self.dispatch(event_name, payload))
