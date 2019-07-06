@@ -28,26 +28,30 @@ from hikari.net import rates
 from hikari_tests import _helpers
 
 
+class UnslottedBase:
+    pass
+
+
 @pytest.fixture
 def timed_token_bucket():
-    class TimedTokenBucket(rates.TimedTokenBucket):
-        __slots__ = ["__dict__"]
+    class TimedTokenBucket(rates.TimedTokenBucket, UnslottedBase):
+        pass
 
     return TimedTokenBucket
 
 
 @pytest.fixture
 def timed_latch_bucket():
-    class TimedLatchBucket(rates.TimedLatchBucket):
-        __slots__ = ["__dict__"]
+    class TimedLatchBucket(rates.TimedLatchBucket, UnslottedBase):
+        pass
 
     return TimedLatchBucket
 
 
 @pytest.fixture
 def variable_token_bucket():
-    class VariableTokenBucket(rates.VariableTokenBucket):
-        __slots__ = ["__dict__"]
+    class VariableTokenBucket(rates.VariableTokenBucket, UnslottedBase):
+        pass
 
     return VariableTokenBucket
 
@@ -398,10 +402,10 @@ async def test_TimedLatchBucket_when_locked_will_return_after_a_cooldown(event_l
     # Yield for a moment to ensure the routine is triggered before we try to acquire.
     await asyncio.sleep(0.05)
     start = time.perf_counter()
-    await latch.acquire(callback, 9, 18, foo=27)
+    await latch.acquire(callback, nine=9, eighteen=18, foo=27)
     end = time.perf_counter()
 
-    callback.assert_called_with(9, 18, foo=27)
+    callback.assert_called_with(nine=9, eighteen=18, foo=27)
     assert checked
     # Assert we waited for about 3 seconds.
     assert math.isclose(end - start, 1, abs_tol=0.25)

@@ -20,7 +20,8 @@
 import asynctest
 import pytest
 
-from hikari import utils
+
+test_args = {"username": "asdf", "avatar": b""}
 
 
 @pytest.fixture()
@@ -31,22 +32,14 @@ async def http_client(event_loop):
 
 
 @pytest.mark.asyncio
-async def test_remove_guild_member_role(http_client):
+async def test_modify_current_user_no_args(http_client):
     http_client.request = asynctest.CoroutineMock()
-    await http_client.remove_guild_member_role("424242", "696969", "404101")
-    http_client.request.assert_awaited_once_with(
-        "delete",
-        "/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
-        guild_id="424242",
-        user_id="696969",
-        role_id="404101",
-        reason=utils.UNSPECIFIED,
-    )
+    await http_client.modify_current_user()
+    http_client.request.assert_awaited_once_with("patch", "/users/@me", json={})
 
 
 @pytest.mark.asyncio
-async def test_with_optional_reason(http_client):
+async def test_modify_current_user_all_args(http_client):
     http_client.request = asynctest.CoroutineMock()
-    await http_client.remove_guild_member_role("424242", "696969", "404101", reason="baz")
-    args, kwargs = http_client.request.call_args
-    assert kwargs["reason"] == "baz"
+    await http_client.modify_current_user(**test_args)
+    http_client.request.assert_awaited_once_with("patch", "/users/@me", json=test_args)

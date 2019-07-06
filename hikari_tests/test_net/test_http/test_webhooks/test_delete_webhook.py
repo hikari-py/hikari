@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -35,7 +35,7 @@ async def test_delete_webhook(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.delete_webhook("424242")
     http_client.request.assert_awaited_once_with(
-        "delete", "/webhooks/{webhook_id}", webhook_id="424242", reason=_utils.unspecified
+        "delete", "/webhooks/{webhook_id}", webhook_id="424242", reason=utils.UNSPECIFIED
     )
 
 

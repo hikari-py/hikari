@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -42,7 +42,7 @@ async def test_modify_guild_integration(http_client):
         guild_id="424242",
         integration_id="696969",
         json={"expire_behaviour": 1, "expire_grace_period": 10, "enable_emoticons": True},
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 

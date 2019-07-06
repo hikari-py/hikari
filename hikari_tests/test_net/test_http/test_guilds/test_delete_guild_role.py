@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -35,7 +35,7 @@ async def test_delete_guild_role(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.delete_guild_role("424242", "696969")
     http_client.request.assert_awaited_once_with(
-        "delete", "/guilds/{guild_id}/roles/{role_id}", guild_id="424242", role_id="696969", reason=_utils.unspecified
+        "delete", "/guilds/{guild_id}/roles/{role_id}", guild_id="424242", role_id="696969", reason=utils.UNSPECIFIED
     )
 
 

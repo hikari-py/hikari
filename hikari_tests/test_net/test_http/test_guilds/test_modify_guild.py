@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 test_all_kwargs = {
@@ -50,7 +50,7 @@ async def test_modify_guild_no_kwargs(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.modify_guild("424242")
     http_client.request.assert_awaited_once_with(
-        "patch", "/guilds/{guild_id}", guild_id="424242", json={}, reason=_utils.unspecified
+        "patch", "/guilds/{guild_id}", guild_id="424242", json={}, reason=utils.UNSPECIFIED
     )
 
 
@@ -59,7 +59,7 @@ async def test_modify_guild_all_kwargs(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.modify_guild("424242", **test_all_kwargs)
     http_client.request.assert_awaited_once_with(
-        "patch", "/guilds/{guild_id}", guild_id="424242", json=test_all_kwargs, reason=_utils.unspecified
+        "patch", "/guilds/{guild_id}", guild_id="424242", json=test_all_kwargs, reason=utils.UNSPECIFIED
     )
 
 

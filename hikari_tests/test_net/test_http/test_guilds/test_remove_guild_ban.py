@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -35,7 +35,7 @@ async def test_remove_guild_ban(http_client):
     http_client.request = asynctest.CoroutineMock()
     await http_client.remove_guild_ban("424242", "696969")
     http_client.request.assert_awaited_once_with(
-        "delete", "/guilds/{guild_id}/bans/{user_id}", guild_id="424242", user_id="696969", reason=_utils.unspecified
+        "delete", "/guilds/{guild_id}/bans/{user_id}", guild_id="424242", user_id="696969", reason=utils.UNSPECIFIED
     )
 
 

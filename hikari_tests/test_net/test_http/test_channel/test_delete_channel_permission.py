@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -39,7 +39,7 @@ async def test_delete_channel_permission(http_client):
         "/channels/{channel_id}/permissions/{overwrite_id}",
         channel_id="696969",
         overwrite_id="123456",
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 

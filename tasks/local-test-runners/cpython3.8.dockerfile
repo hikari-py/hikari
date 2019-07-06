@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019
 #
 # This file is part of Hikari.
@@ -16,3 +14,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+FROM       python:3.8-rc-alpine
+VOLUME     ["/hikari", "/hikari_tests", "/docs"]
+COPY       pyproject.toml .
+COPY       noxfile.py     .
+COPY       tasks          .
+RUN        apk add git && pip install poetry && poetry install -vvv

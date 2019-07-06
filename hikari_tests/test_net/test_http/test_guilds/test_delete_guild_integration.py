@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -39,7 +39,7 @@ async def test_delete_guild_integration(http_client):
         "/guilds/{guild_id}/integrations/{integration_id}",
         guild_id="424242",
         integration_id="696969",
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 

@@ -20,7 +20,7 @@
 import asynctest
 import pytest
 
-from hikari import _utils
+from hikari import utils
 
 
 @pytest.fixture()
@@ -40,7 +40,7 @@ async def test_add_guild_member_role(http_client):
         guild_id="424242",
         user_id="696969",
         role_id="404101",
-        reason=_utils.unspecified,
+        reason=utils.UNSPECIFIED,
     )
 
 

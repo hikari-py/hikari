@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019
 #
 # This file is part of Hikari.
@@ -14,8 +16,20 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-FROM       python:3.7-alpine
-VOLUME     ["/hikari", "/hikari_tests"]
-COPY       requirements.txt .
-COPY       tox.ini          .
-RUN        apk add git && pip install poetry && poetry install -vvv
+
+import asynctest
+import pytest
+
+
+@pytest.fixture()
+async def http_client(event_loop):
+    from hikari_tests.test_net.test_http import ClientMock
+
+    return ClientMock(token="foobarsecret", loop=event_loop)
+
+
+@pytest.mark.asyncio
+async def test_get_current_user(http_client):
+    http_client.request = asynctest.CoroutineMock()
+    await http_client.get_current_user()
+    http_client.request.assert_awaited_once_with("get", "/users/@me")
