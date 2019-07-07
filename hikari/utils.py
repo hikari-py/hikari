@@ -35,6 +35,12 @@ __all__ = (
     "system_type",
     "UNSPECIFIED",
     "user_agent",
+    "DISCORD_EPOCH",
+    "ISO_8601_DATE_PART",
+    "ISO_8601_TIME_PART",
+    "ISO_8601_TZ_PART",
+    "assert_not_none",
+    "parse_iso_8601_datetime",
 )
 
 import contextlib
@@ -363,3 +369,7 @@ def parse_iso_8601_datetime(date_string: str) -> datetime.datetime:
             offset = -offset
 
     return datetime.datetime(year, month, day, hour, minute, second, partial, datetime.timezone(offset))
+
+
+#: This represents the 1st January 2015 as the number of seconds since 1st January 1970 (Discord epoch)
+DISCORD_EPOCH = 1_420_070_400
