@@ -44,11 +44,12 @@ class BasicBot:
         import os
 
         from hikari.net import basic_bot
+        from hikari import utils
 
         logging.basicConfig(level='INFO')
 
 
-        async def dispatch_event(event: str, payload: basic_bot.DiscordObjectProxy):
+        async def dispatch_event(event: str, payload: utils.ObjectProxy):
             if event == 'MESSAGE_CREATE':
                 if payload.content == 'hk.ping':
                     latency = bot.gateway.heartbeat_latency
