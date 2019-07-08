@@ -49,7 +49,7 @@ class BasicBot:
         logging.basicConfig(level='INFO')
 
 
-        async def dispatch_event(event: str, payload: utils.DiscordObjectProxy):
+        async def dispatch_event(event: str, payload: utils.ObjectProxy):
             if event == 'MESSAGE_CREATE':
                 if payload.content == 'hk.ping':
                     latency = bot.gateway.heartbeat_latency
