@@ -32,7 +32,8 @@ __all__ = (
     "Unauthorized",
 )
 
-from hikari.compat import typing
+import typing
+
 from hikari.net import opcodes
 from hikari import utils
 

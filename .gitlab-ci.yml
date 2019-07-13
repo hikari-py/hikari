@@ -51,13 +51,6 @@ variables:
     - pip install nox
 
 ###
-### TEST IN PYTHON 3.6
-###
-py36:
-  image: python:3.6-alpine
-  extends: .cpython-pytest
-
-###
 ### TEST IN PYTHON 3.7
 ###
 py37:
@@ -71,26 +64,6 @@ py37:
 py38:
   image: python:3.8-rc-alpine
   extends: .cpython-pytest
-
-###
-### TEST IN PYTHON 3.9
-###
-py39:
-  image: bash
-  script:
-    - echo "Image not yet on Docker-Hub. Watch this space."
-
-###
-### TEST IN PYPY3.6.
-###
-pypy3:
-  extends: .pytest
-  image: pypy:3.6-slim
-  before_script:
-    - pypy3 -V
-    - apt-get update
-    - apt-get install git -y
-    - pip install nox
 
 ###
 ### FAIL WITH WARNING IF CODE DOES NOT MATCH DESIRED FORMAT.

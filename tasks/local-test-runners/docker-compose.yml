@@ -16,16 +16,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 version: "3.7"
 services:
-  py36:
-    build:
-      context: ../..
-      dockerfile: tasks/local-test-runners/cpython3.6.dockerfile
-    entrypoint: python -bbBm poetry run pytest hikari_tests
-    volumes:
-      - ../../hikari:/hikari:ro
-      - ../../hikari_tests:/hikari_tests:ro
-      - ../../docs:/docs:rw
-    restart: 'no'
 
   py37:
     build:
@@ -54,17 +44,6 @@ services:
       context: ../..
       dockerfile: tasks/local-test-runners/cpython3.9.dockerfile
     # entrypoint: python -bbBm pytest hikari_tests
-    volumes:
-      - ../../hikari:/hikari:ro
-      - ../../hikari_tests:/hikari_tests:ro
-      - ../../docs:/docs:rw
-    restart: 'no'
-
-  pypy3:
-    build:
-      context: ../..
-      dockerfile: tasks/local-test-runners/pypy3.6.dockerfile
-    entrypoint: pypy3 -bbBm poetry run pytest hikari_tests
     volumes:
       - ../../hikari:/hikari:ro
       - ../../hikari_tests:/hikari_tests:ro

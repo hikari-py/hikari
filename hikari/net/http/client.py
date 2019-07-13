@@ -23,11 +23,11 @@ __all__ = ("HTTPClient",)
 
 import io
 import json
+import typing
 
 import aiohttp
 
 from hikari import utils
-from hikari.compat import typing
 from . import base
 
 DELETE = "delete"
