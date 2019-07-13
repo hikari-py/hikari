@@ -32,11 +32,9 @@ classifiers     = [
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Communications :: Chat",
     "Topic :: Communications :: Telephony",
@@ -45,7 +43,7 @@ classifiers     = [
 ]
 
 [tool.poetry.dependencies]
-python          = ">=3.6,<3.9"
+python          = ">=3.7,<=3.9"
 aiohttp         = "~3.5"
 dacite          = "~1.0"
 dataclasses     = "~0.6"
@@ -65,6 +63,6 @@ pytest-testdox  = "~1.1"
 
 [tool.black]
 line-length     = 120
-target-version  = ["py36", "py37", "py38"]
+target-version  = ["py37", "py38"]
 include         = ".*py$"
 

@@ -30,18 +30,18 @@ References:
 """
 __all__ = ("GatewayClient",)
 
+import asyncio
+import contextlib
 import datetime
 import json
 import logging
 import time
+import typing
 import zlib
 
 import websockets
 
 from hikari import errors
-from hikari.compat import asyncio
-from hikari.compat import contextlib
-from hikari.compat import typing
 from hikari.net import opcodes
 from hikari.net import rates
 from hikari import utils

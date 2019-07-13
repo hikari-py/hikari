@@ -19,9 +19,6 @@
 """
 Internal utilities and helper methods for network logic.
 """
-import contextlib
-import re
-
 __all__ = (
     "APIResource",
     "DiscordObject",
@@ -40,6 +37,7 @@ __all__ = (
     "user_agent",
 )
 
+import contextlib
 import collections
 import datetime
 import email
@@ -47,8 +45,9 @@ import enum
 import inspect
 import io
 import platform
+import re
+import typing
 
-from hikari.compat import typing
 
 T = typing.TypeVar("T")
 

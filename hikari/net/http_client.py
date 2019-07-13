@@ -23,12 +23,12 @@ __all__ = ("HTTPClient",)
 
 import io
 import json
+import typing
 
 import aiohttp
 
 from hikari import utils
-from hikari.compat import typing
-from . import base
+from hikari.net import http_base
 
 DELETE = "delete"
 PATCH = "patch"
@@ -37,7 +37,7 @@ POST = "post"
 PUT = "put"
 
 
-class HTTPClient(base.BaseHTTPClient):
+class HTTPClient(http_base.BaseHTTPClient):
     """
     Combination of all components for API handling logic for the V7 Discord HTTP API.
     """

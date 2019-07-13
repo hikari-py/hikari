@@ -28,7 +28,7 @@ from hikari.net import status
 
 
 def _parse(path):
-    with open(os.path.join("hikari_tests", "test_net", "test_status", path)) as fp:
+    with open(os.path.join("hikari_tests", "test_net", "data", path)) as fp:
         return fp.read()
 
 
