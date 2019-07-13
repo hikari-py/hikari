@@ -22,13 +22,13 @@ Rate-limiting adherence logic.
 
 __all__ = ("TimedLatchBucket", "TimedTokenBucket", "VariableTokenBucket")
 
+import asyncio
 import collections
+import contextlib
 import time
+import typing
 
 from hikari import utils
-from hikari.compat import asyncio
-from hikari.compat import contextlib
-from hikari.compat import typing
 
 
 class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
