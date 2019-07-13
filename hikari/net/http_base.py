@@ -21,16 +21,16 @@ Implementation of the base components required for working with the V7 HTTP REST
 """
 __all__ = ("BaseHTTPClient",)
 
+import asyncio
 import json as libjson
 import logging
+import typing
 
 import aiohttp
 
 #: Format string for the default Discord API URL.
 from hikari import utils
 from hikari import errors
-from hikari.compat import asyncio
-from hikari.compat import typing
 from hikari.net import opcodes
 from hikari.net import rates
 
