@@ -34,7 +34,7 @@ from hikari import utils
 from hikari import errors
 from hikari.net import opcodes
 from hikari.net import rates
-from hikari.net.http import base
+from hikari.net import http_base
 from hikari_tests._helpers import _mock_methods_on
 
 
@@ -76,7 +76,7 @@ class MockAiohttpSession:
     close = asynctest.CoroutineMock()
 
 
-class MockBaseHTTPClient(base.BaseHTTPClient):
+class MockBaseHTTPClient(http_base.BaseHTTPClient):
     def __init__(self, *a, **k):
         with asynctest.patch("aiohttp.ClientSession", new=MockAiohttpSession):
             super().__init__(*a, **k)
@@ -153,7 +153,7 @@ async def test_request_forwards_known_arguments_to_request_once(mock_http_connec
 
 @pytest.mark.asyncio
 async def test_request_retries_then_errors(mock_http_connection):
-    mock_http_connection._request_once = asynctest.CoroutineMock(side_effect=base._RateLimited)
+    mock_http_connection._request_once = asynctest.CoroutineMock(side_effect=http_base._RateLimited)
     try:
         await mock_http_connection.request(method="get", path="/foo/bar")
         assert False, "No error was thrown but it was expected!"
@@ -166,7 +166,7 @@ async def test_request_retries_then_errors(mock_http_connection):
 @pytest.mark.asyncio
 async def test_request_seeks_to_zero_on_each_error_for_each_reseekable_resource_given(mock_http_connection):
     mock_http_connection._request_once = asynctest.CoroutineMock(
-        side_effect=[base._RateLimited, base._RateLimited, base._RateLimited, None]
+        side_effect=[http_base._RateLimited, http_base._RateLimited, http_base._RateLimited, None]
     )
 
     re_seekable_resources = [asynctest.MagicMock(), asynctest.MagicMock(), asynctest.MagicMock()]
@@ -181,7 +181,7 @@ async def test_request_seeks_to_zero_on_each_error_for_each_reseekable_resource_
 async def test_request_does_not_retry_on_success(mock_http_connection):
     expected_result = object()
     mock_http_connection._request_once = asynctest.CoroutineMock(
-        side_effect=[base._RateLimited(), base._RateLimited(), expected_result]
+        side_effect=[http_base._RateLimited(), http_base._RateLimited(), expected_result]
     )
     actual_result = await mock_http_connection.request(method="get", path="/foo/bar")
     assert mock_http_connection._request_once.call_count == 3
@@ -251,7 +251,7 @@ async def test_request_once_acquires_global_rate_limit_bucket(mock_http_connecti
     try:
         await mock_http_connection._request_once(retry=0, resource=res, data={})
         assert False
-    except base._RateLimited:
+    except http_base._RateLimited:
         mock_http_connection.global_rate_limit.acquire.assert_awaited_once()
 
 
@@ -265,7 +265,7 @@ async def test_request_once_acquires_local_rate_limit_bucket(mock_http_connectio
     try:
         await mock_http_connection._request_once(retry=0, resource=res, data={})
         assert False
-    except base._RateLimited:
+    except http_base._RateLimited:
         bucket.acquire.assert_awaited_once()
 
 
@@ -276,7 +276,7 @@ async def test_request_once_calls_rate_limit_handler(mock_http_connection, res):
     try:
         await mock_http_connection._request_once(retry=0, resource=res)
         assert False
-    except base._RateLimited:
+    except http_base._RateLimited:
         mock_http_connection._is_rate_limited.assert_called_once()
 
 
@@ -288,7 +288,7 @@ async def test_request_once_raises_RateLimited_if_rate_limit_handler_returned_tr
     try:
         await mock_http_connection._request_once(retry=0, resource=res)
         assert False
-    except base._RateLimited:
+    except http_base._RateLimited:
         pass
 
 

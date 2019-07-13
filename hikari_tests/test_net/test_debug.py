@@ -21,6 +21,7 @@ import asyncio
 import textwrap
 
 import asynctest
+import pytest
 
 from hikari.net import debug
 from hikari_tests import _helpers
@@ -30,7 +31,7 @@ def teardown_function():
     _helpers.purge_loop()
 
 
-@_helpers.mark_asyncio_with_timeout()
+@pytest.mark.asyncio
 async def test_get_debug_data(event_loop):
     with asynctest.patch("aiohttp.request", new=prepare_mock_response()):
         data = await debug.get_debug_data()
