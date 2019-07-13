@@ -34,9 +34,9 @@ __all__ = (
 
 import dataclasses
 import enum
+import typing
 
 from hikari import utils
-from hikari.compat import typing
 from hikari.model import base
 
 from hikari.model import overwrite
@@ -80,54 +80,90 @@ class AuditLogEvent(enum.IntEnum):
 class AuditLogChangeKey(base.NamedEnum):
     """
     Describes what was changed in an audit log change.
+
+    Note:
+        Discord have failed to actually document this correctly, and as a result, these values are never checked
+        to prevent any other undocumented changes from breaking this any further...
+
+        Refer to the documentation for Audit Logs on the developer portal for the supposed "complete list".
+
+        Essentially, attempting to access an entry that doesn't exist will not cause a failure, but just return
+        that string instead of a hardcoded entry.
     """
 
-    NAME = enum.auto()
-    ICON_HASH = enum.auto()
-    SPLASH_HASH = enum.auto()
-    OWNER_ID = enum.auto()
-    REGION = enum.auto()
-    AFK_CHANNEL_ID = enum.auto()
-    AFK_TIMEOUT = enum.auto()
-    MFA_LEVEL = enum.auto()
-    VERIFICATION_LEVEL = enum.auto()
-    EXPLICIT_CONTENT_FILTER = enum.auto()
-    DEFAULT_MESSAGE_NOTIFICATIONS = enum.auto()
-    VANITY_URL_CODE = enum.auto()
-    ADD_ROLE = enum.auto()
-    REMOVE_ROLE = enum.auto()
-    PRUNE_DELETE_DAYS = enum.auto()
-    WIDGET_ENABLED = enum.auto()
-    WIDGET_CHANNEL_ID = enum.auto()
-    POSITION = enum.auto()
-    TOPIC = enum.auto()
-    BITRATE = enum.auto()
-    PERMISSION_OVERWRITES = enum.auto()
-    NSFW = enum.auto()
-    APPLICATION_ID = enum.auto()
-    PERMISSIONS = enum.auto()
-    COLOR = enum.auto()
-    COLOUR = COLOR
-    MENTIONABLE = enum.auto()
-    CHANNEL_ID = enum.auto()
-    INVITER_ID = enum.auto()
-    MAX_USES = enum.auto()
-    TEMPORARY = enum.auto()
-    DEAF = enum.auto()
-    MUTE = enum.auto()
-    NICK = enum.auto()
-    AVATAR_HASH = enum.auto()
-    ID = enum.auto()
-    TYPE = enum.auto()
+    NAME = "name"
+    ICON_HASH = "icon_hash"
+    SPLASH_HASH = "splash_hash"
+    OWNER_ID = "owner_id"
+    REGION = "region"
+    AFK_CHANNEL_ID = "afk_channel_id"
+    AFK_TIMEOUT = "afk_timeout"
+    MFA_LEVEL = "mfa_level"
+    VERIFICATION_LEVEL = "verification_level"
+    EXPLICIT_CONTENT_FILTER = "explicit_content_filter"
+    DEFAULT_MESSAGE_NOTIFICATIONS = "default_message_notifications"
+    VANITY_URL_CODE = "vanity_url_code"
+    ADD_ROLE_TO_MEMBER = "$add"
+    REMOVE_ROLE_FROM_MEMBER = "$remove"
+    PRUNE_DELETE_DAYS = "prune_delete_days"
+    WIDGET_ENABLED = "widget_enabled"
+    WIDGET_CHANNEL_ID = "widget_channel_id"
+    POSITION = "position"
+    TOPIC = "topic"
+    BITRATE = "bitrate"
+    PERMISSION_OVERWRITES = "permission_overwrites"
+    NSFW = "nsfw"
+    APPLICATION_ID = "application_id"
+    PERMISSIONS = "permissions"
+    COLOR = "color"
+    HOIST = "hoist"
+    MENTIONABLE = "mentionable"
+    ALLOW = "allow"
+    DENY = "deny"
+    CODE = "code"
+    CHANNEL_ID = "channel_id"
+    INVITER_ID = "inviter_id"
+    MAX_USES = "max_uses"
+    USES = "uses"
+    MAX_AGE = "max_age"
+    TEMPORARY = "temporary"
+    DEAF = "deaf"
+    MUTE = "mute"
+    NICK = "nick"
+    AVATAR_HASH = "avatar_hash"
+    ID = "id"
+    TYPE = "type"
+    # Undocumented entries go here, I guess...
+    RATE_LIMIT_PER_USER = "rate_limit_per_user"
 
     @classmethod
-    def from_discord_name(cls: AuditLogChangeKey, name: str) -> AuditLogChangeKey:
-        if name == "$add":
-            return cls.ADD_ROLE
-        if name == "$remove":
-            return cls.REMOVE_ROLE
-        # noinspection PyTypeChecker
-        return super().from_discord_name(name)
+    def from_discord_name(cls: AuditLogChangeKey, item) -> typing.Union[AuditLogChangeKey, str]:
+        item = str(item)
+
+        # Dumb edge cases, because why the hell not.
+        if item == "$add":
+            return cls.ADD_ROLE_TO_MEMBER
+        if item == "$remove":
+            return cls.REMOVE_ROLE_FROM_MEMBER
+
+        try:
+            return getattr(cls, item.upper())
+        except AttributeError:
+            return str(item).upper()
+
+    @staticmethod
+    def translate_values(old_value, new_value, key):
+        """
+        Consumes an old value, new value and key, and returns the correct types.
+        
+        Idea is to convert ID
+        """
+        str_key = str(key).lower()
+        if old_value is not None and str_key.endswith("id"):
+            old_value = int(old_value)
+        if new_value is not None and str_key.endswith("id"):
+            new_value = int(new_value)
+        return old_value, new_value, key
 
 
 @dataclasses.dataclass()
@@ -136,11 +172,11 @@ class AuditLog(base.Model):
     An Audit Log.
     """
 
-    __slots__ = ("webhooks", "users", "audit_log_entries")
+    __slots__ = ("webhooks", "users", "entries")
 
     webhooks: typing.List[webhook.Webhook]
     users: typing.List[user.User]
-    audit_log_entries: typing.List[AuditLogEntry]
+    entries: typing.List[AuditLogEntry]
 
     @classmethod
     def from_dict(cls: AuditLog, payload: utils.DiscordObject, state) -> AuditLog:
@@ -156,9 +192,9 @@ class AuditLog(base.Model):
         """
         return AuditLog(
             state,
-            webhooks=[webhook.Webhook.from_dict(webhook, state) for webhook in payload["webhooks"]],
-            users=[user.User.from_dict(user, state) for user in payload["users"]],
-            audit_log_entries=[AuditLogEntry.from_dict(entry, state) for entry in payload["audit_log_entries"]],
+            webhooks=[webhook.Webhook.from_dict(w, state) for w in payload["webhooks"]],
+            users=[user.User.from_dict(u, state) for u in payload["users"]],
+            entries=[AuditLogEntry.from_dict(e, state) for e in payload["audit_log_entries"]],
         )
 
 
@@ -174,7 +210,9 @@ class MemberPrunedAuditLogEntryInfo(base.Model):
     members_removed: int
 
     @classmethod
-    def from_dict(cls: MemberPrunedAuditLogEntryInfo, payload: utils.DiscordObject, state) -> MemberPrunedAuditLogEntryInfo:
+    def from_dict(
+        cls: MemberPrunedAuditLogEntryInfo, payload: utils.DiscordObject, state
+    ) -> MemberPrunedAuditLogEntryInfo:
         """
         Create a MemberPrunedAuditLogEntryInfo object from a dict payload.
 
@@ -204,7 +242,9 @@ class MessageDeletedAuditLogEntryInfo(base.Model):
     count: int
 
     @classmethod
-    def from_dict(cls: MessageDeletedAuditLogEntryInfo, payload: utils.DiscordObject, state) -> MessageDeletedAuditLogEntryInfo:
+    def from_dict(
+        cls: MessageDeletedAuditLogEntryInfo, payload: utils.DiscordObject, state
+    ) -> MessageDeletedAuditLogEntryInfo:
         """
         Create an MessageDeletedAuditLogEntryInfo object from a dict payload.
 
@@ -215,9 +255,7 @@ class MessageDeletedAuditLogEntryInfo(base.Model):
         Returns:
             A MessageDeletedAuditLogEntryInfo object.
         """
-        return cls(
-            state, channel_id=int(payload["channel_id"]), count=int(payload["count"])
-        )
+        return cls(state, channel_id=int(payload["channel_id"]), count=int(payload["count"]))
 
 
 @dataclasses.dataclass()
@@ -233,7 +271,9 @@ class ChannelOverwriteAuditLogEntryInfo(base.Model):
     role_name: str
 
     @classmethod
-    def from_dict(cls: ChannelOverwriteAuditLogEntryInfo, payload: utils.DiscordObject, state) -> ChannelOverwriteAuditLogEntryInfo:
+    def from_dict(
+        cls: ChannelOverwriteAuditLogEntryInfo, payload: utils.DiscordObject, state
+    ) -> ChannelOverwriteAuditLogEntryInfo:
         """
         Create a ChannelOverwriteAuditLogEntryInfo object from a dict payload.
 
@@ -264,9 +304,12 @@ class AuditLogChange(base.Model):
 
     __slots__ = ("new_value", "old_value", "key")
 
-    new_value: typing.Any
-    old_value: typing.Any
-    key: AuditLogChangeKey
+    #: Note:
+    #:      This key is NOT validated due to missing documentation in the Discord API. Instead, it is a pure string
+    #:      to prevent further API changes on Discord's behalf breaking logic any further.
+    key: typing.Union[AuditLogChangeKey, str]
+    new_value: typing.Optional[typing.Any]
+    old_value: typing.Optional[typing.Any]
 
     @classmethod
     def from_dict(cls: AuditLogChange, payload: utils.DiscordObject, state) -> AuditLogChange:
@@ -280,9 +323,10 @@ class AuditLogChange(base.Model):
         Returns:
             An AuditLogChange object.
         """
-
         key = AuditLogChangeKey.from_discord_name(payload["key"])
-        return cls(state, new_value=payload["new_value"], old_value=payload["old_value"], key=key)
+        old_value, new_value, key = payload.get("old_value"), payload.get("new_value"), key
+        old_value, new_value, key = AuditLogChangeKey.translate_values(old_value, new_value, key)
+        return cls(state, old_value=old_value, new_value=new_value, key=key)
 
 
 #: Valid types of additional Audit Log entry information.
@@ -318,7 +362,7 @@ class AuditLogEntry(base.Snowflake):
         Returns:
             An AuditLogEntry object.
         """
-        action_type = AuditLogEvent[payload["action_type"]]
+        action_type = AuditLogEvent(payload["action_type"])
         options = payload.get("options")
 
         if action_type.name.startswith("CHANNEL_OVERWRITE_"):

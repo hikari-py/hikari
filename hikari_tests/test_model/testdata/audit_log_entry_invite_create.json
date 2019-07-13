@@ -1,0 +1,36 @@
+{
+  "target_id": null,
+  "changes": [
+    {
+      "new_value": 86400,
+      "key": "max_age"
+    },
+    {
+      "new_value": "gbPccV",
+      "key": "code"
+    },
+    {
+      "new_value": false,
+      "key": "temporary"
+    },
+    {
+      "new_value": "537340989808050216",
+      "key": "inviter_id"
+    },
+    {
+      "new_value": "577602779410071575",
+      "key": "channel_id"
+    },
+    {
+      "new_value": 0,
+      "key": "uses"
+    },
+    {
+      "new_value": 0,
+      "key": "max_uses"
+    }
+  ],
+  "user_id": "537340989808050216",
+  "id": "599637183640371207",
+  "action_type": 40
+}

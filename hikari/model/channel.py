@@ -26,8 +26,8 @@ __all__ = ()
 import abc
 import dataclasses
 import enum
+import typing
 
-from hikari.compat import typing
 from hikari.model import base
 from hikari.model import overwrite
 from hikari.model import user
@@ -108,16 +108,16 @@ class GuildTextChannel(GuildChannel):
     def from_dict(cls: GuildTextChannel, payload: utils.DiscordObject, state) -> Channel:
         return cls(
             state,
-            id=payload['id'],
-            guild_id=payload['guild_id'],
-            position=payload['position'],
-            permission_overwrites=overwrite.Overwrite.from_dict(payload['permission_overwrites'], state),
-            name=payload['name'],
-            nsfw=payload['nsfw'],
-            parent_id=payload.get('parent_id'),
-            topic=payload.get('topic'),
-            rate_limit_per_user=payload.get('rate_limit_per_user'),
-            last_message_id=payload['last_message_id']
+            id=payload["id"],
+            guild_id=payload["guild_id"],
+            position=payload["position"],
+            permission_overwrites=overwrite.Overwrite.from_dict(payload["permission_overwrites"], state),
+            name=payload["name"],
+            nsfw=payload["nsfw"],
+            parent_id=payload.get("parent_id"),
+            topic=payload.get("topic"),
+            rate_limit_per_user=payload.get("rate_limit_per_user"),
+            last_message_id=payload["last_message_id"],
         )
 
 
@@ -143,9 +143,9 @@ class DMChannel(Channel):
     def from_dict(cls: DMChannel, payload: utils.DiscordObject, state) -> Channel:
         return cls(
             state,
-            id=payload['id'],
-            last_message_id=payload['last_message_id'],
-            recipients=[user.User.from_dict(recipient, state) for recipient in payload['recipients']],
+            id=payload["id"],
+            last_message_id=payload["last_message_id"],
+            recipients=[user.User.from_dict(recipient, state) for recipient in payload["recipients"]],
         )
 
 
@@ -169,12 +169,7 @@ class GuildVoiceChannel(GuildChannel):
 
     @classmethod
     def from_dict(cls: GuildVoiceChannel, payload: utils.DiscordObject, state) -> Channel:
-        return cls(
-            state,
-            id=payload['id'],
-            bitrate=payload['bitrate'],
-            user_limit=payload['user_limit'],
-        )
+        return cls(state, id=payload["id"], bitrate=payload["bitrate"], user_limit=payload["user_limit"])
 
 
 @dataclasses.dataclass()
@@ -204,13 +199,13 @@ class GroupDMChannel(DMChannel):
     def from_dict(cls: GroupDMChannel, payload: utils.DiscordObject, state) -> Channel:
         return cls(
             state,
-            id=payload['id'],
-            last_message_id=payload['last_message_id'],
-            recipients=[user.User.from_dict(recipient, state) for recipient in payload['recipients']],
-            icon=payload.get('icon').encode() if payload['icon'] else None,
-            name=payload.get('name'),
-            owner_application_id=payload.get('application_id'),
-            owner_id=payload['owner_id']
+            id=payload["id"],
+            last_message_id=payload["last_message_id"],
+            recipients=[user.User.from_dict(recipient, state) for recipient in payload["recipients"]],
+            icon=payload.get("icon").encode() if payload["icon"] else None,
+            name=payload.get("name"),
+            owner_application_id=payload.get("application_id"),
+            owner_id=payload["owner_id"],
         )
 
 
