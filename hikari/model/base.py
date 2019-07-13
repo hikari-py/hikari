@@ -19,24 +19,22 @@
 """
 Model ABCs.
 """
-from __future__ import annotations
-
 __all__ = ("Model", "Snowflake", "NamedEnum")
 
 import abc
 import dataclasses
 import datetime
 import enum
+import typing
 
 from hikari import utils
-from hikari.compat import typing
 
 
 T = typing.TypeVar("T")
 
 
 # noinspection PyMethodMayBeStatic,PyUnusedLocal
-@dataclasses.dataclass()
+@dataclasses.dataclass(eq=False, order=False, unsafe_hash=False, repr=False)
 class Model(abc.ABC):
     """
     Base for every model we can use in this API.
@@ -51,7 +49,7 @@ class Model(abc.ABC):
     @abc.abstractmethod
     def from_dict(cls, payload: utils.DiscordObject, state):
         """Consume a Discord payload and produce an instance of this class."""
-        ...
+        return NotImplemented
 
     def to_dict(self) -> utils.DiscordObject:
         """
@@ -108,7 +106,8 @@ class Snowflake(Model, abc.ABC):
 
 class NamedEnum(enum.Enum):
     """
-    An enum that is produced from a string by Discord. This removes foreign characters and fixes the case.
+    An enum that is produced from a string by Discord. This ensures that the key can be looked up from a lowercase
+    value that discord provides and use a Pythonic key name that is in upper case.
     """
 
     @classmethod

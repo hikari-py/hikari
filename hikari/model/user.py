@@ -19,8 +19,6 @@
 """
 Generic users not bound to a guild.
 """
-from __future__ import annotations
-
 __all__ = ()
 
 import enum

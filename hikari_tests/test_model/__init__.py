@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019
 #
@@ -16,22 +16,3 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Invitations to guilds.
-"""
-__all__ = ()
-
-import enum
-from hikari.model import base
-
-
-class Invite(base.Model):
-    __slots__ = ()
-
-
-class TargetUserType(enum.IntEnum):
-    ...
-
-
-class InviteMetadata(base.Model):
-    __slots__ = ()
