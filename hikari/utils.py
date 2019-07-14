@@ -41,6 +41,7 @@ __all__ = (
     "ISO_8601_TZ_PART",
     "assert_not_none",
     "parse_iso_8601_datetime",
+    "make_resource_seekable",
 )
 
 import contextlib
@@ -373,3 +374,24 @@ def parse_iso_8601_datetime(date_string: str) -> datetime.datetime:
 
 #: This represents the 1st January 2015 as the number of seconds since 1st January 1970 (Discord epoch)
 DISCORD_EPOCH = 1_420_070_400
+
+
+def make_resource_seekable(resource):
+    """
+    Given some representation of data, make a seekable resource to use. This supports bytes, bytearray, memoryview,
+    and strings. Anything else is just returned.
+
+    Args:
+        resource:
+            the resource to check.
+    Returns:
+        An stream-compatible resource where possible.
+    """
+    if isinstance(resource, (bytes, bytearray)):
+        resource = io.BytesIO(resource)
+    elif isinstance(resource, memoryview):
+        resource = io.BytesIO(resource.tobytes())
+    elif isinstance(resource, str):
+        resource = io.StringIO(resource)
+
+    return resource
