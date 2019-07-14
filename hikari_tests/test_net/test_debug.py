@@ -70,7 +70,10 @@ def prepare_mock_response():
             pass
 
         def __init__(self, text):
-            self.text = asyncio.coroutine(lambda: text)
+            async def text_getter():
+                return text
+
+            self.text = text_getter
             self.raise_for_status = lambda: None
 
     request_method = asynctest.Mock(
