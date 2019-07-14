@@ -302,7 +302,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         content: str = utils.UNSPECIFIED,
         nonce: str = utils.UNSPECIFIED,
         tts: bool = False,
-        files: typing.List[typing.Tuple[str, utils.FileLike]] = utils.UNSPECIFIED,
+        files: typing.List[utils.FileLike] = utils.UNSPECIFIED,
         embed: utils.DiscordObject = utils.UNSPECIFIED,
     ) -> utils.DiscordObject:
         """
@@ -349,13 +349,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         re_seekable_resources = []
         if files is not utils.UNSPECIFIED:
             for i, (file_name, file) in enumerate(files):
-                if isinstance(file, (bytes, bytearray)):
-                    file = io.BytesIO(file)
-                elif isinstance(file, memoryview):
-                    file = io.BytesIO(file.tobytes())
-                elif isinstance(file, str):
-                    file = io.StringIO(file)
-
+                file = utils.make_resource_seekable(file)
                 re_seekable_resources.append(file)
                 form.add_field(f"file{i}", file, filename=file_name, content_type="application/octet-stream")
 
