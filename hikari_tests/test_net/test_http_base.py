@@ -20,7 +20,6 @@
 """
 Tests the low level handler logic all endpoints will be expected to use.
 """
-import asyncio
 import datetime
 import email
 import re
@@ -30,11 +29,11 @@ import asynctest
 import pytest
 
 import hikari.utils
-from hikari import utils
 from hikari import errors
+from hikari import utils
+from hikari.net import http_base
 from hikari.net import opcodes
 from hikari.net import rates
-from hikari.net import http_base
 from hikari_tests._helpers import _mock_methods_on
 
 
@@ -50,10 +49,22 @@ class UnslottedMockedGlobalRateLimitFacade(rates.TimedLatchBucket):
         self.acquire = asynctest.CoroutineMock()
 
 
+async def return_None(*_, **__):
+    return None
+
+
+async def return_arg(arg, *_, **__):
+    return arg
+
+
+async def return_dict(*_, **__):
+    return {}
+
+
 class MockAiohttpResponse:
-    __aenter__ = asyncio.coroutine(lambda self: self)
-    __aexit__ = asyncio.coroutine(lambda self, *_, **__: None)
-    json = asynctest.CoroutineMock(wraps=asyncio.coroutine(lambda _: {}))
+    __aenter__ = return_arg
+    __aexit__ = return_None
+    json = asynctest.CoroutineMock(wraps=return_dict)
     close = asynctest.CoroutineMock()
     status = 200
     reason = "OK"
