@@ -29,7 +29,7 @@ from hikari.model import service_status as status_model
 
 
 def _parse(path):
-    with open(os.path.join("hikari_tests", "test_net", "data", path)) as fp:
+    with open(os.path.join("hikari_tests", "test_net", "testdata", path)) as fp:
         return fp.read()
 
 
