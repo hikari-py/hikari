@@ -46,7 +46,7 @@ class Model(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def from_dict(cls, payload: utils.DiscordObject, state):
+    def from_dict(cls, payload: utils.DiscordObject, state=NotImplemented):
         """Consume a Discord payload and produce an instance of this class."""
         return NotImplemented
 

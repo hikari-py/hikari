@@ -22,7 +22,7 @@ import textwrap
 import asynctest
 import pytest
 
-from hikari.net import debug
+from hikari.net import server_debug
 from hikari_tests import _helpers
 
 
@@ -33,7 +33,7 @@ def teardown_function():
 @pytest.mark.asyncio
 async def test_get_debug_data(event_loop):
     with asynctest.patch("aiohttp.request", new=prepare_mock_response()):
-        data = await debug.get_debug_data()
+        data = await server_debug.get_debug_data()
         assert data.fl == "abc123"
         assert data.ip == "127.0.0.1"
         assert data.h == "discordapp.com"
