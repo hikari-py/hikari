@@ -28,6 +28,8 @@ References:
     - Gateway documentation: https://discordapp.com/developers/docs/topics/gateway
     - Opcode documentation: https://discordapp.com/developers/docs/topics/opcodes-and-status-codes
 """
+from __future__ import annotations
+
 __all__ = ("GatewayClient",)
 
 import asyncio

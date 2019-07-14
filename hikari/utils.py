@@ -19,6 +19,8 @@
 """
 Internal utilities and helper methods for network logic.
 """
+from __future__ import annotations
+
 __all__ = (
     "APIResource",
     "DiscordObject",
@@ -61,7 +63,7 @@ T = typing.TypeVar("T")
 def get_from_map_as(
     mapping: dict,
     key: typing.Any,
-    klazz: typing.Union[typing.Callable[[typing.Any], T], typing.Type[T]],
+    cast: typing.Union[typing.Callable[[typing.Any], T], typing.Type[T]],
     default=None,
     *,
     default_on_error=False,
@@ -74,7 +76,7 @@ def get_from_map_as(
             dict to read from.
         key:
             key to access.
-        klazz:
+        cast:
             type to cast to if required. This may instead be a function if the call should always be made regardless.
         default:
             default value to return, or `None` if unspecified.
@@ -86,16 +88,16 @@ def get_from_map_as(
         An optional casted value, or `None` if it wasn't in the `mapping` at the start.
     """
     raw = mapping.get(key)
-    is_method_or_function = inspect.isfunction(klazz) or inspect.ismethod(klazz)
-    if not is_method_or_function and isinstance(raw, klazz):
+    is_method_or_function = inspect.isfunction(cast) or inspect.ismethod(cast)
+    if not is_method_or_function and isinstance(raw, cast):
         return raw
     if raw is None:
         return default
     if default_on_error:
         with contextlib.suppress(Exception):
-            return klazz(raw)
+            return cast(raw)
         return default
-    return klazz(raw)
+    return cast(raw)
 
 
 def parse_http_date(date_str: str) -> datetime.datetime:
@@ -363,6 +365,7 @@ def parse_iso_8601_datetime(date_string: str) -> datetime.datetime:
     """
     year, month, day = map(int, ISO_8601_DATE_PART.findall(date_string)[0])
     hour, minute, second, partial = ISO_8601_TIME_PART.findall(date_string)[0]
+    # Pad the millisecond part if it is not in microseconds, otherwise Python will complain.
     partial = partial + (6 - len(partial)) * "0"
     hour, minute, second, partial = int(hour), int(minute), int(second), int(partial)
     if date_string.endswith(("Z", "z")):

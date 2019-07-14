@@ -19,6 +19,8 @@
 """
 Voice state models.
 """
+from __future__ import annotations
+
 __all__ = ()
 
 from hikari.model import base
