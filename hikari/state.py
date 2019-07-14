@@ -19,7 +19,9 @@
 """
 Handles managing the state of the bot, and the cache.
 """
-__all__ = ()
+from __future__ import annotations
+
+__all__ = ("State",)
 
 
 class State:

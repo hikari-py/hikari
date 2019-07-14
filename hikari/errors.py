@@ -19,6 +19,8 @@
 """
 Core errors that may be raised by this API implementation.
 """
+from __future__ import annotations
+
 __all__ = (
     "BadRequest",
     "ClientError",
@@ -199,7 +201,9 @@ class Unauthorized(ClientError):
 
     Note:
         Unlike in the base class :class:`ClientError`, you can assume that :attr:`json_error_code`,
-        :attr:`resource`, and :attr:`http_status` are always populated if this exception is raised.
+            The HTTP resource that was accessed.
+        json_error_code:
+            The JSON error code that was provided with this error.
     """
 
     __slots__ = ()
@@ -211,12 +215,10 @@ class Unauthorized(ClientError):
 class Forbidden(ClientError):
     """
     Occurs when authorization is correct, but you do not have permission to access the resource.
+        :attr:`resource`, and :attr:`http_status` are always populated if this exception is raised.
 
     Args:
         resource:
-            The HTTP resource that was accessed.
-        json_error_code:
-            The JSON error code that was provided with this error.
         message:
             Any additional message that was provided with this error.
 

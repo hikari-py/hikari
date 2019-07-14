@@ -19,6 +19,8 @@
 """
 Implementation of the base components required for working with the V7 HTTP REST API with consistent rate-limiting.
 """
+from __future__ import annotations
+
 __all__ = ("BaseHTTPClient",)
 
 import asyncio
