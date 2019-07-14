@@ -24,67 +24,17 @@ This API is not officially documented.
 """
 from __future__ import annotations
 
-__all__ = ("DataCenter", "DebugData", "get_debug_data")
+__all__ = ("get_debug_data",)
 
 import datetime
 import re
-from dataclasses import dataclass
 
 import aiohttp
 
-
-@dataclass(frozen=True)
-class DataCenter:
-    """Represents a data center. These are represented by an IATA airport code."""
-
-    __slots__ = ("iata_code", "location", "airport", "country")
-
-    #: Airport code
-    iata_code: str
-    #: Data center location
-    location: str
-    #: Data center airport name
-    airport: str
-    #: Data center country
-    country: str
-
-    def __str__(self):
-        return f"{self.airport} ({self.iata_code}), {self.location}, {self.country}"
+from hikari.model import server_debug
 
 
-@dataclass(frozen=True)
-class DebugData:
-    """The response provided from Discord's CGI trace."""
-
-    __slots__ = ("fl", "ip", "ts", "h", "visit_scheme", "uag", "colo", "http", "loc", "tls", "sni", "warp")
-
-    #: Unknown, possibly some form of correlation ID.
-    fl: str
-    #: Your IP
-    ip: str
-    #: UTC unix timestamp.
-    ts: datetime.datetime
-    #: The host that was hit.
-    h: str
-    #: Scheme used
-    visit_scheme: str
-    #: User agent used
-    uag: str
-    #: Data Center info.
-    colo: DataCenter
-    #: HTTP version used.
-    http: str
-    #: Apparent location
-    loc: str
-    #: TLS/SSL version used.
-    tls: str
-    #: Unknown, possibly the content type of this response.
-    sni: str
-    #: Unknown.
-    warp: str
-
-
-async def get_debug_data() -> DebugData:
+async def get_debug_data() -> server_debug.DebugData:
     """
     Query the DiscordApp CDN CGI trace to determine debugging info such as the data center that you are likely using.
     This will then query `http://airlinecodes.co.uk` to determine the data center location from the provided
@@ -115,6 +65,6 @@ async def get_debug_data() -> DebugData:
     airport = airport_match.group(1).strip() if airport_match else "Unknown"
     country = country_match.group(1).strip() if country_match else "Unknown"
 
-    pairs["colo"] = DataCenter(pairs["colo"], location, airport, country)
+    pairs["colo"] = server_debug.DataCenter(pairs["colo"], location, airport, country)
     pairs["ts"] = datetime.datetime.fromtimestamp(float(pairs["ts"]), datetime.timezone.utc)
-    return DebugData(**pairs)
+    return server_debug.DebugData(**pairs)
