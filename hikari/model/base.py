@@ -19,6 +19,7 @@
 """
 Model ABCs.
 """
+
 __all__ = ("Model", "Snowflake", "NamedEnum")
 
 import abc
@@ -29,12 +30,10 @@ import typing
 
 from hikari import utils
 
-
 T = typing.TypeVar("T")
 
 
-# noinspection PyMethodMayBeStatic,PyUnusedLocal
-@dataclasses.dataclass(eq=False, order=False, unsafe_hash=False, repr=False)
+@dataclasses.dataclass(repr=False)
 class Model(abc.ABC):
     """
     Base for every model we can use in this API.
@@ -51,20 +50,34 @@ class Model(abc.ABC):
         """Consume a Discord payload and produce an instance of this class."""
         return NotImplemented
 
-    def to_dict(self) -> utils.DiscordObject:
+    def to_dict(self, *, dict_factory=dict) -> utils.DiscordObject:
         """
         Consume this class instance and produce a Discord payload.
 
-        Classes are not required to implement this method unless it is required internally.
+        Classes are not required to implement this method unless it is required internally. If not
+        implemented otherwise, this will default to calling :func:`dataclasses.asdict`_.
+
+        Args:
+            dict_factory:
+                Optional factory method for making a new dict, defaults to :class:`dict`_.
+                The _state object will not be included in this representation.
         """
-        return NotImplemented
+        dictionary = dataclasses.asdict(self, dict_factory=dict_factory)
+        for slot in self.__slots__:
+            dictionary.pop(slot)
+        return dictionary
 
 
-# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences,PyAbstractClass
 @dataclasses.dataclass()
-class Snowflake(Model, abc.ABC):
+class Snowflake(Model):
     """
-    Base for every model in this API that provides an ID attribute.
+    Abstract base for every model in this API that provides an ID attribute.
+
+    Warning:
+        Due to constraints by the dataclasses library, one must ensure to define
+        `__hash__` on any object expected to be hashable explicitly. It will not
+        be inherited correctly.
     """
 
     __slots__ = ("id",)
@@ -93,15 +106,25 @@ class Snowflake(Model, abc.ABC):
         """The increment of Discord's system when this object was made."""
         return self.id & 0xFFF
 
-    def __eq__(self, other):
-        return isinstance(other, Snowflake) and self.id == other.id
-
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         if not isinstance(other, Snowflake):
             raise TypeError(
                 f"Cannot compare a Snowflake type {type(self).__name__} to a non-snowflake type {type(other).__name__}"
             )
         return self.id < other.id
+
+    def __le__(self, other) -> bool:
+        return self < other or self == other
+
+    def __gt__(self, other) -> bool:
+        if not isinstance(other, Snowflake):
+            raise TypeError(
+                f"Cannot compare a Snowflake type {type(self).__name__} to a non-snowflake type {type(other).__name__}"
+            )
+        return self.id > other.id
+
+    def __ge__(self, other) -> bool:
+        return self > other or self == other
 
 
 class NamedEnum(enum.Enum):
