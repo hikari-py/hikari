@@ -157,7 +157,7 @@ class GuildVoiceChannel(GuildChannel):
 
     __slots__ = ("bitrate", "user_limit")
 
-    #: Bitrate of the voice channel.
+    #: Bit-rate of the voice channel.
     bitrate: int
     #: The max number of users in the voice channel, or `0` if there is no limit.
     user_limit: int
