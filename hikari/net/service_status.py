@@ -136,8 +136,6 @@ async def subscribe_email_to_all_incidents(email: str) -> service_status.Subscri
     Args:
         email:
             the owner's email.
-        incident:
-            the incident or incident ID.
 
     Returns:
         A :class:`Subscription`.
