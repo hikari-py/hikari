@@ -19,6 +19,7 @@
 """
 Rate-limiting adherence logic.
 """
+from __future__ import annotations
 
 __all__ = ("TimedLatchBucket", "TimedTokenBucket", "VariableTokenBucket")
 

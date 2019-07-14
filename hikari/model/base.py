@@ -19,6 +19,7 @@
 """
 Model ABCs.
 """
+from __future__ import annotations
 
 __all__ = ("Model", "Snowflake", "NamedEnum")
 

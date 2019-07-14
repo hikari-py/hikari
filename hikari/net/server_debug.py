@@ -22,6 +22,8 @@ on the host running your code.
 
 This API is not officially documented.
 """
+from __future__ import annotations
+
 __all__ = ("DataCenter", "DebugData", "get_debug_data")
 
 import datetime
