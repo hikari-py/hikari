@@ -44,22 +44,29 @@ from hikari import utils
 from . import base
 
 
-# TODO: slot these classes.
-
-
 @dataclasses.dataclass()
 class Subscriber(base.Model):
     """
     A subscription to an incident.
     """
 
+    __slots__ = (
+        "id",
+        "email",
+        "mode",
+        "quarantined_at",
+        "incident",
+        "skip_confirmation_notification",
+        "purge_at",
+    )
+
     id: str
     email: str
     mode: str
-    quarantined_at: typing.Optional[datetime.datetime] = None
-    incident: typing.Optional[str] = None
-    skip_confirmation_notification: typing.Optional[bool] = None
-    purge_at: typing.Optional[datetime.datetime] = None
+    quarantined_at: typing.Optional[datetime.datetime]
+    incident: typing.Optional[str]
+    skip_confirmation_notification: typing.Optional[bool]
+    purge_at: typing.Optional[datetime.datetime]
 
     @classmethod
     def from_dict(cls: Subscriber, payload: utils.DiscordObject, state=NotImplemented) -> Subscriber:
@@ -77,6 +84,11 @@ class Subscriber(base.Model):
 
 @dataclasses.dataclass()
 class Subscription(base.Model):
+    """
+    A subscription to an incident.
+    """
+    __slots__ = ("subscriber",)
+
     subscriber: Subscriber
 
     @classmethod
@@ -89,6 +101,8 @@ class Page(base.Model):
     """
     A page element.
     """
+
+    __slots__ = ("id", "name", "url", "updated_at")
 
     id: str
     name: str
@@ -112,8 +126,10 @@ class Status(base.Model):
     A status description.
     """
 
-    indicator: typing.Optional[str] = None
-    description: typing.Optional[str] = None
+    __slots__ = ("indicator", "description")
+
+    indicator: typing.Optional[str]
+    description: typing.Optional[str]
 
     @classmethod
     def from_dict(cls: Status, payload: utils.DiscordObject, state=NotImplemented) -> Status:
@@ -126,13 +142,23 @@ class Component(base.Model):
     A component description.
     """
 
+    __slots__ = (
+        "id",
+        "name",
+        "created_at",
+        "page_id",
+        "position",
+        "updated_at",
+        "description",
+    )
+
     id: str
     name: str
     created_at: datetime.datetime
     page_id: str
     position: int
     updated_at: datetime.datetime
-    description: typing.Optional[str] = None
+    description: typing.Optional[str]
 
     @classmethod
     def from_dict(cls: Component, payload: utils.DiscordObject, state=NotImplemented) -> Component:
@@ -154,6 +180,8 @@ class Components(base.Model):
     A collection of :class:`Component` objects.
     """
 
+    __slots__ = ("page", "components")
+
     page: Page
     components: typing.List[Component]
 
@@ -171,6 +199,16 @@ class IncidentUpdate(base.Model):
     """
     An informative status update for a specific incident.
     """
+
+    __slots__ = (
+        "body",
+        "created_at",
+        "display_at",
+        "incident_id",
+        "status",
+        "id",
+        "updated_at",
+    )
 
     body: str
     created_at: datetime.datetime
@@ -199,6 +237,19 @@ class Incident(base.Model):
     """
     An incident.
     """
+
+    __slots__ = (
+        "id",
+        "name",
+        "impact",
+        "incident_updates",
+        "monitoring_at",
+        "page_id",
+        "resolved_at",
+        "shortlink",
+        "status",
+        "updated_at",
+    )
 
     id: str
     name: str
@@ -240,10 +291,21 @@ class Incidents(base.Model):
     A collection of :class:`Incident` objects.
     """
 
+    __slot__ = (
+        "page",
+        "incidents",
+    )
+
     page: Page
     incidents: typing.List[Incident]
 
-    # TODO: def from_dict()
+    @classmethod
+    def from_dict(cls: Incidents, payload: utils.DiscordObject, state=NotImplemented) -> Incidents:
+        return cls(
+            state,
+            Page.from_dict(payload["page"], state),
+            [Incident.from_dict(i, state) for i in payload["incidents"]],
+        )
 
 
 @dataclasses.dataclass()
@@ -251,6 +313,20 @@ class ScheduledMaintenance(base.Model):
     """
     A description of a maintenance that is scheduled to be performed.
     """
+
+    __slots__ = (
+        "id",
+        "name",
+        "impact",
+        "incident_updates",
+        "monitoring_at",
+        "page_id",
+        "resolved_at",
+        "scheduled_for",
+        "scheduled_until",
+        "status",
+        "updated_at",
+    )
 
     id: str
     name: str
@@ -273,6 +349,11 @@ class ScheduledMaintenances(base.Model):
     A collection of maintenance events.
     """
 
+    __slots__ = (
+        "page",
+        "scheduled_maintenances",
+    )
+
     page: Page
     scheduled_maintenances: typing.List[ScheduledMaintenance]
 
@@ -284,6 +365,14 @@ class Summary(base.Model):
     """
     A description of the overall API status.
     """
+
+    __slots__ = (
+        "page",
+        "status",
+        "components",
+        "incidents",
+        "scheduled_maintenances",
+    )
 
     page: Page
     status: Status
