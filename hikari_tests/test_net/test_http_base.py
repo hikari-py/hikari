@@ -20,7 +20,6 @@
 """
 Tests the low level handler logic all endpoints will be expected to use.
 """
-import asyncio
 import datetime
 import email
 import re
@@ -30,11 +29,11 @@ import asynctest
 import pytest
 
 import hikari.utils
-from hikari import utils
 from hikari import errors
+from hikari import utils
+from hikari.net import http_base
 from hikari.net import opcodes
 from hikari.net import rates
-from hikari.net import http_base
 from hikari_tests._helpers import _mock_methods_on
 
 
@@ -60,7 +59,6 @@ async def return_arg(arg, *_, **__):
 
 async def return_dict(*_, **__):
     return {}
-
 
 
 class MockAiohttpResponse:
