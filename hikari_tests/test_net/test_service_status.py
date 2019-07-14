@@ -134,7 +134,8 @@ async def test_subscribe_email_to_all_incidents(patched_request):
 
 @pytest.mark.asyncio
 async def test_subscribe_email_to_incidents(patched_request):
-    assert isinstance(await service_status.subscribe_email_to_incident("foo@bar.com", "1a2b3c"), status_model.Subscriber)
+    subscription = await service_status.subscribe_email_to_incident("foo@bar.com", "1a2b3c")
+    assert isinstance(subscription, status_model.Subscriber)
 
 
 @pytest.mark.asyncio

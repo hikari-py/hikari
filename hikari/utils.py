@@ -59,7 +59,12 @@ T = typing.TypeVar("T")
 
 
 def get_from_map_as(
-    mapping: dict, key: typing.Any, klazz: typing.Type[T], default=None, *, default_on_error=False
+    mapping: dict,
+    key: typing.Any,
+    klazz: typing.Union[typing.Callable[[typing.Any], T], typing.Type[T]],
+    default=None,
+    *,
+    default_on_error=False,
 ) -> typing.Optional[T]:
     """
     Get from a map and perform a type cast where possible.
@@ -70,7 +75,7 @@ def get_from_map_as(
         key:
             key to access.
         klazz:
-            type to cast to if required.
+            type to cast to if required. This may instead be a function if the call should always be made regardless.
         default:
             default value to return, or `None` if unspecified.
         default_on_error:
@@ -81,7 +86,8 @@ def get_from_map_as(
         An optional casted value, or `None` if it wasn't in the `mapping` at the start.
     """
     raw = mapping.get(key)
-    if isinstance(raw, klazz):
+    is_method_or_function = inspect.isfunction(klazz) or inspect.ismethod(klazz)
+    if not is_method_or_function and isinstance(raw, klazz):
         return raw
     if raw is None:
         return default

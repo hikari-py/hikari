@@ -81,7 +81,7 @@ class Subscription(base.Model):
 
     @classmethod
     def from_dict(cls: Subscription, payload: utils.DiscordObject, state=NotImplemented) -> Subscription:
-        return cls(state, subscriber=payload["subscriber"])
+        return cls(state, subscriber=Subscriber.from_dict(payload["subscriber"], state))
 
 
 @dataclasses.dataclass()
