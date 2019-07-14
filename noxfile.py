@@ -67,7 +67,7 @@ class PoetryNoxSession(sessions.Session):
 
     def install_requirements(self, *requirements_file_path_parts) -> None:
         requirements_file = pathify(*requirements_file_path_parts)
-        with open(requirements_file) as fp:
+        with open(requirements_file, encoding="utf-8") as fp:
             for line in fp.read().split("\n"):
                 line = line.strip()
                 if line and not line.startswith("#"):

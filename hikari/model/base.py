@@ -19,6 +19,7 @@
 """
 Model ABCs.
 """
+from __future__ import annotations
 
 __all__ = ("Model", "Snowflake", "NamedEnum")
 
@@ -46,7 +47,7 @@ class Model(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def from_dict(cls, payload: utils.DiscordObject, state):
+    def from_dict(cls, payload: utils.DiscordObject, state=NotImplemented):
         """Consume a Discord payload and produce an instance of this class."""
         return NotImplemented
 
@@ -89,7 +90,7 @@ class Snowflake(Model):
     def created_at(self) -> datetime.datetime:
         """When the object was created."""
         stamp = ((self.id >> 22) / 1_000) + utils.DISCORD_EPOCH
-        return datetime.datetime.fromtimestamp(stamp)
+        return datetime.datetime.utcfromtimestamp(stamp)
 
     @property
     def internal_worker_id(self) -> int:

@@ -27,7 +27,7 @@ def json(file):
         this_directory = os.path.abspath(os.path.dirname(this_file))
         file_path = os.path.join(this_directory, file) + ".json"
 
-        with open(file_path) as fp:
+        with open(file_path, encoding="utf-8") as fp:
             return libjson.load(fp)
 
     return reader

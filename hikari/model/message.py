@@ -17,8 +17,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Messages
+Messages and attachments.
 """
+from __future__ import annotations
+
 __all__ = ()
 
 import enum

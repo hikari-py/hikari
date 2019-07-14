@@ -19,6 +19,8 @@
 """
 Invitations to guilds.
 """
+from __future__ import annotations
+
 __all__ = ()
 
 import enum

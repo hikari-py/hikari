@@ -19,6 +19,8 @@
 """
 Implementation of the HTTP Client mix of all mixin components.
 """
+from __future__ import annotations
+
 __all__ = ("HTTPClient",)
 
 import io
