@@ -24,7 +24,8 @@ import os
 import asynctest
 import pytest
 
-from hikari.net import status
+from hikari.net import service_status
+from hikari.model import service_status as status_model
 
 
 def _parse(path):
@@ -83,78 +84,80 @@ def patched_request():
 
 @pytest.mark.asyncio
 async def test_get_status(patched_request):
-    assert isinstance(await status.get_status(), status.Status)
+    assert isinstance(await service_status.get_status(), status_model.Status)
 
 
 @pytest.mark.asyncio
 async def test_get_summary(patched_request):
-    assert isinstance(await status.get_summary(), status.Summary)
+    assert isinstance(await service_status.get_summary(), status_model.Summary)
 
 
 @pytest.mark.asyncio
 async def test_get_components(patched_request):
-    assert isinstance(await status.get_components(), status.Components)
+    assert isinstance(await service_status.get_components(), status_model.Components)
 
 
 @pytest.mark.asyncio
 async def test_get_all_incidents(patched_request):
-    assert isinstance(await status.get_all_incidents(), status.Incidents)
+    assert isinstance(await service_status.get_all_incidents(), status_model.Incidents)
 
 
 @pytest.mark.asyncio
 async def test_get_unresolved_incidents(patched_request):
-    assert isinstance(await status.get_unresolved_incidents(), status.Incidents)
+    assert isinstance(await service_status.get_unresolved_incidents(), status_model.Incidents)
 
 
 @pytest.mark.asyncio
 async def test_get_all_scheduled_maintenances(patched_request):
-    assert isinstance(await status.get_all_scheduled_maintenances(), status.ScheduledMaintenances)
+    assert isinstance(await service_status.get_all_scheduled_maintenances(), status_model.ScheduledMaintenances)
 
 
 @pytest.mark.asyncio
 async def test_get_upcoming_scheduled_maintenances(patched_request):
-    assert isinstance(await status.get_upcoming_scheduled_maintenances(), status.ScheduledMaintenances)
+    assert isinstance(await service_status.get_upcoming_scheduled_maintenances(), status_model.ScheduledMaintenances)
 
 
 @pytest.mark.asyncio
 async def test_get_active_scheduled_maintenances(patched_request):
-    assert isinstance(await status.get_active_scheduled_maintenances(), status.ScheduledMaintenances)
+    assert isinstance(await service_status.get_active_scheduled_maintenances(), status_model.ScheduledMaintenances)
 
 
 @pytest.mark.asyncio
 async def test_get_active_scheduled_maintenances(patched_request):
-    assert isinstance(await status.get_active_scheduled_maintenances(), status.ScheduledMaintenances)
+    assert isinstance(await service_status.get_active_scheduled_maintenances(), status_model.ScheduledMaintenances)
 
 
 @pytest.mark.asyncio
 async def test_subscribe_email_to_all_incidents(patched_request):
-    assert isinstance(await status.subscribe_email_to_all_incidents("foo@bar.com"), status.Subscriber)
+    assert isinstance(await service_status.subscribe_email_to_all_incidents("foo@bar.com"), status_model.Subscriber)
 
 
 @pytest.mark.asyncio
 async def test_subscribe_email_to_incidents(patched_request):
-    assert isinstance(await status.subscribe_email_to_incident("foo@bar.com", "1a2b3c"), status.Subscriber)
+    assert isinstance(await service_status.subscribe_email_to_incident("foo@bar.com", "1a2b3c"), status_model.Subscriber)
 
 
 @pytest.mark.asyncio
 async def test_subscribe_webhook_to_all_incidents(patched_request):
     assert isinstance(
-        await status.subscribe_webhook_to_all_incidents("foo@bar.com", "localhost:8080/lol"), status.Subscriber
+        await service_status.subscribe_webhook_to_all_incidents("foo@bar.com", "localhost:8080/lol"),
+        status_model.Subscriber,
     )
 
 
 @pytest.mark.asyncio
 async def test_subscribe_webhook_to_incidents(patched_request):
     assert isinstance(
-        await status.subscribe_webhook_to_incident("foo@bar.com", "localhost:8080/lol", "1a2b3c"), status.Subscriber
+        await service_status.subscribe_webhook_to_incident("foo@bar.com", "localhost:8080/lol", "1a2b3c"),
+        status_model.Subscriber,
     )
 
 
 @pytest.mark.asyncio
 async def test_unsubscribe(patched_request):
-    assert await status.unsubscribe_from("1a2b3c") is None
+    assert await service_status.unsubscribe_from("1a2b3c") is None
 
 
 @pytest.mark.asyncio
 async def test_resend_confirmation_email(patched_request):
-    assert await status.resend_confirmation_email("1a2b3c") is None
+    assert await service_status.resend_confirmation_email("1a2b3c") is None
