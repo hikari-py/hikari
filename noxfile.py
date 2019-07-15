@@ -92,6 +92,10 @@ def using_poetry(session_logic):
 @using_poetry
 def pytest(session: PoetryNoxSession) -> None:
     session.run(
+        "python",
+        "-W",
+        "ignore::DeprecationWarning",
+        "-m",
         "pytest",
         "--cov",
         MAIN_PACKAGE,
