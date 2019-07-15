@@ -108,9 +108,6 @@ class TestServiceStatus:
     async def test_get_active_scheduled_maintenances(self, patched_request):
         assert isinstance(await service_status.get_active_scheduled_maintenances(), status_model.ScheduledMaintenances)
 
-    async def test_get_active_scheduled_maintenances(self, patched_request):
-        assert isinstance(await service_status.get_active_scheduled_maintenances(), status_model.ScheduledMaintenances)
-
     async def test_subscribe_email_to_all_incidents(self, patched_request):
         assert isinstance(await service_status.subscribe_email_to_all_incidents("foo@bar.com"), status_model.Subscriber)
 
