@@ -21,7 +21,9 @@ Model ABCs.
 """
 from __future__ import annotations
 
-__all__ = ("Model", "Snowflake", "NamedEnum")
+import copy
+
+__all__ = ("Model", "Snowflake", "PartialObject", "NamedEnum")
 
 import abc
 import dataclasses
@@ -126,6 +128,25 @@ class Snowflake(Model):
 
     def __ge__(self, other) -> bool:
         return self > other or self == other
+
+
+@dataclasses.dataclass()
+class PartialObject(Snowflake):
+    """
+    Representation of a partially constructed object.
+    """
+
+    __slots__ = ("_other_attrs",)
+
+    _other_attrs: typing.Dict[str, typing.Any]
+
+    @classmethod
+    def from_dict(cls: PartialObject, payload: utils.DiscordObject, state=NotImplemented) -> PartialObject:
+        payload = copy.copy(payload)
+        return cls(_state=state, id=int(payload.pop("id")), _other_attrs=payload)
+
+    def __getattr__(self, item):
+        return self._other_attrs[item]
 
 
 class NamedEnum(enum.Enum):

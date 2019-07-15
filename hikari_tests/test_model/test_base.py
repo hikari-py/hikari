@@ -130,3 +130,16 @@ class TestSnowflake:
 @pytest.mark.model
 def test_NamedEnum_from_discord_name():
     assert DummyNamedEnum.from_discord_name("bar") == DummyNamedEnum.BAR
+
+
+@pytest.mark.model
+def test_PartialObject_just_id():
+    assert base.PartialObject.from_dict({"id": "123456"}, NotImplemented) is not None
+
+
+@pytest.mark.model
+def test_PartialObject_dynamic_attrs():
+    po = base.PartialObject.from_dict({"id": "123456", "foo": 69, "bar": False}, NotImplemented)
+    assert po.id == 123456
+    assert po.foo == 69
+    assert po.bar is False
