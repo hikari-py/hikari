@@ -39,7 +39,7 @@ T = typing.TypeVar("T")
 @dataclasses.dataclass(repr=False)
 class Model(abc.ABC):
     """
-    Base for every model we can use in this API.
+    Base for every model we can use in this API which needs access to the global state.
     """
 
     __slots__ = ("_state",)
