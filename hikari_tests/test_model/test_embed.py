@@ -37,7 +37,7 @@ class TestEmbed:
         attr = getattr(embed, slot)
         assert attr is _embed.UNSPECIFIED or slot == "_fields" and attr == []
 
-    @pytest.mark.parametrize(["field", "property"], [(s, s[1:]) for s in _embed.Embed.__slots__ if s.startswith('_')])
+    @pytest.mark.parametrize(["field", "property"], [(s, s[1:]) for s in _embed.Embed.__slots__ if s.startswith("_")])
     def test_Embed_property_accessors_access_values(self, field, property, embed):
         sentinel = object()
         setattr(embed, field, sentinel)
@@ -77,7 +77,7 @@ class TestEmbed:
             assert field.inline is inline
 
     def test_Embed_remove_field(self, embed):
-        a, b, c = 'abc'
+        a, b, c = "abc"
         embed._fields = [a, b, c]
 
         embed.remove_field(1)
@@ -110,13 +110,10 @@ class TestEmbed:
             timestamp=now.replace(tzinfo=datetime.timezone.utc).isoformat(),
             color=color,
             fields=[field1, field2],
-            footer=dict(
-                text="meals from 10am",
-                icon_url="https://hornpub.com/logo.png"
-            ),
+            footer=dict(text="meals from 10am", icon_url="https://hornpub.com/logo.png"),
             thumbnail=dict(url="https://hornpub.com/corny-photo.png"),
             image=dict(url="https://hornpub.com/corny-photo.jpeg"),
-            author=dict(name="me me me")
+            author=dict(name="me me me"),
         )
 
     def test_Embed_to_dict_when_empty(self, embed):
@@ -137,14 +134,19 @@ class TestEmbed:
                 timestamp=now.replace(tzinfo=datetime.timezone.utc).isoformat(),
                 color=color,
                 fields=[field1, field2],
-                footer=dict(
-                    text="meals from 10am",
-                    icon_url="https://hornpub.com/logo.png"
+                footer=dict(text="meals from 10am", icon_url="https://hornpub.com/logo.png"),
+                image=dict(
+                    url="https://hornpub.com/corny-photo.png",
+                    proxy_url="https://cdn.hornpub.com/corny-photo.png",
+                    height=420,
+                    width=45,
                 ),
-                image=dict(url="https://hornpub.com/corny-photo.png",
-                           proxy_url="https://cdn.hornpub.com/corny-photo.png", height=420, width=45),
-                thumbnail=dict(url="https://hornpub.com/corny-photo.jpeg",
-                           proxy_url="https://cdn.hornpub.com/corny-photo.jpeg", height=9999, width=1111),
+                thumbnail=dict(
+                    url="https://hornpub.com/corny-photo.jpeg",
+                    proxy_url="https://cdn.hornpub.com/corny-photo.jpeg",
+                    height=9999,
+                    width=1111,
+                ),
                 author=dict(name="me me me"),
                 provider=dict(name="jobs in carpal tunnel therapy", url="hand-jobs.com"),
                 video=dict(url="youchube.tom", height=69, width=96),
@@ -159,7 +161,9 @@ class TestEmbed:
         assert embed.color == _color.Color(color)
         assert len(embed.fields) == 2
         assert embed.fields[0] == _embed.EmbedField(name="this is field1", value="isn't it nice", inline=True)
-        assert embed.fields[1] == _embed.EmbedField(name="this is field2", value="embeds are kinda broken though", inline=False)
+        assert embed.fields[1] == _embed.EmbedField(
+            name="this is field2", value="embeds are kinda broken though", inline=False
+        )
         assert embed.footer.text == "meals from 10am"
         assert embed.footer.icon_url == "https://hornpub.com/logo.png"
         assert embed.image.url == "https://hornpub.com/corny-photo.png"
