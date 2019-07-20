@@ -55,4 +55,10 @@ class Permission(enum.IntFlag):
     MANAGE_ROLES = 0x10000000
     MANAGE_WEBHOOKS = 0x20000000
     MANAGE_EMOJIS = 0x40000000
-    ALL = 0x80000000 - 1
+
+    @classmethod
+    def all(cls) -> Permission:
+        permission = cls.NONE
+        for member in cls.__members__.values():
+            permission |= member
+        return permission

@@ -16,6 +16,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""
+Most small tests can be done inline, however, if a large piece of test data exists, it is best to dump it here, perhaps.
+"""
 import inspect
 import json as libjson
 import os
