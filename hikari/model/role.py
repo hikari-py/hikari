@@ -19,26 +19,25 @@
 """
 A role within a guild.
 """
-from __future__ import annotations
-
 __all__ = ("Role",)
 
 import dataclasses
 
+from hikari import utils
 from hikari.model import base
 from hikari.model import color as _color
 from hikari.model import permission as _permission
-from hikari import utils
 
 
 @dataclasses.dataclass()
-class Role(base.Snowflake):
+class Role(base.SnowflakeMixin):
     """
     Representation of a role within a guild.
     """
 
-    __slots__ = ("name", "color", "hoist", "position", "permissions", "managed", "mentionable")
+    __slots__ = ("id", "name", "color", "hoist", "position", "permissions", "managed", "mentionable")
 
+    id: int
     name: str
     color: _color.Color
     hoist: bool
@@ -47,10 +46,9 @@ class Role(base.Snowflake):
     managed: bool
     mentionable: bool
 
-    @classmethod
-    def from_dict(cls: Role, payload: utils.DiscordObject, state=NotImplemented) -> Role:
-        return cls(
-            state,
+    @staticmethod
+    def from_dict(payload):
+        return Role(
             id=utils.get_from_map_as(payload, "id", int),
             name=utils.get_from_map_as(payload, "name", str),
             color=utils.get_from_map_as(payload, "color", _color.Color),

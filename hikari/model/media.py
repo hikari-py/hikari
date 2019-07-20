@@ -17,48 +17,17 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Guild models.
+Represents various forms of media such as images.
 """
-__all__ = ()
-
-import enum
-
-from hikari.model import base
+__all__ = ("Avatar",)
 
 
-class PartialGuild:
-    """Returned if the guild is not available yet..."""
+class Avatar:
+    """
+    Represents a user
+    """
 
-    __slots__ = ()
+    __slots__ = ("mime_type", "data")
 
-
-class Guild(PartialGuild):
-    __slots__ = ()
-
-
-class DefaultMessageNotificationLevel(enum.IntEnum):
-    ...
-
-
-class ExplicitContentFilterLevel(enum.IntEnum):
-    ...
-
-
-class MFALevel(enum.IntEnum):
-    ...
-
-
-class VerificationLevel(enum.IntEnum):
-    ...
-
-
-class PremiumTier(enum.IntEnum):
-    ...
-
-
-class GuildEmbed(base.SnowflakeMixin):
-    __slots__ = ()
-
-
-class Ban:
-    __slots__ = ()
+    mime_type: str
+    data: bytes

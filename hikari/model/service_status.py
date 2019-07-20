@@ -19,8 +19,6 @@
 """
 Models for the Status API.
 """
-from __future__ import annotations
-
 __all__ = (
     "Subscriber",
     "Subscription",
@@ -36,16 +34,16 @@ __all__ = (
     "Summary",
 )
 
-import dataclasses
 import datetime
 import typing
 
+import dataclasses
+
 from hikari import utils
-from . import base
 
 
 @dataclasses.dataclass()
-class Subscriber(base.StatefulModel):
+class Subscriber:
     """
     A subscription to an incident.
     """
@@ -60,10 +58,9 @@ class Subscriber(base.StatefulModel):
     skip_confirmation_notification: typing.Optional[bool]
     purge_at: typing.Optional[datetime.datetime]
 
-    @classmethod
-    def from_dict(cls: Subscriber, payload: utils.DiscordObject, state=NotImplemented) -> Subscriber:
-        return cls(
-            state,
+    @staticmethod
+    def from_dict(payload: utils.DiscordObject):
+        return Subscriber(
             id=payload["id"],
             email=payload["email"],
             mode=payload["mode"],
@@ -75,7 +72,7 @@ class Subscriber(base.StatefulModel):
 
 
 @dataclasses.dataclass()
-class Subscription(base.StatefulModel):
+class Subscription:
     """
     A subscription to an incident.
     """
@@ -84,13 +81,13 @@ class Subscription(base.StatefulModel):
 
     subscriber: Subscriber
 
-    @classmethod
-    def from_dict(cls: Subscription, payload: utils.DiscordObject, state=NotImplemented) -> Subscription:
-        return cls(state, subscriber=Subscriber.from_dict(payload["subscriber"], state))
+    @staticmethod
+    def from_dict(payload):
+        return Subscription(subscriber=Subscriber.from_dict(payload["subscriber"]))
 
 
 @dataclasses.dataclass()
-class Page(base.StatefulModel):
+class Page:
     """
     A page element.
     """
@@ -102,10 +99,9 @@ class Page(base.StatefulModel):
     url: str
     updated_at: datetime.datetime
 
-    @classmethod
-    def from_dict(cls: Page, payload: utils.DiscordObject, state=NotImplemented) -> Page:
-        return cls(
-            state,
+    @staticmethod
+    def from_dict(payload):
+        return Page(
             id=payload["id"],
             name=payload["name"],
             url=payload["url"],
@@ -114,7 +110,7 @@ class Page(base.StatefulModel):
 
 
 @dataclasses.dataclass()
-class Status(base.StatefulModel):
+class Status:
     """
     A status description.
     """
@@ -124,13 +120,13 @@ class Status(base.StatefulModel):
     indicator: typing.Optional[str]
     description: typing.Optional[str]
 
-    @classmethod
-    def from_dict(cls: Status, payload: utils.DiscordObject, state=NotImplemented) -> Status:
-        return Status(state, indicator=payload.get("indicator"), description=payload.get("description"))
+    @staticmethod
+    def from_dict(payload: utils.DiscordObject):
+        return Status(indicator=payload.get("indicator"), description=payload.get("description"))
 
 
 @dataclasses.dataclass()
-class Component(base.StatefulModel):
+class Component:
     """
     A component description.
     """
@@ -145,10 +141,9 @@ class Component(base.StatefulModel):
     updated_at: datetime.datetime
     description: typing.Optional[str]
 
-    @classmethod
-    def from_dict(cls: Component, payload: utils.DiscordObject, state=NotImplemented) -> Component:
-        return cls(
-            state,
+    @staticmethod
+    def from_dict(payload: utils.DiscordObject):
+        return Component(
             id=payload["id"],
             name=payload["name"],
             created_at=utils.get_from_map_as(payload, "created_at", utils.parse_iso_8601_datetime),
@@ -160,7 +155,7 @@ class Component(base.StatefulModel):
 
 
 @dataclasses.dataclass()
-class Components(base.StatefulModel):
+class Components:
     """
     A collection of :class:`Component` objects.
     """
@@ -170,17 +165,16 @@ class Components(base.StatefulModel):
     page: Page
     components: typing.List[Component]
 
-    @classmethod
-    def from_dict(cls: Components, payload: utils.DiscordObject, state=NotImplemented) -> Components:
-        return cls(
-            state,
-            page=Page.from_dict(payload["page"], state),
-            components=[Component.from_dict(c, state) for c in payload.get("components", [])],
+    @staticmethod
+    def from_dict(payload):
+        return Components(
+            page=Page.from_dict(payload["page"]),
+            components=[Component.from_dict(c) for c in payload.get("components", [])],
         )
 
 
 @dataclasses.dataclass()
-class IncidentUpdate(base.StatefulModel):
+class IncidentUpdate:
     """
     An informative status update for a specific incident.
     """
@@ -195,10 +189,9 @@ class IncidentUpdate(base.StatefulModel):
     id: str
     updated_at: typing.Optional[datetime.datetime]
 
-    @classmethod
-    def from_dict(cls: IncidentUpdate, payload: utils.DiscordObject, state=NotImplemented) -> IncidentUpdate:
-        return cls(
-            state,
+    @staticmethod
+    def from_dict(payload):
+        return IncidentUpdate(
             id=payload["id"],
             body=payload["body"],
             created_at=utils.get_from_map_as(payload, "created_at", utils.parse_iso_8601_datetime),
@@ -210,7 +203,7 @@ class IncidentUpdate(base.StatefulModel):
 
 
 @dataclasses.dataclass()
-class Incident(base.StatefulModel):
+class Incident:
     """
     An incident.
     """
@@ -239,17 +232,16 @@ class Incident(base.StatefulModel):
     status: str
     updated_at: datetime.datetime
 
-    @classmethod
-    def from_dict(cls: Incident, payload: utils.DiscordObject, state=NotImplemented) -> Incident:
-        return cls(
-            state,
+    @staticmethod
+    def from_dict(payload):
+        return Incident(
             id=payload["id"],
             name=payload["name"],
             status=payload["status"],
             updated_at=utils.get_from_map_as(
                 payload, "updated_at", utils.parse_iso_8601_datetime, default_on_error=True
             ),
-            incident_updates=[IncidentUpdate.from_dict(i, state) for i in payload.get("incident_updates", [])],
+            incident_updates=[IncidentUpdate.from_dict(i) for i in payload.get("incident_updates", [])],
             monitoring_at=utils.get_from_map_as(
                 payload, "monitoring_at", utils.parse_iso_8601_datetime, default_on_error=True
             ),
@@ -263,7 +255,7 @@ class Incident(base.StatefulModel):
 
 
 @dataclasses.dataclass()
-class Incidents(base.StatefulModel):
+class Incidents:
     """
     A collection of :class:`Incident` objects.
     """
@@ -273,15 +265,13 @@ class Incidents(base.StatefulModel):
     page: Page
     incidents: typing.List[Incident]
 
-    @classmethod
-    def from_dict(cls: Incidents, payload: utils.DiscordObject, state=NotImplemented) -> Incidents:
-        return cls(
-            state, Page.from_dict(payload["page"], state), [Incident.from_dict(i, state) for i in payload["incidents"]]
-        )
+    @staticmethod
+    def from_dict(payload):
+        return Incidents(Page.from_dict(payload["page"]), [Incident.from_dict(i) for i in payload["incidents"]])
 
 
 @dataclasses.dataclass()
-class ScheduledMaintenance(base.StatefulModel):
+class ScheduledMaintenance:
     """
     A description of a maintenance that is scheduled to be performed.
     """
@@ -312,16 +302,13 @@ class ScheduledMaintenance(base.StatefulModel):
     status: str
     updated_at: datetime.datetime
 
-    @classmethod
-    def from_dict(
-        cls: ScheduledMaintenance, payload: utils.DiscordObject, state=NotImplemented
-    ) -> ScheduledMaintenance:
-        return cls(
-            state,
+    @staticmethod
+    def from_dict(payload):
+        return ScheduledMaintenance(
             id=payload["id"],
             name=payload["name"],
             impact=payload["impact"],
-            incident_updates=[IncidentUpdate.from_dict(iu, state) for iu in payload.get("incident_updates", [])],
+            incident_updates=[IncidentUpdate.from_dict(iu) for iu in payload.get("incident_updates", [])],
             monitoring_at=utils.get_from_map_as(
                 payload, "monitoring_at", utils.parse_iso_8601_datetime, default_on_error=True
             ),
@@ -343,7 +330,7 @@ class ScheduledMaintenance(base.StatefulModel):
 
 
 @dataclasses.dataclass()
-class ScheduledMaintenances(base.StatefulModel):
+class ScheduledMaintenances:
     """
     A collection of maintenance events.
     """
@@ -353,21 +340,16 @@ class ScheduledMaintenances(base.StatefulModel):
     page: Page
     scheduled_maintenances: typing.List[ScheduledMaintenance]
 
-    @classmethod
-    def from_dict(
-        cls: ScheduledMaintenances, payload: utils.DiscordObject, state=NotImplemented
-    ) -> ScheduledMaintenances:
-        return cls(
-            state,
-            page=Page.from_dict(payload["page"], state),
-            scheduled_maintenances=[
-                ScheduledMaintenance.from_dict(sm, state) for sm in payload["scheduled_maintenances"]
-            ],
+    @staticmethod
+    def from_dict(payload):
+        return ScheduledMaintenances(
+            page=Page.from_dict(payload["page"]),
+            scheduled_maintenances=[ScheduledMaintenance.from_dict(sm) for sm in payload["scheduled_maintenances"]],
         )
 
 
 @dataclasses.dataclass()
-class Summary(base.StatefulModel):
+class Summary:
     """
     A description of the overall API status.
     """
@@ -380,15 +362,12 @@ class Summary(base.StatefulModel):
     incidents: typing.List[Incident]
     scheduled_maintenances: typing.List[ScheduledMaintenance]
 
-    @classmethod
-    def from_dict(cls: Summary, payload: utils.DiscordObject, state=NotImplemented) -> Summary:
-        return cls(
-            state,
-            page=Page.from_dict(payload["page"], state),
-            scheduled_maintenances=[
-                ScheduledMaintenance.from_dict(sm, state) for sm in payload["scheduled_maintenances"]
-            ],
-            incidents=[Incident.from_dict(i, state) for i in payload["incidents"]],
-            components=[Component.from_dict(c, state) for c in payload["components"]],
-            status=Status.from_dict(payload["status"], state),
+    @staticmethod
+    def from_dict(payload):
+        return Summary(
+            page=Page.from_dict(payload["page"]),
+            scheduled_maintenances=[ScheduledMaintenance.from_dict(sm) for sm in payload["scheduled_maintenances"]],
+            incidents=[Incident.from_dict(i) for i in payload["incidents"]],
+            components=[Component.from_dict(c) for c in payload["components"]],
+            status=Status.from_dict(payload["status"]),
         )
