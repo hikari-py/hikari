@@ -19,8 +19,6 @@
 """
 Messages and attachments.
 """
-from __future__ import annotations
-
 __all__ = ()
 
 import enum
@@ -36,17 +34,17 @@ class MessageActivityType(enum.IntEnum):
     ...
 
 
-class Message(base.Snowflake):
+class Message(base.SnowflakeMixin):
     __slots__ = ()
 
 
-class MessageActivity(base.Model):
+class MessageActivity:
     __slots__ = ()
 
 
-class MessageApplication(base.Model):
+class MessageApplication:
     __slots__ = ()
 
 
-class Attachment(base.Snowflake):
+class Attachment(base.SnowflakeMixin):
     __slots__ = ()

@@ -17,65 +17,24 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Model ABCs.
+Model ABCs and mixins.
 """
-from __future__ import annotations
+__all__ = ("SnowflakeMixin", "PartialObject", "NamedEnum")
 
 import copy
-
-__all__ = ("Model", "Snowflake", "PartialObject", "NamedEnum")
-
-import abc
-import dataclasses
 import datetime
 import enum
 import typing
 
+import dataclasses
+
 from hikari import utils
 
-T = typing.TypeVar("T")
 
-
-@dataclasses.dataclass(repr=False)
-class Model(abc.ABC):
+@utils.mixin
+class SnowflakeMixin:
     """
-    Base for every model we can use in this API which needs access to the global state.
-    """
-
-    __slots__ = ("_state",)
-
-    #: Internal API state.
-    _state: typing.Any
-
-    @classmethod
-    @abc.abstractmethod
-    def from_dict(cls, payload: utils.DiscordObject, state=NotImplemented):
-        """Consume a Discord payload and produce an instance of this class."""
-        return NotImplemented
-
-    def to_dict(self, *, dict_factory=dict) -> utils.DiscordObject:
-        """
-        Consume this class instance and produce a Discord payload.
-
-        Classes are not required to implement this method unless it is required internally. If not
-        implemented otherwise, this will default to calling :func:`dataclasses.asdict`_.
-
-        Args:
-            dict_factory:
-                Optional factory method for making a new dict, defaults to :class:`dict`_.
-                The _state object will not be included in this representation.
-        """
-        dictionary = dataclasses.asdict(self, dict_factory=dict_factory)
-        for slot in self.__slots__:
-            dictionary.pop(slot)
-        return dictionary
-
-
-# noinspection PyUnresolvedReferences,PyAbstractClass
-@dataclasses.dataclass()
-class Snowflake(Model):
-    """
-    Abstract base for every model in this API that provides an ID attribute.
+    Base for any type that specifies an ID. The implementation is expected to implement that field.
 
     Warning:
         Due to constraints by the dataclasses library, one must ensure to define
@@ -83,9 +42,8 @@ class Snowflake(Model):
         be inherited correctly.
     """
 
-    __slots__ = ("id",)
+    __slots__ = ()  # DO NOT ADD FIELDS TO THIS MIXIN.
 
-    #: ID of the object.
     id: int
 
     @property
@@ -110,7 +68,7 @@ class Snowflake(Model):
         return self.id & 0xFFF
 
     def __lt__(self, other) -> bool:
-        if not isinstance(other, Snowflake):
+        if not isinstance(other, SnowflakeMixin):
             raise TypeError(
                 f"Cannot compare a Snowflake type {type(self).__name__} to a non-snowflake type {type(other).__name__}"
             )
@@ -120,7 +78,7 @@ class Snowflake(Model):
         return self < other or self == other
 
     def __gt__(self, other) -> bool:
-        if not isinstance(other, Snowflake):
+        if not isinstance(other, SnowflakeMixin):
             raise TypeError(
                 f"Cannot compare a Snowflake type {type(self).__name__} to a non-snowflake type {type(other).__name__}"
             )
@@ -131,19 +89,21 @@ class Snowflake(Model):
 
 
 @dataclasses.dataclass()
-class PartialObject(Snowflake):
+class PartialObject(SnowflakeMixin):
     """
-    Representation of a partially constructed object.
+    Representation of a partially constructed object. This may be returned by some components instead of a correctly
+    initialized object if information is not available.
     """
 
-    __slots__ = ("_other_attrs",)
+    __slots__ = ("id", "_other_attrs")
 
+    id: int
     _other_attrs: typing.Dict[str, typing.Any]
 
-    @classmethod
-    def from_dict(cls: PartialObject, payload: utils.DiscordObject, state=NotImplemented) -> PartialObject:
+    @staticmethod
+    def from_dict(payload):
         payload = copy.copy(payload)
-        return cls(_state=state, id=int(payload.pop("id")), _other_attrs=payload)
+        return PartialObject(id=int(payload.pop("id")), _other_attrs=payload)
 
     def __getattr__(self, item):
         return self._other_attrs[item]

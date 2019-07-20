@@ -19,11 +19,10 @@
 """
 Permission overwrites.
 """
-from __future__ import annotations
-
 __all__ = ()
 
 import enum
+
 from hikari.model import base
 
 
@@ -32,5 +31,7 @@ class OverwriteEntityType(base.NamedEnum):
     ROLE = enum.auto()
 
 
-class Overwrite(base.Snowflake):
+class Overwrite(base.SnowflakeMixin):
     __slots__ = ()
+
+    # TODO: from dict

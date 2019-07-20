@@ -137,7 +137,7 @@ class AuditLogChangeKey(base.NamedEnum):
     RATE_LIMIT_PER_USER = "rate_limit_per_user"
 
     @classmethod
-    def from_discord_name(cls: AuditLogChangeKey, item) -> typing.Union[AuditLogChangeKey, str]:
+    def from_discord_name(cls, item):
         item = str(item)
 
         # Dumb edge cases, because why the hell not.
@@ -167,7 +167,7 @@ class AuditLogChangeKey(base.NamedEnum):
 
 
 @dataclasses.dataclass()
-class AuditLog(base.Model):
+class AuditLog:
     """
     An Audit Log.
     """
@@ -178,28 +178,26 @@ class AuditLog(base.Model):
     users: typing.List[user.User]
     entries: typing.List[AuditLogEntry]
 
-    @classmethod
-    def from_dict(cls: AuditLog, payload: utils.DiscordObject, state) -> AuditLog:
+    @staticmethod
+    def from_dict(payload):
         """
         Create an AuditLog object from a dict payload.
 
         Args:
             payload: the payload to parse.
-            state: the state to associate with the object.
 
         Returns:
             An AuditLog object.
         """
         return AuditLog(
-            state,
-            webhooks=[webhook.Webhook.from_dict(w, state) for w in payload["webhooks"]],
-            users=[user.User.from_dict(u, state) for u in payload["users"]],
-            entries=[AuditLogEntry.from_dict(e, state) for e in payload["audit_log_entries"]],
+            webhooks=[NotImplemented for _ in payload["webhooks"]],
+            users=[NotImplemented for _ in payload["users"]],
+            entries=[AuditLogEntry.from_dict(e) for e in payload["audit_log_entries"]],
         )
 
 
 @dataclasses.dataclass()
-class MemberPrunedAuditLogEntryInfo(base.Model):
+class MemberPrunedAuditLogEntryInfo:
     """
     Additional audit log info for member pruning.
     """
@@ -209,29 +207,24 @@ class MemberPrunedAuditLogEntryInfo(base.Model):
     delete_member_days: int
     members_removed: int
 
-    @classmethod
-    def from_dict(
-        cls: MemberPrunedAuditLogEntryInfo, payload: utils.DiscordObject, state
-    ) -> MemberPrunedAuditLogEntryInfo:
+    @staticmethod
+    def from_dict(payload):
         """
         Create a MemberPrunedAuditLogEntryInfo object from a dict payload.
 
         Args:
             payload: the payload to parse.
-            state: the state to associate with the object.
 
         Returns:
             A MemberPrunedAuditLogEntryInfo object.
         """
-        return cls(
-            state,
-            delete_member_days=int(payload["delete_member_days"]),
-            members_removed=int(payload["members_removed"]),
+        return MemberPrunedAuditLogEntryInfo(
+            delete_member_days=int(payload["delete_member_days"]), members_removed=int(payload["members_removed"])
         )
 
 
 @dataclasses.dataclass()
-class MessageDeletedAuditLogEntryInfo(base.Model):
+class MessageDeletedAuditLogEntryInfo:
     """
     Additional audit log info for message deletions.
     """
@@ -241,25 +234,22 @@ class MessageDeletedAuditLogEntryInfo(base.Model):
     channel_id: int
     count: int
 
-    @classmethod
-    def from_dict(
-        cls: MessageDeletedAuditLogEntryInfo, payload: utils.DiscordObject, state
-    ) -> MessageDeletedAuditLogEntryInfo:
+    @staticmethod
+    def from_dict(payload):
         """
         Create an MessageDeletedAuditLogEntryInfo object from a dict payload.
 
         Args:
             payload: the payload to parse.
-            state: the state to associate with the object.
 
         Returns:
             A MessageDeletedAuditLogEntryInfo object.
         """
-        return cls(state, channel_id=int(payload["channel_id"]), count=int(payload["count"]))
+        return MessageDeletedAuditLogEntryInfo(channel_id=int(payload["channel_id"]), count=int(payload["count"]))
 
 
 @dataclasses.dataclass()
-class ChannelOverwriteAuditLogEntryInfo(base.Model):
+class ChannelOverwriteAuditLogEntryInfo:
     """
     Additional audit log info for channel overwrites that changed.
     """
@@ -270,22 +260,18 @@ class ChannelOverwriteAuditLogEntryInfo(base.Model):
     type: overwrite.OverwriteEntityType
     role_name: str
 
-    @classmethod
-    def from_dict(
-        cls: ChannelOverwriteAuditLogEntryInfo, payload: utils.DiscordObject, state
-    ) -> ChannelOverwriteAuditLogEntryInfo:
+    @staticmethod
+    def from_dict(payload):
         """
         Create a ChannelOverwriteAuditLogEntryInfo object from a dict payload.
 
         Args:
             payload: the payload to parse.
-            state: the state to associate with the object.
 
         Returns:
             An ChannelOverwriteAuditLogEntryInfo object.
         """
-        return cls(
-            state,
+        return ChannelOverwriteAuditLogEntryInfo(
             id=int(payload["id"]),
             type=overwrite.OverwriteEntityType.from_discord_name(payload["type"]),
             role_name=payload["role_name"],
@@ -293,7 +279,7 @@ class ChannelOverwriteAuditLogEntryInfo(base.Model):
 
 
 @dataclasses.dataclass()
-class AuditLogChange(base.Model):
+class AuditLogChange:
     """
     Represents a change that was recorded in the audit log.
 
@@ -311,14 +297,13 @@ class AuditLogChange(base.Model):
     new_value: typing.Optional[typing.Any]
     old_value: typing.Optional[typing.Any]
 
-    @classmethod
-    def from_dict(cls: AuditLogChange, payload: utils.DiscordObject, state) -> AuditLogChange:
+    @staticmethod
+    def from_dict(payload):
         """
         Create an AuditLogChange object from a dict payload.
 
         Args:
             payload: the payload to parse.
-            state: the state to associate with the object.
 
         Returns:
             An AuditLogChange object.
@@ -326,7 +311,7 @@ class AuditLogChange(base.Model):
         key = AuditLogChangeKey.from_discord_name(payload["key"])
         old_value, new_value, key = payload.get("old_value"), payload.get("new_value"), key
         old_value, new_value, key = AuditLogChangeKey.translate_values(old_value, new_value, key)
-        return cls(state, old_value=old_value, new_value=new_value, key=key)
+        return AuditLogChange(old_value=old_value, new_value=new_value, key=key)
 
 
 #: Valid types of additional Audit Log entry information.
@@ -336,13 +321,14 @@ AuditLogEntryInfo = typing.Union[
 
 
 @dataclasses.dataclass()
-class AuditLogEntry(base.Snowflake):
+class AuditLogEntry(base.SnowflakeMixin):
     """
     An entry within an Audit Log.
     """
 
-    __slots__ = ("target_id", "changes", "user_id", "action_type", "options", "reason")
+    __slots__ = ("id", "target_id", "changes", "user_id", "action_type", "options", "reason")
 
+    id: int
     target_id: typing.Optional[int]
     changes: typing.List[AuditLogChange]
     user_id: int
@@ -350,14 +336,14 @@ class AuditLogEntry(base.Snowflake):
     options: AuditLogEntryInfo
     reason: typing.Optional[str]
 
-    @classmethod
-    def from_dict(cls: AuditLogEntry, payload: utils.DiscordObject, state) -> AuditLogEntry:
+    @staticmethod
+    def from_dict(payload):
         """
         Create an AuditLogEntry object from a dict payload.
 
         Args:
-            payload: the payload to parse.
-            state: the state to associate with the object.
+            payload:
+                the payload to parse.
 
         Returns:
             An AuditLogEntry object.
@@ -366,21 +352,20 @@ class AuditLogEntry(base.Snowflake):
         options = payload.get("options")
 
         if action_type.name.startswith("CHANNEL_OVERWRITE_"):
-            options = ChannelOverwriteAuditLogEntryInfo.from_dict(options, state)
+            options = ChannelOverwriteAuditLogEntryInfo.from_dict(options)
         elif action_type is AuditLogEvent.MEMBER_PRUNE:
-            options = MemberPrunedAuditLogEntryInfo.from_dict(options, state)
+            options = MemberPrunedAuditLogEntryInfo.from_dict(options)
         elif action_type is AuditLogEvent.MESSAGE_DELETE:
-            options = MessageDeletedAuditLogEntryInfo.from_dict(options, state)
+            options = MessageDeletedAuditLogEntryInfo.from_dict(options)
         else:
             options = None
 
-        return cls(
-            state,
+        return AuditLogEntry(
+            id=utils.get_from_map_as(payload, "id", int),
             target_id=utils.get_from_map_as(payload, "target_id", int, None),
-            changes=[AuditLogChange.from_dict(change, state) for change in payload.get("changes", [])],
+            changes=[AuditLogChange.from_dict(change) for change in payload.get("changes", [])],
             user_id=utils.get_from_map_as(payload, "user_id", int),
             action_type=action_type,
             options=options,
             reason=utils.get_from_map_as(payload, "reason", str, None),
-            id=utils.get_from_map_as(payload, "id", int),
         )

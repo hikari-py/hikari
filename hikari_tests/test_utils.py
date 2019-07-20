@@ -330,3 +330,64 @@ def test_parse_iso_8601_date_with_milliseconds_instead_of_microseconds():
     assert date.minute == 22
     assert date.second == 33
     assert date.microsecond == 23000
+
+
+def test_mixin_applied_to_something_that_is_not_a_class():
+    try:
+        @utils.mixin
+        def foo():
+            pass
+        assert False, "No error thrown"
+    except TypeError:
+        pass
+
+
+def test_mixin_applied_to_something_that_is_directly_derived_from_object():
+    try:
+        class Bar:
+            pass
+
+        @utils.mixin
+        class FooMixin(Bar):
+            pass
+        assert False, "No error thrown"
+    except TypeError:
+        pass
+
+
+def test_mixin_applied_to_something_that_is_not_slotted():
+    try:
+        @utils.mixin
+        class FooMixin:
+            pass
+        assert False, "No error thrown"
+    except TypeError:
+        pass
+
+
+def test_mixin_applied_to_something_that_is_slotted_but_not_multiple_inheritance_compatible():
+    try:
+        @utils.mixin
+        class FooMixin:
+            __slots__ = ('nine', 'eighteen', 'twentyseven')
+
+        assert False, "No error thrown"
+    except TypeError:
+        pass
+
+
+def test_mixin_applied_to_something_that_is_not_named_correctly():
+    try:
+        @utils.mixin
+        class FooMixer:
+            __slots__ = ()
+
+        assert False, "No error thrown"
+    except NameError:
+        pass
+
+
+def test_mixin_on_compliant_solution():
+    @utils.mixin
+    class FooMixin:
+        __slots__ = ()

@@ -19,16 +19,12 @@
 """
 Emojis.
 """
-from __future__ import annotations
-
 __all__ = ()
 
-from hikari.model import base
 
-
-class PartialEmoji(base.Model):
+class PartialEmoji:
     __slots__ = ()
 
 
-class Emoji(PartialEmoji):
+class Emoji:
     __slots__ = ()

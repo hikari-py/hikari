@@ -23,7 +23,6 @@ from __future__ import annotations
 
 __all__ = ("HTTPClient",)
 
-import io
 import json
 import typing
 

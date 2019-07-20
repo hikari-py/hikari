@@ -28,27 +28,13 @@ from hikari.model import base
 
 
 @dataclasses.dataclass()
-class DummyModel(base.Model):
-    @classmethod
-    def from_dict(cls, payload: utils.DiscordObject, state):
-        return super().from_dict(payload, state)
-
-
-@dataclasses.dataclass()
-class DummySnowflake(base.Snowflake):
-    @classmethod
-    def from_dict(cls, payload: utils.DiscordObject, state):
-        return super().from_dict(payload, state)
-
-
-@pytest.fixture()
-def dummy_model():
-    return DummyModel(NotImplemented)
+class DummySnowflake(base.SnowflakeMixin):
+    id: int
 
 
 @pytest.fixture()
 def neko_snowflake():
-    return DummySnowflake(NotImplemented, 537340989808050216)
+    return DummySnowflake(537340989808050216)
 
 
 class DummyNamedEnum(base.NamedEnum):
@@ -58,57 +44,33 @@ class DummyNamedEnum(base.NamedEnum):
 
 
 @pytest.mark.model
-class TestModel:
-    def test_Model_init_subclass(self, dummy_model):
-        assert dummy_model is not None
-        assert isinstance(dummy_model, base.Model)
-
-    def test_Model_from_dict_defaults_to_NotImplemented(self):
-        assert DummyModel.from_dict(dict(), object()) is NotImplemented
-
-    def test_Model_to_dict_defaults_to_dataclasses_call(self, dummy_model):
-        assert dummy_model.to_dict() == {}
-
-
-@pytest.mark.model
 class TestSnowflake:
     def test_Snowflake_init_subclass(self):
-        instance = DummySnowflake(NotImplemented, id=12345)
+        instance = DummySnowflake(12345)
         assert instance is not None
-        assert isinstance(instance, base.Snowflake)
-        assert isinstance(instance, base.Model)
-
-    def test_Snowflake_from_dict_calls_Model_from_dict(self):
-        with asynctest.patch("hikari.model.base.Model.from_dict", asynctest.MagicMock()):
-            DummySnowflake.from_dict({}, NotImplemented)
-            assert base.Model.from_dict.called_once_with(NotImplemented)
-
-    def test_Snowflake_to_dict_calls_Model_to_dict(self):
-        with asynctest.patch("hikari.model.base.Model.to_dict", asynctest.MagicMock()):
-            DummySnowflake(NotImplemented, 12345).to_dict()
-            assert base.Model.to_dict.called_once()
+        assert isinstance(instance, base.SnowflakeMixin)
 
     def test_Snowflake_comparison(self):
-        assert DummySnowflake(NotImplemented, 12345) < DummySnowflake(NotImplemented, 12346)
-        assert not (DummySnowflake(NotImplemented, 12345) < DummySnowflake(NotImplemented, 12345))
-        assert not (DummySnowflake(NotImplemented, 12345) < DummySnowflake(NotImplemented, 12344))
+        assert DummySnowflake(12345) < DummySnowflake(12346)
+        assert not (DummySnowflake(12345) < DummySnowflake(12345))
+        assert not (DummySnowflake(12345) < DummySnowflake(12344))
 
-        assert DummySnowflake(NotImplemented, 12345) <= DummySnowflake(NotImplemented, 12345)
-        assert DummySnowflake(NotImplemented, 12345) <= DummySnowflake(NotImplemented, 12346)
-        assert not (DummySnowflake(NotImplemented, 12346) <= DummySnowflake(NotImplemented, 12345))
+        assert DummySnowflake(12345) <= DummySnowflake(12345)
+        assert DummySnowflake(12345) <= DummySnowflake(12346)
+        assert not (DummySnowflake(12346) <= DummySnowflake(12345))
 
-        assert DummySnowflake(NotImplemented, 12347) > DummySnowflake(NotImplemented, 12346)
-        assert not (DummySnowflake(NotImplemented, 12344) > DummySnowflake(NotImplemented, 12345))
-        assert not (DummySnowflake(NotImplemented, 12345) > DummySnowflake(NotImplemented, 12345))
+        assert DummySnowflake(12347) > DummySnowflake(12346)
+        assert not (DummySnowflake(12344) > DummySnowflake(12345))
+        assert not (DummySnowflake(12345) > DummySnowflake(12345))
 
-        assert DummySnowflake(NotImplemented, 12345) >= DummySnowflake(NotImplemented, 12345)
-        assert DummySnowflake(NotImplemented, 12347) >= DummySnowflake(NotImplemented, 12346)
-        assert not (DummySnowflake(NotImplemented, 12346) >= DummySnowflake(NotImplemented, 12347))
+        assert DummySnowflake(12345) >= DummySnowflake(12345)
+        assert DummySnowflake(12347) >= DummySnowflake(12346)
+        assert not (DummySnowflake(12346) >= DummySnowflake(12347))
 
     @pytest.mark.parametrize("operator", [getattr(DummySnowflake, o) for o in ["__lt__", "__gt__", "__le__", "__ge__"]])
     def test_Snowflake_comparison_TypeError_cases(self, operator):
         try:
-            operator(DummySnowflake(NotImplemented, 12345), object())
+            operator(DummySnowflake(12345), object())
         except TypeError:
             pass
         else:
@@ -134,12 +96,12 @@ def test_NamedEnum_from_discord_name():
 
 @pytest.mark.model
 def test_PartialObject_just_id():
-    assert base.PartialObject.from_dict({"id": "123456"}, NotImplemented) is not None
+    assert base.PartialObject.from_dict({"id": "123456"}) is not None
 
 
 @pytest.mark.model
 def test_PartialObject_dynamic_attrs():
-    po = base.PartialObject.from_dict({"id": "123456", "foo": 69, "bar": False}, NotImplemented)
+    po = base.PartialObject.from_dict({"id": "123456", "foo": 69, "bar": False})
     assert po.id == 123456
     assert po.foo == 69
     assert po.bar is False

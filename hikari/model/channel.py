@@ -19,19 +19,18 @@
 """
 Channel models.
 """
-from __future__ import annotations
-
 __all__ = ()
 
 import abc
-import dataclasses
 import enum
 import typing
 
+import dataclasses
+
+from hikari import utils
 from hikari.model import base
 from hikari.model import overwrite
 from hikari.model import user
-from hikari import utils
 
 
 class ChannelType(enum.IntEnum):
@@ -49,17 +48,25 @@ class ChannelType(enum.IntEnum):
 
 
 @dataclasses.dataclass()
-class Channel(base.Snowflake, abc.ABC):
+class Channel(base.SnowflakeMixin, abc.ABC):
     """
     A generic type of channel.
     """
 
-    __slots__ = ()
+    __slots__ = ("_state", "id")
+
+    _state: typing.Any
+    id: int
 
     @property
     @abc.abstractmethod
     def type(self) -> ChannelType:
         """The type of channel."""
+
+    @staticmethod
+    @abc.abstractmethod
+    def from_dict(payload, state):
+        """Convert the given payload and state into an object instance."""
 
 
 @dataclasses.dataclass()
@@ -104,20 +111,20 @@ class GuildTextChannel(GuildChannel):
         """The type of the channel."""
         return ChannelType.GUILD_TEXT
 
-    @classmethod
-    def from_dict(cls: GuildTextChannel, payload: utils.DiscordObject, state) -> Channel:
-        return cls(
-            state,
-            id=payload["id"],
-            guild_id=payload["guild_id"],
-            position=payload["position"],
-            permission_overwrites=overwrite.Overwrite.from_dict(payload["permission_overwrites"], state),
+    @staticmethod
+    def from_dict(payload, state):
+        return GuildTextChannel(
+            _state=state,
+            id=int(payload["id"]),
+            guild_id=int(payload["guild_id"]),
+            position=int(payload["position"]),
+            permission_overwrites=[NotImplemented for _ in payload["PermissionOverwrites"]],  # TODO
             name=payload["name"],
             nsfw=payload["nsfw"],
-            parent_id=payload.get("parent_id"),
+            parent_id=utils.get_from_map_as(payload, "parent_id", int),
             topic=payload.get("topic"),
-            rate_limit_per_user=payload.get("rate_limit_per_user"),
-            last_message_id=payload["last_message_id"],
+            rate_limit_per_user=int(payload.get("rate_limit_per_user")),
+            last_message_id=utils.get_from_map_as(payload, "last_message_id", int),
         )
 
 
@@ -139,13 +146,13 @@ class DMChannel(Channel):
         """The type of the channel."""
         return ChannelType.DM
 
-    @classmethod
-    def from_dict(cls: DMChannel, payload: utils.DiscordObject, state) -> Channel:
-        return cls(
-            state,
-            id=payload["id"],
-            last_message_id=payload["last_message_id"],
-            recipients=[user.User.from_dict(recipient, state) for recipient in payload["recipients"]],
+    @staticmethod
+    def from_dict(payload, state):
+        return DMChannel(
+            _state=state,
+            id=int(payload["id"]),
+            last_message_id=utils.get_from_map_as(payload, "last_message_id", int),
+            recipients=[NotImplemented for _ in payload["recipients"]],  # TODO
         )
 
 
@@ -167,9 +174,20 @@ class GuildVoiceChannel(GuildChannel):
         """The type of the channel."""
         return ChannelType.GUILD_VOICE
 
-    @classmethod
-    def from_dict(cls: GuildVoiceChannel, payload: utils.DiscordObject, state) -> Channel:
-        return cls(state, id=payload["id"], bitrate=payload["bitrate"], user_limit=payload["user_limit"])
+    @staticmethod
+    def from_dict(payload, state):
+        return GuildVoiceChannel(
+            _state=state,
+            id=int(payload["id"]),
+            guild_id=int(payload["guild_id"]),
+            position=int(payload["position"]),
+            permission_overwrites=[NotImplemented for _ in payload["PermissionOverwrites"]],  # TODO
+            name=payload["name"],
+            nsfw=payload["nsfw"],
+            parent_id=utils.get_from_map_as(payload, "parent_id", int),
+            bitrate=payload["bitrate"],
+            user_limit=int(payload["user_limit"]),
+        )
 
 
 @dataclasses.dataclass()
@@ -195,13 +213,13 @@ class GroupDMChannel(DMChannel):
         """The type of the channel."""
         return ChannelType.GROUP_DM
 
-    @classmethod
-    def from_dict(cls: GroupDMChannel, payload: utils.DiscordObject, state) -> Channel:
-        return cls(
+    @staticmethod
+    def from_dict(payload, state):
+        return GroupDMChannel(
             state,
             id=payload["id"],
             last_message_id=payload["last_message_id"],
-            recipients=[user.User.from_dict(recipient, state) for recipient in payload["recipients"]],
+            recipients=[NotImplemented for _ in payload["recipients"]],  # TODO
             icon=payload.get("icon").encode() if payload["icon"] else None,
             name=payload.get("name"),
             owner_application_id=payload.get("application_id"),
@@ -222,6 +240,8 @@ class GuildCategory(GuildChannel):
         """The type of the channel."""
         return ChannelType.GUILD_CATEGORY
 
+    # TODO: from dict
+
 
 @dataclasses.dataclass()
 class GuildNewsChannel(GuildChannel):
@@ -241,6 +261,8 @@ class GuildNewsChannel(GuildChannel):
         """The type of the channel."""
         return ChannelType.GUILD_NEWS
 
+    # TODO: from dict
+
 
 @dataclasses.dataclass()
 class GuildStoreChannel(GuildChannel):
@@ -255,8 +277,10 @@ class GuildStoreChannel(GuildChannel):
         """The type of the channel."""
         return ChannelType.GUILD_STORE
 
+    # TODO: from_dict
 
-def channel_from_dict(payload: utils.DiscordObject, state) -> Channel:
+
+def channel_from_dict(payload, state):
     raw_channel_type = payload["type"]
     channel_type = getattr(ChannelType, raw_channel_type, raw_channel_type)
 
