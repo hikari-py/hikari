@@ -26,7 +26,7 @@ __all__ = ()
 from hikari.model import base
 
 
-class PartialEmoji(base.Model):
+class PartialEmoji(base.StatefulModel):
     __slots__ = ()
 
 

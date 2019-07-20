@@ -26,7 +26,7 @@ __all__ = ()
 from hikari.model import base
 
 
-class VoiceState(base.Model):
+class VoiceState(base.StatefulModel):
     __slots__ = ()
 
 

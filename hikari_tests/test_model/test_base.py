@@ -28,7 +28,7 @@ from hikari.model import base
 
 
 @dataclasses.dataclass()
-class DummyModel(base.Model):
+class DummyModel(base.StatefulModel):
     @classmethod
     def from_dict(cls, payload: utils.DiscordObject, state):
         return super().from_dict(payload, state)
@@ -61,13 +61,10 @@ class DummyNamedEnum(base.NamedEnum):
 class TestModel:
     def test_Model_init_subclass(self, dummy_model):
         assert dummy_model is not None
-        assert isinstance(dummy_model, base.Model)
+        assert isinstance(dummy_model, base.StatefulModel)
 
     def test_Model_from_dict_defaults_to_NotImplemented(self):
         assert DummyModel.from_dict(dict(), object()) is NotImplemented
-
-    def test_Model_to_dict_defaults_to_dataclasses_call(self, dummy_model):
-        assert dummy_model.to_dict() == {}
 
 
 @pytest.mark.model
@@ -76,17 +73,12 @@ class TestSnowflake:
         instance = DummySnowflake(NotImplemented, id=12345)
         assert instance is not None
         assert isinstance(instance, base.Snowflake)
-        assert isinstance(instance, base.Model)
+        assert isinstance(instance, base.StatefulModel)
 
     def test_Snowflake_from_dict_calls_Model_from_dict(self):
         with asynctest.patch("hikari.model.base.Model.from_dict", asynctest.MagicMock()):
             DummySnowflake.from_dict({}, NotImplemented)
-            assert base.Model.from_dict.called_once_with(NotImplemented)
-
-    def test_Snowflake_to_dict_calls_Model_to_dict(self):
-        with asynctest.patch("hikari.model.base.Model.to_dict", asynctest.MagicMock()):
-            DummySnowflake(NotImplemented, 12345).to_dict()
-            assert base.Model.to_dict.called_once()
+            assert base.StatefulModel.from_dict.called_once_with(NotImplemented)
 
     def test_Snowflake_comparison(self):
         assert DummySnowflake(NotImplemented, 12345) < DummySnowflake(NotImplemented, 12346)

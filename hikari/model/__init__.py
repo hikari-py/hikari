@@ -25,7 +25,6 @@ from .emoji import *
 from .guild import *
 from .integration import *
 from .invite import *
-from .member import *
 from .message import *
 from .overwrite import *
 from .permission import *

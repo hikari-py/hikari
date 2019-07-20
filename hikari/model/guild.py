@@ -61,5 +61,5 @@ class GuildEmbed(base.Snowflake):
     __slots__ = ()
 
 
-class Ban(base.Model):
+class Ban(base.StatefulModel):
     __slots__ = ()

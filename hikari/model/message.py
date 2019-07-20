@@ -40,11 +40,11 @@ class Message(base.Snowflake):
     __slots__ = ()
 
 
-class MessageActivity(base.Model):
+class MessageActivity(base.StatefulModel):
     __slots__ = ()
 
 
-class MessageApplication(base.Model):
+class MessageApplication(base.StatefulModel):
     __slots__ = ()
 
 

@@ -27,6 +27,10 @@ import enum
 from hikari.model import base
 
 
+class Avatar:
+    __slots__ = ()
+
+
 class User(base.Snowflake):
     __slots__ = ()
 
@@ -45,3 +49,7 @@ class Connection(base.Snowflake):
 
 class ConnectionVisibility(enum.IntEnum):
     ...
+
+
+class Member(base.Snowflake):
+    __slots__ = ("_user",)

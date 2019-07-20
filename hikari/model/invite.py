@@ -27,7 +27,7 @@ import enum
 from hikari.model import base
 
 
-class Invite(base.Model):
+class Invite(base.StatefulModel):
     __slots__ = ()
 
 
@@ -35,5 +35,5 @@ class TargetUserType(enum.IntEnum):
     ...
 
 
-class InviteMetadata(base.Model):
+class InviteMetadata(base.StatefulModel):
     __slots__ = ()
