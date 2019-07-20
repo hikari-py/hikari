@@ -342,6 +342,19 @@ def test_mixin_applied_to_something_that_is_not_a_class():
         pass
 
 
+def test_mixin_applied_to_something_that_is_directly_derived_from_object():
+    try:
+        class Bar:
+            pass
+
+        @utils.mixin
+        class FooMixin(Bar):
+            pass
+        assert False, "No error thrown"
+    except TypeError:
+        pass
+
+
 def test_mixin_applied_to_something_that_is_not_slotted():
     try:
         @utils.mixin
