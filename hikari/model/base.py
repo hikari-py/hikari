@@ -17,62 +17,24 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Model ABCs.
+Model ABCs and mixins.
 """
-from __future__ import annotations
+__all__ = ("SnowflakeMixin", "PartialObject", "NamedEnum")
 
 import copy
-
-__all__ = ("StatefulModel", "Snowflake", "PartialObject", "NamedEnum")
-
-import abc
-import dataclasses
 import datetime
 import enum
 import typing
 
+import dataclasses
+
 from hikari import utils
 
-T = typing.TypeVar("T")
 
-
-class Model(abc.ABC):
+@utils.mixin
+class SnowflakeMixin:
     """
-    Core base model for any Hikari model.
-    """
-
-    __slots__ = ()
-
-    @classmethod
-    @abc.abstractmethod
-    def from_dict(cls, payload: utils.DiscordObject, state=NotImplemented):
-        """
-        Consume a Discord payload and produce an instance of this class.
-
-        The state may not be required by the model. If it is not required, then it is not necessary to specify it.
-        Unless the object implements StatefulModel, then it is not to store the state explicitly.
-        """
-        return NotImplemented
-
-
-@dataclasses.dataclass(repr=False)
-class StatefulModel(Model):
-    """
-    Base for every model we can use in this API which needs access to the global state.
-    """
-
-    __slots__ = ("_state",)
-
-    #: Internal API state.
-    _state: typing.Any
-
-
-# noinspection PyUnresolvedReferences,PyAbstractClass
-@dataclasses.dataclass()
-class Snowflake(StatefulModel):
-    """
-    Abstract base for every model in this API that provides an ID attribute. This should also store the state internally
-    by default.
+    Base for any type that specifies an ID. The implementation is expected to implement that field.
 
     Warning:
         Due to constraints by the dataclasses library, one must ensure to define
@@ -80,9 +42,8 @@ class Snowflake(StatefulModel):
         be inherited correctly.
     """
 
-    __slots__ = ("id",)
+    __slots__ = ()  # DO NOT ADD FIELDS TO THIS MIXIN.
 
-    #: ID of the object.
     id: int
 
     @property
@@ -107,7 +68,7 @@ class Snowflake(StatefulModel):
         return self.id & 0xFFF
 
     def __lt__(self, other) -> bool:
-        if not isinstance(other, Snowflake):
+        if not isinstance(other, SnowflakeMixin):
             raise TypeError(
                 f"Cannot compare a Snowflake type {type(self).__name__} to a non-snowflake type {type(other).__name__}"
             )
@@ -117,7 +78,7 @@ class Snowflake(StatefulModel):
         return self < other or self == other
 
     def __gt__(self, other) -> bool:
-        if not isinstance(other, Snowflake):
+        if not isinstance(other, SnowflakeMixin):
             raise TypeError(
                 f"Cannot compare a Snowflake type {type(self).__name__} to a non-snowflake type {type(other).__name__}"
             )
@@ -128,20 +89,21 @@ class Snowflake(StatefulModel):
 
 
 @dataclasses.dataclass()
-class PartialObject(Snowflake):
+class PartialObject(SnowflakeMixin):
     """
     Representation of a partially constructed object. This may be returned by some components instead of a correctly
     initialized object if information is not available.
     """
 
-    __slots__ = ("_other_attrs",)
+    __slots__ = ("id", "_other_attrs")
 
+    id: int
     _other_attrs: typing.Dict[str, typing.Any]
 
-    @classmethod
-    def from_dict(cls: PartialObject, payload: utils.DiscordObject, state=NotImplemented) -> PartialObject:
+    @staticmethod
+    def from_dict(payload):
         payload = copy.copy(payload)
-        return cls(_state=state, id=int(payload.pop("id")), _other_attrs=payload)
+        return PartialObject(id=int(payload.pop("id")), _other_attrs=payload)
 
     def __getattr__(self, item):
         return self._other_attrs[item]

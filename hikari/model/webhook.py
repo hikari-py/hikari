@@ -19,12 +19,10 @@
 """
 Webhook model.
 """
-from __future__ import annotations
-
 __all__ = ()
 
 from hikari.model import base
 
 
-class Webhook(base.Snowflake):
+class Webhook(base.SnowflakeMixin):
     __slots__ = ()

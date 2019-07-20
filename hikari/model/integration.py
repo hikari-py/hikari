@@ -19,16 +19,20 @@
 """
 Account integrations.
 """
-from __future__ import annotations
-
 __all__ = ()
 
-from hikari.model import base
 
-
-class Integration(base.Snowflake):
+class Integration:
     __slots__ = ()
 
+    @classmethod
+    def from_dict(cls, payload):
+        return NotImplemented
 
-class IntegrationAccount(base.Snowflake):
+
+class IntegrationAccount:
     __slots__ = ()
+
+    @classmethod
+    def from_dict(cls, payload):
+        return NotImplemented

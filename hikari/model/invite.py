@@ -19,15 +19,12 @@
 """
 Invitations to guilds.
 """
-from __future__ import annotations
-
 __all__ = ()
 
 import enum
-from hikari.model import base
 
 
-class Invite(base.StatefulModel):
+class Invite:
     __slots__ = ()
 
 
@@ -35,5 +32,5 @@ class TargetUserType(enum.IntEnum):
     ...
 
 
-class InviteMetadata(base.StatefulModel):
+class InviteMetadata:
     __slots__ = ()
