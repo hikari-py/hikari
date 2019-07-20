@@ -45,7 +45,7 @@ from . import base
 
 
 @dataclasses.dataclass()
-class Subscriber(base.Model):
+class Subscriber(base.StatefulModel):
     """
     A subscription to an incident.
     """
@@ -75,7 +75,7 @@ class Subscriber(base.Model):
 
 
 @dataclasses.dataclass()
-class Subscription(base.Model):
+class Subscription(base.StatefulModel):
     """
     A subscription to an incident.
     """
@@ -90,7 +90,7 @@ class Subscription(base.Model):
 
 
 @dataclasses.dataclass()
-class Page(base.Model):
+class Page(base.StatefulModel):
     """
     A page element.
     """
@@ -114,7 +114,7 @@ class Page(base.Model):
 
 
 @dataclasses.dataclass()
-class Status(base.Model):
+class Status(base.StatefulModel):
     """
     A status description.
     """
@@ -130,7 +130,7 @@ class Status(base.Model):
 
 
 @dataclasses.dataclass()
-class Component(base.Model):
+class Component(base.StatefulModel):
     """
     A component description.
     """
@@ -160,7 +160,7 @@ class Component(base.Model):
 
 
 @dataclasses.dataclass()
-class Components(base.Model):
+class Components(base.StatefulModel):
     """
     A collection of :class:`Component` objects.
     """
@@ -180,7 +180,7 @@ class Components(base.Model):
 
 
 @dataclasses.dataclass()
-class IncidentUpdate(base.Model):
+class IncidentUpdate(base.StatefulModel):
     """
     An informative status update for a specific incident.
     """
@@ -210,7 +210,7 @@ class IncidentUpdate(base.Model):
 
 
 @dataclasses.dataclass()
-class Incident(base.Model):
+class Incident(base.StatefulModel):
     """
     An incident.
     """
@@ -263,7 +263,7 @@ class Incident(base.Model):
 
 
 @dataclasses.dataclass()
-class Incidents(base.Model):
+class Incidents(base.StatefulModel):
     """
     A collection of :class:`Incident` objects.
     """
@@ -281,7 +281,7 @@ class Incidents(base.Model):
 
 
 @dataclasses.dataclass()
-class ScheduledMaintenance(base.Model):
+class ScheduledMaintenance(base.StatefulModel):
     """
     A description of a maintenance that is scheduled to be performed.
     """
@@ -343,7 +343,7 @@ class ScheduledMaintenance(base.Model):
 
 
 @dataclasses.dataclass()
-class ScheduledMaintenances(base.Model):
+class ScheduledMaintenances(base.StatefulModel):
     """
     A collection of maintenance events.
     """
@@ -367,7 +367,7 @@ class ScheduledMaintenances(base.Model):
 
 
 @dataclasses.dataclass()
-class Summary(base.Model):
+class Summary(base.StatefulModel):
     """
     A description of the overall API status.
     """

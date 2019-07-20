@@ -167,7 +167,7 @@ class AuditLogChangeKey(base.NamedEnum):
 
 
 @dataclasses.dataclass()
-class AuditLog(base.Model):
+class AuditLog(base.StatefulModel):
     """
     An Audit Log.
     """
@@ -179,7 +179,7 @@ class AuditLog(base.Model):
     entries: typing.List[AuditLogEntry]
 
     @classmethod
-    def from_dict(cls: AuditLog, payload: utils.DiscordObject, state) -> AuditLog:
+    def from_dict(cls: AuditLog, payload: utils.DiscordObject, state=NotImplemented) -> AuditLog:
         """
         Create an AuditLog object from a dict payload.
 
@@ -199,7 +199,7 @@ class AuditLog(base.Model):
 
 
 @dataclasses.dataclass()
-class MemberPrunedAuditLogEntryInfo(base.Model):
+class MemberPrunedAuditLogEntryInfo(base.StatefulModel):
     """
     Additional audit log info for member pruning.
     """
@@ -211,7 +211,7 @@ class MemberPrunedAuditLogEntryInfo(base.Model):
 
     @classmethod
     def from_dict(
-        cls: MemberPrunedAuditLogEntryInfo, payload: utils.DiscordObject, state
+        cls: MemberPrunedAuditLogEntryInfo, payload: utils.DiscordObject, state=NotImplemented
     ) -> MemberPrunedAuditLogEntryInfo:
         """
         Create a MemberPrunedAuditLogEntryInfo object from a dict payload.
@@ -231,7 +231,7 @@ class MemberPrunedAuditLogEntryInfo(base.Model):
 
 
 @dataclasses.dataclass()
-class MessageDeletedAuditLogEntryInfo(base.Model):
+class MessageDeletedAuditLogEntryInfo(base.StatefulModel):
     """
     Additional audit log info for message deletions.
     """
@@ -259,7 +259,7 @@ class MessageDeletedAuditLogEntryInfo(base.Model):
 
 
 @dataclasses.dataclass()
-class ChannelOverwriteAuditLogEntryInfo(base.Model):
+class ChannelOverwriteAuditLogEntryInfo(base.StatefulModel):
     """
     Additional audit log info for channel overwrites that changed.
     """
@@ -272,7 +272,7 @@ class ChannelOverwriteAuditLogEntryInfo(base.Model):
 
     @classmethod
     def from_dict(
-        cls: ChannelOverwriteAuditLogEntryInfo, payload: utils.DiscordObject, state
+        cls: ChannelOverwriteAuditLogEntryInfo, payload: utils.DiscordObject, state=NotImplemented
     ) -> ChannelOverwriteAuditLogEntryInfo:
         """
         Create a ChannelOverwriteAuditLogEntryInfo object from a dict payload.
@@ -293,7 +293,7 @@ class ChannelOverwriteAuditLogEntryInfo(base.Model):
 
 
 @dataclasses.dataclass()
-class AuditLogChange(base.Model):
+class AuditLogChange(base.StatefulModel):
     """
     Represents a change that was recorded in the audit log.
 
@@ -351,7 +351,7 @@ class AuditLogEntry(base.Snowflake):
     reason: typing.Optional[str]
 
     @classmethod
-    def from_dict(cls: AuditLogEntry, payload: utils.DiscordObject, state) -> AuditLogEntry:
+    def from_dict(cls: AuditLogEntry, payload: utils.DiscordObject, state=NotImplemented) -> AuditLogEntry:
         """
         Create an AuditLogEntry object from a dict payload.
 

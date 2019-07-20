@@ -26,5 +26,5 @@ __all__ = ()
 from hikari.model import base
 
 
-class Reaction(base.Model):
+class Reaction(base.StatefulModel):
     __slots__ = ()

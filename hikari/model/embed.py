@@ -38,7 +38,7 @@ UNSPECIFIED = utils.UNSPECIFIED
 
 
 @dataclasses.dataclass(init=False)
-class Embed:
+class Embed(base.Model):
     __slots__ = (
         "title",
         "description",
@@ -310,29 +310,34 @@ class Embed:
         embed._type = payload["type"]
 
         if "author" in payload:
-            embed._author = EmbedAuthor(**payload["author"])
+            embed._author = EmbedAuthor.from_dict(**payload["author"])
         if "footer" in payload:
-            embed._footer = EmbedFooter(**payload["footer"])
+            embed._footer = EmbedFooter.from_dict(**payload["footer"])
         if "image" in payload:
-            embed._image = EmbedImage(**payload["image"])
+            embed._image = EmbedImage.from_dict(**payload["image"])
         if "thumbnail" in payload:
-            embed._thumbnail = EmbedImage(**payload["thumbnail"])
+            embed._thumbnail = EmbedImage.from_dict(**payload["thumbnail"])
         if "fields" in payload:
-            embed._fields = [EmbedField(**f) for f in payload["fields"]]
+            embed._fields = [EmbedField.from_dict(**f) for f in payload["fields"]]
         if "provider" in payload:
-            embed._provider = EmbedProvider(**payload["provider"])
+            embed._provider = EmbedProvider.from_dict(**payload["provider"])
         if "video" in payload:
-            embed._video = EmbedVideo(**payload["video"])
+            embed._video = EmbedVideo.from_dict(**payload["video"])
 
         return embed
 
 
-class _EmbedComponent:
+class _EmbedComponent(base.Model):
     __slots__ = ()
 
     def to_dict(self, *, dict_factory=dict) -> dict:
         attrs = {a: getattr(self, a) for a in self.__slots__}
         return dict_factory(**{k: v for k, v in attrs.items() if v is not utils.UNSPECIFIED})
+
+    @classmethod
+    def from_dict(cls, state=NotImplemented, **kwargs) -> _EmbedComponent:
+        # noinspection PyArgumentList
+        return cls(**kwargs)
 
 
 @dataclasses.dataclass(init=False)

@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import copy
 
-__all__ = ("Model", "Snowflake", "PartialObject", "NamedEnum")
+__all__ = ("StatefulModel", "Snowflake", "PartialObject", "NamedEnum")
 
 import abc
 import dataclasses
@@ -36,8 +36,27 @@ from hikari import utils
 T = typing.TypeVar("T")
 
 
-@dataclasses.dataclass(repr=False)
 class Model(abc.ABC):
+    """
+    Core base model for any Hikari model.
+    """
+
+    __slots__ = ()
+
+    @classmethod
+    @abc.abstractmethod
+    def from_dict(cls, payload: utils.DiscordObject, state=NotImplemented):
+        """
+        Consume a Discord payload and produce an instance of this class.
+
+        The state may not be required by the model. If it is not required, then it is not necessary to specify it.
+        Unless the object implements StatefulModel, then it is not to store the state explicitly.
+        """
+        return NotImplemented
+
+
+@dataclasses.dataclass(repr=False)
+class StatefulModel(Model):
     """
     Base for every model we can use in this API which needs access to the global state.
     """
@@ -47,35 +66,13 @@ class Model(abc.ABC):
     #: Internal API state.
     _state: typing.Any
 
-    @classmethod
-    @abc.abstractmethod
-    def from_dict(cls, payload: utils.DiscordObject, state=NotImplemented):
-        """Consume a Discord payload and produce an instance of this class."""
-        return NotImplemented
-
-    def to_dict(self, *, dict_factory=dict) -> utils.DiscordObject:
-        """
-        Consume this class instance and produce a Discord payload.
-
-        Classes are not required to implement this method unless it is required internally. If not
-        implemented otherwise, this will default to calling :func:`dataclasses.asdict`_.
-
-        Args:
-            dict_factory:
-                Optional factory method for making a new dict, defaults to :class:`dict`_.
-                The _state object will not be included in this representation.
-        """
-        dictionary = dataclasses.asdict(self, dict_factory=dict_factory)
-        for slot in self.__slots__:
-            dictionary.pop(slot)
-        return dictionary
-
 
 # noinspection PyUnresolvedReferences,PyAbstractClass
 @dataclasses.dataclass()
-class Snowflake(Model):
+class Snowflake(StatefulModel):
     """
-    Abstract base for every model in this API that provides an ID attribute.
+    Abstract base for every model in this API that provides an ID attribute. This should also store the state internally
+    by default.
 
     Warning:
         Due to constraints by the dataclasses library, one must ensure to define
@@ -133,7 +130,8 @@ class Snowflake(Model):
 @dataclasses.dataclass()
 class PartialObject(Snowflake):
     """
-    Representation of a partially constructed object.
+    Representation of a partially constructed object. This may be returned by some components instead of a correctly
+    initialized object if information is not available.
     """
 
     __slots__ = ("_other_attrs",)
