@@ -19,15 +19,14 @@
 """
 Guild models.
 """
-from __future__ import annotations
-
 __all__ = ()
 
 import enum
+
 from hikari.model import base
 
 
-class PartialGuild(base.Snowflake):
+class PartialGuild:
     """Returned if the guild is not available yet..."""
 
     __slots__ = ()
@@ -57,9 +56,9 @@ class PremiumTier(enum.IntEnum):
     ...
 
 
-class GuildEmbed(base.Snowflake):
+class GuildEmbed(base.SnowflakeMixin):
     __slots__ = ()
 
 
-class Ban(base.Model):
+class Ban:
     __slots__ = ()

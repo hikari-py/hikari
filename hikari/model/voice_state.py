@@ -19,16 +19,14 @@
 """
 Voice state models.
 """
-from __future__ import annotations
-
 __all__ = ()
 
 from hikari.model import base
 
 
-class VoiceState(base.Model):
+class VoiceState:
     __slots__ = ()
 
 
-class VoiceRegion(base.Snowflake):
+class VoiceRegion(base.SnowflakeMixin):
     __slots__ = ()

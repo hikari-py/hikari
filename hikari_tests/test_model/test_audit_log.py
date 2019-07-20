@@ -25,7 +25,7 @@ from .testdata import *
 @pytest.fixture
 @with_test_data(json("audit_log"))
 def audit_log_object(test_data):
-    audit_log_object = audit_log.AuditLog.from_dict(test_data, NotImplemented)
+    audit_log_object = audit_log.AuditLog.from_dict(test_data)
     assert audit_log_object is not None
     return audit_log_object
 
@@ -33,7 +33,7 @@ def audit_log_object(test_data):
 @pytest.fixture
 @with_test_data(json("audit_log_entry_edit_channel"))
 def audit_log_entry_edit_channel(test_data):
-    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data, NotImplemented)
+    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data)
     assert audit_log_object is not None
     return audit_log_object
 
@@ -41,7 +41,7 @@ def audit_log_entry_edit_channel(test_data):
 @pytest.fixture
 @with_test_data(json("audit_log_entry_invite_create"))
 def audit_log_entry_invite_create(test_data):
-    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data, NotImplemented)
+    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data)
     assert audit_log_object is not None
     return audit_log_object
 
@@ -49,7 +49,7 @@ def audit_log_entry_invite_create(test_data):
 @pytest.fixture
 @with_test_data(json("audit_log_entry_message_delete"))
 def audit_log_entry_message_delete(test_data):
-    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data, NotImplemented)
+    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data)
     assert audit_log_object is not None
     return audit_log_object
 
@@ -57,7 +57,7 @@ def audit_log_entry_message_delete(test_data):
 @pytest.fixture
 @with_test_data(json("audit_log_entry_overwrites_add"))
 def audit_log_entry_overwrites_add(test_data):
-    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data, NotImplemented)
+    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data)
     assert audit_log_object is not None
     return audit_log_object
 
@@ -65,7 +65,7 @@ def audit_log_entry_overwrites_add(test_data):
 @pytest.fixture
 @with_test_data(json("audit_log_entry_overwrites_delete"))
 def audit_log_entry_overwrites_delete(test_data):
-    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data, NotImplemented)
+    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data)
     assert audit_log_object is not None
     return audit_log_object
 
@@ -73,7 +73,7 @@ def audit_log_entry_overwrites_delete(test_data):
 @pytest.fixture
 @with_test_data(json("audit_log_entry_overwrites_update"))
 def audit_log_entry_overwrites_update(test_data):
-    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data, NotImplemented)
+    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data)
     assert audit_log_object is not None
     return audit_log_object
 
@@ -81,7 +81,7 @@ def audit_log_entry_overwrites_update(test_data):
 @pytest.fixture
 @with_test_data(json("audit_log_entry_role_add"))
 def audit_log_entry_role_add(test_data):
-    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data, NotImplemented)
+    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data)
     assert audit_log_object is not None
     return audit_log_object
 
@@ -89,7 +89,7 @@ def audit_log_entry_role_add(test_data):
 @pytest.fixture
 @with_test_data(json("audit_log_entry_role_remove"))
 def audit_log_entry_role_remove(test_data):
-    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data, NotImplemented)
+    audit_log_object = audit_log.AuditLogEntry.from_dict(test_data)
     assert audit_log_object is not None
     return audit_log_object
 
@@ -141,57 +141,41 @@ class TestAuditLog:
         assert len(audit_log_entry_invite_create.changes) == 7
 
         assert (
+            audit_log.AuditLogChange(old_value=None, new_value=86400, key=audit_log.AuditLogChangeKey.MAX_AGE)
+            in audit_log_entry_invite_create.changes
+        )
+
+        assert (
+            audit_log.AuditLogChange(old_value=None, new_value=False, key=audit_log.AuditLogChangeKey.TEMPORARY)
+            in audit_log_entry_invite_create.changes
+        )
+
+        assert (
             audit_log.AuditLogChange(
-                _state=NotImplemented, old_value=None, new_value=86400, key=audit_log.AuditLogChangeKey.MAX_AGE
+                old_value=None, new_value=537340989808050216, key=audit_log.AuditLogChangeKey.INVITER_ID
             )
             in audit_log_entry_invite_create.changes
         )
 
         assert (
             audit_log.AuditLogChange(
-                _state=NotImplemented, old_value=None, new_value=False, key=audit_log.AuditLogChangeKey.TEMPORARY
+                old_value=None, new_value=577602779410071575, key=audit_log.AuditLogChangeKey.CHANNEL_ID
             )
             in audit_log_entry_invite_create.changes
         )
 
         assert (
-            audit_log.AuditLogChange(
-                _state=NotImplemented,
-                old_value=None,
-                new_value=537340989808050216,
-                key=audit_log.AuditLogChangeKey.INVITER_ID,
-            )
+            audit_log.AuditLogChange(old_value=None, new_value=0, key=audit_log.AuditLogChangeKey.USES)
             in audit_log_entry_invite_create.changes
         )
 
         assert (
-            audit_log.AuditLogChange(
-                _state=NotImplemented,
-                old_value=None,
-                new_value=577602779410071575,
-                key=audit_log.AuditLogChangeKey.CHANNEL_ID,
-            )
+            audit_log.AuditLogChange(old_value=None, new_value=0, key=audit_log.AuditLogChangeKey.MAX_USES)
             in audit_log_entry_invite_create.changes
         )
 
         assert (
-            audit_log.AuditLogChange(
-                _state=NotImplemented, old_value=None, new_value=0, key=audit_log.AuditLogChangeKey.USES
-            )
-            in audit_log_entry_invite_create.changes
-        )
-
-        assert (
-            audit_log.AuditLogChange(
-                _state=NotImplemented, old_value=None, new_value=0, key=audit_log.AuditLogChangeKey.MAX_USES
-            )
-            in audit_log_entry_invite_create.changes
-        )
-
-        assert (
-            audit_log.AuditLogChange(
-                _state=NotImplemented, old_value=None, new_value="gbPccV", key=audit_log.AuditLogChangeKey.CODE
-            )
+            audit_log.AuditLogChange(old_value=None, new_value="gbPccV", key=audit_log.AuditLogChangeKey.CODE)
             in audit_log_entry_invite_create.changes
         )
 
@@ -213,30 +197,22 @@ class TestAuditLog:
         assert audit_log_entry_overwrites_add.changes is not None
 
         assert (
-            audit_log.AuditLogChange(
-                _state=NotImplemented, old_value=None, new_value=2048, key=audit_log.AuditLogChangeKey.DENY
-            )
+            audit_log.AuditLogChange(old_value=None, new_value=2048, key=audit_log.AuditLogChangeKey.DENY)
             in audit_log_entry_overwrites_add.changes
         )
 
         assert (
-            audit_log.AuditLogChange(
-                _state=NotImplemented, old_value=None, new_value="role", key=audit_log.AuditLogChangeKey.TYPE
-            )
+            audit_log.AuditLogChange(old_value=None, new_value="role", key=audit_log.AuditLogChangeKey.TYPE)
             in audit_log_entry_overwrites_add.changes
         )
 
         assert (
-            audit_log.AuditLogChange(
-                _state=NotImplemented, old_value=None, new_value=574921006817476608, key=audit_log.AuditLogChangeKey.ID
-            )
+            audit_log.AuditLogChange(old_value=None, new_value=574921006817476608, key=audit_log.AuditLogChangeKey.ID)
             in audit_log_entry_overwrites_add.changes
         )
 
         assert (
-            audit_log.AuditLogChange(
-                _state=NotImplemented, old_value=None, new_value=0, key=audit_log.AuditLogChangeKey.ALLOW
-            )
+            audit_log.AuditLogChange(old_value=None, new_value=0, key=audit_log.AuditLogChangeKey.ALLOW)
             in audit_log_entry_overwrites_add.changes
         )
 
@@ -254,9 +230,7 @@ class TestAuditLog:
         assert audit_log_entry_overwrites_update.changes is not None
 
         assert (
-            audit_log.AuditLogChange(
-                _state=NotImplemented, old_value=2048, new_value=0, key=audit_log.AuditLogChangeKey.DENY
-            )
+            audit_log.AuditLogChange(old_value=2048, new_value=0, key=audit_log.AuditLogChangeKey.DENY)
             in audit_log_entry_overwrites_update.changes
         )
 
@@ -273,30 +247,22 @@ class TestAuditLog:
         assert audit_log_entry_overwrites_delete.changes is not None
 
         assert (
-            audit_log.AuditLogChange(
-                _state=NotImplemented, new_value=None, old_value=0, key=audit_log.AuditLogChangeKey.DENY
-            )
+            audit_log.AuditLogChange(new_value=None, old_value=0, key=audit_log.AuditLogChangeKey.DENY)
             in audit_log_entry_overwrites_delete.changes
         )
 
         assert (
-            audit_log.AuditLogChange(
-                _state=NotImplemented, new_value=None, old_value="role", key=audit_log.AuditLogChangeKey.TYPE
-            )
+            audit_log.AuditLogChange(new_value=None, old_value="role", key=audit_log.AuditLogChangeKey.TYPE)
             in audit_log_entry_overwrites_delete.changes
         )
 
         assert (
-            audit_log.AuditLogChange(
-                _state=NotImplemented, new_value=None, old_value=574921006817476608, key=audit_log.AuditLogChangeKey.ID
-            )
+            audit_log.AuditLogChange(new_value=None, old_value=574921006817476608, key=audit_log.AuditLogChangeKey.ID)
             in audit_log_entry_overwrites_delete.changes
         )
 
         assert (
-            audit_log.AuditLogChange(
-                _state=NotImplemented, new_value=None, old_value=0, key=audit_log.AuditLogChangeKey.ALLOW
-            )
+            audit_log.AuditLogChange(new_value=None, old_value=0, key=audit_log.AuditLogChangeKey.ALLOW)
             in audit_log_entry_overwrites_delete.changes
         )
 

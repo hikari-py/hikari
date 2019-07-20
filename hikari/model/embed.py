@@ -27,10 +27,8 @@ import datetime
 import dataclasses
 import typing
 
-from hikari.model import base
 from hikari.model import color as _color
 from hikari import utils
-
 
 #: An alias to the unspecified sentinel. This is used to describe embed members with no associated value within this
 #: module.
@@ -89,11 +87,16 @@ class Embed:
     ) -> None:
         """
         Args:
-            title: the optional title of the embed.
-            description: the optional description of the embed.
-            url: the optional hyperlink of the embed title.
-            timestamp: an optional timestamp for the embed. This should be UTC.
-            color: the optional :cls:`_color.Color` or :cls`int` color code.
+            title:
+                the optional title of the embed.
+            description:
+                the optional description of the embed.
+            url:
+                the optional hyperlink of the embed title.
+            timestamp:
+                an optional timestamp for the embed. This should be UTC.
+            color:
+                the optional Color or int color code.
         """
         self.title = title
         self.description = description
@@ -270,7 +273,7 @@ class Embed:
         """
         return self._provider
 
-    def to_dict(self, *, dict_factory=dict) -> utils.DiscordObject:
+    def to_dict(self, *, dict_factory=dict):
         d = dict_factory()
         utils.put_if_specified(d, "title", self.title)
         utils.put_if_specified(d, "description", self.description)
@@ -293,13 +296,13 @@ class Embed:
 
         return d
 
-    @classmethod
-    def from_dict(cls, payload: utils.DiscordObject) -> Embed:
+    @staticmethod
+    def from_dict(payload):
         timestamp = payload.get("timestamp", utils.UNSPECIFIED)
         if timestamp is not utils.UNSPECIFIED:
             timestamp = utils.parse_iso_8601_datetime(timestamp)
 
-        embed = cls(
+        embed = Embed(
             title=payload.get("title", utils.UNSPECIFIED),
             description=payload.get("description", utils.UNSPECIFIED),
             url=payload.get("url", utils.UNSPECIFIED),
@@ -310,19 +313,19 @@ class Embed:
         embed._type = payload["type"]
 
         if "author" in payload:
-            embed._author = EmbedAuthor(**payload["author"])
+            embed._author = EmbedAuthor.from_dict(**payload["author"])
         if "footer" in payload:
-            embed._footer = EmbedFooter(**payload["footer"])
+            embed._footer = EmbedFooter.from_dict(**payload["footer"])
         if "image" in payload:
-            embed._image = EmbedImage(**payload["image"])
+            embed._image = EmbedImage.from_dict(**payload["image"])
         if "thumbnail" in payload:
-            embed._thumbnail = EmbedImage(**payload["thumbnail"])
+            embed._thumbnail = EmbedImage.from_dict(**payload["thumbnail"])
         if "fields" in payload:
-            embed._fields = [EmbedField(**f) for f in payload["fields"]]
+            embed._fields = [EmbedField.from_dict(**f) for f in payload["fields"]]
         if "provider" in payload:
-            embed._provider = EmbedProvider(**payload["provider"])
+            embed._provider = EmbedProvider.from_dict(**payload["provider"])
         if "video" in payload:
-            embed._video = EmbedVideo(**payload["video"])
+            embed._video = EmbedVideo.from_dict(**payload["video"])
 
         return embed
 
@@ -330,9 +333,14 @@ class Embed:
 class _EmbedComponent:
     __slots__ = ()
 
-    def to_dict(self, *, dict_factory=dict) -> dict:
+    def to_dict(self, *, dict_factory=dict):
         attrs = {a: getattr(self, a) for a in self.__slots__}
         return dict_factory(**{k: v for k, v in attrs.items() if v is not utils.UNSPECIFIED})
+
+    @classmethod
+    def from_dict(cls, **kwargs):
+        # noinspection PyArgumentList
+        return cls(**kwargs)
 
 
 @dataclasses.dataclass(init=False)

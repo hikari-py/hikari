@@ -24,15 +24,26 @@ import json as libjson
 import os
 
 
+def in_here(file):
+    this_file = __file__
+    this_directory = os.path.abspath(os.path.dirname(this_file))
+    return os.path.join(this_directory, file)
+
+
 def json(file):
     def reader():
-        this_file = __file__
-        this_directory = os.path.abspath(os.path.dirname(this_file))
-        file_path = os.path.join(this_directory, file) + ".json"
+        file_path = in_here(file) + ".json"
 
         with open(file_path, encoding="utf-8") as fp:
             return libjson.load(fp)
 
+    return reader
+
+
+def raw(file):
+    def reader():
+        with open(in_here(file)) as fp:
+            return fp.read()
     return reader
 
 

@@ -57,7 +57,6 @@ import platform
 import re
 import typing
 
-
 T = typing.TypeVar("T")
 
 
@@ -404,3 +403,37 @@ def make_resource_seekable(resource):
         resource = io.StringIO(resource)
 
     return resource
+
+
+def mixin(cls):
+    """
+    Marks the given class as a mixin. This just ensures mixin compatibility and acts as a form of
+    self-documentation.
+
+    Args:
+        cls:
+            The class to be a mixin.
+
+    Returns:
+        The class, unmodified.
+
+    Raises:
+        TypeError:
+            If the passed parameter is not a class deriving from type; if the passed parameter is not
+            slotted, if the passed parameter has slots but the slot object has more than 0 elements, or
+            if the object subclasses another class other than object.
+        NameError:
+            If the passed parameter does not have a name ending in `Mixin` as this violates the naming
+            convention this project enforces.
+    """
+    if not isinstance(cls, type):
+        raise TypeError(f"Object {cls} is marked as a mixin but does not derive from metaclass {type}.")
+    if cls.mro() != [cls, object]:
+        raise TypeError(f"Class {cls.__qualname__} is marked as a mixin but subclasses {cls.mro()[1:-1]}.")
+    if not hasattr(cls, "__slots__"):
+        raise TypeError(f"Class {cls.__qualname__} is marked as a mixin but is not slotted.")
+    if len(cls.__slots__) > 0:
+        raise TypeError(f"Class {cls.__qualname__} is a mixin so must NOT declare any fields. Slots should be empty.")
+    if not cls.__qualname__.endswith("Mixin"):
+        raise NameError(f'Class {cls.__qualname__} is defined as a mixin but does not have a name ending in "Mixin".')
+    return cls

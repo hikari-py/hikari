@@ -17,17 +17,16 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Generic users not bound to a guild.
+Generic users not bound to a guild, and guild-bound member definitions.
 """
-from __future__ import annotations
-
 __all__ = ()
 
 import enum
+
 from hikari.model import base
 
 
-class User(base.Snowflake):
+class User(base.SnowflakeMixin):
     __slots__ = ()
 
 
@@ -39,9 +38,13 @@ class PremiumType(enum.IntEnum):
     ...
 
 
-class Connection(base.Snowflake):
+class Connection(base.SnowflakeMixin):
     __slots__ = ()
 
 
 class ConnectionVisibility(enum.IntEnum):
     ...
+
+
+class Member(base.SnowflakeMixin):
+    __slots__ = ("_user",)
