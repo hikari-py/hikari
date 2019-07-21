@@ -36,12 +36,11 @@ import dataclasses
 import enum
 import typing
 
-from hikari import utils
 from hikari.model import base
-
 from hikari.model import overwrite
 from hikari.model import user
 from hikari.model import webhook
+from hikari.utils import maps
 
 
 class AuditLogEvent(enum.IntEnum):
@@ -361,11 +360,11 @@ class AuditLogEntry(base.SnowflakeMixin):
             options = None
 
         return AuditLogEntry(
-            id=utils.get_from_map_as(payload, "id", int),
-            target_id=utils.get_from_map_as(payload, "target_id", int, None),
+            id=maps.get_from_map_as(payload, "id", int),
+            target_id=maps.get_from_map_as(payload, "target_id", int, None),
             changes=[AuditLogChange.from_dict(change) for change in payload.get("changes", [])],
-            user_id=utils.get_from_map_as(payload, "user_id", int),
+            user_id=maps.get_from_map_as(payload, "user_id", int),
             action_type=action_type,
             options=options,
-            reason=utils.get_from_map_as(payload, "reason", str, None),
+            reason=maps.get_from_map_as(payload, "reason", str, None),
         )

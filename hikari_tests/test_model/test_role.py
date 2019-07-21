@@ -18,7 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import pytest
 
-from hikari.model import permission, role
+from hikari.model import permission
+from hikari.model import role
 
 
 @pytest.mark.model

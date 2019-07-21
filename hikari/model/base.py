@@ -28,10 +28,11 @@ import typing
 
 import dataclasses
 
-from hikari import utils
+from hikari.utils import assertions
+from hikari.utils import dateutils
 
 
-@utils.mixin
+@assertions.assert_is_mixin
 class SnowflakeMixin:
     """
     Base for any type that specifies an ID. The implementation is expected to implement that field.
@@ -49,8 +50,8 @@ class SnowflakeMixin:
     @property
     def created_at(self) -> datetime.datetime:
         """When the object was created."""
-        stamp = ((self.id >> 22) / 1_000) + utils.DISCORD_EPOCH
-        return datetime.datetime.utcfromtimestamp(stamp)
+        epoch = self.id >> 22
+        return dateutils.discord_epoch_to_datetime(epoch)
 
     @property
     def internal_worker_id(self) -> int:

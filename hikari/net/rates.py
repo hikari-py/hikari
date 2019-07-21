@@ -29,7 +29,7 @@ import contextlib
 import time
 import typing
 
-from hikari import utils
+from hikari.utils import assertions
 
 
 class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
@@ -56,7 +56,7 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
         # We repeatedly push to the rear and pop from the front, and iterate. We don't need random access, and O(k)
         # pushes and shifts are more desirable given this is a doubly linked list underneath.
         self._queue: typing.Deque[asyncio.Future] = collections.deque()
-        self.loop = utils.assert_not_none(loop)
+        self.loop = assertions.assert_not_none(loop)
 
     @property
     def is_limiting(self) -> bool:
@@ -160,7 +160,7 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
         # We repeatedly push to the rear and pop from the front, and iterate. We don't need random access, and O(k)
         # pushes and shifts are more desirable given this is a doubly linked list underneath.
         self._queue: typing.Deque[asyncio.Future] = collections.deque()
-        self.loop = utils.assert_not_none(loop)
+        self.loop = assertions.assert_not_none(loop)
 
     @property
     def is_limiting(self) -> bool:
@@ -277,7 +277,7 @@ class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
     def __init__(self, loop: asyncio.AbstractEventLoop) -> None:
         self._locked = False
         self._unlock_event = asyncio.Event(loop=loop)
-        self.loop = utils.assert_not_none(loop)
+        self.loop = assertions.assert_not_none(loop)
 
     @property
     def is_limiting(self) -> bool:

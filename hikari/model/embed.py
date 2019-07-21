@@ -28,11 +28,13 @@ import dataclasses
 import typing
 
 from hikari.model import color as _color
-from hikari import utils
+from hikari.utils import dateutils
+from hikari.utils import maps
+from hikari.utils import unspecified
 
 #: An alias to the unspecified sentinel. This is used to describe embed members with no associated value within this
 #: module.
-UNSPECIFIED = utils.UNSPECIFIED
+UNSPECIFIED = unspecified.UNSPECIFIED
 
 
 @dataclasses.dataclass(init=False)
@@ -79,11 +81,11 @@ class Embed:
     def __init__(
         self,
         *,
-        title: str = utils.UNSPECIFIED,
-        description: str = utils.UNSPECIFIED,
-        url: str = utils.UNSPECIFIED,
-        timestamp: datetime.datetime = utils.UNSPECIFIED,
-        color: typing.Union[int, _color.Color] = utils.UNSPECIFIED,
+        title: str = UNSPECIFIED,
+        description: str = UNSPECIFIED,
+        url: str = UNSPECIFIED,
+        timestamp: datetime.datetime = UNSPECIFIED,
+        color: typing.Union[int, _color.Color] = UNSPECIFIED,
     ) -> None:
         """
         Args:
@@ -102,15 +104,15 @@ class Embed:
         self.description = description
         self.url = url
         self.timestamp = timestamp
-        self.color = _color.Color(color) if color is not utils.UNSPECIFIED else utils.UNSPECIFIED
-        self._footer = utils.UNSPECIFIED
-        self._image = utils.UNSPECIFIED
-        self._thumbnail = utils.UNSPECIFIED
-        self._author = utils.UNSPECIFIED
+        self.color = _color.Color(color) if color is not UNSPECIFIED else UNSPECIFIED
+        self._footer = UNSPECIFIED
+        self._image = UNSPECIFIED
+        self._thumbnail = UNSPECIFIED
+        self._author = UNSPECIFIED
         self._fields = []
-        self._type = utils.UNSPECIFIED
-        self._video = utils.UNSPECIFIED
-        self._provider = utils.UNSPECIFIED
+        self._type = UNSPECIFIED
+        self._video = UNSPECIFIED
+        self._provider = UNSPECIFIED
 
     @property
     def footer(self) -> typing.Optional[EmbedFooter]:
@@ -119,7 +121,7 @@ class Embed:
         """
         return self._footer
 
-    def set_footer(self, *, icon_url: str = utils.UNSPECIFIED, text: str = utils.UNSPECIFIED) -> Embed:
+    def set_footer(self, *, icon_url: str = UNSPECIFIED, text: str = UNSPECIFIED) -> Embed:
         """
         Set the footer.
 
@@ -133,7 +135,7 @@ class Embed:
             This embed to allow method chaining.
 
         """
-        self._footer = EmbedFooter(icon_url, text, utils.UNSPECIFIED)
+        self._footer = EmbedFooter(icon_url, text, UNSPECIFIED)
         return self
 
     @property
@@ -143,7 +145,7 @@ class Embed:
         """
         return self._image
 
-    def set_image(self, *, url: str = utils.UNSPECIFIED) -> Embed:
+    def set_image(self, *, url: str = UNSPECIFIED) -> Embed:
         """
         Set the image.
 
@@ -158,7 +160,7 @@ class Embed:
 
         """
         self._image = EmbedImage(url=url)
-        self._thumbnail = utils.UNSPECIFIED
+        self._thumbnail = UNSPECIFIED
         return self
 
     @property
@@ -168,7 +170,7 @@ class Embed:
         """
         return self._thumbnail
 
-    def set_thumbnail(self, *, url: str = utils.UNSPECIFIED) -> Embed:
+    def set_thumbnail(self, *, url: str = UNSPECIFIED) -> Embed:
         """
         Set the thumbnail image.
 
@@ -182,7 +184,7 @@ class Embed:
             This embed to allow method chaining.
         """
         self._thumbnail = EmbedImage(url=url)
-        self._image = utils.UNSPECIFIED
+        self._image = UNSPECIFIED
         return self
 
     @property
@@ -193,7 +195,7 @@ class Embed:
         return self._author
 
     def set_author(
-        self, *, name: str = utils.UNSPECIFIED, url: str = utils.UNSPECIFIED, icon_url: str = utils.UNSPECIFIED
+        self, *, name: str = UNSPECIFIED, url: str = UNSPECIFIED, icon_url: str = UNSPECIFIED
     ) -> Embed:
         """
         Set the author of this embed.
@@ -275,21 +277,21 @@ class Embed:
 
     def to_dict(self, *, dict_factory=dict):
         d = dict_factory()
-        utils.put_if_specified(d, "title", self.title)
-        utils.put_if_specified(d, "description", self.description)
-        utils.put_if_specified(d, "url", self.url)
+        maps.put_if_specified(d, "title", self.title)
+        maps.put_if_specified(d, "description", self.description)
+        maps.put_if_specified(d, "url", self.url)
 
-        if self.timestamp is not utils.UNSPECIFIED:
+        if self.timestamp is not UNSPECIFIED:
             d["timestamp"] = self.timestamp.replace(tzinfo=datetime.timezone.utc).isoformat()
-        if self.color is not utils.UNSPECIFIED:
+        if self.color is not UNSPECIFIED:
             d["color"] = int(self.color)
-        if self.footer is not utils.UNSPECIFIED:
+        if self.footer is not UNSPECIFIED:
             d["footer"] = self.footer.to_dict(dict_factory=dict_factory)
-        if self.image is not utils.UNSPECIFIED:
+        if self.image is not UNSPECIFIED:
             d["image"] = self.image.to_dict(dict_factory=dict_factory)
-        if self.thumbnail is not utils.UNSPECIFIED:
+        if self.thumbnail is not UNSPECIFIED:
             d["thumbnail"] = self.thumbnail.to_dict(dict_factory=dict_factory)
-        if self.author is not utils.UNSPECIFIED:
+        if self.author is not UNSPECIFIED:
             d["author"] = self.author.to_dict(dict_factory=dict_factory)
         if self._fields:
             d["fields"] = [f.to_dict(dict_factory=dict_factory) for f in self._fields]
@@ -298,16 +300,16 @@ class Embed:
 
     @staticmethod
     def from_dict(payload):
-        timestamp = payload.get("timestamp", utils.UNSPECIFIED)
-        if timestamp is not utils.UNSPECIFIED:
-            timestamp = utils.parse_iso_8601_datetime(timestamp)
+        timestamp = payload.get("timestamp", UNSPECIFIED)
+        if timestamp is not UNSPECIFIED:
+            timestamp = dateutils.parse_iso_8601_datetime(timestamp)
 
         embed = Embed(
-            title=payload.get("title", utils.UNSPECIFIED),
-            description=payload.get("description", utils.UNSPECIFIED),
-            url=payload.get("url", utils.UNSPECIFIED),
+            title=payload.get("title", UNSPECIFIED),
+            description=payload.get("description", UNSPECIFIED),
+            url=payload.get("url", UNSPECIFIED),
             timestamp=timestamp,
-            color=payload.get("color", utils.UNSPECIFIED),
+            color=payload.get("color", UNSPECIFIED),
         )
 
         embed._type = payload["type"]
@@ -335,7 +337,7 @@ class _EmbedComponent:
 
     def to_dict(self, *, dict_factory=dict):
         attrs = {a: getattr(self, a) for a in self.__slots__}
-        return dict_factory(**{k: v for k, v in attrs.items() if v is not utils.UNSPECIFIED})
+        return dict_factory(**{k: v for k, v in attrs.items() if v is not UNSPECIFIED})
 
     @classmethod
     def from_dict(cls, **kwargs):
@@ -354,7 +356,7 @@ class EmbedVideo(_EmbedComponent):
     width: int
 
     def __init__(
-        self, url: str = utils.UNSPECIFIED, height: int = utils.UNSPECIFIED, width: int = utils.UNSPECIFIED
+        self, url: str = UNSPECIFIED, height: int = UNSPECIFIED, width: int = UNSPECIFIED
     ) -> None:
         self.url = url
         self.height = height
@@ -374,10 +376,10 @@ class EmbedImage(_EmbedComponent):
 
     def __init__(
         self,
-        url: str = utils.UNSPECIFIED,
-        proxy_url: str = utils.UNSPECIFIED,
-        height: int = utils.UNSPECIFIED,
-        width: int = utils.UNSPECIFIED,
+        url: str = UNSPECIFIED,
+        proxy_url: str = UNSPECIFIED,
+        height: int = UNSPECIFIED,
+        width: int = UNSPECIFIED,
     ) -> None:
         self.url = url
         self.proxy_url = proxy_url
@@ -394,7 +396,7 @@ class EmbedProvider(_EmbedComponent):
     name: str
     url: str
 
-    def __init__(self, name: str = utils.UNSPECIFIED, url: str = utils.UNSPECIFIED) -> None:
+    def __init__(self, name: str = UNSPECIFIED, url: str = UNSPECIFIED) -> None:
         self.name = name
         self.url = url
 
@@ -412,10 +414,10 @@ class EmbedAuthor(_EmbedComponent):
 
     def __init__(
         self,
-        name: str = utils.UNSPECIFIED,
-        url: str = utils.UNSPECIFIED,
-        icon_url: str = utils.UNSPECIFIED,
-        proxy_icon_url: str = utils.UNSPECIFIED,
+        name: str = UNSPECIFIED,
+        url: str = UNSPECIFIED,
+        icon_url: str = UNSPECIFIED,
+        proxy_icon_url: str = UNSPECIFIED,
     ) -> None:
         self.name = name
         self.url = url
@@ -434,7 +436,7 @@ class EmbedFooter(_EmbedComponent):
     proxy_icon_url: str
 
     def __init__(
-        self, icon_url: str = utils.UNSPECIFIED, text: str = utils.UNSPECIFIED, proxy_icon_url: str = utils.UNSPECIFIED
+        self, icon_url: str = UNSPECIFIED, text: str = UNSPECIFIED, proxy_icon_url: str = UNSPECIFIED
     ) -> None:
         self.icon_url = icon_url
         self.text = text
