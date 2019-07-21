@@ -28,12 +28,11 @@ import time
 import asynctest
 import pytest
 
-import hikari.utils
 from hikari import errors
-from hikari import utils
 from hikari.net import http_base
 from hikari.net import opcodes
 from hikari.net import rates
+from hikari.utils import unspecified
 from hikari_tests._helpers import _mock_methods_on
 
 
@@ -107,7 +106,7 @@ def mock_http_connection(event_loop):
 
 @pytest.fixture
 def res():
-    return hikari.utils.Resource("http://test.lan", "get", "/foo/bar")
+    return http_base.Resource("http://test.lan", "get", "/foo/bar")
 
 
 ########################################################################################################################
@@ -143,7 +142,7 @@ async def test_request_forwards_known_arguments_to_request_once(mock_http_connec
         channel_id="912000",
     )
 
-    res = utils.Resource(
+    res = http_base.Resource(
         mock_http_connection.base_uri,
         "get",
         "/foo/bar/{channel_id}",
@@ -211,7 +210,7 @@ async def test_reason_header_is_not_added_if_None_during_request(mock_http_conne
 @pytest.mark.asyncio
 async def test_reason_header_is_not_added_if_unspecified_during_request(mock_http_connection):
     mock_http_connection.session.request = asynctest.MagicMock(return_value=mock_http_connection.session.mock_response)
-    await mock_http_connection.request("get", "/foo/bar", reason=utils.UNSPECIFIED)
+    await mock_http_connection.request("get", "/foo/bar", reason=unspecified.UNSPECIFIED)
     args, kwargs = mock_http_connection.session.request.call_args
     headers = kwargs["headers"]
     assert "X-Audit-Log-Reason" not in headers
@@ -230,7 +229,7 @@ async def test_reason_header_is_added_if_provided_during_request(mock_http_conne
 async def test_request_once_calls_session_request_with_expected_arguments(mock_http_connection):
     mock_http_connection.session.request = asynctest.MagicMock(return_value=mock_http_connection.session.mock_response)
     path = "/foo/bar/{channel_id}"
-    res = utils.Resource(mock_http_connection.base_uri, "get", path, channel_id="12321")
+    res = http_base.Resource(mock_http_connection.base_uri, "get", path, channel_id="12321")
     headers = {
         "foo": "bar",
         "baz": "bork",
@@ -648,7 +647,7 @@ async def test_NO_CONTENT_response_with_no_body_present(mock_http_connection, re
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=None)
     mock_http_connection.session.mock_response.headers["Content-Type"] = None
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.NO_CONTENT)
-    res = hikari.utils.Resource("http://test.lan", "get", "/foo/bar")
+    res = http_base.Resource("http://test.lan", "get", "/foo/bar")
     body = await mock_http_connection._request_once(retry=0, resource=res)
     assert not body
 
@@ -871,3 +870,118 @@ async def test_handle_server_error_response_when_body_is_not_a_dict(mock_http_co
         assert False, "No exception was raised"
     except errors.ServerError as ex:
         assert ex.message == "errrooorr"
+
+
+def test_Resource_bucket():
+    a = http_base.Resource(
+        "http://base.lan",
+        "get",
+        "/foo/bar",
+        channel_id="1234",
+        potatos="spaghetti",
+        guild_id="5678",
+        webhook_id="91011",
+    )
+    b = http_base.Resource(
+        "http://base.lan",
+        "GET",
+        "/foo/bar",
+        channel_id="1234",
+        potatos="spaghetti",
+        guild_id="5678",
+        webhook_id="91011",
+    )
+    c = http_base.Resource(
+        "http://base.lan", "get", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011"
+    )
+    d = http_base.Resource(
+        "http://base.lan", "post", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011"
+    )
+
+    assert a.bucket == b.bucket
+    assert c.bucket != d.bucket
+    assert a.bucket == c.bucket
+    assert b.bucket == c.bucket
+    assert a.bucket != d.bucket
+    assert b.bucket != d.bucket
+
+
+def test_Resource_hash():
+    a = http_base.Resource(
+        "http://base.lan",
+        "get",
+        "/foo/bar",
+        channel_id="1234",
+        potatos="spaghetti",
+        guild_id="5678",
+        webhook_id="91011",
+    )
+    b = http_base.Resource(
+        "http://base.lan",
+        "GET",
+        "/foo/bar",
+        channel_id="1234",
+        potatos="spaghetti",
+        guild_id="5678",
+        webhook_id="91011",
+    )
+    c = http_base.Resource(
+        "http://base.lan", "get", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011"
+    )
+    d = http_base.Resource(
+        "http://base.lan", "post", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011"
+    )
+
+    assert hash(a) == hash(b)
+    assert hash(c) != hash(d)
+    assert hash(a) == hash(c)
+    assert hash(b) == hash(c)
+    assert hash(a) != hash(d)
+    assert hash(b) != hash(d)
+
+
+def test_Resource_equality():
+    a = http_base.Resource(
+        "http://base.lan",
+        "get",
+        "/foo/bar",
+        channel_id="1234",
+        potatos="spaghetti",
+        guild_id="5678",
+        webhook_id="91011",
+    )
+    b = http_base.Resource(
+        "http://base.lan",
+        "GET",
+        "/foo/bar",
+        channel_id="1234",
+        potatos="spaghetti",
+        guild_id="5678",
+        webhook_id="91011",
+    )
+    c = http_base.Resource(
+        "http://base.lan", "get", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011"
+    )
+    d = http_base.Resource(
+        "http://base.lan", "post", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011"
+    )
+
+    assert a == b
+    assert b == a
+    assert c != d
+    assert a == c
+    assert b == c
+    assert a != d
+    assert b != d
+
+
+def test_resource_get_uri():
+    a = http_base.Resource(
+        "http://foo.com",
+        "get",
+        "/foo/{channel_id}/bar/{guild_id}/baz/{potatos}",
+        channel_id="1234",
+        potatos="spaghetti",
+        guild_id="5678",
+    )
+    assert a.uri == "http://foo.com/foo/1234/bar/5678/baz/spaghetti"

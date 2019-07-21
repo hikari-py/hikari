@@ -39,7 +39,8 @@ import typing
 
 import dataclasses
 
-from hikari import utils
+from hikari.utils import dateutils
+from hikari.utils import maps
 
 
 @dataclasses.dataclass()
@@ -59,15 +60,15 @@ class Subscriber:
     purge_at: typing.Optional[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload: utils.DiscordObject):
+    def from_dict(payload):
         return Subscriber(
             id=payload["id"],
             email=payload["email"],
             mode=payload["mode"],
-            quarantined_at=utils.get_from_map_as(payload, "quarantined_at", utils.parse_iso_8601_datetime),
-            incident=utils.get_from_map_as(payload, "incident", Incident.from_dict),
-            skip_confirmation_notification=utils.get_from_map_as(payload, "skip_confirmation_notification", bool),
-            purge_at=utils.get_from_map_as(payload, "purge_at", utils.parse_iso_8601_datetime),
+            quarantined_at=maps.get_from_map_as(payload, "quarantined_at", dateutils.parse_iso_8601_datetime),
+            incident=maps.get_from_map_as(payload, "incident", Incident.from_dict),
+            skip_confirmation_notification=maps.get_from_map_as(payload, "skip_confirmation_notification", bool),
+            purge_at=maps.get_from_map_as(payload, "purge_at", dateutils.parse_iso_8601_datetime),
         )
 
 
@@ -105,7 +106,7 @@ class Page:
             id=payload["id"],
             name=payload["name"],
             url=payload["url"],
-            updated_at=utils.get_from_map_as(payload, "updated_at", utils.parse_iso_8601_datetime),
+            updated_at=maps.get_from_map_as(payload, "updated_at", dateutils.parse_iso_8601_datetime),
         )
 
 
@@ -121,7 +122,7 @@ class Status:
     description: typing.Optional[str]
 
     @staticmethod
-    def from_dict(payload: utils.DiscordObject):
+    def from_dict(payload):
         return Status(indicator=payload.get("indicator"), description=payload.get("description"))
 
 
@@ -142,14 +143,14 @@ class Component:
     description: typing.Optional[str]
 
     @staticmethod
-    def from_dict(payload: utils.DiscordObject):
+    def from_dict(payload):
         return Component(
             id=payload["id"],
             name=payload["name"],
-            created_at=utils.get_from_map_as(payload, "created_at", utils.parse_iso_8601_datetime),
+            created_at=maps.get_from_map_as(payload, "created_at", dateutils.parse_iso_8601_datetime),
             page_id=payload["page_id"],
-            position=utils.get_from_map_as(payload, "position", int),
-            updated_at=utils.get_from_map_as(payload, "updated_at", utils.parse_iso_8601_datetime),
+            position=maps.get_from_map_as(payload, "position", int),
+            updated_at=maps.get_from_map_as(payload, "updated_at", dateutils.parse_iso_8601_datetime),
             description=payload.get("description"),
         )
 
@@ -194,11 +195,11 @@ class IncidentUpdate:
         return IncidentUpdate(
             id=payload["id"],
             body=payload["body"],
-            created_at=utils.get_from_map_as(payload, "created_at", utils.parse_iso_8601_datetime),
-            display_at=utils.get_from_map_as(payload, "display_at", utils.parse_iso_8601_datetime),
+            created_at=maps.get_from_map_as(payload, "created_at", dateutils.parse_iso_8601_datetime),
+            display_at=maps.get_from_map_as(payload, "display_at", dateutils.parse_iso_8601_datetime),
             incident_id=payload["incident_id"],
             status=payload["status"],
-            updated_at=utils.get_from_map_as(payload, "updated_at", utils.parse_iso_8601_datetime),
+            updated_at=maps.get_from_map_as(payload, "updated_at", dateutils.parse_iso_8601_datetime),
         )
 
 
@@ -238,15 +239,15 @@ class Incident:
             id=payload["id"],
             name=payload["name"],
             status=payload["status"],
-            updated_at=utils.get_from_map_as(
-                payload, "updated_at", utils.parse_iso_8601_datetime, default_on_error=True
+            updated_at=maps.get_from_map_as(
+                payload, "updated_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
             incident_updates=[IncidentUpdate.from_dict(i) for i in payload.get("incident_updates", [])],
-            monitoring_at=utils.get_from_map_as(
-                payload, "monitoring_at", utils.parse_iso_8601_datetime, default_on_error=True
+            monitoring_at=maps.get_from_map_as(
+                payload, "monitoring_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
-            resolved_at=utils.get_from_map_as(
-                payload, "resolved_at", utils.parse_iso_8601_datetime, default_on_error=True
+            resolved_at=maps.get_from_map_as(
+                payload, "resolved_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
             shortlink=payload["shortlink"],
             page_id=payload["page_id"],
@@ -309,22 +310,22 @@ class ScheduledMaintenance:
             name=payload["name"],
             impact=payload["impact"],
             incident_updates=[IncidentUpdate.from_dict(iu) for iu in payload.get("incident_updates", [])],
-            monitoring_at=utils.get_from_map_as(
-                payload, "monitoring_at", utils.parse_iso_8601_datetime, default_on_error=True
+            monitoring_at=maps.get_from_map_as(
+                payload, "monitoring_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
             page_id=payload["page_id"],
-            resolved_at=utils.get_from_map_as(
-                payload, "resolved_at", utils.parse_iso_8601_datetime, default_on_error=True
+            resolved_at=maps.get_from_map_as(
+                payload, "resolved_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
-            scheduled_for=utils.get_from_map_as(
-                payload, "scheduled_for", utils.parse_iso_8601_datetime, default_on_error=True
+            scheduled_for=maps.get_from_map_as(
+                payload, "scheduled_for", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
-            scheduled_until=utils.get_from_map_as(
-                payload, "scheduled_until", utils.parse_iso_8601_datetime, default_on_error=True
+            scheduled_until=maps.get_from_map_as(
+                payload, "scheduled_until", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
             status=payload["status"],
-            updated_at=utils.get_from_map_as(
-                payload, "updated_at", utils.parse_iso_8601_datetime, default_on_error=True
+            updated_at=maps.get_from_map_as(
+                payload, "updated_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
         )
 

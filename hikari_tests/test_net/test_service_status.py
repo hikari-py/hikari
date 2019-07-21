@@ -17,15 +17,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-import dataclasses
 import json
 import os
 
 import asynctest
+import dataclasses
 import pytest
 
-from hikari.net import service_status
 from hikari.model import service_status as status_model
+from hikari.net import service_status
 
 
 def _parse(path):
