@@ -17,38 +17,29 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Generic users not bound to a guild, and guild-bound member definitions.
+Sentinel value used internally to represent an entity that was omitted from explicit specification. This
+can be used to mark fields that may be able to be `None` as being optional.
 """
-
-__all__ = ()
-
-import enum
-
-from hikari.model import base
+__all__ = ("UNSPECIFIED",)
 
 
-class User(base.SnowflakeMixin):
+class Unspecified:
+    """
+    Type of an unspecified value.
+    """
     __slots__ = ()
 
+    def __str__(self):
+        return "unspecified"
 
-class UserFlag(enum.IntFlag):
-    ...
+    def __bool__(self):
+        return False
 
-
-class PremiumType(enum.IntEnum):
-    ...
-
-
-class Connection(base.SnowflakeMixin):
-    __slots__ = ()
+    __repr__ = __str__
 
 
-class ConnectionVisibility(enum.IntEnum):
-    ...
+#: An attribute that is unspecified by default.
+UNSPECIFIED = Unspecified()
 
-
-class Member(base.SnowflakeMixin):
-    """
-    A specialization of a user which provides
-    """
-    __slots__ = ("_user",)
+# Make Unspecified into a singleton.
+Unspecified.__new__ = lambda *_, **__: UNSPECIFIED

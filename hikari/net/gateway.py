@@ -46,9 +46,9 @@ import websockets
 from hikari import errors
 from hikari.net import opcodes
 from hikari.net import rates
-from hikari import utils
-from hikari.utils import DispatchHandler
-from hikari.utils import DiscordObject
+from hikari.utils import assertions
+from hikari.utils import meta
+from hikari.utils import types
 
 
 class _ResumeConnection(websockets.ConnectionClosed):
@@ -61,6 +61,16 @@ class _RestartConnection(websockets.ConnectionClosed):
     """Request by the gateway to completely reconnect using a fresh connection. This is only used internally."""
 
     __slots__ = ()
+
+
+#: The signature of an event dispatcher function. Consumes two arguments. The first is an event name from the gateway,
+#: the second is the payload which is assumed to always be a :class:`dict` with :class:`str` keys. This should be
+#: a coroutine function; if it is not, it should be expected to be promoted to a coroutine function internally.
+#:
+#: Example:
+#:     >>> async def on_dispatch(event: str, payload: Dict[str, Any]) -> None:
+#:     ...     logger.info("Dispatching %s with payload %r", event, payload)
+DispatchHandler = typing.Callable[[str, typing.Dict[str, typing.Any]], typing.Union[None, typing.Awaitable[None]]]
 
 
 class GatewayClient:
@@ -149,7 +159,7 @@ class GatewayClient:
         *,
         connector=websockets.connect,
         dispatch: DispatchHandler = lambda t, d: None,
-        initial_presence: typing.Optional[DiscordObject] = None,
+        initial_presence: typing.Optional[types.DiscordObject] = None,
         large_threshold: int = 50,
         loop: asyncio.AbstractEventLoop,
         max_persistent_buffer_size: int = 3 * 1024 ** 2,
@@ -157,10 +167,17 @@ class GatewayClient:
         shard_count: typing.Optional[int] = None,
         token: str,
     ) -> None:
-        loop = utils.assert_not_none(loop, "loop")
+        loop = assertions.assert_not_none(loop, "loop")
 
         #: The coroutine function to dispatch any events to.
-        self.dispatch = asyncio.coroutine(dispatch)
+        if not asyncio.iscoroutinefunction(dispatch):
+            async def async_dispatch(*args, **kwargs):
+                return dispatch(*args, **kwargs)
+
+            # noinspection PyTypeChecker
+            self.dispatch: DispatchHandler = async_dispatch
+        else:
+            self.dispatch: DispatchHandler = dispatch
 
         self._connector = connector
         self._in_buffer: bytearray = bytearray()
@@ -255,7 +272,7 @@ class GatewayClient:
             self.out_cid += 1
             await self.ws.send(raw)
 
-    async def _receive_json(self) -> DiscordObject:
+    async def _receive_json(self) -> types.DiscordObject:
         msg = await self.ws.recv()
 
         if isinstance(msg, (bytes, bytearray)):
@@ -282,7 +299,7 @@ class GatewayClient:
 
         return payload
 
-    def _warn_about_internal_rate_limit(self):
+    def _warn_about_internal_rate_limit(self) -> None:
         delta = self.rate_limit.reset_at - time.perf_counter()
         self.logger.warning(
             "you are being rate limited internally to prevent the gateway from disconnecting you. "
@@ -371,9 +388,9 @@ class GatewayClient:
                 "compress": False,
                 "large_threshold": self.large_threshold,
                 "properties": {
-                    "$os": utils.system_type(),
-                    "$browser": utils.library_version(),
-                    "$device": utils.python_version(),
+                    "$os": meta.system_type(),
+                    "$browser": meta.library_version(),
+                    "$device": meta.python_version(),
                 },
             },
         }
@@ -388,7 +405,7 @@ class GatewayClient:
         self.logger.info("sent IDENTIFY")
         await self._send_json(payload, False)
 
-    async def _handle_dispatch(self, event: str, payload: DiscordObject) -> None:
+    async def _handle_dispatch(self, event: str, payload: types.DiscordObject) -> None:
         if event == "READY":
             await self._handle_ready(payload)
         if event == "RESUMED":
@@ -396,15 +413,15 @@ class GatewayClient:
         self.logger.debug("DISPATCH %s", event)
         self._dispatch(event, payload)
 
-    async def _handle_ready(self, ready: DiscordObject) -> None:
-        self.trace = ready["_trace"]
-        self.session_id = ready["session_id"]
-        self.version = ready["v"]
+    async def _handle_ready(self, ready_payload: types.DiscordObject) -> None:
+        self.trace = ready_payload["_trace"]
+        self.session_id = ready_payload["session_id"]
+        self.version = ready_payload["v"]
         self.logger.info("session %s is READY", self.session_id)
         self.logger.debug("trace for session %s is %s", self.session_id, self.trace)
 
-    async def _handle_resumed(self, resumed: DiscordObject) -> None:
-        self.trace = resumed["_trace"]
+    async def _handle_resumed(self, resume_payload: types.DiscordObject) -> None:
+        self.trace = resume_payload["_trace"]
         self.logger.info("RESUMED successfully")
         self._dispatch("RESUME", None)
 
@@ -472,7 +489,7 @@ class GatewayClient:
         )
 
     async def update_status(
-        self, idle_since: typing.Optional[int], game: typing.Optional[DiscordObject], status: str, afk: bool
+        self, idle_since: typing.Optional[int], game: typing.Optional[types.DiscordObject], status: str, afk: bool
     ) -> None:
         """
         Updates the bot user's status in this shard.
@@ -582,6 +599,6 @@ class GatewayClient:
         if block:
             await self.ws.wait_closed()
 
-    def _dispatch(self, event_name: str, payload: typing.Optional[utils.DiscordObject]) -> None:
+    def _dispatch(self, event_name: str, payload: typing.Optional[types.DiscordObject]) -> None:
         # This prevents us blocking any task such as the READY handler.
         self.loop.create_task(self.dispatch(event_name, payload))

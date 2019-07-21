@@ -44,6 +44,7 @@ def raw(file):
     def reader():
         with open(in_here(file)) as fp:
             return fp.read()
+
     return reader
 
 
