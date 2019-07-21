@@ -16,14 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import dataclasses
 import datetime
 
+import dataclasses
 import pytest
 
-import asynctest
-
-from hikari import utils
 from hikari.model import base
 
 
@@ -77,7 +74,8 @@ class TestSnowflake:
             assert False, f"No type error raised for bad comparison for {operator.__name__}"
 
     def test_Snowflake_created_at(self, neko_snowflake):
-        assert neko_snowflake.created_at == datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000)
+        assert neko_snowflake.created_at == datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000).replace(
+            tzinfo=datetime.timezone.utc)
 
     def test_Snowflake_increment(self, neko_snowflake):
         assert neko_snowflake.increment == 40

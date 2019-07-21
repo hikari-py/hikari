@@ -37,7 +37,7 @@ __all__ = (
 import typing
 
 from hikari.net import opcodes
-from hikari import utils
+from hikari.net import http_base
 
 
 class HikariError(RuntimeError):
@@ -125,9 +125,9 @@ class ServerError(HTTPError):
     __slots__ = ("resource", "http_status", "message")
 
     def __init__(
-        self, resource: utils.Resource, http_status: opcodes.HTTPStatus, message: typing.Optional[str] = None
+        self, resource: http_base.Resource, http_status: opcodes.HTTPStatus, message: typing.Optional[str] = None
     ) -> None:
-        self.resource: utils.Resource = resource
+        self.resource: http_base.Resource = resource
         self.http_status: opcodes.HTTPStatus = http_status
         super().__init__(message or http_status.name.replace("_", " ").title())
 
@@ -152,12 +152,12 @@ class ClientError(HTTPError):
 
     def __init__(
         self,
-        resource: typing.Optional[utils.Resource],
+        resource: typing.Optional[http_base.Resource],
         http_status: typing.Optional[opcodes.HTTPStatus],
         json_error_code: typing.Optional[opcodes.JSONErrorCode],
         message: str,
     ) -> None:
-        self.resource: typing.Optional[utils.Resource] = resource
+        self.resource: typing.Optional[http_base.Resource] = resource
         self.status: typing.Optional[opcodes.HTTPStatus] = http_status
         self.error_code: typing.Optional[opcodes.JSONErrorCode] = json_error_code
         super().__init__(message)
@@ -182,7 +182,7 @@ class BadRequest(ClientError):
 
     __slots__ = ()
 
-    def __init__(self, resource: utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
+    def __init__(self, resource: http_base.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
         super().__init__(resource, opcodes.HTTPStatus.BAD_REQUEST, json_error_code, message)
 
 
@@ -208,7 +208,7 @@ class Unauthorized(ClientError):
 
     __slots__ = ()
 
-    def __init__(self, resource: utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
+    def __init__(self, resource: http_base.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
         super().__init__(resource, opcodes.HTTPStatus.UNAUTHORIZED, json_error_code, message)
 
 
@@ -229,7 +229,7 @@ class Forbidden(ClientError):
 
     __slots__ = ()
 
-    def __init__(self, resource: utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
+    def __init__(self, resource: http_base.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
         super().__init__(resource, opcodes.HTTPStatus.FORBIDDEN, json_error_code, message)
 
 
@@ -252,5 +252,5 @@ class NotFound(ClientError):
 
     __slots__ = ()
 
-    def __init__(self, resource: utils.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
+    def __init__(self, resource: http_base.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
         super().__init__(resource, opcodes.HTTPStatus.NOT_FOUND, json_error_code, message)

@@ -30,7 +30,6 @@ import mimetypes
 import re
 import typing
 
-
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
 

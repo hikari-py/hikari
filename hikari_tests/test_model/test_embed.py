@@ -20,9 +20,9 @@ import datetime
 
 import pytest
 
-from hikari import utils
 from hikari.model import color as _color
 from hikari.model import embed as _embed
+from hikari.utils import unspecified
 
 
 @pytest.fixture
@@ -184,15 +184,15 @@ class TestEmbed:
     def test_Embed_from_dict_when_empty(self):
         embed = _embed.Embed.from_dict(dict(type="your mother"))
         assert embed.type == "your mother"
-        assert embed.title is utils.UNSPECIFIED
-        assert embed.description is utils.UNSPECIFIED
-        assert embed.url is utils.UNSPECIFIED
-        assert embed.timestamp is utils.UNSPECIFIED
-        assert embed.color is utils.UNSPECIFIED
+        assert embed.title is unspecified.UNSPECIFIED
+        assert embed.description is unspecified.UNSPECIFIED
+        assert embed.url is unspecified.UNSPECIFIED
+        assert embed.timestamp is unspecified.UNSPECIFIED
+        assert embed.color is unspecified.UNSPECIFIED
         assert embed.fields == []
-        assert embed.footer is utils.UNSPECIFIED
-        assert embed.image is utils.UNSPECIFIED
-        assert embed.thumbnail is utils.UNSPECIFIED
-        assert embed.author is utils.UNSPECIFIED
-        assert embed.provider is utils.UNSPECIFIED
-        assert embed.video is utils.UNSPECIFIED
+        assert embed.footer is unspecified.UNSPECIFIED
+        assert embed.image is unspecified.UNSPECIFIED
+        assert embed.thumbnail is unspecified.UNSPECIFIED
+        assert embed.author is unspecified.UNSPECIFIED
+        assert embed.provider is unspecified.UNSPECIFIED
+        assert embed.video is unspecified.UNSPECIFIED

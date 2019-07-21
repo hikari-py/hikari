@@ -27,10 +27,10 @@ import typing
 
 import dataclasses
 
-from hikari import utils
 from hikari.model import base
 from hikari.model import overwrite
 from hikari.model import user
+from hikari.utils import maps
 
 
 class ChannelType(enum.IntEnum):
@@ -121,10 +121,10 @@ class GuildTextChannel(GuildChannel):
             permission_overwrites=[NotImplemented for _ in payload["PermissionOverwrites"]],  # TODO
             name=payload["name"],
             nsfw=payload["nsfw"],
-            parent_id=utils.get_from_map_as(payload, "parent_id", int),
+            parent_id=maps.get_from_map_as(payload, "parent_id", int),
             topic=payload.get("topic"),
             rate_limit_per_user=int(payload.get("rate_limit_per_user")),
-            last_message_id=utils.get_from_map_as(payload, "last_message_id", int),
+            last_message_id=maps.get_from_map_as(payload, "last_message_id", int),
         )
 
 
@@ -151,7 +151,7 @@ class DMChannel(Channel):
         return DMChannel(
             _state=state,
             id=int(payload["id"]),
-            last_message_id=utils.get_from_map_as(payload, "last_message_id", int),
+            last_message_id=maps.get_from_map_as(payload, "last_message_id", int),
             recipients=[NotImplemented for _ in payload["recipients"]],  # TODO
         )
 
@@ -184,7 +184,7 @@ class GuildVoiceChannel(GuildChannel):
             permission_overwrites=[NotImplemented for _ in payload["PermissionOverwrites"]],  # TODO
             name=payload["name"],
             nsfw=payload["nsfw"],
-            parent_id=utils.get_from_map_as(payload, "parent_id", int),
+            parent_id=maps.get_from_map_as(payload, "parent_id", int),
             bitrate=payload["bitrate"],
             user_limit=int(payload["user_limit"]),
         )
