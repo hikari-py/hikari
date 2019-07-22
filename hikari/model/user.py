@@ -38,7 +38,9 @@ class User(base.SnowflakeMixin):
     bot: bool
 
 
-class Member(base.SnowflakeMixin, metaclass=delegate.DelegatedMeta, delegate_to=(User, "_user")):
+@delegate.delegate_safe_dataclass()
+@delegate.delegate_members(User, "_user")
+class Member(User):
     """
     A specialization of a user which provides
     """
