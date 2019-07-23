@@ -188,6 +188,7 @@ def test_parse_iso_8601_date_with_milliseconds_instead_of_microseconds():
 
 def test_assert_is_mixin_applied_to_something_that_is_not_a_class():
     try:
+
         @assertions.assert_is_mixin
         def foo():
             pass
@@ -199,6 +200,7 @@ def test_assert_is_mixin_applied_to_something_that_is_not_a_class():
 
 def test_assert_is_mixin_applied_to_something_that_is_directly_derived_from_object_or_mixin():
     try:
+
         class Bar:
             pass
 
@@ -213,6 +215,7 @@ def test_assert_is_mixin_applied_to_something_that_is_directly_derived_from_obje
 
 def test_assert_is_mixin_applied_to_something_that_is_not_slotted():
     try:
+
         @assertions.assert_is_mixin
         class FooMixin:
             pass
@@ -224,9 +227,10 @@ def test_assert_is_mixin_applied_to_something_that_is_not_slotted():
 
 def test_assert_is_mixin_applied_to_something_that_is_slotted_but_not_multiple_inheritance_compatible():
     try:
+
         @assertions.assert_is_mixin
         class FooMixin:
-            __slots__ = ('nine', 'eighteen', 'twentyseven')
+            __slots__ = ("nine", "eighteen", "twentyseven")
 
         assert False, "No error thrown"
     except TypeError:
@@ -235,6 +239,7 @@ def test_assert_is_mixin_applied_to_something_that_is_slotted_but_not_multiple_i
 
 def test_assert_is_mixin_applied_to_something_that_is_not_named_correctly():
     try:
+
         @assertions.assert_is_mixin
         class FooMixer:
             __slots__ = ()

@@ -38,10 +38,11 @@ class User(base.SnowflakeMixin):
     bot: bool
 
 
-@delegate.delegate_safe_dataclass()
 @delegate.delegate_members(User, "_user")
+@delegate.delegate_safe_dataclass()
 class Member(User):
     """
     A specialization of a user which provides
     """
+
     __slots__ = ("_user",)

@@ -21,12 +21,13 @@
 """
 __all__ = ("delegate_members", "delegate_safe_dataclass")
 
-import asyncio
 import dataclasses
-import functools
-import inspect
 
 from hikari.utils import assertions
+
+
+_DELEGATE_MEMBERS_FIELD = "__delegate_members__"
+_DELEGATE_TYPES_FIELD = "__delegate_type_mapping__"
 
 
 class DelegatedProperty:
@@ -35,13 +36,17 @@ class DelegatedProperty:
     any accession of the property's value to the attribute named "delegated_member_name" that
     belongs to field "magic_field" on the class it is applied to.
     """
+
     def __init__(self, magic_field, delegated_member_name) -> None:
         self.magic_field = magic_field
         self.delegated_member_name = delegated_member_name
 
     def __get__(self, instance, owner):
-        delegated_object = getattr(instance if instance is not None else owner, self.magic_field)
-        return getattr(delegated_object, self.delegated_member_name)
+        if instance is not None:
+            delegated_object = getattr(instance, self.magic_field)
+            return getattr(delegated_object, self.delegated_member_name)
+        else:
+            return self
 
 
 def delegate_safe_dataclass(**kwargs):
@@ -50,73 +55,85 @@ def delegate_safe_dataclass(**kwargs):
     omits known delegated fields from the signature, thus making it safe to use on delegated classes.
 
     Warning:
-        This decorator must be placed BEFORE the delegate decorators are placed (so, further up the file)
-        otherwise it will produce an incorrect constructor.
+        This decorator must be placed AFTER the delegate decorators are placed (so, further down the file)
+        otherwise it will produce an incorrect constructor. This is checked when using the decorator.
     """
-    kwargs["init"] = False
-    dataclass = dataclasses.dataclass(**kwargs)
 
     def decorator(cls):
-        # Slots also prevent using special cases of field for now which would make this exponentially more complex.
-        assertions.assert_is_slotted(cls)
-        cls = dataclass(cls)
-        fields = dataclasses.fields(cls)
-        non_delegated_field_names = set(field.name for field in fields) - cls.__delegated_members__
+        if hasattr(cls, _DELEGATE_MEMBERS_FIELD):
+            raise TypeError("This class has already had delegates defined on it. Cannot make a dataclass now.")
 
-        init_function = (
-            "def __init__(self, " +
-            ", ".join(name for name in non_delegated_field_names) +
-            ") -> None:\n"
+        # We don't have an `__annotations__` element if no fields exist, annoyingly.
+        annotations = getattr(cls, "__annotations__", ())
+        fields = ", ".join(field for field in annotations)
+        init = "\n".join(
+            [
+                f"def __init__(self, {fields}) -> None:",
+                *[f"    self.{field} = {field}" for field in annotations],
+                # Sue me, who cares if this always ends in pass, it is the simplest way to ensure a body if no fields
+                # exist in the class.
+                "    pass",
+            ]
         )
-
-        if non_delegated_field_names:
-            for name in non_delegated_field_names:
-                init_function += f"    self.{name} = {name}\n"
-        else:
-            init_function += "    pass\n"
-
-        globals_ = {}
         locals_ = {}
-        exec(init_function, globals_, locals_)  # nosec
-        init = locals_["__init__"]
-        cls.__init__ = init
-        return cls
+        exec(init, {}, locals_)  # nosec
+        cls.__init__ = locals_["__init__"]
+        kwargs["init"] = False
+        return dataclasses.dataclass(**kwargs)(cls)
 
     return decorator
 
 
-def delegate_members(delegate_type, _magic_field):
+def delegate_members(delegate_type, magic_field):
     """
-    Make a decorator that wraps a class to make it delegate any inherited fields or methods from
-    `delegate_type` to attributes of the same name on a value stored in a field named the `_magic_field`.
+    Make a decorator that wraps a class to make it delegate any inherited fields from `delegate_type` to attributes of
+    the same name on a value stored in a field named the `magic_field`.
+
+    Args:
+        delegate_type:
+            The class that we wish to delegate to.
+        magic_field:
+            The field that we will store an instance of the delegated type in.
+
+    The idea behind this is to allow us to derive one class from another and allow initializing one instance
+    from another. This is used largely by the `Member` implementation to allow more than one member to refer to
+    the same underlying `User` at once.
+
+    Warning:
+        If making the outer class a dataclass, you must use the :attr:`delegate_safe_dataclass`
+        decorator rather than the vanilla :func:`dataclasses.dataclass` one, otherwise it will
+        produce an incompatible signature.
+
+        If you are instead initializing the class yourself, it is vital that you do not call `super().__init__`
+        and that you define your own constructor that consumes the delegate types. It is recommended to use the
+        :attr:`delegate_safe_dataclass` for complex data classes to automate this correctly.
     """
+
     def decorator(cls):
-        assertions.assert_is_slotted(cls)
         assertions.assert_subclasses(cls, delegate_type)
         delegated_members = set()
-        for name, value in delegate_type.__dict__.items():
-            if name.startswith('_'):
-                continue
-            if inspect.isfunction(value) or isinstance(value, classmethod):
-                if asyncio.iscoroutinefunction(value):
-                    async def delegate(self, *args, **kwargs):
-                        delegated_to = getattr(self, _magic_field)
-                        return await getattr(delegated_to, name)(*args, **kwargs)
-                else:
-                    def delegate(self, *args, **kwargs):
-                        delegated_to = getattr(self, _magic_field)
-                        return getattr(delegated_to, name)(*args, **kwargs)
+        # Tuple of tuples, each sub tuple is (magic_field, delegate_type)
+        delegated_types = getattr(cls, _DELEGATE_TYPES_FIELD, ())
 
-                delegate = functools.wraps(delegate)
-            else:
-                delegate = DelegatedProperty(_magic_field, name)
-                delegate.__doc__ = f"See :attr:`{delegate_type.__name__}.{name}`."
+        # We have three valid cases: either the attribute is a class member, in which case it is in `__dict__`, the
+        # attribute is defined in the class `__slots__`, in which case it is in `__dict__`, or the field is given
+        # a type hint, in which case it is in `__annotations__`. Anything else we lack the ability to detect
+        # (e.g. fields only defined once we are in the `__init__`, as it is basically monkey patching at this point if
+        # we are not slotted).
+        for name in {*delegate_type.__dict__} | {*getattr(delegate_type, "__annotations__", ())}:
+            if name.startswith("_"):
+                continue
+
+            delegate = DelegatedProperty(magic_field, name)
+            delegate.__doc__ = f"See :attr:`{delegate_type.__name__}.{name}`."
 
             setattr(cls, name, delegate)
             delegated_members.add(name)
 
         # Enable repeating the decorator for multiple delegation.
-        delegated_members |= getattr(cls, "__delegated_members__", set())
-        setattr(cls, "__delegated_members__", frozenset(delegated_members))
+        delegated_members |= getattr(cls, _DELEGATE_MEMBERS_FIELD, set())
+        setattr(cls, _DELEGATE_MEMBERS_FIELD, frozenset(delegated_members))
+        setattr(cls, _DELEGATE_TYPES_FIELD, (*delegated_types, (magic_field, delegate_type)))
         return cls
+
     return decorator

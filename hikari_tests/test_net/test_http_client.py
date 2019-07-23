@@ -23,6 +23,7 @@ import asynctest
 import pytest
 
 from hikari.net import http_client as _http_client
+
 # Big text is from: http://patorjk.com/software/taag/#p=display&f=Big&t=Gateway
 # Adding new categories? Keep it consistent, bud.
 from hikari.utils import unspecified
@@ -1045,8 +1046,11 @@ class TestGuild:
         http_client.request = asynctest.CoroutineMock()
         await http_client.create_guild_channel("424242", "asdf")
         http_client.request.assert_awaited_once_with(
-            "post", "/guilds/{guild_id}/channels", guild_id="424242", json={"name": "asdf"},
-            reason=unspecified.UNSPECIFIED
+            "post",
+            "/guilds/{guild_id}/channels",
+            guild_id="424242",
+            json={"name": "asdf"},
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_create_guild_channel_all_kwars(self, http_client):
@@ -1450,8 +1454,11 @@ class TestGuild:
         http_client.request = asynctest.CoroutineMock()
         await http_client.remove_guild_ban("424242", "696969")
         http_client.request.assert_awaited_once_with(
-            "delete", "/guilds/{guild_id}/bans/{user_id}", guild_id="424242", user_id="696969",
-            reason=unspecified.UNSPECIFIED
+            "delete",
+            "/guilds/{guild_id}/bans/{user_id}",
+            guild_id="424242",
+            user_id="696969",
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_remove_guild_ban_with_optional_reason(self, http_client):
