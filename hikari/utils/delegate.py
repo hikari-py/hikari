@@ -17,7 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-
+Implements a basic type delegation system that piggybacks off of the standard 
+inheritance system in Python and boasts full dataclass compatibility in the 
+process.
 """
 __all__ = ("delegate_members", "delegate_safe_dataclass")
 
