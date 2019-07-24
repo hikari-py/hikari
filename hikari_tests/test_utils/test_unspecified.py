@@ -29,3 +29,7 @@ def test_unspecified_str():
 
 def test_unspecified_repr():
     assert repr(unspecified.UNSPECIFIED) == "unspecified"
+
+
+def test_unspecified_bool():
+    assert bool(unspecified.UNSPECIFIED) is False
