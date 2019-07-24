@@ -194,9 +194,7 @@ class Embed:
         """
         return self._author
 
-    def set_author(
-        self, *, name: str = UNSPECIFIED, url: str = UNSPECIFIED, icon_url: str = UNSPECIFIED
-    ) -> Embed:
+    def set_author(self, *, name: str = UNSPECIFIED, url: str = UNSPECIFIED, icon_url: str = UNSPECIFIED) -> Embed:
         """
         Set the author of this embed.
 
@@ -355,9 +353,7 @@ class EmbedVideo(_EmbedComponent):
     height: int
     width: int
 
-    def __init__(
-        self, url: str = UNSPECIFIED, height: int = UNSPECIFIED, width: int = UNSPECIFIED
-    ) -> None:
+    def __init__(self, url: str = UNSPECIFIED, height: int = UNSPECIFIED, width: int = UNSPECIFIED) -> None:
         self.url = url
         self.height = height
         self.width = width
@@ -375,11 +371,7 @@ class EmbedImage(_EmbedComponent):
     width: int
 
     def __init__(
-        self,
-        url: str = UNSPECIFIED,
-        proxy_url: str = UNSPECIFIED,
-        height: int = UNSPECIFIED,
-        width: int = UNSPECIFIED,
+        self, url: str = UNSPECIFIED, proxy_url: str = UNSPECIFIED, height: int = UNSPECIFIED, width: int = UNSPECIFIED
     ) -> None:
         self.url = url
         self.proxy_url = proxy_url
@@ -435,9 +427,7 @@ class EmbedFooter(_EmbedComponent):
     text: str
     proxy_icon_url: str
 
-    def __init__(
-        self, icon_url: str = UNSPECIFIED, text: str = UNSPECIFIED, proxy_icon_url: str = UNSPECIFIED
-    ) -> None:
+    def __init__(self, icon_url: str = UNSPECIFIED, text: str = UNSPECIFIED, proxy_icon_url: str = UNSPECIFIED) -> None:
         self.icon_url = icon_url
         self.text = text
         self.proxy_icon_url = proxy_icon_url

@@ -27,6 +27,7 @@ class Unspecified:
     """
     Type of an unspecified value.
     """
+
     __slots__ = ()
 
     def __str__(self):

@@ -25,7 +25,8 @@ import typing
 
 #: Any type that Discord may return.
 _DiscordType = typing.Union[
-    bool, float, int, None, str, typing.List["DiscordObject"], typing.Dict[str, "DiscordObject"]]
+    bool, float, int, None, str, typing.List["DiscordObject"], typing.Dict[str, "DiscordObject"]
+]
 
 #: Type hint for a Discord-compatible object.
 #:

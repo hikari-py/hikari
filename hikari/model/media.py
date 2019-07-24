@@ -75,7 +75,7 @@ class Avatar:
             See the :attr:`data` note for performance information.
         """
         b64 = base64.b64encode(self.data).decode()
-        return f'data:{self.mime_type};base64,{b64}'
+        return f"data:{self.mime_type};base64,{b64}"
 
     def to_file_object(self) -> io.BytesIO:
         """

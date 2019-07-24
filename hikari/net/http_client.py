@@ -624,8 +624,13 @@ class HTTPClient(http_base.BaseHTTPClient):
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
     async def edit_channel_permissions(
-        self, channel_id: str, overwrite_id: str, allow: int, deny: int, type_: str,
-        reason: str = unspecified.UNSPECIFIED
+        self,
+        channel_id: str,
+        overwrite_id: str,
+        allow: int,
+        deny: int,
+        type_: str,
+        reason: str = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Edit permissions for a given channel.
@@ -2172,8 +2177,11 @@ class HTTPClient(http_base.BaseHTTPClient):
 
     @meta.link_developer_portal(meta.APIResource.USER)
     async def get_current_user_guilds(
-        self, *, before: str = unspecified.UNSPECIFIED, after: str = unspecified.UNSPECIFIED,
-        limit: int = unspecified.UNSPECIFIED
+        self,
+        *,
+        before: str = unspecified.UNSPECIFIED,
+        after: str = unspecified.UNSPECIFIED,
+        limit: int = unspecified.UNSPECIFIED,
     ) -> typing.List[types.DiscordObject]:
         """
         Gets the guilds the current user is in.
@@ -2240,8 +2248,12 @@ class HTTPClient(http_base.BaseHTTPClient):
 
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)
     async def create_webhook(
-        self, channel_id: str, name: str, *, avatar: bytes = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED
+        self,
+        channel_id: str,
+        name: str,
+        *,
+        avatar: bytes = unspecified.UNSPECIFIED,
+        reason: str = unspecified.UNSPECIFIED,
     ) -> types.DiscordObject:
         """
         Creates a webhook for a given channel.
