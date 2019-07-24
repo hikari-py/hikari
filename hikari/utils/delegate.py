@@ -17,220 +17,125 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Metaclass that allows making a class that delegates fields, properties and methods to named delegate class instances.
-This allows making one class implement another without having to subclass it, which enables features such as Member
-objects to have several instances that refer to the same object while only physically storing the user once in memory.
+Implements a basic type delegation system that piggybacks off of the standard 
+inheritance system in Python and boasts full dataclass compatibility in the 
+process.
 """
-from __future__ import annotations
+__all__ = ("delegate_members", "delegate_safe_dataclass")
 
-import typing
+import dataclasses
 
-__all__ = ("DelegatedMeta",)
-
-import asyncio
-import functools
-import inspect
+from hikari.utils import assertions
 
 
-class DelegatedMeta(type):
+_DELEGATE_MEMBERS_FIELD = "__delegate_members__"
+_DELEGATE_TYPES_FIELD = "__delegate_type_mapping__"
+
+
+class DelegatedProperty:
     """
-    Defines a metaclass for classes that wish to implement one or more other classes via delegation rather than
-    inheritance.
+    Delegating property that takes a magic field name and a delegated member name and redirects
+    any accession of the property's value to the attribute named "delegated_member_name" that
+    belongs to field "magic_field" on the class it is applied to.
+    """
 
-    What does this mean...exactly?
+    def __init__(self, magic_field, delegated_member_name) -> None:
+        self.magic_field = magic_field
+        self.delegated_member_name = delegated_member_name
 
-    Suppose you have your `User` object. That represents a user floating around in Discord space. Discord introduces
-    a second abstraction called a `Member`. This is a specialisation of a `User` which has attributes binding it to
-    a specific guild. Seems simple enough.
+    def __get__(self, instance, owner):
+        if instance is not None:
+            delegated_object = getattr(instance, self.magic_field)
+            return getattr(delegated_object, self.delegated_member_name)
+        else:
+            return self
 
-    Using inheritance, we would need to define our `Member` class as deriving from `User`, and add the extra attributes
-    we care about. This is fine for the most part, the only problem is, lets assume we have my User cached already,
-    and then we have 15 guilds I share with my bot. Right, that is 15 members that share all the same attributes
-    that my User does, so I store stuff like my username and ID 16 times rather than once.
 
-    Delegation works around this by replacing inheritance with a system where the Member simply decorates a User and
-    then stores that User as a single field. Each field and method a User has is defined in Member as a property or
-    function that simply calls the corresponding item in the User class. Thus, we can implement a User but only
-    store it physically once. Because of how Python's GC works, it is perfectly safe to replace the User in the bot's
-    state without rebuilding any Members that use it. The User will simply deallocate once all Members that refer to it
-    stop existing.
-
-    Example:
-        >>> import dataclasses
-
-        >>> @dataclasses.dataclass
-        ... class Base:
-        ...     a: int
-        ...     b: float
-
-        >>> class Delegate(metaclass=DelegatedMeta, deletage_to=(Base, "_base")):
-        ...     __slots__ = ("_base", )
-        ...
-        ...     def __init__(self, base):
-        ...         self._base = base
-
-        >>> base = Base(1, 2.3)
-        >>> delegate = Delegate(base)
-        >>> base.b
-        2.3
-        >>> delegate.b
-        2.3
-        >>> base.b = 4.5
-        >>> delegate.b
-        4.5
-
-    The delegation process is performed on class initialization, meaning once defined once, there is almost zero
-    overhead other than one more function call per attribute access; memory overhead is simply one field per instance.
-
-    Note:
-        This currently supports slotted elements, delegating by inspecting type annotations, delegating properties,
-        delegating methods, coroutine methods, class methods, class coroutine methods, static methods, and static
-        coroutine methods.
-
-        Only elements that do not start with an underscore will be delegated.
-
-    Note:
-        Subclassing delegate types is experimental currently. You do so at your own risk :-)
+def delegate_safe_dataclass(**kwargs):
+    """
+    Dataclass decorator that is compatible with delegate types. This generates a new constructor that
+    omits known delegated fields from the signature, thus making it safe to use on delegated classes.
 
     Warning:
-        You cannot currently call `isinstance` or `issubclass` on the delegate and the thing it delegates to and
-        expect a valid result.
+        This decorator must be placed AFTER the delegate decorators are placed (so, further down the file)
+        otherwise it will produce an incorrect constructor. This is checked when using the decorator.
     """
-    __delegates__: typing.List[typing.Tuple[DelegatedMeta, str]]
 
-    @classmethod
-    def __init_subclass__(mcs, **kwargs):
-        """
-        Aid usage by preventing explicit subclassing, as we probably never need to do that...
-        """
-        raise TypeError("This is a delegation metaclass. Perhaps you meant to use `class X(metaclass=DelegatedMeta)`?")
+    def decorator(cls):
+        if hasattr(cls, _DELEGATE_MEMBERS_FIELD):
+            raise TypeError("This class has already had delegates defined on it. Cannot make a dataclass now.")
 
-    @classmethod
-    def __prepare__(mcs, name, bases, **kwargs):
-        """
-        Initialize a base namespace for the new class.
+        # We don't have an `__annotations__` element if no fields exist, annoyingly.
+        annotations = getattr(cls, "__annotations__", ())
+        fields = ", ".join(field for field in annotations)
+        init = "\n".join(
+            [
+                f"def __init__(self, {fields}) -> None:",
+                *[f"    self.{field} = {field}" for field in annotations],
+                # Sue me, who cares if this always ends in pass, it is the simplest way to ensure a body if no fields
+                # exist in the class.
+                "    pass",
+            ]
+        )
+        locals_ = {}
+        exec(init, {}, locals_)  # nosec
+        cls.__init__ = locals_["__init__"]
+        kwargs["init"] = False
+        return dataclasses.dataclass(**kwargs)(cls)
 
-        Args:
-            name:
-                The new class.
-            bases:
-                The bases of the class
-            **kwargs:
-                Keyword arguments passed to the initialization of the class.
+    return decorator
 
-        Returns:
-            A mapping of the base namespace for the class.
-        """
-        try:
-            delegate_to = kwargs.pop("delegate_to")
-        except KeyError as e:
-            # If this is true, don't worry, we are just subclassing an existing delegate.
-            namespaces = {}
-            for base in bases:
-                if hasattr(base, "__delegates__"):
-                    namespaces.update(base.__prepare__(name, [], delegate_to=base.__delegates__))
 
-            if not namespaces:
-                raise AttributeError(e) from None
-            else:
-                return namespaces
+def delegate_members(delegate_type, magic_field):
+    """
+    Make a decorator that wraps a class to make it delegate any inherited fields from `delegate_type` to attributes of
+    the same name on a value stored in a field named the `magic_field`.
 
-        # Ensure it is a list of tuple pairs
-        if not isinstance(delegate_to, list) or not all(isinstance(d, tuple) and len(d) == 2 for d in delegate_to):
-            if isinstance(delegate_to, tuple) and len(delegate_to) == 2:
-                delegate_to = [delegate_to]
-            else:
-                raise TypeError("The delegate_to argument must be a DelegateTo instance or list of DelegateTo items.")
+    Args:
+        delegate_type:
+            The class that we wish to delegate to.
+        magic_field:
+            The field that we will store an instance of the delegated type in.
 
-        namespace = {"__delegates__": []}
+    The idea behind this is to allow us to derive one class from another and allow initializing one instance
+    from another. This is used largely by the `Member` implementation to allow more than one member to refer to
+    the same underlying `User` at once.
 
-        for delegate_to_type, delegate_to_field in delegate_to:
-            fields = {}
+    Warning:
+        If making the outer class a dataclass, you must use the :attr:`delegate_safe_dataclass`
+        decorator rather than the vanilla :func:`dataclasses.dataclass` one, otherwise it will
+        produce an incompatible signature.
 
-            # Collect slots first, in case the user forgot to add type hints. We then overwrite them with
-            # the type hints we find if they overlap, thus giving more detailed info where possible without adding
-            # a concrete constraint on using type hints in slotted classes.
-            for slot in getattr(delegate_to_type, '__slots__', []):
-                if not slot.startswith('_'):
-                    fields[slot] = object
+        If you are instead initializing the class yourself, it is vital that you do not call `super().__init__`
+        and that you define your own constructor that consumes the delegate types. It is recommended to use the
+        :attr:`delegate_safe_dataclass` for complex data classes to automate this correctly.
+    """
 
-            # Collect type hints, potentially overwriting the slots we found if possible.
-            for k, v in getattr(delegate_to_type, '__annotations__', {}).items():
-                if not k.startswith('_'):
-                    fields[k] = v
+    def decorator(cls):
+        assertions.assert_subclasses(cls, delegate_type)
+        delegated_members = set()
+        # Tuple of tuples, each sub tuple is (magic_field, delegate_type)
+        delegated_types = getattr(cls, _DELEGATE_TYPES_FIELD, ())
 
-            # For each field candidate, delegate it with a property.
-            for d_field_name, d_field_type in fields.items():
-                delegate = mcs._delegation_attr(delegate_to_field, d_field_name)
-                namespace[d_field_name] = delegate
+        # We have three valid cases: either the attribute is a class member, in which case it is in `__dict__`, the
+        # attribute is defined in the class `__slots__`, in which case it is in `__dict__`, or the field is given
+        # a type hint, in which case it is in `__annotations__`. Anything else we lack the ability to detect
+        # (e.g. fields only defined once we are in the `__init__`, as it is basically monkey patching at this point if
+        # we are not slotted).
+        for name in {*delegate_type.__dict__} | {*getattr(delegate_type, "__annotations__", ())}:
+            if name.startswith("_"):
+                continue
 
-            # For each property candidate, delegate it with a property if it is not private.
-            for d_property_name, d_property in inspect.getmembers(delegate_to_type, inspect.isdatadescriptor):
-                if not d_property_name.startswith("_"):
-                    delegate = mcs._delegation_attr(delegate_to_field, d_property_name)
-                    namespace[d_property_name] = delegate
+            delegate = DelegatedProperty(magic_field, name)
+            delegate.__doc__ = f"See :attr:`{delegate_type.__name__}.{name}`."
 
-            # For each callable candidate, delegate it with a decorator callable if it is not private
-            for d_method_name, d_method in inspect.getmembers(delegate_to_type, mcs._is_method):
-                if not d_method_name.startswith("_"):
-                    delegate = mcs._delegation_callable(delegate_to_field, d_method_name, d_method)
-                    namespace[d_method_name] = delegate
+            setattr(cls, name, delegate)
+            delegated_members.add(name)
 
-            namespace["__delegates__"].append((delegate_to_type, delegate_to_field))
-
-        return namespace
-
-    @staticmethod
-    def __new__(mcs, name, bases, attrs, **kwargs):
-        # This is needed to ensure a correct signature, as by default we don't allow passing kwargs about.
-        cls: DelegatedMeta = super().__new__(mcs, name, bases, attrs)
+        # Enable repeating the decorator for multiple delegation.
+        delegated_members |= getattr(cls, _DELEGATE_MEMBERS_FIELD, set())
+        setattr(cls, _DELEGATE_MEMBERS_FIELD, frozenset(delegated_members))
+        setattr(cls, _DELEGATE_TYPES_FIELD, (*delegated_types, (magic_field, delegate_type)))
         return cls
 
-    @staticmethod
-    def _delegation_attr(backing_field: str, target_field: str):
-        """
-        Creates a delegation property that looks for the given backing_field on the class applied to, and then
-        returns the value of the field named target_field on the backing_field found.
-
-        Args:
-            backing_field:
-                field on delegating type to delegate to.
-            target_field:
-                the name of the field we are attempting to delegate control to on the backing_field's value.
-
-        Returns:
-            A read-only property.
-        """
-        return property(lambda self: getattr(getattr(self, backing_field), target_field))
-
-    @staticmethod
-    def _delegation_callable(backing_field: str, target_method: str, wraps):
-        """
-        Creates a delegation callable that looks for the given backing_field on the class applied to, and then
-        returns the result of calling the field named target_field on the backing_field found.
-
-        Args:
-            backing_field:
-                field on delegating type to delegate to.
-            target_method:
-                the method name we are considering.
-            wraps:
-                the object to wrap.
-
-        Returns:
-            A function.
-        """
-        if asyncio.iscoroutinefunction(wraps):
-            async def delegate_method(self, *args, **kwargs):
-                # noinspection PyCallingNonCallable
-                return await getattr(getattr(self, backing_field), target_method)(*args, **kwargs)
-        else:
-            def delegate_method(self, *args, **kwargs):
-                # noinspection PyCallingNonCallable
-                return getattr(getattr(self, backing_field), target_method)(*args, **kwargs)
-
-        return functools.wraps(wraps)(delegate_method)
-
-    @staticmethod
-    def _is_method(obj):
-        return callable(obj) or inspect.ismethod(obj) or isinstance(obj, (staticmethod, classmethod))
+    return decorator

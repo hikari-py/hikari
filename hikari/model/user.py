@@ -19,36 +19,30 @@
 """
 Generic users not bound to a guild, and guild-bound member definitions.
 """
+__all__ = ("User", "Member")
 
-__all__ = ()
-
-import enum
+import dataclasses
 
 from hikari.model import base
+from hikari.utils import delegate
 
 
+@dataclasses.dataclass()
 class User(base.SnowflakeMixin):
-    __slots__ = ()
+    __slots__ = ("id", "username", "discriminator", "avatar", "bot")
+
+    id: int
+    username: str
+    discriminator: int
+    avatar: bytes
+    bot: bool
 
 
-class UserFlag(enum.IntFlag):
-    ...
-
-
-class PremiumType(enum.IntEnum):
-    ...
-
-
-class Connection(base.SnowflakeMixin):
-    __slots__ = ()
-
-
-class ConnectionVisibility(enum.IntEnum):
-    ...
-
-
-class Member(base.SnowflakeMixin):
+@delegate.delegate_members(User, "_user")
+@delegate.delegate_safe_dataclass()
+class Member(User):
     """
     A specialization of a user which provides
     """
+
     __slots__ = ("_user",)

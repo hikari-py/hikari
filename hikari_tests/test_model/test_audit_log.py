@@ -125,7 +125,7 @@ class TestAuditLog:
         assert changes0.old_value == "Testing snake pit"
         assert (
             changes0.new_value == "tmpod had a really fancy message here full of bloody invisible special characters "
-                                  "and it pained me so i changed it to this."
+            "and it pained me so i changed it to this."
         )
         assert changes0.key == audit_log.AuditLogChangeKey.TOPIC
         assert audit_log_entry_edit_channel.options is None

@@ -45,7 +45,6 @@ classifiers     = [
 [tool.poetry.dependencies]
 python          = ">=3.7,<=3.9"
 aiohttp         = "~3.5"
-dacite          = "~1.0"
 dataclasses     = "~0.6"
 websockets      = "~7.0"
 

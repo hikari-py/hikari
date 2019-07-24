@@ -16,313 +16,142 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import textwrap
-
 import dataclasses
-import pytest
 
 from hikari.utils import delegate
+from hikari_tests import _helpers
 
 
-def test_delegation_attr_delegates_as_expected():
+def test_DelegatedProperty_on_instance():
     class Inner:
         def __init__(self):
-            self.value = 12345
+            self.a = 1234321
 
     class Outer:
-        value = delegate.DelegatedMeta._delegation_attr("_inner", "value")
+        a = delegate.DelegatedProperty("inner", "a")
 
-        def __init__(self, inner):
-            self._inner = inner
+        def __init__(self, inner_):
+            self.inner = inner_
 
     inner = Inner()
     outer = Outer(inner)
-    assert outer.value == 12345
+    assert outer.a == 1234321
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "inner_method",
-    [
-        """
-        def test(self, a, b):
-            return str(a) + str(b)\n
-        """,
-        """
-        async def test(self, a, b):
-            return str(a) + str(b)\n
-        """,
-        """
-        @classmethod
-        def test(cls, a, b):
-            return str(a) + str(b)\n
-        """,
-        """
-        @classmethod
-        async def test(cls, a, b):
-            return str(a) + str(b)\n
-        """,
-        """
-        @staticmethod
-        def test(a, b):
-            return str(a) + str(b)\n
-        """,
-        """
-        @staticmethod
-        async def test(a, b):
-            return str(a) + str(b)\n
-        """,
-        """
-        class TestCallable:
-            def __call__(self, a, b):
-                return str(a) + str(b)
-
-        test = TestCallable()
-        """,
-        """
-        class TestCallable:
-            async def __call__(self, a, b):
-                return str(a) + str(b)
-
-        test = TestCallable()
-        """
-    ])
-async def test_delegation_callable_delegates_as_expected(inner_method):
-    async def _maybe_await(func, *args, **kwargs):
-        result = func(*args, **kwargs)
-        if hasattr(result, '__await__'):
-            return await result
-        else:
-            return result
-
-    class Inner:
-        exec(textwrap.dedent(inner_method))
-
+def test_DelegatedProperty_on_owner():
     class Outer:
-        test = delegate.DelegatedMeta._delegation_callable("_inner", "test", Inner.test)
+        a = delegate.DelegatedProperty("inner", "a")
 
-        def __init__(self, inner):
-            self._inner = inner
-
-    inner = Inner()
-    outer = Outer(inner)
-
-    assert await _maybe_await(outer.test, 9, 18) == await _maybe_await(inner.test, 9, 18) == "918"
+    assert isinstance(Outer.a, delegate.DelegatedProperty)
 
 
-def test_delegate_slotting():
-    class Base:
-        __slots__ = ("a", "_b")
+@_helpers.assert_raises(TypeError)
+def test_delegate_safe_dataclass_on_delegated_class_fails_test():
+    class Delegated:
+        pass
 
-        def __init__(self, a, b):
-            self.a = a
-            self._b = b
-
-
-    @dataclasses.dataclass
-    class Delegate(metaclass=delegate.DelegatedMeta, delegate_to=(Base, "_base")):
-        _base: Base
-
-    b = Base(1, 2.3)
-    d = Delegate(b)
-    assert d.a == b.a == 1
-    assert not hasattr(d, "_b")
+    setattr(Delegated, delegate._DELEGATE_MEMBERS_FIELD, [])
+    delegate.delegate_safe_dataclass()(Delegated)
 
 
-def test_delegate_by_annotations():
-    @dataclasses.dataclass()
-    class Base:
+def test_delegate_safe_dataclass_with_no_fields():
+    @delegate.delegate_safe_dataclass()
+    class Test:
+        __delegated_members__ = frozenset()
+        __slots__ = ()
+
+    Test()
+
+
+def test_delegate_safe_dataclass_with_fields_and_no_delegated_members():
+    @delegate.delegate_safe_dataclass()
+    class Test:
+        __delegated_members__ = frozenset()
+        __slots__ = ("a", "b", "c")
         a: int
-        _b: float
+        b: int
+        c: int
 
-    @dataclasses.dataclass
-    class Delegate(metaclass=delegate.DelegatedMeta, delegate_to=(Base, "_base")):
-        _base: Base
-
-    b = Base(1, 2.3)
-    d = Delegate(b)
-    assert d.a == b.a == 1
-    assert not hasattr(d, "_b")
+    Test(a=1, b=2, c=3)
 
 
-def test_DelegatedMeta_fails_if_subclassed():
-    try:
-        class Delegation(delegate.DelegatedMeta):
-            pass
-
-        assert False
-    except TypeError:
-        pass
-
-
-def test_DelegatedMeta_fails_if_no_delegate_to_keyword_is_provided():
-    try:
-        class Delegation(metaclass=delegate.DelegatedMeta):
-            pass
-
-        assert False
-    except AttributeError:
-        pass
-
-
-def test_DelegatedMeta_fails_if_delegate_to_keyword_is_provided_but_is_not_a_valid_type():
-    try:
-        class Delegation(metaclass=delegate.DelegatedMeta, delegate_to=69):
-            pass
-
-        assert False
-    except TypeError:
-        pass
-
-
-def test_DelegatedMeta_allows_single_delegation_field():
-    class Backing:
-        test0: int
-
-        def test1(self, a, b, c):
-            pass
-
-        async def test2(self, a, b, c):
-            pass
-
-        @classmethod
-        def test3(self, a, b, c):
-            pass
-
-        @classmethod
-        async def test4(self, a, b, c):
-            pass
-
-        @staticmethod
-        def test5(self, a, b, c):
-            pass
-
-        @staticmethod
-        async def test6(self, a, b, c):
-            pass7
-
-        @property
-        def test7(self):
-            return NotImplemented
-
-        @property
-        async def test8(self):
-            return NotImplemented
-
-        def __private_function(self):
-            pass
-
-        async def __private_coroutine(self):
-            pass
-
-        @property
-        def __private_function_property(self):
-            pass
-
-        @property
-        async def __private_coroutine_property(self):
-            pass
-
-    class Delegation(metaclass=delegate.DelegatedMeta, delegate_to=(Backing, "_backing")):
-        pass
-
-    assert not any("private_function" in attr for attr in dir(Delegation))
-    assert not any("private_coroutine_function" in attr for attr in dir(Delegation))
-    assert not any("private_function_property" in attr for attr in dir(Delegation))
-    assert not any("private_coroutine_property" in attr for attr in dir(Delegation))
-
-    for i in range(0, 9):
-        assert hasattr(Delegation, f"test{i}")
-
-
-def test_DelegatedMeta_with_multiple_delegations():
-    import abc
-
-    @dataclasses.dataclass
-    class SomeModel:
+def test_delegate_safe_dataclass_with_fields_does_not_initialize_delegated_members():
+    @delegate.delegate_safe_dataclass()
+    class Test:
+        __delegated_members__ = frozenset({"d", "e", "f"})
+        __slots__ = ("a", "b", "c", "d", "e", "f")
         a: int
-        b: float
+        b: int
+        c: int
 
-    class CallableABC(metaclass=abc.ABCMeta):
-        @abc.abstractmethod
-        def __call__(self, *args, **kwargs):
-            ...
+    Test(a=1, b=2, c=3)
 
-    class CallableImpl(CallableABC):
-        def __call__(self, *args, **kwargs):
-            return 18
 
-    class SomethingWithSlots:
-        __slots__ = ("c", "d")
+@_helpers.assert_raises(TypeError)
+def test_delegate_safe_dataclass_with_fields_does_validate_non_delegated_dataclass_parameters():
+    @delegate.delegate_safe_dataclass()
+    class Test:
+        __delegated_members__ = frozenset({"d", "e", "f"})
+        __slots__ = ("a", "b", "c", "d", "e", "f")
+        a: int
+        b: int
+        c: int
 
-        def __init__(self, c, d):
-            self.c = c
+    Test(a=1, b=2)  # missing c parameter
+
+
+def test_field_delegation():
+    class Base:
+        __slots__ = ("a", "b", "c")
+
+        def __init__(self, a, b, c):
+            self.a, self.b, self.c = a, b, c
+
+    @delegate.delegate_members(Base, "_base")
+    class Delegate(Base):
+        __slots__ = ("_base", "d", "e", "f")
+        _base: Base
+        d: int
+        e: int
+        f: int
+
+        def __init__(self, _base, d, e, f):
+            self._base = _base
             self.d = d
+            self.e = e
+            self.f = f
 
-    class SomethingElse:
-        @staticmethod
-        def foo():
-            return "bar"
-
-        def foo_again(self):
-            return self.foo() + "... again"
-
-    @dataclasses.dataclass()
-    class Delegate(
-        metaclass=delegate.DelegatedMeta,
-        delegate_to=[
-            (SomeModel, "_some_model"),
-            (CallableImpl, "_callable"),
-            (SomethingWithSlots, "_slotted_thingy"),
-            (SomethingElse, "_that")
-        ]
-    ):
-        _some_model: SomeModel
-        _callable: CallableImpl
-        _slotted_thingy: SomethingWithSlots
-        _that: SomethingElse
-
-    model = SomeModel(1, 2.4)
-    callable = CallableImpl()
-    slotted = SomethingWithSlots(9, 18)
-    that = SomethingElse()
-    Delegate(model, callable, slotted, that)
+    ba = Base(1, 2, 3)
+    de = Delegate(ba, 4, 5, 6)
+    assert de.a == 1
+    assert de.b == 2
+    assert de.c == 3
+    assert de.d == 4 and "d" not in dir(ba)
+    assert de.e == 5 and "e" not in dir(ba)
+    assert de.f == 6 and "f" not in dir(ba)
 
 
-def test_delegate_subclass_check_normal_case():
+def test_field_delegation_on_dataclass():
     @dataclasses.dataclass()
     class Base:
         a: int
-        _b: float
+        b: int
+        c: int
 
-    @dataclasses.dataclass
-    class Delegate(metaclass=delegate.DelegatedMeta, delegate_to=(Base, "_base")):
+    @delegate.delegate_members(Base, "_base")
+    @delegate.delegate_safe_dataclass()
+    class Delegate(Base):
         _base: Base
+        d: int
+        e: int
+        f: int
 
-    class DerivedDelegate(Delegate):
-        pass
+    ba = Base(1, 2, 3)
+    de = Delegate(ba, 4, 5, 6)
 
-    assert issubclass(DerivedDelegate, Delegate)
-
-
-def test_delegate_subclassing_subclasscheck():
-    class Inner:
-        value: int
-
-        def __init__(self):
-            self.value = 12345
-
-    @dataclasses.dataclass()
-    class Outer(metaclass=delegate.DelegatedMeta, delegate_to=(Inner, "_base")):
-        _base: Inner
-
-    class SomeOtherBase:
-        pass
-
-    class SubOuter(Outer, SomeOtherBase):
-        pass
-
-    inner = Inner()
-    sub_outer = SubOuter(inner)
-    assert sub_outer.value == 12345
-    assert isinstance(sub_outer, Outer)
+    assert de.a == 1
+    assert de.b == 2
+    assert de.c == 3
+    assert de.d == 4
+    assert de.e == 5
+    assert de.f == 6

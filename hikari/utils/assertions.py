@@ -20,11 +20,12 @@
 Assertions of things. These are functions that validate a value, expected to return the value on success but error
 on any failure.
 """
-__all__ = ("assert_not_none", "assert_is_slotted", "assert_is_mixin")
+__all__ = ("assert_not_none", "assert_is_slotted", "assert_subclasses", "assert_is_mixin")
 
 import typing
 
 T = typing.TypeVar("T")
+U = typing.TypeVar("U")
 
 
 def assert_not_none(value: T, description: str = "value") -> T:
@@ -38,6 +39,13 @@ def assert_is_slotted(cls: typing.Type[T]) -> typing.Type[T]:
     """Raises a TypeError if the class is not slotted."""
     if not hasattr(cls, "__slots__"):
         raise TypeError(f"Class {cls.__qualname__} is required to be slotted.")
+    return cls
+
+
+def assert_subclasses(cls: typing.Type[T], base: typing.Type[U]) -> typing.Type[T]:
+    """Raises a TypeError if `cls` fails to subclass `base`."""
+    if not issubclass(cls, base):
+        raise TypeError(f"Class {cls.__qualname__} does not subclass {base.__module__}.{base.__qualname__}")
     return cls
 
 

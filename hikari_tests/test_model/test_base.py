@@ -75,7 +75,8 @@ class TestSnowflake:
 
     def test_Snowflake_created_at(self, neko_snowflake):
         assert neko_snowflake.created_at == datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000).replace(
-            tzinfo=datetime.timezone.utc)
+            tzinfo=datetime.timezone.utc
+        )
 
     def test_Snowflake_increment(self, neko_snowflake):
         assert neko_snowflake.increment == 40
