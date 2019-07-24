@@ -22,11 +22,11 @@ import json
 import asynctest
 import pytest
 
-from hikari import utils
 from hikari.net import http_client as _http_client
 
 # Big text is from: http://patorjk.com/software/taag/#p=display&f=Big&t=Gateway
 # Adding new categories? Keep it consistent, bud.
+from hikari.utils import unspecified
 
 r"""
 PyTest Fixtures
@@ -165,7 +165,7 @@ class TestChannel:
         http_client.request = asynctest.CoroutineMock()
         await http_client.create_channel_invite("696969")
         http_client.request.assert_awaited_once_with(
-            "post", "/channels/{channel_id}/invites", channel_id="696969", json={}, reason=utils.UNSPECIFIED
+            "post", "/channels/{channel_id}/invites", channel_id="696969", json={}, reason=unspecified.UNSPECIFIED
         )
 
     async def test_create_channel_invite_with_max_age(self, http_client):
@@ -176,7 +176,7 @@ class TestChannel:
             "/channels/{channel_id}/invites",
             channel_id="696969",
             json={"max_age": 10},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_create_channel_invite_with_max_uses(self, http_client):
@@ -187,7 +187,7 @@ class TestChannel:
             "/channels/{channel_id}/invites",
             channel_id="696969",
             json={"max_uses": 10},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_create_channel_invite_with_temporary(self, http_client):
@@ -198,7 +198,7 @@ class TestChannel:
             "/channels/{channel_id}/invites",
             channel_id="696969",
             json={"temporary": True},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_create_channel_invite_with_unique(self, http_client):
@@ -209,7 +209,7 @@ class TestChannel:
             "/channels/{channel_id}/invites",
             channel_id="696969",
             json={"unique": True},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_create_channel_invite_optional_reason(self, http_client):
@@ -469,7 +469,7 @@ class TestChannel:
             "/channels/{channel_id}/permissions/{overwrite_id}",
             channel_id="696969",
             overwrite_id="123456",
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_delete_channel_permission_with_optional_reason(self, http_client):
@@ -482,7 +482,7 @@ class TestChannel:
         http_client.request = asynctest.CoroutineMock()
         await http_client.delete_close_channel("12345")
         http_client.request.assert_awaited_once_with(
-            "delete", "/channels/{channel_id}", channel_id="12345", reason=utils.UNSPECIFIED
+            "delete", "/channels/{channel_id}", channel_id="12345", reason=unspecified.UNSPECIFIED
         )
 
     async def test_delete_close_channel_with_optional_reason(self, http_client):
@@ -537,7 +537,7 @@ class TestChannel:
             channel_id="69",
             overwrite_id="420",
             json={"allow": 192, "deny": 168, "type": "member"},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_edit_channel_permissions_with_optional_reason(self, http_client):
@@ -760,7 +760,7 @@ class TestChannel:
         http_client.request = asynctest.CoroutineMock()
         await http_client.modify_channel("12345")
         http_client.request.assert_awaited_once_with(
-            "patch", "/channels/{channel_id}", channel_id="12345", json={}, reason=utils.UNSPECIFIED
+            "patch", "/channels/{channel_id}", channel_id="12345", json={}, reason=unspecified.UNSPECIFIED
         )
 
     @pytest.mark.parametrize(
@@ -783,7 +783,7 @@ class TestChannel:
         http_client.request = asynctest.CoroutineMock()
         await http_client.modify_channel("12345", **{name: value})
         http_client.request.assert_awaited_once_with(
-            "patch", "/channels/{channel_id}", channel_id="12345", json={name: value}, reason=utils.UNSPECIFIED
+            "patch", "/channels/{channel_id}", channel_id="12345", json={name: value}, reason=unspecified.UNSPECIFIED
         )
 
     async def test_modify_channel_with_many_kwargs(self, http_client):
@@ -808,7 +808,7 @@ class TestChannel:
             "/channels/{channel_id}",
             channel_id="12345",
             json={name: value for name, value in test_data_kwargs},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_modify_channel_return_value(self, http_client):
@@ -852,7 +852,7 @@ class TestEmoji:
             "/guilds/{guild_id}/emojis",
             guild_id="424242",
             json={"name": "asdf", "image": b"", "roles": []},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_create_guild_emoji_with_optional_reason(self, http_client):
@@ -869,7 +869,7 @@ class TestEmoji:
             "/guilds/{guild_id}/emojis/{emoji_id}",
             guild_id="424242",
             emoji_id="696969",
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_delete_guild_emoji_with_optional_reason(self, http_client):
@@ -899,7 +899,7 @@ class TestEmoji:
             guild_id="424242",
             emoji_id="696969",
             json={"name": "asdf", "roles": []},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_modify_guild_emoji_with_optional_reason(self, http_client):
@@ -967,7 +967,7 @@ class TestGuild:
             guild_id="424242",
             user_id="696969",
             role_id="404101",
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_add_guild_member_role_with_optional_reason(self, http_client):
@@ -984,7 +984,7 @@ class TestGuild:
             "/guilds/{guild_id}/prune",
             guild_id="424242",
             query={"days": 10, "compute_prune_count": False},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_begin_guild_prune_with_optional_reason(self, http_client):
@@ -1046,7 +1046,11 @@ class TestGuild:
         http_client.request = asynctest.CoroutineMock()
         await http_client.create_guild_channel("424242", "asdf")
         http_client.request.assert_awaited_once_with(
-            "post", "/guilds/{guild_id}/channels", guild_id="424242", json={"name": "asdf"}, reason=utils.UNSPECIFIED
+            "post",
+            "/guilds/{guild_id}/channels",
+            guild_id="424242",
+            json={"name": "asdf"},
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_create_guild_channel_all_kwars(self, http_client):
@@ -1068,7 +1072,7 @@ class TestGuild:
             "/guilds/{guild_id}/channels",
             guild_id="424242",
             json=dict(name="asdf", type=1, **test_args),
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_create_guild_channel_with_optional_reason(self, http_client):
@@ -1085,7 +1089,7 @@ class TestGuild:
             "/guilds/{guild_id}/integrations",
             guild_id="424242",
             json={"type": "twitch", "id": "696969"},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_create_guild_integration_with_optional_reason(self, http_client):
@@ -1098,7 +1102,7 @@ class TestGuild:
         http_client.request = asynctest.CoroutineMock()
         await http_client.create_guild_role("424242")
         http_client.request.assert_awaited_once_with(
-            "post", "/guilds/{guild_id}/roles", guild_id="424242", json={}, reason=utils.UNSPECIFIED
+            "post", "/guilds/{guild_id}/roles", guild_id="424242", json={}, reason=unspecified.UNSPECIFIED
         )
 
     async def test_create_guild_role_many_kwargs(self, http_client):
@@ -1107,7 +1111,7 @@ class TestGuild:
         http_client.request = asynctest.CoroutineMock()
         await http_client.create_guild_role("424242", **test_many_args)
         http_client.request.assert_awaited_once_with(
-            "post", "/guilds/{guild_id}/roles", guild_id="424242", json=test_many_args, reason=utils.UNSPECIFIED
+            "post", "/guilds/{guild_id}/roles", guild_id="424242", json=test_many_args, reason=unspecified.UNSPECIFIED
         )
 
     async def test_create_guild_role_with_optional_reason(self, http_client):
@@ -1129,7 +1133,7 @@ class TestGuild:
             "/guilds/{guild_id}/integrations/{integration_id}",
             guild_id="424242",
             integration_id="696969",
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_delete_guild_integration_with_optional_reason(self, http_client):
@@ -1146,7 +1150,7 @@ class TestGuild:
             "/guilds/{guild_id}/roles/{role_id}",
             guild_id="424242",
             role_id="696969",
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_delete_guild_role_with_optional_reason(self, http_client):
@@ -1248,7 +1252,7 @@ class TestGuild:
             "/guilds/{guild_id}/members/@me/nick",
             guild_id="424242",
             json={"nick": "asdf"},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_modify_current_user_nick_to_none(self, http_client):
@@ -1259,7 +1263,7 @@ class TestGuild:
             "/guilds/{guild_id}/members/@me/nick",
             guild_id="424242",
             json={"nick": None},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_modify_current_user_with_optional_reason(self, http_client):
@@ -1272,7 +1276,7 @@ class TestGuild:
         http_client.request = asynctest.CoroutineMock()
         await http_client.modify_guild("424242")
         http_client.request.assert_awaited_once_with(
-            "patch", "/guilds/{guild_id}", guild_id="424242", json={}, reason=utils.UNSPECIFIED
+            "patch", "/guilds/{guild_id}", guild_id="424242", json={}, reason=unspecified.UNSPECIFIED
         )
 
     async def test_modify_guild_all_kwargs(self, http_client):
@@ -1293,7 +1297,7 @@ class TestGuild:
         http_client.request = asynctest.CoroutineMock()
         await http_client.modify_guild("424242", **test_all_kwargs)
         http_client.request.assert_awaited_once_with(
-            "patch", "/guilds/{guild_id}", guild_id="424242", json=test_all_kwargs, reason=utils.UNSPECIFIED
+            "patch", "/guilds/{guild_id}", guild_id="424242", json=test_all_kwargs, reason=unspecified.UNSPECIFIED
         )
 
     async def test_modify_guild_with_optional_reason(self, http_client):
@@ -1310,7 +1314,7 @@ class TestGuild:
             "/guilds/{guild_id}/channels",
             guild_id="424242",
             json=[{"id": "696969", "position": 1}, {"id": "404101", "position": 2}],
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_modify_guild_channel_positions_with_optional_reason(self, http_client):
@@ -1330,7 +1334,7 @@ class TestGuild:
             guild_id="424242",
             integration_id="696969",
             json={"expire_behaviour": 1, "expire_grace_period": 10, "enable_emoticons": True},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_modify_guild_integration_with_optional_reason(self, http_client):
@@ -1350,7 +1354,7 @@ class TestGuild:
             guild_id="424242",
             user_id="696969",
             json={},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_modify_guild_member_all_kwargs(self, http_client):
@@ -1364,7 +1368,7 @@ class TestGuild:
             guild_id="424242",
             user_id="696969",
             json=test_args,
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_modify_guild_member_with_optional_reason(self, http_client):
@@ -1382,7 +1386,7 @@ class TestGuild:
             guild_id="424242",
             role_id="696969",
             json={},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_modify_guild_role_all_kwargs(self, http_client):
@@ -1396,7 +1400,7 @@ class TestGuild:
             guild_id="424242",
             role_id="696969",
             json=test_args,
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_modify_guild_role_with_optional_reason(self, http_client):
@@ -1413,7 +1417,7 @@ class TestGuild:
             "/guilds/{guild_id}/roles",
             guild_id="424242",
             json=[{"id": "696969", "position": 1}, {"id": "404101", "position": 2}],
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_modify_guild_role_positions_with_optional_reason(self, http_client):
@@ -1426,7 +1430,7 @@ class TestGuild:
         http_client.request = asynctest.CoroutineMock()
         await http_client.modify_guild_embed("424242", {})
         http_client.request.assert_awaited_once_with(
-            "patch", "/guilds/{guild_id}/embed", guild_id="424242", json={}, reason=utils.UNSPECIFIED
+            "patch", "/guilds/{guild_id}/embed", guild_id="424242", json={}, reason=unspecified.UNSPECIFIED
         )
 
     async def test_modify_guild_embed_all_args(self, http_client):
@@ -1437,7 +1441,7 @@ class TestGuild:
             "/guilds/{guild_id}/embed",
             guild_id="424242",
             json={"enabled": True, "channel_id": "696969"},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_modify_guild_embed_with_optional_reason(self, http_client):
@@ -1450,7 +1454,11 @@ class TestGuild:
         http_client.request = asynctest.CoroutineMock()
         await http_client.remove_guild_ban("424242", "696969")
         http_client.request.assert_awaited_once_with(
-            "delete", "/guilds/{guild_id}/bans/{user_id}", guild_id="424242", user_id="696969", reason=utils.UNSPECIFIED
+            "delete",
+            "/guilds/{guild_id}/bans/{user_id}",
+            guild_id="424242",
+            user_id="696969",
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_remove_guild_ban_with_optional_reason(self, http_client):
@@ -1467,7 +1475,7 @@ class TestGuild:
             "/guilds/{guild_id}/members/{user_id}",
             guild_id="424242",
             user_id="696969",
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_remove_guild_member_with_optional_reason(self, http_client):
@@ -1485,7 +1493,7 @@ class TestGuild:
             guild_id="424242",
             user_id="696969",
             role_id="404101",
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_remove_guild_member_role_with_optional_reason(self, http_client):
@@ -1521,7 +1529,7 @@ class TestInvite:
         http_client.request = asynctest.CoroutineMock()
         await http_client.delete_invite("424242")
         http_client.request.assert_awaited_once_with(
-            "delete", "/invites/{invite_code}", invite_code="424242", reason=utils.UNSPECIFIED
+            "delete", "/invites/{invite_code}", invite_code="424242", reason=unspecified.UNSPECIFIED
         )
 
     async def test_delete_invite_with_optional_reason(self, http_client):
@@ -1686,7 +1694,7 @@ class TestWebhook:
             "/channels/{channel_id}/webhooks",
             channel_id="424242",
             json={"name": "asdf"},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_create_webhook_with_avatar(self, http_client):
@@ -1697,7 +1705,7 @@ class TestWebhook:
             "/channels/{channel_id}/webhooks",
             channel_id="424242",
             json={"name": "asdf", "avatar": b""},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_create_webhook_with_optional_reason(self, http_client):
@@ -1710,7 +1718,7 @@ class TestWebhook:
         http_client.request = asynctest.CoroutineMock()
         await http_client.delete_webhook("424242")
         http_client.request.assert_awaited_once_with(
-            "delete", "/webhooks/{webhook_id}", webhook_id="424242", reason=utils.UNSPECIFIED
+            "delete", "/webhooks/{webhook_id}", webhook_id="424242", reason=unspecified.UNSPECIFIED
         )
 
     async def test_delete_webhook_with_optional_reason(self, http_client):
@@ -1742,7 +1750,7 @@ class TestWebhook:
             "/webhooks/{webhook_id}",
             webhook_id="424242",
             json={"name": "asdf", "avatar": b"", "channel_id": "696969"},
-            reason=utils.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
         )
 
     async def test_modify_webhook_with_optional_reason(self, http_client):
