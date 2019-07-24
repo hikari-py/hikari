@@ -21,6 +21,8 @@ Implements a basic type delegation system that piggybacks off of the standard
 inheritance system in Python and boasts full dataclass compatibility in the 
 process.
 """
+import inspect
+
 __all__ = ("delegate_members", "delegate_safe_dataclass")
 
 import dataclasses
@@ -122,8 +124,10 @@ def delegate_members(delegate_type, magic_field):
         # a type hint, in which case it is in `__annotations__`. Anything else we lack the ability to detect
         # (e.g. fields only defined once we are in the `__init__`, as it is basically monkey patching at this point if
         # we are not slotted).
-        for name in {*delegate_type.__dict__} | {*getattr(delegate_type, "__annotations__", ())}:
-            if name.startswith("_"):
+        dict_fields = {k for k, v in delegate_type.__dict__.items()}
+        annotation_fields = {*getattr(delegate_type, "__annotations__", ())}
+        for name in dict_fields | annotation_fields:
+            if name.startswith("_") or _is_func(cls, name):
                 continue
 
             delegate = DelegatedProperty(magic_field, name)
@@ -139,3 +143,8 @@ def delegate_members(delegate_type, magic_field):
         return cls
 
     return decorator
+
+
+def _is_func(cls, name):
+    func = getattr(cls, name, None)
+    return inspect.isfunction(func) or inspect.ismethod(func)
