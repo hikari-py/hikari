@@ -19,13 +19,11 @@
 """
 Generic users not bound to a guild, and guild-bound member definitions.
 """
-import datetime
-
-import typing
-
 __all__ = ("User", "Member")
 
 import dataclasses
+import datetime
+import typing
 
 from hikari.model import base
 from hikari.model import guild as _guild
