@@ -126,7 +126,10 @@ class TestGateway:
         gw._logger = asynctest.MagicMock()
 
         # pretend to sleep only
-        with asynctest.patch("asyncio.sleep", new=asyncio.coroutine(lambda _: None)):
+        async def fake_sleep(*_):
+            pass
+
+        with asynctest.patch("asyncio.sleep", new=fake_sleep):
             await gw._send_json({}, False)
 
         gw.ws.send.assert_awaited_once_with("{}")
@@ -336,8 +339,8 @@ class TestGateway:
         gw._send_json = asynctest.CoroutineMock()
 
         with contextlib.ExitStack() as stack:
-            stack.enter_context(asynctest.patch("hikari.utils.python_version", new=lambda: "python3"))
-            stack.enter_context(asynctest.patch("hikari.utils.library_version", new=lambda: "vx.y.z"))
+            stack.enter_context(asynctest.patch("hikari.utils.meta.python_version", new=lambda: "python3"))
+            stack.enter_context(asynctest.patch("hikari.utils.meta.library_version", new=lambda: "vx.y.z"))
             stack.enter_context(asynctest.patch("platform.system", new=lambda: "leenuks"))
 
             await gw._send_identify()
@@ -813,9 +816,10 @@ class TestGateway:
             large_threshold=69,
         )
 
-        gw._process_one_event = asynctest.CoroutineMock(
-            side_effect=asyncio.coroutine(lambda *_, **__: gw.closed_event.set())
-        )
+        async def side_effect(*_, **__):
+            gw.closed_event.set()
+
+        gw._process_one_event = asynctest.CoroutineMock(side_effect=side_effect)
         await gw._process_events()
         gw._process_one_event.assert_awaited_once()
 
@@ -829,7 +833,10 @@ class TestGateway:
             large_threshold=69,
         )
 
-        gw.run_once = asynctest.CoroutineMock(side_effect=asyncio.coroutine(lambda *_, **__: gw.closed_event.set()))
+        async def side_effect(*_, **__):
+            gw.closed_event.set()
+
+        gw.run_once = asynctest.CoroutineMock(side_effect=side_effect)
         await gw.run()
         gw.run_once.assert_awaited_once()
 

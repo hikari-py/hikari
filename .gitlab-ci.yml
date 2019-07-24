@@ -16,207 +16,219 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 stages:
-  - test
-  - verify
-  - deploy
-  - pages
+    - test
+    - verify
+    - deploy
+    - pages
 
 variables:
-  DOCKER_DRIVER: "overlay2"
-  RUN_SLOW_TESTS: "true"
-  OWNER: "nekokatt"
+    DOCKER_DRIVER: "overlay2"
+    RUN_SLOW_TESTS: "true"
+    OWNER: "nekokatt"
+
+.merge_request_testing: &merge_request_testing
+    only:
+        - branches
+        - merge_requests
+        - tags
+        - schedules
 
 ###
 ### TEMPLATE TO RUN PYTEST.
 ###
 .pytest:
-  allow_failure: false
-  stage: test
-  script:
-    - mkdir public || true
-    - nox -s pytest
-  artifacts:
-    paths:
-      - public
+    <<: *merge_request_testing
+    allow_failure: false
+    stage: test
+    script:
+        - mkdir public || true
+        - nox -s pytest
+    artifacts:
+        paths:
+            - public
 
 ###
 ### TEMPLATE TO INITIALIZE CPYTHON ENVIRONMENTS AND THEN RUN PYTEST.
 ###
 .cpython-pytest:
-  stage: test
-  extends: .pytest
-  before_script:
-    - python -V
-    - apk add git gcc g++ make
-    - pip install nox
+    stage: test
+    extends: .pytest
+    before_script:
+        - python -V
+        - apk add git gcc g++ make
+        - pip install nox
 
 ###
 ### TEST IN PYTHON 3.7
 ###
 py37:
-  image: python:3.7-alpine
-  extends: .cpython-pytest
-  coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
+    image: python:3.7-alpine
+    extends: .cpython-pytest
+    coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
 
 ###
 ### TEST IN PYTHON 3.8
 ###
 py38:
-  image: python:3.8-rc-alpine
-  extends: .cpython-pytest
+    image: python:3.8-rc-alpine
+    extends: .cpython-pytest
 
 ###
 ### FAIL WITH WARNING IF CODE DOES NOT MATCH DESIRED FORMAT.
 ### This only runs for merge requests.
 ###
 verify:
-  stage: verify
-  allow_failure: false
-  image: python:3-alpine
-  before_script:
-    - apk add git gcc g++ make
-    - pip install nox
-  script:
-    - nox -s bandit black_check pylint
-  except:
-    - master
-    - staging
+    <<: *merge_request_testing
+    stage: verify
+    allow_failure: false
+    image: python:3-alpine
+    before_script:
+        - apk add git gcc g++ make
+        - pip install nox
+    script:
+        - nox -s bandit black_check
+        - nox -s pylint || true
+    except:
+        - master
+        - staging
 
 ###
 ### VERIFY THAT SETUP.PY IS VALID.
 ###
 setup.py:
-  stage: verify
-  allow_failure: false
-  image: python:3-alpine
-  variables:
-    GIT_STRATEGY: none
-    PACKAGE_SLUG: git+${CI_PROJECT_URL}.git@${CI_COMMIT_REF_NAME}
-  before_script:
-    - apk add git gcc make g++
-    - pip install -U pip
-    - python -V
-    - echo "Testing setup.py for ${PACKAGE_SLUG}"
-  script:
-    - pip install -U ${PACKAGE_SLUG}
-    - python -c "import hikari; print(hikari.__version__)"
+    <<: *merge_request_testing
+    stage: verify
+    allow_failure: false
+    image: python:3-alpine
+    variables:
+        GIT_STRATEGY: none
+        PACKAGE_SLUG: git+${CI_PROJECT_URL}.git@${CI_COMMIT_REF_NAME}
+    before_script:
+        - apk add git gcc make g++
+        - pip install -U pip
+        - python -V
+        - echo "Testing setup.py for ${PACKAGE_SLUG}"
+    script:
+        - pip install -U ${PACKAGE_SLUG}
+        - python -c "import hikari; print(hikari.__version__)"
 
 ###
 ### HANDLE DEPLOYING TO PYPI REPOSITORIES
 ###
 .deploy:
-  allow_failure: false
-  stage: deploy
-  image: python:3
-  before_script:
-    - pip install poetry
-    - poetry install -v
-  script:
-    - poetry config repositories.hikarirepo ${PYPI_REPO}
-    - version="$(date +%Y.%m.%d)${PREFIX}"
-    - release="$(git show --format='%h' -s)"
-    - pep440_version="${version}.${CI_PIPELINE_IID}"
-    - echo "Version will become ${pep440_version}, release will be ${release}"
-    - sed "s/^__version__.*/__version__ = \"${pep440_version}\"/g" -i hikari/__init__.py
-    - sed "s/^__release__.*/__release__ = \"${release}\"/g" -i hikari/__init__.py
-    - sed "0,/^version.*$/s//version = \"${pep440_version}\"/g" -i pyproject.toml
-    - sed "0,/^version.*$/s//version = \"${pep440_version}\"/g" -i docs/conf.py
-    - sed "0,/^release.*$/s//release = \"${release}\"/g" -i docs/conf.py
-    - poetry build
-    - poetry publish --username=$PYPI_USER --password=$PYPI_PASS --repository=hikarirepo
-    - pip install requests
-    - python tasks/notify.py "${pep440_version} (${release})"
+    allow_failure: false
+    stage: deploy
+    image: python:3
+    before_script:
+        - pip install poetry
+        - poetry install -v
+    script:
+        - poetry config repositories.hikarirepo ${PYPI_REPO}
+        - version="$(date +%Y.%m.%d)${PREFIX}"
+        - release="$(git show --format='%h' -s)"
+        - pep440_version="${version}.${CI_PIPELINE_IID}"
+        - echo "Version will become ${pep440_version}, release will be ${release}"
+        - sed "s/^__version__.*/__version__ = \"${pep440_version}\"/g" -i hikari/__init__.py
+        - sed "s/^__release__.*/__release__ = \"${release}\"/g" -i hikari/__init__.py
+        - sed "0,/^version.*$/s//version = \"${pep440_version}\"/g" -i pyproject.toml
+        - sed "0,/^version.*$/s//version = \"${pep440_version}\"/g" -i docs/conf.py
+        - sed "0,/^release.*$/s//release = \"${release}\"/g" -i docs/conf.py
+        - poetry build
+        - poetry publish --username=$PYPI_USER --password=$PYPI_PASS --repository=hikarirepo
+        - pip install requests
+        - python tasks/notify.py "${pep440_version} (${release})"
 
 ###
 ### HANDLE DEPLOYING TO OUR STAGING ENVIRONMENT ON test.pypi.org
 ###
 deploy-to-staging:
-  extends: .deploy
-  only:
-    - staging
-    - $CI_PROJECT_NAMESPACE == $OWNER
-  except:
-    - tags
-    - merge_requests
-    - schedules
-  variables:
-    PREFIX: ".dev"
-    RELEASE_WEBHOOK_NAME: "staging"
-    RELEASE_WEBHOOK_DESCRIPTION: "You can install this version by running:\n```bash\npip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple hikari\n```\n"
-    RELEASE_WEBHOOK_COLOUR: "0xd34615" 
-  environment:
-    name:
-      staging
-  artifacts:
-    paths:
-      - docs
+    extends: .deploy
+    only:
+        - staging
+        - $CI_PROJECT_NAMESPACE == $OWNER
+    except:
+        - tags
+        - merge_requests
+        - schedules
+    variables:
+        PREFIX: ".dev"
+        RELEASE_WEBHOOK_NAME: "staging"
+        RELEASE_WEBHOOK_DESCRIPTION: "You can install this version by running:\n```bash\npip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple hikari\n```\n"
+        RELEASE_WEBHOOK_COLOUR: "0xd34615"
+    environment:
+        name:
+            staging
+    artifacts:
+        paths:
+            - docs
 
 ###
 ### HANDLE DEPLOYING TO OUR PRODUCTION ENVIRONMENT ON pypi.org
 ###
 deploy-to-prod:
-  extends: .deploy
-  only:
-    - master
-    - $CI_PROJECT_NAMESPACE == $OWNER
-  except:
-    - tags
-    - merge_requests
-    - schedules
-  variables:
-    PREFIX: ""
-    RELEASE_WEBHOOK_NAME: "prod"
-    RELEASE_WEBHOOK_DESCRIPTION: "Install it with:\n```bash\npip install hikari\n```\n"
-    RELEASE_WEBHOOK_COLOUR: "0x5c2040"
-  environment:
-    name:
-      prod
-  artifacts:
-    paths:
-      - docs
+    extends: .deploy
+    only:
+        - master
+        - $CI_PROJECT_NAMESPACE == $OWNER
+    except:
+        - tags
+        - merge_requests
+        - schedules
+    variables:
+        PREFIX: ""
+        RELEASE_WEBHOOK_NAME: "prod"
+        RELEASE_WEBHOOK_DESCRIPTION: "Install it with:\n```bash\npip install hikari\n```\n"
+        RELEASE_WEBHOOK_COLOUR: "0x5c2040"
+    environment:
+        name:
+            prod
+    artifacts:
+        paths:
+            - docs
 
 
 ###
 ### TEMPLATE FOR TEST AND PROD DOCUMENTATION GENERATION JOBS.
 ###
 .pages:
-  dependencies:
-    - aggregate-coverage
-    - bandit
-  allow_failure: false
-  image: python:3-stretch
-  before_script:
-    - apt-get update
-    - apt-get install graphviz -y
-    - pip install nox
-  script:
-    - nox -ssphinx
-  artifacts:
-    paths:
-      - public
+    dependencies:
+        - aggregate-coverage
+        - bandit
+    allow_failure: false
+    image: python:3-stretch
+    before_script:
+        - apt-get update
+        - apt-get install graphviz -y
+        - pip install nox
+    script:
+        - nox -ssphinx
+    artifacts:
+        paths:
+            - public
 
 ###
 ### GENERATE DOCUMENTATION WITHOUT DEPLOYING PAGES TO GITLAB PAGES.
 ###
 pages-test:
-  stage: pages
-  extends: .pages
-  except:
-    - master
-  dependencies:
-    - deploy-to-staging
+    <<: *merge_request_testing
+    stage: pages
+    extends: .pages
+    except:
+        - master
+    dependencies:
+        - deploy-to-staging
 
 ###
 ### PRODUCE PRODUCTION DOCUMENTATION.
 ###
 pages:
-  stage: pages
-  extends: .pages
-  only:
-    - master
-  except:
-    - schedules
-  dependencies:
-    - deploy-to-prod
+    stage: pages
+    extends: .pages
+    only:
+        - master
+    except:
+        - schedules
+    dependencies:
+        - deploy-to-prod
 
 

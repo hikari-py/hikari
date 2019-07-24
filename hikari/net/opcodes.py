@@ -22,6 +22,8 @@ Opcodes and constants used within the networking components of Hikari.
 References:
     https://discordapp.com/developers/docs/topics/opcodes-and-status-codes
 """
+from __future__ import annotations
+
 __all__ = ("GatewayOpcode", "GatewayClosure", "HTTPStatus", "JSONErrorCode", "VoiceOpcode", "VoiceClosure")
 
 import enum
