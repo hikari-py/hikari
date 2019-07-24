@@ -19,30 +19,73 @@
 """
 Generic users not bound to a guild, and guild-bound member definitions.
 """
+import datetime
+
+import typing
+
 __all__ = ("User", "Member")
 
 import dataclasses
 
 from hikari.model import base
-from hikari.utils import delegate
+from hikari.model import guild as _guild
+from hikari.utils import delegate, dateutils, maps
 
 
 @dataclasses.dataclass()
 class User(base.SnowflakeMixin):
-    __slots__ = ("id", "username", "discriminator", "avatar", "bot")
+    """
+    Representation of a user account.
+    """
+
+    # TODO: user flags (eventually)
+    __slots__ = ("id", "username", "discriminator", "avatar_hash", "bot")
 
     id: int
     username: str
     discriminator: int
-    avatar: bytes
+    avatar_hash: str
     bot: bool
+
+    @staticmethod
+    def from_dict(payload):
+        return User(
+            id=int(payload["id"]),
+            username=payload["username"],
+            discriminator=int(payload["discriminator"]),
+            avatar_hash=payload["avatar"],
+            bot=payload.get("bot", False),
+        )
 
 
 @delegate.delegate_members(User, "_user")
 @delegate.delegate_safe_dataclass()
 class Member(User):
     """
-    A specialization of a user which provides
+    A specialization of a user which provides implementation details for a specific guild.
+
+    This is a delegate type, meaning it subclasses a :class:`User` and implements it by deferring inherited calls
+    and fields to a wrapped user object which is shared with the corresponding member in every guild the user is in.
     """
 
-    __slots__ = ("_user",)
+    # TODO: voice
+    # TODO: statuses from gateway (eventually)
+    __slots__ = ("_user", "guild", "_roles", "joined_at", "nick", "nitro_boosted_at")
+
+    _user: User
+    _roles: typing.List[int]
+    guild: _guild.Guild
+    joined_at: datetime.datetime
+    nick: typing.Optional[str]
+    nitro_boosted_at: typing.Optional[datetime.datetime]
+
+    @staticmethod
+    def from_dict(payload, user, guild):
+        return Member(
+            _user=user,
+            _roles=[int(r) for r in payload["roles"]],
+            nick=payload.get("nick"),
+            guild=guild,
+            joined_at=dateutils.parse_iso_8601_datetime(payload["joined_at"]),
+            nitro_boosted_at=maps.get_from_map_as(payload, "premium_since", dateutils.parse_iso_8601_datetime),
+        )
