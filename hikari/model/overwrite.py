@@ -19,11 +19,12 @@
 """
 Permission overwrites.
 """
-__all__ = ()
+__all__ = ("Overwrite", "OverwriteEntityType")
 
+import dataclasses
 import enum
 
-from hikari.model import base
+from hikari.model import base, permission
 
 
 class OverwriteEntityType(base.NamedEnum):
@@ -31,7 +32,19 @@ class OverwriteEntityType(base.NamedEnum):
     ROLE = enum.auto()
 
 
+@dataclasses.dataclass()
 class Overwrite(base.SnowflakeMixin):
-    __slots__ = ()
+    __slots__ = ("id", "type", "allow", "deny")
+    id: int
+    type: OverwriteEntityType
+    allow: permission.Permission
+    deny: permission.Permission
 
-    # TODO: from dict
+    @staticmethod
+    def from_dict(payload):
+        return Overwrite(
+            int(payload["id"]),
+            OverwriteEntityType.from_discord_name(payload["type"]),
+            allow=permission.Permission(payload["allow"]),
+            deny=permission.Permission(payload["deny"]),
+        )
