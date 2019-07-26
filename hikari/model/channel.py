@@ -46,12 +46,8 @@ class Channel(base.SnowflakeMixin, abc.ABC):
     __slots__ = ("_state", "id")
 
     _state: typing.Any
+    #: The ID of the channel.
     id: int
-
-    @property
-    def type(self) -> typing.Type[Channel]:
-        """The type of channel."""
-        return type(self)
 
     @staticmethod
     @abc.abstractmethod
