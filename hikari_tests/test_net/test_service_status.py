@@ -67,7 +67,6 @@ class Response:
 
 class Router:
     def __call__(self, method, uri, **kwargs):
-        print("(MOCKED)", method.upper(), uri, "w kwargs", kwargs)
         return Response(endpoints[uri])
 
 

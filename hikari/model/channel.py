@@ -97,15 +97,15 @@ class GuildTextChannel(GuildChannel):
     def from_dict(payload, state):
         return GuildTextChannel(
             _state=state,
-            id=int(payload["id"]),
-            guild_id=int(payload["guild_id"]),
-            position=int(payload["position"]),
+            id=maps.get_from_map_as(payload, "id", int),
+            guild_id=maps.get_from_map_as(payload, "guild_id", int),
+            position=payload["position"],
             permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
             name=payload["name"],
             nsfw=payload.get("nsfw", False),
             parent_id=maps.get_from_map_as(payload, "parent_id", int),
             topic=payload.get("topic"),
-            rate_limit_per_user=int(payload.get("rate_limit_per_user")),
+            rate_limit_per_user=payload.get("rate_limit_per_user"),
             last_message_id=maps.get_from_map_as(payload, "last_message_id", int),
         )
 
@@ -152,8 +152,8 @@ class GuildVoiceChannel(GuildChannel):
     def from_dict(payload, state):
         return GuildVoiceChannel(
             _state=state,
-            id=int(payload["id"]),
-            guild_id=int(payload["guild_id"]),
+            id=maps.get_from_map_as(payload, "id", int),
+            guild_id=maps.get_from_map_as(payload, "guild_id", int),
             position=payload["position"],
             permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
             name=payload["name"],
@@ -169,10 +169,10 @@ class GroupDMChannel(DMChannel):
     A DM group chat.
     """
 
-    __slots__ = ("icon", "name", "owner_id", "owner_application_id")
+    __slots__ = ("icon_hash", "name", "owner_id", "owner_application_id")
 
     #: Hash of the icon for the chat, if there is one.
-    icon: typing.Optional[bytes]
+    icon_hash: typing.Optional[str]
     #: Name for the chat, if there is one.
     name: typing.Optional[str]
     #: ID of the owner of the chat.
@@ -185,13 +185,13 @@ class GroupDMChannel(DMChannel):
     def from_dict(payload, state):
         return GroupDMChannel(
             state,
-            id=payload["id"],
+            id=maps.get_from_map_as(payload, "id", int),
             last_message_id=payload["last_message_id"],
             recipients=[NotImplemented for _ in payload["recipients"]],  # TODO
-            icon=payload.get("icon").encode() if payload["icon"] else None,
+            icon_hash=payload.get("icon") if payload["icon"] else None,
             name=payload.get("name"),
-            owner_application_id=payload.get("application_id"),
-            owner_id=payload["owner_id"],
+            owner_application_id=maps.get_from_map_as(payload, "owner_application_id", int),
+            owner_id=maps.get_from_map_as(payload, "owner_id", int)
         )
 
 
@@ -236,8 +236,8 @@ class GuildNewsChannel(GuildChannel):
     def from_dict(payload, state):
         return GuildNewsChannel(
             _state=state,
-            id=int(payload["id"]),
-            guild_id=int(payload["guild_id"]),
+            id=maps.get_from_map_as(payload, "id", int),
+            guild_id=maps.get_from_map_as(payload, "guild_id", int),
             position=payload["position"],
             permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
             name=payload["name"],
@@ -262,8 +262,8 @@ class GuildStoreChannel(GuildChannel):
     def from_dict(payload, state):
         return GuildStoreChannel(
             _state=state,
-            id=int(payload["id"]),
-            guild_id=int(payload["guild_id"]),
+            id=maps.get_from_map_as(payload, "id", int),
+            guild_id=maps.get_from_map_as(payload, "guild_id", int),
             position=payload["position"],
             permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
             name=payload["name"],
@@ -280,6 +280,6 @@ def channel_from_dict(payload, state):
     channel_type = payload["type"]
 
     try:
-        return channel_types[channel_type](payload, state)
+        return channel_types[channel_type].from_dict(payload, state)
     except IndexError:
         raise TypeError(f"Invalid channel type {channel_type}") from None
