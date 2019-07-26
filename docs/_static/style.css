@@ -140,3 +140,22 @@ code, .highlight {
 .navbar-brand, h1, h2, h3, h4, h5, h6 {
     font-family: 'Permanent Marker', cursive !important;
 }
+
+dl {
+    margin-top: 0em;
+    margin-bottom: 0em;
+}
+
+dl.class {
+    margin-top: 4em !important;
+    margin-bottom: 4em !important;
+}
+
+dl > dd {
+    margin-left: 4em;
+    font-size: 90%;
+}
+
+.sig-name.descname {
+    font-size: inherit !important;
+}

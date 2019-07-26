@@ -23,18 +23,11 @@ from hikari.model import channel
 
 @pytest.mark.model
 class TestChannel:
-    def test_type(self):
-        class Dummy(channel.Channel):
-            @staticmethod
-            def from_dict(payload, state):
-                pass
-
-        d = Dummy(NotImplemented, 123)
-        assert d.type == Dummy
-
     @pytest.mark.xfail
     def test_GuildTextChannel_from_dict(self):
-        raise NotImplementedError
+        gtc = channel.GuildTextChannel.from_dict({
+            "id": "1234567",
+        }, NotImplemented)
 
     @pytest.mark.xfail
     def test_DMChannel_from_dict(self):
