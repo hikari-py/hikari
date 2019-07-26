@@ -21,6 +21,10 @@ Core errors that may be raised by this API implementation.
 """
 from __future__ import annotations
 
+import typing
+
+from hikari.net import http_base, opcodes
+
 __all__ = (
     "BadRequest",
     "ClientError",
@@ -33,11 +37,6 @@ __all__ = (
     "ServerError",
     "Unauthorized",
 )
-
-import typing
-
-from hikari.net import opcodes
-from hikari.net import http_base
 
 
 class HikariError(RuntimeError):

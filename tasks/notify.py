@@ -25,7 +25,6 @@ import traceback
 
 import requests
 
-
 try:
     WEBHOOK_URL = os.environ["RELEASE_WEBHOOK"]
     ENVIRONMENT = os.environ["RELEASE_WEBHOOK_NAME"]

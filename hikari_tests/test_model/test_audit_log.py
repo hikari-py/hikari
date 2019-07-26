@@ -19,6 +19,7 @@
 import pytest
 
 from hikari.model import audit_log
+
 from .testdata import *
 
 
