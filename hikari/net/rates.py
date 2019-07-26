@@ -21,8 +21,6 @@ Rate-limiting adherence logic.
 """
 from __future__ import annotations
 
-__all__ = ("TimedLatchBucket", "TimedTokenBucket", "VariableTokenBucket")
-
 import asyncio
 import collections
 import contextlib
@@ -30,6 +28,8 @@ import time
 import typing
 
 from hikari.utils import assertions
+
+__all__ = ("TimedLatchBucket", "TimedTokenBucket", "VariableTokenBucket")
 
 
 class TimedTokenBucket(contextlib.AbstractAsyncContextManager):

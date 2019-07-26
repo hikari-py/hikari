@@ -21,16 +21,15 @@ Embeds.
 """
 from __future__ import annotations
 
-__all__ = ("Embed", "UNSPECIFIED")
-
-import datetime
 import dataclasses
+import datetime
 import typing
 
 from hikari.model import color as _color
-from hikari.utils import dateutils
-from hikari.utils import maps
-from hikari.utils import unspecified
+from hikari.utils import dateutils, maps, unspecified
+
+__all__ = ("Embed", "UNSPECIFIED")
+
 
 #: An alias to the unspecified sentinel. This is used to describe embed members with no associated value within this
 #: module.

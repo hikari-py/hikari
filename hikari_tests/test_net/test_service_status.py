@@ -17,11 +17,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
+import dataclasses
 import json
 import os
 
 import asynctest
-import dataclasses
 import pytest
 
 from hikari.model import service_status as status_model
@@ -67,7 +67,6 @@ class Response:
 
 class Router:
     def __call__(self, method, uri, **kwargs):
-        print("(MOCKED)", method.upper(), uri, "w kwargs", kwargs)
         return Response(endpoints[uri])
 
 

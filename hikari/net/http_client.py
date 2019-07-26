@@ -21,20 +21,16 @@ Implementation of the HTTP Client mix of all mixin components.
 """
 from __future__ import annotations
 
-from hikari.utils import ioutils
-from hikari.utils import maps
-from hikari.utils import meta
-from hikari.utils import types
-from hikari.utils import unspecified
-
-__all__ = ("HTTPClient",)
-
 import json
 import typing
 
 import aiohttp
 
 from hikari.net import http_base
+from hikari.utils import ioutils, maps, meta, types, unspecified
+
+__all__ = ("HTTPClient",)
+
 
 DELETE = "delete"
 PATCH = "patch"
@@ -771,7 +767,7 @@ class HTTPClient(http_base.BaseHTTPClient):
             hikari.errors.NotFound:
                 if the channel is not found.
             hikari.errors.Forbidden:
-                if you are not in the guild the channel is in; TODO: confirm this.
+                if you are not in the guild the channel is in
         """
         await self.request(POST, "/channels/{channel_id}/typing", channel_id=channel_id)
 
@@ -849,7 +845,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you aren't a member of said guild.
         """
@@ -901,7 +897,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
             hikari.errors.BadRequest:
@@ -1040,7 +1036,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
         """
         return await self.request(GET, "/guilds/{guild_id}", guild_id=guild_id)
 
@@ -1100,7 +1096,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isnt found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
@@ -1129,9 +1125,9 @@ class HTTPClient(http_base.BaseHTTPClient):
             guild_id:
                 The ID of the guild to be deleted.
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you're not the guild owner.
         """
@@ -1151,7 +1147,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you're not in the guild.
         """
@@ -1209,7 +1205,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_CHANNEL` permission or are not in the target guild or are not in the guild.
             hikari.errors.BadRequest:
@@ -1236,15 +1232,20 @@ class HTTPClient(http_base.BaseHTTPClient):
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
         """
-        Edits the position of two or more given channels.
+        Edits the position of one or more given channels.
 
         Args:
             guild_id:
                 The ID of the guild in which to edit the channels.
-            channel/channels:
-                At least two tuples with channel IDs and positions. # TODO: make line this better
+            channel:
+                the first channel to change the position of. This is a tuple of the channel ID and the integer position.
+            channels:
+                optional additional channels to change the position of. These must be tuples of the channel ID and the
+                integer positions to change to.
+            reason:
+                optional reason to add to the audit log for making this change.
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
                 If either the guild or any of the channels aren't found.
             hikari.errors.Forbidden:
@@ -1289,18 +1290,34 @@ class HTTPClient(http_base.BaseHTTPClient):
             limit:
                 The maximum number of members to return (1-1000).
             after:
-                The highest ID in the previous page.  # TODO: Not sure what this means...
+                The highest ID in the previous page. This is used for retrieving more than 1000 members in a server
+                using consecutive requests.
+                
+        Example:
+            .. code-block:: python
+                
+                members = []
+                last_id = 0
+                
+                while True:
+                    next_members = await client.list_guild_members(1234567890, limit=1000, after=last_id)
+                    members += next_members
+                    
+                    if len(next_members) == 1000:
+                        last_id = max(m["id"] for m in next_members)
+                    else:
+                        break                  
 
         Returns:
             A list of member objects.
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you are not in the guild.
             hikari.errors.BadRequest:
-                If you provide invalid values for the `limit` and `after` fields or are not in the guild.
+                If you provide invalid values for the `limit` and `after` fields.
         """
         payload = {}
         maps.put_if_specified(payload, "limit", limit)
@@ -1338,7 +1355,8 @@ class HTTPClient(http_base.BaseHTTPClient):
                 Whether the user should be deafen in the voice channel or not, if applicable.
             channel_id:
                 The ID of the channel to move the member to, if applicable. Pass None to disconnect the user.
-
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
         Raises:
             hikari.errors.NotFound:
                 If either the guild, user, channel or any of the roles aren't found.
@@ -1348,7 +1366,7 @@ class HTTPClient(http_base.BaseHTTPClient):
                 Note that to move a member you must also have permission to connect to the end channel.
                 This will also be raised if you're not in the guild.
             hikari.errors.BadRequest:
-                If you pass `mute`, `deaf` or `channel_id` while the member isn't connected to a voice channel.
+                If you pass `mute`, `deaf` or `channel_id` while the member is not connected to a voice channel.
         """
         payload = {}
         maps.put_if_specified(payload, "nick", nick)
@@ -1370,22 +1388,26 @@ class HTTPClient(http_base.BaseHTTPClient):
         self, guild_id: str, nick: typing.Optional[str], *, reason: str = unspecified.UNSPECIFIED
     ) -> str:
         """
-        Edits the current user's nick for a given guild.
+        Edits the current user's nickname for a given guild.
 
         Args:
             guild_id:
-                The ID of th guild you want to change the nick on.
+                The ID of the guild you want to change the nick on.
             nick:
                 The new nick string.
-
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
+                
         Returns:
-            The new nick.
+            The new nickname.
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you lack the `CHANGE_NICKNAME` permission or are not in the guild.
+            hikari.errors.BadRequest:
+                If you provide a disallowed nickname, one that is too long, or one that is empty.
         """
         return await self.request(
             PATCH, "/guilds/{guild_id}/members/@me/nick", guild_id=guild_id, json={"nick": nick}, reason=reason
@@ -1405,8 +1427,10 @@ class HTTPClient(http_base.BaseHTTPClient):
                 The ID of the member you want to add the role to.
             role_id:
                 The ID of the role you want to add.
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
                 If either the guild, member or role aren't found.
             hikari.errors.Forbidden:
@@ -1435,8 +1459,10 @@ class HTTPClient(http_base.BaseHTTPClient):
                 The ID of the member you want to remove the role from.
             role_id:
                 The ID of the role you want to remove.
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
                 If either the guild, member or role aren't found.
             hikari.errors.Forbidden:
@@ -1461,8 +1487,10 @@ class HTTPClient(http_base.BaseHTTPClient):
                 The ID of the guild the member belongs to.
             user_id:
                 The ID of the member you want to kick.
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
                 If either the guild or member aren't found.
             hikari.errors.Forbidden:
@@ -1486,7 +1514,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
@@ -1499,14 +1527,16 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Args:
             guild_id:
-                The ID of the guild you want to get the bans from.
+                The ID of the guild you want to get the ban from.
+            user_id:
+                The ID of the user to get the ban information for.
 
         Returns:
             A ban object for the requested user.
 
         Raises:
             hikari.errors.NotFound:
-                If either the guild or the user aren't found, or if the user isn't banned.
+                If either the guild or the user aren't found, or if the user is not banned.
             hikari.errors.Forbidden:
                 If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
@@ -1519,7 +1549,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         user_id: str,
         *,
         delete_message_days: int = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,  # Note: this should NOT be passed in the reason field like elsewhere
+        reason: str = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Bans a user from a given guild.
@@ -1529,8 +1559,12 @@ class HTTPClient(http_base.BaseHTTPClient):
                 The ID of the guild the member belongs to.
             user_id:
                 The ID of the member you want to ban.
+            delete_message_days:
+                How many days of messages from the user should be removed. Default is to not delete anything.
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
                 If either the guild or member aren't found.
             hikari.errors.Forbidden:
@@ -1546,15 +1580,17 @@ class HTTPClient(http_base.BaseHTTPClient):
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def remove_guild_ban(self, guild_id: str, user_id: str, *, reason: str = unspecified.UNSPECIFIED) -> None:
         """
-        Unbans a user from a given guild.
+        Un-bans a user from a given guild.
 
         Args:
             guild_id:
                 The ID of the guild the member belongs to.
             user_id:
-                The ID of the member you want to unban.
+                The ID of the member you want to un-ban.
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
                 If either the guild or member aren't found.
             hikari.errors.Forbidden:
@@ -1578,7 +1614,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you're not in the guild.
         """
@@ -1611,14 +1647,16 @@ class HTTPClient(http_base.BaseHTTPClient):
             hoist:
                 Whether the role should hoist or not.
             mentionable:
-                Wheather the role should be pingable or not.
+                Whether the role should be able to be mentioned by users or not.
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Returns:
             The newly created role object.
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_ROLES` permission or you're not in the guild.
             hikari.errors.BadRequest:
@@ -1646,8 +1684,12 @@ class HTTPClient(http_base.BaseHTTPClient):
         Args:
             guild_id:
                 The ID of the guild the roles belong to.
-            role/roles:
-                One or more tuples containing the ID and new position of the affected roles.
+            role:
+                The first role to move.
+            roles:
+                Optional extra roles to move.
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Returns:
             A list of all the guild roles.
@@ -1693,8 +1735,10 @@ class HTTPClient(http_base.BaseHTTPClient):
             hoist:
                 Whether the role should hoist or not.
             mentionable:
-                Wheather the role should be pingable or not.
-
+                Whether the role should be mentionable or not.
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
+                
         Returns:
             The edited role object.
 
@@ -1726,12 +1770,14 @@ class HTTPClient(http_base.BaseHTTPClient):
                 The ID of the guild you want to remove the role from.
             role_id:
                 The ID of the role you want to delete.
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
                 If either the guild or the role aren't found.
             hikari.errors.Forbidden:
-                If you lack the `MANAGE_ROLES` permisssion or are not in the guild.
+                If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         return await self.request(
             DELETE, "/guilds/{guild_id}/roles/{role_id}", guild_id=guild_id, role_id=role_id, reason=reason
@@ -1753,11 +1799,11 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you lack the `KICK_MEMBERS` or you are not in the guild.
             hikari.errors.BadRequest:
-                If you pass an invalid ammount of days.
+                If you pass an invalid amount of days.
         """
         return await self.request(GET, "/guilds/{guild_id}/prune", guild_id=guild_id, query={"days": days})
 
@@ -1766,7 +1812,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         self, guild_id: str, days: int, compute_prune_count: bool = False, reason: str = unspecified.UNSPECIFIED
     ) -> typing.Optional[int]:
         """
-        Prunes members of a given guild based on the number of inative days.
+        Prunes members of a given guild based on the number of inactive days.
 
         Args:
             guild_id:
@@ -1775,13 +1821,15 @@ class HTTPClient(http_base.BaseHTTPClient):
                 The number of inactivity days you want to use as filter.
             compute_prune_count:
                 Whether a count of pruned members is returned or not. Discouraged for large guilds.
+            reason:|
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Returns:
             Either None or an object containing a `pruned` key which holds the pruned member count.
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found:
+                If the guild is not found:
             hikari.errors.Forbidden:
                 If you lack the `KICK_MEMBER` permission or are not in the guild.
             hikari.errors.BadRequest:
@@ -1804,7 +1852,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found:
+                If the guild is not found:
             hikari.errors.Forbidden:
                 If you are not in the guild.
         """
@@ -1824,7 +1872,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
@@ -1844,7 +1892,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
@@ -1864,13 +1912,15 @@ class HTTPClient(http_base.BaseHTTPClient):
                 The integration type string (e.g. "twitch").
             integration_id:
                 The ID for the new integration.
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Returns:
             The newly created integration object.
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
@@ -1896,14 +1946,18 @@ class HTTPClient(http_base.BaseHTTPClient):
         Args:
             guild_id:
                 The ID of the guild to which the integration belongs to.
+            integration_id:
+                The ID of the integration.
             expire_behaviour:
                 The behaviour for when an integration subscription lapses.
             expire_grace_period:
-                Time interval in seconds in which the integration will ingore lapsed subscriptions.
+                Time interval in seconds in which the integration will ignore lapsed subscriptions.
             enable_emoticons:
                 Whether emoticons should be synced for this integration.
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
                 If either the guild or the integration aren't found.
             hikari.errors.Forbidden:
@@ -1935,8 +1989,10 @@ class HTTPClient(http_base.BaseHTTPClient):
                 The ID of the guild from which to delete an integration.
             integration_id:
                 The ID of the integration to delete.
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
                 If either the guild or the integration aren't found.
             hikari.errors.Forbidden:
@@ -1988,7 +2044,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
@@ -2007,13 +2063,15 @@ class HTTPClient(http_base.BaseHTTPClient):
                 The ID of the guild to edit the embed for.
             embed:
                 The new embed object to be set.
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Returns:
             The updated embed object.
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
@@ -2033,7 +2091,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
@@ -2079,7 +2137,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the invite isn't found.
+                If the invite is not found.
         """
         payload = {}
         maps.put_if_specified(payload, "with_counts", with_counts)
@@ -2101,7 +2159,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the invite isn't found.
+                If the invite is not found.
             hikari.errors.Forbidden
                 If you lack either `MANAGE_CHANNELS` on the channel the invite belongs to or `MANAGE_GUILD` for
                 guild-global delete.
@@ -2146,7 +2204,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the user isn't found.
+                If the user is not found.
         """
         return await self.request(GET, "/users/{user_id}", user_id=user_id)
 
@@ -2155,7 +2213,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         self, *, username: str = unspecified.UNSPECIFIED, avatar: bytes = unspecified.UNSPECIFIED
     ) -> types.DiscordObject:
         """
-        Edtis the current user. If any arguments are unspecified, then that subject is not changed on Discord.
+        Edits the current user. If any arguments are unspecified, then that subject is not changed on Discord.
 
         Args:
             username:
@@ -2210,7 +2268,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
          Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
         """
         return await self.request(DELETE, "/users/@me/guilds/{guild_id}", guild_id=guild_id)
 
@@ -2228,7 +2286,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the recipient isn't found.
+                If the recipient is not found.
         """
         return await self.request(POST, "/users/@me/channels", json={"recipient_id": recipient_id})
 
@@ -2273,9 +2331,9 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the channel isn't found.
+                If the channel is not found.
             hikari.errors.Forbidden:
-                If you either lack the `MANAGE_WEBHOOKS` permission or can't see the given channel.
+                If you either lack the `MANAGE_WEBHOOKS` permission or can not see the given channel.
             hikari.errors.BadRequest:
                 If the avatar image is too big or the format is invalid.
         """
@@ -2299,9 +2357,9 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the channel isn't found.
+                If the channel is not found.
             hikari.errors.Forbidden:
-                If you either lack the `MANAGE_WEBHOOKS` permission or can't see the given channel.
+                If you either lack the `MANAGE_WEBHOOKS` permission or can not see the given channel.
         """
         return await self.request(GET, "/channels/{channel_id}/webhooks", channel_id=channel_id)
 
@@ -2319,7 +2377,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the guild isn't found.
+                If the guild is not found.
             hikari.errors.Forbidden:
                 If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the given guild.
         """
@@ -2339,7 +2397,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the webhook isn't found.
+                If the webhook is not found.
         """
         return await self.request(GET, "/webhooks/{webhook_id}", webhook_id=webhook_id)
 
@@ -2391,7 +2449,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Raises:
             hikari.errors.NotFound:
-                If the webhook isn't found.
+                If the webhook is not found.
             hikari.errors.Forbidden:
                 If you're not the webhook owner.
         """

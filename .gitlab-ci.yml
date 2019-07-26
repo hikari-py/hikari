@@ -26,6 +26,14 @@ variables:
     RUN_SLOW_TESTS: "true"
     OWNER: "nekokatt"
 
+cache:
+    paths:
+        - .nox/
+        - .pytest_cache/
+        - poetry.lock
+
+# Fixes a bug where CI now won't verify a branch before merging it and instead does nothing until the heat death of
+# the universe or something.
 .merge_request_testing: &merge_request_testing
     only:
         - branches
@@ -86,7 +94,7 @@ verify:
         - apk add git gcc g++ make
         - pip install nox
     script:
-        - nox -s bandit black_check
+        - nox -s bandit format_check
         - nox -s pylint || true
     except:
         - master
@@ -122,6 +130,7 @@ setup.py:
     before_script:
         - pip install poetry
         - poetry install -v
+        - poetry show -v
     script:
         - poetry config repositories.hikarirepo ${PYPI_REPO}
         - version="$(date +%Y.%m.%d)${PREFIX}"

@@ -17,8 +17,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Metadata. Contains interpreter introspection utilities, Hikari introspection utilities (e.g. version, author, etc)
-and documentation decorators used within this library. There is usually zero need for you to touch anything in this
+Metadata tools that look at documentation and versioning of things.
+
+Contains interpreter introspection utilities, Hikari introspection utilities (e.g. version, author, etc) and
+documentation decorators used within this library. There is usually zero need for you to touch anything in this
 package.
 """
 __all__ = ("APIResource", "link_developer_portal", "library_version", "python_version", "system_type", "user_agent")

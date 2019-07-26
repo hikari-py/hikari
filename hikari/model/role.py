@@ -37,13 +37,21 @@ class Role(base.SnowflakeMixin):
 
     __slots__ = ("id", "name", "color", "hoist", "position", "permissions", "managed", "mentionable")
 
+    #: The ID of the role.
     id: int
+    #: The name of the role.
     name: str
+    #: The color of the role.
     color: _color.Color
+    #: Whether the role will be hoisted (show as a separate list in the member list)
     hoist: bool
+    #: The position of the role.
     position: int
+    #: The permissions for the role.
     permissions: _permission.Permission
+    #: True if the role is created by an integration or by adding a bot to the server, or False otherwise.
     managed: bool
+    #: True if you can mention this role and thus ping all members in that role at once, False if you can not.
     mentionable: bool
 
     @staticmethod

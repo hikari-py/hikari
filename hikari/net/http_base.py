@@ -21,8 +21,6 @@ Implementation of the base components required for working with the V7 HTTP REST
 """
 from __future__ import annotations
 
-__all__ = ("BaseHTTPClient",)
-
 import asyncio
 import json as libjson
 import logging
@@ -32,13 +30,11 @@ import aiohttp
 
 #: Format string for the default Discord API URL.
 from hikari import errors
-from hikari.net import opcodes
-from hikari.net import rates
-from hikari.utils import assertions
-from hikari.utils import dateutils
-from hikari.utils import maps
-from hikari.utils import meta
-from hikari.utils import unspecified
+from hikari.net import opcodes, rates
+from hikari.utils import assertions, dateutils, maps, meta, unspecified
+
+__all__ = ("BaseHTTPClient",)
+
 
 _DISCORD_API_URI_FORMAT = "https://discordapp.com/api/v{VERSION}"
 
