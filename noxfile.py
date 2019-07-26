@@ -21,7 +21,8 @@ import os
 import shutil
 import typing
 
-from nox import session as nox_session, sessions
+from nox import session as nox_session
+from nox import sessions
 
 
 def pathify(arg, *args, root=False):
@@ -36,6 +37,7 @@ ARTIFACT_DIR = "public"
 DOCUMENTATION_DIR = "docs"
 CI_SCRIPT_DIR = "tasks"
 SPHINX_OPTS = "-WTvvn"
+ISORT_ARGS = ["--jobs", "8", "--trailing-comma", "--case-sensitive", "--verbose"]
 BLACK_PATHS = [MAIN_PACKAGE, TEST_PACKAGE, pathify(DOCUMENTATION_DIR, "conf.py"), __file__]
 BLACK_SHIM_PATH = pathify(CI_SCRIPT_DIR, "black.py")
 GENDOC_PATH = pathify(CI_SCRIPT_DIR, "gendoc.py")
@@ -44,6 +46,7 @@ PYTHON_TARGETS = ["python3.7", "python3.8", "python3.9"]
 OFFLINE_FLAG = "NOX_OFFLINE"
 
 existing_python_installs = [target for target in PYTHON_TARGETS if shutil.which(target)]
+has_dumped_venv_info = False
 
 if not existing_python_installs:
     raise OSError(f"Cannot find a valid Python interpreter from the list of {PYTHON_TARGETS} to run.")
@@ -86,9 +89,10 @@ def using_poetry(session_logic):
     def wrapper(session: sessions.Session, *args, **kwargs):
         session.install("poetry")
         session = PoetryNoxSession(session)
-        session.poetry("config", "settings.virtualenvs.create", "false", silent=True)
-        if not os.getenv(OFFLINE_FLAG, False):
-            session.poetry("update", "-v", silent=False)
+        session.poetry("config", "settings.virtualenvs.create", "false", silent=False)
+        if not os.getenv(OFFLINE_FLAG, False) and not has_dumped_venv_info:
+            session.poetry("update", "-v", silent=True)
+            session.poetry("show", "-v")
         return session_logic(session, *args, **kwargs)
 
     return wrapper
@@ -157,13 +161,20 @@ def _black(session, *args, **kwargs):
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *args, **kwargs)
 
 
+def _isort(session, *args, **kwargs):
+    session.install("isort")
+    session.run("python", "-m", "isort", *args, **kwargs)
+
+
 @nox_session(reuse_venv=True)
 @using_poetry
-def black_fix(session: PoetryNoxSession) -> None:
+def format_fix(session: PoetryNoxSession) -> None:
+    _isort(session, *ISORT_ARGS, "--apply", "--atomic")
     _black(session)
 
 
 @nox_session(reuse_venv=True)
 @using_poetry
-def black_check(session: PoetryNoxSession) -> None:
+def format_check(session: PoetryNoxSession) -> None:
+    _isort(session, *ISORT_ARGS, "--check")
     _black(session, "--check")

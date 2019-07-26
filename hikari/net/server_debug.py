@@ -24,14 +24,14 @@ This API is not officially documented.
 """
 from __future__ import annotations
 
-__all__ = ("get_debug_data",)
-
 import datetime
 import re
 
 import aiohttp
 
 from hikari.model import server_debug
+
+__all__ = ("get_debug_data",)
 
 
 async def get_debug_data() -> server_debug.DebugData:

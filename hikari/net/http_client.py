@@ -21,19 +21,16 @@ Implementation of the HTTP Client mix of all mixin components.
 """
 from __future__ import annotations
 
-__all__ = ("HTTPClient",)
-
 import json
 import typing
 
 import aiohttp
 
 from hikari.net import http_base
-from hikari.utils import ioutils
-from hikari.utils import maps
-from hikari.utils import meta
-from hikari.utils import types
-from hikari.utils import unspecified
+from hikari.utils import ioutils, maps, meta, types, unspecified
+
+__all__ = ("HTTPClient",)
+
 
 DELETE = "delete"
 PATCH = "patch"

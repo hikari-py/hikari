@@ -21,13 +21,12 @@ Implements a basic type delegation system that piggybacks off of the standard
 inheritance system in Python and boasts full dataclass compatibility in the 
 process.
 """
+import dataclasses
 import inspect
 
-__all__ = ("delegate_members", "delegate_safe_dataclass")
-
-import dataclasses
-
 from hikari.utils import assertions
+
+__all__ = ("delegate_members", "delegate_safe_dataclass")
 
 
 _DELEGATE_MEMBERS_FIELD = "__delegate_members__"

@@ -29,12 +29,9 @@ import asynctest
 import pytest
 
 from hikari import errors
-from hikari.net import http_base
-from hikari.net import opcodes
-from hikari.net import rates
+from hikari.net import http_base, opcodes, rates
 from hikari.utils import unspecified
 from hikari_tests._helpers import _mock_methods_on
-
 
 ########################################################################################################################
 

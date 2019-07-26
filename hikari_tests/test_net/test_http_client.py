@@ -28,6 +28,7 @@ from hikari.net import http_client as _http_client
 # Adding new categories? Keep it consistent, bud.
 from hikari.utils import unspecified
 
+
 r"""
 PyTest Fixtures
   _____    _______        _     ______ _      _                       

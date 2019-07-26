@@ -28,6 +28,12 @@ See:
 """
 from __future__ import annotations
 
+import typing
+
+import aiohttp
+
+from hikari.model import service_status
+
 __all__ = (
     "get_summary",
     "get_status",
@@ -45,11 +51,6 @@ __all__ = (
     "resend_confirmation_email",
 )
 
-import typing
-
-import aiohttp
-
-from hikari.model import service_status
 
 _BASE_URI = "https://status.discordapp.com/api/v2"
 

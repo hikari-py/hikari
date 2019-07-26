@@ -19,9 +19,8 @@
 
 __all__ = ("DataCenter", "DebugData")
 
-import datetime
-
 import dataclasses
+import datetime
 
 
 @dataclasses.dataclass(frozen=True)
