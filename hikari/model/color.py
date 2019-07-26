@@ -22,10 +22,10 @@ Model that represents a common RGB color and provides simple conversions to othe
 
 from __future__ import annotations
 
-__all__ = ("Color",)
-
 import string
 import typing
+
+__all__ = ("Color",)
 
 
 class Color(int):

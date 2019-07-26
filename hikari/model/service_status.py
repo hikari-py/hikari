@@ -34,13 +34,11 @@ __all__ = (
     "Summary",
 )
 
+import dataclasses
 import datetime
 import typing
 
-import dataclasses
-
-from hikari.utils import dateutils
-from hikari.utils import maps
+from hikari.utils import dateutils, maps
 
 
 @dataclasses.dataclass()

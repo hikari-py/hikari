@@ -30,8 +30,6 @@ References:
 """
 from __future__ import annotations
 
-__all__ = ("GatewayClient",)
-
 import asyncio
 import contextlib
 import datetime
@@ -44,11 +42,10 @@ import zlib
 import websockets
 
 from hikari import errors
-from hikari.net import opcodes
-from hikari.net import rates
-from hikari.utils import assertions
-from hikari.utils import meta
-from hikari.utils import types
+from hikari.net import opcodes, rates
+from hikari.utils import assertions, meta, types
+
+__all__ = ("GatewayClient",)
 
 
 class _ResumeConnection(websockets.ConnectionClosed):
