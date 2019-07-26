@@ -22,7 +22,7 @@ A lightweight, flexible, customizable Discord API wrapper for Python.
 __all__ = ("__author__", "__contributors__", "__copyright__", "__license__", "__version__", "__url__")
 
 __author__ = "Nekoka.tt"
-__contributors__ = {"LunarCoffee", "raatty", "Tmpod"}
+__contributors__ = {"LunarCoffee", "raatty", "Tmpod", "Zach"}
 __copyright__ = f"© 2019 Nekoka.tt"
 __license__ = "LGPLv3"
 __version__ = "2019"

@@ -25,7 +25,6 @@ import multiprocessing
 import os
 import sys
 
-
 try:
     multiprocessing.Lock()
 except ImportError as ex:

@@ -1,6 +1,6 @@
 # hikari core
 
-A base Python Discord API framework for CPython 3.6, CPython 3.7, CPython 3.8, and PyPy 3.6. Designed for ease of use,
+A base Python Discord API framework for CPython 3.7 and CPython 3.8 Designed for ease of use,
 customization, and sane defaults.
 
 This API is designed to provide the pure-python interface to the RESTful Discord API and the Gateway. This will provide
@@ -20,7 +20,7 @@ the [contribution guidelines and agreement](CONTRIBUTING.md) before going any fu
 
 This project uses continuous integration (CI) heavily. This is a set of jobs configured to run in response to any
 commit or change that is made. Each set of jobs makes up a "pipeline" which runs once per commit. The idea is to run
-unit tests in all targeted Python environments (currently CPython 3.6 though 3.8, and PyPy3.6), analyse code coverage
+unit tests in all targeted Python environments (currently CPython 3.7 and 3.8), analyse code coverage
 of tests, perform SAST, test that the project can be installed using `pip`, generate any documentation, 
 and finally deploy new code to PyPi so that users can install it easily. This means if you upload untested or broken
 code, the pipeline will fail and you will be blocked from merging any pull request or deploying the code until it is
@@ -69,12 +69,12 @@ Run `nox -l` to see the jobs that can be run. For example, to only run documenta
 #### Testing all environments at once
 
 If you don't want to have several versions of Python installed, I have added a set of Dockerfiles in `.ci/local-test-runners` 
-to do this for you. Just `cd` into that directory and run the container. An example of running the Python3.6 test suite
+to do this for you. Just `cd` into that directory and run the container. An example of running the Python3.7 test suite
 for Hikari would be:
 
 ```bash
-docker-compose build py36
-docker-compose run py36
+docker-compose build py37
+docker-compose run py37
 ```
 
 The environments supported are listed in the `docker-compose.yml`.
