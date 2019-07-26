@@ -21,17 +21,24 @@ Channel models.
 """
 from __future__ import annotations
 
-__all__ = (
-    "Channel", "GuildChannel", "GuildTextChannel", "DMChannel", "GuildVoiceChannel",
-    "GroupDMChannel", "GuildCategory", "GuildNewsChannel", "GuildStoreChannel",
-)
-
 import abc
 import dataclasses
 import typing
 
 from hikari.model import base, overwrite, user
 from hikari.utils import maps
+
+__all__ = (
+    "Channel",
+    "GuildChannel",
+    "GuildTextChannel",
+    "DMChannel",
+    "GuildVoiceChannel",
+    "GroupDMChannel",
+    "GuildCategory",
+    "GuildNewsChannel",
+    "GuildStoreChannel",
+)
 
 
 @dataclasses.dataclass()
@@ -156,7 +163,7 @@ class GuildVoiceChannel(GuildChannel):
             name=payload["name"],
             bitrate=payload["bitrate"],
             user_limit=payload["user_limit"] or None,
-            parent_id=maps.get_from_map_as(payload, "parent_id", int)
+            parent_id=maps.get_from_map_as(payload, "parent_id", int),
         )
 
 
@@ -188,7 +195,7 @@ class GroupDMChannel(DMChannel):
             icon_hash=payload.get("icon") if payload["icon"] else None,
             name=payload.get("name"),
             owner_application_id=maps.get_from_map_as(payload, "owner_application_id", int),
-            owner_id=maps.get_from_map_as(payload, "owner_id", int)
+            owner_id=maps.get_from_map_as(payload, "owner_id", int),
         )
 
 
@@ -197,6 +204,7 @@ class GuildCategory(GuildChannel):
     """
     A category within a guild.
     """
+
     __slots__ = ()
 
     @staticmethod
@@ -250,6 +258,7 @@ class GuildStoreChannel(GuildChannel):
     """
     A store channel for selling of games within a guild.
     """
+
     __slots__ = ("parent_id",)
 
     #: The parent category ID if there is one.
@@ -264,14 +273,19 @@ class GuildStoreChannel(GuildChannel):
             position=payload["position"],
             permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
             name=payload["name"],
-            parent_id=maps.get_from_map_as(payload, "parent_id", int)
+            parent_id=maps.get_from_map_as(payload, "parent_id", int),
         )
 
 
 def channel_from_dict(payload, state):
     channel_types = [
-        GuildTextChannel, DMChannel, GuildVoiceChannel, GroupDMChannel, GuildCategory, GuildNewsChannel,
-        GuildStoreChannel
+        GuildTextChannel,
+        DMChannel,
+        GuildVoiceChannel,
+        GroupDMChannel,
+        GuildCategory,
+        GuildNewsChannel,
+        GuildStoreChannel,
     ]
 
     channel_type = payload["type"]
