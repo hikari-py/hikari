@@ -22,9 +22,8 @@ Models to outline the debug information for your closest data center.
 
 __all__ = ("DataCenter", "DebugData")
 
-import datetime
-
 import dataclasses
+import datetime
 
 
 @dataclasses.dataclass(frozen=True)

@@ -21,6 +21,13 @@ Models that describe audit logs for guilds.
 """
 from __future__ import annotations
 
+import dataclasses
+import enum
+import typing
+
+from hikari.model import base, overwrite, user, webhook
+from hikari.utils import maps
+
 __all__ = (
     "AuditLogEvent",
     "AuditLogChangeKey",
@@ -31,16 +38,6 @@ __all__ = (
     "AuditLogChange",
     "AuditLogEntry",
 )
-
-import dataclasses
-import enum
-import typing
-
-from hikari.model import base
-from hikari.model import overwrite
-from hikari.model import user
-from hikari.model import webhook
-from hikari.utils import maps
 
 
 class AuditLogEvent(enum.IntEnum):

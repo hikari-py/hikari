@@ -19,11 +19,10 @@
 """
 IO utilities.
 """
+import io
 import typing
 
 __all__ = ("make_resource_seekable",)
-
-import io
 
 
 def make_resource_seekable(resource):

@@ -29,11 +29,7 @@ __all__ = (
 import abc
 import typing
 
-import dataclasses
-
-from hikari.model import base
-from hikari.model import overwrite
-from hikari.model import user
+from hikari.model import base, overwrite, user
 from hikari.utils import maps
 
 

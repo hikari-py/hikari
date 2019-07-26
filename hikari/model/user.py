@@ -27,7 +27,7 @@ import typing
 
 from hikari.model import base
 from hikari.model import guild as _guild
-from hikari.utils import delegate, dateutils, maps
+from hikari.utils import dateutils, delegate, maps
 
 
 @dataclasses.dataclass()

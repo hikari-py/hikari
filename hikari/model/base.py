@@ -22,14 +22,12 @@ Model ABCs and mixins.
 __all__ = ("SnowflakeMixin", "PartialObject", "NamedEnum")
 
 import copy
+import dataclasses
 import datetime
 import enum
 import typing
 
-import dataclasses
-
-from hikari.utils import assertions
-from hikari.utils import dateutils
+from hikari.utils import assertions, dateutils
 
 
 @assertions.assert_is_mixin
