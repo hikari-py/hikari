@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-
+import datetime
 import textwrap
 
 import asynctest
@@ -36,13 +36,22 @@ async def test_get_debug_data(event_loop):
         data = await server_debug.get_debug_data()
         assert data.fl == "abc123"
         assert data.ip == "127.0.0.1"
+        assert data.your_ip_address == "127.0.0.1"
         assert data.h == "discordapp.com"
+        assert data.discord_host == "discordapp.com"
         assert data.visit_scheme == "https"
         assert data.uag == "ayylmao browser inc"
+        assert data.user_agent == "ayylmao browser inc"
         assert data.http == "2"
+        assert data.http_version == "2"
         assert data.tls == "henlo yes ssl here"
+        assert data.tls_version == "henlo yes ssl here"
         assert data.sni == "plaintext"
         assert data.warp == "back to the futureee"
+        assert data.ts == datetime.datetime(2019, 5, 8, 18, 0, 34, 0, tzinfo=datetime.timezone.utc)
+        assert data.timestamp == datetime.datetime(2019, 5, 8, 18, 0, 34, 0, tzinfo=datetime.timezone.utc)
+        assert data.loc == "gb"
+        assert data.location == "gb"
 
         ts = data.ts
         assert ts.day == 8
@@ -52,6 +61,13 @@ async def test_get_debug_data(event_loop):
         assert ts.minute == 0
 
         airport = data.colo
+        assert airport.airport == "Heathrow Airport"
+        assert airport.iata_code == "LHR"
+        assert airport.country == "England"
+        assert airport.location == "London"
+        assert str(airport) == f"{airport.airport} ({airport.iata_code}), {airport.location}, {airport.country}"
+
+        airport = data.data_center
         assert airport.airport == "Heathrow Airport"
         assert airport.iata_code == "LHR"
         assert airport.country == "England"
