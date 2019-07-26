@@ -28,13 +28,29 @@ See:
 """
 from __future__ import annotations
 
-__all__ = ()  # TODO: this.
-
 import typing
 
 import aiohttp
 
 from hikari.model import service_status
+
+__all__ = (
+    "get_summary",
+    "get_status",
+    "get_components",
+    "get_all_incidents",
+    "get_unresolved_incidents",
+    "get_all_scheduled_maintenances",
+    "get_upcoming_scheduled_maintenances",
+    "get_active_scheduled_maintenances",
+    "subscribe_email_to_all_incidents",
+    "subscribe_email_to_incident",
+    "subscribe_webhook_to_all_incidents",
+    "subscribe_webhook_to_incident",
+    "unsubscribe_from",
+    "resend_confirmation_email",
+)
+
 
 _BASE_URI = "https://status.discordapp.com/api/v2"
 

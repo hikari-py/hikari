@@ -18,9 +18,12 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 
+import pytest
+
 from hikari.model import guild, user
 
 
+@pytest.mark.model
 def test_User_from_dict_when_not_a_bot():
     u = user.User.from_dict(
         {
@@ -42,6 +45,7 @@ def test_User_from_dict_when_not_a_bot():
     assert u.bot is False
 
 
+@pytest.mark.model
 def test_User_from_dict_when_is_a_bot():
     u = user.User.from_dict(
         {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": None, "bot": True}
@@ -54,6 +58,7 @@ def test_User_from_dict_when_is_a_bot():
     assert u.bot is True
 
 
+@pytest.mark.model
 def test_Member_from_dict_with_filled_fields():
     u = user.User(12345, "foobar", 1234, "1a2b3c4d", False)
     g = guild.Guild()
@@ -88,6 +93,7 @@ def test_Member_from_dict_with_filled_fields():
     assert m.nitro_boosted_at == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, datetime.timezone.utc)
 
 
+@pytest.mark.model
 def test_Member_from_dict_with_no_optional_fields():
     u = user.User(12345, "foobar", 1234, "1a2b3c4d", False)
     g = guild.Guild()

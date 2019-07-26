@@ -21,14 +21,15 @@ Represents various forms of media such as images.
 """
 from __future__ import annotations
 
-__all__ = ("Avatar",)
-
 import base64
 import dataclasses
 import io
 import mimetypes
 import re
 import typing
+
+__all__ = ("Avatar",)
+
 
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 

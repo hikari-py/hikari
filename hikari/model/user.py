@@ -19,17 +19,15 @@
 """
 Generic users not bound to a guild, and guild-bound member definitions.
 """
-import datetime
-
-import typing
-
 __all__ = ("User", "Member")
 
 import dataclasses
+import datetime
+import typing
 
 from hikari.model import base
 from hikari.model import guild as _guild
-from hikari.utils import delegate, dateutils, maps
+from hikari.utils import dateutils, delegate, maps
 
 
 @dataclasses.dataclass()
@@ -41,19 +39,24 @@ class User(base.SnowflakeMixin):
     # TODO: user flags (eventually)
     __slots__ = ("id", "username", "discriminator", "avatar_hash", "bot")
 
+    #: ID of the user.
     id: int
+    #: The user name.
     username: str
+    #: The 4-digit discriminator of the object.
     discriminator: int
+    #: The hash of the user's avatar, or None if they do not have one.
     avatar_hash: str
+    #: True if the user is a bot, False otherwise
     bot: bool
 
     @staticmethod
     def from_dict(payload):
         return User(
-            id=int(payload["id"]),
+            id=maps.get_from_map_as(payload, "id", int),
             username=payload["username"],
-            discriminator=int(payload["discriminator"]),
-            avatar_hash=payload["avatar"],
+            discriminator=maps.get_from_map_as(payload, "discriminator", int),
+            avatar_hash=payload.get("avatar"),
             bot=payload.get("bot", False),
         )
 
@@ -72,11 +75,17 @@ class Member(User):
     # TODO: statuses from gateway (eventually)
     __slots__ = ("_user", "guild", "_roles", "joined_at", "nick", "nitro_boosted_at")
 
+    #: The underlying user for this member.
     _user: User
+    #: The list of role IDs this member has.
     _roles: typing.List[int]
+    #: The guild this member is in.
     guild: _guild.Guild
+    #: The date and time the member joined this guild.
     joined_at: datetime.datetime
+    #: The optional nickname of the member.
     nick: typing.Optional[str]
+    #: The optional date/time that the member Nitro-boosted the guild.
     nitro_boosted_at: typing.Optional[datetime.datetime]
 
     @staticmethod

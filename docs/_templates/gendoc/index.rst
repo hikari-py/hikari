@@ -3,7 +3,7 @@ Hikari documentation
 
 This is for version |version| -- on PyPi, this is referred to as |release|
 
-Hikari is licensed under the <GNU LGPLv3 `https://www.gnu.org/licenses/lgpl-3.0.en.html`>_.
+Hikari is licensed under the GNU LGPLv3 https://www.gnu.org/licenses/lgpl-3.0.en.html
 
 Packages and submodules
 -----------------------
