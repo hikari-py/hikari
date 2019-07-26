@@ -21,6 +21,12 @@ Models for the Status API.
 """
 from __future__ import annotations
 
+import dataclasses
+import datetime
+import typing
+
+from hikari.utils import dateutils, maps
+
 __all__ = (
     "Subscriber",
     "Subscription",
@@ -35,12 +41,6 @@ __all__ = (
     "ScheduledMaintenances",
     "Summary",
 )
-
-import dataclasses
-import datetime
-import typing
-
-from hikari.utils import dateutils, maps
 
 
 @dataclasses.dataclass()

@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import contextlib
 import functools
 import os
 import shutil
@@ -176,5 +177,7 @@ def format_fix(session: PoetryNoxSession) -> None:
 @nox_session(reuse_venv=True)
 @using_poetry
 def format_check(session: PoetryNoxSession) -> None:
-    _isort(session, *ISORT_ARGS, "--check")
+    with contextlib.suppress(Exception):
+        _isort(session, *ISORT_ARGS, "--check")
+
     _black(session, "--check")
