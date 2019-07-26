@@ -19,6 +19,8 @@
 """
 Models for the Status API.
 """
+from __future__ import annotations
+
 __all__ = (
     "Subscriber",
     "Subscription",
@@ -49,12 +51,22 @@ class Subscriber:
 
     __slots__ = ("id", "email", "mode", "quarantined_at", "incident", "skip_confirmation_notification", "purge_at")
 
+    #: The ID of the subscriber.
+    #:
+    #: Note:
+    #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     id: str
+    #: The email address of the subscription.
     email: str
+    #: The mode of the subscription.
     mode: str
+    #: The date/time the description was quarantined at.
     quarantined_at: typing.Optional[datetime.datetime]
-    incident: typing.Optional[str]
+    #: The optional incident that this subscription is for.
+    incident: typing.Optional[Incident]
+    #: True if the confirmation notification is skipped.
     skip_confirmation_notification: typing.Optional[bool]
+    #: The optional date/time to stop the subscription..
     purge_at: typing.Optional[datetime.datetime]
 
     @staticmethod
@@ -78,6 +90,7 @@ class Subscription:
 
     __slots__ = ("subscriber",)
 
+    #: The subscription body.
     subscriber: Subscriber
 
     @staticmethod
@@ -93,9 +106,16 @@ class Page:
 
     __slots__ = ("id", "name", "url", "updated_at")
 
+    #: The ID of the page.
+    #:
+    #: Note:
+    #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     id: str
+    #: The name of the page.
     name: str
+    #: A permalink to the page.
     url: str
+    #: The date and time that the page was last updated at.
     updated_at: datetime.datetime
 
     @staticmethod
@@ -116,7 +136,9 @@ class Status:
 
     __slots__ = ("indicator", "description")
 
+    #: The indicator that specifies the state of the service.
     indicator: typing.Optional[str]
+    #: The optional description of the service state.
     description: typing.Optional[str]
 
     @staticmethod
@@ -132,12 +154,25 @@ class Component:
 
     __slots__ = ("id", "name", "created_at", "page_id", "position", "updated_at", "description")
 
+    #: The ID of the component.
+    #:
+    #: Note:
+    #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     id: str
+    #: The name of the component.
     name: str
+    #: The date and time the component came online for the first time.
     created_at: datetime.datetime
+    #: The ID of the status page for this component.
+    #:
+    #: Note:
+    #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     page_id: str
+    #: The position of the component in the list of components.
     position: int
+    #: The date/time that this component last was updated at.
     updated_at: datetime.datetime
+    #: The optional description of the component.
     description: typing.Optional[str]
 
     @staticmethod
@@ -161,7 +196,9 @@ class Components:
 
     __slots__ = ("page", "components")
 
+    #: The page for this list of components.
     page: Page
+    #: The list of components.
     components: typing.List[Component]
 
     @staticmethod
@@ -180,12 +217,25 @@ class IncidentUpdate:
 
     __slots__ = ("body", "created_at", "display_at", "incident_id", "status", "id", "updated_at")
 
-    body: str
-    created_at: datetime.datetime
-    display_at: typing.Optional[datetime.datetime]
-    incident_id: str
-    status: str
+    #: The ID of this incident update.
+    #:
+    #: Note:
+    #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     id: str
+    #: The content in this update.
+    body: str
+    #: Time and date the incident update was made at.
+    created_at: datetime.datetime
+    #: The date/time to display the update at.
+    display_at: typing.Optional[datetime.datetime]
+    #: The ID of the corresponding incident.
+    #:
+    #: Note:
+    #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
+    incident_id: str
+    #: The status of the service during this incident update.
+    status: str
+    #: The date/time that the update was last changed.
     updated_at: typing.Optional[datetime.datetime]
 
     @staticmethod
@@ -220,15 +270,31 @@ class Incident:
         "updated_at",
     )
 
+    #: The ID of the incident.
+    #:
+    #: Note:
+    #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     id: str
+    #: The name of the incident.
     name: str
+    #: The impact of the incident.
     impact: str
+    #: A list of zero or more updates to the status of this incident.
     incident_updates: typing.List[IncidentUpdate]
+    #: The date and time, if applicable, that the faulty component(s) were being monitored at.
     monitoring_at: typing.Optional[datetime.datetime]
+    #: The ID of the page describing this incident.
+    #:
+    #: Note:
+    #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     page_id: str
+    #: The date and time that the incident finished, if applicable.
     resolved_at: typing.Optional[datetime.datetime]
+    #: A short permalink to the page describing the incident.
     shortlink: str
+    #: The incident status.
     status: str
+    #: The last time the status of the incident was updated.
     updated_at: datetime.datetime
 
     @staticmethod
@@ -261,7 +327,9 @@ class Incidents:
 
     __slot__ = ("page", "incidents")
 
+    #: The page listing the incidents.
     page: Page
+    #: The list of incidents on the page.
     incidents: typing.List[Incident]
 
     @staticmethod
@@ -289,16 +357,33 @@ class ScheduledMaintenance:
         "updated_at",
     )
 
+    #: The ID of the entry.
+    #:
+    #: Note:
+    #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     id: str
+    #: The name of the entry.
     name: str
+    #: The impact of the entry.
     impact: str
+    #: Zero or more updates to this event.
     incident_updates: typing.List[IncidentUpdate]
+    #: The date and time the event was being monitored since, if applicable.
     monitoring_at: typing.Optional[datetime.datetime]
+    #: The ID of the page describing this event.
+    #:
+    #: Note:
+    #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     page_id: str
+    #: The optional date/time the event finished at.
     resolved_at: typing.Optional[datetime.datetime]
+    #: The date/time that the event was scheduled for.
     scheduled_for: typing.Optional[datetime.datetime]
+    #: The date/time that the event was scheduled until.
     scheduled_until: typing.Optional[datetime.datetime]
+    #: The status of the event.
     status: str
+    #: The date/time that the event was last updated at.
     updated_at: datetime.datetime
 
     @staticmethod
@@ -336,7 +421,9 @@ class ScheduledMaintenances:
 
     __slots__ = ("page", "scheduled_maintenances")
 
+    #: The page containing this information.
     page: Page
+    #: The list of items on the page.
     scheduled_maintenances: typing.List[ScheduledMaintenance]
 
     @staticmethod
@@ -355,10 +442,15 @@ class Summary:
 
     __slots__ = ("page", "status", "components", "incidents", "scheduled_maintenances")
 
+    #: The page describing this summary.
     page: Page
+    #: The overall system status.
     status: Status
+    #: The status of each component in the system.
     components: typing.List[Component]
+    #: The list of incidents that have occurred/are occurring to components in this system.
     incidents: typing.List[Incident]
+    #: A list of maintenance tasks that have been/will be undertaken.
     scheduled_maintenances: typing.List[ScheduledMaintenance]
 
     @staticmethod
