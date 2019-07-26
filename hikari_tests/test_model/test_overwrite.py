@@ -43,3 +43,31 @@ def test_Overwrite():
     assert o.allow & permission.Permission.CREATE_INSTANT_INVITE
     assert o.deny & permission.Permission.MANAGE_MESSAGES
     assert o.deny & permission.Permission.SEND_TTS_MESSAGES
+
+    expected_inverse = (
+        permission.Permission.NONE
+        | permission.Permission.KICK_MEMBERS
+        | permission.Permission.ADMINISTRATOR
+        | permission.Permission.MANAGE_CHANNELS
+        | permission.Permission.MANAGE_GUILD
+        | permission.Permission.VIEW_AUDIT_LOG
+        | permission.Permission.PRIORITY_SPEAKER
+        | permission.Permission.VIEW_CHANNEL
+        | permission.Permission.SEND_MESSAGES
+        | permission.Permission.EMBED_LINKS
+        | permission.Permission.ATTACH_FILES
+        | permission.Permission.READ_MESSAGE_HISTORY
+        | permission.Permission.MENTION_EVERYONE
+        | permission.Permission.USE_EXTERNAL_EMOJIS
+        | permission.Permission.CONNECT
+        | permission.Permission.SPEAK
+        | permission.Permission.MUTE_MEMBERS
+        | permission.Permission.DEAFEN_MEMBERS
+        | permission.Permission.MOVE_MEMBERS
+        | permission.Permission.USE_VAD
+        | permission.Permission.MANAGE_ROLES
+        | permission.Permission.MANAGE_WEBHOOKS
+        | permission.Permission.MANAGE_EMOJIS
+    )
+
+    assert bin(o.default) == bin(expected_inverse)

@@ -41,8 +41,9 @@ class SnowflakeMixin:
         be inherited correctly.
     """
 
-    __slots__ = ()  # DO NOT ADD FIELDS TO THIS MIXIN.
+    __slots__ = ()
 
+    #: The ID of this object.
     id: int
 
     @property
@@ -92,10 +93,14 @@ class PartialObject(SnowflakeMixin):
     """
     Representation of a partially constructed object. This may be returned by some components instead of a correctly
     initialized object if information is not available.
+
+    Any other attributes that were provided with this object are accessible by using dot-notation as normal, but will
+    not be documented here and should not be relied on. Your mileage may vary.
     """
 
     __slots__ = ("id", "_other_attrs")
 
+    #: The ID of this object.
     id: int
     _other_attrs: typing.Dict[str, typing.Any]
 

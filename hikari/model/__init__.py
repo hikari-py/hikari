@@ -16,6 +16,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""
+All models used in Hikari's public API.
+"""
 
 from .audit_log import *
 from .base import *

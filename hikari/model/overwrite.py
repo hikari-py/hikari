@@ -22,23 +22,41 @@ Permission overwrites.
 __all__ = ("Overwrite", "OverwriteEntityType")
 
 import dataclasses
-import enum
 
-from hikari.model import base, permission
+from hikari.model import base
+from hikari.model import permission
+from hikari.model import role
+from hikari.model import user
 
 
 class OverwriteEntityType(base.NamedEnum):
-    MEMBER = enum.auto()
-    ROLE = enum.auto()
+    MEMBER = user.Member
+    ROLE = role.Role
 
 
 @dataclasses.dataclass()
 class Overwrite(base.SnowflakeMixin):
+    """
+    Representation of some permissions that have been explicitly allowed or denied as an override from the defaults.
+    """
     __slots__ = ("id", "type", "allow", "deny")
+
+    #: The ID of this overwrite.
     id: int
+    #: The type of entity that was changed.
     type: OverwriteEntityType
+    #: The bitfield of permissions explicitly allowed.
     allow: permission.Permission
+    #: The bitfield of permissions explicitly denied.
     deny: permission.Permission
+
+    @property
+    def default(self) -> permission.Permission:
+        """
+        Returns:
+            The bitfield of all permissions that were not changed in this overwrite.
+        """
+        return permission.Permission(permission.Permission.all() ^ (self.allow | self.deny))
 
     @staticmethod
     def from_dict(payload):
