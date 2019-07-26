@@ -19,7 +19,10 @@
 """
 Channel models.
 """
-__all__ = ()
+__all__ = (
+    "ChannelType", "Channel", "GuildChannel", "GuildTextChannel", "DMChannel", "GuildVoiceChannel",
+    "GroupDMChannel", "GuildCategory", "GuildNewsChannel", "GuildStoreChannel",
+)
 
 import abc
 import dataclasses
@@ -87,6 +90,19 @@ class GuildChannel(Channel, abc.ABC):
     #: The ID of the parent category, if there is one.
     parent_id: typing.Optional[int]
 
+    @classmethod
+    def from_dict(cls, payload, state):
+        return cls(
+            _state=state,
+            id=int(payload["id"]),
+            guild_id=int(payload["guild_id"]),
+            position=payload["position"],
+            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
+            name=payload["name"],
+            nsfw=payload.get("nsfw", False),
+            parent_id=maps.get_from_map_as(payload, "parent_id", int),
+        )
+
 
 @dataclasses.dataclass()
 class GuildTextChannel(GuildChannel):
@@ -108,6 +124,7 @@ class GuildTextChannel(GuildChannel):
         """The type of the channel."""
         return ChannelType.GUILD_TEXT
 
+    # noinspection PyMethodOverriding
     @staticmethod
     def from_dict(payload, state):
         return GuildTextChannel(
@@ -115,7 +132,7 @@ class GuildTextChannel(GuildChannel):
             id=int(payload["id"]),
             guild_id=int(payload["guild_id"]),
             position=int(payload["position"]),
-            permission_overwrites=[NotImplemented for _ in payload["PermissionOverwrites"]],  # TODO
+            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
             name=payload["name"],
             nsfw=payload["nsfw"],
             parent_id=maps.get_from_map_as(payload, "parent_id", int),
@@ -171,6 +188,7 @@ class GuildVoiceChannel(GuildChannel):
         """The type of the channel."""
         return ChannelType.GUILD_VOICE
 
+    # noinspection PyMethodOverriding
     @staticmethod
     def from_dict(payload, state):
         return GuildVoiceChannel(
@@ -178,7 +196,7 @@ class GuildVoiceChannel(GuildChannel):
             id=int(payload["id"]),
             guild_id=int(payload["guild_id"]),
             position=int(payload["position"]),
-            permission_overwrites=[NotImplemented for _ in payload["PermissionOverwrites"]],  # TODO
+            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
             name=payload["name"],
             nsfw=payload["nsfw"],
             parent_id=maps.get_from_map_as(payload, "parent_id", int),
@@ -237,8 +255,6 @@ class GuildCategory(GuildChannel):
         """The type of the channel."""
         return ChannelType.GUILD_CATEGORY
 
-    # TODO: from dict
-
 
 @dataclasses.dataclass()
 class GuildNewsChannel(GuildChannel):
@@ -258,7 +274,21 @@ class GuildNewsChannel(GuildChannel):
         """The type of the channel."""
         return ChannelType.GUILD_NEWS
 
-    # TODO: from dict
+    # noinspection PyMethodOverriding
+    @staticmethod
+    def from_dict(payload, state):
+        return GuildNewsChannel(
+            _state=state,
+            id=int(payload["id"]),
+            guild_id=int(payload["guild_id"]),
+            position=payload["position"],
+            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
+            name=payload["name"],
+            nsfw=payload.get("nsfw", False),
+            parent_id=maps.get_from_map_as(payload, "parent_id", int),
+            topic=payload.get("topic"),
+            last_message_id=maps.get_from_map_as(payload, "last_message_id", int),
+        )
 
 
 @dataclasses.dataclass()
@@ -273,8 +303,6 @@ class GuildStoreChannel(GuildChannel):
     def type(self) -> ChannelType:
         """The type of the channel."""
         return ChannelType.GUILD_STORE
-
-    # TODO: from_dict
 
 
 def channel_from_dict(payload, state):
