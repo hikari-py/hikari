@@ -19,13 +19,14 @@
 """
 Channel models.
 """
+from __future__ import annotations
+
 __all__ = (
-    "ChannelType", "Channel", "GuildChannel", "GuildTextChannel", "DMChannel", "GuildVoiceChannel",
+    "Channel", "GuildChannel", "GuildTextChannel", "DMChannel", "GuildVoiceChannel",
     "GroupDMChannel", "GuildCategory", "GuildNewsChannel", "GuildStoreChannel",
 )
 
 import abc
-import enum
 import typing
 
 import dataclasses
@@ -34,20 +35,6 @@ from hikari.model import base
 from hikari.model import overwrite
 from hikari.model import user
 from hikari.utils import maps
-
-
-class ChannelType(enum.IntEnum):
-    """
-    Type of a channel.
-    """
-
-    GUILD_TEXT = 0
-    DM = 1
-    GUILD_VOICE = 2
-    GROUP_DM = 3
-    GUILD_CATEGORY = 4
-    GUILD_NEWS = 5
-    GUILD_STORE = 6
 
 
 @dataclasses.dataclass()
@@ -62,9 +49,9 @@ class Channel(base.SnowflakeMixin, abc.ABC):
     id: int
 
     @property
-    @abc.abstractmethod
-    def type(self) -> ChannelType:
+    def type(self) -> typing.Type[Channel]:
         """The type of channel."""
+        return type(self)
 
     @staticmethod
     @abc.abstractmethod
@@ -78,7 +65,7 @@ class GuildChannel(Channel, abc.ABC):
     A channel that belongs to a guild.
     """
 
-    __slots__ = ("guild_id", "position", "permission_overwrites", "name", "nsfw", "parent_id")
+    __slots__ = ("guild_id", "position", "permission_overwrites", "name")
 
     #: ID of the guild that owns this channel.
     guild_id: int
@@ -88,23 +75,6 @@ class GuildChannel(Channel, abc.ABC):
     permission_overwrites: typing.List[overwrite.Overwrite]
     #: The name of the channel.
     name: str
-    #: Whether the channel is flagged as being NSFW or not.
-    nsfw: bool
-    #: The ID of the parent category, if there is one.
-    parent_id: typing.Optional[int]
-
-    @classmethod
-    def from_dict(cls, payload, state):
-        return cls(
-            _state=state,
-            id=int(payload["id"]),
-            guild_id=int(payload["guild_id"]),
-            position=payload["position"],
-            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
-            name=payload["name"],
-            nsfw=payload.get("nsfw", False),
-            parent_id=maps.get_from_map_as(payload, "parent_id", int),
-        )
 
 
 @dataclasses.dataclass()
@@ -113,7 +83,7 @@ class GuildTextChannel(GuildChannel):
     A text channel.
     """
 
-    __slots__ = ("topic", "rate_limit_per_user", "last_message_id")
+    __slots__ = ("topic", "rate_limit_per_user", "last_message_id", "nsfw", "parent_id")
 
     #: The channel topic.
     topic: typing.Optional[str]
@@ -121,11 +91,10 @@ class GuildTextChannel(GuildChannel):
     rate_limit_per_user: int
     #: The optional ID of the last message to be sent.
     last_message_id: typing.Optional[int]
-
-    @property
-    def type(self) -> ChannelType:
-        """The type of the channel."""
-        return ChannelType.GUILD_TEXT
+    #: Whether the channel is NSFW or not
+    nsfw: bool
+    #: The parent ID of the channel, if there is one
+    parent_id: typing.Optional[int]
 
     # noinspection PyMethodOverriding
     @staticmethod
@@ -137,7 +106,7 @@ class GuildTextChannel(GuildChannel):
             position=int(payload["position"]),
             permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
             name=payload["name"],
-            nsfw=payload["nsfw"],
+            nsfw=payload.get("nsfw", False),
             parent_id=maps.get_from_map_as(payload, "parent_id", int),
             topic=payload.get("topic"),
             rate_limit_per_user=int(payload.get("rate_limit_per_user")),
@@ -158,11 +127,6 @@ class DMChannel(Channel):
     #: List of recipients in the DM chat.
     recipients: typing.List[user.User]
 
-    @property
-    def type(self) -> ChannelType:
-        """The type of the channel."""
-        return ChannelType.DM
-
     @staticmethod
     def from_dict(payload, state):
         return DMChannel(
@@ -179,32 +143,27 @@ class GuildVoiceChannel(GuildChannel):
     A voice channel within a guild.
     """
 
-    __slots__ = ("bitrate", "user_limit")
+    __slots__ = ("bitrate", "user_limit", "parent_id")
 
     #: Bit-rate of the voice channel.
     bitrate: int
-    #: The max number of users in the voice channel, or `0` if there is no limit.
-    user_limit: int
+    #: The max number of users in the voice channel, or None if there is no limit.
+    user_limit: typing.Optional[int]
+    #: The parent ID of the channel
+    parent_id: typing.Optional[int]
 
-    @property
-    def type(self) -> ChannelType:
-        """The type of the channel."""
-        return ChannelType.GUILD_VOICE
-
-    # noinspection PyMethodOverriding
     @staticmethod
     def from_dict(payload, state):
         return GuildVoiceChannel(
             _state=state,
             id=int(payload["id"]),
             guild_id=int(payload["guild_id"]),
-            position=int(payload["position"]),
+            position=payload["position"],
             permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
             name=payload["name"],
-            nsfw=payload["nsfw"],
-            parent_id=maps.get_from_map_as(payload, "parent_id", int),
             bitrate=payload["bitrate"],
-            user_limit=int(payload["user_limit"]),
+            user_limit=payload["user_limit"] or None,
+            parent_id=maps.get_from_map_as(payload, "parent_id", int)
         )
 
 
@@ -226,11 +185,6 @@ class GroupDMChannel(DMChannel):
     #: will be `None`.
     owner_application_id: typing.Optional[int]
 
-    @property
-    def type(self) -> ChannelType:
-        """The type of the channel."""
-        return ChannelType.GROUP_DM
-
     @staticmethod
     def from_dict(payload, state):
         return GroupDMChannel(
@@ -250,13 +204,18 @@ class GuildCategory(GuildChannel):
     """
     A category within a guild.
     """
-
     __slots__ = ()
 
-    @property
-    def type(self) -> ChannelType:
-        """The type of the channel."""
-        return ChannelType.GUILD_CATEGORY
+    @staticmethod
+    def from_dict(payload, state):
+        return GuildCategory(
+            _state=state,
+            id=int(payload["id"]),
+            guild_id=int(payload["guild_id"]),
+            position=payload["position"],
+            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
+            name=payload["name"],
+        )
 
 
 @dataclasses.dataclass()
@@ -265,17 +224,16 @@ class GuildNewsChannel(GuildChannel):
     A channel for news topics within a guild.
     """
 
-    __slots__ = ("topic", "last_message_id")
+    __slots__ = ("topic", "last_message_id", "parent_id", "nsfw")
 
     #: The channel topic.
     topic: typing.Optional[str]
     #: The optional ID of the last message to be sent.
     last_message_id: typing.Optional[int]
-
-    @property
-    def type(self) -> ChannelType:
-        """The type of the channel."""
-        return ChannelType.GUILD_NEWS
+    #: Parent of the channel
+    parent_id: typing.Optional[int]
+    #: Whether the channel is NSFW or not
+    nsfw: bool
 
     # noinspection PyMethodOverriding
     @staticmethod
@@ -299,32 +257,33 @@ class GuildStoreChannel(GuildChannel):
     """
     A store channel for selling of games within a guild.
     """
+    __slots__ = ("parent_id",)
 
-    __slots__ = ()
+    #: The parent category ID if there is one.
+    parent_id: typing.Optional[int]
 
-    @property
-    def type(self) -> ChannelType:
-        """The type of the channel."""
-        return ChannelType.GUILD_STORE
+    @staticmethod
+    def from_dict(payload, state):
+        return GuildStoreChannel(
+            _state=state,
+            id=int(payload["id"]),
+            guild_id=int(payload["guild_id"]),
+            position=payload["position"],
+            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
+            name=payload["name"],
+            parent_id=maps.get_from_map_as(payload, "parent_id", int)
+        )
 
 
 def channel_from_dict(payload, state):
-    raw_channel_type = payload["type"]
-    channel_type = getattr(ChannelType, raw_channel_type, raw_channel_type)
+    channel_types = [
+        GuildTextChannel, DMChannel, GuildVoiceChannel, GroupDMChannel, GuildCategory, GuildNewsChannel,
+        GuildStoreChannel
+    ]
 
-    if channel_type == ChannelType.GUILD_TEXT:
-        return GuildTextChannel.from_dict(payload, state)
-    if channel_type == ChannelType.DM:
-        return DMChannel.from_dict(payload, state)
-    if channel_type == ChannelType.GUILD_VOICE:
-        return GuildVoiceChannel.from_dict(payload, state)
-    if channel_type == ChannelType.GROUP_DM:
-        return GroupDMChannel.from_dict(payload, state)
-    if channel_type == ChannelType.GUILD_CATEGORY:
-        return GuildCategory.from_dict(payload, state)
-    if channel_type == ChannelType.GUILD_NEWS:
-        return GuildNewsChannel.from_dict(payload, state)
-    if channel_type == ChannelType.GUILD_STORE:
-        return GuildStoreChannel.from_dict(payload, state)
+    channel_type = payload["type"]
 
-    raise TypeError(f"Invalid channel type {channel_type}")
+    try:
+        return channel_types[channel_type](payload, state)
+    except IndexError:
+        raise TypeError(f"Invalid channel type {channel_type}") from None
