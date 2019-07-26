@@ -16,6 +16,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""
+Models to outline the debug information for your closest data center.
+"""
 
 __all__ = ("DataCenter", "DebugData")
 
