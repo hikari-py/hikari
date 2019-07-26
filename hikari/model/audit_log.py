@@ -170,8 +170,11 @@ class AuditLog:
 
     __slots__ = ("webhooks", "users", "entries")
 
+    #: List of webhooks in the audit log.
     webhooks: typing.List[webhook.Webhook]
+    #: List of users in the audit log.
     users: typing.List[user.User]
+    #: List of entries in the audit log.
     entries: typing.List[AuditLogEntry]
 
     @staticmethod
@@ -200,7 +203,9 @@ class MemberPrunedAuditLogEntryInfo:
 
     __slots__ = ("delete_member_days", "members_removed")
 
+    #: Number of days of messages that were removed as a result of the prune.
     delete_member_days: int
+    #: The number of members who were removed.
     members_removed: int
 
     @staticmethod
@@ -227,7 +232,9 @@ class MessageDeletedAuditLogEntryInfo:
 
     __slots__ = ("channel_id", "count")
 
+    #: The channel ID that the message was deleted from.
     channel_id: int
+    #: The number of message entries removed from the channel.
     count: int
 
     @staticmethod
@@ -252,8 +259,11 @@ class ChannelOverwriteAuditLogEntryInfo:
 
     __slots__ = ("id", "type", "role_name")
 
+    #: The ID of the channel that was edited.
     id: int
+    #: The type of the entity that was changed.
     type: overwrite.OverwriteEntityType
+    #: The name of the role that was changed.
     role_name: str
 
     @staticmethod
@@ -286,12 +296,16 @@ class AuditLogChange:
 
     __slots__ = ("new_value", "old_value", "key")
 
+    #: The name of the thing that was changed (such as "role" or "channel")
+    #:
     #: Note:
     #:      This key is NOT validated due to missing documentation in the Discord API. Instead, it is a pure string
     #:      to prevent further API changes on Discord's behalf breaking logic any further.
     key: typing.Union[AuditLogChangeKey, str]
-    new_value: typing.Optional[typing.Any]
+    #: The old value, if there was one.
     old_value: typing.Optional[typing.Any]
+    #: The new value, if there is one.
+    new_value: typing.Optional[typing.Any]
 
     @staticmethod
     def from_dict(payload):
@@ -324,12 +338,19 @@ class AuditLogEntry(base.SnowflakeMixin):
 
     __slots__ = ("id", "target_id", "changes", "user_id", "action_type", "options", "reason")
 
+    #: The ID of the log entry.
     id: int
+    #: The ID of the thing that the log entry concerns.
     target_id: typing.Optional[int]
+    #: A list of changes made as part of this action.
     changes: typing.List[AuditLogChange]
+    #: The ID of the user who triggered the change.
     user_id: int
+    #: The type of the change.
     action_type: AuditLogEvent
-    options: AuditLogEntryInfo
+    #: The optional additional information associated with the change.
+    options: typing.Optional[AuditLogEntryInfo]
+    #: The optional reason provided with the change.
     reason: typing.Optional[str]
 
     @staticmethod
