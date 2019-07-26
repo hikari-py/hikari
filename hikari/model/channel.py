@@ -27,6 +27,7 @@ __all__ = (
 )
 
 import abc
+import dataclasses
 import typing
 
 from hikari.model import base, overwrite, user
