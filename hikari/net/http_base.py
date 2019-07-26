@@ -19,7 +19,7 @@
 """
 Implementation of the base components required for working with the V7 HTTP REST API with consistent rate-limiting.
 """
-__all__ = ("BaseHTTPClient",)
+from __future__ import annotations
 
 import asyncio
 import json as libjson
@@ -29,10 +29,12 @@ import typing
 import aiohttp
 
 #: Format string for the default Discord API URL.
-from hikari import utils
 from hikari import errors
-from hikari.net import opcodes
-from hikari.net import rates
+from hikari.net import opcodes, rates
+from hikari.utils import assertions, dateutils, maps, meta, unspecified
+
+__all__ = ("BaseHTTPClient",)
+
 
 _DISCORD_API_URI_FORMAT = "https://discordapp.com/api/v{VERSION}"
 
@@ -50,7 +52,47 @@ _RequestReturnSignature = typing.Tuple[opcodes.HTTPStatus, typing.Mapping, typin
 class _RateLimited(Exception):
     """Used as an internal flag. This should not ever be used outside this API."""
 
-    __slots__ = []
+    __slots__ = ()
+
+
+class Resource:
+    """
+    Represents an HTTP request in a format that can be passed around atomically.
+
+    Also provides a mechanism to handle producing a rate limit identifier.
+
+    Note:
+        Comparisons of this object occur on the bucket
+    """
+
+    __slots__ = ("method", "path", "params", "bucket", "uri")
+
+    def __init__(self, base_uri, method, path, **kwargs):
+        #: The HTTP method to use (always upper-case)
+        self.method = method.upper()
+        #: The HTTP path to use (this can contain format-string style placeholders).
+        self.path = path
+        #: Any parameters to later interpolate into `path`.
+        self.params = kwargs
+        #: The bucket. This is a combination of the method, uninterpolated path, and optional `webhook_id`, `guild_id`
+        #: and `channel_id`, and is how the hash code for this route is produced. The hash code is used to determine
+        #: the bucket to use for local rate limiting in the HTTP component.
+        self.bucket = "{0.method} {0.path} {0.webhook_id} {0.guild_id} {0.channel_id}".format(self)
+        #: The full URI to use.
+        self.uri = base_uri + path.format(**kwargs)
+
+    #: The webhook ID, or `None` if it is not present.
+    webhook_id = property(lambda self: self.params.get("webhook_id"))
+    #: The guild ID, or `None` if it is not present.
+    guild_id = property(lambda self: self.params.get("guild_id"))
+    #: The channel ID, or `None` if it is not present.
+    channel_id = property(lambda self: self.params.get("channel_id"))
+
+    def __hash__(self):
+        return hash(self.bucket)
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, Resource) and hash(self) == hash(other)
 
 
 class BaseHTTPClient:
@@ -84,7 +126,7 @@ class BaseHTTPClient:
         loop: asyncio.AbstractEventLoop,
         allow_redirects: bool = False,
         max_retries: int = 5,
-        token: str = utils.UNSPECIFIED,
+        token: str = unspecified.UNSPECIFIED,
         base_uri: str = _DISCORD_API_URI_FORMAT.format(VERSION=VERSION),
         **aiohttp_arguments,
     ) -> None:
@@ -109,7 +151,7 @@ class BaseHTTPClient:
                 additional arguments to pass to the internal :class:`aiohttp.ClientSession` constructor used for making
                 HTTP requests.
         """
-        loop = utils.assert_not_none(loop, "loop")
+        loop = assertions.assert_not_none(loop, "loop")
 
         #: Used for internal bookkeeping
         self._correlation_id = 0
@@ -118,7 +160,7 @@ class BaseHTTPClient:
         #: Whether to allow redirects or not.
         self.allow_redirects = allow_redirects
         #: Local rate limit buckets.
-        self.buckets: typing.Dict[utils.Resource, rates.VariableTokenBucket] = {}
+        self.buckets: typing.Dict[Resource, rates.VariableTokenBucket] = {}
         #: The base URI to target.
         self.base_uri = base_uri
         #: The global rate limit bucket.
@@ -128,11 +170,11 @@ class BaseHTTPClient:
         #: The HTTP session to target.
         self.session = aiohttp.ClientSession(loop=loop, **aiohttp_arguments)
         #: The session `Authorization` header to use.
-        self.authorization = "Bot " + token.strip() if token is not utils.UNSPECIFIED else None
+        self.authorization = "Bot " + token.strip() if token is not unspecified.UNSPECIFIED else None
         #: The logger to use for this object.
         self.logger = logging.getLogger(type(self).__name__)
         #: User agent to use
-        self.user_agent = utils.user_agent()
+        self.user_agent = meta.user_agent()
 
     async def close(self):
         """
@@ -179,7 +221,7 @@ class BaseHTTPClient:
             kwargs:
                 Any arguments to interpolate into the `path`.
         """
-        resource = utils.Resource(self.base_uri, method, path, **kwargs)
+        resource = Resource(self.base_uri, method, path, **kwargs)
 
         for retry in range(5):
             try:
@@ -207,7 +249,7 @@ class BaseHTTPClient:
         headers.setdefault("Accept", "application/json")
 
         # Prevent inconsistencies causing weird behaviour: check both args.
-        if reason is not None and reason is not utils.UNSPECIFIED:
+        if reason is not None and reason is not unspecified.UNSPECIFIED:
             headers.setdefault("X-Audit-Log-Reason", reason)
 
         if self.authorization is not None:
@@ -217,7 +259,7 @@ class BaseHTTPClient:
         await self.global_rate_limit.acquire(self._log_rate_limit_already_in_progress, bucket_id=None)
 
         if resource in self.buckets:
-            await self.buckets[resource].acquire(self._log_rate_limit_already_in_progress, resource)
+            await self.buckets[resource].acquire(self._log_rate_limit_already_in_progress, resource=resource)
 
         uri = resource.uri
 
@@ -300,20 +342,20 @@ class BaseHTTPClient:
         # Retry-after is always in milliseconds.
         if is_global and is_being_rate_limited:
             # assume that is_global only ever occurs on TOO_MANY_REQUESTS response codes.
-            retry_after = (utils.get_from_map_as(body, "retry_after", float) or 0) / 1_000
+            retry_after = (maps.get_from_map_as(body, "retry_after", float) or 0) / 1_000
             self.global_rate_limit.lock(retry_after)
             self._log_rate_limit_starting(None, retry_after)
 
         if all(header in headers for header in _X_RATELIMIT_LOCALS):
             # If we don't get all the info we need, just forget about the rate limit as we can't act on missing
             # information.
-            now = utils.parse_http_date(headers[_DATE]).timestamp()
-            total = utils.get_from_map_as(headers, _X_RATELIMIT_LIMIT, int)
-            reset_at = utils.get_from_map_as(headers, _X_RATELIMIT_RESET, float)
-            remaining = utils.get_from_map_as(headers, _X_RATELIMIT_REMAINING, int)
+            now = dateutils.parse_http_date(headers[_DATE]).timestamp()
+            total = maps.get_from_map_as(headers, _X_RATELIMIT_LIMIT, int)
+            reset_at = maps.get_from_map_as(headers, _X_RATELIMIT_RESET, float)
+            remaining = maps.get_from_map_as(headers, _X_RATELIMIT_REMAINING, int)
 
             # This header only exists if we get a TOO_MANY_REQUESTS first, annoyingly.
-            retry_after = utils.get_from_map_as(headers, "Retry-After", float)
+            retry_after = maps.get_from_map_as(headers, "Retry-After", float)
             retry_after = retry_after / 1_000 if retry_after is not None else reset_at - now
 
             if resource not in self.buckets:
@@ -335,7 +377,7 @@ class BaseHTTPClient:
     def _handle_client_error_response(resource, status, body) -> typing.NoReturn:
         # Assume Discord's spec is right and they don't send us random codes we don't know about...
         try:
-            error_code = utils.get_from_map_as(body, "code", opcodes.JSONErrorCode, None)
+            error_code = maps.get_from_map_as(body, "code", opcodes.JSONErrorCode, None)
             error_message = body.get("message")
         except AttributeError:
             error_code = None

@@ -19,10 +19,12 @@
 
 import asyncio
 import copy
+import functools
 import inspect
 import logging
 
 import asynctest
+import pytest
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,3 +86,23 @@ def _mock_methods_on(obj, except_=(), also_mock=()):
     assert not (except_ - checked), f"Some attributes didn't exist, so were not mocked: {except_ - checked}"
 
     return copy_
+
+
+def assert_raises(type_):
+    def decorator(test):
+        @pytest.mark.asyncio
+        @functools.wraps(test)
+        async def impl(*args, **kwargs):
+            try:
+                result = test(*args, **kwargs)
+                if asyncio.iscoroutinefunction(test):
+                    await result
+                assert False, f"{type_.__name__} was not raised."
+            except type_:
+                pass
+            except BaseException as ex:
+                raise AssertionError(f"Expected {type_.__name__} to be raised but got {type(ex).__name__}") from ex
+
+        return impl
+
+    return decorator
