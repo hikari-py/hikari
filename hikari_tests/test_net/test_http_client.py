@@ -16,6 +16,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+#
+# Big text is from: http://patorjk.com/software/taag/#p=display&f=Big&t=Gateway
+# Adding new categories? Keep it consistent, bud.
 import io
 import json
 
@@ -23,9 +26,6 @@ import asynctest
 import pytest
 
 from hikari.net import http_client as _http_client
-
-# Big text is from: http://patorjk.com/software/taag/#p=display&f=Big&t=Gateway
-# Adding new categories? Keep it consistent, bud.
 from hikari.utils import unspecified
 
 
