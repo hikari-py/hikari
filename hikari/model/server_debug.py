@@ -24,7 +24,7 @@ import datetime
 import dataclasses
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(frozen=True)
 class DataCenter:
     """Represents a data center. These are represented by an IATA airport code."""
 
@@ -43,7 +43,7 @@ class DataCenter:
         return f"{self.airport} ({self.iata_code}), {self.location}, {self.country}"
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(frozen=True)
 class DebugData:
     """The response provided from Discord's CGI trace."""
 
@@ -65,7 +65,7 @@ class DebugData:
     colo: DataCenter
     #: HTTP version used.
     http: str
-    #: Apparent location
+    #: Apparent location.
     loc: str
     #: TLS/SSL version used.
     tls: str
@@ -73,3 +73,43 @@ class DebugData:
     sni: str
     #: Unknown.
     warp: str
+
+    @property
+    def your_ip_address(self) -> str:
+        """Alias for :attr:`ip`"""
+        return self.ip
+
+    @property
+    def timestamp(self) -> datetime.datetime:
+        """Alias for :attr:`ts`"""
+        return self.ts
+
+    @property
+    def discord_host(self) -> str:
+        """Alias for :attr:`h`"""
+        return self.h
+
+    @property
+    def user_agent(self) -> str:
+        """Alias for :attr:`uag`"""
+        return self.uag
+
+    @property
+    def data_center(self) -> DataCenter:
+        """Alias for :attr:`colo`"""
+        return self.colo
+
+    @property
+    def http_version(self) -> str:
+        """Alias for :attr:`http`"""
+        return self.http
+
+    @property
+    def location(self) -> str:
+        """Alias for :attr:`loc`"""
+        return self.loc
+
+    @property
+    def tls_version(self) -> str:
+        """Alias for :attr:`tls`"""
+        return self.tls
