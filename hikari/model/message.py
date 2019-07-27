@@ -83,16 +83,19 @@ class Message(base.SnowflakeMixin):
         "author",
         "content",
         "tts",
-        "mention_everyone",
+        "mentions_everyone",
         "attachments",
         "embeds",
         "pinned",
         "application",
-        "activity" "type",
+        "activity",
+        "type",
     )
 
     #: The ID of the message.
     id: int
+    #: The actual textual content of the message.
+    content: str
     #: The channel ID of the message.
     _channel_id: int
     #: The ID of the guild, or None if it is in a DM.
@@ -111,9 +114,9 @@ class Message(base.SnowflakeMixin):
     embeds: typing.List[embed.Embed]
     #: Whether this message is pinned or not.
     pinned: bool
-    #: The application associated with this message (applicable for rich presence-related chat embeds only.)
+    #: The application associated with this message (applicable for rich presence-related chat embeds only).
     application: typing.Optional[MessageApplication]
-    #: The activity associated with this message (applicable for rich presence-related chat embeds only.)
+    #: The activity associated with this message (applicable for rich presence-related chat embeds only).
     activity: typing.Optional[MessageActivity]
     #: The type of message.
     type: MessageType
@@ -127,13 +130,14 @@ class Message(base.SnowflakeMixin):
             _guild_id=transform.get_cast(payload, "guild_id", int),
             edited_at=transform.get_cast(payload, "edited_timestamp", dateutils.parse_iso_8601_datetime),
             tts=transform.get_cast(payload, "tts", bool, False),
-            mentions_everyone=transform.get_cast(payload, "mentions_everyone", bool, False),
+            mentions_everyone=transform.get_cast(payload, "mention_everyone", bool, False),
             attachments=transform.get_sequence(payload, "attachments", media.Attachment.from_dict),
             embeds=transform.get_sequence(payload, "embeds", embed.Embed.from_dict),
             pinned=transform.get_cast(payload, "pinned", bool, False),
             application=transform.get_cast(payload, "application", MessageApplication.from_dict),
-            activity=transform.get_cast(payload, "activity", MessageApplication.from_dict),
+            activity=transform.get_cast(payload, "activity", MessageActivity.from_dict),
             type=transform.get_cast_or_raw(payload, "type", MessageType),
+            content=payload.get("content"),
         )
 
 
@@ -164,7 +168,7 @@ class MessageApplication:
     Description of a rich presence application that created a rich presence message in a channel.
     """
 
-    __slots__ = ("id", "cover_image", "description", "icon", "name")
+    __slots__ = ("id", "cover_image_id", "description", "icon_image_id", "name")
 
     #: The ID of the application.
     id: int
