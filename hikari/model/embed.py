@@ -26,7 +26,7 @@ import datetime
 import typing
 
 from hikari.model import color as _color
-from hikari.utils import dateutils, maps, unspecified
+from hikari.utils import dateutils, transform, unspecified
 
 __all__ = ("Embed", "UNSPECIFIED")
 
@@ -274,9 +274,9 @@ class Embed:
 
     def to_dict(self, *, dict_factory=dict):
         d = dict_factory()
-        maps.put_if_specified(d, "title", self.title)
-        maps.put_if_specified(d, "description", self.description)
-        maps.put_if_specified(d, "url", self.url)
+        transform.put_if_specified(d, "title", self.title)
+        transform.put_if_specified(d, "description", self.description)
+        transform.put_if_specified(d, "url", self.url)
 
         if self.timestamp is not UNSPECIFIED:
             d["timestamp"] = self.timestamp.replace(tzinfo=datetime.timezone.utc).isoformat()

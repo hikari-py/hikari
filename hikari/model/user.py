@@ -27,7 +27,7 @@ import typing
 
 from hikari.model import base
 from hikari.model import guild as _guild
-from hikari.utils import dateutils, delegate, maps
+from hikari.utils import dateutils, delegate, transform
 
 
 @dataclasses.dataclass()
@@ -53,9 +53,9 @@ class User(base.SnowflakeMixin):
     @staticmethod
     def from_dict(payload):
         return User(
-            id=maps.get_from_map_as(payload, "id", int),
-            username=payload["username"],
-            discriminator=maps.get_from_map_as(payload, "discriminator", int),
+            id=transform.get_cast(payload, "id", int),
+            username=payload.get("username"),
+            discriminator=transform.get_cast(payload, "discriminator", int),
             avatar_hash=payload.get("avatar"),
             bot=payload.get("bot", False),
         )
@@ -88,13 +88,14 @@ class Member(User):
     #: The optional date/time that the member Nitro-boosted the guild.
     nitro_boosted_at: typing.Optional[datetime.datetime]
 
+    # noinspection PyMethodOverriding
     @staticmethod
     def from_dict(payload, user, guild):
         return Member(
             _user=user,
-            _roles=[int(r) for r in payload["roles"]],
+            _roles=transform.get_sequence(payload, "roles", int),
             nick=payload.get("nick"),
             guild=guild,
-            joined_at=dateutils.parse_iso_8601_datetime(payload["joined_at"]),
-            nitro_boosted_at=maps.get_from_map_as(payload, "premium_since", dateutils.parse_iso_8601_datetime),
+            joined_at=transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime),
+            nitro_boosted_at=transform.get_cast(payload, "premium_since", dateutils.parse_iso_8601_datetime),
         )
