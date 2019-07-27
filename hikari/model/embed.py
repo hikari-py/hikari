@@ -73,6 +73,7 @@ class Embed:
     _author: EmbedAuthor
     _fields: typing.List[EmbedField]
 
+    # TODO: implement as enum.
     _type: str
     _video: EmbedVideo
     _provider: EmbedProvider
@@ -336,10 +337,11 @@ class _EmbedComponent:
         attrs = {a: getattr(self, a) for a in self.__slots__}
         return dict_factory(**{k: v for k, v in attrs.items() if v is not UNSPECIFIED})
 
+    # noinspection PyArgumentList,PyDataclass
     @classmethod
     def from_dict(cls, **kwargs):
-        # noinspection PyArgumentList
-        return cls(**kwargs)
+        params = {field.name: kwargs.get(field.name) for field in dataclasses.fields(cls)}
+        return cls(**params)
 
 
 @dataclasses.dataclass(init=False)
