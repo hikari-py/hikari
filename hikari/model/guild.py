@@ -61,4 +61,4 @@ class GuildEmbed(base.SnowflakeMixin):
 
 
 class Ban:
-    __slots__ = ()
+    __slots__ = ("reason", "user")
