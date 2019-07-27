@@ -28,13 +28,16 @@ import mimetypes
 import re
 import typing
 
-__all__ = ("Avatar",)
+from hikari.model import base
+from hikari.utils import transform
+
+__all__ = ("Avatar", "Attachment")
 
 
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
 
-@dataclasses.dataclass(init=False, repr=False)
+@dataclasses.dataclass(init=False)
 class Avatar:
     """
     Represents an Avatar. This contains compressed raw byte data of the given image.
@@ -104,3 +107,39 @@ class Avatar:
 
     def __len__(self):
         return len(self.data)
+
+
+@dataclasses.dataclass()
+class Attachment(base.SnowflakeMixin):
+    """
+    An attachment that is received from Discord in a message.
+    """
+
+    __slots__ = ("id", "filename", "size", "url", "proxy_url", "width", "height")
+
+    #: ID of the attachment.
+    id: int
+    #: Filename of the attachment.
+    filename: str
+    #: Size of the attachment.
+    size: int
+    #: URL of the attachment.
+    url: str
+    #: Proxied URL of the attachment.
+    proxy_url: str
+    #: Width of the attachment (None unless the attachment is an image).
+    width: typing.Optional[int]
+    #: Height of the attachment (None unless the attachment is an image).
+    height: typing.Optional[int]
+
+    @staticmethod
+    def from_dict(payload):
+        return Attachment(
+            id=transform.get_cast(payload, "id", int),
+            filename=payload.get("filename"),
+            size=transform.get_cast(payload, "size", int),
+            url=payload.get("url"),
+            proxy_url=payload.get("proxy_url"),
+            width=transform.get_cast(payload, "width", int),
+            height=transform.get_cast(payload, "height", int),
+        )

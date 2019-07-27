@@ -16,7 +16,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import contextlib
 import functools
 import os
 import shutil
@@ -162,22 +161,13 @@ def _black(session, *args, **kwargs):
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *args, **kwargs)
 
 
-def _isort(session, *args, **kwargs):
-    session.install("isort")
-    session.run("python", "-m", "isort", *args, **kwargs)
-
-
 @nox_session(reuse_venv=True)
 @using_poetry
 def format_fix(session: PoetryNoxSession) -> None:
-    _isort(session, *ISORT_ARGS, "--apply", "--atomic")
     _black(session)
 
 
 @nox_session(reuse_venv=True)
 @using_poetry
 def format_check(session: PoetryNoxSession) -> None:
-    with contextlib.suppress(Exception):
-        _isort(session, *ISORT_ARGS, "--check")
-
     _black(session, "--check")

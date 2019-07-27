@@ -31,6 +31,7 @@ from hikari.utils import assertions, dateutils
 
 
 @assertions.assert_is_mixin
+@assertions.assert_is_slotted
 class SnowflakeMixin:
     """
     Base for any type that specifies an ID. The implementation is expected to implement that field.
