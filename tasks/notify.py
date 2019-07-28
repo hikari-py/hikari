@@ -31,6 +31,7 @@ try:
     COLOUR = os.environ["RELEASE_WEBHOOK_COLOUR"]
     DESCRIPTION = os.environ["RELEASE_WEBHOOK_DESCRIPTION"]
     VERSION = sys.argv[1]
+    NAME = sys.argv[2]
 
     requests.post(
         WEBHOOK_URL,
@@ -38,7 +39,7 @@ try:
             "embeds": [
                 {
                     "title": f"[{VERSION}] New {ENVIRONMENT} deployment!",
-                    "footer": {"text": f"Hikari v{VERSION} has just been put into {ENVIRONMENT}."},
+                    "footer": {"text": f"{NAME} v{VERSION} has just been put into {ENVIRONMENT}."},
                     "color": int(COLOUR, 16),
                     "author": {"name": "Nekoka.tt"},
                     "description": DESCRIPTION,

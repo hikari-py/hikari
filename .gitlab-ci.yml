@@ -118,7 +118,7 @@ setup.py:
         - echo "Testing setup.py for ${PACKAGE_SLUG}"
     script:
         - pip install -U ${PACKAGE_SLUG}
-        - python -c "import hikari; print(hikari.__version__)"
+        - python -c "import hikari; print(hikari.core.__version__)"
 
 ###
 ### HANDLE DEPLOYING TO PYPI REPOSITORIES
@@ -145,7 +145,7 @@ setup.py:
         - poetry build
         - poetry publish --username=$PYPI_USER --password=$PYPI_PASS --repository=hikarirepo
         - pip install requests
-        - python tasks/notify.py "${pep440_version} (${release})"
+        - python tasks/notify.py "${pep440_version} (${release})" "hikari.core"
 
 ###
 ### HANDLE DEPLOYING TO OUR STAGING ENVIRONMENT ON test.pypi.org
@@ -162,7 +162,7 @@ deploy-to-staging:
     variables:
         PREFIX: ".dev"
         RELEASE_WEBHOOK_NAME: "staging"
-        RELEASE_WEBHOOK_DESCRIPTION: "You can install this version by running:\n```bash\npip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple hikari\n```\n"
+        RELEASE_WEBHOOK_DESCRIPTION: "You can install this version by running:\n```bash\npip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple hikari.core\n```\n"
         RELEASE_WEBHOOK_COLOUR: "0xd34615"
     environment:
         name:
@@ -186,7 +186,7 @@ deploy-to-prod:
     variables:
         PREFIX: ""
         RELEASE_WEBHOOK_NAME: "prod"
-        RELEASE_WEBHOOK_DESCRIPTION: "Install it with:\n```bash\npip install hikari\n```\n"
+        RELEASE_WEBHOOK_DESCRIPTION: "Install it with:\n```bash\npip install hikari.core\n```\n"
         RELEASE_WEBHOOK_COLOUR: "0x5c2040"
     environment:
         name:
