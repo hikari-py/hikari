@@ -104,3 +104,36 @@ def test_PartialObject_dynamic_attrs():
     assert po.id == 123456
     assert po.foo == 69
     assert po.bar is False
+
+
+@pytest.mark.model
+def test_no_hash_is_applied_to_dataclass_without_id():
+    @base.dataclass()
+    class NonIDDataClass:
+        foo: int
+        bar: float
+        baz: str
+        bork: object
+
+    first = NonIDDataClass(10, 10.5, "11.0", object())
+    second = NonIDDataClass(10, 10.9, "11.5", object())
+
+    try:
+        assert hash(first) != hash(second)
+        assert False
+    except TypeError as ex:
+        assert "unhashable type" in str(ex)
+
+
+@pytest.mark.model
+def test_hash_is_applied_to_dataclass_with_id():
+    @base.dataclass()
+    class IDDataClass:
+        id: int
+        bar: float
+        baz: str
+        bork: object
+
+    first = IDDataClass(10, 10.5, "11.0", object())
+    second = IDDataClass(10, 10.9, "11.5", object())
+    assert hash(first) == hash(second)

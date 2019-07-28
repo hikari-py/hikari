@@ -21,14 +21,17 @@ Embeds.
 """
 from __future__ import annotations
 
+__all__ = ("Embed",)
+
 import dataclasses
 import datetime
 import typing
 
+from hikari.model import base
 from hikari.model import color as _color
-from hikari.utils import dateutils, transform, unspecified
-
-__all__ = ("Embed", "UNSPECIFIED")
+from hikari.utils import dateutils
+from hikari.utils import transform
+from hikari.utils import unspecified
 
 
 #: An alias to the unspecified sentinel. This is used to describe embed members with no associated value within this
@@ -36,7 +39,7 @@ __all__ = ("Embed", "UNSPECIFIED")
 UNSPECIFIED = unspecified.UNSPECIFIED
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class Embed:
     __slots__ = (
         "title",
@@ -344,7 +347,7 @@ class _EmbedComponent:
         return cls(**params)
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class EmbedVideo(_EmbedComponent):
     """A video in an embed."""
 
@@ -360,7 +363,7 @@ class EmbedVideo(_EmbedComponent):
         self.width = width
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class EmbedImage(_EmbedComponent):
     """An video in an embed."""
 
@@ -380,7 +383,7 @@ class EmbedImage(_EmbedComponent):
         self.width = width
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class EmbedProvider(_EmbedComponent):
     """A provider in an embed."""
 
@@ -394,7 +397,7 @@ class EmbedProvider(_EmbedComponent):
         self.url = url
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class EmbedAuthor(_EmbedComponent):
     """An author in an embed."""
 
@@ -418,7 +421,7 @@ class EmbedAuthor(_EmbedComponent):
         self.proxy_icon_url = proxy_icon_url
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class EmbedFooter(_EmbedComponent):
     """A footer in an embed."""
 
@@ -434,7 +437,7 @@ class EmbedFooter(_EmbedComponent):
         self.proxy_icon_url = proxy_icon_url
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class EmbedField(_EmbedComponent):
     """A field in an embed."""
 

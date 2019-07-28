@@ -22,11 +22,12 @@ Models to outline the debug information for your closest data center.
 
 __all__ = ("DataCenter", "DebugData")
 
-import dataclasses
 import datetime
 
+from hikari.model import base
 
-@dataclasses.dataclass(frozen=True)
+
+@base.dataclass()
 class DataCenter:
     """Represents a data center. These are represented by an IATA airport code."""
 
@@ -45,7 +46,7 @@ class DataCenter:
         return f"{self.airport} ({self.iata_code}), {self.location}, {self.country}"
 
 
-@dataclasses.dataclass(frozen=True)
+@base.dataclass()
 class DebugData:
     """The response provided from Discord's CGI trace."""
 
