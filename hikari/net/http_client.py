@@ -27,7 +27,7 @@ import typing
 import aiohttp
 
 from hikari.net import http_base
-from hikari.utils import ioutils, maps, meta, types, unspecified
+from hikari.utils import ioutils, meta, transform, types, unspecified
 
 __all__ = ("HTTPClient",)
 
@@ -99,9 +99,9 @@ class HTTPClient(http_base.BaseHTTPClient):
                 if the guild does not exist.
         """
         query = {}
-        maps.put_if_specified(query, "user_id", user_id)
-        maps.put_if_specified(query, "action_type", action_type)
-        maps.put_if_specified(query, "limit", limit)
+        transform.put_if_specified(query, "user_id", user_id)
+        transform.put_if_specified(query, "action_type", action_type)
+        transform.put_if_specified(query, "limit", limit)
         return await self.request(GET, "/guilds/{guild_id}/audit-logs", query=query, guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
@@ -178,14 +178,14 @@ class HTTPClient(http_base.BaseHTTPClient):
                 channel).
         """
         payload = {}
-        maps.put_if_specified(payload, "position", position)
-        maps.put_if_specified(payload, "topic", topic)
-        maps.put_if_specified(payload, "nsfw", nsfw)
-        maps.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user)
-        maps.put_if_specified(payload, "bitrate", bitrate)
-        maps.put_if_specified(payload, "user_limit", user_limit)
-        maps.put_if_specified(payload, "permission_overwrites", permission_overwrites)
-        maps.put_if_specified(payload, "parent_id", parent_id)
+        transform.put_if_specified(payload, "position", position)
+        transform.put_if_specified(payload, "topic", topic)
+        transform.put_if_specified(payload, "nsfw", nsfw)
+        transform.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user)
+        transform.put_if_specified(payload, "bitrate", bitrate)
+        transform.put_if_specified(payload, "user_limit", user_limit)
+        transform.put_if_specified(payload, "permission_overwrites", permission_overwrites)
+        transform.put_if_specified(payload, "parent_id", parent_id)
         return await self.request(PATCH, "/channels/{channel_id}", json=payload, channel_id=channel_id, reason=reason)
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL, "deleteclose-channel")  # nonstandard spelling in URI
@@ -263,10 +263,10 @@ class HTTPClient(http_base.BaseHTTPClient):
                 is not found.
         """
         payload = {}
-        maps.put_if_specified(payload, "limit", limit)
-        maps.put_if_specified(payload, "before", before)
-        maps.put_if_specified(payload, "after", after)
-        maps.put_if_specified(payload, "around", around)
+        transform.put_if_specified(payload, "limit", limit)
+        transform.put_if_specified(payload, "before", before)
+        transform.put_if_specified(payload, "after", after)
+        transform.put_if_specified(payload, "around", around)
         return await self.request(GET, "/channels/{channel_id}/messages", channel_id=channel_id, json=payload)
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
@@ -342,9 +342,9 @@ class HTTPClient(http_base.BaseHTTPClient):
         form = aiohttp.FormData()
 
         json_payload = {"tts": tts}
-        maps.put_if_specified(json_payload, "content", content)
-        maps.put_if_specified(json_payload, "nonce", nonce)
-        maps.put_if_specified(json_payload, "embed", embed)
+        transform.put_if_specified(json_payload, "content", content)
+        transform.put_if_specified(json_payload, "nonce", nonce)
+        transform.put_if_specified(json_payload, "embed", embed)
 
         form.add_field("payload_json", json.dumps(json_payload), content_type="application/json")
 
@@ -485,9 +485,9 @@ class HTTPClient(http_base.BaseHTTPClient):
             A list of user objects.
         """
         payload = {}
-        maps.put_if_specified(payload, "before", before)
-        maps.put_if_specified(payload, "after", after)
-        maps.put_if_specified(payload, "limit", limit)
+        transform.put_if_specified(payload, "before", before)
+        transform.put_if_specified(payload, "after", after)
+        transform.put_if_specified(payload, "limit", limit)
         return await self.request(
             GET,
             "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}",
@@ -556,8 +556,8 @@ class HTTPClient(http_base.BaseHTTPClient):
                 if you did not author the message.
         """
         payload = {}
-        maps.put_if_specified(payload, "content", content)
-        maps.put_if_specified(payload, "embed", embed)
+        transform.put_if_specified(payload, "content", content)
+        transform.put_if_specified(payload, "embed", embed)
         return await self.request(
             PATCH,
             "/channels/{channel_id}/messages/{message_id}",
@@ -716,10 +716,10 @@ class HTTPClient(http_base.BaseHTTPClient):
                 if the arguments provided are not valid (e.g. negative age, etc).
         """
         payload = {}
-        maps.put_if_specified(payload, "max_age", max_age)
-        maps.put_if_specified(payload, "max_uses", max_uses)
-        maps.put_if_specified(payload, "temporary", temporary)
-        maps.put_if_specified(payload, "unique", unique)
+        transform.put_if_specified(payload, "max_age", max_age)
+        transform.put_if_specified(payload, "max_uses", max_uses)
+        transform.put_if_specified(payload, "temporary", temporary)
+        transform.put_if_specified(payload, "unique", unique)
         return await self.request(
             POST, "/channels/{channel_id}/invites", json=payload, channel_id=channel_id, reason=reason
         )
@@ -1101,17 +1101,17 @@ class HTTPClient(http_base.BaseHTTPClient):
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = {}
-        maps.put_if_specified(payload, "name", name)
-        maps.put_if_specified(payload, "region", region)
-        maps.put_if_specified(payload, "verification_level", verification_level)
-        maps.put_if_specified(payload, "default_message_notifications", default_message_notifications)
-        maps.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
-        maps.put_if_specified(payload, "afk_channel_id", afk_channel_id)
-        maps.put_if_specified(payload, "afk_timeout", afk_timeout)
-        maps.put_if_specified(payload, "icon", icon)
-        maps.put_if_specified(payload, "owner_id", owner_id)
-        maps.put_if_specified(payload, "splash", splash)
-        maps.put_if_specified(payload, "system_channel_id", system_channel_id)
+        transform.put_if_specified(payload, "name", name)
+        transform.put_if_specified(payload, "region", region)
+        transform.put_if_specified(payload, "verification_level", verification_level)
+        transform.put_if_specified(payload, "default_message_notifications", default_message_notifications)
+        transform.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
+        transform.put_if_specified(payload, "afk_channel_id", afk_channel_id)
+        transform.put_if_specified(payload, "afk_timeout", afk_timeout)
+        transform.put_if_specified(payload, "icon", icon)
+        transform.put_if_specified(payload, "owner_id", owner_id)
+        transform.put_if_specified(payload, "splash", splash)
+        transform.put_if_specified(payload, "system_channel_id", system_channel_id)
         return await self.request(PATCH, "/guilds/{guild_id}", guild_id=guild_id, json=payload, reason=reason)
 
     # pylint: enable=too-many-locals
@@ -1212,15 +1212,15 @@ class HTTPClient(http_base.BaseHTTPClient):
                 If you omit the `name` argument.
         """
         payload = {"name": name}
-        maps.put_if_specified(payload, "type", type_)
-        maps.put_if_specified(payload, "topic", topic)
-        maps.put_if_specified(payload, "bitrate", bitrate)
-        maps.put_if_specified(payload, "user_limit", user_limit)
-        maps.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user)
-        maps.put_if_specified(payload, "position", position)
-        maps.put_if_specified(payload, "permission_overwrites", permission_overwrites)
-        maps.put_if_specified(payload, "parent_id", parent_id)
-        maps.put_if_specified(payload, "nsfw", nsfw)
+        transform.put_if_specified(payload, "type", type_)
+        transform.put_if_specified(payload, "topic", topic)
+        transform.put_if_specified(payload, "bitrate", bitrate)
+        transform.put_if_specified(payload, "user_limit", user_limit)
+        transform.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user)
+        transform.put_if_specified(payload, "position", position)
+        transform.put_if_specified(payload, "permission_overwrites", permission_overwrites)
+        transform.put_if_specified(payload, "parent_id", parent_id)
+        transform.put_if_specified(payload, "nsfw", nsfw)
         return await self.request(POST, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload, reason=reason)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
@@ -1320,8 +1320,8 @@ class HTTPClient(http_base.BaseHTTPClient):
                 If you provide invalid values for the `limit` and `after` fields.
         """
         payload = {}
-        maps.put_if_specified(payload, "limit", limit)
-        maps.put_if_specified(payload, "after", after)
+        transform.put_if_specified(payload, "limit", limit)
+        transform.put_if_specified(payload, "after", after)
         return await self.request(GET, "/guilds/{guild_id}/members", guild_id=guild_id, json=payload)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
@@ -1369,11 +1369,11 @@ class HTTPClient(http_base.BaseHTTPClient):
                 If you pass `mute`, `deaf` or `channel_id` while the member is not connected to a voice channel.
         """
         payload = {}
-        maps.put_if_specified(payload, "nick", nick)
-        maps.put_if_specified(payload, "roles", roles)
-        maps.put_if_specified(payload, "mute", mute)
-        maps.put_if_specified(payload, "deaf", deaf)
-        maps.put_if_specified(payload, "channel_id", channel_id)
+        transform.put_if_specified(payload, "nick", nick)
+        transform.put_if_specified(payload, "roles", roles)
+        transform.put_if_specified(payload, "mute", mute)
+        transform.put_if_specified(payload, "deaf", deaf)
+        transform.put_if_specified(payload, "channel_id", channel_id)
         return await self.request(
             PATCH,
             "/guilds/{guild_id}/members/{user_id}",
@@ -1571,8 +1571,8 @@ class HTTPClient(http_base.BaseHTTPClient):
                 If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         query = {}
-        maps.put_if_specified(query, "delete_message_days", delete_message_days)
-        maps.put_if_specified(query, "reason", reason)
+        transform.put_if_specified(query, "delete_message_days", delete_message_days)
+        transform.put_if_specified(query, "reason", reason)
         return await self.request(
             PUT, "/guilds/{guild_id}/bans/{user_id}", guild_id=guild_id, user_id=user_id, query=query
         )
@@ -1663,11 +1663,11 @@ class HTTPClient(http_base.BaseHTTPClient):
                 If you provide invalid values for the role attributes.
         """
         payload = {}
-        maps.put_if_specified(payload, "name", name)
-        maps.put_if_specified(payload, "permissions", permissions)
-        maps.put_if_specified(payload, "color", color)
-        maps.put_if_specified(payload, "hoist", hoist)
-        maps.put_if_specified(payload, "mentionable", mentionable)
+        transform.put_if_specified(payload, "name", name)
+        transform.put_if_specified(payload, "permissions", permissions)
+        transform.put_if_specified(payload, "color", color)
+        transform.put_if_specified(payload, "hoist", hoist)
+        transform.put_if_specified(payload, "mentionable", mentionable)
         return await self.request(POST, "/guilds/{guild_id}/roles", guild_id=guild_id, json=payload, reason=reason)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
@@ -1751,11 +1751,11 @@ class HTTPClient(http_base.BaseHTTPClient):
                 If you provide invalid values for the role attributes.
         """
         payload = {}
-        maps.put_if_specified(payload, "name", name)
-        maps.put_if_specified(payload, "permissions", permissions)
-        maps.put_if_specified(payload, "color", color)
-        maps.put_if_specified(payload, "hoist", hoist)
-        maps.put_if_specified(payload, "mentionable", mentionable)
+        transform.put_if_specified(payload, "name", name)
+        transform.put_if_specified(payload, "permissions", permissions)
+        transform.put_if_specified(payload, "color", color)
+        transform.put_if_specified(payload, "hoist", hoist)
+        transform.put_if_specified(payload, "mentionable", mentionable)
         return await self.request(
             PATCH, "/guilds/{guild_id}/roles/{role_id}", guild_id=guild_id, role_id=role_id, json=payload, reason=reason
         )
@@ -2140,7 +2140,7 @@ class HTTPClient(http_base.BaseHTTPClient):
                 If the invite is not found.
         """
         payload = {}
-        maps.put_if_specified(payload, "with_counts", with_counts)
+        transform.put_if_specified(payload, "with_counts", with_counts)
         return await self.request(GET, "/invites/{invite_code}", invite_code=invite_code, query=payload)
 
     @meta.link_developer_portal(meta.APIResource.INVITE)
@@ -2229,8 +2229,8 @@ class HTTPClient(http_base.BaseHTTPClient):
                 If you pass username longer than the limit (2-32) or an invalid image.
         """
         payload = {}
-        maps.put_if_specified(payload, "username", username)
-        maps.put_if_specified(payload, "avatar", avatar)
+        transform.put_if_specified(payload, "username", username)
+        transform.put_if_specified(payload, "avatar", avatar)
         return await self.request(PATCH, "/users/@me", json=payload)
 
     @meta.link_developer_portal(meta.APIResource.USER)
@@ -2252,9 +2252,9 @@ class HTTPClient(http_base.BaseHTTPClient):
                 If you pass both `before` and `after`.
         """
         query = {}
-        maps.put_if_specified(query, "before", before)
-        maps.put_if_specified(query, "after", after)
-        maps.put_if_specified(query, "limit", limit)
+        transform.put_if_specified(query, "before", before)
+        transform.put_if_specified(query, "after", after)
+        transform.put_if_specified(query, "limit", limit)
         return await self.request(GET, "/users/@me/guilds", query=query)
 
     @meta.link_developer_portal(meta.APIResource.USER)
@@ -2338,7 +2338,7 @@ class HTTPClient(http_base.BaseHTTPClient):
                 If the avatar image is too big or the format is invalid.
         """
         payload = {"name": name}
-        maps.put_if_specified(payload, "avatar", avatar)
+        transform.put_if_specified(payload, "avatar", avatar)
         return await self.request(
             POST, "/channels/{channel_id}/webhooks", channel_id=channel_id, json=payload, reason=reason
         )
@@ -2431,9 +2431,9 @@ class HTTPClient(http_base.BaseHTTPClient):
                 to.
         """
         payload = {}
-        maps.put_if_specified(payload, "name", name)
-        maps.put_if_specified(payload, "avatar", avatar)
-        maps.put_if_specified(payload, "channel_id", channel_id)
+        transform.put_if_specified(payload, "name", name)
+        transform.put_if_specified(payload, "avatar", avatar)
+        transform.put_if_specified(payload, "channel_id", channel_id)
         return await self.request(PATCH, "/webhooks/{webhook_id}", webhook_id=webhook_id, json=payload, reason=reason)
 
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)

@@ -31,7 +31,7 @@ import aiohttp
 #: Format string for the default Discord API URL.
 from hikari import errors
 from hikari.net import opcodes, rates
-from hikari.utils import assertions, dateutils, maps, meta, unspecified
+from hikari.utils import assertions, dateutils, meta, transform, unspecified
 
 __all__ = ("BaseHTTPClient",)
 
@@ -277,7 +277,7 @@ class BaseHTTPClient:
         ) as r:
             self.logger.debug(
                 "[try %s - %s] %s responded with %s %s containing %s (%s bytes)",
-                retry,
+                retry + 1,
                 self._correlation_id,
                 uri,
                 r.status,
@@ -342,7 +342,7 @@ class BaseHTTPClient:
         # Retry-after is always in milliseconds.
         if is_global and is_being_rate_limited:
             # assume that is_global only ever occurs on TOO_MANY_REQUESTS response codes.
-            retry_after = (maps.get_from_map_as(body, "retry_after", float) or 0) / 1_000
+            retry_after = (transform.get_cast(body, "retry_after", float) or 0) / 1_000
             self.global_rate_limit.lock(retry_after)
             self._log_rate_limit_starting(None, retry_after)
 
@@ -350,12 +350,12 @@ class BaseHTTPClient:
             # If we don't get all the info we need, just forget about the rate limit as we can't act on missing
             # information.
             now = dateutils.parse_http_date(headers[_DATE]).timestamp()
-            total = maps.get_from_map_as(headers, _X_RATELIMIT_LIMIT, int)
-            reset_at = maps.get_from_map_as(headers, _X_RATELIMIT_RESET, float)
-            remaining = maps.get_from_map_as(headers, _X_RATELIMIT_REMAINING, int)
+            total = transform.get_cast(headers, _X_RATELIMIT_LIMIT, int)
+            reset_at = transform.get_cast(headers, _X_RATELIMIT_RESET, float)
+            remaining = transform.get_cast(headers, _X_RATELIMIT_REMAINING, int)
 
             # This header only exists if we get a TOO_MANY_REQUESTS first, annoyingly.
-            retry_after = maps.get_from_map_as(headers, "Retry-After", float)
+            retry_after = transform.get_cast(headers, "Retry-After", float)
             retry_after = retry_after / 1_000 if retry_after is not None else reset_at - now
 
             if resource not in self.buckets:
@@ -377,7 +377,7 @@ class BaseHTTPClient:
     def _handle_client_error_response(resource, status, body) -> typing.NoReturn:
         # Assume Discord's spec is right and they don't send us random codes we don't know about...
         try:
-            error_code = maps.get_from_map_as(body, "code", opcodes.JSONErrorCode, None)
+            error_code = transform.get_cast(body, "code", opcodes.JSONErrorCode, None)
             error_message = body.get("message")
         except AttributeError:
             error_code = None

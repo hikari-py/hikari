@@ -21,12 +21,6 @@ Models for the Status API.
 """
 from __future__ import annotations
 
-import dataclasses
-import datetime
-import typing
-
-from hikari.utils import dateutils, maps
-
 __all__ = (
     "Subscriber",
     "Subscription",
@@ -42,8 +36,15 @@ __all__ = (
     "Summary",
 )
 
+import datetime
+import typing
 
-@dataclasses.dataclass()
+from hikari.model import base
+from hikari.utils import dateutils
+from hikari.utils import transform
+
+
+@base.dataclass()
 class Subscriber:
     """
     A subscription to an incident.
@@ -75,14 +76,14 @@ class Subscriber:
             id=payload["id"],
             email=payload["email"],
             mode=payload["mode"],
-            quarantined_at=maps.get_from_map_as(payload, "quarantined_at", dateutils.parse_iso_8601_datetime),
-            incident=maps.get_from_map_as(payload, "incident", Incident.from_dict),
-            skip_confirmation_notification=maps.get_from_map_as(payload, "skip_confirmation_notification", bool),
-            purge_at=maps.get_from_map_as(payload, "purge_at", dateutils.parse_iso_8601_datetime),
+            quarantined_at=transform.get_cast(payload, "quarantined_at", dateutils.parse_iso_8601_datetime),
+            incident=transform.get_cast(payload, "incident", Incident.from_dict),
+            skip_confirmation_notification=transform.get_cast(payload, "skip_confirmation_notification", bool),
+            purge_at=transform.get_cast(payload, "purge_at", dateutils.parse_iso_8601_datetime),
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Subscription:
     """
     A subscription to an incident.
@@ -98,7 +99,7 @@ class Subscription:
         return Subscription(subscriber=Subscriber.from_dict(payload["subscriber"]))
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Page:
     """
     A page element.
@@ -124,11 +125,11 @@ class Page:
             id=payload["id"],
             name=payload["name"],
             url=payload["url"],
-            updated_at=maps.get_from_map_as(payload, "updated_at", dateutils.parse_iso_8601_datetime),
+            updated_at=transform.get_cast(payload, "updated_at", dateutils.parse_iso_8601_datetime),
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Status:
     """
     A status description.
@@ -146,7 +147,7 @@ class Status:
         return Status(indicator=payload.get("indicator"), description=payload.get("description"))
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Component:
     """
     A component description.
@@ -180,15 +181,15 @@ class Component:
         return Component(
             id=payload["id"],
             name=payload["name"],
-            created_at=maps.get_from_map_as(payload, "created_at", dateutils.parse_iso_8601_datetime),
+            created_at=transform.get_cast(payload, "created_at", dateutils.parse_iso_8601_datetime),
             page_id=payload["page_id"],
-            position=maps.get_from_map_as(payload, "position", int),
-            updated_at=maps.get_from_map_as(payload, "updated_at", dateutils.parse_iso_8601_datetime),
+            position=transform.get_cast(payload, "position", int),
+            updated_at=transform.get_cast(payload, "updated_at", dateutils.parse_iso_8601_datetime),
             description=payload.get("description"),
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Components:
     """
     A collection of :class:`Component` objects.
@@ -209,7 +210,7 @@ class Components:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class IncidentUpdate:
     """
     An informative status update for a specific incident.
@@ -243,15 +244,15 @@ class IncidentUpdate:
         return IncidentUpdate(
             id=payload["id"],
             body=payload["body"],
-            created_at=maps.get_from_map_as(payload, "created_at", dateutils.parse_iso_8601_datetime),
-            display_at=maps.get_from_map_as(payload, "display_at", dateutils.parse_iso_8601_datetime),
+            created_at=transform.get_cast(payload, "created_at", dateutils.parse_iso_8601_datetime),
+            display_at=transform.get_cast(payload, "display_at", dateutils.parse_iso_8601_datetime),
             incident_id=payload["incident_id"],
             status=payload["status"],
-            updated_at=maps.get_from_map_as(payload, "updated_at", dateutils.parse_iso_8601_datetime),
+            updated_at=transform.get_cast(payload, "updated_at", dateutils.parse_iso_8601_datetime),
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Incident:
     """
     An incident.
@@ -303,14 +304,14 @@ class Incident:
             id=payload["id"],
             name=payload["name"],
             status=payload["status"],
-            updated_at=maps.get_from_map_as(
+            updated_at=transform.get_cast(
                 payload, "updated_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
             incident_updates=[IncidentUpdate.from_dict(i) for i in payload.get("incident_updates", [])],
-            monitoring_at=maps.get_from_map_as(
+            monitoring_at=transform.get_cast(
                 payload, "monitoring_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
-            resolved_at=maps.get_from_map_as(
+            resolved_at=transform.get_cast(
                 payload, "resolved_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
             shortlink=payload["shortlink"],
@@ -319,7 +320,7 @@ class Incident:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Incidents:
     """
     A collection of :class:`Incident` objects.
@@ -337,7 +338,7 @@ class Incidents:
         return Incidents(Page.from_dict(payload["page"]), [Incident.from_dict(i) for i in payload["incidents"]])
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class ScheduledMaintenance:
     """
     A description of a maintenance that is scheduled to be performed.
@@ -393,27 +394,27 @@ class ScheduledMaintenance:
             name=payload["name"],
             impact=payload["impact"],
             incident_updates=[IncidentUpdate.from_dict(iu) for iu in payload.get("incident_updates", [])],
-            monitoring_at=maps.get_from_map_as(
+            monitoring_at=transform.get_cast(
                 payload, "monitoring_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
             page_id=payload["page_id"],
-            resolved_at=maps.get_from_map_as(
+            resolved_at=transform.get_cast(
                 payload, "resolved_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
-            scheduled_for=maps.get_from_map_as(
+            scheduled_for=transform.get_cast(
                 payload, "scheduled_for", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
-            scheduled_until=maps.get_from_map_as(
+            scheduled_until=transform.get_cast(
                 payload, "scheduled_until", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
             status=payload["status"],
-            updated_at=maps.get_from_map_as(
+            updated_at=transform.get_cast(
                 payload, "updated_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class ScheduledMaintenances:
     """
     A collection of maintenance events.
@@ -434,7 +435,7 @@ class ScheduledMaintenances:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Summary:
     """
     A description of the overall API status.

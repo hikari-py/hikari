@@ -21,14 +21,17 @@ Embeds.
 """
 from __future__ import annotations
 
+__all__ = ("Embed",)
+
 import dataclasses
 import datetime
 import typing
 
+from hikari.model import base
 from hikari.model import color as _color
-from hikari.utils import dateutils, maps, unspecified
-
-__all__ = ("Embed", "UNSPECIFIED")
+from hikari.utils import dateutils
+from hikari.utils import transform
+from hikari.utils import unspecified
 
 
 #: An alias to the unspecified sentinel. This is used to describe embed members with no associated value within this
@@ -36,7 +39,7 @@ __all__ = ("Embed", "UNSPECIFIED")
 UNSPECIFIED = unspecified.UNSPECIFIED
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class Embed:
     __slots__ = (
         "title",
@@ -73,6 +76,7 @@ class Embed:
     _author: EmbedAuthor
     _fields: typing.List[EmbedField]
 
+    # TODO: implement as enum.
     _type: str
     _video: EmbedVideo
     _provider: EmbedProvider
@@ -274,9 +278,9 @@ class Embed:
 
     def to_dict(self, *, dict_factory=dict):
         d = dict_factory()
-        maps.put_if_specified(d, "title", self.title)
-        maps.put_if_specified(d, "description", self.description)
-        maps.put_if_specified(d, "url", self.url)
+        transform.put_if_specified(d, "title", self.title)
+        transform.put_if_specified(d, "description", self.description)
+        transform.put_if_specified(d, "url", self.url)
 
         if self.timestamp is not UNSPECIFIED:
             d["timestamp"] = self.timestamp.replace(tzinfo=datetime.timezone.utc).isoformat()
@@ -336,13 +340,14 @@ class _EmbedComponent:
         attrs = {a: getattr(self, a) for a in self.__slots__}
         return dict_factory(**{k: v for k, v in attrs.items() if v is not UNSPECIFIED})
 
+    # noinspection PyArgumentList,PyDataclass
     @classmethod
     def from_dict(cls, **kwargs):
-        # noinspection PyArgumentList
-        return cls(**kwargs)
+        params = {field.name: kwargs.get(field.name) for field in dataclasses.fields(cls)}
+        return cls(**params)
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class EmbedVideo(_EmbedComponent):
     """A video in an embed."""
 
@@ -358,7 +363,7 @@ class EmbedVideo(_EmbedComponent):
         self.width = width
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class EmbedImage(_EmbedComponent):
     """An video in an embed."""
 
@@ -378,7 +383,7 @@ class EmbedImage(_EmbedComponent):
         self.width = width
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class EmbedProvider(_EmbedComponent):
     """A provider in an embed."""
 
@@ -392,7 +397,7 @@ class EmbedProvider(_EmbedComponent):
         self.url = url
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class EmbedAuthor(_EmbedComponent):
     """An author in an embed."""
 
@@ -416,7 +421,7 @@ class EmbedAuthor(_EmbedComponent):
         self.proxy_icon_url = proxy_icon_url
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class EmbedFooter(_EmbedComponent):
     """A footer in an embed."""
 
@@ -432,7 +437,7 @@ class EmbedFooter(_EmbedComponent):
         self.proxy_icon_url = proxy_icon_url
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class EmbedField(_EmbedComponent):
     """A field in an embed."""
 

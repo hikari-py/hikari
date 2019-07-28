@@ -21,17 +21,31 @@ Permission overwrites.
 """
 __all__ = ("Overwrite", "OverwriteEntityType")
 
-import dataclasses
+import enum
 
-from hikari.model import base, permission, role, user
+from hikari.model import base
+from hikari.model import permission
+from hikari.model import role
+from hikari.model import user
+from hikari.utils import transform
 
 
-class OverwriteEntityType(base.NamedEnum):
+class OverwriteEntityType(base.NamedEnumMixin, enum.Enum):
+    """
+    The type of "thing" that a permission overwrite sets the permissions for.
+    """
+
     MEMBER = user.Member
     ROLE = role.Role
 
+    def __instancecheck__(self, instance):
+        return isinstance(instance, self.value)
 
-@dataclasses.dataclass()
+    def __subclasscheck__(self, subclass):
+        return issubclass(subclass, self.value)
+
+
+@base.dataclass()
 class Overwrite(base.SnowflakeMixin):
     """
     Representation of some permissions that have been explicitly allowed or denied as an override from the defaults.
@@ -59,8 +73,8 @@ class Overwrite(base.SnowflakeMixin):
     @staticmethod
     def from_dict(payload):
         return Overwrite(
-            int(payload["id"]),
-            OverwriteEntityType.from_discord_name(payload["type"]),
-            allow=permission.Permission(payload["allow"]),
-            deny=permission.Permission(payload["deny"]),
+            id=transform.get_cast(payload, "id", int),
+            type=transform.get_cast_or_raw(payload, "type", OverwriteEntityType.from_discord_name),
+            allow=transform.get_cast_or_raw(payload, "allow", permission.Permission),
+            deny=transform.get_cast_or_raw(payload, "deny", permission.Permission),
         )

@@ -21,13 +21,6 @@ Channel models.
 """
 from __future__ import annotations
 
-import abc
-import dataclasses
-import typing
-
-from hikari.model import base, overwrite, user
-from hikari.utils import maps
-
 __all__ = (
     "Channel",
     "GuildChannel",
@@ -40,8 +33,16 @@ __all__ = (
     "GuildStoreChannel",
 )
 
+import abc
+import typing
 
-@dataclasses.dataclass()
+from hikari.model import base
+from hikari.model import overwrite
+from hikari.model import user
+from hikari.utils import transform
+
+
+@base.dataclass()
 class Channel(base.SnowflakeMixin, abc.ABC):
     """
     A generic type of channel.
@@ -59,7 +60,7 @@ class Channel(base.SnowflakeMixin, abc.ABC):
         """Convert the given payload and state into an object instance."""
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class GuildChannel(Channel, abc.ABC):
     """
     A channel that belongs to a guild.
@@ -77,7 +78,7 @@ class GuildChannel(Channel, abc.ABC):
     name: str
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class GuildTextChannel(GuildChannel):
     """
     A text channel.
@@ -101,20 +102,20 @@ class GuildTextChannel(GuildChannel):
     def from_dict(payload, state):
         return GuildTextChannel(
             _state=state,
-            id=maps.get_from_map_as(payload, "id", int),
-            guild_id=maps.get_from_map_as(payload, "guild_id", int),
-            position=payload["position"],
-            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
-            name=payload["name"],
+            id=transform.get_cast(payload, "id", int),
+            guild_id=transform.get_cast(payload, "guild_id", int),
+            position=payload.get("position"),
+            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
+            name=payload.get("name"),
             nsfw=payload.get("nsfw", False),
-            parent_id=maps.get_from_map_as(payload, "parent_id", int),
+            parent_id=transform.get_cast(payload, "parent_id", int),
             topic=payload.get("topic"),
             rate_limit_per_user=payload.get("rate_limit_per_user"),
-            last_message_id=maps.get_from_map_as(payload, "last_message_id", int),
+            last_message_id=transform.get_cast(payload, "last_message_id", int),
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class DMChannel(Channel):
     """
     A DM channel between users.
@@ -131,13 +132,13 @@ class DMChannel(Channel):
     def from_dict(payload, state):
         return DMChannel(
             _state=state,
-            id=int(payload["id"]),
-            last_message_id=maps.get_from_map_as(payload, "last_message_id", int),
-            recipients=[NotImplemented for _ in payload["recipients"]],  # TODO
+            id=transform.get_cast(payload, "id", int),
+            last_message_id=transform.get_cast(payload, "last_message_id", int),
+            recipients=transform.get_sequence(payload, "recipients", repr),  # TODO
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class GuildVoiceChannel(GuildChannel):
     """
     A voice channel within a guild.
@@ -156,18 +157,18 @@ class GuildVoiceChannel(GuildChannel):
     def from_dict(payload, state):
         return GuildVoiceChannel(
             _state=state,
-            id=maps.get_from_map_as(payload, "id", int),
-            guild_id=maps.get_from_map_as(payload, "guild_id", int),
-            position=payload["position"],
-            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
-            name=payload["name"],
-            bitrate=payload["bitrate"],
-            user_limit=payload["user_limit"] or None,
-            parent_id=maps.get_from_map_as(payload, "parent_id", int),
+            id=transform.get_cast(payload, "id", int),
+            guild_id=transform.get_cast(payload, "guild_id", int),
+            position=payload.get("position"),
+            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
+            name=payload.get("name"),
+            bitrate=payload.get("bitrate"),
+            user_limit=payload.get("user_limit") or None,
+            parent_id=transform.get_cast(payload, "parent_id", int),
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class GroupDMChannel(DMChannel):
     """
     A DM group chat.
@@ -189,17 +190,17 @@ class GroupDMChannel(DMChannel):
     def from_dict(payload, state):
         return GroupDMChannel(
             state,
-            id=maps.get_from_map_as(payload, "id", int),
-            last_message_id=payload["last_message_id"],
-            recipients=[NotImplemented for _ in payload["recipients"]],  # TODO
-            icon_hash=payload.get("icon") if payload["icon"] else None,
+            id=transform.get_cast(payload, "id", int),
+            last_message_id=transform.get_cast(payload, "last_message_id", int),
+            recipients=transform.get_sequence(payload, "recipients", repr),  # TODO
+            icon_hash=payload.get("icon"),
             name=payload.get("name"),
-            owner_application_id=maps.get_from_map_as(payload, "owner_application_id", int),
-            owner_id=maps.get_from_map_as(payload, "owner_id", int),
+            owner_application_id=transform.get_cast(payload, "owner_application_id", int),
+            owner_id=transform.get_cast(payload, "owner_id", int),
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class GuildCategory(GuildChannel):
     """
     A category within a guild.
@@ -211,15 +212,15 @@ class GuildCategory(GuildChannel):
     def from_dict(payload, state):
         return GuildCategory(
             _state=state,
-            id=int(payload["id"]),
-            guild_id=int(payload["guild_id"]),
-            position=payload["position"],
-            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
-            name=payload["name"],
+            id=transform.get_cast(payload, "id", int),
+            guild_id=transform.get_cast(payload, "guild_id", int),
+            position=transform.get_cast(payload, "position", int),
+            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
+            name=payload.get("name"),
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class GuildNewsChannel(GuildChannel):
     """
     A channel for news topics within a guild.
@@ -241,26 +242,25 @@ class GuildNewsChannel(GuildChannel):
     def from_dict(payload, state):
         return GuildNewsChannel(
             _state=state,
-            id=maps.get_from_map_as(payload, "id", int),
-            guild_id=maps.get_from_map_as(payload, "guild_id", int),
-            position=payload["position"],
-            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
-            name=payload["name"],
+            id=transform.get_cast(payload, "id", int),
+            guild_id=transform.get_cast(payload, "guild_id", int),
+            position=transform.get_cast(payload, "position", int),
+            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
+            name=payload.get("name"),
             nsfw=payload.get("nsfw", False),
-            parent_id=maps.get_from_map_as(payload, "parent_id", int),
+            parent_id=transform.get_cast(payload, "parent_id", int),
             topic=payload.get("topic"),
-            last_message_id=maps.get_from_map_as(payload, "last_message_id", int),
+            last_message_id=transform.get_cast(payload, "last_message_id", int),
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class GuildStoreChannel(GuildChannel):
     """
     A store channel for selling of games within a guild.
     """
 
     __slots__ = ("parent_id",)
-
     #: The parent category ID if there is one.
     parent_id: typing.Optional[int]
 
@@ -268,12 +268,12 @@ class GuildStoreChannel(GuildChannel):
     def from_dict(payload, state):
         return GuildStoreChannel(
             _state=state,
-            id=maps.get_from_map_as(payload, "id", int),
-            guild_id=maps.get_from_map_as(payload, "guild_id", int),
-            position=payload["position"],
-            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
-            name=payload["name"],
-            parent_id=maps.get_from_map_as(payload, "parent_id", int),
+            id=transform.get_cast(payload, "id", int),
+            guild_id=transform.get_cast(payload, "guild_id", int),
+            position=transform.get_cast(payload, "position", int),
+            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
+            name=payload.get("name"),
+            parent_id=transform.get_cast(payload, "parent_id", int),
         )
 
 
@@ -288,7 +288,7 @@ def channel_from_dict(payload, state):
         GuildStoreChannel,
     ]
 
-    channel_type = payload["type"]
+    channel_type = payload.get("type")
 
     try:
         return channel_types[channel_type].from_dict(payload, state)

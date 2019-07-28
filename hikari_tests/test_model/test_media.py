@@ -55,3 +55,46 @@ class TestAvatar:
             assert False, "No TypeError raised"
         except TypeError:
             pass
+
+
+@pytest.mark.model
+class TestAttachment:
+    def test_Attachment_from_dict_when_not_an_image(self):
+        attachment = media.Attachment.from_dict(
+            {
+                "id": "123456",
+                "filename": "doggo.mov",
+                "url": "bork.com",
+                "proxy_url": "we-are-watching-you.nsa.bork.com",
+                "size": 69,
+            }
+        )
+
+        assert attachment.id == 123456
+        assert attachment.filename == "doggo.mov"
+        assert attachment.url == "bork.com"
+        assert attachment.proxy_url == "we-are-watching-you.nsa.bork.com"
+        assert attachment.size == 69
+        assert attachment.width is None
+        assert attachment.height is None
+
+    def test_Attachment_from_dict_when_an_image(self):
+        attachment = media.Attachment.from_dict(
+            {
+                "id": "123456",
+                "filename": "doggo.png",
+                "url": "bork.com",
+                "proxy_url": "we-are-watching-you.nsa.bork.com",
+                "size": 69,
+                "width": 1920,
+                "height": 1080,
+            }
+        )
+
+        assert attachment.id == 123456
+        assert attachment.filename == "doggo.png"
+        assert attachment.url == "bork.com"
+        assert attachment.proxy_url == "we-are-watching-you.nsa.bork.com"
+        assert attachment.size == 69
+        assert attachment.width == 1920
+        assert attachment.height == 1080
