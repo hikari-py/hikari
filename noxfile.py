@@ -16,7 +16,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import contextlib
 import functools
 import os
 import shutil
@@ -31,15 +30,16 @@ def pathify(arg, *args, root=False):
 
 
 # Configuration stuff we probably might move around eventually.
-MAIN_PACKAGE = "hikari"
-TEST_PACKAGE = "hikari_tests"
+MAIN_PACKAGE = "hikari.core"
+TEST_PATH = "tests/hikari/core"
 COVERAGE_RC = ".coveragerc"
 ARTIFACT_DIR = "public"
 DOCUMENTATION_DIR = "docs"
 CI_SCRIPT_DIR = "tasks"
 SPHINX_OPTS = "-WTvvn"
 ISORT_ARGS = ["--jobs", "8", "--trailing-comma", "--case-sensitive", "--verbose"]
-BLACK_PATHS = [MAIN_PACKAGE, TEST_PACKAGE, pathify(DOCUMENTATION_DIR, "conf.py"), __file__]
+BLACK_PACKAGES = [MAIN_PACKAGE, TEST_PATH]
+BLACK_PATHS = [m.replace(".", "/") for m in BLACK_PACKAGES] + [__file__, pathify(DOCUMENTATION_DIR, "conf.py")]
 BLACK_SHIM_PATH = pathify(CI_SCRIPT_DIR, "black.py")
 GENDOC_PATH = pathify(CI_SCRIPT_DIR, "gendoc.py")
 PYLINTRC = ".pylintrc"
@@ -123,7 +123,7 @@ def pytest(session: PoetryNoxSession) -> None:
         "--showlocals",
         "--testdox",
         *session.posargs,
-        TEST_PACKAGE,
+        TEST_PATH,
     )
 
 
@@ -141,6 +141,7 @@ def sphinx(session: PoetryNoxSession) -> None:
     session.run(
         "python",
         GENDOC_PATH,
+        ".",
         MAIN_PACKAGE,
         pathify(DOCUMENTATION_DIR, "_templates", "gendoc"),
         pathify(DOCUMENTATION_DIR, "index.rst"),
@@ -162,22 +163,13 @@ def _black(session, *args, **kwargs):
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *args, **kwargs)
 
 
-def _isort(session, *args, **kwargs):
-    session.install("isort")
-    session.run("python", "-m", "isort", *args, **kwargs)
-
-
 @nox_session(reuse_venv=True)
 @using_poetry
 def format_fix(session: PoetryNoxSession) -> None:
-    _isort(session, *ISORT_ARGS, "--apply", "--atomic")
     _black(session)
 
 
 @nox_session(reuse_venv=True)
 @using_poetry
 def format_check(session: PoetryNoxSession) -> None:
-    with contextlib.suppress(Exception):
-        _isort(session, *ISORT_ARGS, "--check")
-
     _black(session, "--check")

@@ -20,9 +20,9 @@ requires        = ["poetry>=0.12"]
 build-backend   = "poetry.masonry.api"
 
 [tool.poetry]
-name            = "hikari"
+name            = "hikari.core"
 version         = "2019"
-description     = "A sane Discord API for Python using asyncio"
+description     = "A sane Discord API for Python using asyncio | Core client"
 authors         = ["Nekoka.tt <nekoka.tt@outlook.com>"]
 license         = "LGPL-3.0-ONLY"
 readme          = "README.md"
@@ -41,11 +41,13 @@ classifiers     = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
+packages        = [
+    {include = "hikari"}
+]
 
 [tool.poetry.dependencies]
-python          = ">=3.7,<=3.9"
+python          = ">=3.7,<3.9"
 aiohttp         = "~3.5"
-dataclasses     = "~0.6"
 websockets      = "~7.0"
 
 [tool.poetry.dev-dependencies]
@@ -62,6 +64,6 @@ pytest-testdox  = "~1.1"
 
 [tool.black]
 line-length     = 120
-target-version  = ["py37", "py38"]
+target-version  = ["py37"]
 include         = ".*py$"
 
