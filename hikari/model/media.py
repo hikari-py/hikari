@@ -21,8 +21,9 @@ Represents various forms of media such as images.
 """
 from __future__ import annotations
 
+__all__ = ("Avatar", "Attachment")
+
 import base64
-import dataclasses
 import io
 import mimetypes
 import re
@@ -31,13 +32,10 @@ import typing
 from hikari.model import base
 from hikari.utils import transform
 
-__all__ = ("Avatar", "Attachment")
-
-
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
 
-@dataclasses.dataclass(init=False)
+@base.dataclass()
 class Avatar:
     """
     Represents an Avatar. This contains compressed raw byte data of the given image.
@@ -109,7 +107,7 @@ class Avatar:
         return len(self.data)
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Attachment(base.SnowflakeMixin):
     """
     An attachment that is received from Discord in a message.

@@ -22,21 +22,27 @@ Channel models.
 from __future__ import annotations
 
 __all__ = (
-    "Channel", "GuildChannel", "GuildTextChannel", "DMChannel", "GuildVoiceChannel",
-    "GroupDMChannel", "GuildCategory", "GuildNewsChannel", "GuildStoreChannel",
+    "Channel",
+    "GuildChannel",
+    "GuildTextChannel",
+    "DMChannel",
+    "GuildVoiceChannel",
+    "GroupDMChannel",
+    "GuildCategory",
+    "GuildNewsChannel",
+    "GuildStoreChannel",
 )
-
-import abc
-import dataclasses
 
 import abc
 import typing
 
-from hikari.model import base, overwrite, user
+from hikari.model import base
+from hikari.model import overwrite
+from hikari.model import user
 from hikari.utils import transform
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Channel(base.SnowflakeMixin, abc.ABC):
     """
     A generic type of channel.
@@ -54,7 +60,7 @@ class Channel(base.SnowflakeMixin, abc.ABC):
         """Convert the given payload and state into an object instance."""
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class GuildChannel(Channel, abc.ABC):
     """
     A channel that belongs to a guild.
@@ -72,7 +78,7 @@ class GuildChannel(Channel, abc.ABC):
     name: str
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class GuildTextChannel(GuildChannel):
     """
     A text channel.
@@ -109,7 +115,7 @@ class GuildTextChannel(GuildChannel):
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class DMChannel(Channel):
     """
     A DM channel between users.
@@ -132,7 +138,7 @@ class DMChannel(Channel):
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class GuildVoiceChannel(GuildChannel):
     """
     A voice channel within a guild.
@@ -162,7 +168,7 @@ class GuildVoiceChannel(GuildChannel):
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class GroupDMChannel(DMChannel):
     """
     A DM group chat.
@@ -194,11 +200,12 @@ class GroupDMChannel(DMChannel):
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class GuildCategory(GuildChannel):
     """
     A category within a guild.
     """
+
     __slots__ = ()
 
     @staticmethod
@@ -213,7 +220,7 @@ class GuildCategory(GuildChannel):
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class GuildNewsChannel(GuildChannel):
     """
     A channel for news topics within a guild.
@@ -247,11 +254,12 @@ class GuildNewsChannel(GuildChannel):
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class GuildStoreChannel(GuildChannel):
     """
     A store channel for selling of games within a guild.
     """
+
     __slots__ = ("parent_id",)
     #: The parent category ID if there is one.
     parent_id: typing.Optional[int]

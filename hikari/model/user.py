@@ -21,7 +21,6 @@ Generic users not bound to a guild, and guild-bound member definitions.
 """
 __all__ = ("User", "Member")
 
-import dataclasses
 import datetime
 import typing
 
@@ -30,7 +29,7 @@ from hikari.model import guild as _guild
 from hikari.utils import dateutils, delegate, transform
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class User(base.SnowflakeMixin):
     """
     Representation of a user account.
@@ -62,7 +61,7 @@ class User(base.SnowflakeMixin):
 
 
 @delegate.delegate_members(User, "_user")
-@delegate.delegate_safe_dataclass()
+@delegate.delegate_safe_dataclass(base.dataclass)
 class Member(User):
     """
     A specialization of a user which provides implementation details for a specific guild.

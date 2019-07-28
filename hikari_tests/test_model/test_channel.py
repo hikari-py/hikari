@@ -52,11 +52,9 @@ class TestChannel:
         assert gtc.name == "shh!"
 
     def test_DMChannel_from_dict(self):
-        dmc = channel.DMChannel.from_dict({
-            "id": "929292",
-            "last_message_id": "12345",
-            "recipients": []
-        }, NotImplemented)
+        dmc = channel.DMChannel.from_dict(
+            {"id": "929292", "last_message_id": "12345", "recipients": []}, NotImplemented
+        )
 
         assert dmc.id == 929292
         assert dmc.last_message_id == 12345
@@ -109,13 +107,10 @@ class TestChannel:
         assert gdmc.owner_id == 111111
 
     def test_GuildCategory_from_dict(self):
-        gc = channel.GuildCategory.from_dict({
-            "id": "123456",
-            "guild_id": "54321",
-            "position": 69,
-            "permission_overwrites": [],
-            "name": "dank category",
-        }, NotImplemented)
+        gc = channel.GuildCategory.from_dict(
+            {"id": "123456", "guild_id": "54321", "position": 69, "permission_overwrites": [], "name": "dank category"},
+            NotImplemented,
+        )
 
         assert gc.name == "dank category"
         assert gc.position == 69

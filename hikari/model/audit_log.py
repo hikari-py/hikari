@@ -21,13 +21,6 @@ Models that describe audit logs for guilds.
 """
 from __future__ import annotations
 
-import dataclasses
-import enum
-import typing
-
-from hikari.model import base, overwrite, user, webhook
-from hikari.utils import transform
-
 __all__ = (
     "AuditLogEvent",
     "AuditLogChangeKey",
@@ -38,6 +31,15 @@ __all__ = (
     "AuditLogChange",
     "AuditLogEntry",
 )
+
+import enum
+import typing
+
+from hikari.model import base
+from hikari.model import overwrite
+from hikari.model import user
+from hikari.model import webhook
+from hikari.utils import transform
 
 
 class AuditLogEvent(enum.IntEnum):
@@ -162,7 +164,7 @@ class AuditLogChangeKey(base.NamedEnum):
         return old_value, new_value, key
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class AuditLog:
     """
     An Audit Log.
@@ -195,7 +197,7 @@ class AuditLog:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class MemberPrunedAuditLogEntryInfo:
     """
     Additional audit log info for member pruning.
@@ -225,7 +227,7 @@ class MemberPrunedAuditLogEntryInfo:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class MessageDeletedAuditLogEntryInfo:
     """
     Additional audit log info for message deletions.
@@ -254,7 +256,7 @@ class MessageDeletedAuditLogEntryInfo:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class ChannelOverwriteAuditLogEntryInfo:
     """
     Additional audit log info for channel overwrites that changed.
@@ -287,7 +289,7 @@ class ChannelOverwriteAuditLogEntryInfo:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class AuditLogChange:
     """
     Represents a change that was recorded in the audit log.
@@ -333,7 +335,7 @@ AuditLogEntryInfo = typing.Union[
 ]
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class AuditLogEntry(base.SnowflakeMixin):
     """
     An entry within an Audit Log.

@@ -43,9 +43,8 @@ classifiers     = [
 ]
 
 [tool.poetry.dependencies]
-python          = ">=3.7,<=3.9"
+python          = ">=3.7,<3.9"
 aiohttp         = "~3.5"
-dataclasses     = "~0.6"
 websockets      = "~7.0"
 
 [tool.poetry.dev-dependencies]
@@ -62,6 +61,6 @@ pytest-testdox  = "~1.1"
 
 [tool.black]
 line-length     = 120
-target-version  = ["py37", "py38"]
+target-version  = ["py37"]
 include         = ".*py$"
 
