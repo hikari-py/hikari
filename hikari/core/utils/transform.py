@@ -29,7 +29,7 @@ from hikari.core.utils import unspecified
 
 T = typing.TypeVar("T")
 U = typing.TypeVar("U")
-Seq = typing.TypeVar("Seq", bound=typing.Sequence)
+Seq = typing.TypeVar("Seq", bound=typing.Collection)
 
 _EMPTY_TUPLE = ()
 _BAD_OBJECT = object()
@@ -120,7 +120,7 @@ def get_sequence(
     mapping: typing.Dict[typing.Hashable, typing.Any],
     key: typing.Hashable,
     inner_cast: typing.Callable[[typing.Any], T],
-    sequence_type: typing.Callable[..., Seq] = list,
+    sequence_type: typing.Union[typing.Type[Seq], typing.Callable[..., Seq]] = list,
 ) -> Seq:
     """
     Get a collection at the given key in the given mapping and cast all values to the inner cast, then wrap in
