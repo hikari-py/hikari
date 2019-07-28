@@ -21,24 +21,19 @@ Channel models.
 """
 from __future__ import annotations
 
+__all__ = (
+    "Channel", "GuildChannel", "GuildTextChannel", "DMChannel", "GuildVoiceChannel",
+    "GroupDMChannel", "GuildCategory", "GuildNewsChannel", "GuildStoreChannel",
+)
+
 import abc
 import dataclasses
+
+import abc
 import typing
 
 from hikari.model import base, overwrite, user
 from hikari.utils import maps
-
-__all__ = (
-    "Channel",
-    "GuildChannel",
-    "GuildTextChannel",
-    "DMChannel",
-    "GuildVoiceChannel",
-    "GroupDMChannel",
-    "GuildCategory",
-    "GuildNewsChannel",
-    "GuildStoreChannel",
-)
 
 
 @dataclasses.dataclass()
@@ -204,7 +199,6 @@ class GuildCategory(GuildChannel):
     """
     A category within a guild.
     """
-
     __slots__ = ()
 
     @staticmethod
@@ -258,9 +252,7 @@ class GuildStoreChannel(GuildChannel):
     """
     A store channel for selling of games within a guild.
     """
-
     __slots__ = ("parent_id",)
-
     #: The parent category ID if there is one.
     parent_id: typing.Optional[int]
 
