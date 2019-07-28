@@ -52,17 +52,21 @@ class DelegatedProperty:
             return self
 
 
-def delegate_safe_dataclass(**kwargs):
+def delegate_safe_dataclass(decorator=dataclasses.dataclass, **kwargs):
     """
     Dataclass decorator that is compatible with delegate types. This generates a new constructor that
     omits known delegated fields from the signature, thus making it safe to use on delegated classes.
+
+    Args:
+        decorator:
+            The decorator to apply to the dataclass to initialize it as a dataclass.
 
     Warning:
         This decorator must be placed AFTER the delegate decorators are placed (so, further down the file)
         otherwise it will produce an incorrect constructor. This is checked when using the decorator.
     """
 
-    def decorator(cls):
+    def actual_decorator(cls):
         if hasattr(cls, _DELEGATE_MEMBERS_FIELD):
             raise TypeError("This class has already had delegates defined on it. Cannot make a dataclass now.")
 
@@ -82,9 +86,9 @@ def delegate_safe_dataclass(**kwargs):
         exec(init, {}, locals_)  # nosec
         cls.__init__ = locals_["__init__"]
         kwargs["init"] = False
-        return dataclasses.dataclass(**kwargs)(cls)
+        return decorator(**kwargs)(cls)
 
-    return decorator
+    return actual_decorator
 
 
 def delegate_members(delegate_type, magic_field):
