@@ -118,7 +118,7 @@ setup.py:
         - echo "Testing setup.py for ${PACKAGE_SLUG}"
     script:
         - pip install -U ${PACKAGE_SLUG}
-        - python -c "import hikari; print(hikari.core.__version__)"
+        - python -c "import hikari.core; print(hikari.core.__version__)"
 
 ###
 ### HANDLE DEPLOYING TO PYPI REPOSITORIES
