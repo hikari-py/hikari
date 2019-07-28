@@ -19,7 +19,7 @@
 """
 Voice state models.
 """
-__all__ = ()
+__all__ = ("VoiceState", "VoiceRegion")
 
 from hikari.model import base
 

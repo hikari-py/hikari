@@ -21,7 +21,7 @@ Model ABCs and mixins.
 """
 from __future__ import annotations
 
-__all__ = ("SnowflakeMixin", "PartialObject", "NamedEnum")
+__all__ = ("SnowflakeMixin", "PartialObject", "NamedEnumMixin")
 
 import copy
 import dataclasses
@@ -145,11 +145,14 @@ class PartialObject(SnowflakeMixin):
         return self._other_attrs[item]
 
 
-class NamedEnum(enum.Enum):
+# noinspection PyUnresolvedReferences
+class NamedEnumMixin:
     """
-    An enum that is produced from a string by Discord. This ensures that the key can be looked up from a lowercase
-    value that discord provides and use a Pythonic key name that is in upper case.
+    A mixin for an enum that is produced from a string by Discord. This ensures that the key can be looked up from a
+    lowercase value that discord provides and use a Pythonic key name that is in upper case.
     """
+
+    __slots__ = ()
 
     @classmethod
     def from_discord_name(cls, name: str):
@@ -158,3 +161,8 @@ class NamedEnum(enum.Enum):
         raise a :class:`KeyError` if the name is invalid.
         """
         return cls[name.upper()]
+
+    def __str__(self):
+        return self.name
+
+    __repr__ = __str__

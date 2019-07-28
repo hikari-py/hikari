@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
+from unittest import mock
 
 import pytest
 
@@ -61,7 +62,7 @@ def test_User_from_dict_when_is_a_bot():
 @pytest.mark.model
 def test_Member_from_dict_with_filled_fields():
     u = user.User(12345, "foobar", 1234, "1a2b3c4d", False)
-    g = guild.Guild()
+    g = mock.MagicMock(spec=guild.Guild)
     m = user.Member.from_dict(
         {
             "nick": "foobarbaz",
@@ -90,13 +91,13 @@ def test_Member_from_dict_with_filled_fields():
     assert m.username == "foobar"
     assert m.nick == "foobarbaz"
     assert m.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, datetime.timezone.utc)
-    assert m.nitro_boosted_at == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, datetime.timezone.utc)
+    assert m.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, datetime.timezone.utc)
 
 
 @pytest.mark.model
 def test_Member_from_dict_with_no_optional_fields():
     u = user.User(12345, "foobar", 1234, "1a2b3c4d", False)
-    g = guild.Guild()
+    g = mock.MagicMock(spec=guild.Guild)
     m = user.Member.from_dict(
         {
             "roles": ["11111", "22222", "33333", "44444"],
@@ -112,4 +113,4 @@ def test_Member_from_dict_with_no_optional_fields():
     assert m.username == "foobar"
     assert m.nick is None
     assert m.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, datetime.timezone.utc)
-    assert m.nitro_boosted_at is None
+    assert m.premium_since is None

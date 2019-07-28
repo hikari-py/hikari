@@ -72,7 +72,7 @@ class Member(User):
 
     # TODO: voice
     # TODO: statuses from gateway (eventually)
-    __slots__ = ("_user", "guild", "_roles", "joined_at", "nick", "nitro_boosted_at")
+    __slots__ = ("_user", "guild", "_roles", "joined_at", "nick", "premium_since")
 
     #: The underlying user for this member.
     _user: User
@@ -85,7 +85,7 @@ class Member(User):
     #: The optional nickname of the member.
     nick: typing.Optional[str]
     #: The optional date/time that the member Nitro-boosted the guild.
-    nitro_boosted_at: typing.Optional[datetime.datetime]
+    premium_since: typing.Optional[datetime.datetime]
 
     # noinspection PyMethodOverriding
     @staticmethod
@@ -96,5 +96,5 @@ class Member(User):
             nick=payload.get("nick"),
             guild=guild,
             joined_at=transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime),
-            nitro_boosted_at=transform.get_cast(payload, "premium_since", dateutils.parse_iso_8601_datetime),
+            premium_since=transform.get_cast(payload, "premium_since", dateutils.parse_iso_8601_datetime),
         )
