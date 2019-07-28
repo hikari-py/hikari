@@ -30,15 +30,16 @@ def pathify(arg, *args, root=False):
 
 
 # Configuration stuff we probably might move around eventually.
-MAIN_PACKAGE = "hikari"
-TEST_PACKAGE = "hikari_tests"
+MAIN_PACKAGE = "hikari.core"
+TEST_PATH = "tests/hikari/core"
 COVERAGE_RC = ".coveragerc"
 ARTIFACT_DIR = "public"
 DOCUMENTATION_DIR = "docs"
 CI_SCRIPT_DIR = "tasks"
 SPHINX_OPTS = "-WTvvn"
 ISORT_ARGS = ["--jobs", "8", "--trailing-comma", "--case-sensitive", "--verbose"]
-BLACK_PATHS = [MAIN_PACKAGE, TEST_PACKAGE, pathify(DOCUMENTATION_DIR, "conf.py"), __file__]
+BLACK_PACKAGES = [MAIN_PACKAGE, TEST_PATH]
+BLACK_PATHS = [m.replace(".", "/") for m in BLACK_PACKAGES] + [__file__, pathify(DOCUMENTATION_DIR, "conf.py")]
 BLACK_SHIM_PATH = pathify(CI_SCRIPT_DIR, "black.py")
 GENDOC_PATH = pathify(CI_SCRIPT_DIR, "gendoc.py")
 PYLINTRC = ".pylintrc"
@@ -122,7 +123,7 @@ def pytest(session: PoetryNoxSession) -> None:
         "--showlocals",
         "--testdox",
         *session.posargs,
-        TEST_PACKAGE,
+        TEST_PATH,
     )
 
 
@@ -140,6 +141,7 @@ def sphinx(session: PoetryNoxSession) -> None:
     session.run(
         "python",
         GENDOC_PATH,
+        ".",
         MAIN_PACKAGE,
         pathify(DOCUMENTATION_DIR, "_templates", "gendoc"),
         pathify(DOCUMENTATION_DIR, "index.rst"),

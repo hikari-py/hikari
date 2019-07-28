@@ -32,27 +32,19 @@ import sys
 import jinja2
 
 
-def remove_base_path(base, path):
-    base = os.path.abspath(os.path.join(base, ".."))
-    path = os.path.abspath(path)
-    truncated = path[len(base) :]
-    return truncated[1:] if truncated.startswith("/") or truncated.startswith("\\") else truncated
-
-
 def is_valid_python_file(path):
     base = os.path.basename(path)
     return not base.startswith("__") and (os.path.isdir(path) or base.endswith(".py"))
 
 
-def to_module_name(rel_path, base):
-    rel_path = remove_base_path(base, rel_path)
-    bits = rel_path.split("/")
+def to_module_name(base):
+    bits = base.split("/")
     bits[-1], _ = os.path.splitext(bits[-1])
     return ".".join(bits)
 
 
 def iter_all_module_paths_in(base):
-    stack = [base]
+    stack = [os.path.join(base)]
     while stack:
         next_path = stack.pop()
 
@@ -71,17 +63,17 @@ def iter_all_module_paths_in(base):
 
 
 def main(*argv):
-    base = argv[0]
-    modules = [to_module_name(module_path, base) for module_path in sorted(iter_all_module_paths_in(base))]
-    print(f"Found {len(modules)} modules to document:", *modules, sep="\n   - ")
-
+    base = argv[0].replace('.', '/')
     template_dir = argv[1]
+    index_file = argv[2]
+    documentation_path = argv[3]
+
+    modules = [to_module_name(module_path) for module_path in sorted(iter_all_module_paths_in(base))]
+    print(f"Found {len(modules)} modules to document:", *modules, sep="\n   - ")
 
     with open(os.path.join(template_dir, "index.rst")) as fp:
         print("Reading", fp.name)
         index_template = jinja2.Template(fp.read())
-
-    index_file = argv[2]
 
     with open(index_file, "w") as fp:
         print("Writing", fp.name)
@@ -91,7 +83,6 @@ def main(*argv):
         print("Reading", fp.name)
         module_template = jinja2.Template(fp.read())
 
-    documentation_path = argv[3]
     os.makedirs(documentation_path, 0o1777, exist_ok=True)
 
     for m in modules:
@@ -103,5 +94,5 @@ def main(*argv):
 
 
 if __name__ == "__main__":
-    os.chdir(os.path.join(os.path.dirname(__file__), ".."))
-    main(*sys.argv[1:])
+    os.chdir(sys.argv[1])
+    main(*sys.argv[2:])

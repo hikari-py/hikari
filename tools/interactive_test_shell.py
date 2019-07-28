@@ -39,10 +39,9 @@ import tkinter
 import tkinter.scrolledtext
 import traceback
 
-from hikari import errors
-from hikari.net import gateway
-from hikari.net import http_client
-
+from hikari.core import errors
+from hikari.core.net import gateway
+from hikari.core.net import http_client
 
 NSEW = tkinter.N + tkinter.S + tkinter.E + tkinter.W
 
