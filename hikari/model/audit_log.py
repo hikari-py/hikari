@@ -26,7 +26,7 @@ import enum
 import typing
 
 from hikari.model import base, overwrite, user, webhook
-from hikari.utils import maps
+from hikari.utils import transform
 
 __all__ = (
     "AuditLogEvent",
@@ -189,9 +189,9 @@ class AuditLog:
             An AuditLog object.
         """
         return AuditLog(
-            webhooks=[NotImplemented for _ in payload["webhooks"]],
-            users=[NotImplemented for _ in payload["users"]],
-            entries=[AuditLogEntry.from_dict(e) for e in payload["audit_log_entries"]],
+            webhooks=transform.get_sequence(payload, "webhooks", webhook.Webhook.from_dict),  # TODO: get from state
+            users=transform.get_sequence(payload, "users", user.User.from_dict),  # TODO: get from state
+            entries=transform.get_sequence(payload, "audit_log_entries", AuditLogEntry.from_dict),
         )
 
 
@@ -220,7 +220,8 @@ class MemberPrunedAuditLogEntryInfo:
             A MemberPrunedAuditLogEntryInfo object.
         """
         return MemberPrunedAuditLogEntryInfo(
-            delete_member_days=int(payload["delete_member_days"]), members_removed=int(payload["members_removed"])
+            delete_member_days=transform.get_cast(payload, "delete_member_days", int),
+            members_removed=transform.get_cast(payload, "members_removed", int),
         )
 
 
@@ -248,7 +249,9 @@ class MessageDeletedAuditLogEntryInfo:
         Returns:
             A MessageDeletedAuditLogEntryInfo object.
         """
-        return MessageDeletedAuditLogEntryInfo(channel_id=int(payload["channel_id"]), count=int(payload["count"]))
+        return MessageDeletedAuditLogEntryInfo(
+            channel_id=transform.get_cast(payload, "channel_id", int), count=transform.get_cast(payload, "count", int)
+        )
 
 
 @dataclasses.dataclass()
@@ -278,9 +281,9 @@ class ChannelOverwriteAuditLogEntryInfo:
             An ChannelOverwriteAuditLogEntryInfo object.
         """
         return ChannelOverwriteAuditLogEntryInfo(
-            id=int(payload["id"]),
-            type=overwrite.OverwriteEntityType.from_discord_name(payload["type"]),
-            role_name=payload["role_name"],
+            id=transform.get_cast(payload, "id", int),
+            type=transform.get_cast_or_raw(payload, "type", overwrite.OverwriteEntityType.from_discord_name),
+            role_name=payload.get("role_name"),
         )
 
 
@@ -318,8 +321,8 @@ class AuditLogChange:
         Returns:
             An AuditLogChange object.
         """
-        key = AuditLogChangeKey.from_discord_name(payload["key"])
-        old_value, new_value, key = payload.get("old_value"), payload.get("new_value"), key
+        key = transform.get_cast_or_raw(payload, "key", AuditLogChangeKey.from_discord_name)
+        old_value, new_value = payload.get("old_value"), payload.get("new_value")
         old_value, new_value, key = AuditLogChangeKey.translate_values(old_value, new_value, key)
         return AuditLogChange(old_value=old_value, new_value=new_value, key=key)
 
@@ -365,10 +368,10 @@ class AuditLogEntry(base.SnowflakeMixin):
         Returns:
             An AuditLogEntry object.
         """
-        action_type = AuditLogEvent(payload["action_type"])
+        action_type = transform.get_cast_or_raw(payload, "action_type", AuditLogEvent)
         options = payload.get("options")
 
-        if action_type.name.startswith("CHANNEL_OVERWRITE_"):
+        if getattr(action_type, "name", action_type).startswith("CHANNEL_OVERWRITE_"):
             options = ChannelOverwriteAuditLogEntryInfo.from_dict(options)
         elif action_type is AuditLogEvent.MEMBER_PRUNE:
             options = MemberPrunedAuditLogEntryInfo.from_dict(options)
@@ -378,11 +381,11 @@ class AuditLogEntry(base.SnowflakeMixin):
             options = None
 
         return AuditLogEntry(
-            id=maps.get_from_map_as(payload, "id", int),
-            target_id=maps.get_from_map_as(payload, "target_id", int, None),
-            changes=[AuditLogChange.from_dict(change) for change in payload.get("changes", [])],
-            user_id=maps.get_from_map_as(payload, "user_id", int),
+            id=transform.get_cast(payload, "id", int),
+            target_id=transform.get_cast(payload, "target_id", int, None),
+            changes=transform.get_sequence(payload, "changes", AuditLogChange.from_dict),
+            user_id=transform.get_cast(payload, "user_id", int),
             action_type=action_type,
             options=options,
-            reason=maps.get_from_map_as(payload, "reason", str, None),
+            reason=transform.get_cast(payload, "reason", str, None),
         )

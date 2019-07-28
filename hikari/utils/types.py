@@ -19,7 +19,7 @@
 """
 Custom data structures.
 """
-__all__ = ("DiscordObject",)
+__all__ = ("DiscordObject", "ObjectProxy", "Ø")
 
 import typing
 

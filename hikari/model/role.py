@@ -26,7 +26,7 @@ import dataclasses
 from hikari.model import base
 from hikari.model import color as _color
 from hikari.model import permission as _permission
-from hikari.utils import maps
+from hikari.utils import transform
 
 
 @dataclasses.dataclass()
@@ -57,12 +57,12 @@ class Role(base.SnowflakeMixin):
     @staticmethod
     def from_dict(payload):
         return Role(
-            id=maps.get_from_map_as(payload, "id", int),
-            name=maps.get_from_map_as(payload, "name", str),
-            color=maps.get_from_map_as(payload, "color", _color.Color),
-            hoist=maps.get_from_map_as(payload, "hoist", bool),
-            position=maps.get_from_map_as(payload, "position", int),
-            permissions=maps.get_from_map_as(payload, "permissions", _permission.Permission),
-            managed=maps.get_from_map_as(payload, "managed", bool),
-            mentionable=maps.get_from_map_as(payload, "mentionable", bool),
+            id=transform.get_cast(payload, "id", int),
+            name=transform.get_cast(payload, "name", str),
+            color=transform.get_cast(payload, "color", _color.Color),
+            hoist=transform.get_cast(payload, "hoist", bool),
+            position=transform.get_cast(payload, "position", int),
+            permissions=transform.get_cast(payload, "permissions", _permission.Permission),
+            managed=transform.get_cast(payload, "managed", bool),
+            mentionable=transform.get_cast(payload, "mentionable", bool),
         )
