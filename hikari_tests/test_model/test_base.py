@@ -18,6 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import dataclasses
 import datetime
+import enum
 
 import pytest
 
@@ -34,7 +35,7 @@ def neko_snowflake():
     return DummySnowflake(537340989808050216)
 
 
-class DummyNamedEnum(base.NamedEnum):
+class DummyNamedEnum(base.NamedEnumMixin, enum.IntEnum):
     FOO = 9
     BAR = 18
     BAZ = 27
@@ -89,8 +90,14 @@ class TestSnowflake:
 
 
 @pytest.mark.model
-def test_NamedEnum_from_discord_name():
+def test_NamedEnumMixin_from_discord_name():
     assert DummyNamedEnum.from_discord_name("bar") == DummyNamedEnum.BAR
+
+
+@pytest.mark.model
+@pytest.mark.parametrize("cast", [str, repr], ids=lambda it: it.__qualname__)
+def test_NamedEnumMixin_str_and_repr(cast):
+    assert cast(DummyNamedEnum.BAZ) == "BAZ"
 
 
 @pytest.mark.model

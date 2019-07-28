@@ -21,6 +21,8 @@ Permission overwrites.
 """
 __all__ = ("Overwrite", "OverwriteEntityType")
 
+import enum
+
 from hikari.model import base
 from hikari.model import permission
 from hikari.model import role
@@ -28,7 +30,11 @@ from hikari.model import user
 from hikari.utils import transform
 
 
-class OverwriteEntityType(base.NamedEnum):
+class OverwriteEntityType(base.NamedEnumMixin, enum.Enum):
+    """
+    The type of "thing" that a permission overwrite sets the permissions for.
+    """
+
     MEMBER = user.Member
     ROLE = role.Role
 

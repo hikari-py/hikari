@@ -75,7 +75,7 @@ class AuditLogEvent(enum.IntEnum):
     MESSAGE_DELETE = 72
 
 
-class AuditLogChangeKey(base.NamedEnum):
+class AuditLogChangeKey(base.NamedEnumMixin, enum.Enum):
     """
     Describes what was changed in an audit log change.
 
