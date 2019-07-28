@@ -26,3 +26,7 @@ from hikari.model import base
 
 class Webhook(base.SnowflakeMixin):
     __slots__ = ()
+
+    @staticmethod
+    def from_dict(payload):
+        return Webhook()

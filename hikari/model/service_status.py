@@ -25,7 +25,7 @@ import dataclasses
 import datetime
 import typing
 
-from hikari.utils import dateutils, maps
+from hikari.utils import dateutils, transform
 
 __all__ = (
     "Subscriber",
@@ -75,10 +75,10 @@ class Subscriber:
             id=payload["id"],
             email=payload["email"],
             mode=payload["mode"],
-            quarantined_at=maps.get_from_map_as(payload, "quarantined_at", dateutils.parse_iso_8601_datetime),
-            incident=maps.get_from_map_as(payload, "incident", Incident.from_dict),
-            skip_confirmation_notification=maps.get_from_map_as(payload, "skip_confirmation_notification", bool),
-            purge_at=maps.get_from_map_as(payload, "purge_at", dateutils.parse_iso_8601_datetime),
+            quarantined_at=transform.get_cast(payload, "quarantined_at", dateutils.parse_iso_8601_datetime),
+            incident=transform.get_cast(payload, "incident", Incident.from_dict),
+            skip_confirmation_notification=transform.get_cast(payload, "skip_confirmation_notification", bool),
+            purge_at=transform.get_cast(payload, "purge_at", dateutils.parse_iso_8601_datetime),
         )
 
 
@@ -124,7 +124,7 @@ class Page:
             id=payload["id"],
             name=payload["name"],
             url=payload["url"],
-            updated_at=maps.get_from_map_as(payload, "updated_at", dateutils.parse_iso_8601_datetime),
+            updated_at=transform.get_cast(payload, "updated_at", dateutils.parse_iso_8601_datetime),
         )
 
 
@@ -180,10 +180,10 @@ class Component:
         return Component(
             id=payload["id"],
             name=payload["name"],
-            created_at=maps.get_from_map_as(payload, "created_at", dateutils.parse_iso_8601_datetime),
+            created_at=transform.get_cast(payload, "created_at", dateutils.parse_iso_8601_datetime),
             page_id=payload["page_id"],
-            position=maps.get_from_map_as(payload, "position", int),
-            updated_at=maps.get_from_map_as(payload, "updated_at", dateutils.parse_iso_8601_datetime),
+            position=transform.get_cast(payload, "position", int),
+            updated_at=transform.get_cast(payload, "updated_at", dateutils.parse_iso_8601_datetime),
             description=payload.get("description"),
         )
 
@@ -243,11 +243,11 @@ class IncidentUpdate:
         return IncidentUpdate(
             id=payload["id"],
             body=payload["body"],
-            created_at=maps.get_from_map_as(payload, "created_at", dateutils.parse_iso_8601_datetime),
-            display_at=maps.get_from_map_as(payload, "display_at", dateutils.parse_iso_8601_datetime),
+            created_at=transform.get_cast(payload, "created_at", dateutils.parse_iso_8601_datetime),
+            display_at=transform.get_cast(payload, "display_at", dateutils.parse_iso_8601_datetime),
             incident_id=payload["incident_id"],
             status=payload["status"],
-            updated_at=maps.get_from_map_as(payload, "updated_at", dateutils.parse_iso_8601_datetime),
+            updated_at=transform.get_cast(payload, "updated_at", dateutils.parse_iso_8601_datetime),
         )
 
 
@@ -303,14 +303,14 @@ class Incident:
             id=payload["id"],
             name=payload["name"],
             status=payload["status"],
-            updated_at=maps.get_from_map_as(
+            updated_at=transform.get_cast(
                 payload, "updated_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
             incident_updates=[IncidentUpdate.from_dict(i) for i in payload.get("incident_updates", [])],
-            monitoring_at=maps.get_from_map_as(
+            monitoring_at=transform.get_cast(
                 payload, "monitoring_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
-            resolved_at=maps.get_from_map_as(
+            resolved_at=transform.get_cast(
                 payload, "resolved_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
             shortlink=payload["shortlink"],
@@ -393,21 +393,21 @@ class ScheduledMaintenance:
             name=payload["name"],
             impact=payload["impact"],
             incident_updates=[IncidentUpdate.from_dict(iu) for iu in payload.get("incident_updates", [])],
-            monitoring_at=maps.get_from_map_as(
+            monitoring_at=transform.get_cast(
                 payload, "monitoring_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
             page_id=payload["page_id"],
-            resolved_at=maps.get_from_map_as(
+            resolved_at=transform.get_cast(
                 payload, "resolved_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
-            scheduled_for=maps.get_from_map_as(
+            scheduled_for=transform.get_cast(
                 payload, "scheduled_for", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
-            scheduled_until=maps.get_from_map_as(
+            scheduled_until=transform.get_cast(
                 payload, "scheduled_until", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
             status=payload["status"],
-            updated_at=maps.get_from_map_as(
+            updated_at=transform.get_cast(
                 payload, "updated_at", dateutils.parse_iso_8601_datetime, default_on_error=True
             ),
         )
