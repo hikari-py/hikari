@@ -23,16 +23,23 @@ __all__ = ("Overwrite", "OverwriteEntityType")
 
 import dataclasses
 
-
 from hikari.model import base
 from hikari.model import permission
 from hikari.model import role
 from hikari.model import user
+from hikari.utils import transform
+
 
 
 class OverwriteEntityType(base.NamedEnum):
     MEMBER = user.Member
     ROLE = role.Role
+
+    def __instancecheck__(self, instance):
+        return isinstance(instance, self.value)
+
+    def __subclasscheck__(self, subclass):
+        return issubclass(subclass, self.value)
 
 
 @dataclasses.dataclass()
@@ -62,8 +69,8 @@ class Overwrite(base.SnowflakeMixin):
     @staticmethod
     def from_dict(payload):
         return Overwrite(
-            int(payload["id"]),
-            OverwriteEntityType.from_discord_name(payload["type"]),
-            allow=permission.Permission(payload["allow"]),
-            deny=permission.Permission(payload["deny"]),
+            id=transform.get_cast(payload, "id", int),
+            type=transform.get_cast_or_raw(payload, "type", OverwriteEntityType.from_discord_name),
+            allow=transform.get_cast_or_raw(payload, "allow", permission.Permission),
+            deny=transform.get_cast_or_raw(payload, "deny", permission.Permission),
         )

@@ -33,7 +33,7 @@ import abc
 import typing
 
 from hikari.model import base, overwrite, user
-from hikari.utils import maps
+from hikari.utils import transform
 
 
 @dataclasses.dataclass()
@@ -96,16 +96,16 @@ class GuildTextChannel(GuildChannel):
     def from_dict(payload, state):
         return GuildTextChannel(
             _state=state,
-            id=maps.get_from_map_as(payload, "id", int),
-            guild_id=maps.get_from_map_as(payload, "guild_id", int),
-            position=payload["position"],
-            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
-            name=payload["name"],
+            id=transform.get_cast(payload, "id", int),
+            guild_id=transform.get_cast(payload, "guild_id", int),
+            position=payload.get("position"),
+            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
+            name=payload.get("name"),
             nsfw=payload.get("nsfw", False),
-            parent_id=maps.get_from_map_as(payload, "parent_id", int),
+            parent_id=transform.get_cast(payload, "parent_id", int),
             topic=payload.get("topic"),
             rate_limit_per_user=payload.get("rate_limit_per_user"),
-            last_message_id=maps.get_from_map_as(payload, "last_message_id", int),
+            last_message_id=transform.get_cast(payload, "last_message_id", int),
         )
 
 
@@ -126,9 +126,9 @@ class DMChannel(Channel):
     def from_dict(payload, state):
         return DMChannel(
             _state=state,
-            id=int(payload["id"]),
-            last_message_id=maps.get_from_map_as(payload, "last_message_id", int),
-            recipients=[NotImplemented for _ in payload["recipients"]],  # TODO
+            id=transform.get_cast(payload, "id", int),
+            last_message_id=transform.get_cast(payload, "last_message_id", int),
+            recipients=transform.get_sequence(payload, "recipients", repr),  # TODO
         )
 
 
@@ -151,14 +151,14 @@ class GuildVoiceChannel(GuildChannel):
     def from_dict(payload, state):
         return GuildVoiceChannel(
             _state=state,
-            id=maps.get_from_map_as(payload, "id", int),
-            guild_id=maps.get_from_map_as(payload, "guild_id", int),
-            position=payload["position"],
-            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
-            name=payload["name"],
-            bitrate=payload["bitrate"],
-            user_limit=payload["user_limit"] or None,
-            parent_id=maps.get_from_map_as(payload, "parent_id", int),
+            id=transform.get_cast(payload, "id", int),
+            guild_id=transform.get_cast(payload, "guild_id", int),
+            position=payload.get("position"),
+            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
+            name=payload.get("name"),
+            bitrate=payload.get("bitrate"),
+            user_limit=payload.get("user_limit") or None,
+            parent_id=transform.get_cast(payload, "parent_id", int),
         )
 
 
@@ -184,13 +184,13 @@ class GroupDMChannel(DMChannel):
     def from_dict(payload, state):
         return GroupDMChannel(
             state,
-            id=maps.get_from_map_as(payload, "id", int),
-            last_message_id=payload["last_message_id"],
-            recipients=[NotImplemented for _ in payload["recipients"]],  # TODO
-            icon_hash=payload.get("icon") if payload["icon"] else None,
+            id=transform.get_cast(payload, "id", int),
+            last_message_id=transform.get_cast(payload, "last_message_id", int),
+            recipients=transform.get_sequence(payload, "recipients", repr),  # TODO
+            icon_hash=payload.get("icon"),
             name=payload.get("name"),
-            owner_application_id=maps.get_from_map_as(payload, "owner_application_id", int),
-            owner_id=maps.get_from_map_as(payload, "owner_id", int),
+            owner_application_id=transform.get_cast(payload, "owner_application_id", int),
+            owner_id=transform.get_cast(payload, "owner_id", int),
         )
 
 
@@ -205,11 +205,11 @@ class GuildCategory(GuildChannel):
     def from_dict(payload, state):
         return GuildCategory(
             _state=state,
-            id=int(payload["id"]),
-            guild_id=int(payload["guild_id"]),
-            position=payload["position"],
-            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
-            name=payload["name"],
+            id=transform.get_cast(payload, "id", int),
+            guild_id=transform.get_cast(payload, "guild_id", int),
+            position=transform.get_cast(payload, "position", int),
+            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
+            name=payload.get("name"),
         )
 
 
@@ -235,15 +235,15 @@ class GuildNewsChannel(GuildChannel):
     def from_dict(payload, state):
         return GuildNewsChannel(
             _state=state,
-            id=maps.get_from_map_as(payload, "id", int),
-            guild_id=maps.get_from_map_as(payload, "guild_id", int),
-            position=payload["position"],
-            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
-            name=payload["name"],
+            id=transform.get_cast(payload, "id", int),
+            guild_id=transform.get_cast(payload, "guild_id", int),
+            position=transform.get_cast(payload, "position", int),
+            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
+            name=payload.get("name"),
             nsfw=payload.get("nsfw", False),
-            parent_id=maps.get_from_map_as(payload, "parent_id", int),
+            parent_id=transform.get_cast(payload, "parent_id", int),
             topic=payload.get("topic"),
-            last_message_id=maps.get_from_map_as(payload, "last_message_id", int),
+            last_message_id=transform.get_cast(payload, "last_message_id", int),
         )
 
 
@@ -260,12 +260,12 @@ class GuildStoreChannel(GuildChannel):
     def from_dict(payload, state):
         return GuildStoreChannel(
             _state=state,
-            id=maps.get_from_map_as(payload, "id", int),
-            guild_id=maps.get_from_map_as(payload, "guild_id", int),
-            position=payload["position"],
-            permission_overwrites=[NotImplemented for _ in payload["permission_overwrites"]],  # TODO
-            name=payload["name"],
-            parent_id=maps.get_from_map_as(payload, "parent_id", int),
+            id=transform.get_cast(payload, "id", int),
+            guild_id=transform.get_cast(payload, "guild_id", int),
+            position=transform.get_cast(payload, "position", int),
+            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
+            name=payload.get("name"),
+            parent_id=transform.get_cast(payload, "parent_id", int),
         )
 
 
@@ -280,7 +280,7 @@ def channel_from_dict(payload, state):
         GuildStoreChannel,
     ]
 
-    channel_type = payload["type"]
+    channel_type = payload.get("type")
 
     try:
         return channel_types[channel_type].from_dict(payload, state)
