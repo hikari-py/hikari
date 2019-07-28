@@ -21,9 +21,9 @@ Guild permissions.
 """
 from __future__ import annotations
 
-import enum
-
 __all__ = ("Permission",)
+
+import enum
 
 
 class Permission(enum.IntFlag):

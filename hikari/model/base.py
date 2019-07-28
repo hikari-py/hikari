@@ -19,7 +19,9 @@
 """
 Model ABCs and mixins.
 """
-__all__ = ("SnowflakeMixin", "PartialObject", "NamedEnum")
+from __future__ import annotations
+
+__all__ = ("SnowflakeMixin", "PartialObject", "NamedEnumMixin")
 
 import copy
 import dataclasses
@@ -30,7 +32,37 @@ import typing
 from hikari.utils import assertions, dateutils
 
 
+def _hash_method(self: SnowflakeMixin):
+    return self.id
+
+
+def dataclass(**kwargs):
+    """
+    Wraps the dataclasses' dataclass decorator and injects some default behaviour, such as injecting `__hash__` into
+    any member that supplies the `id` member.
+
+    Args:
+        **kwargs:
+            Any arguments to pass to dataclasses' dataclass decorator.
+
+    Returns:
+        A decorator for a new data class.
+    """
+
+    def decorator(cls):
+        kwargs.pop("unsafe_hash", None)
+        kwargs.pop("init", "__init__" not in cls.__dict__)
+
+        if "id" in getattr(cls, "__annotations__", []) or "id" in getattr(cls, "__slots__", []):
+            setattr(cls, "__hash__", _hash_method)
+
+        return dataclasses.dataclass(**kwargs)(cls)
+
+    return decorator
+
+
 @assertions.assert_is_mixin
+@assertions.assert_is_slotted
 class SnowflakeMixin:
     """
     Base for any type that specifies an ID. The implementation is expected to implement that field.
@@ -88,7 +120,7 @@ class SnowflakeMixin:
         return self > other or self == other
 
 
-@dataclasses.dataclass()
+@dataclass()
 class PartialObject(SnowflakeMixin):
     """
     Representation of a partially constructed object. This may be returned by some components instead of a correctly
@@ -113,11 +145,14 @@ class PartialObject(SnowflakeMixin):
         return self._other_attrs[item]
 
 
-class NamedEnum(enum.Enum):
+# noinspection PyUnresolvedReferences
+class NamedEnumMixin:
     """
-    An enum that is produced from a string by Discord. This ensures that the key can be looked up from a lowercase
-    value that discord provides and use a Pythonic key name that is in upper case.
+    A mixin for an enum that is produced from a string by Discord. This ensures that the key can be looked up from a
+    lowercase value that discord provides and use a Pythonic key name that is in upper case.
     """
+
+    __slots__ = ()
 
     @classmethod
     def from_discord_name(cls, name: str):
@@ -126,3 +161,8 @@ class NamedEnum(enum.Enum):
         raise a :class:`KeyError` if the name is invalid.
         """
         return cls[name.upper()]
+
+    def __str__(self):
+        return self.name
+
+    __repr__ = __str__

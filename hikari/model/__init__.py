@@ -35,5 +35,5 @@ from .reaction import *
 from .server_debug import *
 from .service_status import *
 from .user import *
-from .voice_state import *
+from .voice import *
 from .webhook import *
