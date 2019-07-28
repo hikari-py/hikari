@@ -58,15 +58,16 @@ def parse_iso_8601_datetime(date_string: str) -> datetime.datetime:
     partial = partial + (6 - len(partial)) * "0"
     hour, minute, second, partial = int(hour), int(minute), int(second), int(partial)
     if date_string.endswith(("Z", "z")):
-        offset = datetime.timedelta(seconds=0)
+        timezone = datetime.timezone.utc
     else:
         sign, tz_hour, tz_minute = ISO_8601_TZ_PART.findall(date_string)[0]
         tz_hour, tz_minute = int(tz_hour), int(tz_minute)
         offset = datetime.timedelta(hours=tz_hour, minutes=tz_minute)
         if sign == "-":
             offset = -offset
+        timezone = datetime.timezone(offset)
 
-    return datetime.datetime(year, month, day, hour, minute, second, partial, datetime.timezone(offset))
+    return datetime.datetime(year, month, day, hour, minute, second, partial, timezone)
 
 
 #: This represents the 1st January 2015 as the number of seconds since 1st January 1970 (Discord epoch)
