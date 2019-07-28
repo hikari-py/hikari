@@ -21,12 +21,6 @@ Models for the Status API.
 """
 from __future__ import annotations
 
-import dataclasses
-import datetime
-import typing
-
-from hikari.utils import dateutils, transform
-
 __all__ = (
     "Subscriber",
     "Subscription",
@@ -42,8 +36,15 @@ __all__ = (
     "Summary",
 )
 
+import datetime
+import typing
 
-@dataclasses.dataclass()
+from hikari.model import base
+from hikari.utils import dateutils
+from hikari.utils import transform
+
+
+@base.dataclass()
 class Subscriber:
     """
     A subscription to an incident.
@@ -82,7 +83,7 @@ class Subscriber:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Subscription:
     """
     A subscription to an incident.
@@ -98,7 +99,7 @@ class Subscription:
         return Subscription(subscriber=Subscriber.from_dict(payload["subscriber"]))
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Page:
     """
     A page element.
@@ -128,7 +129,7 @@ class Page:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Status:
     """
     A status description.
@@ -146,7 +147,7 @@ class Status:
         return Status(indicator=payload.get("indicator"), description=payload.get("description"))
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Component:
     """
     A component description.
@@ -188,7 +189,7 @@ class Component:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Components:
     """
     A collection of :class:`Component` objects.
@@ -209,7 +210,7 @@ class Components:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class IncidentUpdate:
     """
     An informative status update for a specific incident.
@@ -251,7 +252,7 @@ class IncidentUpdate:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Incident:
     """
     An incident.
@@ -319,7 +320,7 @@ class Incident:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Incidents:
     """
     A collection of :class:`Incident` objects.
@@ -337,7 +338,7 @@ class Incidents:
         return Incidents(Page.from_dict(payload["page"]), [Incident.from_dict(i) for i in payload["incidents"]])
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class ScheduledMaintenance:
     """
     A description of a maintenance that is scheduled to be performed.
@@ -413,7 +414,7 @@ class ScheduledMaintenance:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class ScheduledMaintenances:
     """
     A collection of maintenance events.
@@ -434,7 +435,7 @@ class ScheduledMaintenances:
         )
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Summary:
     """
     A description of the overall API status.

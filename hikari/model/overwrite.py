@@ -21,9 +21,10 @@ Permission overwrites.
 """
 __all__ = ("Overwrite", "OverwriteEntityType")
 
-import dataclasses
-
-from hikari.model import base, permission, role, user
+from hikari.model import base
+from hikari.model import permission
+from hikari.model import role
+from hikari.model import user
 from hikari.utils import transform
 
 
@@ -38,7 +39,7 @@ class OverwriteEntityType(base.NamedEnum):
         return issubclass(subclass, self.value)
 
 
-@dataclasses.dataclass()
+@base.dataclass()
 class Overwrite(base.SnowflakeMixin):
     """
     Representation of some permissions that have been explicitly allowed or denied as an override from the defaults.

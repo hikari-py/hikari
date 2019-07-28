@@ -277,7 +277,7 @@ class BaseHTTPClient:
         ) as r:
             self.logger.debug(
                 "[try %s - %s] %s responded with %s %s containing %s (%s bytes)",
-                retry,
+                retry + 1,
                 self._correlation_id,
                 uri,
                 r.status,

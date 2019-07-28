@@ -19,6 +19,8 @@
 """
 Model ABCs and mixins.
 """
+from __future__ import annotations
+
 __all__ = ("SnowflakeMixin", "PartialObject", "NamedEnum")
 
 import copy
@@ -28,6 +30,35 @@ import enum
 import typing
 
 from hikari.utils import assertions, dateutils
+
+
+def _hash_method(self: SnowflakeMixin):
+    return self.id
+
+
+def dataclass(**kwargs):
+    """
+    Wraps the dataclasses' dataclass decorator and injects some default behaviour, such as injecting `__hash__` into
+    any member that supplies the `id` member.
+
+    Args:
+        **kwargs:
+            Any arguments to pass to dataclasses' dataclass decorator.
+
+    Returns:
+        A decorator for a new data class.
+    """
+
+    def decorator(cls):
+        kwargs.pop("unsafe_hash", None)
+        kwargs.pop("init", "__init__" not in cls.__dict__)
+
+        if "id" in getattr(cls, "__annotations__", []) or "id" in getattr(cls, "__slots__", []):
+            setattr(cls, "__hash__", _hash_method)
+
+        return dataclasses.dataclass(**kwargs)(cls)
+
+    return decorator
 
 
 @assertions.assert_is_mixin
@@ -89,7 +120,7 @@ class SnowflakeMixin:
         return self > other or self == other
 
 
-@dataclasses.dataclass()
+@dataclass()
 class PartialObject(SnowflakeMixin):
     """
     Representation of a partially constructed object. This may be returned by some components instead of a correctly
