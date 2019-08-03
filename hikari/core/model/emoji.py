@@ -34,4 +34,3 @@ class Emoji:
     @staticmethod
     def from_dict(global_state: state.AbstractState, payload):
         return NotImplemented
-

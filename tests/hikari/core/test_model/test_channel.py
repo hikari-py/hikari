@@ -117,7 +117,7 @@ class TestChannel:
                 "guild_id": "54321",
                 "position": 69,
                 "permission_overwrites": [],
-                "name": "dank category"
+                "name": "dank category",
             },
             NotImplemented,
         )

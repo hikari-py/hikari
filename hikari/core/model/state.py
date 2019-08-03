@@ -34,6 +34,7 @@ class AbstractState(abc.ABC):
     
     This class provides abstract definitions only to enable a user to implement their own state system if they prefer.
     """
+
     __slots__ = ()
 
     @abc.abstractmethod
