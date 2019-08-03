@@ -21,7 +21,6 @@ All models used in Hikari's public API.
 """
 import builtins as _builtins
 
-from .audit_log import *
 from .base import *
 from .channel import *
 from .color import *

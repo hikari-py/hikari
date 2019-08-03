@@ -21,7 +21,6 @@ Helper methods used for managing Mapping types during transformations.
 """
 __all__ = ("try_cast", "get_cast", "get_cast_or_raw", "get_sequence", "put_if_specified")
 
-import contextlib
 import inspect
 import typing
 
@@ -30,12 +29,13 @@ from hikari.core.utils import unspecified
 T = typing.TypeVar("T")
 U = typing.TypeVar("U")
 Seq = typing.TypeVar("Seq", bound=typing.Collection)
+_CastFunc = typing.Union[typing.Type[T], typing.Callable[[typing.Any], T], typing.Callable[..., T]]
 
 _EMPTY_TUPLE = ()
 _BAD_OBJECT = object()
 
 
-def try_cast(value: typing.Any, cast: typing.Callable[[typing.Any], T], default: U) -> typing.Union[T, U]:
+def try_cast(value: typing.Any, cast: _CastFunc, default: U, **kwargs) -> typing.Union[T, U]:
     """
     Try to cast a given value using the cast, or return default if it fails.
     Args:
@@ -45,14 +45,19 @@ def try_cast(value: typing.Any, cast: typing.Callable[[typing.Any], T], default:
             the cast function.
         default:
             the default value if the cast fails.
+        **kwargs:
+            other kwargs to pass to the cast.
 
     Returns:
         The cast value or the default value otherwise.
     """
-    with contextlib.suppress(Exception) as _:  # _ is useful in pytest traces and when debugging.
-        return cast(value)
-
-    return default
+    # We could use a suppress here, but this is useful during debugging to explicitly see what the exception is
+    # by adding traceback.print_exc() to the except suite.
+    # noinspection PyBroadException
+    try:
+        return cast(value, **kwargs)
+    except Exception:
+        return default
 
 
 def get_cast(
@@ -121,6 +126,8 @@ def get_sequence(
     key: typing.Hashable,
     inner_cast: typing.Callable[[typing.Any], T],
     sequence_type: typing.Union[typing.Type[Seq], typing.Callable[..., Seq]] = list,
+    keep_failures: bool = False,
+    **kwargs
 ) -> Seq:
     """
     Get a collection at the given key in the given mapping and cast all values to the inner cast, then wrap in
@@ -137,12 +144,22 @@ def get_sequence(
             the callable to cast each item with.
         sequence_type:
             the collection type to wrap the collection in.
+        keep_failures:
+            defaults to False. If True, any failed casts will be stored as their input value rather than being omitted.
+        **kwargs:
+            other kwargs to pass to the cast.
 
     Returns:
         A collection of `sequence_type`.
     """
-    items = (try_cast(item, inner_cast, _BAD_OBJECT) for item in mapping.get(key, _EMPTY_TUPLE))
-    return sequence_type(item for item in items if item is not _BAD_OBJECT)
+    initial_items = mapping.get(key, _EMPTY_TUPLE)
+    if keep_failures:
+        items = (try_cast(item, inner_cast, item, **kwargs) for item in initial_items)
+    else:
+        items = (try_cast(item, inner_cast, _BAD_OBJECT, **kwargs) for item in initial_items)
+
+    sequence = sequence_type(item for item in items if item is not _BAD_OBJECT)
+    return sequence
 
 
 def put_if_specified(
