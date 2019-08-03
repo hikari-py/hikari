@@ -300,7 +300,4 @@ class Ban:
 
     @staticmethod
     def from_dict(global_state: state.AbstractState, payload: dict):
-        return Ban(
-            reason=payload.get("reason"),
-            user=transform.get_cast(payload, "user", global_state.parse_user)
-        )
+        return Ban(reason=payload.get("reason"), user=transform.get_cast(payload, "user", global_state.parse_user))

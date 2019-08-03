@@ -55,13 +55,13 @@ def test_guild_payload():
             {
                 "id": "1111223",
                 "name": "some unfunny pun here",
-                "color": 0xff00ff,
+                "color": 0xFF00FF,
                 "hoist": False,
                 "position": 1,
                 "permissions": 1,
                 "managed": False,
                 "mentionable": True,
-            }
+            },
         ],
         "emojis": [
             {
@@ -72,11 +72,11 @@ def test_guild_payload():
                     "username": "Luigi",
                     "discriminator": "0002",
                     "id": "96008815106887111",
-                    "avatar": "5500909a3274e1812beb4e8de6631111"
+                    "avatar": "5500909a3274e1812beb4e8de6631111",
                 },
                 "require_colons": True,
                 "managed": False,
-                "animated": False
+                "animated": False,
             }
         ],
         "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
@@ -127,7 +127,7 @@ def test_guild_payload():
                 "guild_id": "54321",
                 "position": 69,
                 "permission_overwrites": [],
-                "name": "dank category"
+                "name": "dank category",
             },
             {
                 "type": 2,

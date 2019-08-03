@@ -45,7 +45,7 @@ class TestMessage:
                 "application": None,
                 "activity": None,
                 "content": "ayyyyyyy lmao",
-            }
+            },
         )
 
         assert m.type is message.MessageType.DEFAULT
@@ -106,7 +106,7 @@ class TestMessage:
                 "activity": {"type": 2, "party_id": "44332211"},
                 "content": "some pointless text",
                 "something_we_didnt_account_for": "meh, it is fine to ignore it.",
-            }
+            },
         )
 
         assert m.type is message.MessageType.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2

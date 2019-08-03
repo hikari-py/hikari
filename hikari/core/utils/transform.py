@@ -127,7 +127,7 @@ def get_sequence(
     inner_cast: typing.Callable[[typing.Any], T],
     sequence_type: typing.Union[typing.Type[Seq], typing.Callable[..., Seq]] = list,
     keep_failures: bool = False,
-    **kwargs
+    **kwargs,
 ) -> Seq:
     """
     Get a collection at the given key in the given mapping and cast all values to the inner cast, then wrap in
