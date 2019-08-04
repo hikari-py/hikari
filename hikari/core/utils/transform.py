@@ -19,7 +19,7 @@
 """
 Helper methods used for managing Mapping types during transformations.
 """
-__all__ = ("try_cast", "get_cast", "get_cast_or_raw", "get_sequence", "put_if_specified")
+__all__ = ("flatten", "try_cast", "get_cast", "get_cast_or_raw", "get_sequence", "put_if_specified")
 
 import inspect
 import typing
@@ -33,6 +33,10 @@ _CastFunc = typing.Union[typing.Type[T], typing.Callable[[typing.Any], T], typin
 
 _EMPTY_TUPLE = ()
 _BAD_OBJECT = object()
+
+
+def flatten(objects, key_attr: str="id"):
+    return {getattr(o, key_attr): o for o in objects}
 
 
 def try_cast(value: typing.Any, cast: _CastFunc, default: U, **kwargs) -> typing.Union[T, U]:

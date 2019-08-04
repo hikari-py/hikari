@@ -54,11 +54,7 @@ class AbstractModelState(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def parse_member(self, member: types.DiscordObject):
-        ...
-
-    @abc.abstractmethod
-    def get_member_by_id(self, member_id: int):
+    def parse_member(self, member: types.DiscordObject, guild_id: int):
         ...
 
     @abc.abstractmethod
@@ -66,15 +62,7 @@ class AbstractModelState(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def get_role_by_id(self, role_id: int):
-        ...
-
-    @abc.abstractmethod
     def parse_emoji(self, emoji: types.DiscordObject):
-        ...
-
-    @abc.abstractmethod
-    def get_emoji_by_id(self, emoji_id: int):
         ...
 
     @abc.abstractmethod
@@ -90,13 +78,6 @@ class AbstractModelState(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def get_channel_by_id(self, channel_id: int):
-        ...
-
-    @abc.abstractmethod
     def parse_webhook(self, webhook: types.DiscordObject):
         ...
 
-    @abc.abstractmethod
-    def get_webhook_by_id(self, webhook_id: int):
-        ...

@@ -59,6 +59,12 @@ class Channel(base.SnowflakeMixin, abc.ABC):
     def from_dict(payload, state):
         """Convert the given payload and state into an object instance."""
 
+    @property
+    @abc.abstractmethod
+    def is_dm(self) -> bool:
+        """Return True if this is a DM"""
+        ...
+
 
 @base.dataclass()
 class GuildChannel(Channel, abc.ABC):
@@ -76,6 +82,10 @@ class GuildChannel(Channel, abc.ABC):
     permission_overwrites: typing.List[overwrite.Overwrite]
     #: The name of the channel.
     name: str
+
+    @property
+    def is_dm(self) -> bool:
+        return False
 
 
 @base.dataclass()
@@ -99,9 +109,9 @@ class GuildTextChannel(GuildChannel):
 
     # noinspection PyMethodOverriding
     @staticmethod
-    def from_dict(payload, state):
+    def from_dict(global_state, payload):
         return GuildTextChannel(
-            _state=state,
+            _state=global_state,
             id=transform.get_cast(payload, "id", int),
             guild_id=transform.get_cast(payload, "guild_id", int),
             position=payload.get("position"),
@@ -129,13 +139,17 @@ class DMChannel(Channel):
     recipients: typing.List["user.User"]
 
     @staticmethod
-    def from_dict(payload, state):
+    def from_dict(global_state, payload):
         return DMChannel(
-            _state=state,
+            _state=global_state,
             id=transform.get_cast(payload, "id", int),
             last_message_id=transform.get_cast(payload, "last_message_id", int),
-            recipients=transform.get_sequence(payload, "recipients", repr),  # TODO
+            recipients=transform.get_sequence(payload, "recipients", global_state.parse_user)
         )
+
+    @property
+    def is_dm(self) -> bool:
+        return True
 
 
 @base.dataclass()
@@ -154,9 +168,9 @@ class GuildVoiceChannel(GuildChannel):
     parent_id: typing.Optional[int]
 
     @staticmethod
-    def from_dict(payload, state):
+    def from_dict(global_state, payload):
         return GuildVoiceChannel(
-            _state=state,
+            _state=global_state,
             id=transform.get_cast(payload, "id", int),
             guild_id=transform.get_cast(payload, "guild_id", int),
             position=payload.get("position"),
@@ -187,9 +201,9 @@ class GroupDMChannel(DMChannel):
     owner_application_id: typing.Optional[int]
 
     @staticmethod
-    def from_dict(payload, state):
+    def from_dict(global_state, payload):
         return GroupDMChannel(
-            state,
+            global_state,
             id=transform.get_cast(payload, "id", int),
             last_message_id=transform.get_cast(payload, "last_message_id", int),
             recipients=transform.get_sequence(payload, "recipients", repr),  # TODO
@@ -209,9 +223,9 @@ class GuildCategory(GuildChannel):
     __slots__ = ()
 
     @staticmethod
-    def from_dict(payload, state):
+    def from_dict(global_state, payload):
         return GuildCategory(
-            _state=state,
+            _state=global_state,
             id=transform.get_cast(payload, "id", int),
             guild_id=transform.get_cast(payload, "guild_id", int),
             position=transform.get_cast(payload, "position", int),
@@ -239,9 +253,9 @@ class GuildNewsChannel(GuildChannel):
 
     # noinspection PyMethodOverriding
     @staticmethod
-    def from_dict(payload, state):
+    def from_dict(global_state, payload):
         return GuildNewsChannel(
-            _state=state,
+            _state=global_state,
             id=transform.get_cast(payload, "id", int),
             guild_id=transform.get_cast(payload, "guild_id", int),
             position=transform.get_cast(payload, "position", int),
@@ -265,9 +279,9 @@ class GuildStoreChannel(GuildChannel):
     parent_id: typing.Optional[int]
 
     @staticmethod
-    def from_dict(payload, state):
+    def from_dict(global_state, payload):
         return GuildStoreChannel(
-            _state=state,
+            _state=global_state,
             id=transform.get_cast(payload, "id", int),
             guild_id=transform.get_cast(payload, "guild_id", int),
             position=transform.get_cast(payload, "position", int),
@@ -277,7 +291,7 @@ class GuildStoreChannel(GuildChannel):
         )
 
 
-def channel_from_dict(payload, state):
+def channel_from_dict(global_state, payload):
     channel_types = [
         GuildTextChannel,
         DMChannel,
@@ -291,6 +305,6 @@ def channel_from_dict(payload, state):
     channel_type = payload.get("type")
 
     try:
-        return channel_types[channel_type].from_dict(payload, state)
+        return channel_types[channel_type].from_dict(global_state, payload)
     except IndexError:
         raise TypeError(f"Invalid channel type {channel_type}") from None

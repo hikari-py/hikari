@@ -21,13 +21,13 @@ from unittest import mock
 
 import pytest
 
-from hikari.core.model import state
+from hikari.core.model import model_state
 from hikari.core.model import user
 
 
 @pytest.mark.model
 def test_User_from_dict_when_not_a_bot():
-    s = mock.MagicMock(spec_set=state.AbstractModelState)
+    s = mock.MagicMock(spec_set=model_state.AbstractModelState)
     u = user.User.from_dict(
         s,
         {
@@ -51,7 +51,7 @@ def test_User_from_dict_when_not_a_bot():
 
 @pytest.mark.model
 def test_User_from_dict_when_is_a_bot():
-    s = mock.MagicMock(spec_set=state.AbstractModelState)
+    s = mock.MagicMock(spec_set=model_state.AbstractModelState)
     u = user.User.from_dict(
         s, {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": None, "bot": True}
     )
@@ -65,7 +65,7 @@ def test_User_from_dict_when_is_a_bot():
 
 @pytest.mark.model
 def test_Member_from_dict_with_filled_fields():
-    s = mock.MagicMock(spec_set=state.AbstractModelState)
+    s = mock.MagicMock(spec_set=model_state.AbstractModelState)
     user_dict = {
         "id": "123456",
         "username": "Boris Johnson",
@@ -101,7 +101,7 @@ def test_Member_from_dict_with_filled_fields():
 
 @pytest.mark.model
 def test_Member_from_dict_with_no_optional_fields():
-    s = mock.MagicMock(spec_set=state.AbstractModelState)
+    s = mock.MagicMock(spec_set=model_state.AbstractModelState)
     user_dict = {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": "1a2b3c4d"}
     gid = 123456
     m = user.Member.from_dict(

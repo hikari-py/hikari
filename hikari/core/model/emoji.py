@@ -24,9 +24,9 @@ __all__ = ()
 import typing
 
 from hikari.core.model import base
-from hikari.core.model import model_statex
 from hikari.core.model import user
 from hikari.core.model import role
+from hikari.core.model import model_state
 from hikari.core.utils import transform
 
 
@@ -76,3 +76,4 @@ class Emoji:
             managed=transform.get_cast(payload, "managed", bool),
             animated=transform.get_cast(payload, "animated", bool)
         )
+

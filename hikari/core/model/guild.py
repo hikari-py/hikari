@@ -42,7 +42,7 @@ from hikari.core.model import channel
 from hikari.core.model import emoji
 from hikari.core.model import permission
 from hikari.core.model import role
-from hikari.core.model import state
+from hikari.core.model import model_state
 from hikari.core.model import user
 from hikari.core.model import voice
 
@@ -99,7 +99,7 @@ class Guild(base.SnowflakeMixin):
     )
 
     #: The global state.
-    _state: state.AbstractModelState
+    _state: model_state.AbstractModelState
     #: The guild ID.
     id: int
     #: Voice Channel ID for AFK users.
@@ -129,9 +129,9 @@ class Guild(base.SnowflakeMixin):
     #: Explicit content filtering level.
     explicit_content_filter_level: ExplicitContentFilterLevel
     #: Roles in this guild.
-    roles: typing.List["role.Role"]
+    roles: typing.Dict[int, "role.Role"]
     #: Emojis in this guild.
-    emojis: typing.List["emoji.Emoji"]
+    emojis: typing.Dict[int, "emoji.Emoji"]
     #: Enabled features in this guild.
     features: typing.List[GuildFeature]
     #: Number of members.
@@ -146,11 +146,11 @@ class Guild(base.SnowflakeMixin):
     #: True if the guild is considered to be unavailable, or False if it is not.
     unavailable: bool
     #: Voice states of users in the guild.
-    voice_states: typing.List[voice.VoiceState]
+    voice_states: typing.List[voice.VoiceState]  # TODO: dictify?
     #: Members in the guild.
-    members: typing.List["user.Member"]
+    members: typing.Dict[int, "user.Member"]
     #: Channels in the guild.
-    channels: typing.List["channel.GuildChannel"]
+    channels: typing.Dict[int, "channel.GuildChannel"]
     #: Max members allowed in the guild.
     max_members: int
     #: Code for the vanity URL.
@@ -167,10 +167,11 @@ class Guild(base.SnowflakeMixin):
     system_channel_flags: typing.Optional[SystemChannelFlag]
 
     @staticmethod
-    def from_dict(global_state: state.AbstractModelState, payload: dict):
+    def from_dict(global_state: model_state.AbstractModelState, payload: dict):
+        guild_id = transform.get_cast(payload, "id", int)
         return Guild(
             _state=global_state,
-            id=transform.get_cast(payload, "id", int),
+            id=guild_id,
             _afk_channel_id=transform.get_cast(payload, "afk_channel_id", int),
             _owner_id=transform.get_cast(payload, "owner_id", int),
             _voice_region_id=transform.get_cast(payload, "region", int),
@@ -187,8 +188,8 @@ class Guild(base.SnowflakeMixin):
             explicit_content_filter_level=transform.get_cast_or_raw(
                 payload, "explicit_content_filter", ExplicitContentFilterLevel
             ),
-            roles=transform.get_sequence(payload, "roles", global_state.parse_role),
-            emojis=transform.get_sequence(payload, "emojis", global_state.parse_emoji),
+            roles=transform.get_sequence(payload, "roles", global_state.parse_role, transform.flatten),
+            emojis=transform.get_sequence(payload, "emojis", global_state.parse_emoji, transform.flatten),
             features=transform.get_sequence(payload, "features", GuildFeature.from_discord_name, keep_failures=True),
             member_count=transform.get_cast(payload, "member_count", int),
             mfa_level=transform.get_cast_or_raw(payload, "mfa_level", MFALevel),
@@ -196,9 +197,9 @@ class Guild(base.SnowflakeMixin):
             joined_at=transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime),
             large=transform.get_cast(payload, "large", bool),
             unavailable=transform.get_cast(payload, "unavailable", bool),
-            voice_states=transform.get_sequence(payload, "voice_states", voice.VoiceState, set),
-            members=transform.get_sequence(payload, "members", global_state.parse_member, set),
-            channels=transform.get_sequence(payload, "channels", global_state.parse_channel, state=state),
+            voice_states=NotImplemented,   # TODO
+            members=transform.flatten((global_state.parse_member(m, guild_id) for m in payload.get('members', ()))),
+            channels=transform.get_sequence(payload, "channels", global_state.parse_channel, transform.flatten, state=global_state),
             max_members=transform.get_cast(payload, "max_members", int),
             vanity_url_code=payload.get("vanity_url_code"),
             description=payload.get("description"),
@@ -299,5 +300,5 @@ class Ban:
     user: user.User
 
     @staticmethod
-    def from_dict(global_state: state.AbstractModelState, payload: dict):
+    def from_dict(global_state: model_state.AbstractModelState, payload: dict):
         return Ban(reason=payload.get("reason"), user=global_state.parse_user(payload.get("user")))
