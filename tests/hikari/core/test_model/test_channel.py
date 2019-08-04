@@ -21,12 +21,15 @@ from unittest import mock
 import pytest
 
 from hikari.core.model import channel
+from hikari.core.model import model_state
 
 
 @pytest.mark.model
 class TestChannel:
     def test_GuildTextChannel_from_dict(self):
+        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
         gtc = channel.GuildTextChannel.from_dict(
+            s,
             {
                 "type": 0,
                 "id": "1234567",
@@ -39,7 +42,6 @@ class TestChannel:
                 "topic": "nsfw stuff",
                 "name": "shh!",
             },
-            NotImplemented,
         )
 
         assert gtc.id == 1234567
@@ -51,18 +53,23 @@ class TestChannel:
         assert gtc.rate_limit_per_user == 420
         assert gtc.topic == "nsfw stuff"
         assert gtc.name == "shh!"
+        assert not gtc.is_dm
 
     def test_DMChannel_from_dict(self):
+        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
         dmc = channel.DMChannel.from_dict(
-            {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []}, NotImplemented
+            s, {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []}
         )
 
         assert dmc.id == 929292
         assert dmc.last_message_id == 12345
         assert dmc.recipients == []
+        assert dmc.is_dm
 
     def test_GuildVoiceChannel_from_dict(self):
+        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
         gvc = channel.GuildVoiceChannel.from_dict(
+            s,
             {
                 "type": 2,
                 "id": "9292929",
@@ -74,7 +81,6 @@ class TestChannel:
                 "user_limit": 0,
                 "parent_id": "42",
             },
-            NotImplemented,
         )
 
         assert gvc.id == 9292929
@@ -85,9 +91,12 @@ class TestChannel:
         assert gvc.bitrate == 999
         assert gvc.user_limit is None
         assert gvc.parent_id == 42
+        assert not gvc.is_dm
 
     def test_GroupDMChannel_from_dict(self):
+        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
         gdmc = channel.GroupDMChannel.from_dict(
+            s,
             {
                 "type": 3,
                 "id": "99999999999",
@@ -98,7 +107,6 @@ class TestChannel:
                 "owner_application_id": "111111",
                 "owner_id": "111111",
             },
-            NotImplemented,
         )
 
         assert gdmc.id == 99999999999
@@ -108,9 +116,12 @@ class TestChannel:
         assert gdmc.name == "shitposting 101"
         assert gdmc.owner_application_id == 111111
         assert gdmc.owner_id == 111111
+        assert gdmc.is_dm
 
     def test_GuildCategory_from_dict(self):
+        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
         gc = channel.GuildCategory.from_dict(
+            s,
             {
                 "type": 4,
                 "id": "123456",
@@ -119,7 +130,6 @@ class TestChannel:
                 "permission_overwrites": [],
                 "name": "dank category",
             },
-            NotImplemented,
         )
 
         assert gc.name == "dank category"
@@ -127,9 +137,12 @@ class TestChannel:
         assert gc.guild_id == 54321
         assert gc.id == 123456
         assert gc.permission_overwrites == []
+        assert not gc.is_dm
 
     def test_GuildNewsChannel_from_dict(self):
+        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
         gnc = channel.GuildNewsChannel.from_dict(
+            s,
             {
                 "type": 5,
                 "id": "4444",
@@ -142,7 +155,6 @@ class TestChannel:
                 "topic": "crap and stuff",
                 "last_message_id": None,
             },
-            NotImplemented,
         )
 
         assert gnc.id == 4444
@@ -154,9 +166,12 @@ class TestChannel:
         assert gnc.parent_id == 3232
         assert gnc.topic == "crap and stuff"
         assert gnc.last_message_id is None
+        assert not gnc.is_dm
 
     def test_GuildStoreChannel_from_dict(self):
+        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
         gsc = channel.GuildStoreChannel.from_dict(
+            s,
             {
                 "type": 6,
                 "id": "9876",
@@ -166,7 +181,6 @@ class TestChannel:
                 "name": "a",
                 "parent_id": "32",
             },
-            NotImplemented,
         )
 
         assert gsc.id == 9876
@@ -175,6 +189,7 @@ class TestChannel:
         assert gsc.permission_overwrites == []
         assert gsc.name == "a"
         assert gsc.parent_id == 32
+        assert not gsc.is_dm
 
     @pytest.mark.parametrize(
         ["type_field", "expected_class"],
@@ -191,12 +206,12 @@ class TestChannel:
     def test_channel_from_dict_success_case(self, type_field, expected_class):
         fqn = expected_class.__module__ + "." + expected_class.__qualname__ + ".from_dict"
         with mock.patch(fqn) as m:
-            channel.channel_from_dict({"type": type_field}, NotImplemented)
-            m.assert_called_once_with({"type": type_field}, NotImplemented)
+            channel.channel_from_dict(NotImplemented, {"type": type_field})
+            m.assert_called_once_with(NotImplemented, {"type": type_field})
 
     def test_channel_from_dict_failure_case(self):
         try:
-            channel.channel_from_dict({"type": -999}, NotImplemented)
+            channel.channel_from_dict(NotImplemented, {"type": -999})
             assert False
         except TypeError:
             pass

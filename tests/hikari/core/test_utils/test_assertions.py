@@ -127,3 +127,19 @@ def test_assert_is_subclass_sad_path():
         pass
 
     assertions.assert_subclasses(B, A)
+
+
+def test_assert_is_natural_happy_path():
+    assertions.assert_natural(0)
+    assertions.assert_natural(1)
+    assertions.assert_natural(99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999)
+
+
+@_helpers.assert_raises(ValueError)
+def test_assert_is_natural_wrong_type():
+    assertions.assert_natural(1.0)
+
+
+@_helpers.assert_raises(ValueError)
+def test_assert_is_natural_wrong_value():
+    assertions.assert_natural(-1)

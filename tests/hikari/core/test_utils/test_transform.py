@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import dataclasses
 import datetime
 import enum
 
@@ -134,3 +135,19 @@ def test_get_cast_or_raw_when_value_not_present_outputs_None_value():
 
     value = transform.get_cast_or_raw(items, "qux", Enum)
     assert value is None
+
+
+def test_flatten_list():
+    @dataclasses.dataclass()
+    class Obj:
+        id: int
+        value: float
+
+    o1 = Obj(99, 123.45)
+    o2 = Obj(88, 696969696.271)
+    o3 = Obj(32, 33.4)
+
+    mapping = transform.flatten([o1, o2, o3], 'id')
+    assert mapping[99] is o1
+    assert mapping[88] is o2
+    assert mapping[32] is o3

@@ -30,7 +30,7 @@ import typing
 from hikari.core.model import base
 from hikari.core.model import embed
 from hikari.core.model import media
-from hikari.core.model import state
+from hikari.core.model import model_state
 from hikari.core.model import user
 from hikari.core.model import webhook
 from hikari.core.utils import dateutils
@@ -99,7 +99,7 @@ class Message(base.SnowflakeMixin):
     )
 
     #: The global state.
-    _state: state.AbstractModelState
+    _state: model_state.AbstractModelState
     #: The ID of the message.
     id: int
     #: The actual textual content of the message.
@@ -130,7 +130,7 @@ class Message(base.SnowflakeMixin):
     type: MessageType
 
     @staticmethod
-    def from_dict(global_state: state.AbstractModelState, payload):
+    def from_dict(global_state: model_state.AbstractModelState, payload):
         return Message(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),

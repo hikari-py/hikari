@@ -24,9 +24,8 @@ __all__ = ("User", "Member")
 import datetime
 import typing
 
-from hikari.core.model import state
+from hikari.core.model import model_state
 from hikari.core.model import base
-from hikari.core.model import guild as _guild
 from hikari.core.utils import dateutils, transform
 from hikari.core.utils import delegate
 
@@ -38,9 +37,9 @@ class User(base.SnowflakeMixin):
     """
 
     # TODO: user flags (eventually)
-    __slots__ = ("_state", "id", "username", "discriminator", "avatar_hash", "bot")
+    __slots__ = ("_state", "id", "username", "discriminator", "avatar_hash", "bot", "__weakref__")
 
-    _state: state.AbstractModelState
+    _state: model_state.AbstractModelState
     #: ID of the user.
     id: int
     #: The user name.
@@ -53,7 +52,7 @@ class User(base.SnowflakeMixin):
     bot: bool
 
     @staticmethod
-    def from_dict(global_state: state.AbstractModelState, payload):
+    def from_dict(global_state: model_state.AbstractModelState, payload):
         return User(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),
@@ -83,7 +82,7 @@ class Member(User):
     #: The list of role IDs this member has.
     _role_ids: typing.List[int]
     #: The guild this member is in.
-    _guild_id: "_guild.Guild"
+    _guild_id: int
     #: The date and time the member joined this guild.
     joined_at: datetime.datetime
     #: The optional nickname of the member.

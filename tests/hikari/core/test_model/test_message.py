@@ -22,13 +22,13 @@ from unittest import mock
 import pytest
 
 from hikari.core.model import message
-from hikari.core.model import state
+from hikari.core.model import model_state
 
 
 @pytest.mark.model
 class TestMessage:
     def test_Message_from_dict(self):
-        s = mock.MagicMock(spec=state.AbstractModelState)
+        s = mock.MagicMock(spec=model_state.AbstractModelState)
         m = message.Message.from_dict(
             s,
             {
@@ -63,7 +63,7 @@ class TestMessage:
         assert m.content == "ayyyyyyy lmao"
 
     def test_Message_from_dict_INTEGRATION_TEST(self):
-        s = mock.MagicMock(spec=state.AbstractModelState)
+        s = mock.MagicMock(spec=model_state.AbstractModelState)
         m = message.Message.from_dict(
             s,
             {
