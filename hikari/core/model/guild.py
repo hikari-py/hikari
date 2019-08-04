@@ -188,7 +188,7 @@ class Guild(base.SnowflakeMixin):
                 payload, "explicit_content_filter", ExplicitContentFilterLevel
             ),
             roles=transform.get_sequence(payload, "roles", global_state.parse_role),
-            emojis=transform.get_sequence(payload, "emoji", global_state.parse_emoji),
+            emojis=transform.get_sequence(payload, "emojis", global_state.parse_emoji),
             features=transform.get_sequence(payload, "features", GuildFeature.from_discord_name, keep_failures=True),
             member_count=transform.get_cast(payload, "member_count", int),
             mfa_level=transform.get_cast_or_raw(payload, "mfa_level", MFALevel),
@@ -300,4 +300,4 @@ class Ban:
 
     @staticmethod
     def from_dict(global_state: state.AbstractState, payload: dict):
-        return Ban(reason=payload.get("reason"), user=transform.get_cast(payload, "user", global_state.parse_user))
+        return Ban(reason=payload.get("reason"), user=global_state.parse_user(payload.get("user")))
