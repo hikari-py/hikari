@@ -40,7 +40,7 @@ class User(base.SnowflakeMixin):
     # TODO: user flags (eventually)
     __slots__ = ("_state", "id", "username", "discriminator", "avatar_hash", "bot")
 
-    _state: state.AbstractState
+    _state: state.AbstractModelState
     #: ID of the user.
     id: int
     #: The user name.
@@ -53,7 +53,7 @@ class User(base.SnowflakeMixin):
     bot: bool
 
     @staticmethod
-    def from_dict(global_state: state.AbstractState, payload):
+    def from_dict(global_state: state.AbstractModelState, payload):
         return User(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),

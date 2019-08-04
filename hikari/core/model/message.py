@@ -99,7 +99,7 @@ class Message(base.SnowflakeMixin):
     )
 
     #: The global state.
-    _state: state.AbstractState
+    _state: state.AbstractModelState
     #: The ID of the message.
     id: int
     #: The actual textual content of the message.
@@ -130,7 +130,7 @@ class Message(base.SnowflakeMixin):
     type: MessageType
 
     @staticmethod
-    def from_dict(global_state: state.AbstractState, payload):
+    def from_dict(global_state: state.AbstractModelState, payload):
         return Message(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),

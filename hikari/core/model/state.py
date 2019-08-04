@@ -21,14 +21,14 @@ Handles managing the state of the bot, and the cache.
 """
 from __future__ import annotations
 
-__all__ = ("AbstractState",)
+__all__ = ("AbstractModelState",)
 
 import abc
 
 from hikari.core.utils import types
 
 
-class AbstractState(abc.ABC):
+class AbstractModelState(abc.ABC):
     """
     Provides the relational interface between different types of objects and the overall state machine.
     
