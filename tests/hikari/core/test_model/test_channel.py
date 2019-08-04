@@ -28,6 +28,7 @@ class TestChannel:
     def test_GuildTextChannel_from_dict(self):
         gtc = channel.GuildTextChannel.from_dict(
             {
+                "type": 0,
                 "id": "1234567",
                 "guild_id": "696969",
                 "position": 100,
@@ -53,7 +54,7 @@ class TestChannel:
 
     def test_DMChannel_from_dict(self):
         dmc = channel.DMChannel.from_dict(
-            {"id": "929292", "last_message_id": "12345", "recipients": []}, NotImplemented
+            {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []}, NotImplemented
         )
 
         assert dmc.id == 929292
@@ -63,6 +64,7 @@ class TestChannel:
     def test_GuildVoiceChannel_from_dict(self):
         gvc = channel.GuildVoiceChannel.from_dict(
             {
+                "type": 2,
                 "id": "9292929",
                 "guild_id": "929",
                 "position": 66,
@@ -87,6 +89,7 @@ class TestChannel:
     def test_GroupDMChannel_from_dict(self):
         gdmc = channel.GroupDMChannel.from_dict(
             {
+                "type": 3,
                 "id": "99999999999",
                 "last_message_id": None,
                 "recipients": [],
@@ -108,7 +111,14 @@ class TestChannel:
 
     def test_GuildCategory_from_dict(self):
         gc = channel.GuildCategory.from_dict(
-            {"id": "123456", "guild_id": "54321", "position": 69, "permission_overwrites": [], "name": "dank category"},
+            {
+                "type": 4,
+                "id": "123456",
+                "guild_id": "54321",
+                "position": 69,
+                "permission_overwrites": [],
+                "name": "dank category",
+            },
             NotImplemented,
         )
 
@@ -121,6 +131,7 @@ class TestChannel:
     def test_GuildNewsChannel_from_dict(self):
         gnc = channel.GuildNewsChannel.from_dict(
             {
+                "type": 5,
                 "id": "4444",
                 "guild_id": "1111",
                 "position": 24,
@@ -147,6 +158,7 @@ class TestChannel:
     def test_GuildStoreChannel_from_dict(self):
         gsc = channel.GuildStoreChannel.from_dict(
             {
+                "type": 6,
                 "id": "9876",
                 "guild_id": "7676",
                 "position": 9,

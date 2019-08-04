@@ -24,6 +24,7 @@ __all__ = ("User", "Member")
 import datetime
 import typing
 
+from hikari.core.model import state
 from hikari.core.model import base
 from hikari.core.model import guild as _guild
 from hikari.core.utils import dateutils, transform
@@ -37,8 +38,9 @@ class User(base.SnowflakeMixin):
     """
 
     # TODO: user flags (eventually)
-    __slots__ = ("id", "username", "discriminator", "avatar_hash", "bot")
+    __slots__ = ("_state", "id", "username", "discriminator", "avatar_hash", "bot")
 
+    _state: state.AbstractState
     #: ID of the user.
     id: int
     #: The user name.
@@ -51,8 +53,9 @@ class User(base.SnowflakeMixin):
     bot: bool
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(global_state: state.AbstractState, payload):
         return User(
+            _state=global_state,
             id=transform.get_cast(payload, "id", int),
             username=payload.get("username"),
             discriminator=transform.get_cast(payload, "discriminator", int),
@@ -73,14 +76,14 @@ class Member(User):
 
     # TODO: voice
     # TODO: statuses from gateway (eventually)
-    __slots__ = ("_user", "guild", "_roles", "joined_at", "nick", "premium_since")
+    __slots__ = ("_user", "_guild_id", "_role_ids", "joined_at", "nick", "premium_since")
 
     #: The underlying user for this member.
     _user: User
     #: The list of role IDs this member has.
-    _roles: typing.List[int]
+    _role_ids: typing.List[int]
     #: The guild this member is in.
-    guild: _guild.Guild
+    _guild_id: _guild.Guild
     #: The date and time the member joined this guild.
     joined_at: datetime.datetime
     #: The optional nickname of the member.
@@ -90,12 +93,12 @@ class Member(User):
 
     # noinspection PyMethodOverriding
     @staticmethod
-    def from_dict(payload, user, guild):
+    def from_dict(global_state, guild_id, payload):
         return Member(
-            _user=user,
-            _roles=transform.get_sequence(payload, "roles", int),
+            _user=global_state.parse_user(payload.get("user")),
+            _role_ids=transform.get_sequence(payload, "roles", int),
+            _guild_id=guild_id,
             nick=payload.get("nick"),
-            guild=guild,
             joined_at=transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime),
             premium_since=transform.get_cast(payload, "premium_since", dateutils.parse_iso_8601_datetime),
         )

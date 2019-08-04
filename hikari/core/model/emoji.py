@@ -21,6 +21,8 @@ Emojis.
 """
 __all__ = ()
 
+from hikari.core.model import state
+
 
 class PartialEmoji:
     __slots__ = ()
@@ -28,3 +30,7 @@ class PartialEmoji:
 
 class Emoji:
     __slots__ = ()
+
+    @staticmethod
+    def from_dict(global_state: state.AbstractState, payload):
+        return NotImplemented
