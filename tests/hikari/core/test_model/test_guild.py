@@ -170,7 +170,7 @@ def test_guild_payload(test_emoji_payload, test_roles_payloads, test_channel_pay
 @pytest.mark.model
 class TestGuild:
     def test_available_Guild_from_dict(self, test_guild_payload, test_emoji_payload, test_member_payload):
-        s = mock.MagicMock(spec_set=state.AbstractState)
+        s = mock.MagicMock(spec_set=state.AbstractModelState)
         g = guild.Guild.from_dict(s, test_guild_payload)
 
         assert g.id == 123456
@@ -234,14 +234,14 @@ class TestGuild:
         assert len(g.channels) == 3
 
     def test_unavailable_Guild_from_dict(self):
-        s = mock.MagicMock(spec_set=state.AbstractState)
+        s = mock.MagicMock(spec_set=state.AbstractModelState)
         g = guild.Guild.from_dict(s, {"id": "12345678910", "unavailable": True})
 
         assert g.id == 12345678910
         assert g.unavailable
 
     def test_Ban_from_dict(self):
-        s = mock.MagicMock(spec_set=state.AbstractState)
+        s = mock.MagicMock(spec_set=state.AbstractModelState)
         user = object()
         ban = guild.Ban.from_dict(s, {"user": user, "reason": "being bad"})
         assert ban.reason == "being bad"

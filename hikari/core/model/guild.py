@@ -99,7 +99,7 @@ class Guild(base.SnowflakeMixin):
     )
 
     #: The global state.
-    _state: state.AbstractState
+    _state: state.AbstractModelState
     #: The guild ID.
     id: int
     #: Voice Channel ID for AFK users.
@@ -167,7 +167,7 @@ class Guild(base.SnowflakeMixin):
     system_channel_flags: typing.Optional[SystemChannelFlag]
 
     @staticmethod
-    def from_dict(global_state: state.AbstractState, payload: dict):
+    def from_dict(global_state: state.AbstractModelState, payload: dict):
         return Guild(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),
@@ -299,5 +299,5 @@ class Ban:
     user: user.User
 
     @staticmethod
-    def from_dict(global_state: state.AbstractState, payload: dict):
+    def from_dict(global_state: state.AbstractModelState, payload: dict):
         return Ban(reason=payload.get("reason"), user=global_state.parse_user(payload.get("user")))

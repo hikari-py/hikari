@@ -24,7 +24,7 @@ __all__ = ()
 import typing
 
 from hikari.core.model import base
-from hikari.core.model import state
+from hikari.core.model import model_statex
 from hikari.core.model import user
 from hikari.core.model import role
 from hikari.core.utils import transform
@@ -64,7 +64,7 @@ class Emoji:
     animated: bool
 
     @staticmethod
-    def from_dict(global_state: state.AbstractState, payload):
+    def from_dict(global_state: model_state.AbstractModelState, payload):
         """Convert the given payload and state into an object instance."""
         return Emoji(
             _state=global_state,

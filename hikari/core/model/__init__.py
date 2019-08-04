@@ -19,24 +19,3 @@
 """
 All models used in Hikari's public API.
 """
-from .base import *
-from .channel import *
-from .color import *
-from .embed import *
-from .emoji import *
-from .guild import *
-from .integration import *
-from .invite import *
-from .media import *
-from .message import *
-from .overwrite import *
-from .permission import *
-from .reaction import *
-from .role import *
-from .service_status import *
-from .user import *
-from .voice import *
-from .webhook import *
-
-# Easier than keeping these lists up to date with several dozen classes...
-__all__ = [m for m in globals() if not m.startswith("_") and m not in dir(__import__("builtins"))]
