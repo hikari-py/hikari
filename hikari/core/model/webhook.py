@@ -29,4 +29,4 @@ class Webhook(base.SnowflakeMixin):
 
     @staticmethod
     def from_dict(payload):
-        return Webhook()
+        return NotImplemented

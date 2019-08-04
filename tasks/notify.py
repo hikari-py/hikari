@@ -30,6 +30,7 @@ try:
     ENVIRONMENT = os.environ["RELEASE_WEBHOOK_NAME"]
     COLOUR = os.environ["RELEASE_WEBHOOK_COLOUR"]
     DESCRIPTION = os.environ["RELEASE_WEBHOOK_DESCRIPTION"]
+    BRIEF = "**[{VERSION}] New {ENVIRONMENT} deployment!**"
     VERSION = sys.argv[1]
     NAME = sys.argv[2]
 
@@ -38,11 +39,11 @@ try:
         json={
             "embeds": [
                 {
-                    "title": f"[{VERSION}] New {ENVIRONMENT} deployment!",
+                    "title": NAME,
                     "footer": {"text": f"{NAME} v{VERSION} has just been put into {ENVIRONMENT}."},
                     "color": int(COLOUR, 16),
                     "author": {"name": "Nekoka.tt"},
-                    "description": DESCRIPTION,
+                    "description": BRIEF + "\n\n" + DESCRIPTION,
                 }
             ]
         },

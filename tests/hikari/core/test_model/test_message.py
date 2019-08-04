@@ -17,16 +17,20 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
+from unittest import mock
 
 import pytest
 
 from hikari.core.model import message
+from hikari.core.model import state
 
 
 @pytest.mark.model
 class TestMessage:
     def test_Message_from_dict(self):
+        s = mock.MagicMock(spec=state.AbstractState)
         m = message.Message.from_dict(
+            s,
             {
                 "type": 0,
                 "id": "12345",
@@ -41,7 +45,7 @@ class TestMessage:
                 "application": None,
                 "activity": None,
                 "content": "ayyyyyyy lmao",
-            }
+            },
         )
 
         assert m.type is message.MessageType.DEFAULT
@@ -59,7 +63,9 @@ class TestMessage:
         assert m.content == "ayyyyyyy lmao"
 
     def test_Message_from_dict_INTEGRATION_TEST(self):
+        s = mock.MagicMock(spec=state.AbstractState)
         m = message.Message.from_dict(
+            s,
             {
                 "type": 10,
                 "id": "12345",
@@ -100,7 +106,7 @@ class TestMessage:
                 "activity": {"type": 2, "party_id": "44332211"},
                 "content": "some pointless text",
                 "something_we_didnt_account_for": "meh, it is fine to ignore it.",
-            }
+            },
         )
 
         assert m.type is message.MessageType.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2

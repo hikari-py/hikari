@@ -1,6 +1,5 @@
 [run]
 omit =
-    hikari/compat/*
     hikari/__init__.py
 parallel = false
 branch = true
@@ -17,3 +16,5 @@ exclude_lines =
     ^\s*raise$
     ^\s*pass$
     ^if __name__ == ['"]__main__['"]:$
+    ^\s*...$
+    ^\s*@abc.abstractmethod$

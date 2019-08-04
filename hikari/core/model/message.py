@@ -30,6 +30,7 @@ import typing
 from hikari.core.model import base
 from hikari.core.model import embed
 from hikari.core.model import media
+from hikari.core.model import state
 from hikari.core.model import user
 from hikari.core.model import webhook
 from hikari.core.utils import dateutils
@@ -79,6 +80,7 @@ class Message(base.SnowflakeMixin):
     """
 
     __slots__ = (
+        "_state",
         "id",
         "_channel_id",
         "_guild_id",
@@ -96,6 +98,8 @@ class Message(base.SnowflakeMixin):
         "type",
     )
 
+    #: The global state.
+    _state: state.AbstractState
     #: The ID of the message.
     id: int
     #: The actual textual content of the message.
@@ -126,10 +130,11 @@ class Message(base.SnowflakeMixin):
     type: MessageType
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(global_state: state.AbstractState, payload):
         return Message(
+            _state=global_state,
             id=transform.get_cast(payload, "id", int),
-            author=transform.get_cast(payload, "author", user.User),  # TODO: retrieve from state instead.
+            author=global_state.parse_user(payload.get("author")),  # TODO: does this ever consume member instead?
             _channel_id=transform.get_cast(payload, "channel_id", int),
             _guild_id=transform.get_cast(payload, "guild_id", int),
             edited_at=transform.get_cast(payload, "edited_timestamp", dateutils.parse_iso_8601_datetime),
