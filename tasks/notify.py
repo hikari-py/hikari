@@ -26,13 +26,13 @@ import traceback
 import requests
 
 try:
+    VERSION = sys.argv[1]
+    NAME = sys.argv[2]
     WEBHOOK_URL = os.environ["RELEASE_WEBHOOK"]
     ENVIRONMENT = os.environ["RELEASE_WEBHOOK_NAME"]
     COLOUR = os.environ["RELEASE_WEBHOOK_COLOUR"]
     DESCRIPTION = os.environ["RELEASE_WEBHOOK_DESCRIPTION"]
-    BRIEF = "**[{VERSION}] New {ENVIRONMENT} deployment!**"
-    VERSION = sys.argv[1]
-    NAME = sys.argv[2]
+    BRIEF = f"**[{VERSION}] New {ENVIRONMENT} deployment!**"
 
     requests.post(
         WEBHOOK_URL,
