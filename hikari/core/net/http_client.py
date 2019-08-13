@@ -2180,6 +2180,10 @@ class HTTPClient(http_base.BaseHTTPClient):
         """
         return await self.request(GET, "/oauth2/applications/@me")
 
+    ##########
+    # USERS  #
+    ##########
+
     @meta.link_developer_portal(meta.APIResource.USER)
     async def get_current_user(self) -> types.DiscordObject:
         """

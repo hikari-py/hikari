@@ -19,8 +19,6 @@
 """
 All models used in Hikari's public API.
 """
-import builtins as _builtins
-
 from .base import *
 from .channel import *
 from .color import *
@@ -35,13 +33,10 @@ from .overwrite import *
 from .permission import *
 from .reaction import *
 from .role import *
-from .server_debug import *
 from .service_status import *
 from .user import *
 from .voice import *
 from .webhook import *
 
 # Easier than keeping these lists up to date with several dozen classes...
-_builtins = dir(_builtins)
-__all__ = [m for m in globals() if not m.startswith("_") and m not in _builtins]
-del _builtins
+__all__ = [m for m in globals() if not m.startswith("_") and m not in dir(__import__("builtins"))]
