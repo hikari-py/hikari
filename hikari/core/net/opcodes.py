@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import enum
 
-__all__ = ("GatewayOpcode", "GatewayClosure", "HTTPStatus", "JSONErrorCode", "VoiceOpcode", "VoiceClosure")
+__all__ = ("GatewayOpcode", "GatewayClosure", "HTTPStatus", "JSONErrorCode")
 
 
 class GatewayOpcode(enum.IntEnum):
@@ -69,45 +69,6 @@ class GatewayOpcode(enum.IntEnum):
 
     #: Not yet documented, so do not use.
     GUILD_SYNC = 12
-
-
-class VoiceOpcode(enum.Enum):
-    """
-    Voice server opcodes.
-    """
-
-    #: Begin a voice websocket connection.
-    IDENTIFY = 0
-
-    #: Select the voice protocol.
-    SELECT_PROTOCOL = 1
-
-    #: Complete the websocket handshake.
-    READY = 2
-
-    #: Keeps the websocket connection alive.
-    HEARTBEAT = 3
-
-    #: Describe the session.
-    SESSION_DESCRIPTION = 4
-
-    #: Indicate which users are speaking.
-    SPEAKING = 5
-
-    #: Acknowledge a heartbeat opcode.
-    HEARTBEAT_ACK = 6
-
-    #: Resume a connection
-    RESUME = 7
-
-    #: Contains the continuous interval in milliseconds after which the client should send a heartbeat
-    HELLO = 8
-
-    #: Acknowledge a resume occurred.
-    RESUMED = 9
-
-    #: A client has disconnected from the voice channel.
-    CLIENT_DISCONNECT = 13
 
 
 class GatewayClosure(enum.IntEnum):
@@ -166,64 +127,6 @@ class GatewayClosure(enum.IntEnum):
 
     #: The session would have handled too many guilds - you are required to shard your connection in order to connect.
     SHARDING_REQUIRED = 4_011
-
-
-class VoiceClosure(enum.IntEnum):
-    """
-    Reasons for closing a voice connection.
-
-    Note:
-        Flags in the range [1000,2000) are flags that we can send to Discord.
-        Flags in the range [4000,5000) are flags that Discord can send to us.
-    """
-
-    #: We are shutting down normally, we might come back up soon.
-    NORMAL_CLOSURE = 1_000
-
-    #: We are shutting down for the foreseeable future (our process is stopping).
-    GOING_AWAY = 1_001
-
-    #: We expected a specific payload or opcode but Discord failed to provide it to us.
-    PROTOCOL_VIOLATION = 1_002
-
-    #: We expected a specific type of object but Discord failed to provide the correct type to us.
-    TYPE_ERROR = 1_003
-
-    #: Something has failed internally in the Hikari voice connection code.
-    INTERNAL_ERROR = 1_011
-
-    #: You sent an invalid opcode
-    UNKNOWN_OPCODE = 4_001
-
-    #: You sent a payload before identifying with the Gateway.
-    NOT_AUTHENTICATED = 4_003
-
-    #: Authentication failed
-    AUTHENTICATION_FAILED = 4_004
-
-    #: You sent more than one identify payload. Stahp.
-    ALREADY_AUTHENTICATED = 4_005
-
-    #: Your session is no longer valid.
-    SESSION_NO_LONGER_VALID = 4_006
-
-    #: Your session has timed out.
-    SESSION_TIMEOUT = 4_009
-
-    #: We can't find the server you're trying to connect to.
-    SERVER_NOT_FOUND = 4_011
-
-    #: We didn't recognize the protocol you sent.
-    UNKNOWN_PROTOCOL = 4_012
-
-    #: Oh no! You've been disconnected! Try resuming.
-    DISCONNECTED = 4_014
-
-    #: The server crashed. Our bad! Try resuming.
-    VOICE_SERVER_CRASHED = 4_015
-
-    #: We didn't recognize your encryption.
-    UNKNOWN_ENCRYPTION_MODE = 4_016
 
 
 class JSONErrorCode(enum.IntEnum):

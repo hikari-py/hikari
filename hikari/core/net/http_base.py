@@ -124,7 +124,7 @@ class BaseHTTPClient:
     def __init__(
         self,
         *,
-        loop: asyncio.AbstractEventLoop,
+        loop: asyncio.AbstractEventLoop = None,
         allow_redirects: bool = False,
         max_retries: int = 5,
         token: str = unspecified.UNSPECIFIED,
@@ -152,12 +152,10 @@ class BaseHTTPClient:
                 additional arguments to pass to the internal :class:`aiohttp.ClientSession` constructor used for making
                 HTTP requests.
         """
-        loop = assertions.assert_not_none(loop, "loop")
-
         #: Used for internal bookkeeping
         self._correlation_id = 0
         #: The asyncio event loop to run on.
-        self.loop = loop
+        self.loop = loop or asyncio.get_running_loop()
         #: Whether to allow redirects or not.
         self.allow_redirects = allow_redirects
         #: Local rate limit buckets.
@@ -165,11 +163,11 @@ class BaseHTTPClient:
         #: The base URI to target.
         self.base_uri = base_uri
         #: The global rate limit bucket.
-        self.global_rate_limit = rates.TimedLatchBucket(loop=loop)
+        self.global_rate_limit = rates.TimedLatchBucket(loop=self.loop)
         #: Max number of times to retry before giving up.
         self.max_retries = max_retries
         #: The HTTP session to target.
-        self.session = aiohttp.ClientSession(loop=loop, **aiohttp_arguments)
+        self.session = aiohttp.ClientSession(**aiohttp_arguments)
         #: The session `Authorization` header to use.
         self.authorization = "Bot " + token.strip() if token is not unspecified.UNSPECIFIED else None
         #: The logger to use for this object.

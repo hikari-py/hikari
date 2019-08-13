@@ -21,13 +21,15 @@ from unittest import mock
 
 import pytest
 
-from hikari.core.model import guild
+from hikari.core.model import state
 from hikari.core.model import user
 
 
 @pytest.mark.model
 def test_User_from_dict_when_not_a_bot():
+    s = mock.MagicMock(spec_set=state.AbstractState)
     u = user.User.from_dict(
+        s,
         {
             "id": "123456",
             "username": "Boris Johnson",
@@ -37,7 +39,7 @@ def test_User_from_dict_when_not_a_bot():
             "locale": "gb",
             "flags": 0b00101101,
             "premium_type": 0b1101101,
-        }
+        },
     )
 
     assert u.id == 123456
@@ -49,8 +51,9 @@ def test_User_from_dict_when_not_a_bot():
 
 @pytest.mark.model
 def test_User_from_dict_when_is_a_bot():
+    s = mock.MagicMock(spec_set=state.AbstractState)
     u = user.User.from_dict(
-        {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": None, "bot": True}
+        s, {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": None, "bot": True}
     )
 
     assert u.id == 123456
@@ -62,9 +65,21 @@ def test_User_from_dict_when_is_a_bot():
 
 @pytest.mark.model
 def test_Member_from_dict_with_filled_fields():
-    u = user.User(12345, "foobar", 1234, "1a2b3c4d", False)
-    g = mock.MagicMock(spec=guild.Guild)
+    s = mock.MagicMock(spec_set=state.AbstractState)
+    user_dict = {
+        "id": "123456",
+        "username": "Boris Johnson",
+        "discriminator": "6969",
+        "avatar": "1a2b3c4d",
+        "mfa_enabled": True,
+        "locale": "gb",
+        "flags": 0b00101101,
+        "premium_type": 0b1101101,
+    }
+    gid = 123456
     m = user.Member.from_dict(
+        s,
+        gid,
         {
             "nick": "foobarbaz",
             "roles": ["11111", "22222", "33333", "44444"],
@@ -73,45 +88,34 @@ def test_Member_from_dict_with_filled_fields():
             # These should be completely ignored.
             "deaf": False,
             "mute": True,
-            "user": {
-                "id": "123456",
-                "username": "Boris Johnson",
-                "discriminator": "6969",
-                "avatar": "1a2b3c4d",
-                "mfa_enabled": True,
-                "locale": "gb",
-                "flags": 0b00101101,
-                "premium_type": 0b1101101,
-            },
+            "user": user_dict,
         },
-        u,
-        g,
     )
 
-    assert m.id == 12345
-    assert m.username == "foobar"
     assert m.nick == "foobarbaz"
     assert m.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, datetime.timezone.utc)
     assert m.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, datetime.timezone.utc)
+    assert m._guild_id == gid
+    s.parse_user.assert_called_with(user_dict)
 
 
 @pytest.mark.model
 def test_Member_from_dict_with_no_optional_fields():
-    u = user.User(12345, "foobar", 1234, "1a2b3c4d", False)
-    g = mock.MagicMock(spec=guild.Guild)
+    s = mock.MagicMock(spec_set=state.AbstractState)
+    user_dict = {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": "1a2b3c4d"}
+    gid = 123456
     m = user.Member.from_dict(
+        s,
+        gid,
         {
             "roles": ["11111", "22222", "33333", "44444"],
             "joined_at": "2015-04-26T06:26:56.936000+00:00",
-            # These should be completely ignored.
-            "user": {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": "1a2b3c4d"},
+            "user": user_dict,
         },
-        u,
-        g,
     )
 
-    assert m.id == 12345
-    assert m.username == "foobar"
     assert m.nick is None
     assert m.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, datetime.timezone.utc)
     assert m.premium_since is None
+    assert m._guild_id == gid
+    s.parse_user.assert_called_with(user_dict)

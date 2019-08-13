@@ -21,7 +21,17 @@ Guild models.
 """
 from __future__ import annotations
 
-__all__ = ()
+__all__ = (
+    "Guild",
+    "SystemChannelFlag",
+    "GuildFeature",
+    "MessageNotificationLevel",
+    "ExplicitContentFilterLevel",
+    "MFALevel",
+    "VerificationLevel",
+    "PremiumTier",
+    "Ban",
+)
 
 import datetime
 import enum
@@ -32,8 +42,12 @@ from hikari.core.model import channel
 from hikari.core.model import emoji
 from hikari.core.model import permission
 from hikari.core.model import role
+from hikari.core.model import state
 from hikari.core.model import user
 from hikari.core.model import voice
+
+from hikari.core.utils import dateutils
+from hikari.core.utils import transform
 
 
 @base.dataclass()
@@ -49,39 +63,43 @@ class Guild(base.SnowflakeMixin):
     #    permissions - we can get this with a REST call if needed later.
 
     __slots__ = (
+        "_state",
         "id",
-        "_afk_channel_id",  # diff name to payload
-        "_owner_id",  # diff name to payload
-        "_voice_region_id",  # diff name to payload
-        "_system_channel_id",  # diff name to payload
-        "creator_application_id",  # imply if this is none that the guild is not bot-made.
+        "_afk_channel_id",
+        "_owner_id",
+        "_voice_region_id",
+        "_system_channel_id",
+        "creator_application_id",
         "name",
-        "icon_hash",  # diff name to payload
-        "splash_hash",  # diff name to payload
+        "icon_hash",
+        "splash_hash",
         "afk_timeout",
         "verification_level",
-        "message_notification_level",  # diff name to payload
-        "explicit_content_filter_level",  # diff name to payload
+        "message_notification_level",
+        "explicit_content_filter_level",
         "roles",
         "emojis",
         "features",
         "member_count",
         "mfa_level",
+        "my_permissions",
         "joined_at",
         "large",
         "unavailable",
-        "voice_states",  # TODO: add guild_id key in.
+        "voice_states",
         "members",
         "channels",
         "max_members",
         "vanity_url_code",
         "description",
-        "banner_hash",  # diff name to payload
+        "banner_hash",
         "premium_tier",
         "premium_subscription_count",
         "system_channel_flags",  # not documented...
     )
 
+    #: The global state.
+    _state: state.AbstractState
     #: The guild ID.
     id: int
     #: Voice Channel ID for AFK users.
@@ -115,7 +133,7 @@ class Guild(base.SnowflakeMixin):
     #: Emojis in this guild.
     emojis: typing.List[emoji.Emoji]
     #: Enabled features in this guild.
-    features: typing.List[typing.Union[GuildFeatures, str]]
+    features: typing.List[GuildFeature]
     #: Number of members.
     member_count: typing.Optional[int]
     #: MFA level for this guild.
@@ -146,10 +164,52 @@ class Guild(base.SnowflakeMixin):
     #: Number of current Nitro boosts on this server.
     premium_subscription_count: int
     #: Describes what can the system channel can do.
-    system_channel_flags: typing.Optional[SystemChannelFlags]
+    system_channel_flags: typing.Optional[SystemChannelFlag]
+
+    @staticmethod
+    def from_dict(global_state: state.AbstractState, payload: dict):
+        return Guild(
+            _state=global_state,
+            id=transform.get_cast(payload, "id", int),
+            _afk_channel_id=transform.get_cast(payload, "afk_channel_id", int),
+            _owner_id=transform.get_cast(payload, "owner_id", int),
+            _voice_region_id=transform.get_cast(payload, "region", int),
+            _system_channel_id=transform.get_cast(payload, "system_channel_id", int),
+            creator_application_id=transform.get_cast(payload, "application_id", int),
+            name=payload.get("name"),
+            icon_hash=payload.get("icon"),
+            splash_hash=payload.get("splash"),
+            afk_timeout=transform.get_cast(payload, "afk_timeout", int),
+            verification_level=transform.get_cast_or_raw(payload, "verification_level", VerificationLevel),
+            message_notification_level=transform.get_cast_or_raw(
+                payload, "default_message_notifications", MessageNotificationLevel
+            ),
+            explicit_content_filter_level=transform.get_cast_or_raw(
+                payload, "explicit_content_filter", ExplicitContentFilterLevel
+            ),
+            roles=transform.get_sequence(payload, "roles", global_state.parse_role),
+            emojis=transform.get_sequence(payload, "emojis", global_state.parse_emoji),
+            features=transform.get_sequence(payload, "features", GuildFeature.from_discord_name, keep_failures=True),
+            member_count=transform.get_cast(payload, "member_count", int),
+            mfa_level=transform.get_cast_or_raw(payload, "mfa_level", MFALevel),
+            my_permissions=transform.get_cast_or_raw(payload, "permissions", permission.Permission),
+            joined_at=transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime),
+            large=transform.get_cast(payload, "large", bool),
+            unavailable=transform.get_cast(payload, "unavailable", bool),
+            voice_states=transform.get_sequence(payload, "voice_states", voice.VoiceState, set),
+            members=transform.get_sequence(payload, "members", global_state.parse_member, set),
+            channels=transform.get_sequence(payload, "channels", global_state.parse_channel, state=state),
+            max_members=transform.get_cast(payload, "max_members", int),
+            vanity_url_code=payload.get("vanity_url_code"),
+            description=payload.get("description"),
+            banner_hash=payload.get("banner"),
+            premium_tier=transform.get_cast_or_raw(payload, "premium_tier", PremiumTier),
+            premium_subscription_count=transform.get_cast(payload, "premium_subscription_count", int),
+            system_channel_flags=transform.get_cast_or_raw(payload, "system_channel_flags", SystemChannelFlag),
+        )
 
 
-class SystemChannelFlags(enum.IntFlag):
+class SystemChannelFlag(enum.IntFlag):
     """
     Defines what is enabled to be displayed in the system channel.
     """
@@ -160,7 +220,7 @@ class SystemChannelFlags(enum.IntFlag):
     PREMIUM_SUBSCRIPTION = 2
 
 
-class GuildFeatures(base.NamedEnumMixin, enum.Enum):
+class GuildFeature(base.NamedEnumMixin, enum.Enum):
     """
     Features that a guild can provide.
     """
@@ -237,3 +297,7 @@ class Ban:
 
     reason: typing.Optional[str]
     user: user.User
+
+    @staticmethod
+    def from_dict(global_state: state.AbstractState, payload: dict):
+        return Ban(reason=payload.get("reason"), user=global_state.parse_user(payload.get("user")))
