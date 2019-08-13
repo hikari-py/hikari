@@ -16,7 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import collections
+__all__ = ("InMemoryCache",)
+
 import weakref
 
 from hikari.core.model import guild as _guild
@@ -25,45 +26,11 @@ from hikari.core.model import channel as _channel
 from hikari.core.model import role as _role
 from hikari.core.model import user as _user
 from hikari.core.model import model_state
-from hikari.core.utils import assertions
 from hikari.core.utils import transform
 from hikari.core.utils import types
 
 
-class LRUDict(collections.MutableMapping):
-    """
-    A dict that stores a maximum number of items before the oldest is purged.
-
-    Warning:
-        This will not function correctly on non-CPython implementations of Python3.6, and any implementation of
-        Python3.5 or older, as it makes the assumption that all dictionaries are ordered by default.
-    """
-    __slots__ = ("_lru_size", "_data")
-
-    def __init__(self, lru_size: int, dict_factory=dict) -> None:
-        assertions.assert_natural(lru_size)
-        self._data = dict_factory()
-        self._lru_size = lru_size
-
-    def __getitem__(self, item):
-        return self._data[item]
-
-    def __setitem__(self, key, value):
-        while len(self._data) >= self._lru_size:
-            self._data.popitem()
-        self._data[key] = value
-
-    def __delitem__(self, key):
-        del self._data[key]
-
-    def __len__(self):
-        return len(self._data)
-
-    def __iter__(self):
-        yield from self._data
-
-
-class Cache(model_state.AbstractModelState):
+class InMemoryCache(model_state.AbstractModelState):
     """
     Implementation of :class:`model_state.AbstractModelState` which implements the caching logic needed for a shard.
 
@@ -80,8 +47,8 @@ class Cache(model_state.AbstractModelState):
         # retain them while they are referenced from elsewhere to keep things tidy.
         self._users = weakref.WeakValueDictionary()
         self._guilds = {}
-        self._dm_channels = LRUDict(user_dm_channel_size)
-        self._messages = LRUDict(message_cache_size)
+        self._dm_channels = types.LRUDict(user_dm_channel_size)
+        self._messages = types.LRUDict(message_cache_size)
         # These members may only be referred to in the guild they are from, after that they are disposed of.
         self._members = weakref.WeakValueDictionary()
 

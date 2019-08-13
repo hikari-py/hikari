@@ -16,78 +16,105 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+from unittest import mock
+
 import pytest
 
 from hikari.core.state import cache
 
 
 @pytest.mark.state
-class TestLRUDict:
-    def test_init_calls_dict_factory(self):
-        class SomeDict(dict):
-            pass
-
-        c = cache.LRUDict(123, dict_factory=SomeDict)
-        assert isinstance(c._data, SomeDict)
-
-    def test_init_sets_lru_cache_size(self):
-        c = cache.LRUDict(123)
-        assert c._lru_size == 123
-
-    def test_get_item(self):
-        c = cache.LRUDict(123)
-        c._data["foo"] = "bar"
-
-        assert c["foo"] == "bar"
-
-    def test_set_item_when_lru_has_space(self):
-        c = cache.LRUDict(123)
-        first_size = len(c._data)
-        c["foo"] = "bar"
-        second_size = len(c._data)
-        assert c._data["foo"] == "bar"
-        assert second_size == first_size + 1
-
-    def test_set_item_when_lru_is_full(self):
-        c = cache.LRUDict(4)
-        data = c._data
-        data["foo"] = 1
-        data["bar"] = 2
-        data["baz"] = 3
-        data["bork"] = 4
-        first_size = len(data)
-        c["qux"] = 5
-        second_size = len(data)
-        assert first_size == second_size
-        assert data["qux"] == 5
-        assert "foo" not in "data"
-
-    def test_del_item(self):
-        c = cache.LRUDict(123)
-        c._data["foo"] = "bar"
-        del c["foo"]
-        assert "foo" not in c._data
-
-    def test_len(self):
-        c = cache.LRUDict(123)
-        c._data = {"foo": 1, "bar": 2, "baz": 3}
-        assert len(c) == len(c._data) == 3
-
-    def test_iter(self):
-        c = cache.LRUDict(123)
-        c._data = {"foo": 1, "bar": 2, "baz": 3}
-        iterable = [*iter(c)]
-        assert iterable == ["foo", "bar", "baz"]
-
-
-@pytest.mark.state
-class TestCache:
+class TestInMemoryCache:
     @pytest.fixture()
     def mock_cache_init(self):
-        class MockedCacheInit(cache.Cache):
+        class MockedCacheInit(cache.InMemoryCache):
+            # noinspection PyMissingConstructor
             def __init__(self, *args, **kwargs):
                 pass
+
         return MockedCacheInit()
 
-    def test_init_can_run_successfully(self):
-        assert cache.Cache() is not None
+    def test_get_user_by_id_calls_get(self):
+        c = cache.InMemoryCache()
+        c._users = mock.MagicMock(spec_set=dict)
+
+        c.get_user_by_id(123)
+        c._users.get.assert_called_once_with(123)
+
+    def test_get_guild_by_id_calls_get(self):
+        c = cache.InMemoryCache()
+        c._guilds = mock.MagicMock(spec_set=dict)
+
+        c.get_guild_by_id(123)
+        c._guilds.get.assert_called_once_with(123)
+
+    def test_get_message_by_id_calls_get(self):
+        c = cache.InMemoryCache()
+        c._messages = mock.MagicMock()
+
+        c.get_message_by_id(123)
+        c._messages.get.assert_called_once_with(123)
+
+    @pytest.mark.xfail
+    def test_parse_existing_user(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_new_user(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_existing_guild(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_new_guild(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_existing_member(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_new_member(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_existing_role(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_new_role(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_existing_emoji(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_new_emoji(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_existing_message(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_new_message(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_existing_channel(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_new_channel(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_existing_webhook(self):
+        raise NotImplementedError  # TODO
+
+    @pytest.mark.xfail
+    def test_parse_new_webhook(self):
+        raise NotImplementedError  # TODO
