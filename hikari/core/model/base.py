@@ -144,7 +144,8 @@ class PartialObject(SnowflakeMixin):
         return self._other_attrs[item]
 
 
-# noinspection PyUnresolvedReferences
+@assertions.assert_is_mixin
+@assertions.assert_is_slotted
 class NamedEnumMixin:
     """
     A mixin for an enum that is produced from a string by Discord. This ensures that the key can be looked up from a

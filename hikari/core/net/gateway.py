@@ -159,14 +159,12 @@ class GatewayClient:
         dispatch: DispatchHandler = lambda t, d: None,
         initial_presence: typing.Optional[types.DiscordObject] = None,
         large_threshold: int = 50,
-        loop: asyncio.AbstractEventLoop,
+        loop: asyncio.AbstractEventLoop = None,
         max_persistent_buffer_size: int = 3 * 1024 ** 2,
         shard_id: typing.Optional[int] = None,
         shard_count: typing.Optional[int] = None,
         token: str,
     ) -> None:
-        loop = assertions.assert_not_none(loop, "loop")
-
         #: The coroutine function to dispatch any events to.
         if not asyncio.iscoroutinefunction(dispatch):
 
@@ -177,6 +175,8 @@ class GatewayClient:
             self.dispatch: DispatchHandler = async_dispatch
         else:
             self.dispatch: DispatchHandler = dispatch
+
+        loop = loop or asyncio.get_running_loop()
 
         self._connector = connector
         self._in_buffer: bytearray = bytearray()
