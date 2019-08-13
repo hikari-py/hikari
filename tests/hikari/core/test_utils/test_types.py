@@ -22,3 +22,62 @@ from hikari.core.utils import types
 def test_ObjectProxy():
     dop = types.ObjectProxy({"foo": "bar"})
     assert dop["foo"] == dop.foo
+
+
+class TestLRUDict:
+    def test_init_calls_dict_factory(self):
+        class SomeDict(dict):
+            pass
+
+        c = types.LRUDict(123, dict_factory=SomeDict)
+        assert isinstance(c._data, SomeDict)
+
+    def test_init_sets_lru_cache_size(self):
+        c = types.LRUDict(123)
+        assert c._lru_size == 123
+
+    def test_get_item(self):
+        c = types.LRUDict(123)
+        c._data["foo"] = "bar"
+
+        assert c["foo"] == "bar"
+
+    def test_set_item_when_lru_has_space(self):
+        c = types.LRUDict(123)
+        first_size = len(c._data)
+        c["foo"] = "bar"
+        second_size = len(c._data)
+        assert c._data["foo"] == "bar"
+        assert second_size == first_size + 1
+
+    def test_set_item_when_lru_is_full(self):
+        c = types.LRUDict(4)
+        data = c._data
+        data["foo"] = 1
+        data["bar"] = 2
+        data["baz"] = 3
+        data["bork"] = 4
+        first_size = len(data)
+        c["qux"] = 5
+        second_size = len(data)
+        assert first_size == second_size
+        assert data["qux"] == 5
+        assert "foo" not in "data"
+
+    def test_del_item(self):
+        c = types.LRUDict(123)
+        c._data["foo"] = "bar"
+        del c["foo"]
+        assert "foo" not in c._data
+
+    def test_len(self):
+        c = types.LRUDict(123)
+        c._data = {"foo": 1, "bar": 2, "baz": 3}
+        assert len(c) == len(c._data) == 3
+
+    def test_iter(self):
+        c = types.LRUDict(123)
+        c._data = {"foo": 1, "bar": 2, "baz": 3}
+        iterable = [*iter(c)]
+        assert iterable == ["foo", "bar", "baz"]
+
