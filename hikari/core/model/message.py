@@ -109,7 +109,7 @@ class Message(base.SnowflakeMixin):
     #: The ID of the guild, or None if it is in a DM.
     _guild_id: typing.Optional[int]
     #: The author of the message.
-    author: typing.Union[user.User, user.Member, webhook.Webhook]
+    author: typing.Union["user.User", "user.Member", "webhook.Webhook"]
     #: The timestamp that the message was last edited at, or None if not ever edited.
     edited_at: typing.Optional[datetime.datetime]
     #: True if this message was a TTS message, false otherwise.

@@ -126,7 +126,7 @@ class DMChannel(Channel):
     #: The optional ID of the last message to be sent.
     last_message_id: typing.Optional[int]
     #: List of recipients in the DM chat.
-    recipients: typing.List[user.User]
+    recipients: typing.List["user.User"]
 
     @staticmethod
     def from_dict(payload, state):

@@ -83,7 +83,7 @@ class Member(User):
     #: The list of role IDs this member has.
     _role_ids: typing.List[int]
     #: The guild this member is in.
-    _guild_id: _guild.Guild
+    _guild_id: "_guild.Guild"
     #: The date and time the member joined this guild.
     joined_at: datetime.datetime
     #: The optional nickname of the member.
