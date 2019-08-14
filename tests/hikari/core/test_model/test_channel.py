@@ -57,9 +57,7 @@ class TestChannel:
 
     def test_DMChannel_from_dict(self):
         s = mock.MagicMock(spec_set=model_state.AbstractModelState)
-        dmc = channel.DMChannel.from_dict(
-            s, {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []}
-        )
+        dmc = channel.DMChannel.from_dict(s, {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []})
 
         assert dmc.id == 929292
         assert dmc.last_message_id == 12345

@@ -19,14 +19,15 @@
 """
 Webhook model.
 """
-__all__ = ()
+__all__ = ("Webhook",)
 
 from hikari.core.model import base
+from hikari.core.model import model_state
 
 
 class Webhook(base.SnowflakeMixin):
     __slots__ = ()
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(global_state: model_state.AbstractModelState, payload):
         return NotImplemented

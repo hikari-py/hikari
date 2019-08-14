@@ -35,7 +35,7 @@ _EMPTY_TUPLE = ()
 _BAD_OBJECT = object()
 
 
-def flatten(objects, key_attr: str="id"):
+def flatten(objects, key_attr: str = "id"):
     return {getattr(o, key_attr): o for o in objects}
 
 
