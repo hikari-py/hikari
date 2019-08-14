@@ -21,13 +21,13 @@ from unittest import mock
 import pytest
 
 from hikari.core.model import emoji
-from hikari.core.model import state
+from hikari.core.model import model_state
 
 
 @pytest.mark.model
 class TestEmoji:
     def test_Emoji_from_dict(self):
-        test_state = mock.MagicMock(state_set=state.AbstractState)
+        test_state = mock.MagicMock(state_set=model_state.AbstractModelState)
 
         user_dict = {
             "username": "Luigi",
