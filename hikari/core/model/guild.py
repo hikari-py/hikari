@@ -129,9 +129,9 @@ class Guild(base.SnowflakeMixin):
     #: Explicit content filtering level.
     explicit_content_filter_level: ExplicitContentFilterLevel
     #: Roles in this guild.
-    roles: typing.List[role.Role]
+    roles: typing.List["role.Role"]
     #: Emojis in this guild.
-    emojis: typing.List[emoji.Emoji]
+    emojis: typing.List["emoji.Emoji"]
     #: Enabled features in this guild.
     features: typing.List[GuildFeature]
     #: Number of members.
@@ -148,9 +148,9 @@ class Guild(base.SnowflakeMixin):
     #: Voice states of users in the guild.
     voice_states: typing.List[voice.VoiceState]
     #: Members in the guild.
-    members: typing.List[user.Member]
+    members: typing.List["user.Member"]
     #: Channels in the guild.
-    channels: typing.List[channel.GuildChannel]
+    channels: typing.List["channel.GuildChannel"]
     #: Max members allowed in the guild.
     max_members: int
     #: Code for the vanity URL.
