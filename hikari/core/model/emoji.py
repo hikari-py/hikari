@@ -21,16 +21,58 @@ Emojis.
 """
 __all__ = ()
 
+import typing
+
+from hikari.core.model import base
 from hikari.core.model import state
+from hikari.core.model import user
+from hikari.core.model import role
+from hikari.core.utils import transform
 
 
 class PartialEmoji:
     __slots__ = ()
 
 
+@base.dataclass()
 class Emoji:
-    __slots__ = ()
+    __slots__ = (
+        "_state",
+        "id", 
+        "name", 
+        "_roles", 
+        "user", 
+        "require_colons", 
+        "managed", 
+        "animated"
+    )
+
+    _state: typing.Any
+    # The id of the emoji
+    id: int
+    # The name of the emoji
+    name: str
+    # Role ids the emoji is whitelisted to
+    _roles: typing.List[int]
+    # The user whom added the emoji
+    user: "user.User"
+    # Whether the emoji should be wrapped in colons or not
+    require_colons: bool
+    # Whether the emoji is managed or not
+    managed: bool
+    # Whether the emoji is animated or not
+    animated: bool
 
     @staticmethod
     def from_dict(global_state: state.AbstractState, payload):
-        return NotImplemented
+        """Convert the given payload and state into an object instance."""
+        return Emoji(
+            _state=global_state,
+            id=transform.get_cast(payload, "id", int),
+            name=payload.get("name"),
+            _roles=transform.get_sequence(payload, "roles", role.Role),
+            user=global_state.parse_user(payload.get("user")),
+            require_colons=transform.get_cast(payload, "require_colons", bool),
+            managed=transform.get_cast(payload, "managed", bool),
+            animated=transform.get_cast(payload, "animated", bool)
+        )
