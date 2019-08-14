@@ -19,8 +19,6 @@
 """
 Handles managing the state of the bot, and the cache.
 """
-from __future__ import annotations
-
 __all__ = ("AbstractModelState",)
 
 import abc
@@ -80,4 +78,3 @@ class AbstractModelState(abc.ABC):
     @abc.abstractmethod
     def parse_webhook(self, webhook: types.DiscordObject):
         ...
-

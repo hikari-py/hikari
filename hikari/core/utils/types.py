@@ -56,6 +56,7 @@ class LRUDict(typing.MutableMapping):
     """
     A dict that stores a maximum number of items before the oldest is purged.
     """
+
     # This will not function correctly on non-CPython implementations of Python3.6, and any implementation of
     # Python3.5 or older, as it makes the assumption that all dictionaries are ordered by default.
 

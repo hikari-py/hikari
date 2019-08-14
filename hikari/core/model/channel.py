@@ -144,7 +144,7 @@ class DMChannel(Channel):
             _state=global_state,
             id=transform.get_cast(payload, "id", int),
             last_message_id=transform.get_cast(payload, "last_message_id", int),
-            recipients=transform.get_sequence(payload, "recipients", global_state.parse_user)
+            recipients=transform.get_sequence(payload, "recipients", global_state.parse_user),
         )
 
     @property

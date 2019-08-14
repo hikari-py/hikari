@@ -197,9 +197,11 @@ class Guild(base.SnowflakeMixin):
             joined_at=transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime),
             large=transform.get_cast(payload, "large", bool),
             unavailable=transform.get_cast(payload, "unavailable", bool),
-            voice_states=NotImplemented,   # TODO
-            members=transform.flatten((global_state.parse_member(m, guild_id) for m in payload.get('members', ()))),
-            channels=transform.get_sequence(payload, "channels", global_state.parse_channel, transform.flatten, state=global_state),
+            voice_states=NotImplemented,  # TODO
+            members=transform.flatten((global_state.parse_member(m, guild_id) for m in payload.get("members", ()))),
+            channels=transform.get_sequence(
+                payload, "channels", global_state.parse_channel, transform.flatten, state=global_state
+            ),
             max_members=transform.get_cast(payload, "max_members", int),
             vanity_url_code=payload.get("vanity_url_code"),
             description=payload.get("description"),

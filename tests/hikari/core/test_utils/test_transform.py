@@ -147,7 +147,7 @@ def test_flatten_list():
     o2 = Obj(88, 696969696.271)
     o3 = Obj(32, 33.4)
 
-    mapping = transform.flatten([o1, o2, o3], 'id')
+    mapping = transform.flatten([o1, o2, o3], "id")
     assert mapping[99] is o1
     assert mapping[88] is o2
     assert mapping[32] is o3

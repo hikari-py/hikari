@@ -80,4 +80,3 @@ class TestLRUDict:
         c._data = {"foo": 1, "bar": 2, "baz": 3}
         iterable = [*iter(c)]
         assert iterable == ["foo", "bar", "baz"]
-
