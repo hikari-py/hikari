@@ -23,7 +23,7 @@ This package contains the core components for this framework. This includes the 
 limiting, and basic client.
 """
 __author__ = "Nekoka.tt"
-__contributors__ = {"LunarCoffee", "raatty", "Tmpod", "Zach"}
+__contributors__ = {"LunarCoffee", "raatty", "Tmpod", "Zach", "thomm.o"}
 __copyright__ = f"© 2019 Nekoka.tt"
 __license__ = "LGPLv3"
 __version__ = "2019"
