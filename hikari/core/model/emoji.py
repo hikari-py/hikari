@@ -36,16 +36,7 @@ class PartialEmoji:
 
 @base.dataclass()
 class Emoji:
-    __slots__ = (
-        "_state",
-        "id", 
-        "name", 
-        "_roles", 
-        "user", 
-        "require_colons", 
-        "managed", 
-        "animated"
-    )
+    __slots__ = ("_state", "id", "name", "_roles", "user", "require_colons", "managed", "animated")
 
     _state: typing.Any
     # The id of the emoji
@@ -74,6 +65,5 @@ class Emoji:
             user=global_state.parse_user(payload.get("user")),
             require_colons=transform.get_cast(payload, "require_colons", bool),
             managed=transform.get_cast(payload, "managed", bool),
-            animated=transform.get_cast(payload, "animated", bool)
+            animated=transform.get_cast(payload, "animated", bool),
         )
-
