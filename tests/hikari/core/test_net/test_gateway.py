@@ -44,20 +44,21 @@ def fqn(module, item):
     return module.__name__ + "." + item
 
 
+class Context:
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
 class MockGateway(gateway.GatewayClient):
     def __init__(self, **kwargs):
         gateway.GatewayClient.__init__(self, **kwargs)
 
-        class Context(asynctest.MagicMock):
-            async def __aenter__(self):
-                return self
-
-            async def __aexit__(self, exc_type, exc_val, exc_tb):
-                pass
-
-        self._connector = Context()
-
-        self.ws = Context()
+        self._ws = Context()
+        self._connector = lambda *a, **k: self._ws
+        self.ws = self._ws
         self.ws.close = asynctest.CoroutineMock()
         self.ws.send = asynctest.CoroutineMock()
         self.ws.recv = asynctest.CoroutineMock()
@@ -848,12 +849,70 @@ class TestGateway:
 
     @mock_run_once_parts()
     async def test_run_once_opens_connection(_, gw):
+        class MockConnector:
+            def __init__(self):
+                self.init = None
+                self.aenter = None
+                self.aexit = None
+
+            async def __aenter__(self):
+                self.aenter = True
+                return self
+
+            async def __aexit__(self, exc_type, exc_val, exc_tb):
+                self.aexit = True
+                return self
+
+            def __call__(self, *args, **kwargs):
+                self.init = [(args, kwargs)]
+                return self
+
+        gw._receive_hello = asynctest.CoroutineMock(side_effect=StopIteration)
+        gw.uri = "uri"
+        gw.loop = "loop"
+        gw._connector = MockConnector()
         await gw.run_once()
+        assert gw._connector.init
+        assert gw._connector.aenter
+        assert gw._connector.aexit
+        assert ((), {"uri": "uri", "loop": "loop", "compression": None},) in gw._connector.init
 
     @mock_run_once_parts()
     async def test_run_once_waits_for_hello(_, gw):
         await gw.run_once()
         gw._receive_hello.assert_awaited_once()
+
+    @mock_run_once_parts()
+    async def test_run_once_heart_beats_before_keep_alive_but_after_send_identify(_, gw):
+        send_identify_time = -float('inf')
+        heartbeat_time = -float('inf')
+        keep_alive_time = -float('inf')
+
+        async def _send_identify():
+            nonlocal send_identify_time
+            send_identify_time = time.perf_counter()
+
+        async def _send_heartbeat():
+            nonlocal heartbeat_time
+            heartbeat_time = time.perf_counter()
+
+        async def _keep_alive():
+            nonlocal keep_alive_time
+            keep_alive_time = time.perf_counter()
+
+        gw._send_identify = _send_identify
+        gw._send_heartbeat = _send_heartbeat
+        gw._keep_alive = _keep_alive
+
+        await gw.run_once()
+
+        # Sanity check
+        assert -float('inf') == -float('inf')
+
+        assert send_identify_time != -float('inf')
+        assert heartbeat_time != -float('inf')
+        assert keep_alive_time != -float('inf')
+        assert send_identify_time < heartbeat_time < keep_alive_time
 
     @mock_run_once_parts()
     async def test_run_once_identifies_normally(_, gw):
