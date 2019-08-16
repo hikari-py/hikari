@@ -35,6 +35,13 @@ def assert_not_none(value: T, description: str = "value") -> T:
     return value
 
 
+def assert_natural(value: T, description: str = "value") -> int:
+    """Assert the given value is a natural (>=0) integer, or raise a ValueError."""
+    if not isinstance(value, int) or value < 0:
+        raise ValueError(f"{description} must be an integer that is greater or equal to 0")
+    return value
+
+
 def assert_is_slotted(cls: typing.Type[T]) -> typing.Type[T]:
     """Raises a TypeError if the class is not slotted."""
     if not hasattr(cls, "__slots__"):

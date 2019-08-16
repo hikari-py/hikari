@@ -22,7 +22,7 @@ import pytest
 
 from hikari.core.model import guild
 from hikari.core.model import permission
-from hikari.core.model import state
+from hikari.core.model import model_state
 
 
 @pytest.fixture
@@ -170,7 +170,7 @@ def test_guild_payload(test_emoji_payload, test_roles_payloads, test_channel_pay
 @pytest.mark.model
 class TestGuild:
     def test_available_Guild_from_dict(self, test_guild_payload, test_emoji_payload, test_member_payload):
-        s = mock.MagicMock(spec_set=state.AbstractState)
+        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
         g = guild.Guild.from_dict(s, test_guild_payload)
 
         assert g.id == 123456
@@ -222,26 +222,19 @@ class TestGuild:
         assert g.system_channel_flags & guild.SystemChannelFlag.USER_JOIN
 
         assert s.parse_role.call_count == 2
-        assert len(g.roles) == 2
-
         s.parse_emoji.assert_called_once_with(test_emoji_payload)
-        assert len(g.emojis) == 1
-
-        s.parse_member.assert_called_once_with(test_member_payload)
-        assert len(g.members) == 1
-
+        s.parse_member.assert_called_once_with(test_member_payload, g.id)
         assert s.parse_channel.call_count == 3
-        assert len(g.channels) == 3
 
     def test_unavailable_Guild_from_dict(self):
-        s = mock.MagicMock(spec_set=state.AbstractState)
+        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
         g = guild.Guild.from_dict(s, {"id": "12345678910", "unavailable": True})
 
         assert g.id == 12345678910
         assert g.unavailable
 
     def test_Ban_from_dict(self):
-        s = mock.MagicMock(spec_set=state.AbstractState)
+        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
         user = object()
         ban = guild.Ban.from_dict(s, {"user": user, "reason": "being bad"})
         assert ban.reason == "being bad"
