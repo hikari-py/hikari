@@ -45,6 +45,7 @@ class TestMessage:
                 "application": None,
                 "activity": None,
                 "content": "ayyyyyyy lmao",
+                "flags": 7,
             },
         )
 
@@ -61,6 +62,9 @@ class TestMessage:
         assert m.application is None
         assert m.activity is None
         assert m.content == "ayyyyyyy lmao"
+        assert m.flags & message.MessageFlag.CROSSPOSTED
+        assert m.flags & message.MessageFlag.IS_CROSSPOST
+        assert m.flags & message.MessageFlag.SUPPRESS_EMBEDS
 
     def test_Message_from_dict_INTEGRATION_TEST(self):
         s = mock.MagicMock(spec=model_state.AbstractModelState)
