@@ -23,7 +23,15 @@ Contains interpreter introspection utilities, Hikari introspection utilities (e.
 documentation decorators used within this library. There is usually zero need for you to touch anything in this
 package.
 """
-__all__ = ("APIResource", "link_developer_portal", "library_version", "python_version", "system_type", "user_agent")
+__all__ = (
+    "APIResource",
+    "link_developer_portal",
+    "library_version",
+    "python_version",
+    "system_type",
+    "user_agent",
+    "unofficial",
+)
 
 import enum
 import inspect
@@ -59,6 +67,22 @@ def link_developer_portal(scope: APIResource, specific_resource: str = None):
         return obj
 
     return decorator
+
+
+def unofficial(obj):
+    """
+    Marks an element that had to be reverse engineered to work out how to use it, rather than being documented
+    properly...
+    """
+    doc = inspect.cleandoc(inspect.getdoc(obj) or "")
+    setattr(
+        obj,
+        "__doc__",
+        f"{doc}\nNote:\n    Oh boy! Undocumented functionality! This is currently not documented in Discord's API "
+        "documentation, so use this at your own risk. It may break if Discord change their implementation, and "
+        "the expected functionality is purely based on speculation and reverse engineering.",
+    )
+    return obj
 
 
 def library_version() -> str:

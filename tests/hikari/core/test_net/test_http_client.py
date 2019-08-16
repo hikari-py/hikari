@@ -622,6 +622,28 @@ class TestChannel:
             "get", "/channels/{channel_id}/messages/{message_id}", channel_id="696969", message_id="12"
         )
 
+    async def test_suppress_embeds_suppression(self, http_client):
+        http_client.request = asynctest.CoroutineMock()
+        await http_client.suppress_embeds("696969", "12")
+        http_client.request.assert_awaited_once_with(
+            "post",
+            "/channels/{channel_id}/messages/{message_id}/suppress-embeds",
+            channel_id="696969",
+            message_id="12",
+            json={"suppress": True},
+        )
+
+    async def test_suppress_embeds_unsuppression(self, http_client):
+        http_client.request = asynctest.CoroutineMock()
+        await http_client.suppress_embeds("696969", "12", suppress=False)
+        http_client.request.assert_awaited_once_with(
+            "post",
+            "/channels/{channel_id}/messages/{message_id}/suppress-embeds",
+            channel_id="696969",
+            message_id="12",
+            json={"suppress": False},
+        )
+
     async def test_get_channel_messages_no_kwargs(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.get_channel_messages("696969")

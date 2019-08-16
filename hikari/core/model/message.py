@@ -67,6 +67,19 @@ class MessageActivityType(enum.IntEnum):
     JOIN_REQUEST = 5
 
 
+class MessageFlag(enum.IntFlag):
+    """
+    Additional flags for message options.
+    """
+
+    #: This message has been published to subscribed channels via channel following.
+    CROSSPOSTED = 0x1
+    #: This message originated from a message in another channel via channel following.
+    IS_CROSSPOST = 0x2
+    #: Any embeds on this message should be omitted when serializing the message.
+    SUPPRESS_EMBEDS = 0x4
+
+
 # Note: a lot of fields exist in the Message implementation that are not included here. Much of this information is
 # able to be inferred from the information we are provided with, or is just unnecessary. For example, Nonce is omitted
 # as there is no general use for it. Mentions can be found by scanning the message with a regular expression. Call
@@ -96,6 +109,7 @@ class Message(base.SnowflakeMixin):
         "application",
         "activity",
         "type",
+        "flags",
     )
 
     #: The global state.
@@ -128,6 +142,8 @@ class Message(base.SnowflakeMixin):
     activity: typing.Optional[MessageActivity]
     #: The type of message.
     type: MessageType
+    #: Flags applied to the message.
+    flags: MessageFlag
 
     @staticmethod
     def from_dict(global_state: model_state.AbstractModelState, payload):
@@ -147,6 +163,7 @@ class Message(base.SnowflakeMixin):
             activity=transform.get_cast(payload, "activity", MessageActivity.from_dict),
             type=transform.get_cast_or_raw(payload, "type", MessageType),
             content=payload.get("content"),
+            flags=transform.get_cast(payload, "flags", MessageFlag, default=0),
         )
 
 

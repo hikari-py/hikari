@@ -297,6 +297,41 @@ class HTTPClient(http_base.BaseHTTPClient):
         )
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @meta.unofficial
+    async def suppress_embeds(self, channel_id: str, message_id: str, *, suppress=True) -> None:
+        """
+        Either suppresses or un-suppresses any embeds on the given message in the given channel.
+
+        Args:
+            channel_id:
+                The channel to look in.
+            message_id:
+                The message to retrieve.
+            suppress:
+                `True` (default) to suppress any embeds, and `False` to un-suppress embeds.
+
+        Returns:
+            A message object.
+
+        Note:
+            This requires the `READ_MESSAGE_HISTORY` and `MANAGE_MESSAGES` permission to be set.
+
+        Raises:
+            hikari.errors.Forbidden:
+                If you lack permission to see the message, are not in the guild, or lack the latter-mentioned
+                permissions in the target channel.
+            hikari.errors.NotFound:
+                If the message ID or channel ID is not found.
+        """
+        return await self.request(
+            POST,
+            "/channels/{channel_id}/messages/{message_id}/suppress-embeds",
+            channel_id=channel_id,
+            message_id=message_id,
+            json={"suppress": suppress},
+        )
+
+    @meta.link_developer_portal(meta.APIResource.CHANNEL)
     async def create_message(
         self,
         channel_id: str,

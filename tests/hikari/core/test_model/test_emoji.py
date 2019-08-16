@@ -33,7 +33,7 @@ class TestEmoji:
             "username": "Luigi",
             "discriminator": "0002",
             "id": "96008815106887111",
-            "avatar": "5500909a3274e1812beb4e8de6631111"
+            "avatar": "5500909a3274e1812beb4e8de6631111",
         }
 
         emj = emoji.Emoji.from_dict(
@@ -45,8 +45,8 @@ class TestEmoji:
                 "user": user_dict,
                 "require_colons": True,
                 "managed": False,
-                "animated": False
-            }
+                "animated": False,
+            },
         )
 
         assert emj.id == 1234567
