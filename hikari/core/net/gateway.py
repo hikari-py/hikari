@@ -30,6 +30,8 @@ References:
 """
 from __future__ import annotations
 
+__all__ = ("GatewayClient",)
+
 import asyncio
 import contextlib
 import datetime
@@ -46,7 +48,6 @@ from hikari.core.net import opcodes
 from hikari.core.net import rates
 from hikari.core.utils import assertions, meta, types
 
-__all__ = ("GatewayClient",)
 
 
 class _ResumeConnection(websockets.ConnectionClosed):
@@ -335,6 +336,7 @@ class GatewayClient:
         self.logger.debug("received HEARTBEAT_ACK after %sms", round(self.heartbeat_latency * 1000))
 
     async def _keep_alive(self) -> None:
+        # Send first heartbeat immediately so we know the latency.
         while not self.closed_event.is_set():
             try:
                 now = time.perf_counter()
@@ -570,6 +572,7 @@ class GatewayClient:
                     await self._receive_hello()
                     is_resume = self.seq is not None and self.session_id is not None
                     await (self._send_resume() if is_resume else self._send_identify())
+                    await self._send_heartbeat()
                     await asyncio.gather(self._keep_alive(), self._process_events())
                 except (_RestartConnection, _ResumeConnection, websockets.ConnectionClosed) as ex:
                     code, reason = opcodes.GatewayClosure(ex.code), ex.reason or "no reason"
