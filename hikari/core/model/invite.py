@@ -36,6 +36,9 @@ from hikari.core.utils import dateutils
 
 @base.dataclass()
 class Invite:
+    """
+    Represents a code that when used, adds a user to a guild or group DM channel.
+    """
     __slots__ = (
         "_state",
         "code",
@@ -78,11 +81,18 @@ class Invite:
 
 
 class TargetUserType(enum.IntEnum):
-    ...
+    """
+    The type of a target user
+    """
+
+    STREAM = 1
 
 
 @base.dataclass()
 class InviteMetadata:
+    """
+    Metadata relating to a specific invite object
+    """
     __slots__ = ("_state", "inviter", "uses", "max_uses", "max_age", "temporary", "created_at", "revoked")
 
     _state: typing.Any
