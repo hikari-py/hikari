@@ -19,11 +19,13 @@
 """
 Custom data structures.
 """
-__all__ = ("DiscordObject", "ObjectProxy")
+from hikari.core.utils import assertions
+
+__all__ = ("DiscordObject", "ObjectProxy", "LRUDict")
 
 import typing
 
-#: Any type that Discord may return.
+#: Any type that Discord may return from the API.
 _DiscordType = typing.Union[
     bool, float, int, None, str, typing.List["DiscordObject"], typing.Dict[str, "DiscordObject"]
 ]
@@ -48,3 +50,36 @@ class ObjectProxy(typing.Dict[str, typing.Any]):
 
     def __getattr__(self, item):
         return self[item]
+
+
+class LRUDict(typing.MutableMapping):
+    """
+    A dict that stores a maximum number of items before the oldest is purged.
+    """
+
+    # This will not function correctly on non-CPython implementations of Python3.6, and any implementation of
+    # Python3.5 or older, as it makes the assumption that all dictionaries are ordered by default.
+
+    __slots__ = ("_lru_size", "_data")
+
+    def __init__(self, lru_size: int, dict_factory=dict) -> None:
+        assertions.assert_natural(lru_size)
+        self._data = dict_factory()
+        self._lru_size = lru_size
+
+    def __getitem__(self, item):
+        return self._data[item]
+
+    def __setitem__(self, key, value):
+        while len(self._data) >= self._lru_size:
+            self._data.popitem()
+        self._data[key] = value
+
+    def __delitem__(self, key):
+        del self._data[key]
+
+    def __len__(self):
+        return len(self._data)
+
+    def __iter__(self):
+        yield from self._data

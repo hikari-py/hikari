@@ -24,9 +24,9 @@ References:
 """
 from __future__ import annotations
 
-import enum
-
 __all__ = ("GatewayOpcode", "GatewayClosure", "HTTPStatus", "JSONErrorCode")
+
+import enum
 
 
 class GatewayOpcode(enum.IntEnum):

@@ -30,7 +30,7 @@ import typing
 from hikari.core.model import base
 from hikari.core.model import embed
 from hikari.core.model import media
-from hikari.core.model import state
+from hikari.core.model import model_state
 from hikari.core.model import user
 from hikari.core.model import webhook
 from hikari.core.utils import dateutils
@@ -67,6 +67,19 @@ class MessageActivityType(enum.IntEnum):
     JOIN_REQUEST = 5
 
 
+class MessageFlag(enum.IntFlag):
+    """
+    Additional flags for message options.
+    """
+
+    #: This message has been published to subscribed channels via channel following.
+    CROSSPOSTED = 0x1
+    #: This message originated from a message in another channel via channel following.
+    IS_CROSSPOST = 0x2
+    #: Any embeds on this message should be omitted when serializing the message.
+    SUPPRESS_EMBEDS = 0x4
+
+
 # Note: a lot of fields exist in the Message implementation that are not included here. Much of this information is
 # able to be inferred from the information we are provided with, or is just unnecessary. For example, Nonce is omitted
 # as there is no general use for it. Mentions can be found by scanning the message with a regular expression. Call
@@ -96,10 +109,11 @@ class Message(base.SnowflakeMixin):
         "application",
         "activity",
         "type",
+        "flags",
     )
 
     #: The global state.
-    _state: state.AbstractState
+    _state: model_state.AbstractModelState
     #: The ID of the message.
     id: int
     #: The actual textual content of the message.
@@ -109,7 +123,7 @@ class Message(base.SnowflakeMixin):
     #: The ID of the guild, or None if it is in a DM.
     _guild_id: typing.Optional[int]
     #: The author of the message.
-    author: typing.Union[user.User, user.Member, webhook.Webhook]
+    author: typing.Union["user.User", "user.Member", "webhook.Webhook"]
     #: The timestamp that the message was last edited at, or None if not ever edited.
     edited_at: typing.Optional[datetime.datetime]
     #: True if this message was a TTS message, false otherwise.
@@ -128,9 +142,11 @@ class Message(base.SnowflakeMixin):
     activity: typing.Optional[MessageActivity]
     #: The type of message.
     type: MessageType
+    #: Flags applied to the message.
+    flags: MessageFlag
 
     @staticmethod
-    def from_dict(global_state: state.AbstractState, payload):
+    def from_dict(global_state: model_state.AbstractModelState, payload):
         return Message(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),
@@ -147,6 +163,7 @@ class Message(base.SnowflakeMixin):
             activity=transform.get_cast(payload, "activity", MessageActivity.from_dict),
             type=transform.get_cast_or_raw(payload, "type", MessageType),
             content=payload.get("content"),
+            flags=transform.get_cast(payload, "flags", MessageFlag, default=0),
         )
 
 

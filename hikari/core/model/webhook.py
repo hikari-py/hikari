@@ -19,14 +19,38 @@
 """
 Webhook model.
 """
-__all__ = ()
+__all__ = ("Webhook",)
+
+import typing
 
 from hikari.core.model import base
+from hikari.core.model import model_state
+from hikari.core.model import user
+from hikari.core.utils import transform
 
 
+@base.dataclass()
 class Webhook(base.SnowflakeMixin):
-    __slots__ = ()
+    __slots__ = ("_state", "id", "guild_id", "channel_id", "user", "name", "avatar_hash", "token")
+
+    _state: typing.Any
+    id: int
+    guild_id: int
+    channel_id: int
+    user: typing.Optional["user.User"]
+    name: str
+    avatar_hash: typing.Optional[str]
+    token: str
 
     @staticmethod
-    def from_dict(payload):
-        return NotImplemented
+    def from_dict(global_state: model_state.AbstractModelState, payload):
+        return Webhook(
+            _state=global_state,
+            id=transform.get_cast(payload, "id", int),
+            guild_id=transform.get_cast(payload, "guild_id", int),
+            channel_id=transform.get_cast(payload, "channel_id", int),
+            user=global_state.parse_user(payload.get("user")),
+            name=payload.get("name"),
+            avatar_hash=payload.get("avatar_hash"),
+            token=payload.get("token"),
+        )
