@@ -49,7 +49,6 @@ from hikari.core.net import rates
 from hikari.core.utils import assertions, meta, types
 
 
-
 class _ResumeConnection(websockets.ConnectionClosed):
     """Request to restart the client connection using a resume. This is only used internally."""
 

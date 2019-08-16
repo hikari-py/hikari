@@ -31,16 +31,7 @@ from hikari.core.utils import transform
 
 @base.dataclass()
 class Webhook(base.SnowflakeMixin):
-    __slots__ = (
-        "_state",
-        "id",
-        "guild_id",
-        "channel_id",
-        "user",
-        "name",
-        "avatar_hash",
-        "token"
-    )
+    __slots__ = ("_state", "id", "guild_id", "channel_id", "user", "name", "avatar_hash", "token")
 
     _state: typing.Any
     id: int
@@ -61,5 +52,5 @@ class Webhook(base.SnowflakeMixin):
             user=global_state.parse_user(payload.get("user")),
             name=payload.get("name"),
             avatar_hash=payload.get("avatar_hash"),
-            token=payload.get("token")
+            token=payload.get("token"),
         )
