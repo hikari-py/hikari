@@ -875,7 +875,7 @@ class TestGateway:
         assert gw._connector.init
         assert gw._connector.aenter
         assert gw._connector.aexit
-        assert ((), {"uri": "uri", "loop": "loop", "compression": None},) in gw._connector.init
+        assert ((), {"uri": "uri", "loop": "loop", "compression": None}) in gw._connector.init
 
     @mock_run_once_parts()
     async def test_run_once_waits_for_hello(_, gw):
@@ -884,9 +884,9 @@ class TestGateway:
 
     @mock_run_once_parts()
     async def test_run_once_heart_beats_before_keep_alive_but_after_send_identify(_, gw):
-        send_identify_time = -float('inf')
-        heartbeat_time = -float('inf')
-        keep_alive_time = -float('inf')
+        send_identify_time = -float("inf")
+        heartbeat_time = -float("inf")
+        keep_alive_time = -float("inf")
 
         async def _send_identify():
             nonlocal send_identify_time
@@ -907,11 +907,11 @@ class TestGateway:
         await gw.run_once()
 
         # Sanity check
-        assert -float('inf') == -float('inf')
+        assert -float("inf") == -float("inf")
 
-        assert send_identify_time != -float('inf')
-        assert heartbeat_time != -float('inf')
-        assert keep_alive_time != -float('inf')
+        assert send_identify_time != -float("inf")
+        assert heartbeat_time != -float("inf")
+        assert keep_alive_time != -float("inf")
         assert send_identify_time < heartbeat_time < keep_alive_time
 
     @mock_run_once_parts()
