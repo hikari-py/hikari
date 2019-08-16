@@ -19,8 +19,37 @@
 """
 Reactions to a message.
 """
-__all__ = ()
+__all__ = "Reaction"
+
+import typing
+
+from hikari.core.model import base
+from hikari.core.model import emoji
+from hikari.core.model import model_state
+from hikari.core.utils import transform
 
 
+@base.dataclass()
 class Reaction:
-    __slots__ = ()
+    """
+    Model for a message reaction object
+    """
+
+    __slots__ = ("_state", "count", "me", "emoji")
+
+    _state: typing.Any
+    # The number of times the emoji has been used to react
+    count: int
+    # Whether the current user has reacted with the emoji or not
+    me: bool
+    # The emoji used for the reaction
+    emoji: "emoji.Emoji"
+
+    @staticmethod
+    def from_dict(global_state: model_state.AbstractModelState, payload):
+        return Reaction(
+            _state=global_state,
+            count=transform.get_cast(payload, "count", int),
+            me=transform.get_cast(payload, "me", bool),
+            emoji=global_state.parse_emoji(payload.get("emoji")),
+        )
