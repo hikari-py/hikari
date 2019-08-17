@@ -2,8 +2,8 @@
 
 function set-versions() {
   local version=$1
-  sed "s/^__version__.*/__version__ = \"${version}\"/g" -i hikari/__init__.py
-  sed "0,/^version.*$/s//version = \"${version}\"/g" -i pyproject.toml
+  sed "s/^__version__.*/__version__ = \"${version}\"/g" -i hikari/core/__init__.py
+  sed "0,/^version.*$/s//version = \"${version}\"/g" -i pyproject.toml 
   sed "0,/^version.*$/s//version = \"${version}\"/g" -i docs/conf.py
 }
 
