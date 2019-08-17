@@ -57,7 +57,11 @@ cache:
         - mkdir public || true
         # Run the pipelines.
         - echo -e "\e[1;33mRUNNING TEST PIPELINES\e[0m"
-        - nox -sinit -spytest -sbandit -spypitest -sformat_check
+        - nox -sinit
+        - nox -spytest
+        - nox -sbandit
+        - nox -spypitest
+        - nox -sformat_check
         - nox -spylint || true
     artifacts:
         paths:
