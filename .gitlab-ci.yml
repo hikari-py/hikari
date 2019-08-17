@@ -23,8 +23,10 @@ variables:
     DOCKER_DRIVER: "overlay2"
     RUN_SLOW_TESTS: "true"
     OWNER: "nekokatt"
-    # gitalb.com/nekokatt/hikari trigger token
+    # gitlab.com/nekokatt/hikari trigger token
     HIKARI_TRIGGER_TOKEN: secure
+    # To push to gitlab on master
+    GIT_SSH_PRIVATE_KEY: secure
 
 cache:
     paths:
@@ -57,7 +59,7 @@ cache:
         - echo -e "\e[1;33mRUNNING TEST PIPELINES\e[0m"
         - nox -spytest
         - nox -sbandit
-        - nox -sformat_cjecl
+        - nox -sformat_check
         - nox -spylint || true
         # Test setup.py
         - echo -e "\e[1;33mTESTING SETUP.PY\e[0m"
