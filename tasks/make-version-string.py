@@ -35,8 +35,13 @@ pypi_server = "test.pypi.org" if is_staging else "pypi.org"
 
 with requests.get(f"https://{pypi_server}/pypi/hikari.core/json") as resp:
     print("Looking at versions on", pypi_server, file=sys.stderr)
-    resp.raise_for_status()
-    data = resp.json()["releases"]
+
+    if resp.status_code == 404:
+        print("Package not yet been deployed?", file=sys.stderr)
+        data = []
+    else:
+        resp.raise_for_status()
+        data = resp.json()["releases"]
 
 
 # Inspect the version in pyproject.toml
