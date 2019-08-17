@@ -63,7 +63,6 @@ cache:
         - poetry run nox -spytest
         - poetry run nox -sbandit
         - poetry run nox -spypitest
-        - poetry run nox -sformat_check
         - poetry run nox -spylint || true
     artifacts:
         paths:
