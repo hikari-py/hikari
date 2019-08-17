@@ -17,9 +17,7 @@
 
 stages:
     - test
-    - verify
     - deploy
-    - pages
 
 variables:
     DOCKER_DRIVER: "overlay2"
@@ -44,36 +42,38 @@ cache:
         - schedules
 
 ###
-### TEMPLATE TO RUN PYTEST.
+### TEMPLATE TO RUN NOX AND SETUP.PY TESTS
 ###
-.pytest:
+.test:
     <<: *merge_request_testing
     allow_failure: false
     stage: test
     script:
+        - python -V
+        - apk add git gcc g++ make
+        - pip install nox virtualenv
         - mkdir public || true
-        - nox -s pytest
+        # Run the pipelines.
+        - echo -e "\e[1;33mRUNNING TEST PIPELINES\e[0m"
+        - nox -spytest
+        - nox -sbandit
+        - nox -sformat_cjecl
+        - nox -spylint || true
+        # Test setup.py
+        - echo -e "\e[1;33mTESTING SETUP.PY\e[0m"
+        - mkdir test-venv; cd test-venv; python -m venv .venv; source .venv/bin/activate
+        - pip install -U ${PACKAGE_SLUG}
+        - python -c "import hikari.core; print(hikari.core.__version__)"
     artifacts:
         paths:
             - public
-
-###
-### TEMPLATE TO INITIALIZE CPYTHON ENVIRONMENTS AND THEN RUN PYTEST.
-###
-.cpython-pytest:
-    stage: test
-    extends: .pytest
-    before_script:
-        - python -V
-        - apk add git gcc g++ make
-        - pip install nox
 
 ###
 ### TEST IN PYTHON 3.7
 ###
 py37:
     image: python:3.7-alpine
-    extends: .cpython-pytest
+    extends: .test
     coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
 
 ###
@@ -81,46 +81,48 @@ py37:
 ###
 py38:
     image: python:3.8-rc-alpine
-    extends: .cpython-pytest
+    extends: .test
+
 
 ###
-### FAIL WITH WARNING IF CODE DOES NOT MATCH DESIRED FORMAT.
-### This only runs for merge requests.
+### TEMPLATE FOR TEST AND PROD DOCUMENTATION GENERATION JOBS.
 ###
-verify:
-    <<: *merge_request_testing
-    stage: verify
+.pages:
+    stage: deploy
     allow_failure: false
-    image: python:3-alpine
+    image: python:3-stretch
     before_script:
-        - apk add git gcc g++ make
+        - apt-get update
+        - apt-get install graphviz -y
         - pip install nox
     script:
-        - nox -s bandit format_check
-        - nox -s pylint || true
-    except:
-        - master
-        - staging
+        - nox -ssphinx
+    artifacts:
+        paths:
+            - public
 
 ###
-### VERIFY THAT SETUP.PY IS VALID.
+### GENERATE DOCUMENTATION WITHOUT DEPLOYING PAGES TO GITLAB PAGES.
 ###
-setup.py:
+pages-test:
     <<: *merge_request_testing
-    stage: verify
-    allow_failure: false
-    image: python:3-alpine
-    variables:
-        GIT_STRATEGY: none
-        PACKAGE_SLUG: git+${CI_PROJECT_URL}.git@${CI_COMMIT_REF_NAME}
-    before_script:
-        - apk add git gcc make g++
-        - pip install -U pip
-        - python -V
-        - echo "Testing setup.py for ${PACKAGE_SLUG}"
-    script:
-        - pip install -U ${PACKAGE_SLUG}
-        - python -c "import hikari.core; print(hikari.core.__version__)"
+    extends: .pages
+    except:
+        - master
+    dependencies:
+        - deploy-to-staging
+
+###
+### PRODUCE PRODUCTION DOCUMENTATION.
+###
+pages:
+    extends: .pages
+    only:
+        - master
+    except:
+        - schedules
+    dependencies:
+        - deploy-to-prod
 
 ###
 ### HANDLE DEPLOYING TO PYPI REPOSITORIES
@@ -184,50 +186,3 @@ deploy-to-prod:
     artifacts:
         paths:
             - docs
-
-
-###
-### TEMPLATE FOR TEST AND PROD DOCUMENTATION GENERATION JOBS.
-###
-.pages:
-    dependencies:
-        - aggregate-coverage
-        - bandit
-    allow_failure: false
-    image: python:3-stretch
-    before_script:
-        - apt-get update
-        - apt-get install graphviz -y
-        - pip install nox
-    script:
-        - nox -ssphinx
-    artifacts:
-        paths:
-            - public
-
-###
-### GENERATE DOCUMENTATION WITHOUT DEPLOYING PAGES TO GITLAB PAGES.
-###
-pages-test:
-    <<: *merge_request_testing
-    stage: pages
-    extends: .pages
-    except:
-        - master
-    dependencies:
-        - deploy-to-staging
-
-###
-### PRODUCE PRODUCTION DOCUMENTATION.
-###
-pages:
-    stage: pages
-    extends: .pages
-    only:
-        - master
-    except:
-        - schedules
-    dependencies:
-        - deploy-to-prod
-
-
