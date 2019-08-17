@@ -61,7 +61,6 @@ function do-deployment() {
   local next_version
 
   git checkout -f "${CI_COMMIT_REF_NAME}"
-
   current_version=$(grep -oP "^version\s*=\s*\"\K[^\"]*" pyproject.toml)
   next_version=$(python tasks/make-version-string.py "$CI_COMMIT_REF_NAME")
 
@@ -71,6 +70,9 @@ function do-deployment() {
 
   case $CI_COMMIT_REF_NAME in
     master)
+      # Ensure we have the staging ref as well as the master one
+      git stash; git checkout staging -f; git checkout master -f; git stash pop
+
       # Push to GitLab and update both master and staging.
       deploy-to-gitlab "$current_version" "$next_version"
       deploy-to-pypi
