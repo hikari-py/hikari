@@ -38,7 +38,6 @@ project = "Hikari"
 author = "Nekokatt"
 copyright = author
 version = "LATEST"
-release = "LATEST"
 
 # -- General configuration ---------------------------------------------------
 

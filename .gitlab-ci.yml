@@ -131,25 +131,15 @@ setup.py:
     image: python:3
     before_script:
         - apt-get update
-        - apt-get install curl -y
-        - pip install poetry
+        - apt-get install curl git openssh-client -y
+        - pip install poetry requests
         - poetry install -v
         - poetry show -v
     script:
         - poetry config repositories.hikarirepo ${PYPI_REPO}
-        - version="$(date +%Y.%m.%d)${PREFIX}"
-        - release="$(git show --format='%h' -s)"
-        - pep440_version="${version}.${CI_PIPELINE_IID}"
-        - echo "Version will become ${pep440_version}, release will be ${release}"
-        - sed "s/^__version__.*/__version__ = \"${pep440_version}\"/g" -i hikari/__init__.py
-        - sed "s/^__release__.*/__release__ = \"${release}\"/g" -i hikari/__init__.py
-        - sed "0,/^version.*$/s//version = \"${pep440_version}\"/g" -i pyproject.toml
-        - sed "0,/^version.*$/s//version = \"${pep440_version}\"/g" -i docs/conf.py
-        - sed "0,/^release.*$/s//release = \"${release}\"/g" -i docs/conf.py
-        - poetry build
-        - poetry publish --username=$PYPI_USER --password=$PYPI_PASS --repository=hikarirepo
-        - pip install requests
-        - python tasks/notify.py "${pep440_version} (${release})" "hikari.core"
+        - source tasks/deploy.sh
+        - do-entire-deployment
+        - python tasks/notify.py "${version} (${release})" "hikari.core"
 
 ###
 ### HANDLE DEPLOYING TO OUR STAGING ENVIRONMENT ON test.pypi.org
@@ -164,7 +154,6 @@ deploy-to-staging:
         - merge_requests
         - schedules
     variables:
-        PREFIX: ".dev"
         RELEASE_WEBHOOK_NAME: "staging"
         RELEASE_WEBHOOK_DESCRIPTION: "You can install this version by running:\n```bash\npip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple hikari.core\n```\n"
         RELEASE_WEBHOOK_COLOUR: "0xd34615"
@@ -188,7 +177,6 @@ deploy-to-prod:
         - merge_requests
         - schedules
     variables:
-        PREFIX: ""
         RELEASE_WEBHOOK_NAME: "prod"
         RELEASE_WEBHOOK_DESCRIPTION: "Install it with:\n```bash\npip install hikari.core\n```\n"
         RELEASE_WEBHOOK_COLOUR: "0x5c2040"
