@@ -53,16 +53,18 @@ cache:
     script:
         - python -V
         - apk add git gcc g++ make
-        - pip install nox virtualenv
+        - pip install poetry nox virtualenv
         - mkdir public || true
         # Run the pipelines.
         - echo -e "\e[1;33mRUNNING TEST PIPELINES\e[0m"
-        - nox -sinit
-        - nox -spytest
-        - nox -sbandit
-        - nox -spypitest
-        - nox -sformat_check
-        - nox -spylint || true
+        - poetry install
+        - poetry show -v
+        - poetry run nox -sinit
+        - poetry run nox -spytest
+        - poetry run nox -sbandit
+        - poetry run nox -spypitest
+        - poetry run nox -sformat_check
+        - poetry run nox -spylint || true
     artifacts:
         paths:
             - public
