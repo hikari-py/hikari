@@ -57,19 +57,19 @@ function deploy-to-gitlab() {
 
 function do-deployment() {
   set -x
-  local branch
   local current_version
   local next_version
 
-  branch=$(git rev-parse --abbrev-ref HEAD)
+  git checkout -f "${CI_COMMIT_REF_NAME}"
+
   current_version=$(grep -oP "^version\s*=\s*\"\K[^\"]*" pyproject.toml)
-  next_version=$(python tasks/make-version-string.py "$branch")
+  next_version=$(python tasks/make-version-string.py "$CI_COMMIT_REF_NAME")
 
   poetry config repositories.hikarirepo "$PYPI_REPO"
 
   set-versions "$current_version"
 
-  case $branch in
+  case $CI_COMMIT_REF_NAME in
     master)
       # Push to GitLab and update both master and staging.
       deploy-to-gitlab "$current_version" "$next_version"
@@ -82,7 +82,7 @@ function do-deployment() {
       deploy-to-pypi
       ;;
     *)
-      echo -e "\e[1;31m$branch is not master or staging, so will not be updated.\e[0m"
+      echo -e "\e[1;31m$CI_COMMIT_REF_NAME is not master or staging, so will not be updated.\e[0m"
       exit 1
       ;;
   esac
