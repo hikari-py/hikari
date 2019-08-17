@@ -38,12 +38,12 @@ function deploy-to-gitlab() {
   git config user.name "Hikari CI"
   git config user.email "nekoka.tt@outlook.com"
   git add pyproject.toml docs/conf.py hikari/core/__init__.py
-  git commit -am "Deployed $old_version, will update to $current_version [skip ci]"
-  git tag "$old_version"
+  git status
+  git commit -am "Deployed $current_version [skip ci]" --allow-empty
   git diff-index --quiet HEAD || git push origin master
-  git push origin "$old_version" || true
+  git tag "$current_version" && git push origin "$current_version" || true
   git checkout staging
-  git merge -X ours origin/master -m "Deployed $old_version, updating staging to match master on $current_version [skip ci]" || true
+  git merge -X ours origin/master -m "Merge deployed master $current_version into staging [skip ci]" || true
   git push origin staging || true
 }
 
@@ -60,13 +60,11 @@ function do-deployment() {
 
   poetry config repositories.hikarirepo "$PYPI_REPO"
 
-  set-versions "$current_version"
-
   case $CI_COMMIT_REF_NAME in
     master)
       # Ensure we have the staging ref as well as the master one
       git checkout staging -f && git checkout master -f
-
+      set-versions "$current_version"
       # Push to GitLab and update both master and staging.
       deploy-to-gitlab "$old_version" "$current_version"
       deploy-to-pypi
@@ -75,6 +73,7 @@ function do-deployment() {
       curl --request POST --form token="$HIKARI_TRIGGER_TOKEN" --form ref=master https://gitlab.com/api/v4/projects/13535679/trigger/pipeline | python -m json.tool
       ;;
     staging)
+      set-versions "$current_version"
       deploy-to-pypi
       ;;
     *)
