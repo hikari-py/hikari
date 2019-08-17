@@ -87,7 +87,7 @@ py38:
 ###
 ### TEMPLATE FOR TEST AND PROD DOCUMENTATION GENERATION JOBS.
 ###
-.pages:
+pages:
     stage: deploy
     allow_failure: false
     image: python:3-stretch
@@ -100,29 +100,10 @@ py38:
     artifacts:
         paths:
             - public
-
-###
-### GENERATE DOCUMENTATION WITHOUT DEPLOYING PAGES TO GITLAB PAGES.
-###
-pages-test:
-    <<: *merge_request_testing
-    extends: .pages
-    except:
-        - master
-    dependencies:
-        - deploy-to-staging
-
-###
-### PRODUCE PRODUCTION DOCUMENTATION.
-###
-pages:
-    extends: .pages
     only:
         - master
     except:
         - schedules
-    dependencies:
-        - deploy-to-prod
 
 ###
 ### HANDLE DEPLOYING TO PYPI REPOSITORIES
