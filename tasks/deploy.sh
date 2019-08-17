@@ -82,6 +82,6 @@ function do-deployment() {
       ;;
   esac
 
-  notify "$old_version"
+  notify "$current_version"
   set +x
 }
