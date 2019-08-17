@@ -57,15 +57,8 @@ cache:
         - mkdir public || true
         # Run the pipelines.
         - echo -e "\e[1;33mRUNNING TEST PIPELINES\e[0m"
-        - nox -spytest
-        - nox -sbandit
-        - nox -sformat_check
+        - nox -sinit -spytest -sbandit -spypitest -sformat_check
         - nox -spylint || true
-        # Test setup.py
-        - echo -e "\e[1;33mTESTING SETUP.PY\e[0m"
-        - mkdir test-venv; cd test-venv; python -m venv .venv; source .venv/bin/activate
-        - pip install -U ${PACKAGE_SLUG}
-        - python -c "import hikari.core; print(hikari.core.__version__)"
     artifacts:
         paths:
             - public
