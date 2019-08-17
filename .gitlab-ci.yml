@@ -16,8 +16,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 stages:
-    - deploy
     - test
+    - deploy
 
 variables:
     DOCKER_DRIVER: "overlay2"
