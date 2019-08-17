@@ -23,6 +23,7 @@ variables:
     DOCKER_DRIVER: "overlay2"
     RUN_SLOW_TESTS: "true"
     OWNER: "nekokatt"
+    MAIN_REPO: https://gitlab.com/nekokatt/hikari.core
     # gitlab.com/nekokatt/hikari trigger token
     HIKARI_TRIGGER_TOKEN: secure
     # To push to gitlab on master
@@ -124,7 +125,7 @@ deploy-to-staging:
     extends: .deploy
     only:
         - staging
-        - $CI_PROJECT_NAMESPACE == $OWNER
+        - $CI_PROJECT_URL == $MAIN_REPO
     except:
         - tags
         - merge_requests
@@ -147,7 +148,7 @@ deploy-to-prod:
     extends: .deploy
     only:
         - master
-        - $CI_PROJECT_NAMESPACE == $OWNER
+        - $CI_PROJECT_URL == $MAIN_REPO
     except:
         - tags
         - merge_requests
