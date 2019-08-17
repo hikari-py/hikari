@@ -44,7 +44,6 @@ BLACK_SHIM_PATH = pathify(CI_SCRIPT_DIR, "black.py")
 GENDOC_PATH = pathify(CI_SCRIPT_DIR, "gendoc.py")
 PYLINTRC = ".pylintrc"
 PYTHON_TARGETS = ["python3.7", "python3.8", "python3.9"]
-OFFLINE_FLAG = "NOX_OFFLINE"
 
 existing_python_installs = [target for target in PYTHON_TARGETS if shutil.which(target)]
 has_dumped_venv_info = False
@@ -91,9 +90,6 @@ def using_poetry(session_logic):
         session.install("poetry")
         session = PoetryNoxSession(session)
         session.poetry("config", "settings.virtualenvs.create", "false", silent=False)
-        if not os.getenv(OFFLINE_FLAG, False) and not has_dumped_venv_info:
-            session.poetry("update", "-v", silent=True)
-            session.poetry("show", "-v")
         return session_logic(session, *args, **kwargs)
 
     return wrapper
