@@ -152,8 +152,8 @@ def sphinx(session: PoetryNoxSession) -> None:
 @using_poetry
 def bandit(session: PoetryNoxSession) -> None:
     session.install("bandit")
-    session.run("bandit", MAIN_PACKAGE, "-r")
-    session.run("bandit", MAIN_PACKAGE, "-r", "-f", "html", "-o", pathify(ARTIFACT_DIR, "bandit.html"))
+    pkg = MAIN_PACKAGE.split('.')[0]
+    session.run("bandit", pkg, "-r")
 
 
 def _black(session, *args, **kwargs):
