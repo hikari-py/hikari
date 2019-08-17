@@ -64,6 +64,9 @@ function do-deployment() {
   branch=$(git rev-parse --abbrev-ref HEAD)
   current_version=$(grep -oP "^version\s*=\s*\"\K[^\"]*" pyproject.toml)
   next_version=$(python tasks/make-version-string.py "$branch")
+
+  poetry config repositories.hikarirepo "$PYPI_REPO"
+
   set-versions "$current_version"
 
   case $branch in
@@ -72,6 +75,7 @@ function do-deployment() {
       deploy-to-gitlab "$current_version" "$next_version"
       deploy-to-pypi
       # Trigger Hikari deployment in main umbrella repo.
+      echo "Triggering hikari package rebuild"
       curl --request POST --form token="$HIKARI_TRIGGER_TOKEN" --form ref=master https://gitlab.com/api/v4/projects/13535679/trigger/pipeline | python -m json.tool
       ;;
     staging)
