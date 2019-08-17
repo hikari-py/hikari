@@ -66,10 +66,6 @@ class PoetryNoxSession(sessions.Session):
     def run(self, *args, **kwargs) -> None:
         self.poetry("run", *args, **kwargs)
 
-    def run_if_online(self, *args, **kwargs) -> None:
-        if not os.getenv(OFFLINE_FLAG, False):
-            self.run(*args, **kwargs)
-
     def install(self, *args, **kwargs):
         self.run("pip", "install", *args, **kwargs)
 
@@ -93,6 +89,12 @@ def using_poetry(session_logic):
         return session_logic(session, *args, **kwargs)
 
     return wrapper
+
+
+@nox_session(python=existing_python_installs, reuse_venv=True)
+@using_poetry
+def init(session: PoetryNoxSession) -> None:
+    session.poetry("update", "-vv")
 
 
 @nox_session(python=existing_python_installs, reuse_venv=True)
@@ -169,3 +171,16 @@ def format_fix(session: PoetryNoxSession) -> None:
 @using_poetry
 def format_check(session: PoetryNoxSession) -> None:
     _black(session, "--check")
+
+
+@nox_session(reuse_venv=False)
+def pypitest(session: sessions.Session):
+    if os.getenv("CI"):
+        print("Testing published ref can be installed as a package.")
+        url = os.getenv("CI_PROJECT_URL", "https://gitlab.com/nekokatt/hikari.core")
+        ref = os.getenv("CI_COMMIT_REF_NAME", "master")
+        slug = f"git+{url}.git@{ref}"
+        session.install("-vvv", slug)
+    else:
+        print("Testing local repository can be installed as a package.")
+        session.install("-vvv", "--isolated", ".")
