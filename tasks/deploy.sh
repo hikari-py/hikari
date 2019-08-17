@@ -39,12 +39,12 @@ function deploy-to-gitlab() {
   git config user.email "nekoka.tt@outlook.com"
   git add pyproject.toml docs/conf.py hikari/core/__init__.py
   git status
+  git diff
   git commit -am "Deployed $current_version [skip ci]" --allow-empty
-  git diff-index --quiet HEAD || git push origin master
+  git push origin master || true
   git tag "$current_version" && git push origin "$current_version" || true
   git checkout staging
-  git merge -X ours origin/master -m "Merge deployed master $current_version into staging [skip ci]" || true
-  git push origin staging || true
+  git merge master --no-ff -m "Merge deployed master $current_version into staging [skip ci]" && git push origin staging || true
 }
 
 function do-deployment() {
