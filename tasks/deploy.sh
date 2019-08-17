@@ -63,7 +63,7 @@ function do-deployment() {
   case $CI_COMMIT_REF_NAME in
     master)
       # Ensure we have the staging ref as well as the master one
-      git stash; git checkout staging -f; git checkout master -f; git stash pop
+      git checkout staging -f && git checkout master -f
 
       # Push to GitLab and update both master and staging.
       deploy-to-gitlab "$old_version" "$current_version"
