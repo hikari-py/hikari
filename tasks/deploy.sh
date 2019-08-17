@@ -40,7 +40,7 @@ function deploy-to-gitlab() {
   git add pyproject.toml docs/conf.py hikari/core/__init__.py
   git commit -am "Deployed $old_version, will update to $current_version [skip ci]"
   git tag "$old_version"
-  git push origin master
+  git diff-index --quiet HEAD || git push origin master
   git push origin "$old_version" || true
   git checkout staging
   git merge -X ours origin/master -m "Deployed $old_version, updating staging to match master on $current_version [skip ci]" || true
