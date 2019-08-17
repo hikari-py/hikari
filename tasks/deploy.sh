@@ -25,7 +25,9 @@ function deploy-to-gitlab() {
   # Init SSH auth.
   eval "$(ssh-agent -s)"
   mkdir ~/.ssh || true
+  set +x
   echo "$GIT_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+  set -x
   chmod 600 ~/.ssh/id_rsa
   ssh-keyscan -t rsa gitlab.com >> ~/.ssh/known_hosts
   ssh-add ~/.ssh/id_rsa
@@ -39,7 +41,7 @@ function deploy-to-gitlab() {
   git commit -am "Deployed $old_version, will update to $current_version [skip ci]"
   git tag "$old_version"
   git push origin master
-  git push origin "$old_version"
+  git push origin "$old_version" || true
   git checkout staging
   git merge -X ours origin/master -m "Deployed $old_version, updating staging to match master on $current_version [skip ci]" || true
   git push origin staging || true
