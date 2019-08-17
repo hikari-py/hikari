@@ -27,12 +27,7 @@ variables:
     HIKARI_TRIGGER_TOKEN: secure
     # To push to gitlab on master
     GIT_SSH_PRIVATE_KEY: secure
-
-cache:
-    paths:
-        - .nox/
-        - .pytest_cache/
-        - poetry.lock
+    
 
 # Fixes a bug where CI now won't verify a branch before merging it and instead does nothing until the heat death of
 # the universe or something.
