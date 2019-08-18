@@ -251,7 +251,7 @@ class BaseHTTPClient:
         query = query if query else {}
 
         headers.setdefault(USER_AGENT, self.user_agent)
-        headers.setdefault(ACCEPT, "application/json")
+        headers.setdefault(ACCEPT, APPLICATION_JSON)
         # https://github.com/discordapp/discord-api-docs/pull/1064
         headers.setdefault(X_RATELIMIT_PRECISION, MILLISECOND)
 
