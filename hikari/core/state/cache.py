@@ -48,8 +48,7 @@ class InMemoryCache(model_state.AbstractModelState):
         self._guilds = {}
         self._dm_channels = types.LRUDict(user_dm_channel_size)
         self._messages = types.LRUDict(message_cache_size)
-        # These members may only be referred to in the guild they are from, after that they are disposed of.
-        self._members = weakref.WeakValueDictionary()
+        self._emojis = weakref.WeakValueDictionary()
 
     def get_user_by_id(self, user_id: int):
         return self._users.get(user_id)
@@ -59,6 +58,9 @@ class InMemoryCache(model_state.AbstractModelState):
 
     def get_message_by_id(self, message_id: int):
         return self._messages.get(message_id)
+
+    def get_emoji_by_id(self, emoji_id: int):
+        return self._emojis.get(emoji_id)
 
     def parse_user(self, user: types.DiscordObject):
         # If the user already exists, then just return their existing object. We expect discord to tell us if they
@@ -76,31 +78,38 @@ class InMemoryCache(model_state.AbstractModelState):
         return self._guilds[guild_id]
 
     def parse_member(self, member: types.DiscordObject, guild_id: int):
-        user_id = transform.get_cast(member.get("user"), "id", int)
-        if user_id not in self._members:
-            self._members[user_id] = _user.Member.from_dict(self, guild_id, member)
-        return self._members[user_id]
+        # Don't cache members.
+        return _user.Member.from_dict(self, guild_id, member)
 
     def parse_role(self, role: types.DiscordObject):
-        # Don't cache roles here.
+        # Don't cache roles.
         return _role.Role.from_dict(role)
 
     def parse_emoji(self, emoji: types.DiscordObject):
-        # TODO: cache emoji
+        # Don't cache emojis.
         return _emoji.Emoji.from_dict(self, emoji)
 
+    def parse_webhook(self, webhook: types.DiscordObject):
+        # Don't cache webhooks.
+        return _webhook.Webhook.from_dict(self, webhook)
+
     def parse_message(self, message: types.DiscordObject):
+        # Always update the cache with the new message.
         message_id = transform.get_cast(message, "id", int)
         message_obj = _message.Message.from_dict(self, message)
         self._messages[message_id] = message_obj
         return message_obj
 
     def parse_channel(self, channel: types.DiscordObject):
-        channel = _channel.channel_from_dict(self, channel)
-        if channel.is_dm:
-            self._dm_channels[channel.id] = channel
-        return channel
+        # Only cache DM channels.
+        channel_id = transform.get_cast(channel, "id", int)
+        is_dm = transform.get_cast(channel, "type", _channel.is_dm_channel_type)
+        if is_dm:
+            if channel_id in self._dm_channels:
+                return self._dm_channels[channel_id]
+            else:
+                channel = _channel.channel_from_dict(self, channel)
+                self._dm_channels[channel_id] = channel
+                return channel
 
-    def parse_webhook(self, webhook: types.DiscordObject):
-        # Don't cache webhooks here.
-        return _webhook.Webhook.from_dict(self, webhook)
+        return _channel.channel_from_dict(self, channel)

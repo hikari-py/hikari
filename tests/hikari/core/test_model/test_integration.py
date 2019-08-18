@@ -37,10 +37,7 @@ class TestIntegration:
             "avatar": "5500909a3274e1812beb4e8de6631111",
         }
 
-        account_dict = {
-            "id": "123456789",
-            "name": "lasagna"
-        }
+        account_dict = {"id": "123456789", "name": "lasagna"}
 
         inte = integration.Integration.from_dict(
             test_state,
@@ -55,8 +52,8 @@ class TestIntegration:
                 "expire_grace_period": 420,
                 "user": user_dict,
                 "account": account_dict,
-                "synced_at": "2016-03-31T19:15:39.954000+00:00"
-            }
+                "synced_at": "2016-03-31T19:15:39.954000+00:00",
+            },
         )
 
         assert inte.id == 1234567
@@ -70,18 +67,13 @@ class TestIntegration:
         assert inte.synced_at == datetime.datetime(2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc)
         test_state.parse_user.assert_called_with(user_dict)
 
+
 @pytest.mark.model
 class TestIntegrationAccount:
     def test_IntegrationAccount_from_dict(self):
         test_state = mock.MagicMock(state_set=model_state.AbstractModelState)
 
-        inteacc = integration.IntegrationAccount.from_dict(
-            test_state,
-            {
-                "id": "1234567",
-                "name": "memes"
-            }
-        )
+        inteacc = integration.IntegrationAccount.from_dict(test_state, {"id": "1234567", "name": "memes"})
 
         assert inteacc.id == 1234567
         assert inteacc.name == "memes"
