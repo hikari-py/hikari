@@ -21,13 +21,30 @@ stages:
 
 variables:
     DOCKER_DRIVER: "overlay2"
-    RUN_SLOW_TESTS: "true"
     OWNER: "nekokatt"
-    # gitlab.com/nekokatt/hikari trigger token
-    HIKARI_TRIGGER_TOKEN: secure
-    # To push to gitlab on master
-    GIT_SSH_PRIVATE_KEY: secure
-    
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+    PYPI_REPO: secure              # staging + master only: the URI to point to.
+    TEST_PYPI_USER: secure
+    PROD_PYPI_USER: secure
+    TEST_PYPI_PASSWORD: secure
+    PROD_PYPI_PASSWORD: secure
+    HIKARI_TRIGGER_TOKEN: secure   # gitlab.com/nekokatt/hikari trigger token
+    GIT_SSH_PRIVATE_KEY: secure    # To push to gitlab on master
+    RELEASE_WEBHOOK: secure
+
+
+cache:
+    key: "${CI_PROJECT_ID}-${CI_JOB_STAGE}-${CI_JOB_NAME}"
+    paths:
+        - .cache/pip
+        - .nox/
+        - .pytest_cache/
+        - .venv/
+        - venv/
+        - .coverage
+        - poetry.lock
+
 
 # Fixes a bug where CI now won't verify a branch before merging it and instead does nothing until the heat death of
 # the universe or something.
