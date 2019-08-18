@@ -40,12 +40,19 @@ __all__ = ("BaseHTTPClient",)
 _DISCORD_API_URI_FORMAT = "https://discordapp.com/api/v{VERSION}"
 
 # Headers for rate limiting
-_DATE = "Date"
-_X_RATELIMIT_GLOBAL = "X-RateLimit-Global"
-_X_RATELIMIT_LIMIT = "X-RateLimit-Limit"
-_X_RATELIMIT_REMAINING = "X-RateLimit-Remaining"
-_X_RATELIMIT_RESET = "X-RateLimit-Reset"
-_X_RATELIMIT_LOCALS = [_X_RATELIMIT_LIMIT, _X_RATELIMIT_REMAINING, _X_RATELIMIT_RESET, _DATE]
+ACCEPT = "Accept"
+APPLICATION_JSON = "application/json"
+DATE = "Date"
+MILLISECOND = "millisecond"
+RETRY_AFTER = "Retry-After"
+USER_AGENT = "User-Agent"
+X_RATELIMIT_GLOBAL = "X-RateLimit-Global"
+X_RATELIMIT_LIMIT = "X-RateLimit-Limit"
+X_RATELIMIT_PRECISION = "X-RateLimit-Precision"
+X_RATELIMIT_REMAINING = "X-RateLimit-Remaining"
+X_RATELIMIT_RESET = "X-RateLimit-Reset"
+X_RATELIMIT_RESET_AFTER = "X-RateLimit-Reset-After"
+X_RATELIMIT_LOCALS = [X_RATELIMIT_LIMIT, X_RATELIMIT_REMAINING, X_RATELIMIT_RESET, DATE]
 
 _RequestReturnSignature = typing.Tuple[opcodes.HTTPStatus, typing.Mapping, typing.Any]
 
@@ -244,8 +251,10 @@ class BaseHTTPClient:
         headers = headers if headers else {}
         query = query if query else {}
 
-        headers.setdefault("User-Agent", self.user_agent)
-        headers.setdefault("Accept", "application/json")
+        headers.setdefault(USER_AGENT, self.user_agent)
+        headers.setdefault(ACCEPT, APPLICATION_JSON)
+        # https://github.com/discordapp/discord-api-docs/pull/1064
+        headers.setdefault(X_RATELIMIT_PRECISION, MILLISECOND)
 
         # Prevent inconsistencies causing weird behaviour: check both args.
         if reason is not None and reason is not unspecified.UNSPECIFIED:
@@ -335,26 +344,35 @@ class BaseHTTPClient:
             True if we are being rate limited and the current call failed, False if it succeeded and we do not need
             to try again.
         """
-        is_global = headers.get(_X_RATELIMIT_GLOBAL) == "true"
+        is_global = headers.get(X_RATELIMIT_GLOBAL) == "true"
         is_being_rate_limited = response_code == opcodes.HTTPStatus.TOO_MANY_REQUESTS
 
-        # Retry-after is always in milliseconds.
+        # assume that is_global only ever occurs on TOO_MANY_REQUESTS response codes.
         if is_global and is_being_rate_limited:
-            # assume that is_global only ever occurs on TOO_MANY_REQUESTS response codes.
+            # Retry-after is always in milliseconds.
+            # This is only in the body if we get ratelimited, which is a pain, but who
+            # could expect an API to have consistent behaviour, amirite?
             retry_after = (transform.get_cast(body, "retry_after", float) or 0) / 1_000
             self.global_rate_limit.lock(retry_after)
             self._log_rate_limit_starting(None, retry_after)
 
-        if all(header in headers for header in _X_RATELIMIT_LOCALS):
+        if all(header in headers for header in X_RATELIMIT_LOCALS):
             # If we don't get all the info we need, just forget about the rate limit as we can't act on missing
             # information.
-            now = dateutils.parse_http_date(headers[_DATE]).timestamp()
-            total = transform.get_cast(headers, _X_RATELIMIT_LIMIT, int)
-            reset_at = transform.get_cast(headers, _X_RATELIMIT_RESET, float)
-            remaining = transform.get_cast(headers, _X_RATELIMIT_REMAINING, int)
+            now = dateutils.parse_http_date(headers[DATE]).timestamp()
+            total = transform.get_cast(headers, X_RATELIMIT_LIMIT, int)
+            # https://github.com/discordapp/discord-api-docs/pull/1064
+            reset_at = transform.get_cast(headers, X_RATELIMIT_RESET, float, default=now)
+            reset_after = transform.get_cast(headers, X_RATELIMIT_RESET_AFTER, float, default=0)
+            # If both of these headers (reset_at and reset_after) get specified, use the one that is the
+            # furthest away from now. This should reduce the risk of rate limit precision screw ups. This header isn't
+            # documented properly so we are guessing at this point, but it should make this mechanism more sturdy.
+            reset_at = max(reset_at, now + reset_after)
+            remaining = transform.get_cast(headers, X_RATELIMIT_REMAINING, int)
 
-            # This header only exists if we get a TOO_MANY_REQUESTS first, annoyingly.
-            retry_after = transform.get_cast(headers, "Retry-After", float)
+            # This header only exists if we get a TOO_MANY_REQUESTS first, annoyingly, and it isn't
+            # in the body...
+            retry_after = transform.get_cast(headers, RETRY_AFTER, float)
             retry_after = retry_after / 1_000 if retry_after is not None else reset_at - now
 
             if resource not in self.buckets:
