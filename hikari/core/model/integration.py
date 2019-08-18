@@ -33,11 +33,7 @@ from hikari.core.utils import dateutils
 
 @base.dataclass()
 class IntegrationAccount:
-    __slots__ = (
-        "_state",
-        "id",
-        "name"
-    )
+    __slots__ = ("_state", "id", "name")
 
     _state: typing.Any
     # The id for the account
@@ -48,9 +44,7 @@ class IntegrationAccount:
     @staticmethod
     def from_dict(global_state: model_state.AbstractModelState, payload):
         return IntegrationAccount(
-            _state=global_state,
-            id=transform.get_cast(payload, "id", int),
-            name=payload.get("name")
+            _state=global_state, id=transform.get_cast(payload, "id", int), name=payload.get("name")
         )
 
 
@@ -68,7 +62,7 @@ class Integration:
         "expire_grace_period",
         "user",
         "account",
-        "synced_at"
+        "synced_at",
     )
 
     _state: typing.Any
@@ -76,7 +70,7 @@ class Integration:
     id: int
     # The name of the integration
     name: str
-    # The typw of integration, be it twitch, youtube, etc 
+    # The typw of integration, be it twitch, youtube, etc
     type: str
     # Whether the integration is enabled
     enabled: bool
@@ -87,7 +81,7 @@ class Integration:
     # The behaviour of expiring subscribers
     # I assume this to be an enum however docs do not mention anything so god knows
     expire_behavior: int
-    # The grace period for expiring subscribers
+    #  The grace period for expiring subscribers
     expire_grace_period: int
     # The user for this integration
     user: "user.User"
@@ -109,6 +103,8 @@ class Integration:
             expire_behavior=transform.get_cast(payload, "expire_behavior", int),
             expire_grace_period=transform.get_cast(payload, "expire_grace_period", int),
             user=global_state.parse_user(payload.get("user")),
-            account=IntegrationAccount.from_dict(global_state, payload.get("account")), # Change this later, slightly hacky way to do it
-            synced_at=transform.get_cast(payload, "synced_at", dateutils.parse_iso_8601_datetime)
+            account=IntegrationAccount.from_dict(
+                global_state, payload.get("account")
+            ),  #  Change this later, slightly hacky way to do it
+            synced_at=transform.get_cast(payload, "synced_at", dateutils.parse_iso_8601_datetime),
         )

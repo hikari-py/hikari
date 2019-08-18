@@ -37,11 +37,11 @@ class TestReaction:
                 "username": "Luigi",
                 "discriminator": "0002",
                 "id": "96008815106887111",
-                "avatar": "5500909a3274e1812beb4e8de6631111"
+                "avatar": "5500909a3274e1812beb4e8de6631111",
             },
             "require_colons": True,
             "managed": False,
-            "animated": False
+            "animated": False,
         }
 
         re = reaction.Reaction.from_dict(test_state, {"count": 420, "me": True, "emoji": emoji_dict})
