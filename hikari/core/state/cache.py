@@ -59,6 +59,9 @@ class InMemoryCache(model_state.AbstractModelState):
     def get_message_by_id(self, message_id: int):
         return self._messages.get(message_id)
 
+    def get_dm_channel_by_id(self, dm_channel_id: int):
+        return self._dm_channels.get(dm_channel_id)
+
     def get_emoji_by_id(self, emoji_id: int):
         return self._emojis.get(emoji_id)
 
