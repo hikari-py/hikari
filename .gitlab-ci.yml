@@ -108,6 +108,7 @@ pages:
         - apt-get install graphviz -y
         - pip install nox
     script:
+        - nox -sinit
         - nox -ssphinx
     artifacts:
         paths:
