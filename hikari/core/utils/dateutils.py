@@ -19,7 +19,7 @@
 """
 Date/Time utilities.
 """
-__all__ = ("parse_http_date", "parse_iso_8601_datetime")
+__all__ = ("parse_http_date", "parse_iso_8601_datetime", "discord_epoch_to_datetime", "unix_epoch_to_datetime")
 
 import datetime
 import email
@@ -84,3 +84,15 @@ def discord_epoch_to_datetime(epoch) -> datetime.datetime:
         Number of seconds since 1/1/1970 within a datetime object (UTC).
     """
     return datetime.datetime.fromtimestamp(epoch / 1_000 + DISCORD_EPOCH, datetime.timezone.utc)
+
+
+def unix_epoch_to_datetime(epoch) -> datetime.datetime:
+    """
+    Args:
+        epoch:
+            Number of milliseconds since 1/1/1970 (UTC)
+
+    Returns:
+        Number of seconds since 1/1/1970 within a datetime object (UTC).
+    """
+    return datetime.datetime.fromtimestamp(epoch / 1_000, datetime.timezone.utc)

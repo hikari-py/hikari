@@ -16,6 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import logging
+
 __all__ = ("InMemoryCache",)
 
 import weakref
@@ -45,10 +47,12 @@ class InMemoryCache(model_state.AbstractModelState):
         # Users may be cached while we can see them, or they may be cached as a member. Regardless, we only
         # retain them while they are referenced from elsewhere to keep things tidy.
         self._users = weakref.WeakValueDictionary()
+        self._members = weakref.WeakValueDictionary()
         self._guilds = {}
         self._dm_channels = types.LRUDict(user_dm_channel_size)
         self._messages = types.LRUDict(message_cache_size)
         self._emojis = weakref.WeakValueDictionary()
+        self.logger = logging.getLogger(__name__)
 
     def get_user_by_id(self, user_id: int):
         return self._users.get(user_id)
@@ -81,8 +85,18 @@ class InMemoryCache(model_state.AbstractModelState):
         return self._guilds[guild_id]
 
     def parse_member(self, member: types.DiscordObject, guild_id: int):
-        # Don't cache members.
-        return _user.Member.from_dict(self, guild_id, member)
+        # Don't cache members here.
+        guild = self.get_guild_by_id(guild_id)
+        member_id = transform.get_cast(member, "id", int)
+
+        if guild is None:
+            self.logger.warning("Member ID %s referencing an unknown guild %s and is discarded", member_id, guild_id)
+        elif member_id in guild.members:
+            return guild.members[member_id]
+        else:
+            member_object = _user.Member.from_dict(self, guild_id, member)
+            guild.members[member_id] = member_object
+            return member_object
 
     def parse_role(self, role: types.DiscordObject):
         # Don't cache roles.
