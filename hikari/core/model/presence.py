@@ -104,8 +104,6 @@ class Presence:
             mobile_status=mobile_status,
         )
 
-    7
-
 
 @base.dataclass()
 class Activity:
