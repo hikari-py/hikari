@@ -556,6 +556,24 @@ async def test_HTTP_request_has_User_Agent_header_as_expected(mock_http_connecti
 
 
 @pytest.mark.asyncio
+async def test_HTTP_request_has_XRateLimitPrecision_header_as_expected(mock_http_connection, res):
+    # This is a requirement from Discord or they can ban accounts.
+    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
+    mock_http_connection.session.request = asynctest.MagicMock(wraps=mock_http_connection.session.request)
+
+    mock_http_connection.session.mock_response.headers["Content-Type"] = "application/json"
+    mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.OK)
+    mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
+
+    await mock_http_connection._request_once(retry=0, resource=res)
+    assert mock_http_connection.session.request.call_count == 1
+    args, kwargs = mock_http_connection.session.request.call_args_list[0]
+    headers = kwargs["headers"]
+    precision = headers["X-RateLimit-Precision"]
+    assert precision == "millisecond"
+
+
+@pytest.mark.asyncio
 async def test_HTTP_request_has_Authorization_header_if_specified(mock_http_connection, res):
     # This is a requirement from Discord or they can ban accounts.
     mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
