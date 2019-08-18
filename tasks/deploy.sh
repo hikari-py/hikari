@@ -42,9 +42,9 @@ function deploy-to-gitlab() {
   git diff
   git commit -am "Deployed $current_version [skip ci]" --allow-empty
   git push origin master || true
-  git tag "$current_version" && git push origin "$current_version" || true
+  (git tag "$current_version" && git push origin "$current_version") || true
   git checkout staging
-  git merge master --no-ff -m "Merge deployed master $current_version into staging [skip ci]" && git push origin staging || true
+  (git merge master --no-ff --strategy-option theirs -m "Merge deployed master $current_version into staging [skip ci]" && git push origin staging) || true
 }
 
 function do-deployment() {

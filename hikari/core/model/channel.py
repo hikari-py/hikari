@@ -291,20 +291,25 @@ class GuildStoreChannel(GuildChannel):
         )
 
 
-def channel_from_dict(global_state, payload):
-    channel_types = [
-        GuildTextChannel,
-        DMChannel,
-        GuildVoiceChannel,
-        GroupDMChannel,
-        GuildCategory,
-        GuildNewsChannel,
-        GuildStoreChannel,
-    ]
+_CHANNEL_TYPES = (
+    GuildTextChannel,
+    DMChannel,
+    GuildVoiceChannel,
+    GroupDMChannel,
+    GuildCategory,
+    GuildNewsChannel,
+    GuildStoreChannel,
+)
 
+
+def channel_from_dict(global_state, payload):
     channel_type = payload.get("type")
 
     try:
-        return channel_types[channel_type].from_dict(global_state, payload)
+        return _CHANNEL_TYPES[channel_type].from_dict(global_state, payload)
     except IndexError:
         raise TypeError(f"Invalid channel type {channel_type}") from None
+
+
+def is_dm_channel_type(channel_type: int):
+    return channel_type == 1 or channel_type == 3  # DM  # Group DM

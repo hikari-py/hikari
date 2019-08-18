@@ -141,7 +141,7 @@ deploy-to-staging:
     extends: .deploy
     only:
         - staging
-        - $CI_PROJECT_NAMESPACE == $OWNER
+        - $CI_PROJECT_URL == $MAIN_REPO
     except:
         - tags
         - merge_requests
@@ -164,7 +164,7 @@ deploy-to-prod:
     extends: .deploy
     only:
         - master
-        - $CI_PROJECT_NAMESPACE == $OWNER
+        - $CI_PROJECT_URL == $MAIN_REPO
     except:
         - tags
         - merge_requests
