@@ -44,6 +44,7 @@ ACCEPT = "Accept"
 APPLICATION_JSON = "application/json"
 DATE = "Date"
 MILLISECOND = "millisecond"
+RETRY_AFTER = "Retry-After"
 USER_AGENT = "User-Agent"
 X_RATELIMIT_GLOBAL = "X-RateLimit-Global"
 X_RATELIMIT_LIMIT = "X-RateLimit-Limit"
@@ -346,9 +347,11 @@ class BaseHTTPClient:
         is_global = headers.get(X_RATELIMIT_GLOBAL) == "true"
         is_being_rate_limited = response_code == opcodes.HTTPStatus.TOO_MANY_REQUESTS
 
-        # Retry-after is always in milliseconds.
+        # assume that is_global only ever occurs on TOO_MANY_REQUESTS response codes.
         if is_global and is_being_rate_limited:
-            # assume that is_global only ever occurs on TOO_MANY_REQUESTS response codes.
+            # Retry-after is always in milliseconds.
+            # This is only in the body if we get ratelimited, which is a pain, but who
+            # could expect an API to have consistent behaviour, amirite?
             retry_after = (transform.get_cast(body, "retry_after", float) or 0) / 1_000
             self.global_rate_limit.lock(retry_after)
             self._log_rate_limit_starting(None, retry_after)
@@ -367,8 +370,9 @@ class BaseHTTPClient:
             reset_at = max(reset_at, now + reset_after)
             remaining = transform.get_cast(headers, X_RATELIMIT_REMAINING, int)
 
-            # This header only exists if we get a TOO_MANY_REQUESTS first, annoyingly.
-            retry_after = transform.get_cast(headers, "Retry-After", float)
+            # This header only exists if we get a TOO_MANY_REQUESTS first, annoyingly, and it isn't
+            # in the body...
+            retry_after = transform.get_cast(headers, RETRY_AFTER, float)
             retry_after = retry_after / 1_000 if retry_after is not None else reset_at - now
 
             if resource not in self.buckets:
