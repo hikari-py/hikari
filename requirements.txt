@@ -1,18 +1,1 @@
-# Core dependencies
-aiohttp
-websockets
-
-# CI runner
-nox
-
-# Linter
-pylint
-
-# SAST
-bandit
-
-# Formatter
-black
-
-# Package manager
 poetry
