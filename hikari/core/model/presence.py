@@ -22,16 +22,15 @@ Presences for members.
 
 from __future__ import annotations
 
+from hikari.core.utils import dateutils
+
 __all__ = (
     "Status",
     "Presence",
+    "UserActivity",
     "ActivityType",
     "ActivityFlag",
-    "Activity",
-    "ReceivedActivity",
-    "ReceivedRichActivity",
     "ActivityAssets",
-    "ActivitySecrets",
     "ActivityTimestamps",
 )
 
@@ -58,38 +57,16 @@ class Presence:
 
     __slots__ = ("activities", "status", "web_status", "desktop_status", "mobile_status")
 
-    activities: typing.List[typing.Union[ReceivedActivity, ReceivedRichActivity]]
+    activities: typing.List[UserActivity]
     #: Overall account status.
     status: Status
     web_status: Status
     desktop_status: Status
     mobile_status: Status
 
-    @property
-    def primary_activity(self) -> typing.Optional[typing.Union[ReceivedActivity, ReceivedRichActivity]]:
-        """
-        The activity that is being displayed on Discord as the user's main activity, or None if there are no activities.
-        """
-        return self.activities[0] if self.activities else None
-
     @staticmethod
     def from_dict(payload):
-
-        # We shift the game to the front of the activities list and use that fact to determine which activity is the
-        # "active" activity for the user (the one Discord shows on the profile of a user)
-        game = payload.get("game")
-        activities = payload.get("activities")
-
-        if game is not None and activities:
-            # There is no concrete guarantee this is at the front of the list, annoyingly...
-            activities.remove(game)
-            activities.insert(0, game)
-
-        if activities:
-            activities = [transform.try_cast(activity, activity_from_dict, None) for activity in activities]
-        else:
-            activities = []
-
+        activities = transform.get_sequence(payload, "activities", UserActivity.from_dict)
         status = transform.get_cast(payload, "status", Status.from_discord_name, Status.OFFLINE)
         client_status = payload.get("client_status", {})
         web_status = transform.get_cast(client_status, "web", Status.from_discord_name, Status.OFFLINE)
@@ -106,49 +83,7 @@ class Presence:
 
 
 @base.dataclass()
-class Activity:
-    """
-    Base for any activity.
-
-    This is a type that is able to be sent to the gateway in a presence update, and have subclasses received as
-    presence updates.
-
-    Note:
-        The :attr:`url` field is only applicable to the :attr:`ActivityType.STREAMING` activity type. For anything
-        else, it will be `None`. If the activity type is set to the former, then this URL will be validated and must be
-        a Twitch URL for the request to be valid.
-    """
-
-    type: Activity
-    name: str
-    url: typing.Optional[str]
-
-    @staticmethod
-    def from_dict(payload):
-        ...
-
-
-@base.dataclass()
-class ReceivedActivity(Activity):
-    """
-    An old-style activity that is not linked to a rich presence.
-
-    Note:
-        This can only be received from the gateway, not sent to it.
-    """
-
-    __slots__ = ("id", "created_at")
-
-    id: str
-    created_at: datetime.datetime
-
-    @staticmethod
-    def from_dict(payload):
-        ...
-
-
-@base.dataclass()
-class ReceivedRichActivity(Activity):
+class UserActivity:
     """
     Rich presence-style activity.
 
@@ -157,30 +92,47 @@ class ReceivedRichActivity(Activity):
     """
 
     __slots__ = (
-        "sync_id",
-        "state",
-        "session_id",
-        "party",
-        "id",
-        "flags",
+        "name",
+        "type",
+        "url",
+        "timestamps",
+        "application_id",
         "details",
-        "created_at",
+        "state",
+        "party",
         "assets",
         "secrets",
-        "timestamps",
+        "instance",
+        "flags"
     )
 
-    sync_id: str
-    state: str
-    session_id: str
-    party: ActivityParty
-    id: str
+    name: str
+    type: str
+    url: typing.Optional[str]
+    timestamps: typing.Optional[ActivityTimestamps]
+    application_id: typing.Optional[int]
+    details: typing.Optional[str]
+    state: typing.Optional[str]
+    party: typing.Optional[ActivityParty]
+    assets: typing.Optional[ActivityAssets]
+    instance: bool
     flags: ActivityFlag
-    timestamps: ActivityTimestamps
 
     @staticmethod
     def from_dict(payload):
-        ...
+        return UserActivity(
+            name=transform.get_cast(payload, "name", str),
+            type=transform.get_cast_or_raw(payload, "type", ActivityType),
+            url=transform.get_cast(payload, "url", str),
+            timestamps=transform.get_cast(payload, "timestamps", ActivityTimestamps.from_dict),
+            application_id=transform.get_cast(payload, "application_id", int),
+            details=transform.get_cast(payload, "details", str),
+            state=transform.get_cast(payload, "state", str),
+            party=transform.get_cast(payload, "party", ActivityParty.from_dict),
+            assets=transform.get_cast(payload, "assets", ActivityAssets.from_dict),
+            instance=transform.get_cast(payload, "instance", bool, default=False),
+            flags=transform.get_cast(payload, "flags", ActivityFlag, default=0),
+        )
 
 
 class ActivityType(enum.IntEnum):
@@ -228,19 +180,6 @@ class ActivityAssets:
 
 
 @base.dataclass()
-class ActivitySecrets:
-    __slots__ = ("join", "spectate", "match")
-
-    join: typing.Optional[str]
-    spectate: typing.Optional[str]
-    match: typing.Optional[str]
-
-    @staticmethod
-    def from_dict(payload):
-        ...
-
-
-@base.dataclass()
 class ActivityTimestamps:
     __slots__ = ("start", "end")
 
@@ -253,12 +192,7 @@ class ActivityTimestamps:
 
     @staticmethod
     def from_dict(payload):
-        ...
-
-
-def activity_from_dict(payload):
-    # ¯\_(ツ)_/¯
-    if "created_at" in payload:
-        return ReceivedActivity.from_dict(payload)
-
-    return ReceivedRichActivity.from_dict(payload)
+        return ActivityTimestamps(
+            start=transform.get_cast(payload, "start", dateutils.unix_epoch_to_datetime),
+            end=transform.get_cast(payload, "end", dateutils.unix_epoch_to_datetime)
+        )
