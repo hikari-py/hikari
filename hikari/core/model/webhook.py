@@ -24,7 +24,7 @@ __all__ = ("Webhook",)
 import typing
 
 from hikari.core.model import base
-from hikari.core.model import model_state
+from hikari.core.model import model_cache
 from hikari.core.model import user
 from hikari.core.utils import transform
 
@@ -43,7 +43,7 @@ class Webhook(base.SnowflakeMixin):
     token: str
 
     @staticmethod
-    def from_dict(global_state: model_state.AbstractModelState, payload):
+    def from_dict(global_state: model_cache.AbstractModelCache, payload):
         return Webhook(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),

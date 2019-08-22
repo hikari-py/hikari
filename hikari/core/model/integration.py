@@ -26,7 +26,7 @@ import datetime
 
 from hikari.core.model import base
 from hikari.core.model import user
-from hikari.core.model import model_state
+from hikari.core.model import model_cache
 from hikari.core.utils import transform
 from hikari.core.utils import dateutils
 
@@ -42,7 +42,7 @@ class IntegrationAccount:
     name: str
 
     @staticmethod
-    def from_dict(global_state: model_state.AbstractModelState, payload):
+    def from_dict(global_state: model_cache.AbstractModelCache, payload):
         return IntegrationAccount(
             _state=global_state, id=transform.get_cast(payload, "id", int), name=payload.get("name")
         )
@@ -91,7 +91,7 @@ class Integration:
     synced_at: datetime.datetime
 
     @staticmethod
-    def from_dict(global_state: model_state.AbstractModelState, payload):
+    def from_dict(global_state: model_cache.AbstractModelCache, payload):
         return Integration(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),
