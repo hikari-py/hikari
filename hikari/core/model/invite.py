@@ -29,7 +29,7 @@ from hikari.core.model import base
 from hikari.core.model import guild
 from hikari.core.model import channel
 from hikari.core.model import user
-from hikari.core.model import model_state
+from hikari.core.model import model_cache
 from hikari.core.utils import transform
 from hikari.core.utils import dateutils
 
@@ -68,7 +68,7 @@ class Invite:
     approximate_member_count: typing.Optional[int]
 
     @staticmethod
-    def from_dict(global_state: model_state.AbstractModelState, payload):
+    def from_dict(global_state: model_cache.AbstractModelCache, payload):
         return Invite(
             _state=global_state,
             code=payload.get("code"),
@@ -114,7 +114,7 @@ class InviteMetadata:
     revoked: bool
 
     @staticmethod
-    def from_dict(global_state: model_state.AbstractModelState, payload):
+    def from_dict(global_state: model_cache.AbstractModelCache, payload):
         return InviteMetadata(
             _state=global_state,
             inviter=global_state.parse_user(payload.get("inviter")),

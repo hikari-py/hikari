@@ -29,12 +29,12 @@ from hikari.core.model import message as _message
 from hikari.core.model import role as _role
 from hikari.core.model import user as _user
 from hikari.core.model import webhook as _webhook
-from hikari.core.model import model_state
+from hikari.core.model import model_cache
 from hikari.core.utils import transform
 from hikari.core.utils import types
 
 
-class InMemoryCache(model_state.AbstractModelState):
+class InMemoryCache(model_cache.AbstractModelCache):
     """
     Implementation of :class:`model_state.AbstractModelState` which implements the caching logic needed for a shard.
 

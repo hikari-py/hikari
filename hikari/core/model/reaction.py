@@ -25,7 +25,7 @@ import typing
 
 from hikari.core.model import base
 from hikari.core.model import emoji
-from hikari.core.model import model_state
+from hikari.core.model import model_cache
 from hikari.core.utils import transform
 
 
@@ -46,7 +46,7 @@ class Reaction:
     emoji: "emoji.Emoji"
 
     @staticmethod
-    def from_dict(global_state: model_state.AbstractModelState, payload):
+    def from_dict(global_state: model_cache.AbstractModelCache, payload):
         return Reaction(
             _state=global_state,
             count=transform.get_cast(payload, "count", int),

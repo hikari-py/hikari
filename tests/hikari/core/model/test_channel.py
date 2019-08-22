@@ -21,13 +21,13 @@ from unittest import mock
 import pytest
 
 from hikari.core.model import channel
-from hikari.core.model import model_state
+from hikari.core.model import model_cache
 
 
 @pytest.mark.model
 class TestChannel:
     def test_GuildTextChannel_from_dict(self):
-        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
+        s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         gtc = channel.GuildTextChannel.from_dict(
             s,
             {
@@ -56,7 +56,7 @@ class TestChannel:
         assert not gtc.is_dm
 
     def test_DMChannel_from_dict(self):
-        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
+        s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         dmc = channel.DMChannel.from_dict(s, {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []})
 
         assert dmc.id == 929292
@@ -65,7 +65,7 @@ class TestChannel:
         assert dmc.is_dm
 
     def test_GuildVoiceChannel_from_dict(self):
-        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
+        s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         gvc = channel.GuildVoiceChannel.from_dict(
             s,
             {
@@ -92,7 +92,7 @@ class TestChannel:
         assert not gvc.is_dm
 
     def test_GroupDMChannel_from_dict(self):
-        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
+        s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         gdmc = channel.GroupDMChannel.from_dict(
             s,
             {
@@ -117,7 +117,7 @@ class TestChannel:
         assert gdmc.is_dm
 
     def test_GuildCategory_from_dict(self):
-        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
+        s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         gc = channel.GuildCategory.from_dict(
             s,
             {
@@ -138,7 +138,7 @@ class TestChannel:
         assert not gc.is_dm
 
     def test_GuildNewsChannel_from_dict(self):
-        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
+        s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         gnc = channel.GuildNewsChannel.from_dict(
             s,
             {
@@ -167,7 +167,7 @@ class TestChannel:
         assert not gnc.is_dm
 
     def test_GuildStoreChannel_from_dict(self):
-        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
+        s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         gsc = channel.GuildStoreChannel.from_dict(
             s,
             {

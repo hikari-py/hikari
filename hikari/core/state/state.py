@@ -21,6 +21,9 @@ Provides gateway integration.
 """
 import logging
 
+import typing
+
+from hikari.core.model import user as _user
 from hikari.core.state import cache as _cache
 
 
@@ -29,6 +32,7 @@ class State:
         self.logger = logging.getLogger(__name__)
         self.cache = cache
         self.dispatch = dispatch
+        self.user: typing.Optional[_user.BotUser] = None
 
     async def consume_raw_event(self, event_name, payload):
         try:
@@ -39,16 +43,21 @@ class State:
             self.logger.warning("No transformation for %s exists, so the event is being ignored", event_name)
 
     async def on_hello(self, payload):
-        self.dispatch("hello", ...)
+        self.dispatch("hello")
 
     async def on_ready(self, payload):
-        self.dispatch("ready", ...)
+        user = payload["user"]
+        guilds = payload["guilds"]
+
+        self.user = _user.BotUser.from_dict(self.cache, user)
+
+        for guild in guilds:
+            self.cache.parse_guild(guild)
+
+        self.dispatch("ready")
 
     async def on_resumed(self, payload):
-        self.dispatch("resumed", ...)
-
-    async def on_invalid_session(self, payload):
-        self.dispatch("invalid_session", ...)
+        self.dispatch("resumed")
 
     async def on_channel_create(self, payload):
         self.dispatch("channel_create", ...)

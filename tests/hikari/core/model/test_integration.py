@@ -22,13 +22,13 @@ import pytest
 import datetime
 
 from hikari.core.model import integration
-from hikari.core.model import model_state
+from hikari.core.model import model_cache
 
 
 @pytest.mark.model
 class TestIntegration:
     def test_Integration_from_dict(self):
-        test_state = mock.MagicMock(state_set=model_state.AbstractModelState)
+        test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
 
         user_dict = {
             "username": "Luigi",
@@ -71,7 +71,7 @@ class TestIntegration:
 @pytest.mark.model
 class TestIntegrationAccount:
     def test_IntegrationAccount_from_dict(self):
-        test_state = mock.MagicMock(state_set=model_state.AbstractModelState)
+        test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
 
         inteacc = integration.IntegrationAccount.from_dict(test_state, {"id": "1234567", "name": "memes"})
 
