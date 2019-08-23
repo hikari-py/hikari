@@ -25,9 +25,12 @@ import typing
 
 from hikari.core.model import user as _user
 from hikari.core.state import cache as _cache
+from hikari.core.utils import delegate
 
 
-class State:
+@delegate.delegate_members(_cache.InMemoryCache, "cache")
+class State(_cache.InMemoryCache):
+    # noinspection PyMissingConstructor
     def __init__(self, cache: _cache.InMemoryCache, dispatch):
         self.logger = logging.getLogger(__name__)
         self.cache = cache
