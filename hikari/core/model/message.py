@@ -189,7 +189,7 @@ class MessageActivity:
 
 
 @base.dataclass()
-class MessageApplication:
+class MessageApplication(base.SnowflakeMixin):
     """
     Description of a rich presence application that created a rich presence message in a channel.
     """
