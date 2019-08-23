@@ -35,7 +35,7 @@ class PartialEmoji:
 
 
 @base.dataclass()
-class Emoji:
+class Emoji(base.SnowflakeMixin):
     __slots__ = ("_state", "id", "name", "_roles", "user", "require_colons", "managed", "animated")
 
     _state: typing.Any

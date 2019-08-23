@@ -32,7 +32,7 @@ from hikari.core.utils import dateutils
 
 
 @base.dataclass()
-class IntegrationAccount:
+class IntegrationAccount(base.SnowflakeMixin):
     __slots__ = ("_state", "id", "name")
 
     _state: typing.Any
@@ -49,7 +49,7 @@ class IntegrationAccount:
 
 
 @base.dataclass()
-class Integration:
+class Integration(base.SnowflakeMixin):
     __slots__ = (
         "_state",
         "id",
