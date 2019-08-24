@@ -37,6 +37,7 @@ import abc
 import typing
 
 from hikari.core.model import base
+from hikari.core.model import guild as _guild
 from hikari.core.model import overwrite
 from hikari.core.model import user
 from hikari.core.utils import transform
@@ -86,6 +87,10 @@ class GuildChannel(Channel, abc.ABC):
     @property
     def is_dm(self) -> bool:
         return False
+
+    @property
+    def guild(self) -> "_guild.Guild":
+        return self._state.get_guild_by_id(self.guild_id)
 
 
 @base.dataclass()

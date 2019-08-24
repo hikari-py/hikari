@@ -25,7 +25,7 @@ import logging
 
 import typing
 
-from hikari.core.model import channel
+from hikari.core.model import channel as _channel
 from hikari.core.model import user as _user
 from hikari.core.state import cache as _cache
 from hikari.core.utils import delegate
@@ -81,10 +81,15 @@ class State(_cache.InMemoryCache):
         self.dispatch("channel_create", self.cache.parse_channel(payload))
 
     async def handle_channel_update(self, payload):
+        channel_id = int(payload["id"])
+        old_channel = self.cache.get_guild_channel_by_id(channel_id) or self.cache.get_dm_channel_by_id(channel_id)
         new_channel = self.cache.parse_channel(payload)
-        self.dispatch("channel_create")
+        self.dispatch("channel_create", old_channel, new_channel)
 
     async def handle_channel_delete(self, payload):
+        channel = self.cache.parse_channel(payload)
+        if isinstance(channel, _channel.GuildChannel):
+            del channel.guild.channels[channel.id]
         self.dispatch("channel_delete", ...)
 
     async def handle_channel_pins_update(self, payload):

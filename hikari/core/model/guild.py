@@ -38,7 +38,6 @@ import enum
 import typing
 
 from hikari.core.model import base
-from hikari.core.model import channel
 from hikari.core.model import emoji
 from hikari.core.model import permission
 from hikari.core.model import role
@@ -50,7 +49,7 @@ from hikari.core.utils import dateutils
 from hikari.core.utils import transform
 
 
-GuildChannelT = typing.TypeVar("GuildChannelT", bound=channel.GuildChannel)
+GuildChannelT = typing.TypeVar("GuildChannelT", bound="channel.GuildChannel")
 
 
 @base.dataclass()
