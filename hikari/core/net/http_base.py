@@ -362,12 +362,8 @@ class BaseHTTPClient:
             now = dateutils.parse_http_date(headers[DATE]).timestamp()
             total = transform.get_cast(headers, X_RATELIMIT_LIMIT, int)
             # https://github.com/discordapp/discord-api-docs/pull/1064
-            reset_at = transform.get_cast(headers, X_RATELIMIT_RESET, float, default=now)
             reset_after = transform.get_cast(headers, X_RATELIMIT_RESET_AFTER, float, default=0)
-            # If both of these headers (reset_at and reset_after) get specified, use the one that is the
-            # furthest away from now. This should reduce the risk of rate limit precision screw ups. This header isn't
-            # documented properly so we are guessing at this point, but it should make this mechanism more sturdy.
-            reset_at = max(reset_at, now + reset_after)
+            reset_at = now + reset_after
             remaining = transform.get_cast(headers, X_RATELIMIT_REMAINING, int)
 
             # This header only exists if we get a TOO_MANY_REQUESTS first, annoyingly, and it isn't
