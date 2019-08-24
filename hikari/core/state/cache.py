@@ -126,6 +126,7 @@ class InMemoryCache(model_cache.AbstractModelCache):
         # Only cache DM channels.
         channel_id = transform.get_cast(channel, "id", int)
         is_dm = transform.get_cast(channel, "type", _channel.is_dm_channel_type)
+
         if is_dm:
             if channel_id in self._dm_channels:
                 return self._dm_channels[channel_id]
