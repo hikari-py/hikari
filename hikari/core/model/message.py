@@ -28,7 +28,9 @@ import enum
 import typing
 
 from hikari.core.model import base
+from hikari.core.model import channel
 from hikari.core.model import embed
+from hikari.core.model import guild
 from hikari.core.model import media
 from hikari.core.model import model_cache
 from hikari.core.model import user
@@ -87,7 +89,7 @@ class MessageFlag(enum.IntFlag):
 
 
 @base.dataclass()
-class Message(base.SnowflakeMixin):
+class Message(base.Snowflake):
     """
     A message that was sent on Discord.
     """
@@ -97,9 +99,9 @@ class Message(base.SnowflakeMixin):
         "id",
         "_channel_id",
         "_guild_id",
+        "_author_id",
         "edited_at",
         "reactions",
-        "author",
         "content",
         "tts",
         "mentions_everyone",
@@ -123,7 +125,7 @@ class Message(base.SnowflakeMixin):
     #: The ID of the guild, or None if it is in a DM.
     _guild_id: typing.Optional[int]
     #: The author of the message.
-    author: typing.Union["user.User", "user.Member", "webhook.Webhook"]
+    _author_id: int
     #: The timestamp that the message was last edited at, or None if not ever edited.
     edited_at: typing.Optional[datetime.datetime]
     #: True if this message was a TTS message, false otherwise.
@@ -145,12 +147,27 @@ class Message(base.SnowflakeMixin):
     #: Flags applied to the message.
     flags: MessageFlag
 
+    @property
+    def guild(self) -> typing.Optional[guild.Guild]:
+        return self._state.get_guild_by_id(self._guild_id)
+
+    @property
+    def channel(self) -> typing.Union[channel.GuildTextChannel, channel.DMChannel]:
+        if self._guild_id is not None:
+            return self.guild.channels[self._channel_id]
+        else:
+            return self._state.get_dm_channel_by_id(self._channel_id)
+
+    @property
+    def author(self) -> typing.Union[user.User, user.Member, user.BotUser]:
+        return self._state.get_user_by_id(self._author_id)
+
     @staticmethod
     def from_dict(global_state: model_cache.AbstractModelCache, payload):
         return Message(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),
-            author=global_state.parse_user(payload.get("author")),  # TODO: does this ever consume member instead?
+            _author_id=global_state.parse_user(payload.get("author")).id,
             _channel_id=transform.get_cast(payload, "channel_id", int),
             _guild_id=transform.get_cast(payload, "guild_id", int),
             edited_at=transform.get_cast(payload, "edited_timestamp", dateutils.parse_iso_8601_datetime),
@@ -189,7 +206,7 @@ class MessageActivity:
 
 
 @base.dataclass()
-class MessageApplication(base.SnowflakeMixin):
+class MessageApplication(base.Snowflake):
     """
     Description of a rich presence application that created a rich presence message in a channel.
     """

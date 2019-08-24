@@ -76,5 +76,13 @@ class AbstractModelCache(abc.ABC):
         ...
 
     @abc.abstractmethod
+    def get_dm_channel_by_id(self, channel_id: int):
+        ...
+
+    @abc.abstractmethod
+    def get_guild_channel_by_id(self, guild_channel_id: int):
+        ...
+
+    @abc.abstractmethod
     def parse_webhook(self, webhook: types.DiscordObject):
         ...

@@ -27,7 +27,11 @@ from hikari.core.model import model_cache
 
 @pytest.mark.model
 class TestMessage:
-    def test_Message_from_dict(self):
+    @pytest.fixture()
+    def mock_user(self):
+        return {"id": "1234", "username": "potato"}
+
+    def test_Message_from_dict(self, mock_user):
         s = mock.MagicMock(spec=model_cache.AbstractModelCache)
         m = message.Message.from_dict(
             s,
@@ -36,6 +40,7 @@ class TestMessage:
                 "id": "12345",
                 "channel_id": "67890",
                 "guild_id": None,
+                "author": mock_user,
                 "edited_timestamp": None,
                 "tts": True,
                 "mention_everyone": False,
@@ -65,12 +70,14 @@ class TestMessage:
         assert m.flags & message.MessageFlag.CROSSPOSTED
         assert m.flags & message.MessageFlag.IS_CROSSPOST
         assert m.flags & message.MessageFlag.SUPPRESS_EMBEDS
+        s.parse_user.assert_called_with(mock_user)
 
-    def test_Message_from_dict_INTEGRATION_TEST(self):
+    def test_Message_from_dict_INTEGRATION_TEST(self, mock_user):
         s = mock.MagicMock(spec=model_cache.AbstractModelCache)
         m = message.Message.from_dict(
             s,
             {
+                "author": mock_user,
                 "type": 10,
                 "id": "12345",
                 "channel_id": "67890",

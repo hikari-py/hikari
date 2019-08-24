@@ -28,7 +28,7 @@ from hikari.core.utils import transform
 
 
 @base.dataclass()
-class Role(base.SnowflakeMixin):
+class Role(base.Snowflake):
     """
     Representation of a role within a guild.
     """

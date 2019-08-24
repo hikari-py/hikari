@@ -50,6 +50,7 @@ class InMemoryCache(model_cache.AbstractModelCache):
         self._members = weakref.WeakValueDictionary()
         self._guilds = {}
         self._dm_channels = types.LRUDict(user_dm_channel_size)
+        self._guild_channels = weakref.WeakValueDictionary()
         self._messages = types.LRUDict(message_cache_size)
         self._emojis = weakref.WeakValueDictionary()
         self.logger = logging.getLogger(__name__)
@@ -65,6 +66,9 @@ class InMemoryCache(model_cache.AbstractModelCache):
 
     def get_dm_channel_by_id(self, dm_channel_id: int):
         return self._dm_channels.get(dm_channel_id)
+
+    def get_guild_channel_by_id(self, guild_channel_id: int):
+        return self._guild_channels.get(guild_channel_id)
 
     def get_emoji_by_id(self, emoji_id: int):
         return self._emojis.get(emoji_id)
@@ -115,6 +119,7 @@ class InMemoryCache(model_cache.AbstractModelCache):
         message_id = transform.get_cast(message, "id", int)
         message_obj = _message.Message.from_dict(self, message)
         self._messages[message_id] = message_obj
+        message_obj.channel.last_message_id = message_id
         return message_obj
 
     def parse_channel(self, channel: types.DiscordObject):

@@ -43,7 +43,7 @@ from hikari.core.utils import transform
 
 
 @base.dataclass()
-class Channel(base.SnowflakeMixin, abc.ABC):
+class Channel(base.Snowflake, abc.ABC):
     """
     A generic type of channel.
     """

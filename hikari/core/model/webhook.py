@@ -30,7 +30,7 @@ from hikari.core.utils import transform
 
 
 @base.dataclass()
-class Webhook(base.SnowflakeMixin):
+class Webhook(base.Snowflake):
     __slots__ = ("_state", "id", "guild_id", "channel_id", "user", "name", "avatar_hash", "token")
 
     _state: typing.Any

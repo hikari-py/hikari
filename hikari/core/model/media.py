@@ -108,7 +108,7 @@ class Avatar:
 
 
 @base.dataclass()
-class Attachment(base.SnowflakeMixin):
+class Attachment(base.Snowflake):
     """
     An attachment that is received from Discord in a message.
     """
