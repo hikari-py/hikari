@@ -50,8 +50,11 @@ from hikari.core.utils import dateutils
 from hikari.core.utils import transform
 
 
+GuildChannelT = typing.TypeVar("GuildChannelT", bound=channel.GuildChannel)
+
+
 @base.dataclass()
-class Guild(base.SnowflakeMixin):
+class Guild(base.Snowflake):
     # We leave out widget and embed information as there isn't documentation to distinguish what each of them are for,
     # as they seem to overlap.
     # We omit:
@@ -153,7 +156,7 @@ class Guild(base.SnowflakeMixin):
     #: Members in the guild.
     members: typing.Dict[int, "user.Member"]
     #: Channels in the guild.
-    channels: typing.Dict[int, "channel.GuildChannel"]
+    channels: typing.Dict[int, GuildChannelT]
     #: Max members allowed in the guild.
     max_members: int
     #: Code for the vanity URL.
@@ -227,7 +230,7 @@ class SystemChannelFlag(enum.IntFlag):
     PREMIUM_SUBSCRIPTION = 2
 
 
-class GuildFeature(base.NamedEnumMixin, enum.Enum):
+class GuildFeature(base.NamedEnum, enum.Enum):
     """
     Features that a guild can provide.
     """

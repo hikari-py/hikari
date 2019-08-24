@@ -98,8 +98,6 @@ def assert_is_mixin(cls: typing.Type[T]) -> typing.Type[T]:
 
     if len(cls.__slots__) > 0:
         raise TypeError(f"Class {cls.__qualname__} is a mixin so must NOT declare any fields. Slots should be empty.")
-    if not cls.__qualname__.endswith("Mixin"):
-        raise NameError(f'Class {cls.__qualname__} is defined as a mixin but does not have a name ending in "Mixin".')
 
     return cls
 

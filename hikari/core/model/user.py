@@ -31,7 +31,7 @@ from hikari.core.utils import delegate
 
 
 @base.dataclass()
-class User(base.SnowflakeMixin):
+class User(base.Snowflake):
     """
     Representation of a user account.
     """
@@ -108,6 +108,7 @@ class BotUser(User):
     """
     A special instance of user to represent the bot that is signed in.
     """
+
     __slots__ = ("verified", "mfa_enabled")
 
     verified: bool

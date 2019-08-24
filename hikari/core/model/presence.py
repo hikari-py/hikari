@@ -24,15 +24,7 @@ from __future__ import annotations
 
 from hikari.core.utils import dateutils
 
-__all__ = (
-    "Status",
-    "Presence",
-    "UserActivity",
-    "ActivityType",
-    "ActivityFlag",
-    "ActivityAssets",
-    "ActivityTimestamps",
-)
+__all__ = ("Status", "Presence", "UserActivity", "ActivityType", "ActivityFlag", "ActivityAssets", "ActivityTimestamps")
 
 import datetime
 import enum
@@ -42,7 +34,7 @@ from hikari.core.model import base
 from hikari.core.utils import transform
 
 
-class Status(base.NamedEnumMixin, enum.Enum):
+class Status(base.NamedEnum, enum.Enum):
     ONLINE = enum.auto()
     IDLE = enum.auto()
     DND = enum.auto()
@@ -103,7 +95,7 @@ class UserActivity:
         "assets",
         "secrets",
         "instance",
-        "flags"
+        "flags",
     )
 
     name: str
@@ -194,5 +186,5 @@ class ActivityTimestamps:
     def from_dict(payload):
         return ActivityTimestamps(
             start=transform.get_cast(payload, "start", dateutils.unix_epoch_to_datetime),
-            end=transform.get_cast(payload, "end", dateutils.unix_epoch_to_datetime)
+            end=transform.get_cast(payload, "end", dateutils.unix_epoch_to_datetime),
         )

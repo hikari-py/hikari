@@ -25,6 +25,7 @@ import logging
 
 import typing
 
+from hikari.core.model import channel
 from hikari.core.model import user as _user
 from hikari.core.state import cache as _cache
 from hikari.core.utils import delegate
@@ -43,6 +44,7 @@ class State(_cache.InMemoryCache):
             The dispatch FUNCTION to call. This should not be a co-routine, as it is expected to merely schedule
             future callbacks, not await them.
     """
+
     # noinspection PyMissingConstructor
     def __init__(self, cache: _cache.InMemoryCache, dispatch):
         self.logger = logging.getLogger(__name__)
@@ -76,10 +78,11 @@ class State(_cache.InMemoryCache):
         self.dispatch("resumed")
 
     async def handle_channel_create(self, payload):
-        self.dispatch("channel_create", ...)
+        self.dispatch("channel_create", self.cache.parse_channel(payload))
 
     async def handle_channel_update(self, payload):
-        self.dispatch("channel_update ", ...)
+        new_channel = self.cache.parse_channel(payload)
+        self.dispatch("channel_create")
 
     async def handle_channel_delete(self, payload):
         self.dispatch("channel_delete", ...)
