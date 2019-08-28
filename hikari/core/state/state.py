@@ -28,6 +28,7 @@ import typing
 from hikari.core.model import channel as _channel
 from hikari.core.model import user as _user
 from hikari.core.state import cache as _cache
+from hikari.core.utils import dateutils
 from hikari.core.utils import delegate
 
 
@@ -35,7 +36,7 @@ from hikari.core.utils import delegate
 class State(_cache.InMemoryCache):
     """
     A delegate class to an in-memory cache. This takes on the additional responsibility of orchestrating updates to the
-    cache when they are received via websockets or the gateway.
+    cache when they are received via web sockets or the gateway.
 
     Arguments:
         cache:
@@ -60,7 +61,7 @@ class State(_cache.InMemoryCache):
         except AttributeError:
             self.logger.warning("No transformation for %s exists, so the event is being ignored", event_name)
 
-    async def handle_hello(self, payload):
+    async def handle_hello(self, _):
         self.dispatch("hello")
 
     async def handle_ready(self, payload):
@@ -72,9 +73,10 @@ class State(_cache.InMemoryCache):
         for guild in guilds:
             self.cache.parse_guild(guild)
 
+        # FixMe: We shouldn't dispatch this until later probably.
         self.dispatch("ready")
 
-    async def handle_resumed(self, payload):
+    async def handle_resumed(self, _):
         self.dispatch("resumed")
 
     async def handle_channel_create(self, payload):
@@ -90,13 +92,24 @@ class State(_cache.InMemoryCache):
         channel = self.cache.parse_channel(payload)
         if isinstance(channel, _channel.GuildChannel):
             del channel.guild.channels[channel.id]
-        self.dispatch("channel_delete", ...)
+        self.dispatch("channel_delete", channel)
 
     async def handle_channel_pins_update(self, payload):
-        self.dispatch("channel_pins_update", ...)
+        channel_id = int(payload["channel_id"])
+        last_pin_timestamp = payload.get("last_pin_timestamp")
+
+        channel = self.cache.get_guild_channel_by_id(channel_id) or self.cache.get_dm_channel_by_id(channel_id)
+
+        # Ignore if we don't have the channel cached yet...
+        if channel is not None:
+            if last_pin_timestamp is not None:
+                channel.last_pin_timestamp = dateutils.parse_iso_8601_datetime(last_pin_timestamp)
+                self.dispatch("channel_pin_added", channel)
+            else:
+                self.dispatch("channel_pin_removed", channel)
 
     async def handle_guild_create(self, payload):
-        self.dispatch("guild_create", ...)
+        self.dispatch("guild_available", ...)
 
     async def handle_guild_update(self, payload):
         self.dispatch("guild_update", ...)
@@ -167,10 +180,12 @@ class State(_cache.InMemoryCache):
     async def handle_user_update(self, payload):
         self.dispatch("user_update", ...)
 
+    # noinspection PyMethodMayBeStatic
     async def handle_voice_state_update(self, _):
         # self.dispatch("voice_state_update", ...)
         return NotImplemented
 
+    # noinspection PyMethodMayBeStatic
     async def handle_voice_server_update(self, _):
         # self.dispatch("voice_server_update", ...)
         return NotImplemented
