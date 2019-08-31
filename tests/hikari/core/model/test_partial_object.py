@@ -16,17 +16,18 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Voice state models.
-"""
-__all__ = ("VoiceState", "VoiceRegion")
-
-from hikari.core.model import base
+import pytest
+import hikari.core.model.object
 
 
-class VoiceState:
-    __slots__ = ()
+@pytest.mark.model
+def test_PartialObject_just_id():
+    assert hikari.core.model.object.PartialObject.from_dict({"id": "123456"}) is not None
 
 
-class VoiceRegion(base.Snowflake):
-    __slots__ = ()
+@pytest.mark.model
+def test_PartialObject_dynamic_attrs():
+    po = hikari.core.model.object.PartialObject.from_dict({"id": "123456", "foo": 69, "bar": False})
+    assert po.id == 123456
+    assert po.foo == 69
+    assert po.bar is False

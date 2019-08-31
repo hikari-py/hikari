@@ -16,6 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import logging
+
 __all__ = ("InMemoryCache",)
 
 import weakref
@@ -27,12 +29,12 @@ from hikari.core.model import message as _message
 from hikari.core.model import role as _role
 from hikari.core.model import user as _user
 from hikari.core.model import webhook as _webhook
-from hikari.core.model import model_state
+from hikari.core.model import model_cache
 from hikari.core.utils import transform
 from hikari.core.utils import types
 
 
-class InMemoryCache(model_state.AbstractModelState):
+class InMemoryCache(model_cache.AbstractModelCache):
     """
     Implementation of :class:`model_state.AbstractModelState` which implements the caching logic needed for a shard.
 
@@ -45,10 +47,13 @@ class InMemoryCache(model_state.AbstractModelState):
         # Users may be cached while we can see them, or they may be cached as a member. Regardless, we only
         # retain them while they are referenced from elsewhere to keep things tidy.
         self._users = weakref.WeakValueDictionary()
+        self._members = weakref.WeakValueDictionary()
         self._guilds = {}
         self._dm_channels = types.LRUDict(user_dm_channel_size)
+        self._guild_channels = weakref.WeakValueDictionary()
         self._messages = types.LRUDict(message_cache_size)
         self._emojis = weakref.WeakValueDictionary()
+        self.logger = logging.getLogger(__name__)
 
     def get_user_by_id(self, user_id: int):
         return self._users.get(user_id)
@@ -61,6 +66,9 @@ class InMemoryCache(model_state.AbstractModelState):
 
     def get_dm_channel_by_id(self, dm_channel_id: int):
         return self._dm_channels.get(dm_channel_id)
+
+    def get_guild_channel_by_id(self, guild_channel_id: int):
+        return self._guild_channels.get(guild_channel_id)
 
     def get_emoji_by_id(self, emoji_id: int):
         return self._emojis.get(emoji_id)
@@ -81,8 +89,18 @@ class InMemoryCache(model_state.AbstractModelState):
         return self._guilds[guild_id]
 
     def parse_member(self, member: types.DiscordObject, guild_id: int):
-        # Don't cache members.
-        return _user.Member.from_dict(self, guild_id, member)
+        # Don't cache members here.
+        guild = self.get_guild_by_id(guild_id)
+        member_id = transform.get_cast(member, "id", int)
+
+        if guild is None:
+            self.logger.warning("Member ID %s referencing an unknown guild %s and is discarded", member_id, guild_id)
+        elif member_id in guild.members:
+            return guild.members[member_id]
+        else:
+            member_object = _user.Member.from_dict(self, guild_id, member)
+            guild.members[member_id] = member_object
+            return member_object
 
     def parse_role(self, role: types.DiscordObject):
         # Don't cache roles.
@@ -101,12 +119,14 @@ class InMemoryCache(model_state.AbstractModelState):
         message_id = transform.get_cast(message, "id", int)
         message_obj = _message.Message.from_dict(self, message)
         self._messages[message_id] = message_obj
+        message_obj.channel.last_message_id = message_id
         return message_obj
 
     def parse_channel(self, channel: types.DiscordObject):
         # Only cache DM channels.
         channel_id = transform.get_cast(channel, "id", int)
         is_dm = transform.get_cast(channel, "type", _channel.is_dm_channel_type)
+
         if is_dm:
             if channel_id in self._dm_channels:
                 return self._dm_channels[channel_id]

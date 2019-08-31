@@ -63,7 +63,7 @@ class LRUDict(typing.MutableMapping):
     __slots__ = ("_lru_size", "_data")
 
     def __init__(self, lru_size: int, dict_factory=dict) -> None:
-        assertions.assert_natural(lru_size)
+        assertions.assert_is_natural(lru_size)
         self._data = dict_factory()
         self._lru_size = lru_size
 

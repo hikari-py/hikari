@@ -21,6 +21,7 @@ Model that represents a common RGB color and provides simple conversions to othe
 """
 
 from __future__ import annotations
+from hikari.core.utils.assertions import assert_in_range
 
 __all__ = ("Color",)
 
@@ -74,7 +75,7 @@ class Color(int):
     __slots__ = ()
 
     def __new__(cls: typing.Type[Color], raw_rgb: int) -> Color:
-        _assert_in_range(raw_rgb, 0, 0xFF_FF_FF, "integer value")
+        assert_in_range(raw_rgb, 0, 0xFF_FF_FF, "integer value")
         return super(Color, cls).__new__(cls, raw_rgb)
 
     def __repr__(self) -> str:
@@ -154,9 +155,9 @@ class Color(int):
         Raises:
               ValueError: if red, green, or blue are outside the range [0x0, 0xFF]
         """
-        _assert_in_range(red, 0, 0xFF, "red")
-        _assert_in_range(green, 0, 0xFF, "green")
-        _assert_in_range(blue, 0, 0xFF, "blue")
+        assert_in_range(red, 0, 0xFF, "red")
+        assert_in_range(green, 0, 0xFF, "green")
+        assert_in_range(blue, 0, 0xFF, "blue")
         return cls((red << 16) | (green << 8) | blue)
 
     @classmethod
@@ -178,9 +179,9 @@ class Color(int):
         Raises:
             ValueError: if red, green or blue are outside the range [0, 1]
         """
-        _assert_in_range(red_f, 0, 1, "red")
-        _assert_in_range(green_f, 0, 1, "green")
-        _assert_in_range(blue_f, 0, 1, "blue")
+        assert_in_range(red_f, 0, 1, "red")
+        assert_in_range(green_f, 0, 1, "green")
+        assert_in_range(blue_f, 0, 1, "blue")
         return cls.from_rgb(int(red_f * 0xFF), int(green_f * 0xFF), int(blue_f * 0xFF))
 
     @classmethod
@@ -234,11 +235,6 @@ class Color(int):
             The Color object.
         """
         return cls(i)
-
-
-def _assert_in_range(value, min_inclusive, max_inclusive, name):
-    if not (min_inclusive <= value <= max_inclusive):
-        raise ValueError(f"{name} must be in the inclusive range of {min_inclusive} and {max_inclusive}")
 
 
 def _all_same(first, *rest):

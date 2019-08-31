@@ -21,13 +21,13 @@ from unittest import mock
 import pytest
 
 from hikari.core.model import reaction
-from hikari.core.model import model_state
+from hikari.core.model import model_cache
 
 
 @pytest.mark.model
 class TestReaction:
     def test_Reaction_from_dict(self):
-        test_state = mock.MagicMock(state_set=model_state.AbstractModelState)
+        test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
 
         emoji_dict = {
             "id": "41771983429993937",

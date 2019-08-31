@@ -22,11 +22,12 @@ import enum
 
 import pytest
 
+import hikari.core.model.object
 from hikari.core.model import base
 
 
 @dataclasses.dataclass()
-class DummySnowflake(base.SnowflakeMixin):
+class DummySnowflake(base.Snowflake):
     id: int
 
 
@@ -35,7 +36,7 @@ def neko_snowflake():
     return DummySnowflake(537340989808050216)
 
 
-class DummyNamedEnum(base.NamedEnumMixin, enum.IntEnum):
+class DummyNamedEnum(base.NamedEnum, enum.IntEnum):
     FOO = 9
     BAR = 18
     BAZ = 27
@@ -46,7 +47,7 @@ class TestSnowflake:
     def test_Snowflake_init_subclass(self):
         instance = DummySnowflake(12345)
         assert instance is not None
-        assert isinstance(instance, base.SnowflakeMixin)
+        assert isinstance(instance, base.Snowflake)
 
     def test_Snowflake_comparison(self):
         assert DummySnowflake(12345) < DummySnowflake(12346)
@@ -98,19 +99,6 @@ def test_NamedEnumMixin_from_discord_name():
 @pytest.mark.parametrize("cast", [str, repr], ids=lambda it: it.__qualname__)
 def test_NamedEnumMixin_str_and_repr(cast):
     assert cast(DummyNamedEnum.BAZ) == "BAZ"
-
-
-@pytest.mark.model
-def test_PartialObject_just_id():
-    assert base.PartialObject.from_dict({"id": "123456"}) is not None
-
-
-@pytest.mark.model
-def test_PartialObject_dynamic_attrs():
-    po = base.PartialObject.from_dict({"id": "123456", "foo": 69, "bar": False})
-    assert po.id == 123456
-    assert po.foo == 69
-    assert po.bar is False
 
 
 @pytest.mark.model

@@ -86,18 +86,6 @@ def test_assert_is_mixin_applied_to_something_that_is_slotted_but_not_multiple_i
         pass
 
 
-def test_assert_is_mixin_applied_to_something_that_is_not_named_correctly():
-    try:
-
-        @assertions.assert_is_mixin
-        class FooMixer:
-            __slots__ = ()
-
-        assert False, "No error thrown"
-    except NameError:
-        pass
-
-
 def test_assert_is_mixin_applied_to_something_that_is_directly_derived_from_mixins_and_directly_from_object():
     @assertions.assert_is_mixin
     class BarMixin:
@@ -130,16 +118,18 @@ def test_assert_is_subclass_sad_path():
 
 
 def test_assert_is_natural_happy_path():
-    assertions.assert_natural(0)
-    assertions.assert_natural(1)
-    assertions.assert_natural(99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999)
+    assertions.assert_is_natural(0)
+    assertions.assert_is_natural(1)
+    assertions.assert_is_natural(
+        99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
+    )
 
 
 @_helpers.assert_raises(ValueError)
 def test_assert_is_natural_wrong_type():
-    assertions.assert_natural(1.0)
+    assertions.assert_is_natural(1.0)
 
 
 @_helpers.assert_raises(ValueError)
 def test_assert_is_natural_wrong_value():
-    assertions.assert_natural(-1)
+    assertions.assert_is_natural(-1)
