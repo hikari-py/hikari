@@ -46,6 +46,11 @@ class TestInMemoryCache:
         in_memory_cache.get_guild_by_id(123)
         in_memory_cache._guilds.get.assert_called_once_with(123)
 
+    def test_get_guild_channel_by_id_calls_get(self, in_memory_cache):
+        in_memory_cache._guild_channels = mock.MagicMock(spec_set=dict)
+        in_memory_cache.get_guild_channel_by_id(123)
+        in_memory_cache._guild_channels.get.assert_called_once_with(123)
+
     def test_get_dm_channel_by_id_calls_get(self, in_memory_cache):
         in_memory_cache._dm_channels = mock.MagicMock()
         in_memory_cache.get_dm_channel_by_id(123)

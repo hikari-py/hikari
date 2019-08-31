@@ -62,7 +62,6 @@ class Guild(base.Snowflake):
     #    embed_channel_id
     #    widget_enabled
     #    widget_channel_id
-    #    permissions - we can get this with a REST call if needed later.
 
     __slots__ = (
         "_state",

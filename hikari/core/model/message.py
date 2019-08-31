@@ -149,7 +149,7 @@ class Message(base.Snowflake):
 
     @property
     def guild(self) -> typing.Optional[guild.Guild]:
-        return self._state.get_guild_by_id(self._guild_id)
+        return self._state.get_guild_by_id(self._guild_id) if self._guild_id else None
 
     @property
     def channel(self) -> typing.Union[channel.GuildTextChannel, channel.DMChannel]:
