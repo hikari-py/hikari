@@ -19,18 +19,18 @@
 """
 Handles managing the state of the bot, and the cache.
 """
-__all__ = ("AbstractModelState",)
+__all__ = ("AbstractModelCache",)
 
 import abc
 
 from hikari.core.utils import types
 
 
-class AbstractModelState(abc.ABC):
+class AbstractModelCache(abc.ABC):
     """
-    Provides the relational interface between different types of objects and the overall state machine.
+    Provides the relational interface between different types of objects and the overall cache.
     
-    This class provides abstract definitions only to enable a user to implement their own state system if they prefer.
+    This class provides abstract definitions only to enable a user to implement their own cache system if they prefer.
     """
 
     __slots__ = ()
@@ -73,6 +73,14 @@ class AbstractModelState(abc.ABC):
 
     @abc.abstractmethod
     def parse_channel(self, channel: types.DiscordObject):
+        ...
+
+    @abc.abstractmethod
+    def get_dm_channel_by_id(self, channel_id: int):
+        ...
+
+    @abc.abstractmethod
+    def get_guild_channel_by_id(self, guild_channel_id: int):
         ...
 
     @abc.abstractmethod

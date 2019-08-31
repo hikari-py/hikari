@@ -21,13 +21,13 @@ from unittest import mock
 
 import pytest
 
-from hikari.core.model import model_state
+from hikari.core.model import model_cache
 from hikari.core.model import user
 
 
 @pytest.mark.model
 def test_User_from_dict_when_not_a_bot():
-    s = mock.MagicMock(spec_set=model_state.AbstractModelState)
+    s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
     u = user.User.from_dict(
         s,
         {
@@ -35,7 +35,6 @@ def test_User_from_dict_when_not_a_bot():
             "username": "Boris Johnson",
             "discriminator": "6969",
             "avatar": "1a2b3c4d",
-            "mfa_enabled": True,
             "locale": "gb",
             "flags": 0b00101101,
             "premium_type": 0b1101101,
@@ -51,7 +50,7 @@ def test_User_from_dict_when_not_a_bot():
 
 @pytest.mark.model
 def test_User_from_dict_when_is_a_bot():
-    s = mock.MagicMock(spec_set=model_state.AbstractModelState)
+    s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
     u = user.User.from_dict(
         s, {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": None, "bot": True}
     )
@@ -65,13 +64,12 @@ def test_User_from_dict_when_is_a_bot():
 
 @pytest.mark.model
 def test_Member_from_dict_with_filled_fields():
-    s = mock.MagicMock(spec_set=model_state.AbstractModelState)
+    s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
     user_dict = {
         "id": "123456",
         "username": "Boris Johnson",
         "discriminator": "6969",
         "avatar": "1a2b3c4d",
-        "mfa_enabled": True,
         "locale": "gb",
         "flags": 0b00101101,
         "premium_type": 0b1101101,
@@ -101,7 +99,7 @@ def test_Member_from_dict_with_filled_fields():
 
 @pytest.mark.model
 def test_Member_from_dict_with_no_optional_fields():
-    s = mock.MagicMock(spec_set=model_state.AbstractModelState)
+    s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
     user_dict = {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": "1a2b3c4d"}
     gid = 123456
     m = user.Member.from_dict(
@@ -119,3 +117,30 @@ def test_Member_from_dict_with_no_optional_fields():
     assert m.premium_since is None
     assert m._guild_id == gid
     s.parse_user.assert_called_with(user_dict)
+
+
+@pytest.mark.model
+def test_BotUser_from_dict():
+    s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
+    u = user.BotUser.from_dict(
+        s,
+        {
+            "id": "123456",
+            "username": "Boris Johnson",
+            "discriminator": "6969",
+            "avatar": "1a2b3c4d",
+            "mfa_enabled": True,
+            "verified": True,
+            "locale": "en-GB",
+            "flags": 0b00101101,
+            "premium_type": 0b1101101,
+        },
+    )
+
+    assert u.id == 123456
+    assert u.username == "Boris Johnson"
+    assert u.discriminator == 6969
+    assert u.avatar_hash == "1a2b3c4d"
+    assert u.bot is False
+    assert u.verified is True
+    assert u.mfa_enabled is True
