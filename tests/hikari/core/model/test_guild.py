@@ -22,7 +22,7 @@ import pytest
 
 from hikari.core.model import guild
 from hikari.core.model import permission
-from hikari.core.model import model_state
+from hikari.core.model import model_cache
 
 
 @pytest.fixture
@@ -163,6 +163,7 @@ def test_guild_payload(test_emoji_payload, test_roles_payloads, test_channel_pay
         "banner": "1a2b3c",
         "premium_tier": 2,
         "premium_subscription_count": 1,
+        "preferred_locale": "en-GB",
         "system_channel_flags": 3,
     }
 
@@ -170,7 +171,7 @@ def test_guild_payload(test_emoji_payload, test_roles_payloads, test_channel_pay
 @pytest.mark.model
 class TestGuild:
     def test_available_Guild_from_dict(self, test_guild_payload, test_emoji_payload, test_member_payload):
-        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
+        s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         g = guild.Guild.from_dict(s, test_guild_payload)
 
         assert g.id == 123456
@@ -220,6 +221,7 @@ class TestGuild:
         assert g.premium_subscription_count == 1
         assert g.system_channel_flags & guild.SystemChannelFlag.PREMIUM_SUBSCRIPTION
         assert g.system_channel_flags & guild.SystemChannelFlag.USER_JOIN
+        assert g.preferred_locale == "en-GB"
 
         assert s.parse_role.call_count == 2
         s.parse_emoji.assert_called_once_with(test_emoji_payload)
@@ -227,14 +229,14 @@ class TestGuild:
         assert s.parse_channel.call_count == 3
 
     def test_unavailable_Guild_from_dict(self):
-        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
+        s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         g = guild.Guild.from_dict(s, {"id": "12345678910", "unavailable": True})
 
         assert g.id == 12345678910
         assert g.unavailable
 
     def test_Ban_from_dict(self):
-        s = mock.MagicMock(spec_set=model_state.AbstractModelState)
+        s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         user = object()
         ban = guild.Ban.from_dict(s, {"user": user, "reason": "being bad"})
         assert ban.reason == "being bad"

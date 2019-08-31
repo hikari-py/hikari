@@ -30,7 +30,7 @@ from hikari.core.model import user
 from hikari.core.utils import transform
 
 
-class OverwriteEntityType(base.NamedEnumMixin, enum.Enum):
+class OverwriteEntityType(base.NamedEnum, enum.Enum):
     """
     The type of "thing" that a permission overwrite sets the permissions for.
     """
@@ -46,7 +46,7 @@ class OverwriteEntityType(base.NamedEnumMixin, enum.Enum):
 
 
 @base.dataclass()
-class Overwrite(base.SnowflakeMixin):
+class Overwrite(base.Snowflake):
     """
     Representation of some permissions that have been explicitly allowed or denied as an override from the defaults.
     """

@@ -20,7 +20,16 @@
 Assertions of things. These are functions that validate a value, expected to return the value on success but error
 on any failure.
 """
-__all__ = ("assert_not_none", "assert_is_slotted", "assert_subclasses", "assert_is_mixin")
+import inspect
+
+__all__ = (
+    "assert_not_none",
+    "assert_is_slotted",
+    "assert_subclasses",
+    "assert_is_mixin",
+    "assert_in_range",
+    "assert_is_natural",
+)
 
 import typing
 
@@ -35,7 +44,7 @@ def assert_not_none(value: T, description: str = "value") -> T:
     return value
 
 
-def assert_natural(value: T, description: str = "value") -> int:
+def assert_is_natural(value: T, description: str = "value") -> int:
     """Assert the given value is a natural (>=0) integer, or raise a ValueError."""
     if not isinstance(value, int) or value < 0:
         raise ValueError(f"{description} must be an integer that is greater or equal to 0")
@@ -71,8 +80,8 @@ def assert_is_mixin(cls: typing.Type[T]) -> typing.Type[T]:
     Raises a TypeError if the class is not mixin-compatible, or a NameError if it is badly named for a mixin.
 
     """
-    if not isinstance(cls, type):
-        raise TypeError(f"Object {cls} is marked as a mixin but does not derive from metaclass {type}.")
+    if not inspect.isclass(cls):
+        raise TypeError(f"Object {cls} is marked as a mixin but is not a class")
     if cls.mro() != [cls, object]:
         for parent_cls in cls.mro()[1:-1]:
             try:
@@ -87,7 +96,11 @@ def assert_is_mixin(cls: typing.Type[T]) -> typing.Type[T]:
 
     if len(cls.__slots__) > 0:
         raise TypeError(f"Class {cls.__qualname__} is a mixin so must NOT declare any fields. Slots should be empty.")
-    if not cls.__qualname__.endswith("Mixin"):
-        raise NameError(f'Class {cls.__qualname__} is defined as a mixin but does not have a name ending in "Mixin".')
 
     return cls
+
+
+def assert_in_range(value, min_inclusive, max_inclusive, name="The value"):
+    """Raise a value error if a value is not in the range [min, max]"""
+    if not (min_inclusive <= value <= max_inclusive):
+        raise ValueError(f"{name} must be in the inclusive range of {min_inclusive} and {max_inclusive}")

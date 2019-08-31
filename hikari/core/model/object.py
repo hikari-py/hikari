@@ -16,40 +16,32 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Reactions to a message.
-"""
-__all__ = "Reaction"
-
+import copy
 import typing
 
 from hikari.core.model import base
-from hikari.core.model import emoji
-from hikari.core.model import model_cache
-from hikari.core.utils import transform
 
 
 @base.dataclass()
-class Reaction:
+class PartialObject(base.Snowflake):
     """
-    Model for a message reaction object
+    Representation of a partially constructed object. This may be returned by some components instead of a correctly
+    initialized object if information is not available.
+
+    Any other attributes that were provided with this object are accessible by using dot-notation as normal, but will
+    not be documented here and should not be relied on. Your mileage may vary.
     """
 
-    __slots__ = ("_state", "count", "me", "emoji")
+    __slots__ = ("id", "_other_attrs")
 
-    _state: typing.Any
-    # The number of times the emoji has been used to react
-    count: int
-    # Whether the current user has reacted with the emoji or not
-    me: bool
-    # The emoji used for the reaction
-    emoji: "emoji.Emoji"
+    #: The ID of this object.
+    id: int
+    _other_attrs: typing.Dict[str, typing.Any]
 
     @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload):
-        return Reaction(
-            _state=global_state,
-            count=transform.get_cast(payload, "count", int),
-            me=transform.get_cast(payload, "me", bool),
-            emoji=global_state.parse_emoji(payload.get("emoji")),
-        )
+    def from_dict(payload):
+        payload = copy.copy(payload)
+        return PartialObject(id=int(payload.pop("id")), _other_attrs=payload)
+
+    def __getattr__(self, item):
+        return self._other_attrs[item]

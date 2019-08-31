@@ -38,11 +38,10 @@ import enum
 import typing
 
 from hikari.core.model import base
-from hikari.core.model import channel
 from hikari.core.model import emoji
 from hikari.core.model import permission
 from hikari.core.model import role
-from hikari.core.model import model_state
+from hikari.core.model import model_cache
 from hikari.core.model import user
 from hikari.core.model import voice
 
@@ -50,8 +49,11 @@ from hikari.core.utils import dateutils
 from hikari.core.utils import transform
 
 
+GuildChannelT = typing.TypeVar("GuildChannelT", bound="channel.GuildChannel")
+
+
 @base.dataclass()
-class Guild(base.SnowflakeMixin):
+class Guild(base.Snowflake):
     # We leave out widget and embed information as there isn't documentation to distinguish what each of them are for,
     # as they seem to overlap.
     # We omit:
@@ -60,7 +62,6 @@ class Guild(base.SnowflakeMixin):
     #    embed_channel_id
     #    widget_enabled
     #    widget_channel_id
-    #    permissions - we can get this with a REST call if needed later.
 
     __slots__ = (
         "_state",
@@ -75,6 +76,7 @@ class Guild(base.SnowflakeMixin):
         "splash_hash",
         "afk_timeout",
         "verification_level",
+        "preferred_locale",
         "message_notification_level",
         "explicit_content_filter_level",
         "roles",
@@ -99,7 +101,7 @@ class Guild(base.SnowflakeMixin):
     )
 
     #: The global state.
-    _state: model_state.AbstractModelState
+    _state: model_cache.AbstractModelCache
     #: The guild ID.
     id: int
     #: Voice Channel ID for AFK users.
@@ -124,6 +126,8 @@ class Guild(base.SnowflakeMixin):
     afk_timeout: int
     #: Verification level for this guild.
     verification_level: VerificationLevel
+    #: The preferred locale of the guild
+    preferred_locale: typing.Optional[str]
     #: Default level for message notifications in this guild.
     message_notification_level: MessageNotificationLevel
     #: Explicit content filtering level.
@@ -150,7 +154,7 @@ class Guild(base.SnowflakeMixin):
     #: Members in the guild.
     members: typing.Dict[int, "user.Member"]
     #: Channels in the guild.
-    channels: typing.Dict[int, "channel.GuildChannel"]
+    channels: typing.Dict[int, GuildChannelT]
     #: Max members allowed in the guild.
     max_members: int
     #: Code for the vanity URL.
@@ -167,7 +171,7 @@ class Guild(base.SnowflakeMixin):
     system_channel_flags: typing.Optional[SystemChannelFlag]
 
     @staticmethod
-    def from_dict(global_state: model_state.AbstractModelState, payload: dict):
+    def from_dict(global_state: model_cache.AbstractModelCache, payload: dict):
         guild_id = transform.get_cast(payload, "id", int)
         return Guild(
             _state=global_state,
@@ -182,6 +186,7 @@ class Guild(base.SnowflakeMixin):
             splash_hash=payload.get("splash"),
             afk_timeout=transform.get_cast(payload, "afk_timeout", int),
             verification_level=transform.get_cast_or_raw(payload, "verification_level", VerificationLevel),
+            preferred_locale=transform.get_cast(payload, "preferred_locale", str),
             message_notification_level=transform.get_cast_or_raw(
                 payload, "default_message_notifications", MessageNotificationLevel
             ),
@@ -223,7 +228,7 @@ class SystemChannelFlag(enum.IntFlag):
     PREMIUM_SUBSCRIPTION = 2
 
 
-class GuildFeature(base.NamedEnumMixin, enum.Enum):
+class GuildFeature(base.NamedEnum, enum.Enum):
     """
     Features that a guild can provide.
     """
@@ -302,5 +307,5 @@ class Ban:
     user: user.User
 
     @staticmethod
-    def from_dict(global_state: model_state.AbstractModelState, payload: dict):
+    def from_dict(global_state: model_cache.AbstractModelCache, payload: dict):
         return Ban(reason=payload.get("reason"), user=global_state.parse_user(payload.get("user")))
