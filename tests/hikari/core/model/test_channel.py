@@ -213,3 +213,24 @@ class TestChannel:
             assert False
         except TypeError:
             pass
+
+    @pytest.mark.parametrize(
+        "impl",
+        [
+            channel.GuildTextChannel,
+            channel.GuildVoiceChannel,
+            channel.GuildStoreChannel,
+            channel.GuildNewsChannel,
+            channel.GuildCategory,
+        ],
+    )
+    def test_channel_guild(self, impl):
+        cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
+        obj = impl.from_dict(cache, {"guild_id": "91827"})
+        guild = mock.MagicMock()
+        cache.get_guild_by_id = mock.MagicMock(return_value=guild)
+
+        g = obj.guild
+        assert g is guild
+
+        cache.get_guild_by_id.assert_called_with(91827)

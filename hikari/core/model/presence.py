@@ -84,6 +84,7 @@ class UserActivity:
     """
 
     __slots__ = (
+        "id",
         "name",
         "type",
         "url",
@@ -98,6 +99,7 @@ class UserActivity:
         "flags",
     )
 
+    id: str
     name: str
     type: str
     url: typing.Optional[str]
@@ -113,6 +115,7 @@ class UserActivity:
     @staticmethod
     def from_dict(payload):
         return UserActivity(
+            id=transform.get_cast(payload, "id", str),
             name=transform.get_cast(payload, "name", str),
             type=transform.get_cast_or_raw(payload, "type", ActivityType),
             url=transform.get_cast(payload, "url", str),
@@ -154,7 +157,11 @@ class ActivityParty:
 
     @staticmethod
     def from_dict(payload):
-        ...
+        return ActivityParty(
+            id=transform.get_cast(payload, "id", str),
+            current_size=transform.get_cast(payload, "current_size", int),
+            max_size=transform.get_cast(payload, "max_size", int),
+        )
 
 
 @base.dataclass()
@@ -168,7 +175,12 @@ class ActivityAssets:
 
     @staticmethod
     def from_dict(payload):
-        ...
+        return ActivityAssets(
+            large_image=transform.get_cast(payload, "large_image", str),
+            large_text=transform.get_cast(payload, "large_text", str),
+            small_image=transform.get_cast(payload, "small_image", str),
+            small_text=transform.get_cast(payload, "small_text", str),
+        )
 
 
 @base.dataclass()

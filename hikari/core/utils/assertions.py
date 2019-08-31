@@ -82,8 +82,6 @@ def assert_is_mixin(cls: typing.Type[T]) -> typing.Type[T]:
     """
     if not inspect.isclass(cls):
         raise TypeError(f"Object {cls} is marked as a mixin but is not a class")
-    if hasattr(cls, "__metaclass__"):
-        raise TypeError(f"Object {cls} is marked as a mixin but has a different metaclass")
     if cls.mro() != [cls, object]:
         for parent_cls in cls.mro()[1:-1]:
             try:
