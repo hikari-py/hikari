@@ -46,6 +46,11 @@ class TestInMemoryCache:
         in_memory_cache.get_guild_by_id(123)
         in_memory_cache._guilds.get.assert_called_once_with(123)
 
+    def test_get_guild_channel_by_id_calls_get(self, in_memory_cache):
+        in_memory_cache._guild_channels = mock.MagicMock(spec_set=dict)
+        in_memory_cache.get_guild_channel_by_id(123)
+        in_memory_cache._guild_channels.get.assert_called_once_with(123)
+
     def test_get_dm_channel_by_id_calls_get(self, in_memory_cache):
         in_memory_cache._dm_channels = mock.MagicMock()
         in_memory_cache.get_dm_channel_by_id(123)
@@ -219,12 +224,43 @@ class TestInMemoryCache:
             assert in_memory_cache.parse_webhook(payload) is webhook
             from_dict.assert_called_once_with(in_memory_cache, payload)
 
-    def test_parse_member(self, in_memory_cache):
+    def test_parse_member_in_nonexistent_guild(self, in_memory_cache):
+        in_memory_cache._guilds = {}
         payload = {"id": "1234"}
+        member = mock.MagicMock()
+        with mock.patch.object(_user.Member, "from_dict", return_value=member) as from_dict:
+            in_memory_cache.logger = mock.MagicMock()
+            assert in_memory_cache.parse_member(payload, 9876) is None
+            in_memory_cache.logger.warning.assert_called_once()
+
+    def test_parse_new_member_in_existent_guild(self, in_memory_cache):
+        guild = mock.MagicMock()
+        guild.members = {}
+
+        in_memory_cache._guilds = {9876: guild}
+
+        payload = {"id": "1234"}
+
         member = mock.MagicMock()
         with mock.patch.object(_user.Member, "from_dict", return_value=member) as from_dict:
             assert in_memory_cache.parse_member(payload, 9876) is member
             from_dict.assert_called_once_with(in_memory_cache, 9876, payload)
+            assert guild.members == {1234: member}
+
+    def test_parse_existing_member_in_existent_guild(self, in_memory_cache):
+        guild = mock.MagicMock()
+        existing_member = mock.MagicMock()
+        guild.members = {1234: existing_member}
+
+        in_memory_cache._guilds = {9876: guild}
+
+        payload = {"id": "1234"}
+
+        new_member = mock.MagicMock()
+        with mock.patch.object(_user.Member, "from_dict", return_value=new_member) as from_dict:
+            assert in_memory_cache.parse_member(payload, 9876) is existing_member
+            from_dict.assert_not_called()
+            assert guild.members == {1234: existing_member}
 
     def test_parse_role(self, in_memory_cache):
         payload = {"id": "1234"}

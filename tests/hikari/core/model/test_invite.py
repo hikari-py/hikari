@@ -22,13 +22,13 @@ import pytest
 import datetime
 
 from hikari.core.model import invite
-from hikari.core.model import model_state
+from hikari.core.model import model_cache
 
 
 @pytest.mark.model
 class TestInvite:
     def test_Invite_from_dict(self):
-        test_state = mock.MagicMock(state_set=model_state.AbstractModelState)
+        test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
 
         guild_dict = {"id": "165176875973476352", "name": "CS:GO Fraggers Only", "splash": None, "icon": None}
         channel_dict = {"id": "165176875973476352", "name": "illuminati", "type": 0}
@@ -59,7 +59,7 @@ class TestInvite:
 @pytest.mark.model
 class TestInviteMetadata:
     def test_InviteMetadata_from_dict(self):
-        test_state = mock.MagicMock(state_set=model_state.AbstractModelState)
+        test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
 
         user_dict = {
             "id": "80351110224678912",

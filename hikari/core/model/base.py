@@ -21,17 +21,16 @@ Model ABCs and mixins.
 """
 from __future__ import annotations
 
-__all__ = ("SnowflakeMixin", "PartialObject", "NamedEnumMixin")
+__all__ = ("Snowflake", "NamedEnum")
 
-import copy
+import abc
 import dataclasses
 import datetime
-import typing
 
 from hikari.core.utils import assertions, dateutils
 
 
-def _hash_method(self: SnowflakeMixin):
+def _hash_method(self: Snowflake):
     return self.id
 
 
@@ -62,7 +61,7 @@ def dataclass(**kwargs):
 
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
-class SnowflakeMixin:
+class Snowflake(abc.ABC):
     """
     Base for any type that specifies an ID. The implementation is expected to implement that field.
 
@@ -99,7 +98,7 @@ class SnowflakeMixin:
         return self.id & 0xFFF
 
     def __lt__(self, other) -> bool:
-        if not isinstance(other, SnowflakeMixin):
+        if not isinstance(other, Snowflake):
             raise TypeError(
                 f"Cannot compare a Snowflake type {type(self).__name__} to a non-snowflake type {type(other).__name__}"
             )
@@ -109,7 +108,7 @@ class SnowflakeMixin:
         return self < other or self == other
 
     def __gt__(self, other) -> bool:
-        if not isinstance(other, SnowflakeMixin):
+        if not isinstance(other, Snowflake):
             raise TypeError(
                 f"Cannot compare a Snowflake type {type(self).__name__} to a non-snowflake type {type(other).__name__}"
             )
@@ -119,34 +118,9 @@ class SnowflakeMixin:
         return self > other or self == other
 
 
-@dataclass()
-class PartialObject(SnowflakeMixin):
-    """
-    Representation of a partially constructed object. This may be returned by some components instead of a correctly
-    initialized object if information is not available.
-
-    Any other attributes that were provided with this object are accessible by using dot-notation as normal, but will
-    not be documented here and should not be relied on. Your mileage may vary.
-    """
-
-    __slots__ = ("id", "_other_attrs")
-
-    #: The ID of this object.
-    id: int
-    _other_attrs: typing.Dict[str, typing.Any]
-
-    @staticmethod
-    def from_dict(payload):
-        payload = copy.copy(payload)
-        return PartialObject(id=int(payload.pop("id")), _other_attrs=payload)
-
-    def __getattr__(self, item):
-        return self._other_attrs[item]
-
-
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
-class NamedEnumMixin:
+class NamedEnum:
     """
     A mixin for an enum that is produced from a string by Discord. This ensures that the key can be looked up from a
     lowercase value that discord provides and use a Pythonic key name that is in upper case.
@@ -166,3 +140,11 @@ class NamedEnumMixin:
         return self.name
 
     __repr__ = __str__
+
+
+@assertions.assert_is_mixin
+@assertions.assert_is_slotted
+class Messageable(abc.ABC):
+    # @abc.abstractmethod
+    async def send(self, *args, **kwargs):
+        raise NotImplementedError("Not yet implemented.")

@@ -24,14 +24,14 @@ __all__ = ("User", "Member")
 import datetime
 import typing
 
-from hikari.core.model import model_state
+from hikari.core.model import model_cache
 from hikari.core.model import base
 from hikari.core.utils import dateutils, transform
 from hikari.core.utils import delegate
 
 
 @base.dataclass()
-class User(base.SnowflakeMixin):
+class User(base.Snowflake):
     """
     Representation of a user account.
     """
@@ -39,7 +39,7 @@ class User(base.SnowflakeMixin):
     # TODO: user flags (eventually)
     __slots__ = ("_state", "id", "username", "discriminator", "avatar_hash", "bot", "__weakref__")
 
-    _state: model_state.AbstractModelState
+    _state: model_cache.AbstractModelCache
     #: ID of the user.
     id: int
     #: The user name.
@@ -52,7 +52,7 @@ class User(base.SnowflakeMixin):
     bot: bool
 
     @staticmethod
-    def from_dict(global_state: model_state.AbstractModelState, payload):
+    def from_dict(global_state: model_cache.AbstractModelCache, payload):
         return User(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),
@@ -100,4 +100,29 @@ class Member(User):
             nick=payload.get("nick"),
             joined_at=transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime),
             premium_since=transform.get_cast(payload, "premium_since", dateutils.parse_iso_8601_datetime),
+        )
+
+
+@base.dataclass()
+class BotUser(User):
+    """
+    A special instance of user to represent the bot that is signed in.
+    """
+
+    __slots__ = ("verified", "mfa_enabled")
+
+    verified: bool
+    mfa_enabled: bool
+
+    @staticmethod
+    def from_dict(global_state: model_cache.AbstractModelCache, payload):
+        return BotUser(
+            _state=global_state,
+            id=transform.get_cast(payload, "id", int),
+            username=payload.get("username"),
+            discriminator=transform.get_cast(payload, "discriminator", int),
+            avatar_hash=payload.get("avatar"),
+            bot=payload.get("bot", False),
+            verified=payload.get("verified", False),
+            mfa_enabled=payload.get("mfa_enabled", False),
         )

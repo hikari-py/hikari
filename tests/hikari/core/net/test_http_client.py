@@ -48,7 +48,7 @@ class ClientMock(_http_client.HTTPClient):
     .. code-block::
         @pytest.fixture()
         async def http_client(event_loop):
-            from hikari_tests.test_net.test_http import ClientMock
+            from hikari_tests.net.test_http import ClientMock
             return ClientMock(token="foobarsecret", loop=event_loop)
 
                 async def test_that_something_does_a_thing(self, http_client):

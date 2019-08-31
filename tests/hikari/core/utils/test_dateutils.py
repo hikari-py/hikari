@@ -78,5 +78,16 @@ def test_parse_iso_8601_date_with_milliseconds_instead_of_microseconds():
 def test_parse_http_date():
     rfc_timestamp = "Mon, 03 Jun 2019 17:54:26 GMT"
     expected_timestamp = datetime.datetime(2019, 6, 3, 17, 54, 26, tzinfo=datetime.timezone.utc)
-
     assert dateutils.parse_http_date(rfc_timestamp) == expected_timestamp
+
+
+def test_parse_discord_epoch_to_datetime():
+    discord_timestamp = 37921278956
+    expected_timestamp = datetime.datetime(2016, 3, 14, 21, 41, 18, 956000, tzinfo=datetime.timezone.utc)
+    assert dateutils.discord_epoch_to_datetime(discord_timestamp) == expected_timestamp
+
+
+def test_parse_unix_epoch_to_datetime():
+    unix_timestamp = 1457991678956
+    expected_timestamp = datetime.datetime(2016, 3, 14, 21, 41, 18, 956000, tzinfo=datetime.timezone.utc)
+    assert dateutils.unix_epoch_to_datetime(unix_timestamp) == expected_timestamp
