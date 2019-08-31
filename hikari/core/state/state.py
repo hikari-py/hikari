@@ -30,6 +30,7 @@ from hikari.core.model import user as _user
 from hikari.core.state import cache as _cache
 from hikari.core.utils import dateutils
 from hikari.core.utils import delegate
+from hikari.core.utils import transform
 
 
 @delegate.delegate_members(_cache.InMemoryCache, "cache")
@@ -86,7 +87,12 @@ class State(_cache.InMemoryCache):
         channel_id = int(payload["id"])
         old_channel = self.cache.get_guild_channel_by_id(channel_id) or self.cache.get_dm_channel_by_id(channel_id)
         new_channel = self.cache.parse_channel(payload)
-        self.dispatch("channel_create", old_channel, new_channel)
+
+        if old_channel is not None:
+            transform.update_volatile_fields(old_channel, new_channel)
+            self.dispatch("channel_update", old_channel, new_channel)
+        else:
+            await self.handle_channel_create(payload)
 
     async def handle_channel_delete(self, payload):
         channel = self.cache.parse_channel(payload)
@@ -109,10 +115,17 @@ class State(_cache.InMemoryCache):
                 self.dispatch("channel_pin_removed", channel)
 
     async def handle_guild_create(self, payload):
-        self.dispatch("guild_available", ...)
+        self.dispatch("guild_available", self.cache.parse_guild(payload))
 
     async def handle_guild_update(self, payload):
-        self.dispatch("guild_update", ...)
+        guild_id = int(payload["id"])
+        old_guild = self.cache.get_guild_by_id(guild_id)
+        new_guild = self.cache.parse_guild(payload)
+        if old_guild is not None:
+            transform.update_volatile_fields(old_guild, new_guild)
+            self.dispatch("guild_update", old_guild, new_guild)
+        else:
+            await self.handle_guild_create(payload)
 
     async def handle_guild_delete(self, payload):
         self.dispatch("guild_delete", ...)

@@ -145,6 +145,5 @@ class NamedEnum:
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
 class Messageable(abc.ABC):
-    # @abc.abstractmethod
     async def send(self, *args, **kwargs):
         raise NotImplementedError("Not yet implemented.")
