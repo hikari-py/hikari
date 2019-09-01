@@ -106,8 +106,6 @@ pages:
             - public
     only:
         - master
-    except:
-        - schedules
 
 ###
 ### HANDLE DEPLOYING TO PYPI REPOSITORIES
