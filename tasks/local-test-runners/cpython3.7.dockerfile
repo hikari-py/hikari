@@ -16,7 +16,5 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 FROM       python:3.7-alpine
 VOLUME     ["/hikari", "/hikari_tests", "/docs"]
-COPY       pyproject.toml   .
-COPY       noxfile.py       .
-COPY       tasks            .
-RUN        apk add git && pip install poetry && poetry install -vvv
+COPY       . .
+RUN        apk add musl-dev gcc git && pip install poetry && poetry install -vvv

@@ -21,10 +21,10 @@ services:
     build:
       context: ../..
       dockerfile: tasks/local-test-runners/cpython3.7.dockerfile
-    entrypoint: python -bbBm poetry run pytest hikari_tests
+    entrypoint: python -bbBm poetry run pytest tests
     volumes:
       - ../../hikari:/hikari:ro
-      - ../../hikari_tests:/hikari_tests:ro
+      - ../../tests:/tests:ro
       - ../../docs:/docs:rw
     restart: 'no'
 
@@ -32,10 +32,10 @@ services:
     build:
       context: ../..
       dockerfile: tasks/local-test-runners/cpython3.8.dockerfile
-    entrypoint: python -bbBm poetry run pytest hikari_tests
+    entrypoint: python -bbBm poetry run pytest tests
     volumes:
       - ../../hikari:/hikari:ro
-      - ../../hikari_tests:/hikari_tests:ro
+      - ../../tests:/tests:ro
       - ../../docs:/docs:rw
     restart: 'no'
 
@@ -43,14 +43,14 @@ services:
     build:
       context: ../..
       dockerfile: tasks/local-test-runners/cpython3.9.dockerfile
-    # entrypoint: python -bbBm pytest hikari_tests
+    # entrypoint: python -bbBm pytest tests
     volumes:
       - ../../hikari:/hikari:ro
-      - ../../hikari_tests:/hikari_tests:ro
+      - ../../tests:/tests:ro
       - ../../docs:/docs:rw
     restart: 'no'
 
 volumes:
   hikari:
-  hikari_tests:
+  tests:
   docs:
