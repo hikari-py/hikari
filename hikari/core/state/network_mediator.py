@@ -21,6 +21,7 @@ Integrates with the gateway and HTTP components, wrapping an in-memory cache to 
 transformation of JSON payloads into Python objects for any service layer that interacts with us. This is what
 differentiates the framework from a simple HTTP and websocket wrapper to a full idiomatic pythonic bot framework!
 """
+import enum
 import logging
 
 import typing
@@ -29,14 +30,53 @@ from hikari.core.model import channel as _channel
 from hikari.core.model import user as _user
 from hikari.core.state import cache as _cache
 from hikari.core.utils import dateutils
-from hikari.core.utils import delegate
+from hikari.core.utils import transform
 
 
-@delegate.delegate_members(_cache.InMemoryCache, "cache")
-class State(_cache.InMemoryCache):
+class Event(str, enum.Enum):
     """
-    A delegate class to an in-memory cache. This takes on the additional responsibility of orchestrating updates to the
-    cache when they are received via web sockets or the gateway.
+    Valid network-based events we can dispatch.
+    """
+
+    #: Hello payload was sent, initial connection was made.
+    CONNECTED = "connected"
+    #: Bot is ready, state has been loaded.
+    READY = "ready"
+    #: Connection has been resumed.
+    RESUMED = "resumed"
+    #: A channel was created.
+    CHANNEL_CREATED = "channel_created"
+    #: A channel was updated.
+    CHANNEL_UPDATED = "channel_updated"
+    #: A channel was deleted.
+    CHANNEL_DELETED = "channel_deleted"
+    #: A pin was added to a channel.
+    CHANNEL_PIN_ADDED = "channel_pin_added"
+    #: A pin was removed from a channel.
+    CHANNEL_PIN_REMOVED = "channel_pin_removed"
+    #: A guild has just become available. This occurs when we first connect before `ready` is triggered, when resuming
+    #: and the guild becomes available again, or when joining a new guild. Also fires once an outage ends.
+    GUILD_AVAILABLE = "guild_available"
+    #: Info about the guild changed.
+    GUILD_UPDATED = "guild_updated"
+    #: A guild became unavailable because of an outage.
+    GUILD_UNAVAILABLE = "guild_unavailable"
+    #: The bot was kicked from the guild.
+    GUILD_LEFT = "guild_left"
+    #: A guild banned someone.
+    GUILD_USER_BANNED = "guild_user_banned"
+    #: A guild unbanned someone.
+    GUILD_USER_PARDONED = "guild_user_pardoned"
+    #: Emojis updated in a guild.
+    GUILD_EMOJIS_UPDATED = "guild_emojis_updated"
+
+
+class BasicNetworkMediator:
+    """
+    A mediator for gateway and HTTP components that bridges their interface with the model API and cache API to allow
+    everything to interact with each other nicely.
+
+    This defines how events should be processed and what should be dispatched, for example.
 
     Arguments:
         cache:
@@ -62,7 +102,7 @@ class State(_cache.InMemoryCache):
             self.logger.warning("No transformation for %s exists, so the event is being ignored", event_name)
 
     async def handle_hello(self, _):
-        self.dispatch("hello")
+        self.dispatch(Event.CONNECTED)
 
     async def handle_ready(self, payload):
         user = payload["user"]
@@ -73,26 +113,31 @@ class State(_cache.InMemoryCache):
         for guild in guilds:
             self.cache.parse_guild(guild)
 
-        # FixMe: We shouldn't dispatch this until later probably.
-        self.dispatch("ready")
+        # fixme: We shouldn't dispatch this until later probably.
+        self.dispatch(Event.READY)
 
     async def handle_resumed(self, _):
-        self.dispatch("resumed")
+        self.dispatch(Event.RESUMED)
 
     async def handle_channel_create(self, payload):
-        self.dispatch("channel_create", self.cache.parse_channel(payload))
+        self.dispatch(Event.CHANNEL_CREATED, self.cache.parse_channel(payload))
 
     async def handle_channel_update(self, payload):
         channel_id = int(payload["id"])
         old_channel = self.cache.get_guild_channel_by_id(channel_id) or self.cache.get_dm_channel_by_id(channel_id)
         new_channel = self.cache.parse_channel(payload)
-        self.dispatch("channel_create", old_channel, new_channel)
+
+        if old_channel is not None:
+            transform.update_volatile_fields(old_channel, new_channel)
+            self.dispatch(Event.CHANNEL_UPDATED, old_channel, new_channel)
+        else:
+            await self.handle_channel_create(payload)
 
     async def handle_channel_delete(self, payload):
         channel = self.cache.parse_channel(payload)
         if isinstance(channel, _channel.GuildChannel):
             del channel.guild.channels[channel.id]
-        self.dispatch("channel_delete", channel)
+        self.dispatch(Event.CHANNEL_DELETED, channel)
 
     async def handle_channel_pins_update(self, payload):
         channel_id = int(payload["channel_id"])
@@ -104,27 +149,54 @@ class State(_cache.InMemoryCache):
         if channel is not None:
             if last_pin_timestamp is not None:
                 channel.last_pin_timestamp = dateutils.parse_iso_8601_datetime(last_pin_timestamp)
-                self.dispatch("channel_pin_added", channel)
+                self.dispatch(Event.CHANNEL_PIN_ADDED, channel)
             else:
-                self.dispatch("channel_pin_removed", channel)
+                self.dispatch(Event.CHANNEL_PIN_REMOVED, channel)
 
     async def handle_guild_create(self, payload):
-        self.dispatch("guild_available", ...)
+        self.dispatch(Event.GUILD_AVAILABLE, self.cache.parse_guild(payload))
 
     async def handle_guild_update(self, payload):
-        self.dispatch("guild_update", ...)
+        guild_id = int(payload["id"])
+        old_guild = self.cache.get_guild_by_id(guild_id)
+        new_guild = self.cache.parse_guild(payload)
+        if old_guild is not None:
+            transform.update_volatile_fields(old_guild, new_guild)
+            self.dispatch(Event.GUILD_UPDATED, old_guild, new_guild)
+        else:
+            await self.handle_guild_create(payload)
 
     async def handle_guild_delete(self, payload):
-        self.dispatch("guild_delete", ...)
+        is_outage = payload.get("unavailable", False)
+        guild_id = int(payload["id"])
+        # If we have not cached the guild, parse a partial guild instead.
+        guild = self.cache.get_guild_by_id(guild_id) or self.cache.parse_guild(payload)
+
+        if is_outage:
+            self.dispatch(Event.GUILD_UNAVAILABLE, guild)
+        else:
+            # We were kicked.
+            self.dispatch(Event.GUILD_LEFT, self.cache.delete_guild(guild_id))
 
     async def handle_guild_ban_add(self, payload):
-        self.dispatch("guild_ban_add", ...)
+        guild = self.cache.get_guild_by_id(int(payload["id"]))
+        # We shouldn't expect this to be occurring to add a new user when we are observing them being banned
+        # but this ensures that if a ban occurs before we are fully ready that this will still fire correctly, I guess.
+        user = self.cache.parse_user(payload["user"])
+        self.cache.delete_member_from_guild(user.id, guild.id)
+        self.dispatch(Event.GUILD_USER_BANNED, guild, user)
 
     async def handle_guild_ban_remove(self, payload):
-        self.dispatch("guild_ban_remove", ...)
+        guild = self.cache.get_guild_by_id(int(payload["id"]))
+        user = self.cache.parse_user(payload["user"])
+        self.dispatch(Event.USER_PARDON, guild, user)
 
     async def handle_guild_emojis_update(self, payload):
-        self.dispatch("guild_emojis_update", ...)
+        guild = self.cache.get_guild_by_id(int(payload["id"]))
+        existing_emojis = guild.emojis
+        new_emojis = transform.get_sequence(payload, "emojis", self.cache.parse_emoji, guild_id=guild.id)
+        guild.emojis = {e.id: e for e in new_emojis}
+        self.dispatch(Event.GUILD_EMOJIS_UPDATED, existing_emojis, new_emojis)
 
     async def handle_guild_integrations_update(self, payload):
         self.dispatch("guild_integrations_update", ...)
@@ -179,16 +251,6 @@ class State(_cache.InMemoryCache):
 
     async def handle_user_update(self, payload):
         self.dispatch("user_update", ...)
-
-    # noinspection PyMethodMayBeStatic
-    async def handle_voice_state_update(self, _):
-        # self.dispatch("voice_state_update", ...)
-        return NotImplemented
-
-    # noinspection PyMethodMayBeStatic
-    async def handle_voice_server_update(self, _):
-        # self.dispatch("voice_server_update", ...)
-        return NotImplemented
 
     async def handle_webhooks_update(self, payload):
         self.dispatch("webhooks_update", ...)

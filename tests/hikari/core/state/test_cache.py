@@ -110,8 +110,8 @@ class TestInMemoryCache:
         in_memory_cache._emojis = {}
         new_emoji = mock.MagicMock()
         with mock.patch.object(_emoji.Emoji, "from_dict", return_value=new_emoji) as from_dict:
-            emoji = in_memory_cache.parse_emoji(payload)
-            from_dict.assert_called_once_with(in_memory_cache, payload)
+            emoji = in_memory_cache.parse_emoji(1234, payload)
+            from_dict.assert_called_once_with(in_memory_cache, payload, 1234)
             assert emoji is new_emoji
 
     def test_parse_new_emoji(self, in_memory_cache):
@@ -119,8 +119,8 @@ class TestInMemoryCache:
         in_memory_cache._emojis = {}
         new_emoji = mock.MagicMock()
         with mock.patch.object(_emoji.Emoji, "from_dict", return_value=new_emoji) as from_dict:
-            emoji = in_memory_cache.parse_emoji(payload)
-            from_dict.assert_called_once_with(in_memory_cache, payload)
+            emoji = in_memory_cache.parse_emoji(1234, payload)
+            from_dict.assert_called_once_with(in_memory_cache, payload, 1234)
             assert emoji is new_emoji
 
     def test_parse_existing_message(self, in_memory_cache):
@@ -144,6 +144,7 @@ class TestInMemoryCache:
         payload = {"id": "1234"}
         in_memory_cache._messages = {}
         new_message = mock.MagicMock()
+        new_message.id = 1234
 
         assert new_message not in in_memory_cache._messages.values()
 
@@ -167,22 +168,25 @@ class TestInMemoryCache:
         ],
     )
     def test_maybe_parse_existing_channel(self, in_memory_cache, impl, is_dm):
-        payload = {"id": "1234", "type": _channel._CHANNEL_TYPES.index(impl)}
+        type = [key for key, value in _channel._channel_type_to_class.items()][0]
+        payload = {"id": "1234", "type": type}
         existing_channel = mock.MagicMock()
         in_memory_cache._dm_channels = {1234: existing_channel}
-        new_channel = mock.MagicMock()
 
-        with mock.patch.object(impl, "from_dict", return_value=new_channel) as from_dict:
+        new_channel = mock.MagicMock()
+        new_channel.id = 1234
+        setattr(new_channel, "is_dm", is_dm)
+
+        with mock.patch.object(_channel, "channel_from_dict", return_value=new_channel) as from_dict:
             channel = in_memory_cache.parse_channel(payload)
+            from_dict.assert_called_once_with(in_memory_cache, payload)
 
             if is_dm:
                 # DM channels that exist should not be parsed, the cached channel should be used.
-                from_dict.assert_not_called()
-                assert channel is not new_channel
                 assert in_memory_cache._dm_channels == {1234: existing_channel}
+                assert channel is existing_channel
             else:
                 # Non dm channels should always be parsed, as we don't cache them.
-                from_dict.assert_called_once_with(in_memory_cache, payload)
                 assert in_memory_cache._dm_channels == {1234: existing_channel}
 
     @pytest.mark.parametrize(
@@ -198,12 +202,15 @@ class TestInMemoryCache:
         ],
     )
     def test_maybe_parse_new_channel(self, in_memory_cache, impl, is_dm):
-        payload = {"id": "12345", "type": _channel._CHANNEL_TYPES.index(impl)}
+        type = [key for key, value in _channel._channel_type_to_class.items()][0]
+        payload = {"id": "12345", "type": type}
         existing_channel = mock.MagicMock()
         in_memory_cache._dm_channels = {1234: existing_channel}
         new_channel = mock.MagicMock()
+        new_channel.id = 12345
+        setattr(new_channel, "is_dm", is_dm)
 
-        with mock.patch.object(impl, "from_dict", return_value=new_channel) as from_dict:
+        with mock.patch.object(_channel, "channel_from_dict", return_value=new_channel) as from_dict:
             channel = in_memory_cache.parse_channel(payload)
 
             # DM channels that don't yet exist must be parsed. We parse other channels regardless.
@@ -215,7 +222,7 @@ class TestInMemoryCache:
             else:
                 assert in_memory_cache._dm_channels == {1234: existing_channel}
 
-            assert existing_channel in in_memory_cache._dm_channels.values()
+            assert channel is new_channel
 
     def test_parse_webhook(self, in_memory_cache):
         payload = {"id": "1234"}

@@ -45,11 +45,11 @@ class TestChannel:
         )
 
         assert gtc.id == 1234567
-        assert gtc.guild_id == 696969
+        assert gtc._guild_id == 696969
         assert gtc.position == 100
         assert gtc.permission_overwrites == []
         assert gtc.nsfw is True
-        assert gtc.parent_id is None
+        assert gtc._parent_id is None
         assert gtc.rate_limit_per_user == 420
         assert gtc.topic == "nsfw stuff"
         assert gtc.name == "shh!"
@@ -82,13 +82,13 @@ class TestChannel:
         )
 
         assert gvc.id == 9292929
-        assert gvc.guild_id == 929
+        assert gvc._guild_id == 929
         assert gvc.position == 66
         assert gvc.permission_overwrites == []
         assert gvc.name == "roy rodgers mc freely"
         assert gvc.bitrate == 999
         assert gvc.user_limit is None
-        assert gvc.parent_id == 42
+        assert gvc._parent_id == 42
         assert not gvc.is_dm
 
     def test_GroupDMChannel_from_dict(self):
@@ -113,7 +113,7 @@ class TestChannel:
         assert gdmc.icon_hash == "1a2b3c4d"
         assert gdmc.name == "shitposting 101"
         assert gdmc.owner_application_id == 111111
-        assert gdmc.owner_id == 111111
+        assert gdmc._owner_id == 111111
         assert gdmc.is_dm
 
     def test_GuildCategory_from_dict(self):
@@ -132,7 +132,7 @@ class TestChannel:
 
         assert gc.name == "dank category"
         assert gc.position == 69
-        assert gc.guild_id == 54321
+        assert gc._guild_id == 54321
         assert gc.id == 123456
         assert gc.permission_overwrites == []
         assert not gc.is_dm
@@ -156,12 +156,12 @@ class TestChannel:
         )
 
         assert gnc.id == 4444
-        assert gnc.guild_id == 1111
+        assert gnc._guild_id == 1111
         assert gnc.position == 24
         assert gnc.permission_overwrites == []
         assert gnc.name
         assert gnc.nsfw is False
-        assert gnc.parent_id == 3232
+        assert gnc._parent_id == 3232
         assert gnc.topic == "crap and stuff"
         assert gnc.last_message_id is None
         assert not gnc.is_dm
@@ -182,11 +182,11 @@ class TestChannel:
         )
 
         assert gsc.id == 9876
-        assert gsc.guild_id == 7676
+        assert gsc._guild_id == 7676
         assert gsc.position == 9
         assert gsc.permission_overwrites == []
         assert gsc.name == "a"
-        assert gsc.parent_id == 32
+        assert gsc._parent_id == 32
         assert not gsc.is_dm
 
     @pytest.mark.parametrize(

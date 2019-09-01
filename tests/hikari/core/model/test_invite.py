@@ -16,10 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import datetime
 from unittest import mock
 
 import pytest
-import datetime
 
 from hikari.core.model import invite
 from hikari.core.model import model_cache
@@ -48,10 +48,8 @@ class TestInvite:
         )
 
         assert inv.code == "0vCdhLbwjZZTWZLD"
-        assert inv.target_user_type == 1
         assert inv.approximate_presence_count == 69
         assert inv.approximate_member_count == 420
-        test_state.parse_user.assert_called_with(user_dict)
         test_state.parse_guild.assert_called_with(guild_dict)
         test_state.parse_channel.assert_called_with(channel_dict)
 

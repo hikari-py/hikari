@@ -21,22 +21,8 @@ Models for the Status API.
 """
 from __future__ import annotations
 
-__all__ = (
-    "Subscriber",
-    "Subscription",
-    "Page",
-    "Status",
-    "Component",
-    "Components",
-    "IncidentUpdate",
-    "Incident",
-    "Incidents",
-    "ScheduledMaintenance",
-    "ScheduledMaintenances",
-    "Summary",
-)
-
 import datetime
+
 import typing
 
 from hikari.core.model import base
@@ -54,20 +40,40 @@ class Subscriber:
 
     #: The ID of the subscriber.
     #:
-    #: Note:
+    #: :type: :class:`str`
+    #:
+    #: Warning:
     #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     id: str
+
     #: The email address of the subscription.
+    #:
+    #: :type: :class:`str`
     email: str
+
     #: The mode of the subscription.
+    #:
+    #: :type: :class:`str`
     mode: str
-    #: The date/time the description was quarantined at.
+
+    #: The date/time the description was quarantined at, if applicable.
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
     quarantined_at: typing.Optional[datetime.datetime]
+
     #: The optional incident that this subscription is for.
+    #:
+    #: :type: :class:`hikari.core.model.service_status.Incident` or `None`
     incident: typing.Optional[Incident]
+
     #: True if the confirmation notification is skipped.
+    #:
+    #: :type: :class:`bool` or `None`
     skip_confirmation_notification: typing.Optional[bool]
+
     #: The optional date/time to stop the subscription..
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
     purge_at: typing.Optional[datetime.datetime]
 
     @staticmethod
@@ -92,6 +98,8 @@ class Subscription:
     __slots__ = ("subscriber",)
 
     #: The subscription body.
+    #:
+    #: :type: :class:`hikari.core.model.service_status.Subscriber`
     subscriber: Subscriber
 
     @staticmethod
@@ -109,14 +117,25 @@ class Page:
 
     #: The ID of the page.
     #:
+    #: :type: :class:`str`
+    #:
     #: Note:
     #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     id: str
+
     #: The name of the page.
+    #:
+    #: :type: :class:`str`
     name: str
+
     #: A permalink to the page.
+    #:
+    #: :type: :class:`str`
     url: str
+
     #: The date and time that the page was last updated at.
+    #:
+    #: :type: :class:`datetime.datetime`
     updated_at: datetime.datetime
 
     @staticmethod
@@ -138,8 +157,13 @@ class Status:
     __slots__ = ("indicator", "description")
 
     #: The indicator that specifies the state of the service.
+    #:
+    #: :type: :class:`str` or `None`
     indicator: typing.Optional[str]
+
     #: The optional description of the service state.
+    #:
+    #: :type: :class:`str` or `None`
     description: typing.Optional[str]
 
     @staticmethod
@@ -157,23 +181,43 @@ class Component:
 
     #: The ID of the component.
     #:
-    #: Note:
+    #: :type: :class:`str` or `None`
+    #:
+    #: Warning:
     #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     id: str
+
     #: The name of the component.
+    #:
+    #: :type: :class:`str`
     name: str
+
     #: The date and time the component came online for the first time.
+    #:
+    #: :type: :class:`datetime.datetime`
     created_at: datetime.datetime
+
     #: The ID of the status page for this component.
+    #:
+    #: :type: :class:`str`
     #:
     #: Note:
     #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     page_id: str
+
     #: The position of the component in the list of components.
+    #:
+    #: :type: :class:`int`
     position: int
+
     #: The date/time that this component last was updated at.
+    #:
+    #: :type: :class:`datetime.datetime`
     updated_at: datetime.datetime
+
     #: The optional description of the component.
+    #:
+    #: :type: :class:`str` or `None`
     description: typing.Optional[str]
 
     @staticmethod
@@ -198,8 +242,13 @@ class Components:
     __slots__ = ("page", "components")
 
     #: The page for this list of components.
+    #:
+    #: :type: :class:`hikari.core.model.service_status.Page`
     page: Page
+
     #: The list of components.
+    #:
+    #: :type: :class:`list` of :class:`hikari.core.model.service_status.Component`
     components: typing.List[Component]
 
     @staticmethod
@@ -220,23 +269,43 @@ class IncidentUpdate:
 
     #: The ID of this incident update.
     #:
-    #: Note:
+    #: :type: :class:`str`
+    #:
+    #: Warning:
     #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     id: str
+
     #: The content in this update.
+    #:
+    #: :type: :class:`str`
     body: str
+
     #: Time and date the incident update was made at.
+    #:
+    #: :type: :class:`datetime.datetime`
     created_at: datetime.datetime
+
     #: The date/time to display the update at.
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
     display_at: typing.Optional[datetime.datetime]
+
     #: The ID of the corresponding incident.
     #:
-    #: Note:
+    #: :type: :class:`str`
+    #:
+    #: Warning:
     #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     incident_id: str
+
     #: The status of the service during this incident update.
+    #:
+    #: :type: :class:`str`
     status: str
+
     #: The date/time that the update was last changed.
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
     updated_at: typing.Optional[datetime.datetime]
 
     @staticmethod
@@ -273,29 +342,58 @@ class Incident:
 
     #: The ID of the incident.
     #:
-    #: Note:
+    #: :type: :class:`str`
+    #:
+    #: Warning:
     #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     id: str
+
     #: The name of the incident.
+    #:
+    #: :type: :class:`str`
     name: str
+
     #: The impact of the incident.
+    #:
+    #: :type: :class:`str`
     impact: str
+
     #: A list of zero or more updates to the status of this incident.
+    #:
+    #: :type: :class:`list` of :class:`hikari.core.model.service_status.IncidentUpdate`
     incident_updates: typing.List[IncidentUpdate]
+
     #: The date and time, if applicable, that the faulty component(s) were being monitored at.
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
     monitoring_at: typing.Optional[datetime.datetime]
+
     #: The ID of the page describing this incident.
     #:
-    #: Note:
+    #: :type: :class:`str`
+    #:
+    #: Warning:
     #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     page_id: str
+
     #: The date and time that the incident finished, if applicable.
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
     resolved_at: typing.Optional[datetime.datetime]
+
     #: A short permalink to the page describing the incident.
+    #:
+    #: :type: :class:`str`
     shortlink: str
+
     #: The incident status.
+    #:
+    #: :type: :class:`str`
     status: str
+
     #: The last time the status of the incident was updated.
+    #:
+    #: :type: :class:`datetime.datetime`
     updated_at: datetime.datetime
 
     @staticmethod
@@ -329,8 +427,13 @@ class Incidents:
     __slot__ = ("page", "incidents")
 
     #: The page listing the incidents.
+    #:
+    #: :type: :class:`hikari.core.model.service_status.Page`
     page: Page
+
     #: The list of incidents on the page.
+    #:
+    #: :type: :class:`list` of :class:`hikari.core.model.service_status.Incident`
     incidents: typing.List[Incident]
 
     @staticmethod
@@ -360,31 +463,63 @@ class ScheduledMaintenance:
 
     #: The ID of the entry.
     #:
-    #: Note:
+    #: :type: :class:`str`
+    #:
+    #: Warning:
     #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     id: str
+
     #: The name of the entry.
+    #:
+    #: :type: :class:`str`
     name: str
+
     #: The impact of the entry.
+    #:
+    #: :type: :class:`str`
     impact: str
+
     #: Zero or more updates to this event.
+    #:
+    #: :type: :class:`list` of :class:`hikari.core.model.service_status.IncidentUpdate`
     incident_updates: typing.List[IncidentUpdate]
+
     #: The date and time the event was being monitored since, if applicable.
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
     monitoring_at: typing.Optional[datetime.datetime]
+
     #: The ID of the page describing this event.
     #:
-    #: Note:
+    #: :type: :class:`str`
+    #:
+    #: Warning:
     #:     Unlike the rest of this API, this ID is a :class:`str` and *not* an :class:`int` type.
     page_id: str
+
     #: The optional date/time the event finished at.
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
     resolved_at: typing.Optional[datetime.datetime]
+
     #: The date/time that the event was scheduled for.
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
     scheduled_for: typing.Optional[datetime.datetime]
+
     #: The date/time that the event was scheduled until.
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
     scheduled_until: typing.Optional[datetime.datetime]
+
     #: The status of the event.
+    #:
+    #: :type: :class:`str`
     status: str
+
     #: The date/time that the event was last updated at.
+    #:
+    #: :type: :class:`datetime.datetime`
     updated_at: datetime.datetime
 
     @staticmethod
@@ -423,8 +558,13 @@ class ScheduledMaintenances:
     __slots__ = ("page", "scheduled_maintenances")
 
     #: The page containing this information.
+    #:
+    #: :type: :class:`hikari.core.model.service_status.Page`
     page: Page
+
     #: The list of items on the page.
+    #:
+    #: :type: :class:`list` of :class:`hikari.core.model.service_status.ScheduledMaintenance`
     scheduled_maintenances: typing.List[ScheduledMaintenance]
 
     @staticmethod
@@ -444,14 +584,28 @@ class Summary:
     __slots__ = ("page", "status", "components", "incidents", "scheduled_maintenances")
 
     #: The page describing this summary.
+    #:
+    #: :type: :class:`hikari.core.model.service_status.Page`
     page: Page
+
     #: The overall system status.
+    #:
+    #: :type: :class:`hikari.core.model.service_status.Status`
     status: Status
+
     #: The status of each component in the system.
+    #:
+    #: :type: :class:`list` of :class:`hikari.core.model.service_status.Component`
     components: typing.List[Component]
+
     #: The list of incidents that have occurred/are occurring to components in this system.
+    #:
+    #: :type: :class:`list` of :class:`hikari.core.model.service_status.Incident`
     incidents: typing.List[Incident]
+
     #: A list of maintenance tasks that have been/will be undertaken.
+    #:
+    #: :type: :class:`list` of :class:`hikari.core.model.service_status.ScheduledMaintenance`
     scheduled_maintenances: typing.List[ScheduledMaintenance]
 
     @staticmethod
@@ -463,3 +617,19 @@ class Summary:
             components=[Component.from_dict(c) for c in payload["components"]],
             status=Status.from_dict(payload["status"]),
         )
+
+
+__all__ = [
+    "Subscriber",
+    "Subscription",
+    "Page",
+    "Status",
+    "Component",
+    "Components",
+    "IncidentUpdate",
+    "Incident",
+    "Incidents",
+    "ScheduledMaintenance",
+    "ScheduledMaintenances",
+    "Summary",
+]

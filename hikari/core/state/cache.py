@@ -16,10 +16,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import logging
+"""
+Implementation of a model cache.
+"""
+import typing
 
 __all__ = ("InMemoryCache",)
 
+import logging
 import weakref
 
 from hikari.core.model import channel as _channel
@@ -46,10 +50,9 @@ class InMemoryCache(model_cache.AbstractModelCache):
     def __init__(self, message_cache_size: int = 100, user_dm_channel_size: int = 100) -> None:
         # Users may be cached while we can see them, or they may be cached as a member. Regardless, we only
         # retain them while they are referenced from elsewhere to keep things tidy.
-        self._users = weakref.WeakValueDictionary()
-        self._members = weakref.WeakValueDictionary()
-        self._guilds = {}
-        self._dm_channels = types.LRUDict(user_dm_channel_size)
+        self._users: typing.Dict[int, _user.User] = weakref.WeakValueDictionary()
+        self._guilds: typing.Dict[int, _guild.Guild] = {}
+        self._dm_channels: typing.Dict[int, _channel.DMChannel] = types.LRUDict(user_dm_channel_size)
         self._guild_channels = weakref.WeakValueDictionary()
         self._messages = types.LRUDict(message_cache_size)
         self._emojis = weakref.WeakValueDictionary()
@@ -58,8 +61,19 @@ class InMemoryCache(model_cache.AbstractModelCache):
     def get_user_by_id(self, user_id: int):
         return self._users.get(user_id)
 
+    def delete_member_from_guild(self, user_id: int, guild_id: int):
+        guild = self._guilds[guild_id]
+        member = guild.members[user_id]
+        del guild.members[user_id]
+        return member.user
+
     def get_guild_by_id(self, guild_id: int):
         return self._guilds.get(guild_id)
+
+    def delete_guild(self, guild_id: int):
+        guild = self._guilds[guild_id]
+        del self._guilds[guild_id]
+        return guild
 
     def get_message_by_id(self, message_id: int):
         return self._messages.get(message_id)
@@ -106,9 +120,9 @@ class InMemoryCache(model_cache.AbstractModelCache):
         # Don't cache roles.
         return _role.Role.from_dict(role)
 
-    def parse_emoji(self, emoji: types.DiscordObject):
+    def parse_emoji(self, guild_id: int, emoji: types.DiscordObject):
         # Don't cache emojis.
-        return _emoji.Emoji.from_dict(self, emoji)
+        return _emoji.Emoji.from_dict(self, emoji, guild_id)
 
     def parse_webhook(self, webhook: types.DiscordObject):
         # Don't cache webhooks.
@@ -124,15 +138,11 @@ class InMemoryCache(model_cache.AbstractModelCache):
 
     def parse_channel(self, channel: types.DiscordObject):
         # Only cache DM channels.
-        channel_id = transform.get_cast(channel, "id", int)
-        is_dm = transform.get_cast(channel, "type", _channel.is_dm_channel_type)
+        channel_obj = _channel.channel_from_dict(self, channel)
+        if channel_obj.is_dm:
+            if channel_obj.id in self._dm_channels:
+                return self._dm_channels[channel_obj.id]
 
-        if is_dm:
-            if channel_id in self._dm_channels:
-                return self._dm_channels[channel_id]
-            else:
-                channel = _channel.channel_from_dict(self, channel)
-                self._dm_channels[channel_id] = channel
-                return channel
+            self._dm_channels[channel_obj.id] = channel_obj
 
-        return _channel.channel_from_dict(self, channel)
+        return channel_obj
