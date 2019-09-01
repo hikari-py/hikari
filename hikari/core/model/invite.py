@@ -19,19 +19,19 @@
 """
 Invitations to guilds.
 """
-__all__ = ()
+from __future__ import annotations
 
-import enum
-import typing
 import datetime
 
+import typing
+
 from hikari.core.model import base
-from hikari.core.model import guild
 from hikari.core.model import channel
-from hikari.core.model import user
+from hikari.core.model import guild
 from hikari.core.model import model_cache
-from hikari.core.utils import transform
+from hikari.core.model import user
 from hikari.core.utils import dateutils
+from hikari.core.utils import transform
 
 
 @base.dataclass()
@@ -40,31 +40,33 @@ class Invite:
     Represents a code that when used, adds a user to a guild or group DM channel.
     """
 
-    __slots__ = (
-        "_state",
-        "code",
-        "guild",
-        "channel",
-        "target_user",
-        "target_user_type",
-        "approximate_presence_count",
-        "approximate_member_count",
-    )
+    __slots__ = ("_state", "code", "guild", "channel", "approximate_presence_count", "approximate_member_count")
 
     _state: typing.Any
-    # The unique invite code
+
+    #: The unique invite code
+    #:
+    #: :type: :class:`str`
     code: str
-    # The guild the invite is for
-    guild: "guild.Guild"
-    # The channel the invite points to
-    channel: "channel.Channel"
-    # The target user for the invite
-    target_user: "user.User"
-    # The type of target user for the invite
-    target_user_type: int
-    # Approximate count of online members
+
+    #: The guild the invite is for
+    #:
+    #: :type: :class:`hikari.core.model.guild.Guild`
+    guild: guild.Guild
+
+    #: The channel the invite points to
+    #:
+    #: :type: :class:`hikari.core.model.channel.GuildChannel`
+    channel: channel.GuildChannel
+
+    #: Approximate count of online members.
+    #:
+    #: :type: :class:`int` or `None`
     approximate_presence_count: typing.Optional[int]
-    # Approximate count of total members
+
+    #: Approximate count of total members.
+    #:
+    #: :type: :class:`int` or `None`
     approximate_member_count: typing.Optional[int]
 
     @staticmethod
@@ -74,43 +76,54 @@ class Invite:
             code=payload.get("code"),
             guild=global_state.parse_guild(payload.get("guild")),
             channel=global_state.parse_channel(payload.get("channel")),
-            target_user=global_state.parse_user(payload.get("target_user")),
-            target_user_type=transform.get_cast(payload, "target_user_type", int),
             approximate_presence_count=transform.get_cast(payload, "approximate_presence_count", int),
             approximate_member_count=transform.get_cast(payload, "approximate_member_count", int),
         )
 
 
-class TargetUserType(enum.IntEnum):
-    """
-    The type of a target user
-    """
-
-    STREAM = 1
-
-
 @base.dataclass()
 class InviteMetadata:
     """
-    Metadata relating to a specific invite object
+    Metadata relating to a specific invite object.
     """
 
     __slots__ = ("_state", "inviter", "uses", "max_uses", "max_age", "temporary", "created_at", "revoked")
 
     _state: typing.Any
-    # The user who created the invite
-    inviter: "user.User"
-    # The number of times the invite has been used
+
+    #: The user who created the invite.
+    #:
+    #: :type: :class:`hikari.core.model.user.User`
+    inviter: user.User
+
+    #: The number of times the invite has been used.
+    #:
+    #: :type: :class:`int`
     uses: int
-    # The maximum number of times the invite may be used
+
+    #: The maximum number of times the invite may be used.
+    #:
+    #: :type: :class:`int`
     max_uses: int
-    # Duration after which the invite expires, in seconds
+
+    #: Duration after which the invite expires, in seconds.
+    #:
+    #: :type: :class:`int`
     max_age: int
-    # Whether or not the invite only grants temporary membership
+
+    #: Whether or not the invite only grants temporary membership.
+    #:
+    #: :type: :class:`bool`
     temporary: bool
-    # When the invite was created
+
+    #: When the invite was created.
+    #:
+    #: :type: :class:`datetime.datetime`
     created_at: datetime.datetime
-    # Whether or not the invite has been revoked
+
+    #: Whether or not the invite has been revoked.
+    #:
+    #: :type: :class:`bool`
     revoked: bool
 
     @staticmethod
@@ -125,3 +138,6 @@ class InviteMetadata:
             created_at=transform.get_cast(payload, "created_at", dateutils.parse_iso_8601_datetime),
             revoked=transform.get_cast(payload, "revoked", bool),
         )
+
+
+__all__ = ["Invite", "InviteMetadata"]

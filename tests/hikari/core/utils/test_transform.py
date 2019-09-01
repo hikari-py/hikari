@@ -20,8 +20,6 @@ import dataclasses
 import datetime
 import enum
 
-import typing
-
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified
 

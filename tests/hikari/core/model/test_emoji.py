@@ -47,7 +47,7 @@ class TestEmoji:
                 "managed": False,
                 "animated": False,
             },
-            12345
+            12345,
         )
 
         assert emj.id == 1234567

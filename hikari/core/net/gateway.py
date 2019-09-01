@@ -30,23 +30,22 @@ References:
 """
 from __future__ import annotations
 
-__all__ = ("GatewayClient",)
-
 import asyncio
 import contextlib
 import datetime
 import json
 import logging
 import time
-import typing
 import zlib
 
+import typing
 import websockets
 
 from hikari.core import errors
 from hikari.core.net import opcodes
 from hikari.core.net import rates
-from hikari.core.utils import assertions, meta, types
+from hikari.core.utils import meta
+from hikari.core.utils import types
 
 
 class _ResumeConnection(websockets.ConnectionClosed):
@@ -604,3 +603,6 @@ class GatewayClient:
     def _dispatch(self, event_name: str, payload: typing.Optional[types.DiscordObject]) -> None:
         # This prevents us blocking any task such as the READY handler.
         self.loop.create_task(self.dispatch(event_name, payload))
+
+
+__all__ = ["GatewayClient"]

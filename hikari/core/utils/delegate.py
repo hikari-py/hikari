@@ -28,7 +28,6 @@ from hikari.core.utils import assertions
 
 __all__ = ("delegate_members", "delegate_safe_dataclass")
 
-
 _DELEGATE_MEMBERS_FIELD = "__delegate_members__"
 _DELEGATE_TYPES_FIELD = "__delegate_type_mapping__"
 

@@ -21,8 +21,9 @@ Integrates with the gateway and HTTP components, wrapping an in-memory cache to 
 transformation of JSON payloads into Python objects for any service layer that interacts with us. This is what
 differentiates the framework from a simple HTTP and websocket wrapper to a full idiomatic pythonic bot framework!
 """
-import logging
 import enum
+import logging
+
 import typing
 
 from hikari.core.model import channel as _channel
@@ -36,6 +37,7 @@ class Event(str, enum.Enum):
     """
     Valid network-based events we can dispatch.
     """
+
     #: Hello payload was sent, initial connection was made.
     CONNECTED = "connected"
     #: Bot is ready, state has been loaded.

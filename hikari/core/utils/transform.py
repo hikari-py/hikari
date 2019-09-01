@@ -19,11 +19,11 @@
 """
 Helper methods used for managing Mapping types during transformations.
 """
-import dataclasses
 
 __all__ = ("flatten", "try_cast", "get_cast", "get_cast_or_raw", "get_sequence", "put_if_specified")
 
 import inspect
+
 import typing
 
 from hikari.core.utils import unspecified

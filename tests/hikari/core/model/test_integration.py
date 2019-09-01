@@ -16,10 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import datetime
 from unittest import mock
 
 import pytest
-import datetime
 
 from hikari.core.model import integration
 from hikari.core.model import model_cache
@@ -62,7 +62,6 @@ class TestIntegration:
         assert inte.enabled is True
         assert inte.syncing is False
         assert inte._role_id == 69696969
-        assert inte.expire_behavior == 2
         assert inte.expire_grace_period == 420
         assert inte.synced_at == datetime.datetime(2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc)
         test_state.parse_user.assert_called_with(user_dict)

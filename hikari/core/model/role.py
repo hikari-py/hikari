@@ -19,7 +19,7 @@
 """
 A role within a guild.
 """
-__all__ = ("Role",)
+from __future__ import annotations
 
 from hikari.core.model import base
 from hikari.core.model import color as _color
@@ -36,20 +36,43 @@ class Role(base.Snowflake):
     __slots__ = ("id", "name", "color", "hoist", "position", "permissions", "managed", "mentionable")
 
     #: The ID of the role.
+    #:
+    #: :type: :class:`int`
     id: int
+
     #: The name of the role.
+    #:
+    #: :type: :class:`str`
     name: str
+
     #: The color of the role.
+    #:
+    #: :type: :class:`hikari.core.model.color.Color`
     color: _color.Color
+
     #: Whether the role will be hoisted (show as a separate list in the member list)
+    #:
+    #: :type: :class:`bool`
     hoist: bool
+
     #: The position of the role.
+    #:
+    #: :type: :class:`int`
     position: int
+
     #: The permissions for the role.
+    #:
+    #: :type: :class:`hikari.core.model.permission.Permission`
     permissions: _permission.Permission
+
     #: True if the role is created by an integration or by adding a bot to the server, or False otherwise.
+    #:
+    #: :type: :class:`bool`
     managed: bool
+
     #: True if you can mention this role and thus ping all members in that role at once, False if you can not.
+    #:
+    #: :type: :class:`bool`
     mentionable: bool
 
     @staticmethod
@@ -64,3 +87,6 @@ class Role(base.Snowflake):
             managed=transform.get_cast(payload, "managed", bool),
             mentionable=transform.get_cast(payload, "mentionable", bool),
         )
+
+
+__all__ = ["Role"]

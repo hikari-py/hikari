@@ -138,15 +138,11 @@ class InMemoryCache(model_cache.AbstractModelCache):
 
     def parse_channel(self, channel: types.DiscordObject):
         # Only cache DM channels.
-        channel_id = transform.get_cast(channel, "id", int)
-        is_dm = transform.get_cast(channel, "type", _channel.is_dm_channel_type)
+        channel_obj = _channel.channel_from_dict(self, channel)
+        if channel_obj.is_dm:
+            if channel_obj.id in self._dm_channels:
+                return self._dm_channels[channel_obj.id]
 
-        if is_dm:
-            if channel_id in self._dm_channels:
-                return self._dm_channels[channel_id]
-            else:
-                channel = _channel.channel_from_dict(self, channel)
-                self._dm_channels[channel_id] = channel
-                return channel
+            self._dm_channels[channel_obj.id] = channel_obj
 
-        return _channel.channel_from_dict(self, channel)
+        return channel_obj

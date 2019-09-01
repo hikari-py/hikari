@@ -21,35 +21,20 @@ Guild models.
 """
 from __future__ import annotations
 
-__all__ = (
-    "Guild",
-    "SystemChannelFlag",
-    "GuildFeature",
-    "MessageNotificationLevel",
-    "ExplicitContentFilterLevel",
-    "MFALevel",
-    "VerificationLevel",
-    "PremiumTier",
-    "Ban",
-)
-
 import datetime
 import enum
+
 import typing
 
 from hikari.core.model import base
+from hikari.core.model import channel
 from hikari.core.model import emoji
+from hikari.core.model import model_cache
 from hikari.core.model import permission
 from hikari.core.model import role
-from hikari.core.model import model_cache
 from hikari.core.model import user
-from hikari.core.model import voice
-
 from hikari.core.utils import dateutils
 from hikari.core.utils import transform
-
-
-GuildChannelT = typing.TypeVar("GuildChannelT", bound="channel.GuildChannel")
 
 
 @base.dataclass()
@@ -99,72 +84,152 @@ class Guild(base.Snowflake):
         "system_channel_flags",  # not documented...
     )
 
-    #: The global state.
-    _state: model_cache.AbstractModelCache
-    #: The guild ID.
-    id: int
-    #: Voice Channel ID for AFK users.
     _afk_channel_id: typing.Optional[int]
-    #: The ID of the user who owns the guild.
+    _state: model_cache.AbstractModelCache
     _owner_id: int
-    #: The ID of the voice region for this guild.
-    _voice_region_id: int
-    #: System channel ID, if set.
     _system_channel_id: typing.Optional[int]
+    _voice_region_id: int
+
+    #: The guild ID.
+    #:
+    #: :type: :class:`int`
+    id: int
+
     #: The application ID of the creator of the guild. This is always `None` unless the guild was made by a bot.
+    #:
+    #: :type: :class:`int` or `None`
     creator_application_id: typing.Optional[int]
+
     #: The name of the guild.
+    #:
+    #: :type: :class:`str`
     name: str
+
     #: The hash of the icon of the guild.
+    #:
+    #: :type: :class:`str`
     icon_hash: str
+
     #: The hash of the splash for the guild.
+    #:
+    #: :type: :class:`str`
     splash_hash: str
+
     #: Permissions for our user in the guild, minus channel overrides, if the user is in the guild.
+    #:
+    #: :type: :class:`hikari.core.model.permission.Permission` or `None`
     my_permissions: typing.Optional[permission.Permission]
+
     #: Timeout before a user is classed as being AFK in seconds.
+    #:
+    #: :type: :class:`int`
     afk_timeout: int
+
     #: Verification level for this guild.
+    #:
+    #: :type: :class:`hikari.core.model.guild.GuildVerificationLevel`
     verification_level: VerificationLevel
-    #: The preferred locale of the guild
+
+    #: The preferred locale of the guild. This is only populated if the guild has the
+    # :attr:`hikari.core.model.guild.GuildFeature`
+    #:
+    #: :type: :class:`str` or `None`
     preferred_locale: typing.Optional[str]
+
     #: Default level for message notifications in this guild.
-    message_notification_level: MessageNotificationLevel
+    #:
+    #: :type: :class:`hikari.core.model.guild.NotificationLevel`
+    message_notification_level: NotificationLevel
+
     #: Explicit content filtering level.
+    #:
+    #: :type: :class:`hikari.core.model.guild.ExplicitContentFilterLevel`
     explicit_content_filter_level: ExplicitContentFilterLevel
-    #: Roles in this guild.
-    roles: typing.Dict[int, "role.Role"]
-    #: Emojis in this guild.
-    emojis: typing.Dict[int, "emoji.Emoji"]
+
+    #: Roles in this guild. Maps IDs to the role object they represent.
+    #:
+    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.model.role.Role` objects
+    roles: typing.Dict[int, role.Role]
+
+    #: Emojis in this guild. Maps IDs to the role object they represent.
+    #:
+    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.model.emoji.Emoji` objects
+    emojis: typing.Dict[int, emoji.Emoji]
+
     #: Enabled features in this guild.
-    features: typing.List[GuildFeature]
-    #: Number of members.
+    #:
+    #: :type: :class:`set` of :class:`hikari.core.model.guild.Feature` enum values.
+    features: typing.Set[Feature]
+
+    #: Number of members. Only stored if the information is actively available.
+    #:
+    #: :type: :class:`int` or `None`
     member_count: typing.Optional[int]
+
     #: MFA level for this guild.
+    #:
+    #: :type: :class:`hikari.core.model.guild.MFALevel`
     mfa_level: MFALevel
-    #: The date/time the bot user joined this guild, if it is in the guild.
+
+    #: The date/time the bot user joined this guild, or `None` if the bot is not in this guild.
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
     joined_at: typing.Optional[datetime.datetime]
+
     #: True if the guild is considered to be large, or False if it is not. This is defined by whatever the large
     #: threshold for the gateway is set to.
+    #:
+    #: :type: :class:`bool`
     large: bool
+
     #: True if the guild is considered to be unavailable, or False if it is not.
+    #:
+    #: :type: :class:`bool`
     unavailable: bool
+
     #: Members in the guild.
-    members: typing.Dict[int, "user.Member"]
+    #:
+    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.model.user.Member` objects
+    members: typing.Dict[int, user.Member]
+
     #: Channels in the guild.
-    channels: typing.Dict[int, GuildChannelT]
-    #: Max members allowed in the guild.
+    #:
+    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.model.channel.GuildChannel` objects
+    channels: typing.Dict[int, channel.GuildChannel]
+
+    #: Max members allowed in the guild. This is a hard limit enforced by Discord.
+    #:
+    #: :type: :class:`int`
     max_members: int
-    #: Code for the vanity URL.
+
+    #: Code for the vanity URL, if the guild has one.
+    #:
+    #: :type: :class:`str` or `None`
     vanity_url_code: typing.Optional[str]
-    #: Guild description
+
+    #: Guild description, if the guild has one assigned. Currently this only applies to discoverable guilds.
+    #:
+    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.model.role.Role` objects
     description: typing.Optional[str]
-    #: Hash code for the banner.
+
+    #: Hash code for the guild banner, if it has one.
+    #:
+    #: :type: :class:`str` or `None`
     banner_hash: typing.Optional[str]
+
     #: Premium tier.
+    #:
+    #: :type: :class:`hikari.core.model.guild.PremiumTier`
     premium_tier: PremiumTier
-    #: Number of current Nitro boosts on this server.
+
+    #: Number of current Nitro boosts on this guild.
+    #:
+    #: :type: :class:`int`
     premium_subscription_count: int
+
     #: Describes what can the system channel can do.
+    #:
+    #: :type: :class:`hikari.core.model.guild.SystemChannelFlag`
     system_channel_flags: typing.Optional[SystemChannelFlag]
 
     @staticmethod
@@ -185,14 +250,14 @@ class Guild(base.Snowflake):
             verification_level=transform.get_cast_or_raw(payload, "verification_level", VerificationLevel),
             preferred_locale=transform.get_cast(payload, "preferred_locale", str),
             message_notification_level=transform.get_cast_or_raw(
-                payload, "default_message_notifications", MessageNotificationLevel
+                payload, "default_message_notifications", NotificationLevel
             ),
             explicit_content_filter_level=transform.get_cast_or_raw(
                 payload, "explicit_content_filter", ExplicitContentFilterLevel
             ),
             roles=transform.get_sequence(payload, "roles", global_state.parse_role, transform.flatten),
             emojis=transform.get_sequence(payload, "emojis", global_state.parse_emoji, transform.flatten),
-            features=transform.get_sequence(payload, "features", GuildFeature.from_discord_name, keep_failures=True),
+            features=transform.get_sequence(payload, "features", Feature.from_discord_name, keep_failures=True),
             member_count=transform.get_cast(payload, "member_count", int),
             mfa_level=transform.get_cast_or_raw(payload, "mfa_level", MFALevel),
             my_permissions=transform.get_cast_or_raw(payload, "permissions", permission.Permission),
@@ -218,13 +283,13 @@ class SystemChannelFlag(enum.IntFlag):
     Defines what is enabled to be displayed in the system channel.
     """
 
-    #: Users joining.
+    #: Display a message about new users joining.
     USER_JOIN = 1
-    #: Nitro boosting.
+    #: Display a message when the guild is Nitro boosted.
     PREMIUM_SUBSCRIPTION = 2
 
 
-class GuildFeature(base.NamedEnum, enum.Enum):
+class Feature(base.NamedEnum, enum.Enum):
     """
     Features that a guild can provide.
     """
@@ -245,25 +310,36 @@ class GuildFeature(base.NamedEnum, enum.Enum):
     VIP_REGIONS = enum.auto()
 
 
-class MessageNotificationLevel(enum.IntEnum):
+class NotificationLevel(enum.IntEnum):
     """Setting for message notifications."""
 
+    #: Notify users when any message is sent.
     ALL_MESSAGES = 0
+
+    #: Only notify users when they are @mentioned.
     ONLY_MENTIONS = 1
 
 
 class ExplicitContentFilterLevel(enum.IntEnum):
     """Setting for the explicit content filter."""
 
+    #: No explicit content filter.
     DISABLED = 0
+
+    #: Filter posts from anyone without a role.
     MEMBERS_WITHOUT_ROLES = 1
+
+    #: Filter all posts.
     ALL_MEMBERS = 2
 
 
 class MFALevel(enum.IntEnum):
     """Setting multi-factor authorization level."""
 
+    #: No MFA requirement.
     NONE = 0
+
+    #: MFA requirement.
     ELEVATED = 1
 
 
@@ -276,18 +352,22 @@ class VerificationLevel(enum.IntEnum):
     LOW = 1
     #: Must have been registered on Discord for more than 5 minutes.
     MEDIUM = 2
-    #: (╯°□°）╯︵ ┻━┻ - must be a member of the server for longer than 10 minutes.
+    #: (╯°□°）╯︵ ┻━┻ - must be a member of the guild for longer than 10 minutes.
     HIGH = 3
     #: ┻━┻ミヽ(ಠ益ಠ)ﾉ彡┻━┻ - must have a verified phone number.
     VERY_HIGH = 4
 
 
 class PremiumTier(enum.IntEnum):
-    """Tier for Discord Nitro boosting in a server."""
+    """Tier for Discord Nitro boosting in a guild."""
 
+    #: No Nitro boosts.
     NONE = 0
+    #: Level 1 Nitro boost.
     TIER_1 = 1
+    #: Level 2 Nitro boost.
     TIER_2 = 2
+    #: Level 3 Nitro boost.
     TIER_3 = 3
 
 
@@ -299,9 +379,29 @@ class Ban:
 
     __slots__ = ("reason", "user")
 
+    #: The reason for the ban, if there is one given.
+    #:
+    #: :type: :class:`str` or `None`
     reason: typing.Optional[str]
+
+    #: The user who is banned.
+    #:
+    #: :type: :class:`hikari.core.model.user.User`
     user: user.User
 
     @staticmethod
     def from_dict(global_state: model_cache.AbstractModelCache, payload: dict):
         return Ban(reason=payload.get("reason"), user=global_state.parse_user(payload.get("user")))
+
+
+__all__ = [
+    "Guild",
+    "SystemChannelFlag",
+    "Feature",
+    "NotificationLevel",
+    "ExplicitContentFilterLevel",
+    "MFALevel",
+    "VerificationLevel",
+    "PremiumTier",
+    "Ban",
+]

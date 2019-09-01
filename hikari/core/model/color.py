@@ -19,17 +19,16 @@
 """
 Model that represents a common RGB color and provides simple conversions to other common color systems.
 """
-
 from __future__ import annotations
-from hikari.core.utils.assertions import assert_in_range
-
-__all__ = ("Color",)
 
 import string
+
 import typing
 
+from hikari.core.utils import assertions
 
-class Color(int):
+
+class Color(int, typing.SupportsInt):
     """
     Representation of a color. This value is immutable.
 
@@ -75,7 +74,7 @@ class Color(int):
     __slots__ = ()
 
     def __new__(cls: typing.Type[Color], raw_rgb: int) -> Color:
-        assert_in_range(raw_rgb, 0, 0xFF_FF_FF, "integer value")
+        assertions.assert_in_range(raw_rgb, 0, 0xFF_FF_FF, "integer value")
         return super(Color, cls).__new__(cls, raw_rgb)
 
     def __repr__(self) -> str:
@@ -155,9 +154,10 @@ class Color(int):
         Raises:
               ValueError: if red, green, or blue are outside the range [0x0, 0xFF]
         """
-        assert_in_range(red, 0, 0xFF, "red")
-        assert_in_range(green, 0, 0xFF, "green")
-        assert_in_range(blue, 0, 0xFF, "blue")
+        assertions.assert_in_range(red, 0, 0xFF, "red")
+        assertions.assert_in_range(green, 0, 0xFF, "green")
+        assertions.assert_in_range(blue, 0, 0xFF, "blue")
+        # noinspection PyTypeChecker
         return cls((red << 16) | (green << 8) | blue)
 
     @classmethod
@@ -179,9 +179,10 @@ class Color(int):
         Raises:
             ValueError: if red, green or blue are outside the range [0, 1]
         """
-        assert_in_range(red_f, 0, 1, "red")
-        assert_in_range(green_f, 0, 1, "green")
-        assert_in_range(blue_f, 0, 1, "blue")
+        assertions.assert_in_range(red_f, 0, 1, "red")
+        assertions.assert_in_range(green_f, 0, 1, "green")
+        assertions.assert_in_range(blue_f, 0, 1, "blue")
+        # noinspection PyTypeChecker
         return cls.from_rgb(int(red_f * 0xFF), int(green_f * 0xFF), int(blue_f * 0xFF))
 
     @classmethod
@@ -214,16 +215,17 @@ class Color(int):
         if len(hex_code) == 3:
             # Web-safe
             components = (int(c, 16) for c in hex_code)
-            return cls.from_rgb(*(c << 4 | c for c in components))
+            # noinspection PyTypeChecker
+            return cls.from_rgb(*[(c << 4 | c) for c in components])
 
         if len(hex_code) == 6:
             components = hex_code[:2], hex_code[2:4], hex_code[4:6]
-            return cls.from_rgb(*(int(c, 16) for c in components))
+            return cls.from_rgb(*[int(c, 16) for c in components])
 
         raise ValueError("Color code is invalid length. Must be 3 or 6 digits")
 
     @classmethod
-    def from_int(cls: typing.Type[Color], i: int) -> Color:
+    def from_int(cls: typing.Type[Color], i: typing.SupportsInt) -> Color:
         """
         Create a color from a raw integer that Discord can understand.
 
@@ -243,3 +245,6 @@ def _all_same(first, *rest):
             return False
 
     return True
+
+
+__all__ = ["Color"]

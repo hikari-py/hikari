@@ -21,10 +21,9 @@ Embeds.
 """
 from __future__ import annotations
 
-__all__ = ("Embed",)
-
 import dataclasses
 import datetime
+
 import typing
 
 from hikari.core.model import base
@@ -32,7 +31,6 @@ from hikari.core.model import color as _color
 from hikari.core.utils import dateutils
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified
-
 
 #: An alias to the unspecified sentinel. This is used to describe embed members with no associated value within this
 #: module.
@@ -59,6 +57,16 @@ class Embed:
         "_provider",
     )
 
+    _footer: EmbedFooter
+    _image: EmbedImage
+    _thumbnail: EmbedImage
+    _author: EmbedAuthor
+    _fields: typing.List[EmbedField]
+
+    _type: str
+    _video: EmbedVideo
+    _provider: EmbedProvider
+
     #: The embed title.
     title: str
     #: The embed description.
@@ -69,17 +77,6 @@ class Embed:
     timestamp: datetime.datetime
     #: The color of the embed.
     color: typing.Union[int, _color.Color]
-
-    _footer: EmbedFooter
-    _image: EmbedImage
-    _thumbnail: EmbedImage
-    _author: EmbedAuthor
-    _fields: typing.List[EmbedField]
-
-    # TODO: implement as enum.
-    _type: str
-    _video: EmbedVideo
-    _provider: EmbedProvider
 
     def __init__(
         self,
@@ -338,6 +335,7 @@ class _EmbedComponent:
 
     def to_dict(self, *, dict_factory=dict):
         attrs = {a: getattr(self, a) for a in self.__slots__}
+        # noinspection PyArgumentList,PyTypeChecker
         return dict_factory(**{k: v for k, v in attrs.items() if v is not UNSPECIFIED})
 
     # noinspection PyArgumentList,PyDataclass
@@ -451,3 +449,6 @@ class EmbedField(_EmbedComponent):
         self.name = name
         self.value = value
         self.inline = inline
+
+
+__all__ = ["Embed"]

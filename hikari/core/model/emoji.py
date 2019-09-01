@@ -19,36 +19,56 @@
 """
 Emojis.
 """
-__all__ = ("Emoji",)
+from __future__ import annotations
 
 import typing
 
 from hikari.core.model import base
-from hikari.core.model import user
 from hikari.core.model import model_cache
+from hikari.core.model import user
 from hikari.core.utils import transform
 
 
 @base.dataclass()
 class Emoji(base.Snowflake):
+    """
+    Representation of a custom emoji object.
+    """
+
     __slots__ = ("_state", "id", "name", "_role_ids", "_guild_id", "user", "require_colons", "managed", "animated")
 
     _state: typing.Any
-    #: The id of the emoji
-    id: int
-    #: The name of the emoji
-    name: str
-    # Role ids the emoji is whitelisted to
     _role_ids: typing.List[int]
-    #: The owning guild's ID.
     _guild_id: int
+
+    #: The id of the emoji
+    #:
+    #: :type: :class:`int`
+    id: int
+
+    #: The name of the emoji
+    #:
+    #: :type: :class:`str`
+    name: str
+
     #: The user whom added the emoji
-    user: "user.User"
+    #:
+    #: :type: :class:`hikari.core.models.user.User`
+    user: user.User
+
     #: Whether the emoji should be wrapped in colons or not
+    #:
+    #: :type: :class:`bool`
     require_colons: bool
-    #: Whether the emoji is managed or not
+
+    #: Whether the emoji is managed or not as part of some integration, such as Twitch.
+    #:
+    #: :type: :class:`bool`
     managed: bool
+
     #: Whether the emoji is animated or not
+    #:
+    #: :type: :class:`bool`
     animated: bool
 
     @staticmethod
@@ -66,3 +86,6 @@ class Emoji(base.Snowflake):
             managed=transform.get_cast(payload, "managed", bool),
             animated=transform.get_cast(payload, "animated", bool),
         )
+
+
+__all__ = ["Emoji"]
