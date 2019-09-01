@@ -45,6 +45,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "sphinx.ext.inheritance_diagram",
@@ -132,7 +133,7 @@ html_theme_options = {
 autoclass_content = "both"
 
 autodoc_default_options = {
-    # "member-order": "bysource",
+    "member-order": "bysource",
     "undoc-members": False,
     "exclude-members": "__weakref__",
     "show_inheritance": True,
