@@ -35,6 +35,7 @@ from hikari.core.net import rates
 from hikari.core.utils import unspecified
 from tests.hikari.core._helpers import _mock_methods_on
 
+
 ########################################################################################################################
 
 

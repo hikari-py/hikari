@@ -24,18 +24,20 @@ from __future__ import annotations
 import asyncio
 import json as libjson
 import logging
-import typing
 
 import aiohttp
+import typing
 
 #: Format string for the default Discord API URL.
 from hikari.core import errors
 from hikari.core.net import opcodes
 from hikari.core.net import rates
-from hikari.core.utils import assertions, dateutils, meta, transform, unspecified
+from hikari.core.utils import dateutils
+from hikari.core.utils import meta
+from hikari.core.utils import transform
+from hikari.core.utils import unspecified
 
 __all__ = ("BaseHTTPClient",)
-
 
 _DISCORD_API_URI_FORMAT = "https://discordapp.com/api/v{VERSION}"
 
@@ -178,7 +180,7 @@ class BaseHTTPClient:
         #: The session `Authorization` header to use.
         self.authorization = "Bot " + token.strip() if token is not unspecified.UNSPECIFIED else None
         #: The logger to use for this object.
-        self.logger = logging.getLogger(type(self).__name__)
+        self.logger = logging.getLogger(f"{type(self).__module__}.{type(self).__qualname__}")
         #: User agent to use
         self.user_agent = meta.user_agent()
 

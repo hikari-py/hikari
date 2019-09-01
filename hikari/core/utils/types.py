@@ -19,11 +19,11 @@
 """
 Custom data structures.
 """
-from hikari.core.utils import assertions
-
 __all__ = ("DiscordObject", "ObjectProxy", "LRUDict")
 
 import typing
+
+from hikari.core.utils import assertions
 
 #: Any type that Discord may return from the API.
 _DiscordType = typing.Union[
@@ -52,7 +52,11 @@ class ObjectProxy(typing.Dict[str, typing.Any]):
         return self[item]
 
 
-class LRUDict(typing.MutableMapping):
+K = typing.TypeVar("K", bound=typing.Hashable)
+V = typing.TypeVar("V")
+
+
+class LRUDict(typing.MutableMapping[K, V]):
     """
     A dict that stores a maximum number of items before the oldest is purged.
     """
@@ -67,19 +71,19 @@ class LRUDict(typing.MutableMapping):
         self._data = dict_factory()
         self._lru_size = lru_size
 
-    def __getitem__(self, item):
-        return self._data[item]
+    def __getitem__(self, key: K) -> V:
+        return self._data[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: K, value: V) -> None:
         while len(self._data) >= self._lru_size:
             self._data.popitem()
         self._data[key] = value
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: K):
         del self._data[key]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
-    def __iter__(self):
+    def __iter__(self) -> typing.Iterator[K]:
         yield from self._data

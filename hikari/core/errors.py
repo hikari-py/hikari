@@ -23,7 +23,8 @@ from __future__ import annotations
 
 import typing
 
-from hikari.core.net import http_base, opcodes
+from hikari.core.net import http_base
+from hikari.core.net import opcodes
 
 __all__ = (
     "BadRequest",

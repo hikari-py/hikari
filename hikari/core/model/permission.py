@@ -21,8 +21,6 @@ Guild permissions.
 """
 from __future__ import annotations
 
-__all__ = ("Permission",)
-
 import enum
 
 
@@ -59,6 +57,14 @@ class Permission(enum.IntFlag):
     @classmethod
     def all(cls) -> Permission:
         permission = cls.NONE
+        # noinspection PyTypeChecker
         for member in cls.__members__.values():
             permission |= member
         return permission
+
+
+def __getattr__(name):
+    return getattr(Permission, name)
+
+
+__all__ = ["Permission"]

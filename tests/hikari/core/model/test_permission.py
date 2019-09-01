@@ -31,3 +31,8 @@ def test_Permission_all():
         sum_permissions |= pm
 
     assert bin(sum_permissions) == bin(all)
+
+
+@pytest.mark.model
+def test_permission_module___getattr__():
+    assert permission.MANAGE_MESSAGES == permission.Permission.MANAGE_MESSAGES

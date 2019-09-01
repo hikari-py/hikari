@@ -133,7 +133,7 @@ autoclass_content = "both"
 
 autodoc_default_options = {
     # "member-order": "bysource",
-    "undoc-members": True,
+    "undoc-members": False,
     "exclude-members": "__weakref__",
     "show_inheritance": True,
     "inherited_members": True,
