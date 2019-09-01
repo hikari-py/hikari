@@ -100,6 +100,7 @@ def init(session: PoetryNoxSession) -> None:
 @nox_session(python=existing_python_installs, reuse_venv=True)
 @using_poetry
 def pytest(session: PoetryNoxSession) -> None:
+    session.poetry("update")
     session.run(
         "python",
         "-W",
@@ -128,12 +129,14 @@ def pytest(session: PoetryNoxSession) -> None:
 @nox_session(reuse_venv=True)
 @using_poetry
 def pylint(session: PoetryNoxSession):
+    session.poetry("update")
     session.run("pylint", MAIN_PACKAGE, f"--rcfile={PYLINTRC}")
 
 
 @nox_session(reuse_venv=True)
 @using_poetry
 def sphinx(session: PoetryNoxSession) -> None:
+    session.poetry("update")
     session.install_requirements(DOCUMENTATION_DIR, "requirements.txt")
     session.env["SPHINXOPTS"] = SPHINX_OPTS
     session.run(
@@ -151,12 +154,14 @@ def sphinx(session: PoetryNoxSession) -> None:
 @nox_session(reuse_venv=True)
 @using_poetry
 def bandit(session: PoetryNoxSession) -> None:
+    session.poetry("update")
     session.install("bandit")
     pkg = MAIN_PACKAGE.split('.')[0]
     session.run("bandit", pkg, "-r")
 
 
 def _black(session, *args, **kwargs):
+    session.poetry("update")
     session.install("black")
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *args, **kwargs)
 
