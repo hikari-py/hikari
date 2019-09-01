@@ -178,7 +178,7 @@ class BaseHTTPClient:
         #: The session `Authorization` header to use.
         self.authorization = "Bot " + token.strip() if token is not unspecified.UNSPECIFIED else None
         #: The logger to use for this object.
-        self.logger = logging.getLogger(type(self).__name__)
+        self.logger = logging.getLogger(f"{type(self).__module__}.{type(self).__qualname__}")
         #: User agent to use
         self.user_agent = meta.user_agent()
 

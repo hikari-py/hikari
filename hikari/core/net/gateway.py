@@ -165,6 +165,9 @@ class GatewayClient:
         shard_count: typing.Optional[int] = None,
         token: str,
     ) -> None:
+        #: Logger adapter used to dump information to the console.
+        self.logger = logging.getLogger(f"{type(self).__module__}.{type(self).__qualname__}[{shard_id}]")
+
         #: The coroutine function to dispatch any events to.
         if not asyncio.iscoroutinefunction(dispatch):
 
@@ -204,8 +207,6 @@ class GatewayClient:
         self.last_ack_received = float("nan")
         #: The :func:`time.perf_counter` that the last heartbeat was sent at. Is `float('nan')` until then.
         self.last_heartbeat_sent = float("nan")
-        #: Logger adapter used to dump information to the console.
-        self.logger = logging.getLogger(type(self).__name__)
         #: The event loop to use.
         self.loop: asyncio.AbstractEventLoop = loop
         #: What we consider to be a large size for the internal buffer. Any packet over this size results in the buffer
@@ -549,7 +550,7 @@ class GatewayClient:
                 Other arguments to pass to the websockets connect method.
 
         Raises:
-            :class:`errors.DiscordGatewayError`:
+            :class:`errors.GatewayError`:
                 if the token provided is invalidated.
             :class:`websockets.exceptions.ConnectionClosed`:
                 if the connection is unexpectedly closed before we can start processing.

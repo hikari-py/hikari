@@ -19,13 +19,14 @@
 """
 Generic users not bound to a guild, and guild-bound member definitions.
 """
-__all__ = ("User", "Member")
+__all__ = ("User", "Member", "BotUser")
 
 import datetime
 import typing
 
 from hikari.core.model import model_cache
 from hikari.core.model import base
+from hikari.core.model import presence
 from hikari.core.utils import dateutils, transform
 from hikari.core.utils import delegate
 
@@ -74,8 +75,7 @@ class Member(User):
     """
 
     # TODO: voice
-    # TODO: statuses from gateway (eventually)
-    __slots__ = ("_user", "_guild_id", "_role_ids", "joined_at", "nick", "premium_since")
+    __slots__ = ("_user", "_guild_id", "_role_ids", "joined_at", "nick", "premium_since", "presence")
 
     #: The underlying user for this member.
     _user: User
@@ -89,6 +89,8 @@ class Member(User):
     nick: typing.Optional[str]
     #: The optional date/time that the member Nitro-boosted the guild.
     premium_since: typing.Optional[datetime.datetime]
+    #: The user's online presence.
+    presence: presence.Presence
 
     # noinspection PyMethodOverriding
     @staticmethod
@@ -100,7 +102,13 @@ class Member(User):
             nick=payload.get("nick"),
             joined_at=transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime),
             premium_since=transform.get_cast(payload, "premium_since", dateutils.parse_iso_8601_datetime),
+            presence=transform.get_cast(payload, "presence", presence.Presence.from_dict)
         )
+
+    @property
+    def user(self):
+        """Returns the internal user object for this member. This is usually only used internally."""
+        return self._user
 
 
 @base.dataclass()

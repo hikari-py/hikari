@@ -88,7 +88,6 @@ class Guild(base.Snowflake):
         "joined_at",
         "large",
         "unavailable",
-        "voice_states",
         "members",
         "channels",
         "max_members",
@@ -149,8 +148,6 @@ class Guild(base.Snowflake):
     large: bool
     #: True if the guild is considered to be unavailable, or False if it is not.
     unavailable: bool
-    #: Voice states of users in the guild.
-    voice_states: typing.List[voice.VoiceState]  # TODO: dictify?
     #: Members in the guild.
     members: typing.Dict[int, "user.Member"]
     #: Channels in the guild.
@@ -202,7 +199,6 @@ class Guild(base.Snowflake):
             joined_at=transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime),
             large=transform.get_cast(payload, "large", bool),
             unavailable=transform.get_cast(payload, "unavailable", bool),
-            voice_states=NotImplemented,  # TODO
             members=transform.flatten((global_state.parse_member(m, guild_id) for m in payload.get("members", ()))),
             channels=transform.get_sequence(
                 payload, "channels", global_state.parse_channel, transform.flatten, state=global_state

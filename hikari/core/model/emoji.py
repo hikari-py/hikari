@@ -19,49 +19,48 @@
 """
 Emojis.
 """
-__all__ = ()
+__all__ = ("Emoji",)
 
 import typing
 
 from hikari.core.model import base
 from hikari.core.model import user
-from hikari.core.model import role
 from hikari.core.model import model_cache
 from hikari.core.utils import transform
 
 
-class PartialEmoji:
-    __slots__ = ()
-
-
 @base.dataclass()
 class Emoji(base.Snowflake):
-    __slots__ = ("_state", "id", "name", "_roles", "user", "require_colons", "managed", "animated")
+    __slots__ = ("_state", "id", "name", "_role_ids", "_guild_id", "user", "require_colons", "managed", "animated")
 
     _state: typing.Any
-    # The id of the emoji
+    #: The id of the emoji
     id: int
-    # The name of the emoji
+    #: The name of the emoji
     name: str
     # Role ids the emoji is whitelisted to
-    _roles: typing.List[int]
-    # The user whom added the emoji
+    _role_ids: typing.List[int]
+    #: The owning guild's ID.
+    _guild_id: int
+    #: The user whom added the emoji
     user: "user.User"
-    # Whether the emoji should be wrapped in colons or not
+    #: Whether the emoji should be wrapped in colons or not
     require_colons: bool
-    # Whether the emoji is managed or not
+    #: Whether the emoji is managed or not
     managed: bool
-    # Whether the emoji is animated or not
+    #: Whether the emoji is animated or not
     animated: bool
 
     @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload):
+    def from_dict(global_state: model_cache.AbstractModelCache, payload, guild_id: int):
         """Convert the given payload and state into an object instance."""
         return Emoji(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),
             name=payload.get("name"),
-            _roles=transform.get_sequence(payload, "roles", role.Role),
+            # Assume these were already cached...
+            _role_ids=transform.get_sequence(payload, "roles", lambda r: int(r["id"])),
+            _guild_id=guild_id,
             user=global_state.parse_user(payload.get("user")),
             require_colons=transform.get_cast(payload, "require_colons", bool),
             managed=transform.get_cast(payload, "managed", bool),
