@@ -19,7 +19,7 @@
 """
 Reactions to a message.
 """
-__all__ = "Reaction"
+from __future__ import annotations
 
 import typing
 
@@ -38,12 +38,21 @@ class Reaction:
     __slots__ = ("_state", "count", "me", "emoji")
 
     _state: typing.Any
-    # The number of times the emoji has been used to react
+
+    #: The number of times the emoji has been used on this message.
+    #:
+    #: :type: :class:`int`
     count: int
-    # Whether the current user has reacted with the emoji or not
+
+    #: True if the bot added this.
+    #:
+    #: :type: :class:`bool`
     me: bool
-    # The emoji used for the reaction
-    emoji: "emoji.Emoji"
+
+    #: The emoji used for the reaction
+    #:
+    #: :type: :class:`hikari.core.model.emoji.Emoji`
+    emoji: emoji.Emoji
 
     @staticmethod
     def from_dict(global_state: model_cache.AbstractModelCache, payload):
@@ -51,5 +60,9 @@ class Reaction:
             _state=global_state,
             count=transform.get_cast(payload, "count", int),
             me=transform.get_cast(payload, "me", bool),
-            emoji=global_state.parse_emoji(payload.get("emoji")),
+            #: TODO: get the guild for the emoji by doing an API call if need be.
+            emoji=global_state.parse_emoji(None, payload.get("emoji")),
         )
+
+
+__all__ = ["Reaction"]

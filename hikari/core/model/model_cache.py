@@ -19,10 +19,19 @@
 """
 Handles managing the state of the bot, and the cache.
 """
-__all__ = ("AbstractModelCache",)
+from __future__ import annotations
 
 import abc
 
+import typing
+
+from hikari.core.model import channel
+from hikari.core.model import emoji
+from hikari.core.model import guild
+from hikari.core.model import message
+from hikari.core.model import role
+from hikari.core.model import user
+from hikari.core.model import webhook
 from hikari.core.utils import types
 
 
@@ -36,53 +45,56 @@ class AbstractModelCache(abc.ABC):
     __slots__ = ()
 
     @abc.abstractmethod
-    def parse_user(self, user: types.DiscordObject):
+    def parse_user(self, user: types.DiscordObject) -> user.User:
         ...
 
     @abc.abstractmethod
-    def get_user_by_id(self, user_id: int):
+    def get_user_by_id(self, user_id: int) -> typing.Optional[user.User]:
         ...
 
     @abc.abstractmethod
-    def parse_guild(self, guild: types.DiscordObject):
+    def parse_guild(self, guild: types.DiscordObject) -> guild.Guild:
         ...
 
     @abc.abstractmethod
-    def get_guild_by_id(self, guild_id: int):
+    def get_guild_by_id(self, guild_id: int) -> typing.Optional[guild.Guild]:
         ...
 
     @abc.abstractmethod
-    def parse_member(self, member: types.DiscordObject, guild_id: int):
+    def parse_member(self, member: types.DiscordObject, guild_id: int) -> user.Member:
         ...
 
     @abc.abstractmethod
-    def parse_role(self, role: types.DiscordObject):
+    def parse_role(self, role: types.DiscordObject) -> role.Role:
         ...
 
     @abc.abstractmethod
-    def parse_emoji(self, emoji: types.DiscordObject):
+    def parse_emoji(self, guild_id: int, emoji: types.DiscordObject) -> emoji.Emoji:
         ...
 
     @abc.abstractmethod
-    def parse_message(self, message: types.DiscordObject):
+    def parse_message(self, message: types.DiscordObject) -> message.Message:
         ...
 
     @abc.abstractmethod
-    def get_message_by_id(self, message_id: int):
+    def get_message_by_id(self, message_id: int) -> typing.Optional[message.Message]:
         ...
 
     @abc.abstractmethod
-    def parse_channel(self, channel: types.DiscordObject):
+    def parse_channel(self, channel: types.DiscordObject) -> channel.Channel:
         ...
 
     @abc.abstractmethod
-    def get_dm_channel_by_id(self, channel_id: int):
+    def get_dm_channel_by_id(self, channel_id: int) -> typing.Optional[channel.DMChannel]:
         ...
 
     @abc.abstractmethod
-    def get_guild_channel_by_id(self, guild_channel_id: int):
+    def get_guild_channel_by_id(self, guild_channel_id: int) -> typing.Optional[channel.GuildChannel]:
         ...
 
     @abc.abstractmethod
-    def parse_webhook(self, webhook: types.DiscordObject):
+    def parse_webhook(self, webhook: types.DiscordObject) -> webhook.Webhook:
         ...
+
+
+__all__ = ["AbstractModelCache"]

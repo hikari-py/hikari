@@ -21,8 +21,8 @@ from unittest import mock
 import pytest
 
 from hikari.core.model import guild
-from hikari.core.model import permission
 from hikari.core.model import model_cache
+from hikari.core.model import permission
 
 
 @pytest.fixture
@@ -185,10 +185,10 @@ class TestGuild:
         assert g.splash_hash == "0ff0ff0ff"
         assert g.afk_timeout == 1200
         assert g.verification_level == guild.VerificationLevel.VERY_HIGH
-        assert g.message_notification_level == guild.MessageNotificationLevel.ONLY_MENTIONS
+        assert g.message_notification_level == guild.NotificationLevel.ONLY_MENTIONS
         assert g.explicit_content_filter_level == guild.ExplicitContentFilterLevel.ALL_MEMBERS
         assert len(g.features) == 4
-        assert guild.GuildFeature.ANIMATED_ICON in g.features
+        assert guild.Feature.ANIMATED_ICON in g.features
         assert g.member_count == 14
         assert g.mfa_level == guild.MFALevel.ELEVATED
         assert g.my_permissions == (

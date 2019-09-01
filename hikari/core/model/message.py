@@ -21,10 +21,9 @@ Messages and attachments.
 """
 from __future__ import annotations
 
-__all__ = ("MessageType", "MessageActivityType", "Message", "MessageActivity", "MessageApplication")
-
 import datetime
 import enum
+
 import typing
 
 from hikari.core.model import base
@@ -34,7 +33,6 @@ from hikari.core.model import guild
 from hikari.core.model import media
 from hikari.core.model import model_cache
 from hikari.core.model import user
-from hikari.core.model import webhook
 from hikari.core.utils import dateutils
 from hikari.core.utils import transform
 
@@ -44,17 +42,29 @@ class MessageType(enum.IntEnum):
     The type of a message.
     """
 
+    #: A normal message.
     DEFAULT = 0
+    #: A message to denote a new recipient in a group.
     RECIPIENT_ADD = 1
+    #: A message to denote that a recipient left the group.
     RECIPIENT_REMOVE = 2
+    #: A message to denote a VoIP call.
     CALL = 3
+    #: A message to denote that the name of a channel changed.
     CHANNEL_NAME_CHANGE = 4
+    #: A message to denote that the icon of a channel changed.
     CHANNEL_ICON_CHANGE = 5
+    #: A message to denote that a message was pinned.
     CHANNEL_PINNED_MESSAGE = 6
+    #: A message to denote that a member joined the guild.
     GUILD_MEMBER_JOIN = 7
+    #: A message to denote a Nitro subscription.
     USER_PREMIUM_GUILD_SUBSCRIPTION = 8
+    #: A message to denote a tier 1 Nitro subscription.
     USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_1 = 9
+    #: A message to denote a tier 2 Nitro subscription.
     USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2 = 10
+    #: A message to denote a tier 3 Nitro subscription.
     USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3 = 11
 
 
@@ -63,9 +73,13 @@ class MessageActivityType(enum.IntEnum):
     The type of a rich presence message activity.
     """
 
+    #: Join an activity.
     JOIN = 1
+    #: Spectating something.
     SPECTATE = 2
+    #: Listening to something.
     LISTEN = 3
+    #: Request to join an activity.
     JOIN_REQUEST = 5
 
 
@@ -96,10 +110,10 @@ class Message(base.Snowflake):
 
     __slots__ = (
         "_state",
-        "id",
         "_channel_id",
         "_guild_id",
         "_author_id",
+        "id",
         "edited_at",
         "reactions",
         "content",
@@ -114,37 +128,69 @@ class Message(base.Snowflake):
         "flags",
     )
 
-    #: The global state.
     _state: model_cache.AbstractModelCache
-    #: The ID of the message.
-    id: int
-    #: The actual textual content of the message.
-    content: str
-    #: The channel ID of the message.
     _channel_id: int
-    #: The ID of the guild, or None if it is in a DM.
     _guild_id: typing.Optional[int]
-    #: The author of the message.
     _author_id: int
-    #: The timestamp that the message was last edited at, or None if not ever edited.
+
+    #: The ID of the message.
+    #:
+    #: :type: :class:`int`
+    id: int
+
+    #: The actual textual content of the message.
+    #:
+    #: :type: :class:`str`
+    content: str
+
+    #: The timestamp that the message was last edited at, or `None` if not ever edited.
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
     edited_at: typing.Optional[datetime.datetime]
-    #: True if this message was a TTS message, false otherwise.
+
+    #: True if this message was a TTS message, False otherwise.
+    #:
+    #: :type: :class:`bool`
     tts: bool
+
     #: Whether this message mentions @everyone/@here or not.
+    #:
+    #: :type: :class:`bool`
     mentions_everyone: bool
+
     #: List of attachments on this message, if any.
+    #:
+    #: :type: :class:`list` of :class:`hikari.core.model.media.Attachment`
     attachments: typing.List[media.Attachment]
+
     #: List of embeds on this message, if any.
+    #:
+    #: :type: :class:`list` of :class:`hikari.core.model.embed.Embed`
     embeds: typing.List[embed.Embed]
+
     #: Whether this message is pinned or not.
+    #:
+    #: :type: :class:`bool`
     pinned: bool
+
     #: The application associated with this message (applicable for rich presence-related chat embeds only).
+    #:
+    #: :type: :class:`hikari.core.model.message.MessageApplication` or `None`
     application: typing.Optional[MessageApplication]
+
     #: The activity associated with this message (applicable for rich presence-related chat embeds only).
+    #:
+    #: :type: :class:`hikari.core.model.message.MessageActivity` or `None`
     activity: typing.Optional[MessageActivity]
+
     #: The type of message.
+    #:
+    #: :type: :class:`hikari.core.model.message.MessageType`
     type: MessageType
+
     #: Flags applied to the message.
+    #:
+    #: :type: :class:`hikari.core.model.message.MessageFlag`
     flags: MessageFlag
 
     @property
@@ -152,8 +198,17 @@ class Message(base.Snowflake):
         return self._state.get_guild_by_id(self._guild_id) if self._guild_id else None
 
     @property
-    def channel(self) -> typing.Union[channel.GuildTextChannel, channel.DMChannel]:
+    def channel(
+        self
+    ) -> typing.Union[
+        channel.GuildTextChannel,
+        channel.GuildNewsChannel,
+        channel.GuildStoreChannel,
+        channel.DMChannel,
+        channel.GroupDMChannel,
+    ]:
         if self._guild_id is not None:
+            # noinspection PyTypeChecker
             return self.guild.channels[self._channel_id]
         else:
             return self._state.get_dm_channel_by_id(self._channel_id)
@@ -193,8 +248,13 @@ class MessageActivity:
     __slots__ = ("type", "party_id")
 
     #: The activity type of the message.
+    #:
+    #: :type: :class:`hikari.core.model.message.MessageActivityType`
     type: MessageActivityType
+
     #: The optional party ID associated with the message.
+    #:
+    #: :type: :class:`int` or `None
     party_id: typing.Optional[int]
 
     @staticmethod
@@ -214,14 +274,28 @@ class MessageApplication(base.Snowflake):
     __slots__ = ("id", "cover_image_id", "description", "icon_image_id", "name")
 
     #: The ID of the application.
+    #:
+    #: :type: :class:`int`
     id: int
+
     #: The optional ID for the cover image of the application.
+    #:
+    #: :type: :class:`int` or `None`
     cover_image_id: typing.Optional[int]
+
     #: The application description
+    #:
+    #: :type: :class:`str`
     description: str
-    #: THe optional ID of the application's icon
+
+    #: The optional ID of the application's icon
+    #:
+    #: :type: :class:`str` or `None`
     icon_image_id: typing.Optional[int]
+
     #: The application name
+    #:
+    #: :type: :class:`str`
     name: str
 
     @staticmethod
@@ -233,3 +307,6 @@ class MessageApplication(base.Snowflake):
             icon_image_id=transform.get_cast(payload, "icon", int),
             name=payload.get("name"),
         )
+
+
+__all__ = ["MessageType", "MessageActivityType", "Message", "MessageActivity", "MessageApplication"]

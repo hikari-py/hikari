@@ -22,7 +22,6 @@ import enum
 
 import pytest
 
-import hikari.core.model.object
 from hikari.core.model import base
 
 

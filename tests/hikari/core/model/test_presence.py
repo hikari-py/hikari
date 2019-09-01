@@ -177,7 +177,7 @@ class TestPresence:
 
 @pytest.mark.model
 def test_parse_activity(activity):
-    a = presence.UserActivity.from_dict(activity)
+    a = presence.PresenceActivity.from_dict(activity)
     assert a.type == presence.ActivityType.LISTENING
     assert a.timestamps is not None
     assert a.state == "Working on hikari.core"
