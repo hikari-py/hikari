@@ -20,7 +20,6 @@
 import pytest
 
 from hikari.core.model import media
-
 from tests.hikari.core.testdata import *
 
 

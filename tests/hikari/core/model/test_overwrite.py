@@ -20,8 +20,8 @@ from unittest import mock
 
 import pytest
 
-from hikari.core.model import permission
 from hikari.core.model import overwrite
+from hikari.core.model import permission
 from hikari.core.model import user
 
 

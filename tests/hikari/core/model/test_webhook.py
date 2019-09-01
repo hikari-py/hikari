@@ -20,8 +20,8 @@ from unittest import mock
 
 import pytest
 
-from hikari.core.model import webhook
 from hikari.core.model import model_cache
+from hikari.core.model import webhook
 
 
 @pytest.mark.model
@@ -50,12 +50,11 @@ class TestWebhook:
         )
 
         assert wh.name == "test webhook"
-        assert wh.channel_id == 199737254929760256
+        assert wh._channel_id == 199737254929760256
         assert (
             wh.token
             == "3d89bb7572e0fb30d8128367b3b1b44fecd1726de135cbe28a41f8b2f777c372ba2939e72279b94526ff5d1bd4358d65cf11"
         )
         assert wh.avatar_hash is None
-        assert wh.guild_id == 199737254929760256
-        # TODO: uncomment when parse_user merged in task/state
-        # state.parse_user.assert_called_with(user_dict)
+        assert wh._guild_id == 199737254929760256
+        test_state.parse_user.assert_called_with(user_dict)

@@ -19,15 +19,18 @@
 """
 Generic users not bound to a guild, and guild-bound member definitions.
 """
-__all__ = ("User", "Member")
+from __future__ import annotations
 
 import datetime
+
 import typing
 
-from hikari.core.model import model_cache
 from hikari.core.model import base
-from hikari.core.utils import dateutils, transform
+from hikari.core.model import model_cache
+from hikari.core.model import presence
+from hikari.core.utils import dateutils
 from hikari.core.utils import delegate
+from hikari.core.utils import transform
 
 
 @base.dataclass()
@@ -36,19 +39,33 @@ class User(base.Snowflake):
     Representation of a user account.
     """
 
-    # TODO: user flags (eventually)
     __slots__ = ("_state", "id", "username", "discriminator", "avatar_hash", "bot", "__weakref__")
 
     _state: model_cache.AbstractModelCache
+
     #: ID of the user.
+    #:
+    #: :type: :class:`int`
     id: int
+
     #: The user name.
+    #:
+    #: :type: :class:`str`
     username: str
+
     #: The 4-digit discriminator of the object.
+    #:
+    #: :type: :class:`int`
     discriminator: int
+
     #: The hash of the user's avatar, or None if they do not have one.
+    #:
+    #: :type: :class:`str`
     avatar_hash: str
+
     #: True if the user is a bot, False otherwise
+    #:
+    #: :type: :class:`bool`
     bot: bool
 
     @staticmethod
@@ -73,22 +90,31 @@ class Member(User):
     and fields to a wrapped user object which is shared with the corresponding member in every guild the user is in.
     """
 
-    # TODO: voice
-    # TODO: statuses from gateway (eventually)
-    __slots__ = ("_user", "_guild_id", "_role_ids", "joined_at", "nick", "premium_since")
+    __slots__ = ("_user", "_guild_id", "_role_ids", "joined_at", "nick", "premium_since", "presence")
 
-    #: The underlying user for this member.
     _user: User
-    #: The list of role IDs this member has.
     _role_ids: typing.List[int]
-    #: The guild this member is in.
     _guild_id: int
+
     #: The date and time the member joined this guild.
+    #:
+    #: :type: :class:`datetime.datetime`
     joined_at: datetime.datetime
+
     #: The optional nickname of the member.
+    #:
+    #: :type: :class:`str` or `None`
     nick: typing.Optional[str]
+
     #: The optional date/time that the member Nitro-boosted the guild.
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
     premium_since: typing.Optional[datetime.datetime]
+
+    #: The user's online presence.
+    #:
+    #: :type: :class:`hikari.core.model.presence.Presence`
+    presence: presence.Presence
 
     # noinspection PyMethodOverriding
     @staticmethod
@@ -100,7 +126,13 @@ class Member(User):
             nick=payload.get("nick"),
             joined_at=transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime),
             premium_since=transform.get_cast(payload, "premium_since", dateutils.parse_iso_8601_datetime),
+            presence=transform.get_cast(payload, "presence", presence.Presence.from_dict),
         )
+
+    @property
+    def user(self):
+        """Returns the internal user object for this member. This is usually only used internally."""
+        return self._user
 
 
 @base.dataclass()
@@ -111,7 +143,14 @@ class BotUser(User):
 
     __slots__ = ("verified", "mfa_enabled")
 
+    #: Whether the account is verified or not.
+    #:
+    #: :type: :class:`bool`
     verified: bool
+
+    #: Whether MFA is enabled or not.
+    #:
+    #: :type: :class:`bool`
     mfa_enabled: bool
 
     @staticmethod
@@ -126,3 +165,6 @@ class BotUser(User):
             verified=payload.get("verified", False),
             mfa_enabled=payload.get("mfa_enabled", False),
         )
+
+
+__all__ = ["User", "Member", "BotUser"]
