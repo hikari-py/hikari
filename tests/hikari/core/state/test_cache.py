@@ -110,8 +110,8 @@ class TestInMemoryCache:
         in_memory_cache._emojis = {}
         new_emoji = mock.MagicMock()
         with mock.patch.object(_emoji.Emoji, "from_dict", return_value=new_emoji) as from_dict:
-            emoji = in_memory_cache.parse_emoji(payload)
-            from_dict.assert_called_once_with(in_memory_cache, payload)
+            emoji = in_memory_cache.parse_emoji(1234, payload)
+            from_dict.assert_called_once_with(in_memory_cache, payload, 1234)
             assert emoji is new_emoji
 
     def test_parse_new_emoji(self, in_memory_cache):
@@ -119,8 +119,8 @@ class TestInMemoryCache:
         in_memory_cache._emojis = {}
         new_emoji = mock.MagicMock()
         with mock.patch.object(_emoji.Emoji, "from_dict", return_value=new_emoji) as from_dict:
-            emoji = in_memory_cache.parse_emoji(payload)
-            from_dict.assert_called_once_with(in_memory_cache, payload)
+            emoji = in_memory_cache.parse_emoji(1234, payload)
+            from_dict.assert_called_once_with(in_memory_cache, payload, 1234)
             assert emoji is new_emoji
 
     def test_parse_existing_message(self, in_memory_cache):
