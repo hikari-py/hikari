@@ -31,8 +31,8 @@ import pytest
 
 import hikari.core.net.opcodes
 from hikari.core import errors
-from hikari.core.utils import meta
 from hikari.core.net import gateway
+from hikari.core.utils import meta
 from tests.hikari.core import _helpers
 
 

@@ -19,7 +19,7 @@
 """
 Permission overwrites.
 """
-__all__ = ("Overwrite", "OverwriteEntityType")
+from __future__ import annotations
 
 import enum
 
@@ -33,9 +33,19 @@ from hikari.core.utils import transform
 class OverwriteEntityType(base.NamedEnum, enum.Enum):
     """
     The type of "thing" that a permission overwrite sets the permissions for.
+
+    These values act as types, so you can write expressions such as:
+
+    .. code-block:: python
+        if isinstance(user_or_role, overwrite.type):
+            ...
+
+    ...should you desire to do so.
     """
 
+    #: A member.
     MEMBER = user.Member
+    #: A role.
     ROLE = role.Role
 
     def __instancecheck__(self, instance):
@@ -54,12 +64,23 @@ class Overwrite(base.Snowflake):
     __slots__ = ("id", "type", "allow", "deny")
 
     #: The ID of this overwrite.
+    #:
+    #: :type: :class:`int`
     id: int
+
     #: The type of entity that was changed.
+    #:
+    #: :type: :class:`hikari.core.model.overwrite.OverwriteEntityType`
     type: OverwriteEntityType
+
     #: The bitfield of permissions explicitly allowed.
+    #:
+    #: :type: :class:`hikari.core.model.permission.Permission`
     allow: permission.Permission
+
     #: The bitfield of permissions explicitly denied.
+    #:
+    #: :type: :class:`hikari.core.model.permission.Permission`
     deny: permission.Permission
 
     @property
@@ -68,6 +89,7 @@ class Overwrite(base.Snowflake):
         Returns:
             The bitfield of all permissions that were not changed in this overwrite.
         """
+        # noinspection PyTypeChecker
         return permission.Permission(permission.Permission.all() ^ (self.allow | self.deny))
 
     @staticmethod
@@ -78,3 +100,6 @@ class Overwrite(base.Snowflake):
             allow=transform.get_cast_or_raw(payload, "allow", permission.Permission),
             deny=transform.get_cast_or_raw(payload, "deny", permission.Permission),
         )
+
+
+__all__ = ["Overwrite", "OverwriteEntityType"]

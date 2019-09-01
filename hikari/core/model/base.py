@@ -21,13 +21,12 @@ Model ABCs and mixins.
 """
 from __future__ import annotations
 
-__all__ = ("Snowflake", "NamedEnum")
-
 import abc
 import dataclasses
 import datetime
 
-from hikari.core.utils import assertions, dateutils
+from hikari.core.utils import assertions
+from hikari.core.utils import dateutils
 
 
 def _hash_method(self: Snowflake):
@@ -74,6 +73,8 @@ class Snowflake(abc.ABC):
     __slots__ = ()
 
     #: The ID of this object.
+    #:
+    #: :type: :class:`int`
     id: int
 
     @property
@@ -147,3 +148,6 @@ class NamedEnum:
 class Messageable(abc.ABC):
     async def send(self, *args, **kwargs):
         raise NotImplementedError("Not yet implemented.")
+
+
+__all__ = ("Snowflake", "NamedEnum", "Messageable")

@@ -21,12 +21,11 @@ Represents various forms of media such as images.
 """
 from __future__ import annotations
 
-__all__ = ("Avatar", "Attachment")
-
 import base64
 import io
 import mimetypes
 import re
+
 import typing
 
 from hikari.core.model import base
@@ -47,8 +46,13 @@ class Avatar:
     __slots__ = ("mime_type", "data")
 
     #: The MIME type of the data.
+    #:
+    #: :type: :class:`str`
     mime_type: str
+
     #: Image data
+    #:
+    #: :type: :class:`bytes`
     data: bytes
 
     def __init__(self, mime_type: str, base64_data: bytes) -> None:
@@ -116,18 +120,38 @@ class Attachment(base.Snowflake):
     __slots__ = ("id", "filename", "size", "url", "proxy_url", "width", "height")
 
     #: ID of the attachment.
+    #:
+    #: :type: :class:`int`
     id: int
+
     #: Filename of the attachment.
+    #:
+    #: :type: :class:`str`
     filename: str
+
     #: Size of the attachment.
+    #:
+    #: :type: :class:`int`
     size: int
+
     #: URL of the attachment.
+    #:
+    #: :type: :class:`str`
     url: str
+
     #: Proxied URL of the attachment.
+    #:
+    #: :type: :class:`str`
     proxy_url: str
-    #: Width of the attachment (None unless the attachment is an image).
+
+    #: Width of the attachment (`None` unless the attachment is an image).
+    #:
+    #: :type: :class:`int` or `None`
     width: typing.Optional[int]
-    #: Height of the attachment (None unless the attachment is an image).
+
+    #: Height of the attachment (`None` unless the attachment is an image).
+    #:
+    #: :type: :class:`int` or `None`
     height: typing.Optional[int]
 
     @staticmethod
@@ -141,3 +165,6 @@ class Attachment(base.Snowflake):
             width=transform.get_cast(payload, "width", int),
             height=transform.get_cast(payload, "height", int),
         )
+
+
+__all__ = ["Avatar", "Attachment"]

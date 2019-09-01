@@ -28,9 +28,8 @@ See:
 """
 from __future__ import annotations
 
-import typing
-
 import aiohttp
+import typing
 
 from hikari.core.model import service_status
 
@@ -50,7 +49,6 @@ __all__ = (
     "unsubscribe_from",
     "resend_confirmation_email",
 )
-
 
 _BASE_URI = "https://status.discordapp.com/api/v2"
 

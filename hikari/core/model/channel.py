@@ -21,19 +21,8 @@ Channel models.
 """
 from __future__ import annotations
 
-__all__ = (
-    "Channel",
-    "GuildChannel",
-    "GuildTextChannel",
-    "DMChannel",
-    "GuildVoiceChannel",
-    "GroupDMChannel",
-    "GuildCategory",
-    "GuildNewsChannel",
-    "GuildStoreChannel",
-)
-
 import abc
+
 import typing
 
 from hikari.core.model import base
@@ -41,6 +30,8 @@ from hikari.core.model import guild as _guild
 from hikari.core.model import overwrite
 from hikari.core.model import user
 from hikari.core.utils import transform
+
+_channel_type_to_class = {}
 
 
 @base.dataclass()
@@ -52,8 +43,15 @@ class Channel(base.Snowflake, abc.ABC):
     __slots__ = ("_state", "id")
 
     _state: typing.Any
+
     #: The ID of the channel.
+    #:
+    #: :type: :class:`int`
     id: int
+
+    def __init_subclass__(cls, **kwargs):
+        if "type" in kwargs:
+            _channel_type_to_class[kwargs.pop("type")] = cls
 
     @staticmethod
     @abc.abstractmethod
@@ -63,7 +61,7 @@ class Channel(base.Snowflake, abc.ABC):
     @property
     @abc.abstractmethod
     def is_dm(self) -> bool:
-        """Return True if this is a DM"""
+        """Return True if this is a DM."""
         ...
 
 
@@ -73,15 +71,23 @@ class GuildChannel(Channel, abc.ABC):
     A channel that belongs to a guild.
     """
 
-    __slots__ = ("guild_id", "position", "permission_overwrites", "name")
+    __slots__ = ("_guild_id", "position", "permission_overwrites", "name")
 
-    #: ID of the guild that owns this channel.
-    guild_id: int
+    _guild_id: int
+
     #: The position of the channel in the channel list.
+    #:
+    #: :type: :class:`int`
     position: int
+
     #: A list of permission overwrites for this channel.
+    #:
+    #: :type: :class:`list` of :attr:`hikari.core.model.overwrite.Overwrite`
     permission_overwrites: typing.List[overwrite.Overwrite]
+
     #: The name of the channel.
+    #:
+    #: :type: :class:`str`
     name: str
 
     @property
@@ -89,28 +95,46 @@ class GuildChannel(Channel, abc.ABC):
         return False
 
     @property
-    def guild(self) -> "_guild.Guild":
-        return self._state.get_guild_by_id(self.guild_id)
+    def guild(self) -> _guild.Guild:
+        return self._state.get_guild_by_id(self._guild_id)
+
+    @property
+    def parent(self) -> typing.Optional[GuildCategory]:
+        parent_id = getattr(self, "_parent_id", None)
+        if parent_id is not None:
+            return self.guild.channels.get(parent_id)
+        return None
 
 
 @base.dataclass()
-class GuildTextChannel(GuildChannel):
+class GuildTextChannel(GuildChannel, type=0):
     """
     A text channel.
     """
 
-    __slots__ = ("topic", "rate_limit_per_user", "last_message_id", "nsfw", "parent_id")
+    __slots__ = ("topic", "rate_limit_per_user", "last_message_id", "nsfw", "_parent_id")
+
+    _parent_id: typing.Optional[int]
 
     #: The channel topic.
+    #:
+    #: :type: :class:`str` or `None`
     topic: typing.Optional[str]
+
     #: How many seconds a user has to wait before sending consecutive messages.
+    #:
+    #: :type: :class:`int`
     rate_limit_per_user: int
+
     #: The optional ID of the last message to be sent.
+    #:
+    #: :type: :class:`int` or `None`
     last_message_id: typing.Optional[int]
+
     #: Whether the channel is NSFW or not
+    #:
+    #: :type: :class:`bool`
     nsfw: bool
-    #: The parent ID of the channel, if there is one
-    parent_id: typing.Optional[int]
 
     # noinspection PyMethodOverriding
     @staticmethod
@@ -118,12 +142,12 @@ class GuildTextChannel(GuildChannel):
         return GuildTextChannel(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),
-            guild_id=transform.get_cast(payload, "guild_id", int),
+            _guild_id=transform.get_cast(payload, "guild_id", int),
             position=payload.get("position"),
             permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
             name=payload.get("name"),
             nsfw=payload.get("nsfw", False),
-            parent_id=transform.get_cast(payload, "parent_id", int),
+            _parent_id=transform.get_cast(payload, "parent_id", int),
             topic=payload.get("topic"),
             rate_limit_per_user=payload.get("rate_limit_per_user"),
             last_message_id=transform.get_cast(payload, "last_message_id", int),
@@ -131,7 +155,7 @@ class GuildTextChannel(GuildChannel):
 
 
 @base.dataclass()
-class DMChannel(Channel):
+class DMChannel(Channel, type=1):
     """
     A DM channel between users.
     """
@@ -139,9 +163,14 @@ class DMChannel(Channel):
     __slots__ = ("last_message_id", "recipients")
 
     #: The optional ID of the last message to be sent.
+    #:
+    #: :type: :class:`int` or `None`
     last_message_id: typing.Optional[int]
+
     #: List of recipients in the DM chat.
-    recipients: typing.List["user.User"]
+    #:
+    #: :type: :class:`list` of :class:`hikari.core.model.user.User`
+    recipients: typing.List[user.User]
 
     @staticmethod
     def from_dict(global_state, payload):
@@ -158,51 +187,64 @@ class DMChannel(Channel):
 
 
 @base.dataclass()
-class GuildVoiceChannel(GuildChannel):
+class GuildVoiceChannel(GuildChannel, type=2):
     """
     A voice channel within a guild.
     """
 
-    __slots__ = ("bitrate", "user_limit", "parent_id")
+    __slots__ = ("bitrate", "user_limit", "_parent_id")
+
+    _parent_id: typing.Optional[int]
 
     #: Bit-rate of the voice channel.
+    #:
+    #: :type: :class:`int`
     bitrate: int
+
     #: The max number of users in the voice channel, or None if there is no limit.
+    #:
+    #: :type: :class:`int` or `None`
     user_limit: typing.Optional[int]
-    #: The parent ID of the channel
-    parent_id: typing.Optional[int]
 
     @staticmethod
     def from_dict(global_state, payload):
         return GuildVoiceChannel(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),
-            guild_id=transform.get_cast(payload, "guild_id", int),
+            _guild_id=transform.get_cast(payload, "guild_id", int),
             position=payload.get("position"),
             permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
             name=payload.get("name"),
             bitrate=payload.get("bitrate"),
             user_limit=payload.get("user_limit") or None,
-            parent_id=transform.get_cast(payload, "parent_id", int),
+            _parent_id=transform.get_cast(payload, "parent_id", int),
         )
 
 
 @base.dataclass()
-class GroupDMChannel(DMChannel):
+class GroupDMChannel(DMChannel, type=3):
     """
     A DM group chat.
     """
 
-    __slots__ = ("icon_hash", "name", "owner_id", "owner_application_id")
+    __slots__ = ("icon_hash", "name", "_owner_id", "owner_application_id")
+
+    _owner_id: int
 
     #: Hash of the icon for the chat, if there is one.
+    #:
+    #: :type: :class:`str` or `None`
     icon_hash: typing.Optional[str]
+
     #: Name for the chat, if there is one.
+    #:
+    #: :type: :class:`str` or `None`
     name: typing.Optional[str]
-    #: ID of the owner of the chat.
-    owner_id: int
+
     #: If the chat was made by a bot, this will be the application ID of the bot that made it. For all other cases it
     #: will be `None`.
+    #:
+    #: :type: :class:`int` or `None`
     owner_application_id: typing.Optional[int]
 
     @staticmethod
@@ -211,16 +253,16 @@ class GroupDMChannel(DMChannel):
             global_state,
             id=transform.get_cast(payload, "id", int),
             last_message_id=transform.get_cast(payload, "last_message_id", int),
-            recipients=transform.get_sequence(payload, "recipients", repr),  # TODO
+            recipients=transform.get_sequence(payload, "recipients", repr),  # TODO: implement
             icon_hash=payload.get("icon"),
             name=payload.get("name"),
             owner_application_id=transform.get_cast(payload, "owner_application_id", int),
-            owner_id=transform.get_cast(payload, "owner_id", int),
+            _owner_id=transform.get_cast(payload, "owner_id", int),
         )
 
 
 @base.dataclass()
-class GuildCategory(GuildChannel):
+class GuildCategory(GuildChannel, type=4):
     """
     A category within a guild.
     """
@@ -232,7 +274,7 @@ class GuildCategory(GuildChannel):
         return GuildCategory(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),
-            guild_id=transform.get_cast(payload, "guild_id", int),
+            _guild_id=transform.get_cast(payload, "guild_id", int),
             position=transform.get_cast(payload, "position", int),
             permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
             name=payload.get("name"),
@@ -240,20 +282,28 @@ class GuildCategory(GuildChannel):
 
 
 @base.dataclass()
-class GuildNewsChannel(GuildChannel):
+class GuildNewsChannel(GuildChannel, type=5):
     """
     A channel for news topics within a guild.
     """
 
-    __slots__ = ("topic", "last_message_id", "parent_id", "nsfw")
+    __slots__ = ("topic", "last_message_id", "_parent_id", "nsfw")
+
+    _parent_id: typing.Optional[int]
 
     #: The channel topic.
+    #:
+    #: :type: :class:`str` or `None`
     topic: typing.Optional[str]
+
     #: The optional ID of the last message to be sent.
+    #:
+    #: :type: :class:`int` or `None`
     last_message_id: typing.Optional[int]
-    #: Parent of the channel
-    parent_id: typing.Optional[int]
+
     #: Whether the channel is NSFW or not
+    #:
+    #: :type: :class:`bool`
     nsfw: bool
 
     # noinspection PyMethodOverriding
@@ -262,59 +312,66 @@ class GuildNewsChannel(GuildChannel):
         return GuildNewsChannel(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),
-            guild_id=transform.get_cast(payload, "guild_id", int),
+            _guild_id=transform.get_cast(payload, "guild_id", int),
             position=transform.get_cast(payload, "position", int),
             permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
             name=payload.get("name"),
             nsfw=payload.get("nsfw", False),
-            parent_id=transform.get_cast(payload, "parent_id", int),
+            _parent_id=transform.get_cast(payload, "parent_id", int),
             topic=payload.get("topic"),
             last_message_id=transform.get_cast(payload, "last_message_id", int),
         )
 
 
 @base.dataclass()
-class GuildStoreChannel(GuildChannel):
+class GuildStoreChannel(GuildChannel, type=6):
     """
     A store channel for selling of games within a guild.
     """
 
-    __slots__ = ("parent_id",)
-    #: The parent category ID if there is one.
-    parent_id: typing.Optional[int]
+    __slots__ = ("_parent_id",)
+
+    _parent_id: typing.Optional[int]
 
     @staticmethod
     def from_dict(global_state, payload):
         return GuildStoreChannel(
             _state=global_state,
             id=transform.get_cast(payload, "id", int),
-            guild_id=transform.get_cast(payload, "guild_id", int),
+            _guild_id=transform.get_cast(payload, "guild_id", int),
             position=transform.get_cast(payload, "position", int),
             permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
             name=payload.get("name"),
-            parent_id=transform.get_cast(payload, "parent_id", int),
+            _parent_id=transform.get_cast(payload, "parent_id", int),
         )
 
 
-_CHANNEL_TYPES = (
-    GuildTextChannel,
-    DMChannel,
-    GuildVoiceChannel,
-    GroupDMChannel,
-    GuildCategory,
-    GuildNewsChannel,
-    GuildStoreChannel,
-)
+def channel_from_dict(
+    global_state, payload
+) -> typing.Union[
+    GuildTextChannel, DMChannel, GuildVoiceChannel, GroupDMChannel, GuildCategory, GuildNewsChannel, GuildStoreChannel
+]:
+    """
+    Parse a channel from a channel payload from an API call.
 
-
-def channel_from_dict(global_state, payload):
+    This returns an instance of the class that corresponds to the given channel type in the payload.
+    """
     channel_type = payload.get("type")
 
     try:
-        return _CHANNEL_TYPES[channel_type].from_dict(global_state, payload)
-    except IndexError:
+        return _channel_type_to_class[channel_type].from_dict(global_state, payload)
+    except KeyError:
         raise TypeError(f"Invalid channel type {channel_type}") from None
 
 
-def is_dm_channel_type(channel_type: int):
-    return channel_type == 1 or channel_type == 3  # DM  # Group DM
+__all__ = (
+    "Channel",
+    "GuildChannel",
+    "GuildTextChannel",
+    "DMChannel",
+    "GuildVoiceChannel",
+    "GroupDMChannel",
+    "GuildCategory",
+    "GuildNewsChannel",
+    "GuildStoreChannel",
+)

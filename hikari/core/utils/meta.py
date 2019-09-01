@@ -63,7 +63,7 @@ def link_developer_portal(scope: APIResource, specific_resource: str = None):
         frag = obj.__name__.lower().replace("_", "-") if specific_resource is None else specific_resource
         uri = base_resource + "#" + frag
 
-        setattr(obj, "__doc__", f"Read the documentation on `Discord's developer portal <{uri}>`_.\n\n{doc}")
+        setattr(obj, "__doc__", f"Read the documentation on `Discord's developer portal <{uri}>`__.\n\n{doc}")
         return obj
 
     return decorator
