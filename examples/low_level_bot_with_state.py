@@ -27,18 +27,18 @@ import os
 
 from hikari.core.net import gateway, http_client
 from hikari.core.state import cache
-from hikari.core.state import state
+from hikari.core.state import network_mediator
 
 
 class Bot:
     def __init__(self):
         self.http: http_client.HTTPClient = ...
         self.ws: gateway.GatewayClient = ...
-        self.state: state.State = ...
+        self.state: network_mediator.BasicNetworkMediator = ...
         self.cache = cache.InMemoryCache()
 
     async def init(self):
-        self.state = state.State(self.cache, self.on_event)
+        self.state = network_mediator.BasicNetworkMediator(self.cache, self.on_event)
         token = os.environ["TOKEN"]
         self.http = http_client.HTTPClient(token=token)
         host = await self.http.get_gateway()

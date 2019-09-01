@@ -41,19 +41,20 @@ class TestEmoji:
             {
                 "id": "1234567",
                 "name": "peepohappy",
-                "roles": [],
+                "roles": [{"id": 999}, {"id": 888}, {"id": 777}],
                 "user": user_dict,
                 "require_colons": True,
                 "managed": False,
                 "animated": False,
             },
+            12345
         )
 
         assert emj.id == 1234567
         assert emj.name == "peepohappy"
-        assert emj._roles == []
-        assert emj.require_colons == True
-        assert emj.managed == False
-        assert emj.animated == False
-        # TODO: uncomment when parse_user merged in task/state
-        # state.parse_user.assert_called_with(user_dict)
+        assert len(emj._role_ids) == 3
+        assert emj.require_colons is True
+        assert emj.managed is False
+        assert emj.animated is False
+        assert emj._guild_id == 12345
+        test_state.parse_user.assert_called_with(user_dict)
