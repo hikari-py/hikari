@@ -99,6 +99,8 @@ pages:
         - apt-get install graphviz -y
         - pip install nox
     script:
+        - rm pages -Rvf || true
+        - mkdir pages || true
         - nox -sinit
         - nox -ssphinx
     artifacts:
