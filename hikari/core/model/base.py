@@ -24,13 +24,10 @@ from __future__ import annotations
 import abc
 import dataclasses
 import datetime
+import inspect
 
 from hikari.core.utils import assertions
 from hikari.core.utils import dateutils
-
-
-def _hash_method(self: Snowflake):
-    return self.id
 
 
 def dataclass(**kwargs):
@@ -47,14 +44,24 @@ def dataclass(**kwargs):
     """
 
     def decorator(cls):
-        kwargs.pop("unsafe_hash", None)
         kwargs.pop("init", "__init__" not in cls.__dict__)
 
-        if "id" in getattr(cls, "__annotations__", []) or "id" in getattr(cls, "__slots__", []):
-            setattr(cls, "__hash__", _hash_method)
-
         # noinspection PyArgumentList
-        return dataclasses.dataclass(**kwargs)(cls)
+        dataclass_cls = dataclasses.dataclass(**kwargs)(cls)
+
+        # Dataclasses usually don't allow inheritance of hash codes properly due to internal constraints but
+        # we force the hash of our types to be inheritable by extra implementation.
+        # Hashcode gets derived from object normally, but we can usually see this by seeing if the reference
+        # is a slot or an actual function. If it is a slot, we should assume it is not redefined elsewhere, I guess.
+        if not inspect.isfunction(cls.__hash__):
+            # mro [0] is always the implementation class, mro[-1] is always object() which has a __hash__ that is
+            # useless to us.
+            for base in cls.mro()[1:-1]:
+                if "__hash__" in base.__dict__:
+                    dataclass_cls.__hash__ = lambda self: base.__hash__(self)
+                    break
+
+        return dataclass_cls
 
     return decorator
 
@@ -77,6 +84,9 @@ class Snowflake(abc.ABC):
     #:
     #: :type: :class:`int`
     id: int
+
+    def __hash__(self):
+        return hash(self.id)
 
     @property
     def created_at(self) -> datetime.datetime:

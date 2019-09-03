@@ -24,9 +24,9 @@ from __future__ import annotations
 import asyncio
 import json as libjson
 import logging
+import typing
 
 import aiohttp
-import typing
 
 #: Format string for the default Discord API URL.
 import hikari.core.utils.user_agent
