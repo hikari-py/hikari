@@ -184,18 +184,3 @@ def put_if_specified(
     """
     if value is not unspecified.UNSPECIFIED:
         mapping[key] = value
-
-
-class _Volatile:
-    def __init__(self, inner):
-        self.inner = inner
-
-
-def volatile(type: T) -> T:
-    return _Volatile(type)
-
-
-def update_volatile_fields(target, source):
-    for name, annotation in target.__annotations__.items():
-        if isinstance(annotation, _Volatile):
-            setattr(target, name, getattr(source, name))
