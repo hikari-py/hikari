@@ -42,6 +42,7 @@ class Guild(base.Snowflake):
     """
     Implementation of a Guild.
     """
+
     # We leave out widget and embed information as there isn't documentation to distinguish what each of them are for,
     # as they seem to overlap.
     # We omit:
@@ -267,7 +268,7 @@ class Guild(base.Snowflake):
         self.my_permissions = transform.get_cast_or_raw(payload, "permissions", permission.Permission)
         self.joined_at = transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime)
         self.large = transform.get_cast(payload, "large", bool)
-        self.unavailable = transform.get_cast(payload, "unavailable", bool),
+        self.unavailable = (transform.get_cast(payload, "unavailable", bool),)
         self.members = transform.flatten((self._state.parse_member(m, self.id) for m in payload.get("members", ())))
         self.channels = transform.get_sequence(
             payload, "channels", self._state.parse_channel, transform.flatten, state=self._state

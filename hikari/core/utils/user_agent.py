@@ -78,9 +78,4 @@ def user_agent() -> str:
     return f"DiscordBot ({__url__}, {__version__}) {python} {system}"
 
 
-__all__ = (
-    "library_version",
-    "python_version",
-    "system_type",
-    "user_agent",
-)
+__all__ = ("library_version", "python_version", "system_type", "user_agent")
