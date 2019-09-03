@@ -92,14 +92,11 @@ class Overwrite(base.Snowflake):
         # noinspection PyTypeChecker
         return permission.Permission(permission.Permission.all() ^ (self.allow | self.deny))
 
-    @staticmethod
-    def from_dict(payload):
-        return Overwrite(
-            id=transform.get_cast(payload, "id", int),
-            type=transform.get_cast_or_raw(payload, "type", OverwriteEntityType.from_discord_name),
-            allow=transform.get_cast_or_raw(payload, "allow", permission.Permission),
-            deny=transform.get_cast_or_raw(payload, "deny", permission.Permission),
-        )
+    def __init__(self, payload):
+        self.id = transform.get_cast(payload, "id", int)
+        self.type = transform.get_cast_or_raw(payload, "type", OverwriteEntityType.from_discord_name)
+        self.allow = transform.get_cast_or_raw(payload, "allow", permission.Permission)
+        self.deny = transform.get_cast_or_raw(payload, "deny", permission.Permission)
 
 
 __all__ = ["Overwrite", "OverwriteEntityType"]

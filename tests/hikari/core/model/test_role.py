@@ -23,7 +23,7 @@ from hikari.core.model import role
 
 
 @pytest.mark.model
-def test_Role_from_dict():
+def test_Role():
     d = {
         "id": "41771983423143936",
         "name": "WE DEM BOYZZ!!!!!!",
@@ -35,7 +35,7 @@ def test_Role_from_dict():
         "mentionable": False,
     }
 
-    r = role.Role.from_dict(d)
+    r = role.Role(d)
 
     assert r.id == 41771983423143936
     assert r.name == "WE DEM BOYZZ!!!!!!"

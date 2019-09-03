@@ -27,14 +27,14 @@ from hikari.core.model import model_cache
 
 @pytest.mark.model
 class TestInvite:
-    def test_Invite_from_dict(self):
+    def test_Invite(self):
         test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
 
         guild_dict = {"id": "165176875973476352", "name": "CS:GO Fraggers Only", "splash": None, "icon": None}
         channel_dict = {"id": "165176875973476352", "name": "illuminati", "type": 0}
         user_dict = {"id": "165176875973476352", "username": "bob", "avatar": "deadbeef", "discriminator": "#1234"}
 
-        inv = invite.Invite.from_dict(
+        inv = invite.Invite(
             test_state,
             {
                 "code": "0vCdhLbwjZZTWZLD",
@@ -56,7 +56,7 @@ class TestInvite:
 
 @pytest.mark.model
 class TestInviteMetadata:
-    def test_InviteMetadata_from_dict(self):
+    def test_InviteMetadata(self):
         test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
 
         user_dict = {
@@ -70,7 +70,7 @@ class TestInviteMetadata:
             "premium_type": 1,
         }
 
-        invm = invite.InviteMetadata.from_dict(
+        invm = invite.InviteMetadata(
             test_state,
             {
                 "inviter": user_dict,

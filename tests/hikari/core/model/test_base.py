@@ -88,6 +88,20 @@ class TestSnowflake:
     def test_Snowflake_internal_worker_id(self, neko_snowflake):
         assert neko_snowflake.internal_worker_id == 2
 
+    def test_hash(self):
+        @base.dataclass()
+        class FakeSnowflake(base.Snowflake):
+            __slots__ = "id"
+            id: int
+
+        already_observed = set()
+
+        for i in range(50):
+            h = hash(FakeSnowflake(i))
+            assert h not in already_observed
+            already_observed.add(h)
+            assert h == hash(i)
+
 
 @pytest.mark.model
 def test_NamedEnumMixin_from_discord_name():
@@ -98,6 +112,9 @@ def test_NamedEnumMixin_from_discord_name():
 @pytest.mark.parametrize("cast", [str, repr], ids=lambda it: it.__qualname__)
 def test_NamedEnumMixin_str_and_repr(cast):
     assert cast(DummyNamedEnum.BAZ) == "BAZ"
+
+
+5
 
 
 @pytest.mark.model
@@ -120,14 +137,31 @@ def test_no_hash_is_applied_to_dataclass_without_id():
 
 
 @pytest.mark.model
-def test_hash_is_applied_to_dataclass_with_id():
-    @base.dataclass()
-    class IDDataClass:
-        id: int
-        bar: float
-        baz: str
-        bork: object
+def test_dataclass_injects_hash_into_derived_classes_from_bases_with_hash():
+    class Base:
+        def __hash__(self):
+            return 69
 
-    first = IDDataClass(10, 10.5, "11.0", object())
-    second = IDDataClass(10, 10.9, "11.5", object())
-    assert hash(first) == hash(second)
+    @base.dataclass()
+    class Impl(Base):
+        pass
+
+    i = Impl()
+
+    assert hash(i) == 69
+
+
+@pytest.mark.model
+def test_dataclass_does_not_overwrite_existing_hash_if_explicitly_defined():
+    class Base:
+        def __hash__(self):
+            return 69
+
+    @base.dataclass()
+    class Impl(Base):
+        def __hash__(self):
+            return 70
+
+    i = Impl()
+
+    assert hash(i) == 70
