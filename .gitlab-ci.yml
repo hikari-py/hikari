@@ -23,19 +23,7 @@ variables:
     DOCKER_DRIVER: "overlay2"
     OWNER: "nekokatt"
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-
-
-cache:
-    key: "${CI_PROJECT_ID}-${CI_JOB_STAGE}-${CI_JOB_NAME}"
-    paths:
-        - .cache/pip
-        - .nox/
-        - .pytest_cache/
-        - .venv/
-        - venv/
-        - .coverage
-        - poetry.lock
-
+    
 
 # Fixes a bug where CI now won't verify a branch before merging it and instead does nothing until the heat death of
 # the universe or something.
