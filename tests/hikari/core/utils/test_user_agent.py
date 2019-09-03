@@ -16,16 +16,17 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import hikari.core.utils.user_agent
 from hikari.core.utils import meta
 
 
 def test_library_version_is_callable_and_produces_string():
-    result = meta.library_version()
+    result = hikari.core.utils.user_agent.library_version()
     assert result.startswith("hikari.core ")
 
 
 def test_python_version_is_callable_and_produces_string():
-    result = meta.python_version()
+    result = hikari.core.utils.user_agent.python_version()
     assert isinstance(result, str) and len(result.strip()) > 0
 
 
