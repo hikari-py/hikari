@@ -54,6 +54,8 @@ with open("pyproject.toml") as fp:
 
 if is_staging:
     # If development, we release a patch.
+    # Increment staging version to next version, as that is sensible
+    previous_micro += 1
 
     current_dev_releases = [
         LooseVersion(v) for v in data if v.startswith(f"{previous_major}.{previous_minor}.{previous_micro}")
@@ -61,9 +63,6 @@ if is_staging:
 
     print("Releases under this major/minor/micro combination are:", *[v.version for v in current_dev_releases],
           file=sys.stderr)
-          
-    # Increment staging version to next version, as that is sensible
-    previous_micro += 1
 
     if current_dev_releases:
         latest = max(current_dev_releases)
