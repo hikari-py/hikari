@@ -74,8 +74,4 @@ def unofficial(obj):
     return obj
 
 
-__all__ = (
-    "APIResource",
-    "link_developer_portal",
-    "unofficial",
-)
+__all__ = ("APIResource", "link_developer_portal", "unofficial")

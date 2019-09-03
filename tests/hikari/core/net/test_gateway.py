@@ -205,7 +205,7 @@ class TestGateway:
             payload = zlib.compress(recv_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
-            chunks = [payload[i: i + chunk_size] for i in range(0, len(payload), chunk_size)]
+            chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
 
             gw.ws.recv = asynctest.CoroutineMock(side_effect=chunks)
             await gw._receive_json()
@@ -221,7 +221,7 @@ class TestGateway:
             payload = zlib.compress(recv_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
-            chunks = [payload[i: i + chunk_size] for i in range(0, len(payload), chunk_size)]
+            chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
 
             first_array = gw._in_buffer
             gw.ws.recv = asynctest.CoroutineMock(side_effect=chunks)
@@ -237,7 +237,7 @@ class TestGateway:
             payload = zlib.compress(recv_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
-            chunks = [payload[i: i + chunk_size] for i in range(0, len(payload), chunk_size)]
+            chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
 
             first_array = gw._in_buffer
             gw.max_persistent_buffer_size = 3

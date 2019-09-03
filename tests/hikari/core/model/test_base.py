@@ -112,7 +112,10 @@ def test_NamedEnumMixin_from_discord_name():
 @pytest.mark.parametrize("cast", [str, repr], ids=lambda it: it.__qualname__)
 def test_NamedEnumMixin_str_and_repr(cast):
     assert cast(DummyNamedEnum.BAZ) == "BAZ"
+
+
 5
+
 
 @pytest.mark.model
 def test_no_hash_is_applied_to_dataclass_without_id():
