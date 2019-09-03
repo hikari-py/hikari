@@ -32,7 +32,7 @@ import pytest
 import hikari.core.net.opcodes
 from hikari.core import errors
 from hikari.core.net import gateway
-from hikari.core.utils import meta
+from hikari.core.utils import user_agent
 from tests.hikari.core import _helpers
 
 
@@ -205,7 +205,7 @@ class TestGateway:
             payload = zlib.compress(recv_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
-            chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
+            chunks = [payload[i: i + chunk_size] for i in range(0, len(payload), chunk_size)]
 
             gw.ws.recv = asynctest.CoroutineMock(side_effect=chunks)
             await gw._receive_json()
@@ -221,7 +221,7 @@ class TestGateway:
             payload = zlib.compress(recv_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
-            chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
+            chunks = [payload[i: i + chunk_size] for i in range(0, len(payload), chunk_size)]
 
             first_array = gw._in_buffer
             gw.ws.recv = asynctest.CoroutineMock(side_effect=chunks)
@@ -237,7 +237,7 @@ class TestGateway:
             payload = zlib.compress(recv_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
-            chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
+            chunks = [payload[i: i + chunk_size] for i in range(0, len(payload), chunk_size)]
 
             first_array = gw._in_buffer
             gw.max_persistent_buffer_size = 3
@@ -346,8 +346,8 @@ class TestGateway:
         gw._send_json = asynctest.CoroutineMock()
 
         with contextlib.ExitStack() as stack:
-            stack.enter_context(asynctest.patch(fqn(meta, "python_version"), new=lambda: "python3"))
-            stack.enter_context(asynctest.patch(fqn(meta, "library_version"), new=lambda: "vx.y.z"))
+            stack.enter_context(asynctest.patch(fqn(user_agent, "python_version"), new=lambda: "python3"))
+            stack.enter_context(asynctest.patch(fqn(user_agent, "library_version"), new=lambda: "vx.y.z"))
             stack.enter_context(asynctest.patch(fqn(platform, "system"), new=lambda: "leenuks"))
 
             await gw._send_identify()
