@@ -62,18 +62,15 @@ class Webhook(base.Snowflake):
     #: :type: :class:`str` or `None`
     token: typing.Optional[str]
 
-    @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload):
-        return Webhook(
-            _state=global_state,
-            id=transform.get_cast(payload, "id", int),
-            _guild_id=transform.get_cast(payload, "guild_id", int),
-            _channel_id=transform.get_cast(payload, "channel_id", int),
-            user=global_state.parse_user(payload.get("user")),
-            name=payload.get("name"),
-            avatar_hash=payload.get("avatar_hash"),
-            token=payload.get("token"),
-        )
+    def __init__(self, global_state: model_cache.AbstractModelCache, payload):
+        self._state = global_state
+        self.id = transform.get_cast(payload, "id", int)
+        self._guild_id = transform.get_cast(payload, "guild_id", int)
+        self._channel_id = transform.get_cast(payload, "channel_id", int)
+        self.user = global_state.parse_user(payload.get("user"))
+        self.name = payload.get("name")
+        self.avatar_hash = payload.get("avatar_hash")
+        self.token = payload.get("token")
 
 
 __all__ = ["Webhook"]

@@ -75,18 +75,15 @@ class Role(base.Snowflake):
     #: :type: :class:`bool`
     mentionable: bool
 
-    @staticmethod
-    def from_dict(payload):
-        return Role(
-            id=transform.get_cast(payload, "id", int),
-            name=transform.get_cast(payload, "name", str),
-            color=transform.get_cast(payload, "color", _color.Color),
-            hoist=transform.get_cast(payload, "hoist", bool),
-            position=transform.get_cast(payload, "position", int),
-            permissions=transform.get_cast(payload, "permissions", _permission.Permission),
-            managed=transform.get_cast(payload, "managed", bool),
-            mentionable=transform.get_cast(payload, "mentionable", bool),
-        )
+    def __init__(self, payload):
+        self.id = transform.get_cast(payload, "id", int)
+        self.name = transform.get_cast(payload, "name", str)
+        self.color = transform.get_cast(payload, "color", _color.Color)
+        self.hoist = transform.get_cast(payload, "hoist", bool)
+        self.position = transform.get_cast(payload, "position", int)
+        self.permissions = transform.get_cast(payload, "permissions", _permission.Permission)
+        self.managed = transform.get_cast(payload, "managed", bool)
+        self.mentionable = transform.get_cast(payload, "mentionable", bool)
 
 
 __all__ = ["Role"]

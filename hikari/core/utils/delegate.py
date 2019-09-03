@@ -53,8 +53,7 @@ class DelegatedProperty:
 
 def delegate_safe_dataclass(decorator=dataclasses.dataclass, **kwargs):
     """
-    Dataclass decorator that is compatible with delegate types. This generates a new constructor that
-    omits known delegated fields from the signature, thus making it safe to use on delegated classes.
+    Dataclass decorator that is compatible with delegate types.
 
     Args:
         decorator:
@@ -63,6 +62,8 @@ def delegate_safe_dataclass(decorator=dataclasses.dataclass, **kwargs):
     Warning:
         This decorator must be placed AFTER the delegate decorators are placed (so, further down the file)
         otherwise it will produce an incorrect constructor. This is checked when using the decorator.
+
+        You will need to manually define your `__init__`.
     """
 
     def actual_decorator(cls):
@@ -71,20 +72,6 @@ def delegate_safe_dataclass(decorator=dataclasses.dataclass, **kwargs):
 
         # We don't have an `__annotations__` element if no fields exist, annoyingly.
         annotations = getattr(cls, "__annotations__", ())
-        fields = ", ".join(field for field in annotations)
-        init = "\n".join(
-            [
-                f"def __init__(self, {fields}) -> None:",
-                *[f"    self.{field} = {field}" for field in annotations],
-                # Sue me, who cares if this always ends in pass, it is the simplest way to ensure a body if no fields
-                # exist in the class.
-                "    pass",
-            ]
-        )
-        locals_ = {}
-        exec(init, {}, locals_)  # nosec
-        cls.__init__ = locals_["__init__"]
-        kwargs["init"] = False
         return decorator(**kwargs)(cls)
 
     return actual_decorator
@@ -109,10 +96,6 @@ def delegate_members(delegate_type, magic_field):
         If making the outer class a dataclass, you must use the :attr:`delegate_safe_dataclass`
         decorator rather than the vanilla :func:`dataclasses.dataclass` one, otherwise it will
         produce an incompatible signature.
-
-        If you are instead initializing the class yourself, it is vital that you do not call `super().__init__`
-        and that you define your own constructor that consumes the delegate types. It is recommended to use the
-        :attr:`delegate_safe_dataclass` for complex data classes to automate this correctly.
     """
 
     def decorator(cls):

@@ -54,15 +54,12 @@ class Reaction:
     #: :type: :class:`hikari.core.model.emoji.Emoji`
     emoji: emoji.Emoji
 
-    @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload):
-        return Reaction(
-            _state=global_state,
-            count=transform.get_cast(payload, "count", int),
-            me=transform.get_cast(payload, "me", bool),
-            #: TODO: get the guild for the emoji by doing an API call if need be.
-            emoji=global_state.parse_emoji(None, payload.get("emoji")),
-        )
+    def __init__(self, global_state: model_cache.AbstractModelCache, payload):
+        self._state = global_state
+        self.count = transform.get_cast(payload, "count", int)
+        self.me = transform.get_cast(payload, "me", bool)
+        #: TODO: get the guild for the emoji by doing an API call if need be
+        self.emoji = global_state.parse_emoji(None, payload.get("emoji"))
 
 
 __all__ = ["Reaction"]

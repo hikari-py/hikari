@@ -32,7 +32,7 @@ import pytest
 import hikari.core.net.opcodes
 from hikari.core import errors
 from hikari.core.net import gateway
-from hikari.core.utils import meta
+from hikari.core.utils import user_agent
 from tests.hikari.core import _helpers
 
 
@@ -346,8 +346,8 @@ class TestGateway:
         gw._send_json = asynctest.CoroutineMock()
 
         with contextlib.ExitStack() as stack:
-            stack.enter_context(asynctest.patch(fqn(meta, "python_version"), new=lambda: "python3"))
-            stack.enter_context(asynctest.patch(fqn(meta, "library_version"), new=lambda: "vx.y.z"))
+            stack.enter_context(asynctest.patch(fqn(user_agent, "python_version"), new=lambda: "python3"))
+            stack.enter_context(asynctest.patch(fqn(user_agent, "library_version"), new=lambda: "vx.y.z"))
             stack.enter_context(asynctest.patch(fqn(platform, "system"), new=lambda: "leenuks"))
 
             await gw._send_identify()
