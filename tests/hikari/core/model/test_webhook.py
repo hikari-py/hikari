@@ -26,7 +26,7 @@ from hikari.core.model import webhook
 
 @pytest.mark.model
 class TestWebhook:
-    def test_Emoji_from_dict(self):
+    def test_Emoji(self):
         test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
 
         user_dict = {
@@ -36,7 +36,7 @@ class TestWebhook:
             "avatar": "5500909a3274e1812beb4e8de6631111",
         }
 
-        wh = webhook.Webhook.from_dict(
+        wh = webhook.Webhook(
             test_state,
             {
                 "name": "test webhook",

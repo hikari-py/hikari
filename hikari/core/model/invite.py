@@ -69,16 +69,13 @@ class Invite:
     #: :type: :class:`int` or `None`
     approximate_member_count: typing.Optional[int]
 
-    @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload):
-        return Invite(
-            _state=global_state,
-            code=payload.get("code"),
-            guild=global_state.parse_guild(payload.get("guild")),
-            channel=global_state.parse_channel(payload.get("channel")),
-            approximate_presence_count=transform.get_cast(payload, "approximate_presence_count", int),
-            approximate_member_count=transform.get_cast(payload, "approximate_member_count", int),
-        )
+    def __init__(self, global_state: model_cache.AbstractModelCache, payload):
+        self._state = global_state
+        self.code = payload.get("code")
+        self.guild = global_state.parse_guild(payload.get("guild"))
+        self.channel = global_state.parse_channel(payload.get("channel"))
+        self.approximate_presence_count = transform.get_cast(payload, "approximate_presence_count", int)
+        self.approximate_member_count = transform.get_cast(payload, "approximate_member_count", int)
 
 
 @base.dataclass()
@@ -126,18 +123,15 @@ class InviteMetadata:
     #: :type: :class:`bool`
     revoked: bool
 
-    @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload):
-        return InviteMetadata(
-            _state=global_state,
-            inviter=global_state.parse_user(payload.get("inviter")),
-            uses=transform.get_cast(payload, "uses", int),
-            max_uses=transform.get_cast(payload, "max_uses", int),
-            max_age=transform.get_cast(payload, "max_age", int),
-            temporary=transform.get_cast(payload, "temporary", bool),
-            created_at=transform.get_cast(payload, "created_at", dateutils.parse_iso_8601_datetime),
-            revoked=transform.get_cast(payload, "revoked", bool),
-        )
+    def __init__(self, global_state: model_cache.AbstractModelCache, payload):
+        self._state = global_state
+        self.inviter = global_state.parse_user(payload.get("inviter"))
+        self.uses = transform.get_cast(payload, "uses", int)
+        self.max_uses = transform.get_cast(payload, "max_uses", int)
+        self.max_age = transform.get_cast(payload, "max_age", int)
+        self.temporary = transform.get_cast(payload, "temporary", bool)
+        self.created_at = transform.get_cast(payload, "created_at", dateutils.parse_iso_8601_datetime)
+        self.revoked = transform.get_cast(payload, "revoked", bool)
 
 
 __all__ = ["Invite", "InviteMetadata"]

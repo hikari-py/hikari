@@ -396,9 +396,9 @@ class Ban:
     #: :type: :class:`hikari.core.model.user.User`
     user: user.User
 
-    @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload: dict):
-        return Ban(reason=payload.get("reason"), user=global_state.parse_user(payload.get("user")))
+    def __init__(self, global_state: model_cache.AbstractModelCache, payload: dict):
+        self.reason = payload.get("reason")
+        self.user = global_state.parse_user(payload.get("user"))
 
 
 __all__ = [

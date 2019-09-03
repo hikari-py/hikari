@@ -52,11 +52,10 @@ class IntegrationAccount(base.Snowflake):
     #: :type: :class:`str`
     name: str
 
-    @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload):
-        return IntegrationAccount(
-            _state=global_state, id=transform.get_cast(payload, "id", int), name=payload.get("name")
-        )
+    def __init__(self, global_state: model_cache.AbstractModelCache, payload):
+        self._state = global_state
+        self.id = transform.get_cast(payload, "id", int)
+        self.name = payload.get("name")
 
 
 @base.dataclass()
@@ -127,23 +126,18 @@ class Integration(base.Snowflake):
     #: :type: :class:`datetime.datetime`
     synced_at: datetime.datetime
 
-    @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload):
-        return Integration(
-            _state=global_state,
-            id=transform.get_cast(payload, "id", int),
-            name=payload.get("name"),
-            type=payload.get("type"),
-            enabled=transform.get_cast(payload, "enabled", bool),
-            syncing=transform.get_cast(payload, "syncing", bool),
-            _role_id=transform.get_cast(payload, "role_id", int),
-            expire_grace_period=transform.get_cast(payload, "expire_grace_period", int),
-            user=global_state.parse_user(payload.get("user")),
-            account=IntegrationAccount.from_dict(
-                global_state, payload.get("account")
-            ),  #  Change this later, slightly hacky way to do it
-            synced_at=transform.get_cast(payload, "synced_at", dateutils.parse_iso_8601_datetime),
-        )
+    def __init__(self, global_state: model_cache.AbstractModelCache, payload):
+        self._state = global_state
+        self.id = transform.get_cast(payload, "id", int)
+        self.name = payload.get("name")
+        self.type = payload.get("type")
+        self.enabled = transform.get_cast(payload, "enabled", bool)
+        self.syncing = transform.get_cast(payload, "syncing", bool)
+        self._role_id = transform.get_cast(payload, "role_id", int)
+        self.expire_grace_period = transform.get_cast(payload, "expire_grace_period", int)
+        self.user = global_state.parse_user(payload.get("user"))
+        self.account = IntegrationAccount(global_state, payload.get("account"))
+        self.synced_at = transform.get_cast(payload, "synced_at", dateutils.parse_iso_8601_datetime)
 
 
 __all__ = ["Integration", "IntegrationAccount"]

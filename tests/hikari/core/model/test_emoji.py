@@ -26,7 +26,7 @@ from hikari.core.model import model_cache
 
 @pytest.mark.model
 class TestEmoji:
-    def test_Emoji_from_dict(self):
+    def test_Emoji(self):
         test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
 
         user_dict = {
@@ -36,7 +36,7 @@ class TestEmoji:
             "avatar": "5500909a3274e1812beb4e8de6631111",
         }
 
-        emj = emoji.Emoji.from_dict(
+        emj = emoji.Emoji(
             test_state,
             {
                 "id": "1234567",

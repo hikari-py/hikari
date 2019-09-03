@@ -235,9 +235,9 @@ class TestGuild:
         assert g.id == 12345678910
         assert g.unavailable
 
-    def test_Ban_from_dict(self):
+    def test_Ban(self):
         s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         user = object()
-        ban = guild.Ban.from_dict(s, {"user": user, "reason": "being bad"})
+        ban = guild.Ban(s, {"user": user, "reason": "being bad"})
         assert ban.reason == "being bad"
         s.parse_user.assert_called_once_with(user)
