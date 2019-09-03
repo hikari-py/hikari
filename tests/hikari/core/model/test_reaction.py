@@ -26,7 +26,7 @@ from hikari.core.model import reaction
 
 @pytest.mark.model
 class TestReaction:
-    def test_Reaction_from_dict(self):
+    def test_Reaction(self):
         test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
 
         emoji_dict = {
@@ -44,7 +44,7 @@ class TestReaction:
             "animated": False,
         }
 
-        re = reaction.Reaction.from_dict(test_state, {"count": 420, "me": True, "emoji": emoji_dict})
+        re = reaction.Reaction(test_state, {"count": 420, "me": True, "emoji": emoji_dict})
 
         assert re.count == 420
         assert re.me is True

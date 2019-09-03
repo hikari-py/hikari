@@ -53,6 +53,7 @@ def dataclass(**kwargs):
         if "id" in getattr(cls, "__annotations__", []) or "id" in getattr(cls, "__slots__", []):
             setattr(cls, "__hash__", _hash_method)
 
+        # noinspection PyArgumentList
         return dataclasses.dataclass(**kwargs)(cls)
 
     return decorator

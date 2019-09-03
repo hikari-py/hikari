@@ -35,6 +35,11 @@ from hikari.core.model import webhook
 from hikari.core.utils import types
 
 
+# Helps the type checker with heavy covariance
+# noinspection PyTypeChecker
+ChannelT = typing.TypeVar("ChannelT", bound="channel.Channel")
+
+
 class AbstractModelCache(abc.ABC):
     """
     Provides the relational interface between different types of objects and the overall cache.
@@ -81,7 +86,7 @@ class AbstractModelCache(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def parse_channel(self, channel: types.DiscordObject) -> channel.Channel:
+    def parse_channel(self, channel: types.DiscordObject) -> ChannelT:
         ...
 
     @abc.abstractmethod

@@ -26,9 +26,9 @@ from hikari.core.model import user
 
 
 @pytest.mark.model
-def test_User_from_dict_when_not_a_bot():
+def test_User_when_not_a_bot():
     s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-    u = user.User.from_dict(
+    u = user.User(
         s,
         {
             "id": "123456",
@@ -49,9 +49,9 @@ def test_User_from_dict_when_not_a_bot():
 
 
 @pytest.mark.model
-def test_User_from_dict_when_is_a_bot():
+def test_User_when_is_a_bot():
     s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-    u = user.User.from_dict(
+    u = user.User(
         s, {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": None, "bot": True}
     )
 
@@ -63,7 +63,7 @@ def test_User_from_dict_when_is_a_bot():
 
 
 @pytest.mark.model
-def test_Member_from_dict_with_filled_fields():
+def test_Member_with_filled_fields():
     s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
     user_dict = {
         "id": "123456",
@@ -75,7 +75,7 @@ def test_Member_from_dict_with_filled_fields():
         "premium_type": 0b1101101,
     }
     gid = 123456
-    m = user.Member.from_dict(
+    m = user.Member(
         s,
         gid,
         {
@@ -98,11 +98,11 @@ def test_Member_from_dict_with_filled_fields():
 
 
 @pytest.mark.model
-def test_Member_from_dict_with_no_optional_fields():
+def test_Member_with_no_optional_fields():
     s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
     user_dict = {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": "1a2b3c4d"}
     gid = 123456
-    m = user.Member.from_dict(
+    m = user.Member(
         s,
         gid,
         {
@@ -120,9 +120,9 @@ def test_Member_from_dict_with_no_optional_fields():
 
 
 @pytest.mark.model
-def test_BotUser_from_dict():
+def test_BotUser():
     s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-    u = user.BotUser.from_dict(
+    u = user.BotUser(
         s,
         {
             "id": "123456",

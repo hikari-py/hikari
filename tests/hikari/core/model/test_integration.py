@@ -27,7 +27,7 @@ from hikari.core.model import model_cache
 
 @pytest.mark.model
 class TestIntegration:
-    def test_Integration_from_dict(self):
+    def test_Integration(self):
         test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
 
         user_dict = {
@@ -39,7 +39,7 @@ class TestIntegration:
 
         account_dict = {"id": "123456789", "name": "lasagna"}
 
-        inte = integration.Integration.from_dict(
+        inte = integration.Integration(
             test_state,
             {
                 "id": "1234567",
@@ -69,10 +69,10 @@ class TestIntegration:
 
 @pytest.mark.model
 class TestIntegrationAccount:
-    def test_IntegrationAccount_from_dict(self):
+    def test_IntegrationAccount(self):
         test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
 
-        inteacc = integration.IntegrationAccount.from_dict(test_state, {"id": "1234567", "name": "memes"})
+        inteacc = integration.IntegrationAccount(test_state, {"id": "1234567", "name": "memes"})
 
         assert inteacc.id == 1234567
         assert inteacc.name == "memes"
