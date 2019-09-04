@@ -251,7 +251,7 @@ class MessageActivity:
 
     #: The optional party ID associated with the message.
     #:
-    #: :type: :class:`int` or `None
+    #: :type: :class:`int` or `None`
     party_id: typing.Optional[int]
 
     def __init__(self, payload):
