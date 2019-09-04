@@ -22,7 +22,6 @@ Models for the Status API.
 from __future__ import annotations
 
 import datetime
-
 import typing
 
 from hikari.core.model import base

@@ -106,7 +106,7 @@ class GuildChannel(Channel, abc.ABC):
 
 
 @base.dataclass()
-class GuildTextChannel(GuildChannel, type=0):
+class GuildTextChannel(GuildChannel, base.Messageable, type=0):
     """
     A text channel.
     """
@@ -151,7 +151,7 @@ class GuildTextChannel(GuildChannel, type=0):
 
 
 @base.dataclass()
-class DMChannel(Channel, type=1):
+class DMChannel(Channel, base.Messageable, type=1):
     """
     A DM channel between users.
     """
