@@ -19,11 +19,10 @@
 """
 Implementation of a model cache.
 """
-import typing
-
-__all__ = ("InMemoryCache",)
+from __future__ import annotations
 
 import logging
+import typing
 import weakref
 
 from hikari.core.model import channel as _channel
@@ -147,3 +146,6 @@ class InMemoryCache(model_cache.AbstractModelCache):
             self._dm_channels[channel_obj.id] = channel_obj
 
         return channel_obj
+
+
+__all__ = ("InMemoryCache",)

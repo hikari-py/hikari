@@ -25,6 +25,7 @@ import abc
 import dataclasses
 import datetime
 import inspect
+import textwrap
 
 from hikari.core.utils import assertions
 from hikari.core.utils import dateutils
@@ -64,6 +65,30 @@ def dataclass(**kwargs):
         return dataclass_cls
 
     return decorator
+
+
+@assertions.assert_is_mixin
+@assertions.assert_is_slotted
+class NamedEnum:
+    """
+    A mixin for an enum that is produced from a string by Discord. This ensures that the key can be looked up from a
+    lowercase value that discord provides and use a Pythonic key name that is in upper case.
+    """
+
+    __slots__ = ()
+
+    @classmethod
+    def from_discord_name(cls, name: str):
+        """
+        Consume a string as described on the Discord API documentation and return a member of this enum, or
+        raise a :class:`KeyError` if the name is invalid.
+        """
+        return cls[name.upper()]
+
+    def __str__(self):
+        return self.name
+
+    __repr__ = __str__
 
 
 @assertions.assert_is_mixin
@@ -132,33 +157,42 @@ class Snowflake(abc.ABC):
 
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
-class NamedEnum:
+class Volatile(abc.ABC):
     """
-    A mixin for an enum that is produced from a string by Discord. This ensures that the key can be looked up from a
-    lowercase value that discord provides and use a Pythonic key name that is in upper case.
+    Marks a class as being volatile. This means it is likely to be changed at runtime, rather than replaced, so users
+    should not rely on a consistent state.
     """
 
-    __slots__ = ()
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__()
+        doc = inspect.cleandoc(inspect.getdoc(cls) or "")
 
-    @classmethod
-    def from_discord_name(cls, name: str):
+        doc += textwrap.dedent(
+            """
+            Note:
+                This class is volatile. This means that any updates made to the object by Discord will be applied
+                immediately to the object. One should be sure to not expect the state of this object to remain
+                consistent indefinitely.
+                
+                Iterable elements will remain safe to iterate over normally. Collections will be replaced rather than
+                actively mutated.
         """
-        Consume a string as described on the Discord API documentation and return a member of this enum, or
-        raise a :class:`KeyError` if the name is invalid.
+        )
+
+    @abc.abstractmethod
+    def update_state(self, payload):
         """
-        return cls[name.upper()]
-
-    def __str__(self):
-        return self.name
-
-    __repr__ = __str__
+        Updates the internal state of the object. You usually should have no need to invoke this method, as it exists
+        for internal use only.
+        """
 
 
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
 class Messageable(abc.ABC):
-    async def send(self, *args, **kwargs):
-        raise NotImplementedError("Not yet implemented.")
+    """
+    An element that can have messages sent to it.
+    """
 
 
-__all__ = ("Snowflake", "NamedEnum", "Messageable")
+__all__ = ("dataclass", "Snowflake", "NamedEnum", "Volatile", "Messageable")
