@@ -37,6 +37,7 @@ class OverwriteEntityType(base.NamedEnum, enum.Enum):
     These values act as types, so you can write expressions such as:
 
     .. code-block:: python
+
         if isinstance(user_or_role, overwrite.type):
             ...
 

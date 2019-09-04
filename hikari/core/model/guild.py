@@ -38,7 +38,7 @@ from hikari.core.utils import transform
 
 
 @base.dataclass()
-class Guild(base.Snowflake):
+class Guild(base.Snowflake, base.Volatile):
     """
     Implementation of a Guild.
     """
@@ -240,9 +240,9 @@ class Guild(base.Snowflake):
         guild_id = transform.get_cast(payload, "id", int)
         self.id = guild_id
         self._state = global_state
-        self._update(payload)
+        self.update_state(payload)
 
-    def _update(self, payload):
+    def update_state(self, payload):
         self._afk_channel_id = transform.get_cast(payload, "afk_channel_id", int)
         self._owner_id = transform.get_cast(payload, "owner_id", int)
         self._voice_region_id = transform.get_cast(payload, "region", int)
@@ -356,12 +356,16 @@ class VerificationLevel(enum.IntEnum):
 
     #: Unrestricted
     NONE = 0
+
     #: Must have a verified email on their account.
     LOW = 1
+
     #: Must have been registered on Discord for more than 5 minutes.
     MEDIUM = 2
+
     #: (╯°□°）╯︵ ┻━┻ - must be a member of the guild for longer than 10 minutes.
     HIGH = 3
+
     #: ┻━┻ミヽ(ಠ益ಠ)ﾉ彡┻━┻ - must have a verified phone number.
     VERY_HIGH = 4
 
@@ -371,10 +375,13 @@ class PremiumTier(enum.IntEnum):
 
     #: No Nitro boosts.
     NONE = 0
+
     #: Level 1 Nitro boost.
     TIER_1 = 1
+
     #: Level 2 Nitro boost.
     TIER_2 = 2
+
     #: Level 3 Nitro boost.
     TIER_3 = 3
 
