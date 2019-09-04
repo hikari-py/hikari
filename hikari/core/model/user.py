@@ -68,16 +68,13 @@ class User(base.Snowflake):
     #: :type: :class:`bool`
     bot: bool
 
-    @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload):
-        return User(
-            _state=global_state,
-            id=transform.get_cast(payload, "id", int),
-            username=payload.get("username"),
-            discriminator=transform.get_cast(payload, "discriminator", int),
-            avatar_hash=payload.get("avatar"),
-            bot=payload.get("bot", False),
-        )
+    def __init__(self, global_state: model_cache.AbstractModelCache, payload):
+        self._state = global_state
+        self.id = transform.get_cast(payload, "id", int)
+        self.username = payload.get("username")
+        self.discriminator = transform.get_cast(payload, "discriminator", int)
+        self.avatar_hash = payload.get("avatar")
+        self.bot = payload.get("bot", False)
 
 
 @delegate.delegate_members(User, "_user")
@@ -117,17 +114,14 @@ class Member(User):
     presence: presence.Presence
 
     # noinspection PyMethodOverriding
-    @staticmethod
-    def from_dict(global_state, guild_id, payload):
-        return Member(
-            _user=global_state.parse_user(payload.get("user")),
-            _role_ids=transform.get_sequence(payload, "roles", int),
-            _guild_id=guild_id,
-            nick=payload.get("nick"),
-            joined_at=transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime),
-            premium_since=transform.get_cast(payload, "premium_since", dateutils.parse_iso_8601_datetime),
-            presence=transform.get_cast(payload, "presence", presence.Presence.from_dict),
-        )
+    def __init__(self, global_state, guild_id, payload):
+        self._user = global_state.parse_user(payload.get("user"))
+        self._role_ids = transform.get_sequence(payload, "roles", int)
+        self._guild_id = guild_id
+        self.nick = payload.get("nick")
+        self.joined_at = transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime)
+        self.premium_since = transform.get_cast(payload, "premium_since", dateutils.parse_iso_8601_datetime)
+        self.presence = transform.get_cast(payload, "presence", presence.Presence)
 
     @property
     def user(self):
@@ -153,18 +147,15 @@ class BotUser(User):
     #: :type: :class:`bool`
     mfa_enabled: bool
 
-    @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload):
-        return BotUser(
-            _state=global_state,
-            id=transform.get_cast(payload, "id", int),
-            username=payload.get("username"),
-            discriminator=transform.get_cast(payload, "discriminator", int),
-            avatar_hash=payload.get("avatar"),
-            bot=payload.get("bot", False),
-            verified=payload.get("verified", False),
-            mfa_enabled=payload.get("mfa_enabled", False),
-        )
+    def __init__(self, global_state: model_cache.AbstractModelCache, payload):
+        self._state = global_state
+        self.id = transform.get_cast(payload, "id", int)
+        self.username = payload.get("username")
+        self.discriminator = transform.get_cast(payload, "discriminator", int)
+        self.avatar_hash = payload.get("avatar")
+        self.bot = payload.get("bot", False)
+        self.verified = payload.get("verified", False)
+        self.mfa_enabled = payload.get("mfa_enabled", False)
 
 
 __all__ = ["User", "Member", "BotUser"]

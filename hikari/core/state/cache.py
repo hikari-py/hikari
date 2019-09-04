@@ -19,11 +19,10 @@
 """
 Implementation of a model cache.
 """
-import typing
-
-__all__ = ("InMemoryCache",)
+from __future__ import annotations
 
 import logging
+import typing
 import weakref
 
 from hikari.core.model import channel as _channel
@@ -50,6 +49,7 @@ class InMemoryCache(model_cache.AbstractModelCache):
     def __init__(self, message_cache_size: int = 100, user_dm_channel_size: int = 100) -> None:
         # Users may be cached while we can see them, or they may be cached as a member. Regardless, we only
         # retain them while they are referenced from elsewhere to keep things tidy.
+        # noinspection PyTypeChecker
         self._users: typing.Dict[int, _user.User] = weakref.WeakValueDictionary()
         self._guilds: typing.Dict[int, _guild.Guild] = {}
         self._dm_channels: typing.Dict[int, _channel.DMChannel] = types.LRUDict(user_dm_channel_size)
@@ -93,13 +93,13 @@ class InMemoryCache(model_cache.AbstractModelCache):
         # finished with it anyway.
         user_id = transform.get_cast(user, "id", int)
         if user_id not in self._users:
-            self._users[user_id] = _user.User.from_dict(self, user)
+            self._users[user_id] = _user.User(self, user)
         return self._users[user_id]
 
     def parse_guild(self, guild: types.DiscordObject):
         guild_id = transform.get_cast(guild, "id", int)
         if guild_id not in self._guilds:
-            self._guilds[guild_id] = _guild.Guild.from_dict(self, guild)
+            self._guilds[guild_id] = _guild.Guild(self, guild)
         return self._guilds[guild_id]
 
     def parse_member(self, member: types.DiscordObject, guild_id: int):
@@ -112,26 +112,26 @@ class InMemoryCache(model_cache.AbstractModelCache):
         elif member_id in guild.members:
             return guild.members[member_id]
         else:
-            member_object = _user.Member.from_dict(self, guild_id, member)
+            member_object = _user.Member(self, guild_id, member)
             guild.members[member_id] = member_object
             return member_object
 
     def parse_role(self, role: types.DiscordObject):
         # Don't cache roles.
-        return _role.Role.from_dict(role)
+        return _role.Role(role)
 
     def parse_emoji(self, guild_id: int, emoji: types.DiscordObject):
         # Don't cache emojis.
-        return _emoji.Emoji.from_dict(self, emoji, guild_id)
+        return _emoji.Emoji(self, emoji, guild_id)
 
     def parse_webhook(self, webhook: types.DiscordObject):
         # Don't cache webhooks.
-        return _webhook.Webhook.from_dict(self, webhook)
+        return _webhook.Webhook(self, webhook)
 
     def parse_message(self, message: types.DiscordObject):
         # Always update the cache with the new message.
         message_id = transform.get_cast(message, "id", int)
-        message_obj = _message.Message.from_dict(self, message)
+        message_obj = _message.Message(self, message)
         self._messages[message_id] = message_obj
         message_obj.channel.last_message_id = message_id
         return message_obj
@@ -146,3 +146,6 @@ class InMemoryCache(model_cache.AbstractModelCache):
             self._dm_channels[channel_obj.id] = channel_obj
 
         return channel_obj
+
+
+__all__ = ("InMemoryCache",)

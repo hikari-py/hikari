@@ -22,7 +22,6 @@ Model that represents a common RGB color and provides simple conversions to othe
 from __future__ import annotations
 
 import string
-
 import typing
 
 from hikari.core.utils import assertions
@@ -237,6 +236,16 @@ class Color(int, typing.SupportsInt):
             The Color object.
         """
         return cls(i)
+
+    # Partially chose to override these as the docstrings contain typos according to Sphinx.
+    @classmethod
+    def from_bytes(cls, bytes: typing.Sequence[int], byteorder: str, *, signed: bool = ...) -> Color:
+        """Converts the color from bytes."""
+        return Color(super().from_bytes(bytes, byteorder, signed=signed))
+
+    def to_bytes(self, length: int, byteorder: str, *, signed: bool = ...) -> bytes:
+        """Converts the color code to bytes."""
+        return super().to_bytes(length, byteorder, signed=signed)
 
 
 def _all_same(first, *rest):

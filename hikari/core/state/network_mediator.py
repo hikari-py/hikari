@@ -21,6 +21,7 @@ Integrates with the gateway and HTTP components, wrapping an in-memory cache to 
 transformation of JSON payloads into Python objects for any service layer that interacts with us. This is what
 differentiates the framework from a simple HTTP and websocket wrapper to a full idiomatic pythonic bot framework!
 """
+import copy
 import enum
 import logging
 
@@ -124,12 +125,12 @@ class BasicNetworkMediator:
 
     async def handle_channel_update(self, payload):
         channel_id = int(payload["id"])
-        old_channel = self.cache.get_guild_channel_by_id(channel_id) or self.cache.get_dm_channel_by_id(channel_id)
-        new_channel = self.cache.parse_channel(payload)
+        existing_channel = self.cache.get_guild_channel_by_id(channel_id) or self.cache.get_dm_channel_by_id(channel_id)
 
-        if old_channel is not None:
-            transform.update_volatile_fields(old_channel, new_channel)
-            self.dispatch(Event.CHANNEL_UPDATED, old_channel, new_channel)
+        if existing_channel is not None:
+            old_channel = copy.deepcopy(existing_channel)
+            existing_channel._update(payload)
+            self.dispatch(Event.CHANNEL_UPDATED, old_channel, existing_channel)
         else:
             await self.handle_channel_create(payload)
 

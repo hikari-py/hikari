@@ -31,6 +31,7 @@ def pathify(arg, *args, root=False):
 
 # Configuration stuff we probably might move around eventually.
 MAIN_PACKAGE = "hikari.core"
+TECHNICAL_DIR = "technical"
 TEST_PATH = "tests/hikari/core"
 COVERAGE_RC = ".coveragerc"
 ARTIFACT_DIR = "public"
@@ -139,14 +140,17 @@ def sphinx(session: PoetryNoxSession) -> None:
     session.poetry("update")
     session.install_requirements(DOCUMENTATION_DIR, "requirements.txt")
     session.env["SPHINXOPTS"] = SPHINX_OPTS
+    tech_dir = pathify(DOCUMENTATION_DIR, TECHNICAL_DIR)
+    shutil.rmtree(tech_dir, ignore_errors=True, onerror=lambda *_: None)
+    os.mkdir(tech_dir)
     session.run(
         "python",
         GENDOC_PATH,
         ".",
         MAIN_PACKAGE,
         pathify(DOCUMENTATION_DIR, "_templates", "gendoc"),
-        pathify(DOCUMENTATION_DIR, "index.rst"),
-        pathify(DOCUMENTATION_DIR),
+        pathify(DOCUMENTATION_DIR, TECHNICAL_DIR, "index.rst"),
+        pathify(DOCUMENTATION_DIR, TECHNICAL_DIR),
     )
     session.run("sphinx-build", DOCUMENTATION_DIR, ARTIFACT_DIR, "-b", "html")
 

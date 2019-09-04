@@ -138,9 +138,8 @@ autodoc_default_options = {
     "exclude-members": "__weakref__",
     "show_inheritance": True,
     "inherited_members": True,
+    "members": True,
 }
-
-autodoc_default_flags = ["members", "show_inheritance", "inherited_members"]
 
 # -- Intersphinx options -----------------------------------------------------
 intersphinx_mapping = {
@@ -157,11 +156,13 @@ inheritance_graph_attrs = dict(
     layout="twopi",  # dot neato twopi circo fdp
     rankdir="LR",
     fontsize=12,
-    ratio="auto",
+    ratio="compress",
     # splines="ortho",
     pad=0.25,
     nodesep=1,
     ranksep=2.4,
+    size='"24.0, 24.0"',
+    splines="curved"
 )
 
 inheritance_node_attrs = dict(

@@ -151,17 +151,3 @@ def test_flatten_list():
     assert mapping[99] is o1
     assert mapping[88] is o2
     assert mapping[32] is o3
-
-
-def test_Volatile_update():
-    @dataclasses.dataclass()
-    class Base:
-        foo: str
-        bar: transform.volatile(str)
-
-    base = Base("hello", "world")
-    new = Base("blah", "blep")
-
-    transform.update_volatile_fields(base, new)
-    assert base.foo == "hello"
-    assert base.bar == "blep"

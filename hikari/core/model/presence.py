@@ -76,22 +76,13 @@ class Presence:
     #: :type: :class:`hikari.core.model.presence.Status`
     mobile_status: Status
 
-    @staticmethod
-    def from_dict(payload):
-        activities = transform.get_sequence(payload, "activities", PresenceActivity.from_dict)
-        status = transform.get_cast(payload, "status", Status.from_discord_name, Status.OFFLINE)
+    def __init__(self, payload):
         client_status = payload.get("client_status", {})
-        web_status = transform.get_cast(client_status, "web", Status.from_discord_name, Status.OFFLINE)
-        desktop_status = transform.get_cast(client_status, "desktop", Status.from_discord_name, Status.OFFLINE)
-        mobile_status = transform.get_cast(client_status, "mobile", Status.from_discord_name, Status.OFFLINE)
-
-        return Presence(
-            activities=activities,
-            status=status,
-            web_status=web_status,
-            desktop_status=desktop_status,
-            mobile_status=mobile_status,
-        )
+        self.activities = transform.get_sequence(payload, "activities", PresenceActivity)
+        self.status = transform.get_cast(payload, "status", Status.from_discord_name, Status.OFFLINE)
+        self.web_status = transform.get_cast(client_status, "web", Status.from_discord_name, Status.OFFLINE)
+        self.desktop_status = transform.get_cast(client_status, "desktop", Status.from_discord_name, Status.OFFLINE)
+        self.mobile_status = transform.get_cast(client_status, "mobile", Status.from_discord_name, Status.OFFLINE)
 
 
 @base.dataclass()
@@ -176,21 +167,18 @@ class PresenceActivity:
     #: :type: :class:`hikari.core.model.presence.ActivityFlag`
     flags: ActivityFlag
 
-    @staticmethod
-    def from_dict(payload):
-        return PresenceActivity(
-            id=transform.get_cast(payload, "id", str),
-            name=transform.get_cast(payload, "name", str),
-            type=transform.get_cast_or_raw(payload, "type", ActivityType),
-            url=transform.get_cast(payload, "url", str),
-            timestamps=transform.get_cast(payload, "timestamps", ActivityTimestamps.from_dict),
-            application_id=transform.get_cast(payload, "application_id", int),
-            details=transform.get_cast(payload, "details", str),
-            state=transform.get_cast(payload, "state", str),
-            party=transform.get_cast(payload, "party", ActivityParty.from_dict),
-            assets=transform.get_cast(payload, "assets", ActivityAssets.from_dict),
-            flags=transform.get_cast(payload, "flags", ActivityFlag, default=0),
-        )
+    def __init__(self, payload):
+        self.id = transform.get_cast(payload, "id", str)
+        self.name = transform.get_cast(payload, "name", str)
+        self.type = transform.get_cast_or_raw(payload, "type", ActivityType)
+        self.url = transform.get_cast(payload, "url", str)
+        self.timestamps = transform.get_cast(payload, "timestamps", ActivityTimestamps)
+        self.application_id = transform.get_cast(payload, "application_id", int)
+        self.details = transform.get_cast(payload, "details", str)
+        self.state = transform.get_cast(payload, "state", str)
+        self.party = transform.get_cast(payload, "party", ActivityParty)
+        self.assets = transform.get_cast(payload, "assets", ActivityAssets)
+        self.flags = transform.get_cast(payload, "flags", ActivityFlag, default=0)
 
 
 class ActivityType(enum.IntEnum):
@@ -233,13 +221,10 @@ class ActivityParty:
     #: :type: :class:`int` or `None`
     max_size: typing.Optional[int]
 
-    @staticmethod
-    def from_dict(payload):
-        return ActivityParty(
-            id=transform.get_cast(payload, "id", str),
-            current_size=transform.get_cast(payload, "current_size", int),
-            max_size=transform.get_cast(payload, "max_size", int),
-        )
+    def __init__(self, payload):
+        self.id = transform.get_cast(payload, "id", str)
+        self.current_size = transform.get_cast(payload, "current_size", int)
+        self.max_size = transform.get_cast(payload, "max_size", int)
 
 
 @base.dataclass()
@@ -266,14 +251,11 @@ class ActivityAssets:
     #: :type: :class:`str` or `None`
     small_text: typing.Optional[str]
 
-    @staticmethod
-    def from_dict(payload):
-        return ActivityAssets(
-            large_image=transform.get_cast(payload, "large_image", str),
-            large_text=transform.get_cast(payload, "large_text", str),
-            small_image=transform.get_cast(payload, "small_image", str),
-            small_text=transform.get_cast(payload, "small_text", str),
-        )
+    def __init__(self, payload):
+        self.large_image = transform.get_cast(payload, "large_image", str)
+        self.large_text = transform.get_cast(payload, "large_text", str)
+        self.small_image = transform.get_cast(payload, "small_image", str)
+        self.small_text = transform.get_cast(payload, "small_text", str)
 
 
 @base.dataclass()
@@ -298,12 +280,9 @@ class ActivityTimestamps:
         """
         return self.end - self.start if self.start is not None and self.end is not None else None
 
-    @staticmethod
-    def from_dict(payload):
-        return ActivityTimestamps(
-            start=transform.get_cast(payload, "start", dateutils.unix_epoch_to_datetime),
-            end=transform.get_cast(payload, "end", dateutils.unix_epoch_to_datetime),
-        )
+    def __init__(self, payload):
+        self.start = transform.get_cast(payload, "start", dateutils.unix_epoch_to_datetime)
+        self.end = transform.get_cast(payload, "end", dateutils.unix_epoch_to_datetime)
 
 
 __all__ = [

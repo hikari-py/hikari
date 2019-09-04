@@ -170,9 +170,9 @@ def test_guild_payload(test_emoji_payload, test_roles_payloads, test_channel_pay
 
 @pytest.mark.model
 class TestGuild:
-    def test_available_Guild_from_dict(self, test_guild_payload, test_emoji_payload, test_member_payload):
+    def test_available_Guild(self, test_guild_payload, test_emoji_payload, test_member_payload):
         s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-        g = guild.Guild.from_dict(s, test_guild_payload)
+        g = guild.Guild(s, test_guild_payload)
 
         assert g.id == 123456
         assert g._afk_channel_id == 99998888777766
@@ -228,16 +228,16 @@ class TestGuild:
         s.parse_member.assert_called_once_with(test_member_payload, g.id)
         assert s.parse_channel.call_count == 3
 
-    def test_unavailable_Guild_from_dict(self):
+    def test_unavailable_Guild(self):
         s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-        g = guild.Guild.from_dict(s, {"id": "12345678910", "unavailable": True})
+        g = guild.Guild(s, {"id": "12345678910", "unavailable": True})
 
         assert g.id == 12345678910
         assert g.unavailable
 
-    def test_Ban_from_dict(self):
+    def test_Ban(self):
         s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         user = object()
-        ban = guild.Ban.from_dict(s, {"user": user, "reason": "being bad"})
+        ban = guild.Ban(s, {"user": user, "reason": "being bad"})
         assert ban.reason == "being bad"
         s.parse_user.assert_called_once_with(user)

@@ -58,8 +58,8 @@ class TestAvatar:
 
 @pytest.mark.model
 class TestAttachment:
-    def test_Attachment_from_dict_when_not_an_image(self):
-        attachment = media.Attachment.from_dict(
+    def test_Attachment_when_not_an_image(self):
+        attachment = media.Attachment(
             {
                 "id": "123456",
                 "filename": "doggo.mov",
@@ -77,8 +77,8 @@ class TestAttachment:
         assert attachment.width is None
         assert attachment.height is None
 
-    def test_Attachment_from_dict_when_an_image(self):
-        attachment = media.Attachment.from_dict(
+    def test_Attachment_when_an_image(self):
+        attachment = media.Attachment(
             {
                 "id": "123456",
                 "filename": "doggo.png",

@@ -193,6 +193,24 @@ class Message(base.Snowflake):
     #: :type: :class:`hikari.core.model.message.MessageFlag`
     flags: MessageFlag
 
+    def __init__(self, global_state: model_cache.AbstractModelCache, payload):
+        self._state = global_state
+        self.id = transform.get_cast(payload, "id", int)
+        self._author_id = global_state.parse_user(payload.get("author")).id
+        self._channel_id = transform.get_cast(payload, "channel_id", int)
+        self._guild_id = transform.get_cast(payload, "guild_id", int)
+        self.edited_at = transform.get_cast(payload, "edited_timestamp", dateutils.parse_iso_8601_datetime)
+        self.tts = transform.get_cast(payload, "tts", bool, False)
+        self.mentions_everyone = transform.get_cast(payload, "mention_everyone", bool, False)
+        self.attachments = transform.get_sequence(payload, "attachments", media.Attachment)
+        self.embeds = transform.get_sequence(payload, "embeds", embed.Embed.from_dict)
+        self.pinned = transform.get_cast(payload, "pinned", bool, False)
+        self.application = transform.get_cast(payload, "application", MessageApplication)
+        self.activity = transform.get_cast(payload, "activity", MessageActivity)
+        self.type = transform.get_cast_or_raw(payload, "type", MessageType)
+        self.content = payload.get("content")
+        self.flags = transform.get_cast(payload, "flags", MessageFlag, default=0)
+
     @property
     def guild(self) -> typing.Optional[guild.Guild]:
         return self._state.get_guild_by_id(self._guild_id) if self._guild_id else None
@@ -217,27 +235,6 @@ class Message(base.Snowflake):
     def author(self) -> typing.Union[user.User, user.Member, user.BotUser]:
         return self._state.get_user_by_id(self._author_id)
 
-    @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload):
-        return Message(
-            _state=global_state,
-            id=transform.get_cast(payload, "id", int),
-            _author_id=global_state.parse_user(payload.get("author")).id,
-            _channel_id=transform.get_cast(payload, "channel_id", int),
-            _guild_id=transform.get_cast(payload, "guild_id", int),
-            edited_at=transform.get_cast(payload, "edited_timestamp", dateutils.parse_iso_8601_datetime),
-            tts=transform.get_cast(payload, "tts", bool, False),
-            mentions_everyone=transform.get_cast(payload, "mention_everyone", bool, False),
-            attachments=transform.get_sequence(payload, "attachments", media.Attachment.from_dict),
-            embeds=transform.get_sequence(payload, "embeds", embed.Embed.from_dict),
-            pinned=transform.get_cast(payload, "pinned", bool, False),
-            application=transform.get_cast(payload, "application", MessageApplication.from_dict),
-            activity=transform.get_cast(payload, "activity", MessageActivity.from_dict),
-            type=transform.get_cast_or_raw(payload, "type", MessageType),
-            content=payload.get("content"),
-            flags=transform.get_cast(payload, "flags", MessageFlag, default=0),
-        )
-
 
 @base.dataclass()
 class MessageActivity:
@@ -254,15 +251,12 @@ class MessageActivity:
 
     #: The optional party ID associated with the message.
     #:
-    #: :type: :class:`int` or `None
+    #: :type: :class:`int` or `None`
     party_id: typing.Optional[int]
 
-    @staticmethod
-    def from_dict(payload):
-        return MessageActivity(
-            type=transform.get_cast_or_raw(payload, "type", MessageActivityType),
-            party_id=transform.get_cast(payload, "party_id", int),
-        )
+    def __init__(self, payload):
+        self.type = transform.get_cast_or_raw(payload, "type", MessageActivityType)
+        self.party_id = transform.get_cast(payload, "party_id", int)
 
 
 @base.dataclass()
@@ -298,15 +292,12 @@ class MessageApplication(base.Snowflake):
     #: :type: :class:`str`
     name: str
 
-    @staticmethod
-    def from_dict(payload):
-        return MessageApplication(
-            id=transform.get_cast(payload, "id", int),
-            cover_image_id=transform.get_cast(payload, "cover_image", int),
-            description=payload.get("description"),
-            icon_image_id=transform.get_cast(payload, "icon", int),
-            name=payload.get("name"),
-        )
+    def __init__(self, payload):
+        self.id = transform.get_cast(payload, "id", int)
+        self.cover_image_id = transform.get_cast(payload, "cover_image", int)
+        self.description = payload.get("description")
+        self.icon_image_id = transform.get_cast(payload, "icon", int)
+        self.name = payload.get("name")
 
 
 __all__ = ["MessageType", "MessageActivityType", "Message", "MessageActivity", "MessageApplication"]
