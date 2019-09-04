@@ -122,3 +122,11 @@ class TestColor:
             assert False, "No failure"
         except ValueError:
             pass
+
+    def test_Color_from_bytes(self):
+        assert color.Color(0xFFAAFF) == color.Color.from_bytes(b"\xff\xaa\xff\x00\x00\x00\x00\x00\x00\x00", "little")
+
+    def test_Color_to_bytes(self):
+        c = color.Color(0xFFAAFF)
+        b = c.to_bytes(10, "little")
+        assert b == b"\xff\xaa\xff\x00\x00\x00\x00\x00\x00\x00"

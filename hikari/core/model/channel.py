@@ -49,14 +49,13 @@ class Channel(base.Snowflake, abc.ABC):
     #: :type: :class:`int`
     id: int
 
+    @abc.abstractmethod
+    def __init__(self):
+        ...
+
     def __init_subclass__(cls, **kwargs):
         if "type" in kwargs:
             _channel_type_to_class[kwargs.pop("type")] = cls
-
-    @staticmethod
-    @abc.abstractmethod
-    def from_dict(payload, state):
-        """Convert the given payload and state into an object instance."""
 
     @property
     @abc.abstractmethod
@@ -107,7 +106,7 @@ class GuildChannel(Channel, abc.ABC):
 
 
 @base.dataclass()
-class GuildTextChannel(GuildChannel, type=0):
+class GuildTextChannel(GuildChannel, base.Messageable, type=0):
     """
     A text channel.
     """
@@ -136,26 +135,23 @@ class GuildTextChannel(GuildChannel, type=0):
     #: :type: :class:`bool`
     nsfw: bool
 
-    # noinspection PyMethodOverriding
-    @staticmethod
-    def from_dict(global_state, payload):
-        return GuildTextChannel(
-            _state=global_state,
-            id=transform.get_cast(payload, "id", int),
-            _guild_id=transform.get_cast(payload, "guild_id", int),
-            position=payload.get("position"),
-            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
-            name=payload.get("name"),
-            nsfw=payload.get("nsfw", False),
-            _parent_id=transform.get_cast(payload, "parent_id", int),
-            topic=payload.get("topic"),
-            rate_limit_per_user=payload.get("rate_limit_per_user"),
-            last_message_id=transform.get_cast(payload, "last_message_id", int),
-        )
+    # noinspection PyMissingConstructor
+    def __init__(self, global_state, payload):
+        self._state = global_state
+        self.id = transform.get_cast(payload, "id", int)
+        self._guild_id = transform.get_cast(payload, "guild_id", int)
+        self.position = payload.get("position")
+        self.permission_overwrites = transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite)
+        self.name = payload.get("name")
+        self.nsfw = payload.get("nsfw", False)
+        self._parent_id = transform.get_cast(payload, "parent_id", int)
+        self.topic = payload.get("topic")
+        self.rate_limit_per_user = payload.get("rate_limit_per_user")
+        self.last_message_id = transform.get_cast(payload, "last_message_id", int)
 
 
 @base.dataclass()
-class DMChannel(Channel, type=1):
+class DMChannel(Channel, base.Messageable, type=1):
     """
     A DM channel between users.
     """
@@ -172,14 +168,12 @@ class DMChannel(Channel, type=1):
     #: :type: :class:`list` of :class:`hikari.core.model.user.User`
     recipients: typing.List[user.User]
 
-    @staticmethod
-    def from_dict(global_state, payload):
-        return DMChannel(
-            _state=global_state,
-            id=transform.get_cast(payload, "id", int),
-            last_message_id=transform.get_cast(payload, "last_message_id", int),
-            recipients=transform.get_sequence(payload, "recipients", global_state.parse_user),
-        )
+    # noinspection PyMissingConstructor
+    def __init__(self, global_state, payload):
+        self._state = global_state
+        self.id = transform.get_cast(payload, "id", int)
+        self.last_message_id = transform.get_cast(payload, "last_message_id", int)
+        self.recipients = transform.get_sequence(payload, "recipients", global_state.parse_user)
 
     @property
     def is_dm(self) -> bool:
@@ -206,19 +200,17 @@ class GuildVoiceChannel(GuildChannel, type=2):
     #: :type: :class:`int` or `None`
     user_limit: typing.Optional[int]
 
-    @staticmethod
-    def from_dict(global_state, payload):
-        return GuildVoiceChannel(
-            _state=global_state,
-            id=transform.get_cast(payload, "id", int),
-            _guild_id=transform.get_cast(payload, "guild_id", int),
-            position=payload.get("position"),
-            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
-            name=payload.get("name"),
-            bitrate=payload.get("bitrate"),
-            user_limit=payload.get("user_limit") or None,
-            _parent_id=transform.get_cast(payload, "parent_id", int),
-        )
+    # noinspection PyMissingConstructor
+    def __init__(self, global_state, payload):
+        self._state = global_state
+        self.id = transform.get_cast(payload, "id", int)
+        self._guild_id = transform.get_cast(payload, "guild_id", int)
+        self.position = payload.get("position")
+        self.permission_overwrites = transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite)
+        self.name = payload.get("name")
+        self.bitrate = payload.get("bitrate")
+        self.user_limit = payload.get("user_limit") or None
+        self._parent_id = transform.get_cast(payload, "parent_id", int)
 
 
 @base.dataclass()
@@ -247,18 +239,16 @@ class GroupDMChannel(DMChannel, type=3):
     #: :type: :class:`int` or `None`
     owner_application_id: typing.Optional[int]
 
-    @staticmethod
-    def from_dict(global_state, payload):
-        return GroupDMChannel(
-            global_state,
-            id=transform.get_cast(payload, "id", int),
-            last_message_id=transform.get_cast(payload, "last_message_id", int),
-            recipients=transform.get_sequence(payload, "recipients", repr),  # TODO: implement
-            icon_hash=payload.get("icon"),
-            name=payload.get("name"),
-            owner_application_id=transform.get_cast(payload, "owner_application_id", int),
-            _owner_id=transform.get_cast(payload, "owner_id", int),
-        )
+    # noinspection PyMissingConstructor
+    def __init__(self, global_state, payload):
+        self._state = global_state
+        self.id = transform.get_cast(payload, "id", int)
+        self.last_message_id = transform.get_cast(payload, "last_message_id", int)
+        self.recipients = transform.get_sequence(payload, "recipients", repr)
+        self.icon_hash = payload.get("icon")
+        self.name = payload.get("name")
+        self.owner_application_id = transform.get_cast(payload, "owner_application_id", int)
+        self._owner_id = transform.get_cast(payload, "owner_id", int)
 
 
 @base.dataclass()
@@ -269,16 +259,14 @@ class GuildCategory(GuildChannel, type=4):
 
     __slots__ = ()
 
-    @staticmethod
-    def from_dict(global_state, payload):
-        return GuildCategory(
-            _state=global_state,
-            id=transform.get_cast(payload, "id", int),
-            _guild_id=transform.get_cast(payload, "guild_id", int),
-            position=transform.get_cast(payload, "position", int),
-            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
-            name=payload.get("name"),
-        )
+    # noinspection PyMissingConstructor
+    def __init__(self, global_state, payload):
+        self._state = global_state
+        self.id = transform.get_cast(payload, "id", int)
+        self._guild_id = transform.get_cast(payload, "guild_id", int)
+        self.position = transform.get_cast(payload, "position", int)
+        self.permission_overwrites = transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite)
+        self.name = payload.get("name")
 
 
 @base.dataclass()
@@ -306,21 +294,18 @@ class GuildNewsChannel(GuildChannel, type=5):
     #: :type: :class:`bool`
     nsfw: bool
 
-    # noinspection PyMethodOverriding
-    @staticmethod
-    def from_dict(global_state, payload):
-        return GuildNewsChannel(
-            _state=global_state,
-            id=transform.get_cast(payload, "id", int),
-            _guild_id=transform.get_cast(payload, "guild_id", int),
-            position=transform.get_cast(payload, "position", int),
-            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
-            name=payload.get("name"),
-            nsfw=payload.get("nsfw", False),
-            _parent_id=transform.get_cast(payload, "parent_id", int),
-            topic=payload.get("topic"),
-            last_message_id=transform.get_cast(payload, "last_message_id", int),
-        )
+    # noinspection PyMissingConstructor
+    def __init__(self, global_state, payload):
+        self._state = global_state
+        self.id = transform.get_cast(payload, "id", int)
+        self._guild_id = transform.get_cast(payload, "guild_id", int)
+        self.position = transform.get_cast(payload, "position", int)
+        self.permission_overwrites = transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite)
+        self.name = payload.get("name")
+        self.nsfw = payload.get("nsfw", False)
+        self._parent_id = transform.get_cast(payload, "parent_id", int)
+        self.topic = payload.get("topic")
+        self.last_message_id = transform.get_cast(payload, "last_message_id", int)
 
 
 @base.dataclass()
@@ -333,17 +318,14 @@ class GuildStoreChannel(GuildChannel, type=6):
 
     _parent_id: typing.Optional[int]
 
-    @staticmethod
-    def from_dict(global_state, payload):
-        return GuildStoreChannel(
-            _state=global_state,
-            id=transform.get_cast(payload, "id", int),
-            _guild_id=transform.get_cast(payload, "guild_id", int),
-            position=transform.get_cast(payload, "position", int),
-            permission_overwrites=transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite),
-            name=payload.get("name"),
-            _parent_id=transform.get_cast(payload, "parent_id", int),
-        )
+    def __init__(self, global_state, payload):
+        self._state = global_state
+        self.id = transform.get_cast(payload, "id", int)
+        self._guild_id = transform.get_cast(payload, "guild_id", int)
+        self.position = transform.get_cast(payload, "position", int)
+        self.permission_overwrites = transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite)
+        self.name = payload.get("name")
+        self._parent_id = transform.get_cast(payload, "parent_id", int)
 
 
 def channel_from_dict(
@@ -359,7 +341,7 @@ def channel_from_dict(
     channel_type = payload.get("type")
 
     try:
-        return _channel_type_to_class[channel_type].from_dict(global_state, payload)
+        return _channel_type_to_class[channel_type](global_state, payload)
     except KeyError:
         raise TypeError(f"Invalid channel type {channel_type}") from None
 

@@ -26,9 +26,9 @@ from hikari.core.model import model_cache
 
 @pytest.mark.model
 class TestChannel:
-    def test_GuildTextChannel_from_dict(self):
+    def test_GuildTextChannel(self):
         s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-        gtc = channel.GuildTextChannel.from_dict(
+        gtc = channel.GuildTextChannel(
             s,
             {
                 "type": 0,
@@ -55,18 +55,18 @@ class TestChannel:
         assert gtc.name == "shh!"
         assert not gtc.is_dm
 
-    def test_DMChannel_from_dict(self):
+    def test_DMChannel(self):
         s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-        dmc = channel.DMChannel.from_dict(s, {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []})
+        dmc = channel.DMChannel(s, {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []})
 
         assert dmc.id == 929292
         assert dmc.last_message_id == 12345
         assert dmc.recipients == []
         assert dmc.is_dm
 
-    def test_GuildVoiceChannel_from_dict(self):
+    def test_GuildVoiceChannel(self):
         s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-        gvc = channel.GuildVoiceChannel.from_dict(
+        gvc = channel.GuildVoiceChannel(
             s,
             {
                 "type": 2,
@@ -91,9 +91,9 @@ class TestChannel:
         assert gvc._parent_id == 42
         assert not gvc.is_dm
 
-    def test_GroupDMChannel_from_dict(self):
+    def test_GroupDMChannel(self):
         s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-        gdmc = channel.GroupDMChannel.from_dict(
+        gdmc = channel.GroupDMChannel(
             s,
             {
                 "type": 3,
@@ -116,9 +116,9 @@ class TestChannel:
         assert gdmc._owner_id == 111111
         assert gdmc.is_dm
 
-    def test_GuildCategory_from_dict(self):
+    def test_GuildCategory(self):
         s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-        gc = channel.GuildCategory.from_dict(
+        gc = channel.GuildCategory(
             s,
             {
                 "type": 4,
@@ -137,9 +137,9 @@ class TestChannel:
         assert gc.permission_overwrites == []
         assert not gc.is_dm
 
-    def test_GuildNewsChannel_from_dict(self):
+    def test_GuildNewsChannel(self):
         s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-        gnc = channel.GuildNewsChannel.from_dict(
+        gnc = channel.GuildNewsChannel(
             s,
             {
                 "type": 5,
@@ -166,9 +166,9 @@ class TestChannel:
         assert gnc.last_message_id is None
         assert not gnc.is_dm
 
-    def test_GuildStoreChannel_from_dict(self):
+    def test_GuildStoreChannel(self):
         s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-        gsc = channel.GuildStoreChannel.from_dict(
+        gsc = channel.GuildStoreChannel(
             s,
             {
                 "type": 6,
@@ -202,12 +202,12 @@ class TestChannel:
         ],
     )
     def test_channel_from_dict_success_case(self, type_field, expected_class):
-        fqn = expected_class.__module__ + "." + expected_class.__qualname__ + ".from_dict"
-        with mock.patch(fqn) as m:
+        fqn = expected_class.__module__ + "." + expected_class.__qualname__ + ".__init__"
+        with mock.patch(fqn, return_value=None) as m:
             channel.channel_from_dict(NotImplemented, {"type": type_field})
             m.assert_called_once_with(NotImplemented, {"type": type_field})
 
-    def test_channel_from_dict_failure_case(self):
+    def test_channel_failure_case(self):
         try:
             channel.channel_from_dict(NotImplemented, {"type": -999})
             assert False
@@ -226,7 +226,7 @@ class TestChannel:
     )
     def test_channel_guild(self, impl):
         cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-        obj = impl.from_dict(cache, {"guild_id": "91827"})
+        obj = impl(cache, {"guild_id": "91827"})
         guild = mock.MagicMock()
         cache.get_guild_by_id = mock.MagicMock(return_value=guild)
 

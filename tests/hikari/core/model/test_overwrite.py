@@ -28,7 +28,7 @@ from hikari.core.model import user
 @pytest.mark.model
 class TestOverwrite:
     def test_Overwrite(self):
-        o = overwrite.Overwrite.from_dict(
+        o = overwrite.Overwrite(
             {
                 "id": "1234567890",
                 "type": "role",

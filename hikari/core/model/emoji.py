@@ -71,21 +71,17 @@ class Emoji(base.Snowflake):
     #: :type: :class:`bool`
     animated: bool
 
-    @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload, guild_id: int):
+    def __init__(self, global_state: model_cache.AbstractModelCache, payload, guild_id: int):
         """Convert the given payload and state into an object instance."""
-        return Emoji(
-            _state=global_state,
-            id=transform.get_cast(payload, "id", int),
-            name=payload.get("name"),
-            # Assume these were already cached...
-            _role_ids=transform.get_sequence(payload, "roles", lambda r: int(r["id"])),
-            _guild_id=guild_id,
-            user=global_state.parse_user(payload.get("user")),
-            require_colons=transform.get_cast(payload, "require_colons", bool),
-            managed=transform.get_cast(payload, "managed", bool),
-            animated=transform.get_cast(payload, "animated", bool),
-        )
+        self._state = global_state
+        self.id = transform.get_cast(payload, "id", int)
+        self.name = payload.get("name")
+        self._role_ids = transform.get_sequence(payload, "roles", lambda r: int(r["id"]))
+        self._guild_id = guild_id
+        self.user = global_state.parse_user(payload.get("user"))
+        self.require_colons = transform.get_cast(payload, "require_colons", bool)
+        self.managed = transform.get_cast(payload, "managed", bool)
+        self.animated = transform.get_cast(payload, "animated", bool)
 
 
 __all__ = ["Emoji"]

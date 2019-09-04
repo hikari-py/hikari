@@ -24,11 +24,12 @@ from __future__ import annotations
 import asyncio
 import json as libjson
 import logging
-
-import aiohttp
 import typing
 
+import aiohttp
+
 #: Format string for the default Discord API URL.
+import hikari.core.utils.user_agent
 from hikari.core import errors
 from hikari.core.net import opcodes
 from hikari.core.net import rates
@@ -182,7 +183,7 @@ class BaseHTTPClient:
         #: The logger to use for this object.
         self.logger = logging.getLogger(f"{type(self).__module__}.{type(self).__qualname__}")
         #: User agent to use
-        self.user_agent = meta.user_agent()
+        self.user_agent = hikari.core.utils.user_agent.user_agent()
 
     async def close(self):
         """

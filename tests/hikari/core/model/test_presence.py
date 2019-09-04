@@ -141,7 +141,7 @@ def activity(assets, party, timestamps):
 @pytest.mark.model
 class TestPresence:
     def test_parse_no_Presence(self, no_presence):
-        p = presence.Presence.from_dict(no_presence)
+        p = presence.Presence(no_presence)
 
         assert p.status == presence.Status.ONLINE
         assert p.desktop_status == presence.Status.ONLINE
@@ -151,7 +151,7 @@ class TestPresence:
         assert len(p.activities) == 0
 
     def test_parse_legacy_Presence(self, legacy_presence):
-        p = presence.Presence.from_dict(legacy_presence)
+        p = presence.Presence(legacy_presence)
 
         assert p.status == presence.Status.ONLINE
         assert p.desktop_status == presence.Status.OFFLINE
@@ -163,7 +163,7 @@ class TestPresence:
         assert a is not None
 
     def test_rich_Presence(self, rich_presence):
-        p = presence.Presence.from_dict(rich_presence)
+        p = presence.Presence(rich_presence)
 
         assert p.status == presence.Status.ONLINE
         assert p.desktop_status == presence.Status.ONLINE
@@ -177,7 +177,7 @@ class TestPresence:
 
 @pytest.mark.model
 def test_parse_activity(activity):
-    a = presence.PresenceActivity.from_dict(activity)
+    a = presence.PresenceActivity(activity)
     assert a.type == presence.ActivityType.LISTENING
     assert a.timestamps is not None
     assert a.state == "Working on hikari.core"
@@ -193,7 +193,7 @@ def test_parse_activity(activity):
 
 @pytest.mark.model
 def test_parse_assets(assets):
-    a = presence.ActivityAssets.from_dict(assets)
+    a = presence.ActivityAssets(assets)
     assert a.small_text == "Using PyCharm"
     assert a.small_image == "387095349199896578"
     assert a.large_text == "Editing a Scratch file"
@@ -202,7 +202,7 @@ def test_parse_assets(assets):
 
 @pytest.mark.model
 def test_parse_party(party):
-    p = presence.ActivityParty.from_dict(party)
+    p = presence.ActivityParty(party)
     assert p.id == "1a2b3c"
     assert p.current_size == 4
     assert p.max_size == 5
@@ -211,10 +211,10 @@ def test_parse_party(party):
 @pytest.mark.model
 class TestActivityTimestamps:
     def test_parse_timestamps(self, timestamps):
-        t = presence.ActivityTimestamps.from_dict(timestamps)
+        t = presence.ActivityTimestamps(timestamps)
         assert t.start == datetime.datetime(2019, 8, 18, 8, 22, 32, 964000, datetime.timezone.utc)
         assert t.end == datetime.datetime(2019, 8, 18, 13, 44, 52, 633000, datetime.timezone.utc)
 
     def test_duration(self, timestamps):
-        t = presence.ActivityTimestamps.from_dict(timestamps)
+        t = presence.ActivityTimestamps(timestamps)
         assert math.isclose(t.duration.total_seconds(), 1566135892.633 - 1566116552.964)

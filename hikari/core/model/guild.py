@@ -38,7 +38,11 @@ from hikari.core.utils import transform
 
 
 @base.dataclass()
-class Guild(base.Snowflake):
+class Guild(base.Snowflake, base.Volatile):
+    """
+    Implementation of a Guild.
+    """
+
     # We leave out widget and embed information as there isn't documentation to distinguish what each of them are for,
     # as they seem to overlap.
     # We omit:
@@ -232,50 +236,54 @@ class Guild(base.Snowflake):
     #: :type: :class:`hikari.core.model.guild.SystemChannelFlag`
     system_channel_flags: typing.Optional[SystemChannelFlag]
 
+    def __init__(self, global_state, payload):
+        guild_id = transform.get_cast(payload, "id", int)
+        self.id = guild_id
+        self._state = global_state
+        self.update_state(payload)
+
+    def update_state(self, payload):
+        self._afk_channel_id = transform.get_cast(payload, "afk_channel_id", int)
+        self._owner_id = transform.get_cast(payload, "owner_id", int)
+        self._voice_region_id = transform.get_cast(payload, "region", int)
+        self._system_channel_id = transform.get_cast(payload, "system_channel_id", int)
+        self.creator_application_id = transform.get_cast(payload, "application_id", int)
+        self.name = payload.get("name")
+        self.icon_hash = payload.get("icon")
+        self.splash_hash = payload.get("splash")
+        self.afk_timeout = transform.get_cast(payload, "afk_timeout", int)
+        self.verification_level = transform.get_cast_or_raw(payload, "verification_level", VerificationLevel)
+        self.preferred_locale = transform.get_cast(payload, "preferred_locale", str)
+        self.message_notification_level = transform.get_cast_or_raw(
+            payload, "default_message_notifications", NotificationLevel
+        )
+        self.explicit_content_filter_level = transform.get_cast_or_raw(
+            payload, "explicit_content_filter", ExplicitContentFilterLevel
+        )
+        self.roles = transform.get_sequence(payload, "roles", self._state.parse_role, transform.flatten)
+        self.emojis = transform.get_sequence(payload, "emojis", self._state.parse_emoji, transform.flatten)
+        self.features = transform.get_sequence(payload, "features", Feature.from_discord_name, keep_failures=True)
+        self.member_count = transform.get_cast(payload, "member_count", int)
+        self.mfa_level = transform.get_cast_or_raw(payload, "mfa_level", MFALevel)
+        self.my_permissions = transform.get_cast_or_raw(payload, "permissions", permission.Permission)
+        self.joined_at = transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime)
+        self.large = transform.get_cast(payload, "large", bool)
+        self.unavailable = (transform.get_cast(payload, "unavailable", bool),)
+        self.members = transform.flatten((self._state.parse_member(m, self.id) for m in payload.get("members", ())))
+        self.channels = transform.get_sequence(
+            payload, "channels", self._state.parse_channel, transform.flatten, state=self._state
+        )
+        self.max_members = transform.get_cast(payload, "max_members", int)
+        self.vanity_url_code = payload.get("vanity_url_code")
+        self.description = payload.get("description")
+        self.banner_hash = payload.get("banner")
+        self.premium_tier = transform.get_cast_or_raw(payload, "premium_tier", PremiumTier)
+        self.premium_subscription_count = transform.get_cast(payload, "premium_subscription_count", int)
+        self.system_channel_flags = transform.get_cast_or_raw(payload, "system_channel_flags", SystemChannelFlag)
+
     @staticmethod
     def from_dict(global_state: model_cache.AbstractModelCache, payload: dict):
-        guild_id = transform.get_cast(payload, "id", int)
-        return Guild(
-            _state=global_state,
-            id=guild_id,
-            _afk_channel_id=transform.get_cast(payload, "afk_channel_id", int),
-            _owner_id=transform.get_cast(payload, "owner_id", int),
-            _voice_region_id=transform.get_cast(payload, "region", int),
-            _system_channel_id=transform.get_cast(payload, "system_channel_id", int),
-            creator_application_id=transform.get_cast(payload, "application_id", int),
-            name=payload.get("name"),
-            icon_hash=payload.get("icon"),
-            splash_hash=payload.get("splash"),
-            afk_timeout=transform.get_cast(payload, "afk_timeout", int),
-            verification_level=transform.get_cast_or_raw(payload, "verification_level", VerificationLevel),
-            preferred_locale=transform.get_cast(payload, "preferred_locale", str),
-            message_notification_level=transform.get_cast_or_raw(
-                payload, "default_message_notifications", NotificationLevel
-            ),
-            explicit_content_filter_level=transform.get_cast_or_raw(
-                payload, "explicit_content_filter", ExplicitContentFilterLevel
-            ),
-            roles=transform.get_sequence(payload, "roles", global_state.parse_role, transform.flatten),
-            emojis=transform.get_sequence(payload, "emojis", global_state.parse_emoji, transform.flatten),
-            features=transform.get_sequence(payload, "features", Feature.from_discord_name, keep_failures=True),
-            member_count=transform.get_cast(payload, "member_count", int),
-            mfa_level=transform.get_cast_or_raw(payload, "mfa_level", MFALevel),
-            my_permissions=transform.get_cast_or_raw(payload, "permissions", permission.Permission),
-            joined_at=transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime),
-            large=transform.get_cast(payload, "large", bool),
-            unavailable=transform.get_cast(payload, "unavailable", bool),
-            members=transform.flatten((global_state.parse_member(m, guild_id) for m in payload.get("members", ()))),
-            channels=transform.get_sequence(
-                payload, "channels", global_state.parse_channel, transform.flatten, state=global_state
-            ),
-            max_members=transform.get_cast(payload, "max_members", int),
-            vanity_url_code=payload.get("vanity_url_code"),
-            description=payload.get("description"),
-            banner_hash=payload.get("banner"),
-            premium_tier=transform.get_cast_or_raw(payload, "premium_tier", PremiumTier),
-            premium_subscription_count=transform.get_cast(payload, "premium_subscription_count", int),
-            system_channel_flags=transform.get_cast_or_raw(payload, "system_channel_flags", SystemChannelFlag),
-        )
+        return Guild(global_state, payload)
 
 
 class SystemChannelFlag(enum.IntFlag):
@@ -348,12 +356,16 @@ class VerificationLevel(enum.IntEnum):
 
     #: Unrestricted
     NONE = 0
+
     #: Must have a verified email on their account.
     LOW = 1
+
     #: Must have been registered on Discord for more than 5 minutes.
     MEDIUM = 2
+
     #: (╯°□°）╯︵ ┻━┻ - must be a member of the guild for longer than 10 minutes.
     HIGH = 3
+
     #: ┻━┻ミヽ(ಠ益ಠ)ﾉ彡┻━┻ - must have a verified phone number.
     VERY_HIGH = 4
 
@@ -363,10 +375,13 @@ class PremiumTier(enum.IntEnum):
 
     #: No Nitro boosts.
     NONE = 0
+
     #: Level 1 Nitro boost.
     TIER_1 = 1
+
     #: Level 2 Nitro boost.
     TIER_2 = 2
+
     #: Level 3 Nitro boost.
     TIER_3 = 3
 
@@ -389,9 +404,9 @@ class Ban:
     #: :type: :class:`hikari.core.model.user.User`
     user: user.User
 
-    @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload: dict):
-        return Ban(reason=payload.get("reason"), user=global_state.parse_user(payload.get("user")))
+    def __init__(self, global_state: model_cache.AbstractModelCache, payload: dict):
+        self.reason = payload.get("reason")
+        self.user = global_state.parse_user(payload.get("user"))
 
 
 __all__ = [

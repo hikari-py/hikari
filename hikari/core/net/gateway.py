@@ -41,6 +41,7 @@ import zlib
 import typing
 import websockets
 
+import hikari.core.utils.user_agent
 from hikari.core import errors
 from hikari.core.net import opcodes
 from hikari.core.net import rates
@@ -388,9 +389,9 @@ class GatewayClient:
                 "compress": False,
                 "large_threshold": self.large_threshold,
                 "properties": {
-                    "$os": meta.system_type(),
-                    "$browser": meta.library_version(),
-                    "$device": meta.python_version(),
+                    "$os": hikari.core.utils.user_agent.system_type(),
+                    "$browser": hikari.core.utils.user_agent.library_version(),
+                    "$device": hikari.core.utils.user_agent.python_version(),
                 },
             },
         }

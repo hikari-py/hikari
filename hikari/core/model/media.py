@@ -154,17 +154,14 @@ class Attachment(base.Snowflake):
     #: :type: :class:`int` or `None`
     height: typing.Optional[int]
 
-    @staticmethod
-    def from_dict(payload):
-        return Attachment(
-            id=transform.get_cast(payload, "id", int),
-            filename=payload.get("filename"),
-            size=transform.get_cast(payload, "size", int),
-            url=payload.get("url"),
-            proxy_url=payload.get("proxy_url"),
-            width=transform.get_cast(payload, "width", int),
-            height=transform.get_cast(payload, "height", int),
-        )
+    def __init__(self, payload):
+        self.id = transform.get_cast(payload, "id", int)
+        self.filename = payload.get("filename")
+        self.size = transform.get_cast(payload, "size", int)
+        self.url = payload.get("url")
+        self.proxy_url = payload.get("proxy_url")
+        self.width = transform.get_cast(payload, "width", int)
+        self.height = transform.get_cast(payload, "height", int)
 
 
 __all__ = ["Avatar", "Attachment"]

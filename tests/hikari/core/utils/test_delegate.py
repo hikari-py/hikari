@@ -142,6 +142,13 @@ def test_field_delegation_on_dataclass():
     @delegate.delegate_safe_dataclass()
     class Delegate(Base):
         _base: Base
+
+        def __init__(self, base, d, e, f):
+            self._base = base
+            self.d = d
+            self.e = e
+            self.f = f
+
         d: int
         e: int
         f: int
