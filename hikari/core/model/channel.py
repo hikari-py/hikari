@@ -22,19 +22,20 @@ Channel models.
 from __future__ import annotations
 
 import abc
-
+import dataclasses
 import typing
 
+import hikari.core.utils.transform
+import hikari.core.utils.types
 from hikari.core.model import base
 from hikari.core.model import guild as _guild
 from hikari.core.model import overwrite
 from hikari.core.model import user
-from hikari.core.utils import transform
 
 _channel_type_to_class = {}
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Channel(base.Snowflake, abc.ABC):
     """
     A generic type of channel.
@@ -49,9 +50,9 @@ class Channel(base.Snowflake, abc.ABC):
     #: :type: :class:`int`
     id: int
 
-    @abc.abstractmethod
-    def __init__(self):
-        ...
+    def __init__(self, global_state, payload):
+        self._state = global_state
+        self.id = int(payload["id"])
 
     def __init_subclass__(cls, **kwargs):
         if "type" in kwargs:
@@ -64,15 +65,16 @@ class Channel(base.Snowflake, abc.ABC):
         ...
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class GuildChannel(Channel, abc.ABC):
     """
     A channel that belongs to a guild.
     """
 
-    __slots__ = ("_guild_id", "position", "permission_overwrites", "name")
+    __slots__ = ("_guild_id", "position", "permission_overwrites", "name", "_parent_id")
 
     _guild_id: int
+    _parent_id: typing.Optional[int]
 
     #: The position of the channel in the channel list.
     #:
@@ -89,6 +91,20 @@ class GuildChannel(Channel, abc.ABC):
     #: :type: :class:`str`
     name: str
 
+    def __init__(self, global_state, payload):
+        super().__init__(global_state, payload)
+        self._guild_id = int(payload["guild_id"])
+        self.position = int(payload["position"])
+
+        overwrites = []
+        for raw_overwrite in payload["permission_overwrites"]:
+            overwrite_obj = overwrite.Overwrite(raw_overwrite)
+            overwrites.append(overwrite_obj)
+
+        self.permission_overwrites = overwrites
+        self.name = payload["name"]
+        self._parent_id = hikari.core.utils.transform.nullable_cast(payload.get("parent_id"), int)
+
     @property
     def is_dm(self) -> bool:
         return False
@@ -99,19 +115,16 @@ class GuildChannel(Channel, abc.ABC):
 
     @property
     def parent(self) -> typing.Optional[GuildCategory]:
-        parent_id = getattr(self, "_parent_id", None)
-        if parent_id is not None:
-            return self.guild.channels.get(parent_id)
-        return None
+        return self.guild.channels[self._parent_id] if self._parent_id is not None else None
 
 
-@base.dataclass()
-class GuildTextChannel(GuildChannel, base.Messageable, type=0):
+@dataclasses.dataclass()
+class GuildTextChannel(GuildChannel, type=0):
     """
     A text channel.
     """
 
-    __slots__ = ("topic", "rate_limit_per_user", "last_message_id", "nsfw", "_parent_id")
+    __slots__ = ("topic", "rate_limit_per_user", "last_message_id", "nsfw")
 
     _parent_id: typing.Optional[int]
 
@@ -137,21 +150,15 @@ class GuildTextChannel(GuildChannel, base.Messageable, type=0):
 
     # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
-        self._state = global_state
-        self.id = transform.get_cast(payload, "id", int)
-        self._guild_id = transform.get_cast(payload, "guild_id", int)
-        self.position = payload.get("position")
-        self.permission_overwrites = transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite)
-        self.name = payload.get("name")
+        super().__init__(global_state, payload)
         self.nsfw = payload.get("nsfw", False)
-        self._parent_id = transform.get_cast(payload, "parent_id", int)
         self.topic = payload.get("topic")
-        self.rate_limit_per_user = payload.get("rate_limit_per_user")
-        self.last_message_id = transform.get_cast(payload, "last_message_id", int)
+        self.rate_limit_per_user = payload.get("rate_limit_per_user", 0)
+        self.last_message_id = hikari.core.utils.transform.nullable_cast(payload.get("last_message_id"), int)
 
 
-@base.dataclass()
-class DMChannel(Channel, base.Messageable, type=1):
+@dataclasses.dataclass()
+class DMChannel(Channel, type=1):
     """
     A DM channel between users.
     """
@@ -170,23 +177,22 @@ class DMChannel(Channel, base.Messageable, type=1):
 
     # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
-        self._state = global_state
-        self.id = transform.get_cast(payload, "id", int)
-        self.last_message_id = transform.get_cast(payload, "last_message_id", int)
-        self.recipients = transform.get_sequence(payload, "recipients", global_state.parse_user)
+        super().__init__(global_state, payload)
+        self.last_message_id = hikari.core.utils.transform.nullable_cast(payload.get("last_message_id"), int)
+        self.recipients = [global_state.parse_user(u) for u in payload.get("recipients", ())]
 
     @property
     def is_dm(self) -> bool:
         return True
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class GuildVoiceChannel(GuildChannel, type=2):
     """
     A voice channel within a guild.
     """
 
-    __slots__ = ("bitrate", "user_limit", "_parent_id")
+    __slots__ = ("bitrate", "user_limit")
 
     _parent_id: typing.Optional[int]
 
@@ -202,18 +208,12 @@ class GuildVoiceChannel(GuildChannel, type=2):
 
     # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
-        self._state = global_state
-        self.id = transform.get_cast(payload, "id", int)
-        self._guild_id = transform.get_cast(payload, "guild_id", int)
-        self.position = payload.get("position")
-        self.permission_overwrites = transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite)
-        self.name = payload.get("name")
-        self.bitrate = payload.get("bitrate")
+        super().__init__(global_state, payload)
+        self.bitrate = payload.get("bitrate") or None
         self.user_limit = payload.get("user_limit") or None
-        self._parent_id = transform.get_cast(payload, "parent_id", int)
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class GroupDMChannel(DMChannel, type=3):
     """
     A DM group chat.
@@ -241,17 +241,14 @@ class GroupDMChannel(DMChannel, type=3):
 
     # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
-        self._state = global_state
-        self.id = transform.get_cast(payload, "id", int)
-        self.last_message_id = transform.get_cast(payload, "last_message_id", int)
-        self.recipients = transform.get_sequence(payload, "recipients", repr)
+        super().__init__(global_state, payload)
         self.icon_hash = payload.get("icon")
         self.name = payload.get("name")
-        self.owner_application_id = transform.get_cast(payload, "owner_application_id", int)
-        self._owner_id = transform.get_cast(payload, "owner_id", int)
+        self.owner_application_id = hikari.core.utils.transform.nullable_cast(payload.get("application_id"), int)
+        self._owner_id = hikari.core.utils.transform.nullable_cast(payload.get("owner_id"), int)
 
 
-@base.dataclass()
+@dataclasses.dataclass(init=False)
 class GuildCategory(GuildChannel, type=4):
     """
     A category within a guild.
@@ -259,25 +256,14 @@ class GuildCategory(GuildChannel, type=4):
 
     __slots__ = ()
 
-    # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload):
-        self._state = global_state
-        self.id = transform.get_cast(payload, "id", int)
-        self._guild_id = transform.get_cast(payload, "guild_id", int)
-        self.position = transform.get_cast(payload, "position", int)
-        self.permission_overwrites = transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite)
-        self.name = payload.get("name")
 
-
-@base.dataclass()
+@dataclasses.dataclass()
 class GuildNewsChannel(GuildChannel, type=5):
     """
     A channel for news topics within a guild.
     """
 
-    __slots__ = ("topic", "last_message_id", "_parent_id", "nsfw")
-
-    _parent_id: typing.Optional[int]
+    __slots__ = ("topic", "last_message_id", "nsfw")
 
     #: The channel topic.
     #:
@@ -296,36 +282,19 @@ class GuildNewsChannel(GuildChannel, type=5):
 
     # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
-        self._state = global_state
-        self.id = transform.get_cast(payload, "id", int)
-        self._guild_id = transform.get_cast(payload, "guild_id", int)
-        self.position = transform.get_cast(payload, "position", int)
-        self.permission_overwrites = transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite)
-        self.name = payload.get("name")
+        super().__init__(global_state, payload)
         self.nsfw = payload.get("nsfw", False)
-        self._parent_id = transform.get_cast(payload, "parent_id", int)
         self.topic = payload.get("topic")
-        self.last_message_id = transform.get_cast(payload, "last_message_id", int)
+        self.last_message_id = hikari.core.utils.transform.nullable_cast(payload.get("last_message_id"), int)
 
 
-@base.dataclass()
+@dataclasses.dataclass(init=False)
 class GuildStoreChannel(GuildChannel, type=6):
     """
     A store channel for selling of games within a guild.
     """
 
-    __slots__ = ("_parent_id",)
-
-    _parent_id: typing.Optional[int]
-
-    def __init__(self, global_state, payload):
-        self._state = global_state
-        self.id = transform.get_cast(payload, "id", int)
-        self._guild_id = transform.get_cast(payload, "guild_id", int)
-        self.position = transform.get_cast(payload, "position", int)
-        self.permission_overwrites = transform.get_sequence(payload, "permission_overwrites", overwrite.Overwrite)
-        self.name = payload.get("name")
-        self._parent_id = transform.get_cast(payload, "parent_id", int)
+    __slots__ = ()
 
 
 def channel_from_dict(

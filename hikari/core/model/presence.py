@@ -22,14 +22,13 @@ Presences for members.
 
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import enum
-
 import typing
 
 from hikari.core.model import base
 from hikari.core.utils import dateutils
-from hikari.core.utils import transform
 
 
 class Status(base.NamedEnum, enum.Enum):
@@ -43,7 +42,7 @@ class Status(base.NamedEnum, enum.Enum):
     OFFLINE = enum.auto()
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Presence:
     """
     The presence of a member. This includes their status and info on what they are doing currently.
@@ -85,7 +84,7 @@ class Presence:
         self.mobile_status = transform.get_cast(client_status, "mobile", Status.from_discord_name, Status.OFFLINE)
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class PresenceActivity:
     """
     Rich presence-style activity.
@@ -198,7 +197,7 @@ class ActivityFlag(enum.IntFlag):
     PLAY = 0x20
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class ActivityParty:
     __slots__ = ("id", "current_size", "max_size")
 
@@ -227,7 +226,7 @@ class ActivityParty:
         self.max_size = transform.get_cast(payload, "max_size", int)
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class ActivityAssets:
     __slots__ = ("large_image", "large_text", "small_image", "small_text")
 
@@ -258,7 +257,7 @@ class ActivityAssets:
         self.small_text = transform.get_cast(payload, "small_text", str)
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class ActivityTimestamps:
     __slots__ = ("start", "end")
 

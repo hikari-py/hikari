@@ -26,7 +26,7 @@ import inspect
 
 from hikari.core.utils import assertions
 
-__all__ = ("delegate_members", "delegate_safe_dataclass")
+__all__ = ("delegate_members",)
 
 _DELEGATE_MEMBERS_FIELD = "__delegate_members__"
 _DELEGATE_TYPES_FIELD = "__delegate_type_mapping__"
@@ -49,32 +49,6 @@ class DelegatedProperty:
             return getattr(delegated_object, self.delegated_member_name)
         else:
             return self
-
-
-def delegate_safe_dataclass(decorator=dataclasses.dataclass, **kwargs):
-    """
-    Dataclass decorator that is compatible with delegate types.
-
-    Args:
-        decorator:
-            The decorator to apply to the dataclass to initialize it as a dataclass.
-
-    Warning:
-        This decorator must be placed AFTER the delegate decorators are placed (so, further down the file)
-        otherwise it will produce an incorrect constructor. This is checked when using the decorator.
-
-        You will need to manually define your `__init__`.
-    """
-
-    def actual_decorator(cls):
-        if hasattr(cls, _DELEGATE_MEMBERS_FIELD):
-            raise TypeError("This class has already had delegates defined on it. Cannot make a dataclass now.")
-
-        # We don't have an `__annotations__` element if no fields exist, annoyingly.
-        annotations = getattr(cls, "__annotations__", ())
-        return decorator(**kwargs)(cls)
-
-    return actual_decorator
 
 
 def delegate_members(delegate_type, magic_field):
@@ -113,7 +87,6 @@ def delegate_members(delegate_type, magic_field):
         annotation_fields = {*getattr(delegate_type, "__annotations__", ())}
         for name in dict_fields | annotation_fields:
             if name.startswith("_") or _is_func(cls, name):
-                print('dd', name)
                 continue
 
             delegate = DelegatedProperty(magic_field, name)

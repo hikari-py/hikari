@@ -21,15 +21,15 @@ Webhooks.
 """
 from __future__ import annotations
 
+import dataclasses
 import typing
 
 from hikari.core.model import base
 from hikari.core.model import model_cache
 from hikari.core.model import user
-from hikari.core.utils import transform
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Webhook(base.Snowflake):
     __slots__ = ("_state", "id", "_guild_id", "_channel_id", "user", "name", "avatar_hash", "token")
 

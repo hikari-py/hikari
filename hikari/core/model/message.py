@@ -21,9 +21,9 @@ Messages and attachments.
 """
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import enum
-
 import typing
 
 from hikari.core.model import base
@@ -34,7 +34,6 @@ from hikari.core.model import media
 from hikari.core.model import model_cache
 from hikari.core.model import user
 from hikari.core.utils import dateutils
-from hikari.core.utils import transform
 
 
 class MessageType(enum.IntEnum):
@@ -102,7 +101,7 @@ class MessageFlag(enum.IntFlag):
 # information is not documented. Timestamp is pointless as it is able to be found from the ID anyway.
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Message(base.Snowflake):
     """
     A message that was sent on Discord.
@@ -236,7 +235,7 @@ class Message(base.Snowflake):
         return self._state.get_user_by_id(self._author_id)
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class MessageActivity:
     """
     Represents the activity of a rich presence-enabled message.
@@ -259,7 +258,7 @@ class MessageActivity:
         self.party_id = transform.get_cast(payload, "party_id", int)
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class MessageApplication(base.Snowflake):
     """
     Description of a rich presence application that created a rich presence message in a channel.

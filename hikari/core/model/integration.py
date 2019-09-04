@@ -21,18 +21,17 @@ Account integrations.
 """
 from __future__ import annotations
 
+import dataclasses
 import datetime
-
 import typing
 
 from hikari.core.model import base
 from hikari.core.model import model_cache
 from hikari.core.model import user
 from hikari.core.utils import dateutils
-from hikari.core.utils import transform
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class IntegrationAccount(base.Snowflake):
     """
     An account used for an integration.
@@ -58,7 +57,7 @@ class IntegrationAccount(base.Snowflake):
         self.name = payload.get("name")
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Integration(base.Snowflake):
     """
     A guild integration.

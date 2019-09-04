@@ -186,7 +186,7 @@ def test_GroupDMChannel():
             "recipients": [],
             "icon": "1a2b3c4d",
             "name": "shitposting 101",
-            "owner_application_id": "111111",
+            "application_id": "111111",
             "owner_id": "111111",
         },
     )
@@ -322,7 +322,7 @@ def test_channel_failure_case():
 )
 def test_channel_guild(impl):
     cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-    obj = impl(cache, {"guild_id": "91827"})
+    obj = impl(cache, {"id": "1", "position": 2, "guild_id": "91827", "permission_overwrites": [], "name": "milfchnl"})
     guild = mock.MagicMock()
     cache.get_guild_by_id = mock.MagicMock(return_value=guild)
 

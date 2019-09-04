@@ -21,13 +21,14 @@ A role within a guild.
 """
 from __future__ import annotations
 
+import dataclasses
+
 from hikari.core.model import base
 from hikari.core.model import color as _color
 from hikari.core.model import permission as _permission
-from hikari.core.utils import transform
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Role(base.Snowflake):
     """
     Representation of a role within a guild.
