@@ -21,8 +21,8 @@ Generic users not bound to a guild, and guild-bound member definitions.
 """
 from __future__ import annotations
 
+import dataclasses
 import datetime
-
 import typing
 
 from hikari.core.model import base
@@ -30,10 +30,9 @@ from hikari.core.model import model_cache
 from hikari.core.model import presence
 from hikari.core.utils import dateutils
 from hikari.core.utils import delegate
-from hikari.core.utils import transform
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class User(base.Snowflake):
     """
     Representation of a user account.
@@ -78,7 +77,7 @@ class User(base.Snowflake):
 
 
 @delegate.delegate_members(User, "_user")
-@delegate.delegate_safe_dataclass(base.dataclass)
+@dataclasses.dataclass()
 class Member(User):
     """
     A specialization of a user which provides implementation details for a specific guild.
@@ -129,7 +128,7 @@ class Member(User):
         return self._user
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class BotUser(User):
     """
     A special instance of user to represent the bot that is signed in.

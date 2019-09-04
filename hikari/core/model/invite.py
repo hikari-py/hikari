@@ -21,20 +21,18 @@ Invitations to guilds.
 """
 from __future__ import annotations
 
+import dataclasses
 import datetime
-
 import typing
 
-from hikari.core.model import base
 from hikari.core.model import channel
 from hikari.core.model import guild
 from hikari.core.model import model_cache
 from hikari.core.model import user
 from hikari.core.utils import dateutils
-from hikari.core.utils import transform
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Invite:
     """
     Represents a code that when used, adds a user to a guild or group DM channel.
@@ -78,7 +76,7 @@ class Invite:
         self.approximate_member_count = transform.get_cast(payload, "approximate_member_count", int)
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class InviteMetadata:
     """
     Metadata relating to a specific invite object.

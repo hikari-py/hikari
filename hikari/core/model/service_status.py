@@ -21,15 +21,14 @@ Models for the Status API.
 """
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import typing
 
-from hikari.core.model import base
 from hikari.core.utils import dateutils
-from hikari.core.utils import transform
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Subscriber:
     """
     A subscription to an incident.
@@ -88,7 +87,7 @@ class Subscriber:
         )
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Subscription:
     """
     A subscription to an incident.
@@ -106,7 +105,7 @@ class Subscription:
         return Subscription(subscriber=Subscriber.from_dict(payload["subscriber"]))
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Page:
     """
     A page element.
@@ -147,7 +146,7 @@ class Page:
         )
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Status:
     """
     A status description.
@@ -170,7 +169,7 @@ class Status:
         return Status(indicator=payload.get("indicator"), description=payload.get("description"))
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Component:
     """
     A component description.
@@ -232,7 +231,7 @@ class Component:
         )
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Components:
     """
     A collection of :class:`Component` objects.
@@ -258,7 +257,7 @@ class Components:
         )
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class IncidentUpdate:
     """
     An informative status update for a specific incident.
@@ -320,7 +319,7 @@ class IncidentUpdate:
         )
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Incident:
     """
     An incident.
@@ -417,7 +416,7 @@ class Incident:
         )
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Incidents:
     """
     A collection of :class:`Incident` objects.
@@ -440,7 +439,7 @@ class Incidents:
         return Incidents(Page.from_dict(payload["page"]), [Incident.from_dict(i) for i in payload["incidents"]])
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class ScheduledMaintenance:
     """
     A description of a maintenance that is scheduled to be performed.
@@ -548,7 +547,7 @@ class ScheduledMaintenance:
         )
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class ScheduledMaintenances:
     """
     A collection of maintenance events.
@@ -574,7 +573,7 @@ class ScheduledMaintenances:
         )
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Summary:
     """
     A description of the overall API status.

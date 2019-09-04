@@ -21,50 +21,10 @@ Model ABCs and mixins.
 """
 from __future__ import annotations
 
-import abc
-import dataclasses
 import datetime
-import inspect
-import textwrap
 
 from hikari.core.utils import assertions
 from hikari.core.utils import dateutils
-
-
-def dataclass(**kwargs):
-    """
-    Wraps the dataclasses' dataclass decorator and injects some default behaviour, such as injecting `__hash__` into
-    any member that supplies the `id` member.
-
-    Args:
-        **kwargs:
-            Any arguments to pass to dataclasses' dataclass decorator.
-
-    Returns:
-        A decorator for a new data class.
-    """
-
-    def decorator(cls):
-        kwargs.pop("init", "__init__" not in cls.__dict__)
-
-        # noinspection PyArgumentList
-        dataclass_cls = dataclasses.dataclass(**kwargs)(cls)
-
-        # Dataclasses usually don't allow inheritance of hash codes properly due to internal constraints but
-        # we force the hash of our types to be inheritable by extra implementation.
-        # Hashcode gets derived from object normally, but we can usually see this by seeing if the reference
-        # is a slot or an actual function. If it is a slot, we should assume it is not redefined elsewhere, I guess.
-        if not inspect.isfunction(cls.__hash__):
-            # mro [0] is always the implementation class, mro[-1] is always object() which has a __hash__ that is
-            # useless to us.
-            for base in cls.mro()[1:-1]:
-                if "__hash__" in base.__dict__:
-                    dataclass_cls.__hash__ = lambda self: base.__hash__(self)
-                    break
-
-        return dataclass_cls
-
-    return decorator
 
 
 @assertions.assert_is_mixin
@@ -93,7 +53,7 @@ class NamedEnum:
 
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
-class Snowflake(abc.ABC):
+class Snowflake:
     """
     Base for any type that specifies an ID. The implementation is expected to implement that field.
 
@@ -109,9 +69,6 @@ class Snowflake(abc.ABC):
     #:
     #: :type: :class:`int`
     id: int
-
-    def __hash__(self):
-        return hash(self.id)
 
     @property
     def created_at(self) -> datetime.datetime:
@@ -155,44 +112,4 @@ class Snowflake(abc.ABC):
         return self > other or self == other
 
 
-@assertions.assert_is_mixin
-@assertions.assert_is_slotted
-class Volatile(abc.ABC):
-    """
-    Marks a class as being volatile. This means it is likely to be changed at runtime, rather than replaced, so users
-    should not rely on a consistent state.
-    """
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__()
-        doc = inspect.cleandoc(inspect.getdoc(cls) or "")
-
-        doc += textwrap.dedent(
-            """
-            Note:
-                This class is volatile. This means that any updates made to the object by Discord will be applied
-                immediately to the object. One should be sure to not expect the state of this object to remain
-                consistent indefinitely.
-                
-                Iterable elements will remain safe to iterate over normally. Collections will be replaced rather than
-                actively mutated.
-        """
-        )
-
-    @abc.abstractmethod
-    def update_state(self, payload):
-        """
-        Updates the internal state of the object. You usually should have no need to invoke this method, as it exists
-        for internal use only.
-        """
-
-
-@assertions.assert_is_mixin
-@assertions.assert_is_slotted
-class Messageable(abc.ABC):
-    """
-    An element that can have messages sent to it.
-    """
-
-
-__all__ = ("dataclass", "Snowflake", "NamedEnum", "Volatile", "Messageable")
+__all__ = ("Snowflake", "NamedEnum")

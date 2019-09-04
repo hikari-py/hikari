@@ -23,21 +23,15 @@ from __future__ import annotations
 
 import dataclasses
 import datetime
-
 import typing
 
-from hikari.core.model import base
 from hikari.core.model import color as _color
 from hikari.core.utils import dateutils
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified
 
-#: An alias to the unspecified sentinel. This is used to describe embed members with no associated value within this
-#: module.
-UNSPECIFIED = unspecified.UNSPECIFIED
 
-
-@base.dataclass()
+@dataclasses.dataclass()
 class Embed:
     __slots__ = (
         "title",
@@ -81,11 +75,11 @@ class Embed:
     def __init__(
         self,
         *,
-        title: str = UNSPECIFIED,
-        description: str = UNSPECIFIED,
-        url: str = UNSPECIFIED,
-        timestamp: datetime.datetime = UNSPECIFIED,
-        color: typing.Union[int, _color.Color] = UNSPECIFIED,
+        title: str = unspecified.UNSPECIFIED,
+        description: str = unspecified.UNSPECIFIED,
+        url: str = unspecified.UNSPECIFIED,
+        timestamp: datetime.datetime = unspecified.UNSPECIFIED,
+        color: typing.Union[int, _color.Color] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Args:
@@ -104,15 +98,15 @@ class Embed:
         self.description = description
         self.url = url
         self.timestamp = timestamp
-        self.color = _color.Color(color) if color is not UNSPECIFIED else UNSPECIFIED
-        self._footer = UNSPECIFIED
-        self._image = UNSPECIFIED
-        self._thumbnail = UNSPECIFIED
-        self._author = UNSPECIFIED
+        self.color = _color.Color(color) if color is not unspecified.UNSPECIFIED else unspecified.UNSPECIFIED
+        self._footer = unspecified.UNSPECIFIED
+        self._image = unspecified.UNSPECIFIED
+        self._thumbnail = unspecified.UNSPECIFIED
+        self._author = unspecified.UNSPECIFIED
         self._fields = []
-        self._type = UNSPECIFIED
-        self._video = UNSPECIFIED
-        self._provider = UNSPECIFIED
+        self._type = unspecified.UNSPECIFIED
+        self._video = unspecified.UNSPECIFIED
+        self._provider = unspecified.UNSPECIFIED
 
     @property
     def footer(self) -> typing.Optional[EmbedFooter]:
@@ -121,7 +115,7 @@ class Embed:
         """
         return self._footer
 
-    def set_footer(self, *, icon_url: str = UNSPECIFIED, text: str = UNSPECIFIED) -> Embed:
+    def set_footer(self, *, icon_url: str = unspecified.UNSPECIFIED, text: str = unspecified.UNSPECIFIED) -> Embed:
         """
         Set the footer.
 
@@ -135,7 +129,7 @@ class Embed:
             This embed to allow method chaining.
 
         """
-        self._footer = EmbedFooter(icon_url, text, UNSPECIFIED)
+        self._footer = EmbedFooter(icon_url, text, unspecified.UNSPECIFIED)
         return self
 
     @property
@@ -145,7 +139,7 @@ class Embed:
         """
         return self._image
 
-    def set_image(self, *, url: str = UNSPECIFIED) -> Embed:
+    def set_image(self, *, url: str = unspecified.UNSPECIFIED) -> Embed:
         """
         Set the image.
 
@@ -160,7 +154,7 @@ class Embed:
 
         """
         self._image = EmbedImage(url=url)
-        self._thumbnail = UNSPECIFIED
+        self._thumbnail = unspecified.UNSPECIFIED
         return self
 
     @property
@@ -170,7 +164,7 @@ class Embed:
         """
         return self._thumbnail
 
-    def set_thumbnail(self, *, url: str = UNSPECIFIED) -> Embed:
+    def set_thumbnail(self, *, url: str = unspecified.UNSPECIFIED) -> Embed:
         """
         Set the thumbnail image.
 
@@ -184,7 +178,7 @@ class Embed:
             This embed to allow method chaining.
         """
         self._thumbnail = EmbedImage(url=url)
-        self._image = UNSPECIFIED
+        self._image = unspecified.UNSPECIFIED
         return self
 
     @property
@@ -194,7 +188,7 @@ class Embed:
         """
         return self._author
 
-    def set_author(self, *, name: str = UNSPECIFIED, url: str = UNSPECIFIED, icon_url: str = UNSPECIFIED) -> Embed:
+    def set_author(self, *, name: str = unspecified.UNSPECIFIED, url: str = unspecified.UNSPECIFIED, icon_url: str = unspecified.UNSPECIFIED) -> Embed:
         """
         Set the author of this embed.
 
@@ -279,17 +273,17 @@ class Embed:
         transform.put_if_specified(d, "description", self.description)
         transform.put_if_specified(d, "url", self.url)
 
-        if self.timestamp is not UNSPECIFIED:
+        if self.timestamp is not unspecified.UNSPECIFIED:
             d["timestamp"] = self.timestamp.replace(tzinfo=datetime.timezone.utc).isoformat()
-        if self.color is not UNSPECIFIED:
+        if self.color is not unspecified.UNSPECIFIED:
             d["color"] = int(self.color)
-        if self.footer is not UNSPECIFIED:
+        if self.footer is not unspecified.UNSPECIFIED:
             d["footer"] = self.footer.to_dict(dict_factory=dict_factory)
-        if self.image is not UNSPECIFIED:
+        if self.image is not unspecified.UNSPECIFIED:
             d["image"] = self.image.to_dict(dict_factory=dict_factory)
-        if self.thumbnail is not UNSPECIFIED:
+        if self.thumbnail is not unspecified.UNSPECIFIED:
             d["thumbnail"] = self.thumbnail.to_dict(dict_factory=dict_factory)
-        if self.author is not UNSPECIFIED:
+        if self.author is not unspecified.UNSPECIFIED:
             d["author"] = self.author.to_dict(dict_factory=dict_factory)
         if self._fields:
             d["fields"] = [f.to_dict(dict_factory=dict_factory) for f in self._fields]
@@ -298,16 +292,16 @@ class Embed:
 
     @staticmethod
     def from_dict(payload):
-        timestamp = payload.get("timestamp", UNSPECIFIED)
-        if timestamp is not UNSPECIFIED:
+        timestamp = payload.get("timestamp", unspecified.UNSPECIFIED)
+        if timestamp is not unspecified.UNSPECIFIED:
             timestamp = dateutils.parse_iso_8601_datetime(timestamp)
 
         embed = Embed(
-            title=payload.get("title", UNSPECIFIED),
-            description=payload.get("description", UNSPECIFIED),
-            url=payload.get("url", UNSPECIFIED),
+            title=payload.get("title", unspecified.UNSPECIFIED),
+            description=payload.get("description", unspecified.UNSPECIFIED),
+            url=payload.get("url", unspecified.UNSPECIFIED),
             timestamp=timestamp,
-            color=payload.get("color", UNSPECIFIED),
+            color=payload.get("color", unspecified.UNSPECIFIED),
         )
 
         embed._type = payload["type"]
@@ -336,7 +330,7 @@ class _EmbedComponent:
     def to_dict(self, *, dict_factory=dict):
         attrs = {a: getattr(self, a) for a in self.__slots__}
         # noinspection PyArgumentList,PyTypeChecker
-        return dict_factory(**{k: v for k, v in attrs.items() if v is not UNSPECIFIED})
+        return dict_factory(**{k: v for k, v in attrs.items() if v is not unspecified.UNSPECIFIED})
 
     # noinspection PyArgumentList,PyDataclass
     @classmethod
@@ -345,7 +339,7 @@ class _EmbedComponent:
         return cls(**params)
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class EmbedVideo(_EmbedComponent):
     """A video in an embed."""
 
@@ -355,13 +349,13 @@ class EmbedVideo(_EmbedComponent):
     height: int
     width: int
 
-    def __init__(self, url: str = UNSPECIFIED, height: int = UNSPECIFIED, width: int = UNSPECIFIED) -> None:
+    def __init__(self, url: str = unspecified.UNSPECIFIED, height: int = unspecified.UNSPECIFIED, width: int = unspecified.UNSPECIFIED) -> None:
         self.url = url
         self.height = height
         self.width = width
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class EmbedImage(_EmbedComponent):
     """An video in an embed."""
 
@@ -373,7 +367,7 @@ class EmbedImage(_EmbedComponent):
     width: int
 
     def __init__(
-        self, url: str = UNSPECIFIED, proxy_url: str = UNSPECIFIED, height: int = UNSPECIFIED, width: int = UNSPECIFIED
+        self, url: str = unspecified.UNSPECIFIED, proxy_url: str = unspecified.UNSPECIFIED, height: int = unspecified.UNSPECIFIED, width: int = unspecified.UNSPECIFIED
     ) -> None:
         self.url = url
         self.proxy_url = proxy_url
@@ -381,7 +375,7 @@ class EmbedImage(_EmbedComponent):
         self.width = width
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class EmbedProvider(_EmbedComponent):
     """A provider in an embed."""
 
@@ -390,12 +384,12 @@ class EmbedProvider(_EmbedComponent):
     name: str
     url: str
 
-    def __init__(self, name: str = UNSPECIFIED, url: str = UNSPECIFIED) -> None:
+    def __init__(self, name: str = unspecified.UNSPECIFIED, url: str = unspecified.UNSPECIFIED) -> None:
         self.name = name
         self.url = url
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class EmbedAuthor(_EmbedComponent):
     """An author in an embed."""
 
@@ -408,10 +402,10 @@ class EmbedAuthor(_EmbedComponent):
 
     def __init__(
         self,
-        name: str = UNSPECIFIED,
-        url: str = UNSPECIFIED,
-        icon_url: str = UNSPECIFIED,
-        proxy_icon_url: str = UNSPECIFIED,
+        name: str = unspecified.UNSPECIFIED,
+        url: str = unspecified.UNSPECIFIED,
+        icon_url: str = unspecified.UNSPECIFIED,
+        proxy_icon_url: str = unspecified.UNSPECIFIED,
     ) -> None:
         self.name = name
         self.url = url
@@ -419,7 +413,7 @@ class EmbedAuthor(_EmbedComponent):
         self.proxy_icon_url = proxy_icon_url
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class EmbedFooter(_EmbedComponent):
     """A footer in an embed."""
 
@@ -429,13 +423,13 @@ class EmbedFooter(_EmbedComponent):
     text: str
     proxy_icon_url: str
 
-    def __init__(self, icon_url: str = UNSPECIFIED, text: str = UNSPECIFIED, proxy_icon_url: str = UNSPECIFIED) -> None:
+    def __init__(self, icon_url: str = unspecified.UNSPECIFIED, text: str = unspecified.UNSPECIFIED, proxy_icon_url: str = unspecified.UNSPECIFIED) -> None:
         self.icon_url = icon_url
         self.text = text
         self.proxy_icon_url = proxy_icon_url
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class EmbedField(_EmbedComponent):
     """A field in an embed."""
 
