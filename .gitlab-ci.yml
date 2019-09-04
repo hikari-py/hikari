@@ -84,8 +84,12 @@ pages:
     image: python:3-stretch
     before_script:
         - apt-get update
+        - apt-get install git -y
         - apt-get install graphviz -y
         - pip install nox
+        - git fetch --all --prune
+        - git checkout master -f
+        - git status
     script:
         - rm pages -Rvf || true
         - mkdir pages || true
@@ -96,6 +100,7 @@ pages:
             - public
     only:
         - master
+        - staging
 
 ###
 ### HANDLE DEPLOYING TO PYPI REPOSITORIES
