@@ -245,41 +245,39 @@ class Guild(base.Snowflake):
     def update_state(self, payload):
         self._afk_channel_id = transform.nullable_cast(payload.get("afk_channel_id"), int)
         self._owner_id = transform.nullable_cast(payload.get("owner_id"), int)
-        self._voice_region = transform.nullable_cast(payload, "region", str)
-        self._system_channel_id = transform.nullable_cast(payload, "system_channel_id", int)
-        self.creator_application_id = transform.nullable_cast(payload, "application_id", int)
+        self._voice_region = payload.get("region")
+        self._system_channel_id = transform.nullable_cast(payload.get("system_channel_id"), int)
+        self.creator_application_id = transform.nullable_cast(payload.get("application_id"), int)
         self.name = payload.get("name")
         self.icon_hash = payload.get("icon")
         self.splash_hash = payload.get("splash")
-        self.afk_timeout = payload.get("afk_timeout", float('inf'))
+        self.afk_timeout = payload.get("afk_timeout", float("inf"))
         self.verification_level = transform.try_cast(payload.get("verification_level"), VerificationLevel)
         self.preferred_locale = payload.get("preferred_locale")
-        self.message_notification_level = transform.get_cast_or_raw(
-            payload, "default_message_notifications", NotificationLevel
+        self.message_notification_level = transform.try_cast(
+            payload.get("default_message_notifications"), NotificationLevel
         )
-        self.explicit_content_filter_level = transform.get_cast_or_raw(
-            payload, "explicit_content_filter", ExplicitContentFilterLevel
+        self.explicit_content_filter_level = transform.try_cast(
+            payload.get("explicit_content_filter"), ExplicitContentFilterLevel
         )
-        self.roles = transform.get_sequence(payload, "roles", self._state.parse_role, transform.flatten)
-        self.emojis = transform.get_sequence(payload, "emojis", self._state.parse_emoji, transform.flatten, guild_id=self.id)
-        self.features = transform.get_sequence(payload, "features", Feature.from_discord_name, keep_failures=True)
-        self.member_count = transform.nullable_cast(payload, "member_count", int)
-        self.mfa_level = transform.get_cast_or_raw(payload, "mfa_level", MFALevel)
-        self.my_permissions = transform.get_cast_or_raw(payload, "permissions", permission.Permission)
-        self.joined_at = transform.nullable_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime)
-        self.large = transform.nullable_cast(payload, "large", bool)
-        self.unavailable = (transform.nullable_cast(payload, "unavailable", bool),)
-        self.members = transform.flatten((self._state.parse_member(m, self.id) for m in payload.get("members", ())))
-        self.channels = transform.get_sequence(
-            payload, "channels", self._state.parse_channel, transform.flatten, state=self._state
-        )
-        self.max_members = transform.nullable_cast(payload, "max_members", int)
+        self.roles = transform.snowflake_map(self._state.parse_role(r) for r in payload.get("roles", ()))
+        self.emojis = transform.snowflake_map(self._state.parse_emoji(e, self.id) for e in payload.get("emojis", ()))
+        self.features = {transform.try_cast(f, Feature.from_discord_name) for f in payload.get("features", ())}
+        self.member_count = transform.nullable_cast(payload.get("member_count"), int)
+        self.mfa_level = transform.try_cast(payload.get("mfa_level"), MFALevel)
+        self.my_permissions = permission.Permission(payload.get("permissions", 0))
+        self.joined_at = transform.nullable_cast(payload.get("joined_at"), dateutils.parse_iso_8601_datetime)
+        self.large = payload.get("large", False)
+        self.unavailable = payload.get("unavailable", False)
+        self.members = transform.snowflake_map(self._state.parse_member(m, self.id) for m in payload.get("members", ()))
+        self.channels = transform.snowflake_map(self._state.parse_channel(c) for c in payload.get("channels", ()))
+        self.max_members = payload.get("max_members", 0)
         self.vanity_url_code = payload.get("vanity_url_code")
         self.description = payload.get("description")
         self.banner_hash = payload.get("banner")
-        self.premium_tier = transform.get_cast_or_raw(payload, "premium_tier", PremiumTier)
-        self.premium_subscription_count = transform.nullable_cast(payload, "premium_subscription_count", int)
-        self.system_channel_flags = transform.get_cast_or_raw(payload, "system_channel_flags", SystemChannelFlag)
+        self.premium_tier = transform.try_cast(payload.get("premium_tier"), PremiumTier)
+        self.premium_subscription_count = payload.get("premium_subscription_count", 0)
+        self.system_channel_flags = transform.try_cast(payload.get("system_channel_flags"), SystemChannelFlag)
 
 
 class SystemChannelFlag(enum.IntFlag):
