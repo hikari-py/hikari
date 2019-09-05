@@ -43,14 +43,6 @@ BLACK_PACKAGES = [MAIN_PACKAGE, TEST_PATH]
 BLACK_PATHS = [m.replace(".", "/") for m in BLACK_PACKAGES] + [__file__, pathify(DOCUMENTATION_DIR, "conf.py")]
 BLACK_SHIM_PATH = pathify(CI_SCRIPT_DIR, "black.py")
 GENDOC_PATH = pathify(CI_SCRIPT_DIR, "gendoc.py")
-PYLINTRC = ".pylintrc"
-PYTHON_TARGETS = ["python3.7", "python3.8", "python3.9"]
-
-existing_python_installs = [target for target in PYTHON_TARGETS if shutil.which(target)]
-has_dumped_venv_info = False
-
-if not existing_python_installs:
-    raise OSError(f"Cannot find a valid Python interpreter from the list of {PYTHON_TARGETS} to run.")
 
 
 class PoetryNoxSession(sessions.Session):
@@ -67,17 +59,6 @@ class PoetryNoxSession(sessions.Session):
     def run(self, *args, **kwargs) -> None:
         self.poetry("run", *args, **kwargs)
 
-    def install(self, *args, **kwargs):
-        self.run("pip", "install", *args, **kwargs)
-
-    def install_requirements(self, *requirements_file_path_parts) -> None:
-        requirements_file = pathify(*requirements_file_path_parts)
-        with open(requirements_file, encoding="utf-8") as fp:
-            for line in fp.read().split("\n"):
-                line = line.strip()
-                if line and not line.startswith("#"):
-                    self.install(line)
-
 
 def using_poetry(session_logic):
     """Ensure that the decorated function always initializes itself using poetry first."""
@@ -86,19 +67,12 @@ def using_poetry(session_logic):
     def wrapper(session: sessions.Session, *args, **kwargs):
         session.install("poetry")
         session = PoetryNoxSession(session)
-        session.poetry("config", "settings.virtualenvs.create", "false", silent=False)
         return session_logic(session, *args, **kwargs)
 
     return wrapper
 
 
-@nox_session(python=existing_python_installs, reuse_venv=True)
-@using_poetry
-def init(session: PoetryNoxSession) -> None:
-    session.poetry("update", "-vv")
-
-
-@nox_session(python=existing_python_installs, reuse_venv=True)
+@nox_session()
 @using_poetry
 def pytest(session: PoetryNoxSession) -> None:
     session.poetry("update")
@@ -115,9 +89,9 @@ def pytest(session: PoetryNoxSession) -> None:
         "--cov-report",
         "term",
         "--cov-report",
-        f"annotate:{pathify(ARTIFACT_DIR, session.python)}-coverage-annotated",
+        f"annotate:{ARTIFACT_DIR}/coverage/annotated",
         "--cov-report",
-        f"html:{pathify(ARTIFACT_DIR, session.python)}-coverage-html",
+        f"html:{ARTIFACT_DIR}/coverage/html",
         "--cov-branch",
         "-ra",
         "--showlocals",
@@ -127,18 +101,11 @@ def pytest(session: PoetryNoxSession) -> None:
     )
 
 
-@nox_session(reuse_venv=True)
-@using_poetry
-def pylint(session: PoetryNoxSession):
-    session.poetry("update")
-    session.run("pylint", MAIN_PACKAGE, f"--rcfile={PYLINTRC}")
-
-
-@nox_session(reuse_venv=True)
+@nox_session()
 @using_poetry
 def sphinx(session: PoetryNoxSession) -> None:
     session.poetry("update")
-    session.install_requirements(DOCUMENTATION_DIR, "requirements.txt")
+    session.run("pip", "install", "-r", pathify(DOCUMENTATION_DIR, "requirements.txt"))
     session.env["SPHINXOPTS"] = SPHINX_OPTS
     tech_dir = pathify(DOCUMENTATION_DIR, TECHNICAL_DIR)
     shutil.rmtree(tech_dir, ignore_errors=True, onerror=lambda *_: None)
@@ -155,12 +122,12 @@ def sphinx(session: PoetryNoxSession) -> None:
     session.run("sphinx-build", DOCUMENTATION_DIR, ARTIFACT_DIR, "-b", "html")
 
 
-@nox_session(reuse_venv=True)
+@nox_session()
 @using_poetry
 def bandit(session: PoetryNoxSession) -> None:
     session.poetry("update")
     session.install("bandit")
-    pkg = MAIN_PACKAGE.split('.')[0]
+    pkg = MAIN_PACKAGE.split(".")[0]
     session.run("bandit", pkg, "-r")
 
 
@@ -170,19 +137,19 @@ def _black(session, *args, **kwargs):
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *args, **kwargs)
 
 
-@nox_session(reuse_venv=True)
+@nox_session()
 @using_poetry
 def format_fix(session: PoetryNoxSession) -> None:
     _black(session)
 
 
-@nox_session(reuse_venv=True)
+@nox_session()
 @using_poetry
 def format_check(session: PoetryNoxSession) -> None:
     _black(session, "--check")
 
 
-@nox_session(reuse_venv=False)
+@nox_session()
 def pypitest(session: sessions.Session):
     if os.getenv("CI"):
         print("Testing published ref can be installed as a package.")

@@ -32,18 +32,21 @@ def test_GuildChannel_parent_when_specified():
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     g.channels = {1234: mock.MagicMock(spec_set=channel.GuildCategory)}
 
-    c = channel.GuildTextChannel(global_state=s, payload={
-        "type": 0,
-        "id": "1234567",
-        "guild_id": "696969",
-        "position": 100,
-        "permission_overwrites": [],
-        "nsfw": True,
-        "parent_id": "1234",
-        "rate_limit_per_user": 420,
-        "topic": "nsfw stuff",
-        "name": "shh!",
-    })
+    c = channel.GuildTextChannel(
+        global_state=s,
+        payload={
+            "type": 0,
+            "id": "1234567",
+            "guild_id": "696969",
+            "position": 100,
+            "permission_overwrites": [],
+            "nsfw": True,
+            "parent_id": "1234",
+            "rate_limit_per_user": 420,
+            "topic": "nsfw stuff",
+            "name": "shh!",
+        },
+    )
 
     assert c.parent is g.channels[1234]
 
@@ -55,18 +58,21 @@ def test_GuildChannel_parent_when_unspecified():
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     g.channels = {1234: mock.MagicMock(spec_set=channel.GuildCategory)}
 
-    c = channel.GuildTextChannel(global_state=s, payload={
-        "type": 0,
-        "id": "1234567",
-        "guild_id": "696969",
-        "position": 100,
-        "permission_overwrites": [],
-        "nsfw": True,
-        "parent_id": None,
-        "rate_limit_per_user": 420,
-        "topic": "nsfw stuff",
-        "name": "shh!",
-    })
+    c = channel.GuildTextChannel(
+        global_state=s,
+        payload={
+            "type": 0,
+            "id": "1234567",
+            "guild_id": "696969",
+            "position": 100,
+            "permission_overwrites": [],
+            "nsfw": True,
+            "parent_id": None,
+            "rate_limit_per_user": 420,
+            "topic": "nsfw stuff",
+            "name": "shh!",
+        },
+    )
 
     assert c.parent is None
 
@@ -78,18 +84,21 @@ def test_GuildCategory_parent_is_always_None():
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     g.channels = {1234: mock.MagicMock(spec_set=channel.GuildCategory)}
 
-    c = channel.GuildCategory(global_state=s, payload={
-        "type": 4,
-        "id": "1234567",
-        "guild_id": "696969",
-        "position": 100,
-        "permission_overwrites": [],
-        "nsfw": True,
-        "parent_id": "1234",
-        "rate_limit_per_user": 420,
-        "topic": "nsfw stuff",
-        "name": "shh!",
-    })
+    c = channel.GuildCategory(
+        global_state=s,
+        payload={
+            "type": 4,
+            "id": "1234567",
+            "guild_id": "696969",
+            "position": 100,
+            "permission_overwrites": [],
+            "nsfw": True,
+            "parent_id": "1234",
+            "rate_limit_per_user": 420,
+            "topic": "nsfw stuff",
+            "name": "shh!",
+        },
+    )
 
     assert c.parent is None
 
