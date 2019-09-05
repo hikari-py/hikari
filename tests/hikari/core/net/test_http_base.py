@@ -735,7 +735,9 @@ async def test_5xx_is_handled_as_5xx_error_response(mock_http_connection, res):
 )
 async def test_handle_client_error_response_when_no_error_in_json(status, exception_type, mock_http_connection, res):
     try:
-        mock_http_connection._handle_client_error_response(res, status, {"foo": "bar"})
+        mock_http_connection._handle_client_error_response(
+            res, status, {"foo": "bar", "code": int(opcodes.JSONErrorCode.USERS_ONLY)}
+        )
         assert False, "No exception was raised"
     except exception_type as ex:
         assert ex.status == status

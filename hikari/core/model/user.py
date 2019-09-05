@@ -30,6 +30,7 @@ from hikari.core.model import model_cache
 from hikari.core.model import presence
 from hikari.core.utils import dateutils
 from hikari.core.utils import delegate
+from hikari.core.utils import transform
 
 
 @dataclasses.dataclass()
@@ -69,9 +70,9 @@ class User(base.Snowflake):
 
     def __init__(self, global_state: model_cache.AbstractModelCache, payload):
         self._state = global_state
-        self.id = transform.get_cast(payload, "id", int)
+        self.id = int(payload["id"])
         self.username = payload.get("username")
-        self.discriminator = transform.get_cast(payload, "discriminator", int)
+        self.discriminator = int(payload["discriminator"])
         self.avatar_hash = payload.get("avatar")
         self.bot = payload.get("bot", False)
 
@@ -115,12 +116,12 @@ class Member(User):
     # noinspection PyMethodOverriding
     def __init__(self, global_state, guild_id, payload):
         self._user = global_state.parse_user(payload.get("user"))
-        self._role_ids = transform.get_sequence(payload, "roles", int)
+        self._role_ids = [int(r) for r in payload.get("roles", ())]
         self._guild_id = guild_id
         self.nick = payload.get("nick")
-        self.joined_at = transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime)
-        self.premium_since = transform.get_cast(payload, "premium_since", dateutils.parse_iso_8601_datetime)
-        self.presence = transform.get_cast(payload, "presence", presence.Presence)
+        self.joined_at = dateutils.parse_iso_8601_datetime(payload["joined_at"])
+        self.premium_since = transform.nullable_cast(payload.get("premium_since"), dateutils.parse_iso_8601_datetime)
+        self.presence = transform.nullable_cast(payload.get("presence"), presence.Presence)
 
     @property
     def user(self):
@@ -147,12 +148,7 @@ class BotUser(User):
     mfa_enabled: bool
 
     def __init__(self, global_state: model_cache.AbstractModelCache, payload):
-        self._state = global_state
-        self.id = transform.get_cast(payload, "id", int)
-        self.username = payload.get("username")
-        self.discriminator = transform.get_cast(payload, "discriminator", int)
-        self.avatar_hash = payload.get("avatar")
-        self.bot = payload.get("bot", False)
+        super().__init__(global_state, payload)
         self.verified = payload.get("verified", False)
         self.mfa_enabled = payload.get("mfa_enabled", False)
 

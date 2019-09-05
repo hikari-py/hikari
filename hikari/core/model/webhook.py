@@ -64,9 +64,9 @@ class Webhook(base.Snowflake):
 
     def __init__(self, global_state: model_cache.AbstractModelCache, payload):
         self._state = global_state
-        self.id = transform.get_cast(payload, "id", int)
-        self._guild_id = transform.get_cast(payload, "guild_id", int)
-        self._channel_id = transform.get_cast(payload, "channel_id", int)
+        self.id = int(payload["id"])
+        self._guild_id = int(payload["guild_id"])
+        self._channel_id = int(payload["channel_id"])
         self.user = global_state.parse_user(payload.get("user"))
         self.name = payload.get("name")
         self.avatar_hash = payload.get("avatar_hash")

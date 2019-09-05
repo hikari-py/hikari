@@ -55,8 +55,8 @@ class Reaction:
 
     def __init__(self, global_state: model_cache.AbstractModelCache, payload):
         self._state = global_state
-        self.count = transform.get_cast(payload, "count", int)
-        self.me = transform.get_cast(payload, "me", bool)
+        self.count = payload["count"]
+        self.me = payload.get("me", False)
         #: TODO: get the guild for the emoji by doing an API call if need be
         self.emoji = global_state.parse_emoji(payload.get("emoji"), None)
 

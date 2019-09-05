@@ -34,6 +34,7 @@ from hikari.core.model import media
 from hikari.core.model import model_cache
 from hikari.core.model import user
 from hikari.core.utils import dateutils
+from hikari.core.utils import transform
 
 
 class MessageType(enum.IntEnum):
@@ -194,21 +195,22 @@ class Message(base.Snowflake):
 
     def __init__(self, global_state: model_cache.AbstractModelCache, payload):
         self._state = global_state
-        self.id = transform.get_cast(payload, "id", int)
-        self._author_id = global_state.parse_user(payload.get("author")).id
-        self._channel_id = transform.get_cast(payload, "channel_id", int)
-        self._guild_id = transform.get_cast(payload, "guild_id", int)
-        self.edited_at = transform.get_cast(payload, "edited_timestamp", dateutils.parse_iso_8601_datetime)
-        self.tts = transform.get_cast(payload, "tts", bool, False)
-        self.mentions_everyone = transform.get_cast(payload, "mention_everyone", bool, False)
-        self.attachments = transform.get_sequence(payload, "attachments", media.Attachment)
-        self.embeds = transform.get_sequence(payload, "embeds", embed.Embed.from_dict)
-        self.pinned = transform.get_cast(payload, "pinned", bool, False)
-        self.application = transform.get_cast(payload, "application", MessageApplication)
-        self.activity = transform.get_cast(payload, "activity", MessageActivity)
-        self.type = transform.get_cast_or_raw(payload, "type", MessageType)
+        self.id = int(payload["id"])
+        # FixMe: how does this work with webhooks?
+        self._author_id = global_state.parse_user(payload["author"]).id
+        self._channel_id = int(payload["channel_id"])
+        self._guild_id = transform.nullable_cast(payload.get("guild_id"), int)
+        self.edited_at = transform.nullable_cast(payload.get("edited_timestamp"), dateutils.parse_iso_8601_datetime)
+        self.tts = payload["tts"]
+        self.mentions_everyone = payload["mention_everyone"]
+        self.attachments = [media.Attachment(a) for a in payload["attachments"]]
+        self.embeds = [embed.Embed.from_dict(e) for e in payload["embeds"]]
+        self.pinned = payload["pinned"]
+        self.application = transform.nullable_cast(payload.get("application"), MessageApplication)
+        self.activity = transform.nullable_cast(payload.get("activity"), MessageActivity)
+        self.type = transform.try_cast(payload.get("type"), MessageType)
         self.content = payload.get("content")
-        self.flags = transform.get_cast(payload, "flags", MessageFlag, default=0)
+        self.flags = transform.try_cast(payload.get("flags"), MessageFlag, 0)
 
     @property
     def guild(self) -> typing.Optional[guild.Guild]:
@@ -254,8 +256,8 @@ class MessageActivity:
     party_id: typing.Optional[int]
 
     def __init__(self, payload):
-        self.type = transform.get_cast_or_raw(payload, "type", MessageActivityType)
-        self.party_id = transform.get_cast(payload, "party_id", int)
+        self.type = transform.try_cast(payload.get("type"), MessageActivityType)
+        self.party_id = transform.nullable_cast(payload.get("party_id"), int)
 
 
 @dataclasses.dataclass()
@@ -292,10 +294,10 @@ class MessageApplication(base.Snowflake):
     name: str
 
     def __init__(self, payload):
-        self.id = transform.get_cast(payload, "id", int)
-        self.cover_image_id = transform.get_cast(payload, "cover_image", int)
-        self.description = payload.get("description")
-        self.icon_image_id = transform.get_cast(payload, "icon", int)
+        self.id = int(payload["id"])
+        self.cover_image_id = transform.nullable_cast(payload.get("cover_image"), int)
+        self.description = payload["description"]
+        self.icon_image_id = transform.nullable_cast(payload.get("icon"), int)
         self.name = payload.get("name")
 
 
