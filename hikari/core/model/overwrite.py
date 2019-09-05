@@ -28,6 +28,7 @@ from hikari.core.model import base
 from hikari.core.model import permission
 from hikari.core.model import role
 from hikari.core.model import user
+from hikari.core.utils import transform
 
 
 class OverwriteEntityType(base.NamedEnum, enum.Enum):
@@ -94,10 +95,10 @@ class Overwrite(base.Snowflake):
         return permission.Permission(permission.Permission.all() ^ (self.allow | self.deny))
 
     def __init__(self, payload):
-        self.id = transform.get_cast(payload, "id", int)
-        self.type = transform.get_cast_or_raw(payload, "type", OverwriteEntityType.from_discord_name)
-        self.allow = transform.get_cast_or_raw(payload, "allow", permission.Permission)
-        self.deny = transform.get_cast_or_raw(payload, "deny", permission.Permission)
+        self.id = int(payload["id"])
+        self.type = OverwriteEntityType.from_discord_name(payload["type"])
+        self.allow = transform.try_cast(payload["allow"], permission.Permission)
+        self.deny = transform.try_cast(payload["deny"], permission.Permission)
 
 
 __all__ = ["Overwrite", "OverwriteEntityType"]

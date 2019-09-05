@@ -83,8 +83,8 @@ class Role(base.Snowflake):
         self.hoist = payload["hoist"]
         self.position = payload["position"]
         self.permissions = _permission.Permission(payload["permissions"])
-        self.managed = transform.get_cast(payload, "managed", bool)
-        self.mentionable = transform.get_cast(payload, "mentionable", bool)
+        self.managed = payload["managed"]
+        self.mentionable = payload["mentionable"]
 
 
 __all__ = ["Role"]

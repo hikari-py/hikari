@@ -29,6 +29,7 @@ import re
 import typing
 
 from hikari.core.model import base
+from hikari.core.utils import transform
 
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
@@ -154,13 +155,13 @@ class Attachment(base.Snowflake):
     height: typing.Optional[int]
 
     def __init__(self, payload):
-        self.id = transform.get_cast(payload, "id", int)
-        self.filename = payload.get("filename")
-        self.size = transform.get_cast(payload, "size", int)
-        self.url = payload.get("url")
-        self.proxy_url = payload.get("proxy_url")
-        self.width = transform.get_cast(payload, "width", int)
-        self.height = transform.get_cast(payload, "height", int)
+        self.id = int(payload["id"])
+        self.filename = payload["filename"]
+        self.size = int(payload["size"])
+        self.url = payload["url"]
+        self.proxy_url = payload["proxy_url"]
+        self.width = transform.nullable_cast(payload.get("width"), int)
+        self.height = transform.nullable_cast(payload.get("height"), int)
 
 
 __all__ = ["Avatar", "Attachment"]

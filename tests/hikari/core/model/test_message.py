@@ -31,28 +31,29 @@ class TestMessage:
     def mock_user(self):
         return {"id": "1234", "username": "potato"}
 
-    def test_Message(self, mock_user):
+    @pytest.fixture()
+    def mock_message(self, mock_user):
+        return {
+            "type": 0,
+            "id": "12345",
+            "channel_id": "67890",
+            "guild_id": None,
+            "author": mock_user,
+            "edited_timestamp": None,
+            "tts": True,
+            "mention_everyone": False,
+            "attachments": [],
+            "embeds": [],
+            "pinned": False,
+            "application": None,
+            "activity": None,
+            "content": "ayyyyyyy lmao",
+            "flags": 7,
+        }
+
+    def test_Message_simple_test_data(self, mock_message, mock_user):
         s = mock.MagicMock(spec=model_cache.AbstractModelCache)
-        m = message.Message(
-            s,
-            {
-                "type": 0,
-                "id": "12345",
-                "channel_id": "67890",
-                "guild_id": None,
-                "author": mock_user,
-                "edited_timestamp": None,
-                "tts": True,
-                "mention_everyone": False,
-                "attachments": [],
-                "embeds": [],
-                "pinned": False,
-                "application": None,
-                "activity": None,
-                "content": "ayyyyyyy lmao",
-                "flags": 7,
-            },
-        )
+        m = message.Message(s, mock_message)
 
         assert m.type is message.MessageType.DEFAULT
         assert m.id == 12345
@@ -72,7 +73,7 @@ class TestMessage:
         assert m.flags & message.MessageFlag.SUPPRESS_EMBEDS
         s.parse_user.assert_called_with(mock_user)
 
-    def test_Message_INTEGRATION_TEST(self, mock_user):
+    def test_Message_complex_test_data(self, mock_user):
         s = mock.MagicMock(spec=model_cache.AbstractModelCache)
         m = message.Message(
             s,
@@ -168,9 +169,10 @@ class TestMessage:
         assert m.activity.type == message.MessageActivityType.SPECTATE
         assert m.activity.party_id == 44332211
 
-    def test_Message_guild_if_guild_message(self):
+    def test_Message_guild_if_guild_message(self, mock_message):
+        mock_message["guild_id"] = "91827"
         cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-        obj = message.Message(cache, {"guild_id": "91827"})
+        obj = message.Message(cache, mock_message)
 
         guild = mock.MagicMock()
         cache.get_guild_by_id = mock.MagicMock(return_value=guild)
@@ -180,42 +182,44 @@ class TestMessage:
 
         cache.get_guild_by_id.assert_called_with(91827)
 
-    def test_Message_guild_if_dm_message(self):
+    def test_Message_guild_if_dm_message(self, mock_message):
         cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-        obj = message.Message(cache, {})
+        obj = message.Message(cache, mock_message)
         assert obj.guild is None
 
         cache.get_guild_by_id.assert_not_called()
 
-    def test_Message_channel_if_guild_message(self):
+    def test_Message_channel_if_guild_message(self, mock_message):
         cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
+        mock_message["guild_id"] = "5432"
+        mock_message["channel_id"] = "1234"
         guild = mock.MagicMock()
         guild.channels = {1234: mock.MagicMock(), 1235: mock.MagicMock()}
         cache.get_guild_by_id = mock.MagicMock(return_value=guild)
-
-        obj = message.Message(cache, {"channel_id": "1234", "guild_id": "5432"})
+        obj = message.Message(cache, mock_message)
 
         c = obj.channel
         cache.get_guild_by_id.assert_called_with(5432)
         assert c is guild.channels[1234]
 
-    def test_Message_channel_if_dm_message(self):
+    def test_Message_channel_if_dm_message(self, mock_message):
+        mock_message["channel_id"] = "1234"
         cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         channel = mock.MagicMock()
         cache.get_dm_channel_by_id = mock.MagicMock(return_value=channel)
 
-        obj = message.Message(cache, {"channel_id": "1234"})
+        obj = message.Message(cache, mock_message)
 
         c = obj.channel
         cache.get_dm_channel_by_id.assert_called_with(1234)
         assert c is channel
 
-    def test_Message_author(self):
+    def test_Message_author(self, mock_message):
         cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         user = mock.MagicMock()
         cache.get_user_by_id = mock.MagicMock(return_value=user)
 
-        obj = message.Message(cache, {"author_id": "1234"})
+        obj = message.Message(cache, mock_message)
         obj._author_id = 1234
 
         a = obj.author

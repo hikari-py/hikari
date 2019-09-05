@@ -78,32 +78,6 @@ def test_GuildChannel_parent_when_unspecified():
 
 
 @pytest.mark.model
-def test_GuildCategory_parent_is_always_None():
-    s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-    g = mock.MagicMock(spec_set=guild.Guild)
-    s.get_guild_by_id = mock.MagicMock(return_value=g)
-    g.channels = {1234: mock.MagicMock(spec_set=channel.GuildCategory)}
-
-    c = channel.GuildCategory(
-        global_state=s,
-        payload={
-            "type": 4,
-            "id": "1234567",
-            "guild_id": "696969",
-            "position": 100,
-            "permission_overwrites": [],
-            "nsfw": True,
-            "parent_id": "1234",
-            "rate_limit_per_user": 420,
-            "topic": "nsfw stuff",
-            "name": "shh!",
-        },
-    )
-
-    assert c.parent is None
-
-
-@pytest.mark.model
 def test_GuildTextChannel():
     s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
     gtc = channel.GuildTextChannel(
