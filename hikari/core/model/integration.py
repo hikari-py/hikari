@@ -29,6 +29,7 @@ from hikari.core.model import base
 from hikari.core.model import model_cache
 from hikari.core.model import user
 from hikari.core.utils import dateutils
+from hikari.core.utils import transform
 
 
 @dataclasses.dataclass()
@@ -53,7 +54,7 @@ class IntegrationAccount(base.Snowflake):
 
     def __init__(self, global_state: model_cache.AbstractModelCache, payload):
         self._state = global_state
-        self.id = transform.get_cast(payload, "id", int)
+        self.id = int(payload["id"])
         self.name = payload.get("name")
 
 
@@ -127,16 +128,16 @@ class Integration(base.Snowflake):
 
     def __init__(self, global_state: model_cache.AbstractModelCache, payload):
         self._state = global_state
-        self.id = transform.get_cast(payload, "id", int)
-        self.name = payload.get("name")
-        self.type = payload.get("type")
-        self.enabled = transform.get_cast(payload, "enabled", bool)
-        self.syncing = transform.get_cast(payload, "syncing", bool)
-        self._role_id = transform.get_cast(payload, "role_id", int)
-        self.expire_grace_period = transform.get_cast(payload, "expire_grace_period", int)
-        self.user = global_state.parse_user(payload.get("user"))
-        self.account = IntegrationAccount(global_state, payload.get("account"))
-        self.synced_at = transform.get_cast(payload, "synced_at", dateutils.parse_iso_8601_datetime)
+        self.id = int(payload["id"])
+        self.name = payload["name"]
+        self.type = payload["type"]
+        self.enabled = payload["enabled"]
+        self.syncing = payload["syncing"]
+        self._role_id = int(payload["role_id"])
+        self.expire_grace_period = int(payload["expire_grace_period"])
+        self.user = global_state.parse_user(payload["user"])
+        self.account = IntegrationAccount(global_state, payload["account"])
+        self.synced_at = dateutils.parse_iso_8601_datetime(payload["synced_at"])
 
 
 __all__ = ["Integration", "IntegrationAccount"]

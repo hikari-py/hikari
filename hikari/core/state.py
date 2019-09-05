@@ -145,16 +145,19 @@ class State(model_cache.AbstractModelCache):
         # If the user already exists, then just return their existing object. We expect discord to tell us if they
         # get updated if they are a member, and for anything else the object will just be disposed of once we are
         # finished with it anyway.
-        user_id = transform.get_cast(user, "id", int)
+        user_id = int(user["id"])
         if user_id not in self._users:
             self._users[user_id] = _user.User(self, user)
         return self._users[user_id]
 
     def parse_guild(self, guild: types.DiscordObject):
-        guild_id = transform.get_cast(guild, "id", int)
-        if guild_id not in self._guilds or self._guilds[guild_id].unavailable:
+        guild_id = int(guild.get("id"))
+        if guild_id not in self._guilds:
             self._guilds[guild_id] = _guild.Guild(self, guild)
-        return self._guilds[guild_id]
+        else:
+            guild_obj = self._guilds[guild_id]
+            guild_obj.update_state(guild)
+            return guild_obj
 
     def parse_member(self, member: types.DiscordObject, guild_id: int):
         # Don't cache members here.
@@ -265,7 +268,7 @@ class State(model_cache.AbstractModelCache):
 
     async def handle_guild_create(self, payload):
         guild = self.parse_guild(payload)
-        self.dispatch(Event.GUILD_AVAILABLE)
+        self.dispatch(Event.GUILD_AVAILABLE, guild)
 
     async def handle_guild_update(self, payload):
         guild_id = int(payload["id"])
@@ -363,14 +366,14 @@ class State(model_cache.AbstractModelCache):
         guild = self.get_guild_by_id(guild_id)
 
         if guild is None:
-            self.logger.debug("User ID %s referencing unknown guild %s in presence update; ignoring", user_id,
-                              guild_id)
+            self.logger.debug("User ID %s referencing unknown guild %s in presence update; ignoring", user_id, guild_id)
         else:
             member = guild.members.get(user_id)
 
             if member is None:
-                self.logger.debug("Non existent member %s referred to in guild %s presence update; ignoring",
-                                  user_id, guild_id)
+                self.logger.debug(
+                    "Non existent member %s referred to in guild %s presence update; ignoring", user_id, guild_id
+                )
             else:
                 member.presence = _presence.Presence(payload)
                 self.dispatch(Event.PRESENCE_UPDATED, member)

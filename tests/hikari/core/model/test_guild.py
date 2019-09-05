@@ -224,7 +224,7 @@ class TestGuild:
         assert g.preferred_locale == "en-GB"
 
         assert s.parse_role.call_count == 2
-        s.parse_emoji.assert_called_once_with(test_emoji_payload)
+        s.parse_emoji.assert_called_once_with(test_emoji_payload, g.id)
         s.parse_member.assert_called_once_with(test_member_payload, g.id)
         assert s.parse_channel.call_count == 3
 
