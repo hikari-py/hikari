@@ -122,7 +122,7 @@ def test_field_delegation():
             self.e = e
             self.f = f
 
-    ba = Base('aa', 1, 2, 3)
+    ba = Base("aa", 1, 2, 3)
     de = Delegate(ba, 4, 5, 6)
     assert not hasattr(de, "_dont_delegate")
     assert hasattr(ba, "_dont_delegate")

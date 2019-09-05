@@ -50,14 +50,13 @@ variables:
         - echo -e "\e[1;33mRUNNING TEST PIPELINES\e[0m"
         - poetry install
         - poetry show -v
-        - poetry run nox -sinit
         - poetry run nox -spytest
         - poetry run nox -sbandit
         - poetry run nox -spypitest
-        - poetry run nox -spylint || true
+        - poetry run nox -sformat_check || echo -e '\e[1;31mFix your formatting, yo!\e[0m Run `black hikari tests` and push again :-)'
     artifacts:
         paths:
-            - public
+            - public/coverage/
 
 ###
 ### TEST IN PYTHON 3.7

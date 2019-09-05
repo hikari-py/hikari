@@ -113,7 +113,6 @@ def delegate_members(delegate_type, magic_field):
         annotation_fields = {*getattr(delegate_type, "__annotations__", ())}
         for name in dict_fields | annotation_fields:
             if name.startswith("_") or _is_func(cls, name):
-                print('dd', name)
                 continue
 
             delegate = DelegatedProperty(magic_field, name)

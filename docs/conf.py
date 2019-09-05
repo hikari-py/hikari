@@ -162,7 +162,7 @@ inheritance_graph_attrs = dict(
     nodesep=1,
     ranksep=2.4,
     size='"24.0, 24.0"',
-    splines="curved"
+    splines="curved",
 )
 
 inheritance_node_attrs = dict(
