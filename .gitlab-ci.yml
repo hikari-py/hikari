@@ -18,6 +18,7 @@
 stages:
     - test
     - deploy
+    - pages
 
 variables:
     DOCKER_DRIVER: "overlay2"
@@ -79,7 +80,7 @@ py38:
 ### TEMPLATE FOR TEST AND PROD DOCUMENTATION GENERATION JOBS.
 ###
 pages:
-    stage: deploy
+    stage: pages
     allow_failure: false
     image: python:3-stretch
     before_script:
