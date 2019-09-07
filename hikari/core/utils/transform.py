@@ -20,10 +20,7 @@
 Helper methods used for managing Mapping types during transformations.
 """
 
-__all__ = ("flatten", "try_cast", "get_cast", "get_cast_or_raw", "get_sequence", "put_if_specified")
-
 import inspect
-
 import typing
 
 from hikari.core.utils import unspecified
@@ -184,3 +181,24 @@ def put_if_specified(
     """
     if value is not unspecified.UNSPECIFIED:
         mapping[key] = value
+
+
+class SafeFormatDict(dict):
+    """
+    Used internally by :func:`format_present_placeholders`.
+    """
+
+    def __missing__(self, key):
+        return f"{{{key}}}"
+
+
+def format_present_placeholders(string: str, **kwargs) -> str:
+    """
+    Behaves mostly the same as :meth:`str.format`, but if a placeholder is not
+    present, it just keeps the placeholder inplace rather than raising a KeyError.
+
+    Example:
+        >>> format_present_placeholders("{foo} {bar} {baz}", foo=9, baz=27)
+        "9 {bar} 27"
+    """
+    return string.format_map(SafeFormatDict(**kwargs))
