@@ -26,6 +26,33 @@ from hikari.core.model import model_cache
 
 
 @pytest.mark.model
+def test_GuildChannel_permission_overwrites_aggregation():
+    s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
+    g = mock.MagicMock(spec_set=guild.Guild)
+    s.get_guild_by_id = mock.MagicMock(return_value=g)
+    g.channels = {1234: mock.MagicMock(spec_set=channel.GuildCategory)}
+
+    c = channel.GuildTextChannel(
+        global_state=s,
+        payload={
+            "type": 0,
+            "id": "1234567",
+            "guild_id": "696969",
+            "position": 100,
+            "permission_overwrites": [{"id": "123", "allow": 456, "deny": 789, "type": "member"}],
+            "nsfw": True,
+            "parent_id": "1234",
+            "rate_limit_per_user": 420,
+            "topic": "nsfw stuff",
+            "name": "shh!",
+        },
+    )
+
+    assert len(c.permission_overwrites) == 1
+    assert c.permission_overwrites[0].id == 123
+
+
+@pytest.mark.model
 def test_GuildChannel_parent_when_specified():
     s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
     g = mock.MagicMock(spec_set=guild.Guild)

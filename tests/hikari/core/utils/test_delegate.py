@@ -46,12 +46,12 @@ def test_DelegatedProperty_on_owner():
 
 
 def test_field_delegation():
+    @dataclasses.dataclass()
     class Base:
-        __slots__ = ("_dont_delegate", "a", "b", "c")
-
-        def __init__(self, dd, a, b, c):
-            self._dont_delegate = dd
-            self.a, self.b, self.c = a, b, c
+        __slots__ = ("a", "b", "c")
+        a: int
+        b: int
+        c: int
 
     @delegate.delegate_members(Base, "_base")
     class Delegate(Base):
@@ -67,10 +67,8 @@ def test_field_delegation():
             self.e = e
             self.f = f
 
-    ba = Base("aa", 1, 2, 3)
+    ba = Base(1, 2, 3)
     de = Delegate(ba, 4, 5, 6)
-    assert not hasattr(de, "_dont_delegate")
-    assert hasattr(ba, "_dont_delegate")
     assert de.a == 1
     assert de.b == 2
     assert de.c == 3
