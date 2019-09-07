@@ -72,7 +72,7 @@ function do-deployment() {
       # Push to GitLab and update both master and staging.
       deploy-to-pypi
       deploy-to-gitlab "$old_version" "$current_version"
-      deploy-to-release-api "$current_version"
+      deploy-to-release-api "$current_version" || true
       # Trigger Hikari deployment in main umbrella repo.
       echo "Triggering hikari package rebuild"
       curl --request POST --form token="$HIKARI_TRIGGER_TOKEN" --form ref=master https://gitlab.com/api/v4/projects/13535679/trigger/pipeline | python -m json.tool
