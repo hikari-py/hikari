@@ -66,6 +66,33 @@ class TestInMemoryCache:
         in_memory_cache.get_emoji_by_id(123)
         in_memory_cache._emojis.get.assert_called_once_with(123)
 
+    def test_delete_member_from_guild(self, in_memory_cache):
+        u = mock.MagicMock(spec_set=_user.User)
+        u.id = 9101112
+        g = mock.MagicMock(spec_set=_guild.Guild)
+        m = mock.MagicMock(spec_set=_user.Member)
+        m._user = u
+        g.members = {1234: m}
+        in_memory_cache._guilds = {5678: g}
+
+        # Reap reference so the member is the only thing using the ref
+        del u
+
+        deleted_m = in_memory_cache.delete_member_from_guild(1234, 5678)
+        assert deleted_m is m
+        assert m not in g.members.values()
+
+        del deleted_m, m
+
+        # Weak ref should have been collected :)
+        assert 9101112 not in in_memory_cache._users
+
+    def test_delete_guild(self, in_memory_cache):
+        g = mock.MagicMock(spec_set=_guild.Guild)
+        in_memory_cache._guilds = {1234: g}
+        in_memory_cache.delete_guild(1234)
+        assert g not in in_memory_cache._guilds.values()
+
     def test_parse_existing_user(self, in_memory_cache):
         payload = {"id": "1234"}
         existing_user = mock.MagicMock(spec_set=_user.User)

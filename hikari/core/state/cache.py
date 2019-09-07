@@ -65,7 +65,7 @@ class InMemoryCache(model_cache.AbstractModelCache):
         guild = self._guilds[guild_id]
         member = guild.members[user_id]
         del guild.members[user_id]
-        return member.user
+        return member
 
     def get_guild_by_id(self, guild_id: int):
         return self._guilds.get(guild_id)

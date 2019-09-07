@@ -281,10 +281,6 @@ class Guild(base.Snowflake, base.Volatile):
         self.premium_subscription_count = transform.get_cast(payload, "premium_subscription_count", int)
         self.system_channel_flags = transform.get_cast_or_raw(payload, "system_channel_flags", SystemChannelFlag)
 
-    @staticmethod
-    def from_dict(global_state: model_cache.AbstractModelCache, payload: dict):
-        return Guild(global_state, payload)
-
 
 class SystemChannelFlag(enum.IntFlag):
     """

@@ -23,6 +23,7 @@ variables:
     DOCKER_DRIVER: "overlay2"
     OWNER: "nekokatt"
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    ORIGINAL: https://gitlab.com/nekokatt/hikari.core
     
 
 # Fixes a bug where CI now won't verify a branch before merging it and instead does nothing until the heat death of
@@ -50,14 +51,13 @@ variables:
         - echo -e "\e[1;33mRUNNING TEST PIPELINES\e[0m"
         - poetry install
         - poetry show -v
-        - poetry run nox -sinit
         - poetry run nox -spytest
         - poetry run nox -sbandit
         - poetry run nox -spypitest
-        - poetry run nox -spylint || true
+        - poetry run nox -sformat_check || echo -e '\e[1;31mFix your formatting, yo!\e[0m Run `black hikari tests` and push again :-)'
     artifacts:
         paths:
-            - public
+            - public/coverage/
 
 ###
 ### TEST IN PYTHON 3.7
@@ -110,6 +110,7 @@ pages:
     stage: deploy
     image: python:3
     before_script:
+        - "[[ \"$CI_PROJECT_URL\" = \"$ORIGINAL\" ]] || (echo 'You are running off of a fork, so deployment is skipped.' && exit 0)"
         - apt-get update
         - apt-get install curl git openssh-client -y
         - pip install poetry requests
@@ -126,7 +127,6 @@ deploy-to-staging:
     extends: .deploy
     only:
         - staging
-        - $CI_PROJECT_URL == $MAIN_REPO
     except:
         - tags
         - merge_requests
@@ -149,7 +149,6 @@ deploy-to-prod:
     extends: .deploy
     only:
         - master
-        - $CI_PROJECT_URL == $MAIN_REPO
     except:
         - tags
         - merge_requests
