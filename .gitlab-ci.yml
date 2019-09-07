@@ -93,7 +93,6 @@ pages:
     script:
         - rm pages -Rvf || true
         - mkdir pages || true
-        - nox -sinit
         - nox -ssphinx
     artifacts:
         paths:
