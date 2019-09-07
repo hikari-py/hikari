@@ -399,10 +399,13 @@ class BaseHTTPClient:
     @staticmethod
     def _handle_client_error_response(resource, status, body) -> typing.NoReturn:
         # Assume Discord's spec is right and they don't send us random codes we don't know about...
-        try:
-            error_code = opcodes.JSONErrorCode(body.get("code"))
+        if isinstance(body, dict):
             error_message = body.get("message")
-        except AttributeError:
+            try:
+                error_code = opcodes.JSONErrorCode(body.get("code"))
+            except ValueError:
+                error_code = None
+        else:
             error_code = None
             error_message = str(body)
 

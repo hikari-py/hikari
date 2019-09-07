@@ -83,12 +83,10 @@ def delegate_members(delegate_type, magic_field):
         # a type hint, in which case it is in `__annotations__`. Anything else we lack the ability to detect
         # (e.g. fields only defined once we are in the `__init__`, as it is basically monkey patching at this point if
         # we are not slotted).
-        dict_fields = {k for k, v in delegate_type.__dict__.items()}
+        dict_fields = {k for k, v in delegate_type.__dict__.items() if not _is_func(v) and not k.startswith("_")}
         annotation_fields = {*getattr(delegate_type, "__annotations__", ())}
-        for name in dict_fields | annotation_fields:
-            if name.startswith("_") or _is_func(cls, name):
-                continue
-
+        targets = dict_fields | annotation_fields
+        for name in targets:
             delegate = DelegatedProperty(magic_field, name)
             delegate.__doc__ = f"See :attr:`{delegate_type.__name__}.{name}`."
 
@@ -104,6 +102,5 @@ def delegate_members(delegate_type, magic_field):
     return decorator
 
 
-def _is_func(cls, name):
-    func = getattr(cls, name, None)
+def _is_func(func):
     return inspect.isfunction(func) or inspect.ismethod(func)

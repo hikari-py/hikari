@@ -25,11 +25,10 @@ import abc
 import dataclasses
 import typing
 
-import hikari.core.utils.transform
-import hikari.core.utils.types
 from hikari.core.model import base
 from hikari.core.model import guild as _guild
 from hikari.core.model import overwrite
+from hikari.core.utils import transform
 from hikari.core.model import user
 
 _channel_type_to_class = {}
@@ -103,7 +102,7 @@ class GuildChannel(Channel, abc.ABC):
 
         self.permission_overwrites = overwrites
         self.name = payload["name"]
-        self._parent_id = hikari.core.utils.transform.nullable_cast(payload.get("parent_id"), int)
+        self._parent_id = transform.nullable_cast(payload.get("parent_id"), int)
 
     @property
     def is_dm(self) -> bool:
@@ -154,7 +153,7 @@ class GuildTextChannel(GuildChannel, type=0):
         self.nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
         self.rate_limit_per_user = payload.get("rate_limit_per_user", 0)
-        self.last_message_id = hikari.core.utils.transform.nullable_cast(payload.get("last_message_id"), int)
+        self.last_message_id = transform.nullable_cast(payload.get("last_message_id"), int)
 
 
 @dataclasses.dataclass()
@@ -178,7 +177,7 @@ class DMChannel(Channel, type=1):
     # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
         super().__init__(global_state, payload)
-        self.last_message_id = hikari.core.utils.transform.nullable_cast(payload.get("last_message_id"), int)
+        self.last_message_id = transform.nullable_cast(payload.get("last_message_id"), int)
         self.recipients = [global_state.parse_user(u) for u in payload.get("recipients", ())]
 
     @property
@@ -244,8 +243,8 @@ class GroupDMChannel(DMChannel, type=3):
         super().__init__(global_state, payload)
         self.icon_hash = payload.get("icon")
         self.name = payload.get("name")
-        self.owner_application_id = hikari.core.utils.transform.nullable_cast(payload.get("application_id"), int)
-        self._owner_id = hikari.core.utils.transform.nullable_cast(payload.get("owner_id"), int)
+        self.owner_application_id = transform.nullable_cast(payload.get("application_id"), int)
+        self._owner_id = transform.nullable_cast(payload.get("owner_id"), int)
 
 
 @dataclasses.dataclass(init=False)
@@ -285,7 +284,7 @@ class GuildNewsChannel(GuildChannel, type=5):
         super().__init__(global_state, payload)
         self.nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
-        self.last_message_id = hikari.core.utils.transform.nullable_cast(payload.get("last_message_id"), int)
+        self.last_message_id = transform.nullable_cast(payload.get("last_message_id"), int)
 
 
 @dataclasses.dataclass(init=False)
