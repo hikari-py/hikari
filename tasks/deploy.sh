@@ -36,7 +36,7 @@ function deploy-to-gitlab() {
   git remote set-url origin "$repo"
 
   git config user.name "Hikari CI"
-  git config user.email "nekoka.tt@outlook.com"
+  git config user.email "hikari.ci@hikari.gitlab"
   git add pyproject.toml docs/conf.py hikari/core/__init__.py
   git status
   git diff

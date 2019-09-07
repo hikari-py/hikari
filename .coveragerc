@@ -3,6 +3,7 @@ omit =
     hikari/__init__.py
 parallel = false
 branch = true
+timid  = true
 
 [report]
 precision = 1
@@ -18,3 +19,4 @@ exclude_lines =
     ^if __name__ == ['"]__main__['"]:$
     ^\s*...$
     ^\s*@abc.abstractmethod$
+sort = Cover

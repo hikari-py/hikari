@@ -151,3 +151,7 @@ def test_flatten_list():
     assert mapping[99] is o1
     assert mapping[88] is o2
     assert mapping[32] is o3
+
+
+def test_format_present_placeholders():
+    assert transform.format_present_placeholders("{foo} {bar} {baz}", foo=9, baz=27) == "9 {bar} 27"

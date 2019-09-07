@@ -21,6 +21,7 @@ from unittest import mock
 
 import pytest
 
+from hikari.core.model import guild
 from hikari.core.model import model_cache
 from hikari.core.model import user
 
@@ -117,6 +118,17 @@ def test_Member_with_no_optional_fields():
     assert m.premium_since is None
     assert m._guild_id == gid
     s.parse_user.assert_called_with(user_dict)
+
+
+@pytest.mark.model
+def test_Member_user_accessor():
+    u = mock.MagicMock(spec=user.User)
+    g = mock.MagicMock(spec=guild.Guild)
+    s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
+    s.parse_user = mock.MagicMock(return_value=u)
+    s.get_guild_by_id = mock.MagicMock(return_value=g)
+    m = user.Member(s, 1234, {})
+    assert m.user is u
 
 
 @pytest.mark.model

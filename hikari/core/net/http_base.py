@@ -28,34 +28,32 @@ import typing
 
 import aiohttp
 
-#: Format string for the default Discord API URL.
 import hikari.core.utils.user_agent
 from hikari.core import errors
 from hikari.core.net import opcodes
 from hikari.core.net import rates
 from hikari.core.utils import dateutils
-from hikari.core.utils import meta
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified
 
-__all__ = ("BaseHTTPClient",)
-
+#: Format string for the default Discord API URL.
 _DISCORD_API_URI_FORMAT = "https://discordapp.com/api/v{VERSION}"
 
 # Headers for rate limiting
-ACCEPT = "Accept"
-APPLICATION_JSON = "application/json"
-DATE = "Date"
-MILLISECOND = "millisecond"
-RETRY_AFTER = "Retry-After"
-USER_AGENT = "User-Agent"
-X_RATELIMIT_GLOBAL = "X-RateLimit-Global"
-X_RATELIMIT_LIMIT = "X-RateLimit-Limit"
-X_RATELIMIT_PRECISION = "X-RateLimit-Precision"
-X_RATELIMIT_REMAINING = "X-RateLimit-Remaining"
-X_RATELIMIT_RESET = "X-RateLimit-Reset"
-X_RATELIMIT_RESET_AFTER = "X-RateLimit-Reset-After"
-X_RATELIMIT_LOCALS = [X_RATELIMIT_LIMIT, X_RATELIMIT_REMAINING, X_RATELIMIT_RESET, DATE]
+_ACCEPT = "Accept"
+_APPLICATION_JSON = "application/json"
+_DATE = "Date"
+_GRAINULARITY = "millisecond"
+_GRAINULARITY_MULTIPLIER = 1 / 1000
+_RETRY_AFTER = "Retry-After"
+_USER_AGENT = "User-Agent"
+_X_RATELIMIT_GLOBAL = "X-RateLimit-Global"
+_X_RATELIMIT_LIMIT = "X-RateLimit-Limit"
+_X_RATELIMIT_PRECISION = "X-RateLimit-Precision"
+_X_RATELIMIT_REMAINING = "X-RateLimit-Remaining"
+_X_RATELIMIT_RESET = "X-RateLimit-Reset"
+_X_RATELIMIT_RESET_AFTER = "X-RateLimit-Reset-After"
+_X_RATELIMIT_LOCALS = [_X_RATELIMIT_LIMIT, _X_RATELIMIT_REMAINING, _X_RATELIMIT_RESET, _DATE]
 
 _RequestReturnSignature = typing.Tuple[opcodes.HTTPStatus, typing.Mapping, typing.Any]
 
@@ -73,37 +71,48 @@ class Resource:
     Also provides a mechanism to handle producing a rate limit identifier.
 
     Note:
-        Comparisons of this object occur on the bucket
+        Equality comparisons and hashes occur on the :attr:`bucket` attribute only.
     """
 
-    __slots__ = ("method", "path", "params", "bucket", "uri")
+    __slots__ = ("method", "path", "bucket", "uri", "params")
 
     def __init__(self, base_uri, method, path, **kwargs):
+        #: All arguments to interpolate into the URL.
+        self.params = kwargs
         #: The HTTP method to use (always upper-case)
         self.method = method.upper()
         #: The HTTP path to use (this can contain format-string style placeholders).
         self.path = path
-        #: Any parameters to later interpolate into `path`.
-        self.params = kwargs
-        #: The bucket. This is a combination of the method, uninterpolated path, and optional `webhook_id`, `guild_id`
-        #: and `channel_id`, and is how the hash code for this route is produced. The hash code is used to determine
-        #: the bucket to use for local rate limiting in the HTTP component.
-        self.bucket = "{0.method} {0.path} {0.webhook_id} {0.guild_id} {0.channel_id}".format(self)
+
         #: The full URI to use.
         self.uri = base_uri + path.format(**kwargs)
 
-    #: The webhook ID, or `None` if it is not present.
-    webhook_id = property(lambda self: self.params.get("webhook_id"))
-    #: The guild ID, or `None` if it is not present.
-    guild_id = property(lambda self: self.params.get("guild_id"))
-    #: The channel ID, or `None` if it is not present.
-    channel_id = property(lambda self: self.params.get("channel_id"))
+        bucket_path_str = transform.format_present_placeholders(self.path, **self.bucket_params)
+        #: The bucket identifier. This is used internally to uniquely identify a rate limit bucket.
+        self.bucket = f"{self.method} {bucket_path_str}"
+
+    @property
+    def bucket_params(self) -> typing.Dict[str, str]:
+        """
+        Returns a :class:`dict` of any arguments that we will interpolate into the bucket URI.
+        """
+        params = self.params
+        return {
+            "webhook_id": params.get("webhook_id"),
+            "channel_id": params.get("channel_id"),
+            "guild_id": params.get("guild_id"),
+        }
 
     def __hash__(self):
         return hash(self.bucket)
 
     def __eq__(self, other) -> bool:
         return isinstance(other, Resource) and hash(self) == hash(other)
+
+    def __repr__(self):
+        return self.bucket
+
+    __str__ = __repr__
 
 
 class BaseHTTPClient:
@@ -232,10 +241,10 @@ class BaseHTTPClient:
         """
         resource = Resource(self.base_uri, method, path, **kwargs)
 
-        for retry in range(5):
+        while True:
             try:
                 result = await self._request_once(
-                    retry=retry, resource=resource, query=query, headers=headers, data=data, json=json, reason=reason
+                    resource=resource, query=query, headers=headers, data=data, json=json, reason=reason
                 )
             except _RateLimited:
                 # If we are uploading files with io objects in a form body, we need to reset the seeks to 0 to ensure
@@ -244,20 +253,17 @@ class BaseHTTPClient:
                     seekable_resource.seek(0)
             else:
                 return result
-        raise errors.ClientError(
-            resource, None, None, "the request failed too many times and thus was discarded. Try again later."
-        )
 
     async def _request_once(
-        self, *, retry=0, resource, query=None, headers=None, data=None, json=None, reason=None
+        self, *, resource, query=None, headers=None, data=None, json=None, reason=None
     ) -> typing.Any:
         headers = headers if headers else {}
         query = query if query else {}
 
-        headers.setdefault(USER_AGENT, self.user_agent)
-        headers.setdefault(ACCEPT, APPLICATION_JSON)
+        headers.setdefault(_USER_AGENT, self.user_agent)
+        headers.setdefault(_ACCEPT, _APPLICATION_JSON)
         # https://github.com/discordapp/discord-api-docs/pull/1064
-        headers.setdefault(X_RATELIMIT_PRECISION, MILLISECOND)
+        headers.setdefault(_X_RATELIMIT_PRECISION, _GRAINULARITY)
 
         # Prevent inconsistencies causing weird behaviour: check both args.
         if reason is not None and reason is not unspecified.UNSPECIFIED:
@@ -272,14 +278,12 @@ class BaseHTTPClient:
         if resource in self.buckets:
             await self.buckets[resource].acquire(self._log_rate_limit_already_in_progress, resource=resource)
 
-        uri = resource.uri
-
         self._correlation_id += 1
-        self.logger.debug("[try %s - %s] %s %s", retry + 1, self._correlation_id, resource.method, uri)
+        self.logger.debug("[%s] %s %s", self._correlation_id, resource.method, resource.uri)
 
         async with self.session.request(
             resource.method,
-            url=uri,
+            url=resource.uri,
             headers=headers,
             data=data,
             json=json,
@@ -287,10 +291,9 @@ class BaseHTTPClient:
             params=query,
         ) as r:
             self.logger.debug(
-                "[try %s - %s] %s responded with %s %s containing %s (%s bytes)",
-                retry + 1,
+                "[%s] %s %s %s content_type=%s size=%s",
                 self._correlation_id,
-                uri,
+                resource.uri,
                 r.status,
                 r.reason,
                 r.content_type,
@@ -324,11 +327,7 @@ class BaseHTTPClient:
 
     def _log_rate_limit_already_in_progress(self, resource):
         name = f"local rate limit for {resource.bucket}" if resource is not None else "global rate limit"
-        self.logger.debug("a %s is already active, and the call is being suspended", name)
-
-    def _log_rate_limit_starting(self, resource, retry_after):
-        name = f"local rate limit for {resource.bucket}" if resource is not None else "global rate limit"
-        self.logger.debug("a %s has been reached. Try again after %ss", name, retry_after)
+        self.logger.debug("a %s is already active, and the call is being    suspended", name)
 
     def _is_rate_limited(self, resource, response_code, headers, body) -> bool:
         """
@@ -347,7 +346,7 @@ class BaseHTTPClient:
             True if we are being rate limited and the current call failed, False if it succeeded and we do not need
             to try again.
         """
-        is_global = headers.get(X_RATELIMIT_GLOBAL) == "true"
+        is_global = headers.get(_X_RATELIMIT_GLOBAL) == "true"
         is_being_rate_limited = response_code == opcodes.HTTPStatus.TOO_MANY_REQUESTS
 
         # assume that is_global only ever occurs on TOO_MANY_REQUESTS response codes.
@@ -355,23 +354,22 @@ class BaseHTTPClient:
             # Retry-after is always in milliseconds.
             # This is only in the body if we get ratelimited, which is a pain, but who
             # could expect an API to have consistent behaviour, amirite?
-            retry_after = (transform.get_cast(body, "retry_after", float) or 0) / 1_000
+            retry_after = body.get("retry_after", 0) * _GRAINULARITY_MULTIPLIER
             self.global_rate_limit.lock(retry_after)
-            self._log_rate_limit_starting(None, retry_after)
 
-        if all(header in headers for header in X_RATELIMIT_LOCALS):
+        if all(header in headers for header in _X_RATELIMIT_LOCALS):
             # If we don't get all the info we need, just forget about the rate limit as we can't act on missing
             # information.
-            now = dateutils.parse_http_date(headers[DATE]).timestamp()
-            total = transform.get_cast(headers, X_RATELIMIT_LIMIT, int)
+            now = dateutils.parse_http_date(headers[_DATE]).timestamp()
+            total = transform.get_cast(headers, _X_RATELIMIT_LIMIT, int)
             # https://github.com/discordapp/discord-api-docs/pull/1064
-            reset_after = transform.get_cast(headers, X_RATELIMIT_RESET_AFTER, float, default=0)
+            reset_after = transform.get_cast(headers, _X_RATELIMIT_RESET_AFTER, float, default=0)
             reset_at = now + reset_after
-            remaining = transform.get_cast(headers, X_RATELIMIT_REMAINING, int)
+            remaining = transform.get_cast(headers, _X_RATELIMIT_REMAINING, int)
 
             # This header only exists if we get a TOO_MANY_REQUESTS first, annoyingly, and it isn't
             # in the body...
-            retry_after = transform.get_cast(headers, RETRY_AFTER, float)
+            retry_after = transform.get_cast(headers, _RETRY_AFTER, float)
             retry_after = retry_after / 1_000 if retry_after is not None else reset_at - now
 
             if resource not in self.buckets:
@@ -382,10 +380,18 @@ class BaseHTTPClient:
                 bucket = self.buckets[resource]
                 bucket.update(total, remaining, now, reset_at)
 
-            if bucket.is_limiting:
-                self._log_rate_limit_starting(resource, retry_after)
-
-            is_being_rate_limited |= remaining == 0
+            self.logger.debug(
+                "Rate limit data for %s: "
+                "now=%s, total=%s, reset_after=%s, reset_at=%s, remaining=%s, retry_after=%s is_being_rate_limited=%s",
+                resource,
+                now,
+                total,
+                reset_after,
+                reset_at,
+                remaining,
+                retry_after,
+                is_being_rate_limited,
+            )
 
         return is_being_rate_limited
 
@@ -417,3 +423,6 @@ class BaseHTTPClient:
             error_message = str(body)
 
         raise errors.ServerError(resource, status, error_message)
+
+
+__all__ = ["BaseHTTPClient"]
