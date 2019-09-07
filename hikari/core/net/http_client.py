@@ -413,7 +413,7 @@ class HTTPClient(http_base.BaseHTTPClient):
                 The ID of the message to add the reaction in.
             emoji:
                 The emoji to add. This can either be a series of unicode characters making up a valid Discord
-                emoji, or it can be a snowflake ID for a custom emoji.
+                emoji, or it can be in the form of name:id for a custom emoji.
 
         Raises:
             hikari.errors.Forbidden:
@@ -421,6 +421,8 @@ class HTTPClient(http_base.BaseHTTPClient):
                 permission. If you lack `READ_MESSAGE_HISTORY`, this may also raise this error.
             hikari.errors.NotFound:
                 if the channel or message is not found, or if the emoji is not found.
+            hikari.core.errors.ClientError:
+                if the emoji is not valid or formatted correctly
         """
         await self.request(
             PUT,
