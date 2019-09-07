@@ -70,7 +70,7 @@ if is_staging:
     else:
         latest_patch = 1
 
-    current_version = f"{previous_major}.{previous_minor}.{previous_micro}.{latest_patch}"
+    current_version = f"{previous_major}.{previous_minor}.{previous_micro}.dev{latest_patch}"
     print("Will use patch version", current_version, file=sys.stderr)
 
 else:
