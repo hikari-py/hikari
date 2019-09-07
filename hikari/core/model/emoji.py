@@ -21,6 +21,7 @@ Emojis.
 """
 from __future__ import annotations
 
+import dataclasses
 import typing
 
 from hikari.core.model import base
@@ -29,7 +30,7 @@ from hikari.core.model import user
 from hikari.core.utils import transform
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Emoji(base.Snowflake):
     """
     Representation of a custom emoji object.
@@ -74,14 +75,15 @@ class Emoji(base.Snowflake):
     def __init__(self, global_state: model_cache.AbstractModelCache, payload, guild_id: int):
         """Convert the given payload and state into an object instance."""
         self._state = global_state
-        self.id = transform.get_cast(payload, "id", int)
-        self.name = payload.get("name")
-        self._role_ids = transform.get_sequence(payload, "roles", lambda r: int(r["id"]))
+        self.id = int(payload["id"])
+        self.name = payload["name"]
+        self._role_ids = [global_state.parse_role(role).id for role in payload.get("roles", ())]
         self._guild_id = guild_id
-        self.user = global_state.parse_user(payload.get("user"))
-        self.require_colons = transform.get_cast(payload, "require_colons", bool)
-        self.managed = transform.get_cast(payload, "managed", bool)
-        self.animated = transform.get_cast(payload, "animated", bool)
+        user = payload.get("user")
+        self.user = global_state.parse_user(user) if user is not None else None
+        self.require_colons = payload.get("require_colons", False)
+        self.managed = payload.get("managed", False)
+        self.animated = payload.get("animated", False)
 
 
 __all__ = ["Emoji"]

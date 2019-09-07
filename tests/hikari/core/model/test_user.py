@@ -127,7 +127,7 @@ def test_Member_user_accessor():
     s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
     s.parse_user = mock.MagicMock(return_value=u)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
-    m = user.Member(s, 1234, {})
+    m = user.Member(s, 1234, {"joined_at": "2019-05-17T06:26:56.936000+00:00"})
     assert m.user is u
 
 

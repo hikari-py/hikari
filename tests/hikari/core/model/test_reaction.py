@@ -48,4 +48,4 @@ class TestReaction:
 
         assert re.count == 420
         assert re.me is True
-        test_state.parse_emoji.assert_called_with(None, emoji_dict)
+        test_state.parse_emoji.assert_called_with(emoji_dict, None)
