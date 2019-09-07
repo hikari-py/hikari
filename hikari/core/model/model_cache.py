@@ -74,7 +74,7 @@ class AbstractModelCache(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def parse_emoji(self, guild_id: int, emoji: types.DiscordObject) -> emoji.Emoji:
+    def parse_emoji(self, emoji: types.DiscordObject, guild_id: int) -> emoji.Emoji:
         ...
 
     @abc.abstractmethod

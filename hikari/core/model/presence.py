@@ -22,9 +22,9 @@ Presences for members.
 
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import enum
-
 import typing
 
 from hikari.core.model import base
@@ -43,7 +43,7 @@ class Status(base.NamedEnum, enum.Enum):
     OFFLINE = enum.auto()
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Presence:
     """
     The presence of a member. This includes their status and info on what they are doing currently.
@@ -78,14 +78,14 @@ class Presence:
 
     def __init__(self, payload):
         client_status = payload.get("client_status", {})
-        self.activities = transform.get_sequence(payload, "activities", PresenceActivity)
-        self.status = transform.get_cast(payload, "status", Status.from_discord_name, Status.OFFLINE)
-        self.web_status = transform.get_cast(client_status, "web", Status.from_discord_name, Status.OFFLINE)
-        self.desktop_status = transform.get_cast(client_status, "desktop", Status.from_discord_name, Status.OFFLINE)
-        self.mobile_status = transform.get_cast(client_status, "mobile", Status.from_discord_name, Status.OFFLINE)
+        self.activities = [PresenceActivity(a) for a in payload["activities"]]
+        self.status = transform.try_cast(payload["status"], Status.from_discord_name, Status.OFFLINE)
+        self.web_status = transform.try_cast(client_status.get("web"), Status.from_discord_name, Status.OFFLINE)
+        self.desktop_status = transform.try_cast(client_status.get("desktop"), Status.from_discord_name, Status.OFFLINE)
+        self.mobile_status = transform.try_cast(client_status.get("mobile"), Status.from_discord_name, Status.OFFLINE)
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class PresenceActivity:
     """
     Rich presence-style activity.
@@ -168,17 +168,17 @@ class PresenceActivity:
     flags: ActivityFlag
 
     def __init__(self, payload):
-        self.id = transform.get_cast(payload, "id", str)
-        self.name = transform.get_cast(payload, "name", str)
-        self.type = transform.get_cast_or_raw(payload, "type", ActivityType)
-        self.url = transform.get_cast(payload, "url", str)
-        self.timestamps = transform.get_cast(payload, "timestamps", ActivityTimestamps)
-        self.application_id = transform.get_cast(payload, "application_id", int)
-        self.details = transform.get_cast(payload, "details", str)
-        self.state = transform.get_cast(payload, "state", str)
-        self.party = transform.get_cast(payload, "party", ActivityParty)
-        self.assets = transform.get_cast(payload, "assets", ActivityAssets)
-        self.flags = transform.get_cast(payload, "flags", ActivityFlag, default=0)
+        self.id = payload.get("id")
+        self.name = payload.get("name")
+        self.type = transform.try_cast(payload.get("type"), ActivityType)
+        self.url = payload.get("url")
+        self.timestamps = transform.nullable_cast(payload.get("timestamps"), ActivityTimestamps)
+        self.application_id = transform.nullable_cast(payload.get("application_id"), int)
+        self.details = payload.get("details")
+        self.state = payload.get("state")
+        self.party = transform.nullable_cast(payload.get("party"), ActivityParty)
+        self.assets = transform.nullable_cast(payload.get("assets"), ActivityAssets)
+        self.flags = transform.nullable_cast(payload.get("flags"), ActivityFlag) or 0
 
 
 class ActivityType(enum.IntEnum):
@@ -198,7 +198,7 @@ class ActivityFlag(enum.IntFlag):
     PLAY = 0x20
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class ActivityParty:
     __slots__ = ("id", "current_size", "max_size")
 
@@ -222,12 +222,12 @@ class ActivityParty:
     max_size: typing.Optional[int]
 
     def __init__(self, payload):
-        self.id = transform.get_cast(payload, "id", str)
-        self.current_size = transform.get_cast(payload, "current_size", int)
-        self.max_size = transform.get_cast(payload, "max_size", int)
+        self.id = payload.get("id")
+        self.current_size = transform.nullable_cast(payload.get("current_size"), int)
+        self.max_size = transform.nullable_cast(payload.get("max_size"), int)
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class ActivityAssets:
     __slots__ = ("large_image", "large_text", "small_image", "small_text")
 
@@ -252,13 +252,13 @@ class ActivityAssets:
     small_text: typing.Optional[str]
 
     def __init__(self, payload):
-        self.large_image = transform.get_cast(payload, "large_image", str)
-        self.large_text = transform.get_cast(payload, "large_text", str)
-        self.small_image = transform.get_cast(payload, "small_image", str)
-        self.small_text = transform.get_cast(payload, "small_text", str)
+        self.large_image = payload.get("large_image")
+        self.large_text = payload.get("large_text")
+        self.small_image = payload.get("small_image")
+        self.small_text = payload.get("small_text")
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class ActivityTimestamps:
     __slots__ = ("start", "end")
 
@@ -281,8 +281,8 @@ class ActivityTimestamps:
         return self.end - self.start if self.start is not None and self.end is not None else None
 
     def __init__(self, payload):
-        self.start = transform.get_cast(payload, "start", dateutils.unix_epoch_to_datetime)
-        self.end = transform.get_cast(payload, "end", dateutils.unix_epoch_to_datetime)
+        self.start = transform.nullable_cast(payload.get("start"), dateutils.unix_epoch_to_datetime)
+        self.end = transform.nullable_cast(payload.get("end"), dateutils.unix_epoch_to_datetime)
 
 
 __all__ = [

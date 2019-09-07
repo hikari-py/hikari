@@ -21,11 +21,10 @@ Invitations to guilds.
 """
 from __future__ import annotations
 
+import dataclasses
 import datetime
-
 import typing
 
-from hikari.core.model import base
 from hikari.core.model import channel
 from hikari.core.model import guild
 from hikari.core.model import model_cache
@@ -34,7 +33,7 @@ from hikari.core.utils import dateutils
 from hikari.core.utils import transform
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Invite:
     """
     Represents a code that when used, adds a user to a guild or group DM channel.
@@ -74,11 +73,11 @@ class Invite:
         self.code = payload.get("code")
         self.guild = global_state.parse_guild(payload.get("guild"))
         self.channel = global_state.parse_channel(payload.get("channel"))
-        self.approximate_presence_count = transform.get_cast(payload, "approximate_presence_count", int)
-        self.approximate_member_count = transform.get_cast(payload, "approximate_member_count", int)
+        self.approximate_presence_count = transform.nullable_cast(payload.get("approximate_presence_count"), int)
+        self.approximate_member_count = transform.nullable_cast(payload.get("approximate_member_count"), int)
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class InviteMetadata:
     """
     Metadata relating to a specific invite object.
@@ -125,13 +124,13 @@ class InviteMetadata:
 
     def __init__(self, global_state: model_cache.AbstractModelCache, payload):
         self._state = global_state
-        self.inviter = global_state.parse_user(payload.get("inviter"))
-        self.uses = transform.get_cast(payload, "uses", int)
-        self.max_uses = transform.get_cast(payload, "max_uses", int)
-        self.max_age = transform.get_cast(payload, "max_age", int)
-        self.temporary = transform.get_cast(payload, "temporary", bool)
-        self.created_at = transform.get_cast(payload, "created_at", dateutils.parse_iso_8601_datetime)
-        self.revoked = transform.get_cast(payload, "revoked", bool)
+        self.inviter = global_state.parse_user(payload["inviter"])
+        self.uses = int(payload["uses"])
+        self.max_uses = int(payload["max_uses"])
+        self.max_age = int(payload["max_age"])
+        self.temporary = payload.get("temporary", False)
+        self.created_at = dateutils.parse_iso_8601_datetime(payload["created_at"])
+        self.revoked = payload.get("revoked", False)
 
 
 __all__ = ["Invite", "InviteMetadata"]

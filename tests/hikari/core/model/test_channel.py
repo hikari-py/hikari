@@ -26,6 +26,33 @@ from hikari.core.model import model_cache
 
 
 @pytest.mark.model
+def test_GuildChannel_permission_overwrites_aggregation():
+    s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
+    g = mock.MagicMock(spec_set=guild.Guild)
+    s.get_guild_by_id = mock.MagicMock(return_value=g)
+    g.channels = {1234: mock.MagicMock(spec_set=channel.GuildCategory)}
+
+    c = channel.GuildTextChannel(
+        global_state=s,
+        payload={
+            "type": 0,
+            "id": "1234567",
+            "guild_id": "696969",
+            "position": 100,
+            "permission_overwrites": [{"id": "123", "allow": 456, "deny": 789, "type": "member"}],
+            "nsfw": True,
+            "parent_id": "1234",
+            "rate_limit_per_user": 420,
+            "topic": "nsfw stuff",
+            "name": "shh!",
+        },
+    )
+
+    assert len(c.permission_overwrites) == 1
+    assert c.permission_overwrites[0].id == 123
+
+
+@pytest.mark.model
 def test_GuildChannel_parent_when_specified():
     s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
     g = mock.MagicMock(spec_set=guild.Guild)
@@ -68,32 +95,6 @@ def test_GuildChannel_parent_when_unspecified():
             "permission_overwrites": [],
             "nsfw": True,
             "parent_id": None,
-            "rate_limit_per_user": 420,
-            "topic": "nsfw stuff",
-            "name": "shh!",
-        },
-    )
-
-    assert c.parent is None
-
-
-@pytest.mark.model
-def test_GuildCategory_parent_is_always_None():
-    s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-    g = mock.MagicMock(spec_set=guild.Guild)
-    s.get_guild_by_id = mock.MagicMock(return_value=g)
-    g.channels = {1234: mock.MagicMock(spec_set=channel.GuildCategory)}
-
-    c = channel.GuildCategory(
-        global_state=s,
-        payload={
-            "type": 4,
-            "id": "1234567",
-            "guild_id": "696969",
-            "position": 100,
-            "permission_overwrites": [],
-            "nsfw": True,
-            "parent_id": "1234",
             "rate_limit_per_user": 420,
             "topic": "nsfw stuff",
             "name": "shh!",
@@ -186,7 +187,7 @@ def test_GroupDMChannel():
             "recipients": [],
             "icon": "1a2b3c4d",
             "name": "shitposting 101",
-            "owner_application_id": "111111",
+            "application_id": "111111",
             "owner_id": "111111",
         },
     )
@@ -322,7 +323,7 @@ def test_channel_failure_case():
 )
 def test_channel_guild(impl):
     cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-    obj = impl(cache, {"guild_id": "91827"})
+    obj = impl(cache, {"id": "1", "position": 2, "guild_id": "91827", "permission_overwrites": [], "name": "milfchnl"})
     guild = mock.MagicMock()
     cache.get_guild_by_id = mock.MagicMock(return_value=guild)
 

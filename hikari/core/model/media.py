@@ -22,10 +22,10 @@ Represents various forms of media such as images.
 from __future__ import annotations
 
 import base64
+import dataclasses
 import io
 import mimetypes
 import re
-
 import typing
 
 from hikari.core.model import base
@@ -34,7 +34,7 @@ from hikari.core.utils import transform
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Avatar:
     """
     Represents an Avatar. This contains compressed raw byte data of the given image.
@@ -111,7 +111,7 @@ class Avatar:
         return len(self.data)
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Attachment(base.Snowflake):
     """
     An attachment that is received from Discord in a message.
@@ -155,13 +155,13 @@ class Attachment(base.Snowflake):
     height: typing.Optional[int]
 
     def __init__(self, payload):
-        self.id = transform.get_cast(payload, "id", int)
-        self.filename = payload.get("filename")
-        self.size = transform.get_cast(payload, "size", int)
-        self.url = payload.get("url")
-        self.proxy_url = payload.get("proxy_url")
-        self.width = transform.get_cast(payload, "width", int)
-        self.height = transform.get_cast(payload, "height", int)
+        self.id = int(payload["id"])
+        self.filename = payload["filename"]
+        self.size = int(payload["size"])
+        self.url = payload["url"]
+        self.proxy_url = payload["proxy_url"]
+        self.width = transform.nullable_cast(payload.get("width"), int)
+        self.height = transform.nullable_cast(payload.get("height"), int)
 
 
 __all__ = ["Avatar", "Attachment"]
