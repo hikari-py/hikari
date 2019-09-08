@@ -21,13 +21,14 @@ A role within a guild.
 """
 from __future__ import annotations
 
+import dataclasses
+
 from hikari.core.model import base
 from hikari.core.model import color as _color
 from hikari.core.model import permission as _permission
-from hikari.core.utils import transform
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Role(base.Snowflake):
     """
     Representation of a role within a guild.
@@ -76,14 +77,14 @@ class Role(base.Snowflake):
     mentionable: bool
 
     def __init__(self, payload):
-        self.id = transform.get_cast(payload, "id", int)
-        self.name = transform.get_cast(payload, "name", str)
-        self.color = transform.get_cast(payload, "color", _color.Color)
-        self.hoist = transform.get_cast(payload, "hoist", bool)
-        self.position = transform.get_cast(payload, "position", int)
-        self.permissions = transform.get_cast(payload, "permissions", _permission.Permission)
-        self.managed = transform.get_cast(payload, "managed", bool)
-        self.mentionable = transform.get_cast(payload, "mentionable", bool)
+        self.id = int(payload["id"])
+        self.name = payload["name"]
+        self.color = _color.Color(payload["color"])
+        self.hoist = payload["hoist"]
+        self.position = payload["position"]
+        self.permissions = _permission.Permission(payload["permissions"])
+        self.managed = payload["managed"]
+        self.mentionable = payload["mentionable"]
 
 
 __all__ = ["Role"]

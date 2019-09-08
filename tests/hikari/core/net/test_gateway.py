@@ -98,6 +98,7 @@ def mock_run_once_parts(timeout=10):
 @pytest.mark.asyncio
 @pytest.mark.gateway
 @pytest.mark.slow
+@pytest.mark.trylast
 class TestGateway:
     async def test_init_produces_valid_url(self, event_loop):
         """GatewayConnection.__init__ should produce a valid query fragment for the URL."""

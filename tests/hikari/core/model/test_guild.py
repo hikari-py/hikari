@@ -135,7 +135,7 @@ def test_guild_payload(test_emoji_payload, test_roles_payloads, test_channel_pay
         "id": "123456",
         "afk_channel_id": "99998888777766",
         "owner_id": "6969696",
-        "region": "1234321",
+        "region": "eu-central",
         "system_channel_id": "19216801",
         "application_id": "10987654321",
         "name": "L33t guild",
@@ -177,7 +177,7 @@ class TestGuild:
         assert g.id == 123456
         assert g._afk_channel_id == 99998888777766
         assert g._owner_id == 6969696
-        assert g._voice_region_id == 1234321
+        assert g._voice_region == "eu-central"
         assert g._system_channel_id == 19216801
         assert g.creator_application_id == 10987654321
         assert g.name == "L33t guild"
@@ -224,7 +224,7 @@ class TestGuild:
         assert g.preferred_locale == "en-GB"
 
         assert s.parse_role.call_count == 2
-        s.parse_emoji.assert_called_once_with(test_emoji_payload)
+        s.parse_emoji.assert_called_once_with(test_emoji_payload, g.id)
         s.parse_member.assert_called_once_with(test_member_payload, g.id)
         assert s.parse_channel.call_count == 3
 

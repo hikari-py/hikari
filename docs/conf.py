@@ -171,7 +171,7 @@ inheritance_node_attrs = dict(
 
 inheritance_edge_attrs = dict(color='"#772953"', arrowhead="onormal", arrowsize=1)
 
-graphviz_output_format = "svg"
+graphviz_output_format = "png"
 
 
 def setup(app):
