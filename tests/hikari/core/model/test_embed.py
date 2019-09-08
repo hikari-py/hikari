@@ -35,7 +35,7 @@ class TestEmbed:
     @pytest.mark.parametrize("slot", [s for s in _embed.Embed.__slots__])
     def test_Embed_init_sets_correct_defaults(self, slot, embed):
         attr = getattr(embed, slot)
-        assert attr is _embed.UNSPECIFIED or slot == "_fields" and attr == []
+        assert attr is unspecified.UNSPECIFIED or slot == "_fields" and attr == []
 
     @pytest.mark.parametrize(["field", "property"], [(s, s[1:]) for s in _embed.Embed.__slots__ if s.startswith("_")])
     def test_Embed_property_accessors_access_values(self, field, property, embed):

@@ -21,9 +21,9 @@ Guild models.
 """
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import enum
-
 import typing
 
 from hikari.core.model import base
@@ -37,8 +37,8 @@ from hikari.core.utils import dateutils
 from hikari.core.utils import transform
 
 
-@base.dataclass()
-class Guild(base.Snowflake, base.Volatile):
+@dataclasses.dataclass()
+class Guild(base.Snowflake):
     """
     Implementation of a Guild.
     """
@@ -57,7 +57,7 @@ class Guild(base.Snowflake, base.Volatile):
         "id",
         "_afk_channel_id",
         "_owner_id",
-        "_voice_region_id",
+        "_voice_region",
         "_system_channel_id",
         "creator_application_id",
         "name",
@@ -88,11 +88,11 @@ class Guild(base.Snowflake, base.Volatile):
         "system_channel_flags",  # not documented...
     )
 
-    _afk_channel_id: typing.Optional[int]
     _state: model_cache.AbstractModelCache
+    _afk_channel_id: typing.Optional[int]
     _owner_id: int
     _system_channel_id: typing.Optional[int]
-    _voice_region_id: int
+    _voice_region: typing.Optional[str]
 
     #: The guild ID.
     #:
@@ -237,49 +237,47 @@ class Guild(base.Snowflake, base.Volatile):
     system_channel_flags: typing.Optional[SystemChannelFlag]
 
     def __init__(self, global_state, payload):
-        guild_id = transform.get_cast(payload, "id", int)
+        guild_id = transform.nullable_cast(payload.get("id"), int)
         self.id = guild_id
         self._state = global_state
         self.update_state(payload)
 
     def update_state(self, payload):
-        self._afk_channel_id = transform.get_cast(payload, "afk_channel_id", int)
-        self._owner_id = transform.get_cast(payload, "owner_id", int)
-        self._voice_region_id = transform.get_cast(payload, "region", int)
-        self._system_channel_id = transform.get_cast(payload, "system_channel_id", int)
-        self.creator_application_id = transform.get_cast(payload, "application_id", int)
+        self._afk_channel_id = transform.nullable_cast(payload.get("afk_channel_id"), int)
+        self._owner_id = transform.nullable_cast(payload.get("owner_id"), int)
+        self._voice_region = payload.get("region")
+        self._system_channel_id = transform.nullable_cast(payload.get("system_channel_id"), int)
+        self.creator_application_id = transform.nullable_cast(payload.get("application_id"), int)
         self.name = payload.get("name")
         self.icon_hash = payload.get("icon")
         self.splash_hash = payload.get("splash")
-        self.afk_timeout = transform.get_cast(payload, "afk_timeout", int)
-        self.verification_level = transform.get_cast_or_raw(payload, "verification_level", VerificationLevel)
-        self.preferred_locale = transform.get_cast(payload, "preferred_locale", str)
-        self.message_notification_level = transform.get_cast_or_raw(
-            payload, "default_message_notifications", NotificationLevel
+        self.afk_timeout = payload.get("afk_timeout", float("inf"))
+        self.verification_level = transform.try_cast(payload.get("verification_level"), VerificationLevel)
+        self.preferred_locale = payload.get("preferred_locale")
+        self.message_notification_level = transform.try_cast(
+            payload.get("default_message_notifications"), NotificationLevel
         )
-        self.explicit_content_filter_level = transform.get_cast_or_raw(
-            payload, "explicit_content_filter", ExplicitContentFilterLevel
+        self.explicit_content_filter_level = transform.try_cast(
+            payload.get("explicit_content_filter"), ExplicitContentFilterLevel
         )
-        self.roles = transform.get_sequence(payload, "roles", self._state.parse_role, transform.flatten)
-        self.emojis = transform.get_sequence(payload, "emojis", self._state.parse_emoji, transform.flatten)
-        self.features = transform.get_sequence(payload, "features", Feature.from_discord_name, keep_failures=True)
-        self.member_count = transform.get_cast(payload, "member_count", int)
-        self.mfa_level = transform.get_cast_or_raw(payload, "mfa_level", MFALevel)
-        self.my_permissions = transform.get_cast_or_raw(payload, "permissions", permission.Permission)
-        self.joined_at = transform.get_cast(payload, "joined_at", dateutils.parse_iso_8601_datetime)
-        self.large = transform.get_cast(payload, "large", bool)
-        self.unavailable = (transform.get_cast(payload, "unavailable", bool),)
-        self.members = transform.flatten((self._state.parse_member(m, self.id) for m in payload.get("members", ())))
-        self.channels = transform.get_sequence(
-            payload, "channels", self._state.parse_channel, transform.flatten, state=self._state
-        )
-        self.max_members = transform.get_cast(payload, "max_members", int)
+        self.roles = transform.snowflake_map(self._state.parse_role(r) for r in payload.get("roles", ()))
+        self.emojis = transform.snowflake_map(self._state.parse_emoji(e, self.id) for e in payload.get("emojis", ()))
+        self.features = {transform.try_cast(f, Feature.from_discord_name) for f in payload.get("features", ())}
+        self.member_count = transform.nullable_cast(payload.get("member_count"), int)
+        self.mfa_level = transform.try_cast(payload.get("mfa_level"), MFALevel)
+        self.my_permissions = permission.Permission(payload.get("permissions", 0))
+        self.joined_at = transform.nullable_cast(payload.get("joined_at"), dateutils.parse_iso_8601_datetime)
+        self.large = payload.get("large", False)
+        self.unavailable = payload.get("unavailable", False)
+        self.members = transform.snowflake_map(self._state.parse_member(m, self.id) for m in payload.get("members", ()))
+        self.channels = transform.snowflake_map(self._state.parse_channel(c) for c in payload.get("channels", ()))
+        self.max_members = payload.get("max_members", 0)
         self.vanity_url_code = payload.get("vanity_url_code")
         self.description = payload.get("description")
         self.banner_hash = payload.get("banner")
-        self.premium_tier = transform.get_cast_or_raw(payload, "premium_tier", PremiumTier)
-        self.premium_subscription_count = transform.get_cast(payload, "premium_subscription_count", int)
-        self.system_channel_flags = transform.get_cast_or_raw(payload, "system_channel_flags", SystemChannelFlag)
+        self.premium_tier = transform.try_cast(payload.get("premium_tier"), PremiumTier)
+        self.premium_subscription_count = payload.get("premium_subscription_count", 0)
+        self.system_channel_flags = transform.try_cast(payload.get("system_channel_flags"), SystemChannelFlag)
 
 
 class SystemChannelFlag(enum.IntFlag):
@@ -382,7 +380,7 @@ class PremiumTier(enum.IntEnum):
     TIER_3 = 3
 
 
-@base.dataclass()
+@dataclasses.dataclass()
 class Ban:
     """
     A user that was banned, along with the reason for the ban.

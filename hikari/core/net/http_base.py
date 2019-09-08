@@ -28,13 +28,14 @@ import typing
 
 import aiohttp
 
-import hikari.core.utils.user_agent
 from hikari.core import errors
 from hikari.core.net import opcodes
 from hikari.core.net import rates
 from hikari.core.utils import dateutils
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified
+from hikari.core.utils import user_agent
+
 
 #: Format string for the default Discord API URL.
 _DISCORD_API_URI_FORMAT = "https://discordapp.com/api/v{VERSION}"
@@ -192,7 +193,7 @@ class BaseHTTPClient:
         #: The logger to use for this object.
         self.logger = logging.getLogger(f"{type(self).__module__}.{type(self).__qualname__}")
         #: User agent to use
-        self.user_agent = hikari.core.utils.user_agent.user_agent()
+        self.user_agent = user_agent.user_agent()
 
     async def close(self):
         """
@@ -361,15 +362,15 @@ class BaseHTTPClient:
             # If we don't get all the info we need, just forget about the rate limit as we can't act on missing
             # information.
             now = dateutils.parse_http_date(headers[_DATE]).timestamp()
-            total = transform.get_cast(headers, _X_RATELIMIT_LIMIT, int)
+            total = transform.nullable_cast(headers.get(_X_RATELIMIT_LIMIT), int)
             # https://github.com/discordapp/discord-api-docs/pull/1064
-            reset_after = transform.get_cast(headers, _X_RATELIMIT_RESET_AFTER, float, default=0)
+            reset_after = transform.nullable_cast(headers.get(_X_RATELIMIT_RESET_AFTER), float) or 0
             reset_at = now + reset_after
-            remaining = transform.get_cast(headers, _X_RATELIMIT_REMAINING, int)
+            remaining = transform.nullable_cast(headers.get(_X_RATELIMIT_REMAINING), int)
 
             # This header only exists if we get a TOO_MANY_REQUESTS first, annoyingly, and it isn't
             # in the body...
-            retry_after = transform.get_cast(headers, _RETRY_AFTER, float)
+            retry_after = transform.nullable_cast(headers.get(_RETRY_AFTER), float)
             retry_after = retry_after / 1_000 if retry_after is not None else reset_at - now
 
             if resource not in self.buckets:
@@ -398,10 +399,13 @@ class BaseHTTPClient:
     @staticmethod
     def _handle_client_error_response(resource, status, body) -> typing.NoReturn:
         # Assume Discord's spec is right and they don't send us random codes we don't know about...
-        try:
-            error_code = transform.get_cast(body, "code", opcodes.JSONErrorCode, None)
+        if isinstance(body, dict):
             error_message = body.get("message")
-        except AttributeError:
+            try:
+                error_code = opcodes.JSONErrorCode(body.get("code"))
+            except ValueError:
+                error_code = None
+        else:
             error_code = None
             error_message = str(body)
 

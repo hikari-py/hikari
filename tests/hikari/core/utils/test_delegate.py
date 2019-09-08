@@ -45,68 +45,13 @@ def test_DelegatedProperty_on_owner():
     assert isinstance(Outer.a, delegate.DelegatedProperty)
 
 
-@_helpers.assert_raises(TypeError)
-def test_delegate_safe_dataclass_on_delegated_class_fails_test():
-    class Delegated:
-        pass
-
-    setattr(Delegated, delegate._DELEGATE_MEMBERS_FIELD, [])
-    delegate.delegate_safe_dataclass()(Delegated)
-
-
-def test_delegate_safe_dataclass_with_no_fields():
-    @delegate.delegate_safe_dataclass()
-    class Test:
-        __delegated_members__ = frozenset()
-        __slots__ = ()
-
-    Test()
-
-
-def test_delegate_safe_dataclass_with_fields_and_no_delegated_members():
-    @delegate.delegate_safe_dataclass()
-    class Test:
-        __delegated_members__ = frozenset()
+def test_field_delegation():
+    @dataclasses.dataclass()
+    class Base:
         __slots__ = ("a", "b", "c")
         a: int
         b: int
         c: int
-
-    Test(a=1, b=2, c=3)
-
-
-def test_delegate_safe_dataclass_with_fields_does_not_initialize_delegated_members():
-    @delegate.delegate_safe_dataclass()
-    class Test:
-        __delegated_members__ = frozenset({"d", "e", "f"})
-        __slots__ = ("a", "b", "c", "d", "e", "f")
-        a: int
-        b: int
-        c: int
-
-    Test(a=1, b=2, c=3)
-
-
-@_helpers.assert_raises(TypeError)
-def test_delegate_safe_dataclass_with_fields_does_validate_non_delegated_dataclass_parameters():
-    @delegate.delegate_safe_dataclass()
-    class Test:
-        __delegated_members__ = frozenset({"d", "e", "f"})
-        __slots__ = ("a", "b", "c", "d", "e", "f")
-        a: int
-        b: int
-        c: int
-
-    Test(a=1, b=2)  # missing c parameter
-
-
-def test_field_delegation():
-    class Base:
-        __slots__ = ("_dont_delegate", "a", "b", "c")
-
-        def __init__(self, dd, a, b, c):
-            self._dont_delegate = dd
-            self.a, self.b, self.c = a, b, c
 
     @delegate.delegate_members(Base, "_base")
     class Delegate(Base):
@@ -122,10 +67,8 @@ def test_field_delegation():
             self.e = e
             self.f = f
 
-    ba = Base("aa", 1, 2, 3)
+    ba = Base(1, 2, 3)
     de = Delegate(ba, 4, 5, 6)
-    assert not hasattr(de, "_dont_delegate")
-    assert hasattr(ba, "_dont_delegate")
     assert de.a == 1
     assert de.b == 2
     assert de.c == 3
@@ -142,7 +85,6 @@ def test_field_delegation_on_dataclass():
         c: int
 
     @delegate.delegate_members(Base, "_base")
-    @delegate.delegate_safe_dataclass()
     class Delegate(Base):
         _base: Base
 

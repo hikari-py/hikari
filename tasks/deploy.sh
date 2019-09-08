@@ -13,7 +13,7 @@ function deploy-to-pypi() {
 }
 
 function deploy-to-release-api() {
-  python tasks/release.py "${version}"
+  python tasks/release.py "${1}"
 }
 
 function notify() {

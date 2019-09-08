@@ -24,8 +24,6 @@ References:
 """
 from __future__ import annotations
 
-__all__ = ("GatewayOpcode", "GatewayClosure", "HTTPStatus", "JSONErrorCode")
-
 import enum
 
 
