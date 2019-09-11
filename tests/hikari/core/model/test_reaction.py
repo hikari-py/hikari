@@ -22,12 +22,14 @@ import pytest
 
 from hikari.core.model import model_cache
 from hikari.core.model import reaction
+from hikari.core.model import message
 
 
 @pytest.mark.model
 class TestReaction:
     def test_Reaction(self):
         test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
+        message_mock = mock.MagicMock(spec_set=message.Message)
 
         emoji_dict = {
             "id": "41771983429993937",
@@ -44,8 +46,9 @@ class TestReaction:
             "animated": False,
         }
 
-        re = reaction.Reaction(test_state, {"count": 420, "me": True, "emoji": emoji_dict})
+        re = reaction.Reaction(test_state, {"count": 420, "me": True, "emoji": emoji_dict}, message_mock)
 
         assert re.count == 420
         assert re.me is True
+        assert re.message is message_mock
         test_state.parse_emoji.assert_called_with(emoji_dict, None)
