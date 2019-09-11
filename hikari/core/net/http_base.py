@@ -156,9 +156,9 @@ class BaseHTTPClient:
             loop:
                 the asyncio event loop to run on.
             token:
-                the token to use for authentication. This should not start with `Bearer` or `Bot` and will always have
-                `Bot` prepended to it in requests. If this is not specified, no Authentication is used by default. This
-                enables this client to be used by endpoints that do not require active authentication.
+                the token to use for authentication. This should not start with `Bearer` or `Bot`. If this is not 
+                specified, no Authentication is used by default. This enables this client to be used by endpoints that 
+                do not require active authentication.
             allow_redirects:
                 defaults to False for security reasons. If you find you are receiving multiple redirection responses
                 causing requests to fail, it is probably worth enabling this.
@@ -189,7 +189,12 @@ class BaseHTTPClient:
         #: The HTTP session to target.
         self.session = aiohttp.ClientSession(**aiohttp_arguments)
         #: The session `Authorization` header to use.
-        self.authorization = "Bot " + token.strip() if token is not unspecified.UNSPECIFIED else None
+        if token is unspecified.UNSPECIFIED:
+            self.authorization = None
+        elif "." in token:
+            self.authorization = f"Bot {token}"
+        else:
+            self.authorization = f"Bearer {token}"
         #: The logger to use for this object.
         self.logger = logging.getLogger(f"{type(self).__module__}.{type(self).__qualname__}")
         #: User agent to use
