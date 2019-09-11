@@ -72,7 +72,7 @@ py37:
 ### TEST IN PYTHON 3.8
 ###
 py38:
-    image: python:3.8-rc-alpine
+    image: python:3.8.0b4-alpine
     extends: .test
 
 
