@@ -161,6 +161,26 @@ async def test_request_forwards_known_arguments_to_request_once(mock_http_connec
     assert res.params.get("webhook_id") is None
     assert "/foo/bar/" in res.bucket
 
+@pytest.mark.asyncio
+async def test_detecting_bot_authentication_type():
+    mock_token = "bot.token"
+    mock_http_connection = MockBaseHTTPClient(loop=event_loop, token=mock_token)
+
+    assert mock_http_connection.authorization == f"Bot {token}"
+
+@pytest.mark.asyncio
+async def test_detecting_bearer_authentication_type():
+    mock_token = "bearertoken"
+    mock_http_connection = MockBaseHTTPClient(loop=event_loop, token=mock_token)
+
+    assert mock_http_connection.authorization == f"Bearer {token}"
+
+@pytest.mark.asyncio
+async def test_detecting_no_authentication_type():
+    mock_http_connection = MockBaseHTTPClient(loop=event_loop)
+
+    assert mock_http_connection.authorization == None
+
 
 @pytest.mark.asyncio
 async def test_request_retries_indefinitely(mock_http_connection):
