@@ -421,8 +421,8 @@ class HTTPClient(http_base.BaseHTTPClient):
                 permission. If you lack `READ_MESSAGE_HISTORY`, this may also raise this error.
             hikari.errors.NotFound:
                 if the channel or message is not found, or if the emoji is not found.
-            hikari.core.errors.ClientError:
-                if the emoji is not valid or formatted correctly
+            hikari.core.errors.BadRequest:
+                if the emoji is not valid, unknown, or formatted incorrectly
         """
         await self.request(
             PUT,

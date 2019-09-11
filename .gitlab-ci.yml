@@ -74,6 +74,9 @@ py37:
 py38:
     image: python:3.8-rc-alpine
     extends: .test
+    # https://github.com/pytest-dev/pytest/issues/5838
+    # TODO: RE-ENABLE WHEN ISSUE HAS BEEN FIXED
+    allow_failure: true
 
 
 ###
