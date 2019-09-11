@@ -47,19 +47,18 @@ packages        = [
 
 [tool.poetry.dependencies]
 python          = ">=3.7,<3.9"
-aiohttp         = "~3.5"
+aiohttp         = "~3.6"
 websockets      = "~8.0"
 
 [tool.poetry.dev-dependencies]
 asynctest       = "~0.13"
 async-timeout   = "~3.0"
 coverage        = "~4.5"
-nox             = "2019.5.30"
-pylint          = "~2.3"
-pytest          = "~5.0"
+nox             = "~2019"
+pytest          = "~5.1"
 pytest-asyncio  = "~0.10"
 pytest-cov      = "~2.7"
-pytest-html     = "~1.22"
+pytest-html     = "~2.0"
 pytest-testdox  = "~1.1"
 
 [tool.black]
