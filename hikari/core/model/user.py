@@ -115,7 +115,7 @@ class Member(User):
 
     # noinspection PyMethodOverriding
     def __init__(self, global_state, guild_id, payload):
-        self._user = global_state.parse_user(payload.get("user"))
+        self._user = global_state.parse_user(payload["user"])
         self._role_ids = [int(r) for r in payload.get("roles", ())]
         self._guild_id = guild_id
         self.nick = payload.get("nick")

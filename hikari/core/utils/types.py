@@ -52,7 +52,7 @@ class ObjectProxy(typing.Dict[str, typing.Any]):
         return self[item]
 
 
-K = typing.TypeVar("K", bound=typing.Hashable)
+K = typing.TypeVar("K")
 V = typing.TypeVar("V")
 
 
