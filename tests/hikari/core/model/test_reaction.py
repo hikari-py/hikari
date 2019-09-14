@@ -26,29 +26,28 @@ from hikari.core.model import message
 
 
 @pytest.mark.model
-class TestReaction:
-    def test_Reaction(self):
-        test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
-        message_mock = mock.MagicMock(spec_set=message.Message)
+def test_Reaction():
+    test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
+    message_mock = mock.MagicMock(spec_set=message.Message)
 
-        emoji_dict = {
-            "id": "41771983429993937",
-            "name": "LUL",
-            "roles": ["41771983429993000", "41771983429993111"],
-            "user": {
-                "username": "Luigi",
-                "discriminator": "0002",
-                "id": "96008815106887111",
-                "avatar": "5500909a3274e1812beb4e8de6631111",
-            },
-            "require_colons": True,
-            "managed": False,
-            "animated": False,
-        }
+    emoji_dict = {
+        "id": "41771983429993937",
+        "name": "LUL",
+        "roles": ["41771983429993000", "41771983429993111"],
+        "user": {
+            "username": "Luigi",
+            "discriminator": "0002",
+            "id": "96008815106887111",
+            "avatar": "5500909a3274e1812beb4e8de6631111",
+        },
+        "require_colons": True,
+        "managed": False,
+        "animated": False,
+    }
 
-        re = reaction.Reaction(test_state, {"count": 420, "me": True, "emoji": emoji_dict}, message_mock)
+    re = reaction.Reaction(test_state, {"count": 420, "me": True, "emoji": emoji_dict}, message_mock)
 
-        assert re.count == 420
-        assert re.me is True
-        assert re.message is message_mock
-        test_state.parse_emoji.assert_called_with(emoji_dict, None)
+    assert re.count == 420
+    assert re.me is True
+    assert re.message is message_mock
+    test_state.parse_emoji.assert_called_with(emoji_dict, None)

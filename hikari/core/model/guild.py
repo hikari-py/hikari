@@ -157,8 +157,8 @@ class Guild(base.Snowflake):
 
     #: Emojis in this guild. Maps IDs to the role object they represent.
     #:
-    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.model.emoji.Emoji` objects
-    emojis: typing.Dict[int, emoji.Emoji]
+    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.model.emoji.GuildEmoji` objects
+    emojis: typing.Dict[int, emoji.GuildEmoji]
 
     #: Enabled features in this guild.
     #:

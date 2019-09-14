@@ -60,12 +60,13 @@ class Reaction:
     #: :type: :class:`hikari.core.model.message.Message`
     message: message.Message
 
-    def __init__(self, global_state: model_cache.AbstractModelCache, payload: types.DiscordObject, message: message.Message) -> None:
+    def __init__(
+        self, global_state: model_cache.AbstractModelCache, payload: types.DiscordObject, message: message.Message
+    ) -> None:
         self._state = global_state
         self.count = payload["count"]
         self.me = payload.get("me", False)
-        #: TODO: get the guild for the emoji by doing an API call if need be
-        self.emoji = global_state.parse_emoji(payload.get("emoji"), None)
+        self.emoji = global_state.parse_emoji(payload["emoji"], None)
         self.message = message
 
 
