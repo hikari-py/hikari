@@ -308,9 +308,9 @@ def channel_from_dict(
     """
     channel_type = payload.get("type")
 
-    try:
+    if channel_type in _channel_type_to_class:
         return _channel_type_to_class[channel_type](global_state, payload)
-    except KeyError:
+    else:
         raise TypeError(f"Invalid channel type {channel_type}") from None
 
 

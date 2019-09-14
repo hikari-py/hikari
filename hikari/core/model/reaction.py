@@ -26,6 +26,8 @@ import typing
 
 from hikari.core.model import emoji
 from hikari.core.model import model_cache
+from hikari.core.model import message
+from hikari.core.utils import types
 
 
 @dataclasses.dataclass()
@@ -34,7 +36,7 @@ class Reaction:
     Model for a message reaction object
     """
 
-    __slots__ = ("_state", "count", "me", "emoji")
+    __slots__ = ("_state", "count", "me", "emoji", "message")
 
     _state: typing.Any
 
@@ -53,12 +55,19 @@ class Reaction:
     #: :type: :class:`hikari.core.model.emoji.Emoji`
     emoji: emoji.Emoji
 
-    def __init__(self, global_state: model_cache.AbstractModelCache, payload):
+    #: The message that was reacted on
+    #:
+    #: :type: :class:`hikari.core.model.message.Message`
+    message: message.Message
+
+    def __init__(
+        self, global_state: model_cache.AbstractModelCache, payload: types.DiscordObject, message: message.Message
+    ) -> None:
         self._state = global_state
         self.count = payload["count"]
         self.me = payload.get("me", False)
-        #: TODO: get the guild for the emoji by doing an API call if need be
-        self.emoji = global_state.parse_emoji(payload.get("emoji"), None)
+        self.emoji = global_state.parse_emoji(payload["emoji"], None)
+        self.message = message
 
 
 __all__ = ["Reaction"]
