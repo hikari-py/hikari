@@ -74,7 +74,7 @@ class AbstractModelCache(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def parse_emoji(self, emoji: types.DiscordObject, guild_id: int) -> emoji.Emoji:
+    def parse_emoji(self, emoji: types.DiscordObject, guild_id: typing.Optional[int]) -> emoji.Emoji:
         ...
 
     @abc.abstractmethod
@@ -99,6 +99,10 @@ class AbstractModelCache(abc.ABC):
 
     @abc.abstractmethod
     def parse_webhook(self, webhook: types.DiscordObject) -> webhook.Webhook:
+        ...
+
+    @abc.abstractmethod
+    def parse_bot_user(self, bot_user: types.DiscordObject) -> user.BotUser:
         ...
 
 
