@@ -25,7 +25,7 @@ variables:
     OWNER: "nekokatt"
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
     ORIGINAL: https://gitlab.com/nekokatt/hikari.core
-    
+
 
 # Fixes a bug where CI now won't verify a branch before merging it and instead does nothing until the heat death of
 # the universe or something.
@@ -59,6 +59,7 @@ variables:
     artifacts:
         paths:
             - public/coverage/
+    coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
 
 ###
 ### TEST IN PYTHON 3.7
@@ -66,7 +67,6 @@ variables:
 py37:
     image: python:3.7-alpine
     extends: .test
-    coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
 
 ###
 ### TEST IN PYTHON 3.8
@@ -74,15 +74,11 @@ py37:
 py38:
     image: python:3.8-rc-alpine
     extends: .test
-    # https://github.com/pytest-dev/pytest/issues/5838
-    # TODO: RE-ENABLE WHEN ISSUE HAS BEEN FIXED
-    allow_failure: true
-
 
 ###
 ### TEMPLATE FOR TEST AND PROD DOCUMENTATION GENERATION JOBS.
 ###
-pages:
+.pages:
     stage: pages
     allow_failure: false
     image: python:3-stretch
@@ -92,18 +88,57 @@ pages:
         - apt-get install graphviz -y
         - pip install nox
         - git fetch --all --prune
-        - git checkout master -f
-        - git status
-    script:
         - rm pages -Rvf || true
         - mkdir pages || true
-        - nox -ssphinx
+
+pages:
+    extends: .pages
+    script:
+        # Build staging AND master.
+        - source tasks/deploy.sh
+
+        - git checkout origin/staging -f
+        - git status
+
+        - set-versions "$(python tasks/make-version-string.py staging)"
+
+        - nox -r -ssphinx
+
+        - mv public staging
+        - mkdir public
+        - mv staging public/staging
+
+        - git reset --hard origin/staging
+        - git checkout origin/master -f
+        - git status
+
+        - set-versions "$(python tasks/make-version-string.py master)"
+
+        - nox -r -ssphinx
     artifacts:
         paths:
             - public
     only:
         - master
         - staging
+
+
+test-pages:
+    extends: .pages
+    allow_failure: false
+    script:
+        - source tasks/deploy.sh
+        - set-versions "$(python tasks/make-version-string.py staging)"
+        - nox -ssphinx
+    artifacts:
+        paths:
+            - public
+    except:
+        - master
+        - staging
+        - tags
+        - merge-requests
+        - schedules
 
 ###
 ### HANDLE DEPLOYING TO PYPI REPOSITORIES
@@ -119,7 +154,7 @@ pages:
         - pip install poetry requests
         - poetry install -v
         - poetry show -v
-    script:
+    after_script:
         - source tasks/deploy.sh
         - do-deployment
 
@@ -136,8 +171,9 @@ deploy-to-staging:
         - schedules
     variables:
         RELEASE_WEBHOOK_NAME: "staging"
-        RELEASE_WEBHOOK_DESCRIPTION: "Install dev releases with:\n```bash\npip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple hikari.core==<VERSION>\n```\n"
         RELEASE_WEBHOOK_COLOUR: "0xd34615"
+    script:
+        export RELEASE_WEBHOOK_DESCRIPTION="Install dev releases with:\n```bash\npip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple hikari.core==$(python tasks/make-version-string.py staging)\n```\n"
     environment:
         name:
             staging
@@ -158,8 +194,9 @@ deploy-to-prod:
         - schedules
     variables:
         RELEASE_WEBHOOK_NAME: "prod"
-        RELEASE_WEBHOOK_DESCRIPTION: "Install it with:\n```bash\npip install hikari.core\n```\n"
         RELEASE_WEBHOOK_COLOUR: "0x5c2040"
+    script:
+        export RELEASE_WEBHOOK_DESCRIPTION="Install it with:\n```bash\npip install hikari.core==$(python tasks/make-version-string.py master)\n```\n"
     environment:
         name:
             prod
