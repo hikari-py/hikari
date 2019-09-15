@@ -160,3 +160,5 @@ def pypitest(session: sessions.Session):
     else:
         print("Testing local repository can be installed as a package.")
         session.install("-vvv", "--isolated", ".")
+
+    session.run("python", "-c", "import hikari.core; print(hikari.core.__version__)")

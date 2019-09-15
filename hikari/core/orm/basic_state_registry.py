@@ -146,9 +146,9 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
         message_obj.channel.last_message_id = message_id
         return message_obj
 
-    def parse_channel(self, channel: types.DiscordObject):
+    def parse_channel(self, channel: types.DiscordObject, guild_id: typing.Optional[int] = None):
         # Only cache DM channels.
-        channel_obj = _channel.channel_from_dict(self, channel)
+        channel_obj = _channel.channel_from_dict(self, channel, guild_id)
         if channel_obj.is_dm:
             if channel_obj.id in self._dm_channels:
                 return self._dm_channels[channel_obj.id]
