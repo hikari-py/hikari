@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Object relational mapping logic.
+Major internal client components.
 
 This manages converting JSON payloads to object-oriented dataclass models that can refer to each-other
 using a hidden internal state.
