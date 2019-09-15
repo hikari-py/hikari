@@ -86,10 +86,10 @@ py38:
         - apt-get update
         - apt-get install git -y
         - apt-get install graphviz -y
-        - pip install nox
+        - pip install poetry nox requests
         - git fetch --all --prune
-        - rm pages -Rvf || true
-        - mkdir pages || true
+        - rm public -Rvf || true
+        - mkdir public || true
 
 pages:
     extends: .pages
@@ -97,15 +97,16 @@ pages:
         # Build staging AND master.
         - source tasks/deploy.sh
 
-        - git checkout origin/staging -f
-        - git status
+        - git checkout origin/staging -f || true
+        - git status || true
 
-        - set-versions "$(python tasks/make-version-string.py staging)"
+        - set-versions "$(python tasks/make-version-string.py staging)" || true
 
-        - nox -r -ssphinx
+        # If staging is messed up, just ignore it...
+        - nox -r -ssphinx || true
 
-        - mv public staging
-        - mkdir public
+        - mv public staging || true
+        - mkdir public || true
         - mv staging public/staging
 
         - git reset --hard origin/staging
@@ -170,16 +171,13 @@ deploy-to-staging:
         - merge_requests
         - schedules
     variables:
-        RELEASE_WEBHOOK_NAME: "staging"
+        RELEASE_WEBHOOK_NAME: "testing pypi (staging)"
         RELEASE_WEBHOOK_COLOUR: "0xd34615"
     script:
         export RELEASE_WEBHOOK_DESCRIPTION="Install dev releases with:\n```bash\npip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple hikari.core==$(python tasks/make-version-string.py staging)\n```\n"
     environment:
         name:
             staging
-    artifacts:
-        paths:
-            - docs
 
 ###
 ### HANDLE DEPLOYING TO OUR PRODUCTION ENVIRONMENT ON pypi.org
@@ -193,13 +191,10 @@ deploy-to-prod:
         - merge_requests
         - schedules
     variables:
-        RELEASE_WEBHOOK_NAME: "prod"
+        RELEASE_WEBHOOK_NAME: "pypi (prod)"
         RELEASE_WEBHOOK_COLOUR: "0x5c2040"
     script:
         export RELEASE_WEBHOOK_DESCRIPTION="Install it with:\n```bash\npip install hikari.core==$(python tasks/make-version-string.py master)\n```\n"
     environment:
         name:
             prod
-    artifacts:
-        paths:
-            - docs
