@@ -86,7 +86,7 @@ class AbstractModelCache(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def parse_channel(self, channel: types.DiscordObject) -> ChannelT:
+    def parse_channel(self, channel: types.DiscordObject, guild_id: typing.Optional[int] = None) -> ChannelT:
         ...
 
     @abc.abstractmethod
