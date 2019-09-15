@@ -39,44 +39,44 @@ from hikari.core.utils import types
 DispatchFunctionT = typing.Callable[..., None]
 
 
-class BasicEvent(str, enum.Enum):
+class BasicEvent(enum.Enum):
     """
     Valid network-based events we can dispatch.
     """
 
     #: Hello payload was sent, initial connection was made.
-    CONNECTED = "connected"
+    CONNECTED = enum.auto()
     #: Bot is ready, state has been loaded.
-    READY = "ready"
+    READY = enum.auto()
     #: Connection has been resumed.
-    RESUMED = "resumed"
+    RESUMED = enum.auto()
     #: A channel was created.
-    CHANNEL_CREATED = "channel_created"
+    CHANNEL_CREATED = enum.auto()
     #: A channel was updated.
-    CHANNEL_UPDATED = "channel_updated"
+    CHANNEL_UPDATED = enum.auto()
     #: A channel was deleted.
-    CHANNEL_DELETED = "channel_deleted"
+    CHANNEL_DELETED = enum.auto()
     #: A pin was added to a channel.
-    CHANNEL_PIN_ADDED = "channel_pin_added"
+    CHANNEL_PIN_ADDED = enum.auto()
     #: A pin was removed from a channel.
-    CHANNEL_PIN_REMOVED = "channel_pin_removed"
+    CHANNEL_PIN_REMOVED = enum.auto()
     #: A guild has just become available. This occurs when we first connect before `ready` is triggered, when resuming
     #: and the guild becomes available again, or when joining a new guild. Also fires once an outage ends.
-    GUILD_AVAILABLE = "guild_available"
+    GUILD_AVAILABLE = enum.auto()
     #: Info about the guild changed.
-    GUILD_UPDATED = "guild_updated"
+    GUILD_UPDATED = enum.auto()
     #: A guild became unavailable because of an outage.
-    GUILD_UNAVAILABLE = "guild_unavailable"
+    GUILD_UNAVAILABLE = enum.auto()
     #: The bot was kicked from the guild.
-    GUILD_LEFT = "guild_left"
+    GUILD_LEFT = enum.auto()
     #: A guild banned someone.
-    GUILD_USER_BANNED = "guild_user_banned"
+    GUILD_USER_BANNED = enum.auto()
     #: A guild unbanned someone.
-    GUILD_USER_PARDONED = "guild_user_pardoned"
+    GUILD_USER_PARDONED = enum.auto()
     #: Emojis updated in a guild.
-    GUILD_EMOJIS_UPDATED = "guild_emojis_updated"
+    GUILD_EMOJIS_UPDATED = enum.auto()
     #: The presence of a user changed.
-    PRESENCE_UPDATED = "presence_updated"
+    PRESENCE_UPDATED = enum.auto()
 
 
 class BasicEventAdapter:
