@@ -36,16 +36,15 @@ import datetime
 import json
 import logging
 import time
+import typing
 import zlib
 
-import typing
 import websockets
 
 import hikari.core.utils.user_agent
 from hikari.core import errors
 from hikari.core.net import opcodes
 from hikari.core.net import rates
-from hikari.core.utils import meta
 from hikari.core.utils import types
 
 
@@ -61,14 +60,17 @@ class _RestartConnection(websockets.ConnectionClosed):
     __slots__ = ()
 
 
-#: The signature of an event dispatcher function. Consumes two arguments. The first is an event name from the gateway,
-#: the second is the payload which is assumed to always be a :class:`dict` with :class:`str` keys. This should be
-#: a coroutine function; if it is not, it should be expected to be promoted to a coroutine function internally.
+#: The signature of an event dispatcher function. Consumes three arguments. The first is the gateway that triggered
+#: the event. The second is an event name from the gateway, the third is the payload which is assumed to always be a
+#: :class:`dict` with :class:`str` keys. This should be a coroutine function; if it is not, it should be expected to be
+#: promoted to a coroutine function internally.
 #:
 #: Example:
-#:     >>> async def on_dispatch(event: str, payload: Dict[str, Any]) -> None:
+#:     >>> async def on_dispatch(gateway, event: str, payload: Dict[str, Any]) -> None:
 #:     ...     logger.info("Dispatching %s with payload %r", event, payload)
-DispatchHandler = typing.Callable[[str, typing.Dict[str, typing.Any]], typing.Union[None, typing.Awaitable[None]]]
+DispatchHandler = typing.Callable[
+    ["GatewayClient", str, typing.Dict[str, typing.Any]], typing.Union[None, typing.Awaitable[None]]
+]
 
 
 class GatewayClient:
@@ -247,12 +249,12 @@ class GatewayClient:
         """True if this is considered a shard, false otherwise."""
         return self.shard_id is not None and self.shard_count is not None
 
-    async def _trigger_resume(self, code: int, reason: str) -> "typing.NoReturn":
+    async def _trigger_resume(self, code: int, reason: str) -> typing.NoReturn:
         """Trigger a `RESUME` operation. This will raise a :class:`ResumableConnectionClosed` exception."""
         await self.ws.close(code=code, reason=reason)
         raise _ResumeConnection(code=code, reason=reason)
 
-    async def _trigger_identify(self, code: int, reason: str) -> "typing.NoReturn":
+    async def _trigger_identify(self, code: int, reason: str) -> typing.NoReturn:
         """Trigger a re-`IDENTIFY` operation. This will raise a :class:`GatewayRequestedReconnection` exception."""
         await self.ws.close(code=code, reason=reason)
         raise _RestartConnection(code=code, reason=reason)
@@ -371,7 +373,7 @@ class GatewayClient:
         hb = d["heartbeat_interval"]
         self.heartbeat_interval = hb / 1_000.0
         self.logger.info("received HELLO. heartbeat interval is %sms", hb)
-        self._dispatch("HELLO", d)
+        self._dispatch("HELLO", {"gateway": self, "d": d})
 
     async def _send_resume(self) -> None:
         payload = {
@@ -424,7 +426,7 @@ class GatewayClient:
     async def _handle_resumed(self, resume_payload: types.DiscordObject) -> None:
         self.trace = resume_payload["_trace"]
         self.logger.info("RESUMED successfully")
-        self._dispatch("RESUME", None)
+        self._dispatch("RESUMED", {"gateway": self, "d": resume_payload})
 
     async def _process_events(self) -> None:
         """Polls the gateway for new packets and handles dispatching the results."""
@@ -451,17 +453,20 @@ class GatewayClient:
             await self._handle_ack()
         elif op == opcodes.GatewayOpcode.RECONNECT:
             self.logger.warning("instructed to disconnect and RECONNECT with gateway")
+            self._dispatch("REQUEST_TO_RECONNECT", {})
             await self._trigger_identify(
                 code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="you requested me to reconnect"
             )
         elif op == opcodes.GatewayOpcode.INVALID_SESSION:
             if d is True:
                 self.logger.warning("will try to disconnect and RESUME")
+                self._dispatch("invalid_session", True)
                 await self._trigger_resume(
                     code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="invalid session id so will resume"
                 )
             else:
                 self.logger.warning("will try to re-IDENTIFY")
+                self._dispatch("invalid_session", False)
                 await self._trigger_identify(
                     code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="invalid session id so will close"
                 )
@@ -574,8 +579,11 @@ class GatewayClient:
                     await (self._send_resume() if is_resume else self._send_identify())
                     await self._send_heartbeat()
                     await asyncio.gather(self._keep_alive(), self._process_events())
+                    self._dispatch("disconnect", {})
                 except (_RestartConnection, _ResumeConnection, websockets.ConnectionClosed) as ex:
                     code, reason = opcodes.GatewayClosure(ex.code), ex.reason or "no reason"
+
+                    self._dispatch("disconnect", {"code": code, "reason": reason})
 
                     if ex.code in self._NEVER_RECONNECT_CODES:
                         self.logger.critical("disconnected after %s [%s]. Please rectify issue manually", reason, code)
@@ -601,9 +609,9 @@ class GatewayClient:
         if block:
             await self.ws.wait_closed()
 
-    def _dispatch(self, event_name: str, payload: typing.Optional[types.DiscordObject]) -> None:
+    def _dispatch(self, event_name: str, payload) -> None:
         # This prevents us blocking any task such as the READY handler.
-        self.loop.create_task(self.dispatch(event_name, payload))
+        self.loop.create_task(self.dispatch(self, event_name, payload))
 
 
 __all__ = ["GatewayClient"]
