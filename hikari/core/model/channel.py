@@ -44,24 +44,24 @@ class Channel(base.Snowflake, abc.ABC):
 
     _state: typing.Any
 
+    #: True if the implementation is a DM channel, or False otherwise.
+    #:
+    #: :type: :class:`bool`
+    is_dm: typing.ClassVar[bool]
+
     #: The ID of the channel.
     #:
     #: :type: :class:`int`
     id: int
 
-    def __init__(self, global_state, payload):
+    def __init__(self, global_state, payload, *_):
         self._state = global_state
         self.id = int(payload["id"])
 
     def __init_subclass__(cls, **kwargs):
         if "type" in kwargs:
             _channel_type_to_class[kwargs.pop("type")] = cls
-
-    @property
-    @abc.abstractmethod
-    def is_dm(self) -> bool:
-        """Return True if this is a DM."""
-        ...
+        cls.is_dm = "guild" not in cls.__qualname__.lower()
 
 
 @dataclasses.dataclass()
@@ -90,9 +90,9 @@ class GuildChannel(Channel, abc.ABC):
     #: :type: :class:`str`
     name: str
 
-    def __init__(self, global_state, payload):
+    def __init__(self, global_state, payload, guild_id: int):
         super().__init__(global_state, payload)
-        self._guild_id = int(payload["guild_id"])
+        self._guild_id = guild_id
         self.position = int(payload["position"])
 
         overwrites = []
@@ -103,10 +103,6 @@ class GuildChannel(Channel, abc.ABC):
         self.permission_overwrites = overwrites
         self.name = payload["name"]
         self._parent_id = transform.nullable_cast(payload.get("parent_id"), int)
-
-    @property
-    def is_dm(self) -> bool:
-        return False
 
     @property
     def guild(self) -> _guild.Guild:
@@ -148,8 +144,8 @@ class GuildTextChannel(GuildChannel, type=0):
     nsfw: bool
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload):
-        super().__init__(global_state, payload)
+    def __init__(self, global_state, payload, guild_id):
+        super().__init__(global_state, payload, guild_id)
         self.nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
         self.rate_limit_per_user = payload.get("rate_limit_per_user", 0)
@@ -175,14 +171,10 @@ class DMChannel(Channel, type=1):
     recipients: typing.List[user.User]
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload):
+    def __init__(self, global_state, payload, *_):
         super().__init__(global_state, payload)
         self.last_message_id = transform.nullable_cast(payload.get("last_message_id"), int)
         self.recipients = [global_state.parse_user(u) for u in payload.get("recipients", ())]
-
-    @property
-    def is_dm(self) -> bool:
-        return True
 
 
 @dataclasses.dataclass()
@@ -206,8 +198,8 @@ class GuildVoiceChannel(GuildChannel, type=2):
     user_limit: typing.Optional[int]
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload):
-        super().__init__(global_state, payload)
+    def __init__(self, global_state, payload, guild_id):
+        super().__init__(global_state, payload, guild_id)
         self.bitrate = payload.get("bitrate") or None
         self.user_limit = payload.get("user_limit") or None
 
@@ -239,7 +231,7 @@ class GroupDMChannel(DMChannel, type=3):
     owner_application_id: typing.Optional[int]
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload):
+    def __init__(self, global_state, payload, *_):
         super().__init__(global_state, payload)
         self.icon_hash = payload.get("icon")
         self.name = payload.get("name")
@@ -280,8 +272,8 @@ class GuildNewsChannel(GuildChannel, type=5):
     nsfw: bool
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload):
-        super().__init__(global_state, payload)
+    def __init__(self, global_state, payload, guild_id):
+        super().__init__(global_state, payload, guild_id)
         self.nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
         self.last_message_id = transform.nullable_cast(payload.get("last_message_id"), int)
@@ -297,7 +289,7 @@ class GuildStoreChannel(GuildChannel, type=6):
 
 
 def channel_from_dict(
-    global_state, payload
+    global_state, payload, guild_id: typing.Optional[int]
 ) -> typing.Union[
     GuildTextChannel, DMChannel, GuildVoiceChannel, GroupDMChannel, GuildCategory, GuildNewsChannel, GuildStoreChannel
 ]:
@@ -309,7 +301,9 @@ def channel_from_dict(
     channel_type = payload.get("type")
 
     if channel_type in _channel_type_to_class:
-        return _channel_type_to_class[channel_type](global_state, payload)
+        channel_type = _channel_type_to_class[channel_type]
+        channel = channel_type(global_state, payload, guild_id)
+        return channel
     else:
         raise TypeError(f"Invalid channel type {channel_type}") from None
 
