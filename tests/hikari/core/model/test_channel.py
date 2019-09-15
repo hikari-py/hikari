@@ -37,6 +37,7 @@ def test_GuildChannel_permission_overwrites_aggregation():
         {
             "type": 0,
             "id": "1234567",
+            "guild_id": "696969",
             "position": 100,
             "permission_overwrites": [{"id": "123", "allow": 456, "deny": 789, "type": "member"}],
             "nsfw": True,
@@ -45,7 +46,6 @@ def test_GuildChannel_permission_overwrites_aggregation():
             "topic": "nsfw stuff",
             "name": "shh!",
         },
-        696969,
     )
 
     assert len(c.permission_overwrites) == 1
@@ -64,6 +64,7 @@ def test_GuildChannel_parent_when_specified():
         {
             "type": 0,
             "id": "1234567",
+            "guild_id": "696969",
             "position": 100,
             "permission_overwrites": [],
             "nsfw": True,
@@ -72,7 +73,6 @@ def test_GuildChannel_parent_when_specified():
             "topic": "nsfw stuff",
             "name": "shh!",
         },
-        696969,
     )
 
     assert c.parent is g.channels[1234]
@@ -90,6 +90,7 @@ def test_GuildChannel_parent_when_unspecified():
         {
             "type": 0,
             "id": "1234567",
+            "guild_id": "696969",
             "position": 100,
             "permission_overwrites": [],
             "nsfw": True,
@@ -98,7 +99,6 @@ def test_GuildChannel_parent_when_unspecified():
             "topic": "nsfw stuff",
             "name": "shh!",
         },
-        696969,
     )
 
     assert c.parent is None
@@ -112,6 +112,7 @@ def test_GuildTextChannel():
         {
             "type": 0,
             "id": "1234567",
+            "guild_id": "696969",
             "position": 100,
             "permission_overwrites": [],
             "nsfw": True,
@@ -120,7 +121,6 @@ def test_GuildTextChannel():
             "topic": "nsfw stuff",
             "name": "shh!",
         },
-        696969,
     )
 
     assert gtc.id == 1234567
@@ -154,6 +154,7 @@ def test_GuildVoiceChannel():
         {
             "type": 2,
             "id": "9292929",
+            "guild_id": "929",
             "position": 66,
             "permission_overwrites": [],
             "name": "roy rodgers mc freely",
@@ -161,7 +162,6 @@ def test_GuildVoiceChannel():
             "user_limit": 0,
             "parent_id": "42",
         },
-        929,
     )
 
     assert gvc.id == 9292929
@@ -206,7 +206,10 @@ def test_GroupDMChannel():
 def test_GuildCategory():
     s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
     gc = channel.GuildCategory(
-        s, {"type": 4, "id": "123456", "position": 69, "permission_overwrites": [], "name": "dank category"}, 54321
+        s, {
+            "type": 4, "id": "123456", "position": 69, "permission_overwrites": [], "name": "dank category",
+            "guild_id": "54321"
+        }
     )
 
     assert gc.name == "dank category"
@@ -225,6 +228,7 @@ def test_GuildNewsChannel():
         {
             "type": 5,
             "id": "4444",
+            "guild_id": "1111",
             "position": 24,
             "permission_overwrites": [],
             "name": "oylumo",
@@ -233,7 +237,6 @@ def test_GuildNewsChannel():
             "topic": "crap and stuff",
             "last_message_id": None,
         },
-        1111,
     )
 
     assert gnc.id == 4444
@@ -252,7 +255,8 @@ def test_GuildNewsChannel():
 def test_GuildStoreChannel():
     s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
     gsc = channel.GuildStoreChannel(
-        s, {"type": 6, "id": "9876", "position": 9, "permission_overwrites": [], "name": "a", "parent_id": "32"}, 7676
+        s, {"type": 6, "id": "9876", "position": 9, "permission_overwrites": [], "name": "a", "parent_id": "32",
+            "guild_id": "7676"}
     )
 
     assert gsc.id == 9876
@@ -279,8 +283,13 @@ def test_GuildStoreChannel():
 )
 def test_channel_from_dict_success_case(type_field, expected_class):
     fqn = expected_class.__module__ + "." + expected_class.__qualname__ + ".__init__"
+
+    args = NotImplemented, {"type": type_field}
+    is_dm = expected_class.is_dm
+    if not is_dm:
+        args[1]["guild_id"] = "1234"
+
     with mock.patch(fqn, wraps=expected_class, return_value=None) as m:
-        args = NotImplemented, {"type": type_field}, None
         channel.channel_from_dict(*args)
         m.assert_called_once_with(*args)
 
@@ -307,7 +316,7 @@ def test_channel_failure_case():
 )
 def test_channel_guild(impl):
     cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
-    obj = impl(cache, {"id": "1", "position": 2, "permission_overwrites": [], "name": "milfchnl"}, 91827)
+    obj = impl(cache, {"id": "1", "position": 2, "permission_overwrites": [], "name": "milfchnl", "guild_id": "91827"})
     guild = mock.MagicMock()
     cache.get_guild_by_id = mock.MagicMock(return_value=guild)
 

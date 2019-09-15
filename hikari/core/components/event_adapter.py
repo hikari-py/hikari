@@ -96,6 +96,9 @@ class EventAdapter(abc.ABC):
     async def handle_guild_member_add(self, gateway, payload):
         ...
 
+    async def handle_guild_member_update(self, gateway, payload):
+        ...
+
     async def handle_guild_member_remove(self, gateway, payload):
         ...
 
