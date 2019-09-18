@@ -17,8 +17,8 @@
 
 stages:
     - test
-    - deploy
     - pages
+    - deploy
 
 variables:
     DOCKER_DRIVER: "overlay2"
