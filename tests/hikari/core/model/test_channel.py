@@ -297,7 +297,7 @@ def test_channel_from_dict_success_case(type_field, expected_class):
 @pytest.mark.model
 def test_channel_failure_case():
     try:
-        channel.channel_from_dict(NotImplemented, {"type": -999}, 1111)
+        channel.channel_from_dict(mock.MagicMock(), {"type": -999})
         assert False
     except TypeError:
         pass
