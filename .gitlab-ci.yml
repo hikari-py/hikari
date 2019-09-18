@@ -154,7 +154,7 @@ test-pages:
         - apt-get install curl git openssh-client -y
         - pip install poetry requests
         - poetry install -v
-        - poetry show -
+        - poetry show -v
 
 ###
 ### HANDLE DEPLOYING TO OUR STAGING ENVIRONMENT ON test.pypi.org
@@ -172,9 +172,8 @@ deploy-to-staging:
         RELEASE_WEBHOOK_COLOUR: "0xd34615"
     script:
         - export RELEASE_WEBHOOK_DESCRIPTION="Install dev releases with:\n```bash\npip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple hikari.core==$(python tasks/make-version-string.py staging)\n```\n"
-        - source tasks/deploy.sh ; do-deployment 
-
-
+        - source tasks/deploy.sh
+        - do-deployment
     environment:
         name:
             staging
@@ -195,7 +194,8 @@ deploy-to-prod:
         RELEASE_WEBHOOK_COLOUR: "0x5c2040"
     script:
         - export RELEASE_WEBHOOK_DESCRIPTION="Install it with:\n```bash\npip install hikari.core==$(python tasks/make-version-string.py master)\n```\n"
-        - source tasks/deploy.sh ; do-deployment 
-   environment:
+        - source tasks/deploy.sh
+        - do-deployment
+    environment:
         name:
             prod
