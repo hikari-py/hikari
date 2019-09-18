@@ -158,7 +158,7 @@ class GatewayClient:
         host: str,
         *,
         connector=websockets.connect,
-        dispatch: DispatchHandler = lambda t, d: None,
+        dispatch: DispatchHandler = lambda self, t, d: None,
         initial_presence: typing.Optional[types.DiscordObject] = None,
         large_threshold: int = 50,
         loop: asyncio.AbstractEventLoop = None,
