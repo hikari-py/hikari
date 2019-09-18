@@ -55,4 +55,3 @@ async def test_that_consume_raw_event_calls_handle_unrecognised_event_hook_on_in
     event_adapter_impl.handle_unrecognised_event = asynctest.CoroutineMock(wraps=event_adapter_impl.handle_unrecognised_event)
     await event_adapter_impl.consume_raw_event(gateway, "SOMETHING_ELSE", payload)
     event_adapter_impl.handle_unrecognised_event.assert_called_with(gateway, "SOMETHING_ELSE", payload)
-

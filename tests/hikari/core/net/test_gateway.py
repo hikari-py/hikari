@@ -40,10 +40,6 @@ def teardown_function():
     _helpers.purge_loop()
 
 
-def fqn(module, item):
-    return module.__name__ + "." + item
-
-
 class Context:
     async def __aenter__(self):
         return self
@@ -347,9 +343,9 @@ class TestGateway:
         gw._send_json = asynctest.CoroutineMock()
 
         with contextlib.ExitStack() as stack:
-            stack.enter_context(asynctest.patch(fqn(user_agent, "python_version"), new=lambda: "python3"))
-            stack.enter_context(asynctest.patch(fqn(user_agent, "library_version"), new=lambda: "vx.y.z"))
-            stack.enter_context(asynctest.patch(fqn(platform, "system"), new=lambda: "leenuks"))
+            stack.enter_context(asynctest.patch(_helpers.fqn(user_agent, "python_version"), new=lambda: "python3"))
+            stack.enter_context(asynctest.patch(_helpers.fqn(user_agent, "library_version"), new=lambda: "vx.y.z"))
+            stack.enter_context(asynctest.patch(_helpers.fqn(platform, "system"), new=lambda: "leenuks"))
 
             await gw._send_identify()
             gw._send_json.assert_called_with(

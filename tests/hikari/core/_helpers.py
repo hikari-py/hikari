@@ -106,3 +106,7 @@ def assert_raises(type_):
         return impl
 
     return decorator
+
+
+def fqn(module, item):
+    return module.__name__ + "." + item
