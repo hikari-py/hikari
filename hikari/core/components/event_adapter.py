@@ -37,10 +37,9 @@ class EventAdapter(abc.ABC):
     async def consume_raw_event(self, gateway, event_name: str, payload: types.DiscordObject) -> None:
         try:
             handler = getattr(self, f"handle_{event_name.lower()}")
-        except AttributeError:
-            pass
-        else:
             asyncio.create_task(handler(gateway, payload))
+        except AttributeError:
+            asyncio.create_task(self.handle_unrecognised_event(gateway, event_name, payload))
 
     async def handle_disconnect(self, gateway, payload):
         ...
@@ -151,4 +150,7 @@ class EventAdapter(abc.ABC):
         ...
 
     async def handle_webhooks_update(self, gateway, payload):
+        ...
+
+    async def handle_unrecognised_event(self, gateway, event_name, payload):
         ...

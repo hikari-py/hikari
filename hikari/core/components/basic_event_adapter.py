@@ -70,7 +70,6 @@ class BasicEventNames(enum.Enum):
     GUILD_MEMBER_REMOVE = enum.auto()
 
 
-
 class BasicEventAdapter(event_adapter.EventAdapter):
     """
     Basic implementation of event management logic.
@@ -80,6 +79,12 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         self.dispatch = dispatch
         self.logger = logging.getLogger(__name__)
         self.state_registry: _state.BasicStateRegistry = state_registry
+        self._ignored_events = set()
+
+    async def handle_unrecognised_event(self, gateway, event_name, payload):
+        if event_name not in self._ignored_events:
+            self.logger.warning("Received unrecognised event %s, so will ignore it in the future.", event_name)
+            self._ignored_events.add(event_name)
 
     """
     Connection-related and internally-occurring events.
