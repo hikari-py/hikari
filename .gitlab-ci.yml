@@ -113,8 +113,6 @@ pages:
         - git checkout origin/master -f
         - git status
 
-        - set-versions "$(python tasks/make-version-string.py master)"
-
         - nox -r -ssphinx
     artifacts:
         paths:
