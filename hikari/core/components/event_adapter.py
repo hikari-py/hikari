@@ -22,6 +22,7 @@ Abstract definition of an event handler.
 import abc
 import asyncio
 
+from hikari.core.utils import logging_utils
 from hikari.core.utils import types
 
 
@@ -33,6 +34,9 @@ class EventAdapter(abc.ABC):
 
     A couple of additional events are defined that can be produced by the gateway implementation for Hikari.
     """
+
+    def __init__(self):
+        self.logger = logging_utils.get_named_logger(self)
 
     async def consume_raw_event(self, gateway, event_name: str, payload: types.DiscordObject) -> None:
         try:

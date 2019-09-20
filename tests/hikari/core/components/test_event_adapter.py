@@ -51,7 +51,11 @@ async def test_that_consume_raw_event_consumes_a_named_coroutine_if_it_exists(ev
 
 
 @pytest.mark.asyncio
-async def test_that_consume_raw_event_calls_handle_unrecognised_event_hook_on_invalid_event(event_adapter_impl, gateway, payload):
-    event_adapter_impl.handle_unrecognised_event = asynctest.CoroutineMock(wraps=event_adapter_impl.handle_unrecognised_event)
+async def test_that_consume_raw_event_calls_handle_unrecognised_event_hook_on_invalid_event(
+    event_adapter_impl, gateway, payload
+):
+    event_adapter_impl.handle_unrecognised_event = asynctest.CoroutineMock(
+        wraps=event_adapter_impl.handle_unrecognised_event
+    )
     await event_adapter_impl.consume_raw_event(gateway, "SOMETHING_ELSE", payload)
     event_adapter_impl.handle_unrecognised_event.assert_called_with(gateway, "SOMETHING_ELSE", payload)

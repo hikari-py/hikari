@@ -29,7 +29,6 @@ from hikari.core.model import base
 from hikari.core.model import model_cache
 from hikari.core.model import user
 from hikari.core.utils import dateutils
-from hikari.core.utils import transform
 
 
 @dataclasses.dataclass()

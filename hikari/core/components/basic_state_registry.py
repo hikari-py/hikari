@@ -21,7 +21,6 @@ A basic type of registry that handles storing global state.
 """
 from __future__ import annotations
 
-import logging
 import typing
 import weakref
 
@@ -34,6 +33,7 @@ from hikari.core.model import role as _role
 from hikari.core.model import user
 from hikari.core.model import user as _user
 from hikari.core.model import webhook as _webhook
+from hikari.core.utils import logging_utils
 from hikari.core.utils import types
 
 
@@ -56,7 +56,7 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
         self.user: typing.Optional[_user.BotUser] = None
 
         #: Our logger.
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging_utils.get_named_logger(self)
 
     def get_user_by_id(self, user_id: int):
         return self._users.get(user_id)

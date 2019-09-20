@@ -28,8 +28,8 @@ import typing
 from hikari.core.model import base
 from hikari.core.model import guild as _guild
 from hikari.core.model import overwrite
-from hikari.core.utils import transform
 from hikari.core.model import user
+from hikari.core.utils import transform
 
 _channel_type_to_class = {}
 

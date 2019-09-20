@@ -22,7 +22,6 @@ Handles managing the state of the bot, and the cache.
 from __future__ import annotations
 
 import abc
-
 import typing
 
 from hikari.core.model import channel
@@ -33,7 +32,6 @@ from hikari.core.model import role
 from hikari.core.model import user
 from hikari.core.model import webhook
 from hikari.core.utils import types
-
 
 # Helps the type checker with heavy covariance
 # noinspection PyTypeChecker

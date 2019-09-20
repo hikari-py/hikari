@@ -34,7 +34,6 @@ import asyncio
 import contextlib
 import datetime
 import json
-import logging
 import time
 import typing
 import zlib
@@ -45,6 +44,7 @@ import hikari.core.utils.user_agent
 from hikari.core import errors
 from hikari.core.net import opcodes
 from hikari.core.net import rates
+from hikari.core.utils import logging_utils
 from hikari.core.utils import types
 
 
@@ -168,11 +168,11 @@ class GatewayClient:
         token: str,
     ) -> None:
         #: Logger adapter used to dump information to the console.
-        self.logger = logging.getLogger(f"{type(self).__module__}.{type(self).__qualname__}[{shard_id}]")
+        logger_args = (self, shard_id, shard_count) if shard_id is not None and shard_count is not None else (self,)
+        self.logger = logging_utils.get_named_logger(*logger_args)
 
         #: The coroutine function to dispatch any events to.
         if not asyncio.iscoroutinefunction(dispatch):
-
             async def async_dispatch(*args, **kwargs):
                 return dispatch(*args, **kwargs)
 
