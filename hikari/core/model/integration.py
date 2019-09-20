@@ -28,7 +28,7 @@ import typing
 from hikari.core.model import base
 from hikari.core.model import model_cache
 from hikari.core.model import user
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
 
 
 @dataclasses.dataclass()
@@ -136,7 +136,7 @@ class Integration(base.Snowflake):
         self.expire_grace_period = int(payload["expire_grace_period"])
         self.user = global_state.parse_user(payload["user"])
         self.account = IntegrationAccount(global_state, payload["account"])
-        self.synced_at = dateutils.parse_iso_8601_datetime(payload["synced_at"])
+        self.synced_at = date_utils.parse_iso_8601_datetime(payload["synced_at"])
 
 
 __all__ = ["Integration", "IntegrationAccount"]

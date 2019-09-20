@@ -29,7 +29,7 @@ from hikari.core.model import channel
 from hikari.core.model import guild
 from hikari.core.model import model_cache
 from hikari.core.model import user
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 
 
@@ -129,7 +129,7 @@ class InviteMetadata:
         self.max_uses = int(payload["max_uses"])
         self.max_age = int(payload["max_age"])
         self.temporary = payload.get("temporary", False)
-        self.created_at = dateutils.parse_iso_8601_datetime(payload["created_at"])
+        self.created_at = date_utils.parse_iso_8601_datetime(payload["created_at"])
         self.revoked = payload.get("revoked", False)
 
 

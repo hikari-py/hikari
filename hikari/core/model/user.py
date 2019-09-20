@@ -28,7 +28,7 @@ import typing
 from hikari.core.model import base
 from hikari.core.model import model_cache
 from hikari.core.model import presence
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
 from hikari.core.utils import delegate
 from hikari.core.utils import transform
 
@@ -119,8 +119,8 @@ class Member(User):
         self._role_ids = [int(r) for r in payload.get("roles", ())]
         self._guild_id = guild_id
         self.nick = payload.get("nick")
-        self.joined_at = dateutils.parse_iso_8601_datetime(payload["joined_at"])
-        self.premium_since = transform.nullable_cast(payload.get("premium_since"), dateutils.parse_iso_8601_datetime)
+        self.joined_at = date_utils.parse_iso_8601_datetime(payload["joined_at"])
+        self.premium_since = transform.nullable_cast(payload.get("premium_since"), date_utils.parse_iso_8601_datetime)
         self.presence = transform.nullable_cast(payload.get("presence"), presence.Presence)
 
     @property

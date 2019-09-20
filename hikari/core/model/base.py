@@ -24,7 +24,7 @@ from __future__ import annotations
 import datetime
 
 from hikari.core.utils import assertions
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
 
 
 @assertions.assert_is_mixin
@@ -74,7 +74,7 @@ class Snowflake:
     def created_at(self) -> datetime.datetime:
         """When the object was created."""
         epoch = self.id >> 22
-        return dateutils.discord_epoch_to_datetime(epoch)
+        return date_utils.discord_epoch_to_datetime(epoch)
 
     @property
     def internal_worker_id(self) -> int:

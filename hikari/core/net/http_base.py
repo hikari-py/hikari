@@ -30,7 +30,7 @@ import aiohttp
 from hikari.core import errors
 from hikari.core.net import opcodes
 from hikari.core.net import rates
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
 from hikari.core.utils import logging_utils
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified
@@ -365,7 +365,7 @@ class BaseHTTPClient:
         if all(header in headers for header in _X_RATELIMIT_LOCALS):
             # If we don't get all the info we need, just forget about the rate limit as we can't act on missing
             # information.
-            now = dateutils.parse_http_date(headers[_DATE]).timestamp()
+            now = date_utils.parse_http_date(headers[_DATE]).timestamp()
             total = transform.nullable_cast(headers.get(_X_RATELIMIT_LIMIT), int)
             # https://github.com/discordapp/discord-api-docs/pull/1064
             reset_after = transform.nullable_cast(headers.get(_X_RATELIMIT_RESET_AFTER), float) or 0

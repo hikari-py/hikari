@@ -33,7 +33,7 @@ from hikari.core.model import guild
 from hikari.core.model import media
 from hikari.core.model import model_cache
 from hikari.core.model import user
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 
 
@@ -200,7 +200,7 @@ class Message(base.Snowflake):
         self._author_id = global_state.parse_user(payload["author"]).id
         self._channel_id = int(payload["channel_id"])
         self._guild_id = transform.nullable_cast(payload.get("guild_id"), int)
-        self.edited_at = transform.nullable_cast(payload.get("edited_timestamp"), dateutils.parse_iso_8601_datetime)
+        self.edited_at = transform.nullable_cast(payload.get("edited_timestamp"), date_utils.parse_iso_8601_datetime)
         self.tts = payload["tts"]
         self.mentions_everyone = payload["mention_everyone"]
         self.attachments = [media.Attachment(a) for a in payload["attachments"]]
