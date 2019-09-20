@@ -21,7 +21,6 @@ A basic type of registry that handles storing global state.
 """
 from __future__ import annotations
 
-import logging
 import typing
 import weakref
 
@@ -34,6 +33,7 @@ from hikari.core.model import role as _role
 from hikari.core.model import user
 from hikari.core.model import user as _user
 from hikari.core.model import webhook as _webhook
+from hikari.core.utils import logging_utils
 from hikari.core.utils import types
 
 
@@ -48,7 +48,7 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
         self._users: typing.MutableMapping[int, _user.User] = weakref.WeakValueDictionary()
         self._guilds: typing.Dict[int, _guild.Guild] = {}
         self._dm_channels: typing.MutableMapping[int, _channel.DMChannel] = types.LRUDict(user_dm_channel_size)
-        self._guild_channels: typing.MutableMapping[int, _guild.Guild] = weakref.WeakValueDictionary()
+        self._guild_channels: typing.MutableMapping[int, _channel.GuildChannel] = weakref.WeakValueDictionary()
         self._messages: typing.MutableMapping[int, _message.Message] = types.LRUDict(message_cache_size)
         self._emojis: typing.MutableMapping[int, _emoji.GuildEmoji] = weakref.WeakValueDictionary()
 
@@ -56,7 +56,7 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
         self.user: typing.Optional[_user.BotUser] = None
 
         #: Our logger.
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging_utils.get_named_logger(self)
 
     def get_user_by_id(self, user_id: int):
         return self._users.get(user_id)
@@ -74,6 +74,17 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
         guild = self._guilds[guild_id]
         del self._guilds[guild_id]
         return guild
+
+    def delete_dm_channel(self, channel_id: int):
+        channel = self._dm_channels[channel_id]
+        del self._dm_channels[channel_id]
+        return channel
+
+    def delete_guild_channel(self, channel_id: int):
+        guild = self._guild_channels[channel_id].guild
+        channel = guild.channels[channel_id]
+        del guild.channels[channel_id]
+        return channel
 
     def get_message_by_id(self, message_id: int):
         return self._messages.get(message_id)
@@ -99,14 +110,15 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
         return self._users[user_id]
 
     def parse_guild(self, guild: types.DiscordObject):
-        guild_id = int(guild.get("id"))
-        if guild_id not in self._guilds:
+        guild_id = int(guild["id"])
+        unavailable = guild.get("unavailable", False)
+        if unavailable and guild_id in self._guilds:
+            self._guilds[guild_id].unavailable = True
+            return self._guilds[guild_id]
+        else:
             guild_obj = _guild.Guild(self, guild)
             self._guilds[guild_id] = guild_obj
-        else:
-            guild_obj = self._guilds[guild_id]
-            guild_obj.update_state(guild)
-        return guild_obj
+            return guild_obj
 
     def parse_member(self, member: types.DiscordObject, guild_id: int):
         # Don't cache members here.
@@ -146,14 +158,17 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
         message_obj.channel.last_message_id = message_id
         return message_obj
 
-    def parse_channel(self, channel: types.DiscordObject, guild_id: typing.Optional[int] = None):
+    def parse_channel(self, channel: types.DiscordObject):
         # Only cache DM channels.
-        channel_obj = _channel.channel_from_dict(self, channel, guild_id)
+        channel_obj = _channel.channel_from_dict(self, channel)
         if channel_obj.is_dm:
             if channel_obj.id in self._dm_channels:
                 return self._dm_channels[channel_obj.id]
 
             self._dm_channels[channel_obj.id] = channel_obj
+        else:
+            if channel_obj.guild is not None:
+                channel_obj.guild.channels[channel_obj.id] = channel_obj
 
         return channel_obj
 

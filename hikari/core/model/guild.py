@@ -33,7 +33,7 @@ from hikari.core.model import model_cache
 from hikari.core.model import permission
 from hikari.core.model import role
 from hikari.core.model import user
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 
 
@@ -266,7 +266,7 @@ class Guild(base.Snowflake):
         self.member_count = transform.nullable_cast(payload.get("member_count"), int)
         self.mfa_level = transform.try_cast(payload.get("mfa_level"), MFALevel)
         self.my_permissions = permission.Permission(payload.get("permissions", 0))
-        self.joined_at = transform.nullable_cast(payload.get("joined_at"), dateutils.parse_iso_8601_datetime)
+        self.joined_at = transform.nullable_cast(payload.get("joined_at"), date_utils.parse_iso_8601_datetime)
         self.large = payload.get("large", False)
         self.unavailable = payload.get("unavailable", False)
         self.members = transform.snowflake_map(self._state.parse_member(m, self.id) for m in payload.get("members", ()))

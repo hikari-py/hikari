@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import asyncio
 import json as libjson
-import logging
 import typing
 
 import aiohttp
@@ -31,11 +30,11 @@ import aiohttp
 from hikari.core import errors
 from hikari.core.net import opcodes
 from hikari.core.net import rates
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
+from hikari.core.utils import logging_utils
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified
 from hikari.core.utils import user_agent
-
 
 #: Format string for the default Discord API URL.
 _DISCORD_API_URI_FORMAT = "https://discordapp.com/api/v{VERSION}"
@@ -196,7 +195,7 @@ class BaseHTTPClient:
         else:
             self.authorization = f"Bearer {token}"
         #: The logger to use for this object.
-        self.logger = logging.getLogger(f"{type(self).__module__}.{type(self).__qualname__}")
+        self.logger = logging_utils.get_named_logger(self)
         #: User agent to use
         self.user_agent = user_agent.user_agent()
 
@@ -366,7 +365,7 @@ class BaseHTTPClient:
         if all(header in headers for header in _X_RATELIMIT_LOCALS):
             # If we don't get all the info we need, just forget about the rate limit as we can't act on missing
             # information.
-            now = dateutils.parse_http_date(headers[_DATE]).timestamp()
+            now = date_utils.parse_http_date(headers[_DATE]).timestamp()
             total = transform.nullable_cast(headers.get(_X_RATELIMIT_LIMIT), int)
             # https://github.com/discordapp/discord-api-docs/pull/1064
             reset_after = transform.nullable_cast(headers.get(_X_RATELIMIT_RESET_AFTER), float) or 0

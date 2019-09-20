@@ -169,7 +169,7 @@ deploy-to-staging:
         RELEASE_WEBHOOK_NAME: "testing pypi (staging)"
         RELEASE_WEBHOOK_COLOUR: "0xd34615"
     script:
-        - export RELEASE_WEBHOOK_DESCRIPTION="Install dev releases with:\n```bash\npip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple hikari.core==$(python tasks/make-version-string.py staging)\n```\n"
+        - export RELEASE_WEBHOOK_DESCRIPTION=''
         - source tasks/deploy.sh
         - do-deployment
     environment:
@@ -191,7 +191,7 @@ deploy-to-prod:
         RELEASE_WEBHOOK_NAME: "pypi (prod)"
         RELEASE_WEBHOOK_COLOUR: "0x5c2040"
     script:
-        - export RELEASE_WEBHOOK_DESCRIPTION="Install it with:\n```bash\npip install hikari.core==$(python tasks/make-version-string.py master)\n```\n"
+        - export RELEASE_WEBHOOK_DESCRIPTION=''
         - source tasks/deploy.sh
         - do-deployment
     environment:

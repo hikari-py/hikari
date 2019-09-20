@@ -21,12 +21,9 @@ Implements a basic type delegation system that piggybacks off of the standard
 inheritance system in Python and boasts full dataclass compatibility in the 
 process.
 """
-import dataclasses
 import inspect
 
 from hikari.core.utils import assertions
-
-__all__ = ("delegate_members",)
 
 _DELEGATE_MEMBERS_FIELD = "__delegate_members__"
 _DELEGATE_TYPES_FIELD = "__delegate_type_mapping__"
@@ -104,3 +101,6 @@ def delegate_members(delegate_type, magic_field):
 
 def _is_func(func):
     return inspect.isfunction(func) or inspect.ismethod(func)
+
+
+__all__ = ("delegate_members",)
