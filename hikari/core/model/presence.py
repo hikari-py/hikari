@@ -28,7 +28,7 @@ import enum
 import typing
 
 from hikari.core.model import base
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 
 
@@ -281,8 +281,8 @@ class ActivityTimestamps:
         return self.end - self.start if self.start is not None and self.end is not None else None
 
     def __init__(self, payload):
-        self.start = transform.nullable_cast(payload.get("start"), dateutils.unix_epoch_to_datetime)
-        self.end = transform.nullable_cast(payload.get("end"), dateutils.unix_epoch_to_datetime)
+        self.start = transform.nullable_cast(payload.get("start"), date_utils.unix_epoch_to_datetime)
+        self.end = transform.nullable_cast(payload.get("end"), date_utils.unix_epoch_to_datetime)
 
 
 __all__ = [

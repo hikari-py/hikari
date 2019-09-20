@@ -25,7 +25,7 @@ import enum
 
 from hikari.core.components import basic_state_registry as _state
 from hikari.core.components import event_adapter
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 
 
@@ -163,7 +163,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         )
 
         last_pin_timestamp = transform.nullable_cast(
-            payload.get("last_pin_timestamp"), dateutils.parse_iso_8601_datetime
+            payload.get("last_pin_timestamp"), date_utils.parse_iso_8601_datetime
         )
 
         if channel is not None:
