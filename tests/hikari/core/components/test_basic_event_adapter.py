@@ -62,53 +62,35 @@ def event_adapter(state_registry, dispatch):
 @pytest.mark.asyncio
 async def test_handle_disconnect(event_adapter, dispatch, gateway):
     await event_adapter.handle_disconnect(gateway, {"code": 123, "reason": "server on fire"})
-    dispatch.assert_called_with(
-        basic_event_adapter.BasicEvent.DISCONNECT,
-        gateway,
-        123,
-        "server on fire",
-    )
+    dispatch.assert_called_with(basic_event_adapter.BasicEvent.DISCONNECT, gateway, 123, "server on fire")
 
 
 @pytest.mark.asyncio
 async def test_handle_hello(event_adapter, dispatch, gateway):
     await event_adapter.handle_hello(gateway, {})
 
-    dispatch.assert_called_with(
-        basic_event_adapter.BasicEvent.CONNECT,
-        gateway,
-    )
+    dispatch.assert_called_with(basic_event_adapter.BasicEvent.CONNECT, gateway)
 
 
 @pytest.mark.asyncio
 async def test_handle_invalid_session(event_adapter, dispatch, gateway):
     await event_adapter.handle_invalid_session(gateway, False)
 
-    dispatch.assert_called_with(
-        basic_event_adapter.BasicEvent.INVALID_SESSION,
-        gateway,
-        False,
-    )
+    dispatch.assert_called_with(basic_event_adapter.BasicEvent.INVALID_SESSION, gateway, False)
 
 
 @pytest.mark.asyncio
 async def test_handle_request_to_reconnect(event_adapter, dispatch, gateway):
     await event_adapter.handle_request_to_reconnect(gateway, {})
 
-    dispatch.assert_called_with(
-        basic_event_adapter.BasicEvent.REQUEST_TO_RECONNECT,
-        gateway,
-    )
+    dispatch.assert_called_with(basic_event_adapter.BasicEvent.REQUEST_TO_RECONNECT, gateway)
 
 
 @pytest.mark.asyncio
 async def test_handle_resumed(event_adapter, dispatch, gateway):
     await event_adapter.handle_resumed(gateway, {})
 
-    dispatch.assert_called_with(
-        basic_event_adapter.BasicEvent.RESUME,
-        gateway
-    )
+    dispatch.assert_called_with(basic_event_adapter.BasicEvent.RESUME, gateway)
 
 
 @pytest.mark.asyncio
@@ -285,7 +267,9 @@ async def test_handle_guild_delete_when_unavailable_unspecified(event_adapter, d
     dispatch.assert_called_with()
     state_registry.delete_guild.assert_called_with()
 
+
 # TODO: continue writing test names, then writing tests, then continue implementing the code being tested.
+
 
 @pytest.mark.asyncio
 @pytest.mark.xfail

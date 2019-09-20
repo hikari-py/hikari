@@ -206,10 +206,15 @@ def test_GroupDMChannel():
 def test_GuildCategory():
     s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
     gc = channel.GuildCategory(
-        s, {
-            "type": 4, "id": "123456", "position": 69, "permission_overwrites": [], "name": "dank category",
-            "guild_id": "54321"
-        }
+        s,
+        {
+            "type": 4,
+            "id": "123456",
+            "position": 69,
+            "permission_overwrites": [],
+            "name": "dank category",
+            "guild_id": "54321",
+        },
     )
 
     assert gc.name == "dank category"
@@ -255,8 +260,16 @@ def test_GuildNewsChannel():
 def test_GuildStoreChannel():
     s = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
     gsc = channel.GuildStoreChannel(
-        s, {"type": 6, "id": "9876", "position": 9, "permission_overwrites": [], "name": "a", "parent_id": "32",
-            "guild_id": "7676"}
+        s,
+        {
+            "type": 6,
+            "id": "9876",
+            "position": 9,
+            "permission_overwrites": [],
+            "name": "a",
+            "parent_id": "32",
+            "guild_id": "7676",
+        },
     )
 
     assert gsc.id == 9876

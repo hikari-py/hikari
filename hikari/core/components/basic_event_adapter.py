@@ -22,8 +22,6 @@ Handles consumption of gateway events and converting them to the correct data ty
 from __future__ import annotations
 
 import enum
-import logging
-
 
 from hikari.core.components import basic_state_registry as _state
 from hikari.core.components import event_adapter
@@ -76,8 +74,8 @@ class BasicEventAdapter(event_adapter.EventAdapter):
     """
 
     def __init__(self, state_registry: _state.BasicStateRegistry, dispatch) -> None:
+        super().__init__()
         self.dispatch = dispatch
-        self.logger = logging.getLogger(__name__)
         self.state_registry: _state.BasicStateRegistry = state_registry
         self._ignored_events = set()
 
@@ -138,10 +136,9 @@ class BasicEventAdapter(event_adapter.EventAdapter):
 
     async def handle_channel_update(self, gateway, payload):
         channel_id = int(payload["id"])
-        old_channel = (
-            self.state_registry.get_guild_channel_by_id(channel_id)
-            or self.state_registry.get_dm_channel_by_id(channel_id)
-        )
+        old_channel = self.state_registry.get_guild_channel_by_id(
+            channel_id
+        ) or self.state_registry.get_dm_channel_by_id(channel_id)
 
         if old_channel is not None:
             new_channel = self.state_registry.parse_channel(payload)
@@ -161,14 +158,12 @@ class BasicEventAdapter(event_adapter.EventAdapter):
 
     async def handle_channel_pins_update(self, gateway, payload):
         channel_id = int(payload["channel_id"])
-        channel = (
-              self.state_registry.get_guild_channel_by_id(channel_id)
-              or self.state_registry.get_dm_channel_by_id(channel_id)
+        channel = self.state_registry.get_guild_channel_by_id(channel_id) or self.state_registry.get_dm_channel_by_id(
+            channel_id
         )
 
         last_pin_timestamp = transform.nullable_cast(
-            payload.get("last_pin_timestamp"),
-            dateutils.parse_iso_8601_datetime
+            payload.get("last_pin_timestamp"), dateutils.parse_iso_8601_datetime
         )
 
         if channel is not None:

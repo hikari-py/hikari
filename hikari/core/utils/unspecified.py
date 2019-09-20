@@ -20,7 +20,6 @@
 Sentinel value used internally to represent an entity that was omitted from explicit specification. This
 can be used to mark fields that may be able to be `None` as being optional.
 """
-__all__ = ("UNSPECIFIED",)
 
 
 class Unspecified:
@@ -44,3 +43,6 @@ UNSPECIFIED = Unspecified()
 
 # Make Unspecified into a singleton.
 Unspecified.__new__ = lambda *_, **__: UNSPECIFIED
+
+
+__all__ = ("UNSPECIFIED",)
