@@ -18,12 +18,12 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
 
 
 def test_parse_iso_8601_date_with_negative_timezone():
     string = "2019-10-10T05:22:33.023456-02:30"
-    date = dateutils.parse_iso_8601_datetime(string)
+    date = date_utils.parse_iso_8601_datetime(string)
     assert date.year == 2019
     assert date.month == 10
     assert date.day == 10
@@ -37,7 +37,7 @@ def test_parse_iso_8601_date_with_negative_timezone():
 
 def test_parse_iso_8601_date_with_positive_timezone():
     string = "2019-10-10T05:22:33.023456+02:30"
-    date = dateutils.parse_iso_8601_datetime(string)
+    date = date_utils.parse_iso_8601_datetime(string)
     assert date.year == 2019
     assert date.month == 10
     assert date.day == 10
@@ -51,7 +51,7 @@ def test_parse_iso_8601_date_with_positive_timezone():
 
 def test_parse_iso_8601_date_with_zulu():
     string = "2019-10-10T05:22:33.023456Z"
-    date = dateutils.parse_iso_8601_datetime(string)
+    date = date_utils.parse_iso_8601_datetime(string)
     assert date.year == 2019
     assert date.month == 10
     assert date.day == 10
@@ -65,7 +65,7 @@ def test_parse_iso_8601_date_with_zulu():
 
 def test_parse_iso_8601_date_with_milliseconds_instead_of_microseconds():
     string = "2019-10-10T05:22:33.023Z"
-    date = dateutils.parse_iso_8601_datetime(string)
+    date = date_utils.parse_iso_8601_datetime(string)
     assert date.year == 2019
     assert date.month == 10
     assert date.day == 10
@@ -78,16 +78,16 @@ def test_parse_iso_8601_date_with_milliseconds_instead_of_microseconds():
 def test_parse_http_date():
     rfc_timestamp = "Mon, 03 Jun 2019 17:54:26 GMT"
     expected_timestamp = datetime.datetime(2019, 6, 3, 17, 54, 26, tzinfo=datetime.timezone.utc)
-    assert dateutils.parse_http_date(rfc_timestamp) == expected_timestamp
+    assert date_utils.parse_http_date(rfc_timestamp) == expected_timestamp
 
 
 def test_parse_discord_epoch_to_datetime():
     discord_timestamp = 37921278956
     expected_timestamp = datetime.datetime(2016, 3, 14, 21, 41, 18, 956000, tzinfo=datetime.timezone.utc)
-    assert dateutils.discord_epoch_to_datetime(discord_timestamp) == expected_timestamp
+    assert date_utils.discord_epoch_to_datetime(discord_timestamp) == expected_timestamp
 
 
 def test_parse_unix_epoch_to_datetime():
     unix_timestamp = 1457991678956
     expected_timestamp = datetime.datetime(2016, 3, 14, 21, 41, 18, 956000, tzinfo=datetime.timezone.utc)
-    assert dateutils.unix_epoch_to_datetime(unix_timestamp) == expected_timestamp
+    assert date_utils.unix_epoch_to_datetime(unix_timestamp) == expected_timestamp

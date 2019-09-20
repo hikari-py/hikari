@@ -25,8 +25,8 @@ import dataclasses
 import typing
 
 from hikari.core.model import emoji
-from hikari.core.model import model_cache
 from hikari.core.model import message
+from hikari.core.model import model_cache
 from hikari.core.utils import types
 
 

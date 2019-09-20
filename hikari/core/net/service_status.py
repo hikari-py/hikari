@@ -28,27 +28,11 @@ See:
 """
 from __future__ import annotations
 
-import aiohttp
 import typing
 
-from hikari.core.model import service_status
+import aiohttp
 
-__all__ = (
-    "get_summary",
-    "get_status",
-    "get_components",
-    "get_all_incidents",
-    "get_unresolved_incidents",
-    "get_all_scheduled_maintenances",
-    "get_upcoming_scheduled_maintenances",
-    "get_active_scheduled_maintenances",
-    "subscribe_email_to_all_incidents",
-    "subscribe_email_to_incident",
-    "subscribe_webhook_to_all_incidents",
-    "subscribe_webhook_to_incident",
-    "unsubscribe_from",
-    "resend_confirmation_email",
-)
+from hikari.core.model import service_status
 
 _BASE_URI = "https://status.discordapp.com/api/v2"
 
@@ -257,3 +241,21 @@ async def resend_confirmation_email(subscriber: typing.Union[str, service_status
     """
     subscriber = _get_as_id_or_get_id(subscriber)
     await _post(f"/subscriptions/{subscriber}/resend_confirmation", None, None)
+
+
+__all__ = (
+    "get_summary",
+    "get_status",
+    "get_components",
+    "get_all_incidents",
+    "get_unresolved_incidents",
+    "get_all_scheduled_maintenances",
+    "get_upcoming_scheduled_maintenances",
+    "get_active_scheduled_maintenances",
+    "subscribe_email_to_all_incidents",
+    "subscribe_email_to_incident",
+    "subscribe_webhook_to_all_incidents",
+    "subscribe_webhook_to_incident",
+    "unsubscribe_from",
+    "resend_confirmation_email",
+)

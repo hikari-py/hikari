@@ -19,8 +19,6 @@
 """
 Custom data structures.
 """
-__all__ = ("DiscordObject", "ObjectProxy", "LRUDict")
-
 import typing
 
 from hikari.core.utils import assertions
@@ -87,3 +85,6 @@ class LRUDict(typing.MutableMapping[K, V]):
 
     def __iter__(self) -> typing.Iterator[K]:
         yield from self._data
+
+
+__all__ = ("DiscordObject", "ObjectProxy", "LRUDict")

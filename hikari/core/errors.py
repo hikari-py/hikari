@@ -26,19 +26,6 @@ import typing
 from hikari.core.net import http_base
 from hikari.core.net import opcodes
 
-__all__ = (
-    "BadRequest",
-    "ClientError",
-    "DiscordError",
-    "Forbidden",
-    "GatewayError",
-    "HikariError",
-    "HTTPError",
-    "NotFound",
-    "ServerError",
-    "Unauthorized",
-)
-
 
 class HikariError(RuntimeError):
     """
@@ -254,3 +241,17 @@ class NotFound(ClientError):
 
     def __init__(self, resource: http_base.Resource, json_error_code: opcodes.JSONErrorCode, message: str) -> None:
         super().__init__(resource, opcodes.HTTPStatus.NOT_FOUND, json_error_code, message)
+
+
+__all__ = (
+    "BadRequest",
+    "ClientError",
+    "DiscordError",
+    "Forbidden",
+    "GatewayError",
+    "HikariError",
+    "HTTPError",
+    "NotFound",
+    "ServerError",
+    "Unauthorized",
+)
