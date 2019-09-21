@@ -22,11 +22,13 @@ inheritance system in Python and boasts full dataclass compatibility in the
 process.
 """
 import inspect
+import typing
 
 from hikari.core.utils import assertions
 
 _DELEGATE_MEMBERS_FIELD = "__delegate_members__"
 _DELEGATE_TYPES_FIELD = "__delegate_type_mapping__"
+T = typing.TypeVar("T")
 
 
 class DelegatedProperty:
@@ -34,7 +36,11 @@ class DelegatedProperty:
     Delegating property that takes a magic field name and a delegated member name and redirects
     any accession of the property's value to the attribute named "delegated_member_name" that
     belongs to field "magic_field" on the class it is applied to.
+
+    Note:
+        This property is read-only, and only works for instance members.
     """
+    __slots__ = ("magic_field", "delegated_member_name", )
 
     def __init__(self, magic_field, delegated_member_name) -> None:
         self.magic_field = magic_field
@@ -48,7 +54,7 @@ class DelegatedProperty:
             return self
 
 
-def delegate_members(delegate_type, magic_field):
+def delegate_members(delegate_type: typing.Type, magic_field: str) -> typing.Callable[[typing.Type[T], typing.Type[T]]:
     """
     Make a decorator that wraps a class to make it delegate any inherited fields from `delegate_type` to attributes of
     the same name on a value stored in a field named the `magic_field`.
@@ -59,17 +65,15 @@ def delegate_members(delegate_type, magic_field):
         magic_field:
             The field that we will store an instance of the delegated type in.
 
+    Returns:
+        a decorator for a class.
+
     The idea behind this is to allow us to derive one class from another and allow initializing one instance
     from another. This is used largely by the `Member` implementation to allow more than one member to refer to
     the same underlying `User` at once.
-
-    Warning:
-        If making the outer class a dataclass, you must use the :attr:`delegate_safe_dataclass`
-        decorator rather than the vanilla :func:`dataclasses.dataclass` one, otherwise it will
-        produce an incompatible signature.
     """
 
-    def decorator(cls):
+    def decorator(cls: typing.Type[T]) -> typing.Type[T]:
         assertions.assert_subclasses(cls, delegate_type)
         delegated_members = set()
         # Tuple of tuples, each sub tuple is (magic_field, delegate_type)
@@ -103,4 +107,4 @@ def _is_func(func):
     return inspect.isfunction(func) or inspect.ismethod(func)
 
 
-__all__ = ("delegate_members",)
+__all__ = ("delegate_members", "DelegatedProperty")
