@@ -117,7 +117,7 @@ class Member(User):
     #: :type: :class:`hikari.core.model.presence.Presence`
     presence: presence.Presence
 
-    # noinspection PyMethodOverriding
+    # noinspection PyMissingConstructor
     def __init__(self, global_state, guild_id, payload):
         self._user = global_state.parse_user(payload["user"])
         self._guild_id = guild_id
