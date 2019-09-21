@@ -29,6 +29,7 @@ from hikari.core.model import base
 from hikari.core.model import guild as _guild
 from hikari.core.model import overwrite
 from hikari.core.model import user
+from hikari.core.utils import assertions
 from hikari.core.utils import transform
 
 _channel_type_to_class = {}
@@ -68,6 +69,13 @@ class Channel(base.Snowflake, base.Volatile, abc.ABC):
         if "type" in kwargs:
             _channel_type_to_class[kwargs.pop("type")] = cls
         cls.is_dm = "guild" not in cls.__qualname__.lower()
+
+
+class TextChannel(Channel, abc.ABC):
+    """
+    Any class that can have messages sent to it.
+    """
+    __slots__ = ()
 
 
 @dataclasses.dataclass()
@@ -123,7 +131,7 @@ class GuildChannel(Channel, abc.ABC):
 
 
 @dataclasses.dataclass()
-class GuildTextChannel(GuildChannel, type=0):
+class GuildTextChannel(GuildChannel, TextChannel, type=0):
     """
     A text channel.
     """
@@ -164,7 +172,7 @@ class GuildTextChannel(GuildChannel, type=0):
 
 
 @dataclasses.dataclass()
-class DMChannel(Channel, type=1):
+class DMChannel(TextChannel, type=1):
     """
     A DM channel between users.
     """

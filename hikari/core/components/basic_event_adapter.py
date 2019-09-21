@@ -156,12 +156,14 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             # Update the channel meta data just for this call.
             channel = self.state_registry.parse_channel(payload)
 
-            if channel.is_dm:
-                self.state_registry.delete_dm_channel(channel.id)
-                self.dispatch(BasicEvent.DM_CHANNEL_DELETE, channel)
-            elif channel.guild is not None:
-                self.state_registry.delete_guild_channel(channel.id)
-                self.dispatch(BasicEvent.GUILD_CHANNEL_DELETE, channel)
+            try:
+                channel = self.state_registry.delete_channel(channel.id)
+            except KeyError:
+                # Inconsistent state gets ignored.
+                pass
+            else:
+                event = BasicEvent.DM_CHANNEL_DELETE if channel.is_dm else BasicEvent.GUILD_CHANNEL_DELETE
+                self.dispatch(event, channel)
 
     async def handle_channel_pins_update(self, gateway, payload):
         channel_id = int(payload["channel_id"])
@@ -179,9 +181,9 @@ class BasicEventAdapter(event_adapter.EventAdapter):
                     self.dispatch(BasicEvent.GUILD_CHANNEL_PIN_ADDED, last_pin_timestamp)
             else:
                 if channel.is_dm:
-                    self.dispatch(BasicEvent.DM_CHANNEL_PIN_REMOVED, last_pin_timestamp)
+                    self.dispatch(BasicEvent.DM_CHANNEL_PIN_REMOVED)
                 else:
-                    self.dispatch(BasicEvent.GUILD_CHANNEL_PIN_REMOVED, last_pin_timestamp)
+                    self.dispatch(BasicEvent.GUILD_CHANNEL_PIN_REMOVED)
 
     async def handle_guild_create(self, gateway, payload):
         guild_id = int(payload["guild_id"])

@@ -25,6 +25,8 @@ import dataclasses
 
 from hikari.core.model import base
 from hikari.core.model import color as _color
+from hikari.core.model import guild
+from hikari.core.model import model_cache
 from hikari.core.model import permission as _permission
 from hikari.core.utils import types
 
@@ -35,7 +37,12 @@ class Role(base.Snowflake, base.Volatile):
     Representation of a role within a guild.
     """
 
-    __slots__ = ("id", "name", "color", "hoist", "position", "permissions", "managed", "mentionable")
+    __slots__ = (
+        "_state", "_guild_id", "id", "name", "color", "hoist", "position", "permissions", "managed", "mentionable"
+    )
+
+    _state: model_cache.AbstractModelCache
+    _guild_id: int
 
     #: The ID of the role.
     #:
@@ -77,7 +84,9 @@ class Role(base.Snowflake, base.Volatile):
     #: :type: :class:`bool`
     mentionable: bool
 
-    def __init__(self, payload):
+    def __init__(self, global_state, payload, guild_id: int):
+        self._state = global_state
+        self._guild_id = guild_id
         self.id = int(payload["id"])
         self.update_state(payload)
 
@@ -89,6 +98,10 @@ class Role(base.Snowflake, base.Volatile):
         self.permissions = _permission.Permission(payload["permissions"])
         self.managed = payload["managed"]
         self.mentionable = payload["mentionable"]
+
+    @property
+    def guild(self) -> guild.Guild:
+        return self._state.get_guild_by_id(self._guild_id)
 
 
 __all__ = ["Role"]

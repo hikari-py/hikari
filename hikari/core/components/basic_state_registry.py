@@ -21,18 +21,23 @@ A basic type of registry that handles storing global state.
 """
 from __future__ import annotations
 
+import datetime
 import typing
 import weakref
 
+from hikari.core.model import channel
 from hikari.core.model import channel as _channel
+from hikari.core.model import emoji
 from hikari.core.model import emoji as _emoji
 from hikari.core.model import guild as _guild
 from hikari.core.model import message as _message
 from hikari.core.model import model_cache
+from hikari.core.model import role
 from hikari.core.model import role as _role
 from hikari.core.model import user
 from hikari.core.model import user as _user
 from hikari.core.model import webhook as _webhook
+from hikari.core.utils import assertions
 from hikari.core.utils import logging_utils
 from hikari.core.utils import types
 
@@ -40,17 +45,31 @@ from hikari.core.utils import types
 class BasicStateRegistry(model_cache.AbstractModelCache):
     """
     Registry for global state parsing, querying, and management.
+
+    This implementation uses a set of mappings in memory to handle lookups in an average-case time of O(k) and a
+    worst case time of O(n). For objects that have ownership in other objects (e.g. roles that are owned by a guild),
+    we provide internally weak mappings to look up these values quickly. This enables operations such as role deletion
+    to run in O(k) average time, and worst case time of O(n) rather than average time of O(n) and worst case time of
+    O(mn) (where M denotes the number of guilds in the cache, and N denotes the number of roles on average in each
+    guild).
+
+    Weak references are used internally to enable atomic destruction of transitively owned objects when references
+    elsewhere are dropped.
     """
+    __slots__ = (
+        "_dm_channels", "_emojis", "_guilds", "_guild_channels", "_messages", "_roles", "_users", "user", "logger"
+    )
 
     def __init__(self, message_cache_size: int, user_dm_channel_size: int):
         # Users may be cached while we can see them, or they may be cached as a member. Regardless, we only
         # retain them while they are referenced from elsewhere to keep things tidy.
-        self._users: typing.MutableMapping[int, _user.User] = weakref.WeakValueDictionary()
-        self._guilds: typing.Dict[int, _guild.Guild] = {}
         self._dm_channels: typing.MutableMapping[int, _channel.DMChannel] = types.LRUDict(user_dm_channel_size)
+        self._emojis: typing.MutableMapping[int, _emoji.GuildEmoji] = weakref.WeakValueDictionary()
+        self._guilds: typing.Dict[int, _guild.Guild] = {}
         self._guild_channels: typing.MutableMapping[int, _channel.GuildChannel] = weakref.WeakValueDictionary()
         self._messages: typing.MutableMapping[int, _message.Message] = types.LRUDict(message_cache_size)
-        self._emojis: typing.MutableMapping[int, _emoji.GuildEmoji] = weakref.WeakValueDictionary()
+        self._roles: typing.MutableMapping[int, _role.Role] = weakref.WeakValueDictionary()
+        self._users: typing.MutableMapping[int, _user.User] = weakref.WeakValueDictionary()
 
         #: The bot user.
         self.user: typing.Optional[_user.BotUser] = None
@@ -58,21 +77,31 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
         #: Our logger.
         self.logger = logging_utils.get_named_logger(self)
 
-    def delete_dm_channel(self, channel_id: int):
-        channel = self._dm_channels[channel_id]
-        del self._dm_channels[channel_id]
-        return channel
+    def delete_channel(self, channel_id: int):
+        if channel_id in self._guild_channels:
+            guild = self._guild_channels[channel_id].guild
+            channel = guild.channels[channel_id]
+            del guild.channels[channel_id]
+            del self._guild_channels[channel_id]
+            return channel
+        elif channel_id in self._dm_channels:
+            channel = self._dm_channels[channel_id]
+            del self._dm_channels[channel_id]
+            return channel
+        else:
+            raise KeyError(str(channel_id))
+
+    def delete_emoji(self, emoji_id: int) -> emoji.GuildEmoji:
+        emoji = self._emojis[emoji_id]
+        guild = emoji.guild
+        del guild.emojis[emoji_id]
+        del self._emojis[emoji_id]
+        return emoji
 
     def delete_guild(self, guild_id: int):
         guild = self._guilds[guild_id]
         del self._guilds[guild_id]
         return guild
-
-    def delete_guild_channel(self, channel_id: int):
-        guild = self._guild_channels[channel_id].guild
-        channel = guild.channels[channel_id]
-        del guild.channels[channel_id]
-        return channel
 
     def delete_member_from_guild(self, user_id: int, guild_id: int):
         guild = self._guilds[guild_id]
@@ -80,8 +109,15 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
         del guild.members[user_id]
         return member
 
-    def get_dm_channel_by_id(self, dm_channel_id: int):
-        return self._dm_channels.get(dm_channel_id)
+    def delete_role(self, role_id: int) -> role.Role:
+        role = self._roles[role_id]
+        guild = role.guild
+        del guild.roles[role_id]
+        del self._roles[role_id]
+        return role
+
+    def get_channel_by_id(self, channel_id: int) -> typing.Optional[channel.Channel]:
+        return self._guild_channels.get(channel_id) or self._dm_channels.get(channel_id)
 
     def get_emoji_by_id(self, emoji_id: int):
         return self._emojis.get(emoji_id)
@@ -94,6 +130,9 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
 
     def get_message_by_id(self, message_id: int):
         return self._messages.get(message_id)
+
+    def get_role_by_id(self, role_id: int) -> typing.Optional[role.Role]:
+        pass
 
     def get_user_by_id(self, user_id: int):
         return self._users.get(user_id)
@@ -161,9 +200,9 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
         message_obj.channel.last_message_id = message_id
         return message_obj
 
-    def parse_role(self, role: types.DiscordObject):
-        # Don't cache roles.
-        return _role.Role(role)
+    def parse_role(self, role: types.DiscordObject, guild_id: int):
+        role = _role.Role(self, role, guild_id)
+        self._roles[role.id] = role
 
     def parse_user(self, user: types.DiscordObject):
         # If the user already exists, then just return their existing object. We expect discord to tell us if they
@@ -180,3 +219,7 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
     def parse_webhook(self, webhook: types.DiscordObject):
         # Don't cache webhooks.
         return _webhook.Webhook(self, webhook)
+
+    def update_last_pinned_timestamp(self, channel_id: int, timestamp: typing.Optional[datetime.datetime]) -> None:
+        channel = self.get_channel_by_id(channel_id)
+        channel = assertions.assert_is_instance(channel, _channel.GuildTextChannel)
