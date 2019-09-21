@@ -226,11 +226,10 @@ class Message(base.Snowflake):
         channel.DMChannel,
         channel.GroupDMChannel,
     ]:
-        if self._guild_id is not None:
-            # noinspection PyTypeChecker
-            return self.guild.channels[self._channel_id]
-        else:
-            return self._state.get_dm_channel_by_id(self._channel_id)
+        # We may as well just use this to get it. It is pretty much as fast, but it reduces the amount of testing
+        # needed for code that is essentially the same.
+        # noinspection PyTypeChecker
+        return self._state.get_channel_by_id(self._channel_id)
 
     @property
     def author(self) -> typing.Union[user.User, user.Member, user.BotUser]:
