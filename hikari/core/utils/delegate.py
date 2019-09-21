@@ -54,7 +54,7 @@ class DelegatedProperty:
             return self
 
 
-def delegate_members(delegate_type: typing.Type, magic_field: str) -> typing.Callable[[typing.Type[T], typing.Type[T]]:
+def delegate_members(delegate_type: typing.Type, magic_field: str) -> typing.Callable[[typing.Type[T]], typing.Type[T]]:
     """
     Make a decorator that wraps a class to make it delegate any inherited fields from `delegate_type` to attributes of
     the same name on a value stored in a field named the `magic_field`.
