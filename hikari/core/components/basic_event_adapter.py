@@ -47,8 +47,11 @@ class BasicEvent(enum.Enum):
     DM_CHANNEL_DELETE = enum.auto()
     GUILD_CHANNEL_DELETE = enum.auto()
 
-    DM_CHANNEL_PINS_UPDATE = enum.auto()
-    GUILD_CHANNEL_PINS_UPDATE = enum.auto()
+    DM_CHANNEL_PIN_ADDED = enum.auto()
+    GUILD_CHANNEL_PIN_ADDED = enum.auto()
+
+    DM_CHANNEL_PIN_REMOVED = enum.auto()
+    GUILD_CHANNEL_PIN_REMOVED = enum.auto()
 
     GUILD_AVAILABLE = enum.auto()
     GUILD_UNAVAILABLE = enum.auto()
@@ -136,9 +139,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
 
     async def handle_channel_update(self, gateway, payload):
         channel_id = int(payload["id"])
-        old_channel = self.state_registry.get_guild_channel_by_id(
-            channel_id
-        ) or self.state_registry.get_dm_channel_by_id(channel_id)
+        old_channel = self.state_registry.get_channel_by_id(channel_id)
 
         if old_channel is not None:
             new_channel = self.state_registry.parse_channel(payload)
@@ -148,29 +149,39 @@ class BasicEventAdapter(event_adapter.EventAdapter):
                 self.dispatch(BasicEvent.GUILD_CHANNEL_UPDATE, old_channel, new_channel)
 
     async def handle_channel_delete(self, gateway, payload):
-        channel = self.state_registry.parse_channel(payload)
-        if channel.is_dm:
-            self.state_registry.delete_dm_channel(channel.id)
-            self.dispatch(BasicEvent.DM_CHANNEL_DELETE, channel)
-        elif channel.guild is not None:
-            self.state_registry.delete_guild_channel(channel.id)
-            self.dispatch(BasicEvent.GUILD_CHANNEL_DELETE, channel)
+        channel_id = int(payload["id"])
+        channel = self.state_registry.get_channel_by_id(channel_id)
+
+        if channel is not None:
+            # Update the channel meta data just for this call.
+            channel = self.state_registry.parse_channel(payload)
+
+            if channel.is_dm:
+                self.state_registry.delete_dm_channel(channel.id)
+                self.dispatch(BasicEvent.DM_CHANNEL_DELETE, channel)
+            elif channel.guild is not None:
+                self.state_registry.delete_guild_channel(channel.id)
+                self.dispatch(BasicEvent.GUILD_CHANNEL_DELETE, channel)
 
     async def handle_channel_pins_update(self, gateway, payload):
         channel_id = int(payload["channel_id"])
-        channel = self.state_registry.get_guild_channel_by_id(channel_id) or self.state_registry.get_dm_channel_by_id(
-            channel_id
-        )
+        channel = self.state_registry.get_channel_by_id(channel_id)
 
         last_pin_timestamp = transform.nullable_cast(
             payload.get("last_pin_timestamp"), date_utils.parse_iso_8601_datetime
         )
 
         if channel is not None:
-            if channel.is_dm:
-                self.dispatch(BasicEvent.DM_CHANNEL_PINS_UPDATE, last_pin_timestamp)
-            elif channel.guild is not None:
-                self.dispatch(BasicEvent.GUILD_CHANNEL_PINS_UPDATE, last_pin_timestamp)
+            if last_pin_timestamp is not None:
+                if channel.is_dm:
+                    self.dispatch(BasicEvent.DM_CHANNEL_PIN_ADDED, last_pin_timestamp)
+                else:
+                    self.dispatch(BasicEvent.GUILD_CHANNEL_PIN_ADDED, last_pin_timestamp)
+            else:
+                if channel.is_dm:
+                    self.dispatch(BasicEvent.DM_CHANNEL_PIN_REMOVED, last_pin_timestamp)
+                else:
+                    self.dispatch(BasicEvent.GUILD_CHANNEL_PIN_REMOVED, last_pin_timestamp)
 
     async def handle_guild_create(self, gateway, payload):
         guild_id = int(payload["guild_id"])
