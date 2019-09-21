@@ -26,10 +26,11 @@ import dataclasses
 from hikari.core.model import base
 from hikari.core.model import color as _color
 from hikari.core.model import permission as _permission
+from hikari.core.utils import types
 
 
 @dataclasses.dataclass()
-class Role(base.Snowflake):
+class Role(base.Snowflake, base.Volatile):
     """
     Representation of a role within a guild.
     """
@@ -78,6 +79,9 @@ class Role(base.Snowflake):
 
     def __init__(self, payload):
         self.id = int(payload["id"])
+        self.update_state(payload)
+
+    def update_state(self, payload: types.DiscordObject) -> None:
         self.name = payload["name"]
         self.color = _color.Color(payload["color"])
         self.hoist = payload["hoist"]

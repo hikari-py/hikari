@@ -38,7 +38,7 @@ from hikari.core.utils import transform
 
 
 @dataclasses.dataclass()
-class Guild(base.Snowflake):
+class Guild(base.Snowflake, base.Volatile):
     """
     Implementation of a Guild.
     """
