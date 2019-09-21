@@ -58,27 +58,15 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
         #: Our logger.
         self.logger = logging_utils.get_named_logger(self)
 
-    def get_user_by_id(self, user_id: int):
-        return self._users.get(user_id)
-
-    def delete_member_from_guild(self, user_id: int, guild_id: int):
-        guild = self._guilds[guild_id]
-        member = guild.members[user_id]
-        del guild.members[user_id]
-        return member
-
-    def get_guild_by_id(self, guild_id: int):
-        return self._guilds.get(guild_id)
+    def delete_dm_channel(self, channel_id: int):
+        channel = self._dm_channels[channel_id]
+        del self._dm_channels[channel_id]
+        return channel
 
     def delete_guild(self, guild_id: int):
         guild = self._guilds[guild_id]
         del self._guilds[guild_id]
         return guild
-
-    def delete_dm_channel(self, channel_id: int):
-        channel = self._dm_channels[channel_id]
-        del self._dm_channels[channel_id]
-        return channel
 
     def delete_guild_channel(self, channel_id: int):
         guild = self._guild_channels[channel_id].guild
@@ -86,35 +74,65 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
         del guild.channels[channel_id]
         return channel
 
-    def get_message_by_id(self, message_id: int):
-        return self._messages.get(message_id)
+    def delete_member_from_guild(self, user_id: int, guild_id: int):
+        guild = self._guilds[guild_id]
+        member = guild.members[user_id]
+        del guild.members[user_id]
+        return member
 
     def get_dm_channel_by_id(self, dm_channel_id: int):
         return self._dm_channels.get(dm_channel_id)
 
-    def get_guild_channel_by_id(self, guild_channel_id: int):
-        return self._guild_channels.get(guild_channel_id)
-
     def get_emoji_by_id(self, emoji_id: int):
         return self._emojis.get(emoji_id)
 
-    def parse_user(self, user: types.DiscordObject):
-        # If the user already exists, then just return their existing object. We expect discord to tell us if they
-        # get updated if they are a member, and for anything else the object will just be disposed of once we are
-        # finished with it anyway.
-        user_id = int(user["id"])
-        if user_id not in self._users:
-            # DO NOT MAKE THIS INTO A ONE LINER, IT IS A WEAK REF SO WILL BE GARBAGE COLLECTED IMMEDIATELY IF YOU DO.
-            user_obj = _user.User(self, user)
-            self._users[user_id] = user_obj
-        return self._users[user_id]
+    def get_guild_by_id(self, guild_id: int):
+        return self._guilds.get(guild_id)
+
+    def get_guild_channel_by_id(self, guild_channel_id: int):
+        return self._guild_channels.get(guild_channel_id)
+
+    def get_message_by_id(self, message_id: int):
+        return self._messages.get(message_id)
+
+    def get_user_by_id(self, user_id: int):
+        return self._users.get(user_id)
+
+    def parse_bot_user(self, bot_user: types.DiscordObject) -> user.BotUser:
+        bot_user = _user.BotUser(self, bot_user)
+        self.user = bot_user
+        return bot_user
+
+    def parse_channel(self, channel: types.DiscordObject):
+        # Only cache DM channels directly
+        channel_obj = _channel.channel_from_dict(self, channel)
+        if channel_obj.is_dm:
+            if channel_obj.id in self._dm_channels:
+                return self._dm_channels[channel_obj.id]
+
+            self._dm_channels[channel_obj.id] = channel_obj
+        else:
+            if channel_obj.guild is not None:
+                channel_obj.guild.channels[channel_obj.id] = channel_obj
+
+        return channel_obj
+
+    def parse_emoji(self, emoji: types.DiscordObject, guild_id: typing.Optional[int]):
+        emoji = _emoji.emoji_from_dict(self, emoji, guild_id)
+        if isinstance(emoji, _emoji.GuildEmoji):
+            # Only cache guild emojis.
+            self._emojis[guild_id] = emoji
+        return emoji
 
     def parse_guild(self, guild: types.DiscordObject):
         guild_id = int(guild["id"])
         unavailable = guild.get("unavailable", False)
-        if unavailable and guild_id in self._guilds:
-            self._guilds[guild_id].unavailable = True
-            return self._guilds[guild_id]
+        if guild_id in self._guilds:
+            if unavailable:
+                self._guilds[guild_id].unavailable = True
+                return self._guilds[guild_id]
+            else:
+                self._guilds[guild_id].update_state(guild)
         else:
             guild_obj = _guild.Guild(self, guild)
             self._guilds[guild_id] = guild_obj
@@ -135,21 +153,6 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
             guild.members[member_id] = member_object
             return member_object
 
-    def parse_role(self, role: types.DiscordObject):
-        # Don't cache roles.
-        return _role.Role(role)
-
-    def parse_emoji(self, emoji: types.DiscordObject, guild_id: typing.Optional[int]):
-        emoji = _emoji.emoji_from_dict(self, emoji, guild_id)
-        if isinstance(emoji, _emoji.GuildEmoji):
-            # Only cache guild emojis.
-            self._emojis[guild_id] = emoji
-        return emoji
-
-    def parse_webhook(self, webhook: types.DiscordObject):
-        # Don't cache webhooks.
-        return _webhook.Webhook(self, webhook)
-
     def parse_message(self, message: types.DiscordObject):
         # Always update the cache with the new message.
         message_id = int(message["id"])
@@ -158,21 +161,22 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
         message_obj.channel.last_message_id = message_id
         return message_obj
 
-    def parse_channel(self, channel: types.DiscordObject):
-        # Only cache DM channels.
-        channel_obj = _channel.channel_from_dict(self, channel)
-        if channel_obj.is_dm:
-            if channel_obj.id in self._dm_channels:
-                return self._dm_channels[channel_obj.id]
+    def parse_role(self, role: types.DiscordObject):
+        # Don't cache roles.
+        return _role.Role(role)
 
-            self._dm_channels[channel_obj.id] = channel_obj
+    def parse_user(self, user: types.DiscordObject):
+        # If the user already exists, then just return their existing object. We expect discord to tell us if they
+        # get updated if they are a member, and for anything else the object will just be disposed of once we are
+        # finished with it anyway.
+        user_id = int(user["id"])
+        if user_id not in self._users:
+            user_obj = _user.User(self, user)
+            self._users[user_id] = user_obj
+            return user_obj
         else:
-            if channel_obj.guild is not None:
-                channel_obj.guild.channels[channel_obj.id] = channel_obj
+            return self._users[user_id]
 
-        return channel_obj
-
-    def parse_bot_user(self, bot_user: types.DiscordObject) -> user.BotUser:
-        bot_user = _user.BotUser(self, bot_user)
-        self.user = bot_user
-        return bot_user
+    def parse_webhook(self, webhook: types.DiscordObject):
+        # Don't cache webhooks.
+        return _webhook.Webhook(self, webhook)

@@ -35,9 +35,14 @@ _channel_type_to_class = {}
 
 
 @dataclasses.dataclass()
-class Channel(base.Snowflake, abc.ABC):
+class Channel(base.Snowflake, base.Volatile, abc.ABC):
     """
     A generic type of channel.
+
+    Note:
+        As part of the contract for this class being volatile, once initialized, the `update_state` method will be
+        invoked, thus one should set any dependent fields in the constructor BEFORE invoking super where possible
+        or the fields will not be initialized when accessed.
     """
 
     __slots__ = ("_state", "id")
@@ -57,6 +62,7 @@ class Channel(base.Snowflake, abc.ABC):
     def __init__(self, global_state, payload):
         self._state = global_state
         self.id = int(payload["id"])
+        self.update_state(payload)
 
     def __init_subclass__(cls, **kwargs):
         if "type" in kwargs:
@@ -91,11 +97,14 @@ class GuildChannel(Channel, abc.ABC):
     name: str
 
     def __init__(self, global_state, payload):
-        super().__init__(global_state, payload)
         self._guild_id = int(payload["guild_id"])
+        super().__init__(global_state, payload)
+
+    def update_state(self, payload) -> None:
         self.position = int(payload["position"])
 
         overwrites = []
+
         for raw_overwrite in payload["permission_overwrites"]:
             overwrite_obj = overwrite.Overwrite(raw_overwrite)
             overwrites.append(overwrite_obj)
@@ -143,9 +152,11 @@ class GuildTextChannel(GuildChannel, type=0):
     #: :type: :class:`bool`
     nsfw: bool
 
-    # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
         super().__init__(global_state, payload)
+
+    def update_state(self, payload) -> None:
+        super().update_state(payload)
         self.nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
         self.rate_limit_per_user = payload.get("rate_limit_per_user", 0)
@@ -173,8 +184,11 @@ class DMChannel(Channel, type=1):
     # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
         super().__init__(global_state, payload)
+
+    def update_state(self, payload) -> None:
+        super().update_state(payload)
         self.last_message_id = transform.nullable_cast(payload.get("last_message_id"), int)
-        self.recipients = [global_state.parse_user(u) for u in payload.get("recipients", ())]
+        self.recipients = [self._state.parse_user(u) for u in payload.get("recipients", ())]
 
 
 @dataclasses.dataclass()
@@ -200,6 +214,9 @@ class GuildVoiceChannel(GuildChannel, type=2):
     # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
         super().__init__(global_state, payload)
+
+    def update_state(self, payload) -> None:
+        super().update_state(payload)
         self.bitrate = payload.get("bitrate") or None
         self.user_limit = payload.get("user_limit") or None
 
@@ -233,6 +250,9 @@ class GroupDMChannel(DMChannel, type=3):
     # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
         super().__init__(global_state, payload)
+
+    def update_state(self, payload) -> None:
+        super().update_state(payload)
         self.icon_hash = payload.get("icon")
         self.name = payload.get("name")
         self.owner_application_id = transform.nullable_cast(payload.get("application_id"), int)
@@ -274,6 +294,9 @@ class GuildNewsChannel(GuildChannel, type=5):
     # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
         super().__init__(global_state, payload)
+
+    def update_state(self, payload) -> None:
+        super().update_state(payload)
         self.nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
         self.last_message_id = transform.nullable_cast(payload.get("last_message_id"), int)

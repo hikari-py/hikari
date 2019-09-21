@@ -47,7 +47,7 @@ class AbstractModelCache(abc.ABC):
 
     __slots__ = ()
 
-    def delete_channel(self, channel_id: int) -> channel.Channel:
+    def delete_channel(self, channel_id: int) -> ChannelT:
         """
         Delete the given channel from the cache. This may be either a channel from a guild or a DM channel.
 
@@ -130,7 +130,7 @@ class AbstractModelCache(abc.ABC):
                 If the member is not in the given guild or the given guild does not exist.
         """
 
-    def get_channel_by_id(self, channel_id: int) -> typing.Optional[channel.Channel]:
+    def get_channel_by_id(self, channel_id: int) -> typing.Optional[ChannelT]:
         """
         Find a channel by a given ID. Guilds are searched first. If no match is found in a guild, then any open DM
         channels are also checked. If nothing is found still, we return `None`.

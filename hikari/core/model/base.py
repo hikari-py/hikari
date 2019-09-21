@@ -25,6 +25,7 @@ import datetime
 
 from hikari.core.utils import assertions
 from hikari.core.utils import date_utils
+from hikari.core.utils import types
 
 
 @assertions.assert_is_mixin
@@ -112,4 +113,20 @@ class Snowflake:
         return self > other or self == other
 
 
-__all__ = ("Snowflake", "NamedEnum")
+@assertions.assert_is_mixin
+@assertions.assert_is_slotted
+class Volatile:
+    """
+    Marks a class that is allowed to have its state periodically updated, rather than being recreated.
+
+    Any classes with this as a subclass should not be assumed to have consistent state between awaiting other elements.
+    """
+    __slots__ = ()
+
+    def update_state(self, payload: types.DiscordObject) -> None:
+        """
+        Updates the internal state of an existing instance of this object from a raw Discord payload.
+        """
+
+
+__all__ = ("Snowflake", "NamedEnum", "Volatile")
