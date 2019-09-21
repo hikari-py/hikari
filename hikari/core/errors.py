@@ -21,20 +21,21 @@ Core errors that may be raised by this API implementation.
 """
 from __future__ import annotations
 
+import abc
 import typing
 
 from hikari.core.net import http_base
 from hikari.core.net import opcodes
 
 
-class HikariError(RuntimeError):
+class HikariError(RuntimeError, abc.ABC):
     """
     Base for an error raised by this API. Any errors should derive from this.
 
-    Warning:
-        You should not initialize this exception directly.
+    Note:
+        You should never initialize this exception directly.
     """
-
+    @abc.abstractmethod
     def __init__(self, message: str = ""):
         super().__init__()
         self.message: str = message
@@ -46,25 +47,25 @@ class HikariError(RuntimeError):
         return f"{type(self).__qualname__}: {self}"
 
 
-class DiscordError(HikariError):
+class DiscordError(HikariError, abc.ABC):
     """
     Base for an error that occurs with the Discord API somewhere.
 
     May also be used for edge cases where a custom error implementation does not exist.
 
-    Warning:
-        You should not initialize this exception directly.
+    Note:
+        You should never initialize this exception directly.
     """
 
     __slots__ = ()
 
 
-class HTTPError(DiscordError):
+class HTTPError(DiscordError, abc.ABC):
     """
     An error that occurred within the HTTP component of the API from the result of a response, or during processing.
 
-    Warning:
-        You should not initialize this exception directly.
+    Note:
+        You should never initialize this exception directly.
     """
 
     __slots__ = ()
@@ -185,12 +186,12 @@ class Unauthorized(ClientError):
             The JSON error code that was provided with this error.
         message:
             Any additional message that was provided with this error.
+        json_error_code:
+            The JSON error code that was provided with this error.
 
     Note:
         Unlike in the base class :class:`ClientError`, you can assume that :attr:`json_error_code`,
             The HTTP resource that was accessed.
-        json_error_code:
-            The JSON error code that was provided with this error.
     """
 
     __slots__ = ()
@@ -202,10 +203,10 @@ class Unauthorized(ClientError):
 class Forbidden(ClientError):
     """
     Occurs when authorization is correct, but you do not have permission to access the resource.
-        :attr:`resource`, and :attr:`http_status` are always populated if this exception is raised.
 
     Args:
         resource:
+            the resource that was attempted to be accessed when this error was returned by the API.
         message:
             Any additional message that was provided with this error.
 
