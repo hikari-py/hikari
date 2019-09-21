@@ -16,12 +16,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import datetime
 from unittest import mock
 
 import asynctest
 import pytest
 
 from hikari.core.components import basic_event_adapter
+from hikari.core.components import basic_state_registry
 from hikari.core.net import gateway as _gateway
 
 
@@ -46,12 +48,12 @@ def gateway():
 
 @pytest.fixture
 def state_registry():
-    return mock.MagicMock()
+    return mock.MagicMock(spec_set=basic_state_registry.BasicStateRegistry)
 
 
 @pytest.fixture
 def dispatch():
-    return mock.MagicMock()
+    return mock.MagicMock(spec_set=lambda *args: None)
 
 
 @pytest.fixture
@@ -130,8 +132,7 @@ async def test_handle_channel_update_when_existing_guild_channel(event_adapter, 
     old_channel = mock.MagicMock()
     new_channel = mock.MagicMock()
     new_channel.is_dm = False
-    state_registry.get_guild_channel_by_id = mock.MagicMock(return_value=old_channel)
-    state_registry.get_dm_channel_by_id = mock.MagicMock(return_value=None)
+    state_registry.get_channel_by_id = mock.MagicMock(return_value=old_channel)
     state_registry.parse_channel = mock.MagicMock(return_value=new_channel)
 
     await event_adapter.handle_channel_update(gateway, payload)
@@ -144,8 +145,7 @@ async def test_handle_channel_update_when_existing_dm_channel(event_adapter, dis
     old_channel = mock.MagicMock()
     new_channel = mock.MagicMock()
     new_channel.is_dm = True
-    state_registry.get_guild_channel_by_id = mock.MagicMock(return_value=None)
-    state_registry.get_dm_channel_by_id = mock.MagicMock(return_value=old_channel)
+    state_registry.get_channel_by_id = mock.MagicMock(return_value=old_channel)
     state_registry.parse_channel = mock.MagicMock(return_value=new_channel)
 
     await event_adapter.handle_channel_update(gateway, payload)
@@ -158,72 +158,90 @@ async def test_handle_channel_update_when_no_channel_cached(event_adapter, dispa
     no_channel = None
     new_channel = mock.MagicMock()
     new_channel.is_dm = True
-    state_registry.get_guild_channel_by_id = mock.MagicMock(return_value=no_channel)
-    state_registry.get_dm_channel_by_id = mock.MagicMock(return_value=no_channel)
+    state_registry.get_channel_by_id = mock.MagicMock(return_value=no_channel)
     state_registry.parse_channel = mock.MagicMock(return_value=new_channel)
 
     await event_adapter.handle_channel_update(gateway, payload)
+    state_registry.parse_channel.assert_not_called()
     dispatch.assert_not_called()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_channel_delete_when_dm_channel(event_adapter, dispatch, gateway):
-    await event_adapter.handle_channel_delete(gateway, {})
-    dispatch.assert_called_with()
+async def test_handle_channel_delete_when_dm_channel(event_adapter, dispatch, gateway, state_registry):
+    existing_channel = mock.MagicMock()
+    new_channel = mock.MagicMock()
+    new_channel.is_dm = True
+    state_registry.parse_channel = mock.MagicMock(return_value=new_channel)
+    state_registry.get_channel_by_id = mock.MagicMock(return_value=existing_channel)
+    await event_adapter.handle_channel_delete(gateway, {"id": "1234"})
+    state_registry.get_channel_by_id.assert_called_with(1234)
+    state_registry.parse_channel.assert_called_with({"id": "1234"})
+    dispatch.assert_called_with(basic_event_adapter.BasicEvent.DM_CHANNEL_DELETE, new_channel)
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_channel_delete_when_guild_channel(event_adapter, dispatch, gateway):
-    await event_adapter.handle_channel_delete(gateway, {})
-    dispatch.assert_called_with()
+async def test_handle_channel_delete_when_guild_channel(event_adapter, dispatch, gateway, state_registry):
+    existing_channel = mock.MagicMock()
+    new_channel = mock.MagicMock()
+    new_channel.is_dm = False
+    new_channel.guild = mock.MagicMock()
+    state_registry.parse_channel = mock.MagicMock(return_value=new_channel)
+    state_registry.get_channel_by_id = mock.MagicMock(return_value=existing_channel)
+    await event_adapter.handle_channel_delete(gateway, {"id": "1234", "guild_id": "5432"})
+    state_registry.get_channel_by_id.assert_called_with(1234)
+    state_registry.parse_channel.assert_called_with({"id": "1234", "guild_id": "5432"})
+    dispatch.assert_called_with(basic_event_adapter.BasicEvent.GUILD_CHANNEL_DELETE, new_channel)
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_channel_delete_when_invalid_guild(event_adapter, dispatch, gateway):
-    await event_adapter.handle_channel_delete(gateway, {})
-    dispatch.assert_called_with()
+async def test_handle_channel_delete_when_invalid_guild(event_adapter, dispatch, gateway, state_registry):
+    new_channel = mock.MagicMock()
+    new_channel.is_dm = False
+    new_channel.guild = None
+    state_registry.parse_channel = mock.MagicMock(return_value=new_channel)
+    state_registry.get_channel_by_id = mock.MagicMock(return_value=None)
+    await event_adapter.handle_channel_delete(gateway, {"id": "1234", "guild": "6969"})
+    state_registry.parse_channel.assert_not_called()
+    dispatch.assert_not_called()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_channel_pins_update_in_dm_channel(event_adapter, dispatch, gateway):
-    await event_adapter.handle_channel_pins_update(gateway, {})
-    dispatch.assert_called_with()
+@pytest.mark.parametrize("is_dm", [True, False])
+@pytest.mark.parametrize(
+    ["last_pin_timestamp", "expected_args"],
+    [
+        (
+            "2019-10-10T05:22:33.023456+00:00",
+            (datetime.datetime(2019, 10, 10, 5, 22, 33, 23456, tzinfo=datetime.timezone.utc),),
+        ),
+        (
+            None,
+            (),
+        )
+    ]
+)
+async def test_handle_guild_pins_update_when_valid_channel(
+    event_adapter, dispatch, gateway, state_registry, is_dm, last_pin_timestamp, expected_args
+):
+    payload = {
+        "id": "12345",
+        "guild_id": None if is_dm else "54321"
+    }
+
+    existing_channel = mock.MagicMock()
+    existing_channel.is_dm = is_dm
+
+    state_registry.get_channel_by_id = mock.MagicMock(return_value=existing_channel)
+
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_channel_pins_update_in_guild_channel(event_adapter, dispatch, gateway):
-    await event_adapter.handle_channel_pins_update(gateway, {})
-    dispatch.assert_called_with()
-
-
-@pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_channel_pins_update_in_invalid_guild(event_adapter, dispatch, gateway):
-    await event_adapter.handle_channel_pins_update(gateway, {})
-    dispatch.assert_called_with()
-
-
-@pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_channel_pins_when_channel_not_cached(event_adapter, dispatch, gateway):
-    await event_adapter.handle_channel_pins_update(gateway, {})
-    dispatch.assert_called_with()
-
-
-@pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_create_when_guild_was_unavailable_and_now_is_unavailable(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_create(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_create_when_guild_was_unavailable_and_is_now_available(event_adapter, dispatch, gateway):
     # GUILD AVAILABLE
     await event_adapter.handle_guild_create(gateway, {})
@@ -231,7 +249,6 @@ async def test_handle_guild_create_when_guild_was_unavailable_and_is_now_availab
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_create_when_guild_was_not_cached_and_is_now_available(event_adapter, dispatch, gateway):
     # GUILD JOIN
     await event_adapter.handle_guild_create(gateway, {})
@@ -239,28 +256,24 @@ async def test_handle_guild_create_when_guild_was_not_cached_and_is_now_availabl
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_update_when_guild_changes(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_update_when_available_guild_becomes_unavailable(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_update_when_guild_was_not_previously_cached(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_delete_when_unavailable_unspecified(event_adapter, dispatch, gateway, state_registry):
     # guild leave
     await event_adapter.handle_guild_delete(gateway, {})
@@ -269,7 +282,6 @@ async def test_handle_guild_delete_when_unavailable_unspecified(event_adapter, d
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_delete_when_unavailable_specified(event_adapter, dispatch, gateway):
     # guild unavailable
     await event_adapter.handle_guild_delete(gateway, {})
@@ -277,329 +289,282 @@ async def test_handle_guild_delete_when_unavailable_specified(event_adapter, dis
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_ban_add_on_valid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_ban_add(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_ban_add_on_invalid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_ban_add(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_ban_remove_on_valid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_ban_remove(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_ban_remove_on_invalid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_ban_remove(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_emojis_update_on_valid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_emojis_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_emojis_update_on_invalid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_emojis_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_integrations_update_on_valid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_integrations_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_integrations_update_on_invalid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_integrations_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_member_add_on_valid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_member_add(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_member_add_on_invalid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_member_add(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_member_update_on_valid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_member_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_member_update_on_invalid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_member_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_member_update_on_uncached_member(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_member_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_member_remove_on_valid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_member_remove(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_member_remove_on_invalid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_member_remove(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_member_remove_on_uncached_member(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_member_remove(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_members_chunk(event_adapter, dispatch, gateway):
     # TODO: implement this.
     raise NotImplementedError
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_role_create_on_valid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_role_create(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_role_create_on_invalid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_role_create(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_role_update_on_valid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_role_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_role_update_on_invalid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_role_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_role_update_on_unknown_role(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_role_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_role_delete_on_valid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_role_delete(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_role_delete_on_invalid_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_role_delete(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_guild_role_delete_on_unknown_role(event_adapter, dispatch, gateway):
     await event_adapter.handle_guild_role_delete(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_message_create_in_known_channel(event_adapter, dispatch, gateway):
     await event_adapter.handle_message_create(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_message_create_in_unknown_channel(event_adapter, dispatch, gateway):
     await event_adapter.handle_message_create(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_message_update_on_cached_message(event_adapter, dispatch, gateway):
     await event_adapter.handle_message_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_message_update_on_uncached_message(event_adapter, dispatch, gateway):
     await event_adapter.handle_message_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_message_update_in_invalid_channel(event_adapter, dispatch, gateway):
     await event_adapter.handle_message_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_message_delete_on_cached_message(event_adapter, dispatch, gateway):
     await event_adapter.handle_message_delete(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_message_delete_on_uncached_message(event_adapter, dispatch, gateway):
     await event_adapter.handle_message_delete(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_message_delete_in_invalid_channel(event_adapter, dispatch, gateway):
     await event_adapter.handle_message_delete(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_message_delete_bulk_in_valid_channel(event_adapter, dispatch, gateway):
     await event_adapter.handle_message_delete_bulk(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_message_delete_bulk_in_invalid_channel(event_adapter, dispatch, gateway):
     await event_adapter.handle_message_delete_bulk(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_message_reaction_add(event_adapter, dispatch, gateway):
     await event_adapter.handle_message_reaction_add(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_message_reaction_add(event_adapter, dispatch, gateway):
     await event_adapter.handle_message_reaction_add(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_message_reaction_remove(event_adapter, dispatch, gateway):
     await event_adapter.handle_message_reaction_remove(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_message_reaction_remove_all(event_adapter, dispatch, gateway):
     await event_adapter.handle_message_reaction_remove_all(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_presence_update_on_known_member_in_known_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_presence_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_presence_update_on_unknown_member_in_known_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_presence_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_presence_update_on_known_member_in_unknown_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_presence_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_presence_update_on_unknown_member_in_unknown_guild(event_adapter, dispatch, gateway):
     await event_adapter.handle_presence_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_typing_start_on_valid_channel(event_adapter, dispatch, gateway):
     await event_adapter.handle_typing_start(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_typing_start_on_invalid_channel(event_adapter, dispatch, gateway):
     await event_adapter.handle_typing_start(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_user_update(event_adapter, dispatch, gateway):
     await event_adapter.handle_user_update(gateway, {})
     dispatch.assert_called_with()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_voice_state_update(event_adapter, dispatch, gateway):
     # TODO: implement
     await event_adapter.handle_voice_state_update(gateway, {})
@@ -607,14 +572,12 @@ async def test_handle_voice_state_update(event_adapter, dispatch, gateway):
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_voice_server_update(event_adapter, dispatch, gateway):
     # TODO: implement
     raise NotImplementedError
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_handle_webhooks_update(event_adapter, dispatch, gateway):
     await event_adapter.handle_webhooks_update(gateway, {})
     dispatch.assert_called_with()
