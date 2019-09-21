@@ -40,7 +40,6 @@ class DelegatedProperty:
     Note:
         This property is read-only, and only works for instance members.
     """
-    __slots__ = ("magic_field", "delegated_member_name", )
 
     def __init__(self, magic_field, delegated_member_name) -> None:
         self.magic_field = magic_field
