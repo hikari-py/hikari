@@ -90,8 +90,6 @@ def pytest(session: PoetryNoxSession) -> None:
         "--cov-report",
         "term",
         "--cov-report",
-        f"annotate:{ARTIFACT_DIR}/coverage/annotated",
-        "--cov-report",
         f"html:{ARTIFACT_DIR}/coverage/html",
         "--cov-branch",
         "-ra",
@@ -151,7 +149,7 @@ def format_check(session: PoetryNoxSession) -> None:
 
 @nox_session()
 def pypitest(session: sessions.Session):
-    if os.getenv("CI"):
+    if os.getenv("CI", False):
         print("Testing published ref can be installed as a package.")
         url = os.getenv("CI_PROJECT_URL", REPOSITORY)
         ref = os.getenv("CI_COMMIT_REF_NAME", "master")
