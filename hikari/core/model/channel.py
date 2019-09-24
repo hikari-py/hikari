@@ -75,6 +75,7 @@ class TextChannel(Channel, abc.ABC):
     """
     Any class that can have messages sent to it.
     """
+
     __slots__ = ()
 
 

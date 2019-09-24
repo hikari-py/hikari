@@ -56,8 +56,17 @@ class BasicStateRegistry(model_cache.AbstractModelCache):
     Weak references are used internally to enable atomic destruction of transitively owned objects when references
     elsewhere are dropped.
     """
+
     __slots__ = (
-        "_dm_channels", "_emojis", "_guilds", "_guild_channels", "_messages", "_roles", "_users", "user", "logger"
+        "_dm_channels",
+        "_emojis",
+        "_guilds",
+        "_guild_channels",
+        "_messages",
+        "_roles",
+        "_users",
+        "user",
+        "logger",
     )
 
     def __init__(self, message_cache_size: int, user_dm_channel_size: int):

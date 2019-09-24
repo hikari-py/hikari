@@ -121,6 +121,7 @@ class Volatile:
 
     Any classes with this as a subclass should not be assumed to have consistent state between awaiting other elements.
     """
+
     __slots__ = ()
 
     def update_state(self, payload: types.DiscordObject) -> None:
