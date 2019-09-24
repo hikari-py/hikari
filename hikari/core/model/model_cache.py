@@ -94,7 +94,7 @@ class AbstractModelCache(abc.ABC):
             KeyError:
                 If the guild does not exist in cache.
         """
-    
+
     @abc.abstractmethod
     def delete_member_from_guild(self, user_id: int, guild_id: int) -> user.Member:
         """

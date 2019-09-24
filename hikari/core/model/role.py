@@ -38,7 +38,16 @@ class Role(base.Snowflake, base.Volatile):
     """
 
     __slots__ = (
-        "_state", "_guild_id", "id", "name", "color", "hoist", "position", "permissions", "managed", "mentionable"
+        "_state",
+        "_guild_id",
+        "id",
+        "name",
+        "color",
+        "hoist",
+        "position",
+        "permissions",
+        "managed",
+        "mentionable",
     )
 
     _state: model_cache.AbstractModelCache

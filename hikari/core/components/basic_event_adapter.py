@@ -53,9 +53,9 @@ class BasicEvent(enum.Enum):
     DM_CHANNEL_PIN_REMOVED = enum.auto()
     GUILD_CHANNEL_PIN_REMOVED = enum.auto()
 
+    GUILD_CREATE = enum.auto()
     GUILD_AVAILABLE = enum.auto()
     GUILD_UNAVAILABLE = enum.auto()
-    GUILD_JOIN = enum.auto()
     GUILD_UPDATE = enum.auto()
     GUILD_LEAVE = enum.auto()
 
@@ -169,11 +169,11 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         channel_id = int(payload["channel_id"])
         channel = self.state_registry.get_channel_by_id(channel_id)
 
-        last_pin_timestamp = transform.nullable_cast(
-            payload.get("last_pin_timestamp"), date_utils.parse_iso_8601_datetime
-        )
-
         if channel is not None:
+            last_pin_timestamp = transform.nullable_cast(
+                payload.get("last_pin_timestamp"), date_utils.parse_iso_8601_datetime
+            )
+
             if last_pin_timestamp is not None:
                 if channel.is_dm:
                     self.dispatch(BasicEvent.DM_CHANNEL_PIN_ADDED, last_pin_timestamp)
@@ -186,41 +186,47 @@ class BasicEventAdapter(event_adapter.EventAdapter):
                     self.dispatch(BasicEvent.GUILD_CHANNEL_PIN_REMOVED)
 
     async def handle_guild_create(self, gateway, payload):
-        guild_id = int(payload["guild_id"])
+        guild_id = int(payload["id"])
         unavailable = payload.get("unavailable", False)
-        is_new = self.state_registry.get_guild_by_id(guild_id) is None
-
+        was_already_loaded = self.state_registry.get_guild_by_id(guild_id) is not None
         guild = self.state_registry.parse_guild(payload)
 
+        if not was_already_loaded:
+            self.dispatch(BasicEvent.GUILD_CREATE, guild)
+
         if not unavailable:
-            if is_new:
-                # We joined the guild. Yay.
-                # This relies on the fact that guilds still get internally cached if they are unavailable for any of
-                # this to remotely function as expected.
-                self.dispatch(BasicEvent.GUILD_JOIN, guild)
-            else:
-                self.dispatch(BasicEvent.GUILD_AVAILABLE, guild)
+            self.dispatch(BasicEvent.GUILD_AVAILABLE, guild)
 
     async def handle_guild_update(self, gateway, payload):
-        guild_id = int(payload["guild_id"])
-
+        guild_id = int(payload["id"])
         previous_guild = self.state_registry.get_guild_by_id(guild_id)
-        now_unavailable = payload.get("unavailable", False)
 
-        if previous_guild is not None and now_unavailable:
-            if previous_guild.unavailable and not now_unavailable:
-                await self.handle_guild_create(gateway, payload)
-            else:
-                self.dispatch(BasicEvent.GUILD_UPDATE, previous_guild, self.state_registry.parse_guild(payload))
+        if previous_guild is not None:
+            new_guild = self.state_registry.parse_guild(payload)
+            self.dispatch(BasicEvent.GUILD_UPDATE, previous_guild, new_guild)
+        else:
+            # Fix inconsistent state
+            await self.handle_guild_create(gateway, payload)
 
     async def handle_guild_delete(self, gateway, payload):
+        guild_id = int(payload["id"])
+        # This should always be unspecified if the guild was left,
+        # but if discord suddenly send "False" instead, it will still work.
         unavailable = payload.get("unavailable", False)
-        guild = self.state_registry.parse_guild(payload)
         if not unavailable:
+            guild = self.state_registry.parse_guild(payload)
             self.state_registry.delete_guild(guild.id)
             self.dispatch(BasicEvent.GUILD_LEAVE, guild)
         else:
-            self.dispatch(BasicEvent.GUILD_UNAVAILABLE, guild)
+            # We shouldn't ever need to parse this payload unless we have inconsistent state, but if that happens,
+            # lets attempt to fix it.
+            guild = self.state_registry.get_guild_by_id(guild_id)
+
+            if guild is None:
+                await self.handle_guild_create(gateway, payload)
+            else:
+                guild.unavailable = True
+                self.dispatch(BasicEvent.GUILD_UNAVAILABLE, guild)
 
     async def handle_guild_ban_add(self, gateway, payload):
         guild_id = int(payload["guild_id"])

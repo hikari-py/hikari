@@ -222,21 +222,14 @@ async def test_handle_channel_delete_when_invalid_guild(event_adapter, dispatch,
             "2019-10-10T05:22:33.023456+00:00",
             (datetime.datetime(2019, 10, 10, 5, 22, 33, 23456, tzinfo=datetime.timezone.utc),),
         ),
-        (
-            None,
-            (),
-        )
-    ]
+        (None, ()),
+    ],
 )
 async def test_handle_guild_pins_update_when_valid_channel(
     event_adapter, dispatch, gateway, state_registry, is_dm, last_pin_timestamp, expected_args
 ):
-    payload = {
-        "channel_id": "12345",
-        "guild_id": None if is_dm else "54321",
-        "last_pin_timestamp": last_pin_timestamp,
-    }
-    
+    payload = {"channel_id": "12345", "guild_id": None if is_dm else "54321", "last_pin_timestamp": last_pin_timestamp}
+
     existing_channel = mock.MagicMock()
     existing_channel.is_dm = is_dm
 
@@ -250,70 +243,111 @@ async def test_handle_guild_pins_update_when_valid_channel(
             event = basic_event_adapter.BasicEvent.GUILD_CHANNEL_PIN_ADDED
         else:
             event = basic_event_adapter.BasicEvent.GUILD_CHANNEL_PIN_REMOVED
-    
+
     state_registry.get_channel_by_id = mock.MagicMock(return_value=existing_channel)
     await event_adapter.handle_channel_pins_update(gateway, payload)
     state_registry.get_channel_by_id.assert_called_with(12345)
     dispatch.assert_called_with(event, *expected_args)
 
-    
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_guild_create_when_guild_was_unavailable_and_now_is_unavailable(event_adapter, dispatch, gateway):
-    await event_adapter.handle_guild_create(gateway, {})
-    dispatch.assert_called_with()
+async def test_handle_guild_pins_update_when_invalid_channel(event_adapter, dispatch, gateway, state_registry):
+    payload = {"channel_id": "12345", "guild_id": "54321", "last_pin_timestamp": None}
 
-
-@pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_guild_create_when_guild_was_unavailable_and_is_now_available(event_adapter, dispatch, gateway):
-    # GUILD AVAILABLE
-    await event_adapter.handle_guild_create(gateway, {})
-    dispatch.assert_called_with()
+    state_registry.get_channel_by_id = mock.MagicMock(return_value=None)
+    await event_adapter.handle_channel_pins_update(gateway, payload)
+    state_registry.get_channel_by_id.assert_called_with(12345)
+    dispatch.assert_not_called()
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_guild_create_when_guild_was_not_cached_and_is_now_available(event_adapter, dispatch, gateway):
-    # GUILD JOIN
-    await event_adapter.handle_guild_create(gateway, {})
-    dispatch.assert_called_with()
+async def test_handle_guild_create_unavailable_when_not_cached(event_adapter, dispatch, gateway, state_registry):
+    state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
+    guild = mock.MagicMock()
+    state_registry.parse_guild = mock.MagicMock(return_value=guild)
+    await event_adapter.handle_guild_create(gateway, {"id": "1234", "unavailable": True})
+    dispatch.assert_called_with(basic_event_adapter.BasicEvent.GUILD_CREATE, guild)
+
+
+@pytest.mark.asyncio
+async def test_handle_guild_create_available(event_adapter, dispatch, gateway, state_registry):
+    old_guild = mock.MagicMock()
+    old_guild.unavailable = True
+    state_registry.get_guild_by_id = mock.MagicMock(return_value=old_guild)
+    new_guild = mock.MagicMock()
+    state_registry.parse_guild = mock.MagicMock(return_value=new_guild)
+    await event_adapter.handle_guild_create(gateway, {"id": "1234", "unavailable": False})
+    dispatch.assert_called_with(basic_event_adapter.BasicEvent.GUILD_AVAILABLE, new_guild)
+
+
+@pytest.mark.asyncio
+async def test_handle_guild_update(event_adapter, dispatch, gateway, state_registry):
+    old_guild = mock.MagicMock()
+    state_registry.get_guild_by_id = mock.MagicMock(return_value=old_guild)
+    new_guild = mock.MagicMock()
+    state_registry.parse_guild = mock.MagicMock(return_value=new_guild)
+
+    await event_adapter.handle_guild_update(
+        gateway,
+        {
+            "id": "1234",
+            "unavailable": False,
+            # ...
+        },
+    )
+    dispatch.assert_called_with(basic_event_adapter.BasicEvent.GUILD_UPDATE, old_guild, new_guild)
+
+
+@pytest.mark.asyncio
+async def test_handle_guild_update_when_inconsistent_state(event_adapter, dispatch, gateway, state_registry):
+    payload = {
+        "id": "1234",
+        "unavailable": False,
+        # ...
+    }
+    state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
+    new_guild = mock.MagicMock()
+    state_registry.parse_guild = mock.MagicMock(return_value=new_guild)
+    event_adapter.handle_guild_create = asynctest.CoroutineMock()
+    await event_adapter.handle_guild_update(gateway, payload)
+    event_adapter.handle_guild_create.assert_awaited_once_with(gateway, payload)
+
+
+@pytest.mark.asyncio
+async def test_handle_guild_delete_when_unavailable_and_guild_was_cached(
+    event_adapter, dispatch, gateway, state_registry
+):
+    existing_guild = mock.MagicMock()
+    existing_guild.unavailable = False
+    state_registry.get_guild_by_id = mock.MagicMock(return_value=existing_guild)
+
+    await event_adapter.handle_guild_delete(gateway, {"unavailable": True, "id": "123456"})
+
+    state_registry.get_guild_by_id.assert_called_with(123456)
+
+    # We just update the existing guild
+    assert existing_guild.unavailable is True
+
+    dispatch.assert_called_with(basic_event_adapter.BasicEvent.GUILD_UNAVAILABLE, existing_guild)
+
+
+@pytest.mark.asyncio
+async def test_handle_guild_delete_when_unavailable_and_guild_was_not_cached(
+    event_adapter, dispatch, gateway, state_registry
+):
+    state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
+    event_adapter.handle_guild_create = asynctest.CoroutineMock()
+    payload = {"unavailable": True, "id": "123456"}
+
+    await event_adapter.handle_guild_delete(gateway, payload)
+
+    state_registry.get_guild_by_id.assert_called_with(123456)
+    event_adapter.handle_guild_create.assert_awaited_once_with(gateway, payload)
 
 
 @pytest.mark.asyncio
 @pytest.mark.xfail
-async def test_handle_guild_update_when_guild_changes(event_adapter, dispatch, gateway):
-    await event_adapter.handle_guild_update(gateway, {})
-    dispatch.assert_called_with()
-
-
-@pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_guild_update_when_available_guild_becomes_unavailable(event_adapter, dispatch, gateway):
-    await event_adapter.handle_guild_update(gateway, {})
-    dispatch.assert_called_with()
-
-
-@pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_guild_update_when_guild_was_not_previously_cached(event_adapter, dispatch, gateway):
-    await event_adapter.handle_guild_update(gateway, {})
-    dispatch.assert_called_with()
-
-
-@pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_guild_delete_when_unavailable_unspecified(event_adapter, dispatch, gateway, state_registry):
-    # guild leave
-    await event_adapter.handle_guild_delete(gateway, {})
-    dispatch.assert_called_with()
-    state_registry.delete_guild.assert_called_with()
-
-
-@pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_guild_delete_when_unavailable_specified(event_adapter, dispatch, gateway):
+async def test_handle_guild_delete_when_not_unavailable(event_adapter, dispatch, gateway):
     # guild unavailable
     await event_adapter.handle_guild_delete(gateway, {})
     dispatch.assert_called_with()
