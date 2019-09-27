@@ -282,10 +282,11 @@ async def test_handle_guild_create_available(event_adapter, dispatch, gateway, s
 
 @pytest.mark.asyncio
 async def test_handle_guild_update(event_adapter, dispatch, gateway, state_registry):
-    old_guild = mock.MagicMock()
-    state_registry.get_guild_by_id = mock.MagicMock(return_value=old_guild)
     new_guild = mock.MagicMock()
-    state_registry.parse_guild = mock.MagicMock(return_value=new_guild)
+    old_guild = mock.MagicMock()
+    old_guild.clone = mock.MagicMock(return_value=new_guild)
+    state_registry.get_guild_by_id = mock.MagicMock(return_value=old_guild)
+    state_registry.parse_guild = mock.MagicMock(return_value=old_guild)
 
     await event_adapter.handle_guild_update(
         gateway,
@@ -295,7 +296,9 @@ async def test_handle_guild_update(event_adapter, dispatch, gateway, state_regis
             # ...
         },
     )
-    dispatch.assert_called_with(basic_event_adapter.BasicEvent.GUILD_UPDATE, old_guild, new_guild)
+    # This might seem counter intuitive, but our copy of the original guild gets discarded later and we just update
+    # the existing copy.
+    dispatch.assert_called_with(basic_event_adapter.BasicEvent.GUILD_UPDATE, new_guild, old_guild)
 
 
 @pytest.mark.asyncio
@@ -346,11 +349,16 @@ async def test_handle_guild_delete_when_unavailable_and_guild_was_not_cached(
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
-async def test_handle_guild_delete_when_not_unavailable(event_adapter, dispatch, gateway):
-    # guild unavailable
-    await event_adapter.handle_guild_delete(gateway, {})
-    dispatch.assert_called_with()
+async def test_handle_guild_delete_when_not_unavailable(event_adapter, dispatch, gateway, state_registry):
+    new_guild = mock.MagicMock()
+    new_guild.unavailable = False
+    state_registry.parse_guild = mock.MagicMock(return_value=new_guild)
+
+    await event_adapter.handle_guild_delete(gateway, {"id": "123456"})
+
+    state_registry.parse_guild.assert_called_with({"id": "123456"})
+
+    dispatch.assert_called_with(basic_event_adapter.BasicEvent.GUILD_LEAVE, new_guild)
 
 
 @pytest.mark.asyncio
