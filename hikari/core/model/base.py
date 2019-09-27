@@ -21,11 +21,16 @@ Model ABCs and mixins.
 """
 from __future__ import annotations
 
+import copy
 import datetime
+import typing
 
 from hikari.core.utils import assertions
 from hikari.core.utils import date_utils
 from hikari.core.utils import types
+
+
+T = typing.TypeVar("T")
 
 
 @assertions.assert_is_mixin
@@ -128,6 +133,19 @@ class Volatile:
         """
         Updates the internal state of an existing instance of this object from a raw Discord payload.
         """
+
+    def clone(self: T, deep: bool = False) -> T:
+        """
+        Create a copy of this object.
+
+        Args:
+            deep:
+                If True, create a deep copy. Otherwise create a shallow copy.
+
+        Return:
+            the copy of this object.
+        """
+        return copy.deepcopy(self) if deep else copy.copy(self)
 
 
 __all__ = ("Snowflake", "NamedEnum", "Volatile")

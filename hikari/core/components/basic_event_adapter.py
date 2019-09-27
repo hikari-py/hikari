@@ -199,9 +199,10 @@ class BasicEventAdapter(event_adapter.EventAdapter):
 
     async def handle_guild_update(self, gateway, payload):
         guild_id = int(payload["id"])
-        previous_guild = self.state_registry.get_guild_by_id(guild_id)
+        guild = self.state_registry.get_guild_by_id(guild_id)
 
-        if previous_guild is not None:
+        if guild is not None:
+            previous_guild = guild.clone()
             new_guild = self.state_registry.parse_guild(payload)
             self.dispatch(BasicEvent.GUILD_UPDATE, previous_guild, new_guild)
         else:
@@ -265,10 +266,25 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             self.dispatch(BasicEvent.GUILD_MEMBER_ADD, member)
 
     async def handle_guild_member_update(self, gateway, payload):
-        ...
+        guild_id = int(payload["guild_id"])
+        guild = self.state_registry.get_guild_by_id(guild_id)
+
+        if guild is not None:
+            user_id = int(payload["id"])
+            user = self.state_registry.get_user_by_id(user_id)
+            if user is None:
+                # Fix inconsistent state
+                await self.handle_guild_member_add(gateway, payload)
+            else:
+                old_user = user.clone()
+                new_user = self.state_registry.parse_user(payload)
+                self.dispatch(BasicEvent.GUILD_MEMBER_UPDATE, old_user, new_user)
 
     async def handle_guild_member_remove(self, gateway, payload):
-        ...
+        user_id = int(payload["id"])
+        guild_id = int(payload["guild_id"])
+        member = self.state_registry.delete_member_from_guild(user_id, guild_id)
+        self.dispatch(BasicEvent.GUILD_LEAVE, member)
 
     async def handle_guild_members_chunk(self, gateway, payload):
         # TODO: implement this properly.
