@@ -1,5 +1,5 @@
-Hikari documentation
-####################
+Hikari.Core Technical Documentation
+###################################
 
 This is for version |version| which can be found at
 

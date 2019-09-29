@@ -33,12 +33,12 @@ from hikari.core.model import model_cache
 from hikari.core.model import permission
 from hikari.core.model import role
 from hikari.core.model import user
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 
 
 @dataclasses.dataclass()
-class Guild(base.Snowflake):
+class Guild(base.Snowflake, base.Volatile):
     """
     Implementation of a Guild.
     """
@@ -260,13 +260,13 @@ class Guild(base.Snowflake):
         self.explicit_content_filter_level = transform.try_cast(
             payload.get("explicit_content_filter"), ExplicitContentFilterLevel
         )
-        self.roles = transform.snowflake_map(self._state.parse_role(r) for r in payload.get("roles", ()))
+        self.roles = transform.snowflake_map(self._state.parse_role(r, self.id) for r in payload.get("roles", ()))
         self.emojis = transform.snowflake_map(self._state.parse_emoji(e, self.id) for e in payload.get("emojis", ()))
         self.features = {transform.try_cast(f, Feature.from_discord_name) for f in payload.get("features", ())}
         self.member_count = transform.nullable_cast(payload.get("member_count"), int)
         self.mfa_level = transform.try_cast(payload.get("mfa_level"), MFALevel)
         self.my_permissions = permission.Permission(payload.get("permissions", 0))
-        self.joined_at = transform.nullable_cast(payload.get("joined_at"), dateutils.parse_iso_8601_datetime)
+        self.joined_at = transform.nullable_cast(payload.get("joined_at"), date_utils.parse_iso_8601_datetime)
         self.large = payload.get("large", False)
         self.unavailable = payload.get("unavailable", False)
         self.members = transform.snowflake_map(self._state.parse_member(m, self.id) for m in payload.get("members", ()))

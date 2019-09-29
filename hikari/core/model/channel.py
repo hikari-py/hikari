@@ -28,16 +28,22 @@ import typing
 from hikari.core.model import base
 from hikari.core.model import guild as _guild
 from hikari.core.model import overwrite
-from hikari.core.utils import transform
 from hikari.core.model import user
+from hikari.core.utils import assertions
+from hikari.core.utils import transform
 
 _channel_type_to_class = {}
 
 
 @dataclasses.dataclass()
-class Channel(base.Snowflake, abc.ABC):
+class Channel(base.Snowflake, base.Volatile, abc.ABC):
     """
     A generic type of channel.
+
+    Note:
+        As part of the contract for this class being volatile, once initialized, the `update_state` method will be
+        invoked, thus one should set any dependent fields in the constructor BEFORE invoking super where possible
+        or the fields will not be initialized when accessed.
     """
 
     __slots__ = ("_state", "id")
@@ -54,14 +60,23 @@ class Channel(base.Snowflake, abc.ABC):
     #: :type: :class:`int`
     id: int
 
-    def __init__(self, global_state, payload, *_):
+    def __init__(self, global_state, payload):
         self._state = global_state
         self.id = int(payload["id"])
+        self.update_state(payload)
 
     def __init_subclass__(cls, **kwargs):
         if "type" in kwargs:
             _channel_type_to_class[kwargs.pop("type")] = cls
         cls.is_dm = "guild" not in cls.__qualname__.lower()
+
+
+class TextChannel(Channel, abc.ABC):
+    """
+    Any class that can have messages sent to it.
+    """
+
+    __slots__ = ()
 
 
 @dataclasses.dataclass()
@@ -90,12 +105,15 @@ class GuildChannel(Channel, abc.ABC):
     #: :type: :class:`str`
     name: str
 
-    def __init__(self, global_state, payload, guild_id: int):
+    def __init__(self, global_state, payload):
+        self._guild_id = int(payload["guild_id"])
         super().__init__(global_state, payload)
-        self._guild_id = guild_id
+
+    def update_state(self, payload) -> None:
         self.position = int(payload["position"])
 
         overwrites = []
+
         for raw_overwrite in payload["permission_overwrites"]:
             overwrite_obj = overwrite.Overwrite(raw_overwrite)
             overwrites.append(overwrite_obj)
@@ -114,7 +132,7 @@ class GuildChannel(Channel, abc.ABC):
 
 
 @dataclasses.dataclass()
-class GuildTextChannel(GuildChannel, type=0):
+class GuildTextChannel(GuildChannel, TextChannel, type=0):
     """
     A text channel.
     """
@@ -143,9 +161,11 @@ class GuildTextChannel(GuildChannel, type=0):
     #: :type: :class:`bool`
     nsfw: bool
 
-    # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload, guild_id):
-        super().__init__(global_state, payload, guild_id)
+    def __init__(self, global_state, payload):
+        super().__init__(global_state, payload)
+
+    def update_state(self, payload) -> None:
+        super().update_state(payload)
         self.nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
         self.rate_limit_per_user = payload.get("rate_limit_per_user", 0)
@@ -153,7 +173,7 @@ class GuildTextChannel(GuildChannel, type=0):
 
 
 @dataclasses.dataclass()
-class DMChannel(Channel, type=1):
+class DMChannel(TextChannel, type=1):
     """
     A DM channel between users.
     """
@@ -171,10 +191,13 @@ class DMChannel(Channel, type=1):
     recipients: typing.List[user.User]
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload, *_):
+    def __init__(self, global_state, payload):
         super().__init__(global_state, payload)
+
+    def update_state(self, payload) -> None:
+        super().update_state(payload)
         self.last_message_id = transform.nullable_cast(payload.get("last_message_id"), int)
-        self.recipients = [global_state.parse_user(u) for u in payload.get("recipients", ())]
+        self.recipients = [self._state.parse_user(u) for u in payload.get("recipients", ())]
 
 
 @dataclasses.dataclass()
@@ -198,8 +221,11 @@ class GuildVoiceChannel(GuildChannel, type=2):
     user_limit: typing.Optional[int]
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload, guild_id):
-        super().__init__(global_state, payload, guild_id)
+    def __init__(self, global_state, payload):
+        super().__init__(global_state, payload)
+
+    def update_state(self, payload) -> None:
+        super().update_state(payload)
         self.bitrate = payload.get("bitrate") or None
         self.user_limit = payload.get("user_limit") or None
 
@@ -231,8 +257,11 @@ class GroupDMChannel(DMChannel, type=3):
     owner_application_id: typing.Optional[int]
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload, *_):
+    def __init__(self, global_state, payload):
         super().__init__(global_state, payload)
+
+    def update_state(self, payload) -> None:
+        super().update_state(payload)
         self.icon_hash = payload.get("icon")
         self.name = payload.get("name")
         self.owner_application_id = transform.nullable_cast(payload.get("application_id"), int)
@@ -272,8 +301,11 @@ class GuildNewsChannel(GuildChannel, type=5):
     nsfw: bool
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload, guild_id):
-        super().__init__(global_state, payload, guild_id)
+    def __init__(self, global_state, payload):
+        super().__init__(global_state, payload)
+
+    def update_state(self, payload) -> None:
+        super().update_state(payload)
         self.nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
         self.last_message_id = transform.nullable_cast(payload.get("last_message_id"), int)
@@ -289,7 +321,7 @@ class GuildStoreChannel(GuildChannel, type=6):
 
 
 def channel_from_dict(
-    global_state, payload, guild_id: typing.Optional[int]
+    global_state, payload
 ) -> typing.Union[
     GuildTextChannel, DMChannel, GuildVoiceChannel, GroupDMChannel, GuildCategory, GuildNewsChannel, GuildStoreChannel
 ]:
@@ -302,7 +334,7 @@ def channel_from_dict(
 
     if channel_type in _channel_type_to_class:
         channel_type = _channel_type_to_class[channel_type]
-        channel = channel_type(global_state, payload, guild_id)
+        channel = channel_type(global_state, payload)
         return channel
     else:
         raise TypeError(f"Invalid channel type {channel_type}") from None

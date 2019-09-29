@@ -86,7 +86,7 @@ class UnknownEmoji(Emoji, base.Snowflake):
 
 
 @dataclasses.dataclass()
-class GuildEmoji(UnknownEmoji):
+class GuildEmoji(UnknownEmoji, base.Volatile):
     __slots__ = ("_state", "_role_ids", "_guild_id", "require_colons", "managed", "animated", "user", "__weakref__")
 
     _state: model_cache.AbstractModelCache
@@ -118,12 +118,15 @@ class GuildEmoji(UnknownEmoji):
     ) -> None:
         super().__init__(payload)
         self._state = global_state
-        self._role_ids = [int(r) for r in payload.get("roles", [])]
         self._guild_id = guild_id
+        self.user = global_state.parse_user(payload.get("user")) if "user" in payload else None
+        self.update_state(payload)
+
+    def update_state(self, payload: types.DiscordObject) -> None:
         self.require_colons = payload.get("require_colons", True)
         self.animated = payload.get("animated", False)
         self.managed = payload.get("managed", False)
-        self.user = global_state.parse_user(payload.get("user")) if "user" in payload else None
+        self._role_ids = [int(r) for r in payload.get("roles", [])]
 
 
 def emoji_from_dict(

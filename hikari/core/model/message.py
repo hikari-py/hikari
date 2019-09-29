@@ -33,7 +33,7 @@ from hikari.core.model import guild
 from hikari.core.model import media
 from hikari.core.model import model_cache
 from hikari.core.model import user
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 
 
@@ -200,7 +200,7 @@ class Message(base.Snowflake):
         self._author_id = global_state.parse_user(payload["author"]).id
         self._channel_id = int(payload["channel_id"])
         self._guild_id = transform.nullable_cast(payload.get("guild_id"), int)
-        self.edited_at = transform.nullable_cast(payload.get("edited_timestamp"), dateutils.parse_iso_8601_datetime)
+        self.edited_at = transform.nullable_cast(payload.get("edited_timestamp"), date_utils.parse_iso_8601_datetime)
         self.tts = payload["tts"]
         self.mentions_everyone = payload["mention_everyone"]
         self.attachments = [media.Attachment(a) for a in payload["attachments"]]
@@ -226,11 +226,10 @@ class Message(base.Snowflake):
         channel.DMChannel,
         channel.GroupDMChannel,
     ]:
-        if self._guild_id is not None:
-            # noinspection PyTypeChecker
-            return self.guild.channels[self._channel_id]
-        else:
-            return self._state.get_dm_channel_by_id(self._channel_id)
+        # We may as well just use this to get it. It is pretty much as fast, but it reduces the amount of testing
+        # needed for code that is essentially the same.
+        # noinspection PyTypeChecker
+        return self._state.get_channel_by_id(self._channel_id)
 
     @property
     def author(self) -> typing.Union[user.User, user.Member, user.BotUser]:

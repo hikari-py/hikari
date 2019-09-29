@@ -16,33 +16,3 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Sentinel value used internally to represent an entity that was omitted from explicit specification. This
-can be used to mark fields that may be able to be `None` as being optional.
-"""
-
-
-class Unspecified:
-    """
-    Type of an unspecified value.
-    """
-
-    __slots__ = ()
-
-    def __str__(self):
-        return "unspecified"
-
-    def __bool__(self):
-        return False
-
-    __repr__ = __str__
-
-
-#: An attribute that is unspecified by default.
-UNSPECIFIED = Unspecified()
-
-# Make Unspecified into a singleton.
-Unspecified.__new__ = lambda *_, **__: UNSPECIFIED
-
-
-__all__ = ("UNSPECIFIED",)

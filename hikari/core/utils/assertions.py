@@ -22,15 +22,6 @@ on any failure.
 """
 import inspect
 
-__all__ = (
-    "assert_not_none",
-    "assert_is_slotted",
-    "assert_subclasses",
-    "assert_is_mixin",
-    "assert_in_range",
-    "assert_is_natural",
-)
-
 import typing
 
 T = typing.TypeVar("T")
@@ -63,6 +54,17 @@ def assert_subclasses(cls: typing.Type[T], base: typing.Type[U]) -> typing.Type[
     if not issubclass(cls, base):
         raise TypeError(f"Class {cls.__qualname__} does not subclass {base.__module__}.{base.__qualname__}")
     return cls
+
+
+def assert_is_instance(obj: typing.Any, cls: typing.Union[typing.Type[T], typing.Tuple[typing.Type[T]]]) -> T:
+    """Raises a TypeError if `obj` is not an instance of `cls`, otherwise returns the input `obj` cast to `cls`."""
+    if not isinstance(obj, cls):
+        raise TypeError(f"Object {obj} was not an instance of expected class {cls}")
+
+    # Noop
+    obj: T = obj
+
+    return obj
 
 
 def assert_is_mixin(cls: typing.Type[T]) -> typing.Type[T]:
@@ -104,3 +106,13 @@ def assert_in_range(value, min_inclusive, max_inclusive, name="The value"):
     """Raise a value error if a value is not in the range [min, max]"""
     if not (min_inclusive <= value <= max_inclusive):
         raise ValueError(f"{name} must be in the inclusive range of {min_inclusive} and {max_inclusive}")
+
+
+__all__ = (
+    "assert_not_none",
+    "assert_is_slotted",
+    "assert_subclasses",
+    "assert_is_mixin",
+    "assert_in_range",
+    "assert_is_natural",
+)
