@@ -173,6 +173,7 @@ class GatewayClient:
 
         #: The coroutine function to dispatch any events to.
         if not asyncio.iscoroutinefunction(dispatch):
+
             async def async_dispatch(*args, **kwargs):
                 return dispatch(*args, **kwargs)
 

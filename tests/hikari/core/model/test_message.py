@@ -195,23 +195,22 @@ class TestMessage:
         mock_message["channel_id"] = "1234"
         guild = mock.MagicMock()
         guild.channels = {1234: mock.MagicMock(), 1235: mock.MagicMock()}
-        cache.get_guild_by_id = mock.MagicMock(return_value=guild)
         obj = message.Message(cache, mock_message)
-
+        cache.get_channel_by_id = mock.MagicMock(return_value=obj.channel)
+        guild.channels[1234] = obj.channel
         c = obj.channel
-        cache.get_guild_by_id.assert_called_with(5432)
         assert c is guild.channels[1234]
 
     def test_Message_channel_if_dm_message(self, mock_message):
         mock_message["channel_id"] = "1234"
         cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
         channel = mock.MagicMock()
-        cache.get_dm_channel_by_id = mock.MagicMock(return_value=channel)
+        cache.get_channel_by_id = mock.MagicMock(return_value=channel)
 
         obj = message.Message(cache, mock_message)
 
         c = obj.channel
-        cache.get_dm_channel_by_id.assert_called_with(1234)
+        cache.get_channel_by_id.assert_called_with(1234)
         assert c is channel
 
     def test_Message_author(self, mock_message):
