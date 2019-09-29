@@ -29,7 +29,6 @@ from hikari.core.model import base
 from hikari.core.model import guild as _guild
 from hikari.core.model import overwrite
 from hikari.core.model import user
-from hikari.core.utils import assertions
 from hikari.core.utils import transform
 
 _channel_type_to_class = {}
@@ -74,9 +73,17 @@ class Channel(base.Snowflake, base.Volatile, abc.ABC):
 class TextChannel(Channel, abc.ABC):
     """
     Any class that can have messages sent to it.
+
+    This class itself will not behave as a dataclass, and is a trait for Channels that have the ability to
+    send and receive messages to implement as a basic interface.
     """
 
     __slots__ = ()
+
+    #: The optional ID of the last message to be sent.
+    #:
+    #: :type: :class:`int` or `None`
+    last_message_id: typing.Optional[int]
 
 
 @dataclasses.dataclass()
@@ -318,6 +325,16 @@ class GuildStoreChannel(GuildChannel, type=6):
     """
 
     __slots__ = ()
+
+
+def is_channel_type_dm(channel_type: int) -> bool:
+    """
+    Returns True if a raw channel type is for a DM. If a channel type is given that is not recognised, then it returns
+    `False` regardless.
+
+    This is only used internally, there is no other reason for you to use this outside of framework-internal code.
+    """
+    return getattr(_channel_type_to_class.get(channel_type), "is_dm", False)
 
 
 def channel_from_dict(

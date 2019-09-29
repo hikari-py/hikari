@@ -20,10 +20,10 @@
 import asynctest
 import pytest
 
-from hikari.core.components import event_adapter
+from hikari.core.components import event_adapter_stub
 
 
-class Impl(event_adapter.EventAdapter):
+class Impl(event_adapter_stub.EventAdapterStub):
     async def handle_something(self, gateway, payload):
         pass
 

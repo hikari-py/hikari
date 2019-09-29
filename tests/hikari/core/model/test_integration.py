@@ -22,13 +22,13 @@ from unittest import mock
 import pytest
 
 from hikari.core.model import integration
-from hikari.core.model import model_cache
+from hikari.core.model import abstract_state_registry
 
 
 @pytest.mark.model
 class TestIntegration:
     def test_Integration(self):
-        test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
+        test_state = mock.MagicMock(state_set=abstract_state_registry.AbstractStateRegistry)
 
         user_dict = {
             "username": "Luigi",
@@ -70,7 +70,7 @@ class TestIntegration:
 @pytest.mark.model
 class TestIntegrationAccount:
     def test_IntegrationAccount(self):
-        test_state = mock.MagicMock(state_set=model_cache.AbstractModelCache)
+        test_state = mock.MagicMock(state_set=abstract_state_registry.AbstractStateRegistry)
 
         inteacc = integration.IntegrationAccount(test_state, {"id": "1234567", "name": "memes"})
 

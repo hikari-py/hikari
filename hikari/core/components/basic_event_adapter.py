@@ -24,7 +24,8 @@ from __future__ import annotations
 import enum
 
 from hikari.core.components import basic_state_registry as _state
-from hikari.core.components import event_adapter
+from hikari.core.components import event_adapter_stub
+from hikari.core.model import channel as _channel
 from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 
@@ -71,7 +72,7 @@ class BasicEvent(enum.Enum):
     GUILD_MEMBER_REMOVE = enum.auto()
 
 
-class BasicEventAdapter(event_adapter.EventAdapter):
+class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
     """
     Basic implementation of event management logic.
     """
@@ -135,35 +136,44 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             self.dispatch(BasicEvent.DM_CHANNEL_CREATE, channel)
         elif channel.guild is not None:
             self.dispatch(BasicEvent.GUILD_CHANNEL_CREATE, channel)
-        # ignore if we haven't parsed the guild yet, as discord is just sending bad payloads.
+        else:
+            self.logger.warning(
+                "ignoring received channel_create for unknown guild %s channel %s", payload.get("guild_id"), channel.id
+            )
 
     async def handle_channel_update(self, gateway, payload):
         channel_id = int(payload["id"])
         old_channel = self.state_registry.get_channel_by_id(channel_id)
 
+        is_dm = _channel.is_channel_type_dm(payload["type"])
+
         if old_channel is not None:
             new_channel = self.state_registry.parse_channel(payload)
-            if new_channel.is_dm:
+
+            if is_dm:
                 self.dispatch(BasicEvent.DM_CHANNEL_UPDATE, old_channel, new_channel)
             else:
                 self.dispatch(BasicEvent.GUILD_CHANNEL_UPDATE, old_channel, new_channel)
+        elif is_dm:
+            self.logger.warning("ignoring received CHANNEL_UPDATE for unknown DM channel %s", channel_id)
+        else:
+            self.state_registry.parse_channel(payload)
+            self.logger.warning(
+                "ignoring received CHANNEL_UPDATE for unknown guild channel %s - cache amended", channel_id
+            )
 
     async def handle_channel_delete(self, gateway, payload):
-        channel_id = int(payload["id"])
-        channel = self.state_registry.get_channel_by_id(channel_id)
+        # Update the channel meta data just for this call.
+        channel = self.state_registry.parse_channel(payload)
 
-        if channel is not None:
-            # Update the channel meta data just for this call.
-            channel = self.state_registry.parse_channel(payload)
-
-            try:
-                channel = self.state_registry.delete_channel(channel.id)
-            except KeyError:
-                # Inconsistent state gets ignored.
-                pass
-            else:
-                event = BasicEvent.DM_CHANNEL_DELETE if channel.is_dm else BasicEvent.GUILD_CHANNEL_DELETE
-                self.dispatch(event, channel)
+        try:
+            channel = self.state_registry.delete_channel(channel.id)
+        except KeyError:
+            # Inconsistent state gets ignored. This should not happen, I don't think.
+            pass
+        else:
+            event = BasicEvent.DM_CHANNEL_DELETE if channel.is_dm else BasicEvent.GUILD_CHANNEL_DELETE
+            self.dispatch(event, channel)
 
     async def handle_channel_pins_update(self, gateway, payload):
         channel_id = int(payload["channel_id"])
@@ -184,6 +194,12 @@ class BasicEventAdapter(event_adapter.EventAdapter):
                     self.dispatch(BasicEvent.DM_CHANNEL_PIN_REMOVED)
                 else:
                     self.dispatch(BasicEvent.GUILD_CHANNEL_PIN_REMOVED)
+        else:
+            self.logger.warning(
+                "ignoring CHANNEL_PINS_UPDATE for %s channel %s which was not previously cached",
+                "DM" if _channel.is_channel_type_dm(payload["type"]) else "guild",
+                channel_id,
+            )
 
     async def handle_guild_create(self, gateway, payload):
         guild_id = int(payload["id"])
@@ -206,57 +222,82 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             new_guild = self.state_registry.parse_guild(payload)
             self.dispatch(BasicEvent.GUILD_UPDATE, previous_guild, new_guild)
         else:
-            # Fix inconsistent state
-            await self.handle_guild_create(gateway, payload)
+            self.state_registry.parse_guild(payload)
+            self.logger.warning(
+                "ignoring GUILD_UPDATE for unknown guild %s which was not previously cached - cache amended"
+            )
 
     async def handle_guild_delete(self, gateway, payload):
-        guild_id = int(payload["id"])
         # This should always be unspecified if the guild was left,
         # but if discord suddenly send "False" instead, it will still work.
-        unavailable = payload.get("unavailable", False)
-        if not unavailable:
-            guild = self.state_registry.parse_guild(payload)
-            self.state_registry.delete_guild(guild.id)
-            self.dispatch(BasicEvent.GUILD_LEAVE, guild)
+        if payload.get("unavailable", False):
+            await self._handle_guild_unavailable(payload)
         else:
-            # We shouldn't ever need to parse this payload unless we have inconsistent state, but if that happens,
-            # lets attempt to fix it.
-            guild = self.state_registry.get_guild_by_id(guild_id)
+            await self._handle_guild_leave(payload)
 
-            if guild is None:
-                await self.handle_guild_create(gateway, payload)
-            else:
-                guild.unavailable = True
-                self.dispatch(BasicEvent.GUILD_UNAVAILABLE, guild)
+    async def _handle_guild_unavailable(self, payload):
+        # We shouldn't ever need to parse this payload unless we have inconsistent state, but if that happens,
+        # lets attempt to fix it.
+        guild_id = int(payload["id"])
+        guild = self.state_registry.get_guild_by_id(guild_id)
+
+        if guild is None:
+            guild = self.state_registry.parse_guild(payload)
+
+        # TODO: move to state registry code, maybe?
+        guild.unavailable = True
+        self.dispatch(BasicEvent.GUILD_UNAVAILABLE, guild)
+
+    async def _handle_guild_leave(self, payload):
+        guild = self.state_registry.parse_guild(payload)
+        self.state_registry.delete_guild(guild.id)
+        self.dispatch(BasicEvent.GUILD_LEAVE, guild)
 
     async def handle_guild_ban_add(self, gateway, payload):
         guild_id = int(payload["guild_id"])
         guild = self.state_registry.get_guild_by_id(guild_id)
+        user = self.state_registry.parse_user(payload["user"])
         if guild is not None:
-            user = self.state_registry.parse_user(payload["user"])
-            self.dispatch(BasicEvent.GUILD_BAN_ADD, guild, user)
+
+            # The user may or may not be cached, if the guild is large. So, we may have to just pass a normal user, or
+            # if we can, we can pass a whole member. The member should be assumed to be normal behaviour unless caching
+            # of members was disabled, or if Discord is screwing up; regardless, it is probably worth checking this
+            # information first. Since they just got banned, we can't even look this information up anymore...
+            # Perhaps the audit logs could be checked, but this seems like an overkill, honestly...
+            try:
+                member = self.state_registry.delete_member_from_guild(user.id, guild_id)
+            except KeyError:
+                member = user
+
+            self.dispatch(BasicEvent.GUILD_BAN_ADD, guild, member)
+        else:
+            self.logger.warning("ignoring GUILD_BAN_ADD for user %s in unknown guild %s", user.id, guild_id)
 
     async def handle_guild_ban_remove(self, gateway, payload):
         guild_id = int(payload["guild_id"])
         guild = self.state_registry.get_guild_by_id(guild_id)
+        user = self.state_registry.parse_user(payload["user"])
         if guild is not None:
-            user = self.state_registry.parse_user(payload["user"])
             self.dispatch(BasicEvent.GUILD_BAN_REMOVE, guild, user)
+        else:
+            self.logger.warning("ignoring GUILD_BAN_REMOVE for user %s in unknown guild %s", user.id, guild_id)
 
     async def handle_guild_emojis_update(self, gateway, payload):
         guild_id = int(payload["guild_id"])
         guild = self.state_registry.get_guild_by_id(guild_id)
         if guild is not None:
-            old_emojis = [*guild.emojis.values()]
-            new_emojis = [self.state_registry.parse_emoji(emoji, guild_id) for emoji in payload["emojis"]]
-            guild.emojis = transform.snowflake_map(new_emojis)
-            self.dispatch(BasicEvent.GUILD_EMOJIS_UPDATE, old_emojis, new_emojis)
+            old_emojis, new_emojis = self.state_registry.update_guild_emojis(payload, guild_id)
+            self.dispatch(BasicEvent.GUILD_EMOJIS_UPDATE, guild, old_emojis, new_emojis)
+        else:
+            self.logger.warning("ignoring GUILD_EMOJIS_UPDATE for unknown guild %s", guild_id)
 
     async def handle_guild_integrations_update(self, gateway, payload):
         guild_id = int(payload["guild_id"])
         guild = self.state_registry.get_guild_by_id(guild_id)
         if guild is not None:
             self.dispatch(BasicEvent.GUILD_INTEGRATIONS_UPDATE, guild)
+        else:
+            self.logger.warning("ignoring GUILD_INTEGRATIONS_UPDATE for unknown guild %s", guild_id)
 
     async def handle_guild_member_add(self, gateway, payload):
         guild_id = int(payload.pop("guild_id"))
@@ -264,21 +305,20 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         if guild is not None:
             member = self.state_registry.parse_member(payload, guild_id)
             self.dispatch(BasicEvent.GUILD_MEMBER_ADD, member)
+        else:
+            self.logger.warning("ignoring GUILD_MEMBER_ADD for unknown guild %s", guild_id)
 
     async def handle_guild_member_update(self, gateway, payload):
         guild_id = int(payload["guild_id"])
         guild = self.state_registry.get_guild_by_id(guild_id)
 
         if guild is not None:
-            user_id = int(payload["id"])
-            user = self.state_registry.get_user_by_id(user_id)
-            if user is None:
-                # Fix inconsistent state
-                await self.handle_guild_member_add(gateway, payload)
-            else:
-                old_user = user.clone()
-                new_user = self.state_registry.parse_user(payload)
-                self.dispatch(BasicEvent.GUILD_MEMBER_UPDATE, old_user, new_user)
+            user_payload = payload["user"]
+            role_ids = payload["roles"]
+            nick = payload[""]
+
+        else:
+            self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)
 
     async def handle_guild_member_remove(self, gateway, payload):
         user_id = int(payload["id"])
@@ -287,11 +327,15 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         self.dispatch(BasicEvent.GUILD_LEAVE, member)
 
     async def handle_guild_members_chunk(self, gateway, payload):
-        # TODO: implement this properly.
+        # TODO: implement this properly in the future.
         ...
 
     async def handle_guild_role_create(self, gateway, payload):
-        ...
+        guild_id = int(payload["guild_id"])
+        guild = self.state_registry.get_guild_by_id(guild_id)
+
+        if guild is not None:
+            role = self.state_registry.parse_role(payload["role"], guild_id)
 
     async def handle_guild_role_update(self, gateway, payload):
         ...

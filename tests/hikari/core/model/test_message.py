@@ -22,7 +22,7 @@ from unittest import mock
 import pytest
 
 from hikari.core.model import message
-from hikari.core.model import model_cache
+from hikari.core.model import abstract_state_registry
 
 
 @pytest.mark.model
@@ -52,7 +52,7 @@ class TestMessage:
         }
 
     def test_Message_simple_test_data(self, mock_message, mock_user):
-        s = mock.MagicMock(spec=model_cache.AbstractModelCache)
+        s = mock.MagicMock(spec=abstract_state_registry.AbstractStateRegistry)
         m = message.Message(s, mock_message)
 
         assert m.type is message.MessageType.DEFAULT
@@ -74,7 +74,7 @@ class TestMessage:
         s.parse_user.assert_called_with(mock_user)
 
     def test_Message_complex_test_data(self, mock_user):
-        s = mock.MagicMock(spec=model_cache.AbstractModelCache)
+        s = mock.MagicMock(spec=abstract_state_registry.AbstractStateRegistry)
         m = message.Message(
             s,
             {
@@ -171,7 +171,7 @@ class TestMessage:
 
     def test_Message_guild_if_guild_message(self, mock_message):
         mock_message["guild_id"] = "91827"
-        cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
+        cache = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
         obj = message.Message(cache, mock_message)
 
         guild = mock.MagicMock()
@@ -183,14 +183,14 @@ class TestMessage:
         cache.get_guild_by_id.assert_called_with(91827)
 
     def test_Message_guild_if_dm_message(self, mock_message):
-        cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
+        cache = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
         obj = message.Message(cache, mock_message)
         assert obj.guild is None
 
         cache.get_guild_by_id.assert_not_called()
 
     def test_Message_channel_if_guild_message(self, mock_message):
-        cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
+        cache = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
         mock_message["guild_id"] = "5432"
         mock_message["channel_id"] = "1234"
         guild = mock.MagicMock()
@@ -203,7 +203,7 @@ class TestMessage:
 
     def test_Message_channel_if_dm_message(self, mock_message):
         mock_message["channel_id"] = "1234"
-        cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
+        cache = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
         channel = mock.MagicMock()
         cache.get_channel_by_id = mock.MagicMock(return_value=channel)
 
@@ -214,7 +214,7 @@ class TestMessage:
         assert c is channel
 
     def test_Message_author(self, mock_message):
-        cache = mock.MagicMock(spec_set=model_cache.AbstractModelCache)
+        cache = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
         user = mock.MagicMock()
         cache.get_user_by_id = mock.MagicMock(return_value=user)
 
