@@ -47,12 +47,15 @@ class BasicEvent(enum.Enum):
     DM_CHANNEL_DELETE = enum.auto()
     GUILD_CHANNEL_DELETE = enum.auto()
 
-    DM_CHANNEL_PINS_UPDATE = enum.auto()
-    GUILD_CHANNEL_PINS_UPDATE = enum.auto()
+    DM_CHANNEL_PIN_ADDED = enum.auto()
+    GUILD_CHANNEL_PIN_ADDED = enum.auto()
 
+    DM_CHANNEL_PIN_REMOVED = enum.auto()
+    GUILD_CHANNEL_PIN_REMOVED = enum.auto()
+
+    GUILD_CREATE = enum.auto()
     GUILD_AVAILABLE = enum.auto()
     GUILD_UNAVAILABLE = enum.auto()
-    GUILD_JOIN = enum.auto()
     GUILD_UPDATE = enum.auto()
     GUILD_LEAVE = enum.auto()
 
@@ -136,9 +139,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
 
     async def handle_channel_update(self, gateway, payload):
         channel_id = int(payload["id"])
-        old_channel = self.state_registry.get_guild_channel_by_id(
-            channel_id
-        ) or self.state_registry.get_dm_channel_by_id(channel_id)
+        old_channel = self.state_registry.get_channel_by_id(channel_id)
 
         if old_channel is not None:
             new_channel = self.state_registry.parse_channel(payload)
@@ -148,66 +149,85 @@ class BasicEventAdapter(event_adapter.EventAdapter):
                 self.dispatch(BasicEvent.GUILD_CHANNEL_UPDATE, old_channel, new_channel)
 
     async def handle_channel_delete(self, gateway, payload):
-        channel = self.state_registry.parse_channel(payload)
-        if channel.is_dm:
-            self.state_registry.delete_dm_channel(channel.id)
-            self.dispatch(BasicEvent.DM_CHANNEL_DELETE, channel)
-        elif channel.guild is not None:
-            self.state_registry.delete_guild_channel(channel.id)
-            self.dispatch(BasicEvent.GUILD_CHANNEL_DELETE, channel)
+        channel_id = int(payload["id"])
+        channel = self.state_registry.get_channel_by_id(channel_id)
+
+        if channel is not None:
+            # Update the channel meta data just for this call.
+            channel = self.state_registry.parse_channel(payload)
+
+            try:
+                channel = self.state_registry.delete_channel(channel.id)
+            except KeyError:
+                # Inconsistent state gets ignored.
+                pass
+            else:
+                event = BasicEvent.DM_CHANNEL_DELETE if channel.is_dm else BasicEvent.GUILD_CHANNEL_DELETE
+                self.dispatch(event, channel)
 
     async def handle_channel_pins_update(self, gateway, payload):
         channel_id = int(payload["channel_id"])
-        channel = self.state_registry.get_guild_channel_by_id(channel_id) or self.state_registry.get_dm_channel_by_id(
-            channel_id
-        )
-
-        last_pin_timestamp = transform.nullable_cast(
-            payload.get("last_pin_timestamp"), date_utils.parse_iso_8601_datetime
-        )
+        channel = self.state_registry.get_channel_by_id(channel_id)
 
         if channel is not None:
-            if channel.is_dm:
-                self.dispatch(BasicEvent.DM_CHANNEL_PINS_UPDATE, last_pin_timestamp)
-            elif channel.guild is not None:
-                self.dispatch(BasicEvent.GUILD_CHANNEL_PINS_UPDATE, last_pin_timestamp)
+            last_pin_timestamp = transform.nullable_cast(
+                payload.get("last_pin_timestamp"), date_utils.parse_iso_8601_datetime
+            )
+
+            if last_pin_timestamp is not None:
+                if channel.is_dm:
+                    self.dispatch(BasicEvent.DM_CHANNEL_PIN_ADDED, last_pin_timestamp)
+                else:
+                    self.dispatch(BasicEvent.GUILD_CHANNEL_PIN_ADDED, last_pin_timestamp)
+            else:
+                if channel.is_dm:
+                    self.dispatch(BasicEvent.DM_CHANNEL_PIN_REMOVED)
+                else:
+                    self.dispatch(BasicEvent.GUILD_CHANNEL_PIN_REMOVED)
 
     async def handle_guild_create(self, gateway, payload):
-        guild_id = int(payload["guild_id"])
+        guild_id = int(payload["id"])
         unavailable = payload.get("unavailable", False)
-        is_new = self.state_registry.get_guild_by_id(guild_id) is None
-
+        was_already_loaded = self.state_registry.get_guild_by_id(guild_id) is not None
         guild = self.state_registry.parse_guild(payload)
 
+        if not was_already_loaded:
+            self.dispatch(BasicEvent.GUILD_CREATE, guild)
+
         if not unavailable:
-            if is_new:
-                # We joined the guild. Yay.
-                # This relies on the fact that guilds still get internally cached if they are unavailable for any of
-                # this to remotely function as expected.
-                self.dispatch(BasicEvent.GUILD_JOIN, guild)
-            else:
-                self.dispatch(BasicEvent.GUILD_AVAILABLE, guild)
+            self.dispatch(BasicEvent.GUILD_AVAILABLE, guild)
 
     async def handle_guild_update(self, gateway, payload):
-        guild_id = int(payload["guild_id"])
+        guild_id = int(payload["id"])
+        guild = self.state_registry.get_guild_by_id(guild_id)
 
-        previous_guild = self.state_registry.get_guild_by_id(guild_id)
-        now_unavailable = payload.get("unavailable", False)
-
-        if previous_guild is not None and now_unavailable:
-            if previous_guild.unavailable and not now_unavailable:
-                await self.handle_guild_create(gateway, payload)
-            else:
-                self.dispatch(BasicEvent.GUILD_UPDATE, previous_guild, self.state_registry.parse_guild(payload))
+        if guild is not None:
+            previous_guild = guild.clone()
+            new_guild = self.state_registry.parse_guild(payload)
+            self.dispatch(BasicEvent.GUILD_UPDATE, previous_guild, new_guild)
+        else:
+            # Fix inconsistent state
+            await self.handle_guild_create(gateway, payload)
 
     async def handle_guild_delete(self, gateway, payload):
+        guild_id = int(payload["id"])
+        # This should always be unspecified if the guild was left,
+        # but if discord suddenly send "False" instead, it will still work.
         unavailable = payload.get("unavailable", False)
-        guild = self.state_registry.parse_guild(payload)
         if not unavailable:
+            guild = self.state_registry.parse_guild(payload)
             self.state_registry.delete_guild(guild.id)
             self.dispatch(BasicEvent.GUILD_LEAVE, guild)
         else:
-            self.dispatch(BasicEvent.GUILD_UNAVAILABLE, guild)
+            # We shouldn't ever need to parse this payload unless we have inconsistent state, but if that happens,
+            # lets attempt to fix it.
+            guild = self.state_registry.get_guild_by_id(guild_id)
+
+            if guild is None:
+                await self.handle_guild_create(gateway, payload)
+            else:
+                guild.unavailable = True
+                self.dispatch(BasicEvent.GUILD_UNAVAILABLE, guild)
 
     async def handle_guild_ban_add(self, gateway, payload):
         guild_id = int(payload["guild_id"])
@@ -246,10 +266,25 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             self.dispatch(BasicEvent.GUILD_MEMBER_ADD, member)
 
     async def handle_guild_member_update(self, gateway, payload):
-        ...
+        guild_id = int(payload["guild_id"])
+        guild = self.state_registry.get_guild_by_id(guild_id)
+
+        if guild is not None:
+            user_id = int(payload["id"])
+            user = self.state_registry.get_user_by_id(user_id)
+            if user is None:
+                # Fix inconsistent state
+                await self.handle_guild_member_add(gateway, payload)
+            else:
+                old_user = user.clone()
+                new_user = self.state_registry.parse_user(payload)
+                self.dispatch(BasicEvent.GUILD_MEMBER_UPDATE, old_user, new_user)
 
     async def handle_guild_member_remove(self, gateway, payload):
-        ...
+        user_id = int(payload["id"])
+        guild_id = int(payload["guild_id"])
+        member = self.state_registry.delete_member_from_guild(user_id, guild_id)
+        self.dispatch(BasicEvent.GUILD_LEAVE, member)
 
     async def handle_guild_members_chunk(self, gateway, payload):
         # TODO: implement this properly.

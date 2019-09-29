@@ -156,3 +156,18 @@ def test_BotUser():
     assert u.bot is False
     assert u.verified is True
     assert u.mfa_enabled is True
+
+
+@pytest.mark.model
+def test_Member_update_state():
+    # We have faff mocking the delegate neatly, so whatever. Hacks also work.
+    class MockMember:
+        _user = mock.MagicMock()
+
+        def _update_member_state(self, payload):
+            ...
+
+    m = mock.MagicMock(wraps=MockMember())
+    user.Member.update_state(m, {"user": {}})
+    m._user.update_state.assert_called()
+    m._update_member_state.assert_called()

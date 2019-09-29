@@ -31,6 +31,7 @@ def pathify(arg, *args, root=False):
 
 # Configuration stuff we probably might move around eventually.
 MAIN_PACKAGE = "hikari.core"
+OWNER = "nekokatt"
 TECHNICAL_DIR = "technical"
 TEST_PATH = "tests/hikari/core"
 COVERAGE_RC = ".coveragerc"
@@ -38,11 +39,11 @@ ARTIFACT_DIR = "public"
 DOCUMENTATION_DIR = "docs"
 CI_SCRIPT_DIR = "tasks"
 SPHINX_OPTS = "-WTvvn"
-ISORT_ARGS = ["--jobs", "8", "--trailing-comma", "--case-sensitive", "--verbose"]
 BLACK_PACKAGES = [MAIN_PACKAGE, TEST_PATH]
 BLACK_PATHS = [m.replace(".", "/") for m in BLACK_PACKAGES] + [__file__, pathify(DOCUMENTATION_DIR, "conf.py")]
 BLACK_SHIM_PATH = pathify(CI_SCRIPT_DIR, "black.py")
 GENDOC_PATH = pathify(CI_SCRIPT_DIR, "gendoc.py")
+REPOSITORY = f"https://gitlab.com/{OWNER}/{MAIN_PACKAGE}"
 
 
 class PoetryNoxSession(sessions.Session):
@@ -89,8 +90,6 @@ def pytest(session: PoetryNoxSession) -> None:
         "--cov-report",
         "term",
         "--cov-report",
-        f"annotate:{ARTIFACT_DIR}/coverage/annotated",
-        "--cov-report",
         f"html:{ARTIFACT_DIR}/coverage/html",
         "--cov-branch",
         "-ra",
@@ -105,7 +104,6 @@ def pytest(session: PoetryNoxSession) -> None:
 @using_poetry
 def sphinx(session: PoetryNoxSession) -> None:
     session.poetry("update")
-    session.run("pip", "install", "-r", pathify(DOCUMENTATION_DIR, "requirements.txt"))
     session.env["SPHINXOPTS"] = SPHINX_OPTS
     tech_dir = pathify(DOCUMENTATION_DIR, TECHNICAL_DIR)
     shutil.rmtree(tech_dir, ignore_errors=True, onerror=lambda *_: None)
@@ -119,7 +117,7 @@ def sphinx(session: PoetryNoxSession) -> None:
         pathify(DOCUMENTATION_DIR, TECHNICAL_DIR, "index.rst"),
         pathify(DOCUMENTATION_DIR, TECHNICAL_DIR),
     )
-    session.run("sphinx-build", DOCUMENTATION_DIR, ARTIFACT_DIR, "-b", "html")
+    session.run("python", "-m", "sphinx.cmd.build", DOCUMENTATION_DIR, ARTIFACT_DIR, "-b", "html")
 
 
 @nox_session()
@@ -151,9 +149,9 @@ def format_check(session: PoetryNoxSession) -> None:
 
 @nox_session()
 def pypitest(session: sessions.Session):
-    if os.getenv("CI"):
+    if os.getenv("CI", False):
         print("Testing published ref can be installed as a package.")
-        url = os.getenv("CI_PROJECT_URL", "https://gitlab.com/nekokatt/hikari.core")
+        url = os.getenv("CI_PROJECT_URL", REPOSITORY)
         ref = os.getenv("CI_COMMIT_REF_NAME", "master")
         slug = f"git+{url}.git@{ref}"
         session.install("-vvv", slug)
@@ -161,4 +159,4 @@ def pypitest(session: sessions.Session):
         print("Testing local repository can be installed as a package.")
         session.install("-vvv", "--isolated", ".")
 
-    session.run("python", "-c", "import hikari.core; print(hikari.core.__version__)")
+    session.run("python", "-c", f"import {MAIN_PACKAGE}; print({MAIN_PACKAGE}.__version__)")

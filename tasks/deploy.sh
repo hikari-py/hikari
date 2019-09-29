@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
 function set-versions() {
-  local version=$1
-  sed "s/^__version__.*/__version__ = \"${version}\"/g" -i hikari/core/__init__.py
-  sed "0,/^version.*$/s//version = \"${version}\"/g" -i pyproject.toml 
-  sed "0,/^version.*$/s//version = \"${version}\"/g" -i docs/conf.py
+  set -x
+  local version="$1"
+  sed "s|^__version__.*|__version__ = \"${version}\"|g" -i hikari/core/__init__.py
+  sed "0,/^version.*$/s||version = \"${version}\"|g" -i pyproject.toml
+  sed "0,/^version.*$/s||version = \"${version}\"|g" -i docs/conf.py
+  set +x
 }
 
 function deploy-to-pypi() {
@@ -13,15 +15,20 @@ function deploy-to-pypi() {
 }
 
 function deploy-to-release-api() {
+  set -x
   python tasks/release.py "${1}"
+  set +x
 }
 
 function notify() {
+  set -x
   local version=$1
   python tasks/notify.py "${version}" "hikari.core"
+  set +x
 }
 
 function deploy-to-gitlab() {
+  set -x
   local repo
   local old_version=$1
   local current_version=$2
@@ -49,6 +56,7 @@ function deploy-to-gitlab() {
   (git tag "$current_version" && git push origin "$current_version") || true
   git checkout staging
   (git merge master --no-ff --strategy-option theirs -m "Merge deployed master $current_version into staging [skip ci]" && git push origin staging) || true
+  set +x
 }
 
 function do-deployment() {

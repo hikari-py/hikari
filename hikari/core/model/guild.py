@@ -38,7 +38,7 @@ from hikari.core.utils import transform
 
 
 @dataclasses.dataclass()
-class Guild(base.Snowflake):
+class Guild(base.Snowflake, base.Volatile):
     """
     Implementation of a Guild.
     """
@@ -260,7 +260,7 @@ class Guild(base.Snowflake):
         self.explicit_content_filter_level = transform.try_cast(
             payload.get("explicit_content_filter"), ExplicitContentFilterLevel
         )
-        self.roles = transform.snowflake_map(self._state.parse_role(r) for r in payload.get("roles", ()))
+        self.roles = transform.snowflake_map(self._state.parse_role(r, self.id) for r in payload.get("roles", ()))
         self.emojis = transform.snowflake_map(self._state.parse_emoji(e, self.id) for e in payload.get("emojis", ()))
         self.features = {transform.try_cast(f, Feature.from_discord_name) for f in payload.get("features", ())}
         self.member_count = transform.nullable_cast(payload.get("member_count"), int)
