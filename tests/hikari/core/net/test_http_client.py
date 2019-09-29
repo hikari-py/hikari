@@ -851,7 +851,7 @@ class TestChannel:
 
 
 r"""
-Emoji Unit Tests
+AbstractEmoji Unit Tests
   ______                 _ _ 
  |  ____|               (_|_)
  | |__   _ __ ___   ___  _ _ 

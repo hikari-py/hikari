@@ -21,12 +21,12 @@ from unittest import mock
 import pytest
 
 from hikari.core.model import emoji
-from hikari.core.model import model_cache
+from hikari.core.model import abstract_state_registry
 
 
 @pytest.fixture
 def mock_state():
-    return mock.MagicMock(spec_set=model_cache.AbstractModelCache)
+    return mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
 
 
 @pytest.fixture

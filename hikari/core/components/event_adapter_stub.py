@@ -26,9 +26,9 @@ from hikari.core.utils import logging_utils
 from hikari.core.utils import types
 
 
-class EventAdapter(abc.ABC):
+class EventAdapterStub(abc.ABC):
     """
-    Abstract definition of an event handler. This automatically implements an underlying handler for every documented
+    Stubbed definition of an event handler. This automatically implements an underlying handler for every documented
     event that Discord can dispatch to us that performs no operation, so unimplemented events in subclasses go ignored
     silently.
 

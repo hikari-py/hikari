@@ -26,7 +26,7 @@ import datetime
 import typing
 
 from hikari.core.model import base
-from hikari.core.model import model_cache
+from hikari.core.model import abstract_state_registry
 from hikari.core.model import presence
 from hikari.core.utils import date_utils
 from hikari.core.utils import delegate
@@ -41,7 +41,7 @@ class User(base.Snowflake, base.Volatile):
 
     __slots__ = ("_state", "id", "username", "discriminator", "avatar_hash", "bot", "__weakref__")
 
-    _state: model_cache.AbstractModelCache
+    _state: abstract_state_registry.AbstractStateRegistry
 
     #: ID of the user.
     #:
@@ -68,7 +68,7 @@ class User(base.Snowflake, base.Volatile):
     #: :type: :class:`bool`
     bot: bool
 
-    def __init__(self, global_state: model_cache.AbstractModelCache, payload):
+    def __init__(self, global_state: abstract_state_registry.AbstractStateRegistry, payload):
         self._state = global_state
         self.id = int(payload["id"])
         # We don't expect this to ever change...
@@ -131,7 +131,7 @@ class Member(User):
     def _update_member_state(self, payload) -> None:
         self._role_ids = [int(r) for r in payload.get("roles", ())]
         self.nick = payload.get("nick")
-        self.joined_at = date_utils.parse_iso_8601_datetime(payload["joined_at"])
+        self.joined_at = date_utils.parse_iso_8601_datetime(payload.get("joined_at"))
         self.premium_since = transform.nullable_cast(payload.get("premium_since"), date_utils.parse_iso_8601_datetime)
         self.presence = transform.nullable_cast(payload.get("presence"), presence.Presence)
 
@@ -159,7 +159,7 @@ class BotUser(User):
     #: :type: :class:`bool`
     mfa_enabled: bool
 
-    def __init__(self, global_state: model_cache.AbstractModelCache, payload):
+    def __init__(self, global_state: abstract_state_registry.AbstractStateRegistry, payload):
         super().__init__(global_state, payload)
 
     def update_state(self, payload) -> None:
