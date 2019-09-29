@@ -270,7 +270,7 @@ class Guild(base.Snowflake, base.Volatile):
         self.large = payload.get("large", False)
         self.unavailable = payload.get("unavailable", False)
         self.members = transform.snowflake_map(self._state.parse_member(m, self.id) for m in payload.get("members", ()))
-        self.channels = transform.snowflake_map(self._state.parse_channel(c) for c in payload.get("channels", ()))
+        self.channels = transform.snowflake_map(self._parse_channel(c) for c in payload.get("channels", ()))
         self.max_members = payload.get("max_members", 0)
         self.vanity_url_code = payload.get("vanity_url_code")
         self.description = payload.get("description")
@@ -278,6 +278,11 @@ class Guild(base.Snowflake, base.Volatile):
         self.premium_tier = transform.try_cast(payload.get("premium_tier"), PremiumTier)
         self.premium_subscription_count = payload.get("premium_subscription_count", 0)
         self.system_channel_flags = transform.try_cast(payload.get("system_channel_flags"), SystemChannelFlag)
+
+    def _parse_channel(self, channel):
+        # Sometimes this key is missing...
+        channel["guild_id"] = self.id
+        return self._state.parse_channel(channel)
 
 
 class SystemChannelFlag(enum.IntFlag):

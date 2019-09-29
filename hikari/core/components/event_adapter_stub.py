@@ -156,5 +156,10 @@ class EventAdapterStub(abc.ABC):
     async def handle_webhooks_update(self, gateway, payload):
         ...
 
+    async def handle_presences_replace(self, gateway, payload):
+        # This should not be implemented, as it is for users only and is not documented. This exists to allow us to
+        # ignore it silently rather than producing spam.
+        ...
+
     async def handle_unrecognised_event(self, gateway, event_name, payload):
         ...

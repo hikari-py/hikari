@@ -51,6 +51,12 @@ class BasicStateRegistry(abstract_state_registry.AbstractStateRegistry):
 
     Weak references are used internally to enable atomic destruction of transitively owned objects when references
     elsewhere are dropped.
+
+    Cache accesses are not asynchronous. This means that this implementation is not suitable for interfacing with a
+    distributed cache (e.g. Redis). If you wish to instead use that sort of implementation, you should create an
+    implementation from :class:`hikari.core.mode.abstract_state_registry.AbstractStateRegistry` and implement each
+    method as a coroutine function. You will also need to update the models that access the cache, and the event
+    adapter that calls this cache, appropriately.
     """
 
     __slots__ = (
@@ -201,14 +207,14 @@ class BasicStateRegistry(abstract_state_registry.AbstractStateRegistry):
         guild = self.get_guild_by_id(guild_id)
         member_id = int(member["user"]["id"])
 
-        if guild is None:
-            self.logger.warning("Member ID %s referencing an unknown guild %s; ignoring", member_id, guild_id)
-            return None
-        elif member_id in guild.members:
+        if guild is not None and member_id in guild.members:
             return guild.members[member_id]
         else:
             member_object = _user.Member(self, guild_id, member)
-            guild.members[member_id] = member_object
+
+            # Guild may be none when we receive this member for the first time in a GUILD_CREATE payload.
+            if guild is not None:
+                guild.members[member_id] = member_object
             return member_object
 
     def parse_message(self, message: types.DiscordObject):
@@ -222,6 +228,7 @@ class BasicStateRegistry(abstract_state_registry.AbstractStateRegistry):
     def parse_role(self, role: types.DiscordObject, guild_id: int):
         role = _role.Role(self, role, guild_id)
         self._roles[role.id] = role
+        return role
 
     def parse_user(self, user: types.DiscordObject):
         # If the user already exists, then just return their existing object. We expect discord to tell us if they

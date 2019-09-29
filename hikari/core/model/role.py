@@ -48,6 +48,7 @@ class Role(base.Snowflake, base.Volatile):
         "permissions",
         "managed",
         "mentionable",
+        "__weakref__",
     )
 
     _state: abstract_state_registry.AbstractStateRegistry
