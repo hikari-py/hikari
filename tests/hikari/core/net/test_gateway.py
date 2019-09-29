@@ -40,10 +40,6 @@ def teardown_function():
     _helpers.purge_loop()
 
 
-def fqn(module, item):
-    return module.__name__ + "." + item
-
-
 class Context:
     async def __aenter__(self):
         return self
@@ -71,10 +67,10 @@ class MockGateway(gateway.GatewayClient):
 
 def mock_run_once_parts(timeout=10):
     def decorator(coro):
-        async def wrapper(event_loop):
+        async def wrapper(*args, **kwargs):
             gw = MockGateway(
                 host="wss://gateway.discord.gg:4949/",
-                loop=event_loop,
+                loop=asyncio.get_event_loop(),
                 token="1234",
                 shard_id=917,
                 shard_count=1234,
@@ -86,7 +82,7 @@ def mock_run_once_parts(timeout=10):
             gw._keep_alive = asynctest.CoroutineMock()
             gw._process_events = asynctest.CoroutineMock()
 
-            await coro(event_loop, gw)
+            await coro(*args, **kwargs, gw=gw)
 
         wrapper.__name__ = coro.__name__
         wrapper.__qualname__ = coro.__qualname__
@@ -347,9 +343,9 @@ class TestGateway:
         gw._send_json = asynctest.CoroutineMock()
 
         with contextlib.ExitStack() as stack:
-            stack.enter_context(asynctest.patch(fqn(user_agent, "python_version"), new=lambda: "python3"))
-            stack.enter_context(asynctest.patch(fqn(user_agent, "library_version"), new=lambda: "vx.y.z"))
-            stack.enter_context(asynctest.patch(fqn(platform, "system"), new=lambda: "leenuks"))
+            stack.enter_context(asynctest.patch(_helpers.fqn(user_agent, "python_version"), new=lambda: "python3"))
+            stack.enter_context(asynctest.patch(_helpers.fqn(user_agent, "library_version"), new=lambda: "vx.y.z"))
+            stack.enter_context(asynctest.patch(_helpers.fqn(platform, "system"), new=lambda: "leenuks"))
 
             await gw._send_identify()
             gw._send_json.assert_called_with(
@@ -1040,7 +1036,7 @@ class TestGateway:
 
         await asyncio.sleep(0.1)
 
-        dispatch.assert_called_once_with("explosion", {"brains collected": 55})
+        dispatch.assert_called_once_with(gw, "explosion", {"brains collected": 55})
 
         # This implies the task wasn't directly awaited immediately
         assert dispatch_task_created_at < callback_invoked_at

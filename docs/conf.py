@@ -34,7 +34,7 @@ sys.path.insert(0, os.path.abspath(".."))
 
 # -- Project information -----------------------------------------------------
 
-project = "Hikari"
+project = "Hikari.Core"
 author = "Nekokatt"
 copyright = author
 version = "0.0.16"
@@ -59,6 +59,11 @@ if shutil.which("dot"):
 else:
     print("dot WAS NOT INSTALLED, PLEASE INSTALL GRAPHVIZ PROPERLY FOR dot DIAGRAMS TO RENDER")
 
+# Apply our code that fixes weird issues in graphviz
+with open(os.path.join(os.path.dirname(__name__), "graphviz_hacks.py")) as fp:
+    exec(fp.read(), globals(), locals())  # nosec
+
+
 templates_path = ["_templates"]
 exclude_patterns = []
 
@@ -82,9 +87,10 @@ html_theme_options = {
     # Note the "1" or "True" value above as the third argument to indicate
     # an arbitrary url.
     "navbar_links": [
-        ("Source", "http://gitlab.com/nekoka.tt/hikari", True),
-        ("Wiki", "http://gitlab.com/nekoka.tt/hikari/wikis", True),
-        ("CI", "http://gitlab.com/nekoka.tt/hikari/pipelines", True),
+        ("Hikari", "http://gitlab.com/nekokatt/hikari", True),
+        ("Hikari.Core", "http://gitlab.com/nekokatt/hikari.core", True),
+        ("Wiki", "http://gitlab.com/nekokatt/hikari.core/wikis", True),
+        ("CI", "http://gitlab.com/nekokatt/hikari.core/pipelines", True),
     ],
     # Render the next and previous page links in navbar. (Default: true)
     "navbar_sidebarrel": False,
@@ -150,19 +156,21 @@ intersphinx_mapping = {
 
 # -- Inheritance diagram options ---------------------------------------------
 
+
 # https://www.graphviz.org/doc/info/attrs.html
 # https://www.graphviz.org/doc/info/arrows.html
 inheritance_graph_attrs = dict(
     layout="twopi",  # dot neato twopi circo fdp
-    rankdir="LR",
-    fontsize=12,
+    rankdir="TD",
+    fontsize=10,
     ratio="compress",
     # splines="ortho",
-    pad=0.25,
-    nodesep=1,
-    ranksep=2.4,
-    size='"24.0, 24.0"',
-    splines="curved",
+    pad=0.5,
+    nodesep=4,
+    ranksep=4,
+    # Use a stupidly large size we will never reach, then let the compress ratio fix itself.
+    size='"100000.0 100000.0"',
+    splines="straight",
 )
 
 inheritance_node_attrs = dict(
@@ -171,7 +179,7 @@ inheritance_node_attrs = dict(
 
 inheritance_edge_attrs = dict(color='"#772953"', arrowhead="onormal", arrowsize=1)
 
-graphviz_output_format = "png"
+graphviz_output_format = "svg"
 
 
 def setup(app):

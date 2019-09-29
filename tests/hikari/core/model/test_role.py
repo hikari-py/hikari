@@ -16,15 +16,24 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+from unittest import mock
+
 import pytest
 
+from hikari.core.model import model_cache
+from hikari.core.model import guild as _guild
 from hikari.core.model import permission
 from hikari.core.model import role
 
 
-@pytest.mark.model
-def test_Role():
-    d = {
+@pytest.fixture
+def state():
+    return mock.MagicMock(spec_set=model_cache.AbstractModelCache)
+
+
+@pytest.fixture
+def payload():
+    return {
         "id": "41771983423143936",
         "name": "WE DEM BOYZZ!!!!!!",
         "color": 3447003,
@@ -35,13 +44,17 @@ def test_Role():
         "mentionable": False,
     }
 
-    r = role.Role(d)
+
+@pytest.mark.model
+def test_Role(state, payload):
+    r = role.Role(state, payload, 1234)
 
     assert r.id == 41771983423143936
     assert r.name == "WE DEM BOYZZ!!!!!!"
     assert r.color == 0x3498DB
     assert r.hoist is True
     assert r.position == 1
+    assert r._guild_id == 1234
     assert r.permissions == (
         permission.Permission.USE_VAD
         | permission.Permission.MOVE_MEMBERS
@@ -66,3 +79,12 @@ def test_Role():
     )
     assert r.managed is False
     assert r.mentionable is False
+
+
+@pytest.mark.model
+def test_Role_guild(state, payload):
+    r = role.Role(state, payload, 1234)
+    guild = mock.MagicMock(spec_set=_guild.Guild)
+    state.get_guild_by_id = mock.MagicMock(return_value=guild)
+    assert r.guild is guild
+    state.get_guild_by_id.assert_called_with(1234)

@@ -28,13 +28,13 @@ import typing
 from hikari.core.model import base
 from hikari.core.model import model_cache
 from hikari.core.model import presence
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
 from hikari.core.utils import delegate
 from hikari.core.utils import transform
 
 
 @dataclasses.dataclass()
-class User(base.Snowflake):
+class User(base.Snowflake, base.Volatile):
     """
     Representation of a user account.
     """
@@ -71,10 +71,14 @@ class User(base.Snowflake):
     def __init__(self, global_state: model_cache.AbstractModelCache, payload):
         self._state = global_state
         self.id = int(payload["id"])
+        # We don't expect this to ever change...
+        self.bot = payload.get("bot", False)
+        self.update_state(payload)
+
+    def update_state(self, payload) -> None:
         self.username = payload.get("username")
         self.discriminator = int(payload["discriminator"])
         self.avatar_hash = payload.get("avatar")
-        self.bot = payload.get("bot", False)
 
 
 @delegate.delegate_members(User, "_user")
@@ -113,14 +117,22 @@ class Member(User):
     #: :type: :class:`hikari.core.model.presence.Presence`
     presence: presence.Presence
 
-    # noinspection PyMethodOverriding
+    # noinspection PyMissingConstructor
     def __init__(self, global_state, guild_id, payload):
         self._user = global_state.parse_user(payload["user"])
-        self._role_ids = [int(r) for r in payload.get("roles", ())]
         self._guild_id = guild_id
+        self._update_member_state(payload)
+
+    def update_state(self, payload) -> None:
+        # Don't call super directly, update the delegate instead or we will screw up this object's representation!
+        self._user.update_state(payload["user"])
+        self._update_member_state(payload)
+
+    def _update_member_state(self, payload) -> None:
+        self._role_ids = [int(r) for r in payload.get("roles", ())]
         self.nick = payload.get("nick")
-        self.joined_at = dateutils.parse_iso_8601_datetime(payload["joined_at"])
-        self.premium_since = transform.nullable_cast(payload.get("premium_since"), dateutils.parse_iso_8601_datetime)
+        self.joined_at = date_utils.parse_iso_8601_datetime(payload["joined_at"])
+        self.premium_since = transform.nullable_cast(payload.get("premium_since"), date_utils.parse_iso_8601_datetime)
         self.presence = transform.nullable_cast(payload.get("presence"), presence.Presence)
 
     @property
@@ -149,6 +161,9 @@ class BotUser(User):
 
     def __init__(self, global_state: model_cache.AbstractModelCache, payload):
         super().__init__(global_state, payload)
+
+    def update_state(self, payload) -> None:
+        super().update_state(payload)
         self.verified = payload.get("verified", False)
         self.mfa_enabled = payload.get("mfa_enabled", False)
 

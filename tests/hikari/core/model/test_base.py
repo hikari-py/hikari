@@ -21,6 +21,7 @@ import datetime
 import enum
 
 import pytest
+import typing
 
 from hikari.core.model import base
 
@@ -133,3 +134,33 @@ def test_dataclass_does_not_overwrite_existing_hash_if_explicitly_defined():
     i = Impl()
 
     assert hash(i) == 70
+
+
+@pytest.mark.model
+def test_Volatile_clone_shallow():
+    @dataclasses.dataclass()
+    class Test(base.Volatile):
+        data: typing.List[int]
+
+    data = [1, 2, 3]
+    test = Test(data)
+
+    assert test.clone(False) is not test
+    assert test.clone(False).data is data
+    assert test.clone(False) == test
+    assert test.clone(False).data == data
+
+
+@pytest.mark.model
+def test_Volatile_clone_deep():
+    @dataclasses.dataclass()
+    class Test(base.Volatile):
+        data: typing.List[int]
+
+    data = [1, 2, 3]
+    test = Test(data)
+
+    assert test.clone(True) is not test
+    assert test.clone(True).data is not data
+    assert test.clone(True) == test
+    assert test.clone(True).data == data

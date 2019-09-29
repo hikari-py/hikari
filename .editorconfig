@@ -1,13 +1,31 @@
 root = true
 
-[{*.py,*.yml,*.yaml,*.toml,*.json,*.sh}]
+[{*.py, *.pyx, *.pyi, *.c, *.cxx, *.cpp, *.h, *.hpp, *.hxx, *.sh}]
 end_of_line = lf
 insert_final_newline = true
 charset = utf-8
 indent_size = 4
 indent_style = space
 
-[{*.rst,*.md}]
+[{*.rst, *.md}]
 end_of_line = lf
 insert_final_newline = true
 charset = utf-8
+
+[{*.yaml, *.yml, *.toml, *.json, *.ini}]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+indent_size = 2
+indent_style = space
+
+[{*.mk, Makefile}]
+indent_size = 4
+indent_style = tab
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+
+[*.txt]
+charset = utf-8
+insert_final_newline = false

@@ -26,7 +26,7 @@ import datetime
 import typing
 
 from hikari.core.model import color as _color
-from hikari.core.utils import dateutils
+from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified
 
@@ -300,7 +300,7 @@ class Embed:
     def from_dict(payload):
         timestamp = payload.get("timestamp", unspecified.UNSPECIFIED)
         if timestamp is not unspecified.UNSPECIFIED:
-            timestamp = dateutils.parse_iso_8601_datetime(timestamp)
+            timestamp = date_utils.parse_iso_8601_datetime(timestamp)
 
         embed = Embed(
             title=payload.get("title", unspecified.UNSPECIFIED),
