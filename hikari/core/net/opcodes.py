@@ -171,7 +171,7 @@ class JSONErrorCode(enum.IntEnum):
     #: Unknown user
     UNKNOWN_USER = 10_013
 
-    #: Unknown Emoji
+    #: Unknown AbstractEmoji
     UNKNOWN_EMOJI = 10_014
 
     #: Unknown Webhook

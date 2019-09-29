@@ -34,11 +34,8 @@ from hikari.core.model import user
 from hikari.core.model import webhook
 from hikari.core.utils import types
 
-# Helps the type checker with heavy covariance
-# noinspection PyTypeChecker
 
-
-class AbstractModelCache(abc.ABC):
+class AbstractStateRegistry(abc.ABC):
     """
     Provides the relational interface between different types of objects and the overall cache.
 
@@ -90,7 +87,7 @@ class AbstractModelCache(abc.ABC):
         Returns:
             the :class:`guild.Guild` that was deleted.
 
-        Raises:
+7        Raises:
             KeyError:
                 If the guild does not exist in cache.
         """
@@ -214,7 +211,7 @@ class AbstractModelCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_emoji(self, emoji: types.DiscordObject, guild_id: typing.Optional[int]) -> emoji.Emoji:
+    def parse_emoji(self, emoji: types.DiscordObject, guild_id: typing.Optional[int]) -> emoji.AbstractEmoji:
         """
         Parses a emoji payload into a workable object
 
@@ -223,7 +220,7 @@ class AbstractModelCache(abc.ABC):
             guild_id: the ID of the guild the emoji is from.
 
         Returns:
-            a :class:`emoji.Emoji` object.
+            a :class:`emoji.AbstractEmoji` object.
         """
 
     @abc.abstractmethod
@@ -310,5 +307,23 @@ class AbstractModelCache(abc.ABC):
             timestamp: the timestamp of the last pinned message, or `None` if it was just removed.
         """
 
+    @abc.abstractmethod
+    def update_guild_emojis(
+        self, emoji_list: typing.List[types.DiscordObject], guild_id: int
+    ) -> typing.Tuple[typing.FrozenSet[emoji.GuildEmoji], typing.FrozenSet[emoji.GuildEmoji]]:
+        """
+        Update the emojis in a given guild.
 
-__all__ = ["AbstractModelCache"]
+        Args:
+            emoji_list: the list of the new unparsed emojis.
+            guild_id: The ID of the guild the emojis were updated in.
+
+        Returns:
+            A :class:`tuple` of two :class:`frozenset` of :class:`hikari.core.model.emoji.GuildEmoji` objects.
+            The first set contains all the old emojis. The second set contains all the new emojis.
+
+            Note that this is not ordered.
+        """
+
+
+__all__ = ["AbstractStateRegistry"]

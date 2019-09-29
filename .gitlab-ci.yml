@@ -86,7 +86,7 @@ py38:
         - apt-get update
         - apt-get install git -y
         - apt-get install graphviz -y
-        - pip install poetry nox requests
+        - pip install poetry nox
         - git fetch --all --prune
         - rm public -Rvf || true
         - mkdir public || true

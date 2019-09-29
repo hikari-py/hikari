@@ -24,7 +24,7 @@ from __future__ import annotations
 import enum
 
 from hikari.core.components import basic_state_registry as _state
-from hikari.core.components import event_adapter
+from hikari.core.components import event_adapter_stub
 from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 
@@ -71,7 +71,7 @@ class BasicEvent(enum.Enum):
     GUILD_MEMBER_REMOVE = enum.auto()
 
 
-class BasicEventAdapter(event_adapter.EventAdapter):
+class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
     """
     Basic implementation of event management logic.
     """
@@ -234,7 +234,18 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         guild = self.state_registry.get_guild_by_id(guild_id)
         if guild is not None:
             user = self.state_registry.parse_user(payload["user"])
-            self.dispatch(BasicEvent.GUILD_BAN_ADD, guild, user)
+
+            # The user may or may not be cached, if the guild is large. So, we may have to just pass a normal user, or
+            # if we can, we can pass a whole member. The member should be assumed to be normal behaviour unless caching
+            # of members was disabled, or if Discord is screwing up; regardless, it is probably worth checking this
+            # information first. Since they just got banned, we can't even look this information up anymore...
+            # Perhaps the audit logs could be checked, but this seems like an overkill, honestly...
+            try:
+                member = self.state_registry.delete_member_from_guild(user.id, guild_id)
+            except KeyError:
+                member = user
+
+            self.dispatch(BasicEvent.GUILD_BAN_ADD, guild, member)
 
     async def handle_guild_ban_remove(self, gateway, payload):
         guild_id = int(payload["guild_id"])
@@ -247,10 +258,8 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         guild_id = int(payload["guild_id"])
         guild = self.state_registry.get_guild_by_id(guild_id)
         if guild is not None:
-            old_emojis = [*guild.emojis.values()]
-            new_emojis = [self.state_registry.parse_emoji(emoji, guild_id) for emoji in payload["emojis"]]
-            guild.emojis = transform.snowflake_map(new_emojis)
-            self.dispatch(BasicEvent.GUILD_EMOJIS_UPDATE, old_emojis, new_emojis)
+            old_emojis, new_emojis = self.state_registry.update_guild_emojis(payload, guild_id)
+            self.dispatch(BasicEvent.GUILD_EMOJIS_UPDATE, guild, old_emojis, new_emojis)
 
     async def handle_guild_integrations_update(self, gateway, payload):
         guild_id = int(payload["guild_id"])
@@ -287,7 +296,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         self.dispatch(BasicEvent.GUILD_LEAVE, member)
 
     async def handle_guild_members_chunk(self, gateway, payload):
-        # TODO: implement this properly.
+        # TODO: implement this properly in the future.
         ...
 
     async def handle_guild_role_create(self, gateway, payload):

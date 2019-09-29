@@ -26,7 +26,7 @@ import dataclasses
 from hikari.core.model import base
 from hikari.core.model import color as _color
 from hikari.core.model import guild
-from hikari.core.model import model_cache
+from hikari.core.model import abstract_state_registry
 from hikari.core.model import permission as _permission
 from hikari.core.utils import types
 
@@ -50,7 +50,7 @@ class Role(base.Snowflake, base.Volatile):
         "mentionable",
     )
 
-    _state: model_cache.AbstractModelCache
+    _state: abstract_state_registry.AbstractStateRegistry
     _guild_id: int
 
     #: The ID of the role.
