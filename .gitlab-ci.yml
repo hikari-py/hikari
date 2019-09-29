@@ -127,7 +127,7 @@ test-pages:
     allow_failure: false
     script:
         - source tasks/deploy.sh
-        - set-versions "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-job-${CI_JOB_ID}"
+        - set-versions "$(python tasks/make-version-string.py staging).${CI_PIPELINE_IID}"
         - nox -ssphinx
     artifacts:
         paths:
