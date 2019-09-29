@@ -124,7 +124,7 @@ pages:
 
 test-pages:
     extends: .pages
-    allow_failure: false
+    allow_failure: true
     script:
         - source tasks/deploy.sh
         - set-versions "$(python tasks/make-version-string.py staging).${CI_PIPELINE_IID}"

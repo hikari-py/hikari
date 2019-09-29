@@ -327,6 +327,16 @@ class GuildStoreChannel(GuildChannel, type=6):
     __slots__ = ()
 
 
+def is_channel_type_dm(channel_type: int) -> bool:
+    """
+    Returns True if a raw channel type is for a DM. If a channel type is given that is not recognised, then it returns
+    `False` regardless.
+
+    This is only used internally, there is no other reason for you to use this outside of framework-internal code.
+    """
+    return getattr(_channel_type_to_class.get(channel_type), "is_dm", False)
+
+
 def channel_from_dict(
     global_state, payload
 ) -> typing.Union[
