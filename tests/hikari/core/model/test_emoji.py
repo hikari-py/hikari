@@ -20,13 +20,13 @@ from unittest import mock
 
 import pytest
 
+from hikari.core.model import abstract_state_registry
 from hikari.core.model import emoji
-from hikari.core.model import model_cache
 
 
 @pytest.fixture
 def mock_state():
-    return mock.MagicMock(spec_set=model_cache.AbstractModelCache)
+    return mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
 
 
 @pytest.fixture
@@ -121,3 +121,18 @@ def test_emoji_from_dict_with_unknown_emoji(mock_state, unknown_emoji_payload):
 @pytest.mark.model
 def test_emoji_from_dict_with_guild_emoji(mock_state, guild_emoji_payload):
     assert isinstance(emoji.emoji_from_dict(mock_state, guild_emoji_payload), emoji.GuildEmoji)
+
+
+@pytest.mark.model
+def test_UnicodeEmoji_is_unicode(unicode_emoji_payload):
+    assert emoji.UnicodeEmoji(unicode_emoji_payload).is_unicode
+
+
+@pytest.mark.model
+def test_UnknownEmoji_is_unicode(unknown_emoji_payload):
+    assert not emoji.UnknownEmoji(unknown_emoji_payload).is_unicode
+
+
+@pytest.mark.model
+def test_GuildEmoji_is_unicode(mock_state, guild_emoji_payload):
+    assert not emoji.GuildEmoji(mock_state, guild_emoji_payload, 98765).is_unicode

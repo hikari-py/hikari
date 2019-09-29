@@ -28,10 +28,10 @@ T = typing.TypeVar("T")
 U = typing.TypeVar("U")
 
 
-def assert_not_none(value: T, description: str = "value") -> T:
+def assert_not_none(value: T, description: str = "value must not be None") -> T:
     """Raises a ValueError with the optional description if the given value is None."""
     if value is None:
-        raise ValueError(f"{description} must not be None")
+        raise ValueError(description)
     return value
 
 

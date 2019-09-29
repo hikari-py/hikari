@@ -26,7 +26,7 @@ import datetime
 import typing
 
 from hikari.core.model import base
-from hikari.core.model import model_cache
+from hikari.core.model import abstract_state_registry
 from hikari.core.model import user
 from hikari.core.utils import date_utils
 
@@ -51,7 +51,7 @@ class IntegrationAccount(base.Snowflake):
     #: :type: :class:`str`
     name: str
 
-    def __init__(self, global_state: model_cache.AbstractModelCache, payload):
+    def __init__(self, global_state: abstract_state_registry.AbstractStateRegistry, payload):
         self._state = global_state
         self.id = int(payload["id"])
         self.name = payload.get("name")
@@ -125,7 +125,7 @@ class Integration(base.Snowflake):
     #: :type: :class:`datetime.datetime`
     synced_at: datetime.datetime
 
-    def __init__(self, global_state: model_cache.AbstractModelCache, payload):
+    def __init__(self, global_state: abstract_state_registry.AbstractStateRegistry, payload):
         self._state = global_state
         self.id = int(payload["id"])
         self.name = payload["name"]
