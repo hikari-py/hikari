@@ -121,19 +121,14 @@ class Member(User):
     def __init__(self, global_state, guild_id, payload):
         self._user = global_state.parse_user(payload["user"])
         self._guild_id = guild_id
-        self._update_member_state(payload)
-
-    def update_state(self, payload) -> None:
-        # Don't call super directly, update the delegate instead or we will screw up this object's representation!
-        self._user.update_state(payload["user"])
-        self._update_member_state(payload)
-
-    def _update_member_state(self, payload) -> None:
-        self._role_ids = [int(r) for r in payload.get("roles", ())]
-        self.nick = payload.get("nick")
         self.joined_at = date_utils.parse_iso_8601_datetime(payload.get("joined_at"))
         self.premium_since = transform.nullable_cast(payload.get("premium_since"), date_utils.parse_iso_8601_datetime)
-        self.presence = transform.nullable_cast(payload.get("presence"), presence.Presence)
+        self.update_state(payload.get("role_ids", ()), payload.get("nick"))
+
+    # noinspection PyMethodOverriding
+    def update_state(self, role_ids, nick) -> None:
+        self._role_ids = [int(r) for r in role_ids]
+        self.nick = nick
 
     @property
     def user(self):

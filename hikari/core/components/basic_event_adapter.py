@@ -143,24 +143,14 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
 
     async def handle_channel_update(self, gateway, payload):
         channel_id = int(payload["id"])
-        old_channel = self.state_registry.get_channel_by_id(channel_id)
+        channel_diff = self.state_registry.update_channel(payload)
 
-        is_dm = _channel.is_channel_type_dm(payload["type"])
-
-        if old_channel is not None:
-            new_channel = self.state_registry.parse_channel(payload)
-
-            if is_dm:
-                self.dispatch(BasicEvent.DM_CHANNEL_UPDATE, old_channel, new_channel)
-            else:
-                self.dispatch(BasicEvent.GUILD_CHANNEL_UPDATE, old_channel, new_channel)
-        elif is_dm:
-            self.logger.warning("ignoring received CHANNEL_UPDATE for unknown DM channel %s", channel_id)
+        if channel_diff is not None:
+            is_dm = _channel.is_channel_type_dm(payload["type"])
+            event = BasicEvent.DM_CHANNEL_UPDATE if is_dm else BasicEvent.GUILD_CHANNEL_UPDATE
+            self.dispatch(event, *channel_diff)
         else:
-            self.state_registry.parse_channel(payload)
-            self.logger.warning(
-                "ignoring received CHANNEL_UPDATE for unknown guild channel %s - cache amended", channel_id
-            )
+            self.logger.warning("ignoring received CHANNEL_UPDATE for unknown channel %s", channel_id)
 
     async def handle_channel_delete(self, gateway, payload):
         # Update the channel meta data just for this call.
@@ -214,13 +204,10 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
             self.dispatch(BasicEvent.GUILD_AVAILABLE, guild)
 
     async def handle_guild_update(self, gateway, payload):
-        guild_id = int(payload["id"])
-        guild = self.state_registry.get_guild_by_id(guild_id)
+        guild_diff = self.state_registry.update_guild(payload)
 
-        if guild is not None:
-            previous_guild = guild.clone()
-            new_guild = self.state_registry.parse_guild(payload)
-            self.dispatch(BasicEvent.GUILD_UPDATE, previous_guild, new_guild)
+        if guild_diff is not None:
+            self.dispatch(BasicEvent.GUILD_UPDATE, *guild_diff)
         else:
             self.state_registry.parse_guild(payload)
             self.logger.warning(
@@ -315,7 +302,10 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
         if guild is not None:
             user_payload = payload["user"]
             role_ids = payload["roles"]
-            nick = payload[""]
+            nick = payload["nick"]
+
+            user = self.state_registry.parse_user(user_payload)
+            self.state_registry.update_member(guild_id, role_ids, nick)
 
         else:
             self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)

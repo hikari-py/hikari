@@ -168,6 +168,6 @@ def test_Member_update_state():
             ...
 
     m = mock.MagicMock(wraps=MockMember())
-    user.Member.update_state(m, {"user": {}})
-    m._user.update_state.assert_called()
-    m._update_member_state.assert_called()
+    user.Member.update_state(m, ["1", "2", "3"], "potato")
+    assert m.nick == "potato"
+    assert m._role_ids == [1, 2, 3]
