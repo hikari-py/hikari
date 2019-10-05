@@ -27,20 +27,6 @@ from hikari.core.components import basic_state_registry
 from hikari.core.net import gateway as _gateway
 
 
-@pytest.mark.asyncio
-async def test_unrecognised_events_only_get_warned_once(event_adapter, dispatch, gateway):
-    adapter = basic_event_adapter.BasicEventAdapter(asynctest.MagicMock(), asynctest.MagicMock())
-    adapter.logger.warning = mock.MagicMock()
-
-    await adapter.handle_unrecognised_event(asynctest.MagicMock(), "no_idea", {})
-    assert adapter.logger.warning.call_args[0][1] == "no_idea"
-
-    adapter.logger.warning.reset_mock()
-
-    await adapter.handle_unrecognised_event(asynctest.MagicMock(), "no_idea", {})
-    assert adapter.logger.warning.call_count == 0
-
-
 @pytest.fixture
 def gateway():
     return mock.MagicMock(spec_set=_gateway.GatewayClient)
@@ -59,6 +45,20 @@ def dispatch():
 @pytest.fixture
 def event_adapter(state_registry, dispatch):
     return basic_event_adapter.BasicEventAdapter(state_registry, dispatch)
+
+
+@pytest.mark.asyncio
+async def test_unrecognised_events_only_get_warned_once():
+    adapter = basic_event_adapter.BasicEventAdapter(asynctest.MagicMock(), asynctest.MagicMock())
+    adapter.logger.warning = mock.MagicMock()
+
+    await adapter.handle_unrecognised_event(asynctest.MagicMock(), "no_idea", {})
+    assert adapter.logger.warning.call_args[0][1] == "no_idea"
+
+    adapter.logger.warning.reset_mock()
+
+    await adapter.handle_unrecognised_event(asynctest.MagicMock(), "no_idea", {})
+    assert adapter.logger.warning.call_count == 0
 
 
 @pytest.mark.asyncio
