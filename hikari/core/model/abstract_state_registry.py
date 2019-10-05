@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019
 #
@@ -29,6 +29,7 @@ from hikari.core.model import channel
 from hikari.core.model import emoji
 from hikari.core.model import guild
 from hikari.core.model import message
+from hikari.core.model import presence
 from hikari.core.model import role
 from hikari.core.model import user
 from hikari.core.model import webhook
@@ -50,7 +51,8 @@ class AbstractStateRegistry(abc.ABC):
         Delete the given channel from the cache. This may be either a channel from a guild or a DM channel.
 
         Args:
-            channel_id: the channel ID to delete.
+            channel_id:
+                the channel ID to delete.
 
         Returns:
             The channel that was deleted.
@@ -66,7 +68,8 @@ class AbstractStateRegistry(abc.ABC):
         Delete the given emoji ID from the cache.
         
         Args:
-            emoji_id: the ID of the emoji to delete.
+            emoji_id:
+                the ID of the emoji to delete.
 
         Returns:
             The :class:`emoji.GuildEmoji` that was deleted.
@@ -82,12 +85,13 @@ class AbstractStateRegistry(abc.ABC):
         Delete the given guild ID from the cache.
 
         Args:
-            guild_id: the guild ID to delete.
+            guild_id:
+                the guild ID to delete.
 
         Returns:
             the :class:`guild.Guild` that was deleted.
 
-7        Raises:
+        Raises:
             KeyError:
                 If the guild does not exist in cache.
         """
@@ -98,8 +102,10 @@ class AbstractStateRegistry(abc.ABC):
         Delete the member with the given user ID from the given guild ID's member list.
 
         Args:
-            user_id: the user ID to delete
-            guild_id: the guild ID to delete from
+            user_id:
+                the user ID to delete
+            guild_id:
+                the guild ID to delete from
 
         Returns:
             the :class:`user.Member` that was deleted.
@@ -115,7 +121,8 @@ class AbstractStateRegistry(abc.ABC):
         Delete the given role ID from the cache.
 
         Args:
-            role_id: the ID of the role to delete.
+            role_id:
+                the ID of the role to delete.
 
         Returns:
             The :class:`role.Role` that was deleted.
@@ -132,7 +139,8 @@ class AbstractStateRegistry(abc.ABC):
         channels are also checked. If nothing is found still, we return `None`.
 
         Args:
-            channel_id: the channel ID.
+            channel_id:
+                the channel ID.
 
         Returns:
             a :class:`channel.Channel` derivative, or `None` if nothing is found.
@@ -144,7 +152,8 @@ class AbstractStateRegistry(abc.ABC):
         Find a guild by an ID.
 
         Args:
-            guild_id: the ID of the guild to look up.
+            guild_id:
+                the ID of the guild to look up.
 
         Returns:
             a :class:`guild.Guild` object, or `None` if one was not found.
@@ -156,7 +165,8 @@ class AbstractStateRegistry(abc.ABC):
         Find a message by an ID.
 
         Args:
-            message_id: the ID of the message to look up.
+            message_id:
+                the ID of the message to look up.
 
         Returns:
             a :class:`message.Message` object, or `None` if one was not found.
@@ -168,7 +178,8 @@ class AbstractStateRegistry(abc.ABC):
         Find a cached role by an ID.
 
         Args:
-            role_id: the ID of the role to look up.
+            role_id:
+                the ID of the role to look up.
 
         Returns:
             a :class:`role.Role` object, or `None` if one was not found.
@@ -180,121 +191,206 @@ class AbstractStateRegistry(abc.ABC):
         Find a user by an ID.
 
         Args:
-            user_id: the ID of the user to look up.
+            user_id:
+                the ID of the user to look up.
 
         Returns:
             a :class:`user.User` object, or `None` if one was not found.
         """
 
     @abc.abstractmethod
-    def parse_bot_user(self, bot_user: types.DiscordObject) -> user.BotUser:
+    def parse_bot_user(self, bot_user_payload: types.DiscordObject) -> user.BotUser:
         """
         Parses a bot user payload into a workable object
 
         Args:
-            bot_user: the payload of the bot user.
+            bot_user_payload:
+                the payload of the bot user.
 
         Returns:
             a :class:`user.BotUser` object.
         """
 
     @abc.abstractmethod
-    def parse_channel(self, channel: types.DiscordObject) -> channel.Channel:
+    def parse_channel(self, channel_payload: types.DiscordObject) -> channel.Channel:
         """
         Parses a channel payload into a workable object
 
         Args:
-            channel: the payload of the channel.
+            channel_payload:
+                the payload of the channel.
 
         Returns:
             a :class:`channel.Channel` object.
         """
 
     @abc.abstractmethod
-    def parse_emoji(self, emoji: types.DiscordObject, guild_id: typing.Optional[int]) -> emoji.AbstractEmoji:
+    def parse_emoji(self, emoji_payload: types.DiscordObject, guild_id: typing.Optional[int]) -> emoji.AbstractEmoji:
         """
         Parses a emoji payload into a workable object
 
         Args:
-            emoji: the payload of the emoji.
-            guild_id: the ID of the guild the emoji is from.
+            emoji_payload:
+                the payload of the emoji.
+            guild_id:
+                the ID of the guild the emoji is from.
 
         Returns:
             a :class:`emoji.AbstractEmoji` object.
         """
 
     @abc.abstractmethod
-    def parse_guild(self, guild: types.DiscordObject) -> guild.Guild:
+    def parse_guild(self, guild_payload: types.DiscordObject) -> guild.Guild:
         """
         Parses a guild payload into a workable object
 
         Args:
-            guild: the payload of the guild.
+            guild_payload:
+                the payload of the guild.
 
         Returns:
             a :class:`guild.Guild` object.
         """
 
     @abc.abstractmethod
-    def parse_member(self, member: types.DiscordObject, guild_id: int) -> user.Member:
+    def parse_member(self, member_payload: types.DiscordObject, guild_id: int) -> user.Member:
         """
         Parses a member payload into a workable object
 
         Args:
-            member: the payload of the member.
-            guild_id: the ID of the guild the member is from.
+            member_payload:
+                the payload of the member.
+            guild_id:
+                the ID of the guild the member is from.
 
         Returns:
             a :class:`user.Member` object.
         """
 
     @abc.abstractmethod
-    def parse_message(self, message: types.DiscordObject) -> message.Message:
+    def parse_message(self, message_payload: types.DiscordObject) -> message.Message:
         """
         Parses a message payload into a workable object
 
         Args:
-            message: the payload of the message.
+            message_payload:
+                the payload of the message.
 
         Returns:
             a :class:`message.Message` object.
         """
 
     @abc.abstractmethod
-    def parse_role(self, role: types.DiscordObject, guild_id: int) -> role.Role:
+    def parse_presence(self, guild_id: int, user_id: int, presence_payload: types.DiscordObject) -> presence.Presence:
+        """
+        Parse a presence for a given guild and user, and attempt to update the member corresponding to the presence
+        if it can be found.
+
+        Args:
+            guild_id:
+                the ID of the guild.
+            user_id:
+                the ID of the user.
+            presence_payload:
+                the payload containing the presence.
+
+        Returns:
+            a :class:`presence.Presence` object.
+        """
+
+    @abc.abstractmethod
+    def parse_role(self, role_payload: types.DiscordObject, guild_id: int) -> role.Role:
         """
         Parses a role payload into a workable object
 
         Args:
-            role: the payload of the role.
-            guild_id: the ID of the owning guild.
+            role_payload:
+                the payload of the role.
+            guild_id:
+                the ID of the owning guild.
 
         Returns:
             a :class:`role.Role` object.
         """
 
     @abc.abstractmethod
-    def parse_user(self, user: types.DiscordObject) -> user.User:
+    def parse_user(self, user_payload: types.DiscordObject) -> user.User:
         """
         Parses a user payload into a workable object
 
         Args:
-            user: the payload of the user.
+            user_payload:
+                the payload of the user.
 
         Returns:
             a :class:`user.User` object.
         """
 
     @abc.abstractmethod
-    def parse_webhook(self, webhook: types.DiscordObject) -> webhook.Webhook:
+    def parse_webhook(self, webhook_payload: types.DiscordObject) -> webhook.Webhook:
         """
         Parses a webhook payload into a workable object
 
         Args:
-            webhook: the payload of the webhook.
+            webhook_payload:
+                the payload of the webhook.
 
         Returns:
             a :class:`webhook.Webhook` object.
+        """
+
+    @abc.abstractmethod
+    def update_channel(
+        self, channel_payload: types.DiscordObject
+    ) -> typing.Optional[typing.Tuple[channel.Channel, channel.Channel]]:
+        """
+        Update the given channel represented by the channel payload.
+
+        Args:
+            channel_payload:
+                The raw payload to update the channel with. This contains the ID of the channel also.
+
+        Returns:
+            A :class:`tuple` of two :class:`channel.Channel` objects. The first represents the old channel state, and
+            the second represents the new channel state. If no channel was cached, this returns `None`.
+        """
+
+    @abc.abstractmethod
+    def update_guild(
+        self, guild_payload: types.DiscordObject
+    ) -> typing.Optional[typing.Tuple[guild.Guild, guild.Guild]]:
+        """
+
+        Update the given guild represented by the guild payload.
+
+        Args:
+            guild_payload:
+                The raw guild payload to update. This contains the ID of the guild also.
+
+        Returns:
+            A :class:`tuple` of two :class:`guild.Guild` objects. The first represents the old guild state, and
+            the second represents the new guild state. If no guild was cached, this returns `None`.
+        """
+
+    @abc.abstractmethod
+    def update_guild_emojis(
+        self, emoji_list: typing.List[types.DiscordObject], guild_id: int
+    ) -> typing.Optional[typing.Tuple[typing.FrozenSet[emoji.GuildEmoji], typing.FrozenSet[emoji.GuildEmoji]]]:
+        """
+        Update the emojis in a given guild.
+
+        Args:
+            emoji_list:
+                the list of the new unparsed emojis.
+            guild_id:
+                the ID of the guild the emojis were updated in.
+
+        Returns:
+            A :class:`tuple` of two :class:`frozenset` of :class:`hikari.core.model.emoji.GuildEmoji` objects.
+            The first set contains all the old emojis. The second set contains all the new emojis. If the guild was
+            not cached, this will just return `None`
+
+            Note that this is not ordered.
         """
 
     @abc.abstractmethod
@@ -303,26 +399,53 @@ class AbstractStateRegistry(abc.ABC):
         Update the last pinned timestamp time for the given channel.
 
         Args:
-            channel_id: the ID of the channel to update.
-            timestamp: the timestamp of the last pinned message, or `None` if it was just removed.
+            channel_id:
+                the ID of the channel to update.
+            timestamp:
+                the timestamp of the last pinned message, or `None` if it was just removed.
         """
 
     @abc.abstractmethod
-    def update_guild_emojis(
-        self, emoji_list: typing.List[types.DiscordObject], guild_id: int
-    ) -> typing.Tuple[typing.FrozenSet[emoji.GuildEmoji], typing.FrozenSet[emoji.GuildEmoji]]:
+    def update_member(
+        self, guild_id: int, role_ids: typing.List[int], nick: typing.Optional[str], user_id: int
+    ) -> typing.Optional[typing.Tuple[user.Member, user.Member]]:
         """
-        Update the emojis in a given guild.
+        Update a member in a given guild. If the member is not already registered, nothing is returned.
 
         Args:
-            emoji_list: the list of the new unparsed emojis.
-            guild_id: The ID of the guild the emojis were updated in.
+            guild_id:
+                the ID of the guild the member is in.
+            role_ids:
+                the list of roles the member should have.
+            nick:
+                the nickname of the member.
+            user_id:
+                the ID of the member to update.
 
         Returns:
-            A :class:`tuple` of two :class:`frozenset` of :class:`hikari.core.model.emoji.GuildEmoji` objects.
-            The first set contains all the old emojis. The second set contains all the new emojis.
+            a :class:`tuple` of two :class:`user.Member` objects: first being the old state of the member and the
+            second being the new state (if the member exists). If it does not exist in that guild, or the guild itself
+            is not cached, then `None` is returned instead.
+        """
 
-            Note that this is not ordered.
+    def update_member_presence(
+        self, guild_id: int, user_id: int, presence_payload: types.DiscordObject
+    ) -> typing.Optional[typing.Tuple[user.Member, presence.Presence, presence.Presence]]:
+        """
+        Update the presence for a given user in a given guild.
+
+        Args:
+            guild_id:
+                The guild of the member.
+            user_id:
+                The ID of the member.
+            presence_payload:
+                The new presence to set.
+
+        Returns:
+            a :class:`tuple` of three items: the first being the :class:`user.Member` that was updated, the second
+            being the :class:`presence.Presence` before, and the third being the :class:`presence.Presence` now.
+            If the user, member, or guild does not exist in the cache, then `None` is returned instead.
         """
 
 
