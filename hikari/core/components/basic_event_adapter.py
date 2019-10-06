@@ -54,11 +54,11 @@ class BasicEvent(enum.Enum):
     DM_CHANNEL_PIN_REMOVED = enum.auto()
     GUILD_CHANNEL_PIN_REMOVED = enum.auto()
 
-    GUILD_CREATE = enum.auto()
     GUILD_AVAILABLE = enum.auto()
+    GUILD_CREATE = enum.auto()
+    GUILD_LEAVE = enum.auto()
     GUILD_UNAVAILABLE = enum.auto()
     GUILD_UPDATE = enum.auto()
-    GUILD_LEAVE = enum.auto()
 
     GUILD_BAN_ADD = enum.auto()
     GUILD_BAN_REMOVE = enum.auto()
@@ -70,6 +70,10 @@ class BasicEvent(enum.Enum):
     GUILD_MEMBER_ADD = enum.auto()
     GUILD_MEMBER_UPDATE = enum.auto()
     GUILD_MEMBER_REMOVE = enum.auto()
+
+    GUILD_ROLE_CREATE = enum.auto()
+    GUILD_ROLE_UPDATE = enum.auto()
+    GUILD_ROLE_DELETE = enum.auto()
 
 
 class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
@@ -226,14 +230,17 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
         # We shouldn't ever need to parse this payload unless we have inconsistent state, but if that happens,
         # lets attempt to fix it.
         guild_id = int(payload["id"])
-        guild = self.state_registry.get_guild_by_id(guild_id)
 
-        if guild is None:
-            guild = self.state_registry.parse_guild(payload)
+        self.state_registry.set_guild_unavailability(guild_id, True)
 
-        # TODO: move to state registry code, maybe?
-        guild.unavailable = True
-        self.dispatch(BasicEvent.GUILD_UNAVAILABLE, guild)
+        guild_obj = self.state_registry.get_guild_by_id(guild_id)
+
+        if guild_obj is not None:
+            self.dispatch(BasicEvent.GUILD_UNAVAILABLE, guild_obj)
+        else:
+            # We don't have a guild parsed yet. That shouldn't happen but if it does, we can make a note of this
+            # so that we don't fail on other events later, and pre-emptively parse this information now.
+            self.state_registry.parse_guild(payload)
 
     async def _handle_guild_leave(self, payload):
         guild = self.state_registry.parse_guild(payload)
@@ -298,15 +305,16 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
     async def handle_guild_member_update(self, gateway, payload):
         guild_id = int(payload["guild_id"])
         guild = self.state_registry.get_guild_by_id(guild_id)
+        user_id = int(payload["user"]["id"])
 
-        if guild is not None:
+        if guild is not None and user_id in guild.members:
             user_payload = payload["user"]
             role_ids = payload["roles"]
             nick = payload["nick"]
 
-            user = self.state_registry.parse_user(user_payload)
-            self.state_registry.update_member(guild_id, role_ids, nick)
-
+            member_diff = self.state_registry.update_member(guild_id, role_ids, nick, user_id)
+            if member_diff is not None:
+                self.dispatch(BasicEvent.GUILD_MEMBER_UPDATE, *member_diff)
         else:
             self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)
 
@@ -326,6 +334,7 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
 
         if guild is not None:
             role = self.state_registry.parse_role(payload["role"], guild_id)
+            self.dispatch(BasicEvent.GU)
 
     async def handle_guild_role_update(self, gateway, payload):
         ...

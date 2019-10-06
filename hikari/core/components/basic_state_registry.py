@@ -258,6 +258,11 @@ class BasicStateRegistry(abstract_state_registry.AbstractStateRegistry):
         # Don't cache webhooks.
         return webhook.Webhook(self, webhook_payload)
 
+    def set_guild_unavailability(self, guild_id: int, unavailability: bool) -> None:
+        guild_obj = self.get_guild_by_id(guild_id)
+        if guild_obj is not None:
+            guild_obj.unavailable = unavailability
+
     def update_channel(
         self, channel_payload: types.DiscordObject
     ) -> typing.Optional[typing.Tuple[channel.Channel, channel.Channel]]:

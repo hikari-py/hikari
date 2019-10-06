@@ -340,6 +340,18 @@ class AbstractStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
+    def set_guild_unavailability(self, guild_id: int, unavailability: bool) -> None:
+        """
+        Update the availability for the given guild.
+
+        Args:
+            guild_id:
+                the ID for the given guild.
+            unavailability:
+                `True` if unavailable, `False` if available.
+        """
+
+    @abc.abstractmethod
     def update_channel(
         self, channel_payload: types.DiscordObject
     ) -> typing.Optional[typing.Tuple[channel.Channel, channel.Channel]]:
@@ -348,7 +360,7 @@ class AbstractStateRegistry(abc.ABC):
 
         Args:
             channel_payload:
-                The raw payload to update the channel with. This contains the ID of the channel also.
+                the raw payload to update the channel with. This contains the ID of the channel also.
 
         Returns:
             A :class:`tuple` of two :class:`channel.Channel` objects. The first represents the old channel state, and
