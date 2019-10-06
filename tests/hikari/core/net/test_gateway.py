@@ -335,17 +335,17 @@ class TestGateway:
         gw._send_json.assert_called_with({"op": 6, "d": {"token": "1234", "session_id": 1234321, "seq": 69_420}}, False)
 
     async def test_send_identify(self, event_loop):
-        gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None, large_threshold=69
-        )
-        gw.session_id = 1234321
-        gw.seq = 69_420
-        gw._send_json = asynctest.CoroutineMock()
-
         with contextlib.ExitStack() as stack:
             stack.enter_context(asynctest.patch(_helpers.fqn(user_agent, "python_version"), new=lambda: "python3"))
             stack.enter_context(asynctest.patch(_helpers.fqn(user_agent, "library_version"), new=lambda: "vx.y.z"))
             stack.enter_context(asynctest.patch(_helpers.fqn(platform, "system"), new=lambda: "leenuks"))
+
+            gw = MockGateway(
+                host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None, large_threshold=69
+            )
+            gw.session_id = 1234321
+            gw.seq = 69_420
+            gw._send_json = asynctest.CoroutineMock()
 
             await gw._send_identify()
             gw._send_json.assert_called_with(

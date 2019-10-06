@@ -21,59 +21,13 @@ Handles consumption of gateway events and converting them to the correct data ty
 """
 from __future__ import annotations
 
-import enum
 
-from hikari.core.components import basic_state_registry as _state
+from hikari.core.components.basic import state_registry as _state
 from hikari.core.components import event_adapter_stub
-from hikari.core.model import channel as _channel
+from hikari.core.net import gateway as _gateway
+from hikari.core.model import channel
 from hikari.core.utils import date_utils
 from hikari.core.utils import transform
-
-
-class BasicEvent(enum.Enum):
-    """Event names that the basic event adapter can emit to the dispatcher."""
-
-    CONNECT = enum.auto()
-    DISCONNECT = enum.auto()
-    INVALID_SESSION = enum.auto()
-    REQUEST_TO_RECONNECT = enum.auto()
-    RESUME = enum.auto()
-
-    DM_CHANNEL_CREATE = enum.auto()
-    GUILD_CHANNEL_CREATE = enum.auto()
-
-    DM_CHANNEL_UPDATE = enum.auto()
-    GUILD_CHANNEL_UPDATE = enum.auto()
-
-    DM_CHANNEL_DELETE = enum.auto()
-    GUILD_CHANNEL_DELETE = enum.auto()
-
-    DM_CHANNEL_PIN_ADDED = enum.auto()
-    GUILD_CHANNEL_PIN_ADDED = enum.auto()
-
-    DM_CHANNEL_PIN_REMOVED = enum.auto()
-    GUILD_CHANNEL_PIN_REMOVED = enum.auto()
-
-    GUILD_AVAILABLE = enum.auto()
-    GUILD_CREATE = enum.auto()
-    GUILD_LEAVE = enum.auto()
-    GUILD_UNAVAILABLE = enum.auto()
-    GUILD_UPDATE = enum.auto()
-
-    GUILD_BAN_ADD = enum.auto()
-    GUILD_BAN_REMOVE = enum.auto()
-
-    GUILD_EMOJIS_UPDATE = enum.auto()
-
-    GUILD_INTEGRATIONS_UPDATE = enum.auto()
-
-    GUILD_MEMBER_ADD = enum.auto()
-    GUILD_MEMBER_UPDATE = enum.auto()
-    GUILD_MEMBER_REMOVE = enum.auto()
-
-    GUILD_ROLE_CREATE = enum.auto()
-    GUILD_ROLE_UPDATE = enum.auto()
-    GUILD_ROLE_DELETE = enum.auto()
 
 
 class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
@@ -98,37 +52,37 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
 
     async def handle_disconnect(self, gateway, payload):
         """
-        Dispatches a :attr:`BasicEvent.DISCONNECT` with the gateway object that triggered it as an argument,
+        Dispatches a :attr:`_gateway.Event.DISCONNECT` with the gateway object that triggered it as an argument,
         as well as the integer code given as the closure reason, and the reason string, if there was one.
         """
-        self.dispatch(BasicEvent.DISCONNECT, gateway, payload.get("code"), payload.get("reason"))
+        self.dispatch(_gateway.Event.DISCONNECT, gateway, payload.get("code"), payload.get("reason"))
 
-    async def handle_hello(self, gateway, payload):
+    async def handle_connect(self, gateway, payload):
         """
-        Dispatches a :attr:`BasicEvent.CONNECT` with the gateway object that triggered it as an argument.
+        Dispatches a :attr:`_gateway.Event.CONNECT` with the gateway object that triggered it as an argument.
         """
-        self.dispatch(BasicEvent.CONNECT, gateway)
+        self.dispatch(_gateway.Event.CONNECT, gateway)
 
     async def handle_invalid_session(self, gateway, payload):
         """
-        Dispatches a :attr:`BasicEvent.INVALID_SESSION` with the gateway object that triggered it
+        Dispatches a :attr:`_gateway.Event.INVALID_SESSION` with the gateway object that triggered it
         and a :class:`bool` indicating if the connection is able to be resumed or not as arguments.
         as an argument.
         """
-        self.dispatch(BasicEvent.INVALID_SESSION, gateway, payload)
+        self.dispatch(_gateway.Event.INVALID_SESSION, gateway, payload)
 
     async def handle_request_to_reconnect(self, gateway, payload):
         """
-        Dispatches a :attr:`BasicEvent.REQUEST_TO_RECONNECT` with the gateway object that triggered it as
+        Dispatches a :attr:`_gateway.Event.REQUEST_TO_RECONNECT` with the gateway object that triggered it as
         an argument.
         """
-        self.dispatch(BasicEvent.REQUEST_TO_RECONNECT, gateway)
+        self.dispatch(_gateway.Event.REQUEST_TO_RECONNECT, gateway)
 
     async def handle_resumed(self, gateway, payload):
         """
-        Dispatches a :attr:`BasicEvent.RESUME` with the gateway object that triggered it as an argument.
+        Dispatches a :attr:`_gateway.Event.RESUME` with the gateway object that triggered it as an argument.
         """
-        self.dispatch(BasicEvent.RESUME, gateway)
+        self.dispatch(_gateway.Event.RESUMED, gateway)
 
     """
     API events
@@ -137,9 +91,9 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
     async def handle_channel_create(self, gateway, payload):
         channel = self.state_registry.parse_channel(payload)
         if channel.is_dm:
-            self.dispatch(BasicEvent.DM_CHANNEL_CREATE, channel)
+            self.dispatch(_gateway.Event.DM_CHANNEL_CREATE, channel)
         elif channel.guild is not None:
-            self.dispatch(BasicEvent.GUILD_CHANNEL_CREATE, channel)
+            self.dispatch(_gateway.Event.GUILD_CHANNEL_CREATE, channel)
         else:
             self.logger.warning(
                 "ignoring received channel_create for unknown guild %s channel %s", payload.get("guild_id"), channel.id
@@ -150,8 +104,8 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
         channel_diff = self.state_registry.update_channel(payload)
 
         if channel_diff is not None:
-            is_dm = _channel.is_channel_type_dm(payload["type"])
-            event = BasicEvent.DM_CHANNEL_UPDATE if is_dm else BasicEvent.GUILD_CHANNEL_UPDATE
+            is_dm = channel.is_channel_type_dm(payload["type"])
+            event = _gateway.Event.DM_CHANNEL_UPDATE if is_dm else _gateway.Event.GUILD_CHANNEL_UPDATE
             self.dispatch(event, *channel_diff)
         else:
             self.logger.warning("ignoring received CHANNEL_UPDATE for unknown channel %s", channel_id)
@@ -166,32 +120,32 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
             # Inconsistent state gets ignored. This should not happen, I don't think.
             pass
         else:
-            event = BasicEvent.DM_CHANNEL_DELETE if channel.is_dm else BasicEvent.GUILD_CHANNEL_DELETE
+            event = _gateway.Event.DM_CHANNEL_DELETE if channel.is_dm else _gateway.Event.GUILD_CHANNEL_DELETE
             self.dispatch(event, channel)
 
     async def handle_channel_pins_update(self, gateway, payload):
         channel_id = int(payload["channel_id"])
-        channel = self.state_registry.get_channel_by_id(channel_id)
+        channel_obj = self.state_registry.get_channel_by_id(channel_id)
 
-        if channel is not None:
+        if channel_obj is not None:
             last_pin_timestamp = transform.nullable_cast(
                 payload.get("last_pin_timestamp"), date_utils.parse_iso_8601_datetime
             )
 
             if last_pin_timestamp is not None:
-                if channel.is_dm:
-                    self.dispatch(BasicEvent.DM_CHANNEL_PIN_ADDED, last_pin_timestamp)
+                if channel_obj.is_dm:
+                    self.dispatch(_gateway.Event.DM_CHANNEL_PIN_ADDED, last_pin_timestamp)
                 else:
-                    self.dispatch(BasicEvent.GUILD_CHANNEL_PIN_ADDED, last_pin_timestamp)
+                    self.dispatch(_gateway.Event.GUILD_CHANNEL_PIN_ADDED, last_pin_timestamp)
             else:
-                if channel.is_dm:
-                    self.dispatch(BasicEvent.DM_CHANNEL_PIN_REMOVED)
+                if channel_obj.is_dm:
+                    self.dispatch(_gateway.Event.DM_CHANNEL_PIN_REMOVED)
                 else:
-                    self.dispatch(BasicEvent.GUILD_CHANNEL_PIN_REMOVED)
+                    self.dispatch(_gateway.Event.GUILD_CHANNEL_PIN_REMOVED)
         else:
             self.logger.warning(
                 "ignoring CHANNEL_PINS_UPDATE for %s channel %s which was not previously cached",
-                "DM" if _channel.is_channel_type_dm(payload["type"]) else "guild",
+                "DM" if channel.is_channel_type_dm(payload["type"]) else "guild",
                 channel_id,
             )
 
@@ -202,16 +156,16 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
         guild = self.state_registry.parse_guild(payload)
 
         if not was_already_loaded:
-            self.dispatch(BasicEvent.GUILD_CREATE, guild)
+            self.dispatch(_gateway.Event.GUILD_CREATE, guild)
 
         if not unavailable:
-            self.dispatch(BasicEvent.GUILD_AVAILABLE, guild)
+            self.dispatch(_gateway.Event.GUILD_AVAILABLE, guild)
 
     async def handle_guild_update(self, gateway, payload):
         guild_diff = self.state_registry.update_guild(payload)
 
         if guild_diff is not None:
-            self.dispatch(BasicEvent.GUILD_UPDATE, *guild_diff)
+            self.dispatch(_gateway.Event.GUILD_UPDATE, *guild_diff)
         else:
             self.state_registry.parse_guild(payload)
             self.logger.warning(
@@ -236,7 +190,7 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
         guild_obj = self.state_registry.get_guild_by_id(guild_id)
 
         if guild_obj is not None:
-            self.dispatch(BasicEvent.GUILD_UNAVAILABLE, guild_obj)
+            self.dispatch(_gateway.Event.GUILD_UNAVAILABLE, guild_obj)
         else:
             # We don't have a guild parsed yet. That shouldn't happen but if it does, we can make a note of this
             # so that we don't fail on other events later, and pre-emptively parse this information now.
@@ -245,7 +199,7 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
     async def _handle_guild_leave(self, payload):
         guild = self.state_registry.parse_guild(payload)
         self.state_registry.delete_guild(guild.id)
-        self.dispatch(BasicEvent.GUILD_LEAVE, guild)
+        self.dispatch(_gateway.Event.GUILD_LEAVE, guild)
 
     async def handle_guild_ban_add(self, gateway, payload):
         guild_id = int(payload["guild_id"])
@@ -263,7 +217,7 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
             except KeyError:
                 member = user
 
-            self.dispatch(BasicEvent.GUILD_BAN_ADD, guild, member)
+            self.dispatch(_gateway.Event.GUILD_BAN_ADD, guild, member)
         else:
             self.logger.warning("ignoring GUILD_BAN_ADD for user %s in unknown guild %s", user.id, guild_id)
 
@@ -272,7 +226,7 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
         guild = self.state_registry.get_guild_by_id(guild_id)
         user = self.state_registry.parse_user(payload["user"])
         if guild is not None:
-            self.dispatch(BasicEvent.GUILD_BAN_REMOVE, guild, user)
+            self.dispatch(_gateway.Event.GUILD_BAN_REMOVE, guild, user)
         else:
             self.logger.warning("ignoring GUILD_BAN_REMOVE for user %s in unknown guild %s", user.id, guild_id)
 
@@ -281,7 +235,7 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
         guild = self.state_registry.get_guild_by_id(guild_id)
         if guild is not None:
             old_emojis, new_emojis = self.state_registry.update_guild_emojis(payload, guild_id)
-            self.dispatch(BasicEvent.GUILD_EMOJIS_UPDATE, guild, old_emojis, new_emojis)
+            self.dispatch(_gateway.Event.GUILD_EMOJIS_UPDATE, guild, old_emojis, new_emojis)
         else:
             self.logger.warning("ignoring GUILD_EMOJIS_UPDATE for unknown guild %s", guild_id)
 
@@ -289,7 +243,7 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
         guild_id = int(payload["guild_id"])
         guild = self.state_registry.get_guild_by_id(guild_id)
         if guild is not None:
-            self.dispatch(BasicEvent.GUILD_INTEGRATIONS_UPDATE, guild)
+            self.dispatch(_gateway.Event.GUILD_INTEGRATIONS_UPDATE, guild)
         else:
             self.logger.warning("ignoring GUILD_INTEGRATIONS_UPDATE for unknown guild %s", guild_id)
 
@@ -298,7 +252,7 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
         guild = self.state_registry.get_guild_by_id(guild_id)
         if guild is not None:
             member = self.state_registry.parse_member(payload, guild_id)
-            self.dispatch(BasicEvent.GUILD_MEMBER_ADD, member)
+            self.dispatch(_gateway.Event.GUILD_MEMBER_ADD, member)
         else:
             self.logger.warning("ignoring GUILD_MEMBER_ADD for unknown guild %s", guild_id)
 
@@ -314,7 +268,7 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
 
             member_diff = self.state_registry.update_member(guild_id, role_ids, nick, user_id)
             if member_diff is not None:
-                self.dispatch(BasicEvent.GUILD_MEMBER_UPDATE, *member_diff)
+                self.dispatch(_gateway.Event.GUILD_MEMBER_UPDATE, *member_diff)
         else:
             self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)
 
@@ -322,11 +276,11 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
         user_id = int(payload["id"])
         guild_id = int(payload["guild_id"])
         member = self.state_registry.delete_member_from_guild(user_id, guild_id)
-        self.dispatch(BasicEvent.GUILD_LEAVE, member)
+        self.dispatch(_gateway.Event.GUILD_LEAVE, member)
 
     async def handle_guild_members_chunk(self, gateway, payload):
-        # TODO: implement this properly in the future.
-        ...
+        # TODO: implement this feature.
+        self.logger.warning("Received GUILD_MEMBERS_CHUNK but that is not implemented yet.")
 
     async def handle_guild_role_create(self, gateway, payload):
         guild_id = int(payload["guild_id"])
@@ -334,7 +288,6 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
 
         if guild is not None:
             role = self.state_registry.parse_role(payload["role"], guild_id)
-            self.dispatch(BasicEvent.GU)
 
     async def handle_guild_role_update(self, gateway, payload):
         ...

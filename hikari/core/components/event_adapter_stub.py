@@ -51,7 +51,7 @@ class EventAdapterStub(abc.ABC):
     async def handle_request_to_reconnect(self, gateway, payload):
         ...
 
-    async def handle_hello(self, gateway, payload):
+    async def handle_connect(self, gateway, payload):
         ...
 
     async def handle_ready(self, gateway, payload):
