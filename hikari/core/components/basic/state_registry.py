@@ -121,11 +121,15 @@ class BasicStateRegistry(abstract_state_registry.AbstractStateRegistry):
         del guild_obj.members[user_id]
         return member_obj
 
-    def delete_role(self, role_id: int) -> role.Role:
-        role_obj = self._roles[role_id]
-        guild_obj = role_obj.guild
+    # noinspection PyProtectedMember
+    def delete_role(self, guild_id: int, role_id: int) -> role.Role:
+        guild_obj = self._guilds[guild_id]
+        role_obj = guild_obj.roles[role_id]
         del guild_obj.roles[role_id]
-        del self._roles[role_id]
+        for member in guild_obj.members.values():
+            if role_id in member._role_ids:
+                member._role_ids.remove(role_id)
+
         return role_obj
 
     def get_channel_by_id(self, channel_id: int) -> typing.Optional[channel.Channel]:
@@ -143,8 +147,8 @@ class BasicStateRegistry(abstract_state_registry.AbstractStateRegistry):
     def get_message_by_id(self, message_id: int):
         return self._messages.get(message_id)
 
-    def get_role_by_id(self, role_id: int) -> typing.Optional[role.Role]:
-        pass
+    def get_role_by_id(self, guild_id: int, role_id: int) -> typing.Optional[role.Role]:
+        self._
 
     def get_user_by_id(self, user_id: int):
         return self._users.get(user_id)

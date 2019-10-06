@@ -116,16 +116,21 @@ class AbstractStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_role(self, role_id: int) -> role.Role:
+    def delete_role(self, guild_id: int, role_id: int) -> role.Role:
         """
         Delete the given role ID from the cache.
 
         Args:
+            guild_id:
+                the guild that the role is in.
             role_id:
                 the ID of the role to delete.
 
         Returns:
             The :class:`role.Role` that was deleted.
+
+        Note:
+            This will also update all members in the guild to not have that role anymore.
 
         Raises:
             KeyError:
@@ -173,11 +178,13 @@ class AbstractStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_role_by_id(self, role_id: int) -> typing.Optional[role.Role]:
+    def get_role_by_id(self, guild_id: int, role_id: int) -> typing.Optional[role.Role]:
         """
         Find a cached role by an ID.
 
         Args:
+            guild_id:
+                the ID of the guild that the role is in.
             role_id:
                 the ID of the role to look up.
 
