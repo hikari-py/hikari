@@ -324,7 +324,7 @@ async def test_handle_guild_delete_when_unavailable_and_guild_was_cached(
     state_registry.get_guild_by_id.assert_called_with(123456)
 
     # We just update the existing guild
-    assert existing_guild.unavailable is True
+    state_registry.set_guild_unavailability.assert_called_with(123456, True)
     dispatch.assert_called_with(basic_event_adapter.BasicEvent.GUILD_UNAVAILABLE, existing_guild)
 
 
@@ -340,11 +340,9 @@ async def test_handle_guild_delete_when_unavailable_and_guild_was_not_cached(
 
     await event_adapter.handle_guild_delete(gateway, payload)
 
-    # We just update the existing guild
-    assert new_guild.unavailable is True
-
     state_registry.get_guild_by_id.assert_called_with(123456)
-    dispatch.assert_called_with(basic_event_adapter.BasicEvent.GUILD_UNAVAILABLE, new_guild)
+    state_registry.parse_guild.assert_called_with(payload)
+    dispatch.assert_not_called()
 
 
 @pytest.mark.asyncio
