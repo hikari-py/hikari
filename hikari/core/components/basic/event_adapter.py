@@ -65,7 +65,7 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
 
     async def handle_invalid_session(self, gateway, payload):
         """
-        Dispatches a :attr:`_gateway.Event.INVALID_SESSION` with the gateway object that triggered it
+        Dispatches a :attr:`hikari.core.net.gateway.Event.INVALID_SESSION` with the gateway object that triggered it
         and a :class:`bool` indicating if the connection is able to be resumed or not as arguments.
         as an argument.
         """
@@ -73,14 +73,15 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
 
     async def handle_request_to_reconnect(self, gateway, payload):
         """
-        Dispatches a :attr:`_gateway.Event.REQUEST_TO_RECONNECT` with the gateway object that triggered it as
-        an argument.
+        Dispatches a :attr:`hikari.core.net.gateway.Event.REQUEST_TO_RECONNECT` with the gateway object that triggered
+        it as an argument.
         """
         self.dispatch(_gateway.Event.REQUEST_TO_RECONNECT, gateway)
 
     async def handle_resumed(self, gateway, payload):
         """
-        Dispatches a :attr:`_gateway.Event.RESUME` with the gateway object that triggered it as an argument.
+        Dispatches a :attr:`hikari.core.net.gateway.Event.RESUME` with the gateway object that triggered it as an
+        argument.
         """
         self.dispatch(_gateway.Event.RESUMED, gateway)
 

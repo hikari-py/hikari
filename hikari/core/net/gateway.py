@@ -134,7 +134,7 @@ class Event(enum.Enum):
     GUILD_MEMBERS_CHUNK = enum.auto()
 
     #: Should not be implemented for bots, and is undocumented, but is here for completeness.
-    PRESENCE_CHANGED = enum.auto()
+    PRESENCES_REPLACE = enum.auto()
 
 
 class GatewayClient:
