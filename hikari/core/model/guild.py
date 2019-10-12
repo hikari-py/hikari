@@ -261,8 +261,8 @@ class Guild(base.Snowflake, base.Volatile):
         self.explicit_content_filter_level = transform.try_cast(
             payload.get("explicit_content_filter"), ExplicitContentFilterLevel
         )
-        self.roles = transform.snowflake_map(self._state.parse_role(r, self.id) for r in payload.get("roles", ()))
-        self.emojis = transform.snowflake_map(self._state.parse_emoji(e, self.id) for e in payload.get("emojis", ()))
+        self.roles = transform.id_map(self._state.parse_role(r, self.id) for r in payload.get("roles", ()))
+        self.emojis = transform.id_map(self._state.parse_emoji(e, self.id) for e in payload.get("emojis", ()))
         self.features = {transform.try_cast(f, Feature.from_discord_name) for f in payload.get("features", ())}
         self.member_count = transform.nullable_cast(payload.get("member_count"), int)
         self.mfa_level = transform.try_cast(payload.get("mfa_level"), MFALevel)
@@ -270,8 +270,8 @@ class Guild(base.Snowflake, base.Volatile):
         self.joined_at = transform.nullable_cast(payload.get("joined_at"), date_utils.parse_iso_8601_datetime)
         self.large = payload.get("large", False)
         self.unavailable = payload.get("unavailable", False)
-        self.members = transform.snowflake_map(self._state.parse_member(m, self.id) for m in payload.get("members", ()))
-        self.channels = transform.snowflake_map(self._parse_channel(c) for c in payload.get("channels", ()))
+        self.members = transform.id_map(self._state.parse_member(m, self.id) for m in payload.get("members", ()))
+        self.channels = transform.id_map(self._state.parse_channel(c, self.id) for c in payload.get("channels", ()))
         self.max_members = payload.get("max_members", 0)
         self.vanity_url_code = payload.get("vanity_url_code")
         self.description = payload.get("description")
@@ -279,11 +279,6 @@ class Guild(base.Snowflake, base.Volatile):
         self.premium_tier = transform.try_cast(payload.get("premium_tier"), PremiumTier)
         self.premium_subscription_count = payload.get("premium_subscription_count", 0)
         self.system_channel_flags = transform.try_cast(payload.get("system_channel_flags"), SystemChannelFlag)
-
-    def _parse_channel(self, channel):
-        # Sometimes this key is missing...
-        channel["guild_id"] = self.id
-        return self._state.parse_channel(channel)
 
 
 class SystemChannelFlag(enum.IntFlag):

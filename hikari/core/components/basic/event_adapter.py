@@ -263,7 +263,6 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         user_id = int(payload["user"]["id"])
 
         if guild is not None and user_id in guild.members:
-            user_payload = payload["user"]
             role_ids = payload["roles"]
             nick = payload["nick"]
 
@@ -271,6 +270,9 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             if member_diff is not None:
                 self.dispatch(_gateway.Event.GUILD_MEMBER_UPDATE, *member_diff)
             else:
+                self.logger.warning(
+                    "ignoring GUILD_MEMBER_UPDATE for unknown member %s in guild %s", user_id, guild_id
+                )
                 self.state_registry.parse_member(payload, guild_id)
         else:
             self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)
@@ -283,7 +285,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
 
     async def handle_guild_members_chunk(self, gateway, payload):
         # TODO: implement this feature.
-        self.logger.warning("Received GUILD_MEMBERS_CHUNK but that is not implemented yet.")
+        self.logger.warning("Received GUILD_MEMBERS_CHUNK but that is not implemented yet")
 
     async def handle_guild_role_create(self, gateway, payload):
         guild_id = int(payload["guild_id"])
@@ -291,6 +293,9 @@ class BasicEventAdapter(event_adapter.EventAdapter):
 
         if guild is not None:
             role = self.state_registry.parse_role(payload["role"], guild_id)
+            self.dispatch(_gateway.Event.GUILD_ROLE_CREATE, role)
+        else:
+            self.logger.warning("ignoring GUILD_ROLE_CREATE for unknown guild %s", guild_id)
 
     async def handle_guild_role_update(self, gateway, payload):
         ...

@@ -76,5 +76,5 @@ def format_present_placeholders(string: str, **kwargs) -> str:
     return string.format_map(SafeFormatDict(**kwargs))
 
 
-def snowflake_map(snowflake_iterable):
+def id_map(snowflake_iterable):
     return {snowflake.id: snowflake for snowflake in snowflake_iterable}

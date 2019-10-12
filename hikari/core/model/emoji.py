@@ -161,7 +161,7 @@ def is_payload_guild_emoji_candidate(payload: types.DiscordObject) -> bool:
 def emoji_from_dict(
     global_state: state_registry.StateRegistry, payload: types.DiscordObject, guild_id: typing.Optional[int] = None
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:
-    if is_payload_guild_emoji_candidate(payload):
+    if is_payload_guild_emoji_candidate(payload) and guild_id is not None:
         return GuildEmoji(global_state, payload, guild_id)
     elif payload.get("id") is not None:
         return UnknownEmoji(payload)
