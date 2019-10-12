@@ -23,14 +23,14 @@ from __future__ import annotations
 
 
 from hikari.core.components.basic import state_registry as _state
-from hikari.core.components import event_adapter_stub
+from hikari.core.components import event_adapter
 from hikari.core.net import gateway as _gateway
 from hikari.core.model import channel
 from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 
 
-class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
+class BasicEventAdapter(event_adapter.EventAdapter):
     """
     Basic implementation of event management logic.
     """
@@ -270,6 +270,8 @@ class BasicEventAdapter(event_adapter_stub.EventAdapterStub):
             member_diff = self.state_registry.update_member(guild_id, role_ids, nick, user_id)
             if member_diff is not None:
                 self.dispatch(_gateway.Event.GUILD_MEMBER_UPDATE, *member_diff)
+            else:
+                self.state_registry.parse_member(payload, guild_id)
         else:
             self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)
 

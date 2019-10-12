@@ -26,7 +26,7 @@ import typing
 
 from hikari.core.model import emoji
 from hikari.core.model import message
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 from hikari.core.utils import types
 
 
@@ -53,7 +53,7 @@ class Reaction:
     #: The emoji used for the reaction
     #:
     #: :type: :class:`hikari.core.model.emoji.AbstractEmoji`
-    emoji: emoji.AbstractEmoji
+    emoji: emoji.Emoji
 
     #: The message that was reacted on
     #:
@@ -62,7 +62,7 @@ class Reaction:
 
     def __init__(
         self,
-        global_state: abstract_state_registry.AbstractStateRegistry,
+        global_state: state_registry.StateRegistry,
         payload: types.DiscordObject,
         message: message.Message,
     ) -> None:

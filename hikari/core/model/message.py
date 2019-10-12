@@ -31,7 +31,7 @@ from hikari.core.model import channel
 from hikari.core.model import embed
 from hikari.core.model import guild
 from hikari.core.model import media
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 from hikari.core.model import user
 from hikari.core.utils import date_utils
 from hikari.core.utils import transform
@@ -128,7 +128,7 @@ class Message(base.Snowflake):
         "flags",
     )
 
-    _state: abstract_state_registry.AbstractStateRegistry
+    _state: state_registry.StateRegistry
     _channel_id: int
     _guild_id: typing.Optional[int]
     _author_id: int
@@ -193,7 +193,7 @@ class Message(base.Snowflake):
     #: :type: :class:`hikari.core.model.message.MessageFlag`
     flags: MessageFlag
 
-    def __init__(self, global_state: abstract_state_registry.AbstractStateRegistry, payload):
+    def __init__(self, global_state: state_registry.StateRegistry, payload):
         self._state = global_state
         self.id = int(payload["id"])
         # FixMe: how does this work with webhooks?

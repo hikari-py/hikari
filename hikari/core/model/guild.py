@@ -29,7 +29,7 @@ import typing
 from hikari.core.model import base
 from hikari.core.model import channel
 from hikari.core.model import emoji
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 from hikari.core.model import permission
 from hikari.core.model import role
 from hikari.core.model import user
@@ -88,7 +88,7 @@ class Guild(base.Snowflake, base.Volatile):
         "system_channel_flags",  # not documented...
     )
 
-    _state: abstract_state_registry.AbstractStateRegistry
+    _state: state_registry.StateRegistry
     _afk_channel_id: typing.Optional[int]
     _owner_id: int
     _system_channel_id: typing.Optional[int]
@@ -403,7 +403,7 @@ class Ban:
     #: :type: :class:`hikari.core.model.user.User`
     user: user.User
 
-    def __init__(self, global_state: abstract_state_registry.AbstractStateRegistry, payload: dict):
+    def __init__(self, global_state: state_registry.StateRegistry, payload: dict):
         self.reason = payload.get("reason")
         self.user = global_state.parse_user(payload.get("user"))
 

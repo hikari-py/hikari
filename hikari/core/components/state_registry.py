@@ -36,7 +36,7 @@ from hikari.core.model import webhook
 from hikari.core.utils import types
 
 
-class AbstractStateRegistry(abc.ABC):
+class StateRegistry(abc.ABC):
     """
     Provides the relational interface between different types of objects and the overall cache.
 
@@ -189,7 +189,7 @@ class AbstractStateRegistry(abc.ABC):
                 the ID of the role to look up.
 
         Returns:
-            a :class:`role.Role` object, or `None` if one was not found.
+            a :class:`role.Role` object, or `None` if a role/guild was not found matching the given IDs.
         """
 
     @abc.abstractmethod
@@ -232,7 +232,7 @@ class AbstractStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_emoji(self, emoji_payload: types.DiscordObject, guild_id: typing.Optional[int]) -> emoji.AbstractEmoji:
+    def parse_emoji(self, emoji_payload: types.DiscordObject, guild_id: typing.Optional[int]) -> emoji.Emoji:
         """
         Parses a emoji payload into a workable object
 
@@ -468,4 +468,4 @@ class AbstractStateRegistry(abc.ABC):
         """
 
 
-__all__ = ["AbstractStateRegistry"]
+__all__ = ["StateRegistry"]

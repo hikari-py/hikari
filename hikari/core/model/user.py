@@ -26,7 +26,7 @@ import datetime
 import typing
 
 from hikari.core.model import base
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 from hikari.core.model import presence
 from hikari.core.utils import date_utils
 from hikari.core.utils import delegate
@@ -41,7 +41,7 @@ class User(base.Snowflake, base.Volatile):
 
     __slots__ = ("_state", "id", "username", "discriminator", "avatar_hash", "bot", "__weakref__")
 
-    _state: abstract_state_registry.AbstractStateRegistry
+    _state: state_registry.StateRegistry
 
     #: ID of the user.
     #:
@@ -68,7 +68,7 @@ class User(base.Snowflake, base.Volatile):
     #: :type: :class:`bool`
     bot: bool
 
-    def __init__(self, global_state: abstract_state_registry.AbstractStateRegistry, payload):
+    def __init__(self, global_state: state_registry.StateRegistry, payload):
         self._state = global_state
         self.id = int(payload["id"])
         # We don't expect this to ever change...
@@ -154,7 +154,7 @@ class BotUser(User):
     #: :type: :class:`bool`
     mfa_enabled: bool
 
-    def __init__(self, global_state: abstract_state_registry.AbstractStateRegistry, payload):
+    def __init__(self, global_state: state_registry.StateRegistry, payload):
         super().__init__(global_state, payload)
 
     def update_state(self, payload) -> None:

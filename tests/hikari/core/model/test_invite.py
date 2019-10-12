@@ -22,13 +22,13 @@ from unittest import mock
 import pytest
 
 from hikari.core.model import invite
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 
 
 @pytest.mark.model
 class TestInvite:
     def test_Invite(self):
-        test_state = mock.MagicMock(state_set=abstract_state_registry.AbstractStateRegistry)
+        test_state = mock.MagicMock(state_set=state_registry.StateRegistry)
 
         guild_dict = {"id": "165176875973476352", "name": "CS:GO Fraggers Only", "splash": None, "icon": None}
         channel_dict = {"id": "165176875973476352", "name": "illuminati", "type": 0}
@@ -57,7 +57,7 @@ class TestInvite:
 @pytest.mark.model
 class TestInviteMetadata:
     def test_InviteMetadata(self):
-        test_state = mock.MagicMock(state_set=abstract_state_registry.AbstractStateRegistry)
+        test_state = mock.MagicMock(state_set=state_registry.StateRegistry)
 
         user_dict = {
             "id": "80351110224678912",
