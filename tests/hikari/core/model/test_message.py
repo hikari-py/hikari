@@ -21,8 +21,8 @@ from unittest import mock
 
 import pytest
 
-from hikari.core.model import message
 from hikari.core.components import state_registry
+from hikari.core.model import message
 
 
 @pytest.mark.model
@@ -117,6 +117,11 @@ class TestMessage:
                 },
                 "activity": {"type": 2, "party_id": "44332211"},
                 "content": "some pointless text",
+                "message_reference": {
+                    "channel_id": "278325129692446722",
+                    "guild_id": "278325129692446720",
+                    "message_id": "306588351130107906",
+                },
                 "something_we_didnt_account_for": "meh, it is fine to ignore it.",
             },
         )
@@ -169,6 +174,10 @@ class TestMessage:
         assert m.activity.type == message.MessageActivityType.SPECTATE
         assert m.activity.party_id == 44332211
 
+        assert m.crosspost_of.channel_id == 278325129692446722
+        assert m.crosspost_of.message_id == 306588351130107906
+        assert m.crosspost_of.guild_id == 278325129692446720
+
     def test_Message_guild_if_guild_message(self, mock_message):
         mock_message["guild_id"] = "91827"
         cache = mock.MagicMock(spec_set=state_registry.StateRegistry)
@@ -213,18 +222,6 @@ class TestMessage:
         cache.get_channel_by_id.assert_called_with(1234)
         assert c is channel
 
-    def test_Message_author(self, mock_message):
-        cache = mock.MagicMock(spec_set=state_registry.StateRegistry)
-        user = mock.MagicMock()
-        cache.get_user_by_id = mock.MagicMock(return_value=user)
-
-        obj = message.Message(cache, mock_message)
-        obj._author_id = 1234
-
-        a = obj.author
-        cache.get_user_by_id.assert_called_with(1234)
-        assert a is user
-
 
 @pytest.mark.model
 def test_MessageActivity():
@@ -245,3 +242,14 @@ def test_MessageApplication():
     assert ma.cover_image_id == 112233
     assert ma.description == "potato"
     assert ma.name == "poof"
+
+
+@pytest.mark.model
+def test_MessageCrosspost():
+    mcp = message.MessageCrosspost(
+        {"channel_id": "278325129692446722", "guild_id": "278325129692446720", "message_id": "306588351130107906"}
+    )
+
+    assert mcp.channel_id == 278325129692446722
+    assert mcp.message_id == 306588351130107906
+    assert mcp.guild_id == 278325129692446720

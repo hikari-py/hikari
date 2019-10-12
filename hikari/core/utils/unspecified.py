@@ -44,5 +44,4 @@ UNSPECIFIED = Unspecified()
 # Make Unspecified into a singleton.
 Unspecified.__new__ = lambda *_, **__: UNSPECIFIED
 
-
 __all__ = ("UNSPECIFIED",)

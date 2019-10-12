@@ -24,11 +24,11 @@ process.
 import inspect
 import typing
 
-from hikari.core.utils import assertions
+from hikari.core.utils import assertions, custom_types
 
 _DELEGATE_MEMBERS_FIELD = "__delegate_members__"
 _DELEGATE_TYPES_FIELD = "__delegate_type_mapping__"
-T = typing.TypeVar("T")
+_T = typing.TypeVar("_T")
 
 
 class DelegatedProperty:
@@ -53,7 +53,7 @@ class DelegatedProperty:
             return self
 
 
-def delegate_members(delegate_type: typing.Type, magic_field: str) -> typing.Callable[[typing.Type[T]], typing.Type[T]]:
+def delegate_to(delegate_type: typing.Type, magic_field: str) -> typing.Callable[[typing.Type[_T]], typing.Type[_T]]:
     """
     Make a decorator that wraps a class to make it delegate any inherited fields from `delegate_type` to attributes of
     the same name on a value stored in a field named the `magic_field`.
@@ -72,11 +72,11 @@ def delegate_members(delegate_type: typing.Type, magic_field: str) -> typing.Cal
     the same underlying `User` at once.
     """
 
-    def decorator(cls: typing.Type[T]) -> typing.Type[T]:
+    def decorator(cls: typing.Type[_T]) -> typing.Type[_T]:
         assertions.assert_subclasses(cls, delegate_type)
         delegated_members = set()
         # Tuple of tuples, each sub tuple is (magic_field, delegate_type)
-        delegated_types = getattr(cls, _DELEGATE_TYPES_FIELD, ())
+        delegated_types = getattr(cls, _DELEGATE_TYPES_FIELD, custom_types.EMPTY_SEQUENCE)
 
         # We have three valid cases: either the attribute is a class member, in which case it is in `__dict__`, the
         # attribute is defined in the class `__slots__`, in which case it is in `__dict__`, or the field is given
@@ -84,7 +84,7 @@ def delegate_members(delegate_type: typing.Type, magic_field: str) -> typing.Cal
         # (e.g. fields only defined once we are in the `__init__`, as it is basically monkey patching at this point if
         # we are not slotted).
         dict_fields = {k for k, v in delegate_type.__dict__.items() if not _is_func(v) and not k.startswith("_")}
-        annotation_fields = {*getattr(delegate_type, "__annotations__", ())}
+        annotation_fields = {*getattr(delegate_type, "__annotations__", custom_types.EMPTY_SEQUENCE)}
         targets = dict_fields | annotation_fields
         for name in targets:
             delegate = DelegatedProperty(magic_field, name)
@@ -106,4 +106,4 @@ def _is_func(func):
     return inspect.isfunction(func) or inspect.ismethod(func)
 
 
-__all__ = ("delegate_members", "DelegatedProperty")
+__all__ = ("delegate_to", "DelegatedProperty")

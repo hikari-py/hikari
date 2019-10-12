@@ -26,14 +26,14 @@ import datetime
 import enum
 import typing
 
-from hikari.core.model import base
+from hikari.core.components import state_registry
+from hikari.core.model import base, reaction, webhook
 from hikari.core.model import channel
 from hikari.core.model import embed
 from hikari.core.model import guild
 from hikari.core.model import media
-from hikari.core.components import state_registry
 from hikari.core.model import user
-from hikari.core.utils import date_utils, auto_repr
+from hikari.core.utils import date_utils, auto_repr, custom_types
 from hikari.core.utils import transform
 
 
@@ -75,6 +75,7 @@ class MessageActivityType(enum.IntEnum):
     The type of a rich presence message activity.
     """
 
+    NONE = 0
     #: Join an activity.
     JOIN = 1
     #: Spectating something.
@@ -90,6 +91,7 @@ class MessageFlag(enum.IntFlag):
     Additional flags for message options.
     """
 
+    NONE = 0x0
     #: This message has been published to subscribed channels via channel following.
     CROSSPOSTED = 0x1
     #: This message originated from a message in another channel via channel following.
@@ -105,7 +107,7 @@ class MessageFlag(enum.IntFlag):
 
 
 @dataclasses.dataclass()
-class Message(base.Snowflake):
+class Message(base.Snowflake, base.Volatile):
     """
     A message that was sent on Discord.
     """
@@ -114,7 +116,7 @@ class Message(base.Snowflake):
         "_state",
         "_channel_id",
         "_guild_id",
-        "_author_id",
+        "author",
         "id",
         "edited_at",
         "reactions",
@@ -128,12 +130,16 @@ class Message(base.Snowflake):
         "activity",
         "type",
         "flags",
+        "crosspost_of",
     )
 
     _state: state_registry.StateRegistry
     _channel_id: int
     _guild_id: typing.Optional[int]
-    _author_id: int
+
+    #: Either a :type:`user.User`, a :type:`member.Member` or a :type:`webhook.Webhook` depending on what created the
+    #: message and where.
+    author: typing.Union[user.User, user.Member, webhook.Webhook]
 
     #: The ID of the message.
     #:
@@ -143,7 +149,7 @@ class Message(base.Snowflake):
     #: The actual textual content of the message.
     #:
     #: :type: :class:`str`
-    content: str
+    content: typing.Optional[str]
 
     #: The timestamp that the message was last edited at, or `None` if not ever edited.
     #:
@@ -162,13 +168,13 @@ class Message(base.Snowflake):
 
     #: List of attachments on this message, if any.
     #:
-    #: :type: :class:`list` of :class:`hikari.core.model.media.Attachment`
-    attachments: typing.List[media.Attachment]
+    #: :type: :class:`typing.Sequence` of :class:`hikari.core.model.media.Attachment`
+    attachments: typing.Sequence[media.Attachment]
 
     #: List of embeds on this message, if any.
     #:
-    #: :type: :class:`list` of :class:`hikari.core.model.embed.Embed`
-    embeds: typing.List[embed.Embed]
+    #: :type: :class:`typing.Sequence` of :class:`hikari.core.model.embed.Embed`
+    embeds: typing.Sequence[embed.Embed]
 
     #: Whether this message is pinned or not.
     #:
@@ -195,26 +201,90 @@ class Message(base.Snowflake):
     #: :type: :class:`hikari.core.model.message.MessageFlag`
     flags: MessageFlag
 
+    #: Message reactions, if any.
+    #:
+    #: :type: :class:`typing.Sequence` of :class:`hikari.core.model.reaction.Reaction`
+    reactions: typing.Sequence[reaction.Reaction]
+
+    #: Optional crossposting reference. Only valid if the message is a cross post.
+    #:
+    #: :type: :class:`hikari.core.model.message.MessageCrossPost` or `None` if not a cross post.
+    crosspost_of: typing.Optional[MessageCrosspost]
+
     __repr__ = auto_repr.repr_of("id", "author", "type", "tts", "created_at", "edited_at")
 
     def __init__(self, global_state: state_registry.StateRegistry, payload):
         self._state = global_state
         self.id = int(payload["id"])
-        # FixMe: how does this work with webhooks?
-        self._author_id = global_state.parse_user(payload["author"]).id
+
         self._channel_id = int(payload["channel_id"])
         self._guild_id = transform.nullable_cast(payload.get("guild_id"), int)
-        self.edited_at = transform.nullable_cast(payload.get("edited_timestamp"), date_utils.parse_iso_8601_datetime)
+
+        if "webhook_id" in payload:
+            self.author = global_state.parse_webhook(payload["author"])
+        else:
+            self.author = global_state.parse_user(payload["author"])
+
         self.tts = payload["tts"]
-        self.mentions_everyone = payload["mention_everyone"]
-        self.attachments = [media.Attachment(a) for a in payload["attachments"]]
-        self.embeds = [embed.Embed.from_dict(e) for e in payload["embeds"]]
-        self.pinned = payload["pinned"]
-        self.application = transform.nullable_cast(payload.get("application"), MessageApplication)
-        self.activity = transform.nullable_cast(payload.get("activity"), MessageActivity)
-        self.type = transform.try_cast(payload.get("type"), MessageType)
-        self.content = payload.get("content")
+        self.crosspost_of = MessageCrosspost(payload["message_reference"]) if "message_reference" in payload else None
         self.flags = transform.try_cast(payload.get("flags"), MessageFlag, 0)
+
+        # These fields need an initial value, since they may not be specified, and our update state only accounts
+        # for changes to the initial state due to Discord being consistently inconsistent in their API behaviour and
+        # output... they won't specify what can change so I have to make an educated guess at this until I have
+        # something more working that I can try this out with easily...
+        self.reactions = custom_types.EMPTY_SEQUENCE
+        self.activity = None
+        self.application = None
+        self.edited_at = None
+        self.mentions_everyone = False
+        self.attachments = custom_types.EMPTY_SEQUENCE
+        self.embeds = custom_types.EMPTY_SEQUENCE
+        self.pinned = False
+        self.application = None
+        self.activity = None
+        self.type = MessageType.DEFAULT
+        self.content = None
+        self.reactions = custom_types.EMPTY_SEQUENCE
+
+        self.update_state(payload)
+
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
+        if "member" in payload:
+            self.author = self._state.parse_member(payload["member"], self._guild_id)
+
+        if "edited_timestamp" in payload:
+            self.edited_at = transform.nullable_cast(payload.get("edited_timestamp"), date_utils.parse_iso_8601_ts)
+
+        if "mention_everyone" in payload:
+            self.mentions_everyone = payload["mention_everyone"]
+
+        if "attachments" in payload:
+            self.attachments = [media.Attachment(a) for a in payload["attachments"]]
+
+        if "embeds" in payload:
+            self.embeds = [embed.Embed.from_dict(e) for e in payload["embeds"]]
+
+        if "pinned" in payload:
+            self.pinned = payload["pinned"]
+
+        if "application" in payload:
+            self.application = transform.nullable_cast(payload.get("application"), MessageApplication)
+
+        if "activity" in payload:
+            self.activity = transform.nullable_cast(payload.get("activity"), MessageActivity)
+
+        if "type" in payload:
+            self.type = transform.try_cast(payload.get("type"), MessageType)
+
+        if "content" in payload:
+            self.content = payload.get("content")
+
+        if "reactions" in payload:
+            self.reactions = [
+                reaction.Reaction(self._state, reaction_obj, self)
+                for reaction_obj in payload.get("reactions", custom_types.EMPTY_SEQUENCE)
+            ]
 
     @property
     def guild(self) -> typing.Optional[guild.Guild]:
@@ -234,10 +304,6 @@ class Message(base.Snowflake):
         # needed for code that is essentially the same.
         # noinspection PyTypeChecker
         return self._state.get_channel_by_id(self._channel_id)
-
-    @property
-    def author(self) -> typing.Union[user.User, user.Member, user.BotUser]:
-        return self._state.get_user_by_id(self._author_id)
 
 
 @dataclasses.dataclass()
@@ -306,6 +372,46 @@ class MessageApplication(base.Snowflake):
         self.description = payload["description"]
         self.icon_image_id = transform.nullable_cast(payload.get("icon"), int)
         self.name = payload.get("name")
+
+
+@dataclasses.dataclass()
+class MessageCrosspost:
+    """
+    Represents information about a cross-posted message and the origin of the original message.
+    """
+
+    __slots__ = ("message_id", "guild_id", "channel_id")
+
+    #: The optional ID of the original message.
+    #:
+    #: Warning:
+    #:     This may be `None` in some cases according to the Discord API
+    #:     documentation, but the situations that cause this to occur are not currently documented.
+    #:
+    #: :type: :class:`int` or `None`.
+    message_id: typing.Optional[int]
+
+    #: The ID of the guild that the message originated from.
+    #: :type: :class:`int`.
+    channel_id: int
+
+    #: The ID of the guild that the message originated from.
+    #:
+    #: Warning:
+    #:     This may be `None` in some cases according to the Discord API
+    #:     documentation, but the situations that cause this to occur are not currently documented.
+    #:
+    #: :type: :class:`int` or `None`.
+    guild_id: typing.Optional[int]
+
+    __repr__ = auto_repr.repr_of("message_id", "guild_id", "channel_id")
+
+    def __init__(self, payload: custom_types.DiscordObject) -> None:
+        # This is never null for some reason but the other two are... thanks Discord!
+        self.channel_id = int(payload["channel_id"])
+
+        self.message_id = transform.nullable_cast(payload.get("message_id"), int)
+        self.guild_id = transform.nullable_cast(payload.get("guild_id"), int)
 
 
 __all__ = ["MessageType", "MessageActivityType", "Message", "MessageActivity", "MessageApplication"]

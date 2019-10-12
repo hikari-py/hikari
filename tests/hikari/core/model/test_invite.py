@@ -21,8 +21,8 @@ from unittest import mock
 
 import pytest
 
-from hikari.core.model import invite
 from hikari.core.components import state_registry
+from hikari.core.model import invite
 
 
 @pytest.mark.model

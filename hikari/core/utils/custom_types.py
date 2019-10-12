@@ -17,23 +17,33 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Custom data structures.
+Custom data structures and constant values.
 """
+import types
 import typing
 
 from hikari.core.utils import assertions
 
+# If more than one empty-definition is used in the same context, the type checker will probably whinge, so we have
+# to keep separate types...
+_A = typing.TypeVar("_A")
+_B = typing.TypeVar("_B", bound=typing.Hashable)
+_C = typing.TypeVar("_C")
+_D = typing.TypeVar("_D", bound=typing.Hashable)
+_E = typing.TypeVar("_E")
+
+_K = typing.TypeVar("_K", bound=typing.Hashable)
+_V = typing.TypeVar("_V")
+
 #: Any type that Discord may return from the API.
-_DiscordType = typing.Union[
-    bool, float, int, None, str, typing.List["DiscordObject"], typing.Dict[str, "DiscordObject"]
-]
+DiscordType = typing.Union[bool, float, int, None, str, typing.List["DiscordObject"], typing.Dict[str, "DiscordObject"]]
 
 #: Type hint for a Discord-compatible object.
 #:
 #: This is a :class:`builtins.dict` of :class:`builtins.str` keys that map to any value. Since the :mod:`hikari.net`
 #: module does not enforce concrete models for values sent and received, mappings are passed around to represent request
 #: and response data. This allows an implementation to use this layer as desired.
-DiscordObject = typing.Dict[str, _DiscordType]
+DiscordObject = typing.Dict[str, DiscordType]
 
 
 class ObjectProxy(typing.Dict[str, typing.Any]):
@@ -50,11 +60,7 @@ class ObjectProxy(typing.Dict[str, typing.Any]):
         return self[item]
 
 
-K = typing.TypeVar("K")
-V = typing.TypeVar("V")
-
-
-class LRUDict(typing.MutableMapping[K, V]):
+class LRUDict(typing.MutableMapping[_K, _V]):
     """
     A dict that stores a maximum number of items before the oldest is purged.
     """
@@ -69,22 +75,31 @@ class LRUDict(typing.MutableMapping[K, V]):
         self._data = dict_factory()
         self._lru_size = lru_size
 
-    def __getitem__(self, key: K) -> V:
+    def __getitem__(self, key: _K) -> _V:
         return self._data[key]
 
-    def __setitem__(self, key: K, value: V) -> None:
+    def __setitem__(self, key: _K, value: _V) -> None:
         while len(self._data) >= self._lru_size:
             self._data.popitem()
         self._data[key] = value
 
-    def __delitem__(self, key: K):
+    def __delitem__(self, key: _K) -> None:
         del self._data[key]
 
     def __len__(self) -> int:
         return len(self._data)
 
-    def __iter__(self) -> typing.Iterator[K]:
+    def __iter__(self) -> typing.Iterator[_K]:
         yield from self._data
 
 
-__all__ = ("DiscordObject", "ObjectProxy", "LRUDict")
+#: An immutable indexable container of elements with zero size.
+EMPTY_SEQUENCE: typing.Sequence[_A] = tuple()
+#: An immutable unordered container of elements with zero size.
+EMPTY_SET: typing.AbstractSet[_B] = frozenset()
+#: An immutable container of elements with zero size.
+EMPTY_COLLECTION: typing.Collection[_C] = EMPTY_SEQUENCE
+#: An immutable ordered mapping of key elements to value elements with zero size.
+EMPTY_DICT: typing.Mapping[_D, _E] = types.MappingProxyType({})
+
+__all__ = ("DiscordObject", "ObjectProxy", "LRUDict", "EMPTY_SEQUENCE", "EMPTY_SET", "EMPTY_COLLECTION", "EMPTY_DICT")

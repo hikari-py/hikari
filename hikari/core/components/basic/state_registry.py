@@ -29,14 +29,14 @@ from hikari.core.components import state_registry
 from hikari.core.model import channel
 from hikari.core.model import emoji
 from hikari.core.model import guild
-from hikari.core.model import presence
 from hikari.core.model import message
+from hikari.core.model import presence
 from hikari.core.model import role
 from hikari.core.model import user
 from hikari.core.model import webhook
+from hikari.core.utils import custom_types
 from hikari.core.utils import logging_utils
 from hikari.core.utils import transform
-from hikari.core.utils import types
 
 
 class BasicStateRegistry(state_registry.StateRegistry):
@@ -60,25 +60,16 @@ class BasicStateRegistry(state_registry.StateRegistry):
     adapter that calls this cache, appropriately.
     """
 
-    __slots__ = (
-        "_dm_channels",
-        "_emojis",
-        "_guilds",
-        "_guild_channels",
-        "_messages",
-        "_users",
-        "user",
-        "logger",
-    )
+    __slots__ = ("_dm_channels", "_emojis", "_guilds", "_guild_channels", "_messages", "_users", "user", "logger")
 
     def __init__(self, message_cache_size: int, user_dm_channel_size: int) -> None:
         # Users may be cached while we can see them, or they may be cached as a member. Regardless, we only
         # retain them while they are referenced from elsewhere to keep things tidy.
-        self._dm_channels: typing.MutableMapping[int, channel.DMChannel] = types.LRUDict(user_dm_channel_size)
+        self._dm_channels: typing.MutableMapping[int, channel.DMChannel] = custom_types.LRUDict(user_dm_channel_size)
         self._emojis: typing.MutableMapping[int, emoji.GuildEmoji] = weakref.WeakValueDictionary()
         self._guilds: typing.Dict[int, guild.Guild] = {}
         self._guild_channels: typing.MutableMapping[int, channel.GuildChannel] = weakref.WeakValueDictionary()
-        self._messages: typing.MutableMapping[int, message.Message] = types.LRUDict(message_cache_size)
+        self._messages: typing.MutableMapping[int, message.Message] = custom_types.LRUDict(message_cache_size)
         self._users: typing.MutableMapping[int, user.User] = weakref.WeakValueDictionary()
 
         #: The bot user.
@@ -153,12 +144,14 @@ class BasicStateRegistry(state_registry.StateRegistry):
     def get_user_by_id(self, user_id: int):
         return self._users.get(user_id)
 
-    def parse_bot_user(self, bot_user_payload: types.DiscordObject) -> user.BotUser:
+    def parse_bot_user(self, bot_user_payload: custom_types.DiscordObject) -> user.BotUser:
         bot_user_payload = user.BotUser(self, bot_user_payload)
         self.user = bot_user_payload
         return bot_user_payload
 
-    def parse_channel(self, channel_payload: types.DiscordObject, guild_id: typing.Optional[int]) -> channel.Channel:
+    def parse_channel(
+        self, channel_payload: custom_types.DiscordObject, guild_id: typing.Optional[int]
+    ) -> channel.Channel:
         channel_id = int(channel_payload["id"])
         channel_obj = self.get_channel_by_id(channel_id)
 
@@ -179,11 +172,11 @@ class BasicStateRegistry(state_registry.StateRegistry):
 
     # These fix typing issues in the update_guild_emojis method.
     @typing.overload
-    def parse_emoji(self, emoji_payload: types.DiscordObject, guild_id: int) -> emoji.GuildEmoji:
+    def parse_emoji(self, emoji_payload: custom_types.DiscordObject, guild_id: int) -> emoji.GuildEmoji:
         ...
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: types.DiscordObject, guild_id: None) -> emoji.Emoji:
+    def parse_emoji(self, emoji_payload: custom_types.DiscordObject, guild_id: None) -> emoji.Emoji:
         ...
 
     def parse_emoji(self, emoji_payload, guild_id):
@@ -198,7 +191,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
 
         return emoji.emoji_from_dict(self, emoji_payload, guild_id)
 
-    def parse_guild(self, guild_payload: types.DiscordObject):
+    def parse_guild(self, guild_payload: custom_types.DiscordObject):
         guild_id = int(guild_payload["id"])
         unavailable = guild_payload.get("unavailable", False)
         if guild_id in self._guilds:
@@ -213,7 +206,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
 
         return guild_obj
 
-    def parse_member(self, member_payload: types.DiscordObject, guild_id: int):
+    def parse_member(self, member_payload: custom_types.DiscordObject, guild_id: int):
         guild_obj = self.get_guild_by_id(guild_id)
         member_id = int(member_payload["user"]["id"])
 
@@ -227,29 +220,33 @@ class BasicStateRegistry(state_registry.StateRegistry):
             guild_obj.members[member_id] = member_obj
             return member_obj
 
-    def parse_message(self, message_payload: types.DiscordObject):
+    def parse_message(self, message_payload: custom_types.DiscordObject):
         # Always update the cache with the new message.
         message_id = int(message_payload["id"])
         message_obj = message.Message(self, message_payload)
+
+        channel = message_obj.channel
+        if channel is not None:
+            message_obj.channel.last_message_id = message_id
+
         self._messages[message_id] = message_obj
-        message_obj.channel.last_message_id = message_id
         return message_obj
 
-    def parse_presence(self, guild_id: int, user_id: int, presence_payload: types.DiscordObject):
+    def parse_presence(self, guild_id: int, user_id: int, presence_payload: custom_types.DiscordObject):
         presence_obj = presence.Presence(presence_payload)
         guild_obj = self.get_guild_by_id(guild_id)
         if guild is not None and user_id in guild_obj.members:
             guild_obj.members[user_id].presence = presence_obj
             return presence_obj
 
-    def parse_role(self, role_payload: types.DiscordObject, guild_id: int):
+    def parse_role(self, role_payload: custom_types.DiscordObject, guild_id: int):
         if guild_id in self._guilds:
             guild = self._guilds[guild_id]
             role_payload = role.Role(self, role_payload, guild_id)
             guild.roles[role_payload.id] = role_payload
             return role_payload
 
-    def parse_user(self, user_payload: types.DiscordObject):
+    def parse_user(self, user_payload: custom_types.DiscordObject):
         # If the user already exists, then just return their existing object. We expect discord to tell us if they
         # get updated if they are a member, and for anything else the object will just be disposed of once we are
         # finished with it anyway.
@@ -271,7 +268,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
 
         return existing_user
 
-    def parse_webhook(self, webhook_payload: types.DiscordObject):
+    def parse_webhook(self, webhook_payload: custom_types.DiscordObject):
         # Don't cache webhooks.
         return webhook.Webhook(self, webhook_payload)
 
@@ -281,7 +278,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
             guild_obj.unavailable = unavailability
 
     def update_channel(
-        self, channel_payload: types.DiscordObject
+        self, channel_payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[channel.Channel, channel.Channel]]:
         channel_id = int(channel_payload["id"])
         existing_channel = self.get_channel_by_id(channel_id)
@@ -292,7 +289,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
             return old_channel, new_channel
 
     def update_guild(
-        self, guild_payload: types.DiscordObject
+        self, guild_payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[guild.Guild, guild.Guild]]:
         guild_id = int(guild_payload["id"])
         guild_obj = self.get_guild_by_id(guild_id)
@@ -303,7 +300,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
             return previous_guild, new_guild
 
     def update_guild_emojis(
-        self, emoji_list: typing.List[types.DiscordObject], guild_id: int
+        self, emoji_list: typing.List[custom_types.DiscordObject], guild_id: int
     ) -> typing.Optional[typing.Tuple[typing.FrozenSet[emoji.GuildEmoji], typing.FrozenSet[emoji.GuildEmoji]]]:
         guild_obj = self.get_guild_by_id(guild_id)
         if guild_obj is not None:
@@ -329,7 +326,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
             return old_member, new_member
 
     def update_member_presence(
-        self, guild_id: int, user_id: int, presence_payload: types.DiscordObject
+        self, guild_id: int, user_id: int, presence_payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[user.Member, presence.Presence, presence.Presence]]:
         guild_obj = self.get_guild_by_id(guild_id)
 

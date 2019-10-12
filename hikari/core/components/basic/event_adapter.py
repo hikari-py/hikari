@@ -21,11 +21,10 @@ Handles consumption of gateway events and converting them to the correct data ty
 """
 from __future__ import annotations
 
-
-from hikari.core.components.basic import state_registry as _state
 from hikari.core.components import event_adapter
-from hikari.core.net import gateway as _gateway
+from hikari.core.components.basic import state_registry as _state
 from hikari.core.model import channel
+from hikari.core.net import gateway as _gateway
 from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 
@@ -130,7 +129,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
 
         if channel_obj is not None:
             last_pin_timestamp = transform.nullable_cast(
-                payload.get("last_pin_timestamp"), date_utils.parse_iso_8601_datetime
+                payload.get("last_pin_timestamp"), date_utils.parse_iso_8601_ts
             )
 
             if last_pin_timestamp is not None:
@@ -270,9 +269,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             if member_diff is not None:
                 self.dispatch(_gateway.Event.GUILD_MEMBER_UPDATE, *member_diff)
             else:
-                self.logger.warning(
-                    "ignoring GUILD_MEMBER_UPDATE for unknown member %s in guild %s", user_id, guild_id
-                )
+                self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown member %s in guild %s", user_id, guild_id)
                 self.state_registry.parse_member(payload, guild_id)
         else:
             self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)
@@ -329,7 +326,12 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             self.logger.warning("ignoring GUILD_ROLE_DELETE for role %s in unknown guild %s", role_id, guild_id)
 
     async def handle_message_create(self, gateway, payload):
-        ...
+        message = self.state_registry.parse_message(payload)
+        if message.channel is not None:
+            self.dispatch(_gateway.Event)
+        else:
+            channel_id = int(payload["channel_id"])
+            self.logger.warning("ignoring MESSAGE_CREATE for message %s in unknown channel %s", message.id, channel_id)
 
     async def handle_message_update(self, gateway, payload):
         ...

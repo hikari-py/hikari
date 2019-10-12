@@ -33,7 +33,7 @@ from hikari.core.model import presence
 from hikari.core.model import role
 from hikari.core.model import user
 from hikari.core.model import webhook
-from hikari.core.utils import types
+from hikari.core.utils import custom_types
 
 
 class StateRegistry(abc.ABC):
@@ -206,7 +206,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_bot_user(self, bot_user_payload: types.DiscordObject) -> user.BotUser:
+    def parse_bot_user(self, bot_user_payload: custom_types.DiscordObject) -> user.BotUser:
         """
         Parses a bot user payload into a workable object
 
@@ -219,7 +219,9 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_channel(self, channel_payload: types.DiscordObject, guild_id: typing.Optional[int]) -> channel.Channel:
+    def parse_channel(
+        self, channel_payload: custom_types.DiscordObject, guild_id: typing.Optional[int]
+    ) -> channel.Channel:
         """
         Parses a channel payload into a workable object
 
@@ -235,7 +237,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_emoji(self, emoji_payload: types.DiscordObject, guild_id: typing.Optional[int]) -> emoji.Emoji:
+    def parse_emoji(self, emoji_payload: custom_types.DiscordObject, guild_id: typing.Optional[int]) -> emoji.Emoji:
         """
         Parses a emoji payload into a workable object
 
@@ -250,7 +252,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_guild(self, guild_payload: types.DiscordObject) -> guild.Guild:
+    def parse_guild(self, guild_payload: custom_types.DiscordObject) -> guild.Guild:
         """
         Parses a guild payload into a workable object
 
@@ -263,7 +265,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_member(self, member_payload: types.DiscordObject, guild_id: int) -> typing.Optional[user.Member]:
+    def parse_member(self, member_payload: custom_types.DiscordObject, guild_id: int) -> typing.Optional[user.Member]:
         """
         Parses a member payload into a workable object
 
@@ -279,7 +281,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_message(self, message_payload: types.DiscordObject) -> message.Message:
+    def parse_message(self, message_payload: custom_types.DiscordObject) -> message.Message:
         """
         Parses a message payload into a workable object
 
@@ -289,10 +291,18 @@ class StateRegistry(abc.ABC):
 
         Returns:
             a :class:`message.Message` object.
+
+        Warning:
+            This will not validate whether internal channels and guilds exist. You must do that yourself, as there
+            are cases where partially parsed messages may be useful to return. This **will** however update any
+            last_message_timestamp objects if the channel is resolvable. If it is not resolvable, that step will be
+            skipped.
         """
 
     @abc.abstractmethod
-    def parse_presence(self, guild_id: int, user_id: int, presence_payload: types.DiscordObject) -> presence.Presence:
+    def parse_presence(
+        self, guild_id: int, user_id: int, presence_payload: custom_types.DiscordObject
+    ) -> presence.Presence:
         """
         Parse a presence for a given guild and user, and attempt to update the member corresponding to the presence
         if it can be found.
@@ -310,7 +320,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_role(self, role_payload: types.DiscordObject, guild_id: int) -> role.Role:
+    def parse_role(self, role_payload: custom_types.DiscordObject, guild_id: int) -> role.Role:
         """
         Parses a role payload into a workable object
 
@@ -325,7 +335,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_user(self, user_payload: types.DiscordObject) -> user.User:
+    def parse_user(self, user_payload: custom_types.DiscordObject) -> user.User:
         """
         Parses a user payload into a workable object
 
@@ -345,7 +355,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_webhook(self, webhook_payload: types.DiscordObject) -> webhook.Webhook:
+    def parse_webhook(self, webhook_payload: custom_types.DiscordObject) -> webhook.Webhook:
         """
         Parses a webhook payload into a workable object
 
@@ -371,7 +381,7 @@ class StateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_channel(
-        self, channel_payload: types.DiscordObject
+        self, channel_payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[channel.Channel, channel.Channel]]:
         """
         Update the given channel represented by the channel payload.
@@ -387,7 +397,7 @@ class StateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_guild(
-        self, guild_payload: types.DiscordObject
+        self, guild_payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[guild.Guild, guild.Guild]]:
         """
 
@@ -404,7 +414,7 @@ class StateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_guild_emojis(
-        self, emoji_list: typing.List[types.DiscordObject], guild_id: int
+        self, emoji_list: typing.List[custom_types.DiscordObject], guild_id: int
     ) -> typing.Optional[typing.Tuple[typing.FrozenSet[emoji.GuildEmoji], typing.FrozenSet[emoji.GuildEmoji]]]:
         """
         Update the emojis in a given guild.
@@ -459,7 +469,7 @@ class StateRegistry(abc.ABC):
         """
 
     def update_member_presence(
-        self, guild_id: int, user_id: int, presence_payload: types.DiscordObject
+        self, guild_id: int, user_id: int, presence_payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[user.Member, presence.Presence, presence.Presence]]:
         """
         Update the presence for a given user in a given guild.
@@ -479,7 +489,7 @@ class StateRegistry(abc.ABC):
         """
 
     def update_role(
-        self, guild_id: int, role_payload: types.DiscordObject
+        self, guild_id: int, role_payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[role.Role, role.Role]]:
         """
         Update the given role in a given guild.

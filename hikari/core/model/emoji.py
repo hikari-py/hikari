@@ -25,9 +25,9 @@ import abc
 import dataclasses
 import typing
 
-from hikari.core.model import base
 from hikari.core.components import state_registry
-from hikari.core.utils import types, auto_repr
+from hikari.core.model import base
+from hikari.core.utils import custom_types, auto_repr
 
 
 class Emoji(abc.ABC):
@@ -50,6 +50,9 @@ class UnicodeEmoji(Emoji):
 
     __slots__ = ("value",)
 
+    #: The unicode string value for the emoji.
+    #:
+    #: :type: :class:`str`
     value: str
 
     __repr__ = auto_repr.repr_of("value")
@@ -58,7 +61,7 @@ class UnicodeEmoji(Emoji):
     def is_unicode(self) -> bool:
         return True
 
-    def __init__(self, payload: types.DiscordObject) -> None:
+    def __init__(self, payload: custom_types.DiscordObject) -> None:
         self.value = payload["name"]
 
     def __eq__(self, other):
@@ -93,7 +96,7 @@ class UnknownEmoji(Emoji, base.Snowflake):
 
     __repr__ = auto_repr.repr_of("id", "name")
 
-    def __init__(self, payload: types.DiscordObject) -> None:
+    def __init__(self, payload: custom_types.DiscordObject) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
 
@@ -111,7 +114,7 @@ class GuildEmoji(UnknownEmoji):
     __slots__ = ("_state", "_role_ids", "_guild_id", "require_colons", "managed", "animated", "user", "__weakref__")
 
     _state: state_registry.StateRegistry
-    _role_ids: typing.List[int]
+    _role_ids: typing.Sequence[int]
     _guild_id: typing.Optional[int]
 
     #: `True` if the emoji requires colons to be mentioned; `False` otherwise.
@@ -136,7 +139,9 @@ class GuildEmoji(UnknownEmoji):
 
     __repr__ = auto_repr.repr_of("id", "name", "animated")
 
-    def __init__(self, global_state: state_registry.StateRegistry, payload: types.DiscordObject, guild_id: int) -> None:
+    def __init__(
+        self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject, guild_id: int
+    ) -> None:
         super().__init__(payload)
         self._state = global_state
         self._guild_id = guild_id
@@ -144,10 +149,10 @@ class GuildEmoji(UnknownEmoji):
         self.require_colons = payload.get("require_colons", True)
         self.animated = payload.get("animated", False)
         self.managed = payload.get("managed", False)
-        self._role_ids = [int(r) for r in payload.get("roles", [])]
+        self._role_ids = [int(r) for r in payload.get("roles", custom_types.EMPTY_SEQUENCE)]
 
 
-def is_payload_guild_emoji_candidate(payload: types.DiscordObject) -> bool:
+def is_payload_guild_emoji_candidate(payload: custom_types.DiscordObject) -> bool:
     """
     Returns True if the given dict represents an emoji that is from a guild we actively reside in.
 
@@ -159,7 +164,9 @@ def is_payload_guild_emoji_candidate(payload: types.DiscordObject) -> bool:
 
 
 def emoji_from_dict(
-    global_state: state_registry.StateRegistry, payload: types.DiscordObject, guild_id: typing.Optional[int] = None
+    global_state: state_registry.StateRegistry,
+    payload: custom_types.DiscordObject,
+    guild_id: typing.Optional[int] = None,
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:
     if is_payload_guild_emoji_candidate(payload) and guild_id is not None:
         return GuildEmoji(global_state, payload, guild_id)

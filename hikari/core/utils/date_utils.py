@@ -43,7 +43,7 @@ ISO_8601_TIME_PART = re.compile(r"[Tt](\d{2}):(\d{2}):(\d{2})\.(\d{1,6})")
 ISO_8601_TZ_PART = re.compile(r"([+-])(\d{2}):(\d{2})$")
 
 
-def parse_iso_8601_datetime(date_string: str) -> datetime.datetime:
+def parse_iso_8601_ts(date_string: str) -> datetime.datetime:
     """
     Parses an ISO 8601 date string into a datetime object
 
@@ -84,7 +84,7 @@ def discord_epoch_to_datetime(epoch) -> datetime.datetime:
     return datetime.datetime.fromtimestamp(epoch / 1_000 + DISCORD_EPOCH, datetime.timezone.utc)
 
 
-def unix_epoch_to_datetime(epoch) -> datetime.datetime:
+def unix_epoch_to_ts(epoch) -> datetime.datetime:
     """
     Args:
         epoch:
@@ -96,4 +96,4 @@ def unix_epoch_to_datetime(epoch) -> datetime.datetime:
     return datetime.datetime.fromtimestamp(epoch / 1_000, datetime.timezone.utc)
 
 
-__all__ = ("parse_http_date", "parse_iso_8601_datetime", "discord_epoch_to_datetime", "unix_epoch_to_datetime")
+__all__ = ("parse_http_date", "parse_iso_8601_ts", "discord_epoch_to_datetime", "unix_epoch_to_ts")

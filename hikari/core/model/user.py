@@ -25,10 +25,10 @@ import dataclasses
 import datetime
 import typing
 
-from hikari.core.model import base
 from hikari.core.components import state_registry
+from hikari.core.model import base
 from hikari.core.model import presence
-from hikari.core.utils import date_utils, auto_repr
+from hikari.core.utils import date_utils, auto_repr, custom_types
 from hikari.core.utils import delegate
 from hikari.core.utils import transform
 
@@ -83,7 +83,7 @@ class User(base.Snowflake, base.Volatile):
         self.avatar_hash = payload.get("avatar")
 
 
-@delegate.delegate_members(User, "_user")
+@delegate.delegate_to(User, "_user")
 @dataclasses.dataclass()
 class Member(User):
     """
@@ -96,7 +96,7 @@ class Member(User):
     __slots__ = ("_user", "_guild_id", "_role_ids", "joined_at", "nick", "premium_since", "presence")
 
     _user: User
-    _role_ids: typing.List[int]
+    _role_ids: typing.Sequence[int]
     _guild_id: int
 
     #: The date and time the member joined this guild.
@@ -125,9 +125,9 @@ class Member(User):
     def __init__(self, global_state, guild_id, payload):
         self._user = global_state.parse_user(payload["user"])
         self._guild_id = guild_id
-        self.joined_at = date_utils.parse_iso_8601_datetime(payload.get("joined_at"))
-        self.premium_since = transform.nullable_cast(payload.get("premium_since"), date_utils.parse_iso_8601_datetime)
-        self.update_state(payload.get("role_ids", ()), payload.get("nick"))
+        self.joined_at = date_utils.parse_iso_8601_ts(payload.get("joined_at"))
+        self.premium_since = transform.nullable_cast(payload.get("premium_since"), date_utils.parse_iso_8601_ts)
+        self.update_state(payload.get("role_ids", custom_types.EMPTY_SEQUENCE), payload.get("nick"))
 
     # noinspection PyMethodOverriding
     def update_state(self, role_ids, nick) -> None:

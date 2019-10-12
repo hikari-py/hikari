@@ -24,14 +24,19 @@ import typing
 
 from hikari.core.utils import unspecified
 
+_T = typing.TypeVar("_T")
+_U = typing.TypeVar("_U")
+TypeCast = typing.Type[_T]
+Cast = typing.Union[TypeCast, typing.Callable[[typing.Any], _T]]
 
-def nullable_cast(value, cast):
+
+def nullable_cast(value: typing.Any, cast: Cast) -> typing.Optional[_T]:
     if value is not None:
         return cast(value)
     return value
 
 
-def try_cast(value, cast, default=None):
+def try_cast(value: typing.Any, cast: Cast, default: _U = None) -> typing.Union[_T, _U]:
     with contextlib.suppress(Exception):
         return cast(value)
     return default

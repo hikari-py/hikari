@@ -44,8 +44,8 @@ import websockets
 from hikari.core import errors
 from hikari.core.net import opcodes
 from hikari.core.net import rates
+from hikari.core.utils import custom_types
 from hikari.core.utils import logging_utils
-from hikari.core.utils import types
 from hikari.core.utils import user_agent
 
 
@@ -136,6 +136,11 @@ class Event(enum.Enum):
     #: Should not be implemented for bots, and is undocumented, but is here for completeness.
     PRESENCES_REPLACE = enum.auto()
 
+    MESSAGE_CREATE = enum.auto()
+    MESSAGE_UPDATE = enum.auto()
+    MESSAGE_DELETE = enum.auto()
+    MESSAGE_DELETE_BULK = enum.auto()
+
 
 class GatewayClient:
     """
@@ -224,7 +229,7 @@ class GatewayClient:
         *,
         connector=websockets.connect,
         dispatch: DispatchHandler = lambda self, t, d: None,
-        initial_presence: typing.Optional[types.DiscordObject] = None,
+        initial_presence: typing.Optional[custom_types.DiscordObject] = None,
         large_threshold: int = 50,
         loop: asyncio.AbstractEventLoop = None,
         max_persistent_buffer_size: int = 3 * 1024 ** 2,
@@ -346,7 +351,7 @@ class GatewayClient:
             self.out_cid += 1
             await self.ws.send(raw)
 
-    async def _receive_json(self) -> types.DiscordObject:
+    async def _receive_json(self) -> custom_types.DiscordObject:
         msg = await self.ws.recv()
 
         if isinstance(msg, (bytes, bytearray)):
@@ -476,7 +481,7 @@ class GatewayClient:
         self.logger.info("sent IDENTIFY")
         await self._send_json(payload, False)
 
-    async def _handle_dispatch(self, event: str, payload: types.DiscordObject) -> None:
+    async def _handle_dispatch(self, event: str, payload: custom_types.DiscordObject) -> None:
         if event == "READY":
             await self._handle_ready(payload)
         if event == "RESUMED":
@@ -484,14 +489,14 @@ class GatewayClient:
         self.logger.debug("DISPATCH %s", event)
         self._dispatch(event, payload)
 
-    async def _handle_ready(self, ready_payload: types.DiscordObject) -> None:
+    async def _handle_ready(self, ready_payload: custom_types.DiscordObject) -> None:
         self.trace = ready_payload["_trace"]
         self.session_id = ready_payload["session_id"]
         self.version = ready_payload["v"]
         self.logger.info("session %s is READY", self.session_id)
         self.logger.debug("trace for session %s is %s", self.session_id, self.trace)
 
-    async def _handle_resumed(self, resume_payload: types.DiscordObject) -> None:
+    async def _handle_resumed(self, resume_payload: custom_types.DiscordObject) -> None:
         self.trace = resume_payload["_trace"]
         self.logger.info("RESUMED successfully")
         self._dispatch(Event.RESUMED.name, {"gateway": self, "d": resume_payload})
@@ -565,7 +570,11 @@ class GatewayClient:
         )
 
     async def update_status(
-        self, idle_since: typing.Optional[int], game: typing.Optional[types.DiscordObject], status: str, afk: bool
+        self,
+        idle_since: typing.Optional[int],
+        game: typing.Optional[custom_types.DiscordObject],
+        status: str,
+        afk: bool,
     ) -> None:
         """
         Updates the bot user's status in this shard.

@@ -19,9 +19,9 @@
 import dataclasses
 import datetime
 import enum
+import typing
 
 import pytest
-import typing
 
 from hikari.core.model import base
 

@@ -25,11 +25,12 @@ import abc
 import dataclasses
 import typing
 
+from hikari.core.components import state_registry
 from hikari.core.model import base
 from hikari.core.model import guild as _guild
 from hikari.core.model import overwrite
 from hikari.core.model import user
-from hikari.core.utils import transform, auto_repr
+from hikari.core.utils import transform, auto_repr, custom_types
 
 _channel_type_to_class = {}
 
@@ -47,7 +48,7 @@ class Channel(base.Snowflake, base.Volatile, abc.ABC):
 
     __slots__ = ("_state", "id")
 
-    _state: typing.Any
+    _state: state_registry.StateRegistry
 
     #: True if the implementation is a DM channel, or False otherwise.
     #:
@@ -59,7 +60,7 @@ class Channel(base.Snowflake, base.Volatile, abc.ABC):
     #: :type: :class:`int`
     id: int
 
-    def __init__(self, global_state, payload):
+    def __init__(self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject):
         self._state = global_state
         self.id = int(payload["id"])
         self.update_state(payload)
@@ -102,21 +103,21 @@ class GuildChannel(Channel, abc.ABC):
     #: :type: :class:`int`
     position: int
 
-    #: A list of permission overwrites for this channel.
+    #: A sequence t of permission overwrites for this channel.
     #:
-    #: :type: :class:`list` of :attr:`hikari.core.model.overwrite.Overwrite`
-    permission_overwrites: typing.List[overwrite.Overwrite]
+    #: :type: :class:`typing.Sequence` of :attr:`hikari.core.model.overwrite.Overwrite`
+    permission_overwrites: typing.Sequence[overwrite.Overwrite]
 
     #: The name of the channel.
     #:
     #: :type: :class:`str`
     name: str
 
-    def __init__(self, global_state, payload):
+    def __init__(self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject):
         self._guild_id = int(payload["guild_id"])
         super().__init__(global_state, payload)
 
-    def update_state(self, payload) -> None:
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
         self.position = int(payload["position"])
 
         overwrites = []
@@ -170,10 +171,10 @@ class GuildTextChannel(GuildChannel, TextChannel, type=0):
 
     __repr__ = auto_repr.repr_of("id", "name", "guild.name", "nsfw")
 
-    def __init__(self, global_state, payload):
+    def __init__(self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject):
         super().__init__(global_state, payload)
 
-    def update_state(self, payload) -> None:
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
         super().update_state(payload)
         self.nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
@@ -194,21 +195,21 @@ class DMChannel(TextChannel, type=1):
     #: :type: :class:`int` or `None`
     last_message_id: typing.Optional[int]
 
-    #: List of recipients in the DM chat.
+    #: Sequence of recipients in the DM chat.
     #:
-    #: :type: :class:`list` of :class:`hikari.core.model.user.User`
-    recipients: typing.List[user.User]
+    #: :type: :class:`typing.Sequence` of :class:`hikari.core.model.user.User`
+    recipients: typing.Sequence[user.User]
 
     __repr__ = auto_repr.repr_of("id", "name")
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload):
+    def __init__(self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject):
         super().__init__(global_state, payload)
 
-    def update_state(self, payload) -> None:
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
         super().update_state(payload)
         self.last_message_id = transform.nullable_cast(payload.get("last_message_id"), int)
-        self.recipients = [self._state.parse_user(u) for u in payload.get("recipients", ())]
+        self.recipients = [self._state.parse_user(u) for u in payload.get("recipients", custom_types.EMPTY_SEQUENCE)]
 
 
 @dataclasses.dataclass()
@@ -234,10 +235,10 @@ class GuildVoiceChannel(GuildChannel, type=2):
     __repr__ = auto_repr.repr_of("id", "name", "guild.name", "bitrate", "user_limit")
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload):
+    def __init__(self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject):
         super().__init__(global_state, payload)
 
-    def update_state(self, payload) -> None:
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
         super().update_state(payload)
         self.bitrate = payload.get("bitrate") or None
         self.user_limit = payload.get("user_limit") or None
@@ -272,10 +273,10 @@ class GroupDMChannel(DMChannel, type=3):
     __repr__ = auto_repr.repr_of("id", "name")
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload):
+    def __init__(self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject) -> None:
         super().__init__(global_state, payload)
 
-    def update_state(self, payload) -> None:
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
         super().update_state(payload)
         self.icon_hash = payload.get("icon")
         self.name = payload.get("name")
@@ -320,10 +321,10 @@ class GuildNewsChannel(GuildChannel, type=5):
     __repr__ = auto_repr.repr_of("id", "name", "guild.name", "nsfw")
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state, payload):
+    def __init__(self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject) -> None:
         super().__init__(global_state, payload)
 
-    def update_state(self, payload) -> None:
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
         super().update_state(payload)
         self.nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")

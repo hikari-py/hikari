@@ -1,53 +1,53 @@
 {
-    "page": {
-        "id": "srhpyqt94yxb",
-        "name": "Discord",
-        "url": "http://status.discordapp.com",
-        "time_zone": "America/Tijuana",
-        "updated_at": "2019-06-24T06:07:14.473-07:00"
-    },
-    "incidents": [
+  "page": {
+    "id": "srhpyqt94yxb",
+    "name": "Discord",
+    "url": "http://status.discordapp.com",
+    "time_zone": "America/Tijuana",
+    "updated_at": "2019-06-24T06:07:14.473-07:00"
+  },
+  "incidents": [
+    {
+      "id": "2gztsrksff0v",
+      "name": "Global Unavailability",
+      "status": "investigating",
+      "created_at": "2019-06-24T05:25:57.666-07:00",
+      "updated_at": "2019-06-24T06:07:14.465-07:00",
+      "monitoring_at": null,
+      "resolved_at": null,
+      "impact": "none",
+      "shortlink": "http://stspg.io/15e073752",
+      "started_at": "2019-06-24T05:25:57.659-07:00",
+      "page_id": "srhpyqt94yxb",
+      "incident_updates": [
         {
-            "id": "2gztsrksff0v",
-            "name": "Global Unavailability",
-            "status": "investigating",
-            "created_at": "2019-06-24T05:25:57.666-07:00",
-            "updated_at": "2019-06-24T06:07:14.465-07:00",
-            "monitoring_at": null,
-            "resolved_at": null,
-            "impact": "none",
-            "shortlink": "http://stspg.io/15e073752",
-            "started_at": "2019-06-24T05:25:57.659-07:00",
-            "page_id": "srhpyqt94yxb",
-            "incident_updates": [
-                {
-                    "id": "xxqwgv42dnx5",
-                    "status": "investigating",
-                    "body": "We are working on resolving some internal technical problems now.",
-                    "incident_id": "2gztsrksff0v",
-                    "created_at": "2019-06-24T06:07:14.463-07:00",
-                    "updated_at": "2019-06-24T06:07:14.463-07:00",
-                    "display_at": "2019-06-24T06:07:14.463-07:00",
-                    "affected_components": null,
-                    "deliver_notifications": false,
-                    "custom_tweet": null,
-                    "tweet_id": null
-                },
-                {
-                    "id": "jvrfncktc4yp",
-                    "status": "investigating",
-                    "body": "Discord is affected by the general internet outage. Hang tight.  Pet your cats.",
-                    "incident_id": "2gztsrksff0v",
-                    "created_at": "2019-06-24T05:25:57.698-07:00",
-                    "updated_at": "2019-06-24T05:25:57.698-07:00",
-                    "display_at": "2019-06-24T05:25:57.698-07:00",
-                    "affected_components": null,
-                    "deliver_notifications": false,
-                    "custom_tweet": null,
-                    "tweet_id": null
-                }
-            ],
-            "components": []
+          "id": "xxqwgv42dnx5",
+          "status": "investigating",
+          "body": "We are working on resolving some internal technical problems now.",
+          "incident_id": "2gztsrksff0v",
+          "created_at": "2019-06-24T06:07:14.463-07:00",
+          "updated_at": "2019-06-24T06:07:14.463-07:00",
+          "display_at": "2019-06-24T06:07:14.463-07:00",
+          "affected_components": null,
+          "deliver_notifications": false,
+          "custom_tweet": null,
+          "tweet_id": null
+        },
+        {
+          "id": "jvrfncktc4yp",
+          "status": "investigating",
+          "body": "Discord is affected by the general internet outage. Hang tight.  Pet your cats.",
+          "incident_id": "2gztsrksff0v",
+          "created_at": "2019-06-24T05:25:57.698-07:00",
+          "updated_at": "2019-06-24T05:25:57.698-07:00",
+          "display_at": "2019-06-24T05:25:57.698-07:00",
+          "affected_components": null,
+          "deliver_notifications": false,
+          "custom_tweet": null,
+          "tweet_id": null
         }
-    ]
+      ],
+      "components": []
+    }
+  ]
 }

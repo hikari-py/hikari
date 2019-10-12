@@ -24,8 +24,8 @@ from __future__ import annotations
 import dataclasses
 import typing
 
-from hikari.core.model import base
 from hikari.core.components import state_registry
+from hikari.core.model import base
 from hikari.core.model import user
 from hikari.core.utils import auto_repr
 

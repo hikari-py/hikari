@@ -23,12 +23,12 @@ from __future__ import annotations
 
 import dataclasses
 
+from hikari.core.components import state_registry
 from hikari.core.model import base
 from hikari.core.model import color as _color
 from hikari.core.model import guild
-from hikari.core.components import state_registry
 from hikari.core.model import permission as _permission
-from hikari.core.utils import types, auto_repr
+from hikari.core.utils import custom_types, auto_repr
 
 
 @dataclasses.dataclass()
@@ -102,7 +102,7 @@ class Role(base.Snowflake, base.Volatile):
         self.id = int(payload["id"])
         self.update_state(payload)
 
-    def update_state(self, payload: types.DiscordObject) -> None:
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
         self.name = payload["name"]
         self.color = _color.Color(payload["color"])
         self.hoist = payload["hoist"]
