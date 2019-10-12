@@ -19,7 +19,6 @@
 import dataclasses
 
 from hikari.core.utils import delegate
-from tests.hikari.core import _helpers
 
 
 def test_DelegatedProperty_on_instance():
@@ -53,7 +52,7 @@ def test_field_delegation():
         b: int
         c: int
 
-    @delegate.delegate_members(Base, "_base")
+    @delegate.delegate_to(Base, "_base")
     class Delegate(Base):
         __slots__ = ("_base", "d", "e", "f")
         _base: Base
@@ -84,7 +83,7 @@ def test_field_delegation_on_dataclass():
         b: int
         c: int
 
-    @delegate.delegate_members(Base, "_base")
+    @delegate.delegate_to(Base, "_base")
     class Delegate(Base):
         _base: Base
 

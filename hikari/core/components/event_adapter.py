@@ -19,16 +19,15 @@
 """
 Abstract definition of an event handler.
 """
-import abc
 import asyncio
 
+from hikari.core.utils import custom_types
 from hikari.core.utils import logging_utils
-from hikari.core.utils import types
 
 
-class EventAdapter(abc.ABC):
+class EventAdapter:
     """
-    Abstract definition of an event handler. This automatically implements an underlying handler for every documented
+    Stubbed definition of an event handler. This automatically implements an underlying handler for every documented
     event that Discord can dispatch to us that performs no operation, so unimplemented events in subclasses go ignored
     silently.
 
@@ -38,7 +37,7 @@ class EventAdapter(abc.ABC):
     def __init__(self):
         self.logger = logging_utils.get_named_logger(self)
 
-    async def consume_raw_event(self, gateway, event_name: str, payload: types.DiscordObject) -> None:
+    async def consume_raw_event(self, gateway, event_name: str, payload: custom_types.DiscordObject) -> None:
         try:
             handler = getattr(self, f"handle_{event_name.lower()}")
             asyncio.create_task(handler(gateway, payload))
@@ -51,7 +50,7 @@ class EventAdapter(abc.ABC):
     async def handle_request_to_reconnect(self, gateway, payload):
         ...
 
-    async def handle_hello(self, gateway, payload):
+    async def handle_connect(self, gateway, payload):
         ...
 
     async def handle_ready(self, gateway, payload):
@@ -154,6 +153,11 @@ class EventAdapter(abc.ABC):
         ...
 
     async def handle_webhooks_update(self, gateway, payload):
+        ...
+
+    async def handle_presences_replace(self, gateway, payload):
+        # This should not be implemented, as it is for users only and is not documented. This exists to allow us to
+        # ignore it silently rather than producing spam.
         ...
 
     async def handle_unrecognised_event(self, gateway, event_name, payload):

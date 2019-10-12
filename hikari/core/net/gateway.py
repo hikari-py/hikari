@@ -33,6 +33,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import datetime
+import enum
 import json
 import time
 import typing
@@ -40,12 +41,12 @@ import zlib
 
 import websockets
 
-import hikari.core.utils.user_agent
 from hikari.core import errors
 from hikari.core.net import opcodes
 from hikari.core.net import rates
+from hikari.core.utils import custom_types
 from hikari.core.utils import logging_utils
-from hikari.core.utils import types
+from hikari.core.utils import user_agent
 
 
 class _ResumeConnection(websockets.ConnectionClosed):
@@ -71,6 +72,74 @@ class _RestartConnection(websockets.ConnectionClosed):
 DispatchHandler = typing.Callable[
     ["GatewayClient", str, typing.Dict[str, typing.Any]], typing.Union[None, typing.Awaitable[None]]
 ]
+
+
+class Event(enum.Enum):
+    """
+    Events that can occur on this gateway.
+    """
+
+    #: Note:
+    #:     This is not a physical gateway event, and is synthesised by the implementation of the gateway client.
+    CONNECT = enum.auto()
+    #: Note:
+    #:     This is not a physical gateway event, and is synthesised by the implementation of the gateway client.
+    DISCONNECT = enum.auto()
+    #: Note:
+    #:     This is not a physical gateway event, and is synthesised by the implementation of the gateway client.
+    INVALID_SESSION = enum.auto()
+    #: Note:
+    #:     This is not a physical gateway event, and is synthesised by the implementation of the gateway client.
+    REQUEST_TO_RECONNECT = enum.auto()
+    #: Note:
+    #:     This is not a physical gateway event, and is synthesised by the implementation of the gateway client.
+    RESUMED = enum.auto()
+
+    DM_CHANNEL_CREATE = enum.auto()
+    GUILD_CHANNEL_CREATE = enum.auto()
+
+    DM_CHANNEL_UPDATE = enum.auto()
+    GUILD_CHANNEL_UPDATE = enum.auto()
+
+    DM_CHANNEL_DELETE = enum.auto()
+    GUILD_CHANNEL_DELETE = enum.auto()
+
+    DM_CHANNEL_PIN_ADDED = enum.auto()
+    GUILD_CHANNEL_PIN_ADDED = enum.auto()
+
+    DM_CHANNEL_PIN_REMOVED = enum.auto()
+    GUILD_CHANNEL_PIN_REMOVED = enum.auto()
+
+    GUILD_AVAILABLE = enum.auto()
+    GUILD_CREATE = enum.auto()
+    GUILD_LEAVE = enum.auto()
+    GUILD_UNAVAILABLE = enum.auto()
+    GUILD_UPDATE = enum.auto()
+
+    GUILD_BAN_ADD = enum.auto()
+    GUILD_BAN_REMOVE = enum.auto()
+
+    GUILD_EMOJIS_UPDATE = enum.auto()
+
+    GUILD_INTEGRATIONS_UPDATE = enum.auto()
+
+    GUILD_MEMBER_ADD = enum.auto()
+    GUILD_MEMBER_UPDATE = enum.auto()
+    GUILD_MEMBER_REMOVE = enum.auto()
+
+    GUILD_ROLE_CREATE = enum.auto()
+    GUILD_ROLE_UPDATE = enum.auto()
+    GUILD_ROLE_DELETE = enum.auto()
+
+    GUILD_MEMBERS_CHUNK = enum.auto()
+
+    #: Should not be implemented for bots, and is undocumented, but is here for completeness.
+    PRESENCES_REPLACE = enum.auto()
+
+    MESSAGE_CREATE = enum.auto()
+    MESSAGE_UPDATE = enum.auto()
+    MESSAGE_DELETE = enum.auto()
+    MESSAGE_DELETE_BULK = enum.auto()
 
 
 class GatewayClient:
@@ -118,6 +187,7 @@ class GatewayClient:
     __slots__ = [
         "dispatch",
         "_connector",
+        "_client_identifier",
         "_in_buffer",
         "_zlib_decompressor",
         "shard_count",
@@ -159,7 +229,7 @@ class GatewayClient:
         *,
         connector=websockets.connect,
         dispatch: DispatchHandler = lambda self, t, d: None,
-        initial_presence: typing.Optional[types.DiscordObject] = None,
+        initial_presence: typing.Optional[custom_types.DiscordObject] = None,
         large_threshold: int = 50,
         loop: asyncio.AbstractEventLoop = None,
         max_persistent_buffer_size: int = 3 * 1024 ** 2,
@@ -183,6 +253,12 @@ class GatewayClient:
             self.dispatch: DispatchHandler = dispatch
 
         loop = loop or asyncio.get_running_loop()
+
+        self._client_identifier = {
+            "$os": user_agent.system_type(),
+            "$browser": user_agent.library_version(),
+            "$device": user_agent.python_version(),
+        }
 
         self._connector = connector
         self._in_buffer: bytearray = bytearray()
@@ -275,7 +351,7 @@ class GatewayClient:
             self.out_cid += 1
             await self.ws.send(raw)
 
-    async def _receive_json(self) -> types.DiscordObject:
+    async def _receive_json(self) -> custom_types.DiscordObject:
         msg = await self.ws.recv()
 
         if isinstance(msg, (bytes, bytearray)):
@@ -374,7 +450,7 @@ class GatewayClient:
         hb = d["heartbeat_interval"]
         self.heartbeat_interval = hb / 1_000.0
         self.logger.info("received HELLO. heartbeat interval is %sms", hb)
-        self._dispatch("HELLO", {"gateway": self, "d": d})
+        self._dispatch(Event.CONNECT.name, {"gateway": self, "d": d})
 
     async def _send_resume(self) -> None:
         payload = {
@@ -391,11 +467,7 @@ class GatewayClient:
                 "token": self.token,
                 "compress": False,
                 "large_threshold": self.large_threshold,
-                "properties": {
-                    "$os": hikari.core.utils.user_agent.system_type(),
-                    "$browser": hikari.core.utils.user_agent.library_version(),
-                    "$device": hikari.core.utils.user_agent.python_version(),
-                },
+                "properties": self._client_identifier,
             },
         }
 
@@ -409,7 +481,7 @@ class GatewayClient:
         self.logger.info("sent IDENTIFY")
         await self._send_json(payload, False)
 
-    async def _handle_dispatch(self, event: str, payload: types.DiscordObject) -> None:
+    async def _handle_dispatch(self, event: str, payload: custom_types.DiscordObject) -> None:
         if event == "READY":
             await self._handle_ready(payload)
         if event == "RESUMED":
@@ -417,17 +489,17 @@ class GatewayClient:
         self.logger.debug("DISPATCH %s", event)
         self._dispatch(event, payload)
 
-    async def _handle_ready(self, ready_payload: types.DiscordObject) -> None:
+    async def _handle_ready(self, ready_payload: custom_types.DiscordObject) -> None:
         self.trace = ready_payload["_trace"]
         self.session_id = ready_payload["session_id"]
         self.version = ready_payload["v"]
         self.logger.info("session %s is READY", self.session_id)
         self.logger.debug("trace for session %s is %s", self.session_id, self.trace)
 
-    async def _handle_resumed(self, resume_payload: types.DiscordObject) -> None:
+    async def _handle_resumed(self, resume_payload: custom_types.DiscordObject) -> None:
         self.trace = resume_payload["_trace"]
         self.logger.info("RESUMED successfully")
-        self._dispatch("RESUMED", {"gateway": self, "d": resume_payload})
+        self._dispatch(Event.RESUMED.name, {"gateway": self, "d": resume_payload})
 
     async def _process_events(self) -> None:
         """Polls the gateway for new packets and handles dispatching the results."""
@@ -454,20 +526,20 @@ class GatewayClient:
             await self._handle_ack()
         elif op == opcodes.GatewayOpcode.RECONNECT:
             self.logger.warning("instructed to disconnect and RECONNECT with gateway")
-            self._dispatch("REQUEST_TO_RECONNECT", {})
+            self._dispatch(Event.REQUEST_TO_RECONNECT.name, {})
             await self._trigger_identify(
                 code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="you requested me to reconnect"
             )
         elif op == opcodes.GatewayOpcode.INVALID_SESSION:
             if d is True:
                 self.logger.warning("will try to disconnect and RESUME")
-                self._dispatch("invalid_session", True)
+                self._dispatch(Event.INVALID_SESSION.name, True)
                 await self._trigger_resume(
                     code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="invalid session id so will resume"
                 )
             else:
                 self.logger.warning("will try to re-IDENTIFY")
-                self._dispatch("invalid_session", False)
+                self._dispatch(Event.INVALID_SESSION.name, False)
                 await self._trigger_identify(
                     code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="invalid session id so will close"
                 )
@@ -484,7 +556,9 @@ class GatewayClient:
             limit: max number of members to retrieve, or zero to remove the constraint.
 
         Warning:
-            Results will be dispatched as events in chunks of 1000 members per guild.
+            Results will be dispatched as events in chunks of 1000 members per guild using the
+            :attr:`Event.GUILD_MEMBERS_CHUNK` event. You will need to listen to these yourself and decode them
+            in case more than one occurs at once.
         """
         self.logger.debug("requesting members for guild %r with query %r and limit %r", guild_id, query, limit)
         await self._send_json(
@@ -496,7 +570,11 @@ class GatewayClient:
         )
 
     async def update_status(
-        self, idle_since: typing.Optional[int], game: typing.Optional[types.DiscordObject], status: str, afk: bool
+        self,
+        idle_since: typing.Optional[int],
+        game: typing.Optional[custom_types.DiscordObject],
+        status: str,
+        afk: bool,
     ) -> None:
         """
         Updates the bot user's status in this shard.
@@ -580,11 +658,11 @@ class GatewayClient:
                     await (self._send_resume() if is_resume else self._send_identify())
                     await self._send_heartbeat()
                     await asyncio.gather(self._keep_alive(), self._process_events())
-                    self._dispatch("disconnect", {})
+                    self._dispatch(Event.DISCONNECT.name, {})
                 except (_RestartConnection, _ResumeConnection, websockets.ConnectionClosed) as ex:
                     code, reason = opcodes.GatewayClosure(ex.code), ex.reason or "no reason"
 
-                    self._dispatch("disconnect", {"code": code, "reason": reason})
+                    self._dispatch(Event.DISCONNECT.name, {"code": code, "reason": reason})
 
                     if ex.code in self._NEVER_RECONNECT_CODES:
                         self.logger.critical("disconnected after %s [%s]. Please rectify issue manually", reason, code)
@@ -615,4 +693,4 @@ class GatewayClient:
         self.loop.create_task(self.dispatch(self, event_name, payload))
 
 
-__all__ = ["GatewayClient"]
+__all__ = ["Event", "GatewayClient"]

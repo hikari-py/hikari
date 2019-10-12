@@ -17,8 +17,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import functools
+import fnmatch
 import os
 import shutil
+import traceback
 import typing
 
 from nox import session as nox_session
@@ -43,7 +45,44 @@ BLACK_PACKAGES = [MAIN_PACKAGE, TEST_PATH]
 BLACK_PATHS = [m.replace(".", "/") for m in BLACK_PACKAGES] + [__file__, pathify(DOCUMENTATION_DIR, "conf.py")]
 BLACK_SHIM_PATH = pathify(CI_SCRIPT_DIR, "black.py")
 GENDOC_PATH = pathify(CI_SCRIPT_DIR, "gendoc.py")
+MAIN_PACKAGE_PATH = MAIN_PACKAGE.replace(".", "/")
 REPOSITORY = f"https://gitlab.com/{OWNER}/{MAIN_PACKAGE}"
+
+
+def line_count(directories, file_include_globs=("*.py",), dir_exclude_globs=("__pycache__",)):
+    def match_globs(names, globs):
+        results = set()
+        for glob in globs:
+            results |= set(fnmatch.filter(names, glob))
+        return results
+
+    def get_files_matching():
+        for root, dirs, files in os.walk(directory, topdown=True):
+            for exclude in match_globs(dirs, dir_exclude_globs):
+                dirs.remove(exclude)
+
+            for file in match_globs(files, file_include_globs):
+                yield os.path.join(root, file)
+
+    def print_line_count(count, file):
+        print(f"{count: >10.0f}", file)
+
+    total_lines = 0
+    for directory in directories:
+        total_sub_lines = 0
+        print()
+        print("Line count in", directory)
+        for file in sorted(get_files_matching()):
+            with open(file) as fp:
+                file_lines = fp.read().count("\n")
+                print_line_count(file_lines, file)
+                total_sub_lines += file_lines
+                total_lines += file_lines
+
+        print_line_count(total_sub_lines, "TOTAL in " + directory)
+
+    print()
+    print_line_count(total_lines, "TOTAL")
 
 
 class PoetryNoxSession(sessions.Session):
@@ -76,6 +115,11 @@ def using_poetry(session_logic):
 @nox_session()
 @using_poetry
 def pytest(session: PoetryNoxSession) -> None:
+    try:
+        line_count([TEST_PATH, MAIN_PACKAGE_PATH])
+    except:
+        traceback.print_exc()
+
     session.poetry("update")
     session.run(
         "python",

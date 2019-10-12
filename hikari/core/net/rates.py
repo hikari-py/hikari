@@ -29,8 +29,6 @@ import typing
 
 from hikari.core.utils import assertions
 
-__all__ = ("TimedLatchBucket", "TimedTokenBucket", "VariableTokenBucket")
-
 
 class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
     """
@@ -326,3 +324,6 @@ class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         pass
+
+
+__all__ = ("TimedLatchBucket", "TimedTokenBucket", "VariableTokenBucket")

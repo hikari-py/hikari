@@ -22,6 +22,17 @@ from hikari.core.utils import assertions
 from tests.hikari.core import _helpers
 
 
+def test_assert_that_when_True():
+    assertions.assert_that(True)
+
+
+def test_assert_that_when_False():
+    try:
+        assertions.assert_that(False, "bang")
+    except ValueError as ex:
+        assert str(ex) == "bang"
+
+
 def test_assert_not_none_when_none():
     try:
         assertions.assert_not_none(None)
@@ -96,7 +107,7 @@ def test_assert_is_mixin_applied_to_something_that_is_directly_derived_from_mixi
         __slots__ = ()
 
 
-def test_assert_is_subclass_happy_path():
+def test_assert_subclasses_happy_path():
     class A:
         pass
 
@@ -107,7 +118,7 @@ def test_assert_is_subclass_happy_path():
 
 
 @_helpers.assert_raises(TypeError)
-def test_assert_is_subclass_sad_path():
+def test_assert_subclasses_sad_path():
     class A:
         pass
 
@@ -115,6 +126,28 @@ def test_assert_is_subclass_sad_path():
         pass
 
     assertions.assert_subclasses(B, A)
+
+
+def test_assert_is_instance_happy_path():
+    class A:
+        pass
+
+    class B(A):
+        pass
+
+    assertions.assert_is_instance(B(), B)
+    assertions.assert_is_instance(B(), A)
+
+
+@_helpers.assert_raises(TypeError)
+def test_assert_is_instance_sad_path():
+    class A:
+        pass
+
+    class B:
+        pass
+
+    assertions.assert_is_instance(B(), A)
 
 
 def test_assert_is_natural_happy_path():

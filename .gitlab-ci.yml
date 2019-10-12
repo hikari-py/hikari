@@ -86,7 +86,7 @@ py38:
         - apt-get update
         - apt-get install git -y
         - apt-get install graphviz -y
-        - pip install poetry nox requests
+        - pip install poetry nox
         - git fetch --all --prune
         - rm public -Rvf || true
         - mkdir public || true
@@ -124,10 +124,10 @@ pages:
 
 test-pages:
     extends: .pages
-    allow_failure: false
+    allow_failure: true
     script:
         - source tasks/deploy.sh
-        - set-versions "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-job-${CI_JOB_ID}"
+        - set-versions "$(python tasks/make-version-string.py staging).${CI_PIPELINE_IID}"
         - nox -ssphinx
     artifacts:
         paths:

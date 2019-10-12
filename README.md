@@ -44,3 +44,12 @@ their platform and it screws up my experience of their platform, so this API wil
 It is **not** an OAuth2 API wrapper for Discord. Maybe some day.
 
 It currently is **not** able to provide voice functionality. Again, this may be added in the future.
+
+## FAQ
+
+### Contributing to Hikari Core
+
+**When I try to run `nox`, it complains that `pip` cannot be run with `--user`. How do I run the tests?**
+
+I seem to get this issue on Manjaro Linux a lot. The solution for me is to edit `/etc/pip.conf` and set `user = False`
+then try running again.
