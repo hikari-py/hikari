@@ -16,9 +16,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import dataclasses
-import datetime
-import enum
 
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified

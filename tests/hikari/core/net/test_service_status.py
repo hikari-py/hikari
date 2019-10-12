@@ -22,7 +22,7 @@ import dataclasses
 import asynctest
 import pytest
 
-from hikari.core.model import service_status as status_model
+from hikari.core.models import service_status as status_model
 from hikari.core.net import service_status
 from tests.hikari.core.testdata import *
 

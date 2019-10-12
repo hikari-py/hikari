@@ -27,10 +27,10 @@ import typing
 import aiohttp
 
 from hikari.core.net import http_base
-from hikari.core.utils import ioutils
+from hikari.core.utils import custom_types
+from hikari.core.utils import io_utils
 from hikari.core.utils import meta
 from hikari.core.utils import transform
-from hikari.core.utils import types
 from hikari.core.utils import unspecified
 
 __all__ = ("HTTPClient",)
@@ -59,7 +59,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return result["url"]
 
     @meta.link_developer_portal(meta.APIResource.GATEWAY)
-    async def get_gateway_bot(self) -> types.DiscordObject:
+    async def get_gateway_bot(self) -> custom_types.DiscordObject:
         """
         Returns:
             An object containing a `url` to connect to, an :class:`int` number of shards recommended to use
@@ -78,7 +78,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         user_id: str = unspecified.UNSPECIFIED,
         action_type: int = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
-    ) -> types.DiscordObject:
+    ) -> custom_types.DiscordObject:
         """
         Get an audit log object for the given guild.
 
@@ -108,7 +108,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(GET, "/guilds/{guild_id}/audit-logs", query=query, guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    async def get_channel(self, channel_id: str) -> types.DiscordObject:
+    async def get_channel(self, channel_id: str) -> custom_types.DiscordObject:
         """
         Get a channel object from a given channel ID.
 
@@ -136,10 +136,10 @@ class HTTPClient(http_base.BaseHTTPClient):
         rate_limit_per_user: int = unspecified.UNSPECIFIED,
         bitrate: int = unspecified.UNSPECIFIED,
         user_limit: int = unspecified.UNSPECIFIED,
-        permission_overwrites: typing.List[types.DiscordObject] = unspecified.UNSPECIFIED,
+        permission_overwrites: typing.List[custom_types.DiscordObject] = unspecified.UNSPECIFIED,
         parent_id: str = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> types.DiscordObject:
+    ) -> custom_types.DiscordObject:
         """
         Update one or more aspects of a given channel ID.
 
@@ -226,7 +226,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         after: str = unspecified.UNSPECIFIED,
         before: str = unspecified.UNSPECIFIED,
         around: str = unspecified.UNSPECIFIED,
-    ) -> typing.List[types.DiscordObject]:
+    ) -> typing.List[custom_types.DiscordObject]:
         """
         Retrieve message history for a given channel. If a user is provided, retrieve the DM history.
 
@@ -273,7 +273,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(GET, "/channels/{channel_id}/messages", channel_id=channel_id, json=payload)
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    async def get_channel_message(self, channel_id: str, message_id: str) -> types.DiscordObject:
+    async def get_channel_message(self, channel_id: str, message_id: str) -> custom_types.DiscordObject:
         """
         Get the message with the given message ID from the channel with the given channel ID.
 
@@ -342,9 +342,9 @@ class HTTPClient(http_base.BaseHTTPClient):
         content: str = unspecified.UNSPECIFIED,
         nonce: str = unspecified.UNSPECIFIED,
         tts: bool = False,
-        files: typing.List[ioutils.FileLike] = unspecified.UNSPECIFIED,
-        embed: types.DiscordObject = unspecified.UNSPECIFIED,
-    ) -> types.DiscordObject:
+        files: typing.List[io_utils.FileLike] = unspecified.UNSPECIFIED,
+        embed: custom_types.DiscordObject = unspecified.UNSPECIFIED,
+    ) -> custom_types.DiscordObject:
         """
         Create a message in the given channel or DM.
 
@@ -389,7 +389,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         re_seekable_resources = []
         if files is not unspecified.UNSPECIFIED:
             for i, (file_name, file) in enumerate(files):
-                file = ioutils.make_resource_seekable(file)
+                file = io_utils.make_resource_seekable(file)
                 re_seekable_resources.append(file)
                 form.add_field(f"file{i}", file, filename=file_name, content_type="application/octet-stream")
 
@@ -499,7 +499,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         before: str = unspecified.UNSPECIFIED,
         after: str = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
-    ) -> typing.List[types.DiscordObject]:
+    ) -> typing.List[custom_types.DiscordObject]:
         """
         Get a list of users who reacted with the given emoji on the given message in the given channel or user DM.
 
@@ -568,8 +568,8 @@ class HTTPClient(http_base.BaseHTTPClient):
         message_id: str,
         *,
         content: str = unspecified.UNSPECIFIED,
-        embed: types.DiscordObject = unspecified.UNSPECIFIED,
-    ) -> types.DiscordObject:
+        embed: custom_types.DiscordObject = unspecified.UNSPECIFIED,
+    ) -> custom_types.DiscordObject:
         """
         Update the given message.
 
@@ -696,7 +696,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         )
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    async def get_channel_invites(self, channel_id: str) -> typing.List[types.DiscordObject]:
+    async def get_channel_invites(self, channel_id: str) -> typing.List[custom_types.DiscordObject]:
         """
         Get invites for a given channel.
 
@@ -725,7 +725,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         temporary: bool = unspecified.UNSPECIFIED,
         unique: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> types.DiscordObject:
+    ) -> custom_types.DiscordObject:
         """
         Create a new invite for the given channel.
 
@@ -872,7 +872,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         )
 
     @meta.link_developer_portal(meta.APIResource.EMOJI)
-    async def list_guild_emojis(self, guild_id: str) -> typing.List[types.DiscordObject]:
+    async def list_guild_emojis(self, guild_id: str) -> typing.List[custom_types.DiscordObject]:
         """
         Gets emojis for a given guild ID.
 
@@ -892,7 +892,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(GET, "/guilds/{guild_id}/emojis", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.EMOJI)
-    async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> types.DiscordObject:
+    async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> custom_types.DiscordObject:
         """
         Gets an emoji from a given guild and emoji IDs
 
@@ -916,7 +916,7 @@ class HTTPClient(http_base.BaseHTTPClient):
     @meta.link_developer_portal(meta.APIResource.EMOJI)
     async def create_guild_emoji(
         self, guild_id: str, name: str, image: bytes, roles: typing.List[str], *, reason: str = unspecified.UNSPECIFIED
-    ) -> types.DiscordObject:
+    ) -> custom_types.DiscordObject:
         """
         Creates a new emoji for a given guild.
 
@@ -949,7 +949,7 @@ class HTTPClient(http_base.BaseHTTPClient):
     @meta.link_developer_portal(meta.APIResource.EMOJI)
     async def modify_guild_emoji(
         self, guild_id: str, emoji_id: str, name: str, roles: typing.List[str], reason: str = unspecified.UNSPECIFIED
-    ) -> types.DiscordObject:
+    ) -> custom_types.DiscordObject:
         """
         Edits an emoji of a given guild
 
@@ -1016,9 +1016,9 @@ class HTTPClient(http_base.BaseHTTPClient):
         verification_level: int,
         default_message_notifications: int,
         explicit_content_filter: int,
-        roles: typing.List[types.DiscordObject],
-        channels: typing.List[types.DiscordObject],
-    ) -> types.DiscordObject:
+        roles: typing.List[custom_types.DiscordObject],
+        channels: typing.List[custom_types.DiscordObject],
+    ) -> custom_types.DiscordObject:
         """
         Creates a new guild. Can only be used by bots in less than 10 guilds.
 
@@ -1063,7 +1063,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(POST, "/guilds", json=payload)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild(self, guild_id: str) -> types.DiscordObject:
+    async def get_guild(self, guild_id: str) -> custom_types.DiscordObject:
         """
         Gets a given guild's object.
 
@@ -1098,7 +1098,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         splash: bytes = unspecified.UNSPECIFIED,
         system_channel_id: str = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> types.DiscordObject:
+    ) -> custom_types.DiscordObject:
         """
         Edits a given guild.
 
@@ -1174,7 +1174,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(DELETE, "/guilds/{guild_id}", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_channels(self, guild_id: str) -> typing.List[types.DiscordObject]:
+    async def get_guild_channels(self, guild_id: str) -> typing.List[custom_types.DiscordObject]:
         """
         Gets all the channels for a given guild.
 
@@ -1205,11 +1205,11 @@ class HTTPClient(http_base.BaseHTTPClient):
         user_limit: int = unspecified.UNSPECIFIED,
         rate_limit_per_user: int = unspecified.UNSPECIFIED,
         position: int = unspecified.UNSPECIFIED,
-        permission_overwrites: typing.List[types.DiscordObject] = unspecified.UNSPECIFIED,
+        permission_overwrites: typing.List[custom_types.DiscordObject] = unspecified.UNSPECIFIED,
         parent_id: str = unspecified.UNSPECIFIED,
         nsfw: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> types.DiscordObject:
+    ) -> custom_types.DiscordObject:
         """
         Creates a channel in a given guild.
 
@@ -1298,7 +1298,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(PATCH, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload, reason=reason)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_member(self, guild_id: str, user_id: str) -> types.DiscordObject:
+    async def get_guild_member(self, guild_id: str, user_id: str) -> custom_types.DiscordObject:
         """
         Gets a given guild member.
 
@@ -1320,7 +1320,7 @@ class HTTPClient(http_base.BaseHTTPClient):
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def list_guild_members(
         self, guild_id: str, *, limit: int = unspecified.UNSPECIFIED, after: str = unspecified.UNSPECIFIED
-    ) -> typing.List[types.DiscordObject]:
+    ) -> typing.List[custom_types.DiscordObject]:
         """
         Lists all members of a given guild.
 
@@ -1541,7 +1541,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         )
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_bans(self, guild_id: str) -> typing.List[types.DiscordObject]:
+    async def get_guild_bans(self, guild_id: str) -> typing.List[custom_types.DiscordObject]:
         """
         Gets the bans for a given guild.
 
@@ -1561,7 +1561,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(GET, "/guilds/{guild_id}/bans", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_ban(self, guild_id: str, user_id: str) -> types.DiscordObject:
+    async def get_guild_ban(self, guild_id: str, user_id: str) -> custom_types.DiscordObject:
         """
         Gets a ban from a given guild.
 
@@ -1641,7 +1641,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         )
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_roles(self, guild_id: str) -> typing.List[types.DiscordObject]:
+    async def get_guild_roles(self, guild_id: str) -> typing.List[custom_types.DiscordObject]:
         """
         Gets the roles for a given guild.
 
@@ -1671,7 +1671,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         hoist: bool = unspecified.UNSPECIFIED,
         mentionable: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> types.DiscordObject:
+    ) -> custom_types.DiscordObject:
         """
         Creates a new role for a given guild.
 
@@ -1879,7 +1879,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(POST, "/guilds/{guild_id}/prune", guild_id=guild_id, query=query, reason=reason)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_voice_regions(self, guild_id: str) -> typing.List[types.DiscordObject]:
+    async def get_guild_voice_regions(self, guild_id: str) -> typing.List[custom_types.DiscordObject]:
         """
         Gets the voice regions for a given guild.
 
@@ -1899,7 +1899,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(GET, "/guilds/{guild_id}/regions", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_invites(self, guild_id: str) -> typing.List[types.DiscordObject]:
+    async def get_guild_invites(self, guild_id: str) -> typing.List[custom_types.DiscordObject]:
         """
         Gets the invites for a given guild.
 
@@ -1919,7 +1919,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(GET, "/guilds/{guild_id}/invites", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_integrations(self, guild_id: str) -> typing.List[types.DiscordObject]:
+    async def get_guild_integrations(self, guild_id: str) -> typing.List[custom_types.DiscordObject]:
         """
         Gets the integrations for a given guild.
 
@@ -2071,7 +2071,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         )
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_embed(self, guild_id: str) -> types.DiscordObject:
+    async def get_guild_embed(self, guild_id: str) -> custom_types.DiscordObject:
         """
         Gets the embed for a given guild.
 
@@ -2093,8 +2093,8 @@ class HTTPClient(http_base.BaseHTTPClient):
     #: TODO: does this take a reason header?
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def modify_guild_embed(
-        self, guild_id: str, embed: types.DiscordObject, reason: str = unspecified.UNSPECIFIED
-    ) -> types.DiscordObject:
+        self, guild_id: str, embed: custom_types.DiscordObject, reason: str = unspecified.UNSPECIFIED
+    ) -> custom_types.DiscordObject:
         """
         Edits the embed for a given guild.
 
@@ -2161,7 +2161,9 @@ class HTTPClient(http_base.BaseHTTPClient):
         return f"{self.base_uri}/guilds/{guild_id}/widget.png?style={style}"
 
     @meta.link_developer_portal(meta.APIResource.INVITE)
-    async def get_invite(self, invite_code: str, *, with_counts: bool = unspecified.UNSPECIFIED) -> types.DiscordObject:
+    async def get_invite(
+        self, invite_code: str, *, with_counts: bool = unspecified.UNSPECIFIED
+    ) -> custom_types.DiscordObject:
         """
         Gets the given invite.
 
@@ -2184,7 +2186,9 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(GET, "/invites/{invite_code}", invite_code=invite_code, query=payload)
 
     @meta.link_developer_portal(meta.APIResource.INVITE)
-    async def delete_invite(self, invite_code: str, *, reason: str = unspecified.UNSPECIFIED) -> types.DiscordObject:
+    async def delete_invite(
+        self, invite_code: str, *, reason: str = unspecified.UNSPECIFIED
+    ) -> custom_types.DiscordObject:
         """
         Deletes a given invite.
 
@@ -2211,7 +2215,7 @@ class HTTPClient(http_base.BaseHTTPClient):
     ##########
 
     @meta.link_developer_portal(meta.APIResource.OAUTH2)
-    async def get_current_application_info(self) -> types.DiscordObject:
+    async def get_current_application_info(self) -> custom_types.DiscordObject:
         """
         Get the current application information.
 
@@ -2225,7 +2229,7 @@ class HTTPClient(http_base.BaseHTTPClient):
     ##########
 
     @meta.link_developer_portal(meta.APIResource.USER)
-    async def get_current_user(self) -> types.DiscordObject:
+    async def get_current_user(self) -> custom_types.DiscordObject:
         """
         Gets the currently the user that is represented by token given to the client.
 
@@ -2235,7 +2239,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(GET, "/users/@me")
 
     @meta.link_developer_portal(meta.APIResource.USER)
-    async def get_user(self, user_id: str) -> types.DiscordObject:
+    async def get_user(self, user_id: str) -> custom_types.DiscordObject:
         """
         Gets a given user.
 
@@ -2255,7 +2259,7 @@ class HTTPClient(http_base.BaseHTTPClient):
     @meta.link_developer_portal(meta.APIResource.USER)
     async def modify_current_user(
         self, *, username: str = unspecified.UNSPECIFIED, avatar: bytes = unspecified.UNSPECIFIED
-    ) -> types.DiscordObject:
+    ) -> custom_types.DiscordObject:
         """
         Edits the current user. If any arguments are unspecified, then that subject is not changed on Discord.
 
@@ -2284,7 +2288,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         before: str = unspecified.UNSPECIFIED,
         after: str = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
-    ) -> typing.List[types.DiscordObject]:
+    ) -> typing.List[custom_types.DiscordObject]:
         """
         Gets the guilds the current user is in.
 
@@ -2317,7 +2321,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(DELETE, "/users/@me/guilds/{guild_id}", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.USER)
-    async def create_dm(self, recipient_id: str) -> types.DiscordObject:
+    async def create_dm(self, recipient_id: str) -> custom_types.DiscordObject:
         """
         Creates a new DM channel with a given user.
 
@@ -2335,7 +2339,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(POST, "/users/@me/channels", json={"recipient_id": recipient_id})
 
     @meta.link_developer_portal(meta.APIResource.VOICE)
-    async def list_voice_regions(self) -> typing.List[types.DiscordObject]:
+    async def list_voice_regions(self) -> typing.List[custom_types.DiscordObject]:
         """
         Get the voice regions that are available.
 
@@ -2356,7 +2360,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         *,
         avatar: bytes = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> types.DiscordObject:
+    ) -> custom_types.DiscordObject:
         """
         Creates a webhook for a given channel.
 
@@ -2388,7 +2392,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         )
 
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)
-    async def get_channel_webhooks(self, channel_id: str) -> typing.List[types.DiscordObject]:
+    async def get_channel_webhooks(self, channel_id: str) -> typing.List[custom_types.DiscordObject]:
         """
         Gets all webhooks from a given channel.
 
@@ -2408,7 +2412,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(GET, "/channels/{channel_id}/webhooks", channel_id=channel_id)
 
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)
-    async def get_guild_webhooks(self, guild_id: str) -> typing.List[types.DiscordObject]:
+    async def get_guild_webhooks(self, guild_id: str) -> typing.List[custom_types.DiscordObject]:
         """
         Gets all webhooks for a given guild.
 
@@ -2428,7 +2432,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(GET, "/guilds/{guild_id}/webhooks", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)
-    async def get_webhook(self, webhook_id: str) -> types.DiscordObject:
+    async def get_webhook(self, webhook_id: str) -> custom_types.DiscordObject:
         """
         Gets a given webhook.
 
@@ -2448,7 +2452,7 @@ class HTTPClient(http_base.BaseHTTPClient):
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)
     async def modify_webhook(
         self, webhook_id: str, name: str, avatar: bytes, channel_id: str, reason: str = unspecified.UNSPECIFIED
-    ) -> types.DiscordObject:
+    ) -> custom_types.DiscordObject:
         """
         Edits a given webhook.
 
