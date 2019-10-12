@@ -28,7 +28,7 @@ from hikari.core.model import color as _color
 from hikari.core.model import guild
 from hikari.core.components import state_registry
 from hikari.core.model import permission as _permission
-from hikari.core.utils import types
+from hikari.core.utils import types, auto_repr
 
 
 @dataclasses.dataclass()
@@ -93,6 +93,8 @@ class Role(base.Snowflake, base.Volatile):
     #:
     #: :type: :class:`bool`
     mentionable: bool
+
+    __repr__ = auto_repr.repr_of("id", "name", "position", "managed", "mentionable", "hoist")
 
     def __init__(self, global_state, payload, guild_id: int):
         self._state = global_state

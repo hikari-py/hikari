@@ -28,7 +28,7 @@ import enum
 import typing
 
 from hikari.core.model import base
-from hikari.core.utils import date_utils
+from hikari.core.utils import date_utils, auto_repr
 from hikari.core.utils import transform
 
 
@@ -75,6 +75,8 @@ class Presence:
     #:
     #: :type: :class:`hikari.core.model.presence.Status`
     mobile_status: Status
+
+    __repr__ = auto_repr.repr_of("status")
 
     def __init__(self, payload):
         client_status = payload.get("client_status", {})
@@ -167,6 +169,8 @@ class PresenceActivity:
     #: :type: :class:`hikari.core.model.presence.ActivityFlag`
     flags: ActivityFlag
 
+    __repr__ = auto_repr.repr_of("id", "name", "type")
+
     def __init__(self, payload):
         self.id = payload.get("id")
         self.name = payload.get("name")
@@ -221,6 +225,8 @@ class ActivityParty:
     #: :type: :class:`int` or `None`
     max_size: typing.Optional[int]
 
+    __repr__ = auto_repr.repr_of("id", "current_size", "max_size")
+
     def __init__(self, payload):
         self.id = payload.get("id")
         self.current_size = transform.nullable_cast(payload.get("current_size"), int)
@@ -251,6 +257,8 @@ class ActivityAssets:
     #: :type: :class:`str` or `None`
     small_text: typing.Optional[str]
 
+    __repr__ = auto_repr.repr_of()
+
     def __init__(self, payload):
         self.large_image = payload.get("large_image")
         self.large_text = payload.get("large_text")
@@ -271,6 +279,8 @@ class ActivityTimestamps:
     #:
     #: :type: :class:`datetime.datetime` or `None`
     end: typing.Optional[datetime.datetime]
+
+    __repr__ = auto_repr.repr_of("start", "end", "duration")
 
     @property
     def duration(self) -> typing.Optional[datetime.timedelta]:

@@ -33,7 +33,7 @@ from hikari.core.components import state_registry
 from hikari.core.model import permission
 from hikari.core.model import role
 from hikari.core.model import user
-from hikari.core.utils import date_utils
+from hikari.core.utils import date_utils, auto_repr
 from hikari.core.utils import transform
 
 
@@ -236,9 +236,10 @@ class Guild(base.Snowflake, base.Volatile):
     #: :type: :class:`hikari.core.model.guild.SystemChannelFlag`
     system_channel_flags: typing.Optional[SystemChannelFlag]
 
+    __repr__ = auto_repr.repr_of("id", "name", "unavailable", "large", "member_count")
+
     def __init__(self, global_state, payload):
-        guild_id = transform.nullable_cast(payload.get("id"), int)
-        self.id = guild_id
+        self.id = transform.nullable_cast(payload.get("id"), int)
         self._state = global_state
         self.update_state(payload)
 
@@ -402,6 +403,8 @@ class Ban:
     #:
     #: :type: :class:`hikari.core.model.user.User`
     user: user.User
+
+    __repr__ = auto_repr.repr_of("user", "reason")
 
     def __init__(self, global_state: state_registry.StateRegistry, payload: dict):
         self.reason = payload.get("reason")

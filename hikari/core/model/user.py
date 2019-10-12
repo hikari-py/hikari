@@ -28,7 +28,7 @@ import typing
 from hikari.core.model import base
 from hikari.core.components import state_registry
 from hikari.core.model import presence
-from hikari.core.utils import date_utils
+from hikari.core.utils import date_utils, auto_repr
 from hikari.core.utils import delegate
 from hikari.core.utils import transform
 
@@ -67,6 +67,8 @@ class User(base.Snowflake, base.Volatile):
     #:
     #: :type: :class:`bool`
     bot: bool
+
+    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot")
 
     def __init__(self, global_state: state_registry.StateRegistry, payload):
         self._state = global_state
@@ -117,6 +119,8 @@ class Member(User):
     #: :type: :class:`hikari.core.model.presence.Presence`
     presence: presence.Presence
 
+    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot", "guild", "nick", "joined_at")
+
     # noinspection PyMissingConstructor
     def __init__(self, global_state, guild_id, payload):
         self._user = global_state.parse_user(payload["user"])
@@ -153,6 +157,8 @@ class BotUser(User):
     #:
     #: :type: :class:`bool`
     mfa_enabled: bool
+
+    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot", "verified", "mfa_enabled")
 
     def __init__(self, global_state: state_registry.StateRegistry, payload):
         super().__init__(global_state, payload)

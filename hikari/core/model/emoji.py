@@ -27,7 +27,7 @@ import typing
 
 from hikari.core.model import base
 from hikari.core.components import state_registry
-from hikari.core.utils import types
+from hikari.core.utils import types, auto_repr
 
 
 class Emoji(abc.ABC):
@@ -51,6 +51,8 @@ class UnicodeEmoji(Emoji):
     __slots__ = ("value",)
 
     value: str
+
+    __repr__ = auto_repr.repr_of("value")
 
     @property
     def is_unicode(self) -> bool:
@@ -88,6 +90,8 @@ class UnknownEmoji(Emoji, base.Snowflake):
     #:
     #: :type: :class:`str`
     name: str
+
+    __repr__ = auto_repr.repr_of("id", "name")
 
     def __init__(self, payload: types.DiscordObject) -> None:
         self.id = int(payload["id"])
@@ -130,9 +134,9 @@ class GuildEmoji(UnknownEmoji):
     #: :type: :class:`bool
     animated: bool
 
-    def __init__(
-        self, global_state: state_registry.StateRegistry, payload: types.DiscordObject, guild_id: int
-    ) -> None:
+    __repr__ = auto_repr.repr_of("id", "name", "animated")
+
+    def __init__(self, global_state: state_registry.StateRegistry, payload: types.DiscordObject, guild_id: int) -> None:
         super().__init__(payload)
         self._state = global_state
         self._guild_id = guild_id
@@ -155,9 +159,7 @@ def is_payload_guild_emoji_candidate(payload: types.DiscordObject) -> bool:
 
 
 def emoji_from_dict(
-    global_state: state_registry.StateRegistry,
-    payload: types.DiscordObject,
-    guild_id: typing.Optional[int] = None,
+    global_state: state_registry.StateRegistry, payload: types.DiscordObject, guild_id: typing.Optional[int] = None
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:
     if is_payload_guild_emoji_candidate(payload):
         return GuildEmoji(global_state, payload, guild_id)

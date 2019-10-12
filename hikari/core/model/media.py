@@ -29,7 +29,7 @@ import re
 import typing
 
 from hikari.core.model import base
-from hikari.core.utils import transform
+from hikari.core.utils import transform, auto_repr
 
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
@@ -54,6 +54,8 @@ class Avatar:
     #:
     #: :type: :class:`bytes`
     data: bytes
+
+    __repr__ = auto_repr.repr_of("mime_type")
 
     def __init__(self, mime_type: str, base64_data: bytes) -> None:
         """
@@ -153,6 +155,8 @@ class Attachment(base.Snowflake):
     #:
     #: :type: :class:`int` or `None`
     height: typing.Optional[int]
+
+    __repr__ = auto_repr.repr_of("id", "filename", "size")
 
     def __init__(self, payload):
         self.id = int(payload["id"])

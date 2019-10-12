@@ -27,7 +27,7 @@ import typing
 from hikari.core.model import emoji
 from hikari.core.model import message
 from hikari.core.components import state_registry
-from hikari.core.utils import types
+from hikari.core.utils import types, auto_repr
 
 
 @dataclasses.dataclass()
@@ -60,11 +60,10 @@ class Reaction:
     #: :type: :class:`hikari.core.model.message.Message`
     message: message.Message
 
+    __repr__ = auto_repr.repr_of("me", "count", "emoji")
+
     def __init__(
-        self,
-        global_state: state_registry.StateRegistry,
-        payload: types.DiscordObject,
-        message: message.Message,
+        self, global_state: state_registry.StateRegistry, payload: types.DiscordObject, message: message.Message
     ) -> None:
         self._state = global_state
         self.count = payload["count"]

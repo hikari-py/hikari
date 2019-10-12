@@ -28,7 +28,7 @@ from hikari.core.model import base
 from hikari.core.model import permission
 from hikari.core.model import role
 from hikari.core.model import user
-from hikari.core.utils import transform
+from hikari.core.utils import transform, auto_repr
 
 
 class OverwriteEntityType(base.NamedEnum, enum.Enum):
@@ -84,6 +84,8 @@ class Overwrite(base.Snowflake):
     #:
     #: :type: :class:`hikari.core.model.permission.Permission`
     deny: permission.Permission
+
+    __repr__ = auto_repr.repr_of("id", "type", "allow", "deny", "default")
 
     @property
     def default(self) -> permission.Permission:
