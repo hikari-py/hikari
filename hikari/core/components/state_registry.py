@@ -25,14 +25,14 @@ import abc
 import datetime
 import typing
 
-from hikari.core.model import channel
-from hikari.core.model import emoji
-from hikari.core.model import guild
-from hikari.core.model import message
-from hikari.core.model import presence
-from hikari.core.model import role
-from hikari.core.model import user
-from hikari.core.model import webhook
+from hikari.core.models import channel
+from hikari.core.models import emoji
+from hikari.core.models import guild
+from hikari.core.models import message
+from hikari.core.models import presence
+from hikari.core.models import role
+from hikari.core.models import user
+from hikari.core.models import webhook
 from hikari.core.utils import custom_types
 
 
@@ -426,7 +426,7 @@ class StateRegistry(abc.ABC):
                 the ID of the guild the emojis were updated in.
 
         Returns:
-            A :class:`tuple` of two :class:`frozenset` of :class:`hikari.core.model.emoji.GuildEmoji` objects.
+            A :class:`tuple` of two :class:`frozenset` of :class:`hikari.core.models.emoji.GuildEmoji` objects.
             The first set contains all the old emojis. The second set contains all the new emojis. If the guild was
             not cached, this will just return `None`
 

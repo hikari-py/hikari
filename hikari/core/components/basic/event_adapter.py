@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from hikari.core.components import event_adapter
 from hikari.core.components.basic import state_registry as _state
-from hikari.core.model import channel
+from hikari.core.models import channel
 from hikari.core.net import gateway as _gateway
 from hikari.core.utils import date_utils
 from hikari.core.utils import transform
