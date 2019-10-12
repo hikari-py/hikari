@@ -23,7 +23,7 @@ from hikari.core.utils import date_utils
 
 def test_parse_iso_8601_date_with_negative_timezone():
     string = "2019-10-10T05:22:33.023456-02:30"
-    date = date_utils.parse_iso_8601_datetime(string)
+    date = date_utils.parse_iso_8601_ts(string)
     assert date.year == 2019
     assert date.month == 10
     assert date.day == 10
@@ -37,7 +37,7 @@ def test_parse_iso_8601_date_with_negative_timezone():
 
 def test_parse_iso_8601_date_with_positive_timezone():
     string = "2019-10-10T05:22:33.023456+02:30"
-    date = date_utils.parse_iso_8601_datetime(string)
+    date = date_utils.parse_iso_8601_ts(string)
     assert date.year == 2019
     assert date.month == 10
     assert date.day == 10
@@ -51,7 +51,7 @@ def test_parse_iso_8601_date_with_positive_timezone():
 
 def test_parse_iso_8601_date_with_zulu():
     string = "2019-10-10T05:22:33.023456Z"
-    date = date_utils.parse_iso_8601_datetime(string)
+    date = date_utils.parse_iso_8601_ts(string)
     assert date.year == 2019
     assert date.month == 10
     assert date.day == 10
@@ -65,7 +65,7 @@ def test_parse_iso_8601_date_with_zulu():
 
 def test_parse_iso_8601_date_with_milliseconds_instead_of_microseconds():
     string = "2019-10-10T05:22:33.023Z"
-    date = date_utils.parse_iso_8601_datetime(string)
+    date = date_utils.parse_iso_8601_ts(string)
     assert date.year == 2019
     assert date.month == 10
     assert date.day == 10
@@ -90,4 +90,4 @@ def test_parse_discord_epoch_to_datetime():
 def test_parse_unix_epoch_to_datetime():
     unix_timestamp = 1457991678956
     expected_timestamp = datetime.datetime(2016, 3, 14, 21, 41, 18, 956000, tzinfo=datetime.timezone.utc)
-    assert date_utils.unix_epoch_to_datetime(unix_timestamp) == expected_timestamp
+    assert date_utils.unix_epoch_to_ts(unix_timestamp) == expected_timestamp

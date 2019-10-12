@@ -26,14 +26,14 @@ import datetime
 import enum
 import typing
 
+from hikari.core.components import state_registry
 from hikari.core.model import base
 from hikari.core.model import channel
 from hikari.core.model import emoji
-from hikari.core.components import state_registry
 from hikari.core.model import permission
 from hikari.core.model import role
 from hikari.core.model import user
-from hikari.core.utils import date_utils, auto_repr
+from hikari.core.utils import date_utils, auto_repr, custom_types
 from hikari.core.utils import transform
 
 
@@ -153,12 +153,12 @@ class Guild(base.Snowflake, base.Volatile):
     #: Roles in this guild. Maps IDs to the role object they represent.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.model.role.Role` objects
-    roles: typing.Dict[int, role.Role]
+    roles: typing.Mapping[int, role.Role]
 
     #: Emojis in this guild. Maps IDs to the role object they represent.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.model.emoji.GuildEmoji` objects
-    emojis: typing.Dict[int, emoji.GuildEmoji]
+    emojis: typing.Mapping[int, emoji.GuildEmoji]
 
     #: Enabled features in this guild.
     #:
@@ -194,12 +194,12 @@ class Guild(base.Snowflake, base.Volatile):
     #: Members in the guild.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.model.user.Member` objects
-    members: typing.Dict[int, user.Member]
+    members: typing.Mapping[int, user.Member]
 
     #: Channels in the guild.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.model.channel.GuildChannel` objects
-    channels: typing.Dict[int, channel.GuildChannel]
+    channels: typing.Mapping[int, channel.GuildChannel]
 
     #: Max members allowed in the guild. This is a hard limit enforced by Discord.
     #:
@@ -261,17 +261,28 @@ class Guild(base.Snowflake, base.Volatile):
         self.explicit_content_filter_level = transform.try_cast(
             payload.get("explicit_content_filter"), ExplicitContentFilterLevel
         )
-        self.roles = transform.id_map(self._state.parse_role(r, self.id) for r in payload.get("roles", ()))
-        self.emojis = transform.id_map(self._state.parse_emoji(e, self.id) for e in payload.get("emojis", ()))
-        self.features = {transform.try_cast(f, Feature.from_discord_name) for f in payload.get("features", ())}
+        self.roles = transform.id_map(
+            self._state.parse_role(r, self.id) for r in payload.get("roles", custom_types.EMPTY_SEQUENCE)
+        )
+        self.emojis = transform.id_map(
+            self._state.parse_emoji(e, self.id) for e in payload.get("emojis", custom_types.EMPTY_SEQUENCE)
+        )
+        self.features = {
+            transform.try_cast(f, Feature.from_discord_name)
+            for f in payload.get("features", custom_types.EMPTY_SEQUENCE)
+        }
         self.member_count = transform.nullable_cast(payload.get("member_count"), int)
         self.mfa_level = transform.try_cast(payload.get("mfa_level"), MFALevel)
         self.my_permissions = permission.Permission(payload.get("permissions", 0))
-        self.joined_at = transform.nullable_cast(payload.get("joined_at"), date_utils.parse_iso_8601_datetime)
+        self.joined_at = transform.nullable_cast(payload.get("joined_at"), date_utils.parse_iso_8601_ts)
         self.large = payload.get("large", False)
         self.unavailable = payload.get("unavailable", False)
-        self.members = transform.id_map(self._state.parse_member(m, self.id) for m in payload.get("members", ()))
-        self.channels = transform.id_map(self._state.parse_channel(c, self.id) for c in payload.get("channels", ()))
+        self.members = transform.id_map(
+            self._state.parse_member(m, self.id) for m in payload.get("members", custom_types.EMPTY_SEQUENCE)
+        )
+        self.channels = transform.id_map(
+            self._state.parse_channel(c, self.id) for c in payload.get("channels", custom_types.EMPTY_SEQUENCE)
+        )
         self.max_members = payload.get("max_members", 0)
         self.vanity_url_code = payload.get("vanity_url_code")
         self.description = payload.get("description")

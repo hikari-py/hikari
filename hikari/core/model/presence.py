@@ -28,7 +28,7 @@ import enum
 import typing
 
 from hikari.core.model import base
-from hikari.core.utils import date_utils, auto_repr
+from hikari.core.utils import date_utils, auto_repr, custom_types
 from hikari.core.utils import transform
 
 
@@ -53,8 +53,8 @@ class Presence:
 
     #: The activities the member currently is doing.
     #:
-    #: :type: :class:`list` of :class:`hikari.core.model.presence.PresenceActivity`
-    activities: typing.List[PresenceActivity]
+    #: :type: :class:`typing.Sequence` of :class:`hikari.core.model.presence.PresenceActivity`
+    activities: typing.Sequence[PresenceActivity]
 
     #: Overall account status.
     #:
@@ -79,7 +79,7 @@ class Presence:
     __repr__ = auto_repr.repr_of("status")
 
     def __init__(self, payload):
-        client_status = payload.get("client_status", {})
+        client_status = payload.get("client_status", custom_types.EMPTY_DICT)
         self.activities = [PresenceActivity(a) for a in payload["activities"]]
         self.status = transform.try_cast(payload["status"], Status.from_discord_name, Status.OFFLINE)
         self.web_status = transform.try_cast(client_status.get("web"), Status.from_discord_name, Status.OFFLINE)
@@ -291,8 +291,8 @@ class ActivityTimestamps:
         return self.end - self.start if self.start is not None and self.end is not None else None
 
     def __init__(self, payload):
-        self.start = transform.nullable_cast(payload.get("start"), date_utils.unix_epoch_to_datetime)
-        self.end = transform.nullable_cast(payload.get("end"), date_utils.unix_epoch_to_datetime)
+        self.start = transform.nullable_cast(payload.get("start"), date_utils.unix_epoch_to_ts)
+        self.end = transform.nullable_cast(payload.get("end"), date_utils.unix_epoch_to_ts)
 
 
 __all__ = [

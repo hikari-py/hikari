@@ -55,7 +55,7 @@ class Embed:
     _image: EmbedImage
     _thumbnail: EmbedImage
     _author: EmbedAuthor
-    _fields: typing.List[EmbedField]
+    _fields: typing.MutableSequence[EmbedField]
 
     _type: str
     _video: EmbedVideo
@@ -302,7 +302,7 @@ class Embed:
     def from_dict(payload):
         timestamp = payload.get("timestamp", unspecified.UNSPECIFIED)
         if timestamp is not unspecified.UNSPECIFIED:
-            timestamp = date_utils.parse_iso_8601_datetime(timestamp)
+            timestamp = date_utils.parse_iso_8601_ts(timestamp)
 
         embed = Embed(
             title=payload.get("title", unspecified.UNSPECIFIED),

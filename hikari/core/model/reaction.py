@@ -22,12 +22,12 @@ Reactions to a message.
 from __future__ import annotations
 
 import dataclasses
-import typing
 
+from hikari.core.components import state_registry
 from hikari.core.model import emoji
 from hikari.core.model import message
-from hikari.core.components import state_registry
-from hikari.core.utils import types, auto_repr
+from hikari.core.utils import auto_repr
+from hikari.core.utils import custom_types
 
 
 @dataclasses.dataclass()
@@ -38,7 +38,7 @@ class Reaction:
 
     __slots__ = ("_state", "count", "me", "emoji", "message")
 
-    _state: typing.Any
+    _state: state_registry.StateRegistry
 
     #: The number of times the emoji has been used on this message.
     #:
@@ -63,13 +63,16 @@ class Reaction:
     __repr__ = auto_repr.repr_of("me", "count", "emoji")
 
     def __init__(
-        self, global_state: state_registry.StateRegistry, payload: types.DiscordObject, message: message.Message
+        self,
+        global_state: state_registry.StateRegistry,
+        payload: custom_types.DiscordObject,
+        message_obj: message.Message,
     ) -> None:
         self._state = global_state
         self.count = payload["count"]
         self.me = payload.get("me", False)
         self.emoji = global_state.parse_emoji(payload["emoji"], None)
-        self.message = message
+        self.message = message_obj
 
 
 __all__ = ["Reaction"]

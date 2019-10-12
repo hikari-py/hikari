@@ -1,29 +1,29 @@
 {
-    "user_id": "159053372010266624",
-    "target_id": "583953735722729485",
-    "options": {
-        "role_name": "@everyone",
-        "type": "role",
-        "id": "574921006817476608"
+  "user_id": "159053372010266624",
+  "target_id": "583953735722729485",
+  "options": {
+    "role_name": "@everyone",
+    "type": "role",
+    "id": "574921006817476608"
+  },
+  "action_type": 15,
+  "changes": [
+    {
+      "old_value": 0,
+      "key": "deny"
     },
-    "action_type": 15,
-    "changes": [
-        {
-            "old_value": 0,
-            "key": "deny"
-        },
-        {
-            "old_value": "role",
-            "key": "type"
-        },
-        {
-            "old_value": "574921006817476608",
-            "key": "id"
-        },
-        {
-            "old_value": 0,
-            "key": "allow"
-        }
-    ],
-    "id": "592719735557455883"
+    {
+      "old_value": "role",
+      "key": "type"
+    },
+    {
+      "old_value": "574921006817476608",
+      "key": "id"
+    },
+    {
+      "old_value": 0,
+      "key": "allow"
+    }
+  ],
+  "id": "592719735557455883"
 }

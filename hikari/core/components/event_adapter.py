@@ -21,8 +21,8 @@ Abstract definition of an event handler.
 """
 import asyncio
 
+from hikari.core.utils import custom_types
 from hikari.core.utils import logging_utils
-from hikari.core.utils import types
 
 
 class EventAdapter:
@@ -37,7 +37,7 @@ class EventAdapter:
     def __init__(self):
         self.logger = logging_utils.get_named_logger(self)
 
-    async def consume_raw_event(self, gateway, event_name: str, payload: types.DiscordObject) -> None:
+    async def consume_raw_event(self, gateway, event_name: str, payload: custom_types.DiscordObject) -> None:
         try:
             handler = getattr(self, f"handle_{event_name.lower()}")
             asyncio.create_task(handler(gateway, payload))

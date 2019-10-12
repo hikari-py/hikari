@@ -68,10 +68,10 @@ class Avatar:
         self.mime_type = mime_type
         self.data = base64.b64decode(base64_data)
 
-    def get_file_types(self) -> typing.List[str]:
+    def get_file_types(self) -> typing.Sequence[str]:
         """
         Returns:
-            A list of guessed file extensions that are valid for the given MIME type of this avatar. Each will begin
+            A sequence of guessed file extensions that are valid for the given MIME type of this avatar. Each will begin
             with a period `.` and is simply an educated guess.
         """
         return mimetypes.guess_all_extensions(self.mime_type, strict=True)

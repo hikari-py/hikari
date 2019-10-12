@@ -21,8 +21,8 @@ from unittest import mock
 import pytest
 
 from hikari.core.components import state_registry
-from hikari.core.model import reaction
 from hikari.core.model import message
+from hikari.core.model import reaction
 
 
 @pytest.mark.model

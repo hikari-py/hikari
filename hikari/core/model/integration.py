@@ -23,10 +23,9 @@ from __future__ import annotations
 
 import dataclasses
 import datetime
-import typing
 
-from hikari.core.model import base
 from hikari.core.components import state_registry
+from hikari.core.model import base
 from hikari.core.model import user
 from hikari.core.utils import date_utils, auto_repr
 
@@ -39,7 +38,7 @@ class IntegrationAccount(base.Snowflake):
 
     __slots__ = ("_state", "id", "name")
 
-    _state: typing.Any
+    _state: state_registry.StateRegistry
 
     #: The id for the account
     #:
@@ -79,7 +78,7 @@ class Integration(base.Snowflake):
         "synced_at",
     )
 
-    _state: typing.Any
+    _state: state_registry.StateRegistry
     _role_id: int
 
     #: The integration ID
@@ -140,7 +139,7 @@ class Integration(base.Snowflake):
         self.expire_grace_period = int(payload["expire_grace_period"])
         self.user = global_state.parse_user(payload["user"])
         self.account = IntegrationAccount(global_state, payload["account"])
-        self.synced_at = date_utils.parse_iso_8601_datetime(payload["synced_at"])
+        self.synced_at = date_utils.parse_iso_8601_ts(payload["synced_at"])
 
 
 __all__ = ["Integration", "IntegrationAccount"]

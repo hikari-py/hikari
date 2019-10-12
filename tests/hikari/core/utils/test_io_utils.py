@@ -20,7 +20,7 @@ import io
 
 import pytest
 
-from hikari.core.utils import ioutils
+from hikari.core.utils import io_utils
 
 
 @pytest.mark.parametrize(
@@ -33,4 +33,4 @@ from hikari.core.utils import ioutils
     ],
 )
 def test_make_resource_seekable(input, expected_result_type):
-    assert isinstance(ioutils.make_resource_seekable(input), expected_result_type)
+    assert isinstance(io_utils.make_resource_seekable(input), expected_result_type)

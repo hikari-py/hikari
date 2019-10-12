@@ -26,11 +26,10 @@ import datetime
 import typing
 
 from hikari.core.utils import assertions
+from hikari.core.utils import custom_types
 from hikari.core.utils import date_utils
-from hikari.core.utils import types
 
-
-T = typing.TypeVar("T")
+_T = typing.TypeVar("_T")
 
 
 @assertions.assert_is_mixin
@@ -129,12 +128,12 @@ class Volatile:
 
     __slots__ = ()
 
-    def update_state(self, payload: types.DiscordObject) -> None:
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
         """
         Updates the internal state of an existing instance of this object from a raw Discord payload.
         """
 
-    def clone(self: T, deep: bool = False) -> T:
+    def clone(self: _T, deep: bool = False) -> _T:
         """
         Create a copy of this object.
 

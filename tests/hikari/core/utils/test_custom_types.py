@@ -16,11 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-from hikari.core.utils import types
+from hikari.core.utils import custom_types
 
 
 def test_ObjectProxy():
-    dop = types.ObjectProxy({"foo": "bar"})
+    dop = custom_types.ObjectProxy({"foo": "bar"})
     assert dop["foo"] == dop.foo
 
 
@@ -29,21 +29,21 @@ class TestLRUDict:
         class SomeDict(dict):
             pass
 
-        c = types.LRUDict(123, dict_factory=SomeDict)
+        c = custom_types.LRUDict(123, dict_factory=SomeDict)
         assert isinstance(c._data, SomeDict)
 
     def test_init_sets_lru_cache_size(self):
-        c = types.LRUDict(123)
+        c = custom_types.LRUDict(123)
         assert c._lru_size == 123
 
     def test_get_item(self):
-        c = types.LRUDict(123)
+        c = custom_types.LRUDict(123)
         c._data["foo"] = "bar"
 
         assert c["foo"] == "bar"
 
     def test_set_item_when_lru_has_space(self):
-        c = types.LRUDict(123)
+        c = custom_types.LRUDict(123)
         first_size = len(c._data)
         c["foo"] = "bar"
         second_size = len(c._data)
@@ -51,7 +51,7 @@ class TestLRUDict:
         assert second_size == first_size + 1
 
     def test_set_item_when_lru_is_full(self):
-        c = types.LRUDict(4)
+        c = custom_types.LRUDict(4)
         data = c._data
         data["foo"] = 1
         data["bar"] = 2
@@ -65,18 +65,18 @@ class TestLRUDict:
         assert "foo" not in "data"
 
     def test_del_item(self):
-        c = types.LRUDict(123)
+        c = custom_types.LRUDict(123)
         c._data["foo"] = "bar"
         del c["foo"]
         assert "foo" not in c._data
 
     def test_len(self):
-        c = types.LRUDict(123)
+        c = custom_types.LRUDict(123)
         c._data = {"foo": 1, "bar": 2, "baz": 3}
         assert len(c) == len(c._data) == 3
 
     def test_iter(self):
-        c = types.LRUDict(123)
+        c = custom_types.LRUDict(123)
         c._data = {"foo": 1, "bar": 2, "baz": 3}
         iterable = [*iter(c)]
         assert iterable == ["foo", "bar", "baz"]

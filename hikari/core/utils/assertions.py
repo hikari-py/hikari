@@ -56,7 +56,9 @@ def assert_is_slotted(cls: typing.Type[T]) -> typing.Type[T]:
     return cls
 
 
-def assert_subclasses(cls: typing.Type[T], base: typing.Type[U], message: str=None) -> typing.Type[T]:
+def assert_subclasses(
+    cls: typing.Type[T], base: typing.Union[type, typing.Type[U]], message: str = None
+) -> typing.Type[T]:
     """Raises a TypeError if `cls` fails to subclass `base`."""
     if not issubclass(cls, base):
         message = message or f"Class {cls.__qualname__} does not subclass {base.__module__}.{base.__qualname__}"
@@ -65,8 +67,7 @@ def assert_subclasses(cls: typing.Type[T], base: typing.Type[U], message: str=No
 
 
 def assert_is_instance(
-    obj: typing.Any, cls: typing.Union[typing.Type[T], typing.Tuple[typing.Type[T]]],
-    message: str=None
+    obj: typing.Any, cls: typing.Union[typing.Type[T], typing.Tuple[typing.Type[T]]], message: str = None
 ) -> T:
     """Raises a TypeError if `obj` is not an instance of `cls`, otherwise returns the input `obj` cast to `cls`."""
     if not isinstance(obj, cls):
@@ -113,7 +114,7 @@ def assert_is_mixin(cls: typing.Type[T]) -> typing.Type[T]:
     return cls
 
 
-def assert_in_range(value, min_inclusive, max_inclusive, name: str=None):
+def assert_in_range(value, min_inclusive, max_inclusive, name: str = None):
     """Raise a value error if a value is not in the range [min, max]"""
     if not (min_inclusive <= value <= max_inclusive):
         name = name or "The value"
