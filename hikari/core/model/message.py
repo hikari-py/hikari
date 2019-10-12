@@ -228,6 +228,7 @@ class Message(base.Snowflake, base.Volatile):
         self.tts = payload["tts"]
         self.crosspost_of = MessageCrosspost(payload["message_reference"]) if "message_reference" in payload else None
         self.flags = transform.try_cast(payload.get("flags"), MessageFlag, 0)
+        self.type = transform.try_cast(payload.get("type"), MessageType)
 
         # These fields need an initial value, since they may not be specified, and our update state only accounts
         # for changes to the initial state due to Discord being consistently inconsistent in their API behaviour and
@@ -243,7 +244,7 @@ class Message(base.Snowflake, base.Volatile):
         self.pinned = False
         self.application = None
         self.activity = None
-        self.type = MessageType.DEFAULT
+
         self.content = None
         self.reactions = custom_types.EMPTY_SEQUENCE
 
@@ -273,9 +274,6 @@ class Message(base.Snowflake, base.Volatile):
 
         if "activity" in payload:
             self.activity = transform.nullable_cast(payload.get("activity"), MessageActivity)
-
-        if "type" in payload:
-            self.type = transform.try_cast(payload.get("type"), MessageType)
 
         if "content" in payload:
             self.content = payload.get("content")
@@ -414,4 +412,4 @@ class MessageCrosspost:
         self.guild_id = transform.nullable_cast(payload.get("guild_id"), int)
 
 
-__all__ = ["MessageType", "MessageActivityType", "Message", "MessageActivity", "MessageApplication"]
+__all__ = ("MessageType", "MessageActivityType", "Message", "MessageActivity", "MessageApplication")
