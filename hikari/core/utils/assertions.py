@@ -28,17 +28,24 @@ T = typing.TypeVar("T")
 U = typing.TypeVar("U")
 
 
-def assert_not_none(value: T, description: str = "value must not be None") -> T:
+def assert_that(condition: bool, message: str = None) -> None:
+    """Raises a ValueError with the optional description if the given condition is falsified."""
+    if not condition:
+        raise ValueError(message or "condition must not be False")
+
+
+def assert_not_none(value: T, message: str = None) -> T:
     """Raises a ValueError with the optional description if the given value is None."""
     if value is None:
-        raise ValueError(description)
+        raise ValueError(message or "value must not be None")
     return value
 
 
-def assert_is_natural(value: T, description: str = "value") -> int:
+def assert_is_natural(value: T, name: str = None) -> int:
     """Assert the given value is a natural (>=0) integer, or raise a ValueError."""
     if not isinstance(value, int) or value < 0:
-        raise ValueError(f"{description} must be an integer that is greater or equal to 0")
+        name = name or "value"
+        raise ValueError(f"{name} must be an integer that is greater or equal to 0")
     return value
 
 
@@ -49,19 +56,23 @@ def assert_is_slotted(cls: typing.Type[T]) -> typing.Type[T]:
     return cls
 
 
-def assert_subclasses(cls: typing.Type[T], base: typing.Type[U]) -> typing.Type[T]:
+def assert_subclasses(cls: typing.Type[T], base: typing.Type[U], message: str=None) -> typing.Type[T]:
     """Raises a TypeError if `cls` fails to subclass `base`."""
     if not issubclass(cls, base):
-        raise TypeError(f"Class {cls.__qualname__} does not subclass {base.__module__}.{base.__qualname__}")
+        message = message or f"Class {cls.__qualname__} does not subclass {base.__module__}.{base.__qualname__}"
+        raise TypeError(message)
     return cls
 
 
-def assert_is_instance(obj: typing.Any, cls: typing.Union[typing.Type[T], typing.Tuple[typing.Type[T]]]) -> T:
+def assert_is_instance(
+    obj: typing.Any, cls: typing.Union[typing.Type[T], typing.Tuple[typing.Type[T]]],
+    message: str=None
+) -> T:
     """Raises a TypeError if `obj` is not an instance of `cls`, otherwise returns the input `obj` cast to `cls`."""
     if not isinstance(obj, cls):
-        raise TypeError(f"Object {obj} was not an instance of expected class {cls}")
+        raise TypeError(message or f"Object {obj} was not an instance of expected class {cls}")
 
-    # Noop
+    # Noop that satisfies type checker!
     obj: T = obj
 
     return obj
@@ -102,17 +113,20 @@ def assert_is_mixin(cls: typing.Type[T]) -> typing.Type[T]:
     return cls
 
 
-def assert_in_range(value, min_inclusive, max_inclusive, name="The value"):
+def assert_in_range(value, min_inclusive, max_inclusive, name: str=None):
     """Raise a value error if a value is not in the range [min, max]"""
     if not (min_inclusive <= value <= max_inclusive):
+        name = name or "The value"
         raise ValueError(f"{name} must be in the inclusive range of {min_inclusive} and {max_inclusive}")
 
 
 __all__ = (
+    "assert_that",
     "assert_not_none",
+    "assert_is_natural",
     "assert_is_slotted",
     "assert_subclasses",
+    "assert_is_instance",
     "assert_is_mixin",
     "assert_in_range",
-    "assert_is_natural",
 )

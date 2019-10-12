@@ -22,6 +22,17 @@ from hikari.core.utils import assertions
 from tests.hikari.core import _helpers
 
 
+def test_assert_that_when_True():
+    assertions.assert_that(True)
+
+
+def test_assert_that_when_False():
+    try:
+        assertions.assert_that(False, "bang")
+    except ValueError as ex:
+        assert str(ex) == "bang"
+
+
 def test_assert_not_none_when_none():
     try:
         assertions.assert_not_none(None)

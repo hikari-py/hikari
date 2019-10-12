@@ -66,6 +66,8 @@ class MessageType(enum.IntEnum):
     USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2 = 10
     #: A message to denote a tier 3 Nitro subscription.
     USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3 = 11
+    #: Channel follow add
+    CHANNEL_FOLLOW_ADD = 12
 
 
 class MessageActivityType(enum.IntEnum):
