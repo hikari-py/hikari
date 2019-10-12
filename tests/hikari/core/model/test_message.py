@@ -51,6 +51,49 @@ class TestMessage:
             "flags": 7,
         }
 
+    def test_Message_parsing_User(self, mock_message, mock_user):
+        s = mock.MagicMock(spec=state_registry.StateRegistry)
+        assert "webhook_id" not in mock_message, "this test needs a mock message with no webhook id set :("
+        message.Message(s, mock_message)
+        s.parse_user.assert_called_with(mock_user)
+        s.parse_member.assert_not_called()
+        s.parse_webhook.assert_not_called()
+
+    def test_Message_parsing_Member(self, mock_message, mock_user):
+        s = mock.MagicMock(spec=state_registry.StateRegistry)
+        mock_message["guild_id"] = "909090"
+        mock_message["member"] = {"foo": "bar", "baz": "bork"}
+        message.Message(s, mock_message)
+        s.parse_user.assert_called_with(mock_user)
+        s.parse_member.assert_called_with({"foo": "bar", "baz": "bork"}, 909090)
+        s.parse_webhook.assert_not_called()
+
+    def test_Message_parsing_Webhook(self, mock_message, mock_user):
+        s = mock.MagicMock(spec=state_registry.StateRegistry)
+        mock_message["guild_id"] = "909090"
+        mock_message["webhook_id"] = object()  # we don't care what this really is
+        message.Message(s, mock_message)
+        s.parse_webhook.assert_called_with(mock_user)
+        s.parse_user.assert_not_called()
+        s.parse_member.assert_not_called()
+
+    def test_Message_update_state_with_empty_partial_message(self, mock_message):
+        s = mock.MagicMock(spec=state_registry.StateRegistry)
+        m1 = message.Message(s, mock_message)
+        m2 = m1.clone(deep=True)
+        m2.update_state({})
+        assert m1.author == m2.author
+        assert m1.edited_at == m2.edited_at
+        assert m1.mentions_everyone == m2.mentions_everyone
+        assert m1.attachments == m2.attachments
+        assert m1.embeds == m2.embeds
+        assert m1.pinned == m2.pinned
+        assert m1.application == m2.application
+        assert m1.activity == m2.activity
+        assert m1.type == m2.type
+        assert m1.content == m2.content
+        assert m1.reactions == m2.reactions
+
     def test_Message_simple_test_data(self, mock_message, mock_user):
         s = mock.MagicMock(spec=state_registry.StateRegistry)
         m = message.Message(s, mock_message)
