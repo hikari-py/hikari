@@ -66,7 +66,6 @@ class BasicStateRegistry(state_registry.StateRegistry):
         "_guilds",
         "_guild_channels",
         "_messages",
-        "_roles",
         "_users",
         "user",
         "logger",
@@ -80,7 +79,6 @@ class BasicStateRegistry(state_registry.StateRegistry):
         self._guilds: typing.Dict[int, guild.Guild] = {}
         self._guild_channels: typing.MutableMapping[int, channel.GuildChannel] = weakref.WeakValueDictionary()
         self._messages: typing.MutableMapping[int, message.Message] = types.LRUDict(message_cache_size)
-        self._roles: typing.MutableMapping[int, role.Role] = weakref.WeakValueDictionary()
         self._users: typing.MutableMapping[int, user.User] = weakref.WeakValueDictionary()
 
         #: The bot user.
@@ -160,9 +158,13 @@ class BasicStateRegistry(state_registry.StateRegistry):
         self.user = bot_user_payload
         return bot_user_payload
 
-    def parse_channel(self, channel_payload: types.DiscordObject) -> channel.Channel:
+    def parse_channel(self, channel_payload: types.DiscordObject, guild_id: typing.Optional[int]) -> channel.Channel:
         channel_id = int(channel_payload["id"])
         channel_obj = self.get_channel_by_id(channel_id)
+
+        if guild_id is not None:
+            channel_obj["guild_id"] = guild_id
+
         if channel_obj is not None:
             channel_obj.update_state(channel_payload)
         else:
@@ -186,7 +188,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
 
     def parse_emoji(self, emoji_payload, guild_id):
         existing_emoji = None
-        if guild_id is not None and emoji.is_payload_guild_emoji_candidate(emoji_payload):
+        if guild_id is not None:
             emoji_id = int(emoji_payload["id"])
             existing_emoji = self.get_emoji_by_id(emoji_id)
 
@@ -217,12 +219,12 @@ class BasicStateRegistry(state_registry.StateRegistry):
 
         if guild is not None and member_id in guild_obj.members:
             return guild_obj.members[member_id]
-        else:
-            member_obj = user.Member(self, guild_id, member_payload)
 
-            # Guild may be none when we receive this member for the first time in a GUILD_CREATE payload.
-            if guild is not None:
-                guild_obj.members[member_id] = member_obj
+        member_obj = user.Member(self, guild_id, member_payload)
+
+        # Guild may be none when we receive this member for the first time in a GUILD_CREATE payload.
+        if guild is not None:
+            guild_obj.members[member_id] = member_obj
             return member_obj
 
     def parse_message(self, message_payload: types.DiscordObject):
@@ -238,26 +240,36 @@ class BasicStateRegistry(state_registry.StateRegistry):
         guild_obj = self.get_guild_by_id(guild_id)
         if guild is not None and user_id in guild_obj.members:
             guild_obj.members[user_id].presence = presence_obj
-        return presence_obj
+            return presence_obj
 
     def parse_role(self, role_payload: types.DiscordObject, guild_id: int):
-        role_payload = role.Role(self, role_payload, guild_id)
-        self._roles[role_payload.id] = role_payload
-        return role_payload
+        if guild_id in self._guilds:
+            guild = self._guilds[guild_id]
+            role_payload = role.Role(self, role_payload, guild_id)
+            guild.roles[role_payload.id] = role_payload
+            return role_payload
 
     def parse_user(self, user_payload: types.DiscordObject):
         # If the user already exists, then just return their existing object. We expect discord to tell us if they
         # get updated if they are a member, and for anything else the object will just be disposed of once we are
         # finished with it anyway.
         user_id = int(user_payload["id"])
+
+        if self.user and user_id == self.user.id:
+            return self.user
+
+        if "mfa_enabled" in user_payload or "verified" in user_payload:
+            return self.parse_bot_user(user_payload)
+
         if user_id not in self._users:
             user_obj = user.User(self, user_payload)
             self._users[user_id] = user_obj
             return user_obj
-        else:
-            existing_user = self._users[user_id]
-            existing_user.update_state(user_payload)
-            return existing_user
+
+        existing_user = self._users[user_id]
+        existing_user.update_state(user_payload)
+
+        return existing_user
 
     def parse_webhook(self, webhook_payload: types.DiscordObject):
         # Don't cache webhooks.
@@ -278,8 +290,6 @@ class BasicStateRegistry(state_registry.StateRegistry):
             new_channel = existing_channel
             new_channel.update_state(channel_payload)
             return old_channel, new_channel
-        else:
-            return None
 
     def update_guild(
         self, guild_payload: types.DiscordObject
@@ -291,8 +301,6 @@ class BasicStateRegistry(state_registry.StateRegistry):
             new_guild = guild_obj
             new_guild.update_state(guild_payload)
             return previous_guild, new_guild
-        else:
-            return None
 
     def update_guild_emojis(
         self, emoji_list: typing.List[types.DiscordObject], guild_id: int
@@ -301,10 +309,8 @@ class BasicStateRegistry(state_registry.StateRegistry):
         if guild_obj is not None:
             old_emojis = frozenset(guild_obj.emojis.values())
             new_emojis = frozenset(self.parse_emoji(emoji, guild_id) for emoji in emoji_list)
-            guild_obj.emojis = transform.snowflake_map(new_emojis)
+            guild_obj.emojis = transform.id_map(new_emojis)
             return old_emojis, new_emojis
-        else:
-            return None
 
     def update_last_pinned_timestamp(self, channel_id: int, timestamp: typing.Optional[datetime.datetime]) -> None:
         # We don't persist this information, as it is not overly useful. The user can use the HTTP endpoint if they
@@ -321,8 +327,6 @@ class BasicStateRegistry(state_registry.StateRegistry):
             old_member = new_member.clone()
             new_member.update_state(role_ids, nick)
             return old_member, new_member
-        else:
-            return None
 
     def update_member_presence(
         self, guild_id: int, user_id: int, presence_payload: types.DiscordObject
@@ -334,5 +338,3 @@ class BasicStateRegistry(state_registry.StateRegistry):
             old_presence = member_obj.presence
             new_presence = self.parse_presence(guild_id, user_id, presence_payload)
             return member_obj, old_presence, new_presence
-        else:
-            return None

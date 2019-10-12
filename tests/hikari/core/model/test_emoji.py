@@ -119,8 +119,16 @@ def test_emoji_from_dict_with_unknown_emoji(mock_state, unknown_emoji_payload):
 
 
 @pytest.mark.model
-def test_emoji_from_dict_with_guild_emoji(mock_state, guild_emoji_payload):
-    assert isinstance(emoji.emoji_from_dict(mock_state, guild_emoji_payload), emoji.GuildEmoji)
+def test_emoji_from_dict_with_guild_emoji_but_no_guild(mock_state, guild_emoji_payload):
+    e = emoji.emoji_from_dict(mock_state, guild_emoji_payload, None)
+    assert isinstance(e, emoji.UnknownEmoji)
+    assert not isinstance(e, emoji.GuildEmoji)
+
+
+@pytest.mark.model
+def test_emoji_from_dict_with_guild_emoji_and_passed_guild_id(mock_state, guild_emoji_payload):
+    e = emoji.emoji_from_dict(mock_state, guild_emoji_payload, 1234)
+    assert isinstance(e, emoji.GuildEmoji)
 
 
 @pytest.mark.model

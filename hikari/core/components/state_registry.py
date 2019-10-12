@@ -219,13 +219,16 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_channel(self, channel_payload: types.DiscordObject) -> channel.Channel:
+    def parse_channel(self, channel_payload: types.DiscordObject, guild_id: typing.Optional[int]) -> channel.Channel:
         """
         Parses a channel payload into a workable object
 
         Args:
             channel_payload:
                 the payload of the channel.
+            guild_id:
+                the guild ID, if we know it, otherwise None. This is used to resolve missing guild_id information
+                due to an inconsistency in the public Discord API when parsing guild channels.
 
         Returns:
             a :class:`channel.Channel` object.
@@ -260,7 +263,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_member(self, member_payload: types.DiscordObject, guild_id: int) -> user.Member:
+    def parse_member(self, member_payload: types.DiscordObject, guild_id: int) -> typing.Optional[user.Member]:
         """
         Parses a member payload into a workable object
 
@@ -271,7 +274,8 @@ class StateRegistry(abc.ABC):
                 the ID of the guild the member is from.
 
         Returns:
-            a :class:`user.Member` object.
+            a :class:`user.Member` object if the guild at the given `guild_id` is already cached. Otherwise, `None`
+            is returned.
         """
 
     @abc.abstractmethod
@@ -331,6 +335,13 @@ class StateRegistry(abc.ABC):
 
         Returns:
             a :class:`user.User` object.
+
+        Note:
+            If the user is detected to be the bot user for the account you are signed in as, then one can expect
+            the :meth:`parse_bot_user` method to be invoked internally instead. This can only occur if the bot's
+            user has already been parsed once during the lifetime of this registry, although a conforming gateway
+            implementation should ensure this occurs beforehand anyway, since passing the bot user is part of a
+            successful handshake.
         """
 
     @abc.abstractmethod
