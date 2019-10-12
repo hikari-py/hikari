@@ -26,14 +26,14 @@ import typing
 import weakref
 
 from hikari.core.components import state_registry
-from hikari.core.model import channel
-from hikari.core.model import emoji
-from hikari.core.model import guild
-from hikari.core.model import message
-from hikari.core.model import presence
-from hikari.core.model import role
-from hikari.core.model import user
-from hikari.core.model import webhook
+from hikari.core.models import channel
+from hikari.core.models import emoji
+from hikari.core.models import guild
+from hikari.core.models import message
+from hikari.core.models import presence
+from hikari.core.models import role
+from hikari.core.models import user
+from hikari.core.models import webhook
 from hikari.core.utils import custom_types
 from hikari.core.utils import logging_utils
 from hikari.core.utils import transform
