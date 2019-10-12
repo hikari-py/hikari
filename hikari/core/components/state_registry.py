@@ -478,5 +478,23 @@ class StateRegistry(abc.ABC):
             If the user, member, or guild does not exist in the cache, then `None` is returned instead.
         """
 
+    def update_role(
+        self, guild_id: int, role_payload: types.DiscordObject
+    ) -> typing.Optional[typing.Tuple[role.Role, role.Role]]:
+        """
+        Update the given role in a given guild.
+
+        Args:
+            guild_id:
+                The ID of the guild.
+            role_payload:
+                The role to update.
+
+        Returns:
+            A :class:`tuple` of two items: the first being the old :class:`role.Role` state and the second being the
+            new :class:`role.Role` state. If the `guild_id` does not correspond to a guild in the cache, then
+            `None` is returned instead.
+        """
+
 
 __all__ = ["StateRegistry"]

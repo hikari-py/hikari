@@ -298,10 +298,35 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             self.logger.warning("ignoring GUILD_ROLE_CREATE for unknown guild %s", guild_id)
 
     async def handle_guild_role_update(self, gateway, payload):
-        ...
+        guild_id = int(payload["guild_id"])
+        guild = self.state_registry.get_guild_by_id(guild_id)
+
+        if guild is not None:
+            role_id = int(payload["role"]["id"])
+            existing_role = guild.roles.get(role_id)
+            if existing_role is not None:
+                old_role = existing_role.clone()
+                existing_role.update_state(payload["role"])
+                new_role = existing_role
+                self.dispatch(_gateway.Event.GUILD_ROLE_UPDATE, old_role, new_role)
+            else:
+                self.logger.warning("ignoring GUILD_ROLE_UPDATE for unknown role %s in guild %s", role_id, guild_id)
+        else:
+            self.logger.warning("ignoring GUILD_ROLE_UPDATE for unknown guild %s", guild_id)
 
     async def handle_guild_role_delete(self, gateway, payload):
-        ...
+        guild_id = int(payload["guild_id"])
+        role_id = int(payload["role_id"])
+        guild = self.state_registry.get_guild_by_id(guild_id)
+
+        if guild is not None:
+            if role_id in guild.roles:
+                role = self.state_registry.delete_role(guild_id, role_id)
+                self.dispatch(_gateway.Event.GUILD_ROLE_DELETE, role)
+            else:
+                self.logger.warning("ignoring GUILD_ROLE_DELETE for unknown role %s in guild %s", role_id, guild_id)
+        else:
+            self.logger.warning("ignoring GUILD_ROLE_DELETE for role %s in unknown guild %s", role_id, guild_id)
 
     async def handle_message_create(self, gateway, payload):
         ...
