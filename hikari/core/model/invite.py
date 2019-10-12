@@ -29,7 +29,7 @@ from hikari.core.model import channel
 from hikari.core.model import guild
 from hikari.core.components import state_registry
 from hikari.core.model import user
-from hikari.core.utils import date_utils
+from hikari.core.utils import date_utils, auto_repr
 from hikari.core.utils import transform
 
 
@@ -68,10 +68,13 @@ class Invite:
     #: :type: :class:`int` or `None`
     approximate_member_count: typing.Optional[int]
 
+    __repr__ = auto_repr.repr_of("code", "guild", "channel")
+
     def __init__(self, global_state: state_registry.StateRegistry, payload):
         self._state = global_state
         self.code = payload.get("code")
         self.guild = global_state.parse_guild(payload.get("guild"))
+        # noinspection PyTypeChecker
         self.channel = global_state.parse_channel(payload.get("channel"))
         self.approximate_presence_count = transform.nullable_cast(payload.get("approximate_presence_count"), int)
         self.approximate_member_count = transform.nullable_cast(payload.get("approximate_member_count"), int)
@@ -121,6 +124,8 @@ class InviteMetadata:
     #:
     #: :type: :class:`bool`
     revoked: bool
+
+    __repr__ = auto_repr.repr_of("inviter", "uses", "max_uses", "created_at")
 
     def __init__(self, global_state: state_registry.StateRegistry, payload):
         self._state = global_state

@@ -26,7 +26,7 @@ import datetime
 import typing
 
 from hikari.core.model import color as _color
-from hikari.core.utils import date_utils
+from hikari.core.utils import date_utils, auto_repr
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified
 
@@ -71,6 +71,8 @@ class Embed:
     timestamp: datetime.datetime
     #: The color of the embed.
     color: typing.Union[int, _color.Color]
+
+    __repr__ = auto_repr.repr_of("title", "timestamp", "color")
 
     def __init__(
         self,

@@ -27,6 +27,7 @@ import typing
 from hikari.core.model import base
 from hikari.core.components import state_registry
 from hikari.core.model import user
+from hikari.core.utils import auto_repr
 
 
 @dataclasses.dataclass()
@@ -61,6 +62,8 @@ class Webhook(base.Snowflake):
     #:
     #: :type: :class:`str` or `None`
     token: typing.Optional[str]
+
+    __repr__ = auto_repr.repr_of("id", "name")
 
     def __init__(self, global_state: state_registry.StateRegistry, payload):
         self._state = global_state

@@ -29,7 +29,7 @@ from hikari.core.model import base
 from hikari.core.model import guild as _guild
 from hikari.core.model import overwrite
 from hikari.core.model import user
-from hikari.core.utils import transform
+from hikari.core.utils import transform, auto_repr
 
 _channel_type_to_class = {}
 
@@ -168,6 +168,8 @@ class GuildTextChannel(GuildChannel, TextChannel, type=0):
     #: :type: :class:`bool`
     nsfw: bool
 
+    __repr__ = auto_repr.repr_of("id", "name", "guild.name", "nsfw")
+
     def __init__(self, global_state, payload):
         super().__init__(global_state, payload)
 
@@ -196,6 +198,8 @@ class DMChannel(TextChannel, type=1):
     #:
     #: :type: :class:`list` of :class:`hikari.core.model.user.User`
     recipients: typing.List[user.User]
+
+    __repr__ = auto_repr.repr_of("id", "name")
 
     # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
@@ -226,6 +230,8 @@ class GuildVoiceChannel(GuildChannel, type=2):
     #:
     #: :type: :class:`int` or `None`
     user_limit: typing.Optional[int]
+
+    __repr__ = auto_repr.repr_of("id", "name", "guild.name", "bitrate", "user_limit")
 
     # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
@@ -263,6 +269,8 @@ class GroupDMChannel(DMChannel, type=3):
     #: :type: :class:`int` or `None`
     owner_application_id: typing.Optional[int]
 
+    __repr__ = auto_repr.repr_of("id", "name")
+
     # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
         super().__init__(global_state, payload)
@@ -282,6 +290,8 @@ class GuildCategory(GuildChannel, type=4):
     """
 
     __slots__ = ()
+
+    __repr__ = auto_repr.repr_of("id", "name", "guild.name")
 
 
 @dataclasses.dataclass()
@@ -307,6 +317,8 @@ class GuildNewsChannel(GuildChannel, type=5):
     #: :type: :class:`bool`
     nsfw: bool
 
+    __repr__ = auto_repr.repr_of("id", "name", "guild.name", "nsfw")
+
     # noinspection PyMissingConstructor
     def __init__(self, global_state, payload):
         super().__init__(global_state, payload)
@@ -325,6 +337,8 @@ class GuildStoreChannel(GuildChannel, type=6):
     """
 
     __slots__ = ()
+
+    __repr__ = auto_repr.repr_of("id", "name", "guild.name")
 
 
 def is_channel_type_dm(channel_type: int) -> bool:

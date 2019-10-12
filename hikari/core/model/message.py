@@ -33,7 +33,7 @@ from hikari.core.model import guild
 from hikari.core.model import media
 from hikari.core.components import state_registry
 from hikari.core.model import user
-from hikari.core.utils import date_utils
+from hikari.core.utils import date_utils, auto_repr
 from hikari.core.utils import transform
 
 
@@ -193,6 +193,8 @@ class Message(base.Snowflake):
     #: :type: :class:`hikari.core.model.message.MessageFlag`
     flags: MessageFlag
 
+    __repr__ = auto_repr.repr_of("id", "author", "type", "tts", "created_at", "edited_at")
+
     def __init__(self, global_state: state_registry.StateRegistry, payload):
         self._state = global_state
         self.id = int(payload["id"])
@@ -254,6 +256,8 @@ class MessageActivity:
     #: :type: :class:`int` or `None`
     party_id: typing.Optional[int]
 
+    __repr__ = auto_repr.repr_of("type", "party_id")
+
     def __init__(self, payload):
         self.type = transform.try_cast(payload.get("type"), MessageActivityType)
         self.party_id = transform.nullable_cast(payload.get("party_id"), int)
@@ -291,6 +295,8 @@ class MessageApplication(base.Snowflake):
     #:
     #: :type: :class:`str`
     name: str
+
+    __repr__ = auto_repr.repr_of("id", "name")
 
     def __init__(self, payload):
         self.id = int(payload["id"])

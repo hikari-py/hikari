@@ -28,7 +28,7 @@ import typing
 from hikari.core.model import base
 from hikari.core.components import state_registry
 from hikari.core.model import user
-from hikari.core.utils import date_utils
+from hikari.core.utils import date_utils, auto_repr
 
 
 @dataclasses.dataclass()
@@ -50,6 +50,8 @@ class IntegrationAccount(base.Snowflake):
     #:
     #: :type: :class:`str`
     name: str
+
+    __repr__ = auto_repr.repr_of("id", "name")
 
     def __init__(self, global_state: state_registry.StateRegistry, payload):
         self._state = global_state
@@ -124,6 +126,8 @@ class Integration(base.Snowflake):
     #:
     #: :type: :class:`datetime.datetime`
     synced_at: datetime.datetime
+
+    __repr__ = auto_repr.repr_of("id", "name")
 
     def __init__(self, global_state: state_registry.StateRegistry, payload):
         self._state = global_state
