@@ -20,14 +20,14 @@ from unittest import mock
 
 import pytest
 
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 from hikari.core.model import reaction
 from hikari.core.model import message
 
 
 @pytest.mark.model
 def test_Reaction():
-    test_state = mock.MagicMock(state_set=abstract_state_registry.AbstractStateRegistry)
+    test_state = mock.MagicMock(state_set=state_registry.StateRegistry)
     message_mock = mock.MagicMock(spec_set=message.Message)
 
     emoji_dict = {

@@ -26,11 +26,11 @@ import dataclasses
 import typing
 
 from hikari.core.model import base
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 from hikari.core.utils import types
 
 
-class AbstractEmoji(abc.ABC):
+class Emoji(abc.ABC):
     """Base for any emoji type."""
 
     __slots__ = ()
@@ -42,7 +42,7 @@ class AbstractEmoji(abc.ABC):
 
 
 @dataclasses.dataclass()
-class UnicodeEmoji(AbstractEmoji):
+class UnicodeEmoji(Emoji):
     """
     An emoji that consists of one or more unicode characters. This is just a string with some extra pieces of
     information included.
@@ -70,7 +70,7 @@ class UnicodeEmoji(AbstractEmoji):
 
 
 @dataclasses.dataclass()
-class UnknownEmoji(AbstractEmoji, base.Snowflake):
+class UnknownEmoji(Emoji, base.Snowflake):
     """
     A custom emoji that we do not know anything about other than the ID and name. These usually occur as a result
     of messages being sent by Nitro users, emojis from public emoji servers, and as reactions to a message by nitro
@@ -106,7 +106,7 @@ class GuildEmoji(UnknownEmoji):
 
     __slots__ = ("_state", "_role_ids", "_guild_id", "require_colons", "managed", "animated", "user", "__weakref__")
 
-    _state: abstract_state_registry.AbstractStateRegistry
+    _state: state_registry.StateRegistry
     _role_ids: typing.List[int]
     _guild_id: typing.Optional[int]
 
@@ -131,7 +131,7 @@ class GuildEmoji(UnknownEmoji):
     animated: bool
 
     def __init__(
-        self, global_state: abstract_state_registry.AbstractStateRegistry, payload: types.DiscordObject, guild_id: int
+        self, global_state: state_registry.StateRegistry, payload: types.DiscordObject, guild_id: int
     ) -> None:
         super().__init__(payload)
         self._state = global_state
@@ -155,7 +155,7 @@ def is_payload_guild_emoji_candidate(payload: types.DiscordObject) -> bool:
 
 
 def emoji_from_dict(
-    global_state: abstract_state_registry.AbstractStateRegistry,
+    global_state: state_registry.StateRegistry,
     payload: types.DiscordObject,
     guild_id: typing.Optional[int] = None,
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:

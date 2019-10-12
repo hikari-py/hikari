@@ -20,7 +20,7 @@ from unittest import mock
 
 import pytest
 
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 from hikari.core.model import guild as _guild
 from hikari.core.model import permission
 from hikari.core.model import role
@@ -28,7 +28,7 @@ from hikari.core.model import role
 
 @pytest.fixture
 def state():
-    return mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    return mock.MagicMock(spec_set=state_registry.StateRegistry)
 
 
 @pytest.fixture

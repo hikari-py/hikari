@@ -26,7 +26,7 @@ import dataclasses
 from hikari.core.model import base
 from hikari.core.model import color as _color
 from hikari.core.model import guild
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 from hikari.core.model import permission as _permission
 from hikari.core.utils import types
 
@@ -51,7 +51,7 @@ class Role(base.Snowflake, base.Volatile):
         "__weakref__",
     )
 
-    _state: abstract_state_registry.AbstractStateRegistry
+    _state: state_registry.StateRegistry
     _guild_id: int
 
     #: The ID of the role.

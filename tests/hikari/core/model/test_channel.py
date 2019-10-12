@@ -22,12 +22,12 @@ import pytest
 
 from hikari.core.model import channel
 from hikari.core.model import guild
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 
 
 @pytest.mark.model
 def test_GuildChannel_permission_overwrites_aggregation():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     g = mock.MagicMock(spec_set=guild.Guild)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     g.channels = {1234: mock.MagicMock(spec_set=channel.GuildCategory)}
@@ -54,7 +54,7 @@ def test_GuildChannel_permission_overwrites_aggregation():
 
 @pytest.mark.model
 def test_GuildChannel_parent_when_specified():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     g = mock.MagicMock(spec_set=guild.Guild)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     g.channels = {1234: mock.MagicMock(spec_set=channel.GuildCategory)}
@@ -80,7 +80,7 @@ def test_GuildChannel_parent_when_specified():
 
 @pytest.mark.model
 def test_GuildChannel_parent_when_unspecified():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     g = mock.MagicMock(spec_set=guild.Guild)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     g.channels = {1234: mock.MagicMock(spec_set=channel.GuildCategory)}
@@ -106,7 +106,7 @@ def test_GuildChannel_parent_when_unspecified():
 
 @pytest.mark.model
 def test_GuildTextChannel():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     gtc = channel.GuildTextChannel(
         s,
         {
@@ -137,7 +137,7 @@ def test_GuildTextChannel():
 
 @pytest.mark.model
 def test_DMChannel():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     dmc = channel.DMChannel(s, {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []})
 
     assert dmc.id == 929292
@@ -148,7 +148,7 @@ def test_DMChannel():
 
 @pytest.mark.model
 def test_GuildVoiceChannel():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     gvc = channel.GuildVoiceChannel(
         s,
         {
@@ -177,7 +177,7 @@ def test_GuildVoiceChannel():
 
 @pytest.mark.model
 def test_GroupDMChannel():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     gdmc = channel.GroupDMChannel(
         s,
         {
@@ -204,7 +204,7 @@ def test_GroupDMChannel():
 
 @pytest.mark.model
 def test_GuildCategory():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     gc = channel.GuildCategory(
         s,
         {
@@ -227,7 +227,7 @@ def test_GuildCategory():
 
 @pytest.mark.model
 def test_GuildNewsChannel():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     gnc = channel.GuildNewsChannel(
         s,
         {
@@ -258,7 +258,7 @@ def test_GuildNewsChannel():
 
 @pytest.mark.model
 def test_GuildStoreChannel():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     gsc = channel.GuildStoreChannel(
         s,
         {
@@ -328,7 +328,7 @@ def test_channel_failure_case():
     ],
 )
 def test_channel_guild(impl):
-    cache = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    cache = mock.MagicMock(spec_set=state_registry.StateRegistry)
     obj = impl(cache, {"id": "1", "position": 2, "permission_overwrites": [], "name": "milfchnl", "guild_id": "91827"})
     guild = mock.MagicMock()
     cache.get_guild_by_id = mock.MagicMock(return_value=guild)

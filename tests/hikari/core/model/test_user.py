@@ -22,13 +22,13 @@ from unittest import mock
 import pytest
 
 from hikari.core.model import guild
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 from hikari.core.model import user
 
 
 @pytest.mark.model
 def test_User_when_not_a_bot():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     u = user.User(
         s,
         {
@@ -51,7 +51,7 @@ def test_User_when_not_a_bot():
 
 @pytest.mark.model
 def test_User_when_is_a_bot():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     u = user.User(
         s, {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": None, "bot": True}
     )
@@ -65,7 +65,7 @@ def test_User_when_is_a_bot():
 
 @pytest.mark.model
 def test_Member_with_filled_fields():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     user_dict = {
         "id": "123456",
         "username": "Boris Johnson",
@@ -100,7 +100,7 @@ def test_Member_with_filled_fields():
 
 @pytest.mark.model
 def test_Member_with_no_optional_fields():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     user_dict = {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": "1a2b3c4d"}
     gid = 123456
     m = user.Member(
@@ -124,7 +124,7 @@ def test_Member_with_no_optional_fields():
 def test_Member_user_accessor():
     u = mock.MagicMock(spec=user.User)
     g = mock.MagicMock(spec=guild.Guild)
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     s.parse_user = mock.MagicMock(return_value=u)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     m = user.Member(s, 1234, {"joined_at": "2019-05-17T06:26:56.936000+00:00", "user": u})
@@ -133,7 +133,7 @@ def test_Member_user_accessor():
 
 @pytest.mark.model
 def test_BotUser():
-    s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+    s = mock.MagicMock(spec_set=state_registry.StateRegistry)
     u = user.BotUser(
         s,
         {

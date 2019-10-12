@@ -25,7 +25,7 @@ import datetime
 import typing
 import weakref
 
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 from hikari.core.model import channel
 from hikari.core.model import emoji
 from hikari.core.model import guild
@@ -39,7 +39,7 @@ from hikari.core.utils import transform
 from hikari.core.utils import types
 
 
-class BasicStateRegistry(abstract_state_registry.AbstractStateRegistry):
+class BasicStateRegistry(state_registry.StateRegistry):
     """
     Registry for global state parsing, querying, and management.
 
@@ -148,7 +148,9 @@ class BasicStateRegistry(abstract_state_registry.AbstractStateRegistry):
         return self._messages.get(message_id)
 
     def get_role_by_id(self, guild_id: int, role_id: int) -> typing.Optional[role.Role]:
-        self._
+        if guild_id not in self._guilds:
+            return None
+        return self._guilds[guild_id].roles.get(role_id)
 
     def get_user_by_id(self, user_id: int):
         return self._users.get(user_id)
@@ -179,7 +181,7 @@ class BasicStateRegistry(abstract_state_registry.AbstractStateRegistry):
         ...
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: types.DiscordObject, guild_id: None) -> emoji.AbstractEmoji:
+    def parse_emoji(self, emoji_payload: types.DiscordObject, guild_id: None) -> emoji.Emoji:
         ...
 
     def parse_emoji(self, emoji_payload, guild_id):
@@ -210,7 +212,6 @@ class BasicStateRegistry(abstract_state_registry.AbstractStateRegistry):
         return guild_obj
 
     def parse_member(self, member_payload: types.DiscordObject, guild_id: int):
-        # Don't cache members here.
         guild_obj = self.get_guild_by_id(guild_id)
         member_id = int(member_payload["user"]["id"])
 

@@ -20,14 +20,14 @@ from unittest import mock
 
 import pytest
 
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 from hikari.core.model import webhook
 
 
 @pytest.mark.model
 class TestWebhook:
     def test_Emoji(self):
-        test_state = mock.MagicMock(state_set=abstract_state_registry.AbstractStateRegistry)
+        test_state = mock.MagicMock(state_set=state_registry.StateRegistry)
 
         user_dict = {
             "username": "Luigi",

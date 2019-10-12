@@ -25,7 +25,7 @@ import dataclasses
 import typing
 
 from hikari.core.model import base
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 from hikari.core.model import user
 
 
@@ -33,7 +33,7 @@ from hikari.core.model import user
 class Webhook(base.Snowflake):
     __slots__ = ("_state", "id", "_guild_id", "_channel_id", "user", "name", "avatar_hash", "token")
 
-    _state: abstract_state_registry.AbstractStateRegistry
+    _state: state_registry.StateRegistry
     _guild_id: int
     _channel_id: int
 
@@ -62,7 +62,7 @@ class Webhook(base.Snowflake):
     #: :type: :class:`str` or `None`
     token: typing.Optional[str]
 
-    def __init__(self, global_state: abstract_state_registry.AbstractStateRegistry, payload):
+    def __init__(self, global_state: state_registry.StateRegistry, payload):
         self._state = global_state
         self.id = int(payload["id"])
         self._guild_id = int(payload["guild_id"])

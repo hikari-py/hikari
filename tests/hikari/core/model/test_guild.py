@@ -21,7 +21,7 @@ from unittest import mock
 import pytest
 
 from hikari.core.model import guild
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 from hikari.core.model import permission
 
 
@@ -171,7 +171,7 @@ def test_guild_payload(test_emoji_payload, test_roles_payloads, test_channel_pay
 @pytest.mark.model
 class TestGuild:
     def test_available_Guild(self, test_guild_payload, test_emoji_payload, test_member_payload):
-        s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+        s = mock.MagicMock(spec_set=state_registry.StateRegistry)
         g = guild.Guild(s, test_guild_payload)
 
         assert g.id == 123456
@@ -229,14 +229,14 @@ class TestGuild:
         assert s.parse_channel.call_count == 3
 
     def test_unavailable_Guild(self):
-        s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+        s = mock.MagicMock(spec_set=state_registry.StateRegistry)
         g = guild.Guild(s, {"id": "12345678910", "unavailable": True})
 
         assert g.id == 12345678910
         assert g.unavailable
 
     def test_Ban(self):
-        s = mock.MagicMock(spec_set=abstract_state_registry.AbstractStateRegistry)
+        s = mock.MagicMock(spec_set=state_registry.StateRegistry)
         user = object()
         ban = guild.Ban(s, {"user": user, "reason": "being bad"})
         assert ban.reason == "being bad"

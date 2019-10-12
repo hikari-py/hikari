@@ -27,7 +27,7 @@ import typing
 
 from hikari.core.model import channel
 from hikari.core.model import guild
-from hikari.core.model import abstract_state_registry
+from hikari.core.components import state_registry
 from hikari.core.model import user
 from hikari.core.utils import date_utils
 from hikari.core.utils import transform
@@ -68,7 +68,7 @@ class Invite:
     #: :type: :class:`int` or `None`
     approximate_member_count: typing.Optional[int]
 
-    def __init__(self, global_state: abstract_state_registry.AbstractStateRegistry, payload):
+    def __init__(self, global_state: state_registry.StateRegistry, payload):
         self._state = global_state
         self.code = payload.get("code")
         self.guild = global_state.parse_guild(payload.get("guild"))
@@ -122,7 +122,7 @@ class InviteMetadata:
     #: :type: :class:`bool`
     revoked: bool
 
-    def __init__(self, global_state: abstract_state_registry.AbstractStateRegistry, payload):
+    def __init__(self, global_state: state_registry.StateRegistry, payload):
         self._state = global_state
         self.inviter = global_state.parse_user(payload["inviter"])
         self.uses = int(payload["uses"])
