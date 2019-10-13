@@ -1,0 +1,166 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright © Nekoka.tt 2019
+#
+# This file is part of Hikari.
+#
+# Hikari is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Hikari is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""
+Expected events that this framework can dispatch.
+"""
+
+
+#: Fired when a gateway connection is made and the gateway has sent a HELLO payload.
+#:
+#: Args:
+#:     gateway:
+#:         the gateway instance that sent this signal.
+CONNECT = "connect"
+
+#: Fired when a gateway connection closes due to some connection error or if requested by Discord's servers.
+#:
+#: Args:
+#:     gateway:
+#:         the gateway instance that sent this signal.
+#:     code:
+#:         the integer closure code given by the gateway.
+#:     reason:
+#:         the optional string reason for the closure given by the gateway.
+DISCONNECT = "disconnect"
+
+#: Fired if an INVALID_SESSION payload is sent.
+#:
+#: |selfHealing|
+#:
+#: Args:
+#:     gateway:
+#:         the gateway instance that sent this signal.
+#:     can_resume:
+#:         `True` if we expect the connection to be resumed (that is, it disconnects and reconnects without the initial
+#:         identification handshake and parsing of guild information). If `False`, the connection will be restarted as
+#:         if a fresh connection from scratch, which will take longer.
+INVALID_SESSION = "invalid_session"
+
+#: Fired if the gateway requested we reconnect.
+#:
+#: |selfHealing|
+#:
+#: Args:
+#:     gateway:
+#:         the gateway instance that sent this signal.
+RECONNECT = "reconnect"
+
+#: Fired if a connection was successfully resumed.
+#:
+#: Args:
+#:     gateway:
+#:         the gateway instance that sent this signal.
+RESUMED = "resumed"
+
+#: Fired if the gateway is told to shutdown by your code. The gateway will not automatically restart in this case.
+#:
+#: Args:
+#:     gateway:
+#:         the gateway instance that sent this signal.
+SHUTDOWN = "shutdown"
+
+#: Triggered when Discord notifies the gateway of some channel being created.
+#:
+#: |rawEvent|
+#:
+#: Args:
+#:    channel:
+#:        a dict corresponding to https://discordapp.com/developers/docs/resources/channel#channel-object
+RAW_CHANNEL_CREATE = "raw_channel_create"
+
+#: Fired when a DM channel is created.
+#:
+#: Args:
+#:     channel:
+#           the :class:`hikari.core.models.channel.DMChannel` or :class:`hikari.core.models.channel.GroupDMChannel`
+#           that was created.
+DM_CHANNEL_CREATE = "dm_channel_create"
+
+#: Fired when a guild channel or category is created.
+#:
+#: Args:
+#:     channel:
+#:         the :class:`hikari.core.models.channel.GuildChannel` derivative that was created.
+#:
+#: Note:
+#:     If the guild of a channel that was created was not cached, then this event will not fire. See
+#:     :attr:`RAW_CHANNEL_CREATE` for all events.
+GUILD_CHANNEL_CREATE = "guild_channel_create"
+
+RAW_CHANNEL_UPDATE = "raw_channel_update"
+DM_CHANNEL_UPDATE = "dm_channel_update"
+GUILD_CHANNEL_UPDATE = "guild_channel_update"
+
+RAW_CHANNEL_DELETE = "raw_channel_delete"
+DM_CHANNEL_DELETE = "dm_channel_delete"
+GUILD_CHANNEL_DELETE = "guild_channel_delete"
+
+RAW_CHANNEL_PINS_UPDATE = "raw_channel_pins_update"
+DM_CHANNEL_PIN_ADDED = "dm_channel_pin_added"
+DM_CHANNEL_PIN_REMOVED = "dm_channel_pin_removed"
+GUILD_CHANNEL_PIN_ADDED = "guild_channel_pin_added"
+GUILD_CHANNEL_PIN_REMOVED = "guild_channel_pin_removed"
+
+RAW_GUILD_CREATE = "raw_guild_create"
+GUILD_CREATE = "guild_create"
+GUILD_AVAILABLE = "guild_available"
+
+RAW_GUILD_UPDATE = "raw_guild_update"
+GUILD_UPDATE = "guild_update"
+
+RAW_GUILD_DELETE = "raw_guild_delete"
+GUILD_UNAVAILABLE = "guild_unavailable"
+GUILD_LEAVE = "guild_leave"
+
+RAW_GUILD_BAN_ADD = "raw_guild_ban_add"
+GUILD_BAN_ADD = "guild_ban_add"
+
+RAW_GUILD_BAN_REMOVE = "raw_guild_ban_remove"
+GUILD_BAN_REMOVE = "guild_ban_remove"
+
+RAW_GUILD_EMOJIS_UPDATE = "raw_guild_emojis_update"
+GUILD_EMOJIS_UPDATE = "guild_emojis_update"
+
+RAW_GUILD_INTEGRATIONS_UPDATE = "raw_guild_integrations_update"
+GUILD_INTEGRATIONS_UPDATE = "guild_integrations_update"
+
+RAW_GUILD_MEMBER_ADD = "raw_guild_member_add"
+GUILD_MEMBER_ADD = "guild_member_add"
+
+RAW_GUILD_MEMBER_UPDATE = "raw_guild_member_update"
+GUILD_MEMBER_UPDATE = "guild_member_update"
+
+RAW_GUILD_MEMBER_REMOVE = "raw_guild_member_remove"
+GUILD_MEMBER_REMOVE = "guild_member_remove"
+
+RAW_GUILD_MEMBERS_CHUNK = "raw_guild_members_chunk"
+
+RAW_GUILD_ROLE_CREATE = "raw_guild_role_create"
+GUILD_ROLE_CREATE = "guild_role_create"
+
+RAW_GUILD_ROLE_UPDATE = "raw_guild_role_update"
+GUILD_ROLE_UPDATE = "guild_role_update"
+
+RAW_GUILD_ROLE_DELETE = "raw_guild_role_delete"
+GUILD_ROLE_DELETE = "guild_role_delete"
+
+RAW_MESSAGE = "raw_message"
+MESSAGE = "message"
+GUILD_MESSAGE = "guild_message"
+DM_MESSAGE = "dm_message"

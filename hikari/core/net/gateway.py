@@ -33,7 +33,6 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import datetime
-import enum
 import json
 import time
 import typing
@@ -42,6 +41,7 @@ import zlib
 import websockets
 
 from hikari.core import errors
+from hikari.core import events
 from hikari.core.net import opcodes
 from hikari.core.net import rates
 from hikari.core.utils import custom_types
@@ -72,74 +72,6 @@ class _RestartConnection(websockets.ConnectionClosed):
 DispatchHandler = typing.Callable[
     ["GatewayClient", str, typing.Dict[str, typing.Any]], typing.Union[None, typing.Awaitable[None]]
 ]
-
-
-class Event(enum.Enum):
-    """
-    Events that can occur on this gateway.
-    """
-
-    #: Note:
-    #:     This is not a physical gateway event, and is synthesised by the implementation of the gateway client.
-    CONNECT = enum.auto()
-    #: Note:
-    #:     This is not a physical gateway event, and is synthesised by the implementation of the gateway client.
-    DISCONNECT = enum.auto()
-    #: Note:
-    #:     This is not a physical gateway event, and is synthesised by the implementation of the gateway client.
-    INVALID_SESSION = enum.auto()
-    #: Note:
-    #:     This is not a physical gateway event, and is synthesised by the implementation of the gateway client.
-    REQUEST_TO_RECONNECT = enum.auto()
-    #: Note:
-    #:     This is not a physical gateway event, and is synthesised by the implementation of the gateway client.
-    RESUMED = enum.auto()
-
-    DM_CHANNEL_CREATE = enum.auto()
-    GUILD_CHANNEL_CREATE = enum.auto()
-
-    DM_CHANNEL_UPDATE = enum.auto()
-    GUILD_CHANNEL_UPDATE = enum.auto()
-
-    DM_CHANNEL_DELETE = enum.auto()
-    GUILD_CHANNEL_DELETE = enum.auto()
-
-    DM_CHANNEL_PIN_ADDED = enum.auto()
-    GUILD_CHANNEL_PIN_ADDED = enum.auto()
-
-    DM_CHANNEL_PIN_REMOVED = enum.auto()
-    GUILD_CHANNEL_PIN_REMOVED = enum.auto()
-
-    GUILD_AVAILABLE = enum.auto()
-    GUILD_CREATE = enum.auto()
-    GUILD_LEAVE = enum.auto()
-    GUILD_UNAVAILABLE = enum.auto()
-    GUILD_UPDATE = enum.auto()
-
-    GUILD_BAN_ADD = enum.auto()
-    GUILD_BAN_REMOVE = enum.auto()
-
-    GUILD_EMOJIS_UPDATE = enum.auto()
-
-    GUILD_INTEGRATIONS_UPDATE = enum.auto()
-
-    GUILD_MEMBER_ADD = enum.auto()
-    GUILD_MEMBER_UPDATE = enum.auto()
-    GUILD_MEMBER_REMOVE = enum.auto()
-
-    GUILD_ROLE_CREATE = enum.auto()
-    GUILD_ROLE_UPDATE = enum.auto()
-    GUILD_ROLE_DELETE = enum.auto()
-
-    GUILD_MEMBERS_CHUNK = enum.auto()
-
-    #: Should not be implemented for bots, and is undocumented, but is here for completeness.
-    PRESENCES_REPLACE = enum.auto()
-
-    MESSAGE_CREATE = enum.auto()
-    MESSAGE_UPDATE = enum.auto()
-    MESSAGE_DELETE = enum.auto()
-    MESSAGE_DELETE_BULK = enum.auto()
 
 
 class GatewayClient:
@@ -450,7 +382,7 @@ class GatewayClient:
         hb = d["heartbeat_interval"]
         self.heartbeat_interval = hb / 1_000.0
         self.logger.info("received HELLO. heartbeat interval is %sms", hb)
-        self._dispatch(Event.CONNECT.name, {"gateway": self, "d": d})
+        self._dispatch(events.CONNECT)
 
     async def _send_resume(self) -> None:
         payload = {
@@ -499,7 +431,7 @@ class GatewayClient:
     async def _handle_resumed(self, resume_payload: custom_types.DiscordObject) -> None:
         self.trace = resume_payload["_trace"]
         self.logger.info("RESUMED successfully")
-        self._dispatch(Event.RESUMED.name, {"gateway": self, "d": resume_payload})
+        self._dispatch(events.RESUMED)
 
     async def _process_events(self) -> None:
         """Polls the gateway for new packets and handles dispatching the results."""
@@ -526,20 +458,20 @@ class GatewayClient:
             await self._handle_ack()
         elif op == opcodes.GatewayOpcode.RECONNECT:
             self.logger.warning("instructed to disconnect and RECONNECT with gateway")
-            self._dispatch(Event.REQUEST_TO_RECONNECT.name, {})
+            self._dispatch(events.RECONNECT)
             await self._trigger_identify(
                 code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="you requested me to reconnect"
             )
         elif op == opcodes.GatewayOpcode.INVALID_SESSION:
             if d is True:
                 self.logger.warning("will try to disconnect and RESUME")
-                self._dispatch(Event.INVALID_SESSION.name, True)
+                self._dispatch(events.INVALID_SESSION, True)
                 await self._trigger_resume(
                     code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="invalid session id so will resume"
                 )
             else:
                 self.logger.warning("will try to re-IDENTIFY")
-                self._dispatch(Event.INVALID_SESSION.name, False)
+                self._dispatch(events.INVALID_SESSION, False)
                 await self._trigger_identify(
                     code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="invalid session id so will close"
                 )
@@ -658,11 +590,11 @@ class GatewayClient:
                     await (self._send_resume() if is_resume else self._send_identify())
                     await self._send_heartbeat()
                     await asyncio.gather(self._keep_alive(), self._process_events())
-                    self._dispatch(Event.DISCONNECT.name, {})
+                    self._dispatch(events.SHUTDOWN)
                 except (_RestartConnection, _ResumeConnection, websockets.ConnectionClosed) as ex:
                     code, reason = opcodes.GatewayClosure(ex.code), ex.reason or "no reason"
 
-                    self._dispatch(Event.DISCONNECT.name, {"code": code, "reason": reason})
+                    self._dispatch(events.DISCONNECT, {"code": code, "reason": reason})
 
                     if ex.code in self._NEVER_RECONNECT_CODES:
                         self.logger.critical("disconnected after %s [%s]. Please rectify issue manually", reason, code)
@@ -688,9 +620,9 @@ class GatewayClient:
         if block:
             await self.ws.wait_closed()
 
-    def _dispatch(self, event_name: str, payload) -> None:
+    def _dispatch(self, event_name: str, payload=None) -> None:
         # This prevents us blocking any task such as the READY handler.
         self.loop.create_task(self.dispatch(self, event_name, payload))
 
 
-__all__ = ["Event", "GatewayClient"]
+__all__ = ["GatewayClient"]

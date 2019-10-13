@@ -19,13 +19,14 @@
 """
 Abstract definition of an event handler.
 """
+import abc
 import asyncio
 
 from hikari.core.utils import custom_types
 from hikari.core.utils import logging_utils
 
 
-class EventAdapter:
+class EventAdapter(abc.ABC):
     """
     Stubbed definition of an event handler. This automatically implements an underlying handler for every documented
     event that Discord can dispatch to us that performs no operation, so unimplemented events in subclasses go ignored
@@ -34,7 +35,8 @@ class EventAdapter:
     A couple of additional events are defined that can be produced by the gateway implementation for Hikari.
     """
 
-    def __init__(self):
+    @abc.abstractmethod
+    def __init__(self) -> None:
         self.logger = logging_utils.get_named_logger(self)
 
     async def consume_raw_event(self, gateway, event_name: str, payload: custom_types.DiscordObject) -> None:
@@ -47,7 +49,7 @@ class EventAdapter:
     async def handle_disconnect(self, gateway, payload):
         ...
 
-    async def handle_request_to_reconnect(self, gateway, payload):
+    async def handle_reconnect(self, gateway, payload):
         ...
 
     async def handle_connect(self, gateway, payload):

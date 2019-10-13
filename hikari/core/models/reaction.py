@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import dataclasses
 
-from hikari.core.components import state_registry
+from hikari.core.internal import state_registry
 from hikari.core.models import emoji
 from hikari.core.models import message
 from hikari.core.utils import auto_repr

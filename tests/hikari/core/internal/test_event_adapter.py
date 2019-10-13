@@ -20,10 +20,14 @@
 import asynctest
 import pytest
 
-from hikari.core.components import event_adapter
+from hikari.core.internal import event_adapter
 
 
 class Impl(event_adapter.EventAdapter):
+    # noinspection PyMissingConstructor
+    def __init__(self):
+        pass
+
     async def handle_something(self, gateway, payload):
         pass
 
