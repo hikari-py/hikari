@@ -343,9 +343,9 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             self.dispatch(events.MESSAGE_CREATE, message)
 
             if message.guild is not None:
-                self.dispatch(events.GUILD_MESSAGE_CREATE)
+                self.dispatch(events.GUILD_MESSAGE_CREATE, message)
             else:
-                self.dispatch(events.DM_MESSAGE_CREATE)
+                self.dispatch(events.DM_MESSAGE_CREATE, message)
         else:
             channel_id = int(payload["channel_id"])
             self.logger.warning("ignoring MESSAGE_CREATE for message %s in unknown channel %s", message.id, channel_id)
