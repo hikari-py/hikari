@@ -21,7 +21,7 @@ from unittest import mock
 
 import pytest
 
-from hikari.core.components import state_registry
+from hikari.core.internal import state_registry
 from hikari.core.models import integration
 
 
@@ -63,7 +63,9 @@ class TestIntegration:
         assert integration_obj.syncing is False
         assert integration_obj._role_id == 69696969
         assert integration_obj.expire_grace_period == 420
-        assert integration_obj.synced_at == datetime.datetime(2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc)
+        assert integration_obj.synced_at == datetime.datetime(
+            2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc
+        )
         test_state.parse_user.assert_called_with(user_dict)
 
 

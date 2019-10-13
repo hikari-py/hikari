@@ -25,7 +25,7 @@ import datetime
 import typing
 import weakref
 
-from hikari.core.components import state_registry
+from hikari.core.internal import state_registry
 from hikari.core.models import channel
 from hikari.core.models import emoji
 from hikari.core.models import guild

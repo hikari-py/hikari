@@ -25,7 +25,7 @@ import dataclasses
 import datetime
 import typing
 
-from hikari.core.components import state_registry
+from hikari.core.internal import state_registry
 from hikari.core.models import channel
 from hikari.core.models import guild
 from hikari.core.models import user

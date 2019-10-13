@@ -25,7 +25,7 @@ import abc
 import dataclasses
 import typing
 
-from hikari.core.components import state_registry
+from hikari.core.internal import state_registry
 from hikari.core.models import base
 from hikari.core.utils import custom_types, auto_repr
 

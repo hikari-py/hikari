@@ -25,7 +25,7 @@ import dataclasses
 import datetime
 import typing
 
-from hikari.core.components import state_registry
+from hikari.core.internal import state_registry
 from hikari.core.models import base
 from hikari.core.models import presence
 from hikari.core.utils import date_utils, auto_repr, custom_types
