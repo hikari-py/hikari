@@ -39,7 +39,7 @@ class TestIntegration:
 
         account_dict = {"id": "123456789", "name": "lasagna"}
 
-        inte = integration.Integration(
+        integration_obj = integration.Integration(
             test_state,
             {
                 "id": "1234567",
@@ -56,14 +56,14 @@ class TestIntegration:
             },
         )
 
-        assert inte.id == 1234567
-        assert inte.name == "peepohappy"
-        assert inte.type == "twitch"
-        assert inte.enabled is True
-        assert inte.syncing is False
-        assert inte._role_id == 69696969
-        assert inte.expire_grace_period == 420
-        assert inte.synced_at == datetime.datetime(2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc)
+        assert integration_obj.id == 1234567
+        assert integration_obj.name == "peepohappy"
+        assert integration_obj.type == "twitch"
+        assert integration_obj.enabled is True
+        assert integration_obj.syncing is False
+        assert integration_obj._role_id == 69696969
+        assert integration_obj.expire_grace_period == 420
+        assert integration_obj.synced_at == datetime.datetime(2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc)
         test_state.parse_user.assert_called_with(user_dict)
 
 
