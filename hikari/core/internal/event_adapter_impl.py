@@ -337,15 +337,15 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             self.logger.warning("ignoring GUILD_ROLE_DELETE for role %s in unknown guild %s", role_id, guild_id)
 
     async def handle_message_create(self, gateway, payload):
-        self.dispatch(events.RAW_MESSAGE, payload)
+        self.dispatch(events.RAW_MESSAGE_CREATE, payload)
         message = self.state_registry.parse_message(payload)
         if message.channel is not None:
-            self.dispatch(events.MESSAGE, message)
+            self.dispatch(events.MESSAGE_CREATE, message)
 
             if message.guild is not None:
-                self.dispatch(events.GUILD_MESSAGE)
+                self.dispatch(events.GUILD_MESSAGE_CREATE)
             else:
-                self.dispatch(events.DM_MESSAGE)
+                self.dispatch(events.DM_MESSAGE_CREATE)
         else:
             channel_id = int(payload["channel_id"])
             self.logger.warning("ignoring MESSAGE_CREATE for message %s in unknown channel %s", message.id, channel_id)
