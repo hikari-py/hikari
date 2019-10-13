@@ -41,6 +41,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         self._ignored_events = set()
 
     async def handle_unrecognised_event(self, gateway, event_name, payload):
+        self.dispatch("raw_" + event_name.lower(), payload)
         if event_name not in self._ignored_events:
             self.logger.warning("Received unrecognised event %s, so will ignore it in the future.", event_name)
             self._ignored_events.add(event_name)
@@ -94,16 +95,16 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         # Update the channel meta data just for this call.
         self.dispatch(events.RAW_CHANNEL_DELETE, payload)
 
-        channel = self.state_registry.parse_channel(payload)
+        channel_obj = self.state_registry.parse_channel(payload)
 
         try:
-            channel = self.state_registry.delete_channel(channel.id)
+            channel_obj = self.state_registry.delete_channel(channel_obj.id)
         except KeyError:
             # Inconsistent state gets ignored. This should not happen, I don't think.
             pass
         else:
-            event = events.DM_CHANNEL_DELETE if channel.is_dm else events.GUILD_CHANNEL_DELETE
-            self.dispatch(event, channel)
+            event = events.DM_CHANNEL_DELETE if channel_obj.is_dm else events.GUILD_CHANNEL_DELETE
+            self.dispatch(event, channel_obj)
 
     async def handle_channel_pins_update(self, gateway, payload):
         self.dispatch(events.RAW_CHANNEL_PINS_UPDATE, payload)
@@ -351,37 +352,37 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             self.logger.warning("ignoring MESSAGE_CREATE for message %s in unknown channel %s", message.id, channel_id)
 
     async def handle_message_update(self, gateway, payload):
-        ...
+        self.dispatch(events.RAW_MESSAGE_UPDATE, payload)
 
     async def handle_message_delete(self, gateway, payload):
-        ...
+        self.dispatch(events.RAW_MESSAGE_DELETE, payload)
 
     async def handle_message_delete_bulk(self, gateway, payload):
-        ...
+        self.dispatch(events.RAW_MESSAGE_DELETE_BULK, payload)
 
     async def handle_message_reaction_add(self, gateway, payload):
-        ...
+        self.dispatch(events.RAW_MESSAGE_REACTION_ADD, payload)
 
     async def handle_message_reaction_remove(self, gateway, payload):
-        ...
+        self.dispatch(events.RAW_MESSAGE_REACTION_REMOVE, payload)
 
     async def handle_message_reaction_remove_all(self, gateway, payload):
-        ...
+        self.dispatch(events.RAW_MESSAGE_REACTION_REMOVE_ALL, payload)
 
     async def handle_presence_update(self, gateway, payload):
-        ...
+        self.dispatch(events.RAW_MEMBER_PRESENCE_UPDATE, payload)
 
     async def handle_typing_start(self, gateway, payload):
-        ...
+        self.dispatch(events.RAW_TYPING_START, payload)
 
     async def handle_user_update(self, gateway, payload):
-        ...
+        self.dispatch(events.RAW_USER_UPDATE, payload)
 
     async def handle_voice_state_update(self, gateway, payload):
-        ...
+        self.dispatch(events.RAW_VOICE_STATE_UPDATE, payload)
 
     async def handle_voice_server_update(self, gateway, payload):
-        ...
+        self.dispatch(events.RAW_VOICE_SERVER_UPDATE, payload)
 
     async def handle_webhooks_update(self, gateway, payload):
-        ...
+        self.dispatch(events.RAW_WEBHOOKS_UPDATE, payload)

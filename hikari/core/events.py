@@ -162,5 +162,46 @@ GUILD_ROLE_DELETE = "guild_role_delete"
 
 RAW_MESSAGE_CREATE = "raw_message_create"
 MESSAGE_CREATE = "message_create"
+
+RAW_MESSAGE_UPDATE = "raw_message_update"
+MESSAGE_UPDATE = "message_update"
+
+RAW_MESSAGE_DELETE = "raw_message_delete"
+MESSAGE_DELETE = "message_delete"
+
+RAW_MESSAGE_DELETE_BULK = "raw_message_delete_bulk"
+MESSAGE_DELETE_BULK = "message_delete_bulk"
+
+RAW_MESSAGE_REACTION_ADD = "raw_message_reaction_add"
+MESSAGE_REACTION_ADD = "message_reaction_add"
+
+RAW_MESSAGE_REACTION_REMOVE = "raw_message_reaction_remove"
+MESSAGE_REACTION_REMOVE = "message_reaction_remove"
+
+RAW_MESSAGE_REACTION_REMOVE_ALL = "raw_message_reaction_remove_all"
+MESSAGE_REACTION_REMOVE_ALL = "message_reaction_remove_all"
+
+RAW_MEMBER_PRESENCE_UPDATE = "raw_member_presence_update"
+MEMBER_PRESENCE_UPDATE = "member_presence_update"
+
+RAW_TYPING_START = "raw_typing_start"
+TYPING_START = "typing_start"
+
+RAW_USER_UPDATE = "raw_user_update"
+USER_UPDATE = "user_update"
+
+RAW_VOICE_STATE_UPDATE = "raw_voice_state_update"
+VOICE_STATE_UPDATE = "voice_state_update"
+
+RAW_VOICE_SERVER_UPDATE = "raw_voice_server_update"
+VOICE_SERVER_UPDATE = "voice_server_update"
+
+RAW_WEBHOOKS_UPDATE = "raw_webhooks_update"
+WEBHOOKS_UPDATE = "webhooks_update"
+
+#: This is purely provided for convenience being a regular event you may wish to listen to. It is designed to make
+#: handling commands more trivial.
 GUILD_MESSAGE_CREATE = "guild_message_create"
+#: This is purely provided for convenience being a regular event you may wish to listen to. It is designed to make
+#: handling commands more trivial.
 DM_MESSAGE_CREATE = "dm_message_create"
