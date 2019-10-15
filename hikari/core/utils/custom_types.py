@@ -35,29 +35,42 @@ _E = typing.TypeVar("_E")
 _K = typing.TypeVar("_K", bound=typing.Hashable)
 _V = typing.TypeVar("_V")
 
+_DiscordType = typing.Union[bool, float, int, None, str, typing.List["_DiscordType"], "_DiscordObject"]
+_DiscordObject = typing.Dict[str, "_DiscordType"]
+
 #: Any type that Discord may return from the API.
-DiscordType = typing.Union[bool, float, int, None, str, typing.List["DiscordObject"], typing.Dict[str, "DiscordObject"]]
+DiscordType = typing.NewType("DiscordType", _DiscordType)
 
 #: Type hint for a Discord-compatible object.
 #:
 #: This is a :class:`builtins.dict` of :class:`builtins.str` keys that map to any value. Since the :mod:`hikari.net`
 #: module does not enforce concrete models for values sent and received, mappings are passed around to represent request
 #: and response data. This allows an implementation to use this layer as desired.
-DiscordObject = typing.Dict[str, DiscordType]
+DiscordObject = typing.NewType("DiscordObject", _DiscordObject)
 
 
 class ObjectProxy(typing.Dict[str, typing.Any]):
     """
-    A wrapper for a dict that enables accession of valid key names as if they were attributes.
+    A wrapper for a dict that enables accession, mutation, and deletion of valid key names as if they were attributes.
 
     Example:
         >>> o = ObjectProxy({"foo": 10, "bar": 20})
         >>> print(o["foo"], o.bar)  # 10 20
-
+        >>> del o["foo"]
+        >>> o["bar"] = 69
+        >>> print(o)  # {"bar": 69}
     """
 
-    def __getattr__(self, item):
-        return self[item]
+    __slots__ = ()
+
+    def __getattr__(self, key: str) -> typing.Any:
+        return self[key]
+
+    def __setattr__(self, key: str, value: typing.Any) -> None:
+        self[key] = value
+
+    def __delattr__(self, key: str) -> None:
+        del self[key]
 
 
 class LRUDict(typing.MutableMapping[_K, _V]):

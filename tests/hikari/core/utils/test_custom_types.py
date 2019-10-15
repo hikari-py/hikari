@@ -19,9 +19,40 @@
 from hikari.core.utils import custom_types
 
 
-def test_ObjectProxy():
+def test_ObjectProxy_getattr():
     dop = custom_types.ObjectProxy({"foo": "bar"})
     assert dop["foo"] == dop.foo
+
+
+def test_ObjectProxy_setattr():
+    dop = custom_types.ObjectProxy({"foo": "bar"})
+    dop["foof"] = 123
+    assert dop["foof"] == 123
+    dop["foof"] = 456
+    assert dop["foof"] == 456
+
+
+def test_ObjectProxy_delattr():
+    dop = custom_types.ObjectProxy({"foo": "bar"})
+    assert "foo" in dop
+    del dop["foo"]
+    assert "foo" not in dop
+
+
+def test_json_module_handles_ObjectProxy_as_expected_flat():
+    import json
+
+    d = json.loads('{"foo": "bar"}', object_hook=custom_types.ObjectProxy)
+    assert d == {"foo": "bar"}
+    assert d.foo == "bar"
+
+
+def test_json_module_handles_ObjectProxy_as_expected_nested_in_object():
+    import json
+
+    d = json.loads('{"foo": "bar", "baz": [{"id": 1}, {"id": 2}]}', object_hook=custom_types.ObjectProxy)
+    assert d == {"foo": "bar", "baz": [{"id": 1}, {"id": 2}]}
+    assert d.baz[1].id == 2
 
 
 class TestLRUDict:

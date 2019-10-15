@@ -30,7 +30,7 @@ import aiohttp
 from hikari.core import errors
 from hikari.core.net import opcodes
 from hikari.core.net import rates
-from hikari.core.utils import date_utils
+from hikari.core.utils import date_utils, custom_types
 from hikari.core.utils import logging_utils
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified
@@ -243,6 +243,19 @@ class BaseHTTPClient:
                 Audit-log reason.
             kwargs:
                 Any arguments to interpolate into the `path`.
+
+        Returns:
+            The response.
+
+        Note:
+            Any dicts that get parsed in any form of nested structure from a JSON payload will be parsed as an
+            :class:`hikari.core.utils.custom_types.ObjectProxy`. This means that you can use the dict as a regular dict,
+            or use "JavaScript"-like dot-notation to access members.
+
+            .. code-block:: python
+
+                d = ObjectProxy(...)
+                assert d.foo[1].bar == d["foo"][1]["bar"]
         """
         resource = Resource(self.base_uri, method, path, **kwargs)
 
@@ -310,7 +323,7 @@ class BaseHTTPClient:
             body = await r.read()
 
             if r.content_type == "application/json":
-                body = libjson.loads(body)
+                body = libjson.loads(body, object_hook=custom_types.ObjectProxy)
             elif r.content_type in ("text/plain", "text/html"):
                 # Cloudflare commonly will cause text/html (e.g. Discord is down)
                 body = body.decode()

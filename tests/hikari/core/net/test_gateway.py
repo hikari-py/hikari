@@ -29,10 +29,11 @@ import zlib
 import asynctest
 import pytest
 
-import hikari.core.net.opcodes
+from hikari.core.net import opcodes
 from hikari.core import errors
 from hikari.core.net import gateway
 from hikari.core.utils import user_agent
+from hikari.core.utils import custom_types
 from tests.hikari.core import _helpers
 
 
@@ -91,6 +92,7 @@ def mock_run_once_parts(timeout=10):
     return decorator
 
 
+# noinspection PyProtectedMember,SpellCheckingInspection,PyUnresolvedReferences
 @pytest.mark.asyncio
 @pytest.mark.gateway
 @pytest.mark.slow
@@ -180,7 +182,7 @@ class TestGateway:
         await gw._receive_json()
         gw.ws.recv.assert_any_call()
         gw._trigger_identify.assert_awaited_once_with(
-            code=hikari.core.net.opcodes.GatewayClosure.TYPE_ERROR, reason="Expected JSON object."
+            code=opcodes.GatewayClosure.TYPE_ERROR, reason="Expected JSON object."
         )
 
     async def test_receive_json_when_receiving_string_decodes_immediately(self, event_loop):
@@ -191,7 +193,7 @@ class TestGateway:
             gw.ws.recv = asynctest.CoroutineMock(return_value=recv_value)
             await gw._receive_json()
             # noinspection PyUnresolvedReferences,PyUnresolvedReferences
-            json.loads.assert_called_with(recv_value)
+            json.loads.assert_called_with(recv_value, object_hook=custom_types.ObjectProxy)
 
     async def test_receive_json_when_receiving_zlib_payloads_collects_before_decoding(self, event_loop):
         gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
@@ -207,7 +209,7 @@ class TestGateway:
             gw.ws.recv = asynctest.CoroutineMock(side_effect=chunks)
             await gw._receive_json()
             # noinspection PyUnresolvedReferences,PyUnresolvedReferences
-            json.loads.assert_called_with(recv_value.decode("utf-8"))
+            json.loads.assert_called_with(recv_value.decode("utf-8"), object_hook=custom_types.ObjectProxy)
 
     async def test_small_zlib_payloads_leave_buffer_alone(self, event_loop):
         gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
@@ -672,7 +674,7 @@ class TestGateway:
         )
         gw._trigger_resume = asynctest.CoroutineMock(wraps=gw._trigger_resume)
         gw._trigger_identify = asynctest.CoroutineMock(wraps=gw._trigger_identify)
-        pl = {"op": hikari.core.net.opcodes.GatewayOpcode.INVALID_SESSION.value, "d": False}
+        pl = {"op": opcodes.GatewayOpcode.INVALID_SESSION.value, "d": False}
         gw._receive_json = asynctest.CoroutineMock(return_value=pl)
 
         with contextlib.suppress(gateway._RestartConnection):
@@ -693,7 +695,7 @@ class TestGateway:
         )
         gw._trigger_resume = asynctest.CoroutineMock(wraps=gw._trigger_resume)
         gw._trigger_identify = asynctest.CoroutineMock(wraps=gw._trigger_identify)
-        pl = {"op": hikari.core.net.opcodes.GatewayOpcode.INVALID_SESSION.value, "d": True}
+        pl = {"op": opcodes.GatewayOpcode.INVALID_SESSION.value, "d": True}
         gw._receive_json = asynctest.CoroutineMock(return_value=pl)
 
         with contextlib.suppress(gateway._ResumeConnection):
@@ -960,9 +962,7 @@ class TestGateway:
     @mock_run_once_parts()
     async def test_run_once_RestartConnection(_, gw):
         gw._process_events = asynctest.CoroutineMock(
-            side_effect=gateway._RestartConnection(
-                hikari.core.net.opcodes.GatewayClosure.INVALID_SEQ, "some lazy message"
-            )
+            side_effect=gateway._RestartConnection(opcodes.GatewayClosure.INVALID_SEQ, "some lazy message")
         )
         start = 1, 2, ["foo"]
         gw.seq, gw.session_id, gw.trace = start
@@ -976,9 +976,7 @@ class TestGateway:
     @mock_run_once_parts()
     async def test_run_once_ResumeConnection(_, gw):
         gw._process_events = asynctest.CoroutineMock(
-            side_effect=gateway._ResumeConnection(
-                hikari.core.net.opcodes.GatewayClosure.RATE_LIMITED, "some lazy message"
-            )
+            side_effect=gateway._ResumeConnection(opcodes.GatewayClosure.RATE_LIMITED, "some lazy message")
         )
         start = 1, 2, ["foo"]
         gw._seq, gw._session_id, gw.trace = start
