@@ -1861,7 +1861,7 @@ class HTTPClient(http_base.BaseHTTPClient):
                 The number of inactivity days you want to use as filter.
             compute_prune_count:
                 Whether a count of pruned members is returned or not. Discouraged for large guilds.
-            reason:|
+            reason:
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Returns:

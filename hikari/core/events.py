@@ -81,7 +81,8 @@ SHUTDOWN = "shutdown"
 #:
 #: Args:
 #:    channel:
-#:        a dict corresponding to https://discordapp.com/developers/docs/resources/channel#channel-object
+#:        a :class:`hikari.core.utils.custom_types.ObjectProxy` corresponding to
+#:        the definition at https://discordapp.com/developers/docs/resources/channel#channel-object
 RAW_CHANNEL_CREATE = "raw_channel_create"
 
 #: Fired when a DM channel is created.

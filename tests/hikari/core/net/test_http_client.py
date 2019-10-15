@@ -1618,7 +1618,7 @@ User Unit Tests
 
 
 @pytest.mark.asyncio
-@pytest.mark.user
+@pytest.mark.me
 class TestUser:
     async def test_create_dm(self, http_client):
         http_client.request = asynctest.CoroutineMock()

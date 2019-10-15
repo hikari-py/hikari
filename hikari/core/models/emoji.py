@@ -30,7 +30,7 @@ from hikari.core.models import base
 from hikari.core.utils import custom_types, auto_repr
 
 
-class Emoji(abc.ABC):
+class Emoji(base.HikariModel, abc.ABC):
     """Base for any emoji type."""
 
     __slots__ = ()

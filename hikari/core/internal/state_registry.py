@@ -45,6 +45,16 @@ class StateRegistry(abc.ABC):
 
     __slots__ = ()
 
+    @property
+    @abc.abstractmethod
+    def me(self) -> user.BotUser:
+        ...
+
+    @property
+    @abc.abstractmethod
+    def message_cache(self) -> typing.MutableMapping[int, message.Message]:
+        ...
+
     @abc.abstractmethod
     def delete_channel(self, channel_id: int) -> channel.Channel:
         """
@@ -488,6 +498,21 @@ class StateRegistry(abc.ABC):
             If the user, member, or guild does not exist in the cache, then `None` is returned instead.
         """
 
+    def update_message(
+        self, payload: custom_types.DiscordObject
+    ) -> typing.Optional[typing.Tuple[message.Message, message.Message]]:
+        """
+        Update a message in the cache.
+
+        Args:
+            payload:
+                The message_update payload to parse.
+
+        Returns:
+            a :class:`tuple` of two items: the first being the old :class:`message.Message` and the second being the
+            new :class:`message.Message`. If the message was not cached, then `None` is returned instead of a tuple.
+        """
+
     def update_role(
         self, guild_id: int, role_payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[role.Role, role.Role]]:
@@ -505,6 +530,13 @@ class StateRegistry(abc.ABC):
             new :class:`role.Role` state. If the `guild_id` does not correspond to a guild in the cache, then
             `None` is returned instead.
         """
+
+    def __copy__(self):
+        """
+        We don't allow ourselves to be copied, as this would lead to inconsistent state when the models get
+        cloned. Instead, we just return our own reference.
+        """
+        return self
 
 
 __all__ = ["StateRegistry"]

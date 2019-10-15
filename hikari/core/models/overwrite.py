@@ -58,7 +58,7 @@ class OverwriteEntityType(base.NamedEnum, enum.Enum):
 
 
 @dataclasses.dataclass()
-class Overwrite(base.Snowflake):
+class Overwrite(base.HikariModel, base.Snowflake):
     """
     Representation of some permissions that have been explicitly allowed or denied as an override from the defaults.
     """

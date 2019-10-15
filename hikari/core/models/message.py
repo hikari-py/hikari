@@ -107,7 +107,7 @@ class MessageFlag(enum.IntFlag):
 
 
 @dataclasses.dataclass()
-class Message(base.Snowflake, base.Volatile):
+class Message(base.Snowflake):
     """
     A message that was sent on Discord.
     """

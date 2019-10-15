@@ -139,7 +139,9 @@ html_theme_options = {
 autoclass_content = "both"
 
 autodoc_default_options = {
-    "member-order": "bysource",
+    # "member-order": "bysource",
+    # "member-order": "alphabetical",
+    "member-order": "groupwise",
     "undoc-members": False,
     "exclude-members": "__weakref__",
     "show_inheritance": True,

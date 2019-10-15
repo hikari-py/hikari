@@ -31,7 +31,7 @@ from hikari.core.utils import date_utils, auto_repr
 
 
 @dataclasses.dataclass()
-class IntegrationAccount(base.Snowflake):
+class IntegrationAccount(base.HikariModel, base.Snowflake):
     """
     An account used for an integration.
     """
@@ -59,7 +59,7 @@ class IntegrationAccount(base.Snowflake):
 
 
 @dataclasses.dataclass()
-class Integration(base.Snowflake):
+class Integration(base.HikariModel, base.Snowflake):
     """
     A guild integration.
     """

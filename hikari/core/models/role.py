@@ -32,7 +32,7 @@ from hikari.core.utils import custom_types, auto_repr
 
 
 @dataclasses.dataclass()
-class Role(base.Snowflake, base.Volatile):
+class Role(base.Snowflake, base.HikariModel):
     """
     Representation of a role within a guild.
     """

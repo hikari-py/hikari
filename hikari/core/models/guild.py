@@ -38,7 +38,7 @@ from hikari.core.utils import transform
 
 
 @dataclasses.dataclass()
-class Guild(base.Snowflake, base.Volatile):
+class Guild(base.Snowflake, base.HikariModel):
     """
     Implementation of a Guild.
     """
@@ -87,6 +87,8 @@ class Guild(base.Snowflake, base.Volatile):
         "premium_subscription_count",
         "system_channel_flags",  # not documented...
     )
+
+    __copy_by_ref__ = ("roles", "emojis", "members", "channels")
 
     _state: state_registry.StateRegistry
     _afk_channel_id: typing.Optional[int]
@@ -194,12 +196,12 @@ class Guild(base.Snowflake, base.Volatile):
     #: Members in the guild.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.user.Member` objects
-    members: typing.Mapping[int, user.Member]
+    members: typing.MutableMapping[int, user.Member]
 
     #: Channels in the guild.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.channel.GuildChannel` objects
-    channels: typing.Mapping[int, channel.GuildChannel]
+    channels: typing.MutableMapping[int, channel.GuildChannel]
 
     #: Max members allowed in the guild. This is a hard limit enforced by Discord.
     #:

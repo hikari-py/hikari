@@ -26,7 +26,7 @@ import datetime
 import typing
 
 from hikari.core.internal import state_registry
-from hikari.core.models import channel
+from hikari.core.models import channel, base
 from hikari.core.models import guild
 from hikari.core.models import user
 from hikari.core.utils import date_utils, auto_repr
@@ -34,7 +34,7 @@ from hikari.core.utils import transform
 
 
 @dataclasses.dataclass()
-class Invite:
+class Invite(base.HikariModel):
     """
     Represents a code that when used, adds a user to a guild or group DM channel.
     """
@@ -81,7 +81,7 @@ class Invite:
 
 
 @dataclasses.dataclass()
-class InviteMetadata:
+class InviteMetadata(base.HikariModel):
     """
     Metadata relating to a specific invite object.
     """

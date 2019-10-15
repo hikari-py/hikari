@@ -139,28 +139,34 @@ def test_dataclass_does_not_overwrite_existing_hash_if_explicitly_defined():
 @pytest.mark.model
 def test_Volatile_clone_shallow():
     @dataclasses.dataclass()
-    class Test(base.Volatile):
+    class Test(base.HikariModel):
         data: typing.List[int]
+        whatever: object
+
+        def __eq__(self, other):
+            return self.data == other.data
 
     data = [1, 2, 3]
-    test = Test(data)
+    whatever = object()
+    test = Test(data, whatever)
 
-    assert test.clone(False) is not test
-    assert test.clone(False).data is data
-    assert test.clone(False) == test
-    assert test.clone(False).data == data
+    assert test.copy() is not test
+    assert test.copy().data is not data
+    assert test.copy().data == data
+    assert test.copy() == test
+
+    assert test.copy().whatever is not whatever
 
 
 @pytest.mark.model
-def test_Volatile_clone_deep():
+def test_Volatile_does_not_clone_ownership_fields():
     @dataclasses.dataclass()
-    class Test(base.Volatile):
+    class Test(base.HikariModel):
+        __copy_by_ref__ = ["data"]
         data: typing.List[int]
 
     data = [1, 2, 3]
     test = Test(data)
 
-    assert test.clone(True) is not test
-    assert test.clone(True).data is not data
-    assert test.clone(True) == test
-    assert test.clone(True).data == data
+    assert test.copy() is not test
+    assert test.copy().data is data
