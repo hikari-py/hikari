@@ -114,6 +114,16 @@ class GatewayClient:
         It is highly recommended to not alter any attributes of this object whilst the gateway is running unless clearly
         specified otherwise. Any change to internal state may result in undefined behaviour or effects. This is designed
         to be a low-level interface to the gateway, and not a general-use object.
+
+    Note:
+        Any dicts that get parsed in any form of nested structure from a JSON payload will be parsed as an
+        :class:`hikari.core.utils.custom_types.ObjectProxy`. This means that you can use the dict as a regular dict,
+        or use "JavaScript"-like dot-notation to access members.
+
+        .. code-block:: python
+
+            d = ObjectProxy(...)
+            assert d.foo[1].bar == d["foo"][1]["bar"]
     """
 
     __slots__ = [
@@ -300,7 +310,7 @@ class GatewayClient:
             else:
                 self._in_buffer.clear()
 
-        payload = json.loads(msg)
+        payload = json.loads(msg, object_hook=custom_types.ObjectProxy)
 
         if not isinstance(payload, dict):
             return await self._trigger_identify(code=opcodes.GatewayClosure.TYPE_ERROR, reason="Expected JSON object.")
