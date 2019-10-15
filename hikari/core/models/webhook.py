@@ -31,8 +31,9 @@ from hikari.core.utils import auto_repr
 
 
 @dataclasses.dataclass()
-class Webhook(base.Snowflake):
+class Webhook(base.HikariModel, base.Snowflake):
     __slots__ = ("_state", "id", "_guild_id", "_channel_id", "user", "name", "avatar_hash", "token")
+    __copy_by_ref__ = ("user",)
 
     _state: state_registry.StateRegistry
     _guild_id: int

@@ -36,7 +36,7 @@ _channel_type_to_class = {}
 
 
 @dataclasses.dataclass()
-class Channel(base.Snowflake, base.Volatile, abc.ABC):
+class Channel(base.Snowflake, base.HikariModel, abc.ABC):
     """
     A generic type of channel.
 

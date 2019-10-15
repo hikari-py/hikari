@@ -44,7 +44,7 @@ class Status(base.NamedEnum, enum.Enum):
 
 
 @dataclasses.dataclass()
-class Presence:
+class Presence(base.HikariModel):
     """
     The presence of a member. This includes their status and info on what they are doing currently.
     """
@@ -88,7 +88,7 @@ class Presence:
 
 
 @dataclasses.dataclass()
-class PresenceActivity:
+class PresenceActivity(base.HikariModel):
     """
     Rich presence-style activity.
 
@@ -203,7 +203,7 @@ class ActivityFlag(enum.IntFlag):
 
 
 @dataclasses.dataclass()
-class ActivityParty:
+class ActivityParty(base.HikariModel):
     __slots__ = ("id", "current_size", "max_size")
 
     #: The ID of the party, if applicable, else `None`
@@ -234,7 +234,7 @@ class ActivityParty:
 
 
 @dataclasses.dataclass()
-class ActivityAssets:
+class ActivityAssets(base.HikariModel):
     __slots__ = ("large_image", "large_text", "small_image", "small_text")
 
     #: Large image asset, or `None`.
@@ -267,7 +267,7 @@ class ActivityAssets:
 
 
 @dataclasses.dataclass()
-class ActivityTimestamps:
+class ActivityTimestamps(base.HikariModel):
     __slots__ = ("start", "end")
 
     #: The start timestamp, or `None` if not specified.

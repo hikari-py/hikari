@@ -29,8 +29,6 @@ from hikari.core.utils import assertions
 from hikari.core.utils import custom_types
 from hikari.core.utils import date_utils
 
-_T = typing.TypeVar("_T")
-
 
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
@@ -117,34 +115,52 @@ class Snowflake:
         return self > other or self == other
 
 
+_T = typing.TypeVar("_T", bound="HikariModel")
+
+
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
-class Volatile:
+class HikariModel:
     """
     Marks a class that is allowed to have its state periodically updated, rather than being recreated.
 
     Any classes with this as a subclass should not be assumed to have consistent state between awaiting other elements.
+
+    If you need some fields to be copied across by reference regardless of being requested to produce a new copy, you
+    should specify their names in the `__copy_byref__` class var. This will prevent :func:`copy.copy` being
+    invoked on them when duplicating the object to produce a before and after view when a change is made.
     """
 
     __slots__ = ()
+    __copy_by_ref__: typing.ClassVar[typing.Tuple] = ()
 
     def update_state(self, payload: custom_types.DiscordObject) -> None:
         """
         Updates the internal state of an existing instance of this object from a raw Discord payload.
         """
 
-    def clone(self: _T, deep: bool = False) -> _T:
+    def copy(self: _T) -> _T:
         """
         Create a copy of this object.
-
-        Args:
-            deep:
-                If True, create a deep copy. Otherwise create a shallow copy.
 
         Return:
             the copy of this object.
         """
-        return copy.deepcopy(self) if deep else copy.copy(self)
+        # Make a new instance without the internal attributes.
+        # noinspection PyArgumentList
+        reconstructor, (cls, base, state), data = self.__reduce__()
+        new_instance = reconstructor(cls, base, state)
+
+        for k, v in data.items():
+            if k in self.__copy_by_ref__:
+                setattr(new_instance, k, v)
+            else:
+                setattr(new_instance, k, copy.copy(v))
+
+        return new_instance
+
+    def __copy__(self):
+        return self.copy()
 
 
-__all__ = ("Snowflake", "NamedEnum", "Volatile")
+__all__ = ("Snowflake", "NamedEnum", "HikariModel")

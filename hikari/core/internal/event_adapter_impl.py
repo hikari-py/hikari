@@ -312,7 +312,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             role_id = int(payload["role"]["id"])
             existing_role = guild.roles.get(role_id)
             if existing_role is not None:
-                old_role = existing_role.clone()
+                old_role = existing_role.copy()
                 existing_role.update_state(payload["role"])
                 new_role = existing_role
                 self.dispatch(events.GUILD_ROLE_UPDATE, old_role, new_role)
@@ -353,6 +353,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
 
     async def handle_message_update(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_UPDATE, payload)
+        message_id = int(payload["id"])
 
     async def handle_message_delete(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_DELETE, payload)

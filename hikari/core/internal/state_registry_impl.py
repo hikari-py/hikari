@@ -60,7 +60,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
     adapter that calls this cache, appropriately.
     """
 
-    __slots__ = ("_dm_channels", "_emojis", "_guilds", "_guild_channels", "_messages", "_users", "user", "logger")
+    __slots__ = ("_dm_channels", "_emojis", "_guilds", "_guild_channels", "_message_cache", "_users", "_user", "logger")
 
     def __init__(self, message_cache_size: int, user_dm_channel_size: int) -> None:
         # Users may be cached while we can see them, or they may be cached as a member. Regardless, we only
@@ -69,14 +69,22 @@ class BasicStateRegistry(state_registry.StateRegistry):
         self._emojis: typing.MutableMapping[int, emoji.GuildEmoji] = weakref.WeakValueDictionary()
         self._guilds: typing.Dict[int, guild.Guild] = {}
         self._guild_channels: typing.MutableMapping[int, channel.GuildChannel] = weakref.WeakValueDictionary()
-        self._messages: typing.MutableMapping[int, message.Message] = custom_types.LRUDict(message_cache_size)
         self._users: typing.MutableMapping[int, user.User] = weakref.WeakValueDictionary()
+        self._message_cache: typing.MutableMapping[int, message.Message] = custom_types.LRUDict(message_cache_size)
 
         #: The bot user.
-        self.user: typing.Optional[user.BotUser] = None
+        self._user: typing.Optional[user.BotUser] = None
 
         #: Our logger.
         self.logger = logging_utils.get_named_logger(self)
+
+    @property
+    def me(self) -> user.BotUser:
+        return self._user
+
+    @property
+    def message_cache(self) -> typing.MutableMapping[int, message.Message]:
+        return self.message_cache
 
     def delete_channel(self, channel_id: int) -> channel.Channel:
         if channel_id in self._guild_channels:
@@ -134,7 +142,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
         return self._guild_channels.get(guild_channel_id)
 
     def get_message_by_id(self, message_id: int):
-        return self._messages.get(message_id)
+        return self._message_cache.get(message_id)
 
     def get_role_by_id(self, guild_id: int, role_id: int) -> typing.Optional[role.Role]:
         if guild_id not in self._guilds:
@@ -146,7 +154,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
 
     def parse_bot_user(self, bot_user_payload: custom_types.DiscordObject) -> user.BotUser:
         bot_user_payload = user.BotUser(self, bot_user_payload)
-        self.user = bot_user_payload
+        self._user = bot_user_payload
         return bot_user_payload
 
     def parse_channel(
@@ -225,11 +233,11 @@ class BasicStateRegistry(state_registry.StateRegistry):
         message_id = int(message_payload["id"])
         message_obj = message.Message(self, message_payload)
 
-        channel = message_obj.channel
-        if channel is not None:
+        channel_obj = message_obj.channel
+        if channel_obj is not None:
             message_obj.channel.last_message_id = message_id
 
-        self._messages[message_id] = message_obj
+        self._message_cache[message_id] = message_obj
         return message_obj
 
     def parse_presence(self, guild_id: int, user_id: int, presence_payload: custom_types.DiscordObject):
@@ -241,9 +249,9 @@ class BasicStateRegistry(state_registry.StateRegistry):
 
     def parse_role(self, role_payload: custom_types.DiscordObject, guild_id: int):
         if guild_id in self._guilds:
-            guild = self._guilds[guild_id]
+            guild_obj = self._guilds[guild_id]
             role_payload = role.Role(self, role_payload, guild_id)
-            guild.roles[role_payload.id] = role_payload
+            guild_obj.roles[role_payload.id] = role_payload
             return role_payload
 
     def parse_user(self, user_payload: custom_types.DiscordObject):
@@ -252,8 +260,8 @@ class BasicStateRegistry(state_registry.StateRegistry):
         # finished with it anyway.
         user_id = int(user_payload["id"])
 
-        if self.user and user_id == self.user.id:
-            return self.user
+        if self._user and user_id == self._user.id:
+            return self._user
 
         if "mfa_enabled" in user_payload or "verified" in user_payload:
             return self.parse_bot_user(user_payload)
@@ -283,7 +291,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
         channel_id = int(channel_payload["id"])
         existing_channel = self.get_channel_by_id(channel_id)
         if existing_channel is not None:
-            old_channel = existing_channel.clone()
+            old_channel = existing_channel.copy()
             new_channel = existing_channel
             new_channel.update_state(channel_payload)
             return old_channel, new_channel
@@ -294,7 +302,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
         guild_id = int(guild_payload["id"])
         guild_obj = self.get_guild_by_id(guild_id)
         if guild_obj is not None:
-            previous_guild = guild_obj.clone()
+            previous_guild = guild_obj.copy()
             new_guild = guild_obj
             new_guild.update_state(guild_payload)
             return previous_guild, new_guild
@@ -321,7 +329,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
 
         if guild is not None and user_id in guild_obj.members:
             new_member = guild_obj.members[user_id]
-            old_member = new_member.clone()
+            old_member = new_member.copy()
             new_member.update_state(role_ids, nick)
             return old_member, new_member
 
@@ -335,3 +343,14 @@ class BasicStateRegistry(state_registry.StateRegistry):
             old_presence = member_obj.presence
             new_presence = self.parse_presence(guild_id, user_id, presence_payload)
             return member_obj, old_presence, new_presence
+
+    def update_message(
+        self, payload: custom_types.DiscordObject
+    ) -> typing.Optional[typing.Tuple[message.Message, message.Message]]:
+        message_id = int(payload["message_id"])
+        existing_message = self._message_cache.get(message_id)
+        if existing_message is not None:
+            old_message = existing_message.copy()
+            new_message = existing_message
+            new_message.update_state(payload)
+            return old_message, new_message
