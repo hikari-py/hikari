@@ -401,7 +401,7 @@ class StateRegistry(abc.ABC):
                 the raw payload to update the channel with. This contains the ID of the channel also.
 
         Returns:
-            A :class:`tuple` of two :class:`channel.Channel` objects. The first represents the old channel state, and
+            Two :class:`channel.Channel` objects. The first represents the old channel state, and
             the second represents the new channel state. If no channel was cached, this returns `None`.
         """
 
@@ -418,7 +418,7 @@ class StateRegistry(abc.ABC):
                 The raw guild payload to update. This contains the ID of the guild also.
 
         Returns:
-            A :class:`tuple` of two :class:`guild.Guild` objects. The first represents the old guild state, and
+            Two :class:`guild.Guild` objects. The first represents the old guild state, and
             the second represents the new guild state. If no guild was cached, this returns `None`.
         """
 
@@ -436,7 +436,7 @@ class StateRegistry(abc.ABC):
                 the ID of the guild the emojis were updated in.
 
         Returns:
-            A :class:`tuple` of two :class:`frozenset` of :class:`hikari.core.models.emoji.GuildEmoji` objects.
+            Two :class:`frozenset` of :class:`hikari.core.models.emoji.GuildEmoji` objects.
             The first set contains all the old emojis. The second set contains all the new emojis. If the guild was
             not cached, this will just return `None`
 
@@ -473,7 +473,7 @@ class StateRegistry(abc.ABC):
                 the ID of the member to update.
 
         Returns:
-            a :class:`tuple` of two :class:`user.Member` objects: first being the old state of the member and the
+            Two :class:`user.Member` objects. The first being the old state of the member and the
             second being the new state (if the member exists). If it does not exist in that guild, or the guild itself
             is not cached, then `None` is returned instead.
         """
@@ -493,7 +493,7 @@ class StateRegistry(abc.ABC):
                 The new presence to set.
 
         Returns:
-            a :class:`tuple` of three items: the first being the :class:`user.Member` that was updated, the second
+            Three items. The first being the :class:`user.Member` that was updated, the second
             being the :class:`presence.Presence` before, and the third being the :class:`presence.Presence` now.
             If the user, member, or guild does not exist in the cache, then `None` is returned instead.
         """
@@ -509,7 +509,7 @@ class StateRegistry(abc.ABC):
                 The message_update payload to parse.
 
         Returns:
-            a :class:`tuple` of two items: the first being the old :class:`message.Message` and the second being the
+            Two items. The first being the old :class:`message.Message` and the second being the
             new :class:`message.Message`. If the message was not cached, then `None` is returned instead of a tuple.
         """
 
