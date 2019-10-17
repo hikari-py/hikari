@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import dataclasses
 
-from hikari.core.components import state_registry
+from hikari.core.internal import state_registry
 from hikari.core.models import base
 from hikari.core.models import color as _color
 from hikari.core.models import guild
@@ -32,7 +32,7 @@ from hikari.core.utils import custom_types, auto_repr
 
 
 @dataclasses.dataclass()
-class Role(base.Snowflake, base.Volatile):
+class Role(base.Snowflake, base.HikariModel):
     """
     Representation of a role within a guild.
     """

@@ -25,14 +25,14 @@ import dataclasses
 import datetime
 import typing
 
-from hikari.core.models import color as _color
+from hikari.core.models import color as _color, base
 from hikari.core.utils import date_utils, auto_repr
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified
 
 
 @dataclasses.dataclass()
-class Embed:
+class Embed(base.HikariModel):
     __slots__ = (
         "title",
         "description",
@@ -332,7 +332,7 @@ class Embed:
         return embed
 
 
-class _EmbedComponent:
+class _EmbedComponent(base.HikariModel):
     __slots__ = ()
 
     def to_dict(self, *, dict_factory=dict):

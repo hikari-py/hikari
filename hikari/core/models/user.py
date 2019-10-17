@@ -25,7 +25,7 @@ import dataclasses
 import datetime
 import typing
 
-from hikari.core.components import state_registry
+from hikari.core.internal import state_registry
 from hikari.core.models import base
 from hikari.core.models import presence
 from hikari.core.utils import date_utils, auto_repr, custom_types
@@ -34,7 +34,7 @@ from hikari.core.utils import transform
 
 
 @dataclasses.dataclass()
-class User(base.Snowflake, base.Volatile):
+class User(base.HikariModel, base.Snowflake):
     """
     Representation of a user account.
     """
@@ -96,7 +96,7 @@ class Member(User):
     __slots__ = ("_user", "_guild_id", "_role_ids", "joined_at", "nick", "premium_since", "presence")
 
     _user: User
-    _role_ids: typing.Sequence[int]
+    _role_ids: typing.MutableSequence[int]
     _guild_id: int
 
     #: The date and time the member joined this guild.
@@ -118,6 +118,8 @@ class Member(User):
     #:
     #: :type: :class:`hikari.core.models.presence.Presence`
     presence: presence.Presence
+
+    __copy_by_ref__ = ("presence",)
 
     __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot", "guild", "nick", "joined_at")
 
