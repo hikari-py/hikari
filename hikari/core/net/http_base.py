@@ -171,7 +171,7 @@ class BaseHTTPClient:
                 additional arguments to pass to the internal :class:`aiohttp.ClientSession` constructor used for making
                 HTTP requests.
         """
-        #: Used for internal bookkeeping
+        # Used for internal bookkeeping
         self._correlation_id = 0
         #: The asyncio event loop to run on.
         self.loop = loop or asyncio.get_running_loop()
