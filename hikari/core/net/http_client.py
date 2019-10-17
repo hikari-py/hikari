@@ -17,7 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Implementation of the HTTP Client mix of all mixin components.
+Implementation of a basic HTTP client that uses aiohttp to interact with the
+V7 Discord API.
 """
 from __future__ import annotations
 
@@ -33,11 +34,10 @@ from hikari.core.utils import meta
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified
 
-__all__ = ("HTTPClient",)
 
 DELETE = "delete"
-PATCH = "patch"
 GET = "get"
+PATCH = "patch"
 POST = "post"
 PUT = "put"
 
@@ -1861,7 +1861,7 @@ class HTTPClient(http_base.BaseHTTPClient):
                 The number of inactivity days you want to use as filter.
             compute_prune_count:
                 Whether a count of pruned members is returned or not. Discouraged for large guilds.
-            reason:|
+            reason:
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Returns:
@@ -2502,3 +2502,6 @@ class HTTPClient(http_base.BaseHTTPClient):
                 If you're not the webhook owner.
         """
         return await self.request(DELETE, "/webhooks/{webhook_id}", webhook_id=webhook_id, reason=reason)
+
+
+__all__ = ["HTTPClient"]

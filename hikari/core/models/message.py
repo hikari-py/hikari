@@ -26,7 +26,7 @@ import datetime
 import enum
 import typing
 
-from hikari.core.components import state_registry
+from hikari.core.internal import state_registry
 from hikari.core.models import base, reaction, webhook
 from hikari.core.models import channel
 from hikari.core.models import embed
@@ -107,7 +107,7 @@ class MessageFlag(enum.IntFlag):
 
 
 @dataclasses.dataclass()
-class Message(base.Snowflake, base.Volatile):
+class Message(base.Snowflake):
     """
     A message that was sent on Discord.
     """

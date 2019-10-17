@@ -167,26 +167,22 @@ def sphinx(session: PoetryNoxSession) -> None:
 @nox_session()
 @using_poetry
 def bandit(session: PoetryNoxSession) -> None:
-    session.poetry("update")
     session.install("bandit")
     pkg = MAIN_PACKAGE.split(".")[0]
     session.run("bandit", pkg, "-r")
 
 
 def _black(session, *args, **kwargs):
-    session.poetry("update")
     session.install("black")
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *args, **kwargs)
 
 
 @nox_session()
-@using_poetry
 def format_fix(session: PoetryNoxSession) -> None:
     _black(session)
 
 
 @nox_session()
-@using_poetry
 def format_check(session: PoetryNoxSession) -> None:
     _black(session, "--check")
 

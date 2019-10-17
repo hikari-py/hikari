@@ -35,7 +35,7 @@ _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
 
 @dataclasses.dataclass()
-class Avatar:
+class Avatar(base.HikariModel):
     """
     Represents an Avatar. This contains compressed raw byte data of the given image.
 
@@ -114,7 +114,7 @@ class Avatar:
 
 
 @dataclasses.dataclass()
-class Attachment(base.Snowflake):
+class Attachment(base.HikariModel, base.Snowflake):
     """
     An attachment that is received from Discord in a message.
     """

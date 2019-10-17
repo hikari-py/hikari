@@ -139,7 +139,9 @@ html_theme_options = {
 autoclass_content = "both"
 
 autodoc_default_options = {
-    "member-order": "bysource",
+    # "member-order": "bysource",
+    # "member-order": "alphabetical",
+    "member-order": "groupwise",
     "undoc-members": False,
     "exclude-members": "__weakref__",
     "show_inheritance": True,
@@ -180,6 +182,21 @@ inheritance_node_attrs = dict(
 inheritance_edge_attrs = dict(color='"#772953"', arrowhead="onormal", arrowsize=1)
 
 graphviz_output_format = "svg"
+
+
+# -- Epilog to inject into each page... ---------------------------------------------
+
+
+rst_epilog = """
+.. |rawEvent| replace:: This is is a raw event. This means that it is fired with the raw data sent by Discord's gateway
+                        without any form of pre-processing or validation. Corresponding information may be incorrect, 
+                        sent multiple times, or refer to information that is not cached. The implementation specifics
+                        of this are documented on the developer portal for Discord at 
+                        https://discordapp.com/developers/docs/topics/gateway#commands-and-events
+
+.. |selfHealing| replace:: You do not have to do anything in this situation. The gateway client in Hikari will attempt 
+                           to resolve these issues for you.
+"""
 
 
 def setup(app):
