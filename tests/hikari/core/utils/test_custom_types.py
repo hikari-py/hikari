@@ -28,14 +28,19 @@ def test_ObjectProxy_setattr():
     dop = custom_types.ObjectProxy({"foo": "bar"})
     dop["foof"] = 123
     assert dop["foof"] == 123
-    dop["foof"] = 456
-    assert dop["foof"] == 456
+    dop.foof = 456
+    assert dop.foof == 456
 
 
 def test_ObjectProxy_delattr():
     dop = custom_types.ObjectProxy({"foo": "bar"})
     assert "foo" in dop
     del dop["foo"]
+    assert "foo" not in dop
+
+    dop = custom_types.ObjectProxy({"foo": "bar"})
+    assert "foo" in dop
+    del dop.foo
     assert "foo" not in dop
 
 

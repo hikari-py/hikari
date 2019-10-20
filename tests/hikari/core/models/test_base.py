@@ -16,10 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import copy
 import dataclasses
 import datetime
 import enum
 import typing
+from unittest import mock
 
 import pytest
 
@@ -159,7 +161,7 @@ def test_Volatile_clone_shallow():
 
 
 @pytest.mark.model
-def test_Volatile_does_not_clone_ownership_fields():
+def test_HikariModel_does_not_clone_ownership_fields():
     @dataclasses.dataclass()
     class Test(base.HikariModel):
         __copy_by_ref__ = ["data"]
@@ -170,3 +172,15 @@ def test_Volatile_does_not_clone_ownership_fields():
 
     assert test.copy() is not test
     assert test.copy().data is data
+
+
+@pytest.mark.model
+def test_HikariModel_copy_calls___copy__():
+    @dataclasses.dataclass()
+    class Test(base.HikariModel):
+        pass
+
+    t = Test()
+    t.copy = mock.MagicMock()
+    copy.copy(t)
+    t.copy.assert_called_once()
