@@ -70,6 +70,10 @@ class Channel(base.Snowflake, base.HikariModel, abc.ABC):
             _channel_type_to_class[kwargs.pop("type")] = cls
         cls.is_dm = "guild" not in cls.__qualname__.lower()
 
+    @abc.abstractmethod
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
+        ...
+
 
 class TextChannel(Channel, abc.ABC):
     """

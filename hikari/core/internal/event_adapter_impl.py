@@ -21,11 +21,13 @@ Handles consumption of gateway events and converting them to the correct data ty
 """
 from __future__ import annotations
 
+import typing
+
 from hikari.core import events
 from hikari.core.internal import event_adapter
 from hikari.core.internal import state_registry as _state
-from hikari.core.models import channel
-from hikari.core.utils import date_utils
+from hikari.core.models import channel, reaction
+from hikari.core.utils import date_utils, custom_types
 from hikari.core.utils import transform
 
 
@@ -379,13 +381,67 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         if channel_obj is not None:
             self.dispatch(events.MESSAGE_DELETE_BULK, channel_obj, messages)
         else:
-            self.logger.warning("Ignoring MESSAGE_DELETE_BULK for unknown channel %s", channel_id)
+            self.logger.warning("ignoring MESSAGE_DELETE_BULK for unknown channel %s", channel_id)
 
+    # This is a headache to do as it has a completely different layout to reactions elsewhere...
     async def handle_message_reaction_add(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_REACTION_ADD, payload)
+        guild_id = transform.nullable_cast(payload.get("guild_id"), int)
+        message_id = int(payload["message_id"])
+        user_id = int(payload["user_id"])
+        message_obj = self.state_registry.get_message_by_id(message_id)
+
+        if message_obj is None:
+            # Message was not cached, so ignore
+            return
+
+        emoji_obj = self.state_registry.parse_emoji(payload["emoji"], None)
+
+        reaction_obj = self.state_registry.add_reaction(message_obj, emoji_obj)
+
+        if guild_id is not None:
+            user_obj = self.state_registry.get_member_by_id(user_id, guild_id)
+        else:
+            user_obj = self.state_registry.get_user_by_id(user_id)
+
+        if user_obj is not None:
+            self.dispatch(events.MESSAGE_REACTION_ADD, reaction_obj, user_obj)
+
+        else:
+            self.logger.warning(
+                "ignoring MESSAGE_REACTION_ADD for unknown %s %s",
+                "user" if user_id is None else f"guild {guild_id} and member",
+                user_id,
+            )
 
     async def handle_message_reaction_remove(self, gateway, payload):
-        self.dispatch(events.RAW_MESSAGE_REACTION_REMOVE, payload)
+        guild_id = transform.nullable_cast(payload.get("guild_id"), int)
+        message_id = int(payload["message_id"])
+        user_id = int(payload["user_id"])
+        message_obj = self.state_registry.get_message_by_id(message_id)
+
+        if message_obj is None:
+            # Message was not cached, so ignore
+            return
+
+        emoji_obj = self.state_registry.parse_emoji(payload["emoji"], None)
+
+        reaction_obj = self.state_registry.remove_reaction(message_obj, emoji_obj)
+
+        if guild_id is not None:
+            user_obj = self.state_registry.get_member_by_id(user_id, guild_id)
+        else:
+            user_obj = self.state_registry.get_user_by_id(user_id)
+
+        if user_obj is not None:
+            self.dispatch(events.MESSAGE_REACTION_REMOVE, reaction_obj, user_obj)
+
+        else:
+            self.logger.warning(
+                "ignoring MESSAGE_REACTION_REMOVE for unknown %s %s",
+                "user" if user_id is None else f"guild {guild_id} and member",
+                user_id,
+            )
 
     async def handle_message_reaction_remove_all(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_REACTION_REMOVE_ALL, payload)
