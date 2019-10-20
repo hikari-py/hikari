@@ -27,6 +27,7 @@ Sphinx documentation configuration.
 import os
 import shutil
 import sys
+import textwrap
 
 import sphinx_bootstrap_theme
 
@@ -38,6 +39,8 @@ project = "Hikari.Core"
 author = "Nekokatt"
 copyright = author
 version = "0.0.19"
+
+is_staging = "dev" in version
 
 # -- General configuration ---------------------------------------------------
 
@@ -197,6 +200,16 @@ rst_epilog = """
 .. |selfHealing| replace:: You do not have to do anything in this situation. The gateway client in Hikari will attempt 
                            to resolve these issues for you.
 """
+
+if not is_staging:
+    rst_epilog += textwrap.dedent("""
+        .. |staging_link| replace:: If you want the latest staging documentation instead, please visit 
+                                    `this page <staging/index.html>`__.
+    """)
+else:
+    rst_epilog += textwrap.dedent("""
+        .. |staging_link| replace:: This is the documentation for the development release
+    """)
 
 
 def setup(app):
