@@ -99,6 +99,29 @@ class TestMessage:
         assert m.flags & message.MessageFlag.SUPPRESS_EMBEDS
         s.parse_user.assert_called_with(mock_user)
 
+    def test_Message_update_state_with_no_payload(self, mock_message):
+        s = mock.MagicMock(spec=state_registry.StateRegistry)
+        initial = message.Message(s, mock_message)
+        updated = message.Message(s, mock_message)
+        updated.update_state({})
+        assert initial.author == updated.author
+        assert initial.edited_at == updated.edited_at
+        assert initial.mentions_everyone == updated.mentions_everyone
+        assert initial.attachments == updated.attachments
+        assert initial.embeds == updated.embeds
+        assert initial.pinned == updated.pinned
+        assert initial.application == updated.application
+        assert initial.activity == updated.activity
+        assert initial.content == updated.content
+        assert initial.reactions == updated.reactions
+
+    def test_Message_update_state_reactions(self, mock_message):
+        s = mock.MagicMock(spec=state_registry.StateRegistry)
+        m = message.Message(s, mock_message)
+        # noinspection PyTypeChecker
+        m.update_state({"reactions": [{"id": None, "value": "\N{OK HAND SIGN}"}]})
+        s.parse_reaction.assert_called_once_with({"id": None, "value": "\N{OK HAND SIGN}"})
+
     def test_Message_complex_test_data(self, mock_user):
         s = mock.MagicMock(spec=state_registry.StateRegistry)
         m = message.Message(

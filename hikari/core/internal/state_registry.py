@@ -65,6 +65,9 @@ class StateRegistry(abc.ABC):
                 the emoji of the reaction.
             message_obj:
                 the message the reaction was on.
+
+        Returns:
+            a :class:`hikari.core.models.reaction.Reaction` object.
         """
 
     @abc.abstractmethod
@@ -470,6 +473,9 @@ class StateRegistry(abc.ABC):
 
         Note:
             If the count reaches zero, the reaction will be removed from the message additionally.
+
+        Returns:
+            a :class:`hikari.core.models.reaction.Reaction` object.
         """
 
     @abc.abstractmethod
@@ -573,6 +579,7 @@ class StateRegistry(abc.ABC):
             is not cached, then `None` is returned instead.
         """
 
+    @abc.abstractmethod
     def update_member_presence(
         self, guild_id: int, user_id: int, presence_payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[user.Member, presence.Presence, presence.Presence]]:
@@ -594,6 +601,7 @@ class StateRegistry(abc.ABC):
             If the user, member, or guild does not exist in the cache, then `None` is returned instead.
         """
 
+    @abc.abstractmethod
     def update_message(
         self, payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[message.Message, message.Message]]:
@@ -610,6 +618,7 @@ class StateRegistry(abc.ABC):
             instead of a tuple.
         """
 
+    @abc.abstractmethod
     def update_role(
         self, guild_id: int, role_payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[role.Role, role.Role]]:
@@ -628,12 +637,9 @@ class StateRegistry(abc.ABC):
             a guild in the cache, then `None` is returned instead.
         """
 
+    @abc.abstractmethod
     def __copy__(self):
-        """
-        We don't allow ourselves to be copied, as this would lead to inconsistent state when the models get
-        cloned. Instead, we just return our own reference.
-        """
-        return self
+        ...
 
 
 __all__ = ["StateRegistry"]
