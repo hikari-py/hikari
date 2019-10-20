@@ -202,14 +202,18 @@ rst_epilog = """
 """
 
 if not is_staging:
-    rst_epilog += textwrap.dedent("""
+    rst_epilog += textwrap.dedent(
+        """
         .. |staging_link| replace:: If you want the latest staging documentation instead, please visit 
                                     `this page <staging/index.html>`__.
-    """)
+    """
+    )
 else:
-    rst_epilog += textwrap.dedent("""
+    rst_epilog += textwrap.dedent(
+        """
         .. |staging_link| replace:: This is the documentation for the development release
-    """)
+    """
+    )
 
 
 def setup(app):

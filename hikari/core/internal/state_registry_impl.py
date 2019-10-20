@@ -112,6 +112,11 @@ class BasicStateRegistry(state_registry.StateRegistry):
         del self._guilds[guild_id]
         return guild_obj
 
+    def delete_message(self, message_id: int) -> message.Message:
+        message_obj = self._message_cache[message_id]
+        del self._message_cache[message_id]
+        return message_obj
+
     def delete_member_from_guild(self, user_id: int, guild_id: int) -> user.Member:
         guild_obj = self._guilds[guild_id]
         member_obj = guild_obj.members[user_id]
