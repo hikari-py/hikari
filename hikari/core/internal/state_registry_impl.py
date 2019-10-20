@@ -87,8 +87,6 @@ class BasicStateRegistry(state_registry.StateRegistry):
         return self.message_cache
 
     def add_reaction(self, message_obj: message.Message, emoji_obj: emoji.Emoji) -> reaction.Reaction:
-        # We don't use the user ID here.
-
         # Ensure the reaction is subscribed on the message.
         for reaction_obj in message_obj.reactions:
             if reaction_obj.emoji == emoji_obj:
@@ -424,3 +422,22 @@ class BasicStateRegistry(state_registry.StateRegistry):
             new_message = existing_message
             new_message.update_state(payload)
             return old_message, new_message
+
+    def update_role(
+        self, guild_id: int, payload: custom_types.DiscordObject
+    ) -> typing.Optional[typing.Tuple[role.Role, role.Role]]:
+        role_id = int(payload["id"])
+        existing_role = self.get_role_by_id(role_id)
+
+        if existing_role is not None:
+            old_role = existing_role.copy()
+            new_role = existing_role
+            new_role.update_state(payload)
+            return old_role, new_role
+
+    def __copy__(self):
+        """
+        We don't allow ourselves to be copied, as this would lead to inconsistent state when the models get
+        cloned. Instead, we just return our own reference.
+        """
+        return self

@@ -337,3 +337,11 @@ def test_channel_guild(impl):
     assert g is guild
 
     cache.get_guild_by_id.assert_called_with(91827)
+
+
+@pytest.mark.model
+@pytest.mark.parametrize(
+    ["type_id", "is_dm"], [[0, False], [1, True], [2, False], [3, True], [4, False], [5, False], [6, False]]
+)
+def test_is_channel_type_dm(type_id, is_dm):
+    assert channel.is_channel_type_dm(type_id) is is_dm
