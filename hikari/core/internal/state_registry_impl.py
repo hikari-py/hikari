@@ -26,7 +26,7 @@ import typing
 import weakref
 
 from hikari.core.internal import state_registry
-from hikari.core.models import channel
+from hikari.core.models import channel, reaction
 from hikari.core.models import emoji
 from hikari.core.models import guild
 from hikari.core.models import message
@@ -86,6 +86,18 @@ class BasicStateRegistry(state_registry.StateRegistry):
     def message_cache(self) -> typing.MutableMapping[int, message.Message]:
         return self.message_cache
 
+    def add_reaction(self, message_obj: message.Message, emoji_obj: emoji.Emoji) -> reaction.Reaction:
+        # Ensure the reaction is subscribed on the message.
+        for reaction_obj in message_obj.reactions:
+            if reaction_obj.emoji == emoji_obj:
+                # Increment the count.
+                reaction_obj.count += 1
+                return reaction_obj
+        else:
+            reaction_obj = reaction.Reaction(1, emoji_obj, message_obj)
+            message_obj.reactions.append(reaction_obj)
+            return reaction_obj
+
     def delete_channel(self, channel_id: int) -> channel.Channel:
         if channel_id in self._guild_channels:
             guild_obj = self._guild_channels[channel_id].guild
@@ -123,6 +135,15 @@ class BasicStateRegistry(state_registry.StateRegistry):
         del guild_obj.members[user_id]
         return member_obj
 
+    def delete_reaction_from_message(self, message_id: int, user_id: int, emoji_obj: emoji.Emoji) -> reaction.Reaction:
+        # We do not store info about the user, so just ignore this parameter.
+        message_obj = self._message_cache[message_id]
+        for reaction_obj in message_obj.reactions:
+            if reaction_obj.emoji == emoji and reaction_obj.message.id == reaction_obj.message.id:
+                message_obj.reactions.remove(reaction_obj)
+                return reaction_obj
+        raise KeyError(f"reaction with message_id {message_id} and user_id {user_id}")
+
     # noinspection PyProtectedMember
     def delete_role(self, guild_id: int, role_id: int) -> role.Role:
         guild_obj = self._guilds[guild_id]
@@ -131,7 +152,6 @@ class BasicStateRegistry(state_registry.StateRegistry):
         for member in guild_obj.members.values():
             if role_id in member._role_ids:
                 member._role_ids.remove(role_id)
-
         return role_obj
 
     def get_channel_by_id(self, channel_id: int) -> typing.Optional[channel.Channel]:
@@ -145,6 +165,11 @@ class BasicStateRegistry(state_registry.StateRegistry):
 
     def get_guild_channel_by_id(self, guild_channel_id: int):
         return self._guild_channels.get(guild_channel_id)
+
+    def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[user.Member]:
+        guild_obj = self._guilds.get(guild_id)
+        if guild_obj is not None:
+            return guild_obj.members.get(user_id)
 
     def get_message_by_id(self, message_id: int):
         return self._message_cache.get(message_id)
@@ -194,15 +219,22 @@ class BasicStateRegistry(state_registry.StateRegistry):
 
     def parse_emoji(self, emoji_payload, guild_id):
         existing_emoji = None
-        if guild_id is not None:
-            emoji_id = int(emoji_payload["id"])
+        emoji_id = int(emoji_payload["id"])
+
+        if emoji_id is not None:
             existing_emoji = self.get_emoji_by_id(emoji_id)
 
         if existing_emoji is not None:
             existing_emoji.update_state(emoji_payload)
             return existing_emoji
 
-        return emoji.emoji_from_dict(self, emoji_payload, guild_id)
+        new_emoji = emoji.emoji_from_dict(self, emoji_payload, guild_id)
+        if isinstance(new_emoji, emoji.GuildEmoji):
+            guild_obj = self.get_guild_by_id(guild_id)
+            if guild_obj is not None:
+                guild_obj.emojis[new_emoji.id] = new_emoji
+
+        return new_emoji
 
     def parse_guild(self, guild_payload: custom_types.DiscordObject):
         guild_id = int(guild_payload["id"])
@@ -252,6 +284,26 @@ class BasicStateRegistry(state_registry.StateRegistry):
             guild_obj.members[user_id].presence = presence_obj
             return presence_obj
 
+    def parse_reaction(self, reaction_payload: custom_types.DiscordObject):
+        message_id = int(reaction_payload["message_id"])
+        message_obj = self.get_message_by_id(message_id)
+        count = int(reaction_payload["count"])
+        emoji_obj = self.parse_emoji(reaction_payload["emoji"], None)
+
+        if message_obj is not None:
+            # We might not add this, this is simpler than duplicating code to reparse this payload in two places,
+            # though, so we parse it first anyway and then either ditch or store it depending on whether the reaction
+            # already exists or not.
+            new_reaction_obj = reaction.Reaction(count, emoji_obj, message_obj)
+
+            for existing_reaction_obj in message_obj.reactions:
+                if existing_reaction_obj.emoji == new_reaction_obj.emoji:
+                    existing_reaction_obj.count = new_reaction_obj.count
+                    return existing_reaction_obj
+            else:
+                message_obj.reactions.append(new_reaction_obj)
+                return new_reaction_obj
+
     def parse_role(self, role_payload: custom_types.DiscordObject, guild_id: int):
         if guild_id in self._guilds:
             guild_obj = self._guilds[guild_id]
@@ -284,6 +336,17 @@ class BasicStateRegistry(state_registry.StateRegistry):
     def parse_webhook(self, webhook_payload: custom_types.DiscordObject):
         # Don't cache webhooks.
         return webhook.Webhook(self, webhook_payload)
+
+    def remove_reaction(self, message_obj: message.Message, emoji_obj: emoji.Emoji) -> reaction.Reaction:
+        for reaction_obj in message_obj.reactions:
+            if reaction_obj.emoji == emoji_obj:
+                reaction_obj.count -= 1
+                if reaction_obj.count <= 0:
+                    reaction_obj.count = 0
+                    message_obj.reactions.remove(reaction_obj)
+                return reaction_obj
+        else:
+            return reaction.Reaction(0, emoji_obj, message_obj)
 
     def set_guild_unavailability(self, guild_id: int, unavailability: bool) -> None:
         guild_obj = self.get_guild_by_id(guild_id)
@@ -318,7 +381,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
         guild_obj = self.get_guild_by_id(guild_id)
         if guild_obj is not None:
             old_emojis = frozenset(guild_obj.emojis.values())
-            new_emojis = frozenset(self.parse_emoji(emoji, guild_id) for emoji in emoji_list)
+            new_emojis = frozenset(self.parse_emoji(emoji_obj, guild_id) for emoji_obj in emoji_list)
             guild_obj.emojis = transform.id_map(new_emojis)
             return old_emojis, new_emojis
 
@@ -359,3 +422,22 @@ class BasicStateRegistry(state_registry.StateRegistry):
             new_message = existing_message
             new_message.update_state(payload)
             return old_message, new_message
+
+    def update_role(
+        self, guild_id: int, payload: custom_types.DiscordObject
+    ) -> typing.Optional[typing.Tuple[role.Role, role.Role]]:
+        role_id = int(payload["id"])
+        existing_role = self.get_role_by_id(role_id)
+
+        if existing_role is not None:
+            old_role = existing_role.copy()
+            new_role = existing_role
+            new_role.update_state(payload)
+            return old_role, new_role
+
+    def __copy__(self):
+        """
+        We don't allow ourselves to be copied, as this would lead to inconsistent state when the models get
+        cloned. Instead, we just return our own reference.
+        """
+        return self
