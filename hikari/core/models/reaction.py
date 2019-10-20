@@ -23,13 +23,13 @@ from __future__ import annotations
 
 import dataclasses
 
-from hikari.core.models import emoji as _emoji
+from hikari.core.models import emoji as _emoji, base
 from hikari.core.models import message as _message
 from hikari.core.utils import auto_repr
 
 
 @dataclasses.dataclass()
-class Reaction:
+class Reaction(base.HikariModel):
     """
     Model for a message reaction object
     """
