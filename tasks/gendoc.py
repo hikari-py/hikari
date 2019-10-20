@@ -77,7 +77,7 @@ def main(*argv):
 
     with open(index_file, "w") as fp:
         print("Writing", fp.name)
-        fp.write(index_template.render(modules=modules))
+        fp.write(index_template.render(modules=modules, documentation_path=documentation_path))
 
     with open(os.path.join(template_dir, "module.rst")) as fp:
         print("Reading", fp.name)
@@ -90,6 +90,7 @@ def main(*argv):
             submodules = [sm for sm in modules if sm.startswith(m) and sm != m]
 
             print("Writing", fp.name)
+
             fp.write(module_template.render(module=m, rule=len(m) * "#", submodules=submodules))
 
 
