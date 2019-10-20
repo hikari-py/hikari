@@ -158,7 +158,7 @@ def sphinx(session: PoetryNoxSession) -> None:
         ".",
         MAIN_PACKAGE,
         pathify(DOCUMENTATION_DIR, "_templates", "gendoc"),
-        pathify(DOCUMENTATION_DIR, TECHNICAL_DIR, "index.rst"),
+        pathify(DOCUMENTATION_DIR, "index.rst"),
         pathify(DOCUMENTATION_DIR, TECHNICAL_DIR),
     )
     session.run("python", "-m", "sphinx.cmd.build", DOCUMENTATION_DIR, ARTIFACT_DIR, "-b", "html")
