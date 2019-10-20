@@ -3,9 +3,6 @@
 {% include "lgplv3.html" %}
 {% extends "!layout.html" %}
 
-{# Add some extra stuff before and use existing with 'super()' call. #}
+{# Don't add a footer #}
 {% block footer %}
-<div class="container-fluid navbar-inverse navbar-expand-lg">
-  {{ super() }}
-</div>
 {% endblock %}
