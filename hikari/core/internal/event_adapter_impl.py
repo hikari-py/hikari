@@ -342,24 +342,44 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         message = self.state_registry.parse_message(payload)
         if message.channel is not None:
             self.dispatch(events.MESSAGE_CREATE, message)
-
-            if message.guild is not None:
-                self.dispatch(events.GUILD_MESSAGE_CREATE, message)
-            else:
-                self.dispatch(events.DM_MESSAGE_CREATE, message)
         else:
             channel_id = int(payload["channel_id"])
             self.logger.warning("ignoring MESSAGE_CREATE for message %s in unknown channel %s", message.id, channel_id)
 
     async def handle_message_update(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_UPDATE, payload)
-        message_id = int(payload["id"])
+        diff = self.state_registry.update_message(payload)
+
+        # Don't bother logging this, it will probably happen a lot, as this state occurs whenever a message not cached
+        # gets edited. It is perfectly normal.
+        if diff is not None:
+            self.dispatch(events.MESSAGE_UPDATE, *diff)
 
     async def handle_message_delete(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_DELETE, payload)
 
+        try:
+            message = self.state_registry.delete_message(int(payload["id"]))
+            self.dispatch(events.MESSAGE_DELETE, message)
+        except KeyError:
+            # Will occur if the message was deleted without being in the cache. This is fine.
+            pass
+
     async def handle_message_delete_bulk(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_DELETE_BULK, payload)
+
+        channel_id = int(payload["channel_id"])
+        messages = (int(message_id) for message_id in payload["ids"])
+        messages = {
+            message_id: transform.try_cast(message_id, self.state_registry.delete_message, None)
+            for message_id in messages
+        }
+
+        channel_obj = self.state_registry.get_channel_by_id(channel_id)
+        if channel_obj is not None:
+            self.dispatch(events.MESSAGE_DELETE_BULK, channel_obj, messages)
+        else:
+            self.logger.warning("Ignoring MESSAGE_DELETE_BULK for unknown channel %s", channel_id)
 
     async def handle_message_reaction_add(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_REACTION_ADD, payload)
