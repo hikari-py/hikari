@@ -412,4 +412,7 @@ class MessageCrosspost:
         self.guild_id = transform.nullable_cast(payload.get("guild_id"), int)
 
 
-__all__ = ("MessageType", "MessageActivityType", "Message", "MessageActivity", "MessageApplication")
+__all__ = [
+    "MessageType", "MessageActivityType", "Message", "MessageActivity", "MessageApplication", "MessageCrosspost"
+    "MessageFlag",
+]
