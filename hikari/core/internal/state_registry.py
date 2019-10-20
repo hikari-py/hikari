@@ -107,6 +107,23 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
+    def delete_message(self, message_id: int) -> message.Message:
+        """
+        Delete the given message id from the cache if it exists,
+
+        Args:
+            message_id:
+                the message ID to delete.
+
+        Returns:
+            the :class:`hikari.core.models.message.Message` that was deleted.
+
+        Raises:
+            KeyError:
+                If the message does not exist in cache.
+        """
+
+    @abc.abstractmethod
     def delete_member_from_guild(self, user_id: int, guild_id: int) -> user.Member:
         """
         Delete the member with the given user ID from the given guild ID's member list.

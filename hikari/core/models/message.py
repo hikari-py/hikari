@@ -107,7 +107,7 @@ class MessageFlag(enum.IntFlag):
 
 
 @dataclasses.dataclass()
-class Message(base.Snowflake):
+class Message(base.Snowflake, base.HikariModel):
     """
     A message that was sent on Discord.
     """
@@ -132,6 +132,8 @@ class Message(base.Snowflake):
         "flags",
         "crosspost_of",
     )
+
+    __copy_by_ref__ = ("author",)
 
     _state: state_registry.StateRegistry
     _channel_id: int
@@ -413,6 +415,10 @@ class MessageCrosspost:
 
 
 __all__ = [
-    "MessageType", "MessageActivityType", "Message", "MessageActivity", "MessageApplication", "MessageCrosspost"
-    "MessageFlag",
+    "MessageType",
+    "MessageActivityType",
+    "Message",
+    "MessageActivity",
+    "MessageApplication",
+    "MessageCrosspost" "MessageFlag",
 ]

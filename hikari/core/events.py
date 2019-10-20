@@ -199,10 +199,3 @@ VOICE_SERVER_UPDATE = "voice_server_update"
 
 RAW_WEBHOOKS_UPDATE = "raw_webhooks_update"
 WEBHOOKS_UPDATE = "webhooks_update"
-
-#: This is purely provided for convenience being a regular event you may wish to listen to. It is designed to make
-#: handling commands more trivial.
-GUILD_MESSAGE_CREATE = "guild_message_create"
-#: This is purely provided for convenience being a regular event you may wish to listen to. It is designed to make
-#: handling commands more trivial.
-DM_MESSAGE_CREATE = "dm_message_create"
