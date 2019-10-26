@@ -35,18 +35,7 @@ token = os.environ["GITLAB_RELEASE_TOKEN"]
 
 
 def try_to_get_changelog():
-    try:
-        major, minor, micro = release.split(".")
-        major, minor, micro = int(major), int(minor), int(micro) - 1
-        previous_release = f"{major}.{minor}.{micro}"
-        changelog = subprocess.check_output(f"git log {previous_release}..HEAD", shell=True).decode("utf-8")
-        re.sub(r"(?<=^Author:/.*)<.*>")
-        print("Changelog:")
-        print(changelog)
-        return changelog
-    except:
-        traceback.print_exc()
-        return "No changelog was able to be generated."
+    return "No changelog was able to be generated."
 
 
 change_log = try_to_get_changelog()

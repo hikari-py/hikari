@@ -32,10 +32,10 @@ def pathify(arg, *args, root=False):
 
 
 # Configuration stuff we probably might move around eventually.
-MAIN_PACKAGE = "hikari.core"
+MAIN_PACKAGE = "hikari"
 OWNER = "nekokatt"
 TECHNICAL_DIR = "technical"
-TEST_PATH = "tests/hikari/core"
+TEST_PATH = "tests/hikari"
 COVERAGE_RC = ".coveragerc"
 ARTIFACT_DIR = "public"
 DOCUMENTATION_DIR = "docs"
