@@ -138,6 +138,7 @@ class HikariModel:
         """
         Updates the internal state of an existing instance of this object from a raw Discord payload.
         """
+        raise NotImplementedError
 
     def copy(self: _T) -> _T:
         """

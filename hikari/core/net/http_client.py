@@ -245,10 +245,10 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Warning:
             You can only specify a maximum of one from `before`, `after`, and `around`. Specifying more than one will
-            cause a :class:`hikari.errors.BadRequest` to be raised.
+            cause a :class:`hikari.core.errors.BadRequest` to be raised.
 
         Note:
-            If you are missing the `VIEW_CHANNEL` permission, you will receive a :class:`hikari.errors.Forbidden`.
+            If you are missing the `VIEW_CHANNEL` permission, you will receive a :class:`hikari.core.errors.Forbidden`.
             If you are instead missing the `READ_MESSAGE_HISTORY` permission, you will always receive zero results, and
             thus an empty list will be returned instead.
 
@@ -256,12 +256,12 @@ class HTTPClient(http_base.BaseHTTPClient):
             A list of message objects.
 
         Raises:
-            hikari.errors.Forbidden:
+            hikari.core.errors.Forbidden:
                 If you lack permission to read the channel.
-            hikari.errors.BadRequest:
+            hikari.core.errors.BadRequest:
                 If your query is malformed, has an invalid value for `limit`, or contains more than one of `after`,
                 `before` and `around`.
-            hikari.errors.NotFound:
+            hikari.core.errors.NotFound:
                 If the given `channel_id` was not found, or the message ID provided for one of the filter arguments
                 is not found.
         """

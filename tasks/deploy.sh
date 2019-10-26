@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
+# Load configuration.
+# source "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"/config.sh
+
 function set-versions() {
   set -x
-  local version="$1"
-  sed "s|^__version__.*|__version__ = \"${version}\"|g" -i hikari/core/__init__.py
-  sed "0,/^version.*$/s||version = \"${version}\"|g" -i pyproject.toml
-  sed "0,/^version.*$/s||version = \"${version}\"|g" -i docs/conf.py
+  bash tasks/transform-versions.sh $1
   set +x
 }
 
 function deploy-to-pypi() {
   poetry build
-  poetry publish --username="$PYPI_USER" --password="$PYPI_PASS" --repository=hikarirepo
+  poetry publish --username="${PYPI_USER}" --password="${PYPI_PASS}" --repository=${POETRY_REPOSITORY_PROPERTY_NAME}
 }
 
 function deploy-to-release-api() {
@@ -22,40 +22,38 @@ function deploy-to-release-api() {
 
 function notify() {
   set -x
-  local version=$1
-  python tasks/notify.py "${version}" "hikari.core"
+  local version=${1}
+  python tasks/notify.py "${version}" "${API_NAME}"
   set +x
 }
 
-function deploy-to-gitlab() {
+function deploy-to-svc() {
   set -x
   local repo
-  local old_version=$1
-  local current_version=$2
+  local old_version=${1}
+  local current_version=${2}
 
   # Init SSH auth.
   eval "$(ssh-agent -s)"
   mkdir ~/.ssh || true
   set +x
-  echo "$GIT_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+  echo "${GIT_SSH_PRIVATE_KEY}" > ${SSH_PRIVATE_KEY_PATH}
   set -x
-  chmod 600 ~/.ssh/id_rsa
-  ssh-keyscan -t rsa gitlab.com >> ~/.ssh/known_hosts
-  ssh-add ~/.ssh/id_rsa
-  ssh git@gitlab.com  # Ensure it works
-  repo=$(echo "$CI_REPOSITORY_URL" | perl -pe 's#.*@(.+?(\:\d+)?)/#git@\1:#')
-  git remote set-url origin "$repo"
-
-  git config user.name "Hikari CI"
-  git config user.email "hikari.ci@hikari.gitlab"
-  git add pyproject.toml docs/conf.py hikari/core/__init__.py
+  chmod 600 ${SSH_PRIVATE_KEY_PATH}
+  ssh-keyscan -t rsa ${GIT_SVC_HOST} >> ~/.ssh/known_hosts
+  ssh-add ${SSH_PRIVATE_KEY_PATH}
+  # Verify the key works.
+  ssh ${GIT_TEST_SSH_PATH}
+  git remote set-url ${REMOTE_NAME} "${REPOSITORY_URL}"
+  git config user.name "${CI_ROBOT_NAME}"
+  git config user.email "${CI_ROBOT_EMAIL}"
   git status
   git diff
-  git commit -am "Deployed $current_version [skip ci]" --allow-empty
-  git push origin master || true
-  (git tag "$current_version" && git push origin "$current_version") || true
-  git checkout staging
-  (git merge master --no-ff --strategy-option theirs -m "Merge deployed master $current_version into staging [skip ci]" && git push origin staging) || true
+  git commit -am "Deployed ${current_version} ${SKIP_CI_COMMIT_PHRASE}" --allow-empty
+  git push ${REMOTE_NAME} ${PROD_BRANCH} || true
+  (git tag "${current_version}" && git push ${REMOTE_NAME} "${current_version}") || true
+  git checkout ${PREPROD_BRANCH}
+  (git merge ${PROD_BRANCH} --no-ff --strategy-option theirs -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_CI_PHRASE}" && git push ${REMOTE_NAME} ${PREPROD_BRANCH}) || true
   set +x
 }
 
@@ -65,36 +63,33 @@ function do-deployment() {
   local current_version
 
   git fetch -ap
-  git checkout -f "${CI_COMMIT_REF_NAME}"
+  git checkout -f "${COMMIT_REF}"
 
-  old_version=$(grep -oP "^version\s*=\s*\"\K[^\"]*" pyproject.toml)
-  current_version=$(python tasks/make-version-string.py "$CI_COMMIT_REF_NAME")
+  old_version=$(grep -oP "${CURRENT_VERSION_PATTERN}" "${CURRENT_VERSION_FILE}")
+  current_version=$(python tasks/make-version-string.py "${COMMIT_REF}")
 
-  poetry config repositories.hikarirepo "$PYPI_REPO"
+  poetry config repositories.${POETRY_REPOSITORY_PROPERTY_NAME} "${PYPI_REPO}"
 
-  case $CI_COMMIT_REF_NAME in
-    master)
+  case "${COMMIT_REF}" in
+    ${PROD_BRANCH})
       # Ensure we have the staging ref as well as the master one
-      git checkout staging -f && git checkout master -f
-      set-versions "$current_version"
+      git checkout "${PREPROD_BRANCH}" -f && git checkout "${PROD_BRANCH}" -f
+      set-versions "${current_version}"
       # Push to GitLab and update both master and staging.
       deploy-to-pypi
-      deploy-to-gitlab "$old_version" "$current_version"
-      deploy-to-release-api "$current_version" || true
-      # Trigger Hikari deployment in main umbrella repo.
-      echo "Triggering hikari package rebuild"
-      curl --request POST --form token="$HIKARI_TRIGGER_TOKEN" --form ref=master https://gitlab.com/api/v4/projects/13535679/trigger/pipeline | python -m json.tool
+      deploy-to-svc "${old_version}" "${current_version}"
+      deploy-to-release-api "${current_version}" || true
       ;;
-    staging)
-      set-versions "$current_version"
+    ${PREPROD_BRANCH})
+      set-versions "${current_version}"
       deploy-to-pypi
       ;;
     *)
-      echo -e "\e[1;31m$CI_COMMIT_REF_NAME is not master or staging, so will not be updated.\e[0m"
+      echo -e "\e[1;31m${COMMIT_REF} is not ${PROD_BRANCH} or ${PREPROD_BRANCH}, so will not be updated.\e[0m"
       exit 1
       ;;
   esac
 
-  notify "$current_version"
+  notify "${current_version}"
   set +x
 }

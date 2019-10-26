@@ -32,10 +32,10 @@ def pathify(arg, *args, root=False):
 
 
 # Configuration stuff we probably might move around eventually.
-MAIN_PACKAGE = "hikari.core"
+MAIN_PACKAGE = "hikari"
 OWNER = "nekokatt"
 TECHNICAL_DIR = "technical"
-TEST_PATH = "tests/hikari/core"
+TEST_PATH = "tests/hikari"
 COVERAGE_RC = ".coveragerc"
 ARTIFACT_DIR = "public"
 DOCUMENTATION_DIR = "docs"
@@ -158,7 +158,7 @@ def sphinx(session: PoetryNoxSession) -> None:
         ".",
         MAIN_PACKAGE,
         pathify(DOCUMENTATION_DIR, "_templates", "gendoc"),
-        pathify(DOCUMENTATION_DIR, TECHNICAL_DIR, "index.rst"),
+        pathify(DOCUMENTATION_DIR, "index.rst"),
         pathify(DOCUMENTATION_DIR, TECHNICAL_DIR),
     )
     session.run("python", "-m", "sphinx.cmd.build", DOCUMENTATION_DIR, ARTIFACT_DIR, "-b", "html")

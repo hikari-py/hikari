@@ -155,12 +155,12 @@ class Guild(base.Snowflake, base.HikariModel):
     #: Roles in this guild. Maps IDs to the role object they represent.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.role.Role` objects
-    roles: typing.Mapping[int, role.Role]
+    roles: typing.Dict[int, role.Role]
 
     #: Emojis in this guild. Maps IDs to the role object they represent.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.emoji.GuildEmoji` objects
-    emojis: typing.Mapping[int, emoji.GuildEmoji]
+    emojis: typing.Dict[int, emoji.GuildEmoji]
 
     #: Enabled features in this guild.
     #:

@@ -107,7 +107,7 @@ class MessageFlag(enum.IntFlag):
 
 
 @dataclasses.dataclass()
-class Message(base.Snowflake):
+class Message(base.Snowflake, base.HikariModel):
     """
     A message that was sent on Discord.
     """
@@ -132,6 +132,8 @@ class Message(base.Snowflake):
         "flags",
         "crosspost_of",
     )
+
+    __copy_by_ref__ = ("author",)
 
     _state: state_registry.StateRegistry
     _channel_id: int
@@ -203,8 +205,8 @@ class Message(base.Snowflake):
 
     #: Message reactions, if any.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.reaction.Reaction`
-    reactions: typing.Sequence[reaction.Reaction]
+    #: :type: :class:`typing.List` of :class:`hikari.core.models.reaction.Reaction`
+    reactions: typing.List[reaction.Reaction]
 
     #: Optional crossposting reference. Only valid if the message is a cross post.
     #:
@@ -234,7 +236,7 @@ class Message(base.Snowflake):
         # for changes to the initial state due to Discord being consistently inconsistent in their API behaviour and
         # output... they won't specify what can change so I have to make an educated guess at this until I have
         # something more working that I can try this out with easily...
-        self.reactions = custom_types.EMPTY_SEQUENCE
+        self.reactions = []
         self.activity = None
         self.application = None
         self.edited_at = None
@@ -244,9 +246,7 @@ class Message(base.Snowflake):
         self.pinned = False
         self.application = None
         self.activity = None
-
         self.content = None
-        self.reactions = custom_types.EMPTY_SEQUENCE
 
         self.update_state(payload)
 
@@ -279,10 +279,9 @@ class Message(base.Snowflake):
             self.content = payload.get("content")
 
         if "reactions" in payload:
-            self.reactions = [
-                reaction.Reaction(self._state, reaction_obj, self)
-                for reaction_obj in payload.get("reactions", custom_types.EMPTY_SEQUENCE)
-            ]
+            self.reactions = []
+            for reaction_payload in payload.get("reactions"):
+                self._state.parse_reaction(reaction_payload)
 
     @property
     def guild(self) -> typing.Optional[guild.Guild]:
@@ -412,4 +411,12 @@ class MessageCrosspost:
         self.guild_id = transform.nullable_cast(payload.get("guild_id"), int)
 
 
-__all__ = ("MessageType", "MessageActivityType", "Message", "MessageActivity", "MessageApplication")
+__all__ = [
+    "MessageType",
+    "MessageActivityType",
+    "Message",
+    "MessageActivity",
+    "MessageApplication",
+    "MessageCrosspost",
+    "MessageFlag",
+]
