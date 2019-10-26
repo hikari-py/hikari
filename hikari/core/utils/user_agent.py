@@ -27,11 +27,11 @@ def library_version() -> str:
     Creates a string that is representative of the version of this library.
 
     Example:
-        hikari.core 2019.12.12.1399
+        hikari 2019.12.12.1399
     """
-    from hikari.core import __version__
+    from hikari import __version__
 
-    return f"hikari.core {__version__}"
+    return f"hikari {__version__}"
 
 
 def python_version() -> str:
@@ -67,11 +67,11 @@ def user_agent() -> str:
 
     Examples:
         CPython3.7:
-            DiscordBot (https://gitlab.com/nekokatt/hikari.core, 0.0.1a) CPython 3.7.3 GCC 8.2.1 20181127 Linux
+            DiscordBot (https://gitlab.com/nekokatt/hikari, 0.0.1a) CPython 3.7.3 GCC 8.2.1 20181127 Linux
         PyPy3.6:
-            DiscordBot (https://gitlab.com/nekokatt/hikari.core, 0.0.1a) PyPy 3.6.1 release-pypy3.6-v7.1.1 Linux
+            DiscordBot (https://gitlab.com/nekokatt/hikari, 0.0.1a) PyPy 3.6.1 release-pypy3.6-v7.1.1 Linux
     """
-    from hikari.core import __version__, __url__
+    from hikari import __version__, __url__
 
     system = system_type()
     python = python_version()

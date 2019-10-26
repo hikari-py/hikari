@@ -22,7 +22,7 @@ from hikari.core.utils import meta
 
 def test_library_version_is_callable_and_produces_string():
     result = hikari.core.utils.user_agent.library_version()
-    assert result.startswith("hikari.core ")
+    assert result.startswith("hikari ")
 
 
 def test_python_version_is_callable_and_produces_string():

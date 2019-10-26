@@ -1,4 +1,4 @@
-# hikari core
+# hikari
 
 An opinionated Discord API for Python 3 and asyncio.
 
@@ -34,9 +34,6 @@ This API is **not** designed to be backwards compatible with ye olde Python vers
 reason: that reason is optimisation, usability, and readability. If you want to use a version of Python that is three
 major versions behind the most recent major stable release, this is not for you.
 
-This API is **not** a bot framework (e.g. basic IoC functionality, command routing, etc). A separate Hikari component
-may be released once this is nearer to a completed state in order to handle providing this.
-
 It is **not** a self-botting API. Go elsewhere. Unlike other APIs, the aim is to not provide the user with tools
 clearly implemented for the sole purpose of exploiting Discord and breaching their ToS. It screws up your experience of
 their platform and it screws up my experience of their platform, so this API will not encourage it in any way.
@@ -47,7 +44,7 @@ It currently is **not** able to provide voice functionality. Again, this may be 
 
 ## FAQ
 
-### Contributing to Hikari Core
+### Contributing to Hikari
 
 **When I try to run `nox`, it complains that `pip` cannot be run with `--user`. How do I run the tests?**
 
