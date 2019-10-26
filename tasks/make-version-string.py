@@ -35,7 +35,7 @@ pypi_server = "test.pypi.org" if is_staging else "pypi.org"
 api_name = os.environ["API_NAME"]
 pypi_json_url = f"https://{pypi_server}/pypi/{api_name}/json"
 
-print("Querying API at", pypi_json_url)
+print("Querying API at", pypi_json_url, file=sys.stderr)
 
 with requests.get(pypi_json_url) as resp:
     print("Looking at versions on", pypi_server, file=sys.stderr)
