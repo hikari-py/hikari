@@ -20,10 +20,10 @@ requires        = ["poetry>=0.12"]
 build-backend   = "poetry.masonry.api"
 
 [tool.poetry]
-name            = "hikari.core"
-version = "0.0.19"
+name            = "hikari"
+version = "0.0.27"
 description     = "A sane Discord API for Python using asyncio | Core client"
-authors         = ["Nekoka.tt <nekoka.tt@outlook.com>"]
+authors         = ["Nekokatt <nekoka.tt@outlook.com>"]
 license         = "LGPL-3.0-ONLY"
 readme          = "README.md"
 classifiers     = [
@@ -55,16 +55,18 @@ asynctest       = "~0.13"
 async-timeout   = "~3.0"
 coverage        = "~4.5"
 nox             = "~2019"
-pytest          = "~5.1"
+pytest          = "~5.2"
 pytest-asyncio  = "~0.10"
-pytest-cov      = "~2.7"
+pytest-cov      = "~2.8"
 pytest-html     = "~2.0"
-pytest-testdox  = "~1.1"
+pytest-testdox  = "~1.2"
 requests        = "~2.22"
-sphinx          = "~2.1"
-sphinx-autodoc-typehints = "~1.6"
+sphinx          = "~2.2"
 sphinx-bootstrap-theme = "~0.7"
+sphinx-autodoc-typehints = "~1.9"
 Jinja2          = "~2.10"
+
+# Sphinx seems to die without this, annoyingly.
 importlib-metadata = "0.23"
 
 [tool.black]

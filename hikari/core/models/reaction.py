@@ -23,11 +23,9 @@ from __future__ import annotations
 
 import dataclasses
 
-from hikari.core.internal import state_registry
-from hikari.core.models import emoji, base
-from hikari.core.models import message
+from hikari.core.models import emoji as _emoji, base
+from hikari.core.models import message as _message
 from hikari.core.utils import auto_repr
-from hikari.core.utils import custom_types
 
 
 @dataclasses.dataclass()
@@ -36,43 +34,28 @@ class Reaction(base.HikariModel):
     Model for a message reaction object
     """
 
-    __slots__ = ("_state", "count", "me", "emoji", "message")
-
-    _state: state_registry.StateRegistry
+    __slots__ = ("count", "emoji", "message")
 
     #: The number of times the emoji has been used on this message.
     #:
     #: :type: :class:`int`
+    #:
+    #: Warning:
+    #:     This value may not be completely accurate. To get an accurate count, either request the message from the
+    #:     HTTP API, or request the list of users who reacted to it.
     count: int
 
-    #: True if the bot added this.
-    #:
-    #: :type: :class:`bool`
-    me: bool
-
-    #: The emoji used for the reaction
+    #: The emoji used for the reaction.
     #:
     #: :type: :class:`hikari.core.models.emoji.AbstractEmoji`
-    emoji: emoji.Emoji
+    emoji: _emoji.Emoji
 
-    #: The message that was reacted on
+    #: The message that was reacted on.
     #:
     #: :type: :class:`hikari.core.models.message.Message`
-    message: message.Message
+    message: _message.Message
 
-    __repr__ = auto_repr.repr_of("me", "count", "emoji")
-
-    def __init__(
-        self,
-        global_state: state_registry.StateRegistry,
-        payload: custom_types.DiscordObject,
-        message_obj: message.Message,
-    ) -> None:
-        self._state = global_state
-        self.count = payload["count"]
-        self.me = payload.get("me", False)
-        self.emoji = global_state.parse_emoji(payload["emoji"], None)
-        self.message = message_obj
+    __repr__ = auto_repr.repr_of("count", "emoji", "message.id")
 
 
 __all__ = ["Reaction"]

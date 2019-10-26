@@ -25,7 +25,7 @@ import abc
 import datetime
 import typing
 
-from hikari.core.models import channel
+from hikari.core.models import channel, reaction
 from hikari.core.models import emoji
 from hikari.core.models import guild
 from hikari.core.models import message
@@ -56,6 +56,21 @@ class StateRegistry(abc.ABC):
         ...
 
     @abc.abstractmethod
+    def add_reaction(self, message_obj: message.Message, emoji_obj: emoji.Emoji) -> reaction.Reaction:
+        """
+        Adds 1 to the count for the reaction.
+
+        Args:
+            emoji_obj:
+                the emoji of the reaction.
+            message_obj:
+                the message the reaction was on.
+
+        Returns:
+            a :class:`hikari.core.models.reaction.Reaction` object.
+        """
+
+    @abc.abstractmethod
     def delete_channel(self, channel_id: int) -> channel.Channel:
         """
         Delete the given channel from the cache. This may be either a channel from a guild or a DM channel.
@@ -82,7 +97,7 @@ class StateRegistry(abc.ABC):
                 the ID of the emoji to delete.
 
         Returns:
-            The :class:`emoji.GuildEmoji` that was deleted.
+            The :class:`hikari.core.models.emoji.GuildEmoji` that was deleted.
 
         Raises:
             KeyError:
@@ -99,11 +114,28 @@ class StateRegistry(abc.ABC):
                 the guild ID to delete.
 
         Returns:
-            the :class:`guild.Guild` that was deleted.
+            the :class:`hikari.core.models.guild.Guild` that was deleted.
 
         Raises:
             KeyError:
                 If the guild does not exist in cache.
+        """
+
+    @abc.abstractmethod
+    def delete_message(self, message_id: int) -> message.Message:
+        """
+        Delete the given message id from the cache if it exists,
+
+        Args:
+            message_id:
+                the message ID to delete.
+
+        Returns:
+            the :class:`hikari.core.models.message.Message` that was deleted.
+
+        Raises:
+            KeyError:
+                If the message does not exist in cache.
         """
 
     @abc.abstractmethod
@@ -118,11 +150,32 @@ class StateRegistry(abc.ABC):
                 the guild ID to delete from
 
         Returns:
-            the :class:`user.Member` that was deleted.
+            the :class:`hikari.core.models.user.Member` that was deleted.
 
         Raises:
             KeyError:
                 If the member is not in the given guild or the given guild does not exist.
+        """
+
+    @abc.abstractmethod
+    def delete_reaction_from_message(self, message_id: int, user_id: int, emoji_obj: emoji.Emoji) -> reaction.Reaction:
+        """
+        Attempt to remove the given reaction from the given message ID.
+
+        Args:
+            message_id:
+                the ID of the message to look up.
+            user_id:
+                the ID of the user who made the reaction.
+            emoji_obj:
+                the parsed emoji object that the reaction was made as.
+
+        Returns:
+            the :class:`hikari.core.models.Reaction` that was deleted.
+
+        Raises:
+            KeyError:
+                If the message or reaction is not cached.
         """
 
     @abc.abstractmethod
@@ -137,7 +190,7 @@ class StateRegistry(abc.ABC):
                 the ID of the role to delete.
 
         Returns:
-            The :class:`role.Role` that was deleted.
+            The :class:`hikari.core.models.role.Role` that was deleted.
 
         Note:
             This will also update all members in the guild to not have that role anymore.
@@ -158,7 +211,7 @@ class StateRegistry(abc.ABC):
                 the channel ID.
 
         Returns:
-            a :class:`channel.Channel` derivative, or `None` if nothing is found.
+            a :class:`hikari.core.models.channel.Channel` derivative, or `None` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -171,7 +224,7 @@ class StateRegistry(abc.ABC):
                 the ID of the guild to look up.
 
         Returns:
-            a :class:`guild.Guild` object, or `None` if one was not found.
+            a :class:`hikari.core.models.guild.Guild` object, or `None` if one was not found.
         """
 
     @abc.abstractmethod
@@ -184,7 +237,7 @@ class StateRegistry(abc.ABC):
                 the ID of the message to look up.
 
         Returns:
-            a :class:`message.Message` object, or `None` if one was not found.
+            a :class:`hikari.core.models.message.Message` object, or `None` if one was not found.
         """
 
     @abc.abstractmethod
@@ -199,7 +252,8 @@ class StateRegistry(abc.ABC):
                 the ID of the role to look up.
 
         Returns:
-            a :class:`role.Role` object, or `None` if a role/guild was not found matching the given IDs.
+            a :class:`hikari.core.models.role.Role` object, or `None` if a role/guild was not found matching the given
+            IDs.
         """
 
     @abc.abstractmethod
@@ -212,7 +266,22 @@ class StateRegistry(abc.ABC):
                 the ID of the user to look up.
 
         Returns:
-            a :class:`user.User` object, or `None` if one was not found.
+            a :class:`hikari.core.models.user.User` object, or `None` if one was not found.
+        """
+
+    @abc.abstractmethod
+    def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[user.Member]:
+        """
+        Find a member in a specific guild by their ID.
+
+        Args:
+            user_id:
+                the ID of the member to look up.
+            guild_id:
+                the ID of the guild to look in.
+
+        Returns:
+            a :class:`hikari.core.models.user.Member` object, or `None` if one was not found.
         """
 
     @abc.abstractmethod
@@ -225,7 +294,7 @@ class StateRegistry(abc.ABC):
                 the payload of the bot user.
 
         Returns:
-            a :class:`user.BotUser` object.
+            a :class:`hikari.core.models.user.BotUser` object.
         """
 
     @abc.abstractmethod
@@ -243,7 +312,7 @@ class StateRegistry(abc.ABC):
                 due to an inconsistency in the public Discord API when parsing guild channels.
 
         Returns:
-            a :class:`channel.Channel` object.
+            a :class:`hikari.core.models.channel.Channel` object.
         """
 
     @abc.abstractmethod
@@ -258,7 +327,7 @@ class StateRegistry(abc.ABC):
                 the ID of the guild the emoji is from.
 
         Returns:
-            a :class:`emoji.AbstractEmoji` object.
+            a :class:`hikari.core.models.emoji.AbstractEmoji` object.
         """
 
     @abc.abstractmethod
@@ -271,7 +340,7 @@ class StateRegistry(abc.ABC):
                 the payload of the guild.
 
         Returns:
-            a :class:`guild.Guild` object.
+            a :class:`hikari.core.models.guild.Guild` object.
         """
 
     @abc.abstractmethod
@@ -286,8 +355,8 @@ class StateRegistry(abc.ABC):
                 the ID of the guild the member is from.
 
         Returns:
-            a :class:`user.Member` object if the guild at the given `guild_id` is already cached. Otherwise, `None`
-            is returned.
+            a :class:`hikari.core.models.user.Member` object if the guild at the given `guild_id` is already cached.
+            Otherwise, `None` is returned.
         """
 
     @abc.abstractmethod
@@ -300,7 +369,7 @@ class StateRegistry(abc.ABC):
                 the payload of the message.
 
         Returns:
-            a :class:`message.Message` object.
+            a :class:`hikari.core.models.message.Message` object.
 
         Warning:
             This will not validate whether internal channels and guilds exist. You must do that yourself, as there
@@ -326,7 +395,21 @@ class StateRegistry(abc.ABC):
                 the payload containing the presence.
 
         Returns:
-            a :class:`presence.Presence` object.
+            a :class:`hikari.core.models.presence.Presence` object.
+        """
+
+    @abc.abstractmethod
+    def parse_reaction(self, reaction_payload: custom_types.DiscordObject) -> typing.Optional[reaction.Reaction]:
+        """
+        Attempt to parse a reaction object and store it on the corresponding message.
+
+        Args:
+            reaction_payload:
+                the reaction object to parse.
+
+        Returns:
+            a :class:`hikari.core.models.reaction.Reaction` object if the message was cached. Otherwise, `None` is
+            returned instead.
         """
 
     @abc.abstractmethod
@@ -341,7 +424,7 @@ class StateRegistry(abc.ABC):
                 the ID of the owning guild.
 
         Returns:
-            a :class:`role.Role` object.
+            a :class:`hikari.core.models.role.Role` object.
         """
 
     @abc.abstractmethod
@@ -354,7 +437,7 @@ class StateRegistry(abc.ABC):
                 the payload of the user.
 
         Returns:
-            a :class:`user.User` object.
+            a :class:`hikari.core.models.user.User` object.
 
         Note:
             If the user is detected to be the bot user for the account you are signed in as, then one can expect
@@ -374,7 +457,25 @@ class StateRegistry(abc.ABC):
                 the payload of the webhook.
 
         Returns:
-            a :class:`webhook.Webhook` object.
+            a :class:`hikari.core.models.webhook.Webhook` object.
+        """
+
+    @abc.abstractmethod
+    def remove_reaction(self, message_obj: message.Message, emoji_obj: emoji.Emoji) -> reaction.Reaction:
+        """
+        Subtracts 1 from the count for the reaction.
+
+        Args:
+            emoji_obj:
+                the emoji of the reaction.
+            message_obj:
+                the message the reaction was on.
+
+        Note:
+            If the count reaches zero, the reaction will be removed from the message additionally.
+
+        Returns:
+            a :class:`hikari.core.models.reaction.Reaction` object.
         """
 
     @abc.abstractmethod
@@ -401,7 +502,7 @@ class StateRegistry(abc.ABC):
                 the raw payload to update the channel with. This contains the ID of the channel also.
 
         Returns:
-            Two :class:`channel.Channel` objects. The first represents the old channel state, and
+            Two :class:`hikari.core.models.channel.Channel` objects. The first represents the old channel state, and
             the second represents the new channel state. If no channel was cached, this returns `None`.
         """
 
@@ -418,7 +519,7 @@ class StateRegistry(abc.ABC):
                 The raw guild payload to update. This contains the ID of the guild also.
 
         Returns:
-            Two :class:`guild.Guild` objects. The first represents the old guild state, and
+            Two :class:`hikari.core.models.guild.Guild` objects. The first represents the old guild state, and
             the second represents the new guild state. If no guild was cached, this returns `None`.
         """
 
@@ -473,11 +574,12 @@ class StateRegistry(abc.ABC):
                 the ID of the member to update.
 
         Returns:
-            Two :class:`user.Member` objects. The first being the old state of the member and the
+            Two :class:`hikari.core.models.user.Member` objects. The first being the old state of the member and the
             second being the new state (if the member exists). If it does not exist in that guild, or the guild itself
             is not cached, then `None` is returned instead.
         """
 
+    @abc.abstractmethod
     def update_member_presence(
         self, guild_id: int, user_id: int, presence_payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[user.Member, presence.Presence, presence.Presence]]:
@@ -493,11 +595,13 @@ class StateRegistry(abc.ABC):
                 The new presence to set.
 
         Returns:
-            Three items. The first being the :class:`user.Member` that was updated, the second
-            being the :class:`presence.Presence` before, and the third being the :class:`presence.Presence` now.
+            Three items. The first being the :class:`hikari.core.models.user.Member` that was updated, the second
+            being the :class:`hikari.core.models.presence.Presence` before, and the third being the
+            :class:`hikari.core.models.presence.Presence` now.
             If the user, member, or guild does not exist in the cache, then `None` is returned instead.
         """
 
+    @abc.abstractmethod
     def update_message(
         self, payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[message.Message, message.Message]]:
@@ -509,10 +613,12 @@ class StateRegistry(abc.ABC):
                 The message_update payload to parse.
 
         Returns:
-            Two items. The first being the old :class:`message.Message` and the second being the
-            new :class:`message.Message`. If the message was not cached, then `None` is returned instead of a tuple.
+            Two items. The first being the old :class:`hikari.core.models.message.Message` and the second being the
+            new :class:`hikari.core.models.message.Message`. If the message was not cached, then `None` is returned
+            instead of a tuple.
         """
 
+    @abc.abstractmethod
     def update_role(
         self, guild_id: int, role_payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[role.Role, role.Role]]:
@@ -526,17 +632,14 @@ class StateRegistry(abc.ABC):
                 The role to update.
 
         Returns:
-            A :class:`tuple` of two items: the first being the old :class:`role.Role` state and the second being the
-            new :class:`role.Role` state. If the `guild_id` does not correspond to a guild in the cache, then
-            `None` is returned instead.
+            A :class:`tuple` of two items: the first being the old :class:`hikari.core.models.role.Role` state and the
+            second being the new :class:`hikari.core.models.role.Role` state. If the `guild_id` does not correspond to
+            a guild in the cache, then `None` is returned instead.
         """
 
+    @abc.abstractmethod
     def __copy__(self):
-        """
-        We don't allow ourselves to be copied, as this would lead to inconsistent state when the models get
-        cloned. Instead, we just return our own reference.
-        """
-        return self
+        ...
 
 
 __all__ = ["StateRegistry"]

@@ -332,7 +332,7 @@ class Embed(base.HikariModel):
         return embed
 
 
-class _EmbedComponent(base.HikariModel):
+class EmbedPart(base.HikariModel):
     __slots__ = ()
 
     def to_dict(self, *, dict_factory=dict):
@@ -348,7 +348,7 @@ class _EmbedComponent(base.HikariModel):
 
 
 @dataclasses.dataclass()
-class EmbedVideo(_EmbedComponent):
+class EmbedVideo(EmbedPart):
     """A video in an embed."""
 
     __slots__ = ("url", "height", "width")
@@ -369,7 +369,7 @@ class EmbedVideo(_EmbedComponent):
 
 
 @dataclasses.dataclass()
-class EmbedImage(_EmbedComponent):
+class EmbedImage(EmbedPart):
     """An video in an embed."""
 
     __slots__ = ("url", "proxy_url", "height", "width")
@@ -393,7 +393,7 @@ class EmbedImage(_EmbedComponent):
 
 
 @dataclasses.dataclass()
-class EmbedProvider(_EmbedComponent):
+class EmbedProvider(EmbedPart):
     """A provider in an embed."""
 
     __slots__ = ("name", "url")
@@ -407,7 +407,7 @@ class EmbedProvider(_EmbedComponent):
 
 
 @dataclasses.dataclass()
-class EmbedAuthor(_EmbedComponent):
+class EmbedAuthor(EmbedPart):
     """An author in an embed."""
 
     __slots__ = ("name", "url", "icon_url", "proxy_icon_url")
@@ -431,7 +431,7 @@ class EmbedAuthor(_EmbedComponent):
 
 
 @dataclasses.dataclass()
-class EmbedFooter(_EmbedComponent):
+class EmbedFooter(EmbedPart):
     """A footer in an embed."""
 
     __slots__ = ("icon_url", "text", "proxy_icon_url")
@@ -452,7 +452,7 @@ class EmbedFooter(_EmbedComponent):
 
 
 @dataclasses.dataclass()
-class EmbedField(_EmbedComponent):
+class EmbedField(EmbedPart):
     """A field in an embed."""
 
     __slots__ = ("name", "value", "inline")
@@ -465,6 +465,3 @@ class EmbedField(_EmbedComponent):
         self.name = name
         self.value = value
         self.inline = inline
-
-
-__all__ = ["Embed"]
