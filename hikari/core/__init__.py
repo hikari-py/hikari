@@ -22,9 +22,3 @@ A lightweight, flexible, customizable Discord API wrapper for Python.
 This package contains the core components for this framework. This includes the basic network level, models, rate
 limiting, and basic client.
 """
-__author__ = "Nekoka.tt"
-__contributors__ = {"LunarCoffee", "raatty", "Tmpod", "Zach", "thomm.o", "rock500", "davfsa"}
-__copyright__ = f"© 2019 Nekoka.tt"
-__license__ = "LGPLv3"
-__version__ = "0.0.19"
-__url__ = "https://gitlab.com/nekokatt/hikari.core"
