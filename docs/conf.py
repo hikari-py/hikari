@@ -35,7 +35,7 @@ sys.path.insert(0, os.path.abspath(".."))
 
 # -- Project information -----------------------------------------------------
 
-project = "Hikari.Core"
+project = "Hikari"
 author = "Nekokatt"
 copyright = author
 version = "0.0.19"
@@ -91,9 +91,8 @@ html_theme_options = {
     # an arbitrary url.
     "navbar_links": [
         ("Hikari", "http://gitlab.com/nekokatt/hikari", True),
-        ("Hikari.Core", "http://gitlab.com/nekokatt/hikari.core", True),
-        ("Wiki", "http://gitlab.com/nekokatt/hikari.core/wikis", True),
-        ("CI", "http://gitlab.com/nekokatt/hikari.core/pipelines", True),
+        ("Wiki", "http://gitlab.com/nekokatt/hikari/wikis", True),
+        ("CI", "http://gitlab.com/nekokatt/hikari/pipelines", True),
     ],
     # Render the next and previous page links in navbar. (Default: true)
     "navbar_sidebarrel": False,

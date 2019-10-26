@@ -20,10 +20,10 @@ requires        = ["poetry>=0.12"]
 build-backend   = "poetry.masonry.api"
 
 [tool.poetry]
-name            = "hikari.core"
-version = "0.0.19"
+name            = "hikari"
+version = "0.0.27"
 description     = "A sane Discord API for Python using asyncio | Core client"
-authors         = ["Nekoka.tt <nekoka.tt@outlook.com>"]
+authors         = ["Nekokatt <nekoka.tt@outlook.com>"]
 license         = "LGPL-3.0-ONLY"
 readme          = "README.md"
 classifiers     = [
