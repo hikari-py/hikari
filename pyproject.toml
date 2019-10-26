@@ -65,6 +65,7 @@ sphinx          = "~2.1"
 sphinx-autodoc-typehints = "~1.6"
 sphinx-bootstrap-theme = "~0.7"
 Jinja2          = "~2.10"
+importlib-metadata = "0.23"
 
 [tool.black]
 line-length     = 120
