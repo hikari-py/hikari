@@ -33,6 +33,7 @@ try:
     COLOUR = os.environ["RELEASE_WEBHOOK_COLOUR"]
     DESCRIPTION = os.environ["RELEASE_WEBHOOK_DESCRIPTION"]
     BRIEF = f"**[{VERSION}] New {ENVIRONMENT} deployment!**"
+    AUTHOR = os.environ["REPO_AUTHOR"]
 
     requests.post(
         WEBHOOK_URL,
@@ -42,7 +43,7 @@ try:
                     "title": NAME,
                     "footer": {"text": f"{NAME} v{VERSION} has just been put into {ENVIRONMENT}."},
                     "color": int(COLOUR, 16),
-                    "author": {"name": "Nekoka.tt"},
+                    "author": {"name": AUTHOR},
                     "description": BRIEF + "\n\n" + DESCRIPTION,
                 }
             ]
