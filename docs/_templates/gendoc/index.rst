@@ -1,5 +1,5 @@
-Hikari.Core Technical Documentation
-###################################
+Hikari Technical Documentation
+##############################
 
 This is for version |version|. |staging_link|
 
