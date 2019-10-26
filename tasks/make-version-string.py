@@ -33,9 +33,11 @@ is_staging = len(sys.argv) > 1 and sys.argv[1].casefold() == "staging"
 print("Will use", "staging" if is_staging else "prod", "configuration for this next version", file=sys.stderr)
 pypi_server = "test.pypi.org" if is_staging else "pypi.org"
 api_name = os.environ["API_NAME"]
+pypi_json_url = f"https://{pypi_server}/pypi/{api_name}/json"
 
+print("Querying API at", pypi_json_url, file=sys.stderr)
 
-with requests.get(f"https://{pypi_server}/pypi/${api_name}/json") as resp:
+with requests.get(pypi_json_url) as resp:
     print("Looking at versions on", pypi_server, file=sys.stderr)
 
     if resp.status_code == 404:

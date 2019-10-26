@@ -37,11 +37,11 @@ function deploy-to-svc() {
   eval "$(ssh-agent -s)"
   mkdir ~/.ssh || true
   set +x
-  echo "${GIT_SSH_PRIVATE_KEY}" > ${SSH_PRIVATE_KEY_PATH}
+  echo "${GIT_SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
   set -x
-  chmod 600 ${SSH_PRIVATE_KEY_PATH}
+  chmod 600 ~/.ssh/id_rsa
   ssh-keyscan -t rsa ${GIT_SVC_HOST} >> ~/.ssh/known_hosts
-  ssh-add ${SSH_PRIVATE_KEY_PATH}
+  ssh-add ~/.ssh/id_rsa
   # Verify the key works.
   ssh ${GIT_TEST_SSH_PATH}
   git remote set-url ${REMOTE_NAME} "${REPOSITORY_URL}"
