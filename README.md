@@ -21,7 +21,7 @@ manually. The Discord API provides too much functionality to be able to feasibly
 every commit. Aiming for testability also enables this API to be kept as tidy as possible internally, as each testable
 unit is forced to be easily mockable or able to be extracted and used independently of the rest of the API. Think LEGO,
 but it is Python code. The same is said for security testing, documentation generation, and releasing. The entire
-deployment pipeline is automated as much as possible to keep the updates flowing and to prevent human error wwherever
+deployment pipeline is automated as much as possible to keep the updates flowing and to prevent human error wherever
 possible.
 
 The final aim is for maintainability. This API attempts to be as documented and expandable as possible internally. If
