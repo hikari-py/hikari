@@ -21,6 +21,7 @@ A basic type of registry that handles storing global state.
 """
 from __future__ import annotations
 
+import contextlib
 import datetime
 import typing
 import weakref
@@ -109,35 +110,42 @@ class StateRegistryImpl(state_registry.StateRegistry):
         elif channel_obj in self._dm_channels:
             channel_obj: channels.DMChannel
             del self._dm_channels[channel_id]
-        else:
-            raise KeyError(str(channel_id))
 
     def delete_emoji(self, emoji_obj: emojis.GuildEmoji) -> None:
-        del self._emojis[emoji_obj.id]
+        with contextlib.suppress(KeyError):
+            del self._emojis[emoji_obj.id]
+
         guild_obj = emoji_obj.guild
-        del guild_obj.emojis[emoji_obj]
+
+        with contextlib.suppress(KeyError):
+            del guild_obj.emojis[emoji_obj]
 
     def delete_guild(self, guild_obj: guilds.Guild) -> None:
-        del self._guilds[guild_obj.id]
+        with contextlib.suppress(KeyError):
+            del self._guilds[guild_obj.id]
 
     def delete_message(self, message_obj: messages.Message) -> None:
-        if message_obj in self._message_cache:
+        with contextlib.suppress(KeyError):
             message_obj = self._message_cache[message_obj.id]
             del self._message_cache[message_obj.id]
 
     def delete_member(self, member_obj: users.Member) -> None:
-        del member_obj.guild.members[member_obj.id]
+        with contextlib.suppress(KeyError):
+            del member_obj.guild.members[member_obj.id]
 
     def delete_reaction(self, message_obj: messages.Message, user_obj: users.User, emoji_obj: emojis.Emoji) -> None:
         # We do not store info about the user, so just ignore that parameter.
         for reaction_obj in message_obj.reactions:
             if reaction_obj.emoji == emojis and reaction_obj.message.id == reaction_obj.message.id:
                 message_obj.reactions.remove(reaction_obj)
+                # This emoji will only be referenced once, so shortcut to save time.
+                break
 
     # noinspection PyProtectedMember
     def delete_role(self, role_obj: roles.Role) -> None:
         guild_obj = role_obj.guild
-        del guild_obj.roles[role_obj.id]
+        with contextlib.suppress(KeyError):
+            del guild_obj.roles[role_obj.id]
 
         for member in guild_obj.members.values():
             # Protected member access, but much more efficient for this case than resolving every role repeatedly.
