@@ -26,7 +26,7 @@ import typing
 from hikari.core import events
 from hikari.core.internal import event_adapter
 from hikari.core.internal import state_registry as _state
-from hikari.core.models import channel, reaction
+from hikari.core.models import channel, reaction, presence
 from hikari.core.utils import date_utils, custom_types
 from hikari.core.utils import transform
 
@@ -415,6 +415,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             )
 
     async def handle_message_reaction_remove(self, gateway, payload):
+        self.dispatch(events.RAW_MESSAGE_REACTION_REMOVE, payload)
         guild_id = transform.nullable_cast(payload.get("guild_id"), int)
         message_id = int(payload["message_id"])
         user_id = int(payload["user_id"])
@@ -445,21 +446,94 @@ class BasicEventAdapter(event_adapter.EventAdapter):
 
     async def handle_message_reaction_remove_all(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_REACTION_REMOVE_ALL, payload)
+        message_id = int(payload["message_id"])
+
+        message_obj = self.state_registry.get_message_by_id(message_id)
+
+        if message_obj is None:
+            # Not cached, so ignore.
+            return
+
+        self.state_registry.remove_all_reactions(message_obj)
+        self.dispatch(events.MESSAGE_REACTION_REMOVE_ALL, message_obj)
 
     async def handle_presence_update(self, gateway, payload):
         self.dispatch(events.RAW_MEMBER_PRESENCE_UPDATE, payload)
 
+        guild_id = int(payload["guild_id"])
+        guild = self.state_registry.get_guild_by_id(guild_id)
+
+        if guild is None:
+            self.logger.warning("ignoring PRESENCE_UPDATE for unknown guild %s", guild_id)
+            return
+
+        user_id = int(payload["user"]["id"])
+        user = self.state_registry.get_user_by_id(user_id)
+        if user is None:
+            self.logger.warning("ignoring PRESENCE_UPDATE for unknown user %s in guild %s", user_id, guild_id)
+            return
+
+        member = self.state_registry.get_member_by_id(user_id, guild_id)
+        if member is None:
+            self.logger.warning("ignoring PRESENCE_UPDATE for unknown member %s in guild %s", user_id, guild_id)
+            return
+
+        presence_obj = self.state_registry.parse_presence(guild_id, user_id, payload)
+
+        role_ids = (int(role_id) for role_id in payload["roles"])
+        roles = []
+        for role_id in role_ids:
+            next_role = self.state_registry.get_role_by_id(guild_id, role_id)
+            if next_role is None:
+                self.logger.warning(
+                    "ignoring unknown role %s being added to user %s in guild %s silently",
+                    role_id,
+                    user_id,
+                    guild_id
+                )
+            else:
+                roles.append(role_id)
+
+        self.state_registry.update
+
+        self.dispatch(events.MEMBER_PRESENCE_UPDATE, presence_obj)
+
     async def handle_typing_start(self, gateway, payload):
         self.dispatch(events.RAW_TYPING_START, payload)
+        channel_id = int(payload["channel_id"])
+        user_id = int(payload["user_id"])
+        channel_obj = self.state_registry.get_channel_by_id(channel_id)
+
+        if channel_obj is None:
+            self.logger.warning("ignoring TYPING_START by user %s in unknown channel %s", user_id, channel_id)
+            return
+
+        user_obj = self.state_registry.get_user_by_id(user_id)
+        if user_obj is None:
+            self.logger.warning("ignoring TYPING_START by unknown user %s in channel %s", user_id, channel_id)
+
+        self.dispatch(events.TYPING_START, user_obj, channel_obj)
 
     async def handle_user_update(self, gateway, payload):
         self.dispatch(events.RAW_USER_UPDATE, payload)
+        user_obj = self.state_registry.parse_user(payload)
+        self.dispatch(events.USER_UPDATE, user_obj)
 
     async def handle_voice_state_update(self, gateway, payload):
         self.dispatch(events.RAW_VOICE_STATE_UPDATE, payload)
+        # Todo: implement voice.
 
     async def handle_voice_server_update(self, gateway, payload):
         self.dispatch(events.RAW_VOICE_SERVER_UPDATE, payload)
+        # Todo: implement voice.
 
     async def handle_webhooks_update(self, gateway, payload):
         self.dispatch(events.RAW_WEBHOOKS_UPDATE, payload)
+        channel_id = int(payload["channel_id"])
+
+        channel_obj = self.state_registry.get_channel_by_id(channel_id)
+
+        if channel_obj is None:
+            self.logger.warning("ignoring WEBHOOKS_UPDATE in unknown channel %s", channel_id)
+        else:
+            self.dispatch(events.WEBHOOKS_UPDATE, channel_obj)

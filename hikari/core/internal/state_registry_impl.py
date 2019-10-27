@@ -26,11 +26,12 @@ import typing
 import weakref
 
 from hikari.core.internal import state_registry
-from hikari.core.models import channel, reaction
+from hikari.core.models import channel
 from hikari.core.models import emoji
 from hikari.core.models import guild
 from hikari.core.models import message
 from hikari.core.models import presence
+from hikari.core.models import reaction
 from hikari.core.models import role
 from hikari.core.models import user
 from hikari.core.models import webhook
@@ -310,6 +311,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
             role_payload = role.Role(self, role_payload, guild_id)
             guild_obj.roles[role_payload.id] = role_payload
             return role_payload
+        return None
 
     def parse_user(self, user_payload: custom_types.DiscordObject):
         # If the user already exists, then just return their existing object. We expect discord to tell us if they
@@ -334,8 +336,13 @@ class BasicStateRegistry(state_registry.StateRegistry):
         return existing_user
 
     def parse_webhook(self, webhook_payload: custom_types.DiscordObject):
-        # Don't cache webhooks.
         return webhook.Webhook(self, webhook_payload)
+
+    def remove_all_reactions(self, message_obj: message.Message) -> None:
+        for reaction_obj in message_obj.reactions:
+            reaction_obj.count = 0
+
+        message_obj.reactions.clear()
 
     def remove_reaction(self, message_obj: message.Message, emoji_obj: emoji.Emoji) -> reaction.Reaction:
         for reaction_obj in message_obj.reactions:
@@ -353,6 +360,14 @@ class BasicStateRegistry(state_registry.StateRegistry):
         if guild_obj is not None:
             guild_obj.unavailable = unavailability
 
+    def set_last_pinned_timestamp(self, channel_id: int, timestamp: typing.Optional[datetime.datetime]) -> None:
+        # We don't persist this information, as it is not overly useful. The user can use the HTTP endpoint if they
+        # care what the pins are...
+        pass
+
+    def set_roles_for_member(self, roles: typing.Sequence[role.Role], member_obj: user.Member) -> None:
+        member_obj._role_ids = roles
+
     def update_channel(
         self, channel_payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[channel.Channel, channel.Channel]]:
@@ -363,6 +378,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
             new_channel = existing_channel
             new_channel.update_state(channel_payload)
             return old_channel, new_channel
+        return None
 
     def update_guild(
         self, guild_payload: custom_types.DiscordObject
@@ -374,6 +390,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
             new_guild = guild_obj
             new_guild.update_state(guild_payload)
             return previous_guild, new_guild
+        return None
 
     def update_guild_emojis(
         self, emoji_list: typing.List[custom_types.DiscordObject], guild_id: int
@@ -384,11 +401,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
             new_emojis = frozenset(self.parse_emoji(emoji_obj, guild_id) for emoji_obj in emoji_list)
             guild_obj.emojis = transform.id_map(new_emojis)
             return old_emojis, new_emojis
-
-    def update_last_pinned_timestamp(self, channel_id: int, timestamp: typing.Optional[datetime.datetime]) -> None:
-        # We don't persist this information, as it is not overly useful. The user can use the HTTP endpoint if they
-        # care what the pins are...
-        pass
+        return None
 
     def update_member(
         self, guild_id: int, role_ids: typing.List[int], nick: typing.Optional[str], user_id: int
@@ -400,6 +413,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
             old_member = new_member.copy()
             new_member.update_state(role_ids, nick)
             return old_member, new_member
+        return None
 
     def update_member_presence(
         self, guild_id: int, user_id: int, presence_payload: custom_types.DiscordObject
@@ -411,6 +425,7 @@ class BasicStateRegistry(state_registry.StateRegistry):
             old_presence = member_obj.presence
             new_presence = self.parse_presence(guild_id, user_id, presence_payload)
             return member_obj, old_presence, new_presence
+        return None
 
     def update_message(
         self, payload: custom_types.DiscordObject
@@ -422,22 +437,26 @@ class BasicStateRegistry(state_registry.StateRegistry):
             new_message = existing_message
             new_message.update_state(payload)
             return old_message, new_message
+        return None
 
     def update_role(
         self, guild_id: int, payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[role.Role, role.Role]]:
         role_id = int(payload["id"])
-        existing_role = self.get_role_by_id(role_id)
+        existing_role = self.get_role_by_id(guild_id, role_id)
 
         if existing_role is not None:
             old_role = existing_role.copy()
             new_role = existing_role
             new_role.update_state(payload)
             return old_role, new_role
+        return None
 
     def __copy__(self):
         """
         We don't allow ourselves to be copied, as this would lead to inconsistent state when the models get
         cloned. Instead, we just return our own reference.
+
+        This is a hack, I should probably remove this and find a different way to implement this eventually.
         """
         return self
