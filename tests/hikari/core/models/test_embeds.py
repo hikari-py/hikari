@@ -20,8 +20,8 @@ import datetime
 
 import pytest
 
-from hikari.core.models import color as _color
-from hikari.core.models import embed as _embed
+from hikari.core.models import colors as _color
+from hikari.core.models import embeds as _embed
 from hikari.core.utils import unspecified
 
 

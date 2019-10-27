@@ -25,14 +25,14 @@ import abc
 import datetime
 import typing
 
-from hikari.core.models import channel, reaction
-from hikari.core.models import emoji
-from hikari.core.models import guild
-from hikari.core.models import message
-from hikari.core.models import presence
-from hikari.core.models import role
-from hikari.core.models import user
-from hikari.core.models import webhook
+from hikari.core.models import channels, reactions
+from hikari.core.models import emojis
+from hikari.core.models import guilds
+from hikari.core.models import messages
+from hikari.core.models import presences
+from hikari.core.models import roles
+from hikari.core.models import users
+from hikari.core.models import webhooks
 from hikari.core.utils import custom_types
 
 
@@ -47,16 +47,16 @@ class StateRegistry(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def me(self) -> user.BotUser:
+    def me(self) -> users.BotUser:
         ...
 
     @property
     @abc.abstractmethod
-    def message_cache(self) -> typing.Mapping[int, message.Message]:
+    def message_cache(self) -> typing.Mapping[int, messages.Message]:
         ...
 
     @abc.abstractmethod
-    def add_reaction(self, message_obj: message.Message, emoji_obj: emoji.Emoji) -> reaction.Reaction:
+    def add_reaction(self, message_obj: messages.Message, emoji_obj: emojis.Emoji) -> reactions.Reaction:
         """
         Adds 1 to the count for the reaction.
 
@@ -71,7 +71,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_channel(self, channel_obj: channel.Channel) -> None:
+    def delete_channel(self, channel_obj: channels.Channel) -> None:
         """
         Delete the given channel from the cache. This may be either a channel from a guild or a DM channel.
 
@@ -81,7 +81,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_emoji(self, emoji_obj: emoji.GuildEmoji) -> None:
+    def delete_emoji(self, emoji_obj: emojis.GuildEmoji) -> None:
         """
         Delete the given guild emoji from the cache.
         
@@ -91,7 +91,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_guild(self, guild_obj: guild.Guild) -> None:
+    def delete_guild(self, guild_obj: guilds.Guild) -> None:
         """
         Delete the given guild from the cache.
 
@@ -101,7 +101,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_message(self, message_obj: message.Message) -> None:
+    def delete_message(self, message_obj: messages.Message) -> None:
         """
         Delete the given message from the cache if it exists,
 
@@ -111,7 +111,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_member(self, member_obj: user.Member) -> None:
+    def delete_member(self, member_obj: users.Member) -> None:
         """
         Delete the member with the given user ID from the guilds member list.
 
@@ -121,7 +121,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_reaction(self, message_obj: message.Message, user_obj: user.User, emoji_obj: emoji.Emoji) -> None:
+    def delete_reaction(self, message_obj: messages.Message, user_obj: users.User, emoji_obj: emojis.Emoji) -> None:
         """
         Attempt to remove the given reaction from the given message by the given user..
 
@@ -135,7 +135,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_role(self, role_obj: role.Role) -> None:
+    def delete_role(self, role_obj: roles.Role) -> None:
         """
         Delete the given role ID from the cache.
 
@@ -148,7 +148,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_channel_by_id(self, channel_id: int) -> typing.Optional[channel.Channel]:
+    def get_channel_by_id(self, channel_id: int) -> typing.Optional[channels.Channel]:
         """
         Find a channel by a given ID. Guilds are searched first. If no match is found in a guild, then any open DM
         channels are also checked. If nothing is found still, we return `None`.
@@ -162,7 +162,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_guild_by_id(self, guild_id: int) -> typing.Optional[guild.Guild]:
+    def get_guild_by_id(self, guild_id: int) -> typing.Optional[guilds.Guild]:
         """
         Find a guild by an ID.
 
@@ -175,7 +175,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_message_by_id(self, message_id: int) -> typing.Optional[message.Message]:
+    def get_message_by_id(self, message_id: int) -> typing.Optional[messages.Message]:
         """
         Find a message by an ID.
 
@@ -188,7 +188,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_role_by_id(self, guild_id: int, role_id: int) -> typing.Optional[role.Role]:
+    def get_role_by_id(self, guild_id: int, role_id: int) -> typing.Optional[roles.Role]:
         """
         Find a cached role by an ID.
 
@@ -204,7 +204,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_user_by_id(self, user_id: int) -> typing.Optional[user.User]:
+    def get_user_by_id(self, user_id: int) -> typing.Optional[users.User]:
         """
         Find a user by an ID.
 
@@ -217,7 +217,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[user.Member]:
+    def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[users.Member]:
         """
         Find a member in a specific guild by their ID.
 
@@ -232,7 +232,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_bot_user(self, bot_user_payload: custom_types.DiscordObject) -> user.BotUser:
+    def parse_bot_user(self, bot_user_payload: custom_types.DiscordObject) -> users.BotUser:
         """
         Parses a bot user payload into a workable object
 
@@ -247,7 +247,7 @@ class StateRegistry(abc.ABC):
     @abc.abstractmethod
     def parse_channel(
         self, channel_payload: custom_types.DiscordObject, guild_id: typing.Optional[int]
-    ) -> channel.Channel:
+    ) -> channels.Channel:
         """
         Parses a channel payload into a workable object
 
@@ -263,7 +263,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_emoji(self, emoji_payload: custom_types.DiscordObject, guild_id: typing.Optional[int]) -> emoji.Emoji:
+    def parse_emoji(self, emoji_payload: custom_types.DiscordObject, guild_id: typing.Optional[int]) -> emojis.Emoji:
         """
         Parses a emoji payload into a workable object
 
@@ -278,7 +278,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_guild(self, guild_payload: custom_types.DiscordObject) -> guild.Guild:
+    def parse_guild(self, guild_payload: custom_types.DiscordObject) -> guilds.Guild:
         """
         Parses a guild payload into a workable object
 
@@ -291,23 +291,22 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_member(self, member_payload: custom_types.DiscordObject, guild_id: int) -> typing.Optional[user.Member]:
+    def parse_member(self, member_payload: custom_types.DiscordObject, guild_obj: guilds.Guild) -> users.Member:
         """
         Parses a member payload into a workable object
 
         Args:
             member_payload:
                 the payload of the member.
-            guild_id:
-                the ID of the guild the member is from.
+            guild_obj:
+                the guild the member should be placed in.
 
         Returns:
-            a :class:`hikari.core.models.user.Member` object if the guild at the given `guild_id` is already cached.
-            Otherwise, `None` is returned.
+            a :class:`hikari.core.models.user.Member` object.
         """
 
     @abc.abstractmethod
-    def parse_message(self, message_payload: custom_types.DiscordObject) -> message.Message:
+    def parse_message(self, message_payload: custom_types.DiscordObject) -> messages.Message:
         """
         Parses a message payload into a workable object
 
@@ -327,17 +326,15 @@ class StateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def parse_presence(
-        self, guild_id: int, user_id: int, presence_payload: custom_types.DiscordObject
-    ) -> presence.Presence:
+        self, member_obj: users.Member, presence_payload: custom_types.DiscordObject
+    ) -> presences.Presence:
         """
         Parse a presence for a given guild and user, and attempt to update the member corresponding to the presence
         if it can be found.
 
         Args:
-            guild_id:
-                the ID of the guild.
-            user_id:
-                the ID of the user.
+            member_obj:
+                the member to update the presence for.
             presence_payload:
                 the payload containing the presence.
 
@@ -346,7 +343,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_reaction(self, reaction_payload: custom_types.DiscordObject) -> typing.Optional[reaction.Reaction]:
+    def parse_reaction(self, reaction_payload: custom_types.DiscordObject) -> typing.Optional[reactions.Reaction]:
         """
         Attempt to parse a reaction object and store it on the corresponding message.
 
@@ -360,7 +357,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_role(self, role_payload: custom_types.DiscordObject, guild_id: int) -> role.Role:
+    def parse_role(self, role_payload: custom_types.DiscordObject, guild_id: int) -> roles.Role:
         """
         Parses a role payload into a workable object
 
@@ -375,7 +372,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_user(self, user_payload: custom_types.DiscordObject) -> user.User:
+    def parse_user(self, user_payload: custom_types.DiscordObject) -> users.User:
         """
         Parses a user payload into a workable object
 
@@ -395,7 +392,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_webhook(self, webhook_payload: custom_types.DiscordObject) -> webhook.Webhook:
+    def parse_webhook(self, webhook_payload: custom_types.DiscordObject) -> webhooks.Webhook:
         """
         Parses a webhook payload into a workable object
 
@@ -408,7 +405,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def remove_all_reactions(self, message_obj: message.Message) -> None:
+    def remove_all_reactions(self, message_obj: messages.Message) -> None:
         """
         Removes all reactions from a message.
 
@@ -418,7 +415,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def remove_reaction(self, message_obj: message.Message, emoji_obj: emoji.Emoji) -> reaction.Reaction:
+    def remove_reaction(self, message_obj: messages.Message, emoji_obj: emojis.Emoji) -> reactions.Reaction:
         """
         Subtracts 1 from the count for the reaction.
 
@@ -460,12 +457,12 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_roles_for_member(self, roles: typing.Sequence[role.Role], member_obj: user.Member) -> None:
+    def set_roles_for_member(self, role_objs: typing.Sequence[roles.Role], member_obj: users.Member) -> None:
         """
         Set the roles for the given member.
 
         Args:
-            roles:
+            role_objs:
                 roles to set on the member.
             member_obj:
                 the member to update.
@@ -474,7 +471,7 @@ class StateRegistry(abc.ABC):
     @abc.abstractmethod
     def update_channel(
         self, channel_payload: custom_types.DiscordObject
-    ) -> typing.Optional[typing.Tuple[channel.Channel, channel.Channel]]:
+    ) -> typing.Optional[typing.Tuple[channels.Channel, channels.Channel]]:
         """
         Update the given channel represented by the channel payload.
 
@@ -490,7 +487,7 @@ class StateRegistry(abc.ABC):
     @abc.abstractmethod
     def update_guild(
         self, guild_payload: custom_types.DiscordObject
-    ) -> typing.Optional[typing.Tuple[guild.Guild, guild.Guild]]:
+    ) -> typing.Optional[typing.Tuple[guilds.Guild, guilds.Guild]]:
         """
 
         Update the given guild represented by the guild payload.
@@ -507,7 +504,7 @@ class StateRegistry(abc.ABC):
     @abc.abstractmethod
     def update_guild_emojis(
         self, emoji_list: typing.List[custom_types.DiscordObject], guild_id: int
-    ) -> typing.Optional[typing.Tuple[typing.FrozenSet[emoji.GuildEmoji], typing.FrozenSet[emoji.GuildEmoji]]]:
+    ) -> typing.Optional[typing.Tuple[typing.FrozenSet[emojis.GuildEmoji], typing.FrozenSet[emojis.GuildEmoji]]]:
         """
         Update the emojis in a given guild.
 
@@ -528,7 +525,7 @@ class StateRegistry(abc.ABC):
     @abc.abstractmethod
     def update_member(
         self, guild_id: int, role_ids: typing.List[int], nick: typing.Optional[str], user_id: int
-    ) -> typing.Optional[typing.Tuple[user.Member, user.Member]]:
+    ) -> typing.Optional[typing.Tuple[users.Member, users.Member]]:
         """
         Update a member in a given guild. If the member is not already registered, nothing is returned.
 
@@ -551,7 +548,7 @@ class StateRegistry(abc.ABC):
     @abc.abstractmethod
     def update_member_presence(
         self, guild_id: int, user_id: int, presence_payload: custom_types.DiscordObject
-    ) -> typing.Optional[typing.Tuple[user.Member, presence.Presence, presence.Presence]]:
+    ) -> typing.Optional[typing.Tuple[users.Member, presences.Presence, presences.Presence]]:
         """
         Update the presence for a given user in a given guild.
 
@@ -573,7 +570,7 @@ class StateRegistry(abc.ABC):
     @abc.abstractmethod
     def update_message(
         self, payload: custom_types.DiscordObject
-    ) -> typing.Optional[typing.Tuple[message.Message, message.Message]]:
+    ) -> typing.Optional[typing.Tuple[messages.Message, messages.Message]]:
         """
         Update a message in the cache.
 
@@ -590,7 +587,7 @@ class StateRegistry(abc.ABC):
     @abc.abstractmethod
     def update_role(
         self, guild_id: int, role_payload: custom_types.DiscordObject
-    ) -> typing.Optional[typing.Tuple[role.Role, role.Role]]:
+    ) -> typing.Optional[typing.Tuple[roles.Role, roles.Role]]:
         """
         Update the given role in a given guild.
 

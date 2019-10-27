@@ -26,7 +26,7 @@ import datetime
 
 from hikari.core.internal import state_registry
 from hikari.core.models import base
-from hikari.core.models import user
+from hikari.core.models import users
 from hikari.core.utils import date_utils, auto_repr
 
 
@@ -114,7 +114,7 @@ class Integration(base.HikariModel, base.Snowflake):
     #: The user for this integration
     #:
     #: :type: :class:`hikari.core.models.user.User`
-    user: user.User
+    user: users.User
 
     #: Integration account information.
     #:

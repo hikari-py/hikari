@@ -79,11 +79,11 @@ class Presence(base.HikariModel):
     __repr__ = auto_repr.repr_of("status")
 
     def __init__(self, payload):
-        self.activities = ...
-        self.status = ...
-        self.web_status = ...
-        self.desktop_status = ...
-        self.mobile_status = ...
+        self.activities = custom_types.EMPTY_SEQUENCE
+        self.status = Status.OFFLINE
+        self.web_status = Status.OFFLINE
+        self.desktop_status = Status.OFFLINE
+        self.mobile_status = Status.OFFLINE
         self.update_state(payload)
 
     def update_state(self, payload: custom_types.DiscordObject) -> None:
