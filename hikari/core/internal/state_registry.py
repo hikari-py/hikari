@@ -52,7 +52,7 @@ class StateRegistry(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def message_cache(self) -> typing.MutableMapping[int, message.Message]:
+    def message_cache(self) -> typing.Mapping[int, message.Message]:
         ...
 
     @abc.abstractmethod
@@ -71,133 +71,80 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_channel(self, channel_id: int) -> channel.Channel:
+    def delete_channel(self, channel_obj: channel.Channel) -> None:
         """
         Delete the given channel from the cache. This may be either a channel from a guild or a DM channel.
 
         Args:
-            channel_id:
-                the channel ID to delete.
-
-        Returns:
-            The channel that was deleted.
-
-        Raises:
-            KeyError:
-                if the channel is not in the cache.
+            channel_obj:
+                the channel to delete.
         """
 
     @abc.abstractmethod
-    def delete_emoji(self, emoji_id: int) -> emoji.GuildEmoji:
+    def delete_emoji(self, emoji_obj: emoji.GuildEmoji) -> None:
         """
-        Delete the given emoji ID from the cache.
+        Delete the given guild emoji from the cache.
         
         Args:
-            emoji_id:
-                the ID of the emoji to delete.
-
-        Returns:
-            The :class:`hikari.core.models.emoji.GuildEmoji` that was deleted.
-
-        Raises:
-            KeyError:
-                If the emoji didn't exist.
+            emoji_obj:
+                the emoji to delete.
         """
 
     @abc.abstractmethod
-    def delete_guild(self, guild_id: int) -> guild.Guild:
+    def delete_guild(self, guild_obj: guild.Guild) -> None:
         """
-        Delete the given guild ID from the cache.
+        Delete the given guild from the cache.
 
         Args:
-            guild_id:
-                the guild ID to delete.
-
-        Returns:
-            the :class:`hikari.core.models.guild.Guild` that was deleted.
-
-        Raises:
-            KeyError:
-                If the guild does not exist in cache.
+            guild_obj:
+                the guild to delete.
         """
 
     @abc.abstractmethod
-    def delete_message(self, message_id: int) -> message.Message:
+    def delete_message(self, message_obj: message.Message) -> None:
         """
-        Delete the given message id from the cache if it exists,
+        Delete the given message from the cache if it exists,
 
         Args:
-            message_id:
-                the message ID to delete.
-
-        Returns:
-            the :class:`hikari.core.models.message.Message` that was deleted.
-
-        Raises:
-            KeyError:
-                If the message does not exist in cache.
+            message_obj:
+                the message to delete.
         """
 
     @abc.abstractmethod
-    def delete_member_from_guild(self, user_id: int, guild_id: int) -> user.Member:
+    def delete_member(self, member_obj: user.Member) -> None:
         """
-        Delete the member with the given user ID from the given guild ID's member list.
+        Delete the member with the given user ID from the guilds member list.
 
         Args:
-            user_id:
-                the user ID to delete
-            guild_id:
-                the guild ID to delete from
-
-        Returns:
-            the :class:`hikari.core.models.user.Member` that was deleted.
-
-        Raises:
-            KeyError:
-                If the member is not in the given guild or the given guild does not exist.
+            member_obj:
+                the member to remove.
         """
 
     @abc.abstractmethod
-    def delete_reaction_from_message(self, message_id: int, user_id: int, emoji_obj: emoji.Emoji) -> reaction.Reaction:
+    def delete_reaction(self, message_obj: message.Message, user_obj: user.User, emoji_obj: emoji.Emoji) -> None:
         """
-        Attempt to remove the given reaction from the given message ID.
+        Attempt to remove the given reaction from the given message by the given user..
 
         Args:
-            message_id:
-                the ID of the message to look up.
-            user_id:
-                the ID of the user who made the reaction.
+            message_obj:
+                the message to remove the reaction from.
+            user_obj:
+                the user to remove the reaction from.
             emoji_obj:
                 the parsed emoji object that the reaction was made as.
-
-        Returns:
-            the :class:`hikari.core.models.Reaction` that was deleted.
-
-        Raises:
-            KeyError:
-                If the message or reaction is not cached.
         """
 
     @abc.abstractmethod
-    def delete_role(self, guild_id: int, role_id: int) -> role.Role:
+    def delete_role(self, role_obj: role.Role) -> None:
         """
         Delete the given role ID from the cache.
 
         Args:
-            guild_id:
-                the guild that the role is in.
-            role_id:
-                the ID of the role to delete.
-
-        Returns:
-            The :class:`hikari.core.models.role.Role` that was deleted.
+            role_obj:
+                the role to remove
 
         Note:
-            This will also update all members in the guild to not have that role anymore.
-
-        Raises:
-            KeyError:
-                If the role didn't exist.
+            This will also update all cached members in the owning guild to not have that role anymore.
         """
 
     @abc.abstractmethod
@@ -513,13 +460,13 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_roles_for_member(self, role_ids: typing.Sequence[int], member_obj: user.Member) -> None:
+    def set_roles_for_member(self, roles: typing.Sequence[role.Role], member_obj: user.Member) -> None:
         """
         Set the roles for the given member.
 
         Args:
-            role_ids:
-                sequence of role IDs to set on the member.
+            roles:
+                roles to set on the member.
             member_obj:
                 the member to update.
         """

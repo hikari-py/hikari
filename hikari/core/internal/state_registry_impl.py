@@ -40,7 +40,7 @@ from hikari.core.utils import logging_utils
 from hikari.core.utils import transform
 
 
-class BasicStateRegistry(state_registry.StateRegistry):
+class StateRegistryImpl(state_registry.StateRegistry):
     """
     Registry for global state parsing, querying, and management.
 
@@ -99,61 +99,50 @@ class BasicStateRegistry(state_registry.StateRegistry):
             message_obj.reactions.append(reaction_obj)
             return reaction_obj
 
-    def delete_channel(self, channel_id: int) -> channel.Channel:
-        if channel_id in self._guild_channels:
-            guild_obj = self._guild_channels[channel_id].guild
-            channel_obj = guild_obj.channels[channel_id]
+    def delete_channel(self, channel_obj: channel.Channel) -> None:
+        channel_id = channel_obj.id
+        if channel_obj in self._guild_channels:
+            channel_obj: channel.GuildChannel
+            guild_obj = channel_obj.guild
             del guild_obj.channels[channel_id]
             del self._guild_channels[channel_id]
-        elif channel_id in self._dm_channels:
-            channel_obj = self._dm_channels[channel_id]
+        elif channel_obj in self._dm_channels:
+            channel_obj: channel.DMChannel
             del self._dm_channels[channel_id]
         else:
             raise KeyError(str(channel_id))
 
-        return channel_obj
-
-    def delete_emoji(self, emoji_id: int) -> emoji.GuildEmoji:
-        emoji_obj = self._emojis[emoji_id]
+    def delete_emoji(self, emoji_obj: emoji.GuildEmoji) -> None:
+        del self._emojis[emoji_obj.id]
         guild_obj = emoji_obj.guild
-        del guild_obj.emojis[emoji_id]
-        del self._emojis[emoji_id]
-        return emoji_obj
+        del guild_obj.emojis[emoji_obj]
 
-    def delete_guild(self, guild_id: int) -> guild.Guild:
-        guild_obj = self._guilds[guild_id]
-        del self._guilds[guild_id]
-        return guild_obj
+    def delete_guild(self, guild_obj: guild.Guild) -> None:
+        del self._guilds[guild_obj.id]
 
-    def delete_message(self, message_id: int) -> message.Message:
-        message_obj = self._message_cache[message_id]
-        del self._message_cache[message_id]
-        return message_obj
+    def delete_message(self, message_obj: message.Message) -> None:
+        if message_obj in self._message_cache:
+            message_obj = self._message_cache[message_obj.id]
+            del self._message_cache[message_obj.id]
 
-    def delete_member_from_guild(self, user_id: int, guild_id: int) -> user.Member:
-        guild_obj = self._guilds[guild_id]
-        member_obj = guild_obj.members[user_id]
-        del guild_obj.members[user_id]
-        return member_obj
+    def delete_member(self, member_obj: user.Member) -> None:
+        del member_obj.guild.members[member_obj.id]
 
-    def delete_reaction_from_message(self, message_id: int, user_id: int, emoji_obj: emoji.Emoji) -> reaction.Reaction:
-        # We do not store info about the user, so just ignore this parameter.
-        message_obj = self._message_cache[message_id]
+    def delete_reaction(self, message_obj: message.Message, user_obj: user.User, emoji_obj: emoji.Emoji) -> None:
+        # We do not store info about the user, so just ignore that parameter.
         for reaction_obj in message_obj.reactions:
             if reaction_obj.emoji == emoji and reaction_obj.message.id == reaction_obj.message.id:
                 message_obj.reactions.remove(reaction_obj)
-                return reaction_obj
-        raise KeyError(f"reaction with message_id {message_id} and user_id {user_id}")
 
     # noinspection PyProtectedMember
-    def delete_role(self, guild_id: int, role_id: int) -> role.Role:
-        guild_obj = self._guilds[guild_id]
-        role_obj = guild_obj.roles[role_id]
-        del guild_obj.roles[role_id]
+    def delete_role(self, role_obj: role.Role) -> None:
+        guild_obj = role_obj.guild
+        del guild_obj.roles[role_obj.id]
+
         for member in guild_obj.members.values():
-            if role_id in member._role_ids:
-                member._role_ids.remove(role_id)
-        return role_obj
+            # Protected member access, but much more efficient for this case than resolving every role repeatedly.
+            if role_obj.id in member._role_ids:
+                member._role_ids.remove(role_obj.id)
 
     def get_channel_by_id(self, channel_id: int) -> typing.Optional[channel.Channel]:
         return self._guild_channels.get(channel_id) or self._dm_channels.get(channel_id)
