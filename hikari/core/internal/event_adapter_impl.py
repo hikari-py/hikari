@@ -40,7 +40,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         self.state_registry: _state.StateRegistry = state_registry
         self._ignored_events = set()
 
-    async def handle_unrecognised_event(self, gateway, event_name, payload):
+    async def drain_unrecognised_event(self, gateway, event_name, payload):
         self.dispatch("raw_" + event_name.lower(), payload)
         if event_name not in self._ignored_events:
             self.logger.warning("Received unrecognised event %s, so will ignore it in the future.", event_name)
@@ -151,10 +151,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         if guild_diff is not None:
             self.dispatch(events.GUILD_UPDATE, *guild_diff)
         else:
-            self.state_registry.parse_guild(payload)
-            self.logger.warning(
-                "ignoring GUILD_UPDATE for unknown guild %s which was not previously cached - cache amended"
-            )
+            self.logger.warning("ignoring GUILD_UPDATE for unknown guild %s which was not previously cached")
 
     async def handle_guild_delete(self, gateway, payload):
         self.dispatch(events.RAW_GUILD_DELETE, payload)
@@ -455,7 +452,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         self.dispatch(events.MESSAGE_REACTION_REMOVE_ALL, message_obj)
 
     async def handle_presence_update(self, gateway, payload):
-        self.dispatch(events.RAW_MEMBER_PRESENCE_UPDATE, payload)
+        self.dispatch(events.RAW_PRESENCE_UPDATE, payload)
 
         guild_id = int(payload["guild_id"])
         guild_obj = self.state_registry.get_guild_by_id(guild_id)
@@ -475,7 +472,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
             self.logger.warning("ignoring PRESENCE_UPDATE for unknown member %s in guild %s", user_id, guild_id)
             return
 
-        presence_obj = self.state_registry.parse_presence(member_obj, payload)
+        presence_diff = self.state_registry.update_member_presence(guild_id, user_id, payload)
 
         role_ids = (int(role_id) for role_id in payload["roles"])
         role_objs = []
@@ -489,7 +486,8 @@ class EventAdapterImpl(event_adapter.EventAdapter):
                 role_objs.append(next_role)
 
         self.state_registry.set_roles_for_member(role_objs, member_obj)
-        self.dispatch(events.MEMBER_PRESENCE_UPDATE, presence_obj)
+
+        self.dispatch(events.PRESENCE_UPDATE, *presence_diff)
 
     async def handle_typing_start(self, gateway, payload):
         self.dispatch(events.RAW_TYPING_START, payload)
