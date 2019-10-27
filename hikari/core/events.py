@@ -182,8 +182,8 @@ MESSAGE_REACTION_REMOVE = "message_reaction_remove"
 RAW_MESSAGE_REACTION_REMOVE_ALL = "raw_message_reaction_remove_all"
 MESSAGE_REACTION_REMOVE_ALL = "message_reaction_remove_all"
 
-RAW_MEMBER_PRESENCE_UPDATE = "raw_member_presence_update"
-MEMBER_PRESENCE_UPDATE = "member_presence_update"
+RAW_PRESENCE_UPDATE = "raw_presence_update"
+PRESENCE_UPDATE = "presence_update"
 
 RAW_TYPING_START = "raw_typing_start"
 TYPING_START = "typing_start"

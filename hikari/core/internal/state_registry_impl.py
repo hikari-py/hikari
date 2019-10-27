@@ -144,13 +144,16 @@ class StateRegistryImpl(state_registry.StateRegistry):
     # noinspection PyProtectedMember
     def delete_role(self, role_obj: roles.Role) -> None:
         guild_obj = role_obj.guild
-        with contextlib.suppress(KeyError):
+        try:
             del guild_obj.roles[role_obj.id]
-
-        for member in guild_obj.members.values():
-            # Protected member access, but much more efficient for this case than resolving every role repeatedly.
-            if role_obj.id in member._role_ids:
-                member._role_ids.remove(role_obj.id)
+        except KeyError:
+            # Don't bother updating the members, something is inconsistent in our state.
+            pass
+        else:
+            for member in guild_obj.members.values():
+                # Protected member access, but much more efficient for this case than resolving every role repeatedly.
+                if role_obj.id in member._role_ids:
+                    member._role_ids.remove(role_obj.id)
 
     def get_channel_by_id(self, channel_id: int) -> typing.Optional[channels.Channel]:
         return self._guild_channels.get(channel_id) or self._dm_channels.get(channel_id)
@@ -161,13 +164,12 @@ class StateRegistryImpl(state_registry.StateRegistry):
     def get_guild_by_id(self, guild_id: int):
         return self._guilds.get(guild_id)
 
-    def get_guild_channel_by_id(self, guild_channel_id: int):
-        return self._guild_channels.get(guild_channel_id)
-
     def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[users.Member]:
         guild_obj = self._guilds.get(guild_id)
-        if guild_obj is not None:
-            return guild_obj.members.get(user_id)
+        if guild_obj is None:
+            return None
+
+        return guild_obj.members.get(user_id)
 
     def get_message_by_id(self, message_id: int):
         return self._message_cache.get(message_id)
@@ -276,8 +278,9 @@ class StateRegistryImpl(state_registry.StateRegistry):
         if channel_obj is not None:
             message_obj.channel.last_message_id = message_id
 
-        self._message_cache[message_id] = message_obj
-        return message_obj
+            self._message_cache[message_id] = message_obj
+            return message_obj
+        return None
 
     def parse_presence(self, member_obj: users.Member, presence_payload: custom_types.DiscordObject):
         presence_obj = presences.Presence(presence_payload)
@@ -321,10 +324,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
         # finished with it anyway.
         user_id = int(user_payload["id"])
 
-        if self._user and user_id == self._user.id:
-            return self._user
-
-        if "mfa_enabled" in user_payload or "verified" in user_payload:
+        if self._user and user_id == self._user.id or "mfa_enabled" in user_payload or "verified" in user_payload:
             return self.parse_bot_user(user_payload)
 
         user_obj = self.get_user_by_id(user_id)
@@ -412,7 +412,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
     ) -> typing.Optional[typing.Tuple[users.Member, users.Member]]:
         guild_obj = self.get_guild_by_id(guild_id)
 
-        if guilds is not None and user_id in guild_obj.members:
+        if guild_obj is not None and user_id in guild_obj.members:
             new_member = guild_obj.members[user_id]
             old_member = new_member.copy()
             new_member.update_state(role_ids, nick)
@@ -424,7 +424,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
     ) -> typing.Optional[typing.Tuple[users.Member, presences.Presence, presences.Presence]]:
         guild_obj = self.get_guild_by_id(guild_id)
 
-        if guilds is not None and user_id in guild_obj.members:
+        if guild_obj is not None and user_id in guild_obj.members:
             member_obj = guild_obj.members[user_id]
             old_presence = member_obj.presence
             new_presence = self.parse_presence(member_obj, presence_payload)
