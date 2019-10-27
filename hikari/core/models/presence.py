@@ -79,12 +79,34 @@ class Presence(base.HikariModel):
     __repr__ = auto_repr.repr_of("status")
 
     def __init__(self, payload):
+        self.activities = ...
+        self.status = ...
+        self.web_status = ...
+        self.desktop_status = ...
+        self.mobile_status = ...
+        self.update_state(payload)
+
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
         client_status = payload.get("client_status", custom_types.EMPTY_DICT)
-        self.activities = [PresenceActivity(a) for a in payload["activities"]]
-        self.status = transform.try_cast(payload["status"], Status.from_discord_name, Status.OFFLINE)
-        self.web_status = transform.try_cast(client_status.get("web"), Status.from_discord_name, Status.OFFLINE)
-        self.desktop_status = transform.try_cast(client_status.get("desktop"), Status.from_discord_name, Status.OFFLINE)
-        self.mobile_status = transform.try_cast(client_status.get("mobile"), Status.from_discord_name, Status.OFFLINE)
+
+        if "activities" in payload:
+            self.activities = [PresenceActivity(a) for a in payload["activities"]]
+
+        if "status" in payload:
+            self.status = transform.try_cast(payload["status"], Status.from_discord_name, Status.OFFLINE)
+
+        if "web" in client_status:
+            self.web_status = transform.try_cast(client_status.get("web"), Status.from_discord_name, Status.OFFLINE)
+
+        if "desktop" in client_status:
+            self.desktop_status = transform.try_cast(
+                client_status.get("desktop"), Status.from_discord_name, Status.OFFLINE
+            )
+
+        if "mobile" in client_status:
+            self.mobile_status = transform.try_cast(
+                client_status.get("mobile"), Status.from_discord_name, Status.OFFLINE
+            )
 
 
 @dataclasses.dataclass()
@@ -184,6 +206,10 @@ class PresenceActivity(base.HikariModel):
         self.assets = transform.nullable_cast(payload.get("assets"), ActivityAssets)
         self.flags = transform.nullable_cast(payload.get("flags"), ActivityFlag) or 0
 
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
+        # We don't bother with this here.
+        raise NotImplementedError
+
 
 class ActivityType(enum.IntEnum):
     UNKNOWN = -1
@@ -232,6 +258,9 @@ class ActivityParty(base.HikariModel):
         self.current_size = transform.nullable_cast(payload.get("current_size"), int)
         self.max_size = transform.nullable_cast(payload.get("max_size"), int)
 
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
+        raise NotImplementedError
+
 
 @dataclasses.dataclass()
 class ActivityAssets(base.HikariModel):
@@ -265,6 +294,9 @@ class ActivityAssets(base.HikariModel):
         self.small_image = payload.get("small_image")
         self.small_text = payload.get("small_text")
 
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
+        raise NotImplementedError
+
 
 @dataclasses.dataclass()
 class ActivityTimestamps(base.HikariModel):
@@ -282,6 +314,10 @@ class ActivityTimestamps(base.HikariModel):
 
     __repr__ = auto_repr.repr_of("start", "end", "duration")
 
+    def __init__(self, payload):
+        self.start = transform.nullable_cast(payload.get("start"), date_utils.unix_epoch_to_ts)
+        self.end = transform.nullable_cast(payload.get("end"), date_utils.unix_epoch_to_ts)
+
     @property
     def duration(self) -> typing.Optional[datetime.timedelta]:
         """
@@ -290,9 +326,8 @@ class ActivityTimestamps(base.HikariModel):
         """
         return self.end - self.start if self.start is not None and self.end is not None else None
 
-    def __init__(self, payload):
-        self.start = transform.nullable_cast(payload.get("start"), date_utils.unix_epoch_to_ts)
-        self.end = transform.nullable_cast(payload.get("end"), date_utils.unix_epoch_to_ts)
+    def update_state(self, payload: custom_types.DiscordObject) -> None:
+        raise NotImplementedError
 
 
 __all__ = [

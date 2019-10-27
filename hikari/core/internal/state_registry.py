@@ -461,6 +461,16 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
+    def remove_all_reactions(self, message_obj: message.Message) -> None:
+        """
+        Removes all reactions from a message.
+
+        Args:
+            message_obj:
+                the message the reaction was on.
+        """
+
+    @abc.abstractmethod
     def remove_reaction(self, message_obj: message.Message, emoji_obj: emoji.Emoji) -> reaction.Reaction:
         """
         Subtracts 1 from the count for the reaction.
@@ -481,13 +491,37 @@ class StateRegistry(abc.ABC):
     @abc.abstractmethod
     def set_guild_unavailability(self, guild_id: int, unavailability: bool) -> None:
         """
-        Update the availability for the given guild.
+        Set the availability for the given guild.
 
         Args:
             guild_id:
                 the ID for the given guild.
             unavailability:
                 `True` if unavailable, `False` if available.
+        """
+
+    @abc.abstractmethod
+    def set_last_pinned_timestamp(self, channel_id: int, timestamp: typing.Optional[datetime.datetime]) -> None:
+        """
+        Set the last pinned timestamp time for the given channel.
+
+        Args:
+            channel_id:
+                the ID of the channel to update.
+            timestamp:
+                the timestamp of the last pinned message, or `None` if it was just removed.
+        """
+
+    @abc.abstractmethod
+    def set_roles_for_member(self, role_ids: typing.Sequence[int], member_obj: user.Member) -> None:
+        """
+        Set the roles for the given member.
+
+        Args:
+            role_ids:
+                sequence of role IDs to set on the member.
+            member_obj:
+                the member to update.
         """
 
     @abc.abstractmethod
@@ -542,18 +576,6 @@ class StateRegistry(abc.ABC):
             not cached, this will just return `None`
 
             Note that this is not ordered.
-        """
-
-    @abc.abstractmethod
-    def update_last_pinned_timestamp(self, channel_id: int, timestamp: typing.Optional[datetime.datetime]) -> None:
-        """
-        Update the last pinned timestamp time for the given channel.
-
-        Args:
-            channel_id:
-                the ID of the channel to update.
-            timestamp:
-                the timestamp of the last pinned message, or `None` if it was just removed.
         """
 
     @abc.abstractmethod
