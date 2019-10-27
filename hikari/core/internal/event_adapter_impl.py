@@ -24,7 +24,7 @@ from __future__ import annotations
 from hikari.core import events
 from hikari.core.internal import event_adapter
 from hikari.core.internal import state_registry as _state
-from hikari.core.models import channel
+from hikari.core.models import channels
 from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 
@@ -85,7 +85,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         channel_diff = self.state_registry.update_channel(payload)
 
         if channel_diff is not None:
-            is_dm = channel.is_channel_type_dm(payload["type"])
+            is_dm = channels.is_channel_type_dm(payload["type"])
             event = events.DM_CHANNEL_UPDATE if is_dm else events.GUILD_CHANNEL_UPDATE
             self.dispatch(event, *channel_diff)
         else:
@@ -125,7 +125,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         else:
             self.logger.warning(
                 "ignoring CHANNEL_PINS_UPDATE for %s channel %s which was not previously cached",
-                "DM" if channel.is_channel_type_dm(payload["type"]) else "guild",
+                "DM" if channels.is_channel_type_dm(payload["type"]) else "guild",
                 channel_id,
             )
 
@@ -241,9 +241,9 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         self.dispatch(events.RAW_GUILD_MEMBER_ADD, payload)
 
         guild_id = int(payload.pop("guild_id"))
-        guild = self.state_registry.get_guild_by_id(guild_id)
-        if guild is not None:
-            member = self.state_registry.parse_member(payload, guild_id)
+        guild_obj = self.state_registry.get_guild_by_id(guild_id)
+        if guild_obj is not None:
+            member = self.state_registry.parse_member(payload, guild_obj)
             self.dispatch(events.GUILD_MEMBER_ADD, member)
         else:
             self.logger.warning("ignoring GUILD_MEMBER_ADD for unknown guild %s", guild_id)
@@ -252,10 +252,10 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         self.dispatch(events.RAW_GUILD_MEMBER_UPDATE, payload)
 
         guild_id = int(payload["guild_id"])
-        guild = self.state_registry.get_guild_by_id(guild_id)
+        guild_obj = self.state_registry.get_guild_by_id(guild_id)
         user_id = int(payload["user"]["id"])
 
-        if guild is not None and user_id in guild.members:
+        if guild_obj is not None and user_id in guild_obj.members:
             role_ids = payload["roles"]
             nick = payload["nick"]
 
@@ -264,7 +264,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
                 self.dispatch(events.GUILD_MEMBER_UPDATE, *member_diff)
             else:
                 self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown member %s in guild %s", user_id, guild_id)
-                self.state_registry.parse_member(payload, guild_id)
+                self.state_registry.parse_member(payload, guild_obj)
         else:
             self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)
 
@@ -458,40 +458,37 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         self.dispatch(events.RAW_MEMBER_PRESENCE_UPDATE, payload)
 
         guild_id = int(payload["guild_id"])
-        guild = self.state_registry.get_guild_by_id(guild_id)
+        guild_obj = self.state_registry.get_guild_by_id(guild_id)
 
-        if guild is None:
+        if guild_obj is None:
             self.logger.warning("ignoring PRESENCE_UPDATE for unknown guild %s", guild_id)
             return
 
         user_id = int(payload["user"]["id"])
-        user = self.state_registry.get_user_by_id(user_id)
-        if user is None:
+        user_obj = self.state_registry.get_user_by_id(user_id)
+        if user_obj is None:
             self.logger.warning("ignoring PRESENCE_UPDATE for unknown user %s in guild %s", user_id, guild_id)
             return
 
-        member = self.state_registry.get_member_by_id(user_id, guild_id)
-        if member is None:
+        member_obj = self.state_registry.get_member_by_id(user_id, guild_id)
+        if member_obj is None:
             self.logger.warning("ignoring PRESENCE_UPDATE for unknown member %s in guild %s", user_id, guild_id)
             return
 
-        presence_obj = self.state_registry.parse_presence(guild_id, user_id, payload)
+        presence_obj = self.state_registry.parse_presence(member_obj, payload)
 
         role_ids = (int(role_id) for role_id in payload["roles"])
-        roles = []
+        role_objs = []
         for role_id in role_ids:
             next_role = self.state_registry.get_role_by_id(guild_id, role_id)
             if next_role is None:
                 self.logger.warning(
-                    "ignoring unknown role %s being added to user %s in guild %s silently",
-                    role_id,
-                    user_id,
-                    guild_id
+                    "ignoring unknown role %s being added to user %s in guild %s silently", role_id, user_id, guild_id
                 )
             else:
-                roles.append(next_role)
+                role_objs.append(next_role)
 
-        self.state_registry.set_roles_for_member(roles, member)
+        self.state_registry.set_roles_for_member(role_objs, member_obj)
         self.dispatch(events.MEMBER_PRESENCE_UPDATE, presence_obj)
 
     async def handle_typing_start(self, gateway, payload):

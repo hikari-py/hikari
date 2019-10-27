@@ -25,7 +25,7 @@ import dataclasses
 import datetime
 import typing
 
-from hikari.core.models import color as _color, base
+from hikari.core.models import colors as _color, base
 from hikari.core.utils import date_utils, auto_repr
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified

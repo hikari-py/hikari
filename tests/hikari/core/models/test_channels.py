@@ -21,18 +21,18 @@ from unittest import mock
 import pytest
 
 from hikari.core.internal import state_registry
-from hikari.core.models import channel
-from hikari.core.models import guild
+from hikari.core.models import channels
+from hikari.core.models import guilds
 
 
 @pytest.mark.model
 def test_GuildChannel_permission_overwrites_aggregation():
     s = mock.MagicMock(spec_set=state_registry.StateRegistry)
-    g = mock.MagicMock(spec_set=guild.Guild)
+    g = mock.MagicMock(spec_set=guilds.Guild)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
-    g.channels = {1234: mock.MagicMock(spec_set=channel.GuildCategory)}
+    g.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
 
-    c = channel.GuildTextChannel(
+    c = channels.GuildTextChannel(
         s,
         {
             "type": 0,
@@ -55,11 +55,11 @@ def test_GuildChannel_permission_overwrites_aggregation():
 @pytest.mark.model
 def test_GuildChannel_parent_when_specified():
     s = mock.MagicMock(spec_set=state_registry.StateRegistry)
-    g = mock.MagicMock(spec_set=guild.Guild)
+    g = mock.MagicMock(spec_set=guilds.Guild)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
-    g.channels = {1234: mock.MagicMock(spec_set=channel.GuildCategory)}
+    g.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
 
-    c = channel.GuildTextChannel(
+    c = channels.GuildTextChannel(
         s,
         {
             "type": 0,
@@ -81,11 +81,11 @@ def test_GuildChannel_parent_when_specified():
 @pytest.mark.model
 def test_GuildChannel_parent_when_unspecified():
     s = mock.MagicMock(spec_set=state_registry.StateRegistry)
-    g = mock.MagicMock(spec_set=guild.Guild)
+    g = mock.MagicMock(spec_set=guilds.Guild)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
-    g.channels = {1234: mock.MagicMock(spec_set=channel.GuildCategory)}
+    g.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
 
-    c = channel.GuildTextChannel(
+    c = channels.GuildTextChannel(
         s,
         {
             "type": 0,
@@ -107,7 +107,7 @@ def test_GuildChannel_parent_when_unspecified():
 @pytest.mark.model
 def test_GuildTextChannel():
     s = mock.MagicMock(spec_set=state_registry.StateRegistry)
-    gtc = channel.GuildTextChannel(
+    gtc = channels.GuildTextChannel(
         s,
         {
             "type": 0,
@@ -138,7 +138,7 @@ def test_GuildTextChannel():
 @pytest.mark.model
 def test_DMChannel():
     s = mock.MagicMock(spec_set=state_registry.StateRegistry)
-    dmc = channel.DMChannel(s, {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []})
+    dmc = channels.DMChannel(s, {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []})
 
     assert dmc.id == 929292
     assert dmc.last_message_id == 12345
@@ -149,7 +149,7 @@ def test_DMChannel():
 @pytest.mark.model
 def test_GuildVoiceChannel():
     s = mock.MagicMock(spec_set=state_registry.StateRegistry)
-    gvc = channel.GuildVoiceChannel(
+    gvc = channels.GuildVoiceChannel(
         s,
         {
             "type": 2,
@@ -178,7 +178,7 @@ def test_GuildVoiceChannel():
 @pytest.mark.model
 def test_GroupDMChannel():
     s = mock.MagicMock(spec_set=state_registry.StateRegistry)
-    gdmc = channel.GroupDMChannel(
+    gdmc = channels.GroupDMChannel(
         s,
         {
             "type": 3,
@@ -205,7 +205,7 @@ def test_GroupDMChannel():
 @pytest.mark.model
 def test_GuildCategory():
     s = mock.MagicMock(spec_set=state_registry.StateRegistry)
-    gc = channel.GuildCategory(
+    gc = channels.GuildCategory(
         s,
         {
             "type": 4,
@@ -228,7 +228,7 @@ def test_GuildCategory():
 @pytest.mark.model
 def test_GuildNewsChannel():
     s = mock.MagicMock(spec_set=state_registry.StateRegistry)
-    gnc = channel.GuildNewsChannel(
+    gnc = channels.GuildNewsChannel(
         s,
         {
             "type": 5,
@@ -259,7 +259,7 @@ def test_GuildNewsChannel():
 @pytest.mark.model
 def test_GuildStoreChannel():
     s = mock.MagicMock(spec_set=state_registry.StateRegistry)
-    gsc = channel.GuildStoreChannel(
+    gsc = channels.GuildStoreChannel(
         s,
         {
             "type": 6,
@@ -285,13 +285,13 @@ def test_GuildStoreChannel():
 @pytest.mark.parametrize(
     ["type_field", "expected_class"],
     [
-        (0, channel.GuildTextChannel),
-        (1, channel.DMChannel),
-        (2, channel.GuildVoiceChannel),
-        (3, channel.GroupDMChannel),
-        (4, channel.GuildCategory),
-        (5, channel.GuildNewsChannel),
-        (6, channel.GuildStoreChannel),
+        (0, channels.GuildTextChannel),
+        (1, channels.DMChannel),
+        (2, channels.GuildVoiceChannel),
+        (3, channels.GroupDMChannel),
+        (4, channels.GuildCategory),
+        (5, channels.GuildNewsChannel),
+        (6, channels.GuildStoreChannel),
     ],
 )
 def test_channel_from_dict_success_case(type_field, expected_class):
@@ -303,14 +303,14 @@ def test_channel_from_dict_success_case(type_field, expected_class):
         args[1]["guild_id"] = "1234"
 
     with mock.patch(fqn, wraps=expected_class, return_value=None) as m:
-        channel.channel_from_dict(*args)
+        channels.channel_from_dict(*args)
         m.assert_called_once_with(*args)
 
 
 @pytest.mark.model
 def test_channel_failure_case():
     try:
-        channel.channel_from_dict(mock.MagicMock(), {"type": -999})
+        channels.channel_from_dict(mock.MagicMock(), {"type": -999})
         assert False
     except TypeError:
         pass
@@ -320,11 +320,11 @@ def test_channel_failure_case():
 @pytest.mark.parametrize(
     "impl",
     [
-        channel.GuildTextChannel,
-        channel.GuildVoiceChannel,
-        channel.GuildStoreChannel,
-        channel.GuildNewsChannel,
-        channel.GuildCategory,
+        channels.GuildTextChannel,
+        channels.GuildVoiceChannel,
+        channels.GuildStoreChannel,
+        channels.GuildNewsChannel,
+        channels.GuildCategory,
     ],
 )
 def test_channel_guild(impl):
@@ -344,4 +344,4 @@ def test_channel_guild(impl):
     ["type_id", "is_dm"], [[0, False], [1, True], [2, False], [3, True], [4, False], [5, False], [6, False]]
 )
 def test_is_channel_type_dm(type_id, is_dm):
-    assert channel.is_channel_type_dm(type_id) is is_dm
+    assert channels.is_channel_type_dm(type_id) is is_dm

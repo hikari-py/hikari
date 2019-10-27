@@ -22,7 +22,7 @@ from unittest import mock
 import pytest
 
 from hikari.core.internal import state_registry
-from hikari.core.models import invite
+from hikari.core.models import invites
 
 
 @pytest.mark.model
@@ -34,7 +34,7 @@ class TestInvite:
         channel_dict = {"id": "165176875973476352", "name": "illuminati", "type": 0}
         user_dict = {"id": "165176875973476352", "username": "bob", "avatar": "deadbeef", "discriminator": "#1234"}
 
-        inv = invite.Invite(
+        inv = invites.Invite(
             test_state,
             {
                 "code": "0vCdhLbwjZZTWZLD",
@@ -70,7 +70,7 @@ class TestInviteMetadata:
             "premium_type": 1,
         }
 
-        invm = invite.InviteMetadata(
+        invm = invites.InviteMetadata(
             test_state,
             {
                 "inviter": user_dict,

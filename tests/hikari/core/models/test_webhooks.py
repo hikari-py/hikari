@@ -21,7 +21,7 @@ from unittest import mock
 import pytest
 
 from hikari.core.internal import state_registry
-from hikari.core.models import webhook
+from hikari.core.models import webhooks
 
 
 @pytest.mark.model
@@ -36,7 +36,7 @@ class TestWebhook:
             "avatar": "5500909a3274e1812beb4e8de6631111",
         }
 
-        wh = webhook.Webhook(
+        wh = webhooks.Webhook(
             test_state,
             {
                 "name": "test webhook",

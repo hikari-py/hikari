@@ -27,12 +27,12 @@ import enum
 import typing
 
 from hikari.core.internal import state_registry
-from hikari.core.models import base, reaction, webhook
-from hikari.core.models import channel
-from hikari.core.models import embed
-from hikari.core.models import guild
+from hikari.core.models import base, reactions, webhooks
+from hikari.core.models import channels
+from hikari.core.models import embeds
+from hikari.core.models import guilds
 from hikari.core.models import media
-from hikari.core.models import user
+from hikari.core.models import users
 from hikari.core.utils import date_utils, auto_repr, custom_types
 from hikari.core.utils import transform
 
@@ -141,7 +141,7 @@ class Message(base.Snowflake, base.HikariModel):
 
     #: Either a :type:`user.User`, a :type:`member.Member` or a :type:`webhook.Webhook` depending on what created the
     #: message and where.
-    author: typing.Union[user.User, user.Member, webhook.Webhook]
+    author: typing.Union[users.User, users.Member, webhooks.Webhook]
 
     #: The ID of the message.
     #:
@@ -176,7 +176,7 @@ class Message(base.Snowflake, base.HikariModel):
     #: List of embeds on this message, if any.
     #:
     #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.embed.Embed`
-    embeds: typing.Sequence[embed.Embed]
+    embeds: typing.Sequence[embeds.Embed]
 
     #: Whether this message is pinned or not.
     #:
@@ -206,7 +206,7 @@ class Message(base.Snowflake, base.HikariModel):
     #: Message reactions, if any.
     #:
     #: :type: :class:`typing.List` of :class:`hikari.core.models.reaction.Reaction`
-    reactions: typing.List[reaction.Reaction]
+    reactions: typing.List[reactions.Reaction]
 
     #: Optional crossposting reference. Only valid if the message is a cross post.
     #:
@@ -264,7 +264,7 @@ class Message(base.Snowflake, base.HikariModel):
             self.attachments = [media.Attachment(a) for a in payload["attachments"]]
 
         if "embeds" in payload:
-            self.embeds = [embed.Embed.from_dict(e) for e in payload["embeds"]]
+            self.embeds = [embeds.Embed.from_dict(e) for e in payload["embeds"]]
 
         if "pinned" in payload:
             self.pinned = payload["pinned"]
@@ -284,18 +284,18 @@ class Message(base.Snowflake, base.HikariModel):
                 self._state.parse_reaction(reaction_payload)
 
     @property
-    def guild(self) -> typing.Optional[guild.Guild]:
+    def guild(self) -> typing.Optional[guilds.Guild]:
         return self._state.get_guild_by_id(self._guild_id) if self._guild_id else None
 
     @property
     def channel(
         self
     ) -> typing.Union[
-        channel.GuildTextChannel,
-        channel.GuildNewsChannel,
-        channel.GuildStoreChannel,
-        channel.DMChannel,
-        channel.GroupDMChannel,
+        channels.GuildTextChannel,
+        channels.GuildNewsChannel,
+        channels.GuildStoreChannel,
+        channels.DMChannel,
+        channels.GroupDMChannel,
     ]:
         # We may as well just use this to get it. It is pretty much as fast, but it reduces the amount of testing
         # needed for code that is essentially the same.

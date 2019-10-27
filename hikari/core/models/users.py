@@ -27,7 +27,7 @@ import typing
 
 from hikari.core.internal import state_registry
 from hikari.core.models import base
-from hikari.core.models import presence
+from hikari.core.models import presences
 from hikari.core.utils import date_utils, auto_repr, custom_types
 from hikari.core.utils import delegate
 from hikari.core.utils import transform
@@ -117,7 +117,7 @@ class Member(User):
     #: The user's online presence.
     #:
     #: :type: :class:`hikari.core.models.presence.Presence`
-    presence: presence.Presence
+    presence: presences.Presence
 
     __copy_by_ref__ = ("presence",)
 
