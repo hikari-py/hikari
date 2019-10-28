@@ -19,27 +19,46 @@
 """
 Pushes a release to GitLab via the release API.
 """
+import contextlib
+import io
 import os
-import re
 import subprocess
 import sys
 import traceback
 
+import gcg.entrypoint
 import requests
 
-
-release = sys.argv[1]
+api_name = sys.argv[1]
+release = sys.argv[2]
 project_id = os.getenv("CI_PROJECT_ID", 0)
 # Personal access token with read/write API scope.
 token = os.environ["GITLAB_RELEASE_TOKEN"]
 
 
+def get_most_recent_tag_hash():
+    # We skip one as we expect a new tag to just have been created a few moments ago.
+    return subprocess.check_output(
+        ["git", "rev-list", "--tags", "--skip=1", "--max-count=1"], universal_newlines=True
+    ).strip()
+
+
 def try_to_get_changelog():
-    return "No changelog was able to be generated."
+    try:
+        sio = io.StringIO()
+        with contextlib.redirect_stdout(sio):
+            gcg.entrypoint.main(["-O", "rpm", "-s", get_most_recent_tag_hash()])
+        return sio.getvalue()
+    except Exception:
+        traceback.print_exc()
+        sio = io.StringIO()
+        with contextlib.redirect_stdout(sio):
+            gcg.entrypoint.main(["-O", "rpm"])
+    finally:
+        return sio.getvalue()
 
 
 change_log = try_to_get_changelog()
-
 
 headers = {
     "PRIVATE-TOKEN": token,
@@ -52,7 +71,7 @@ payload = {
     "description": change_log,
     "assets": {
         "links": [
-            {"name": "PyPI package", "url": f"https://pypi.org/package/{release}"}
+            {"name": "PyPI package", "url": f"https://pypi.org/project/{api_name}/{release}"}
         ]
     }
 }
