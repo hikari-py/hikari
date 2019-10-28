@@ -159,292 +159,320 @@ class TestStateRegistryImpl:
 
         assert True, "this should exit silently"
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_message_cached(self):
-        raise NotImplementedError
+    def test_delete_message_cached(self, registry: state_registry_impl.StateRegistryImpl):
+        message_obj = mock_model(messages.Message, id=1234)
+        registry._message_cache = {message_obj.id: message_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_message_uncached(self):
-        raise NotImplementedError
+        registry.delete_message(message_obj)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_member_cached(self):
-        raise NotImplementedError
+        assert message_obj not in registry._message_cache
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_member_uncached(self):
-        raise NotImplementedError
+    def test_delete_message_uncached(self, registry: state_registry_impl.StateRegistryImpl):
+        message_obj = mock_model(messages.Message, id=1234)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_reaction_cached(self):
-        raise NotImplementedError
+        registry.delete_message(message_obj)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_reaction_uncached(self):
-        raise NotImplementedError
+        assert True, "this should exit silently"
+
+    def test_delete_member_cached(self, registry: state_registry_impl.StateRegistryImpl):
+        member_obj = mock_model(users.Member, id=1234)
+        guild_obj = mock_model(guilds.Guild, id=5689)
+        guild_obj.members = {member_obj.id: member_obj}
+        member_obj.guild = guild_obj
+        registry._guilds = {guild_obj.id: guild_obj}
+
+        registry.delete_member(member_obj)
+
+        assert member_obj.id not in guild_obj.members
+
+    def test_delete_member_uncached(self, registry: state_registry_impl.StateRegistryImpl):
+        member_obj = mock_model(users.Member, id=1234)
+
+        registry.delete_member(member_obj)
+
+        assert True, "this should exit silently"
+
+    def test_delete_reaction_cached(self, registry: state_registry_impl.StateRegistryImpl):
+        emoji_obj = mock_model(emojis.Emoji)
+        user_obj = mock_model(users.User, id=6789)
+        message_obj = mock_model(messages.Message, id=1234)
+        message_obj.reactions = [reactions.Reaction(5, emoji_obj, message_obj)]
+
+        registry.delete_reaction(message_obj, user_obj, emoji_obj)
+
+        assert len(message_obj.reactions) == 0
+
+    def test_delete_reaction_uncached(self, registry: state_registry_impl.StateRegistryImpl):
+        emoji_obj = mock_model(emojis.Emoji)
+        user_obj = mock_model(users.User, id=6789)
+        message_obj = mock_model(messages.Message, id=1234)
+
+        registry.delete_reaction(message_obj, user_obj, emoji_obj)
+
+        assert True, "this should exit silently"
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_role_cached(self):
+    def test_delete_role_cached(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_role_uncached(self):
+    def test_delete_role_uncached(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_channel_by_id_cached_guild_channel(self):
+    def test_get_channel_by_id_cached_guild_channel(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_channel_by_id_cached_dm_channel(self):
+    def test_get_channel_by_id_cached_dm_channel(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_channel_by_id_uncached_returns_None(self):
+    def test_get_channel_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_emoji_by_id_cached(self):
+    def test_get_emoji_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_emoji_by_id_uncached_returns_None(self):
+    def test_get_emoji_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_guild_by_id_cached(self):
+    def test_get_guild_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_guild_by_id_uncached_returns_None(self):
+    def test_get_guild_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_member_by_id_cached_guild_cached_user(self):
+    def test_get_member_by_id_cached_guild_cached_user(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_member_by_id_cached_guild_uncached_user(self):
+    def test_get_member_by_id_cached_guild_uncached_user(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_member_by_id_uncached_guild_cached_user(self):
+    def test_get_member_by_id_uncached_guild_cached_user(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_member_by_id_uncached_guild_uncached_user(self):
+    def test_get_member_by_id_uncached_guild_uncached_user(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_message_by_id_cached(self):
+    def test_get_message_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_message_by_id_uncached_returns_None(self):
+    def test_get_message_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_role_by_id_cached_guild_cached_role(self):
+    def test_get_role_by_id_cached_guild_cached_role(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_role_by_id_cached_guild_uncached_role(self):
+    def test_get_role_by_id_cached_guild_uncached_role(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_role_by_id_uncached_guild_uncached_role(self):
+    def test_get_role_by_id_uncached_guild_uncached_role(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_user_by_id_cached(self):
+    def test_get_user_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_user_by_id_uncached_returns_None(self):
+    def test_get_user_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_channel_sets_guild_id_on_guild_channel_payload_if_not_None(self):
+    def test_parse_channel_sets_guild_id_on_guild_channel_payload_if_not_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_channel_updates_state_if_already_cached(self):
+    def test_parse_channel_updates_state_if_already_cached(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_channel_returns_existing_channel_if_already_cached(self):
+    def test_parse_channel_returns_existing_channel_if_already_cached(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_channel_caches_dm_channel_if_uncached_dm_channel(self):
+    def test_parse_channel_caches_dm_channel_if_uncached_dm_channel(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_channel_caches_guild_channel_if_uncached_guild_channel(self):
+    def test_parse_channel_caches_guild_channel_if_uncached_guild_channel(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_channel_returns_new_channel_if_uncached(self):
+    def test_parse_channel_returns_new_channel_if_uncached(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_unicode_emoji_does_not_change_cache(self):
+    def test_parse_unicode_emoji_does_not_change_cache(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_unicode_emoji_returns_unicode_emoji(self):
+    def test_parse_unicode_emoji_returns_unicode_emoji(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_unknown_emoji_does_not_change_cache(self):
+    def test_parse_unknown_emoji_does_not_change_cache(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_unknown_emoji_returns_unknown_emoji(self):
+    def test_parse_unknown_emoji_returns_unknown_emoji(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_guild_emoji_caches_emoji_globally(self):
+    def test_parse_guild_emoji_caches_emoji_globally(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_guild_emoji_when_valid_guild_caches_emoji_on_guild(self):
+    def test_parse_guild_emoji_when_valid_guild_caches_emoji_on_guild(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_guild_emoji_when_valid_guild_returns_guild_emoji(self):
+    def test_parse_guild_emoji_when_valid_guild_returns_guild_emoji(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_guild_emoji_when_invalid_guild_returns_guild_emoji(self):
+    def test_parse_guild_emoji_when_invalid_guild_returns_guild_emoji(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_guild_when_already_cached_and_is_available(self):
+    def test_parse_guild_when_already_cached_and_is_available(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_guild_when_already_cached_and_is_unavailable(self):
+    def test_parse_guild_when_already_cached_and_is_unavailable(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_guild_when_not_cached(self):
+    def test_parse_guild_when_not_cached(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_guild_returns_guild(self):
+    def test_parse_guild_returns_guild(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_member_when_existing_member_updates_state(self):
+    def test_parse_member_when_existing_member_updates_state(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_member_when_existing_member_returns_existing_member(self):
+    def test_parse_member_when_existing_member_returns_existing_member(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_member_when_new_member_caches_new_member_on_guild(self):
+    def test_parse_member_when_new_member_caches_new_member_on_guild(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_member_when_new_member_returns_new_member(self):
+    def test_parse_member_when_new_member_returns_new_member(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_message_when_channel_uncached_returns_None(self):
+    def test_parse_message_when_channel_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_message_when_channel_cached_updates_last_message_timestamp_on_channel(self):
+    def test_parse_message_when_channel_cached_updates_last_message_timestamp_on_channel(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_message_when_channel_cached_returns_message(self):
+    def test_parse_message_when_channel_cached_returns_message(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_presence(self):
+    def test_parse_presence(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_reaction_when_message_is_cached_and_existing_reaction_updates_reaction_count(self):
+    def test_parse_reaction_when_message_is_cached_and_existing_reaction_updates_reaction_count(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_reaction_when_message_is_cached_and_not_existing_reaction_adds_new_reaction(self):
+    def test_parse_reaction_when_message_is_cached_and_not_existing_reaction_adds_new_reaction(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_reaction_when_message_is_uncached_returns_None(self):
+    def test_parse_reaction_when_message_is_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_role_when_guild_uncached_returns_None(self):
+    def test_parse_role_when_guild_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_role_when_guild_cached_updates_role_mapping(self):
+    def test_parse_role_when_guild_cached_updates_role_mapping(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_role_when_guild_cached_returns_role(self):
+    def test_parse_role_when_guild_cached_returns_role(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_user_when_bot_user_calls_parse_bot_user(self):
+    def test_parse_user_when_bot_user_calls_parse_bot_user(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_user_when_uncached_user_creates_new_user_and_returns_it(self):
+    def test_parse_user_when_uncached_user_creates_new_user_and_returns_it(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_user_when_cached_user_updates_state_of_existing_user(self):
+    def test_parse_user_when_cached_user_updates_state_of_existing_user(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_user_when_cached_returns_cached_user(self):
+    def test_parse_user_when_cached_returns_cached_user(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_webhook_returns_webhook(self):
+    def test_parse_webhook_returns_webhook(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_all_reactions_sets_reaction_counts_to_0(self):
+    def test_remove_all_reactions_sets_reaction_counts_to_0(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_all_reactions_removes_all_reactions(self):
+    def test_remove_all_reactions_removes_all_reactions(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_reaction_when_cached_and_more_than_one_user_on_the_same_reaction_decrements_count_by_1(self):
+    def test_remove_reaction_when_cached_and_more_than_one_user_on_the_same_reaction_decrements_count_by_1(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_reaction_when_cached_and_one_user_on_reaction_sets_count_to_0(self):
+    def test_remove_reaction_when_cached_and_one_user_on_reaction_sets_count_to_0(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_reaction_when_cached_and_one_user_on_reaction_removes_reaction_from_message(self):
+    def test_remove_reaction_when_cached_and_one_user_on_reaction_removes_reaction_from_message(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_reaction_when_cached_returns_existing_reaction(self):
+    def test_remove_reaction_when_cached_returns_existing_reaction(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_reaction_when_uncached_returns_new_reaction(self):
+    def test_remove_reaction_when_uncached_returns_new_reaction(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_reaction_when_uncached_sets_reaction_count_to_0(self):
+    def test_remove_reaction_when_uncached_sets_reaction_count_to_0(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_set_guild_unavailability_for_uncached_guild_exits_silently(self):
+    def test_set_guild_unavailability_for_uncached_guild_exits_silently(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
@@ -453,71 +481,71 @@ class TestStateRegistryImpl:
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_set_last_pinned_timestamp_for_cached_channel_id_exits_silently(self):
+    def test_set_last_pinned_timestamp_for_cached_channel_id_exits_silently(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_set_last_pinned_timestamp_for_uncached_channel_id_exits_silently(self):
+    def test_set_last_pinned_timestamp_for_uncached_channel_id_exits_silently(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_set_roles_for_member_replaces_role_list_on_member(self):
+    def test_set_roles_for_member_replaces_role_list_on_member(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_update_channel_when_existing_channel_does_not_exist_returns_None(self):
+    def test_update_channel_when_existing_channel_does_not_exist_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_update_channel_when_existing_channel_exists_returns_old_state_copy_and_updated_new_state(self):
+    def test_update_channel_when_existing_channel_exists_returns_old_state_copy_and_updated_new_state(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_update_guild_when_existing_guild_does_not_exist_returns_None(self):
+    def test_update_guild_when_existing_guild_does_not_exist_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_update_guild_when_existing_guild_exists_returns_old_state_copy_and_updated_new_state(self):
+    def test_update_guild_when_existing_guild_exists_returns_old_state_copy_and_updated_new_state(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_update_member_when_guild_does_not_exist_returns_None(self):
+    def test_update_member_when_guild_does_not_exist_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_update_member_when_existing_member_does_not_exist_returns_None(self):
+    def test_update_member_when_existing_member_does_not_exist_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_update_member_when_existing_member_exists_returns_old_state_copy_and_updated_new_state(self):
+    def test_update_member_when_existing_member_exists_returns_old_state_copy_and_updated_new_state(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_update_member_presence_when_guild_does_not_exist_returns_None(self):
+    def test_update_member_presence_when_guild_does_not_exist_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_update_member_presence_when_existing_member_does_not_exist_returns_None(self):
+    def test_update_member_presence_when_existing_member_does_not_exist_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_update_member_presence_when_existing_member_exists_returns_old_state_copy_and_updated_new_state(self):
+    def test_update_member_presence_when_existing_member_exists_returns_old_state_copy_and_updated_new_state(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_update_message_when_existing_message_uncached_returns_None(self):
+    def test_update_message_when_existing_message_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_update_message_when_existing_message_cached_returns_old_state_copy_and_updated_new_state(self):
+    def test_update_message_when_existing_message_cached_returns_old_state_copy_and_updated_new_state(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_update_role_when_existing_role_does_not_exist_returns_None(self):
+    def test_update_role_when_existing_role_does_not_exist_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
-    def test_update_role_when_existing_role_exists_returns_old_state_copy_and_updated_new_state(self):
+    def test_update_role_when_existing_role_exists_returns_old_state_copy_and_updated_new_state(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
 
     def test_copy_constructor_returns_same_instance(self):

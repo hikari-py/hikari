@@ -136,7 +136,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
     def delete_reaction(self, message_obj: messages.Message, user_obj: users.User, emoji_obj: emojis.Emoji) -> None:
         # We do not store info about the user, so just ignore that parameter.
         for reaction_obj in message_obj.reactions:
-            if reaction_obj.emoji == emojis and reaction_obj.message.id == reaction_obj.message.id:
+            if reaction_obj.emoji == emoji_obj and reaction_obj.message.id == reaction_obj.message.id:
                 message_obj.reactions.remove(reaction_obj)
                 # This emoji will only be referenced once, so shortcut to save time.
                 break
