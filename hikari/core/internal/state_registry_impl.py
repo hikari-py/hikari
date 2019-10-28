@@ -86,7 +86,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
     @property
     def message_cache(self) -> typing.MutableMapping[int, messages.Message]:
-        return self.message_cache
+        return self._message_cache
 
     def add_reaction(self, message_obj: messages.Message, emoji_obj: emojis.Emoji) -> reactions.Reaction:
         # Ensure the reaction is subscribed on the message.

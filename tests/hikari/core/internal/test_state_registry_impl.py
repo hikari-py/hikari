@@ -16,24 +16,32 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+from unittest import mock
+
 import pytest
 
 from hikari.core.internal import state_registry_impl
 
 
+@pytest.fixture()
+def state_registry_obj():
+    return state_registry_impl.StateRegistryImpl(999, 999)
+
+
 @pytest.mark.state
 class TestStateRegistryImpl:
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_message_cache_property_returns_message_cache(self):
-        raise NotImplementedError
+    def test_message_cache_property_returns_message_cache(self, state_registry_obj):
+        cache = mock.MagicMock()
+        state_registry_obj._message_cache = cache
+        assert state_registry_obj.message_cache is cache
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_me_property_returns_bot_user_when_cached(self):
-        raise NotImplementedError
+    def test_me_property_returns_bot_user_when_cached(self, state_registry_obj):
+        user = mock.MagicMock()
+        state_registry_obj._user = user
+        assert state_registry_obj.me is user
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_me_property_returns_None_when_uncached(self):
-        raise NotImplementedError
+    def test_me_property_returns_None_when_uncached(self, state_registry_obj):
+        assert state_registry_obj.me is None
 
     @pytest.mark.xfail(reason="Not yet implemented")
     def test_add_reaction_for_existing_reaction(self):
