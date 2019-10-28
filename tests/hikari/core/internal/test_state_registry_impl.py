@@ -19,8 +19,20 @@
 from unittest import mock
 
 import pytest
+import typing
 
 from hikari.core.internal import state_registry_impl
+from hikari.core.models import emojis, users
+from hikari.core.models import messages
+from hikari.core.models import reactions
+
+
+T = typing.TypeVar("T")
+
+
+def mock_model(spec_set: typing.Type[T]) -> T:
+    # Enables type hinting for my own reference.
+    return mock.MagicMock(spec_set=spec_set)
 
 
 @pytest.fixture()
@@ -31,25 +43,34 @@ def state_registry_obj():
 @pytest.mark.state
 class TestStateRegistryImpl:
     def test_message_cache_property_returns_message_cache(self, state_registry_obj):
-        cache = mock.MagicMock()
+        cache = mock_model(dict)
         state_registry_obj._message_cache = cache
         assert state_registry_obj.message_cache is cache
 
     def test_me_property_returns_bot_user_when_cached(self, state_registry_obj):
-        user = mock.MagicMock()
+        user = mock_model(users.BotUser)
         state_registry_obj._user = user
         assert state_registry_obj.me is user
 
     def test_me_property_returns_None_when_uncached(self, state_registry_obj):
         assert state_registry_obj.me is None
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_add_reaction_for_existing_reaction(self):
-        raise NotImplementedError
+    def test_add_reaction_for_existing_reaction(self, state_registry_obj):
+        message_obj = mock_model(messages.Message)
+        emoji_obj = mock_model(emojis.Emoji)
+        reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
+        message_obj.reactions = [reaction_obj]
+        new_reaction_obj = state_registry_obj.add_reaction(message_obj, emoji_obj)
+        assert new_reaction_obj is reaction_obj
+        assert new_reaction_obj.count == 6
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_add_reaction_for_new_reaction(self):
-        raise NotImplementedError
+    def test_add_reaction_for_new_reaction(self, state_registry_obj):
+        message_obj = mock_model(messages.Message)
+        emoji_obj = mock_model(emojis.Emoji)
+        message_obj.reactions = []
+        new_reaction_obj = state_registry_obj.add_reaction(message_obj, emoji_obj)
+        assert isinstance(new_reaction_obj, reactions.Reaction)
+        assert new_reaction_obj.count == 1
 
     @pytest.mark.xfail(reason="Not yet implemented")
     def test_delete_channel_when_cached_guild_channel(self):
