@@ -16,6 +16,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+
+from . import core, commands
+
 __author__ = "Nekoka.tt"
 __contributors__ = {"LunarCoffee", "raatty", "Tmpod", "Zach", "thomm.o", "rock500", "davfsa"}
 __copyright__ = f"© 2019 Nekoka.tt"
