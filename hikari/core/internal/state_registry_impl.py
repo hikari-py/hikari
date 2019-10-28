@@ -144,13 +144,13 @@ class StateRegistryImpl(state_registry.StateRegistry):
     # noinspection PyProtectedMember
     def delete_role(self, role_obj: roles.Role) -> None:
         guild_obj = role_obj.guild
-        try:
+        with contextlib.suppress(KeyError):
             del guild_obj.roles[role_obj.id]
-        except KeyError:
-            # Don't bother updating the members, something is inconsistent in our state.
-            pass
-        else:
+
             for member in guild_obj.members.values():
+                # TODO: make member role references weak, perhaps?
+                # Would require me to store the actual roles rather than the IDs though...
+
                 # Protected member access, but much more efficient for this case than resolving every role repeatedly.
                 if role_obj.id in member._role_ids:
                     member._role_ids.remove(role_obj.id)
