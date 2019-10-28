@@ -140,6 +140,8 @@ def test_Member_user_accessor():
     u = mock.MagicMock(spec=users.User)
     g = mock.MagicMock(spec=guilds.Guild)
     s = mock.MagicMock(spec_set=state_registry.StateRegistry)
+    # Member's state is delegated to the inner user.
+    u._state = s
     s.parse_user = mock.MagicMock(return_value=u)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     m = users.Member(s, 1234, {"joined_at": "2019-05-17T06:26:56.936000+00:00", "user": u})
@@ -151,6 +153,8 @@ def test_Member_guild_accessor():
     u = mock.MagicMock(spec=users.User)
     g = mock.MagicMock(spec=guilds.Guild)
     s = mock.MagicMock(spec_set=state_registry.StateRegistry)
+    # Member's state is delegated to the inner user.
+    u._state = s
     s.parse_user = mock.MagicMock(return_value=u)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     m = users.Member(s, 1234, {"joined_at": "2019-05-17T06:26:56.936000+00:00", "user": u, "guild_id": 1234})
