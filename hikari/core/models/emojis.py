@@ -26,7 +26,7 @@ import dataclasses
 import typing
 
 from hikari.core.internal import state_registry
-from hikari.core.models import base
+from hikari.core.models import base, guilds
 from hikari.core.utils import custom_types, auto_repr
 
 
@@ -150,6 +150,10 @@ class GuildEmoji(UnknownEmoji):
         self.animated = payload.get("animated", False)
         self.managed = payload.get("managed", False)
         self._role_ids = [int(r) for r in payload.get("roles", custom_types.EMPTY_SEQUENCE)]
+
+    @property
+    def guild(self) -> guilds.Guild:
+        return self._state.get_guild_by_id(self._guild_id)
 
 
 def is_payload_guild_emoji_candidate(payload: custom_types.DiscordObject) -> bool:

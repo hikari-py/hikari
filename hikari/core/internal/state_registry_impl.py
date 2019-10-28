@@ -102,12 +102,12 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
     def delete_channel(self, channel_obj: channels.Channel) -> None:
         channel_id = channel_obj.id
-        if channel_obj in self._guild_channels:
+        if channel_id in self._guild_channels:
             channel_obj: channels.GuildChannel
             guild_obj = channel_obj.guild
             del guild_obj.channels[channel_id]
             del self._guild_channels[channel_id]
-        elif channel_obj in self._dm_channels:
+        elif channel_id in self._dm_channels:
             channel_obj: channels.DMChannel
             del self._dm_channels[channel_id]
 
@@ -118,7 +118,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
         guild_obj = emoji_obj.guild
 
         with contextlib.suppress(KeyError):
-            del guild_obj.emojis[emoji_obj]
+            del guild_obj.emojis[emoji_obj.id]
 
     def delete_guild(self, guild_obj: guilds.Guild) -> None:
         with contextlib.suppress(KeyError):

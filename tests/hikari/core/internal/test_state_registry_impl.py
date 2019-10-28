@@ -22,7 +22,7 @@ import pytest
 import typing
 
 from hikari.core.internal import state_registry_impl
-from hikari.core.models import emojis, users
+from hikari.core.models import emojis, users, channels, guilds
 from hikari.core.models import messages
 from hikari.core.models import reactions
 
@@ -30,79 +30,134 @@ from hikari.core.models import reactions
 T = typing.TypeVar("T")
 
 
-def mock_model(spec_set: typing.Type[T]) -> T:
-    # Enables type hinting for my own reference.
-    return mock.MagicMock(spec_set=spec_set)
+def mock_model(spec_set: typing.Type[T] = object, **kwargs) -> T:
+    # Enables type hinting for my own reference, and quick attribute setting.
+    obj = mock.MagicMock(spec_set=spec_set)
+    for name, value in kwargs.items():
+        setattr(obj, name, value)
+    return obj
 
 
 @pytest.fixture()
-def state_registry_obj():
+def registry():
     return state_registry_impl.StateRegistryImpl(999, 999)
 
 
+# noinspection PyPropertyAccess,PyProtectedMember
 @pytest.mark.state
 class TestStateRegistryImpl:
-    def test_message_cache_property_returns_message_cache(self, state_registry_obj):
+    def test_message_cache_property_returns_message_cache(self, registry: state_registry_impl.StateRegistryImpl):
         cache = mock_model(dict)
-        state_registry_obj._message_cache = cache
-        assert state_registry_obj.message_cache is cache
+        registry._message_cache = cache
 
-    def test_me_property_returns_bot_user_when_cached(self, state_registry_obj):
+        assert registry.message_cache is cache
+
+    def test_me_property_returns_bot_user_when_cached(self, registry: state_registry_impl.StateRegistryImpl):
         user = mock_model(users.BotUser)
-        state_registry_obj._user = user
-        assert state_registry_obj.me is user
+        registry._user = user
 
-    def test_me_property_returns_None_when_uncached(self, state_registry_obj):
-        assert state_registry_obj.me is None
+        assert registry.me is user
 
-    def test_add_reaction_for_existing_reaction(self, state_registry_obj):
+    def test_me_property_returns_None_when_uncached(self, registry: state_registry_impl.StateRegistryImpl):
+        assert registry.me is None
+
+    def test_add_reaction_for_existing_reaction(self, registry: state_registry_impl.StateRegistryImpl):
         message_obj = mock_model(messages.Message)
         emoji_obj = mock_model(emojis.Emoji)
         reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
         message_obj.reactions = [reaction_obj]
-        new_reaction_obj = state_registry_obj.add_reaction(message_obj, emoji_obj)
+
+        new_reaction_obj = registry.add_reaction(message_obj, emoji_obj)
+
         assert new_reaction_obj is reaction_obj
         assert new_reaction_obj.count == 6
 
-    def test_add_reaction_for_new_reaction(self, state_registry_obj):
+    def test_add_reaction_for_new_reaction(self, registry: state_registry_impl.StateRegistryImpl):
         message_obj = mock_model(messages.Message)
         emoji_obj = mock_model(emojis.Emoji)
         message_obj.reactions = []
-        new_reaction_obj = state_registry_obj.add_reaction(message_obj, emoji_obj)
+
+        new_reaction_obj = registry.add_reaction(message_obj, emoji_obj)
+
         assert isinstance(new_reaction_obj, reactions.Reaction)
         assert new_reaction_obj.count == 1
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_channel_when_cached_guild_channel(self):
-        raise NotImplementedError
+    def test_delete_channel_when_cached_guild_channel(self, registry: state_registry_impl.StateRegistryImpl):
+        channel_obj = mock_model(channels.GuildTextChannel, id=5678)
+        guild_obj = mock_model(guilds.Guild, id=1234)
+        channel_obj.guild = guild_obj
+        registry._guilds = {guild_obj.id: guild_obj}
+        guild_obj.channels = {channel_obj.id: channel_obj}
+        registry._guild_channels = {channel_obj.id: channel_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_channel_when_cached_dm_channel(self):
-        raise NotImplementedError
+        registry.delete_channel(channel_obj)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_channel_uncached(self):
-        raise NotImplementedError
+        assert channel_obj.id not in registry._guild_channels
+        assert channel_obj.id not in guild_obj.channels
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_emoji_cached_deletes_from_global_cache(self):
-        raise NotImplementedError
+    def test_delete_channel_when_cached_dm_channel(self, registry: state_registry_impl.StateRegistryImpl):
+        channel_obj = mock_model(channels.DMChannel, id=5678)
+        registry._dm_channels = {channel_obj.id: channel_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_emoji_cached_deletes_from_guild(self):
-        raise NotImplementedError
+        registry.delete_channel(channel_obj)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_emoji_uncached(self):
-        raise NotImplementedError
+        assert channel_obj.id not in registry._dm_channels
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_guild_cached(self):
-        raise NotImplementedError
+    def test_delete_channel_uncached(self, registry: state_registry_impl.StateRegistryImpl):
+        channel_obj = mock_model(channels.Channel)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_delete_guild_uncached(self):
-        raise NotImplementedError
+        registry.delete_channel(channel_obj)
+
+        assert True, "this should exit silently"
+
+    def test_delete_emoji_cached_deletes_from_global_cache(self, registry: state_registry_impl.StateRegistryImpl):
+        emoji_obj = mock_model(emojis.GuildEmoji, id=10987)
+        guild_obj = mock_model(guilds.Guild, id=6969)
+        guild_obj.emojis = {emoji_obj.id: emoji_obj}
+        emoji_obj.guild = guild_obj
+        registry._emojis = {emoji_obj.id: emoji_obj}
+        registry._guilds = {guild_obj.id: guild_obj}
+
+        registry.delete_emoji(emoji_obj)
+
+        assert emoji_obj.id not in registry._emojis
+
+    def test_delete_emoji_cached_deletes_from_guild(self, registry: state_registry_impl.StateRegistryImpl):
+        emoji_obj = mock_model(emojis.GuildEmoji, id=10987)
+        guild_obj = mock_model(guilds.Guild, id=6969)
+        guild_obj.emojis = {emoji_obj.id: emoji_obj}
+        emoji_obj.guild = guild_obj
+        registry._emojis = {emoji_obj.id: emoji_obj}
+        registry._guilds = {guild_obj.id: guild_obj}
+
+        registry.delete_emoji(emoji_obj)
+
+        assert emoji_obj.id not in guild_obj.emojis
+
+    def test_delete_emoji_uncached(self, registry: state_registry_impl.StateRegistryImpl):
+        emoji_obj = mock_model(emojis.GuildEmoji, id=10987)
+        guild_obj = mock_model(guilds.Guild, id=6969)
+        emoji_obj.guild = guild_obj
+
+        registry.delete_emoji(emoji_obj)
+
+        assert True, "this should exit silently"
+
+    def test_delete_guild_cached(self, registry: state_registry_impl.StateRegistryImpl):
+        guild_obj = mock_model(guilds.Guild, id=1234)
+        registry._guilds = {guild_obj.id: guild_obj}
+
+        registry.delete_guild(guild_obj)
+
+        assert guild_obj.id not in registry._guilds
+
+    def test_delete_guild_uncached(self, registry: state_registry_impl.StateRegistryImpl):
+        guild_obj = mock_model(guilds.Guild, id=1234)
+        registry._guilds = {}
+
+        registry.delete_guild(guild_obj)
+
+        assert True, "this should exit silently"
 
     @pytest.mark.xfail(reason="Not yet implemented")
     def test_delete_message_cached(self):
