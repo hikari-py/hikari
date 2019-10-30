@@ -22,7 +22,7 @@ import pytest
 import typing
 
 from hikari.core.internal import state_registry_impl
-from hikari.core.models import emojis, users, channels, guilds
+from hikari.core.models import emojis, users, channels, guilds, roles
 from hikari.core.models import messages
 from hikari.core.models import reactions
 
@@ -35,6 +35,9 @@ def mock_model(spec_set: typing.Type[T] = object, **kwargs) -> T:
     obj = mock.MagicMock(spec_set=spec_set)
     for name, value in kwargs.items():
         setattr(obj, name, value)
+
+    obj.__eq__ = lambda self, other: other is self
+    obj.__ne__ = lambda self, other: other is not self
     return obj
 
 
@@ -64,13 +67,16 @@ class TestStateRegistryImpl:
     def test_add_reaction_for_existing_reaction(self, registry: state_registry_impl.StateRegistryImpl):
         message_obj = mock_model(messages.Message)
         emoji_obj = mock_model(emojis.Emoji)
+        other_emoji_obj = mock_model(emojis.Emoji)
         reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
-        message_obj.reactions = [reaction_obj]
+        other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
+        message_obj.reactions = [other_reaction_obj, reaction_obj]
 
         new_reaction_obj = registry.add_reaction(message_obj, emoji_obj)
 
         assert new_reaction_obj is reaction_obj
         assert new_reaction_obj.count == 6
+        assert len(message_obj.reactions) == 2
 
     def test_add_reaction_for_new_reaction(self, registry: state_registry_impl.StateRegistryImpl):
         message_obj = mock_model(messages.Message)
@@ -193,14 +199,18 @@ class TestStateRegistryImpl:
         assert True, "this should exit silently"
 
     def test_delete_reaction_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        emoji_obj = mock_model(emojis.Emoji)
+        emoji_obj_to_remove = mock_model(emojis.Emoji)
+        emoji_obj_to_keep = mock_model(emojis.Emoji)
         user_obj = mock_model(users.User, id=6789)
         message_obj = mock_model(messages.Message, id=1234)
-        message_obj.reactions = [reactions.Reaction(5, emoji_obj, message_obj)]
+        message_obj.reactions = [
+            reactions.Reaction(7, emoji_obj_to_keep, message_obj),
+            reactions.Reaction(5, emoji_obj_to_remove, message_obj),
+        ]
 
-        registry.delete_reaction(message_obj, user_obj, emoji_obj)
+        registry.delete_reaction(message_obj, user_obj, emoji_obj_to_remove)
 
-        assert len(message_obj.reactions) == 0
+        assert len(message_obj.reactions) == 1
 
     def test_delete_reaction_uncached(self, registry: state_registry_impl.StateRegistryImpl):
         emoji_obj = mock_model(emojis.Emoji)
@@ -211,85 +221,151 @@ class TestStateRegistryImpl:
 
         assert True, "this should exit silently"
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_delete_role_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        role_obj_to_remove = mock_model(roles.Role, id=1234)
+        role_obj_to_keep = mock_model(roles.Role, id=1235)
+        guild_obj = mock_model(guilds.Guild, id=5678)
+        guild_obj.roles = {role_obj_to_remove.id: role_obj_to_remove, role_obj_to_keep.id: role_obj_to_keep}
+        role_obj_to_remove.guild = guild_obj
+        role_obj_to_keep.guild = guild_obj
+        member_obj = mock_model(users.Member, id=9101112)
+        member_obj._role_ids = [role_obj_to_keep.id, role_obj_to_remove.id]
+        other_member_obj = mock_model(users.Member, id=13141516)
+        guild_obj.members = {member_obj.id: member_obj, other_member_obj.id: other_member_obj}
+        registry._guilds = {guild_obj.id: guild_obj}
+        registry.delete_role(role_obj_to_remove)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert len(guild_obj.roles) == 1
+        assert len(member_obj._role_ids) == 1
+
     def test_delete_role_uncached(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        role_obj = mock_model(roles.Role, id=1234)
+        registry.delete_role(role_obj)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert True, "this should exit silently"
+
     def test_get_channel_by_id_cached_guild_channel(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        guild_channel_obj = mock_model(channels.GuildTextChannel, id=1234)
+        dm_channel_obj = mock_model(channels.GroupDMChannel, id=1235)
+        registry._guild_channels = {guild_channel_obj.id: guild_channel_obj}
+        registry._dm_channels = {dm_channel_obj.id: dm_channel_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_channel_by_id(guild_channel_obj.id) is guild_channel_obj
+
     def test_get_channel_by_id_cached_dm_channel(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        guild_channel_obj = mock_model(channels.GuildTextChannel, id=1234)
+        dm_channel_obj = mock_model(channels.GroupDMChannel, id=1235)
+        registry._guild_channels = {guild_channel_obj.id: guild_channel_obj}
+        registry._dm_channels = {dm_channel_obj.id: dm_channel_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_channel_by_id(dm_channel_obj.id) is dm_channel_obj
+
     def test_get_channel_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        guild_channel_obj = mock_model(channels.GuildTextChannel, id=1234)
+        dm_channel_obj = mock_model(channels.GroupDMChannel, id=1235)
+        registry._guild_channels = {guild_channel_obj.id: guild_channel_obj}
+        registry._dm_channels = {dm_channel_obj.id: dm_channel_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_channel_by_id(1236) is None
+
     def test_get_emoji_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        emoji_obj = mock_model(emojis.GuildEmoji, id=69)
+        registry._emojis = {emoji_obj.id: emoji_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_emoji_by_id(emoji_obj.id) is emoji_obj
+
     def test_get_emoji_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        emoji_obj = mock_model(emojis.GuildEmoji, id=69)
+        registry._emojis = {emoji_obj.id: emoji_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_emoji_by_id(70) is None
+
     def test_get_guild_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        guild_obj = mock_model(guilds.Guild, id=69)
+        registry._guilds = {guild_obj.id: guild_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_guild_by_id(guild_obj.id) is guild_obj
+
     def test_get_guild_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        guild_obj = mock_model(guilds.Guild, id=69)
+        registry._guilds = {guild_obj.id: guild_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_guild_by_id(70) is None
+
     def test_get_member_by_id_cached_guild_cached_user(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        guild_obj = mock_model(guilds.Guild, id=1)
+        member_obj = mock_model(users.Member, id=2, guild=guild_obj)
+        guild_obj.members = {member_obj.id: member_obj}
+        registry._guilds = {guild_obj.id: guild_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_member_by_id(member_obj.id, guild_obj.id) is member_obj
+
     def test_get_member_by_id_cached_guild_uncached_user(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        guild_obj = mock_model(guilds.Guild, id=1)
+        guild_obj.members = {}
+        registry._guilds = {guild_obj.id: guild_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_get_member_by_id_uncached_guild_cached_user(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        assert registry.get_member_by_id(1, guild_obj.id) is None
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_get_member_by_id_uncached_guild_uncached_user(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        guild_obj = mock_model(guilds.Guild, id=1)
+        member_obj = mock_model(users.Member, id=2, guild=guild_obj)
+        guild_obj.members = {member_obj.id: member_obj}
+        registry._guilds = {guild_obj.id: guild_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_member_by_id(3, 4) is None
+
     def test_get_message_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        message_obj = mock_model(messages.Message, id=69)
+        registry._message_cache = {message_obj.id: message_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_message_by_id(message_obj.id) is message_obj
+
     def test_get_message_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        message_obj = mock_model(messages.Message, id=69)
+        registry._message_cache = {message_obj.id: message_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_message_by_id(70) is None
+
     def test_get_role_by_id_cached_guild_cached_role(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        guild_obj = mock_model(guilds.Guild, id=1)
+        role_obj = mock_model(roles.Role, id=2, guild=guild_obj)
+        guild_obj.roles = {role_obj.id: role_obj}
+        registry._guilds = {guild_obj.id: guild_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_role_by_id(guild_obj.id, role_obj.id) is role_obj
+
     def test_get_role_by_id_cached_guild_uncached_role(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        guild_obj = mock_model(guilds.Guild, id=1)
+        guild_obj.roles = {}
+        registry._guilds = {guild_obj.id: guild_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_role_by_id(guild_obj.id, 2) is None
+
     def test_get_role_by_id_uncached_guild_uncached_role(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        registry._guilds = {}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_role_by_id(1, 2) is None
+
+    def test_get_user_by_id_cached_bot_user(self, registry: state_registry_impl.StateRegistryImpl):
+        user_obj = mock_model(users.BotUser, id=1)
+        registry._user = user_obj
+        registry._users = {}
+
+        assert registry.get_user_by_id(user_obj.id) is registry._user
+
     def test_get_user_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        user_obj = mock_model(users.User, id=1)
+        registry._user = mock_model(users.BotUser, id=2)
+        registry._users = {user_obj.id: user_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.get_user_by_id(user_obj.id) is user_obj
+
     def test_get_user_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        registry._user = None
+        registry._users = {}
+
+        assert registry.get_user_by_id(1) is None
 
     @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_channel_sets_guild_id_on_guild_channel_payload_if_not_None(
