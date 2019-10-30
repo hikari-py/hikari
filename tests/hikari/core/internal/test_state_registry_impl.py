@@ -16,37 +16,26 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import contextlib
 from unittest import mock
 
 import pytest
-import typing
 
 from hikari.core.internal import state_registry_impl
 from hikari.core.models import emojis, users, channels, guilds, roles
 from hikari.core.models import messages
 from hikari.core.models import reactions
-
-
-T = typing.TypeVar("T")
-
-
-def mock_model(spec_set: typing.Type[T] = object, **kwargs) -> T:
-    # Enables type hinting for my own reference, and quick attribute setting.
-    obj = mock.MagicMock(spec_set=spec_set)
-    for name, value in kwargs.items():
-        setattr(obj, name, value)
-
-    obj.__eq__ = lambda self, other: other is self
-    obj.__ne__ = lambda self, other: other is not self
-    return obj
+from tests.hikari.core import _helpers
+from tests.hikari.core._helpers import mock_model
 
 
 @pytest.fixture()
 def registry():
-    return state_registry_impl.StateRegistryImpl(999, 999)
+    # We cant overwrite methods on a slotted class... subclass it to remove that constraint.
+    return _helpers.unslot_class(state_registry_impl.StateRegistryImpl)(999, 999)
 
 
-# noinspection PyPropertyAccess,PyProtectedMember
+# noinspection PyPropertyAccess,PyProtectedMember,PyTypeChecker,PyDunderSlots,PyUnresolvedReferences
 @pytest.mark.state
 class TestStateRegistryImpl:
     def test_message_cache_property_returns_message_cache(self, registry: state_registry_impl.StateRegistryImpl):
@@ -367,75 +356,154 @@ class TestStateRegistryImpl:
 
         assert registry.get_user_by_id(1) is None
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_channel_sets_guild_id_on_guild_channel_payload_if_not_None(
+    def test_parse_bot_user_given_user_cached(self, registry: state_registry_impl.StateRegistryImpl):
+        bot_user = mock.MagicMock(spec_set=users.BotUser)
+        registry._user = bot_user
+        with mock.patch(_helpers.fqn1(users.BotUser), return_value=bot_user) as BotUser:
+            parsed_obj = registry.parse_bot_user({})
+            assert parsed_obj is bot_user
+            assert parsed_obj is registry.me
+            BotUser.assert_not_called()
+            bot_user.update_state.assert_called_once_with({})
+
+    def test_parse_bot_user_given_no_previous_user_cached(self, registry: state_registry_impl.StateRegistryImpl):
+        bot_user = mock.MagicMock(spec_set=users.BotUser)
+        with mock.patch(_helpers.fqn1(users.BotUser), return_value=bot_user) as BotUser:
+            parsed_obj = registry.parse_bot_user({})
+            assert parsed_obj is bot_user
+            assert parsed_obj is registry.me
+            BotUser.assert_called_once_with(registry, {})
+
+    def test_parse_channel_sets_guild_id_on_guild_channel_payload_if_guild_id_param_is_not_None(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        payload = {"id": "1234"}
+        channel_obj = mock_model(channels.GuildTextChannel, id=5678)
+        registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
+        with contextlib.suppress(Exception):
+            registry.parse_channel(payload, 1234)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert payload["guild_id"] == 1234
+
     def test_parse_channel_updates_state_if_already_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        payload = {"id": "1234"}
+        channel_obj = mock_model(channels.Channel, id=1234)
+        registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
+        registry.parse_channel(payload)
+        channel_obj.update_state.assert_called_once_with(payload)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_channel_returns_existing_channel_if_already_cached(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        payload = {"id": "1234"}
+        channel_obj = mock_model(channels.Channel, id=1234)
+        registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
+        result = registry.parse_channel(payload)
+        assert result is channel_obj
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_channel_caches_dm_channel_if_uncached_dm_channel(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        payload = {"id": "1234", "type": -1}
+        channel_obj = mock_model(channels.DMChannel, id=1234)
+        registry._dm_channels = {}
+        registry.get_channel_by_id = mock.MagicMock(return_value=None)
+        with mock.patch(_helpers.fqn1(channels.channel_from_dict), return_value=channel_obj):
+            with mock.patch(_helpers.fqn1(channels.is_channel_type_dm), return_value=True):
+                registry.parse_channel(payload)
+                assert channel_obj in registry._dm_channels.values()
+                assert channel_obj not in registry._guild_channels.values()
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_channel_caches_guild_channel_if_uncached_guild_channel(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        payload = {"id": "1234", "type": -1}
+        guild_obj = mock_model(guilds.Guild, id=100, channels={})
+        channel_obj = mock_model(channels.GuildChannel, id=1234, guild=guild_obj)
+        registry._dm_channels = {}
+        registry._guild_channels = {}
+        registry.get_channel_by_id = mock.MagicMock(return_value=None)
+        with mock.patch(_helpers.fqn1(channels.channel_from_dict), return_value=channel_obj):
+            with mock.patch(_helpers.fqn1(channels.is_channel_type_dm), return_value=False):
+                registry.parse_channel(payload)
+                assert channel_obj not in registry._dm_channels.values()
+                assert channel_obj in registry._guild_channels.values()
+                assert guild_obj.channels[channel_obj.id] is channel_obj
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_channel_returns_new_channel_if_uncached(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        payload = {"id": "1234", "type": -1}
+        channel_obj = mock_model(channels.Channel, id=1234)
+        registry.get_channel_by_id = mock.MagicMock(return_value=None)
+        with mock.patch(_helpers.fqn1(channels.channel_from_dict), return_value=channel_obj):
+            with mock.patch(_helpers.fqn1(channels.is_channel_type_dm), return_value=True):
+                result = registry.parse_channel(payload)
+                assert result is channel_obj
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_unicode_emoji_does_not_change_cache(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
+        payload = {"id": "1234"}
+        registry._emojis = {}
+        guild_id = None
+        with mock.patch(_helpers.fqn1(emojis.emoji_from_dict), return_value=emoji_obj):
+            registry.parse_emoji(payload, guild_id)
+            assert registry._emojis == {}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_unicode_emoji_returns_unicode_emoji(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
+        payload = {"id": "1234"}
+        guild_id = None
+        with mock.patch(_helpers.fqn1(emojis.emoji_from_dict), return_value=emoji_obj):
+            assert registry.parse_emoji(payload, guild_id) is emoji_obj
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_unknown_emoji_does_not_change_cache(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        emoji_obj = _helpers.mock_model(emojis.UnknownEmoji)
+        payload = {"id": "1234"}
+        registry._emojis = {}
+        guild_id = None
+        with mock.patch(_helpers.fqn1(emojis.emoji_from_dict), return_value=emoji_obj):
+            registry.parse_emoji(payload, guild_id)
+            assert registry._emojis == {}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_unknown_emoji_returns_unknown_emoji(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        emoji_obj = _helpers.mock_model(emojis.UnknownEmoji)
+        payload = {"id": "1234"}
+        guild_id = None
+        with mock.patch(_helpers.fqn1(emojis.emoji_from_dict), return_value=emoji_obj):
+            assert registry.parse_emoji(payload, guild_id) is emoji_obj
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_guild_emoji_caches_emoji_globally(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        guild_obj = _helpers.mock_model(guilds.Guild, id=5678)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, guild=guild_obj)
+        payload = {"id": "1234"}
+        registry._emojis = {}
+        registry._guilds = {guild_obj.id: guild_obj}
+        guild_id = guild_obj.id
+        with mock.patch(_helpers.fqn1(emojis.emoji_from_dict), return_value=emoji_obj):
+            registry.parse_emoji(payload, guild_id)
+            assert registry._emojis == {emoji_obj.id: emoji_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_guild_emoji_when_valid_guild_caches_emoji_on_guild(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        guild_obj = _helpers.mock_model(guilds.Guild, id=5678, emojis={})
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, guild=guild_obj)
+        payload = {"id": "1234"}
+        registry._guilds = {guild_obj.id: guild_obj}
+        guild_id = guild_obj.id
+        with mock.patch(_helpers.fqn1(emojis.emoji_from_dict), return_value=emoji_obj):
+            registry.parse_emoji(payload, guild_id)
+            assert emoji_obj in guild_obj.emojis.values()
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_guild_emoji_when_valid_guild_returns_guild_emoji(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_guild_emoji_when_invalid_guild_returns_guild_emoji(
-        self, registry: state_registry_impl.StateRegistryImpl
-    ):
-        raise NotImplementedError
+        guild_obj = _helpers.mock_model(guilds.Guild, id=5678)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, guild=guild_obj)
+        payload = {"id": "1234"}
+        registry._guilds = {guild_obj.id: guild_obj}
+        guild_id = guild_obj.id
+        with mock.patch(_helpers.fqn1(emojis.emoji_from_dict), return_value=emoji_obj):
+            assert registry.parse_emoji(payload, guild_id) is emoji_obj
 
     @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_guild_when_already_cached_and_is_available(self, registry: state_registry_impl.StateRegistryImpl):

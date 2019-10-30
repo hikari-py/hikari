@@ -184,18 +184,21 @@ class StateRegistryImpl(state_registry.StateRegistry):
         return self._users.get(user_id)
 
     def parse_bot_user(self, bot_user_payload: custom_types.DiscordObject) -> users.BotUser:
-        bot_user_payload = users.BotUser(self, bot_user_payload)
-        self._user = bot_user_payload
-        return bot_user_payload
+        if self._user is not None:
+            self._user.update_state(bot_user_payload)
+        else:
+            self._user = users.BotUser(self, bot_user_payload)
+
+        return self._user
 
     def parse_channel(
-        self, channel_payload: custom_types.DiscordObject, guild_id: typing.Optional[int]
+        self, channel_payload: custom_types.DiscordObject, guild_id: typing.Optional[int] = None
     ) -> channels.Channel:
         channel_id = int(channel_payload["id"])
         channel_obj = self.get_channel_by_id(channel_id)
 
         if guild_id is not None:
-            channel_obj["guild_id"] = guild_id
+            channel_payload["guild_id"] = guild_id
 
         if channel_obj is not None:
             channel_obj.update_state(channel_payload)
@@ -220,7 +223,9 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
     def parse_emoji(self, emoji_payload, guild_id):
         existing_emoji = None
-        emoji_id = int(emoji_payload["id"])
+        # While it is true the API docs state that we always get an ID back, I don't trust discord wont break this
+        # in the future, so I am playing it safe.
+        emoji_id = transform.nullable_cast(emoji_payload.get("id"), int)
 
         if emoji_id is not None:
             existing_emoji = self.get_emoji_by_id(emoji_id)
@@ -232,8 +237,8 @@ class StateRegistryImpl(state_registry.StateRegistry):
         new_emoji = emojis.emoji_from_dict(self, emoji_payload, guild_id)
         if isinstance(new_emoji, emojis.GuildEmoji):
             guild_obj = self.get_guild_by_id(guild_id)
-            if guild_obj is not None:
-                guild_obj.emojis[new_emoji.id] = new_emoji
+            guild_obj.emojis[new_emoji.id] = new_emoji
+            self._emojis[new_emoji.id] = new_emoji
 
         return new_emoji
 
