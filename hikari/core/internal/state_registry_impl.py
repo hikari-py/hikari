@@ -158,20 +158,18 @@ class StateRegistryImpl(state_registry.StateRegistry):
     def get_channel_by_id(self, channel_id: int) -> typing.Optional[channels.Channel]:
         return self._guild_channels.get(channel_id) or self._dm_channels.get(channel_id)
 
-    def get_emoji_by_id(self, emoji_id: int):
+    def get_emoji_by_id(self, emoji_id: int) -> typing.Optional[emojis.GuildEmoji]:
         return self._emojis.get(emoji_id)
 
-    def get_guild_by_id(self, guild_id: int):
+    def get_guild_by_id(self, guild_id: int) -> typing.Optional[guilds.Guild]:
         return self._guilds.get(guild_id)
 
     def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[users.Member]:
-        guild_obj = self._guilds.get(guild_id)
-        if guild_obj is None:
+        if guild_id not in self._guilds:
             return None
+        return self._guilds[guild_id].members.get(user_id)
 
-        return guild_obj.members.get(user_id)
-
-    def get_message_by_id(self, message_id: int):
+    def get_message_by_id(self, message_id: int) -> typing.Optional[messages.Message]:
         return self._message_cache.get(message_id)
 
     def get_role_by_id(self, guild_id: int, role_id: int) -> typing.Optional[roles.Role]:
@@ -179,7 +177,10 @@ class StateRegistryImpl(state_registry.StateRegistry):
             return None
         return self._guilds[guild_id].roles.get(role_id)
 
-    def get_user_by_id(self, user_id: int):
+    def get_user_by_id(self, user_id: int) -> typing.Optional[users.User]:
+        if self._user is not None and self._user.id == user_id:
+            return self._user
+
         return self._users.get(user_id)
 
     def parse_bot_user(self, bot_user_payload: custom_types.DiscordObject) -> users.BotUser:
