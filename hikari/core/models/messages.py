@@ -289,7 +289,7 @@ class Message(base.Snowflake, base.HikariModel):
 
     @property
     def channel(
-        self
+        self,
     ) -> typing.Union[
         channels.GuildTextChannel,
         channels.GuildNewsChannel,
