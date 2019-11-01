@@ -40,6 +40,8 @@ class Color(int, typing.SupportsInt):
     - RGB (float)
     - 3-digit hex codes (e.g. 0xF1A -- web safe)
     - 6-digit hex codes (e.g. 0xFF11AA)
+    - 3-digit RGB strings (e.g. #1A2 -- web safe)
+    - 6-digit RGB hash strings (e.g. #1A2B3C)
 
     Examples of conversions to given formats:
         >>> c = Color(0xFF051A)
@@ -256,4 +258,8 @@ def _all_same(first, *rest):
     return True
 
 
-__all__ = ["Color"]
+#: Alias for :class:`Color` for non-americanized developers.
+Colour = Color
+
+
+__all__ = ["Color", "Colour"]
