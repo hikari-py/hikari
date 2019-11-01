@@ -362,8 +362,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
                     reaction_obj.count = 0
                     message_obj.reactions.remove(reaction_obj)
                 return reaction_obj
-        else:
-            return reactions.Reaction(0, emoji_obj, message_obj)
+        return reactions.Reaction(0, emoji_obj, message_obj)
 
     def set_guild_unavailability(self, guild_id: int, unavailability: bool) -> None:
         guild_obj = self.get_guild_by_id(guild_id)

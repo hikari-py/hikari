@@ -505,21 +505,46 @@ class TestStateRegistryImpl:
         with mock.patch(_helpers.fqn1(emojis.emoji_from_dict), return_value=emoji_obj):
             assert registry.parse_emoji(payload, guild_id) is emoji_obj
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_guild_when_already_cached_and_is_available(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+    def test_parse_guild_when_already_cached_and_payload_is_available_calls_update_state(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        payload = {"id": "1234", "unavailable": False}
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1234)
+        registry._guilds = {guild_obj.id: guild_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_guild_when_already_cached_and_is_unavailable(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        registry.parse_guild(payload)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_guild_when_not_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        guild_obj.update_state.assert_called_with(payload)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_guild_returns_guild(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+    def test_parse_guild_when_already_cached_and_becomes_unavailable_only_sets_unavailability_flag(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        payload = {"id": "1234", "unavailable": True}
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1234, unavailable=False)
+        registry._guilds = {guild_obj.id: guild_obj}
+
+        registry.parse_guild(payload)
+
+        guild_obj.update_state.assert_not_called()
+        assert guild_obj.unavailable is True
+
+    def test_parse_guild_when_not_cached_caches_new_guild(self, registry: state_registry_impl.StateRegistryImpl):
+        payload = {"id": "1234", "unavailable": False}
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1234, unavailable=False)
+        registry._guilds = {}
+
+        with mock.patch(_helpers.fqn1(guilds.Guild), return_value=guild_obj) as Guild:
+            registry.parse_guild(payload)
+            Guild.assert_called_once_with(registry, payload)
+            assert guild_obj in registry._guilds.values()
+
+    def test_parse_guild_when_not_cached_returns_new_guild(self, registry: state_registry_impl.StateRegistryImpl):
+        payload = {"id": "1234", "unavailable": False}
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1234, unavailable=False)
+        registry._guilds = {}
+
+        with mock.patch(_helpers.fqn1(guilds.Guild), return_value=guild_obj):
+            assert registry.parse_guild(payload) is guild_obj
 
     @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_member_when_existing_member_updates_state(self, registry: state_registry_impl.StateRegistryImpl):
