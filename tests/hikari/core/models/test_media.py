@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
+import asynctest
 import pytest
 
 from hikari.core.models import media
@@ -97,3 +98,140 @@ class TestAttachment:
         assert attachment.size == 69
         assert attachment.width == 1920
         assert attachment.height == 1080
+
+    @pytest.mark.asyncio
+    async def test_Attachment_save(self):
+        attachment = media.Attachment(
+            {
+                "id": "123456",
+                "filename": "doggo.png",
+                "url": "bork.com",
+                "proxy_url": "we-are-watching-you.nsa.bork.com",
+                "size": 69,
+                "width": 1920,
+                "height": 1080,
+            }
+        )
+
+        chunks = 1000
+        i = 0
+
+        async def _readany():
+            nonlocal i
+            i += 1
+            while i < chunks:
+                yield bytes(i)
+                i += 1
+            else:
+                yield None
+
+        iter = _readany()
+
+        async def readany():
+            return await iter.__anext__()
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, ex_t, ex, ex_tb):
+            ...
+
+        aiofiles_obj = asynctest.MagicMock()
+        aiofiles_obj.write = asynctest.CoroutineMock()
+        aiohttp_resp_obj = asynctest.MagicMock()
+        aiohttp_resp_obj.content = asynctest.MagicMock()
+        aiohttp_resp_obj.content.readany = asynctest.CoroutineMock(wraps=readany)
+        aiofiles_obj.__aenter__ = __aenter__
+        aiohttp_resp_obj.__aenter__ = __aenter__
+        aiofiles_obj.__aexit__ = __aexit__
+        aiohttp_resp_obj.__aexit__ = __aexit__
+
+        fake_file = "test.file"
+
+        with asynctest.patch("aiofiles.open", return_value=aiofiles_obj) as aiofiles_open:
+            with asynctest.patch("aiohttp.request", return_value=aiohttp_resp_obj) as aiohttp_request:
+                await attachment.save(fake_file)
+
+                aiohttp_request.assert_called_once_with("get", attachment.url)
+                aiofiles_open.assert_called_once_with(fake_file, "wb", executor=None, loop=None)
+                assert aiofiles_obj.write.await_count == chunks
+                assert aiohttp_resp_obj.content.readany.await_count == chunks
+                assert i == chunks
+
+    @pytest.mark.asyncio
+    async def test_Attachment_read(self):
+        attachment = media.Attachment(
+            {
+                "id": "123456",
+                "filename": "doggo.png",
+                "url": "bork.com",
+                "proxy_url": "we-are-watching-you.nsa.bork.com",
+                "size": 69,
+                "width": 1920,
+                "height": 1080,
+            }
+        )
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, ex_t, ex, ex_tb):
+            ...
+
+        expected_result = object()
+
+        aiohttp_resp_obj = asynctest.MagicMock()
+        aiohttp_resp_obj.read = asynctest.CoroutineMock(return_value=expected_result)
+        aiohttp_resp_obj.raise_for_status = asynctest.MagicMock()
+        aiohttp_resp_obj.__aenter__ = __aenter__
+        aiohttp_resp_obj.__aexit__ = __aexit__
+
+        with asynctest.patch("aiohttp.request", return_value=aiohttp_resp_obj) as aiohttp_request:
+            actual_result = await attachment.read()
+
+            aiohttp_request.assert_called_once_with("get", attachment.url)
+            aiohttp_resp_obj.raise_for_status.assert_called_once()
+            aiohttp_resp_obj.read.assert_awaited_once()
+            assert actual_result is expected_result
+
+
+@pytest.mark.model
+@pytest.mark.asyncio
+async def test_InMemoryFile_open():
+    file = media.InMemoryFile("foo", "this is data")
+
+    class ContextManager:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+    with asynctest.patch("hikari.core.utils.io_utils.make_resource_seekable", return_value=ContextManager()) as mrs:
+        async with file.open() as fp:
+            assert isinstance(fp, ContextManager)
+        mrs.assert_called_once_with("this is data")
+
+
+@pytest.mark.model
+@pytest.mark.asyncio
+async def test_File_open():
+    file = media.File("foo")
+
+    class ContextManager:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+    with asynctest.patch("aiofiles.open", return_value=ContextManager()) as aiofiles_open:
+        async with file.open() as fp:
+            assert isinstance(fp, ContextManager)
+        aiofiles_open.assert_called_once_with("foo")
+
+
+@pytest.mark.model
+@pytest.mark.parametrize("file", [media.File("foo",), media.InMemoryFile("foo", "foo")])
+def test_hash_File(file):
+    assert hash(file) == hash(file.name)

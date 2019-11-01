@@ -35,5 +35,18 @@ def test_put_if_specified_when_unspecified():
     assert d == {}
 
 
+def test_put_if_not_None_when_not_None():
+    d = {}
+    transform.put_if_not_none(d, "foo", 69)
+    transform.put_if_not_none(d, "bar", "hi")
+    assert d == {"foo": 69, "bar": "hi"}
+
+
+def test_put_if_not_None_when_None():
+    d = {}
+    transform.put_if_not_none(d, "bar", None)
+    assert d == {}
+
+
 def test_format_present_placeholders():
     assert transform.format_present_placeholders("{foo} {bar} {baz}", foo=9, baz=27) == "9 {bar} 27"
