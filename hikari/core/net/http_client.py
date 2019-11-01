@@ -342,7 +342,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         content: str = unspecified.UNSPECIFIED,
         nonce: str = unspecified.UNSPECIFIED,
         tts: bool = False,
-        files: typing.List[io_utils.FileLike] = unspecified.UNSPECIFIED,
+        files: typing.List[io_utils.FileLikeT] = unspecified.UNSPECIFIED,
         embed: custom_types.DiscordObject = unspecified.UNSPECIFIED,
     ) -> custom_types.DiscordObject:
         """

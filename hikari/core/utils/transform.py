@@ -60,6 +60,24 @@ def put_if_specified(
         mapping[key] = value
 
 
+def put_if_not_none(
+    mapping: typing.Dict[typing.Hashable, typing.Any], key: typing.Hashable, value: typing.Optional[typing.Any]
+) -> None:
+    """
+    Add a value to the mapping under the given key as long as the value is not :attr:`None`
+
+    Args:
+        mapping:
+            The mapping to add to.
+        key:
+            The key to add the value under.
+        value:
+            The value to add.
+    """
+    if value is not None:
+        mapping[key] = value
+
+
 class SafeFormatDict(dict):
     """
     Used internally by :func:`format_present_placeholders`.

@@ -200,3 +200,6 @@ def pypitest(session: sessions.Session):
         session.install("-vvv", "--isolated", ".")
 
     session.run("python", "-c", f"import {MAIN_PACKAGE}; print({MAIN_PACKAGE}.__version__)")
+
+    # Prevent nox caching old versions and using those when tests run.
+    session.run("python", "-m", "pip", "uninstall", "-vvv", "-y", MAIN_PACKAGE)

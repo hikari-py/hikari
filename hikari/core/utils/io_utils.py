@@ -44,18 +44,14 @@ def make_resource_seekable(resource):
     return resource
 
 
-#: Type description for any object that can be considered to be file-like.
-FileLike = typing.Union[
-    bytes,
-    bytearray,
-    memoryview,
-    str,
-    io.IOBase,
-    io.StringIO,
-    io.BytesIO,
-    io.BufferedRandom,
-    io.BufferedReader,
-    io.BufferedRWPair,
+#: A bytes-like object, such as a :class:`str`, raw :class:`bytes`, or view across a bytes-like object.
+BytesLikeT = typing.Union[
+    bytes, bytearray, memoryview, str, io.StringIO, io.BytesIO,
 ]
 
-__all__ = ("make_resource_seekable", "FileLike")
+#: Type description for any object that can be considered to be file-like.
+FileLikeT = typing.Union[
+    BytesLikeT, io.BufferedRandom, io.BufferedReader, io.BufferedRWPair,
+]
+
+__all__ = ("make_resource_seekable", "FileLikeT", "BytesLikeT")
