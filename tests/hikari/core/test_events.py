@@ -21,4 +21,5 @@
 def test_events():
     """Ensure we still get some coverage if we don't get to import this."""
     from hikari.core import events
+
     assert events  # ¯\_(ツ)_/¯
