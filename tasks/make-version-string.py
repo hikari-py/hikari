@@ -31,7 +31,7 @@ import requests
 
 is_staging = len(sys.argv) > 1 and sys.argv[1].casefold() == "staging"
 print("Will use", "staging" if is_staging else "prod", "configuration for this next version", file=sys.stderr)
-pypi_server = "test.pypi.org" if is_staging else "pypi.org"
+pypi_server = "pypi.org"
 api_name = os.environ["API_NAME"]
 pypi_json_url = f"https://{pypi_server}/pypi/{api_name}/json"
 
