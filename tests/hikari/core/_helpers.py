@@ -22,6 +22,8 @@ import copy
 import functools
 import inspect
 import logging
+import typing
+from unittest import mock
 
 import asynctest
 import pytest
@@ -43,7 +45,7 @@ def purge_loop():
     loop.close()
 
 
-def _mock_methods_on(obj, except_=(), also_mock=()):
+def mock_methods_on(obj, except_=(), also_mock=()):
     # Mock any methods we don't care about. also_mock is a collection of attribute names that we can eval to access
     # and mock specific components with a coroutine mock to mock other external components quickly :)
     magics = ["__enter__", "__exit__", "__aenter__", "__aexit__", "__iter__", "__aiter__"]
@@ -108,5 +110,27 @@ def assert_raises(type_):
     return decorator
 
 
-def fqn(module, item):
-    return module.__name__ + "." + item
+def fqn1(klass):
+    return klass.__module__ + "." + klass.__qualname__
+
+
+def fqn2(module, item_identifier):
+    return module.__name__ + "." + item_identifier
+
+
+T = typing.TypeVar("T")
+
+
+def mock_model(spec_set: typing.Type[T] = object, **kwargs) -> T:
+    # Enables type hinting for my own reference, and quick attribute setting.
+    obj = mock.MagicMock(spec_set=spec_set)
+    for name, value in kwargs.items():
+        setattr(obj, name, value)
+
+    obj.__eq__ = lambda self, other: other is self
+    obj.__ne__ = lambda self, other: other is not self
+    return obj
+
+
+def unslot_class(klass):
+    return type(klass.__name__ + "Unslotted", (klass,), {})

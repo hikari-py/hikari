@@ -17,11 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-from . import core, commands
 
-__author__ = "Nekoka.tt"
-__contributors__ = {"LunarCoffee", "raatty", "Tmpod", "Zach", "thomm.o", "rock500", "davfsa"}
-__copyright__ = f"© 2019 Nekoka.tt"
-__license__ = "LGPLv3"
-__version__ = "0.0.29"
-__url__ = "https://gitlab.com/nekokatt/hikari"
+def test_events():
+    """Ensure we still get some coverage if we don't get to import this."""
+    from hikari.core import events
+
+    assert events  # ¯\_(ツ)_/¯

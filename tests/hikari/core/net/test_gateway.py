@@ -338,9 +338,9 @@ class TestGateway:
 
     async def test_send_identify(self, event_loop):
         with contextlib.ExitStack() as stack:
-            stack.enter_context(asynctest.patch(_helpers.fqn(user_agent, "python_version"), new=lambda: "python3"))
-            stack.enter_context(asynctest.patch(_helpers.fqn(user_agent, "library_version"), new=lambda: "vx.y.z"))
-            stack.enter_context(asynctest.patch(_helpers.fqn(platform, "system"), new=lambda: "leenuks"))
+            stack.enter_context(asynctest.patch(_helpers.fqn2(user_agent, "python_version"), new=lambda: "python3"))
+            stack.enter_context(asynctest.patch(_helpers.fqn2(user_agent, "library_version"), new=lambda: "vx.y.z"))
+            stack.enter_context(asynctest.patch(_helpers.fqn2(platform, "system"), new=lambda: "leenuks"))
 
             gw = MockGateway(
                 host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None, large_threshold=69
