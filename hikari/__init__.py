@@ -23,5 +23,5 @@ __author__ = "Nekoka.tt"
 __contributors__ = {"LunarCoffee", "raatty", "Tmpod", "Zach", "thomm.o", "rock500", "davfsa"}
 __copyright__ = f"© 2019 Nekoka.tt"
 __license__ = "LGPLv3"
-__version__ = "0.0.29"
+__version__ = "0.0.31"
 __url__ = "https://gitlab.com/nekokatt/hikari"
