@@ -85,8 +85,10 @@ else:
         current_version = "0.0.1"
         print("There was no previous release", file=sys.stderr)
     else:
-        most_major_release = max([LooseVersion(version) for version in data])
-        print("Most recent PyPi release was", most_major_release, file=sys.stderr)
+        releases = [LooseVersion(version) for version in data]
+        non_dev_releases = [r for r in releases if all(isinstance(number, int) for number in r.version)]
+        most_major_release = max(non_dev_releases)
+        print("Most recent non-dev PyPi release was", most_major_release, file=sys.stderr)
         major, minor, micro = most_major_release.version[:3]
 
         if major == previous_major and minor == previous_minor:
