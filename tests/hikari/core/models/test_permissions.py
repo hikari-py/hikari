@@ -19,15 +19,15 @@
 
 import pytest
 
-from hikari.core.models import permission
+from hikari.core.models import permissions
 
 
 @pytest.mark.model
 def test_Permission_all():
-    all = permission.Permission.all()
+    all = permissions.Permission.all()
 
     sum_permissions = 0
-    for pm in permission.Permission.__members__.values():
+    for pm in permissions.Permission.__members__.values():
         sum_permissions |= pm
 
     assert bin(sum_permissions) == bin(all)
@@ -35,4 +35,4 @@ def test_Permission_all():
 
 @pytest.mark.model
 def test_permission_module___getattr__():
-    assert permission.MANAGE_MESSAGES == permission.Permission.MANAGE_MESSAGES
+    assert permissions.MANAGE_MESSAGES == permissions.Permission.MANAGE_MESSAGES

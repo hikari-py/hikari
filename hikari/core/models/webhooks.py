@@ -26,7 +26,7 @@ import typing
 
 from hikari.core.internal import state_registry
 from hikari.core.models import base
-from hikari.core.models import user
+from hikari.core.models import users
 from hikari.core.utils import auto_repr
 
 
@@ -47,7 +47,7 @@ class Webhook(base.HikariModel, base.Snowflake):
     #: The optional user for the webhook.
     #:
     #: :type: :class:`hikari.core.models.user.User` or `None`
-    user: typing.Optional[user.User]
+    user: typing.Optional[users.User]
 
     #: The name of the webhook.
     #:

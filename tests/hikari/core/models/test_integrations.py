@@ -22,7 +22,7 @@ from unittest import mock
 import pytest
 
 from hikari.core.internal import state_registry
-from hikari.core.models import integration
+from hikari.core.models import integrations
 
 
 @pytest.mark.model
@@ -39,7 +39,7 @@ class TestIntegration:
 
         account_dict = {"id": "123456789", "name": "lasagna"}
 
-        integration_obj = integration.Integration(
+        integration_obj = integrations.Integration(
             test_state,
             {
                 "id": "1234567",
@@ -74,7 +74,7 @@ class TestIntegrationAccount:
     def test_IntegrationAccount(self):
         test_state = mock.MagicMock(state_set=state_registry.StateRegistry)
 
-        inteacc = integration.IntegrationAccount(test_state, {"id": "1234567", "name": "memes"})
+        inteacc = integrations.IntegrationAccount(test_state, {"id": "1234567", "name": "memes"})
 
         assert inteacc.id == 1234567
         assert inteacc.name == "memes"

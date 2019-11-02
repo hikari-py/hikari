@@ -42,9 +42,9 @@ class EventAdapter(abc.ABC):
     async def consume_raw_event(self, gateway, event_name: str, payload: custom_types.DiscordObject) -> None:
         try:
             handler = getattr(self, f"handle_{event_name.lower()}")
-            asyncio.create_task(handler(gateway, payload))
+            await handler(gateway, payload)
         except AttributeError:
-            asyncio.create_task(self.handle_unrecognised_event(gateway, event_name, payload))
+            await self.drain_unrecognised_event(gateway, event_name, payload)
 
     async def handle_disconnect(self, gateway, payload):
         ...
@@ -162,5 +162,5 @@ class EventAdapter(abc.ABC):
         # ignore it silently rather than producing spam.
         ...
 
-    async def handle_unrecognised_event(self, gateway, event_name, payload):
+    async def drain_unrecognised_event(self, gateway, event_name, payload):
         ...

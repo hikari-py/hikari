@@ -158,7 +158,7 @@ test-pages:
     - poetry show -v
 
 ###
-### HANDLE DEPLOYING TO OUR STAGING ENVIRONMENT ON test.pypi.org
+### HANDLE DEPLOYING TO OUR STAGING ENVIRONMENT ON pypi.org as a prerelease.
 ###
 deploy-to-staging:
   extends: .deploy
@@ -169,7 +169,7 @@ deploy-to-staging:
     - merge_requests
     - schedules
   variables:
-    RELEASE_WEBHOOK_NAME: "testing pypi (staging)"
+    RELEASE_WEBHOOK_NAME: "pypi (prerelease only)"
     RELEASE_WEBHOOK_COLOUR: "0xd34615"
   script:
     - export RELEASE_WEBHOOK_DESCRIPTION=''
@@ -191,7 +191,7 @@ deploy-to-prod:
     - merge_requests
     - schedules
   variables:
-    RELEASE_WEBHOOK_NAME: "pypi (prod)"
+    RELEASE_WEBHOOK_NAME: "pypi"
     RELEASE_WEBHOOK_COLOUR: "0x5c2040"
   script:
     - export RELEASE_WEBHOOK_DESCRIPTION=''

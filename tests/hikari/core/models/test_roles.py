@@ -21,9 +21,9 @@ from unittest import mock
 import pytest
 
 from hikari.core.internal import state_registry
-from hikari.core.models import guild as _guild
-from hikari.core.models import permission
-from hikari.core.models import role
+from hikari.core.models import guilds as _guild
+from hikari.core.models import permissions
+from hikari.core.models import roles
 
 
 @pytest.fixture
@@ -47,7 +47,7 @@ def payload():
 
 @pytest.mark.model
 def test_Role(state, payload):
-    r = role.Role(state, payload, 1234)
+    r = roles.Role(state, payload, 1234)
 
     assert r.id == 41771983423143936
     assert r.name == "WE DEM BOYZZ!!!!!!"
@@ -56,26 +56,26 @@ def test_Role(state, payload):
     assert r.position == 1
     assert r._guild_id == 1234
     assert r.permissions == (
-        permission.Permission.USE_VAD
-        | permission.Permission.MOVE_MEMBERS
-        | permission.Permission.DEAFEN_MEMBERS
-        | permission.Permission.MUTE_MEMBERS
-        | permission.Permission.SPEAK
-        | permission.Permission.CONNECT
-        | permission.Permission.MENTION_EVERYONE
-        | permission.Permission.READ_MESSAGE_HISTORY
-        | permission.Permission.ATTACH_FILES
-        | permission.Permission.EMBED_LINKS
-        | permission.Permission.MANAGE_MESSAGES
-        | permission.Permission.SEND_TTS_MESSAGES
-        | permission.Permission.SEND_MESSAGES
-        | permission.Permission.VIEW_CHANNEL
-        | permission.Permission.MANAGE_GUILD
-        | permission.Permission.MANAGE_CHANNELS
-        | permission.Permission.ADMINISTRATOR
-        | permission.Permission.BAN_MEMBERS
-        | permission.Permission.KICK_MEMBERS
-        | permission.Permission.CREATE_INSTANT_INVITE
+        permissions.Permission.USE_VAD
+        | permissions.Permission.MOVE_MEMBERS
+        | permissions.Permission.DEAFEN_MEMBERS
+        | permissions.Permission.MUTE_MEMBERS
+        | permissions.Permission.SPEAK
+        | permissions.Permission.CONNECT
+        | permissions.Permission.MENTION_EVERYONE
+        | permissions.Permission.READ_MESSAGE_HISTORY
+        | permissions.Permission.ATTACH_FILES
+        | permissions.Permission.EMBED_LINKS
+        | permissions.Permission.MANAGE_MESSAGES
+        | permissions.Permission.SEND_TTS_MESSAGES
+        | permissions.Permission.SEND_MESSAGES
+        | permissions.Permission.VIEW_CHANNEL
+        | permissions.Permission.MANAGE_GUILD
+        | permissions.Permission.MANAGE_CHANNELS
+        | permissions.Permission.ADMINISTRATOR
+        | permissions.Permission.BAN_MEMBERS
+        | permissions.Permission.KICK_MEMBERS
+        | permissions.Permission.CREATE_INSTANT_INVITE
     )
     assert r.managed is False
     assert r.mentionable is False
@@ -83,7 +83,7 @@ def test_Role(state, payload):
 
 @pytest.mark.model
 def test_Role_guild(state, payload):
-    r = role.Role(state, payload, 1234)
+    r = roles.Role(state, payload, 1234)
     guild = mock.MagicMock(spec_set=_guild.Guild)
     state.get_guild_by_id = mock.MagicMock(return_value=guild)
     assert r.guild is guild

@@ -342,7 +342,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         content: str = unspecified.UNSPECIFIED,
         nonce: str = unspecified.UNSPECIFIED,
         tts: bool = False,
-        files: typing.List[io_utils.FileLike] = unspecified.UNSPECIFIED,
+        files: typing.List[io_utils.FileLikeT] = unspecified.UNSPECIFIED,
         embed: custom_types.DiscordObject = unspecified.UNSPECIFIED,
     ) -> custom_types.DiscordObject:
         """
@@ -2090,7 +2090,6 @@ class HTTPClient(http_base.BaseHTTPClient):
         """
         return await self.request(GET, "/guilds/{guild_id}/embed", guild_id=guild_id)
 
-    #: TODO: does this take a reason header?
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def modify_guild_embed(
         self, guild_id: str, embed: custom_types.DiscordObject, reason: str = unspecified.UNSPECIFIED

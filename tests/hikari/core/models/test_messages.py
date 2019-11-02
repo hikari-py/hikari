@@ -22,7 +22,7 @@ from unittest import mock
 import pytest
 
 from hikari.core.internal import state_registry
-from hikari.core.models import message
+from hikari.core.models import messages
 
 
 @pytest.mark.model
@@ -54,7 +54,7 @@ class TestMessage:
     def test_Message_parsing_User(self, mock_message, mock_user):
         s = mock.MagicMock(spec=state_registry.StateRegistry)
         assert "webhook_id" not in mock_message, "this test needs a mock message with no webhook id set :("
-        message.Message(s, mock_message)
+        messages.Message(s, mock_message)
         s.parse_user.assert_called_with(mock_user)
         s.parse_member.assert_not_called()
         s.parse_webhook.assert_not_called()
@@ -63,7 +63,7 @@ class TestMessage:
         s = mock.MagicMock(spec=state_registry.StateRegistry)
         mock_message["guild_id"] = "909090"
         mock_message["member"] = {"foo": "bar", "baz": "bork"}
-        message.Message(s, mock_message)
+        messages.Message(s, mock_message)
         s.parse_user.assert_called_with(mock_user)
         s.parse_member.assert_called_with({"foo": "bar", "baz": "bork"}, 909090)
         s.parse_webhook.assert_not_called()
@@ -72,16 +72,16 @@ class TestMessage:
         s = mock.MagicMock(spec=state_registry.StateRegistry)
         mock_message["guild_id"] = "909090"
         mock_message["webhook_id"] = object()  # we don't care what this really is
-        message.Message(s, mock_message)
+        messages.Message(s, mock_message)
         s.parse_webhook.assert_called_with(mock_user)
         s.parse_user.assert_not_called()
         s.parse_member.assert_not_called()
 
     def test_Message_simple_test_data(self, mock_message, mock_user):
         s = mock.MagicMock(spec=state_registry.StateRegistry)
-        m = message.Message(s, mock_message)
+        m = messages.Message(s, mock_message)
 
-        assert m.type is message.MessageType.DEFAULT
+        assert m.type is messages.MessageType.DEFAULT
         assert m.id == 12345
         assert m._channel_id == 67890
         assert m._guild_id is None
@@ -94,15 +94,15 @@ class TestMessage:
         assert m.application is None
         assert m.activity is None
         assert m.content == "ayyyyyyy lmao"
-        assert m.flags & message.MessageFlag.CROSSPOSTED
-        assert m.flags & message.MessageFlag.IS_CROSSPOST
-        assert m.flags & message.MessageFlag.SUPPRESS_EMBEDS
+        assert m.flags & messages.MessageFlag.CROSSPOSTED
+        assert m.flags & messages.MessageFlag.IS_CROSSPOST
+        assert m.flags & messages.MessageFlag.SUPPRESS_EMBEDS
         s.parse_user.assert_called_with(mock_user)
 
     def test_Message_update_state_with_no_payload(self, mock_message):
         s = mock.MagicMock(spec=state_registry.StateRegistry)
-        initial = message.Message(s, mock_message)
-        updated = message.Message(s, mock_message)
+        initial = messages.Message(s, mock_message)
+        updated = messages.Message(s, mock_message)
         updated.update_state({})
         assert initial.author == updated.author
         assert initial.edited_at == updated.edited_at
@@ -117,14 +117,14 @@ class TestMessage:
 
     def test_Message_update_state_reactions(self, mock_message):
         s = mock.MagicMock(spec=state_registry.StateRegistry)
-        m = message.Message(s, mock_message)
+        m = messages.Message(s, mock_message)
         # noinspection PyTypeChecker
         m.update_state({"reactions": [{"id": None, "value": "\N{OK HAND SIGN}"}]})
         s.parse_reaction.assert_called_once_with({"id": None, "value": "\N{OK HAND SIGN}"})
 
     def test_Message_complex_test_data(self, mock_user):
         s = mock.MagicMock(spec=state_registry.StateRegistry)
-        m = message.Message(
+        m = messages.Message(
             s,
             {
                 "author": mock_user,
@@ -175,7 +175,7 @@ class TestMessage:
             },
         )
 
-        assert m.type is message.MessageType.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2
+        assert m.type is messages.MessageType.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2
         assert m.id == 12345
         assert m._channel_id == 67890
         assert m._guild_id == 102234
@@ -220,7 +220,7 @@ class TestMessage:
         assert m.application.icon_image_id == 900
         assert m.application.name == "fubar"
 
-        assert m.activity.type == message.MessageActivityType.SPECTATE
+        assert m.activity.type == messages.MessageActivityType.SPECTATE
         assert m.activity.party_id == 44332211
 
         assert m.crosspost_of.channel_id == 278325129692446722
@@ -230,7 +230,7 @@ class TestMessage:
     def test_Message_guild_if_guild_message(self, mock_message):
         mock_message["guild_id"] = "91827"
         cache = mock.MagicMock(spec_set=state_registry.StateRegistry)
-        obj = message.Message(cache, mock_message)
+        obj = messages.Message(cache, mock_message)
 
         guild = mock.MagicMock()
         cache.get_guild_by_id = mock.MagicMock(return_value=guild)
@@ -242,7 +242,7 @@ class TestMessage:
 
     def test_Message_guild_if_dm_message(self, mock_message):
         cache = mock.MagicMock(spec_set=state_registry.StateRegistry)
-        obj = message.Message(cache, mock_message)
+        obj = messages.Message(cache, mock_message)
         assert obj.guild is None
 
         cache.get_guild_by_id.assert_not_called()
@@ -253,7 +253,7 @@ class TestMessage:
         mock_message["channel_id"] = "1234"
         guild = mock.MagicMock()
         guild.channels = {1234: mock.MagicMock(), 1235: mock.MagicMock()}
-        obj = message.Message(cache, mock_message)
+        obj = messages.Message(cache, mock_message)
         cache.get_channel_by_id = mock.MagicMock(return_value=obj.channel)
         guild.channels[1234] = obj.channel
         c = obj.channel
@@ -265,7 +265,7 @@ class TestMessage:
         channel = mock.MagicMock()
         cache.get_channel_by_id = mock.MagicMock(return_value=channel)
 
-        obj = message.Message(cache, mock_message)
+        obj = messages.Message(cache, mock_message)
 
         c = obj.channel
         cache.get_channel_by_id.assert_called_with(1234)
@@ -274,15 +274,15 @@ class TestMessage:
 
 @pytest.mark.model
 def test_MessageActivity():
-    ma = message.MessageActivity({"type": 3, "party_id": "999"})
+    ma = messages.MessageActivity({"type": 3, "party_id": "999"})
 
-    assert ma.type == message.MessageActivityType.LISTEN
+    assert ma.type == messages.MessageActivityType.LISTEN
     assert ma.party_id == 999
 
 
 @pytest.mark.model
 def test_MessageApplication():
-    ma = message.MessageApplication(
+    ma = messages.MessageApplication(
         {"id": "19", "cover_image": "112233", "description": "potato", "icon": "332211", "name": "poof"}
     )
 
@@ -295,7 +295,7 @@ def test_MessageApplication():
 
 @pytest.mark.model
 def test_MessageCrosspost():
-    mcp = message.MessageCrosspost(
+    mcp = messages.MessageCrosspost(
         {"channel_id": "278325129692446722", "guild_id": "278325129692446720", "message_id": "306588351130107906"}
     )
 

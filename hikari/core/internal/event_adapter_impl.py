@@ -21,17 +21,15 @@ Handles consumption of gateway events and converting them to the correct data ty
 """
 from __future__ import annotations
 
-import typing
-
 from hikari.core import events
 from hikari.core.internal import event_adapter
 from hikari.core.internal import state_registry as _state
-from hikari.core.models import channel, reaction
-from hikari.core.utils import date_utils, custom_types
+from hikari.core.models import channels
+from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 
 
-class BasicEventAdapter(event_adapter.EventAdapter):
+class EventAdapterImpl(event_adapter.EventAdapter):
     """
     Basic implementation of event management logic.
     """
@@ -42,7 +40,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         self.state_registry: _state.StateRegistry = state_registry
         self._ignored_events = set()
 
-    async def handle_unrecognised_event(self, gateway, event_name, payload):
+    async def drain_unrecognised_event(self, gateway, event_name, payload):
         self.dispatch("raw_" + event_name.lower(), payload)
         if event_name not in self._ignored_events:
             self.logger.warning("Received unrecognised event %s, so will ignore it in the future.", event_name)
@@ -87,7 +85,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         channel_diff = self.state_registry.update_channel(payload)
 
         if channel_diff is not None:
-            is_dm = channel.is_channel_type_dm(payload["type"])
+            is_dm = channels.is_channel_type_dm(payload["type"])
             event = events.DM_CHANNEL_UPDATE if is_dm else events.GUILD_CHANNEL_UPDATE
             self.dispatch(event, *channel_diff)
         else:
@@ -97,16 +95,11 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         # Update the channel meta data just for this call.
         self.dispatch(events.RAW_CHANNEL_DELETE, payload)
 
-        channel_obj = self.state_registry.parse_channel(payload)
+        guild_id = transform.nullable_cast(payload.get("guild_id"), int)
 
-        try:
-            channel_obj = self.state_registry.delete_channel(channel_obj.id)
-        except KeyError:
-            # Inconsistent state gets ignored. This should not happen, I don't think.
-            pass
-        else:
-            event = events.DM_CHANNEL_DELETE if channel_obj.is_dm else events.GUILD_CHANNEL_DELETE
-            self.dispatch(event, channel_obj)
+        channel_obj = self.state_registry.parse_channel(payload, guild_id)
+        event = events.DM_CHANNEL_DELETE if channel_obj.is_dm else events.GUILD_CHANNEL_DELETE
+        self.dispatch(event, channel_obj)
 
     async def handle_channel_pins_update(self, gateway, payload):
         self.dispatch(events.RAW_CHANNEL_PINS_UPDATE, payload)
@@ -132,7 +125,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         else:
             self.logger.warning(
                 "ignoring CHANNEL_PINS_UPDATE for %s channel %s which was not previously cached",
-                "DM" if channel.is_channel_type_dm(payload["type"]) else "guild",
+                "DM" if channels.is_channel_type_dm(payload["type"]) else "guild",
                 channel_id,
             )
 
@@ -158,10 +151,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         if guild_diff is not None:
             self.dispatch(events.GUILD_UPDATE, *guild_diff)
         else:
-            self.state_registry.parse_guild(payload)
-            self.logger.warning(
-                "ignoring GUILD_UPDATE for unknown guild %s which was not previously cached - cache amended"
-            )
+            self.logger.warning("ignoring GUILD_UPDATE for unknown guild %s which was not previously cached")
 
     async def handle_guild_delete(self, gateway, payload):
         self.dispatch(events.RAW_GUILD_DELETE, payload)
@@ -190,7 +180,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
 
     async def _handle_guild_leave(self, payload):
         guild = self.state_registry.parse_guild(payload)
-        self.state_registry.delete_guild(guild.id)
+        self.state_registry.delete_guild(guild)
         self.dispatch(events.GUILD_LEAVE, guild)
 
     async def handle_guild_ban_add(self, gateway, payload):
@@ -206,12 +196,9 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             # of members was disabled, or if Discord is screwing up; regardless, it is probably worth checking this
             # information first. Since they just got banned, we can't even look this information up anymore...
             # Perhaps the audit logs could be checked, but this seems like an overkill, honestly...
-            try:
-                member = self.state_registry.delete_member_from_guild(user.id, guild_id)
-            except KeyError:
-                member = user
-
-            self.dispatch(events.GUILD_BAN_ADD, guild, member)
+            if user.id in guild.members:
+                user = guild.members[user.id]
+            self.dispatch(events.GUILD_BAN_ADD, guild, user)
         else:
             self.logger.warning("ignoring GUILD_BAN_ADD for user %s in unknown guild %s", user.id, guild_id)
 
@@ -251,9 +238,9 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         self.dispatch(events.RAW_GUILD_MEMBER_ADD, payload)
 
         guild_id = int(payload.pop("guild_id"))
-        guild = self.state_registry.get_guild_by_id(guild_id)
-        if guild is not None:
-            member = self.state_registry.parse_member(payload, guild_id)
+        guild_obj = self.state_registry.get_guild_by_id(guild_id)
+        if guild_obj is not None:
+            member = self.state_registry.parse_member(payload, guild_obj)
             self.dispatch(events.GUILD_MEMBER_ADD, member)
         else:
             self.logger.warning("ignoring GUILD_MEMBER_ADD for unknown guild %s", guild_id)
@@ -262,10 +249,10 @@ class BasicEventAdapter(event_adapter.EventAdapter):
         self.dispatch(events.RAW_GUILD_MEMBER_UPDATE, payload)
 
         guild_id = int(payload["guild_id"])
-        guild = self.state_registry.get_guild_by_id(guild_id)
+        guild_obj = self.state_registry.get_guild_by_id(guild_id)
         user_id = int(payload["user"]["id"])
 
-        if guild is not None and user_id in guild.members:
+        if guild_obj is not None and user_id in guild_obj.members:
             role_ids = payload["roles"]
             nick = payload["nick"]
 
@@ -274,7 +261,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
                 self.dispatch(events.GUILD_MEMBER_UPDATE, *member_diff)
             else:
                 self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown member %s in guild %s", user_id, guild_id)
-                self.state_registry.parse_member(payload, guild_id)
+                self.state_registry.parse_member(payload, guild_obj)
         else:
             self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)
 
@@ -283,14 +270,19 @@ class BasicEventAdapter(event_adapter.EventAdapter):
 
         user_id = int(payload["id"])
         guild_id = int(payload["guild_id"])
-        member = self.state_registry.delete_member_from_guild(user_id, guild_id)
-        self.dispatch(events.GUILD_MEMBER_REMOVE, member)
+        member_obj = self.state_registry.get_member_by_id(user_id, guild_id)
+
+        if member_obj is not None:
+            self.state_registry.delete_member(member_obj)
+            self.dispatch(events.GUILD_MEMBER_REMOVE, member_obj)
+        else:
+            self.logger.warning("ignoring GUILD_MEMBER_REMOVE for unknown member %s in guild %s", user_id, guild_id)
 
     async def handle_guild_members_chunk(self, gateway, payload):
         self.dispatch(events.RAW_GUILD_MEMBERS_CHUNK, payload)
 
         # TODO: implement this feature properly.
-        self.logger.warning("Received GUILD_MEMBERS_CHUNK but that is not implemented yet")
+        self.logger.warning("received GUILD_MEMBERS_CHUNK but that is not implemented yet")
 
     async def handle_guild_role_create(self, gateway, payload):
         self.dispatch(events.RAW_GUILD_ROLE_CREATE, payload)
@@ -332,8 +324,9 @@ class BasicEventAdapter(event_adapter.EventAdapter):
 
         if guild is not None:
             if role_id in guild.roles:
-                role = self.state_registry.delete_role(guild_id, role_id)
-                self.dispatch(events.GUILD_ROLE_DELETE, role)
+                role_obj = self.state_registry.get_role_by_id(guild_id, role_id)
+                self.state_registry.delete_role(role_obj)
+                self.dispatch(events.GUILD_ROLE_DELETE, role_obj)
             else:
                 self.logger.warning("ignoring GUILD_ROLE_DELETE for unknown role %s in guild %s", role_id, guild_id)
         else:
@@ -360,12 +353,13 @@ class BasicEventAdapter(event_adapter.EventAdapter):
     async def handle_message_delete(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_DELETE, payload)
 
-        try:
-            message = self.state_registry.delete_message(int(payload["id"]))
-            self.dispatch(events.MESSAGE_DELETE, message)
-        except KeyError:
-            # Will occur if the message was deleted without being in the cache. This is fine.
-            pass
+        message_id = int(payload["id"])
+        message_obj = self.state_registry.get_message_by_id(message_id)
+
+        if message_obj is not None:
+            self.state_registry.delete_message(message_obj)
+            self.dispatch(events.MESSAGE_DELETE, message_obj)
+        # If this does not fire, we can just ignore it, as it just means the message is no longer cached.
 
     async def handle_message_delete_bulk(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_DELETE_BULK, payload)
@@ -415,6 +409,7 @@ class BasicEventAdapter(event_adapter.EventAdapter):
             )
 
     async def handle_message_reaction_remove(self, gateway, payload):
+        self.dispatch(events.RAW_MESSAGE_REACTION_REMOVE, payload)
         guild_id = transform.nullable_cast(payload.get("guild_id"), int)
         message_id = int(payload["message_id"])
         user_id = int(payload["user_id"])
@@ -445,21 +440,93 @@ class BasicEventAdapter(event_adapter.EventAdapter):
 
     async def handle_message_reaction_remove_all(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_REACTION_REMOVE_ALL, payload)
+        message_id = int(payload["message_id"])
+
+        message_obj = self.state_registry.get_message_by_id(message_id)
+
+        if message_obj is None:
+            # Not cached, so ignore.
+            return
+
+        self.state_registry.remove_all_reactions(message_obj)
+        self.dispatch(events.MESSAGE_REACTION_REMOVE_ALL, message_obj)
 
     async def handle_presence_update(self, gateway, payload):
-        self.dispatch(events.RAW_MEMBER_PRESENCE_UPDATE, payload)
+        self.dispatch(events.RAW_PRESENCE_UPDATE, payload)
+
+        guild_id = int(payload["guild_id"])
+        guild_obj = self.state_registry.get_guild_by_id(guild_id)
+
+        if guild_obj is None:
+            self.logger.warning("ignoring PRESENCE_UPDATE for unknown guild %s", guild_id)
+            return
+
+        user_id = int(payload["user"]["id"])
+        user_obj = self.state_registry.get_user_by_id(user_id)
+        if user_obj is None:
+            self.logger.warning("ignoring PRESENCE_UPDATE for unknown user %s in guild %s", user_id, guild_id)
+            return
+
+        member_obj = self.state_registry.get_member_by_id(user_id, guild_id)
+        if member_obj is None:
+            self.logger.warning("ignoring PRESENCE_UPDATE for unknown member %s in guild %s", user_id, guild_id)
+            return
+
+        presence_diff = self.state_registry.update_member_presence(guild_id, user_id, payload)
+
+        role_ids = (int(role_id) for role_id in payload["roles"])
+        role_objs = []
+        for role_id in role_ids:
+            next_role = self.state_registry.get_role_by_id(guild_id, role_id)
+            if next_role is None:
+                self.logger.warning(
+                    "ignoring unknown role %s being added to user %s in guild %s silently", role_id, user_id, guild_id
+                )
+            else:
+                role_objs.append(next_role)
+
+        self.state_registry.set_roles_for_member(role_objs, member_obj)
+
+        self.dispatch(events.PRESENCE_UPDATE, *presence_diff)
 
     async def handle_typing_start(self, gateway, payload):
         self.dispatch(events.RAW_TYPING_START, payload)
+        channel_id = int(payload["channel_id"])
+        user_id = int(payload["user_id"])
+        channel_obj = self.state_registry.get_channel_by_id(channel_id)
+
+        if channel_obj is None:
+            self.logger.warning("ignoring TYPING_START by user %s in unknown channel %s", user_id, channel_id)
+            return
+
+        user_obj = self.state_registry.get_user_by_id(user_id)
+        if user_obj is None:
+            self.logger.warning("ignoring TYPING_START by unknown user %s in channel %s", user_id, channel_id)
+
+        self.dispatch(events.TYPING_START, user_obj, channel_obj)
 
     async def handle_user_update(self, gateway, payload):
         self.dispatch(events.RAW_USER_UPDATE, payload)
+        user_obj = self.state_registry.parse_user(payload)
+        self.dispatch(events.USER_UPDATE, user_obj)
 
     async def handle_voice_state_update(self, gateway, payload):
         self.dispatch(events.RAW_VOICE_STATE_UPDATE, payload)
+        # TODO: implement voice.
+        self.logger.warning("received VOICE_STATE_UPDATE but that is not implemented yet")
 
     async def handle_voice_server_update(self, gateway, payload):
         self.dispatch(events.RAW_VOICE_SERVER_UPDATE, payload)
+        # TODO: implement voice.
+        self.logger.warning("received VOICE_SERVER_UPDATE but that is not implemented yet")
 
     async def handle_webhooks_update(self, gateway, payload):
         self.dispatch(events.RAW_WEBHOOKS_UPDATE, payload)
+        channel_id = int(payload["channel_id"])
+
+        channel_obj = self.state_registry.get_channel_by_id(channel_id)
+
+        if channel_obj is None:
+            self.logger.warning("ignoring WEBHOOKS_UPDATE in unknown channel %s", channel_id)
+        else:
+            self.dispatch(events.WEBHOOKS_UPDATE, channel_obj)

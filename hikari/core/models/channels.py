@@ -27,9 +27,9 @@ import typing
 
 from hikari.core.internal import state_registry
 from hikari.core.models import base
-from hikari.core.models import guild as _guild
-from hikari.core.models import overwrite
-from hikari.core.models import user
+from hikari.core.models import guilds as _guild
+from hikari.core.models import overwrites
+from hikari.core.models import users
 from hikari.core.utils import transform, auto_repr, custom_types
 
 _channel_type_to_class = {}
@@ -110,7 +110,7 @@ class GuildChannel(Channel, abc.ABC):
     #: A sequence t of permission overwrites for this channel.
     #:
     #: :type: :class:`typing.Sequence` of :attr:`hikari.core.models.overwrite.Overwrite`
-    permission_overwrites: typing.Sequence[overwrite.Overwrite]
+    permission_overwrites: typing.Sequence[overwrites.Overwrite]
 
     #: The name of the channel.
     #:
@@ -124,13 +124,13 @@ class GuildChannel(Channel, abc.ABC):
     def update_state(self, payload: custom_types.DiscordObject) -> None:
         self.position = int(payload["position"])
 
-        overwrites = []
+        overwrite_objs = []
 
         for raw_overwrite in payload["permission_overwrites"]:
-            overwrite_obj = overwrite.Overwrite(raw_overwrite)
-            overwrites.append(overwrite_obj)
+            overwrite_obj = overwrites.Overwrite(raw_overwrite)
+            overwrite_objs.append(overwrite_obj)
 
-        self.permission_overwrites = overwrites
+        self.permission_overwrites = overwrite_objs
         self.name = payload["name"]
         self._parent_id = transform.nullable_cast(payload.get("parent_id"), int)
 
@@ -202,7 +202,7 @@ class DMChannel(TextChannel, type=1):
     #: Sequence of recipients in the DM chat.
     #:
     #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.user.User`
-    recipients: typing.Sequence[user.User]
+    recipients: typing.Sequence[users.User]
 
     __repr__ = auto_repr.repr_of("id", "name")
 

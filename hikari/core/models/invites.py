@@ -26,9 +26,9 @@ import datetime
 import typing
 
 from hikari.core.internal import state_registry
-from hikari.core.models import channel, base
-from hikari.core.models import guild
-from hikari.core.models import user
+from hikari.core.models import channels, base
+from hikari.core.models import guilds
+from hikari.core.models import users
 from hikari.core.utils import date_utils, auto_repr
 from hikari.core.utils import transform
 
@@ -51,12 +51,12 @@ class Invite(base.HikariModel):
     #: The guild the invite is for
     #:
     #: :type: :class:`hikari.core.models.guild.Guild`
-    guild: guild.Guild
+    guild: guilds.Guild
 
     #: The channel the invite points to
     #:
     #: :type: :class:`hikari.core.models.channel.GuildChannel`
-    channel: channel.GuildChannel
+    channel: channels.GuildChannel
 
     #: Approximate count of online members.
     #:
@@ -93,7 +93,7 @@ class InviteMetadata(base.HikariModel):
     #: The user who created the invite.
     #:
     #: :type: :class:`hikari.core.models.user.User`
-    inviter: user.User
+    inviter: users.User
 
     #: The number of times the invite has been used.
     #:

@@ -27,7 +27,7 @@ class Unspecified:
     Type of an unspecified value.
     """
 
-    __slots__ = ()
+    __slots__ = ("__weakref__",)
 
     def __str__(self):
         return "unspecified"

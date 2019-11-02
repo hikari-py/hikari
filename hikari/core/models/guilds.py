@@ -28,11 +28,11 @@ import typing
 
 from hikari.core.internal import state_registry
 from hikari.core.models import base
-from hikari.core.models import channel
-from hikari.core.models import emoji
-from hikari.core.models import permission
-from hikari.core.models import role
-from hikari.core.models import user
+from hikari.core.models import channels
+from hikari.core.models import emojis
+from hikari.core.models import permissions
+from hikari.core.models import roles
+from hikari.core.models import users
 from hikari.core.utils import date_utils, auto_repr, custom_types
 from hikari.core.utils import transform
 
@@ -124,7 +124,7 @@ class Guild(base.Snowflake, base.HikariModel):
     #: Permissions for our user in the guild, minus channel overrides, if the user is in the guild.
     #:
     #: :type: :class:`hikari.core.models.permission.Permission` or `None`
-    my_permissions: typing.Optional[permission.Permission]
+    my_permissions: typing.Optional[permissions.Permission]
 
     #: Timeout before a user is classed as being AFK in seconds.
     #:
@@ -155,12 +155,12 @@ class Guild(base.Snowflake, base.HikariModel):
     #: Roles in this guild. Maps IDs to the role object they represent.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.role.Role` objects
-    roles: typing.Dict[int, role.Role]
+    roles: typing.Dict[int, roles.Role]
 
     #: Emojis in this guild. Maps IDs to the role object they represent.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.emoji.GuildEmoji` objects
-    emojis: typing.Dict[int, emoji.GuildEmoji]
+    emojis: typing.Dict[int, emojis.GuildEmoji]
 
     #: Enabled features in this guild.
     #:
@@ -196,12 +196,12 @@ class Guild(base.Snowflake, base.HikariModel):
     #: Members in the guild.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.user.Member` objects
-    members: typing.MutableMapping[int, user.Member]
+    members: typing.MutableMapping[int, users.Member]
 
     #: Channels in the guild.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.channel.GuildChannel` objects
-    channels: typing.MutableMapping[int, channel.GuildChannel]
+    channels: typing.MutableMapping[int, channels.GuildChannel]
 
     #: Max members allowed in the guild. This is a hard limit enforced by Discord.
     #:
@@ -275,7 +275,7 @@ class Guild(base.Snowflake, base.HikariModel):
         }
         self.member_count = transform.nullable_cast(payload.get("member_count"), int)
         self.mfa_level = transform.try_cast(payload.get("mfa_level"), MFALevel)
-        self.my_permissions = permission.Permission(payload.get("permissions", 0))
+        self.my_permissions = permissions.Permission(payload.get("permissions", 0))
         self.joined_at = transform.nullable_cast(payload.get("joined_at"), date_utils.parse_iso_8601_ts)
         self.large = payload.get("large", False)
         self.unavailable = payload.get("unavailable", False)
@@ -410,7 +410,7 @@ class Ban:
     #: The user who is banned.
     #:
     #: :type: :class:`hikari.core.models.user.User`
-    user: user.User
+    user: users.User
 
     __repr__ = auto_repr.repr_of("user", "reason")
 

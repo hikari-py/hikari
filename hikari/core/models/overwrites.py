@@ -25,9 +25,9 @@ import dataclasses
 import enum
 
 from hikari.core.models import base
-from hikari.core.models import permission
-from hikari.core.models import role
-from hikari.core.models import user
+from hikari.core.models import permissions
+from hikari.core.models import roles
+from hikari.core.models import users
 from hikari.core.utils import transform, auto_repr
 
 
@@ -46,9 +46,9 @@ class OverwriteEntityType(base.NamedEnum, enum.Enum):
     """
 
     #: A member.
-    MEMBER = user.Member
+    MEMBER = users.Member
     #: A role.
-    ROLE = role.Role
+    ROLE = roles.Role
 
     def __instancecheck__(self, instance):
         return isinstance(instance, self.value)
@@ -78,29 +78,29 @@ class Overwrite(base.HikariModel, base.Snowflake):
     #: The bitfield of permissions explicitly allowed.
     #:
     #: :type: :class:`hikari.core.models.permission.Permission`
-    allow: permission.Permission
+    allow: permissions.Permission
 
     #: The bitfield of permissions explicitly denied.
     #:
     #: :type: :class:`hikari.core.models.permission.Permission`
-    deny: permission.Permission
+    deny: permissions.Permission
 
     __repr__ = auto_repr.repr_of("id", "type", "allow", "deny", "default")
 
     @property
-    def default(self) -> permission.Permission:
+    def default(self) -> permissions.Permission:
         """
         Returns:
             The bitfield of all permissions that were not changed in this overwrite.
         """
         # noinspection PyTypeChecker
-        return permission.Permission(permission.Permission.all() ^ (self.allow | self.deny))
+        return permissions.Permission(permissions.Permission.all() ^ (self.allow | self.deny))
 
     def __init__(self, payload):
         self.id = int(payload["id"])
         self.type = OverwriteEntityType.from_discord_name(payload["type"])
-        self.allow = transform.try_cast(payload["allow"], permission.Permission)
-        self.deny = transform.try_cast(payload["deny"], permission.Permission)
+        self.allow = transform.try_cast(payload["allow"], permissions.Permission)
+        self.deny = transform.try_cast(payload["deny"], permissions.Permission)
 
 
 __all__ = ["Overwrite", "OverwriteEntityType"]
