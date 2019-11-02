@@ -47,6 +47,7 @@ packages        = [
 
 [tool.poetry.dependencies]
 python          = ">=3.7,<3.9"
+aiofiles        = "~0.4"
 aiohttp         = "~3.6"
 websockets      = "~8.0"
 

@@ -21,7 +21,7 @@ import math
 
 import pytest
 
-from hikari.core.models import presence
+from hikari.core.models import presences
 
 
 @pytest.fixture()
@@ -32,6 +32,24 @@ def no_presence():
         "game": None,
         "client_status": {"desktop": "online"},
         "activities": [],
+    }
+
+
+@pytest.fixture()
+def presence_delta_empty():
+    return {"user": {"id": "339767912841871360"}}
+
+
+@pytest.fixture()
+def presence_update():
+    return {
+        "user": {"id": "339767912841871360"},
+        "status": "online",
+        "game": None,
+        "client_status": {"desktop": "online"},
+        "activities": [],
+        "roles": ["123", "456", "789"],
+        "guild_id": "10987",
     }
 
 
@@ -141,44 +159,60 @@ def activity(assets, party, timestamps):
 @pytest.mark.model
 class TestPresence:
     def test_parse_no_Presence(self, no_presence):
-        p = presence.Presence(no_presence)
+        p = presences.Presence(no_presence)
 
-        assert p.status == presence.Status.ONLINE
-        assert p.desktop_status == presence.Status.ONLINE
-        assert p.web_status == presence.Status.OFFLINE
-        assert p.mobile_status == presence.Status.OFFLINE
+        assert p.status == presences.Status.ONLINE
+        assert p.desktop_status == presences.Status.ONLINE
+        assert p.web_status == presences.Status.OFFLINE
+        assert p.mobile_status == presences.Status.OFFLINE
 
         assert len(p.activities) == 0
 
     def test_parse_legacy_Presence(self, legacy_presence):
-        p = presence.Presence(legacy_presence)
+        p = presences.Presence(legacy_presence)
 
-        assert p.status == presence.Status.ONLINE
-        assert p.desktop_status == presence.Status.OFFLINE
-        assert p.web_status == presence.Status.ONLINE
-        assert p.mobile_status == presence.Status.OFFLINE
+        assert p.status == presences.Status.ONLINE
+        assert p.desktop_status == presences.Status.OFFLINE
+        assert p.web_status == presences.Status.ONLINE
+        assert p.mobile_status == presences.Status.OFFLINE
 
         assert len(p.activities) == 1
         a = p.activities[0]
         assert a is not None
 
     def test_rich_Presence(self, rich_presence):
-        p = presence.Presence(rich_presence)
+        p = presences.Presence(rich_presence)
 
-        assert p.status == presence.Status.ONLINE
-        assert p.desktop_status == presence.Status.ONLINE
-        assert p.web_status == presence.Status.OFFLINE
-        assert p.mobile_status == presence.Status.OFFLINE
+        assert p.status == presences.Status.ONLINE
+        assert p.desktop_status == presences.Status.ONLINE
+        assert p.web_status == presences.Status.OFFLINE
+        assert p.mobile_status == presences.Status.OFFLINE
 
         assert len(p.activities) == 1
         a = p.activities[0]
         assert a is not None
 
+    def test_Presence_update(self, presence_update):
+        p = presences.Presence(presence_update)
+        assert p.status == presences.Status.ONLINE
+        assert p.desktop_status == presences.Status.ONLINE
+        assert p.web_status == presences.Status.OFFLINE
+        assert p.mobile_status == presences.Status.OFFLINE
+        assert len(p.activities) == 0
+
+    def test_Presence_delta_when_empty(self, presence_delta_empty):
+        p = presences.Presence(presence_delta_empty)
+        assert p.status == presences.Status.OFFLINE
+        assert p.desktop_status == presences.Status.OFFLINE
+        assert p.web_status == presences.Status.OFFLINE
+        assert p.mobile_status == presences.Status.OFFLINE
+        assert len(p.activities) == 0
+
 
 @pytest.mark.model
 def test_parse_activity(activity):
-    a = presence.PresenceActivity(activity)
-    assert a.type == presence.ActivityType.LISTENING
+    a = presences.PresenceActivity(activity)
+    assert a.type == presences.ActivityType.LISTENING
     assert a.timestamps is not None
     assert a.state == "Working on hikari.core"
     assert a.name == "JetBrains IDE"
@@ -186,14 +220,14 @@ def test_parse_activity(activity):
     assert a.details == "Editing [Scratch] scratch_2.py"
     assert a.assets is not None
     assert a.application_id == 384215522050572288
-    assert a.flags & presence.ActivityFlag.INSTANCE
-    assert a.flags & presence.ActivityFlag.JOIN
+    assert a.flags & presences.ActivityFlag.INSTANCE
+    assert a.flags & presences.ActivityFlag.JOIN
     assert a.party is not None
 
 
 @pytest.mark.model
 def test_parse_assets(assets):
-    a = presence.ActivityAssets(assets)
+    a = presences.ActivityAssets(assets)
     assert a.small_text == "Using PyCharm"
     assert a.small_image == "387095349199896578"
     assert a.large_text == "Editing a Scratch file"
@@ -202,7 +236,7 @@ def test_parse_assets(assets):
 
 @pytest.mark.model
 def test_parse_party(party):
-    p = presence.ActivityParty(party)
+    p = presences.ActivityParty(party)
     assert p.id == "1a2b3c"
     assert p.current_size == 4
     assert p.max_size == 5
@@ -211,10 +245,10 @@ def test_parse_party(party):
 @pytest.mark.model
 class TestActivityTimestamps:
     def test_parse_timestamps(self, timestamps):
-        t = presence.ActivityTimestamps(timestamps)
+        t = presences.ActivityTimestamps(timestamps)
         assert t.start == datetime.datetime(2019, 8, 18, 8, 22, 32, 964000, datetime.timezone.utc)
         assert t.end == datetime.datetime(2019, 8, 18, 13, 44, 52, 633000, datetime.timezone.utc)
 
     def test_duration(self, timestamps):
-        t = presence.ActivityTimestamps(timestamps)
+        t = presences.ActivityTimestamps(timestamps)
         assert math.isclose(t.duration.total_seconds(), 1566135892.633 - 1566116552.964)

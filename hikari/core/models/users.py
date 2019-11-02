@@ -26,8 +26,8 @@ import datetime
 import typing
 
 from hikari.core.internal import state_registry
-from hikari.core.models import base
-from hikari.core.models import presence
+from hikari.core.models import base, guilds
+from hikari.core.models import presences
 from hikari.core.utils import date_utils, auto_repr, custom_types
 from hikari.core.utils import delegate
 from hikari.core.utils import transform
@@ -117,7 +117,7 @@ class Member(User):
     #: The user's online presence.
     #:
     #: :type: :class:`hikari.core.models.presence.Presence`
-    presence: presence.Presence
+    presence: presences.Presence
 
     __copy_by_ref__ = ("presence",)
 
@@ -137,9 +137,14 @@ class Member(User):
         self.nick = nick
 
     @property
-    def user(self):
-        """Returns the internal user object for this member. This is usually only used internally."""
+    def user(self) -> User:
+        """The internal user object for this member. This is usually only required internally."""
         return self._user
+
+    @property
+    def guild(self) -> guilds.Guild:
+        """The guild this member is in."""
+        return self._state.get_guild_by_id(self._guild_id)
 
 
 @dataclasses.dataclass()

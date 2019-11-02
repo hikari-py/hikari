@@ -16,7 +16,8 @@ function deploy-to-pypi() {
 
 function deploy-to-release-api() {
   set -x
-  python tasks/release.py "${1}"
+  pip install gcg   # Git Changelog Generator
+  python tasks/release.py "${API_NAME}" "${1}"
   set +x
 }
 

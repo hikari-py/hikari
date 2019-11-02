@@ -25,9 +25,9 @@ import dataclasses
 
 from hikari.core.internal import state_registry
 from hikari.core.models import base
-from hikari.core.models import color as _color
-from hikari.core.models import guild
-from hikari.core.models import permission as _permission
+from hikari.core.models import colors as _color
+from hikari.core.models import guilds
+from hikari.core.models import permissions as _permission
 from hikari.core.utils import custom_types, auto_repr
 
 
@@ -112,7 +112,7 @@ class Role(base.Snowflake, base.HikariModel):
         self.mentionable = payload["mentionable"]
 
     @property
-    def guild(self) -> guild.Guild:
+    def guild(self) -> guilds.Guild:
         return self._state.get_guild_by_id(self._guild_id)
 
 
