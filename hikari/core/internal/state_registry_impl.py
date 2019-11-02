@@ -102,12 +102,12 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
     def delete_channel(self, channel_obj: channels.Channel) -> None:
         channel_id = channel_obj.id
-        if channel_obj in self._guild_channels:
+        if channel_id in self._guild_channels:
             channel_obj: channels.GuildChannel
             guild_obj = channel_obj.guild
             del guild_obj.channels[channel_id]
             del self._guild_channels[channel_id]
-        elif channel_obj in self._dm_channels:
+        elif channel_id in self._dm_channels:
             channel_obj: channels.DMChannel
             del self._dm_channels[channel_id]
 
@@ -118,7 +118,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
         guild_obj = emoji_obj.guild
 
         with contextlib.suppress(KeyError):
-            del guild_obj.emojis[emoji_obj]
+            del guild_obj.emojis[emoji_obj.id]
 
     def delete_guild(self, guild_obj: guilds.Guild) -> None:
         with contextlib.suppress(KeyError):
@@ -136,7 +136,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
     def delete_reaction(self, message_obj: messages.Message, user_obj: users.User, emoji_obj: emojis.Emoji) -> None:
         # We do not store info about the user, so just ignore that parameter.
         for reaction_obj in message_obj.reactions:
-            if reaction_obj.emoji == emojis and reaction_obj.message.id == reaction_obj.message.id:
+            if reaction_obj.emoji == emoji_obj and reaction_obj.message.id == reaction_obj.message.id:
                 message_obj.reactions.remove(reaction_obj)
                 # This emoji will only be referenced once, so shortcut to save time.
                 break
@@ -144,13 +144,13 @@ class StateRegistryImpl(state_registry.StateRegistry):
     # noinspection PyProtectedMember
     def delete_role(self, role_obj: roles.Role) -> None:
         guild_obj = role_obj.guild
-        try:
+        with contextlib.suppress(KeyError):
             del guild_obj.roles[role_obj.id]
-        except KeyError:
-            # Don't bother updating the members, something is inconsistent in our state.
-            pass
-        else:
+
             for member in guild_obj.members.values():
+                # TODO: make member role references weak, perhaps?
+                # Would require me to store the actual roles rather than the IDs though...
+
                 # Protected member access, but much more efficient for this case than resolving every role repeatedly.
                 if role_obj.id in member._role_ids:
                     member._role_ids.remove(role_obj.id)
@@ -158,20 +158,18 @@ class StateRegistryImpl(state_registry.StateRegistry):
     def get_channel_by_id(self, channel_id: int) -> typing.Optional[channels.Channel]:
         return self._guild_channels.get(channel_id) or self._dm_channels.get(channel_id)
 
-    def get_emoji_by_id(self, emoji_id: int):
+    def get_emoji_by_id(self, emoji_id: int) -> typing.Optional[emojis.GuildEmoji]:
         return self._emojis.get(emoji_id)
 
-    def get_guild_by_id(self, guild_id: int):
+    def get_guild_by_id(self, guild_id: int) -> typing.Optional[guilds.Guild]:
         return self._guilds.get(guild_id)
 
     def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[users.Member]:
-        guild_obj = self._guilds.get(guild_id)
-        if guild_obj is None:
+        if guild_id not in self._guilds:
             return None
+        return self._guilds[guild_id].members.get(user_id)
 
-        return guild_obj.members.get(user_id)
-
-    def get_message_by_id(self, message_id: int):
+    def get_message_by_id(self, message_id: int) -> typing.Optional[messages.Message]:
         return self._message_cache.get(message_id)
 
     def get_role_by_id(self, guild_id: int, role_id: int) -> typing.Optional[roles.Role]:
@@ -179,22 +177,28 @@ class StateRegistryImpl(state_registry.StateRegistry):
             return None
         return self._guilds[guild_id].roles.get(role_id)
 
-    def get_user_by_id(self, user_id: int):
+    def get_user_by_id(self, user_id: int) -> typing.Optional[users.User]:
+        if self._user is not None and self._user.id == user_id:
+            return self._user
+
         return self._users.get(user_id)
 
     def parse_bot_user(self, bot_user_payload: custom_types.DiscordObject) -> users.BotUser:
-        bot_user_payload = users.BotUser(self, bot_user_payload)
-        self._user = bot_user_payload
-        return bot_user_payload
+        if self._user is not None:
+            self._user.update_state(bot_user_payload)
+        else:
+            self._user = users.BotUser(self, bot_user_payload)
+
+        return self._user
 
     def parse_channel(
-        self, channel_payload: custom_types.DiscordObject, guild_id: typing.Optional[int]
+        self, channel_payload: custom_types.DiscordObject, guild_id: typing.Optional[int] = None
     ) -> channels.Channel:
         channel_id = int(channel_payload["id"])
         channel_obj = self.get_channel_by_id(channel_id)
 
         if guild_id is not None:
-            channel_obj["guild_id"] = guild_id
+            channel_payload["guild_id"] = guild_id
 
         if channel_obj is not None:
             channel_obj.update_state(channel_payload)
@@ -219,7 +223,9 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
     def parse_emoji(self, emoji_payload, guild_id):
         existing_emoji = None
-        emoji_id = int(emoji_payload["id"])
+        # While it is true the API docs state that we always get an ID back, I don't trust discord wont break this
+        # in the future, so I am playing it safe.
+        emoji_id = transform.nullable_cast(emoji_payload.get("id"), int)
 
         if emoji_id is not None:
             existing_emoji = self.get_emoji_by_id(emoji_id)
@@ -231,8 +237,8 @@ class StateRegistryImpl(state_registry.StateRegistry):
         new_emoji = emojis.emoji_from_dict(self, emoji_payload, guild_id)
         if isinstance(new_emoji, emojis.GuildEmoji):
             guild_obj = self.get_guild_by_id(guild_id)
-            if guild_obj is not None:
-                guild_obj.emojis[new_emoji.id] = new_emoji
+            guild_obj.emojis[new_emoji.id] = new_emoji
+            self._emojis[new_emoji.id] = new_emoji
 
         return new_emoji
 
@@ -356,8 +362,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
                     reaction_obj.count = 0
                     message_obj.reactions.remove(reaction_obj)
                 return reaction_obj
-        else:
-            return reactions.Reaction(0, emoji_obj, message_obj)
+        return reactions.Reaction(0, emoji_obj, message_obj)
 
     def set_guild_unavailability(self, guild_id: int, unavailability: bool) -> None:
         guild_obj = self.get_guild_by_id(guild_id)

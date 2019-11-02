@@ -2090,7 +2090,6 @@ class HTTPClient(http_base.BaseHTTPClient):
         """
         return await self.request(GET, "/guilds/{guild_id}/embed", guild_id=guild_id)
 
-    #: TODO: does this take a reason header?
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def modify_guild_embed(
         self, guild_id: str, embed: custom_types.DiscordObject, reason: str = unspecified.UNSPECIFIED

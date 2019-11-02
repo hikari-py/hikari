@@ -21,7 +21,7 @@ from unittest import mock
 import pytest
 
 from hikari.core.internal import state_registry
-from hikari.core.models import emojis
+from hikari.core.models import emojis, guilds
 
 
 @pytest.fixture
@@ -144,3 +144,13 @@ def test_UnknownEmoji_is_unicode(unknown_emoji_payload):
 @pytest.mark.model
 def test_GuildEmoji_is_unicode(mock_state, guild_emoji_payload):
     assert not emojis.GuildEmoji(mock_state, guild_emoji_payload, 98765).is_unicode
+
+
+@pytest.mark.model
+def test_GuildEmoji_guild_property(mock_state, guild_emoji_payload):
+    guild = mock.MagicMock(spec_state=guilds.Guild)
+    guild.id = 1234
+    emoji = emojis.GuildEmoji(mock_state, guild_emoji_payload, guild.id)
+    mock_state.get_guild_by_id = mock.MagicMock(return_value=guild)
+    assert emoji.guild is guild
+    mock_state.get_guild_by_id.assert_called_once_with(1234)

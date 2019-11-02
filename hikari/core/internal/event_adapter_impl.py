@@ -512,12 +512,12 @@ class EventAdapterImpl(event_adapter.EventAdapter):
 
     async def handle_voice_state_update(self, gateway, payload):
         self.dispatch(events.RAW_VOICE_STATE_UPDATE, payload)
-        # Todo: implement voice.
+        # TODO: implement voice.
         self.logger.warning("received VOICE_STATE_UPDATE but that is not implemented yet")
 
     async def handle_voice_server_update(self, gateway, payload):
         self.dispatch(events.RAW_VOICE_SERVER_UPDATE, payload)
-        # Todo: implement voice.
+        # TODO: implement voice.
         self.logger.warning("received VOICE_SERVER_UPDATE but that is not implemented yet")
 
     async def handle_webhooks_update(self, gateway, payload):

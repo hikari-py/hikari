@@ -34,7 +34,7 @@ from hikari.core.net import http_base
 from hikari.core.net import opcodes
 from hikari.core.net import rates
 from hikari.core.utils import unspecified
-from tests.hikari.core._helpers import _mock_methods_on
+from tests.hikari.core._helpers import mock_methods_on
 
 
 ########################################################################################################################
@@ -289,7 +289,7 @@ async def test_request_once_calls_session_request_with_expected_arguments(mock_h
 
 @pytest.mark.asyncio
 async def test_request_once_acquires_global_rate_limit_bucket(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     try:
         await mock_http_connection._request_once(resource=res, data={})
@@ -300,7 +300,7 @@ async def test_request_once_acquires_global_rate_limit_bucket(mock_http_connecti
 
 @pytest.mark.asyncio
 async def test_request_once_acquires_local_rate_limit_bucket(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     bucket = asynctest.MagicMock()
     bucket.acquire = asynctest.CoroutineMock()
@@ -314,7 +314,7 @@ async def test_request_once_acquires_local_rate_limit_bucket(mock_http_connectio
 
 @pytest.mark.asyncio
 async def test_request_once_calls_rate_limit_handler(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     try:
         await mock_http_connection._request_once(resource=res)
@@ -325,7 +325,7 @@ async def test_request_once_calls_rate_limit_handler(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_request_once_raises_RateLimited_if_rate_limit_handler_returned_true(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=True)
     try:
@@ -337,7 +337,7 @@ async def test_request_once_raises_RateLimited_if_rate_limit_handler_returned_tr
 
 @pytest.mark.asyncio
 async def test_request_once_does_not_raise_RateLimited_if_rate_limit_handler_returned_false(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
     await mock_http_connection._request_once(resource=res)
@@ -352,7 +352,7 @@ async def test_log_rate_limit_already_in_progress_logs_something(mock_http_conne
 
 @pytest.mark.asyncio
 async def test_is_rate_limited_locks_global_rate_limit_if_set(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(
+    mock_http_connection = mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
     mock_http_connection._is_rate_limited(
@@ -367,7 +367,7 @@ async def test_is_rate_limited_locks_global_rate_limit_if_set(mock_http_connecti
 
 @pytest.mark.asyncio
 async def test_is_rate_limited_returns_True_when_globally_rate_limited(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(
+    mock_http_connection = mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
     result = mock_http_connection._is_rate_limited(
@@ -382,7 +382,7 @@ async def test_is_rate_limited_returns_True_when_globally_rate_limited(mock_http
 
 @pytest.mark.asyncio
 async def test_is_rate_limited_does_not_lock_global_rate_limit_if_XRateLimitGlobal_is_false(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(
+    mock_http_connection = mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
     mock_http_connection._is_rate_limited(
@@ -397,7 +397,7 @@ async def test_is_rate_limited_does_not_lock_global_rate_limit_if_XRateLimitGlob
 
 @pytest.mark.asyncio
 async def test_is_rate_limited_does_not_lock_global_rate_limit_if_not_a_429_response(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(
+    mock_http_connection = mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
     mock_http_connection._is_rate_limited(
@@ -414,7 +414,7 @@ async def test_is_rate_limited_does_not_lock_global_rate_limit_if_not_a_429_resp
 async def test_is_rate_limited_does_not_lock_global_rate_limit_if_XRateLimitGlobal_is_not_present(
     mock_http_connection, res
 ):
-    mock_http_connection = _mock_methods_on(
+    mock_http_connection = mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
     mock_http_connection._is_rate_limited(
@@ -434,7 +434,7 @@ async def test_is_rate_limited_creates_a_local_bucket_if_one_does_not_exist_for_
     mock_http_connection.buckets.clear()
     now = time.time()
     now_dt = email.utils.format_datetime(datetime.datetime.utcnow())
-    mock_http_connection = _mock_methods_on(
+    mock_http_connection = mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
 
@@ -457,7 +457,7 @@ async def test_is_rate_limited_updates_existing_bucket_if_one_already_exists_for
     mock_http_connection.buckets.clear()
     now = time.time()
     now_dt = email.utils.format_datetime(datetime.datetime.utcnow())
-    mock_http_connection = _mock_methods_on(
+    mock_http_connection = mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
 
@@ -480,7 +480,7 @@ async def test_is_rate_limited_returns_True_if_429_received(mock_http_connection
     mock_http_connection.buckets.clear()
     now = time.time()
     now_dt = email.utils.format_datetime(datetime.datetime.utcnow())
-    mock_http_connection = _mock_methods_on(
+    mock_http_connection = mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
 
@@ -499,7 +499,7 @@ async def test_is_rate_limited_returns_False_if_not_local_or_global_rate_limit(m
     mock_http_connection.buckets.clear()
     now = time.time()
     now_dt = email.utils.format_datetime(datetime.datetime.utcnow())
-    mock_http_connection = _mock_methods_on(
+    mock_http_connection = mock_methods_on(
         mock_http_connection, except_=["_is_rate_limited"], also_mock=["global_rate_limit"]
     )
 
@@ -516,7 +516,7 @@ async def test_is_rate_limited_returns_False_if_not_local_or_global_rate_limit(m
 @pytest.mark.asyncio
 async def test_HTTP_request_has_User_Agent_header_as_expected(mock_http_connection, res):
     # This is a requirement from Discord or they can ban accounts.
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
     mock_http_connection.session.request = asynctest.MagicMock(wraps=mock_http_connection.session.request)
     mock_http_connection.session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.OK)
@@ -532,7 +532,7 @@ async def test_HTTP_request_has_User_Agent_header_as_expected(mock_http_connecti
 @pytest.mark.asyncio
 async def test_HTTP_request_has_XRateLimitPrecision_header_as_expected(mock_http_connection, res):
     # This is a requirement from Discord or they can ban accounts.
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
     mock_http_connection.session.request = asynctest.MagicMock(wraps=mock_http_connection.session.request)
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = "application/json"
@@ -550,7 +550,7 @@ async def test_HTTP_request_has_XRateLimitPrecision_header_as_expected(mock_http
 @pytest.mark.asyncio
 async def test_HTTP_request_has_Authorization_header_if_specified(mock_http_connection, res):
     # This is a requirement from Discord or they can ban accounts.
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
     mock_http_connection.session.request = asynctest.MagicMock(wraps=mock_http_connection.session.request)
     mock_http_connection.session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.OK)
@@ -567,7 +567,7 @@ async def test_HTTP_request_has_Authorization_header_if_specified(mock_http_conn
 @pytest.mark.asyncio
 async def test_HTTP_request_has_no_Authorization_header_if_unspecified(mock_http_connection, res):
     # This is a requirement from Discord or they can ban accounts.
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
     mock_http_connection.session.request = asynctest.MagicMock(wraps=mock_http_connection.session.request)
     mock_http_connection.session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.OK)
@@ -583,7 +583,7 @@ async def test_HTTP_request_has_no_Authorization_header_if_unspecified(mock_http
 @pytest.mark.asyncio
 async def test_HTTP_request_has_Accept_header(mock_http_connection, res):
     # This is a requirement from Discord or they can ban accounts.
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
     mock_http_connection.session.request = asynctest.MagicMock(wraps=mock_http_connection.session.request)
     mock_http_connection.session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.OK)
@@ -599,7 +599,7 @@ async def test_HTTP_request_has_Accept_header(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_some_response_that_has_a_json_object_body_gets_decoded_as_expected(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.OK)
@@ -610,7 +610,7 @@ async def test_some_response_that_has_a_json_object_body_gets_decoded_as_expecte
 
 @pytest.mark.asyncio
 async def test_plain_text_gets_decoded_as_unicode(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = "text/plain"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.OK)
@@ -621,7 +621,7 @@ async def test_plain_text_gets_decoded_as_unicode(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_html_gets_decoded_as_unicode(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = "text/html"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.OK)
@@ -634,7 +634,7 @@ async def test_html_gets_decoded_as_unicode(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_NO_CONTENT_response_with_no_body_present(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
     mock_http_connection.session.mock_response.read = asynctest.CoroutineMock(return_value=None)
     mock_http_connection.session.mock_response.headers["Content-Type"] = None
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.NO_CONTENT)
@@ -645,7 +645,7 @@ async def test_NO_CONTENT_response_with_no_body_present(mock_http_connection, re
 
 @pytest.mark.asyncio
 async def test_some_response_that_has_an_unrecognised_content_type_returns_bytes(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = "mac-and/cheese"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.CREATED)
@@ -656,7 +656,7 @@ async def test_some_response_that_has_an_unrecognised_content_type_returns_bytes
 
 @pytest.mark.asyncio
 async def test_4xx_hits_handle_client_error_response(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.BAD_REQUEST)
@@ -669,7 +669,7 @@ async def test_4xx_hits_handle_client_error_response(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_5xx_hits_handle_server_error_response(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once", "_is_rate_limited"])
 
     mock_http_connection.session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.session.mock_response.status = int(opcodes.HTTPStatus.GATEWAY_TIMEOUT)
@@ -682,7 +682,7 @@ async def test_5xx_hits_handle_server_error_response(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_ValueError_on_unrecognised_HTTP_status(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
     mock_http_connection.session.mock_response.status = 669
     mock_http_connection.session.mock_response.headers = {"foo": "bar", "baz": "bork"}
@@ -696,7 +696,7 @@ async def test_ValueError_on_unrecognised_HTTP_status(mock_http_connection, res)
 
 @pytest.mark.asyncio
 async def test_2xx_returns_object(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
     mock_http_connection.session.mock_response.status = 201
     mock_http_connection.session.mock_response.headers = {"foo": "bar", "baz": "bork"}
@@ -708,7 +708,7 @@ async def test_2xx_returns_object(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_3xx_returns_tuple(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
     mock_http_connection.session.mock_response.status = 304
     mock_http_connection.session.mock_response.headers = {"foo": "bar", "baz": "bork"}
@@ -720,7 +720,7 @@ async def test_3xx_returns_tuple(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_4xx_is_handled_as_4xx_error_response(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
     mock_http_connection.session.mock_response.status = 401
     mock_http_connection.session.mock_response.headers = {"foo": "bar", "baz": "bork"}
@@ -733,7 +733,7 @@ async def test_4xx_is_handled_as_4xx_error_response(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_5xx_is_handled_as_5xx_error_response(mock_http_connection, res):
-    mock_http_connection = _mock_methods_on(mock_http_connection, except_=["_request_once"])
+    mock_http_connection = mock_methods_on(mock_http_connection, except_=["_request_once"])
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
     mock_http_connection.session.mock_response.status = 501
     mock_http_connection.session.mock_response.headers = {"foo": "bar", "baz": "bork"}
