@@ -46,7 +46,4 @@ It currently is **not** able to provide voice functionality. Again, this may be 
 
 ### Contributing to Hikari
 
-**When I try to run `nox`, it complains that `pip` cannot be run with `--user`. How do I run the tests?**
-
-I seem to get this issue on Manjaro Linux a lot. The solution for me is to edit `/etc/pip.conf` and set `user = False`
-then try running again.
+[View the contributing guide!](https://gitlab.com/nekokatt/hikari/-/wiki_pages/Contributing)
