@@ -16,15 +16,3 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-from hikari.core.internal import state_registry
-
-
-def test_MissingDependencyError_accesses_failed_method_correctly():
-    payload = {"junk": "foo bar baz"}
-
-    try:
-        raise state_registry.MissingDependencyError(payload, "deez nuts")
-    except state_registry.MissingDependencyError as ex:
-        assert ex.payload is payload
-        assert ex.missing == "deez nuts"
-        assert ex.method == test_MissingDependencyError_accesses_failed_method_correctly.__name__
