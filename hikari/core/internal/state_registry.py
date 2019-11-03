@@ -56,7 +56,7 @@ class StateRegistry(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def add_reaction(self, message_obj: messages.Message, emoji_obj: emojis.Emoji) -> reactions.Reaction:
+    def increment_reaction_count(self, message_obj: messages.Message, emoji_obj: emojis.Emoji) -> reactions.Reaction:
         """
         Adds 1 to the count for the reaction.
 
@@ -68,6 +68,27 @@ class StateRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.core.models.reaction.Reaction` object.
+        """
+
+    @abc.abstractmethod
+    def decrement_reaction_count(
+        self, message_obj: messages.Message, emoji_obj: emojis.Emoji
+    ) -> typing.Optional[reactions.Reaction]:
+        """
+        Subtracts 1 from the count for the reaction.
+
+        Args:
+            emoji_obj:
+                the emoji of the reaction.
+            message_obj:
+                the message the reaction was on.
+
+        Note:
+            If the count reaches zero, the reaction will be removed from the message additionally.
+
+        Returns:
+            a :class:`hikari.core.models.reaction.Reaction` object if the reaction existed already in the
+            cache, otherwise `None`.
         """
 
     @abc.abstractmethod
@@ -406,7 +427,7 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def remove_all_reactions(self, message_obj: messages.Message) -> None:
+    def delete_all_reactions(self, message_obj: messages.Message) -> None:
         """
         Removes all reactions from a message.
 
@@ -416,31 +437,13 @@ class StateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def remove_reaction(self, message_obj: messages.Message, emoji_obj: emojis.Emoji) -> reactions.Reaction:
-        """
-        Subtracts 1 from the count for the reaction.
-
-        Args:
-            emoji_obj:
-                the emoji of the reaction.
-            message_obj:
-                the message the reaction was on.
-
-        Note:
-            If the count reaches zero, the reaction will be removed from the message additionally.
-
-        Returns:
-            a :class:`hikari.core.models.reaction.Reaction` object.
-        """
-
-    @abc.abstractmethod
-    def set_guild_unavailability(self, guild_id: int, unavailability: bool) -> None:
+    def set_guild_unavailability(self, guild_obj: guilds.Guild, unavailability: bool) -> None:
         """
         Set the availability for the given guild.
 
         Args:
-            guild_id:
-                the ID for the given guild.
+            guild_obj:
+                the guild to update.
             unavailability:
                 `True` if unavailable, `False` if available.
         """

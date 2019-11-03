@@ -88,7 +88,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
     def message_cache(self) -> typing.MutableMapping[int, messages.Message]:
         return self._message_cache
 
-    def add_reaction(self, message_obj: messages.Message, emoji_obj: emojis.Emoji) -> reactions.Reaction:
+    def increment_reaction_count(self, message_obj: messages.Message, emoji_obj: emojis.Emoji) -> reactions.Reaction:
         # Ensure the reaction is subscribed on the message.
         for reaction_obj in message_obj.reactions:
             if reaction_obj.emoji == emoji_obj:
@@ -99,6 +99,23 @@ class StateRegistryImpl(state_registry.StateRegistry):
         reaction_obj = reactions.Reaction(1, emoji_obj, message_obj)
         message_obj.reactions.append(reaction_obj)
         return reaction_obj
+
+    def decrement_reaction_count(
+        self, message_obj: messages.Message, emoji_obj: emojis.Emoji
+    ) -> typing.Optional[reactions.Reaction]:
+        # Ensure the reaction is subscribed on the message.
+        for reaction_obj in message_obj.reactions:
+            if reaction_obj.emoji == emoji_obj:
+                # Decrement the count.
+                reaction_obj.count -= 1
+
+                # If the count is zero, remove it from the message
+                if reaction_obj.count == 0:
+                    message_obj.reactions.remove(reaction_obj)
+
+                return reaction_obj
+
+        return None
 
     def delete_channel(self, channel_obj: channels.Channel) -> None:
         channel_id = channel_obj.id
@@ -138,8 +155,19 @@ class StateRegistryImpl(state_registry.StateRegistry):
         for reaction_obj in message_obj.reactions:
             if reaction_obj.emoji == emoji_obj and reaction_obj.message.id == reaction_obj.message.id:
                 message_obj.reactions.remove(reaction_obj)
+                # Set this to zero so that if a reference to this object exists elsewhere, it reflects that it has
+                # been removed from the message.
+                reaction_obj.count = 0
                 # This emoji will only be referenced once, so shortcut to save time.
                 break
+
+    def delete_all_reactions(self, message_obj: messages.Message) -> None:
+        # If the user had any reference to the objects, we should ensure that is now zero to show the reaction
+        # is no longer alive.
+        for reaction_obj in message_obj.reactions:
+            reaction_obj.count = 0
+
+        message_obj.reactions.clear()
 
     # noinspection PyProtectedMember
     def delete_role(self, role_obj: roles.Role) -> None:
@@ -246,12 +274,12 @@ class StateRegistryImpl(state_registry.StateRegistry):
         guild_id = int(guild_payload["id"])
         unavailable = guild_payload.get("unavailable", False)
 
-        # Always try to update an existing guild first.
-        guild_obj = self.get_guild_by_id(guild_id)
-
         if guild_id in self._guilds:
+            # Always try to update an existing guild first.
+            guild_obj = self.get_guild_by_id(guild_id)
+
             if unavailable:
-                self.set_guild_unavailability(guild_id, True)
+                self.set_guild_unavailability(guild_obj, True)
             else:
                 guild_obj.update_state(guild_payload)
         else:
@@ -319,9 +347,15 @@ class StateRegistryImpl(state_registry.StateRegistry):
             return None
 
     def parse_role(self, role_payload: custom_types.DiscordObject, guild_obj: guilds.Guild):
-        role_payload = roles.Role(self, role_payload, guild_obj.id)
-        guild_obj.roles[role_payload.id] = role_payload
-        return role_payload
+        role_id = int(role_payload["id"])
+        if role_id in guild_obj.roles:
+            role = guild_obj.roles[role_id]
+            role.update_state(role_payload)
+            return role
+        else:
+            role_payload = roles.Role(self, role_payload, guild_obj.id)
+            guild_obj.roles[role_payload.id] = role_payload
+            return role_payload
 
     def parse_user(self, user_payload: custom_types.DiscordObject):
         # If the user already exists, then just return their existing object. We expect discord to tell us if they
@@ -345,28 +379,14 @@ class StateRegistryImpl(state_registry.StateRegistry):
         return existing_user
 
     def parse_webhook(self, webhook_payload: custom_types.DiscordObject):
+        # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
+        # so that it isn't coupling dependent classes of this one to the model implementation as much.
         return webhooks.Webhook(self, webhook_payload)
 
-    def remove_all_reactions(self, message_obj: messages.Message) -> None:
-        for reaction_obj in message_obj.reactions:
-            reaction_obj.count = 0
-
-        message_obj.reactions.clear()
-
-    def remove_reaction(self, message_obj: messages.Message, emoji_obj: emojis.Emoji) -> reactions.Reaction:
-        for reaction_obj in message_obj.reactions:
-            if reaction_obj.emoji == emoji_obj:
-                reaction_obj.count -= 1
-                if reaction_obj.count <= 0:
-                    reaction_obj.count = 0
-                    message_obj.reactions.remove(reaction_obj)
-                return reaction_obj
-        return reactions.Reaction(0, emoji_obj, message_obj)
-
-    def set_guild_unavailability(self, guild_id: int, unavailability: bool) -> None:
-        guild_obj = self.get_guild_by_id(guild_id)
-        if guild_obj is not None:
-            guild_obj.unavailable = unavailability
+    def set_guild_unavailability(self, guild_obj: guilds.Guild, unavailability: bool) -> None:
+        # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
+        # so that it isn't coupling dependent classes of this one to the model implementation as much.
+        guild_obj.unavailable = unavailability
 
     def set_last_pinned_timestamp(self, channel_id: int, timestamp: typing.Optional[datetime.datetime]) -> None:
         # We don't persist this information, as it is not overly useful. The user can use the HTTP endpoint if they
@@ -374,6 +394,8 @@ class StateRegistryImpl(state_registry.StateRegistry):
         pass
 
     def set_roles_for_member(self, role_objs: typing.Sequence[roles.Role], member_obj: users.Member) -> None:
+        # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
+        # so that it isn't coupling dependent classes of this one to the model implementation as much.
         member_obj._role_ids = [role.id for role in role_objs]
 
     def update_channel(
