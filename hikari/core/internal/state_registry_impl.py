@@ -22,6 +22,7 @@ A basic type of registry that handles storing global state.
 from __future__ import annotations
 
 import contextlib
+import copy
 import datetime
 import typing
 import weakref
@@ -464,10 +465,9 @@ class StateRegistryImpl(state_registry.StateRegistry):
         self, payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[messages.Message, messages.Message]]:
         message_id = int(payload["message_id"])
-        existing_message = self._message_cache.get(message_id)
-        if existing_message is not None:
-            old_message = existing_message.copy()
-            new_message = existing_message
+        if message_id in self._message_cache:
+            new_message = self._message_cache.get(message_id)
+            old_message = new_message.copy()
             new_message.update_state(payload)
             return old_message, new_message
         return None

@@ -16,12 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import copy
 import dataclasses
 import datetime
 import enum
 import typing
-from unittest import mock
 
 import pytest
 
@@ -142,6 +140,7 @@ def test_dataclass_does_not_overwrite_existing_hash_if_explicitly_defined():
 def test_Volatile_clone_shallow():
     @dataclasses.dataclass()
     class Test(base.HikariModel):
+        __slots__ = ("data", "whatever")
         data: typing.List[int]
         whatever: object
 
@@ -152,33 +151,35 @@ def test_Volatile_clone_shallow():
     whatever = object()
     test = Test(data, whatever)
 
-    assert copy.copy(test) is not test
-    assert copy.copy(test) == test
-    assert copy.copy(test).data is not data
-    assert copy.copy(test).data == data
+    assert test.copy() is not test
+    assert test.copy() == test
+    assert test.copy().data is not data
+    assert test.copy().data == data
 
-    assert copy.copy(test).whatever is not whatever
+    assert test.copy().whatever is not whatever
 
 
 @pytest.mark.model
 def test_HikariModel_does_not_clone_ownership_fields():
     @dataclasses.dataclass()
     class Test(base.HikariModel):
-        __copy_by_ref__ = ["data"]
+        __copy_by_ref__ = ("data",)
+        __slots__ = ("data",)
         data: typing.List[int]
 
     data = [1, 2, 3]
     test = Test(data)
 
-    assert copy.copy(test) is not test
-    assert copy.copy(test).data is data
+    assert test.copy() is not test
+    assert test.copy().data is data
 
 
 @pytest.mark.model
 def test_HikariModel_does_not_clone_state_by_default_fields():
     @dataclasses.dataclass()
     class Test(base.HikariModel):
-        __copy_by_ref__ = ["foo"]
+        __copy_by_ref__ = ("foo",)
+        __slots__ = ("foo", "_state")
         _state: typing.List[int]
         foo: int
 
@@ -186,44 +187,60 @@ def test_HikariModel_does_not_clone_state_by_default_fields():
     foo = 12
     test = Test(state, foo)
 
-    assert copy.copy(test) is not test
-    assert copy.copy(test)._state is state
-
-
-@pytest.mark.model
-def test_HikariModel_copy_calls___copy__():
-    @dataclasses.dataclass()
-    class Test(base.HikariModel):
-        pass
-
-    t = Test()
-    t._copy = mock.MagicMock()
-    copy.copy(t)
-    t._copy.assert_called_with(copy.copy)
-
-
-@pytest.mark.model
-def test_HikariModel_deepcopy_calls___deepcopy__():
-    @dataclasses.dataclass()
-    class Test(base.HikariModel):
-        pass
-
-    t = Test()
-    t._copy = mock.MagicMock()
-    copy.deepcopy(t)
-    t._copy.assert_called_with(copy.deepcopy)
+    assert test.copy() is not test
+    assert test.copy()._state is state
 
 
 @pytest.mark.model
 def test_HikariModel___copy_by_ref___is_inherited():
     class Base1(base.HikariModel):
         __copy_by_ref__ = ["a", "b", "c"]
+        __slots__ = ("a", "b", "c")
 
     class Base2(Base1):
         __copy_by_ref__ = ["d", "e", "f"]
+        __slots__ = ("d", "e", "f")
 
     class Base3(Base2):
         __copy_by_ref__ = ["g", "h", "i"]
+        __slots__ = ("g", "h", "i")
 
     for letter in "abcdefghi":
         assert letter in Base3.__copy_by_ref__, f"{letter!r} was not inherited into __copy_by_ref__"
+
+
+@pytest.mark.model
+def test_HikariModel___all_slots___is_inherited():
+    class Base1(base.HikariModel):
+        __copy_by_ref__ = ["a", "b", "c"]
+        __slots__ = ("a", "b", "c")
+
+    class Base2(Base1):
+        __copy_by_ref__ = ["d", "e", "f"]
+        __slots__ = ("d", "e", "f")
+
+    class Base3(Base2):
+        __copy_by_ref__ = ["g", "h", "i"]
+        __slots__ = ("g", "h", "i")
+
+    for letter in "abcdefghi":
+        assert letter in Base3.__all_slots__, f"{letter!r} was not inherited into __all_slots__"
+
+
+@pytest.mark.model
+def test_non_slotted_HikariModel_refuses_to_initialize():
+    try:
+        class BadClass(base.HikariModel):
+            # look ma, no slots.
+            pass
+    except TypeError:
+        assert True
+
+
+@pytest.mark.model
+def test_slotted_HikariModel_can_initialize():
+    try:
+        class GoodClass(base.HikariModel):
+            __slots__ = ()
+    except TypeError as ex:
+        raise AssertionError from ex
