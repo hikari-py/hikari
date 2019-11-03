@@ -992,23 +992,47 @@ class TestStateRegistryImpl:
         # We don't store this attribute, so we don't bother doing anything with it.
         assert True, r"¯\_(ツ)_/¯"
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_set_roles_for_member_replaces_role_list_on_member(self, registry: state_registry_impl.StateRegistryImpl):
-        roles = []
-        member_obj = _helpers.mock_model(members.Member)
-        raise NotImplementedError
+        role_objs = [
+            _helpers.mock_model(roles.Role, id=9),
+            _helpers.mock_model(roles.Role, id=2),
+            _helpers.mock_model(roles.Role, id=33),
+        ]
+        member_obj = _helpers.mock_model(members.Member, _role_ids=[])
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        registry.set_roles_for_member(role_objs, member_obj)
+
+        assert 9 in member_obj._role_ids
+        assert 2 in member_obj._role_ids
+        assert 33 in member_obj._role_ids
+
     def test_update_channel_when_existing_channel_does_not_exist_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        registry.get_channel_by_id = mock.MagicMock(return_value=None, spec_set=registry.get_channel_by_id)
+        payload = {"id": "1234"}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        diff = registry.update_channel(payload)
+
+        assert diff is None
+
     def test_update_channel_when_existing_channel_exists_returns_old_state_copy_and_updated_new_state(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, channels={})
+        registry._guilds = {guild_obj.id: guild_obj}
+        original_channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=456)
+        cloned_channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=456)
+        original_channel_obj.copy = mock.MagicMock(spec_set=original_channel_obj.copy, return_value=cloned_channel_obj)
+        registry._guild_channels = {original_channel_obj.id: original_channel_obj}
+
+        old, new = registry.update_channel({"id": "456"})
+
+        assert old is not None
+        assert new is not None
+
+        assert new is original_channel_obj, "existing channel was not used as target for update!"
+        assert old is cloned_channel_obj, "existing channel did not get the old state copied and returned!"
 
     @pytest.mark.xfail(reason="Not yet implemented")
     def test_update_guild_when_existing_guild_does_not_exist_returns_None(

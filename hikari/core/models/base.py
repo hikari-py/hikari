@@ -22,6 +22,7 @@ Model ABCs and mixins.
 from __future__ import annotations
 
 import copy
+import dataclasses
 import datetime
 import typing
 
@@ -115,12 +116,9 @@ class Snowflake:
         return self > other or self == other
 
 
-_T = typing.TypeVar("_T", bound="HikariModel")
-_U = typing.TypeVar("_U")
-
-
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
+@dataclasses.dataclass()
 class HikariModel:
     """
     Marks a class that is allowed to have its state periodically updated, rather than being recreated.
@@ -130,23 +128,41 @@ class HikariModel:
     If you need some fields to be copied across by reference regardless of being requested to produce a new copy, you
     should specify their names in the `__copy_byref__` class var. This will prevent :func:`copy.copy` being
     invoked on them when duplicating the object to produce a before and after view when a change is made.
+
+    Warning:
+        Copy functionality on this base is only implemented for slotted derived classes.
     """
 
-    __slots__ = ()
+    __slots__ = []
+
+    #: We want a fast way of knowing all the slotted fields instances of this subclass may provide without heavy
+    #: recursive introspection every time an update event occurs and we need to create a shallow one-level-deep copy
+    #: of the object.
+    __all_slots__ = ()
+
+    #: Tracks the fields we shouldn't clone. This always includes the state.
     __copy_by_ref__: typing.ClassVar[typing.Tuple] = ("_state",)
 
     def __init_subclass__(cls, **kwargs):
         """
         When the subclass gets inited, resolve the `__copy_by_ref__` for all base classes as well.
         """
+        if "__slots__" not in cls.__dict__:
+            raise TypeError(f"{cls.__module__}.{cls.__qualname__} must be slotted to derive from HikariModel.")
+
         copy_by_ref = set()
+        slots = set()
 
         for base in cls.mro():
+            next_slots = getattr(base, "__slots__", custom_types.EMPTY_COLLECTION)
             next_refs = getattr(base, "__copy_by_ref__", custom_types.EMPTY_COLLECTION)
             for ref in next_refs:
                 copy_by_ref.add(ref)
+            for slot in next_slots:
+                slots.add(slot)
 
         cls.__copy_by_ref__ = tuple(copy_by_ref)
+        cls.__all_slots__ = tuple(slots)
 
     def update_state(self, payload: custom_types.DiscordObject) -> None:
         """
@@ -154,7 +170,7 @@ class HikariModel:
         """
         return NotImplemented
 
-    def _copy(self: _T, copy_func: typing.Callable[[_U], _U]) -> _T:
+    def copy(self, copy_func=copy.copy):
         """
         Create a copy of this object.
 
@@ -162,24 +178,24 @@ class HikariModel:
             the copy of this object.
         """
         # Make a new instance without the internal attributes.
-        # noinspection PyArgumentList
-        reconstructor, (cls, base, state), data = self.__reduce__()
-        new_instance = reconstructor(cls, base, state)
+        cls = type(self)
 
-        for k, v in data.items():
-            if k in self.__copy_by_ref__:
-                setattr(new_instance, k, v)
+        # Calls the base initialization function for the given object to allocate the initial empty shell. We usually
+        # would use this if we overrode `__new__`. Unlike using `__reduce_ex__` and `__reduce__`, this does not invoke
+        # pickle, so should be much more efficient than pickling and unpickling to get an empty object.
+        # This also ensures all methods are referenced, but no instance variables get bound, which is just what we need.
+
+        # noinspection PySuperArguments
+        instance = super(type, cls).__new__(cls)
+
+        for attr in cls.__all_slots__:
+            attr_val = getattr(self, attr)
+            if attr in self.__copy_by_ref__:
+                setattr(instance, attr, attr_val)
             else:
-                copied_attr = copy_func(v)
-                setattr(new_instance, k, copied_attr)
+                setattr(instance, attr, copy_func(attr_val))
 
-        return new_instance
-
-    def __copy__(self):
-        return self._copy(copy.copy)
-
-    def __deepcopy__(self, memo=...):
-        return self._copy(copy.deepcopy)
+        return instance
 
 
 __all__ = ("Snowflake", "NamedEnum", "HikariModel")
