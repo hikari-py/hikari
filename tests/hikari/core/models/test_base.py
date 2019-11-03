@@ -148,16 +148,16 @@ def test_Volatile_clone_shallow():
         def __eq__(self, other):
             return self.data == other.data
 
-    data = [1, 2, 3]
+    data = [1, 2, 3, object(), object()]
     whatever = object()
     test = Test(data, whatever)
 
-    assert test.copy() is not test
-    assert test.copy().data is not data
-    assert test.copy().data == data
-    assert test.copy() == test
+    assert copy.copy(test) is not test
+    assert copy.copy(test) == test
+    assert copy.copy(test).data is not data
+    assert copy.copy(test).data == data
 
-    assert test.copy().whatever is not whatever
+    assert copy.copy(test).whatever is not whatever
 
 
 @pytest.mark.model
@@ -170,8 +170,25 @@ def test_HikariModel_does_not_clone_ownership_fields():
     data = [1, 2, 3]
     test = Test(data)
 
-    assert test.copy() is not test
-    assert test.copy().data is data
+    assert copy.copy(test) is not test
+    assert copy.copy(test).data is data
+
+
+@pytest.mark.model
+def test_HikariModel_does_not_clone_state_by_default_fields():
+    @dataclasses.dataclass()
+    class Test(base.HikariModel):
+        __copy_by_ref__ = ["foo"]
+        _state: typing.List[int]
+        foo: int
+
+
+    state = [1, 2, 3]
+    foo = 12
+    test = Test(state, foo)
+
+    assert copy.copy(test) is not test
+    assert copy.copy(test)._state is state
 
 
 @pytest.mark.model
@@ -181,6 +198,33 @@ def test_HikariModel_copy_calls___copy__():
         pass
 
     t = Test()
-    t.copy = mock.MagicMock()
+    t._copy = mock.MagicMock()
     copy.copy(t)
-    t.copy.assert_called_once()
+    t._copy.assert_called_with(copy.copy)
+
+
+@pytest.mark.model
+def test_HikariModel_deepcopy_calls___deepcopy__():
+    @dataclasses.dataclass()
+    class Test(base.HikariModel):
+        pass
+
+    t = Test()
+    t._copy = mock.MagicMock()
+    copy.deepcopy(t)
+    t._copy.assert_called_with(copy.deepcopy)
+
+
+@pytest.mark.model
+def test_HikariModel___copy_by_ref___is_inherited():
+    class Base1(base.HikariModel):
+        __copy_by_ref__ = ["a", "b", "c"]
+
+    class Base2(Base1):
+        __copy_by_ref__ = ["d", "e", "f"]
+
+    class Base3(Base2):
+        __copy_by_ref__ = ["g", "h", "i"]
+
+    for letter in "abcdefghi":
+        assert letter in Base3.__copy_by_ref__, f"{letter!r} was not inherited into __copy_by_ref__"

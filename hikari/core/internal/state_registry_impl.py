@@ -286,7 +286,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
             self._message_cache[message_id] = message_obj
             return message_obj
-        return None
+        raise MissingDependencyError
 
     def parse_presence(self, member_obj: users.Member, presence_payload: custom_types.DiscordObject):
         presence_obj = presences.Presence(presence_payload)
@@ -460,12 +460,3 @@ class StateRegistryImpl(state_registry.StateRegistry):
             new_role.update_state(payload)
             return old_role, new_role
         return None
-
-    def __copy__(self):
-        """
-        We don't allow ourselves to be copied, as this would lead to inconsistent state when the models get
-        cloned. Instead, we just return our own reference.
-
-        This is a hack, I should probably remove this and find a different way to implement this eventually.
-        """
-        return self

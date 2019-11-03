@@ -546,25 +546,47 @@ class TestStateRegistryImpl:
         with mock.patch(_helpers.fqn1(guilds.Guild), return_value=guild_obj):
             assert registry.parse_guild(payload) is guild_obj
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_member_when_existing_member_updates_state(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        payload = {"user": {"id": "1234"}, "roles": ["9", "18", "27"], "nick": "Roy Rodgers McFreely"}
+        member_obj = _helpers.mock_model(users.Member, id=1234, _role_ids=[], nick=None)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=5678, members={member_obj.id: member_obj})
+        registry._guilds = {guild_obj.id: guild_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        registry.parse_member(payload, guild_obj)
+
+        member_obj.update_state.assert_called_with([9, 18, 27], "Roy Rodgers McFreely")
+
     def test_parse_member_when_existing_member_returns_existing_member(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        payload = {"user": {"id": "1234"}, "roles": ["9", "18", "27"], "nick": "Roy Rodgers McFreely"}
+        member_obj = _helpers.mock_model(users.Member, id=1234, _role_ids=[], nick=None)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=5678, members={member_obj.id: member_obj})
+        registry._guilds = {guild_obj.id: guild_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.parse_member(payload, guild_obj) is member_obj
+
     def test_parse_member_when_new_member_caches_new_member_on_guild(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        payload = {"user": {"id": "1234"}, "roles": ["9", "18", "27"], "nick": "Roy Rodgers McFreely"}
+        guild_obj = _helpers.mock_model(guilds.Guild, id=5678, members={})
+        registry._guilds = {guild_obj.id: guild_obj}
+        member_obj = _helpers.mock_model(users.Member)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        with mock.patch(_helpers.fqn1(users.Member), return_value=member_obj):
+            registry.parse_member(payload, guild_obj)
+            assert member_obj in guild_obj.members.values()
+
     def test_parse_member_when_new_member_returns_new_member(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        payload = {"user": {"id": "1234"}, "roles": ["9", "18", "27"], "nick": "Roy Rodgers McFreely"}
+        guild_obj = _helpers.mock_model(guilds.Guild, id=5678, members={})
+        registry._guilds = {guild_obj.id: guild_obj}
+        member_obj = _helpers.mock_model(users.Member)
+
+        with mock.patch(_helpers.fqn1(users.Member), return_value=member_obj):
+            parsed_member_obj = registry.parse_member(payload, guild_obj)
+            assert parsed_member_obj is member_obj
 
     @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_message_when_channel_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
@@ -790,9 +812,3 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         raise NotImplementedError
-
-    def test_copy_constructor_returns_same_instance(self):
-        import copy
-
-        reg = state_registry_impl.StateRegistryImpl(100, 100)
-        assert copy.copy(reg) is reg

@@ -116,6 +116,7 @@ class Snowflake:
 
 
 _T = typing.TypeVar("_T", bound="HikariModel")
+_U = typing.TypeVar("_U")
 
 
 @assertions.assert_is_mixin
@@ -132,7 +133,20 @@ class HikariModel:
     """
 
     __slots__ = ()
-    __copy_by_ref__: typing.ClassVar[typing.Tuple] = ()
+    __copy_by_ref__: typing.ClassVar[typing.Tuple] = ("_state",)
+
+    def __init_subclass__(cls, **kwargs):
+        """
+        When the subclass gets inited, resolve the `__copy_by_ref__` for all base classes as well.
+        """
+        copy_by_ref = set()
+
+        for base in cls.mro():
+            next_refs = getattr(base, "__copy_by_ref__", custom_types.EMPTY_COLLECTION)
+            for ref in next_refs:
+                copy_by_ref.add(ref)
+
+        cls.__copy_by_ref__ = tuple(copy_by_ref)
 
     def update_state(self, payload: custom_types.DiscordObject) -> None:
         """
@@ -140,7 +154,7 @@ class HikariModel:
         """
         return NotImplemented
 
-    def copy(self: _T) -> _T:
+    def _copy(self: _T, copy_func: typing.Callable[[_U], _U]) -> _T:
         """
         Create a copy of this object.
 
@@ -156,12 +170,16 @@ class HikariModel:
             if k in self.__copy_by_ref__:
                 setattr(new_instance, k, v)
             else:
-                setattr(new_instance, k, copy.copy(v))
+                copied_attr = copy_func(v)
+                setattr(new_instance, k, copied_attr)
 
         return new_instance
 
     def __copy__(self):
-        return self.copy()
+        return self._copy(copy.copy)
+
+    def __deepcopy__(self, memo=...):
+        return self._copy(copy.deepcopy)
 
 
 __all__ = ("Snowflake", "NamedEnum", "HikariModel")

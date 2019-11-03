@@ -47,6 +47,21 @@ BLACK_SHIM_PATH = pathify(CI_SCRIPT_DIR, "black.py")
 GENDOC_PATH = pathify(CI_SCRIPT_DIR, "gendoc.py")
 MAIN_PACKAGE_PATH = MAIN_PACKAGE.replace(".", "/")
 REPOSITORY = f"https://gitlab.com/{OWNER}/{MAIN_PACKAGE}"
+PYTEST_ARGS = [
+    "--cov",
+    MAIN_PACKAGE,
+    "--cov-config",
+    COVERAGE_RC,
+    "--cov-report",
+    "term",
+    "--cov-report",
+    f"html:{ARTIFACT_DIR}/coverage/html",
+    "--cov-branch",
+    "-ra",
+    "--showlocals",
+    "--testdox",
+    "--force-testdox",
+]
 
 
 def line_count(directories, file_include_globs=("*.py",), dir_exclude_globs=("__pycache__",)):
@@ -127,18 +142,7 @@ def pytest(session: PoetryNoxSession) -> None:
         "ignore::DeprecationWarning",
         "-m",
         "pytest",
-        "--cov",
-        MAIN_PACKAGE,
-        "--cov-config",
-        COVERAGE_RC,
-        "--cov-report",
-        "term",
-        "--cov-report",
-        f"html:{ARTIFACT_DIR}/coverage/html",
-        "--cov-branch",
-        "-ra",
-        "--showlocals",
-        "--testdox",
+        *PYTEST_ARGS,
         *session.posargs,
         TEST_PATH,
     )
