@@ -24,5 +24,4 @@ from hikari.core.models import colours
 
 @pytest.mark.model
 def test_colours():
-    for attr in colors.__all__:
-        assert getattr(colors, attr) is getattr(colours, attr)
+    assert colors.Color is colours.Colour

@@ -34,7 +34,6 @@ from hikari.core.utils import meta
 from hikari.core.utils import transform
 from hikari.core.utils import unspecified
 
-
 DELETE = "delete"
 GET = "get"
 PATCH = "patch"

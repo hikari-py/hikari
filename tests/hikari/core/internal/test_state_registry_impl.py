@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import copy
+import datetime
 import contextlib
 from unittest import mock
 
@@ -26,6 +27,7 @@ from hikari.core.internal import state_registry_impl
 from hikari.core.models import emojis
 from hikari.core.models import channels
 from hikari.core.models import guilds
+from hikari.core.models import members
 from hikari.core.models import messages
 from hikari.core.models import presences
 from hikari.core.models import reactions
@@ -272,7 +274,7 @@ class TestStateRegistryImpl:
         assert True, "this should exit silently"
 
     def test_delete_member_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        member_obj = _helpers.mock_model(users.Member, id=1234)
+        member_obj = _helpers.mock_model(members.Member, id=1234)
         guild_obj = _helpers.mock_model(guilds.Guild, id=5689)
         guild_obj.members = {member_obj.id: member_obj}
         member_obj.guild = guild_obj
@@ -283,7 +285,7 @@ class TestStateRegistryImpl:
         assert member_obj.id not in guild_obj.members
 
     def test_delete_member_uncached(self, registry: state_registry_impl.StateRegistryImpl):
-        member_obj = _helpers.mock_model(users.Member, id=1234)
+        member_obj = _helpers.mock_model(members.Member, id=1234)
 
         registry.delete_member(member_obj)
 
@@ -363,9 +365,9 @@ class TestStateRegistryImpl:
         guild_obj.roles = {role_obj_to_remove.id: role_obj_to_remove, role_obj_to_keep.id: role_obj_to_keep}
         role_obj_to_remove.guild = guild_obj
         role_obj_to_keep.guild = guild_obj
-        member_obj = _helpers.mock_model(users.Member, id=9101112)
+        member_obj = _helpers.mock_model(members.Member, id=9101112)
         member_obj._role_ids = [role_obj_to_keep.id, role_obj_to_remove.id]
-        other_member_obj = _helpers.mock_model(users.Member, id=13141516)
+        other_member_obj = _helpers.mock_model(members.Member, id=13141516)
         guild_obj.members = {member_obj.id: member_obj, other_member_obj.id: other_member_obj}
         registry._guilds = {guild_obj.id: guild_obj}
         registry.delete_role(role_obj_to_remove)
@@ -429,7 +431,7 @@ class TestStateRegistryImpl:
 
     def test_get_member_by_id_cached_guild_cached_user(self, registry: state_registry_impl.StateRegistryImpl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=1)
-        member_obj = _helpers.mock_model(users.Member, id=2, guild=guild_obj)
+        member_obj = _helpers.mock_model(members.Member, id=2, guild=guild_obj)
         guild_obj.members = {member_obj.id: member_obj}
         registry._guilds = {guild_obj.id: guild_obj}
 
@@ -444,7 +446,7 @@ class TestStateRegistryImpl:
 
     def test_get_member_by_id_uncached_guild_uncached_user(self, registry: state_registry_impl.StateRegistryImpl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=1)
-        member_obj = _helpers.mock_model(users.Member, id=2, guild=guild_obj)
+        member_obj = _helpers.mock_model(members.Member, id=2, guild=guild_obj)
         guild_obj.members = {member_obj.id: member_obj}
         registry._guilds = {guild_obj.id: guild_obj}
 
@@ -706,7 +708,7 @@ class TestStateRegistryImpl:
 
     def test_parse_member_when_existing_member_updates_state(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"user": {"id": "1234"}, "roles": ["9", "18", "27"], "nick": "Roy Rodgers McFreely"}
-        member_obj = _helpers.mock_model(users.Member, id=1234, _role_ids=[], nick=None)
+        member_obj = _helpers.mock_model(members.Member, id=1234, _role_ids=[], nick=None)
         guild_obj = _helpers.mock_model(guilds.Guild, id=5678, members={member_obj.id: member_obj})
         registry._guilds = {guild_obj.id: guild_obj}
 
@@ -718,7 +720,7 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         payload = {"user": {"id": "1234"}, "roles": ["9", "18", "27"], "nick": "Roy Rodgers McFreely"}
-        member_obj = _helpers.mock_model(users.Member, id=1234, _role_ids=[], nick=None)
+        member_obj = _helpers.mock_model(members.Member, id=1234, _role_ids=[], nick=None)
         guild_obj = _helpers.mock_model(guilds.Guild, id=5678, members={member_obj.id: member_obj})
         registry._guilds = {guild_obj.id: guild_obj}
 
@@ -730,9 +732,9 @@ class TestStateRegistryImpl:
         payload = {"user": {"id": "1234"}, "roles": ["9", "18", "27"], "nick": "Roy Rodgers McFreely"}
         guild_obj = _helpers.mock_model(guilds.Guild, id=5678, members={})
         registry._guilds = {guild_obj.id: guild_obj}
-        member_obj = _helpers.mock_model(users.Member)
+        member_obj = _helpers.mock_model(members.Member)
 
-        with mock.patch(_helpers.fqn1(users.Member), return_value=member_obj):
+        with mock.patch(_helpers.fqn1(members.Member), return_value=member_obj):
             registry.parse_member(payload, guild_obj)
             assert member_obj in guild_obj.members.values()
 
@@ -740,9 +742,9 @@ class TestStateRegistryImpl:
         payload = {"user": {"id": "1234"}, "roles": ["9", "18", "27"], "nick": "Roy Rodgers McFreely"}
         guild_obj = _helpers.mock_model(guilds.Guild, id=5678, members={})
         registry._guilds = {guild_obj.id: guild_obj}
-        member_obj = _helpers.mock_model(users.Member)
+        member_obj = _helpers.mock_model(members.Member)
 
-        with mock.patch(_helpers.fqn1(users.Member), return_value=member_obj):
+        with mock.patch(_helpers.fqn1(members.Member), return_value=member_obj):
             parsed_member_obj = registry.parse_member(payload, guild_obj)
             assert parsed_member_obj is member_obj
 
@@ -778,7 +780,7 @@ class TestStateRegistryImpl:
             assert parsed_message is mock_message
 
     def test_parse_presence_updates_member(self, registry: state_registry_impl.StateRegistryImpl):
-        member_obj = _helpers.mock_model(users.Member, presence=None)
+        member_obj = _helpers.mock_model(members.Member, presence=None)
         presence_obj = _helpers.mock_model(presences.Presence)
         payload = {}
 
@@ -787,7 +789,7 @@ class TestStateRegistryImpl:
             assert member_obj.presence is presence_obj
 
     def test_parse_presence_returns_presence(self, registry: state_registry_impl.StateRegistryImpl):
-        member_obj = _helpers.mock_model(users.Member, presence=None)
+        member_obj = _helpers.mock_model(members.Member, presence=None)
         presence_obj = _helpers.mock_model(presences.Presence)
         payload = {}
 
@@ -981,20 +983,19 @@ class TestStateRegistryImpl:
         registry.set_guild_unavailability(guild_obj, new_unavailability)
         assert guild_obj.unavailable is new_unavailability
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+    @pytest.mark.parametrize("timestamp", [datetime.datetime.now(), None])
     def test_set_last_pinned_timestamp_for_cached_channel_id_exits_silently(
-        self, registry: state_registry_impl.StateRegistryImpl
+        self, registry: state_registry_impl.StateRegistryImpl, timestamp: datetime.datetime
     ):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_set_last_pinned_timestamp_for_uncached_channel_id_exits_silently(
-        self, registry: state_registry_impl.StateRegistryImpl
-    ):
-        raise NotImplementedError
+        channel_obj = _helpers.mock_model(channels.TextChannel)
+        registry.set_last_pinned_timestamp(channel_obj, timestamp)
+        # We don't store this attribute, so we don't bother doing anything with it.
+        assert True, r"¯\_(ツ)_/¯"
 
     @pytest.mark.xfail(reason="Not yet implemented")
     def test_set_roles_for_member_replaces_role_list_on_member(self, registry: state_registry_impl.StateRegistryImpl):
+        roles = []
+        member_obj = _helpers.mock_model(members.Member)
         raise NotImplementedError
 
     @pytest.mark.xfail(reason="Not yet implemented")
