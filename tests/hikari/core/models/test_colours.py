@@ -16,27 +16,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-All models used in Hikari's public API.
-"""
-from . import (
-    base,
-    channels,
-    colors,
-    colours,
-    embeds,
-    emojis,
-    guilds,
-    integrations,
-    invites,
-    media,
-    messages,
-    overwrites,
-    permissions,
-    presences,
-    reactions,
-    roles,
-    service_status,
-    users,
-    webhooks,
-)
+import pytest
+
+from hikari.core.models import colors
+from hikari.core.models import colours
+
+
+@pytest.mark.model
+def test_colours():
+    for attr in colors.__all__:
+        assert getattr(colors, attr) is getattr(colours, attr)
