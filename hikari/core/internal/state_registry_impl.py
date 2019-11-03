@@ -221,7 +221,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
     def parse_emoji(self, emoji_payload: custom_types.DiscordObject, guild_id: None) -> emojis.Emoji:
         ...
 
-    def parse_emoji(self, emoji_payload, guild_id):
+    def parse_emoji(self, emoji_payload, owned_guild_id):
         existing_emoji = None
         # While it is true the API docs state that we always get an ID back, I don't trust discord wont break this
         # in the future, so I am playing it safe.
@@ -234,9 +234,9 @@ class StateRegistryImpl(state_registry.StateRegistry):
             existing_emoji.update_state(emoji_payload)
             return existing_emoji
 
-        new_emoji = emojis.emoji_from_dict(self, emoji_payload, guild_id)
+        new_emoji = emojis.emoji_from_dict(self, emoji_payload, owned_guild_id)
         if isinstance(new_emoji, emojis.GuildEmoji):
-            guild_obj = self.get_guild_by_id(guild_id)
+            guild_obj = self.get_guild_by_id(owned_guild_id)
             guild_obj.emojis[new_emoji.id] = new_emoji
             self._emojis[new_emoji.id] = new_emoji
 
@@ -278,10 +278,12 @@ class StateRegistryImpl(state_registry.StateRegistry):
     def parse_message(self, message_payload: custom_types.DiscordObject):
         # Always update the cache with the new message.
         message_id = int(message_payload["id"])
-        message_obj = messages.Message(self, message_payload)
 
-        channel_obj = message_obj.channel
+        channel_id = int(message_payload["channel_id"])
+        channel_obj = self.get_channel_by_id(channel_id)
+
         if channel_obj is not None:
+            message_obj = messages.Message(self, message_payload)
             message_obj.channel.last_message_id = message_id
 
             self._message_cache[message_id] = message_obj
@@ -372,7 +374,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
         pass
 
     def set_roles_for_member(self, role_objs: typing.Sequence[roles.Role], member_obj: users.Member) -> None:
-        member_obj._role_ids = role_objs
+        member_obj._role_ids = [role.id for role in role_objs]
 
     def update_channel(
         self, channel_payload: custom_types.DiscordObject

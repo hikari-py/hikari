@@ -22,9 +22,14 @@ from unittest import mock
 import pytest
 
 from hikari.core.internal import state_registry_impl
-from hikari.core.models import emojis, users, channels, guilds, roles
+from hikari.core.models import emojis
+from hikari.core.models import channels
+from hikari.core.models import guilds
 from hikari.core.models import messages
+from hikari.core.models import presences
 from hikari.core.models import reactions
+from hikari.core.models import roles
+from hikari.core.models import users
 from tests.hikari.core import _helpers
 from tests.hikari.core._helpers import mock_model
 
@@ -505,6 +510,18 @@ class TestStateRegistryImpl:
         with mock.patch(_helpers.fqn1(emojis.emoji_from_dict), return_value=emoji_obj):
             assert registry.parse_emoji(payload, guild_id) is emoji_obj
 
+    def test_parse_guild_emoji_when_already_cached_returns_cached_emoji(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=5678)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, guild=guild_obj)
+        registry._emojis = {emoji_obj.id: emoji_obj}
+        payload = {"id": "1234"}
+        registry._guilds = {guild_obj.id: guild_obj}
+        guild_id = guild_obj.id
+
+        assert registry.parse_emoji(payload, guild_id) is emoji_obj
+
     def test_parse_guild_when_already_cached_and_payload_is_available_calls_update_state(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
@@ -588,41 +605,120 @@ class TestStateRegistryImpl:
             parsed_member_obj = registry.parse_member(payload, guild_obj)
             assert parsed_member_obj is member_obj
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_message_when_channel_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        payload = {"id": "1234", "channel_id": "4567"}
+        registry._guild_channels = {}
+        registry._dm_channels = {}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        assert registry.parse_message(payload) is None
+
     def test_parse_message_when_channel_cached_updates_last_message_timestamp_on_channel(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        payload = {"id": "1234", "channel_id": "4567"}
+        channel_obj = mock_model(channels.GuildTextChannel, id=4567, last_message_id=9999)
+        registry._guild_channels = {channel_obj.id: channel_obj}
+        registry._dm_channels = {}
+        mock_message = _helpers.mock_model(messages.Message, id=1234, channel=channel_obj)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        with mock.patch(_helpers.fqn1(messages.Message), return_value=mock_message):
+            registry.parse_message(payload)
+            assert channel_obj.last_message_id == mock_message.id
+
     def test_parse_message_when_channel_cached_returns_message(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        payload = {"id": "1234", "channel_id": "4567"}
+        channel_obj = mock_model(channels.GuildTextChannel, id=4567, last_message_id=9999)
+        registry._guild_channels = {channel_obj.id: channel_obj}
+        registry._dm_channels = {}
+        mock_message = _helpers.mock_model(messages.Message, id=1234, channel=channel_obj)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_presence(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        with mock.patch(_helpers.fqn1(messages.Message), return_value=mock_message):
+            parsed_message = registry.parse_message(payload)
+            assert parsed_message is mock_message
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+    def test_parse_presence_updates_member(self, registry: state_registry_impl.StateRegistryImpl):
+        member_obj = _helpers.mock_model(users.Member, presence=None)
+        presence_obj = _helpers.mock_model(presences.Presence)
+        payload = {}
+
+        with mock.patch(_helpers.fqn1(presences.Presence), return_value=presence_obj):
+            registry.parse_presence(member_obj, payload)
+            assert member_obj.presence is presence_obj
+
+    def test_parse_presence_returns_presence(self, registry: state_registry_impl.StateRegistryImpl):
+        member_obj = _helpers.mock_model(users.Member, presence=None)
+        presence_obj = _helpers.mock_model(presences.Presence)
+        payload = {}
+
+        with mock.patch(_helpers.fqn1(presences.Presence), return_value=presence_obj):
+            parsed_presence = registry.parse_presence(member_obj, payload)
+            assert parsed_presence is presence_obj
+
+    def test_parse_reaction_parses_emoji(self, registry: state_registry_impl.StateRegistryImpl):
+        registry.parse_emoji = mock.MagicMock(spec_set=registry.parse_emoji)
+        registry._message_cache = {}
+        emoji_payload = {"name": "\N{OK HAND SIGN}", "id": None}
+        payload = {"message_id": "1234", "count": 12, "emoji": emoji_payload}
+
+        registry.parse_reaction(payload)
+
+        registry.parse_emoji.assert_called_with(emoji_payload, None)
+
     def test_parse_reaction_when_message_is_cached_and_existing_reaction_updates_reaction_count(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        emoji_payload = {"name": "\N{OK HAND SIGN}", "id": None}
+        payload = {"message_id": "1234", "count": 12, "emoji": emoji_payload}
+        expected_emoji = emojis.UnicodeEmoji(emoji_payload)
+        reaction_obj = mock_model(reactions.Reaction, count=10, emoji=expected_emoji)
+        message_obj = mock_model(messages.Message, id=1234, reactions=[reaction_obj])
+        registry._message_cache = {message_obj.id: message_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        registry.parse_reaction(payload)
+        assert message_obj.reactions[0].count == 12
+
+    def test_parse_reaction_when_message_is_cached_and_existing_reaction_returns_existing_reaction(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        emoji_payload = {"name": "\N{OK HAND SIGN}", "id": None}
+        payload = {"message_id": "1234", "count": 12, "emoji": emoji_payload}
+        expected_emoji = emojis.UnicodeEmoji(emoji_payload)
+        reaction_obj = mock_model(reactions.Reaction, count=10, emoji=expected_emoji)
+        message_obj = mock_model(messages.Message, id=1234, reactions=[reaction_obj])
+        registry._message_cache = {message_obj.id: message_obj}
+
+        assert registry.parse_reaction(payload) is reaction_obj
+
     def test_parse_reaction_when_message_is_cached_and_not_existing_reaction_adds_new_reaction(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        payload = {"message_id": "1234", "count": 12, "emoji": {"name": "\N{OK HAND SIGN}", "id": None}}
+        message_obj = mock_model(messages.Message, id=1234, reactions=[])
+        reaction_obj = mock_model(reactions.Reaction)
+        registry._message_cache = {message_obj.id: message_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        with mock.patch(_helpers.fqn1(reactions.Reaction), return_value=reaction_obj):
+            assert registry.parse_reaction(payload)
+            assert reaction_obj in message_obj.reactions
+
+    def test_parse_reaction_when_message_is_cached_returns_reaction(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        payload = {"message_id": "1234", "count": 12, "emoji": {"name": "\N{OK HAND SIGN}", "id": None}}
+        message_obj = mock_model(messages.Message, id=1234, reactions=[])
+        reaction_obj = mock_model(reactions.Reaction)
+        registry._message_cache = {message_obj.id: message_obj}
+
+        with mock.patch(_helpers.fqn1(reactions.Reaction), return_value=reaction_obj):
+            assert registry.parse_reaction(payload) is reaction_obj
+
     def test_parse_reaction_when_message_is_uncached_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        payload = {"message_id": "1234", "count": 12, "emoji": {"name": "\N{OK HAND SIGN}", "id": None}}
+        registry._message_cache = {}
+
+        assert registry.parse_reaction(payload) is None
 
     @pytest.mark.xfail(reason="Not yet implemented")
     def test_parse_role_when_guild_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):

@@ -65,7 +65,9 @@ class UnicodeEmoji(Emoji):
         self.value = payload["name"]
 
     def __eq__(self, other):
-        return self.value == other
+        if isinstance(other, Emoji):
+            return other.value == self.value
+        return other == self.value
 
     def __ne__(self, other):
         return not (self.value == other)
