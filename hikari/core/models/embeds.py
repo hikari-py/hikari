@@ -27,10 +27,13 @@ import datetime
 import typing
 import weakref
 
-from hikari.core.models import colors as colors
 from hikari.core.models import base
+from hikari.core.models import colors
 from hikari.core.models import media
-from hikari.core.utils import date_utils, auto_repr, custom_types, assertions
+from hikari.core.utils import assertions
+from hikari.core.utils import auto_repr
+from hikari.core.utils import custom_types
+from hikari.core.utils import date_utils
 from hikari.core.utils import transform
 
 
@@ -468,6 +471,8 @@ class BaseEmbed:
         Returns:
             :type: the result of calling the `dict_factory`, or :class:`dict` by default.
         """
+        # TODO: potentially add the 6k char limit checks RE http://github.com/discordapp/discord-api-docs/issues/1173
+
         d = dict_factory()
         transform.put_if_not_none(d, "title", self.title)
         transform.put_if_not_none(d, "description", self.description)

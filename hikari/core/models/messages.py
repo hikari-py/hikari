@@ -32,6 +32,7 @@ from hikari.core.models import channels
 from hikari.core.models import embeds
 from hikari.core.models import guilds
 from hikari.core.models import media
+from hikari.core.models import members
 from hikari.core.models import users
 from hikari.core.utils import date_utils, auto_repr, custom_types
 from hikari.core.utils import transform
@@ -141,7 +142,7 @@ class Message(base.Snowflake, base.HikariModel):
 
     #: Either a :type:`user.User`, a :type:`member.Member` or a :type:`webhook.Webhook` depending on what created the
     #: message and where.
-    author: typing.Union[users.User, users.Member, webhooks.Webhook]
+    author: typing.Union[users.User, members.Member, webhooks.Webhook]
 
     #: The ID of the message.
     #:

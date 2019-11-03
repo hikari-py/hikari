@@ -70,11 +70,17 @@ def test_UnicodeEmoji___init__(unicode_emoji_payload):
 @pytest.mark.model
 def test_UnicodeEmoji___eq__(unicode_emoji_payload):
     assert emojis.UnicodeEmoji(unicode_emoji_payload) == "\N{OK HAND SIGN}"
+    assert emojis.UnicodeEmoji(unicode_emoji_payload).value == emojis.UnicodeEmoji(
+        {"name": "\N{OK HAND SIGN}", "id": None}
+    )
 
 
 @pytest.mark.model
 def test_UnicodeEmoji___ne__(unicode_emoji_payload):
     assert emojis.UnicodeEmoji(unicode_emoji_payload) != "\N{AUBERGINE}"
+    assert emojis.UnicodeEmoji(unicode_emoji_payload).value != emojis.UnicodeEmoji(
+        {"name": "\N{AUBERGINE}", "id": None}
+    )
 
 
 @pytest.mark.model

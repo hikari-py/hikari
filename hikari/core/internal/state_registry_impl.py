@@ -22,6 +22,7 @@ A basic type of registry that handles storing global state.
 from __future__ import annotations
 
 import contextlib
+import copy
 import datetime
 import typing
 import weakref
@@ -30,6 +31,7 @@ from hikari.core.internal import state_registry
 from hikari.core.models import channels
 from hikari.core.models import emojis
 from hikari.core.models import guilds
+from hikari.core.models import members
 from hikari.core.models import messages
 from hikari.core.models import presences
 from hikari.core.models import reactions
@@ -88,17 +90,34 @@ class StateRegistryImpl(state_registry.StateRegistry):
     def message_cache(self) -> typing.MutableMapping[int, messages.Message]:
         return self._message_cache
 
-    def add_reaction(self, message_obj: messages.Message, emoji_obj: emojis.Emoji) -> reactions.Reaction:
+    def increment_reaction_count(self, message_obj: messages.Message, emoji_obj: emojis.Emoji) -> reactions.Reaction:
         # Ensure the reaction is subscribed on the message.
         for reaction_obj in message_obj.reactions:
             if reaction_obj.emoji == emoji_obj:
                 # Increment the count.
                 reaction_obj.count += 1
                 return reaction_obj
-        else:
-            reaction_obj = reactions.Reaction(1, emoji_obj, message_obj)
-            message_obj.reactions.append(reaction_obj)
-            return reaction_obj
+
+        reaction_obj = reactions.Reaction(1, emoji_obj, message_obj)
+        message_obj.reactions.append(reaction_obj)
+        return reaction_obj
+
+    def decrement_reaction_count(
+        self, message_obj: messages.Message, emoji_obj: emojis.Emoji
+    ) -> typing.Optional[reactions.Reaction]:
+        # Ensure the reaction is subscribed on the message.
+        for reaction_obj in message_obj.reactions:
+            if reaction_obj.emoji == emoji_obj:
+                # Decrement the count.
+                reaction_obj.count -= 1
+
+                # If the count is zero, remove it from the message
+                if reaction_obj.count == 0:
+                    message_obj.reactions.remove(reaction_obj)
+
+                return reaction_obj
+
+        return None
 
     def delete_channel(self, channel_obj: channels.Channel) -> None:
         channel_id = channel_obj.id
@@ -129,7 +148,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
             message_obj = self._message_cache[message_obj.id]
             del self._message_cache[message_obj.id]
 
-    def delete_member(self, member_obj: users.Member) -> None:
+    def delete_member(self, member_obj: members.Member) -> None:
         with contextlib.suppress(KeyError):
             del member_obj.guild.members[member_obj.id]
 
@@ -138,8 +157,19 @@ class StateRegistryImpl(state_registry.StateRegistry):
         for reaction_obj in message_obj.reactions:
             if reaction_obj.emoji == emoji_obj and reaction_obj.message.id == reaction_obj.message.id:
                 message_obj.reactions.remove(reaction_obj)
+                # Set this to zero so that if a reference to this object exists elsewhere, it reflects that it has
+                # been removed from the message.
+                reaction_obj.count = 0
                 # This emoji will only be referenced once, so shortcut to save time.
                 break
+
+    def delete_all_reactions(self, message_obj: messages.Message) -> None:
+        # If the user had any reference to the objects, we should ensure that is now zero to show the reaction
+        # is no longer alive.
+        for reaction_obj in message_obj.reactions:
+            reaction_obj.count = 0
+
+        message_obj.reactions.clear()
 
     # noinspection PyProtectedMember
     def delete_role(self, role_obj: roles.Role) -> None:
@@ -164,7 +194,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
     def get_guild_by_id(self, guild_id: int) -> typing.Optional[guilds.Guild]:
         return self._guilds.get(guild_id)
 
-    def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[users.Member]:
+    def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[members.Member]:
         if guild_id not in self._guilds:
             return None
         return self._guilds[guild_id].members.get(user_id)
@@ -221,7 +251,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
     def parse_emoji(self, emoji_payload: custom_types.DiscordObject, guild_id: None) -> emojis.Emoji:
         ...
 
-    def parse_emoji(self, emoji_payload, guild_id):
+    def parse_emoji(self, emoji_payload, owned_guild_id):
         existing_emoji = None
         # While it is true the API docs state that we always get an ID back, I don't trust discord wont break this
         # in the future, so I am playing it safe.
@@ -234,9 +264,9 @@ class StateRegistryImpl(state_registry.StateRegistry):
             existing_emoji.update_state(emoji_payload)
             return existing_emoji
 
-        new_emoji = emojis.emoji_from_dict(self, emoji_payload, guild_id)
+        new_emoji = emojis.emoji_from_dict(self, emoji_payload, owned_guild_id)
         if isinstance(new_emoji, emojis.GuildEmoji):
-            guild_obj = self.get_guild_by_id(guild_id)
+            guild_obj = self.get_guild_by_id(owned_guild_id)
             guild_obj.emojis[new_emoji.id] = new_emoji
             self._emojis[new_emoji.id] = new_emoji
 
@@ -246,12 +276,12 @@ class StateRegistryImpl(state_registry.StateRegistry):
         guild_id = int(guild_payload["id"])
         unavailable = guild_payload.get("unavailable", False)
 
-        # Always try to update an existing guild first.
-        guild_obj = self.get_guild_by_id(guild_id)
-
         if guild_id in self._guilds:
+            # Always try to update an existing guild first.
+            guild_obj = self.get_guild_by_id(guild_id)
+
             if unavailable:
-                self.set_guild_unavailability(guild_id, True)
+                self.set_guild_unavailability(guild_obj, True)
             else:
                 guild_obj.update_state(guild_payload)
         else:
@@ -270,7 +300,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
             member_obj.update_state(role_ids, nick)
             return member_obj
 
-        member_obj = users.Member(self, guild_obj.id, member_payload)
+        member_obj = members.Member(self, guild_obj.id, member_payload)
 
         guild_obj.members[member_id] = member_obj
         return member_obj
@@ -278,17 +308,20 @@ class StateRegistryImpl(state_registry.StateRegistry):
     def parse_message(self, message_payload: custom_types.DiscordObject):
         # Always update the cache with the new message.
         message_id = int(message_payload["id"])
-        message_obj = messages.Message(self, message_payload)
 
-        channel_obj = message_obj.channel
+        channel_id = int(message_payload["channel_id"])
+        channel_obj = self.get_channel_by_id(channel_id)
+
         if channel_obj is not None:
+            message_obj = messages.Message(self, message_payload)
             message_obj.channel.last_message_id = message_id
 
             self._message_cache[message_id] = message_obj
             return message_obj
+
         return None
 
-    def parse_presence(self, member_obj: users.Member, presence_payload: custom_types.DiscordObject):
+    def parse_presence(self, member_obj: members.Member, presence_payload: custom_types.DiscordObject):
         presence_obj = presences.Presence(presence_payload)
         member_obj.presence = presence_obj
         return presence_obj
@@ -313,16 +346,18 @@ class StateRegistryImpl(state_registry.StateRegistry):
                 message_obj.reactions.append(new_reaction_obj)
                 return new_reaction_obj
         else:
-            # No message was cached, so just ignore it.
-            pass
+            return None
 
-    def parse_role(self, role_payload: custom_types.DiscordObject, guild_id: int):
-        if guild_id in self._guilds:
-            guild_obj = self._guilds[guild_id]
-            role_payload = roles.Role(self, role_payload, guild_id)
+    def parse_role(self, role_payload: custom_types.DiscordObject, guild_obj: guilds.Guild):
+        role_id = int(role_payload["id"])
+        if role_id in guild_obj.roles:
+            role = guild_obj.roles[role_id]
+            role.update_state(role_payload)
+            return role
+        else:
+            role_payload = roles.Role(self, role_payload, guild_obj.id)
             guild_obj.roles[role_payload.id] = role_payload
             return role_payload
-        return None
 
     def parse_user(self, user_payload: custom_types.DiscordObject):
         # If the user already exists, then just return their existing object. We expect discord to tell us if they
@@ -346,36 +381,26 @@ class StateRegistryImpl(state_registry.StateRegistry):
         return existing_user
 
     def parse_webhook(self, webhook_payload: custom_types.DiscordObject):
+        # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
+        # so that it isn't coupling dependent classes of this one to the model implementation as much.
         return webhooks.Webhook(self, webhook_payload)
 
-    def remove_all_reactions(self, message_obj: messages.Message) -> None:
-        for reaction_obj in message_obj.reactions:
-            reaction_obj.count = 0
+    def set_guild_unavailability(self, guild_obj: guilds.Guild, unavailability: bool) -> None:
+        # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
+        # so that it isn't coupling dependent classes of this one to the model implementation as much.
+        guild_obj.unavailable = unavailability
 
-        message_obj.reactions.clear()
-
-    def remove_reaction(self, message_obj: messages.Message, emoji_obj: emojis.Emoji) -> reactions.Reaction:
-        for reaction_obj in message_obj.reactions:
-            if reaction_obj.emoji == emoji_obj:
-                reaction_obj.count -= 1
-                if reaction_obj.count <= 0:
-                    reaction_obj.count = 0
-                    message_obj.reactions.remove(reaction_obj)
-                return reaction_obj
-        return reactions.Reaction(0, emoji_obj, message_obj)
-
-    def set_guild_unavailability(self, guild_id: int, unavailability: bool) -> None:
-        guild_obj = self.get_guild_by_id(guild_id)
-        if guild_obj is not None:
-            guild_obj.unavailable = unavailability
-
-    def set_last_pinned_timestamp(self, channel_id: int, timestamp: typing.Optional[datetime.datetime]) -> None:
+    def set_last_pinned_timestamp(
+        self, channel_obj: channels.TextChannel, timestamp: typing.Optional[datetime.datetime]
+    ) -> None:
         # We don't persist this information, as it is not overly useful. The user can use the HTTP endpoint if they
         # care what the pins are...
         pass
 
-    def set_roles_for_member(self, role_objs: typing.Sequence[roles.Role], member_obj: users.Member) -> None:
-        member_obj._role_ids = role_objs
+    def set_roles_for_member(self, role_objs: typing.Sequence[roles.Role], member_obj: members.Member) -> None:
+        # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
+        # so that it isn't coupling dependent classes of this one to the model implementation as much.
+        member_obj._role_ids = [role.id for role in role_objs]
 
     def update_channel(
         self, channel_payload: custom_types.DiscordObject
@@ -414,7 +439,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
     def update_member(
         self, guild_id: int, role_ids: typing.List[int], nick: typing.Optional[str], user_id: int
-    ) -> typing.Optional[typing.Tuple[users.Member, users.Member]]:
+    ) -> typing.Optional[typing.Tuple[members.Member, members.Member]]:
         guild_obj = self.get_guild_by_id(guild_id)
 
         if guild_obj is not None and user_id in guild_obj.members:
@@ -426,7 +451,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
     def update_member_presence(
         self, guild_id: int, user_id: int, presence_payload: custom_types.DiscordObject
-    ) -> typing.Optional[typing.Tuple[users.Member, presences.Presence, presences.Presence]]:
+    ) -> typing.Optional[typing.Tuple[members.Member, presences.Presence, presences.Presence]]:
         guild_obj = self.get_guild_by_id(guild_id)
 
         if guild_obj is not None and user_id in guild_obj.members:
@@ -440,10 +465,9 @@ class StateRegistryImpl(state_registry.StateRegistry):
         self, payload: custom_types.DiscordObject
     ) -> typing.Optional[typing.Tuple[messages.Message, messages.Message]]:
         message_id = int(payload["message_id"])
-        existing_message = self._message_cache.get(message_id)
-        if existing_message is not None:
-            old_message = existing_message.copy()
-            new_message = existing_message
+        if message_id in self._message_cache:
+            new_message = self._message_cache.get(message_id)
+            old_message = new_message.copy()
             new_message.update_state(payload)
             return old_message, new_message
         return None
@@ -460,12 +484,3 @@ class StateRegistryImpl(state_registry.StateRegistry):
             new_role.update_state(payload)
             return old_role, new_role
         return None
-
-    def __copy__(self):
-        """
-        We don't allow ourselves to be copied, as this would lead to inconsistent state when the models get
-        cloned. Instead, we just return our own reference.
-
-        This is a hack, I should probably remove this and find a different way to implement this eventually.
-        """
-        return self

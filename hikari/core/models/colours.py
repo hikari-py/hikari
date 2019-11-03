@@ -17,25 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-All models used in Hikari's public API.
+Alias for the :mod:`hikari.core.models.colors` module.
 """
-from . import base
-from . import channels
-from . import colors
-from . import colours
-from . import embeds
-from . import emojis
-from . import guilds
-from . import integrations
-from . import invites
-from . import media
-from . import messages
-from . import members
-from . import overwrites
-from . import permissions
-from . import presences
-from . import reactions
-from . import roles
-from . import service_status
-from . import users
-from . import webhooks
+from .colors import Color as Colour
+
+
+__all__ = ["Colour"]
