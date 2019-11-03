@@ -182,7 +182,6 @@ def test_HikariModel_does_not_clone_state_by_default_fields():
         _state: typing.List[int]
         foo: int
 
-
     state = [1, 2, 3]
     foo = 12
     test = Test(state, foo)

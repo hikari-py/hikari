@@ -137,14 +137,7 @@ def pytest(session: PoetryNoxSession) -> None:
 
     session.poetry("update")
     session.run(
-        "python",
-        "-W",
-        "ignore::DeprecationWarning",
-        "-m",
-        "pytest",
-        *PYTEST_ARGS,
-        *session.posargs,
-        TEST_PATH,
+        "python", "-W", "ignore::DeprecationWarning", "-m", "pytest", *PYTEST_ARGS, *session.posargs, TEST_PATH,
     )
 
 
