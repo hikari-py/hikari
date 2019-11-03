@@ -20,7 +20,6 @@
 Expected events that this framework can dispatch.
 """
 
-
 #: Fired when a gateway connection is made and the gateway has sent a HELLO payload.
 #:
 #: Args:

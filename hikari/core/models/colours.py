@@ -19,5 +19,7 @@
 """
 Alias for the :mod:`hikari.core.models.colors` module.
 """
-# noinspection PyUnresolvedReferences
-from .colors import *
+from .colors import Color as Colour
+
+
+__all__ = ["Colour"]

@@ -21,9 +21,11 @@ Handles consumption of gateway events and converting them to the correct data ty
 """
 from __future__ import annotations
 
+import typing
+
 from hikari.core import events
 from hikari.core.internal import event_adapter
-from hikari.core.internal import state_registry as _state
+from hikari.core.internal import state_registry
 from hikari.core.models import channels
 from hikari.core.utils import date_utils
 from hikari.core.utils import transform
@@ -34,10 +36,10 @@ class EventAdapterImpl(event_adapter.EventAdapter):
     Basic implementation of event management logic.
     """
 
-    def __init__(self, state_registry: _state.StateRegistry, dispatch) -> None:
+    def __init__(self, state_registry_obj: state_registry.StateRegistry, dispatch) -> None:
         super().__init__()
         self.dispatch = dispatch
-        self.state_registry: _state.StateRegistry = state_registry
+        self.state_registry: state_registry.StateRegistry = state_registry_obj
         self._ignored_events = set()
 
     async def drain_unrecognised_event(self, gateway, event_name, payload):
@@ -105,12 +107,16 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         self.dispatch(events.RAW_CHANNEL_PINS_UPDATE, payload)
 
         channel_id = int(payload["channel_id"])
-        channel_obj = self.state_registry.get_channel_by_id(channel_id)
+        channel_obj: typing.Optional[channels.Channel] = self.state_registry.get_channel_by_id(channel_id)
 
         if channel_obj is not None:
+            channel_obj: channels.TextChannel
+
             last_pin_timestamp = transform.nullable_cast(
                 payload.get("last_pin_timestamp"), date_utils.parse_iso_8601_ts
             )
+
+            self.state_registry.set_last_pinned_timestamp(channel_obj, last_pin_timestamp)
 
             if last_pin_timestamp is not None:
                 if channel_obj.is_dm:
@@ -305,7 +311,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
             existing_role = guild.roles.get(role_id)
             if existing_role is not None:
                 old_role = existing_role.copy()
-                existing_role.update_state(payload["role"])
+                existing_role.updatestate_registry(payload["role"])
                 new_role = existing_role
                 self.dispatch(events.GUILD_ROLE_UPDATE, old_role, new_role)
             else:
@@ -521,7 +527,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
     async def handle_voice_state_update(self, gateway, payload):
         self.dispatch(events.RAW_VOICE_STATE_UPDATE, payload)
         # TODO: implement voice.
-        self.logger.warning("received VOICE_STATE_UPDATE but that is not implemented yet")
+        self.logger.warning("received VOICEstate_registry_UPDATE but that is not implemented yet")
 
     async def handle_voice_server_update(self, gateway, payload):
         self.dispatch(events.RAW_VOICE_SERVER_UPDATE, payload)

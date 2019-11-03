@@ -258,8 +258,4 @@ def _all_same(first, *rest):
     return True
 
 
-#: Alias for :class:`Color` for non-americanized developers.
-Colour = Color
-
-
-__all__ = ["Color", "Colour"]
+__all__ = ["Color"]

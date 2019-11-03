@@ -22,15 +22,10 @@ Generic users not bound to a guild, and guild-bound member definitions.
 from __future__ import annotations
 
 import dataclasses
-import datetime
-import typing
 
 from hikari.core.internal import state_registry
-from hikari.core.models import base, guilds
-from hikari.core.models import presences
-from hikari.core.utils import date_utils, auto_repr, custom_types
-from hikari.core.utils import delegate
-from hikari.core.utils import transform
+from hikari.core.models import base
+from hikari.core.utils import auto_repr
 
 
 @dataclasses.dataclass()
@@ -83,70 +78,6 @@ class User(base.HikariModel, base.Snowflake):
         self.avatar_hash = payload.get("avatar")
 
 
-@delegate.delegate_to(User, "_user")
-@dataclasses.dataclass()
-class Member(User):
-    """
-    A specialization of a user which provides implementation details for a specific guild.
-
-    This is a delegate type, meaning it subclasses a :class:`User` and implements it by deferring inherited calls
-    and fields to a wrapped user object which is shared with the corresponding member in every guild the user is in.
-    """
-
-    __slots__ = ("_user", "_guild_id", "_role_ids", "joined_at", "nick", "premium_since", "presence")
-
-    _user: User
-    _role_ids: typing.MutableSequence[int]
-    _guild_id: int
-
-    #: The date and time the member joined this guild.
-    #:
-    #: :type: :class:`datetime.datetime`
-    joined_at: datetime.datetime
-
-    #: The optional nickname of the member.
-    #:
-    #: :type: :class:`str` or `None`
-    nick: typing.Optional[str]
-
-    #: The optional date/time that the member Nitro-boosted the guild.
-    #:
-    #: :type: :class:`datetime.datetime` or `None`
-    premium_since: typing.Optional[datetime.datetime]
-
-    #: The user's online presence.
-    #:
-    #: :type: :class:`hikari.core.models.presence.Presence`
-    presence: presences.Presence
-
-    __copy_by_ref__ = ("presence",)
-
-    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot", "guild", "nick", "joined_at")
-
-    # noinspection PyMissingConstructor
-    def __init__(self, global_state, guild_id, payload):
-        self._user = global_state.parse_user(payload["user"])
-        self._guild_id = guild_id
-        self.joined_at = date_utils.parse_iso_8601_ts(payload.get("joined_at"))
-        self.premium_since = transform.nullable_cast(payload.get("premium_since"), date_utils.parse_iso_8601_ts)
-        self.update_state(payload.get("role_ids", custom_types.EMPTY_SEQUENCE), payload.get("nick"))
-
-    # noinspection PyMethodOverriding
-    def update_state(self, role_ids, nick) -> None:
-        self._role_ids = [int(r) for r in role_ids]
-        self.nick = nick
-
-    @property
-    def user(self) -> User:
-        """The internal user object for this member. This is usually only required internally."""
-        return self._user
-
-    @property
-    def guild(self) -> guilds.Guild:
-        """The guild this member is in."""
-        return self._state.get_guild_by_id(self._guild_id)
-
-
 @dataclasses.dataclass()
 class BotUser(User):
     """
@@ -176,4 +107,4 @@ class BotUser(User):
         self.mfa_enabled = payload.get("mfa_enabled", False)
 
 
-__all__ = ["User", "Member", "BotUser"]
+__all__ = ["User", "BotUser"]

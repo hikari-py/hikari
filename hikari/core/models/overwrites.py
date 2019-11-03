@@ -25,9 +25,9 @@ import dataclasses
 import enum
 
 from hikari.core.models import base
+from hikari.core.models import members
 from hikari.core.models import permissions
 from hikari.core.models import roles
-from hikari.core.models import users
 from hikari.core.utils import transform, auto_repr
 
 
@@ -46,7 +46,7 @@ class OverwriteEntityType(base.NamedEnum, enum.Enum):
     """
 
     #: A member.
-    MEMBER = users.Member
+    MEMBER = members.Member
     #: A role.
     ROLE = roles.Role
 

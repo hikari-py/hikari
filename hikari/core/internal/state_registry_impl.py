@@ -30,6 +30,7 @@ from hikari.core.internal import state_registry
 from hikari.core.models import channels
 from hikari.core.models import emojis
 from hikari.core.models import guilds
+from hikari.core.models import members
 from hikari.core.models import messages
 from hikari.core.models import presences
 from hikari.core.models import reactions
@@ -146,7 +147,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
             message_obj = self._message_cache[message_obj.id]
             del self._message_cache[message_obj.id]
 
-    def delete_member(self, member_obj: users.Member) -> None:
+    def delete_member(self, member_obj: members.Member) -> None:
         with contextlib.suppress(KeyError):
             del member_obj.guild.members[member_obj.id]
 
@@ -192,7 +193,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
     def get_guild_by_id(self, guild_id: int) -> typing.Optional[guilds.Guild]:
         return self._guilds.get(guild_id)
 
-    def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[users.Member]:
+    def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[members.Member]:
         if guild_id not in self._guilds:
             return None
         return self._guilds[guild_id].members.get(user_id)
@@ -298,7 +299,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
             member_obj.update_state(role_ids, nick)
             return member_obj
 
-        member_obj = users.Member(self, guild_obj.id, member_payload)
+        member_obj = members.Member(self, guild_obj.id, member_payload)
 
         guild_obj.members[member_id] = member_obj
         return member_obj
@@ -319,7 +320,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
         return None
 
-    def parse_presence(self, member_obj: users.Member, presence_payload: custom_types.DiscordObject):
+    def parse_presence(self, member_obj: members.Member, presence_payload: custom_types.DiscordObject):
         presence_obj = presences.Presence(presence_payload)
         member_obj.presence = presence_obj
         return presence_obj
@@ -388,12 +389,14 @@ class StateRegistryImpl(state_registry.StateRegistry):
         # so that it isn't coupling dependent classes of this one to the model implementation as much.
         guild_obj.unavailable = unavailability
 
-    def set_last_pinned_timestamp(self, channel_id: int, timestamp: typing.Optional[datetime.datetime]) -> None:
+    def set_last_pinned_timestamp(
+        self, channel_obj: channels.TextChannel, timestamp: typing.Optional[datetime.datetime]
+    ) -> None:
         # We don't persist this information, as it is not overly useful. The user can use the HTTP endpoint if they
         # care what the pins are...
         pass
 
-    def set_roles_for_member(self, role_objs: typing.Sequence[roles.Role], member_obj: users.Member) -> None:
+    def set_roles_for_member(self, role_objs: typing.Sequence[roles.Role], member_obj: members.Member) -> None:
         # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
         # so that it isn't coupling dependent classes of this one to the model implementation as much.
         member_obj._role_ids = [role.id for role in role_objs]
@@ -435,7 +438,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
     def update_member(
         self, guild_id: int, role_ids: typing.List[int], nick: typing.Optional[str], user_id: int
-    ) -> typing.Optional[typing.Tuple[users.Member, users.Member]]:
+    ) -> typing.Optional[typing.Tuple[members.Member, members.Member]]:
         guild_obj = self.get_guild_by_id(guild_id)
 
         if guild_obj is not None and user_id in guild_obj.members:
@@ -447,7 +450,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
     def update_member_presence(
         self, guild_id: int, user_id: int, presence_payload: custom_types.DiscordObject
-    ) -> typing.Optional[typing.Tuple[users.Member, presences.Presence, presences.Presence]]:
+    ) -> typing.Optional[typing.Tuple[members.Member, presences.Presence, presences.Presence]]:
         guild_obj = self.get_guild_by_id(guild_id)
 
         if guild_obj is not None and user_id in guild_obj.members:

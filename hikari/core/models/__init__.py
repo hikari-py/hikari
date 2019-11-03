@@ -19,24 +19,23 @@
 """
 All models used in Hikari's public API.
 """
-from . import (
-    base,
-    channels,
-    colors,
-    colours,
-    embeds,
-    emojis,
-    guilds,
-    integrations,
-    invites,
-    media,
-    messages,
-    overwrites,
-    permissions,
-    presences,
-    reactions,
-    roles,
-    service_status,
-    users,
-    webhooks,
-)
+from . import base
+from . import channels
+from . import colors
+from . import colours
+from . import embeds
+from . import emojis
+from . import guilds
+from . import integrations
+from . import invites
+from . import media
+from . import messages
+from . import members
+from . import overwrites
+from . import permissions
+from . import presences
+from . import reactions
+from . import roles
+from . import service_status
+from . import users
+from . import webhooks

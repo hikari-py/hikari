@@ -20,7 +20,6 @@
 Abstract definition of an event handler.
 """
 import abc
-import asyncio
 
 from hikari.core.utils import custom_types
 from hikari.core.utils import logging_utils
