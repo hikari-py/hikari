@@ -33,6 +33,7 @@ def embed():
 @pytest.mark.model
 def test_EmbedPart_delattr_sets_to_None():
     class Impl(_embed.EmbedPart):
+        __slots__ = ("a", "b", "c")
         def __init__(self, a, b, c):
             super().__init__()
             self.a = a

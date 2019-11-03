@@ -30,6 +30,7 @@ from hikari.core.internal import state_registry
 from hikari.core.models import base
 from hikari.core.models import channels
 from hikari.core.models import emojis
+from hikari.core.models import members
 from hikari.core.models import permissions
 from hikari.core.models import roles
 from hikari.core.models import users
@@ -196,7 +197,7 @@ class Guild(base.Snowflake, base.HikariModel):
     #: Members in the guild.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.user.Member` objects
-    members: typing.MutableMapping[int, users.Member]
+    members: typing.MutableMapping[int, members.Member]
 
     #: Channels in the guild.
     #:

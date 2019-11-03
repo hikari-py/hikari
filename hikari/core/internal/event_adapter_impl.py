@@ -21,9 +21,11 @@ Handles consumption of gateway events and converting them to the correct data ty
 """
 from __future__ import annotations
 
+import typing
+
 from hikari.core import events
 from hikari.core.internal import event_adapter
-from hikari.core.internal import state_registry as _state
+from hikari.core.internal import state_registry
 from hikari.core.models import channels
 from hikari.core.utils import date_utils
 from hikari.core.utils import transform
@@ -34,10 +36,10 @@ class EventAdapterImpl(event_adapter.EventAdapter):
     Basic implementation of event management logic.
     """
 
-    def __init__(self, state_registry: _state.StateRegistry, dispatch) -> None:
+    def __init__(self, state_registry_obj: state_registry.StateRegistry, dispatch) -> None:
         super().__init__()
         self.dispatch = dispatch
-        self.state_registry: _state.StateRegistry = state_registry
+        self.state_registry: state_registry.StateRegistry = state_registry_obj
         self._ignored_events = set()
 
     async def drain_unrecognised_event(self, gateway, event_name, payload):
@@ -105,12 +107,16 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         self.dispatch(events.RAW_CHANNEL_PINS_UPDATE, payload)
 
         channel_id = int(payload["channel_id"])
-        channel_obj = self.state_registry.get_channel_by_id(channel_id)
+        channel_obj: typing.Optional[channels.Channel] = self.state_registry.get_channel_by_id(channel_id)
 
         if channel_obj is not None:
+            channel_obj: channels.TextChannel
+
             last_pin_timestamp = transform.nullable_cast(
                 payload.get("last_pin_timestamp"), date_utils.parse_iso_8601_ts
             )
+
+            self.state_registry.set_last_pinned_timestamp(channel_obj, last_pin_timestamp)
 
             if last_pin_timestamp is not None:
                 if channel_obj.is_dm:
@@ -166,12 +172,10 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         # We shouldn't ever need to parse this payload unless we have inconsistent state, but if that happens,
         # lets attempt to fix it.
         guild_id = int(payload["id"])
-
-        self.state_registry.set_guild_unavailability(guild_id, True)
-
         guild_obj = self.state_registry.get_guild_by_id(guild_id)
 
         if guild_obj is not None:
+            self.state_registry.set_guild_unavailability(guild_obj, True)
             self.dispatch(events.GUILD_UNAVAILABLE, guild_obj)
         else:
             # We don't have a guild parsed yet. That shouldn't happen but if it does, we can make a note of this
@@ -288,10 +292,10 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         self.dispatch(events.RAW_GUILD_ROLE_CREATE, payload)
 
         guild_id = int(payload["guild_id"])
-        guild = self.state_registry.get_guild_by_id(guild_id)
+        guild_obj = self.state_registry.get_guild_by_id(guild_id)
 
-        if guild is not None:
-            role = self.state_registry.parse_role(payload["role"], guild_id)
+        if guild_obj is not None:
+            role = self.state_registry.parse_role(payload["role"], guild_obj)
             self.dispatch(events.GUILD_ROLE_CREATE, role)
         else:
             self.logger.warning("ignoring GUILD_ROLE_CREATE for unknown guild %s", guild_id)
@@ -307,7 +311,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
             existing_role = guild.roles.get(role_id)
             if existing_role is not None:
                 old_role = existing_role.copy()
-                existing_role.update_state(payload["role"])
+                existing_role.updatestate_registry(payload["role"])
                 new_role = existing_role
                 self.dispatch(events.GUILD_ROLE_UPDATE, old_role, new_role)
             else:
@@ -391,7 +395,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
 
         emoji_obj = self.state_registry.parse_emoji(payload["emoji"], None)
 
-        reaction_obj = self.state_registry.add_reaction(message_obj, emoji_obj)
+        reaction_obj = self.state_registry.increment_reaction_count(message_obj, emoji_obj)
 
         if guild_id is not None:
             user_obj = self.state_registry.get_member_by_id(user_id, guild_id)
@@ -419,24 +423,34 @@ class EventAdapterImpl(event_adapter.EventAdapter):
             # Message was not cached, so ignore
             return
 
-        emoji_obj = self.state_registry.parse_emoji(payload["emoji"], None)
-
-        reaction_obj = self.state_registry.remove_reaction(message_obj, emoji_obj)
-
         if guild_id is not None:
             user_obj = self.state_registry.get_member_by_id(user_id, guild_id)
         else:
             user_obj = self.state_registry.get_user_by_id(user_id)
 
-        if user_obj is not None:
-            self.dispatch(events.MESSAGE_REACTION_REMOVE, reaction_obj, user_obj)
+        emoji_obj = self.state_registry.parse_emoji(payload["emoji"], None)
+        reaction_obj = self.state_registry.decrement_reaction_count(message_obj, emoji_obj)
 
-        else:
+        if reaction_obj is None:
             self.logger.warning(
-                "ignoring MESSAGE_REACTION_REMOVE for unknown %s %s",
+                "ignoring MESSAGE_REACTION_REMOVE for non existent reaction %s on message %s by %s %s",
+                reaction_obj,
+                message_id,
                 "user" if user_id is None else f"guild {guild_id} and member",
                 user_id,
             )
+            return
+
+        if user_obj is None:
+            self.logger.warning(
+                "ignoring MESSAGE_REACTION_REMOVE for reaction %s on message %s for unknown %s %s",
+                reaction_obj,
+                message_id,
+                "user" if user_id is None else f"guild {guild_id} and member",
+                user_id,
+            )
+
+        self.dispatch(events.MESSAGE_REACTION_REMOVE, reaction_obj, user_obj)
 
     async def handle_message_reaction_remove_all(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_REACTION_REMOVE_ALL, payload)
@@ -448,7 +462,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
             # Not cached, so ignore.
             return
 
-        self.state_registry.remove_all_reactions(message_obj)
+        self.state_registry.delete_all_reactions(message_obj)
         self.dispatch(events.MESSAGE_REACTION_REMOVE_ALL, message_obj)
 
     async def handle_presence_update(self, gateway, payload):
@@ -513,7 +527,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
     async def handle_voice_state_update(self, gateway, payload):
         self.dispatch(events.RAW_VOICE_STATE_UPDATE, payload)
         # TODO: implement voice.
-        self.logger.warning("received VOICE_STATE_UPDATE but that is not implemented yet")
+        self.logger.warning("received VOICEstate_registry_UPDATE but that is not implemented yet")
 
     async def handle_voice_server_update(self, gateway, payload):
         self.dispatch(events.RAW_VOICE_SERVER_UPDATE, payload)
