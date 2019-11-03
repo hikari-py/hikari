@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import copy
 import contextlib
 from unittest import mock
 
@@ -30,8 +31,8 @@ from hikari.core.models import presences
 from hikari.core.models import reactions
 from hikari.core.models import roles
 from hikari.core.models import users
+from hikari.core.models import webhooks
 from tests.hikari.core import _helpers
-from tests.hikari.core._helpers import mock_model
 
 
 @pytest.fixture()
@@ -44,13 +45,13 @@ def registry():
 @pytest.mark.state
 class TestStateRegistryImpl:
     def test_message_cache_property_returns_message_cache(self, registry: state_registry_impl.StateRegistryImpl):
-        cache = mock_model(dict)
+        cache = _helpers.mock_model(dict)
         registry._message_cache = cache
 
         assert registry.message_cache is cache
 
     def test_me_property_returns_bot_user_when_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        user = mock_model(users.BotUser)
+        user = _helpers.mock_model(users.BotUser)
         registry._user = user
 
         assert registry.me is user
@@ -58,33 +59,129 @@ class TestStateRegistryImpl:
     def test_me_property_returns_None_when_uncached(self, registry: state_registry_impl.StateRegistryImpl):
         assert registry.me is None
 
-    def test_add_reaction_for_existing_reaction(self, registry: state_registry_impl.StateRegistryImpl):
-        message_obj = mock_model(messages.Message)
-        emoji_obj = mock_model(emojis.Emoji)
-        other_emoji_obj = mock_model(emojis.Emoji)
+    def test_increment_reaction_count_for_existing_reaction_does_not_add_new_reaction(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        message_obj = _helpers.mock_model(messages.Message)
+        emoji_obj = _helpers.mock_model(emojis.Emoji)
+        other_emoji_obj = _helpers.mock_model(emojis.Emoji)
         reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
         other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
         message_obj.reactions = [other_reaction_obj, reaction_obj]
 
-        new_reaction_obj = registry.add_reaction(message_obj, emoji_obj)
+        registry.increment_reaction_count(message_obj, emoji_obj)
 
-        assert new_reaction_obj is reaction_obj
-        assert new_reaction_obj.count == 6
         assert len(message_obj.reactions) == 2
 
-    def test_add_reaction_for_new_reaction(self, registry: state_registry_impl.StateRegistryImpl):
-        message_obj = mock_model(messages.Message)
-        emoji_obj = mock_model(emojis.Emoji)
+    def test_increment_reaction_count_for_existing_reaction_returns_existing_reaction(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        message_obj = _helpers.mock_model(messages.Message)
+        emoji_obj = _helpers.mock_model(emojis.Emoji)
+        other_emoji_obj = _helpers.mock_model(emojis.Emoji)
+        reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
+        other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
+        message_obj.reactions = [other_reaction_obj, reaction_obj]
+
+        new_reaction_obj = registry.increment_reaction_count(message_obj, emoji_obj)
+
+        assert new_reaction_obj is reaction_obj
+
+    def test_increment_reaction_count_for_new_reaction(self, registry: state_registry_impl.StateRegistryImpl):
+        message_obj = _helpers.mock_model(messages.Message)
+        emoji_obj = _helpers.mock_model(emojis.Emoji)
         message_obj.reactions = []
 
-        new_reaction_obj = registry.add_reaction(message_obj, emoji_obj)
+        new_reaction_obj = registry.increment_reaction_count(message_obj, emoji_obj)
 
         assert isinstance(new_reaction_obj, reactions.Reaction)
         assert new_reaction_obj.count == 1
 
+    def test_increment_reaction_count_for_existing_reaction_increments_count_by_1(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        message_obj = _helpers.mock_model(messages.Message)
+        emoji_obj = _helpers.mock_model(emojis.Emoji)
+        other_emoji_obj = _helpers.mock_model(emojis.Emoji)
+        reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
+        other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
+        message_obj.reactions = [other_reaction_obj, reaction_obj]
+
+        new_reaction_obj = registry.increment_reaction_count(message_obj, emoji_obj)
+
+        assert new_reaction_obj.count == 6
+
+    def test_decrement_reaction_count_for_existing_reaction_does_not_remove_reaction_if_reactions_still_exist(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        message_obj = _helpers.mock_model(messages.Message)
+        emoji_obj = _helpers.mock_model(emojis.Emoji)
+        other_emoji_obj = _helpers.mock_model(emojis.Emoji)
+        reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
+        other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
+        message_obj.reactions = [other_reaction_obj, reaction_obj]
+
+        registry.decrement_reaction_count(message_obj, emoji_obj)
+
+        assert len(message_obj.reactions) == 2
+
+    def test_decrement_reaction_count_for_existing_reaction_removes_reaction_if_reactions_no_longer_exist(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        message_obj = _helpers.mock_model(messages.Message)
+        emoji_obj = _helpers.mock_model(emojis.Emoji)
+        other_emoji_obj = _helpers.mock_model(emojis.Emoji)
+        reaction_obj = reactions.Reaction(1, emoji_obj, message_obj)
+        other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
+        message_obj.reactions = [other_reaction_obj, reaction_obj]
+
+        registry.decrement_reaction_count(message_obj, emoji_obj)
+
+        assert len(message_obj.reactions) == 1
+        assert reaction_obj not in message_obj.reactions
+
+    def test_decrement_reaction_count_for_existing_reaction_returns_existing_reaction(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        message_obj = _helpers.mock_model(messages.Message)
+        emoji_obj = _helpers.mock_model(emojis.Emoji)
+        other_emoji_obj = _helpers.mock_model(emojis.Emoji)
+        reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
+        other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
+        message_obj.reactions = [other_reaction_obj, reaction_obj]
+
+        new_reaction_obj = registry.decrement_reaction_count(message_obj, emoji_obj)
+
+        assert new_reaction_obj is reaction_obj
+
+    def test_decrement_reaction_count_for_new_reaction_returns_None(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        message_obj = _helpers.mock_model(messages.Message)
+        emoji_obj = _helpers.mock_model(emojis.Emoji)
+        message_obj.reactions = []
+
+        new_reaction_obj = registry.decrement_reaction_count(message_obj, emoji_obj)
+
+        assert new_reaction_obj is None
+
+    def test_decrement_reaction_count_for_existing_reaction_decrements_count_by_1(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        message_obj = _helpers.mock_model(messages.Message)
+        emoji_obj = _helpers.mock_model(emojis.Emoji)
+        other_emoji_obj = _helpers.mock_model(emojis.Emoji)
+        reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
+        other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
+        message_obj.reactions = [other_reaction_obj, reaction_obj]
+
+        new_reaction_obj = registry.decrement_reaction_count(message_obj, emoji_obj)
+
+        assert new_reaction_obj.count == 4
+
     def test_delete_channel_when_cached_guild_channel(self, registry: state_registry_impl.StateRegistryImpl):
-        channel_obj = mock_model(channels.GuildTextChannel, id=5678)
-        guild_obj = mock_model(guilds.Guild, id=1234)
+        channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=5678)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1234)
         channel_obj.guild = guild_obj
         registry._guilds = {guild_obj.id: guild_obj}
         guild_obj.channels = {channel_obj.id: channel_obj}
@@ -96,7 +193,7 @@ class TestStateRegistryImpl:
         assert channel_obj.id not in guild_obj.channels
 
     def test_delete_channel_when_cached_dm_channel(self, registry: state_registry_impl.StateRegistryImpl):
-        channel_obj = mock_model(channels.DMChannel, id=5678)
+        channel_obj = _helpers.mock_model(channels.DMChannel, id=5678)
         registry._dm_channels = {channel_obj.id: channel_obj}
 
         registry.delete_channel(channel_obj)
@@ -104,15 +201,15 @@ class TestStateRegistryImpl:
         assert channel_obj.id not in registry._dm_channels
 
     def test_delete_channel_uncached(self, registry: state_registry_impl.StateRegistryImpl):
-        channel_obj = mock_model(channels.Channel)
+        channel_obj = _helpers.mock_model(channels.Channel)
 
         registry.delete_channel(channel_obj)
 
         assert True, "this should exit silently"
 
     def test_delete_emoji_cached_deletes_from_global_cache(self, registry: state_registry_impl.StateRegistryImpl):
-        emoji_obj = mock_model(emojis.GuildEmoji, id=10987)
-        guild_obj = mock_model(guilds.Guild, id=6969)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=10987)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=6969)
         guild_obj.emojis = {emoji_obj.id: emoji_obj}
         emoji_obj.guild = guild_obj
         registry._emojis = {emoji_obj.id: emoji_obj}
@@ -123,8 +220,8 @@ class TestStateRegistryImpl:
         assert emoji_obj.id not in registry._emojis
 
     def test_delete_emoji_cached_deletes_from_guild(self, registry: state_registry_impl.StateRegistryImpl):
-        emoji_obj = mock_model(emojis.GuildEmoji, id=10987)
-        guild_obj = mock_model(guilds.Guild, id=6969)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=10987)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=6969)
         guild_obj.emojis = {emoji_obj.id: emoji_obj}
         emoji_obj.guild = guild_obj
         registry._emojis = {emoji_obj.id: emoji_obj}
@@ -135,8 +232,8 @@ class TestStateRegistryImpl:
         assert emoji_obj.id not in guild_obj.emojis
 
     def test_delete_emoji_uncached(self, registry: state_registry_impl.StateRegistryImpl):
-        emoji_obj = mock_model(emojis.GuildEmoji, id=10987)
-        guild_obj = mock_model(guilds.Guild, id=6969)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=10987)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=6969)
         emoji_obj.guild = guild_obj
 
         registry.delete_emoji(emoji_obj)
@@ -144,7 +241,7 @@ class TestStateRegistryImpl:
         assert True, "this should exit silently"
 
     def test_delete_guild_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        guild_obj = mock_model(guilds.Guild, id=1234)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1234)
         registry._guilds = {guild_obj.id: guild_obj}
 
         registry.delete_guild(guild_obj)
@@ -152,7 +249,7 @@ class TestStateRegistryImpl:
         assert guild_obj.id not in registry._guilds
 
     def test_delete_guild_uncached(self, registry: state_registry_impl.StateRegistryImpl):
-        guild_obj = mock_model(guilds.Guild, id=1234)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1234)
         registry._guilds = {}
 
         registry.delete_guild(guild_obj)
@@ -160,7 +257,7 @@ class TestStateRegistryImpl:
         assert True, "this should exit silently"
 
     def test_delete_message_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        message_obj = mock_model(messages.Message, id=1234)
+        message_obj = _helpers.mock_model(messages.Message, id=1234)
         registry._message_cache = {message_obj.id: message_obj}
 
         registry.delete_message(message_obj)
@@ -168,15 +265,15 @@ class TestStateRegistryImpl:
         assert message_obj not in registry._message_cache
 
     def test_delete_message_uncached(self, registry: state_registry_impl.StateRegistryImpl):
-        message_obj = mock_model(messages.Message, id=1234)
+        message_obj = _helpers.mock_model(messages.Message, id=1234)
 
         registry.delete_message(message_obj)
 
         assert True, "this should exit silently"
 
     def test_delete_member_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        member_obj = mock_model(users.Member, id=1234)
-        guild_obj = mock_model(guilds.Guild, id=5689)
+        member_obj = _helpers.mock_model(users.Member, id=1234)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=5689)
         guild_obj.members = {member_obj.id: member_obj}
         member_obj.guild = guild_obj
         registry._guilds = {guild_obj.id: guild_obj}
@@ -186,17 +283,17 @@ class TestStateRegistryImpl:
         assert member_obj.id not in guild_obj.members
 
     def test_delete_member_uncached(self, registry: state_registry_impl.StateRegistryImpl):
-        member_obj = mock_model(users.Member, id=1234)
+        member_obj = _helpers.mock_model(users.Member, id=1234)
 
         registry.delete_member(member_obj)
 
         assert True, "this should exit silently"
 
     def test_delete_reaction_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        emoji_obj_to_remove = mock_model(emojis.Emoji)
-        emoji_obj_to_keep = mock_model(emojis.Emoji)
-        user_obj = mock_model(users.User, id=6789)
-        message_obj = mock_model(messages.Message, id=1234)
+        emoji_obj_to_remove = _helpers.mock_model(emojis.Emoji)
+        emoji_obj_to_keep = _helpers.mock_model(emojis.Emoji)
+        user_obj = _helpers.mock_model(users.User, id=6789)
+        message_obj = _helpers.mock_model(messages.Message, id=1234)
         message_obj.reactions = [
             reactions.Reaction(7, emoji_obj_to_keep, message_obj),
             reactions.Reaction(5, emoji_obj_to_remove, message_obj),
@@ -206,25 +303,69 @@ class TestStateRegistryImpl:
 
         assert len(message_obj.reactions) == 1
 
+    def test_delete_reaction_cached_sets_reaction_count_to_0(self, registry: state_registry_impl.StateRegistryImpl):
+        emoji_obj_to_remove = _helpers.mock_model(emojis.Emoji)
+        emoji_obj_to_keep = _helpers.mock_model(emojis.Emoji)
+        user_obj = _helpers.mock_model(users.User, id=6789)
+        message_obj = _helpers.mock_model(messages.Message, id=1234)
+        reaction_obj_to_delete = reactions.Reaction(5, emoji_obj_to_remove, message_obj)
+        reaction_obj_to_keep = reactions.Reaction(7, emoji_obj_to_keep, message_obj)
+        message_obj.reactions = [
+            reaction_obj_to_keep,
+            reaction_obj_to_delete,
+        ]
+
+        registry.delete_reaction(message_obj, user_obj, emoji_obj_to_remove)
+
+        assert reaction_obj_to_delete.count == 0
+        assert reaction_obj_to_keep.count == 7
+
     def test_delete_reaction_uncached(self, registry: state_registry_impl.StateRegistryImpl):
-        emoji_obj = mock_model(emojis.Emoji)
-        user_obj = mock_model(users.User, id=6789)
-        message_obj = mock_model(messages.Message, id=1234)
+        emoji_obj = _helpers.mock_model(emojis.Emoji)
+        user_obj = _helpers.mock_model(users.User, id=6789)
+        message_obj = _helpers.mock_model(messages.Message, id=1234)
 
         registry.delete_reaction(message_obj, user_obj, emoji_obj)
 
         assert True, "this should exit silently"
 
+    def test_delete_all_reactions_sets_reaction_counts_to_0(self, registry: state_registry_impl.StateRegistryImpl):
+        reaction_objs = [
+            _helpers.mock_model(reactions.Reaction, count=5),
+            _helpers.mock_model(reactions.Reaction, count=7),
+            _helpers.mock_model(reactions.Reaction, count=3),
+        ]
+
+        message_obj = _helpers.mock_model(messages.Message, reactions=copy.copy(reaction_objs))
+
+        registry.delete_all_reactions(message_obj)
+
+        for reaction_obj in reaction_objs:
+            assert reaction_obj.count == 0
+
+    def test_delete_all_reactions_removes_all_reactions(self, registry: state_registry_impl.StateRegistryImpl):
+        reaction_objs = [
+            _helpers.mock_model(reactions.Reaction, count=5),
+            _helpers.mock_model(reactions.Reaction, count=7),
+            _helpers.mock_model(reactions.Reaction, count=3),
+        ]
+
+        message_obj = _helpers.mock_model(messages.Message, reactions=copy.copy(reaction_objs))
+
+        registry.delete_all_reactions(message_obj)
+
+        assert len(message_obj.reactions) == 0
+
     def test_delete_role_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        role_obj_to_remove = mock_model(roles.Role, id=1234)
-        role_obj_to_keep = mock_model(roles.Role, id=1235)
-        guild_obj = mock_model(guilds.Guild, id=5678)
+        role_obj_to_remove = _helpers.mock_model(roles.Role, id=1234)
+        role_obj_to_keep = _helpers.mock_model(roles.Role, id=1235)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=5678)
         guild_obj.roles = {role_obj_to_remove.id: role_obj_to_remove, role_obj_to_keep.id: role_obj_to_keep}
         role_obj_to_remove.guild = guild_obj
         role_obj_to_keep.guild = guild_obj
-        member_obj = mock_model(users.Member, id=9101112)
+        member_obj = _helpers.mock_model(users.Member, id=9101112)
         member_obj._role_ids = [role_obj_to_keep.id, role_obj_to_remove.id]
-        other_member_obj = mock_model(users.Member, id=13141516)
+        other_member_obj = _helpers.mock_model(users.Member, id=13141516)
         guild_obj.members = {member_obj.id: member_obj, other_member_obj.id: other_member_obj}
         registry._guilds = {guild_obj.id: guild_obj}
         registry.delete_role(role_obj_to_remove)
@@ -233,104 +374,104 @@ class TestStateRegistryImpl:
         assert len(member_obj._role_ids) == 1
 
     def test_delete_role_uncached(self, registry: state_registry_impl.StateRegistryImpl):
-        role_obj = mock_model(roles.Role, id=1234)
+        role_obj = _helpers.mock_model(roles.Role, id=1234)
         registry.delete_role(role_obj)
 
         assert True, "this should exit silently"
 
     def test_get_channel_by_id_cached_guild_channel(self, registry: state_registry_impl.StateRegistryImpl):
-        guild_channel_obj = mock_model(channels.GuildTextChannel, id=1234)
-        dm_channel_obj = mock_model(channels.GroupDMChannel, id=1235)
+        guild_channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=1234)
+        dm_channel_obj = _helpers.mock_model(channels.GroupDMChannel, id=1235)
         registry._guild_channels = {guild_channel_obj.id: guild_channel_obj}
         registry._dm_channels = {dm_channel_obj.id: dm_channel_obj}
 
         assert registry.get_channel_by_id(guild_channel_obj.id) is guild_channel_obj
 
     def test_get_channel_by_id_cached_dm_channel(self, registry: state_registry_impl.StateRegistryImpl):
-        guild_channel_obj = mock_model(channels.GuildTextChannel, id=1234)
-        dm_channel_obj = mock_model(channels.GroupDMChannel, id=1235)
+        guild_channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=1234)
+        dm_channel_obj = _helpers.mock_model(channels.GroupDMChannel, id=1235)
         registry._guild_channels = {guild_channel_obj.id: guild_channel_obj}
         registry._dm_channels = {dm_channel_obj.id: dm_channel_obj}
 
         assert registry.get_channel_by_id(dm_channel_obj.id) is dm_channel_obj
 
     def test_get_channel_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        guild_channel_obj = mock_model(channels.GuildTextChannel, id=1234)
-        dm_channel_obj = mock_model(channels.GroupDMChannel, id=1235)
+        guild_channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=1234)
+        dm_channel_obj = _helpers.mock_model(channels.GroupDMChannel, id=1235)
         registry._guild_channels = {guild_channel_obj.id: guild_channel_obj}
         registry._dm_channels = {dm_channel_obj.id: dm_channel_obj}
 
         assert registry.get_channel_by_id(1236) is None
 
     def test_get_emoji_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        emoji_obj = mock_model(emojis.GuildEmoji, id=69)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=69)
         registry._emojis = {emoji_obj.id: emoji_obj}
 
         assert registry.get_emoji_by_id(emoji_obj.id) is emoji_obj
 
     def test_get_emoji_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        emoji_obj = mock_model(emojis.GuildEmoji, id=69)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=69)
         registry._emojis = {emoji_obj.id: emoji_obj}
 
         assert registry.get_emoji_by_id(70) is None
 
     def test_get_guild_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        guild_obj = mock_model(guilds.Guild, id=69)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=69)
         registry._guilds = {guild_obj.id: guild_obj}
 
         assert registry.get_guild_by_id(guild_obj.id) is guild_obj
 
     def test_get_guild_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        guild_obj = mock_model(guilds.Guild, id=69)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=69)
         registry._guilds = {guild_obj.id: guild_obj}
 
         assert registry.get_guild_by_id(70) is None
 
     def test_get_member_by_id_cached_guild_cached_user(self, registry: state_registry_impl.StateRegistryImpl):
-        guild_obj = mock_model(guilds.Guild, id=1)
-        member_obj = mock_model(users.Member, id=2, guild=guild_obj)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1)
+        member_obj = _helpers.mock_model(users.Member, id=2, guild=guild_obj)
         guild_obj.members = {member_obj.id: member_obj}
         registry._guilds = {guild_obj.id: guild_obj}
 
         assert registry.get_member_by_id(member_obj.id, guild_obj.id) is member_obj
 
     def test_get_member_by_id_cached_guild_uncached_user(self, registry: state_registry_impl.StateRegistryImpl):
-        guild_obj = mock_model(guilds.Guild, id=1)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1)
         guild_obj.members = {}
         registry._guilds = {guild_obj.id: guild_obj}
 
         assert registry.get_member_by_id(1, guild_obj.id) is None
 
     def test_get_member_by_id_uncached_guild_uncached_user(self, registry: state_registry_impl.StateRegistryImpl):
-        guild_obj = mock_model(guilds.Guild, id=1)
-        member_obj = mock_model(users.Member, id=2, guild=guild_obj)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1)
+        member_obj = _helpers.mock_model(users.Member, id=2, guild=guild_obj)
         guild_obj.members = {member_obj.id: member_obj}
         registry._guilds = {guild_obj.id: guild_obj}
 
         assert registry.get_member_by_id(3, 4) is None
 
     def test_get_message_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        message_obj = mock_model(messages.Message, id=69)
+        message_obj = _helpers.mock_model(messages.Message, id=69)
         registry._message_cache = {message_obj.id: message_obj}
 
         assert registry.get_message_by_id(message_obj.id) is message_obj
 
     def test_get_message_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        message_obj = mock_model(messages.Message, id=69)
+        message_obj = _helpers.mock_model(messages.Message, id=69)
         registry._message_cache = {message_obj.id: message_obj}
 
         assert registry.get_message_by_id(70) is None
 
     def test_get_role_by_id_cached_guild_cached_role(self, registry: state_registry_impl.StateRegistryImpl):
-        guild_obj = mock_model(guilds.Guild, id=1)
-        role_obj = mock_model(roles.Role, id=2, guild=guild_obj)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1)
+        role_obj = _helpers.mock_model(roles.Role, id=2, guild=guild_obj)
         guild_obj.roles = {role_obj.id: role_obj}
         registry._guilds = {guild_obj.id: guild_obj}
 
         assert registry.get_role_by_id(guild_obj.id, role_obj.id) is role_obj
 
     def test_get_role_by_id_cached_guild_uncached_role(self, registry: state_registry_impl.StateRegistryImpl):
-        guild_obj = mock_model(guilds.Guild, id=1)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1)
         guild_obj.roles = {}
         registry._guilds = {guild_obj.id: guild_obj}
 
@@ -342,15 +483,15 @@ class TestStateRegistryImpl:
         assert registry.get_role_by_id(1, 2) is None
 
     def test_get_user_by_id_cached_bot_user(self, registry: state_registry_impl.StateRegistryImpl):
-        user_obj = mock_model(users.BotUser, id=1)
+        user_obj = _helpers.mock_model(users.BotUser, id=1)
         registry._user = user_obj
         registry._users = {}
 
         assert registry.get_user_by_id(user_obj.id) is registry._user
 
     def test_get_user_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        user_obj = mock_model(users.User, id=1)
-        registry._user = mock_model(users.BotUser, id=2)
+        user_obj = _helpers.mock_model(users.User, id=1)
+        registry._user = _helpers.mock_model(users.BotUser, id=2)
         registry._users = {user_obj.id: user_obj}
 
         assert registry.get_user_by_id(user_obj.id) is user_obj
@@ -383,7 +524,7 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         payload = {"id": "1234"}
-        channel_obj = mock_model(channels.GuildTextChannel, id=5678)
+        channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=5678)
         registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
         with contextlib.suppress(Exception):
             registry.parse_channel(payload, 1234)
@@ -392,7 +533,7 @@ class TestStateRegistryImpl:
 
     def test_parse_channel_updates_state_if_already_cached(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234"}
-        channel_obj = mock_model(channels.Channel, id=1234)
+        channel_obj = _helpers.mock_model(channels.Channel, id=1234)
         registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
         registry.parse_channel(payload)
         channel_obj.update_state.assert_called_once_with(payload)
@@ -401,7 +542,7 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         payload = {"id": "1234"}
-        channel_obj = mock_model(channels.Channel, id=1234)
+        channel_obj = _helpers.mock_model(channels.Channel, id=1234)
         registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
         result = registry.parse_channel(payload)
         assert result is channel_obj
@@ -410,7 +551,7 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         payload = {"id": "1234", "type": -1}
-        channel_obj = mock_model(channels.DMChannel, id=1234)
+        channel_obj = _helpers.mock_model(channels.DMChannel, id=1234)
         registry._dm_channels = {}
         registry.get_channel_by_id = mock.MagicMock(return_value=None)
         with mock.patch(_helpers.fqn1(channels.channel_from_dict), return_value=channel_obj):
@@ -423,8 +564,8 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         payload = {"id": "1234", "type": -1}
-        guild_obj = mock_model(guilds.Guild, id=100, channels={})
-        channel_obj = mock_model(channels.GuildChannel, id=1234, guild=guild_obj)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=100, channels={})
+        channel_obj = _helpers.mock_model(channels.GuildChannel, id=1234, guild=guild_obj)
         registry._dm_channels = {}
         registry._guild_channels = {}
         registry.get_channel_by_id = mock.MagicMock(return_value=None)
@@ -437,7 +578,7 @@ class TestStateRegistryImpl:
 
     def test_parse_channel_returns_new_channel_if_uncached(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234", "type": -1}
-        channel_obj = mock_model(channels.Channel, id=1234)
+        channel_obj = _helpers.mock_model(channels.Channel, id=1234)
         registry.get_channel_by_id = mock.MagicMock(return_value=None)
         with mock.patch(_helpers.fqn1(channels.channel_from_dict), return_value=channel_obj):
             with mock.patch(_helpers.fqn1(channels.is_channel_type_dm), return_value=True):
@@ -616,7 +757,7 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         payload = {"id": "1234", "channel_id": "4567"}
-        channel_obj = mock_model(channels.GuildTextChannel, id=4567, last_message_id=9999)
+        channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=4567, last_message_id=9999)
         registry._guild_channels = {channel_obj.id: channel_obj}
         registry._dm_channels = {}
         mock_message = _helpers.mock_model(messages.Message, id=1234, channel=channel_obj)
@@ -627,7 +768,7 @@ class TestStateRegistryImpl:
 
     def test_parse_message_when_channel_cached_returns_message(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234", "channel_id": "4567"}
-        channel_obj = mock_model(channels.GuildTextChannel, id=4567, last_message_id=9999)
+        channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=4567, last_message_id=9999)
         registry._guild_channels = {channel_obj.id: channel_obj}
         registry._dm_channels = {}
         mock_message = _helpers.mock_model(messages.Message, id=1234, channel=channel_obj)
@@ -670,8 +811,8 @@ class TestStateRegistryImpl:
         emoji_payload = {"name": "\N{OK HAND SIGN}", "id": None}
         payload = {"message_id": "1234", "count": 12, "emoji": emoji_payload}
         expected_emoji = emojis.UnicodeEmoji(emoji_payload)
-        reaction_obj = mock_model(reactions.Reaction, count=10, emoji=expected_emoji)
-        message_obj = mock_model(messages.Message, id=1234, reactions=[reaction_obj])
+        reaction_obj = _helpers.mock_model(reactions.Reaction, count=10, emoji=expected_emoji)
+        message_obj = _helpers.mock_model(messages.Message, id=1234, reactions=[reaction_obj])
         registry._message_cache = {message_obj.id: message_obj}
 
         registry.parse_reaction(payload)
@@ -683,8 +824,10 @@ class TestStateRegistryImpl:
         emoji_payload = {"name": "\N{OK HAND SIGN}", "id": None}
         payload = {"message_id": "1234", "count": 12, "emoji": emoji_payload}
         expected_emoji = emojis.UnicodeEmoji(emoji_payload)
-        reaction_obj = mock_model(reactions.Reaction, count=10, emoji=expected_emoji)
-        message_obj = mock_model(messages.Message, id=1234, reactions=[reaction_obj])
+        reaction_obj = _helpers.mock_model(reactions.Reaction, count=10, emoji=expected_emoji)
+        other_reaction_obj = _helpers.mock_model(reactions.Reaction)
+        reaction_objs = [other_reaction_obj, reaction_obj]
+        message_obj = _helpers.mock_model(messages.Message, id=1234, reactions=reaction_objs)
         registry._message_cache = {message_obj.id: message_obj}
 
         assert registry.parse_reaction(payload) is reaction_obj
@@ -693,8 +836,8 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         payload = {"message_id": "1234", "count": 12, "emoji": {"name": "\N{OK HAND SIGN}", "id": None}}
-        message_obj = mock_model(messages.Message, id=1234, reactions=[])
-        reaction_obj = mock_model(reactions.Reaction)
+        message_obj = _helpers.mock_model(messages.Message, id=1234, reactions=[])
+        reaction_obj = _helpers.mock_model(reactions.Reaction)
         registry._message_cache = {message_obj.id: message_obj}
 
         with mock.patch(_helpers.fqn1(reactions.Reaction), return_value=reaction_obj):
@@ -705,8 +848,8 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         payload = {"message_id": "1234", "count": 12, "emoji": {"name": "\N{OK HAND SIGN}", "id": None}}
-        message_obj = mock_model(messages.Message, id=1234, reactions=[])
-        reaction_obj = mock_model(reactions.Reaction)
+        message_obj = _helpers.mock_model(messages.Message, id=1234, reactions=[])
+        reaction_obj = _helpers.mock_model(reactions.Reaction)
         registry._message_cache = {message_obj.id: message_obj}
 
         with mock.patch(_helpers.fqn1(reactions.Reaction), return_value=reaction_obj):
@@ -720,94 +863,123 @@ class TestStateRegistryImpl:
 
         assert registry.parse_reaction(payload) is None
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_role_when_guild_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_role_when_guild_cached_updates_role_mapping(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_role_when_guild_cached_returns_role(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_user_when_bot_user_calls_parse_bot_user(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_parse_user_when_uncached_user_creates_new_user_and_returns_it(
+    def test_parse_role_when_role_exists_does_not_update_role_mapping(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        payload = {"id": "1234"}
+        role_obj = _helpers.mock_model(roles.Role, id=1234)
+        before_mapping = {role_obj.id: role_obj}
+        guild_obj = _helpers.mock_model(guilds.Guild, roles=before_mapping)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        registry.parse_role(payload, guild_obj)
+
+        assert guild_obj.roles is before_mapping
+
+    def test_parse_role_when_role_does_not_exist_adds_to_role_mapping(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        payload = {"id": "1234"}
+        role_obj = _helpers.mock_model(roles.Role, id=1234)
+        guild_obj = _helpers.mock_model(guilds.Guild, roles={})
+
+        with mock.patch(_helpers.fqn1(roles.Role), return_value=role_obj):
+            registry.parse_role(payload, guild_obj)
+
+        assert guild_obj.roles == {role_obj.id: role_obj}
+
+    def test_parse_role_when_role_exists_updates_existing_role(self, registry: state_registry_impl.StateRegistryImpl):
+        payload = {"id": "1234"}
+        role_obj = _helpers.mock_model(roles.Role, id=1234)
+        guild_obj = _helpers.mock_model(guilds.Guild, roles={role_obj.id: role_obj})
+
+        registry.parse_role(payload, guild_obj)
+
+        role_obj.update_state.assert_called_with(payload)
+
+    def test_parse_role_when_role_exists_returns_existing_role(self, registry: state_registry_impl.StateRegistryImpl):
+        payload = {"id": "1234"}
+        role_obj = _helpers.mock_model(roles.Role, id=1234)
+        guild_obj = _helpers.mock_model(guilds.Guild, roles={role_obj.id: role_obj})
+
+        assert registry.parse_role(payload, guild_obj) is role_obj
+
+    def test_parse_role_when_role_does_not_exist_returns_new_role(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        payload = {"id": "1234"}
+        role_obj = _helpers.mock_model(roles.Role, id=1234)
+        guild_obj = _helpers.mock_model(guilds.Guild, roles={})
+
+        with mock.patch(_helpers.fqn1(roles.Role), return_value=role_obj):
+            assert registry.parse_role(payload, guild_obj) is role_obj
+
+    def test_parse_user_when_bot_user_calls_parse_bot_user(self, registry: state_registry_impl.StateRegistryImpl):
+        payload = {"id": "1234", "mfa_enabled": False, "verified": True}
+        bot_user_obj = _helpers.mock_model(users.BotUser)
+        registry.parse_bot_user = mock.MagicMock(return_value=bot_user_obj)
+
+        registry.parse_user(payload)
+
+        registry.parse_bot_user.assert_called_with(payload)
+
+    def test_parse_user_when_bot_user_returns_bot_user(self, registry: state_registry_impl.StateRegistryImpl):
+        payload = {"id": "1234", "mfa_enabled": False, "verified": True}
+        bot_user_obj = _helpers.mock_model(users.BotUser)
+        registry.parse_bot_user = mock.MagicMock(return_value=bot_user_obj)
+
+        assert registry.parse_user(payload) is bot_user_obj
+
+    def test_parse_user_when_uncached_user_caches_new_user(self, registry: state_registry_impl.StateRegistryImpl):
+        payload = {"id": "1234"}
+        user_obj = _helpers.mock_model(users.User, id=1234)
+        registry._users = {}
+
+        with mock.patch(_helpers.fqn1(users.User), return_value=user_obj):
+            registry.parse_user(payload)
+
+        assert user_obj in registry._users.values()
+
+    def test_parse_user_when_uncached_user_returns_new_user(self, registry: state_registry_impl.StateRegistryImpl):
+        payload = {"id": "1234"}
+        user_obj = _helpers.mock_model(users.User, id=1234)
+        registry._users = {}
+
+        with mock.patch(_helpers.fqn1(users.User), return_value=user_obj):
+            assert registry.parse_user(payload) is user_obj
+
     def test_parse_user_when_cached_user_updates_state_of_existing_user(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        payload = {"id": "1234"}
+        user_obj = _helpers.mock_model(users.User, id=1234)
+        registry._users = {user_obj.id: user_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        with mock.patch(_helpers.fqn1(users.User), return_value=user_obj):
+            registry.parse_user(payload)
+
+        user_obj.update_state.assert_called_with(payload)
+
     def test_parse_user_when_cached_returns_cached_user(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        payload = {"id": "1234"}
+        user_obj = _helpers.mock_model(users.User, id=1234)
+        registry._users = {user_obj.id: user_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        with mock.patch(_helpers.fqn1(users.User), return_value=user_obj):
+            assert registry.parse_user(payload) is user_obj
+
     def test_parse_webhook_returns_webhook(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        webhook_obj = _helpers.mock_model(webhooks.Webhook)
+        with mock.patch(_helpers.fqn1(webhooks.Webhook), return_value=webhook_obj):
+            assert registry.parse_webhook({}) is webhook_obj
 
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_all_reactions_sets_reaction_counts_to_0(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_all_reactions_removes_all_reactions(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_reaction_when_cached_and_more_than_one_user_on_the_same_reaction_decrements_count_by_1(
-        self, registry: state_registry_impl.StateRegistryImpl
+    @pytest.mark.parametrize("initial_unavailability", [True, False])
+    @pytest.mark.parametrize("new_unavailability", [True, False])
+    def test_set_guild_unavailability(
+        self, initial_unavailability, new_unavailability, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_reaction_when_cached_and_one_user_on_reaction_sets_count_to_0(
-        self, registry: state_registry_impl.StateRegistryImpl
-    ):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_reaction_when_cached_and_one_user_on_reaction_removes_reaction_from_message(
-        self, registry: state_registry_impl.StateRegistryImpl
-    ):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_reaction_when_cached_returns_existing_reaction(
-        self, registry: state_registry_impl.StateRegistryImpl
-    ):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_reaction_when_uncached_returns_new_reaction(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_remove_reaction_when_uncached_sets_reaction_count_to_0(
-        self, registry: state_registry_impl.StateRegistryImpl
-    ):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    def test_set_guild_unavailability_for_uncached_guild_exits_silently(
-        self, registry: state_registry_impl.StateRegistryImpl
-    ):
-        raise NotImplementedError
-
-    @pytest.mark.xfail(reason="Not yet implemented")
-    @pytest.mark.parametrize("unavailability", [True, False])
-    def test_set_guild_unavailability_for_cached_guild(self, unavailability):
-        raise NotImplementedError
+        guild_obj = _helpers.mock_model(guilds.Guild, unavailable=initial_unavailability)
+        registry.set_guild_unavailability(guild_obj, new_unavailability)
+        assert guild_obj.unavailable is new_unavailability
 
     @pytest.mark.xfail(reason="Not yet implemented")
     def test_set_last_pinned_timestamp_for_cached_channel_id_exits_silently(

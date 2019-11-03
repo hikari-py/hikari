@@ -166,12 +166,10 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         # We shouldn't ever need to parse this payload unless we have inconsistent state, but if that happens,
         # lets attempt to fix it.
         guild_id = int(payload["id"])
-
-        self.state_registry.set_guild_unavailability(guild_id, True)
-
         guild_obj = self.state_registry.get_guild_by_id(guild_id)
 
         if guild_obj is not None:
+            self.state_registry.set_guild_unavailability(guild_obj, True)
             self.dispatch(events.GUILD_UNAVAILABLE, guild_obj)
         else:
             # We don't have a guild parsed yet. That shouldn't happen but if it does, we can make a note of this
@@ -391,7 +389,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
 
         emoji_obj = self.state_registry.parse_emoji(payload["emoji"], None)
 
-        reaction_obj = self.state_registry.add_reaction(message_obj, emoji_obj)
+        reaction_obj = self.state_registry.increment_reaction_count(message_obj, emoji_obj)
 
         if guild_id is not None:
             user_obj = self.state_registry.get_member_by_id(user_id, guild_id)
@@ -419,24 +417,34 @@ class EventAdapterImpl(event_adapter.EventAdapter):
             # Message was not cached, so ignore
             return
 
-        emoji_obj = self.state_registry.parse_emoji(payload["emoji"], None)
-
-        reaction_obj = self.state_registry.remove_reaction(message_obj, emoji_obj)
-
         if guild_id is not None:
             user_obj = self.state_registry.get_member_by_id(user_id, guild_id)
         else:
             user_obj = self.state_registry.get_user_by_id(user_id)
 
-        if user_obj is not None:
-            self.dispatch(events.MESSAGE_REACTION_REMOVE, reaction_obj, user_obj)
+        emoji_obj = self.state_registry.parse_emoji(payload["emoji"], None)
+        reaction_obj = self.state_registry.decrement_reaction_count(message_obj, emoji_obj)
 
-        else:
+        if reaction_obj is None:
             self.logger.warning(
-                "ignoring MESSAGE_REACTION_REMOVE for unknown %s %s",
+                "ignoring MESSAGE_REACTION_REMOVE for non existent reaction %s on message %s by %s %s",
+                reaction_obj,
+                message_id,
                 "user" if user_id is None else f"guild {guild_id} and member",
                 user_id,
             )
+            return
+
+        if user_obj is None:
+            self.logger.warning(
+                "ignoring MESSAGE_REACTION_REMOVE for reaction %s on message %s for unknown %s %s",
+                reaction_obj,
+                message_id,
+                "user" if user_id is None else f"guild {guild_id} and member",
+                user_id,
+            )
+
+        self.dispatch(events.MESSAGE_REACTION_REMOVE, reaction_obj, user_obj)
 
     async def handle_message_reaction_remove_all(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_REACTION_REMOVE_ALL, payload)
@@ -448,7 +456,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
             # Not cached, so ignore.
             return
 
-        self.state_registry.remove_all_reactions(message_obj)
+        self.state_registry.delete_all_reactions(message_obj)
         self.dispatch(events.MESSAGE_REACTION_REMOVE_ALL, message_obj)
 
     async def handle_presence_update(self, gateway, payload):
