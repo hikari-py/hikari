@@ -95,10 +95,10 @@ class StateRegistryImpl(state_registry.StateRegistry):
                 # Increment the count.
                 reaction_obj.count += 1
                 return reaction_obj
-        else:
-            reaction_obj = reactions.Reaction(1, emoji_obj, message_obj)
-            message_obj.reactions.append(reaction_obj)
-            return reaction_obj
+
+        reaction_obj = reactions.Reaction(1, emoji_obj, message_obj)
+        message_obj.reactions.append(reaction_obj)
+        return reaction_obj
 
     def delete_channel(self, channel_obj: channels.Channel) -> None:
         channel_id = channel_obj.id
@@ -286,7 +286,8 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
             self._message_cache[message_id] = message_obj
             return message_obj
-        raise MissingDependencyError
+
+        return None
 
     def parse_presence(self, member_obj: users.Member, presence_payload: custom_types.DiscordObject):
         presence_obj = presences.Presence(presence_payload)
@@ -313,16 +314,12 @@ class StateRegistryImpl(state_registry.StateRegistry):
                 message_obj.reactions.append(new_reaction_obj)
                 return new_reaction_obj
         else:
-            # No message was cached, so just ignore it.
-            pass
+            return None
 
-    def parse_role(self, role_payload: custom_types.DiscordObject, guild_id: int):
-        if guild_id in self._guilds:
-            guild_obj = self._guilds[guild_id]
-            role_payload = roles.Role(self, role_payload, guild_id)
-            guild_obj.roles[role_payload.id] = role_payload
-            return role_payload
-        return None
+    def parse_role(self, role_payload: custom_types.DiscordObject, guild_obj: guilds.Guild):
+        role_payload = roles.Role(self, role_payload, guild_obj.id)
+        guild_obj.roles[role_payload.id] = role_payload
+        return role_payload
 
     def parse_user(self, user_payload: custom_types.DiscordObject):
         # If the user already exists, then just return their existing object. We expect discord to tell us if they

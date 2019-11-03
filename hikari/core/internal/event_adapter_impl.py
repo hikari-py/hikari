@@ -288,10 +288,10 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         self.dispatch(events.RAW_GUILD_ROLE_CREATE, payload)
 
         guild_id = int(payload["guild_id"])
-        guild = self.state_registry.get_guild_by_id(guild_id)
+        guild_obj = self.state_registry.get_guild_by_id(guild_id)
 
-        if guild is not None:
-            role = self.state_registry.parse_role(payload["role"], guild_id)
+        if guild_obj is not None:
+            role = self.state_registry.parse_role(payload["role"], guild_obj)
             self.dispatch(events.GUILD_ROLE_CREATE, role)
         else:
             self.logger.warning("ignoring GUILD_ROLE_CREATE for unknown guild %s", guild_id)
