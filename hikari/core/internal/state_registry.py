@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import abc
 import datetime
+import inspect
 import typing
 
 from hikari.core.models import channels, reactions
@@ -34,6 +35,28 @@ from hikari.core.models import roles
 from hikari.core.models import users
 from hikari.core.models import webhooks
 from hikari.core.utils import custom_types
+
+
+class MissingDependencyError(RuntimeError):
+    """
+    Raised if a dependency of an object being parsed cannot be resolved.
+    """
+    __slots__ = ("payload", "missing", "method")
+
+    #: The payload that was being parsed.
+    payload: typing.Any
+    #: The description of what was missing.
+    missing: str
+    #: The method that was being called.
+    method: str
+
+    def __init__(self, payload: typing.Any, missing: str) -> None:
+        self.payload = payload
+        self.missing = missing
+        # Cast to str just in case this references a string somehow allocated purely for the frame object, otherwise
+        # we risk leaking memory.
+        self.method = str(inspect.stack()[1].function)
+        super().__init__(f"{missing} was missing when executing {self.method}")
 
 
 class StateRegistry(abc.ABC):
@@ -603,9 +626,5 @@ class StateRegistry(abc.ABC):
             a guild in the cache, then `None` is returned instead.
         """
 
-    @abc.abstractmethod
-    def __copy__(self):
-        ...
 
-
-__all__ = ["StateRegistry"]
+__all__ = ["StateRegistry", "MissingDependencyError"]
