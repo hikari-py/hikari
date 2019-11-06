@@ -34,11 +34,22 @@ variables:
     - tags
     - schedules
 
+# Run a cache per branch per job
+.per_job_branch_cache: &per_job_branch_cache
+  cache:
+    paths:
+      - $CI_PROJECT_DIR/.cache/pip
+      - .nox/
+    key: $CI_COMMIT_REF_SLUG-$CI_JOB_STAGE-$CI_JOB_NAME
+    policy: pull-push
+    
+
 ###
 ### TEMPLATE TO RUN NOX AND SETUP.PY TESTS
 ###
 .test:
   <<: *merge_request_testing
+  <<: *per_job_branch_cache
   allow_failure: false
   stage: test
   script:
@@ -79,6 +90,7 @@ py38:
 ### TEMPLATE FOR TEST AND PROD DOCUMENTATION GENERATION JOBS.
 ###
 .pages:
+  <<: *per_job_branch_cache
   allow_failure: false
   image: python:3
   before_script:
@@ -145,6 +157,7 @@ test-pages:
 ### HANDLE DEPLOYING TO PYPI REPOSITORIES
 ###
 .deploy:
+  <<: *per_job_branch_cache
   allow_failure: false
   stage: deploy
   image: python:3-stretch
