@@ -46,4 +46,4 @@ It currently is **not** able to provide voice functionality. Again, this may be 
 
 ### Contributing to Hikari
 
-[View the contributing guide!](https://gitlab.com/nekokatt/hikari/-/wiki_pages/Contributing)
+[View the contributing guide!](https://gitlab.com/nekokatt/hikari/wikis/Contributing)
