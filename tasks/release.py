@@ -44,14 +44,13 @@ def get_most_recent_tag_hash():
 
 
 def try_to_get_changelog():
+    sio = io.StringIO()
     try:
-        sio = io.StringIO()
         with contextlib.redirect_stdout(sio):
-            gcg.entrypoint.main(["-O", "rpm", "-s", get_most_recent_tag_hash()])
+            gcg.entrypoint.main([sys.argv[0], "-O", "rpm", "-s", get_most_recent_tag_hash()])
         return sio.getvalue()
-    except Exception:
-        traceback.print_exc()
-        sio = io.StringIO()
+    except Exception as ex:
+        traceback.print_exception(type(ex), ex, ex.__traceback__)
         with contextlib.redirect_stdout(sio):
             gcg.entrypoint.main(["-O", "rpm"])
     finally:
@@ -75,6 +74,8 @@ payload = {
         ]
     }
 }
+
+print("Sending payload", payload)
 
 with requests.post(f"https://gitlab.com/api/v4/projects/{project_id}/releases", json=payload, headers=headers) as resp:
     resp.raise_for_status()
