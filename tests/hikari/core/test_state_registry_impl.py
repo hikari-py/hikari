@@ -1182,7 +1182,7 @@ class TestStateRegistryImpl:
         original_message_obj = _helpers.mock_model(messages.Message, id=123)
         cloned_message_obj = _helpers.mock_model(messages.Message, id=123)
         original_message_obj.copy = mock.MagicMock(spec_set=original_message_obj.copy, return_value=cloned_message_obj)
-        registry._message_cache = {original_message_obj.id : original_message_obj}
+        registry._message_cache = {original_message_obj.id: original_message_obj}
         payload = {"message_id": "123"}
 
         old, new = registry.update_message(payload)
@@ -1194,14 +1194,30 @@ class TestStateRegistryImpl:
         assert old is cloned_message_obj, "existing message did not get the old state copied and returned!"
 
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_update_role_when_existing_role_does_not_exist_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        registry.get_role_by_id = mock.MagicMock(return_value=None, spec_set=registry.get_role_by_id)
+        payload = {"id": "1234"}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        diff = registry.update_role(123, payload)
+
+        assert diff is None
+
     def test_update_role_when_existing_role_exists_returns_old_state_copy_and_updated_new_state(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        original_role_obj = _helpers.mock_model(roles.Role, id=123)
+        cloned_role_obj = _helpers.mock_model(roles.Role, id=123)
+        original_role_obj.copy = mock.MagicMock(spec_set=original_role_obj.copy, return_value=cloned_role_obj)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=124, roles={original_role_obj.id: original_role_obj})
+        registry._guilds = {guild_obj.id: guild_obj}
+        payload = {"id": "123"}
+
+        old, new = registry.update_role(guild_obj.id, payload)
+
+        assert old is not None
+        assert new is not None
+
+        assert new is original_role_obj, "existing message was not used as target for update!"
+        assert old is cloned_role_obj, "existing message did not get the old state copied and returned!"
