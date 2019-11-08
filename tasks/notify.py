@@ -28,6 +28,7 @@ import requests
 try:
     VERSION = sys.argv[1]
     NAME = sys.argv[2]
+    DEPLOYMENT_HOST = sys.argv[3]
     WEBHOOK_URL = os.environ["RELEASE_WEBHOOK"]
     ENVIRONMENT = os.environ["RELEASE_WEBHOOK_NAME"]
     COLOUR = os.environ["RELEASE_WEBHOOK_COLOUR"]
@@ -37,11 +38,14 @@ try:
 
     requests.post(
         WEBHOOK_URL,
-        json={
+        json = {
             "embeds": [
                 {
                     "title": NAME,
-                    "footer": {"text": f"{NAME} v{VERSION} has just been put into {ENVIRONMENT}."},
+                    "footer": {
+                        "text": f"[{NAME} v{VERSION}]({DEPLOYMENT_HOST}/project/{NAME}/{VERSION}) has "
+                                f"just been put into {ENVIRONMENT}."
+                    },
                     "color": int(COLOUR, 16),
                     "author": {"name": AUTHOR},
                     "description": BRIEF + "\n\n" + DESCRIPTION,

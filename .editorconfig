@@ -69,6 +69,7 @@ ij_visual_guides = 80,100,120
 ij_wrap_on_typing = true
 
 [{*.pyw,*.py}]
+ij_continuation_indent_size = 4
 ij_visual_guides = 80,100,120
 ij_python_align_collections_and_comprehensions = true
 ij_python_align_multiline_imports = false
@@ -140,11 +141,11 @@ ij_xml_keep_indents_on_empty_lines = false
 ij_xml_line_comment_at_first_column = true
 
 [{*.zsh,*.bash,*.sh}]
-ij_shell_binary_ops_start_line = false
+ij_shell_binary_ops_start_line = true
 ij_shell_keep_column_alignment_padding = false
 ij_shell_minify_program = false
-ij_shell_redirect_followed_by_space = false
-ij_shell_switch_cases_indented = false
+ij_shell_redirect_followed_by_space = true
+ij_shell_switch_cases_indented = true
 
 [{test_state_registry_impl,*.yml,*.yaml}]
 ij_continuation_indent_size = 2
