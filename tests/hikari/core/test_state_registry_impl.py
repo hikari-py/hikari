@@ -1219,5 +1219,5 @@ class TestStateRegistryImpl:
         assert old is not None
         assert new is not None
 
-        assert new is original_role_obj, "existing message was not used as target for update!"
-        assert old is cloned_role_obj, "existing message did not get the old state copied and returned!"
+        assert new is original_role_obj, "existing role was not used as target for update!"
+        assert old is cloned_role_obj, "existing role did not get the old state copied and returned!"
