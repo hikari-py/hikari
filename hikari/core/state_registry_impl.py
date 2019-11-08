@@ -297,10 +297,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
         if member_id in guild_obj.members:
             member_obj = guild_obj.members[member_id]
             nick = member_payload.get("nick")
-            role_objs = [
-                self.get_role_by_id(guild_obj.id, int(role_id))
-                for role_id in member_payload["roles"]
-            ]
+            role_objs = [self.get_role_by_id(guild_obj.id, int(role_id)) for role_id in member_payload["roles"]]
             member_obj.update_state(role_objs, nick)
             return member_obj
 
@@ -449,7 +446,18 @@ class StateRegistryImpl(state_registry.StateRegistry):
         if guild_obj is not None and user_id in guild_obj.members:
             new_member = guild_obj.members[user_id]
             old_member = new_member.copy()
-            new_member.update_state(role_ids, nick)
+            role_objs = []
+
+            for role_id in role_ids:
+                try:
+                    role_objs.append(guild_obj.roles[role_id])
+                except KeyError:
+                    # If we cant resolve a role, just skip the step, but don't abort.
+                    self.logger.warning(
+                        "unresolvable role ID %s on member %s in guild %s will be ignored", role_id, user_id, guild_id
+                    )
+
+            new_member.update_state(role_objs, nick)
             return old_member, new_member
         return None
 
