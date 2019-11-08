@@ -1034,19 +1034,33 @@ class TestStateRegistryImpl:
         assert new is original_channel_obj, "existing channel was not used as target for update!"
         assert old is cloned_channel_obj, "existing channel did not get the old state copied and returned!"
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+    
     def test_update_guild_when_existing_guild_does_not_exist_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        registry.get_guild_by_id = mock.MagicMock(return_value=None, spec_set=registry.get_guild_by_id)
+        payload = {"id": "1234"}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        diff = registry.update_guild(payload)
+
+        assert diff is None
+
     def test_update_guild_when_existing_guild_exists_returns_old_state_copy_and_updated_new_state(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        original_guild_obj = _helpers.mock_model(guilds.Guild, id=456)
+        cloned_guild_obj = _helpers.mock_model(guilds.Guild, id=456)
+        original_guild_obj.copy = mock.MagicMock(spec_set=original_guild_obj.copy, return_value=cloned_guild_obj)
+        registry._guilds = {original_guild_obj.id: original_guild_obj}
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        old, new = registry.update_channel({"id": "456"})
+
+        assert old is not None
+        assert new is not None
+
+        assert new is original_channel_obj, "existing guild was not used as target for update!"
+        assert old is cloned_channel_obj, "existing guild did not get the old state copied and returned!"
+
     def test_update_member_when_guild_does_not_exist_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
