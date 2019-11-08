@@ -25,9 +25,11 @@ import abc
 import dataclasses
 import typing
 
-from hikari.core.internal import state_registry
-from hikari.core.models import base, guilds
-from hikari.core.utils import custom_types, auto_repr
+from hikari import state_registry
+from hikari.core.models import base
+from hikari.core.models import guilds
+from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import data_structures
 
 
 class Emoji(base.HikariModel, abc.ABC):
@@ -61,7 +63,7 @@ class UnicodeEmoji(Emoji):
     def is_unicode(self) -> bool:
         return True
 
-    def __init__(self, payload: custom_types.DiscordObject) -> None:
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.value = payload["name"]
 
     def __eq__(self, other):
@@ -98,7 +100,7 @@ class UnknownEmoji(Emoji, base.Snowflake):
 
     __repr__ = auto_repr.repr_of("id", "name")
 
-    def __init__(self, payload: custom_types.DiscordObject) -> None:
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
 
@@ -142,7 +144,7 @@ class GuildEmoji(UnknownEmoji):
     __repr__ = auto_repr.repr_of("id", "name", "animated")
 
     def __init__(
-        self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject, guild_id: int
+        self, global_state: state_registry.StateRegistry, payload: data_structures.DiscordObjectT, guild_id: int
     ) -> None:
         super().__init__(payload)
         self._state = global_state
@@ -151,14 +153,14 @@ class GuildEmoji(UnknownEmoji):
         self.require_colons = payload.get("require_colons", True)
         self.animated = payload.get("animated", False)
         self.managed = payload.get("managed", False)
-        self._role_ids = [int(r) for r in payload.get("roles", custom_types.EMPTY_SEQUENCE)]
+        self._role_ids = [int(r) for r in payload.get("roles", data_structures.EMPTY_SEQUENCE)]
 
     @property
     def guild(self) -> guilds.Guild:
         return self._state.get_guild_by_id(self._guild_id)
 
 
-def is_payload_guild_emoji_candidate(payload: custom_types.DiscordObject) -> bool:
+def is_payload_guild_emoji_candidate(payload: data_structures.DiscordObjectT) -> bool:
     """
     Returns True if the given dict represents an emoji that is from a guild we actively reside in.
 
@@ -171,7 +173,7 @@ def is_payload_guild_emoji_candidate(payload: custom_types.DiscordObject) -> boo
 
 def emoji_from_dict(
     global_state: state_registry.StateRegistry,
-    payload: custom_types.DiscordObject,
+    payload: data_structures.DiscordObjectT,
     guild_id: typing.Optional[int] = None,
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:
     if is_payload_guild_emoji_candidate(payload) and guild_id is not None:

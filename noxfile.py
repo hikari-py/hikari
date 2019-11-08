@@ -16,8 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import functools
 import fnmatch
+import functools
 import os
 import shutil
 import traceback

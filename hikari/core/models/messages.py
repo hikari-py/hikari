@@ -26,16 +26,20 @@ import datetime
 import enum
 import typing
 
-from hikari.core.internal import state_registry
-from hikari.core.models import base, reactions, webhooks
+from hikari import state_registry
+from hikari.core.models import base
 from hikari.core.models import channels
 from hikari.core.models import embeds
 from hikari.core.models import guilds
 from hikari.core.models import media
 from hikari.core.models import members
+from hikari.core.models import reactions
 from hikari.core.models import users
-from hikari.core.utils import date_utils, auto_repr, custom_types
-from hikari.core.utils import transform
+from hikari.core.models import webhooks
+from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import transformations
 
 
 class MessageType(enum.IntEnum):
@@ -221,7 +225,7 @@ class Message(base.Snowflake, base.HikariModel):
         self.id = int(payload["id"])
 
         self._channel_id = int(payload["channel_id"])
-        self._guild_id = transform.nullable_cast(payload.get("guild_id"), int)
+        self._guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
 
         if "webhook_id" in payload:
             self.author = global_state.parse_webhook(payload["author"])
@@ -230,8 +234,8 @@ class Message(base.Snowflake, base.HikariModel):
 
         self.tts = payload["tts"]
         self.crosspost_of = MessageCrosspost(payload["message_reference"]) if "message_reference" in payload else None
-        self.flags = transform.try_cast(payload.get("flags"), MessageFlag, 0)
-        self.type = transform.try_cast(payload.get("type"), MessageType)
+        self.flags = transformations.try_cast(payload.get("flags"), MessageFlag, 0)
+        self.type = transformations.try_cast(payload.get("type"), MessageType)
 
         # These fields need an initial value, since they may not be specified, and our update state only accounts
         # for changes to the initial state due to Discord being consistently inconsistent in their API behaviour and
@@ -242,8 +246,8 @@ class Message(base.Snowflake, base.HikariModel):
         self.application = None
         self.edited_at = None
         self.mentions_everyone = False
-        self.attachments = custom_types.EMPTY_SEQUENCE
-        self.embeds = custom_types.EMPTY_SEQUENCE
+        self.attachments = data_structures.EMPTY_SEQUENCE
+        self.embeds = data_structures.EMPTY_SEQUENCE
         self.pinned = False
         self.application = None
         self.activity = None
@@ -251,12 +255,14 @@ class Message(base.Snowflake, base.HikariModel):
 
         self.update_state(payload)
 
-    def update_state(self, payload: custom_types.DiscordObject) -> None:
+    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         if "member" in payload:
             self.author = self._state.parse_member(payload["member"], self._guild_id)
 
         if "edited_timestamp" in payload:
-            self.edited_at = transform.nullable_cast(payload.get("edited_timestamp"), date_utils.parse_iso_8601_ts)
+            self.edited_at = transformations.nullable_cast(
+                payload.get("edited_timestamp"), date_helpers.parse_iso_8601_ts
+            )
 
         if "mention_everyone" in payload:
             self.mentions_everyone = payload["mention_everyone"]
@@ -271,10 +277,10 @@ class Message(base.Snowflake, base.HikariModel):
             self.pinned = payload["pinned"]
 
         if "application" in payload:
-            self.application = transform.nullable_cast(payload.get("application"), MessageApplication)
+            self.application = transformations.nullable_cast(payload.get("application"), MessageApplication)
 
         if "activity" in payload:
-            self.activity = transform.nullable_cast(payload.get("activity"), MessageActivity)
+            self.activity = transformations.nullable_cast(payload.get("activity"), MessageActivity)
 
         if "content" in payload:
             self.content = payload.get("content")
@@ -325,8 +331,8 @@ class MessageActivity:
     __repr__ = auto_repr.repr_of("type", "party_id")
 
     def __init__(self, payload):
-        self.type = transform.try_cast(payload.get("type"), MessageActivityType)
-        self.party_id = transform.nullable_cast(payload.get("party_id"), int)
+        self.type = transformations.try_cast(payload.get("type"), MessageActivityType)
+        self.party_id = transformations.nullable_cast(payload.get("party_id"), int)
 
 
 @dataclasses.dataclass()
@@ -366,9 +372,9 @@ class MessageApplication(base.Snowflake):
 
     def __init__(self, payload):
         self.id = int(payload["id"])
-        self.cover_image_id = transform.nullable_cast(payload.get("cover_image"), int)
+        self.cover_image_id = transformations.nullable_cast(payload.get("cover_image"), int)
         self.description = payload["description"]
-        self.icon_image_id = transform.nullable_cast(payload.get("icon"), int)
+        self.icon_image_id = transformations.nullable_cast(payload.get("icon"), int)
         self.name = payload.get("name")
 
 
@@ -404,12 +410,12 @@ class MessageCrosspost:
 
     __repr__ = auto_repr.repr_of("message_id", "guild_id", "channel_id")
 
-    def __init__(self, payload: custom_types.DiscordObject) -> None:
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         # This is never null for some reason but the other two are... thanks Discord!
         self.channel_id = int(payload["channel_id"])
 
-        self.message_id = transform.nullable_cast(payload.get("message_id"), int)
-        self.guild_id = transform.nullable_cast(payload.get("guild_id"), int)
+        self.message_id = transformations.nullable_cast(payload.get("message_id"), int)
+        self.guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
 
 
 __all__ = [

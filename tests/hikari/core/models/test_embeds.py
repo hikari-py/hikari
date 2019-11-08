@@ -20,9 +20,9 @@ import datetime
 
 import pytest
 
-from hikari.core.models import colors as _color, media
+from hikari.core.models import colors as _color
 from hikari.core.models import embeds as _embed
-from hikari.core.utils import unspecified
+from hikari.core.models import media
 
 
 @pytest.fixture
@@ -34,6 +34,7 @@ def embed():
 def test_EmbedPart_delattr_sets_to_None():
     class Impl(_embed.EmbedPart):
         __slots__ = ("a", "b", "c")
+
         def __init__(self, a, b, c):
             super().__init__()
             self.a = a
