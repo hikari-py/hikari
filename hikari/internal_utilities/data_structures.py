@@ -30,7 +30,7 @@ HashableT = typing.TypeVar("HashableT", bound=typing.Hashable)
 ValueT = typing.TypeVar("ValueT")
 
 #: General scalar JSON-compatible type.
-ScalarT = typing.Union["DiscordObjectT", typing.List["ScalarT"], int, float, str, bool, None]
+ScalarT = typing.Union[dict, list, int, float, str, bool, None]
 
 #: Type hint for a Discord-compatible object.
 #:

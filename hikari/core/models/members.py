@@ -25,8 +25,10 @@ import dataclasses
 import datetime
 import typing
 
+from hikari import state_registry
 from hikari.core.models import guilds
 from hikari.core.models import presences
+from hikari.core.models import roles as _roles
 from hikari.core.models import users
 from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
@@ -35,7 +37,7 @@ from hikari.internal_utilities import delegate
 from hikari.internal_utilities import transformations
 
 
-@delegate.delegate_to(users.BaseUser, "_user")
+@delegate.delegate_to(users.BaseUser, "user")
 @dataclasses.dataclass()
 class Member(users.BaseUser):
     """
@@ -45,11 +47,16 @@ class Member(users.BaseUser):
     and fields to a wrapped user object which is shared with the corresponding member in every guild the user is in.
     """
 
-    __slots__ = ("_user", "_guild_id", "_role_ids", "joined_at", "nick", "premium_since", "presence")
+    __slots__ = ("user", "guild", "roles", "joined_at", "nick", "premium_since", "presence")
 
-    _user: users.User
-    _role_ids: typing.MutableSequence[int]
-    _guild_id: int
+    #: The underlying user object.
+    user: users.User
+
+    #: The guild that the member is in.
+    guild: guilds.Guild
+
+    #: The roles that the member is in.
+    roles: typing.MutableSequence[_roles.Role]
 
     #: The date and time the member joined this guild.
     #:
@@ -71,32 +78,32 @@ class Member(users.BaseUser):
     #: :type: :class:`hikari.core.models.presence.Presence`
     presence: presences.Presence
 
-    __copy_by_ref__ = ("presence",)
+    __copy_by_ref__ = ("presence", "guild")
 
     __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot", "guild", "nick", "joined_at")
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state, guild_id, payload):
-        self._user = global_state.parse_user(payload["user"])
-        self._guild_id = guild_id
+    def __init__(
+        self,
+        global_state: state_registry.StateRegistry,
+        guild: guilds.Guild, payload: data_structures.DiscordObjectT
+    ) -> None:
+        self.user = global_state.parse_user(payload["user"])
+        self.guild = guild
         self.joined_at = date_helpers.parse_iso_8601_ts(payload.get("joined_at"))
         self.premium_since = transformations.nullable_cast(payload.get("premium_since"), date_helpers.parse_iso_8601_ts)
-        self.update_state(payload.get("role_ids", data_structures.EMPTY_SEQUENCE), payload.get("nick"))
+
+        role_objs = [
+            global_state.get_role_by_id(self.guild.id, int(rid))
+            for rid in payload.get("role_ids",  data_structures.EMPTY_SEQUENCE)
+        ]
+
+        self.update_state(role_objs, payload.get("nick"))
 
     # noinspection PyMethodOverriding
-    def update_state(self, role_ids, nick) -> None:
-        self._role_ids = [int(r) for r in role_ids]
+    def update_state(self, role_objs: typing.Sequence[_roles.Role], nick: typing.Optional[str]) -> None:
+        self.roles = list(role_objs)
         self.nick = nick
-
-    @property
-    def user(self) -> users.User:
-        """The internal user object for this member. This is usually only required internally."""
-        return self._user
-
-    @property
-    def guild(self) -> guilds.Guild:
-        """The guild this member is in."""
-        return self._state.get_guild_by_id(self._guild_id)
 
 
 __all__ = ["Member"]
