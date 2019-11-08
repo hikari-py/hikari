@@ -183,8 +183,8 @@ class StateRegistryImpl(state_registry.StateRegistry):
                 # Would require me to store the actual roles rather than the IDs though...
 
                 # Protected member access, but much more efficient for this case than resolving every role repeatedly.
-                if role_obj.id in member._role_ids:
-                    member._role_ids.remove(role_obj.id)
+                if role_obj in member.roles:
+                    member.roles.remove(role_obj)
 
     def get_channel_by_id(self, channel_id: int) -> typing.Optional[channels.Channel]:
         return self._guild_channels.get(channel_id) or self._dm_channels.get(channel_id)
@@ -297,11 +297,14 @@ class StateRegistryImpl(state_registry.StateRegistry):
         if member_id in guild_obj.members:
             member_obj = guild_obj.members[member_id]
             nick = member_payload.get("nick")
-            role_ids = [int(role_id) for role_id in member_payload.get("roles")]
-            member_obj.update_state(role_ids, nick)
+            role_objs = [
+                self.get_role_by_id(guild_obj.id, int(role_id))
+                for role_id in member_payload["roles"]
+            ]
+            member_obj.update_state(role_objs, nick)
             return member_obj
 
-        member_obj = members.Member(self, guild_obj.id, member_payload)
+        member_obj = members.Member(self, guild_obj, member_payload)
 
         guild_obj.members[member_id] = member_obj
         return member_obj
@@ -401,7 +404,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
     def set_roles_for_member(self, role_objs: typing.Sequence[roles.Role], member_obj: members.Member) -> None:
         # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
         # so that it isn't coupling dependent classes of this one to the model implementation as much.
-        member_obj._role_ids = [role.id for role in role_objs]
+        member_obj.roles = [role for role in role_objs]
 
     def update_channel(
         self, channel_payload: data_structures.DiscordObjectT
