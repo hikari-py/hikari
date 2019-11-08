@@ -304,3 +304,17 @@ class TestEmbed:
         embed._author = object()
         del embed.author
         assert embed._author is None
+
+    def test_embed_may_not_exceed_6k_chars_in_size(self, embed):
+        embed.set_author(name="a" * 120)
+        embed.description = "b" * 2000
+        embed.title = "c" * 100
+        embed.set_footer(text="d" * 2000)
+        for i in range(20):
+            embed.add_field(name="e" * 120, value="f" * 1000)
+
+        try:
+            embed.to_dict()
+            assert False, "expected failure but never failed"
+        except ValueError:
+            assert True, "expected failure"
