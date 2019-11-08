@@ -43,15 +43,15 @@ try:
                 {
                     "title": NAME,
                     "footer": {
-                        "text": f"[{NAME} v{VERSION}]({DEPLOYMENT_HOST}/project/{NAME}/{VERSION}) has "
-                                f"just been put into {ENVIRONMENT}."
+                        "text": BRIEF + "\n\n" + DESCRIPTION,
                     },
                     "color": int(COLOUR, 16),
                     "author": {"name": AUTHOR},
-                    "description": BRIEF + "\n\n" + DESCRIPTION,
+                    "description": f"[{NAME} v{VERSION}]({DEPLOYMENT_HOST}/project/{NAME}/{VERSION}) has "
+                                   f"just been put into {ENVIRONMENT}."
                 }
             ]
         },
     )
-except BaseException:
-    traceback.print_exc()
+except BaseException as ex:
+    traceback.print_exception(type(ex), ex, ex.__traceback__)

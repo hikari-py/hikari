@@ -37,6 +37,9 @@ from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import transformations
 
 
+_MAX_EMBED_SIZE = 6_000
+
+
 class EmbedPart(base.HikariModel, abc.ABC):
     """
     Abstract base for any internal component for an embed.
@@ -609,6 +612,10 @@ def _extract_url(url: FileOrUrlT) -> typing.Tuple[typing.Optional[str], typing.O
     return url, None
 
 
+def _safe_len(item):
+    return len(item) if item is not None else 0
+
+
 @dataclasses.dataclass(init=False)
 class Embed(BaseEmbed):
     """
@@ -811,6 +818,25 @@ class Embed(BaseEmbed):
         del self._fields[index]
         return self
 
+    def to_dict(self, *, dict_factory: DictFactoryT = dict) -> DictImplT:
+        self._perform_total_length_check()
+        return super().to_dict(dict_factory=dict_factory)
+
     def _maybe_ref_file_obj(self, component, file_obj):
         if file_obj is not None:
             self._assets_to_upload[file_obj] = component
+
+    def _perform_total_length_check(self):
+        total_size = _safe_len(self.title)
+        total_size += _safe_len(self.description)
+        total_size += _safe_len(self.author.name) if self.author is not None else 0
+        total_size += _safe_len(self.footer.text) if self.footer is not None else 0
+
+        for field in self._fields:
+            total_size += len(field.name)
+            total_size += len(field.value)
+
+        assertions.assert_that(
+            total_size <= _MAX_EMBED_SIZE,
+            f"Total characters in an embed can not exceed {_MAX_EMBED_SIZE}"
+        )
