@@ -33,6 +33,7 @@ class BaseUser(base.HikariModel, base.Snowflake):
     """
     Representation of a user account.
     """
+
     __slots__ = ()
 
     _state: state_registry.StateRegistry
@@ -69,6 +70,7 @@ class User(BaseUser):
     """
     Implementation of the user data type.
     """
+
     __slots__ = ("_state", "id", "username", "discriminator", "avatar_hash", "bot", "__weakref__")
 
     def __init__(self, global_state: state_registry.StateRegistry, payload):

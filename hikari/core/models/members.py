@@ -84,9 +84,7 @@ class Member(users.BaseUser):
 
     # noinspection PyMissingConstructor
     def __init__(
-        self,
-        global_state: state_registry.StateRegistry,
-        guild: guilds.Guild, payload: data_structures.DiscordObjectT
+        self, global_state: state_registry.StateRegistry, guild: guilds.Guild, payload: data_structures.DiscordObjectT
     ) -> None:
         self.user = global_state.parse_user(payload["user"])
         self.guild = guild
@@ -95,7 +93,7 @@ class Member(users.BaseUser):
 
         role_objs = [
             global_state.get_role_by_id(self.guild.id, int(rid))
-            for rid in payload.get("role_ids",  data_structures.EMPTY_SEQUENCE)
+            for rid in payload.get("role_ids", data_structures.EMPTY_SEQUENCE)
         ]
 
         self.update_state(role_objs, payload.get("nick"))

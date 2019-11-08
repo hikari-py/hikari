@@ -710,22 +710,22 @@ class TestStateRegistryImpl:
         payload = {"user": {"id": "1234"}, "roles": ["9", "18", "27"], "nick": "Roy Rodgers McFreely"}
 
         expected_roles = [
-            _helpers.mock_model(roles.Role, id = 9),
-            _helpers.mock_model(roles.Role, id = 18),
-            _helpers.mock_model(roles.Role, id = 27),
+            _helpers.mock_model(roles.Role, id=9),
+            _helpers.mock_model(roles.Role, id=18),
+            _helpers.mock_model(roles.Role, id=27),
         ]
 
         roles_map = {
             1: _helpers.mock_model(roles.Role, id=1),
-            2: _helpers.mock_model(roles.Role, id = 2),
-            36: _helpers.mock_model(roles.Role, id = 36),
-            **{r.id: r for r in expected_roles}
+            2: _helpers.mock_model(roles.Role, id=2),
+            36: _helpers.mock_model(roles.Role, id=36),
+            **{r.id: r for r in expected_roles},
         }
 
         guild_obj = _helpers.mock_model(guilds.Guild, id=5678, roles=roles_map)
         registry._guilds = {guild_obj.id: guild_obj}
 
-        member_obj = _helpers.mock_model(members.Member, id=1234, roles = [], nick=None, guild=guild_obj)
+        member_obj = _helpers.mock_model(members.Member, id=1234, roles=[], nick=None, guild=guild_obj)
 
         guild_obj.members = {member_obj.id: member_obj}
 
@@ -1106,20 +1106,48 @@ class TestStateRegistryImpl:
     def test_update_member_when_existing_member_exists_returns_old_state_copy_and_updated_new_state(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        guild_obj = _helpers.mock_model(guilds.Guild, id=124)
+        role_1 = _helpers.mock_model(roles.Role, id=111)
+        role_2 = _helpers.mock_model(roles.Role, id=112)
+        role_3 = _helpers.mock_model(roles.Role, id=113)
+
+        roles_map = {role_1.id: role_1, role_2.id: role_2, role_3.id: role_3}
+        guild_obj = _helpers.mock_model(guilds.Guild, id=124, roles=roles_map)
+
         registry._guilds = {guild_obj.id: guild_obj}
         original_member_obj = _helpers.mock_model(members.Member, id=123)
-        cloned_member_obj = _helpers.mock_model(members.Member, id=123)
+        cloned_member_obj = _helpers.mock_model(members.Member, id=123, roles=roles_map)
         original_member_obj.copy = mock.MagicMock(spec_set=original_member_obj.copy, return_value=cloned_member_obj)
         guild_obj.members = {original_member_obj.id: original_member_obj}
 
-        old, new = registry.update_member(guild_obj.id, guild_obj.roles, None, original_member_obj.id)
+        old, new = registry.update_member(guild_obj.id, roles_map.keys(), "potatoboi", original_member_obj.id)
 
         assert old is not None
         assert new is not None
 
         assert new is original_member_obj, "existing member was not used as target for update!"
         assert old is cloned_member_obj, "existing member did not get the old state copied and returned!"
+
+        new.update_state.assert_called_with([role_1, role_2, role_3], "potatoboi")
+
+    def test_update_member_when_existing_member_exists_but_role_is_missing_gets_skipped(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        role_1 = _helpers.mock_model(roles.Role, id=111)
+        role_2 = _helpers.mock_model(roles.Role, id=112)
+        role_3 = _helpers.mock_model(roles.Role, id=113)
+
+        roles_map = {role_1.id: role_1, role_2.id: role_2, role_3.id: role_3}
+        guild_obj = _helpers.mock_model(guilds.Guild, id=124, roles=roles_map)
+
+        registry._guilds = {guild_obj.id: guild_obj}
+        original_member_obj = _helpers.mock_model(members.Member, id=123)
+        cloned_member_obj = _helpers.mock_model(members.Member, id=123, roles=roles_map)
+        original_member_obj.copy = mock.MagicMock(spec_set=original_member_obj.copy, return_value=cloned_member_obj)
+        guild_obj.members = {original_member_obj.id: original_member_obj}
+
+        old, new = registry.update_member(guild_obj.id, [111, 114], None, original_member_obj.id)
+
+        new.update_state.assert_called_with([role_1], None)
 
     @pytest.mark.xfail(reason="Not yet implemented")
     def test_update_member_presence_when_guild_does_not_exist_returns_None(
