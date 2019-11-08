@@ -29,12 +29,11 @@ from hikari.internal_utilities import auto_repr
 
 
 @dataclasses.dataclass()
-class User(base.HikariModel, base.Snowflake):
+class BaseUser(base.HikariModel, base.Snowflake):
     """
     Representation of a user account.
     """
-
-    __slots__ = ("_state", "id", "username", "discriminator", "avatar_hash", "bot", "__weakref__")
+    __slots__ = ()
 
     _state: state_registry.StateRegistry
 
@@ -64,6 +63,13 @@ class User(base.HikariModel, base.Snowflake):
     bot: bool
 
     __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot")
+
+
+class User(BaseUser):
+    """
+    Implementation of the user data type.
+    """
+    __slots__ = ("_state", "id", "username", "discriminator", "avatar_hash", "bot", "__weakref__")
 
     def __init__(self, global_state: state_registry.StateRegistry, payload):
         self._state = global_state
@@ -107,4 +113,4 @@ class BotUser(User):
         self.mfa_enabled = payload.get("mfa_enabled", False)
 
 
-__all__ = ["User", "BotUser"]
+__all__ = ["BaseUser", "User", "BotUser"]
