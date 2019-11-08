@@ -60,7 +60,7 @@ class ClientMock(_http_client.HTTPClient):
     """
 
     def __init__(self, *args, **kwargs):
-        with _helpers.mock_patch(aiohttp.ClientSession, new=asynctest.MagicMock()):
+        with _helpers.mock_patch("aiohttp.ClientSession", new=asynctest.MagicMock()):
             super().__init__(*args, **kwargs)
 
     async def request(self, method, path, params=None, **kwargs):
