@@ -1061,6 +1061,7 @@ class TestStateRegistryImpl:
         assert new is original_channel_obj, "existing guild was not used as target for update!"
         assert old is cloned_channel_obj, "existing guild did not get the old state copied and returned!"
 
+    @pytest.mark.xfail(reason="Not yet implemented")
     def test_update_member_when_guild_does_not_exist_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
