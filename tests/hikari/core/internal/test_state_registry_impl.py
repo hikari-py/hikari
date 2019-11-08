@@ -1025,8 +1025,9 @@ class TestStateRegistryImpl:
         cloned_channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=456)
         original_channel_obj.copy = mock.MagicMock(spec_set=original_channel_obj.copy, return_value=cloned_channel_obj)
         registry._guild_channels = {original_channel_obj.id: original_channel_obj}
+        payload = {"id": "456"}
 
-        old, new = registry.update_channel({"id": "456"})
+        old, new = registry.update_channel(payload)
 
         assert old is not None
         assert new is not None
@@ -1048,36 +1049,61 @@ class TestStateRegistryImpl:
     def test_update_guild_when_existing_guild_exists_returns_old_state_copy_and_updated_new_state(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        original_guild_obj = _helpers.mock_model(guilds.Guild, id=456)
-        cloned_guild_obj = _helpers.mock_model(guilds.Guild, id=456)
+        original_guild_obj = _helpers.mock_model(guilds.Guild, id=123)
+        cloned_guild_obj = _helpers.mock_model(guilds.Guild, id=123)
         original_guild_obj.copy = mock.MagicMock(spec_set=original_guild_obj.copy, return_value=cloned_guild_obj)
         registry._guilds = {original_guild_obj.id: original_guild_obj}
+        payload = {"id": "123"}
 
-        old, new = registry.update_channel({"id": "456"})
+        old, new = registry.update_guild(payload)
 
         assert old is not None
         assert new is not None
 
-        assert new is original_channel_obj, "existing guild was not used as target for update!"
-        assert old is cloned_channel_obj, "existing guild did not get the old state copied and returned!"
+        assert new is original_guild_obj, "existing guild was not used as target for update!"
+        assert old is cloned_guild_obj, "existing guild did not get the old state copied and returned!"
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+    @pytest.mark.xfail(reason="WIP")
     def test_update_member_when_guild_does_not_exist_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        registry.get_member_by_id = mock.MagicMock(return_value=None, spec_set=registry.get_member_by_id)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        diff = registry.update_member("1234", [], None, registry.get_member_by_id)
+
+        assert diff is None
+
+    @pytest.mark.xfail(reason="WIP")
     def test_update_member_when_existing_member_does_not_exist_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        guild_obj = _helpers.mock_model(guilds.Guild, id=124, channels={}, roles={}, members={})
+        registry._guilds = {guild_obj.id: guild_obj}
+        member_obj = _helpers.mock_model(members.Member, id=1234)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        diff = registry.update_member(guild_obj.id, guild_obj.roles, None, member_obj.id)
+
+        assert diff is None
+
+    # This should be done, but just in case
+    @pytest.mark.xfail(reason="WIP")
     def test_update_member_when_existing_member_exists_returns_old_state_copy_and_updated_new_state(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        guild_obj = _helpers.mock_model(guilds.Guild, id=124)
+        registry._guilds = {guild_obj.id: guild_obj}
+        original_member_obj = _helpers.mock_model(members.Member, id=123)
+        cloned_member_obj = _helpers.mock_model(members.Member, id=123)
+        original_member_obj.copy = mock.MagicMock(spec_set=original_member_obj.copy, return_value=cloned_member_obj)
+        guild_obj.members = {original_member_obj.id: original_member_obj}
+
+        old, new = registry.update_member(guild_obj.id, guild_obj.roles, None, original_member_obj.id)
+
+        assert old is not None
+        assert new is not None
+
+        assert new is original_member_obj, "existing member was not used as target for update!"
+        assert old is cloned_member_obj, "existing member did not get the old state copied and returned!"
 
     @pytest.mark.xfail(reason="Not yet implemented")
     def test_update_member_presence_when_guild_does_not_exist_returns_None(
