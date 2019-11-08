@@ -23,9 +23,9 @@ from __future__ import annotations
 
 import dataclasses
 
-from hikari.core.internal import state_registry
+from hikari import state_registry
 from hikari.core.models import base
-from hikari.core.utils import auto_repr
+from hikari.internal_utilities import auto_repr
 
 
 @dataclasses.dataclass()

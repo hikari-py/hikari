@@ -66,7 +66,6 @@ else:
 with open(os.path.join(os.path.dirname(__name__), "graphviz_hacks.py")) as fp:
     exec(fp.read(), globals(), locals())  # nosec
 
-
 templates_path = ["_templates"]
 exclude_patterns = []
 
@@ -184,7 +183,6 @@ inheritance_node_attrs = dict(
 inheritance_edge_attrs = dict(color='"#772953"', arrowhead="onormal", arrowsize=1)
 
 graphviz_output_format = "svg"
-
 
 # -- Epilog to inject into each page... ---------------------------------------------
 

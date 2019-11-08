@@ -30,11 +30,11 @@ import weakref
 from hikari.core.models import base
 from hikari.core.models import colors
 from hikari.core.models import media
-from hikari.core.utils import assertions
-from hikari.core.utils import auto_repr
-from hikari.core.utils import custom_types
-from hikari.core.utils import date_utils
-from hikari.core.utils import transform
+from hikari.internal_utilities import assertions
+from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import transformations
 
 
 class EmbedPart(base.HikariModel, abc.ABC):
@@ -474,9 +474,9 @@ class BaseEmbed:
         # TODO: potentially add the 6k char limit checks RE http://github.com/discordapp/discord-api-docs/issues/1173
 
         d = dict_factory()
-        transform.put_if_not_none(d, "title", self.title)
-        transform.put_if_not_none(d, "description", self.description)
-        transform.put_if_not_none(d, "url", self.url)
+        transformations.put_if_not_none(d, "title", self.title)
+        transformations.put_if_not_none(d, "description", self.description)
+        transformations.put_if_not_none(d, "url", self.url)
         d["type"] = self.type
 
         if self.timestamp is not None:
@@ -497,7 +497,7 @@ class BaseEmbed:
         return d
 
     @classmethod
-    def from_dict(cls: typing.Type[EmbedT], payload: custom_types.DiscordObject) -> EmbedT:
+    def from_dict(cls: typing.Type[EmbedT], payload: data_structures.DiscordObjectT) -> EmbedT:
         """
         Parses an instance of this embed type from a raw Discord payload.
 
@@ -506,7 +506,7 @@ class BaseEmbed:
         """
         timestamp = payload.get("timestamp")
         if timestamp is not None:
-            timestamp = date_utils.parse_iso_8601_ts(timestamp)
+            timestamp = date_helpers.parse_iso_8601_ts(timestamp)
 
         embed = cls(
             title=payload.get("title"),

@@ -29,8 +29,8 @@ from . import guilds
 from . import integrations
 from . import invites
 from . import media
-from . import messages
 from . import members
+from . import messages
 from . import overwrites
 from . import permissions
 from . import presences

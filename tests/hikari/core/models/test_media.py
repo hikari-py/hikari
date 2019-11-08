@@ -16,11 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-
 import asynctest
 import pytest
 
 from hikari.core.models import media
+from hikari.internal_utilities import io_helpers
+from tests.hikari import _helpers
 from tests.hikari.core.testdata import *
 
 
@@ -101,18 +102,6 @@ class TestAttachment:
 
     @pytest.mark.asyncio
     async def test_Attachment_save(self):
-        attachment = media.Attachment(
-            {
-                "id": "123456",
-                "filename": "doggo.png",
-                "url": "bork.com",
-                "proxy_url": "we-are-watching-you.nsa.bork.com",
-                "size": 69,
-                "width": 1920,
-                "height": 1080,
-            }
-        )
-
         chunks = 1000
         i = 0
 
@@ -146,10 +135,21 @@ class TestAttachment:
         aiofiles_obj.__aexit__ = __aexit__
         aiohttp_resp_obj.__aexit__ = __aexit__
 
-        fake_file = "test.file"
+        with _helpers.mock_patch("aiofiles.open", return_value=aiofiles_obj) as aiofiles_open:
+            with _helpers.mock_patch("aiohttp.request", return_value=aiohttp_resp_obj) as aiohttp_request:
+                attachment = media.Attachment(
+                    {
+                        "id": "123456",
+                        "filename": "doggo.png",
+                        "url": "bork.com",
+                        "proxy_url": "we-are-watching-you.nsa.bork.com",
+                        "size": 69,
+                        "width": 1920,
+                        "height": 1080,
+                    }
+                )
 
-        with asynctest.patch("aiofiles.open", return_value=aiofiles_obj) as aiofiles_open:
-            with asynctest.patch("aiohttp.request", return_value=aiohttp_resp_obj) as aiohttp_request:
+                fake_file = "test.file"
                 await attachment.save(fake_file)
 
                 aiohttp_request.assert_called_once_with("get", attachment.url)
@@ -160,18 +160,6 @@ class TestAttachment:
 
     @pytest.mark.asyncio
     async def test_Attachment_read(self):
-        attachment = media.Attachment(
-            {
-                "id": "123456",
-                "filename": "doggo.png",
-                "url": "bork.com",
-                "proxy_url": "we-are-watching-you.nsa.bork.com",
-                "size": 69,
-                "width": 1920,
-                "height": 1080,
-            }
-        )
-
         async def __aenter__(self):
             return self
 
@@ -186,7 +174,19 @@ class TestAttachment:
         aiohttp_resp_obj.__aenter__ = __aenter__
         aiohttp_resp_obj.__aexit__ = __aexit__
 
-        with asynctest.patch("aiohttp.request", return_value=aiohttp_resp_obj) as aiohttp_request:
+        with _helpers.mock_patch("aiohttp.request", return_value=aiohttp_resp_obj) as aiohttp_request:
+            attachment = media.Attachment(
+                {
+                    "id": "123456",
+                    "filename": "doggo.png",
+                    "url": "bork.com",
+                    "proxy_url": "we-are-watching-you.nsa.bork.com",
+                    "size": 69,
+                    "width": 1920,
+                    "height": 1080,
+                }
+            )
+
             actual_result = await attachment.read()
 
             aiohttp_request.assert_called_once_with("get", attachment.url)
@@ -207,7 +207,7 @@ async def test_InMemoryFile_open():
         async def __aexit__(self, exc_type, exc_val, exc_tb):
             pass
 
-    with asynctest.patch("hikari.core.utils.io_utils.make_resource_seekable", return_value=ContextManager()) as mrs:
+    with _helpers.mock_patch(io_helpers.make_resource_seekable, return_value=ContextManager()) as mrs:
         async with file.open() as fp:
             assert isinstance(fp, ContextManager)
         mrs.assert_called_once_with("this is data")
@@ -216,8 +216,6 @@ async def test_InMemoryFile_open():
 @pytest.mark.model
 @pytest.mark.asyncio
 async def test_File_open():
-    file = media.File("foo")
-
     class ContextManager:
         async def __aenter__(self):
             return self
@@ -225,9 +223,12 @@ async def test_File_open():
         async def __aexit__(self, exc_type, exc_val, exc_tb):
             pass
 
-    with asynctest.patch("aiofiles.open", return_value=ContextManager()) as aiofiles_open:
+    with _helpers.mock_patch("aiofiles.open", return_value=ContextManager()) as aiofiles_open:
+        file = media.File("foo")
+
         async with file.open() as fp:
             assert isinstance(fp, ContextManager)
+
         aiofiles_open.assert_called_once_with("foo")
 
 

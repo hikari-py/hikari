@@ -25,12 +25,14 @@ import dataclasses
 import datetime
 import typing
 
-from hikari.core.internal import state_registry
-from hikari.core.models import channels, base
+from hikari import state_registry
+from hikari.core.models import base
+from hikari.core.models import channels
 from hikari.core.models import guilds
 from hikari.core.models import users
-from hikari.core.utils import date_utils, auto_repr
-from hikari.core.utils import transform
+from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import transformations
 
 
 @dataclasses.dataclass()
@@ -76,8 +78,8 @@ class Invite(base.HikariModel):
         self.guild = global_state.parse_guild(payload.get("guild"))
         # noinspection PyTypeChecker
         self.channel = global_state.parse_channel(payload.get("channel"))
-        self.approximate_presence_count = transform.nullable_cast(payload.get("approximate_presence_count"), int)
-        self.approximate_member_count = transform.nullable_cast(payload.get("approximate_member_count"), int)
+        self.approximate_presence_count = transformations.nullable_cast(payload.get("approximate_presence_count"), int)
+        self.approximate_member_count = transformations.nullable_cast(payload.get("approximate_member_count"), int)
 
 
 @dataclasses.dataclass()
@@ -134,7 +136,7 @@ class InviteMetadata(base.HikariModel):
         self.max_uses = int(payload["max_uses"])
         self.max_age = int(payload["max_age"])
         self.temporary = payload.get("temporary", False)
-        self.created_at = date_utils.parse_iso_8601_ts(payload["created_at"])
+        self.created_at = date_helpers.parse_iso_8601_ts(payload["created_at"])
         self.revoked = payload.get("revoked", False)
 
 

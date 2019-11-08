@@ -26,7 +26,7 @@ import datetime
 import enum
 import typing
 
-from hikari.core.internal import state_registry
+from hikari import state_registry
 from hikari.core.models import base
 from hikari.core.models import channels
 from hikari.core.models import emojis
@@ -34,8 +34,10 @@ from hikari.core.models import members
 from hikari.core.models import permissions
 from hikari.core.models import roles
 from hikari.core.models import users
-from hikari.core.utils import date_utils, auto_repr, custom_types
-from hikari.core.utils import transform
+from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import transformations
 
 
 @dataclasses.dataclass()
@@ -242,57 +244,57 @@ class Guild(base.Snowflake, base.HikariModel):
     __repr__ = auto_repr.repr_of("id", "name", "unavailable", "large", "member_count")
 
     def __init__(self, global_state, payload):
-        self.id = transform.nullable_cast(payload.get("id"), int)
+        self.id = transformations.nullable_cast(payload.get("id"), int)
         self._state = global_state
         self.update_state(payload)
 
     def update_state(self, payload):
-        self._afk_channel_id = transform.nullable_cast(payload.get("afk_channel_id"), int)
-        self._owner_id = transform.nullable_cast(payload.get("owner_id"), int)
+        self._afk_channel_id = transformations.nullable_cast(payload.get("afk_channel_id"), int)
+        self._owner_id = transformations.nullable_cast(payload.get("owner_id"), int)
         self._voice_region = payload.get("region")
-        self._system_channel_id = transform.nullable_cast(payload.get("system_channel_id"), int)
-        self.creator_application_id = transform.nullable_cast(payload.get("application_id"), int)
+        self._system_channel_id = transformations.nullable_cast(payload.get("system_channel_id"), int)
+        self.creator_application_id = transformations.nullable_cast(payload.get("application_id"), int)
         self.name = payload.get("name")
         self.icon_hash = payload.get("icon")
         self.splash_hash = payload.get("splash")
         self.afk_timeout = payload.get("afk_timeout", float("inf"))
-        self.verification_level = transform.try_cast(payload.get("verification_level"), VerificationLevel)
+        self.verification_level = transformations.try_cast(payload.get("verification_level"), VerificationLevel)
         self.preferred_locale = payload.get("preferred_locale")
-        self.message_notification_level = transform.try_cast(
+        self.message_notification_level = transformations.try_cast(
             payload.get("default_message_notifications"), NotificationLevel
         )
-        self.explicit_content_filter_level = transform.try_cast(
+        self.explicit_content_filter_level = transformations.try_cast(
             payload.get("explicit_content_filter"), ExplicitContentFilterLevel
         )
-        self.roles = transform.id_map(
-            self._state.parse_role(r, self.id) for r in payload.get("roles", custom_types.EMPTY_SEQUENCE)
+        self.roles = transformations.id_map(
+            self._state.parse_role(r, self.id) for r in payload.get("roles", data_structures.EMPTY_SEQUENCE)
         )
-        self.emojis = transform.id_map(
-            self._state.parse_emoji(e, self.id) for e in payload.get("emojis", custom_types.EMPTY_SEQUENCE)
+        self.emojis = transformations.id_map(
+            self._state.parse_emoji(e, self.id) for e in payload.get("emojis", data_structures.EMPTY_SEQUENCE)
         )
         self.features = {
-            transform.try_cast(f, Feature.from_discord_name)
-            for f in payload.get("features", custom_types.EMPTY_SEQUENCE)
+            transformations.try_cast(f, Feature.from_discord_name)
+            for f in payload.get("features", data_structures.EMPTY_SEQUENCE)
         }
-        self.member_count = transform.nullable_cast(payload.get("member_count"), int)
-        self.mfa_level = transform.try_cast(payload.get("mfa_level"), MFALevel)
+        self.member_count = transformations.nullable_cast(payload.get("member_count"), int)
+        self.mfa_level = transformations.try_cast(payload.get("mfa_level"), MFALevel)
         self.my_permissions = permissions.Permission(payload.get("permissions", 0))
-        self.joined_at = transform.nullable_cast(payload.get("joined_at"), date_utils.parse_iso_8601_ts)
+        self.joined_at = transformations.nullable_cast(payload.get("joined_at"), date_helpers.parse_iso_8601_ts)
         self.large = payload.get("large", False)
         self.unavailable = payload.get("unavailable", False)
-        self.members = transform.id_map(
-            self._state.parse_member(m, self.id) for m in payload.get("members", custom_types.EMPTY_SEQUENCE)
+        self.members = transformations.id_map(
+            self._state.parse_member(m, self.id) for m in payload.get("members", data_structures.EMPTY_SEQUENCE)
         )
-        self.channels = transform.id_map(
-            self._state.parse_channel(c, self.id) for c in payload.get("channels", custom_types.EMPTY_SEQUENCE)
+        self.channels = transformations.id_map(
+            self._state.parse_channel(c, self.id) for c in payload.get("channels", data_structures.EMPTY_SEQUENCE)
         )
         self.max_members = payload.get("max_members", 0)
         self.vanity_url_code = payload.get("vanity_url_code")
         self.description = payload.get("description")
         self.banner_hash = payload.get("banner")
-        self.premium_tier = transform.try_cast(payload.get("premium_tier"), PremiumTier)
+        self.premium_tier = transformations.try_cast(payload.get("premium_tier"), PremiumTier)
         self.premium_subscription_count = payload.get("premium_subscription_count", 0)
-        self.system_channel_flags = transform.try_cast(payload.get("system_channel_flags"), SystemChannelFlag)
+        self.system_channel_flags = transformations.try_cast(payload.get("system_channel_flags"), SystemChannelFlag)
 
 
 class SystemChannelFlag(enum.IntFlag):

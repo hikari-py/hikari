@@ -24,10 +24,11 @@ from __future__ import annotations
 import dataclasses
 import datetime
 
-from hikari.core.internal import state_registry
+from hikari import state_registry
 from hikari.core.models import base
 from hikari.core.models import users
-from hikari.core.utils import date_utils, auto_repr
+from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import date_helpers
 
 
 @dataclasses.dataclass()
@@ -139,7 +140,7 @@ class Integration(base.HikariModel, base.Snowflake):
         self.expire_grace_period = int(payload["expire_grace_period"])
         self.user = global_state.parse_user(payload["user"])
         self.account = IntegrationAccount(global_state, payload["account"])
-        self.synced_at = date_utils.parse_iso_8601_ts(payload["synced_at"])
+        self.synced_at = date_helpers.parse_iso_8601_ts(payload["synced_at"])
 
 
 __all__ = ["Integration", "IntegrationAccount"]

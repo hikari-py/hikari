@@ -21,7 +21,7 @@ from unittest import mock
 
 import pytest
 
-from hikari.core.internal import state_registry
+from hikari import state_registry
 from hikari.core.models import integrations
 
 

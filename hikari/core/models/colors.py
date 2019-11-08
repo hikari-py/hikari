@@ -24,7 +24,7 @@ from __future__ import annotations
 import string
 import typing
 
-from hikari.core.utils import assertions
+from hikari.internal_utilities import assertions
 
 
 class Color(int, typing.SupportsInt):

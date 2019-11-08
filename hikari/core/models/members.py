@@ -28,11 +28,11 @@ import typing
 from hikari.core.models import guilds
 from hikari.core.models import presences
 from hikari.core.models import users
-from hikari.core.utils import auto_repr
-from hikari.core.utils import custom_types
-from hikari.core.utils import date_utils
-from hikari.core.utils import delegate
-from hikari.core.utils import transform
+from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import delegate
+from hikari.internal_utilities import transformations
 
 
 @delegate.delegate_to(users.User, "_user")
@@ -79,9 +79,9 @@ class Member(users.User):
     def __init__(self, global_state, guild_id, payload):
         self._user = global_state.parse_user(payload["user"])
         self._guild_id = guild_id
-        self.joined_at = date_utils.parse_iso_8601_ts(payload.get("joined_at"))
-        self.premium_since = transform.nullable_cast(payload.get("premium_since"), date_utils.parse_iso_8601_ts)
-        self.update_state(payload.get("role_ids", custom_types.EMPTY_SEQUENCE), payload.get("nick"))
+        self.joined_at = date_helpers.parse_iso_8601_ts(payload.get("joined_at"))
+        self.premium_since = transformations.nullable_cast(payload.get("premium_since"), date_helpers.parse_iso_8601_ts)
+        self.update_state(payload.get("role_ids", data_structures.EMPTY_SEQUENCE), payload.get("nick"))
 
     # noinspection PyMethodOverriding
     def update_state(self, role_ids, nick) -> None:

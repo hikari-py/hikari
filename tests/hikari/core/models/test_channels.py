@@ -20,9 +20,10 @@ from unittest import mock
 
 import pytest
 
-from hikari.core.internal import state_registry
+from hikari import state_registry
 from hikari.core.models import channels
 from hikari.core.models import guilds
+from tests.hikari import _helpers
 
 
 @pytest.mark.model
@@ -295,14 +296,12 @@ def test_GuildStoreChannel():
     ],
 )
 def test_channel_from_dict_success_case(type_field, expected_class):
-    fqn = expected_class.__module__ + "." + expected_class.__qualname__ + ".__init__"
-
     args = NotImplemented, {"type": type_field}
     is_dm = expected_class.is_dm
     if not is_dm:
         args[1]["guild_id"] = "1234"
 
-    with mock.patch(fqn, wraps=expected_class, return_value=None) as m:
+    with _helpers.mock_patch(expected_class.__init__, wraps=expected_class, return_value=None) as m:
         channels.channel_from_dict(*args)
         m.assert_called_once_with(*args)
 
