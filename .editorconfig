@@ -26,6 +26,9 @@ ij_json_spaces_within_braces = false
 ij_json_spaces_within_brackets = false
 ij_json_wrap_long_lines = false
 
+[*.properties]
+ij_properties_align_group_field_declarations = false
+
 [.editorconfig]
 ij_editorconfig_align_group_field_declarations = false
 ij_editorconfig_space_after_colon = false
