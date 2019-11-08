@@ -26,6 +26,9 @@ ij_json_spaces_within_braces = false
 ij_json_spaces_within_brackets = false
 ij_json_wrap_long_lines = false
 
+[*.properties]
+ij_properties_align_group_field_declarations = false
+
 [.editorconfig]
 ij_editorconfig_align_group_field_declarations = false
 ij_editorconfig_space_after_colon = false
@@ -66,6 +69,7 @@ ij_visual_guides = 80,100,120
 ij_wrap_on_typing = true
 
 [{*.pyw,*.py}]
+ij_continuation_indent_size = 4
 ij_visual_guides = 80,100,120
 ij_python_align_collections_and_comprehensions = true
 ij_python_align_multiline_imports = false
@@ -116,8 +120,8 @@ ij_python_space_within_empty_method_parentheses = false
 ij_python_spaces_around_additive_operators = true
 ij_python_spaces_around_assignment_operators = true
 ij_python_spaces_around_bitwise_operators = true
-ij_python_spaces_around_eq_in_keyword_argument = true
-ij_python_spaces_around_eq_in_named_parameter = true
+ij_python_spaces_around_eq_in_keyword_argument = false
+ij_python_spaces_around_eq_in_named_parameter = false
 ij_python_spaces_around_equality_operators = true
 ij_python_spaces_around_multiplicative_operators = true
 ij_python_spaces_around_power_operator = true
@@ -137,11 +141,11 @@ ij_xml_keep_indents_on_empty_lines = false
 ij_xml_line_comment_at_first_column = true
 
 [{*.zsh,*.bash,*.sh}]
-ij_shell_binary_ops_start_line = false
+ij_shell_binary_ops_start_line = true
 ij_shell_keep_column_alignment_padding = false
 ij_shell_minify_program = false
-ij_shell_redirect_followed_by_space = false
-ij_shell_switch_cases_indented = false
+ij_shell_redirect_followed_by_space = true
+ij_shell_switch_cases_indented = true
 
 [{test_state_registry_impl,*.yml,*.yaml}]
 ij_continuation_indent_size = 2
