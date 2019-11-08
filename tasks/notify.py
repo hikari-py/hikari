@@ -28,12 +28,12 @@ import requests
 try:
     VERSION = sys.argv[1]
     NAME = sys.argv[2]
-    DEPLOYMENT_HOST = sys.argv[3]
+    DEPLOYMENT_HOST = "https://pypi.org"
     WEBHOOK_URL = os.environ["RELEASE_WEBHOOK"]
     ENVIRONMENT = os.environ["RELEASE_WEBHOOK_NAME"]
     COLOUR = os.environ["RELEASE_WEBHOOK_COLOUR"]
     DESCRIPTION = os.environ["RELEASE_WEBHOOK_DESCRIPTION"]
-    BRIEF = f"**[{VERSION}] New {ENVIRONMENT} deployment!**"
+    BRIEF = f"[{VERSION}] New {ENVIRONMENT} deployment!"
     AUTHOR = os.environ["REPO_AUTHOR"]
 
     requests.post(
