@@ -35,9 +35,9 @@ from hikari.internal_utilities import delegate
 from hikari.internal_utilities import transformations
 
 
-@delegate.delegate_to(users.User, "_user")
+@delegate.delegate_to(users.BaseUser, "_user")
 @dataclasses.dataclass()
-class Member(users.User):
+class Member(users.BaseUser):
     """
     A specialization of a user which provides implementation details for a specific guild.
 
