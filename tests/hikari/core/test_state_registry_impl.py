@@ -1148,23 +1148,68 @@ class TestStateRegistryImpl:
 
         new.update_state.assert_called_with([role_1], None)
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_update_member_presence_when_guild_does_not_exist_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        registry.get_guild_by_id = mock.MagicMock(return_value=None, spec_set=registry.get_guild_by_id)
+        presence = _helpers.mock_model(presences.Presence)
+        payload = {
+            "user": {"id": "339767912841871360"},
+            "status": "online",
+            "game": None,
+            "client_status": {"desktop": "online"},
+            "activities": [],
+        }
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        diff = registry.update_member_presence(123, 456, payload)
+
+        assert diff is None
+
     def test_update_member_presence_when_existing_member_does_not_exist_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={})
+        registry._guilds = {guild_obj.id: guild_obj}
+        member_obj = _helpers.mock_model(members.Member, id=456)
+        guild_obj.members = {}
+        presence = _helpers.mock_model(presences.Presence)
+        payload = {
+            "user": {"id": "339767912841871360"},
+            "status": "online",
+            "game": None,
+            "client_status": {"desktop": "online"},
+            "activities": [],
+        }
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        diff = registry.update_member_presence(guild_obj.id, member_obj.id, payload)
+
+        assert diff is None
+
     def test_update_member_presence_when_existing_member_exists_returns_old_state_copy_and_updated_new_state(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        raise NotImplementedError
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123)
+        registry._guilds = {guild_obj.id: guild_obj}
+        presence = _helpers.mock_model(presences.Presence)
+        original_member_obj = _helpers.mock_model(members.Member, id=456, presence=presence)
+        cloned_member_obj = _helpers.mock_model(members.Member, id=456, presence=presence)
+        original_member_obj.copy = mock.MagicMock(spec_set=original_member_obj.copy, return_value=cloned_member_obj)
+        guild_obj.members = {original_member_obj.id: original_member_obj}
+        payload = {
+            "user": {"id": "339767912841871360"},
+            "status": "online",
+            "game": None,
+            "client_status": {"desktop": "online"},
+            "activities": [],
+        }
+
+        member_obj, old, new = registry.update_member_presence(guild_obj.id, original_member_obj.id, payload)
+
+        assert old is not None
+        assert new is not None
+
+        assert new is original_member_obj.presence, "existing presence was not used as target for update!"
+        assert old is cloned_member_obj.presence, "existing presence did not get the old state copied and returned!"
 
     def test_update_message_when_existing_message_uncached_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
@@ -1192,7 +1237,6 @@ class TestStateRegistryImpl:
 
         assert new is original_message_obj, "existing message was not used as target for update!"
         assert old is cloned_message_obj, "existing message did not get the old state copied and returned!"
-
 
     def test_update_role_when_existing_role_does_not_exist_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
