@@ -111,7 +111,7 @@ class GuildChannel(Channel, abc.ABC):
 
     #: A sequence t of permission overwrites for this channel.
     #:
-    #: :type: :class:`typing.Sequence` of :attr:`hikari.core.models.overwrite.Overwrite`
+    #: :type: :class:`typing.Sequence` of :attr:`hikari.core.models.overwrites.Overwrite`
     permission_overwrites: typing.Sequence[overwrites.Overwrite]
 
     #: The name of the channel.
@@ -203,7 +203,7 @@ class DMChannel(TextChannel, type=1):
 
     #: Sequence of recipients in the DM chat.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.user.User`
+    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.users.User`
     recipients: typing.Sequence[users.User]
 
     __repr__ = auto_repr.repr_of("id", "name")
