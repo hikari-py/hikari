@@ -296,7 +296,7 @@ class InMemoryFile(AbstractFile):
 
     #: A bytes-like object containing the data to upload.
     #:
-    #: :type: :class:`hikari.core.utils.io_utils.BytesLikeT`
+    #: :type: :class:`hikari.internal_utilities.io_helpers.BytesLikeT`
     data: io_helpers.BytesLikeT
 
     def open(self, *args, **kwargs):
