@@ -48,12 +48,12 @@ class Reaction(base.HikariModel):
 
     #: The emoji used for the reaction.
     #:
-    #: :type: :class:`hikari.core.models.emoji.AbstractEmoji`
+    #: :type: :class:`hikari.core.models.emojis.AbstractEmoji`
     emoji: _emoji.Emoji
 
     #: The message that was reacted on.
     #:
-    #: :type: :class:`hikari.core.models.message.Message`
+    #: :type: :class:`hikari.core.models.messages.Message`
     message: _message.Message
 
     __repr__ = auto_repr.repr_of("count", "emoji", "message.id")

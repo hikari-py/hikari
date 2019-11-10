@@ -128,7 +128,7 @@ class GuildEmoji(UnknownEmoji):
 
     #: The user who made the object, if available.
     #:
-    #: :type: :class:`hikari.core.models.user.User` or `None`
+    #: :type: :class:`hikari.core.models.users.User` or `None`
     user: typing.Optional[user.User]
 
     #: `True` if the emoji is managed as part of an integration with Twitch, `False` otherwise.

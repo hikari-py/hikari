@@ -73,17 +73,17 @@ class Overwrite(base.HikariModel, base.Snowflake):
 
     #: The type of entity that was changed.
     #:
-    #: :type: :class:`hikari.core.models.overwrite.OverwriteEntityType`
+    #: :type: :class:`hikari.core.models.overwrites.OverwriteEntityType`
     type: OverwriteEntityType
 
     #: The bitfield of permissions explicitly allowed.
     #:
-    #: :type: :class:`hikari.core.models.permission.Permission`
+    #: :type: :class:`hikari.core.models.permissions.Permission`
     allow: permissions.Permission
 
     #: The bitfield of permissions explicitly denied.
     #:
-    #: :type: :class:`hikari.core.models.permission.Permission`
+    #: :type: :class:`hikari.core.models.permissions.Permission`
     deny: permissions.Permission
 
     __repr__ = auto_repr.repr_of("id", "type", "allow", "deny", "default")
