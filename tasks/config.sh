@@ -3,8 +3,8 @@
 echo "===============CONFIGURATION==============="
 
 function do_export() {
-  echo "exported $*"
-  export "$*"
+    echo "exported $*"
+    export "$*"
 }
 
 do_export CURRENT_VERSION_FILE="pyproject.toml"
@@ -32,7 +32,7 @@ do_export COMMIT_REF="${CI_COMMIT_REF_NAME}"
 
 do_export POETRY_REPOSITORY_PROPERTY_NAME="chosen_repo"
 
-cat > /dev/null <<EOF
+cat > /dev/null << EOF
   SECURE VARIABLES TO DEFINE IN CI
   ================================
 

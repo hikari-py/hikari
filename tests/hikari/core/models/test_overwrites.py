@@ -23,7 +23,6 @@ import pytest
 import hikari.core.models.members
 from hikari.core.models import overwrites
 from hikari.core.models import permissions
-from hikari.core.models import users
 
 
 @pytest.mark.model

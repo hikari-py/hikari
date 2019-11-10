@@ -28,26 +28,30 @@ import requests
 try:
     VERSION = sys.argv[1]
     NAME = sys.argv[2]
+    DEPLOYMENT_HOST = "https://pypi.org"
     WEBHOOK_URL = os.environ["RELEASE_WEBHOOK"]
     ENVIRONMENT = os.environ["RELEASE_WEBHOOK_NAME"]
     COLOUR = os.environ["RELEASE_WEBHOOK_COLOUR"]
     DESCRIPTION = os.environ["RELEASE_WEBHOOK_DESCRIPTION"]
-    BRIEF = f"**[{VERSION}] New {ENVIRONMENT} deployment!**"
+    BRIEF = f"[{VERSION}] New {ENVIRONMENT} deployment!"
     AUTHOR = os.environ["REPO_AUTHOR"]
 
     requests.post(
         WEBHOOK_URL,
-        json={
+        json = {
             "embeds": [
                 {
                     "title": NAME,
-                    "footer": {"text": f"{NAME} v{VERSION} has just been put into {ENVIRONMENT}."},
+                    "footer": {
+                        "text": BRIEF + "\n\n" + DESCRIPTION,
+                    },
                     "color": int(COLOUR, 16),
                     "author": {"name": AUTHOR},
-                    "description": BRIEF + "\n\n" + DESCRIPTION,
+                    "description": f"[{NAME} v{VERSION}]({DEPLOYMENT_HOST}/project/{NAME}/{VERSION}) has "
+                                   f"just been put into {ENVIRONMENT}."
                 }
             ]
         },
     )
-except BaseException:
-    traceback.print_exc()
+except BaseException as ex:
+    traceback.print_exception(type(ex), ex, ex.__traceback__)

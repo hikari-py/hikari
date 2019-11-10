@@ -20,9 +20,9 @@ import datetime
 
 import pytest
 
-from hikari.core.models import colors as _color, media
+from hikari.core.models import colors as _color
 from hikari.core.models import embeds as _embed
-from hikari.core.utils import unspecified
+from hikari.core.models import media
 
 
 @pytest.fixture
@@ -34,6 +34,7 @@ def embed():
 def test_EmbedPart_delattr_sets_to_None():
     class Impl(_embed.EmbedPart):
         __slots__ = ("a", "b", "c")
+
         def __init__(self, a, b, c):
             super().__init__()
             self.a = a
@@ -303,3 +304,17 @@ class TestEmbed:
         embed._author = object()
         del embed.author
         assert embed._author is None
+
+    def test_embed_may_not_exceed_6k_chars_in_size(self, embed):
+        embed.set_author(name="a" * 120)
+        embed.description = "b" * 2000
+        embed.title = "c" * 100
+        embed.set_footer(text="d" * 2000)
+        for i in range(20):
+            embed.add_field(name="e" * 120, value="f" * 1000)
+
+        try:
+            embed.to_dict()
+            assert False, "expected failure but never failed"
+        except ValueError:
+            assert True, "expected failure"

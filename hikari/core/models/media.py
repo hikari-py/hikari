@@ -35,8 +35,9 @@ import aiofiles
 import aiohttp
 
 from hikari.core.models import base
-from hikari.core.utils import auto_repr, io_utils
-from hikari.core.utils import transform
+from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import io_helpers
+from hikari.internal_utilities import transformations
 
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
@@ -171,8 +172,8 @@ class Attachment(base.HikariModel, base.Snowflake):
         self.size = int(payload["size"])
         self.url = payload["url"]
         self.proxy_url = payload["proxy_url"]
-        self.width = transform.nullable_cast(payload.get("width"), int)
-        self.height = transform.nullable_cast(payload.get("height"), int)
+        self.width = transformations.nullable_cast(payload.get("width"), int)
+        self.height = transformations.nullable_cast(payload.get("height"), int)
 
     async def read(self) -> typing.Union[bytes]:
         async with aiohttp.request("get", self.url) as resp:
@@ -296,7 +297,7 @@ class InMemoryFile(AbstractFile):
     #: A bytes-like object containing the data to upload.
     #:
     #: :type: :class:`hikari.core.utils.io_utils.BytesLikeT`
-    data: io_utils.BytesLikeT
+    data: io_helpers.BytesLikeT
 
     def open(self, *args, **kwargs):
         """
@@ -309,7 +310,7 @@ class InMemoryFile(AbstractFile):
 
               This means that passing the `mode` will have no effect on the return type.
         """
-        return io_utils.make_resource_seekable(self.data)
+        return io_helpers.make_resource_seekable(self.data)
 
     def __hash__(self):
         return hash(self.name)

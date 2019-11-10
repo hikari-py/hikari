@@ -26,9 +26,9 @@ import dataclasses
 import datetime
 import typing
 
-from hikari.core.utils import assertions
-from hikari.core.utils import custom_types
-from hikari.core.utils import date_utils
+from hikari.internal_utilities import assertions
+from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import date_helpers
 
 
 @assertions.assert_is_mixin
@@ -78,7 +78,7 @@ class Snowflake:
     def created_at(self) -> datetime.datetime:
         """When the object was created."""
         epoch = self.id >> 22
-        return date_utils.discord_epoch_to_datetime(epoch)
+        return date_helpers.discord_epoch_to_datetime(epoch)
 
     @property
     def internal_worker_id(self) -> int:
@@ -154,8 +154,8 @@ class HikariModel:
         slots = set()
 
         for base in cls.mro():
-            next_slots = getattr(base, "__slots__", custom_types.EMPTY_COLLECTION)
-            next_refs = getattr(base, "__copy_by_ref__", custom_types.EMPTY_COLLECTION)
+            next_slots = getattr(base, "__slots__", data_structures.EMPTY_COLLECTION)
+            next_refs = getattr(base, "__copy_by_ref__", data_structures.EMPTY_COLLECTION)
             for ref in next_refs:
                 copy_by_ref.add(ref)
             for slot in next_slots:
@@ -164,7 +164,7 @@ class HikariModel:
         cls.__copy_by_ref__ = tuple(copy_by_ref)
         cls.__all_slots__ = tuple(slots)
 
-    def update_state(self, payload: custom_types.DiscordObject) -> None:
+    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         """
         Updates the internal state of an existing instance of this object from a raw Discord payload.
         """

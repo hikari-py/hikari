@@ -25,12 +25,14 @@ import abc
 import dataclasses
 import typing
 
-from hikari.core.internal import state_registry
+from hikari import state_registry
 from hikari.core.models import base
 from hikari.core.models import guilds as _guild
 from hikari.core.models import overwrites
 from hikari.core.models import users
-from hikari.core.utils import transform, auto_repr, custom_types
+from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import transformations
 
 _channel_type_to_class = {}
 
@@ -60,7 +62,7 @@ class Channel(base.Snowflake, base.HikariModel, abc.ABC):
     #: :type: :class:`int`
     id: int
 
-    def __init__(self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject):
+    def __init__(self, global_state: state_registry.StateRegistry, payload: data_structures.DiscordObjectT):
         self._state = global_state
         self.id = int(payload["id"])
         self.update_state(payload)
@@ -71,7 +73,7 @@ class Channel(base.Snowflake, base.HikariModel, abc.ABC):
         cls.is_dm = "guild" not in cls.__qualname__.lower()
 
     @abc.abstractmethod
-    def update_state(self, payload: custom_types.DiscordObject) -> None:
+    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         ...
 
 
@@ -117,11 +119,11 @@ class GuildChannel(Channel, abc.ABC):
     #: :type: :class:`str`
     name: str
 
-    def __init__(self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject):
+    def __init__(self, global_state: state_registry.StateRegistry, payload: data_structures.DiscordObjectT):
         self._guild_id = int(payload["guild_id"])
         super().__init__(global_state, payload)
 
-    def update_state(self, payload: custom_types.DiscordObject) -> None:
+    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         self.position = int(payload["position"])
 
         overwrite_objs = []
@@ -132,7 +134,7 @@ class GuildChannel(Channel, abc.ABC):
 
         self.permission_overwrites = overwrite_objs
         self.name = payload["name"]
-        self._parent_id = transform.nullable_cast(payload.get("parent_id"), int)
+        self._parent_id = transformations.nullable_cast(payload.get("parent_id"), int)
 
     @property
     def guild(self) -> _guild.Guild:
@@ -175,15 +177,15 @@ class GuildTextChannel(GuildChannel, TextChannel, type=0):
 
     __repr__ = auto_repr.repr_of("id", "name", "guild.name", "nsfw")
 
-    def __init__(self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject):
+    def __init__(self, global_state: state_registry.StateRegistry, payload: data_structures.DiscordObjectT):
         super().__init__(global_state, payload)
 
-    def update_state(self, payload: custom_types.DiscordObject) -> None:
+    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
         self.nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
         self.rate_limit_per_user = payload.get("rate_limit_per_user", 0)
-        self.last_message_id = transform.nullable_cast(payload.get("last_message_id"), int)
+        self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
 
 
 @dataclasses.dataclass()
@@ -207,13 +209,13 @@ class DMChannel(TextChannel, type=1):
     __repr__ = auto_repr.repr_of("id", "name")
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject):
+    def __init__(self, global_state: state_registry.StateRegistry, payload: data_structures.DiscordObjectT):
         super().__init__(global_state, payload)
 
-    def update_state(self, payload: custom_types.DiscordObject) -> None:
+    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
-        self.last_message_id = transform.nullable_cast(payload.get("last_message_id"), int)
-        self.recipients = [self._state.parse_user(u) for u in payload.get("recipients", custom_types.EMPTY_SEQUENCE)]
+        self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
+        self.recipients = [self._state.parse_user(u) for u in payload.get("recipients", data_structures.EMPTY_SEQUENCE)]
 
 
 @dataclasses.dataclass()
@@ -239,10 +241,10 @@ class GuildVoiceChannel(GuildChannel, type=2):
     __repr__ = auto_repr.repr_of("id", "name", "guild.name", "bitrate", "user_limit")
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject):
+    def __init__(self, global_state: state_registry.StateRegistry, payload: data_structures.DiscordObjectT):
         super().__init__(global_state, payload)
 
-    def update_state(self, payload: custom_types.DiscordObject) -> None:
+    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
         self.bitrate = payload.get("bitrate") or None
         self.user_limit = payload.get("user_limit") or None
@@ -277,15 +279,15 @@ class GroupDMChannel(DMChannel, type=3):
     __repr__ = auto_repr.repr_of("id", "name")
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject) -> None:
+    def __init__(self, global_state: state_registry.StateRegistry, payload: data_structures.DiscordObjectT) -> None:
         super().__init__(global_state, payload)
 
-    def update_state(self, payload: custom_types.DiscordObject) -> None:
+    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
         self.icon_hash = payload.get("icon")
         self.name = payload.get("name")
-        self.owner_application_id = transform.nullable_cast(payload.get("application_id"), int)
-        self._owner_id = transform.nullable_cast(payload.get("owner_id"), int)
+        self.owner_application_id = transformations.nullable_cast(payload.get("application_id"), int)
+        self._owner_id = transformations.nullable_cast(payload.get("owner_id"), int)
 
 
 @dataclasses.dataclass(init=False)
@@ -325,14 +327,14 @@ class GuildNewsChannel(GuildChannel, type=5):
     __repr__ = auto_repr.repr_of("id", "name", "guild.name", "nsfw")
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state: state_registry.StateRegistry, payload: custom_types.DiscordObject) -> None:
+    def __init__(self, global_state: state_registry.StateRegistry, payload: data_structures.DiscordObjectT) -> None:
         super().__init__(global_state, payload)
 
-    def update_state(self, payload: custom_types.DiscordObject) -> None:
+    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
         self.nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
-        self.last_message_id = transform.nullable_cast(payload.get("last_message_id"), int)
+        self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
 
 
 @dataclasses.dataclass(init=False)
