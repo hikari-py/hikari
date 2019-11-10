@@ -1153,8 +1153,13 @@ class TestStateRegistryImpl:
     ):
         registry.get_guild_by_id = mock.MagicMock(return_value=None, spec_set=registry.get_guild_by_id)
         presence = _helpers.mock_model(presences.Presence)
-        payload = {"activities": presence.activities, "status": presence.status, "web_status": presence.web_status,
-                   "desktop_status": presence.desktop_status, "mobile_status": presence.mobile_status}
+        payload = {
+            "user": {"id": "339767912841871360"},
+            "status": "online",
+            "game": None,
+            "client_status": {"desktop": "online"},
+            "activities": [],
+        }
 
         diff = registry.update_member_presence(123, 456, payload)
 
@@ -1165,13 +1170,18 @@ class TestStateRegistryImpl:
     ):
         guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={})
         registry._guilds = {guild_obj.id: guild_obj}
-        guild_obj.members = {}
         member_obj = _helpers.mock_model(members.Member, id=456)
+        guild_obj.members = {}
         presence = _helpers.mock_model(presences.Presence)
-        payload = {"activities": presence.activities, "status": presence.status, "web_status": presence.web_status,
-                   "desktop_status": presence.desktop_status, "mobile_status": presence.mobile_status}
+        payload = {
+            "user": {"id": "339767912841871360"},
+            "status": "online",
+            "game": None,
+            "client_status": {"desktop": "online"},
+            "activities": [],
+        }
 
-        diff = registry.update_member_presence(guild_obj.id, 123, payload)
+        diff = registry.update_member_presence(guild_obj.id, member_obj.id, payload)
 
         assert diff is None
 
@@ -1185,8 +1195,13 @@ class TestStateRegistryImpl:
         cloned_member_obj = _helpers.mock_model(members.Member, id=456, presence=presence)
         original_member_obj.copy = mock.MagicMock(spec_set=original_member_obj.copy, return_value=cloned_member_obj)
         guild_obj.members = {original_member_obj.id: original_member_obj}
-        payload = {"activities": presence.activities, "status": presence.status, "web_status": presence.web_status,
-                   "desktop_status": presence.desktop_status, "mobile_status": presence.mobile_status}
+        payload = {
+            "user": {"id": "339767912841871360"},
+            "status": "online",
+            "game": None,
+            "client_status": {"desktop": "online"},
+            "activities": [],
+        }
 
         member_obj, old, new = registry.update_member_presence(guild_obj.id, original_member_obj.id, payload)
 
@@ -1222,7 +1237,6 @@ class TestStateRegistryImpl:
 
         assert new is original_message_obj, "existing message was not used as target for update!"
         assert old is cloned_message_obj, "existing message did not get the old state copied and returned!"
-
 
     def test_update_role_when_existing_role_does_not_exist_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
