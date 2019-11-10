@@ -20,8 +20,9 @@ from unittest import mock
 
 import pytest
 
-from hikari.core.internal import state_registry
-from hikari.core.models import emojis, guilds
+from hikari import state_registry
+from hikari.core.models import emojis
+from hikari.core.models import guilds
 
 
 @pytest.fixture

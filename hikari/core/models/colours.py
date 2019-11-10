@@ -21,5 +21,4 @@ Alias for the :mod:`hikari.core.models.colors` module.
 """
 from .colors import Color as Colour
 
-
 __all__ = ["Colour"]

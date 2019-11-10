@@ -25,8 +25,9 @@ import dataclasses
 import datetime
 import typing
 
-from hikari.core.utils import date_utils, custom_types
-from hikari.core.utils import transform
+from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import transformations
 
 
 @dataclasses.dataclass()
@@ -81,10 +82,12 @@ class Subscriber:
             id=payload["id"],
             email=payload["email"],
             mode=payload["mode"],
-            quarantined_at=transform.nullable_cast(payload.get("quarantined_at"), date_utils.parse_iso_8601_ts),
-            incident=transform.nullable_cast(payload.get("incident"), Incident.from_dict),
-            skip_confirmation_notification=transform.nullable_cast(payload.get("skip_confirmation_notification"), bool),
-            purge_at=transform.nullable_cast(payload.get("purge_at"), date_utils.parse_iso_8601_ts),
+            quarantined_at=transformations.nullable_cast(payload.get("quarantined_at"), date_helpers.parse_iso_8601_ts),
+            incident=transformations.nullable_cast(payload.get("incident"), Incident.from_dict),
+            skip_confirmation_notification=transformations.nullable_cast(
+                payload.get("skip_confirmation_notification"), bool
+            ),
+            purge_at=transformations.nullable_cast(payload.get("purge_at"), date_helpers.parse_iso_8601_ts),
         )
 
 
@@ -143,7 +146,7 @@ class Page:
             id=payload["id"],
             name=payload["name"],
             url=payload["url"],
-            updated_at=transform.nullable_cast(payload.get("updated_at"), date_utils.parse_iso_8601_ts),
+            updated_at=transformations.nullable_cast(payload.get("updated_at"), date_helpers.parse_iso_8601_ts),
         )
 
 
@@ -224,10 +227,10 @@ class Component:
         return Component(
             id=payload["id"],
             name=payload["name"],
-            created_at=transform.nullable_cast(payload.get("created_at"), date_utils.parse_iso_8601_ts),
+            created_at=transformations.nullable_cast(payload.get("created_at"), date_helpers.parse_iso_8601_ts),
             page_id=payload["page_id"],
-            position=transform.nullable_cast(payload.get("position"), int),
-            updated_at=transform.nullable_cast(payload.get("updated_at"), date_utils.parse_iso_8601_ts),
+            position=transformations.nullable_cast(payload.get("position"), int),
+            updated_at=transformations.nullable_cast(payload.get("updated_at"), date_helpers.parse_iso_8601_ts),
             description=payload.get("description"),
         )
 
@@ -312,11 +315,11 @@ class IncidentUpdate:
         return IncidentUpdate(
             id=payload["id"],
             body=payload["body"],
-            created_at=transform.nullable_cast(payload.get("created_at"), date_utils.parse_iso_8601_ts),
-            display_at=transform.nullable_cast(payload.get("display_at"), date_utils.parse_iso_8601_ts),
+            created_at=transformations.nullable_cast(payload.get("created_at"), date_helpers.parse_iso_8601_ts),
+            display_at=transformations.nullable_cast(payload.get("display_at"), date_helpers.parse_iso_8601_ts),
             incident_id=payload["incident_id"],
             status=payload["status"],
-            updated_at=transform.nullable_cast(payload.get("updated_at"), date_utils.parse_iso_8601_ts),
+            updated_at=transformations.nullable_cast(payload.get("updated_at"), date_helpers.parse_iso_8601_ts),
         )
 
 
@@ -401,12 +404,12 @@ class Incident:
             id=payload["id"],
             name=payload["name"],
             status=payload["status"],
-            updated_at=transform.try_cast(payload.get("updated_at"), date_utils.parse_iso_8601_ts),
+            updated_at=transformations.try_cast(payload.get("updated_at"), date_helpers.parse_iso_8601_ts),
             incident_updates=[
-                IncidentUpdate.from_dict(i) for i in payload.get("incident_updates", custom_types.EMPTY_SEQUENCE)
+                IncidentUpdate.from_dict(i) for i in payload.get("incident_updates", data_structures.EMPTY_SEQUENCE)
             ],
-            monitoring_at=transform.try_cast(payload.get("monitoring_at"), date_utils.parse_iso_8601_ts),
-            resolved_at=transform.try_cast(payload.get("resolved_at"), date_utils.parse_iso_8601_ts),
+            monitoring_at=transformations.try_cast(payload.get("monitoring_at"), date_helpers.parse_iso_8601_ts),
+            resolved_at=transformations.try_cast(payload.get("resolved_at"), date_helpers.parse_iso_8601_ts),
             shortlink=payload["shortlink"],
             page_id=payload["page_id"],
             impact=payload["impact"],
@@ -524,15 +527,15 @@ class ScheduledMaintenance:
             name=payload["name"],
             impact=payload["impact"],
             incident_updates=[
-                IncidentUpdate.from_dict(iu) for iu in payload.get("incident_updates", custom_types.EMPTY_SEQUENCE)
+                IncidentUpdate.from_dict(iu) for iu in payload.get("incident_updates", data_structures.EMPTY_SEQUENCE)
             ],
-            monitoring_at=transform.try_cast(payload.get("monitoring_at"), date_utils.parse_iso_8601_ts),
+            monitoring_at=transformations.try_cast(payload.get("monitoring_at"), date_helpers.parse_iso_8601_ts),
             page_id=payload["page_id"],
-            resolved_at=transform.try_cast(payload.get("resolved_at"), date_utils.parse_iso_8601_ts),
-            scheduled_for=transform.try_cast(payload.get("scheduled_for"), date_utils.parse_iso_8601_ts),
-            scheduled_until=transform.try_cast(payload.get("scheduled_until"), date_utils.parse_iso_8601_ts),
+            resolved_at=transformations.try_cast(payload.get("resolved_at"), date_helpers.parse_iso_8601_ts),
+            scheduled_for=transformations.try_cast(payload.get("scheduled_for"), date_helpers.parse_iso_8601_ts),
+            scheduled_until=transformations.try_cast(payload.get("scheduled_until"), date_helpers.parse_iso_8601_ts),
             status=payload["status"],
-            updated_at=transform.try_cast(payload.get("updated_at"), date_utils.parse_iso_8601_ts),
+            updated_at=transformations.try_cast(payload.get("updated_at"), date_helpers.parse_iso_8601_ts),
         )
 
 

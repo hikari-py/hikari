@@ -1,0 +1,83 @@
+# Copyright © Nekoka.tt 2019
+#
+# This file is part of Hikari.
+#
+# Hikari is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Hikari is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+
+###
+### TEMPLATE FOR TEST AND PROD DOCUMENTATION GENERATION JOBS.
+###
+.pages:
+    extends: .cache_job
+    allow_failure: false
+    image: python:3
+    before_script:
+        - source tasks/config.sh
+        - apt-get update
+        - apt-get install git -y
+        - apt-get install graphviz -y
+        - pip install poetry nox
+        - git fetch --all --prune
+        - rm public -Rvf || true
+        - mkdir public || true
+
+pages:
+    stage: pages
+    extends: .pages
+    script:
+        # Build staging AND master.
+        - source tasks/deploy.sh
+
+        - git checkout origin/staging -f || true
+        - git status || true
+
+        - set-versions "$(python tasks/make-version-string.py staging)" || true
+
+        # If staging is messed up, just ignore it...
+        - nox -r -ssphinx || true
+
+        - mv public staging || true
+        - mkdir public || true
+        - mv staging public/staging
+
+        - git reset --hard origin/staging
+        - git checkout origin/master -f
+        - git status
+
+        - nox -r -ssphinx
+    artifacts:
+        paths:
+            - public
+    only:
+        - master
+        - staging
+
+
+test-pages:
+    stage: test
+    extends: .pages
+    allow_failure: true
+    script:
+        - source tasks/deploy.sh
+        - set-versions "$(python tasks/make-version-string.py staging).${CI_PIPELINE_IID}"
+        - nox -ssphinx
+    artifacts:
+        paths:
+            - public
+    except:
+        - master
+        - staging
+        - tags
+        - merge-requests
+        - schedules

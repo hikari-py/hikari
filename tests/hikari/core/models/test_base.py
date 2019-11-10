@@ -230,9 +230,11 @@ def test_HikariModel___all_slots___is_inherited():
 @pytest.mark.model
 def test_non_slotted_HikariModel_refuses_to_initialize():
     try:
+
         class BadClass(base.HikariModel):
             # look ma, no slots.
             pass
+
     except TypeError:
         assert True
 
@@ -240,7 +242,9 @@ def test_non_slotted_HikariModel_refuses_to_initialize():
 @pytest.mark.model
 def test_slotted_HikariModel_can_initialize():
     try:
+
         class GoodClass(base.HikariModel):
             __slots__ = ()
+
     except TypeError as ex:
         raise AssertionError from ex

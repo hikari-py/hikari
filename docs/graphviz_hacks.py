@@ -24,7 +24,6 @@ from sphinx.ext.inheritance_diagram import get_graph_hash
 from sphinx.locale import __
 from sphinx.writers.html import HTMLTranslator
 
-
 EXPECTED_GITLAB_ROUTE = f"https://{author.lower()}.gitlab.io/{project.lower()}/technical"
 
 
@@ -106,9 +105,9 @@ def html_visit_inheritance_diagram(self, node):
             else:
                 urls[child['reftitle']] = '#' + child.get('refid')
 
-    dotcode = graph.generate_dot(name, urls, env=self.builder.env)
+    dotcode = graph.generate_dot(name, urls, env = self.builder.env)
     render_dot_html(self, node, dotcode, {}, 'inheritance', 'inheritance',
-                    alt='Inheritance diagram of ' + node['content'])
+                    alt = 'Inheritance diagram of ' + node['content'])
     raise nodes.SkipNode
 
 

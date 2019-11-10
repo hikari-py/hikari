@@ -23,9 +23,10 @@ from __future__ import annotations
 
 import dataclasses
 
-from hikari.core.models import emojis as _emoji, base
+from hikari.core.models import base
+from hikari.core.models import emojis as _emoji
 from hikari.core.models import messages as _message
-from hikari.core.utils import auto_repr
+from hikari.internal_utilities import auto_repr
 
 
 @dataclasses.dataclass()
