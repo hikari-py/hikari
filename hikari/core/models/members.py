@@ -75,7 +75,7 @@ class Member(users.BaseUser):
 
     #: The user's online presence.
     #:
-    #: :type: :class:`hikari.core.models.presence.Presence`
+    #: :type: :class:`hikari.core.models.presences.Presence`
     presence: presences.Presence
 
     __copy_by_ref__ = ("presence", "guild")

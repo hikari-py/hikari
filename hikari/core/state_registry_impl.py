@@ -58,7 +58,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
     Cache accesses are not asynchronous. This means that this implementation is not suitable for interfacing with a
     distributed cache (e.g. Redis). If you wish to instead use that sort of implementation, you should create an
-    implementation from :class:`hikari.core.internal.state_registry.StateRegistry` and implement each
+    implementation from :class:`hikari.state_registry.StateRegistry` and implement each
     method as a coroutine function. You will also need to update the models that access the cache, and the event
     adapter that calls this cache, appropriately.
     """

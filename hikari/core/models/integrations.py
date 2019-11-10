@@ -114,12 +114,12 @@ class Integration(base.HikariModel, base.Snowflake):
 
     #: The user for this integration
     #:
-    #: :type: :class:`hikari.core.models.user.User`
+    #: :type: :class:`hikari.core.models.users.User`
     user: users.User
 
     #: Integration account information.
     #:
-    #: :type: :class:`hikari.core.models.integration.IntegrationAccount`
+    #: :type: :class:`hikari.core.models.integrations.IntegrationAccount`
     account: IntegrationAccount
 
     #: The time when the integration last synchronized.

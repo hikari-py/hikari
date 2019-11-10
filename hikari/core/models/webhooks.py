@@ -46,7 +46,7 @@ class Webhook(base.HikariModel, base.Snowflake):
 
     #: The optional user for the webhook.
     #:
-    #: :type: :class:`hikari.core.models.user.User` or `None`
+    #: :type: :class:`hikari.core.models.users.User` or `None`
     user: typing.Optional[users.User]
 
     #: The name of the webhook.
