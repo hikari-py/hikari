@@ -1264,19 +1264,19 @@ class TestStateRegistryImpl:
         assert new is original_role_obj, "existing role was not used as target for update!"
         assert old is cloned_role_obj, "existing role did not get the old state copied and returned!"
 
-    def test_update_guild_emojis_when_existing_guild_does_not_exist_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
+    def test_update_guild_emojis_when_existing_guild_does_not_exist_returns_None(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
         guild_obj = _helpers.mock_model(guilds.Guild, id=123, emojis={})
         registry._guilds = {}
-        payload = [{
-            "id": "456",
-            "name": "roundCheck",
-            "_guild_id": 123
-        }]
+        payload = [{"id": "456", "name": "roundCheck", "_guild_id": 123}]
 
         diff = registry.update_guild_emojis([payload], guild_obj.id)
 
         assert diff is None
 
     @pytest.mark.skip(reason="WIP")
-    def test_update_guild_emojis_when_when_existing_guild_exists_returns_old_state_copy_and_updated_new_state(self, registry: state_registry_impl.StateRegistryImpl):
+    def test_update_guild_emojis_when_when_existing_guild_exists_returns_old_state_copy_and_updated_new_state(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
         raise NotImplementedError
