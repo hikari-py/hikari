@@ -1265,3 +1265,11 @@ class TestStateRegistryImpl:
 
         assert new is original_role_obj, "existing role was not used as target for update!"
         assert old is cloned_role_obj, "existing role did not get the old state copied and returned!"
+
+    @pytest.mark.xfail(reason="Not yet implemented")
+    def test_update_guild_emojis_when_existing_guild_does_not_exist_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
+        raise NotImplementedError
+
+    @pytest.mark.xfail(reason="Not yet implemented")
+    def test_update_guild_emojis_when_when_existing_guild_exists_returns_old_state_copy_and_updated_new_state(self, registry: state_registry_impl.StateRegistryImpl):
+        raise NotImplementedError
