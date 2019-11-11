@@ -1152,7 +1152,6 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         registry.get_guild_by_id = mock.MagicMock(return_value=None, spec_set=registry.get_guild_by_id)
-        presence = _helpers.mock_model(presences.Presence)
         payload = {
             "user": {"id": "339767912841871360"},
             "status": "online",
@@ -1172,7 +1171,6 @@ class TestStateRegistryImpl:
         registry._guilds = {guild_obj.id: guild_obj}
         member_obj = _helpers.mock_model(members.Member, id=456)
         guild_obj.members = {}
-        presence = _helpers.mock_model(presences.Presence)
         payload = {
             "user": {"id": "339767912841871360"},
             "status": "online",
@@ -1266,10 +1264,19 @@ class TestStateRegistryImpl:
         assert new is original_role_obj, "existing role was not used as target for update!"
         assert old is cloned_role_obj, "existing role did not get the old state copied and returned!"
 
-    @pytest.mark.xfail(reason="Not yet implemented")
     def test_update_guild_emojis_when_existing_guild_does_not_exist_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        raise NotImplementedError
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, emojis={})
+        registry._guilds = {}
+        payload = [{
+            "id": "456",
+            "name": "roundCheck",
+            "_guild_id": 123
+        }]
 
-    @pytest.mark.xfail(reason="Not yet implemented")
+        diff = registry.update_guild_emojis([payload], guild_obj.id)
+
+        assert diff is None
+
+    @pytest.mark.skip(reason="WIP")
     def test_update_guild_emojis_when_when_existing_guild_exists_returns_old_state_copy_and_updated_new_state(self, registry: state_registry_impl.StateRegistryImpl):
         raise NotImplementedError
