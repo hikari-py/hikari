@@ -42,6 +42,8 @@ version = "0.0.33"
 
 is_staging = "dev" in version
 
+
+
 # -- General configuration ---------------------------------------------------
 
 extensions = [
@@ -211,6 +213,12 @@ else:
         .. |staging_link| replace:: This is the documentation for the development release
     """
     )
+
+# -- Discord embed settings ---------------------------------------------
+
+embed_title = "Hikari Technical Documentation"
+embed_logo_url = "https://assets.gitlab-static.net/uploads/-/system/project/avatar/12050696/Hikari-Logo_1.png"
+embed_description = "A sane Discord Bot framework for modern Python and asyncio."
 
 
 def setup(app):
