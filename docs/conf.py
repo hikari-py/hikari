@@ -43,7 +43,6 @@ version = "0.0.33"
 is_staging = "dev" in version
 
 
-
 # -- General configuration ---------------------------------------------------
 
 extensions = [

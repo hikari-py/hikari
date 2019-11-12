@@ -108,9 +108,6 @@ class UnknownEmoji(Emoji, base.Snowflake):
     def is_unicode(self) -> bool:
         return False
 
-    def __hash__(self):
-        return hash(self.id)
-
 
 @dataclasses.dataclass()
 class GuildEmoji(UnknownEmoji):
@@ -161,9 +158,6 @@ class GuildEmoji(UnknownEmoji):
     @property
     def guild(self) -> guilds.Guild:
         return self._state.get_guild_by_id(self._guild_id)
-
-    def __hash__(self):
-        return super().__hash__()
 
 
 def is_payload_guild_emoji_candidate(payload: data_structures.DiscordObjectT) -> bool:
