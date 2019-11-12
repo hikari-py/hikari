@@ -135,10 +135,6 @@ html_theme_options = {
     # Choose Bootstrap version.
     # Values: "3" (default) or "2" (in quotes)
     "bootstrap_version": "3",
-    
-    "embed_title": "Hikari Technical Documentation",
-    "embed_logo_url": "https://assets.gitlab-static.net/uploads/-/system/project/avatar/12050696/Hikari-Logo_1.png",
-    "embed_description": "A sane Discord Bot framework for modern Python and asyncio.",
 }
 
 # -- Autodoc options ---------------------------------------------------------
