@@ -37,11 +37,12 @@
         - apt-get install graphviz -qy || apt-get update && apt-get install graphviz -qy
         - pip install virtualenv
         - >
-            if [[ -v ${CI_IS_SCHEDULED} ]] || [[ ! -f .venv ]]; then
+            if [[ "${CI_IS_SCHEDULED}" -eq "1" ]] || [[ ! -f .venv ]]; then
                 echo "Installing new venv and installing poetry inside it."
                 rm poetry.lock .cache/pip .venv/ .nox/ .pytest_cache/ -Rf || true
                 python -m venv .venv
                 source .venv/bin/activate
+                pip install -U pip
                 pip install poetry
                 poetry update
             else
