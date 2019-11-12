@@ -206,6 +206,7 @@ def test_GroupDMChannel():
 @pytest.mark.model
 def test_GuildCategory():
     s = mock.MagicMock(spec_set=state_registry.StateRegistry)
+
     gc = channels.GuildCategory(
         s,
         {
@@ -302,14 +303,14 @@ def test_channel_from_dict_success_case(type_field, expected_class):
         args[1]["guild_id"] = "1234"
 
     with _helpers.mock_patch(expected_class.__init__, wraps=expected_class, return_value=None) as m:
-        channels.channel_from_dict(*args)
+        channels.parse_channel(*args)
         m.assert_called_once_with(*args)
 
 
 @pytest.mark.model
 def test_channel_failure_case():
     try:
-        channels.channel_from_dict(mock.MagicMock(), {"type": -999})
+        channels.parse_channel(mock.MagicMock(), {"type": -999})
         assert False
     except TypeError:
         pass

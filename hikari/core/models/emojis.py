@@ -36,6 +36,10 @@ class Emoji(base.HikariModel, abc.ABC):
 
     __slots__ = ()
 
+    @abc.abstractmethod
+    def __init__(self):
+        ...
+
     @property
     @abc.abstractmethod
     def is_unicode(self) -> bool:
@@ -167,11 +171,25 @@ def is_payload_guild_emoji_candidate(payload: data_structures.DiscordObjectT) ->
     return "id" in payload and "animated" in payload
 
 
-def emoji_from_dict(
+def parse_emoji(
     global_state: state_registry.StateRegistry,
     payload: data_structures.DiscordObjectT,
     guild_id: typing.Optional[int] = None,
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:
+    """
+    Parse the given emoji payload into an appropriate implementation of Emoji.
+
+    Args:
+        global_state:
+            The global state object.
+        payload:
+            the payload to parse.
+        guild_id:
+            the owning guild of the emoji if known and appropriate, otherwise `None`.
+
+    Returns:
+        One of :class:`UnicodeEmoji`, :class:`UnknownEmoji`, :class:`GuildEmoji`.
+    """
     if is_payload_guild_emoji_candidate(payload) and guild_id is not None:
         return GuildEmoji(global_state, payload, guild_id)
     elif payload.get("id") is not None:
@@ -180,4 +198,4 @@ def emoji_from_dict(
         return UnicodeEmoji(payload)
 
 
-__all__ = ["UnicodeEmoji", "UnknownEmoji", "GuildEmoji"]
+__all__ = ["Emoji", "UnicodeEmoji", "UnknownEmoji", "GuildEmoji"]

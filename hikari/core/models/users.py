@@ -62,6 +62,9 @@ class BaseUser(base.HikariModel, base.Snowflake):
 
     __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot")
 
+    #: This is an abstract implementation that should be overridden.
+    __init__ = NotImplemented
+
 
 class User(BaseUser):
     """

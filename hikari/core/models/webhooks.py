@@ -30,6 +30,11 @@ from hikari.internal_utilities import auto_repr
 
 
 class Webhook(base.HikariModel, base.Snowflake):
+    """
+    Describes a webhook. This is an HTTP endpoint that can be used to send messages to certain
+    channels without spinning up a complete bot implementation elsewhere (such as for CI pipelines).
+    """
+
     __slots__ = ("_state", "id", "_guild_id", "_channel_id", "user", "name", "avatar_hash", "token")
     __copy_by_ref__ = ("user",)
 
