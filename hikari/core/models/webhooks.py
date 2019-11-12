@@ -21,7 +21,6 @@ Webhooks.
 """
 from __future__ import annotations
 
-import dataclasses
 import typing
 
 from hikari import state_registry
@@ -30,8 +29,12 @@ from hikari.core.models import users
 from hikari.internal_utilities import auto_repr
 
 
-@dataclasses.dataclass()
 class Webhook(base.HikariModel, base.Snowflake):
+    """
+    Describes a webhook. This is an HTTP endpoint that can be used to send messages to certain
+    channels without spinning up a complete bot implementation elsewhere (such as for CI pipelines).
+    """
+
     __slots__ = ("_state", "id", "_guild_id", "_channel_id", "user", "name", "avatar_hash", "token")
     __copy_by_ref__ = ("user",)
 
@@ -46,7 +49,7 @@ class Webhook(base.HikariModel, base.Snowflake):
 
     #: The optional user for the webhook.
     #:
-    #: :type: :class:`hikari.core.models.user.User` or `None`
+    #: :type: :class:`hikari.core.models.users.User` or `None`
     user: typing.Optional[users.User]
 
     #: The name of the webhook.

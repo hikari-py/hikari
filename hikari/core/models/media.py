@@ -42,7 +42,6 @@ from hikari.internal_utilities import transformations
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
 
-@dataclasses.dataclass()
 class Avatar(base.HikariModel):
     """
     Represents an Avatar. This contains compressed raw byte data of the given image.
@@ -121,7 +120,6 @@ class Avatar(base.HikariModel):
         return len(self.data)
 
 
-@dataclasses.dataclass()
 class Attachment(base.HikariModel, base.Snowflake):
     """
     An attachment that is received from Discord in a message.
@@ -296,7 +294,7 @@ class InMemoryFile(AbstractFile):
 
     #: A bytes-like object containing the data to upload.
     #:
-    #: :type: :class:`hikari.core.utils.io_utils.BytesLikeT`
+    #: :type: :class:`hikari.internal_utilities.io_helpers.BytesLikeT`
     data: io_helpers.BytesLikeT
 
     def open(self, *args, **kwargs):

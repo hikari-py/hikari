@@ -22,7 +22,6 @@ Model ABCs and mixins.
 from __future__ import annotations
 
 import copy
-import dataclasses
 import datetime
 import typing
 
@@ -59,12 +58,23 @@ class NamedEnum:
 @assertions.assert_is_slotted
 class Snowflake:
     """
-    Base for any type that specifies an ID. The implementation is expected to implement that field.
+    Mixin type for any type that specifies an ID. The implementation is expected to implement that
+    field.
 
     Warning:
-        Due to constraints by the dataclasses library, one must ensure to define
-        `__hash__` on any object expected to be hashable explicitly. It will not
-        be inherited correctly.
+         Inheriting this class injects a `__hash__` that will operate on the `id` attribute.
+
+    Note:
+         Any derivative of this class becomes fully comparable and sortable due to implementing
+         the comparison operators `<`, `<=`, `>=`, and `>`. These operators will operate on the
+         `id` field.
+
+    Warning:
+         This implementation will respect the assumption for any good Python model that the
+         behaviour of `__eq__` and the behaviour of `__hash__` should be as close as possible.
+         Thus, the `__eq__` operation will be overridden to implement comparison that returns true
+         if and only if the classes for both implementations being compared are exactly the same
+         and if their IDs both match directly, unless a custom `__hash__` has also been provided.
     """
 
     __slots__ = ()
@@ -115,10 +125,18 @@ class Snowflake:
     def __ge__(self, other) -> bool:
         return self > other or self == other
 
+    def __hash__(self):
+        return hash(self.id)
+
+    def __eq__(self, other):
+        return type(self) == type(other) and self.id == other.id
+
+    def __ne__(self, other) -> bool:
+        return not self == other
+
 
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
-@dataclasses.dataclass()
 class HikariModel:
     """
     Marks a class that is allowed to have its state periodically updated, rather than being recreated.
@@ -147,6 +165,8 @@ class HikariModel:
         """
         When the subclass gets inited, resolve the `__copy_by_ref__` for all base classes as well.
         """
+        super().__init_subclass__()
+
         if "__slots__" not in cls.__dict__:
             raise TypeError(f"{cls.__module__}.{cls.__qualname__} must be slotted to derive from HikariModel.")
 

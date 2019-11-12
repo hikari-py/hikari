@@ -21,7 +21,6 @@ Messages and attachments.
 """
 from __future__ import annotations
 
-import dataclasses
 import datetime
 import enum
 import typing
@@ -111,7 +110,6 @@ class MessageFlag(enum.IntFlag):
 # information is not documented. Timestamp is pointless as it is able to be found from the ID anyway.
 
 
-@dataclasses.dataclass()
 class Message(base.Snowflake, base.HikariModel):
     """
     A message that was sent on Discord.
@@ -180,7 +178,7 @@ class Message(base.Snowflake, base.HikariModel):
 
     #: List of embeds on this message, if any.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.embed.Embed`
+    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.embeds.Embed`
     embeds: typing.Sequence[embeds.Embed]
 
     #: Whether this message is pinned or not.
@@ -190,32 +188,32 @@ class Message(base.Snowflake, base.HikariModel):
 
     #: The application associated with this message (applicable for rich presence-related chat embeds only).
     #:
-    #: :type: :class:`hikari.core.models.message.MessageApplication` or `None`
+    #: :type: :class:`hikari.core.models.messages.MessageApplication` or `None`
     application: typing.Optional[MessageApplication]
 
     #: The activity associated with this message (applicable for rich presence-related chat embeds only).
     #:
-    #: :type: :class:`hikari.core.models.message.MessageActivity` or `None`
+    #: :type: :class:`hikari.core.models.messages.MessageActivity` or `None`
     activity: typing.Optional[MessageActivity]
 
     #: The type of message.
     #:
-    #: :type: :class:`hikari.core.models.message.MessageType`
+    #: :type: :class:`hikari.core.models.messages.MessageType`
     type: MessageType
 
     #: Flags applied to the message.
     #:
-    #: :type: :class:`hikari.core.models.message.MessageFlag`
+    #: :type: :class:`hikari.core.models.messages.MessageFlag`
     flags: MessageFlag
 
     #: Message reactions, if any.
     #:
-    #: :type: :class:`typing.List` of :class:`hikari.core.models.reaction.Reaction`
+    #: :type: :class:`typing.List` of :class:`hikari.core.models.reactions.Reaction`
     reactions: typing.List[reactions.Reaction]
 
     #: Optional crossposting reference. Only valid if the message is a cross post.
     #:
-    #: :type: :class:`hikari.core.models.message.MessageCrossPost` or `None` if not a cross post.
+    #: :type: :class:`hikari.core.models.messages.MessageCrossPost` or `None` if not a cross post.
     crosspost_of: typing.Optional[MessageCrosspost]
 
     __repr__ = auto_repr.repr_of("id", "author", "type", "tts", "created_at", "edited_at")
@@ -310,7 +308,6 @@ class Message(base.Snowflake, base.HikariModel):
         return self._state.get_channel_by_id(self._channel_id)
 
 
-@dataclasses.dataclass()
 class MessageActivity:
     """
     Represents the activity of a rich presence-enabled message.
@@ -320,7 +317,7 @@ class MessageActivity:
 
     #: The activity type of the message.
     #:
-    #: :type: :class:`hikari.core.models.message.MessageActivityType`
+    #: :type: :class:`hikari.core.models.messages.MessageActivityType`
     type: MessageActivityType
 
     #: The optional party ID associated with the message.
@@ -335,7 +332,6 @@ class MessageActivity:
         self.party_id = transformations.nullable_cast(payload.get("party_id"), int)
 
 
-@dataclasses.dataclass()
 class MessageApplication(base.Snowflake):
     """
     Description of a rich presence application that created a rich presence message in a channel.
@@ -378,7 +374,6 @@ class MessageApplication(base.Snowflake):
         self.name = payload.get("name")
 
 
-@dataclasses.dataclass()
 class MessageCrosspost:
     """
     Represents information about a cross-posted message and the origin of the original message.

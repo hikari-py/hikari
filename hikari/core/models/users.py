@@ -21,14 +21,11 @@ Generic users not bound to a guild, and guild-bound member definitions.
 """
 from __future__ import annotations
 
-import dataclasses
-
 from hikari import state_registry
 from hikari.core.models import base
 from hikari.internal_utilities import auto_repr
 
 
-@dataclasses.dataclass()
 class BaseUser(base.HikariModel, base.Snowflake):
     """
     Representation of a user account.
@@ -65,6 +62,9 @@ class BaseUser(base.HikariModel, base.Snowflake):
 
     __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot")
 
+    #: This is an abstract implementation that should be overridden.
+    __init__ = NotImplemented
+
 
 class User(BaseUser):
     """
@@ -86,7 +86,6 @@ class User(BaseUser):
         self.avatar_hash = payload.get("avatar")
 
 
-@dataclasses.dataclass()
 class BotUser(User):
     """
     A special instance of user to represent the bot that is signed in.

@@ -21,7 +21,6 @@ Members that represent users and their state in specific guilds.
 """
 from __future__ import annotations
 
-import dataclasses
 import datetime
 import typing
 
@@ -38,7 +37,6 @@ from hikari.internal_utilities import transformations
 
 
 @delegate.delegate_to(users.BaseUser, "user")
-@dataclasses.dataclass()
 class Member(users.BaseUser):
     """
     A specialization of a user which provides implementation details for a specific guild.
@@ -75,7 +73,7 @@ class Member(users.BaseUser):
 
     #: The user's online presence.
     #:
-    #: :type: :class:`hikari.core.models.presence.Presence`
+    #: :type: :class:`hikari.core.models.presences.Presence`
     presence: presences.Presence
 
     __copy_by_ref__ = ("presence", "guild")

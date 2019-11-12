@@ -21,7 +21,6 @@ Guild models.
 """
 from __future__ import annotations
 
-import dataclasses
 import datetime
 import enum
 import typing
@@ -40,7 +39,6 @@ from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import transformations
 
 
-@dataclasses.dataclass()
 class Guild(base.Snowflake, base.HikariModel):
     """
     Implementation of a Guild.
@@ -126,7 +124,7 @@ class Guild(base.Snowflake, base.HikariModel):
 
     #: Permissions for our user in the guild, minus channel overrides, if the user is in the guild.
     #:
-    #: :type: :class:`hikari.core.models.permission.Permission` or `None`
+    #: :type: :class:`hikari.core.models.permissions.Permission` or `None`
     my_permissions: typing.Optional[permissions.Permission]
 
     #: Timeout before a user is classed as being AFK in seconds.
@@ -136,7 +134,7 @@ class Guild(base.Snowflake, base.HikariModel):
 
     #: Verification level for this guild.
     #:
-    #: :type: :class:`hikari.core.models.guild.GuildVerificationLevel`
+    #: :type: :class:`hikari.core.models.guilds.GuildVerificationLevel`
     verification_level: VerificationLevel
 
     #: The preferred locale of the guild. This is only populated if the guild has the
@@ -147,27 +145,27 @@ class Guild(base.Snowflake, base.HikariModel):
 
     #: Default level for message notifications in this guild.
     #:
-    #: :type: :class:`hikari.core.models.guild.NotificationLevel`
+    #: :type: :class:`hikari.core.models.guilds.NotificationLevel`
     message_notification_level: NotificationLevel
 
     #: Explicit content filtering level.
     #:
-    #: :type: :class:`hikari.core.models.guild.ExplicitContentFilterLevel`
+    #: :type: :class:`hikari.core.models.guilds.ExplicitContentFilterLevel`
     explicit_content_filter_level: ExplicitContentFilterLevel
 
     #: Roles in this guild. Maps IDs to the role object they represent.
     #:
-    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.role.Role` objects
+    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.roles.Role` objects
     roles: typing.Dict[int, roles.Role]
 
     #: Emojis in this guild. Maps IDs to the role object they represent.
     #:
-    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.emoji.GuildEmoji` objects
+    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.emojis.GuildEmoji` objects
     emojis: typing.Dict[int, emojis.GuildEmoji]
 
     #: Enabled features in this guild.
     #:
-    #: :type: :class:`set` of :class:`hikari.core.models.guild.Feature` enum values.
+    #: :type: :class:`set` of :class:`hikari.core.models.guilds.Feature` enum values.
     features: typing.Set[Feature]
 
     #: Number of members. Only stored if the information is actively available.
@@ -177,7 +175,7 @@ class Guild(base.Snowflake, base.HikariModel):
 
     #: MFA level for this guild.
     #:
-    #: :type: :class:`hikari.core.models.guild.MFALevel`
+    #: :type: :class:`hikari.core.models.guilds.MFALevel`
     mfa_level: MFALevel
 
     #: The date/time the bot user joined this guild, or `None` if the bot is not in this guild.
@@ -198,12 +196,12 @@ class Guild(base.Snowflake, base.HikariModel):
 
     #: Members in the guild.
     #:
-    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.user.Member` objects
+    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.members.Member` objects
     members: typing.MutableMapping[int, members.Member]
 
     #: Channels in the guild.
     #:
-    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.channel.GuildChannel` objects
+    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.channels.GuildChannel` objects
     channels: typing.MutableMapping[int, channels.GuildChannel]
 
     #: Max members allowed in the guild. This is a hard limit enforced by Discord.
@@ -218,7 +216,7 @@ class Guild(base.Snowflake, base.HikariModel):
 
     #: Guild description, if the guild has one assigned. Currently this only applies to discoverable guilds.
     #:
-    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.role.Role` objects
+    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.core.models.roles.Role` objects
     description: typing.Optional[str]
 
     #: Hash code for the guild banner, if it has one.
@@ -228,7 +226,7 @@ class Guild(base.Snowflake, base.HikariModel):
 
     #: Premium tier.
     #:
-    #: :type: :class:`hikari.core.models.guild.PremiumTier`
+    #: :type: :class:`hikari.core.models.guilds.PremiumTier`
     premium_tier: PremiumTier
 
     #: Number of current Nitro boosts on this guild.
@@ -238,7 +236,7 @@ class Guild(base.Snowflake, base.HikariModel):
 
     #: Describes what can the system channel can do.
     #:
-    #: :type: :class:`hikari.core.models.guild.SystemChannelFlag`
+    #: :type: :class:`hikari.core.models.guilds.SystemChannelFlag`
     system_channel_flags: typing.Optional[SystemChannelFlag]
 
     __repr__ = auto_repr.repr_of("id", "name", "unavailable", "large", "member_count")
@@ -397,7 +395,6 @@ class PremiumTier(enum.IntEnum):
     TIER_3 = 3
 
 
-@dataclasses.dataclass()
 class Ban:
     """
     A user that was banned, along with the reason for the ban.
@@ -412,7 +409,7 @@ class Ban:
 
     #: The user who is banned.
     #:
-    #: :type: :class:`hikari.core.models.user.User`
+    #: :type: :class:`hikari.core.models.users.User`
     user: users.User
 
     __repr__ = auto_repr.repr_of("user", "reason")

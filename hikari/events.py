@@ -88,7 +88,7 @@ RAW_CHANNEL_CREATE = "raw_channel_create"
 #:
 #: Args:
 #:     channel:
-#           the :class:`hikari.core.models.channel.DMChannel` or :class:`hikari.core.models.channel.GroupDMChannel`
+#           the :class:`hikari.core.models.channels.DMChannel` or :class:`hikari.core.models.channels.GroupDMChannel`
 #           that was created.
 DM_CHANNEL_CREATE = "dm_channel_create"
 
@@ -96,7 +96,7 @@ DM_CHANNEL_CREATE = "dm_channel_create"
 #:
 #: Args:
 #:     channel:
-#:         the :class:`hikari.core.models.channel.GuildChannel` derivative that was created.
+#:         the :class:`hikari.core.models.channels.GuildChannel` derivative that was created.
 #:
 #: Note:
 #:     If the guild of a channel that was created was not cached, then this event will not fire. See
