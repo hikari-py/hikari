@@ -17,14 +17,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import fnmatch
-import functools
 import os
 import shutil
-import traceback
-import typing
+import time
 
-from nox import session as nox_session
-from nox import sessions
+import nox.sessions
+
+
+print("Before you go any further, please read https://gitlab.com/nekokatt/hikari/wikis/Contributing")
+time.sleep(2)
 
 
 def pathify(arg, *args, root=False):
@@ -100,51 +101,23 @@ def line_count(directories, file_include_globs=("*.py",), dir_exclude_globs=("__
     print_line_count(total_lines, "TOTAL")
 
 
-class PoetryNoxSession(sessions.Session):
-    # noinspection PyMissingConstructor
-    def __init__(self, session: sessions.Session) -> None:
-        self.__session = session
-
-    def __getattr__(self, item) -> typing.Any:
-        return getattr(self.__session, item)
-
-    def poetry(self, command, *args, **kwargs) -> None:
-        self.__session.run("poetry", command, *args, **kwargs)
-
-    def run(self, *args, **kwargs) -> None:
-        self.poetry("run", *args, **kwargs)
+@nox.session(python=False)
+def stats(_) -> None:
+    """Count lines of code."""
+    line_count([TEST_PATH, MAIN_PACKAGE_PATH])
 
 
-def using_poetry(session_logic):
-    """Ensure that the decorated function always initializes itself using poetry first."""
-
-    @functools.wraps(session_logic)
-    def wrapper(session: sessions.Session, *args, **kwargs):
-        session.install("poetry")
-        session = PoetryNoxSession(session)
-        return session_logic(session, *args, **kwargs)
-
-    return wrapper
-
-
-@nox_session()
-@using_poetry
-def pytest(session: PoetryNoxSession) -> None:
-    try:
-        line_count([TEST_PATH, MAIN_PACKAGE_PATH])
-    except:
-        traceback.print_exc()
-
-    session.poetry("update")
+@nox.session(python=False)
+def pytest(session) -> None:
+    """Run pytest"""
     session.run(
         "python", "-W", "ignore::DeprecationWarning", "-m", "pytest", *PYTEST_ARGS, *session.posargs, TEST_PATH,
     )
 
 
-@nox_session()
-@using_poetry
-def sphinx(session: PoetryNoxSession) -> None:
-    session.poetry("update")
+@nox.session(python=False)
+def sphinx(session) -> None:
+    """Generate documentation."""
     session.env["SPHINXOPTS"] = SPHINX_OPTS
     tech_dir = pathify(DOCUMENTATION_DIR, TECHNICAL_DIR)
     shutil.rmtree(tech_dir, ignore_errors=True, onerror=lambda *_: None)
@@ -161,42 +134,37 @@ def sphinx(session: PoetryNoxSession) -> None:
     session.run("python", "-m", "sphinx.cmd.build", DOCUMENTATION_DIR, ARTIFACT_DIR, "-b", "html")
 
 
-@nox_session()
-@using_poetry
-def bandit(session: PoetryNoxSession) -> None:
-    session.install("bandit")
+@nox.session(python=False)
+def bandit(session) -> None:
+    """Run static application security analysis."""
     pkg = MAIN_PACKAGE.split(".")[0]
     session.run("bandit", pkg, "-r")
 
 
-def _black(session, *args, **kwargs):
-    session.install("black")
-    session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *args, **kwargs)
+@nox.session(python=False)
+def black(session) -> None:
+    """Check formatting."""
+    session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *session.posargs)
 
 
-@nox_session()
-def format_fix(session: PoetryNoxSession) -> None:
-    _black(session)
-
-
-@nox_session()
-def format_check(session: PoetryNoxSession) -> None:
-    _black(session, "--check")
-
-
-@nox_session()
-def pypitest(session: sessions.Session):
+@nox.session()
+def install(session: nox.sessions.Session):
+    """Test installing PyPI package or zipped code bundle if running locally."""
     if os.getenv("CI", False):
-        print("Testing published ref can be installed as a package.")
-        url = os.getenv("CI_PROJECT_URL", REPOSITORY)
-        ref = os.getenv("CI_COMMIT_REF_NAME", "master")
-        slug = f"git+{url}.git@{ref}"
-        session.install("-vvv", slug)
+        if "--showtime" in session.posargs:
+            session.log("Testing we can install packaged pypi object")
+            session.run("pip", "install", MAIN_PACKAGE)
+        else:
+            session.log("Testing published ref can be installed as a package.")
+            url = session.env.get("CI_PROJECT_URL", REPOSITORY)
+            ref = session.env.get("CI_COMMIT_REF_NAME", "master")
+            slug = f"git+{url}.git@{ref}"
+            session.run("pip", "install", slug)
     else:
-        print("Testing local repository can be installed as a package.")
-        session.install("-vvv", "--isolated", ".")
+        session.log("Testing local repository can be installed as a package.")
+        session.run("pip", "install", "--isolated", ".")
 
     session.run("python", "-c", f"import {MAIN_PACKAGE}; print({MAIN_PACKAGE}.__version__)")
 
     # Prevent nox caching old versions and using those when tests run.
-    session.run("python", "-m", "pip", "uninstall", "-vvv", "-y", MAIN_PACKAGE)
+    session.run("pip", "uninstall", "-vvv", "-y", MAIN_PACKAGE)
