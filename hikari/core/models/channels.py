@@ -60,6 +60,7 @@ class Channel(base.Snowflake, base.HikariModel, abc.ABC):
     #: :type: :class:`int`
     id: int
 
+    @abc.abstractmethod
     def __init__(self, global_state: state_registry.StateRegistry, payload: data_structures.DiscordObjectT):
         self._state = global_state
         self.id = int(payload["id"])
@@ -90,6 +91,10 @@ class TextChannel(Channel, abc.ABC):
     #: :type: :class:`int` or `None`
     last_message_id: typing.Optional[int]
 
+    @abc.abstractmethod
+    def __init__(self, global_state, payload):
+        super().__init__(global_state, payload)
+
 
 class GuildChannel(Channel, abc.ABC):
     """
@@ -116,6 +121,7 @@ class GuildChannel(Channel, abc.ABC):
     #: :type: :class:`str`
     name: str
 
+    @abc.abstractmethod
     def __init__(self, global_state: state_registry.StateRegistry, payload: data_structures.DiscordObjectT):
         self._guild_id = int(payload["guild_id"])
         super().__init__(global_state, payload)
@@ -292,6 +298,9 @@ class GuildCategory(GuildChannel, type=4):
 
     __repr__ = auto_repr.repr_of("id", "name", "guild.name")
 
+    def __init__(self, global_state: state_registry.StateRegistry, payload: data_structures.DiscordObjectT) -> None:
+        super().__init__(global_state, payload)
+
 
 class GuildNewsChannel(GuildChannel, type=5):
     """
@@ -337,6 +346,9 @@ class GuildStoreChannel(GuildChannel, type=6):
 
     __repr__ = auto_repr.repr_of("id", "name", "guild.name")
 
+    def __init__(self, global_state: state_registry.StateRegistry, payload: data_structures.DiscordObjectT) -> None:
+        super().__init__(global_state, payload)
+
 
 def is_channel_type_dm(channel_type: int) -> bool:
     """
@@ -348,7 +360,7 @@ def is_channel_type_dm(channel_type: int) -> bool:
     return getattr(_channel_type_to_class.get(channel_type), "is_dm", False)
 
 
-def channel_from_dict(
+def parse_channel(
     global_state, payload
 ) -> typing.Union[
     GuildTextChannel, DMChannel, GuildVoiceChannel, GroupDMChannel, GuildCategory, GuildNewsChannel, GuildStoreChannel
@@ -356,7 +368,14 @@ def channel_from_dict(
     """
     Parse a channel from a channel payload from an API call.
 
-    This returns an instance of the class that corresponds to the given channel type in the payload.
+    Args:
+        global_state:
+            the global state object.
+        payload:
+            the payload to parse.
+
+    Returns:
+        A subclass of :class:`Channel` as appropriate for the given payload provided.
     """
     channel_type = payload.get("type")
 

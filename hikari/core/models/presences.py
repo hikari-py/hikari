@@ -38,9 +38,13 @@ class Status(base.NamedEnum, enum.Enum):
     The status of a member.
     """
 
+    #: Online/green.
     ONLINE = enum.auto()
+    #: Idle/yellow.
     IDLE = enum.auto()
+    #: Do not disturb/red.
     DND = enum.auto()
+    #: Offline/grey.
     OFFLINE = enum.auto()
 
 
@@ -243,6 +247,10 @@ def parse_presence_activity(
 
 
 class ActivityType(enum.IntEnum):
+    """
+    The activity state. Can be more than one using bitwise-combinations.
+    """
+
     #: Shows up as `Playing <name>`
     PLAYING = 0
     #: Shows up as `Streaming <name>`.
@@ -250,13 +258,20 @@ class ActivityType(enum.IntEnum):
     #: Warning:
     #:     Corresponding presences must be associated with VALID Twitch stream URLS!
     STREAMING = 1
-    #:
+    #: Shows up as `Listening to <name>`.
     LISTENING = 2
+    #: Shows up as `Watching <name>`.
     WATCHING = 3
+    #: A custom status. Note that this is not yet fully supported by the API in a documented way,
+    #: so information pertaining to the emoji associated with the presence is not yet available.
     CUSTOM = 4
 
 
 class ActivityFlag(enum.IntFlag):
+    """
+    The activity state. Can be more than one using bitwise-combinations.
+    """
+
     INSTANCE = 0x1
     JOIN = 0x2
     SPECTATE = 0x4
@@ -266,6 +281,11 @@ class ActivityFlag(enum.IntFlag):
 
 
 class ActivityParty(base.HikariModel):
+    """
+    A description of a party of players in the same rich-presence activity. This
+    is used to describe multiplayer sessions, and the likes.
+    """
+
     __slots__ = ("id", "current_size", "max_size")
 
     #: The ID of the party, if applicable, else `None`
@@ -299,6 +319,10 @@ class ActivityParty(base.HikariModel):
 
 
 class ActivityAssets(base.HikariModel):
+    """
+    Any rich assets such as tooltip data and image/icon data for a rich presence activity.
+    """
+
     __slots__ = ("large_image", "large_text", "small_image", "small_text")
 
     #: Large image asset, or `None`.
@@ -334,6 +358,11 @@ class ActivityAssets(base.HikariModel):
 
 
 class ActivityTimestamps(base.HikariModel):
+    """
+    Timestamps for a rich presence activity object that define when and for how long the
+    user has been undergoing an activity.
+    """
+
     __slots__ = ("start", "end")
 
     #: The start timestamp, or `None` if not specified.

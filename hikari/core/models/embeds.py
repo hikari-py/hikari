@@ -48,10 +48,9 @@ class EmbedPart(base.HikariModel, abc.ABC):
 
     __slots__ = ("__weakref__",)
 
-    # Abstract to enforce subclassing.
     @abc.abstractmethod
     def __init__(self):
-        pass
+        ...
 
     def __delattr__(self, item):
         setattr(self, item, None)

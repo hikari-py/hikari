@@ -111,6 +111,7 @@ class Role(base.Snowflake, base.HikariModel):
 
     @property
     def guild(self) -> guilds.Guild:
+        """The guild that the role belongs to."""
         return self._state.get_guild_by_id(self._guild_id)
 
 

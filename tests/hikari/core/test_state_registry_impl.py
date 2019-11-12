@@ -556,7 +556,7 @@ class TestStateRegistryImpl:
         channel_obj = _helpers.mock_model(channels.DMChannel, id=1234)
         registry._dm_channels = {}
         registry.get_channel_by_id = mock.MagicMock(return_value=None)
-        with _helpers.mock_patch(channels.channel_from_dict, return_value=channel_obj):
+        with _helpers.mock_patch(channels.parse_channel, return_value=channel_obj):
             with _helpers.mock_patch(channels.is_channel_type_dm, return_value=True):
                 registry.parse_channel(payload)
                 assert channel_obj in registry._dm_channels.values()
@@ -571,7 +571,7 @@ class TestStateRegistryImpl:
         registry._dm_channels = {}
         registry._guild_channels = {}
         registry.get_channel_by_id = mock.MagicMock(return_value=None)
-        with _helpers.mock_patch(channels.channel_from_dict, return_value=channel_obj):
+        with _helpers.mock_patch(channels.parse_channel, return_value=channel_obj):
             with _helpers.mock_patch(channels.is_channel_type_dm, return_value=False):
                 registry.parse_channel(payload)
                 assert channel_obj not in registry._dm_channels.values()
@@ -582,7 +582,7 @@ class TestStateRegistryImpl:
         payload = {"id": "1234", "type": -1}
         channel_obj = _helpers.mock_model(channels.Channel, id=1234)
         registry.get_channel_by_id = mock.MagicMock(return_value=None)
-        with _helpers.mock_patch(channels.channel_from_dict, return_value=channel_obj):
+        with _helpers.mock_patch(channels.parse_channel, return_value=channel_obj):
             with _helpers.mock_patch(channels.is_channel_type_dm, return_value=True):
                 result = registry.parse_channel(payload)
                 assert result is channel_obj
@@ -592,7 +592,7 @@ class TestStateRegistryImpl:
         payload = {"id": "1234"}
         registry._emojis = {}
         guild_id = None
-        with _helpers.mock_patch(emojis.emoji_from_dict, return_value=emoji_obj):
+        with _helpers.mock_patch(emojis.parse_emoji, return_value=emoji_obj):
             registry.parse_emoji(payload, guild_id)
             assert registry._emojis == {}
 
@@ -600,7 +600,7 @@ class TestStateRegistryImpl:
         emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
         payload = {"id": "1234"}
         guild_id = None
-        with _helpers.mock_patch(emojis.emoji_from_dict, return_value=emoji_obj):
+        with _helpers.mock_patch(emojis.parse_emoji, return_value=emoji_obj):
             assert registry.parse_emoji(payload, guild_id) is emoji_obj
 
     def test_parse_unknown_emoji_does_not_change_cache(self, registry: state_registry_impl.StateRegistryImpl):
@@ -608,7 +608,7 @@ class TestStateRegistryImpl:
         payload = {"id": "1234"}
         registry._emojis = {}
         guild_id = None
-        with _helpers.mock_patch(emojis.emoji_from_dict, return_value=emoji_obj):
+        with _helpers.mock_patch(emojis.parse_emoji, return_value=emoji_obj):
             registry.parse_emoji(payload, guild_id)
             assert registry._emojis == {}
 
@@ -616,7 +616,7 @@ class TestStateRegistryImpl:
         emoji_obj = _helpers.mock_model(emojis.UnknownEmoji)
         payload = {"id": "1234"}
         guild_id = None
-        with _helpers.mock_patch(emojis.emoji_from_dict, return_value=emoji_obj):
+        with _helpers.mock_patch(emojis.parse_emoji, return_value=emoji_obj):
             assert registry.parse_emoji(payload, guild_id) is emoji_obj
 
     def test_parse_guild_emoji_caches_emoji_globally(self, registry: state_registry_impl.StateRegistryImpl):
@@ -626,7 +626,7 @@ class TestStateRegistryImpl:
         registry._emojis = {}
         registry._guilds = {guild_obj.id: guild_obj}
         guild_id = guild_obj.id
-        with _helpers.mock_patch(emojis.emoji_from_dict, return_value=emoji_obj):
+        with _helpers.mock_patch(emojis.parse_emoji, return_value=emoji_obj):
             registry.parse_emoji(payload, guild_id)
             assert registry._emojis == {emoji_obj.id: emoji_obj}
 
@@ -638,7 +638,7 @@ class TestStateRegistryImpl:
         payload = {"id": "1234"}
         registry._guilds = {guild_obj.id: guild_obj}
         guild_id = guild_obj.id
-        with _helpers.mock_patch(emojis.emoji_from_dict, return_value=emoji_obj):
+        with _helpers.mock_patch(emojis.parse_emoji, return_value=emoji_obj):
             registry.parse_emoji(payload, guild_id)
             assert emoji_obj in guild_obj.emojis.values()
 
@@ -650,7 +650,7 @@ class TestStateRegistryImpl:
         payload = {"id": "1234"}
         registry._guilds = {guild_obj.id: guild_obj}
         guild_id = guild_obj.id
-        with _helpers.mock_patch(emojis.emoji_from_dict, return_value=emoji_obj):
+        with _helpers.mock_patch(emojis.parse_emoji, return_value=emoji_obj):
             assert registry.parse_emoji(payload, guild_id) is emoji_obj
 
     def test_parse_guild_emoji_when_already_cached_returns_cached_emoji(
