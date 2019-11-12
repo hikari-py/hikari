@@ -64,6 +64,13 @@ cat > /dev/null << EOF
 
   Preproduction environment:
     PYPI_REPO
+
+  VARIABLES TO DEFINE IN SCHEDULED JOBS
+  =====================================
+
+      CI_IS_SCHEDULED - set to 1 and the job will discard any pypi cache. This has the effect that
+                        the job will automatically renew its cache first. This also means the cache can be
+                        kept up-to-date by schedules, keeping repeated builds running quickly.
 EOF
 
 echo "=============END CONFIGURATION============="

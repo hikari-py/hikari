@@ -16,30 +16,71 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 .test:
-    extends: .cache_merge_job
+    only:
+        - branches
+        - merge_requests
+        - tags
+        - schedules
+    cache:
+        paths:
+            - $CI_PROJECT_DIR/.pytest_cache
+            - $CI_PROJECT_DIR/.nox
+            - $CI_PROJECT_DIR/.venv
+            - $CI_PROJECT_DIR/.cache/pip
+            - $CI_PROJECT_DIR/poetry.lock
+        key: $CI_COMMIT_REF_SLUG-$CI_JOB_STAGE-$CI_JOB_NAME
+        policy: pull-push
     allow_failure: false
     stage: test
-    script:
+    before_script:
+        - apt-get install -qy git gcc g++ make
+        - >
+            if [[ "${CI_IS_SCHEDULED}" -eq "1" ]] || [[ ! -d .venv ]]; then
+                echo -e "\e[0;35mInstalling new venv and installing poetry inside it.\e[0m"
+                rm poetry.lock .cache/pip .venv/ .nox/ .pytest_cache/ -Rf || true
+                pip install virtualenv
+                python -m venv .venv
+                source .venv/bin/activate
+                pip install -U pip
+                pip install poetry
+                poetry update
+            else
+                echo -e "\e[0;36mReusing cached venv from GitLab caches.\e[0m"
+                source .venv/bin/activate
+            fi
         - source tasks/config.sh
         - python -V
-        - apt-get install -qy git gcc g++ make
-        - pip install poetry nox virtualenv
         - mkdir public || true
-        # Run the pipelines.
-        - echo -e "\e[1;33mRUNNING TEST PIPELINES\e[0m"
-        - poetry run nox -spytest
-        - poetry run nox -sbandit
-        - poetry run nox -spypitest
-        - poetry run nox -sformat_check 2>&1 | grep -qiv 'Oh no!'
+        - poetry show -v
+    script:
+        - nox --sessions pytest bandit stats --report public/nox.json
+        - nox --sessions black -- --check
     artifacts:
         paths:
             - public/coverage/
+            - public/nox.json
     coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
 
-py37:
+unittest-py37:
     image: python:3.7.5
     extends: .test
 
-py38:
+unittest-py38:
     image: python:3.8.0
     extends: .test
+
+test-pip-install:
+    image: python:3.8.0
+    extends: .test
+    stage: test
+    script:
+        - nox --sessions install
+
+verify-pypi-release:
+    image: python:3.8.0
+    extends: .test
+    stage: verify
+    script:
+        - nox --sessions install -- --showtime
+    only:
+        - master
