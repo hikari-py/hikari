@@ -1282,15 +1282,9 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         guild_id = 9999
-        existing_emoji_1 = emojis.GuildEmoji(
-            registry, {"id": "1234", "name": "bowsettebaka", "animated": False}, guild_id
-        )
-        existing_emoji_2 = emojis.GuildEmoji(
-            registry, {"id": "1235", "name": "bowsettel00d", "animated": False}, guild_id
-        )
-        existing_emoji_3 = emojis.GuildEmoji(
-            registry, {"id": "1236", "name": "bowsetteowo", "animated": True}, guild_id
-        )
+        existing_emoji_1 = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="bowsettebaka", animated=False)
+        existing_emoji_2 = _helpers.mock_model(emojis.GuildEmoji, id=1235, name="bowsettel00d", animated=False)
+        existing_emoji_3 = _helpers.mock_model(emojis.GuildEmoji, id=1236, name="bowsetteowo", animated=True)
 
         initial_emoji_map = {
             existing_emoji_1.id: existing_emoji_1,
