@@ -5,10 +5,10 @@
 
 {# Add metadata to show up in Discord embeds #}
 {% block extrahead %}
-    <meta property="og:title" content={{embed_title}}>
+    <meta property="og:title" content="{{embed_title}}">
     <meta property="og:type" content="website">
-    <meta property="og:image" content={{embed_logo_url}}>
-    <meta property="og:description" content={{embed_description}}>
+    <meta property="og:image" content="{{embed_logo_url}}">
+    <meta property="og:description" content="{{embed_description}}">
 {{ super() }}
 {% endblock %}
 
