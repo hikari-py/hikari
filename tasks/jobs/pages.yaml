@@ -21,7 +21,7 @@
 .pages:
     extends: .cache_job
     allow_failure: false
-    image: python:3
+    image: python:3.7.5
     before_script:
         - source tasks/config.sh
         - apt-get update

@@ -22,33 +22,24 @@
     script:
         - source tasks/config.sh
         - python -V
-        - apt-get update -q
         - apt-get install -qy git gcc g++ make
         - pip install poetry nox virtualenv
         - mkdir public || true
         # Run the pipelines.
         - echo -e "\e[1;33mRUNNING TEST PIPELINES\e[0m"
-        - poetry install
-        - poetry show -v
         - poetry run nox -spytest
         - poetry run nox -sbandit
         - poetry run nox -spypitest
-        - poetry run nox -sformat_check || echo -e '\e[1;31mFix your formatting, yo!\e[0m Run `black hikari tests` and push again :-)'
+        - poetry run nox -sformat_check 2>&1 | grep -qiv 'Oh no!'
     artifacts:
         paths:
             - public/coverage/
     coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
 
-###
-### TEST IN PYTHON 3.7
-###
 py37:
-    image: python:3.7
+    image: python:3.7.5
     extends: .test
 
-###
-### TEST IN PYTHON 3.8
-###
 py38:
-    image: python:3.8
+    image: python:3.8.0
     extends: .test

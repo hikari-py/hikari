@@ -31,7 +31,6 @@
         key: $CI_COMMIT_REF_SLUG-$CI_JOB_STAGE-$CI_JOB_NAME
         policy: pull-push
 
-
 .cache_job:
     <<: *per_job_branch_cache
 
