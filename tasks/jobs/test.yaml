@@ -34,11 +34,11 @@
     stage: test
     before_script:
         - apt-get install -qy git gcc g++ make
-        - pip install virtualenv
         - >
             if [[ "${CI_IS_SCHEDULED}" -eq "1" ]] || [[ ! -d .venv ]]; then
                 echo -e "\e[0;35mInstalling new venv and installing poetry inside it.\e[0m"
                 rm poetry.lock .cache/pip .venv/ .nox/ .pytest_cache/ -Rf || true
+                pip install virtualenv
                 python -m venv .venv
                 source .venv/bin/activate
                 pip install -U pip
