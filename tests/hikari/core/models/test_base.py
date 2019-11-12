@@ -89,33 +89,6 @@ class TestSnowflake:
     def test_Snowflake_internal_worker_id(self, neko_snowflake):
         assert neko_snowflake.internal_worker_id == 2
 
-    def test_Snowflake_derivative_has_hashcode(self):
-        @dataclasses.dataclass()
-        class SnowflakeSubclass(base.Snowflake):
-            __slots__ = ("id",)
-            id: int
-
-            def __init__(self, id_):
-                self.id = id_
-
-        instance = SnowflakeSubclass(689)
-        assert hash(instance) == hash(689)
-
-    def test_Snowflake_derivative_does_not_override_custom_hashcode(self):
-        @dataclasses.dataclass()
-        class SnowflakeSubclass(base.Snowflake):
-            __slots__ = ("id",)
-            id: int
-
-            def __init__(self, id_):
-                self.id = id_
-
-            def __hash__(self):
-                return 69  # nice
-
-        instance = SnowflakeSubclass(689)
-        assert hash(instance) == 69
-
 
 @pytest.mark.model
 def test_NamedEnumMixin_from_discord_name():
@@ -128,6 +101,7 @@ def test_NamedEnumMixin_str_and_repr(cast):
     assert cast(DummyNamedEnum.BAZ) == "BAZ"
 
 
+#: ASSUMPTION
 @pytest.mark.model
 def test_no_hash_is_applied_to_dataclass_without_id():
     @dataclasses.dataclass()

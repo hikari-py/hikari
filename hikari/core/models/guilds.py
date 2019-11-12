@@ -21,7 +21,6 @@ Guild models.
 """
 from __future__ import annotations
 
-import dataclasses
 import datetime
 import enum
 import typing
@@ -40,7 +39,6 @@ from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import transformations
 
 
-@dataclasses.dataclass()
 class Guild(base.Snowflake, base.HikariModel):
     """
     Implementation of a Guild.
@@ -397,7 +395,6 @@ class PremiumTier(enum.IntEnum):
     TIER_3 = 3
 
 
-@dataclasses.dataclass()
 class Ban:
     """
     A user that was banned, along with the reason for the ban.

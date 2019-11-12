@@ -22,7 +22,6 @@ Presences for members.
 
 from __future__ import annotations
 
-import dataclasses
 import datetime
 import enum
 import typing
@@ -45,7 +44,6 @@ class Status(base.NamedEnum, enum.Enum):
     OFFLINE = enum.auto()
 
 
-@dataclasses.dataclass()
 class Presence(base.HikariModel):
     """
     The presence of a member. This includes their status and info on what they are doing currently.
@@ -113,7 +111,6 @@ class Presence(base.HikariModel):
             )
 
 
-@dataclasses.dataclass()
 class PresenceActivity(base.HikariModel):
     """
     A non-rich presence-style activity.
@@ -151,7 +148,6 @@ class PresenceActivity(base.HikariModel):
     update_state = NotImplemented
 
 
-@dataclasses.dataclass()
 class RichPresenceActivity(PresenceActivity):
     """
     Rich presence-style activity.
@@ -269,7 +265,6 @@ class ActivityFlag(enum.IntFlag):
     PLAY = 0x20
 
 
-@dataclasses.dataclass()
 class ActivityParty(base.HikariModel):
     __slots__ = ("id", "current_size", "max_size")
 
@@ -303,7 +298,6 @@ class ActivityParty(base.HikariModel):
         raise NotImplementedError
 
 
-@dataclasses.dataclass()
 class ActivityAssets(base.HikariModel):
     __slots__ = ("large_image", "large_text", "small_image", "small_text")
 
@@ -339,7 +333,6 @@ class ActivityAssets(base.HikariModel):
         raise NotImplementedError
 
 
-@dataclasses.dataclass()
 class ActivityTimestamps(base.HikariModel):
     __slots__ = ("start", "end")
 

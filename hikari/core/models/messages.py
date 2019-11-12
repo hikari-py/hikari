@@ -21,7 +21,6 @@ Messages and attachments.
 """
 from __future__ import annotations
 
-import dataclasses
 import datetime
 import enum
 import typing
@@ -111,7 +110,6 @@ class MessageFlag(enum.IntFlag):
 # information is not documented. Timestamp is pointless as it is able to be found from the ID anyway.
 
 
-@dataclasses.dataclass()
 class Message(base.Snowflake, base.HikariModel):
     """
     A message that was sent on Discord.
@@ -310,7 +308,6 @@ class Message(base.Snowflake, base.HikariModel):
         return self._state.get_channel_by_id(self._channel_id)
 
 
-@dataclasses.dataclass()
 class MessageActivity:
     """
     Represents the activity of a rich presence-enabled message.
@@ -335,7 +332,6 @@ class MessageActivity:
         self.party_id = transformations.nullable_cast(payload.get("party_id"), int)
 
 
-@dataclasses.dataclass()
 class MessageApplication(base.Snowflake):
     """
     Description of a rich presence application that created a rich presence message in a channel.
@@ -378,7 +374,6 @@ class MessageApplication(base.Snowflake):
         self.name = payload.get("name")
 
 
-@dataclasses.dataclass()
 class MessageCrosspost:
     """
     Represents information about a cross-posted message and the origin of the original message.
