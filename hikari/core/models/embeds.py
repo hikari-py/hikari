@@ -36,7 +36,6 @@ from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import transformations
 
-
 _MAX_EMBED_SIZE = 6_000
 
 

@@ -21,7 +21,6 @@ Permission overwrites.
 """
 from __future__ import annotations
 
-import dataclasses
 import enum
 
 from hikari.core.models import base
@@ -58,7 +57,6 @@ class OverwriteEntityType(base.NamedEnum, enum.Enum):
         return issubclass(subclass, self.value)
 
 
-@dataclasses.dataclass()
 class Overwrite(base.HikariModel, base.Snowflake):
     """
     Representation of some permissions that have been explicitly allowed or denied as an override from the defaults.

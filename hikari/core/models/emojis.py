@@ -22,7 +22,6 @@ Types of emoji.
 from __future__ import annotations
 
 import abc
-import dataclasses
 import typing
 
 from hikari import state_registry
@@ -43,7 +42,6 @@ class Emoji(base.HikariModel, abc.ABC):
         """True if the emoji is a unicode emoji, false otherwise."""
 
 
-@dataclasses.dataclass()
 class UnicodeEmoji(Emoji):
     """
     An emoji that consists of one or more unicode characters. This is just a string with some extra pieces of
@@ -78,7 +76,6 @@ class UnicodeEmoji(Emoji):
         return self.value
 
 
-@dataclasses.dataclass()
 class UnknownEmoji(Emoji, base.Snowflake):
     """
     A custom emoji that we do not know anything about other than the ID and name. These usually occur as a result
@@ -109,7 +106,6 @@ class UnknownEmoji(Emoji, base.Snowflake):
         return False
 
 
-@dataclasses.dataclass()
 class GuildEmoji(UnknownEmoji):
     """
     Represents an AbstractEmoji in a guild that the user is a member of.

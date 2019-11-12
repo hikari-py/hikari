@@ -22,7 +22,6 @@ Channel models.
 from __future__ import annotations
 
 import abc
-import dataclasses
 import typing
 
 from hikari import state_registry
@@ -37,7 +36,6 @@ from hikari.internal_utilities import transformations
 _channel_type_to_class = {}
 
 
-@dataclasses.dataclass()
 class Channel(base.Snowflake, base.HikariModel, abc.ABC):
     """
     A generic type of channel.
@@ -93,7 +91,6 @@ class TextChannel(Channel, abc.ABC):
     last_message_id: typing.Optional[int]
 
 
-@dataclasses.dataclass()
 class GuildChannel(Channel, abc.ABC):
     """
     A channel that belongs to a guild.
@@ -145,7 +142,6 @@ class GuildChannel(Channel, abc.ABC):
         return self.guild.channels[self._parent_id] if self._parent_id is not None else None
 
 
-@dataclasses.dataclass()
 class GuildTextChannel(GuildChannel, TextChannel, type=0):
     """
     A text channel.
@@ -188,7 +184,6 @@ class GuildTextChannel(GuildChannel, TextChannel, type=0):
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
 
 
-@dataclasses.dataclass()
 class DMChannel(TextChannel, type=1):
     """
     A DM channel between users.
@@ -218,7 +213,6 @@ class DMChannel(TextChannel, type=1):
         self.recipients = [self._state.parse_user(u) for u in payload.get("recipients", data_structures.EMPTY_SEQUENCE)]
 
 
-@dataclasses.dataclass()
 class GuildVoiceChannel(GuildChannel, type=2):
     """
     A voice channel within a guild.
@@ -250,7 +244,6 @@ class GuildVoiceChannel(GuildChannel, type=2):
         self.user_limit = payload.get("user_limit") or None
 
 
-@dataclasses.dataclass()
 class GroupDMChannel(DMChannel, type=3):
     """
     A DM group chat.
@@ -290,7 +283,6 @@ class GroupDMChannel(DMChannel, type=3):
         self._owner_id = transformations.nullable_cast(payload.get("owner_id"), int)
 
 
-@dataclasses.dataclass(init=False)
 class GuildCategory(GuildChannel, type=4):
     """
     A category within a guild.
@@ -301,7 +293,6 @@ class GuildCategory(GuildChannel, type=4):
     __repr__ = auto_repr.repr_of("id", "name", "guild.name")
 
 
-@dataclasses.dataclass()
 class GuildNewsChannel(GuildChannel, type=5):
     """
     A channel for news topics within a guild.
@@ -337,7 +328,6 @@ class GuildNewsChannel(GuildChannel, type=5):
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
 
 
-@dataclasses.dataclass(init=False)
 class GuildStoreChannel(GuildChannel, type=6):
     """
     A store channel for selling of games within a guild.

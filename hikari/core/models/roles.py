@@ -21,8 +21,6 @@ A role within a guild.
 """
 from __future__ import annotations
 
-import dataclasses
-
 from hikari import state_registry
 from hikari.core.models import base
 from hikari.core.models import colors as _color
@@ -32,7 +30,6 @@ from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 
 
-@dataclasses.dataclass()
 class Role(base.Snowflake, base.HikariModel):
     """
     Representation of a role within a guild.

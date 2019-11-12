@@ -21,7 +21,6 @@ Webhooks.
 """
 from __future__ import annotations
 
-import dataclasses
 import typing
 
 from hikari import state_registry
@@ -30,7 +29,6 @@ from hikari.core.models import users
 from hikari.internal_utilities import auto_repr
 
 
-@dataclasses.dataclass()
 class Webhook(base.HikariModel, base.Snowflake):
     __slots__ = ("_state", "id", "_guild_id", "_channel_id", "user", "name", "avatar_hash", "token")
     __copy_by_ref__ = ("user",)
