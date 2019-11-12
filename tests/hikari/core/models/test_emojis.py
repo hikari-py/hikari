@@ -161,3 +161,15 @@ def test_GuildEmoji_guild_property(mock_state, guild_emoji_payload):
     mock_state.get_guild_by_id = mock.MagicMock(return_value=guild)
     assert emoji.guild is guild
     mock_state.get_guild_by_id.assert_called_once_with(1234)
+
+
+@pytest.mark.model
+def test_UnknownEmoji___hash__(unknown_emoji_payload):
+    e = emojis.UnknownEmoji(unknown_emoji_payload)
+    assert hash(e) == hash(e.id)
+
+
+@pytest.mark.model
+def test_GuildEmoji___hash__(mock_state, guild_emoji_payload):
+    e = emojis.GuildEmoji(mock_state, guild_emoji_payload, 1234)
+    assert hash(e) == hash(e.id)

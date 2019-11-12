@@ -121,7 +121,7 @@ def fqn2(module, item_identifier):
 T = typing.TypeVar("T")
 
 
-def mock_model(spec_set: typing.Type[T] = object, **kwargs) -> T:
+def mock_model(spec_set: typing.Type[T] = object, hash_code_provider=lambda self: hash(id(self)), **kwargs) -> T:
     # Enables type hinting for my own reference, and quick attribute setting.
     obj = mock.MagicMock(spec_set=spec_set)
     for name, value in kwargs.items():
@@ -129,6 +129,7 @@ def mock_model(spec_set: typing.Type[T] = object, **kwargs) -> T:
 
     obj.__eq__ = lambda self, other: other is self
     obj.__ne__ = lambda self, other: other is not self
+    obj.__hash__ = hash_code_provider
     return obj
 
 
