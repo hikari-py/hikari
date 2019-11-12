@@ -92,7 +92,7 @@ class Presence(base.HikariModel):
         client_status = payload.get("client_status", data_structures.EMPTY_DICT)
 
         if "activities" in payload:
-            self.activities = [PresenceActivity(a) for a in payload["activities"]]
+            self.activities = [parse_presence_activity(a) for a in payload["activities"]]
 
         if "status" in payload:
             self.status = transformations.try_cast(payload["status"], Status.from_discord_name, Status.OFFLINE)
@@ -116,6 +116,44 @@ class Presence(base.HikariModel):
 @dataclasses.dataclass()
 class PresenceActivity(base.HikariModel):
     """
+    A non-rich presence-style activity.
+
+    Note:
+        This can only be received from the gateway, not sent to it.
+    """
+
+    __slots__ = (
+        "name",
+        "type",
+        "url",
+    )
+
+    #: The name of the activity.
+    #:
+    #: :type: :class:`str`
+    name: str
+
+    #: The type of the activity.
+    #:
+    #: :type: :class:`str`
+    type: str
+
+    #: The URL of the activity, if applicable
+    #:
+    #: :type: :class:`str` or `None`
+    url: typing.Optional[str]
+
+    def __init__(self, payload):
+        self.name = payload.get("name")
+        self.type = transformations.try_cast(payload.get("type"), ActivityType)
+        self.url = payload.get("url")
+
+    update_state = NotImplemented
+
+
+@dataclasses.dataclass()
+class RichPresenceActivity(PresenceActivity):
+    """
     Rich presence-style activity.
 
     Note:
@@ -124,9 +162,6 @@ class PresenceActivity(base.HikariModel):
 
     __slots__ = (
         "id",
-        "name",
-        "type",
-        "url",
         "timestamps",
         "application_id",
         "details",
@@ -144,21 +179,6 @@ class PresenceActivity(base.HikariModel):
     #: Warning:
     #:     Unlike most IDs in this API, this is a :class:`str`, and *NOT* an :class:`int`
     id: str
-
-    #: The name of the activity.
-    #:
-    #: :type: :class:`str`
-    name: str
-
-    #: The type of the activity.
-    #:
-    #: :type: :class:`str`
-    type: str
-
-    #: The URL of the activity, if applicable
-    #:
-    #: :type: :class:`str` or `None`
-    url: typing.Optional[str]
 
     #: The start and end timestamps for the activity, if applicable, else `None`
     #:
@@ -198,10 +218,8 @@ class PresenceActivity(base.HikariModel):
     __repr__ = auto_repr.repr_of("id", "name", "type")
 
     def __init__(self, payload):
+        super().__init__(payload)
         self.id = payload.get("id")
-        self.name = payload.get("name")
-        self.type = transformations.try_cast(payload.get("type"), ActivityType)
-        self.url = payload.get("url")
         self.timestamps = transformations.nullable_cast(payload.get("timestamps"), ActivityTimestamps)
         self.application_id = transformations.nullable_cast(payload.get("application_id"), int)
         self.details = payload.get("details")
@@ -210,17 +228,36 @@ class PresenceActivity(base.HikariModel):
         self.assets = transformations.nullable_cast(payload.get("assets"), ActivityAssets)
         self.flags = transformations.nullable_cast(payload.get("flags"), ActivityFlag) or 0
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
-        # We don't bother with this here.
-        raise NotImplementedError
+    update_state = NotImplemented
+
+
+def parse_presence_activity(
+    payload: data_structures.DiscordObjectT,
+) -> typing.Union[PresenceActivity, RichPresenceActivity]:
+    """
+    Consumes a payload and decides the type of activity it represents. A corresponding object is then
+    constructed and returned as appropriate.
+
+    Returns:
+        either a :class:`PresenceActivity` or a :class:`RichPresenceActivity` depending on the
+        implementation details provided.
+    """
+    impl = RichPresenceActivity if any(slot in payload for slot in RichPresenceActivity.__slots__) else PresenceActivity
+    return impl(payload)
 
 
 class ActivityType(enum.IntEnum):
-    UNKNOWN = -1
+    #: Shows up as `Playing <name>`
     PLAYING = 0
+    #: Shows up as `Streaming <name>`.
+    #:
+    #: Warning:
+    #:     Corresponding presences must be associated with VALID Twitch stream URLS!
     STREAMING = 1
+    #:
     LISTENING = 2
     WATCHING = 3
+    CUSTOM = 4
 
 
 class ActivityFlag(enum.IntFlag):
@@ -338,6 +375,8 @@ __all__ = [
     "Status",
     "Presence",
     "PresenceActivity",
+    "RichPresenceActivity",
+    "parse_presence_activity",
     "ActivityType",
     "ActivityFlag",
     "ActivityAssets",
