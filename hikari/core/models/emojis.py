@@ -22,7 +22,6 @@ Types of emoji.
 from __future__ import annotations
 
 import abc
-import dataclasses
 import typing
 
 from hikari import state_registry
@@ -37,13 +36,16 @@ class Emoji(base.HikariModel, abc.ABC):
 
     __slots__ = ()
 
+    @abc.abstractmethod
+    def __init__(self):
+        ...
+
     @property
     @abc.abstractmethod
     def is_unicode(self) -> bool:
         """True if the emoji is a unicode emoji, false otherwise."""
 
 
-@dataclasses.dataclass()
 class UnicodeEmoji(Emoji):
     """
     An emoji that consists of one or more unicode characters. This is just a string with some extra pieces of
@@ -78,7 +80,6 @@ class UnicodeEmoji(Emoji):
         return self.value
 
 
-@dataclasses.dataclass()
 class UnknownEmoji(Emoji, base.Snowflake):
     """
     A custom emoji that we do not know anything about other than the ID and name. These usually occur as a result
@@ -109,7 +110,6 @@ class UnknownEmoji(Emoji, base.Snowflake):
         return False
 
 
-@dataclasses.dataclass()
 class GuildEmoji(UnknownEmoji):
     """
     Represents an AbstractEmoji in a guild that the user is a member of.
@@ -128,7 +128,7 @@ class GuildEmoji(UnknownEmoji):
 
     #: The user who made the object, if available.
     #:
-    #: :type: :class:`hikari.core.models.user.User` or `None`
+    #: :type: :class:`hikari.core.models.users.User` or `None`
     user: typing.Optional[user.User]
 
     #: `True` if the emoji is managed as part of an integration with Twitch, `False` otherwise.
@@ -171,11 +171,25 @@ def is_payload_guild_emoji_candidate(payload: data_structures.DiscordObjectT) ->
     return "id" in payload and "animated" in payload
 
 
-def emoji_from_dict(
+def parse_emoji(
     global_state: state_registry.StateRegistry,
     payload: data_structures.DiscordObjectT,
     guild_id: typing.Optional[int] = None,
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:
+    """
+    Parse the given emoji payload into an appropriate implementation of Emoji.
+
+    Args:
+        global_state:
+            The global state object.
+        payload:
+            the payload to parse.
+        guild_id:
+            the owning guild of the emoji if known and appropriate, otherwise `None`.
+
+    Returns:
+        One of :class:`UnicodeEmoji`, :class:`UnknownEmoji`, :class:`GuildEmoji`.
+    """
     if is_payload_guild_emoji_candidate(payload) and guild_id is not None:
         return GuildEmoji(global_state, payload, guild_id)
     elif payload.get("id") is not None:
@@ -184,4 +198,4 @@ def emoji_from_dict(
         return UnicodeEmoji(payload)
 
 
-__all__ = ["UnicodeEmoji", "UnknownEmoji", "GuildEmoji"]
+__all__ = ["Emoji", "UnicodeEmoji", "UnknownEmoji", "GuildEmoji"]

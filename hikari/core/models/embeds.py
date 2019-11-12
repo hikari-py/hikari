@@ -36,7 +36,6 @@ from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import transformations
 
-
 _MAX_EMBED_SIZE = 6_000
 
 
@@ -49,10 +48,9 @@ class EmbedPart(base.HikariModel, abc.ABC):
 
     __slots__ = ("__weakref__",)
 
-    # Abstract to enforce subclassing.
     @abc.abstractmethod
     def __init__(self):
-        pass
+        ...
 
     def __delattr__(self, item):
         setattr(self, item, None)
@@ -373,7 +371,7 @@ class BaseEmbed:
         """
         The color of the embed. Can be set and removed using the `del` operator additionally.
 
-        Can be a :class:`hikari.core.models.color.Color` or an :class:`int`.
+        Can be a :class:`hikari.core.models.colors.Color` or an :class:`int`.
         """
         return self._color
 
@@ -625,7 +623,7 @@ class Embed(BaseEmbed):
     Warning:
         An embed may contain no more than 6,000 characters of textual content, and only up to 25 fields. Additionally,
         specific attributes of an embed have their own size constraints which are documented per field. If you exceed
-        any of these limits, you will receive a :class:`hikari.core.errors.BadRequest` from the API upon sending the
+        any of these limits, you will receive a :class:`hikari.errors.BadRequest` from the API upon sending the
         embed.
     """
 

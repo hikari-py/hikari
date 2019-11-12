@@ -89,6 +89,42 @@ class TestSnowflake:
     def test_Snowflake_internal_worker_id(self, neko_snowflake):
         assert neko_snowflake.internal_worker_id == 2
 
+    def test___eq___when_matching_type_and_matching_id(self):
+        class SnowflakeImpl(base.Snowflake):
+            def __init__(self):
+                self.id = 1
+
+        assert SnowflakeImpl() == SnowflakeImpl()
+
+    def test___eq___when_matching_type_but_no_matching_id(self):
+        class SnowflakeImpl(base.Snowflake):
+            def __init__(self, id_):
+                self.id = id_
+
+        assert SnowflakeImpl(1) != SnowflakeImpl(2)
+
+    def test___eq___when_no_matching_type_but_matching_id(self):
+        class SnowflakeImpl1(base.Snowflake):
+            def __init__(self, id_):
+                self.id = id_
+
+        class SnowflakeImpl2(base.Snowflake):
+            def __init__(self, id_):
+                self.id = id_
+
+        assert SnowflakeImpl1(1) != SnowflakeImpl2(1)
+
+    def test___eq___when_no_matching_type_and_no_matching_id(self):
+        class SnowflakeImpl1(base.Snowflake):
+            def __init__(self, id_):
+                self.id = id_
+
+        class SnowflakeImpl2(base.Snowflake):
+            def __init__(self, id_):
+                self.id = id_
+
+        assert SnowflakeImpl1(1) != SnowflakeImpl2(2)
+
 
 @pytest.mark.model
 def test_NamedEnumMixin_from_discord_name():
@@ -101,6 +137,7 @@ def test_NamedEnumMixin_str_and_repr(cast):
     assert cast(DummyNamedEnum.BAZ) == "BAZ"
 
 
+#: ASSUMPTION
 @pytest.mark.model
 def test_no_hash_is_applied_to_dataclass_without_id():
     @dataclasses.dataclass()

@@ -22,7 +22,6 @@ Presences for members.
 
 from __future__ import annotations
 
-import dataclasses
 import datetime
 import enum
 import typing
@@ -39,13 +38,16 @@ class Status(base.NamedEnum, enum.Enum):
     The status of a member.
     """
 
+    #: Online/green.
     ONLINE = enum.auto()
+    #: Idle/yellow.
     IDLE = enum.auto()
+    #: Do not disturb/red.
     DND = enum.auto()
+    #: Offline/grey.
     OFFLINE = enum.auto()
 
 
-@dataclasses.dataclass()
 class Presence(base.HikariModel):
     """
     The presence of a member. This includes their status and info on what they are doing currently.
@@ -55,27 +57,27 @@ class Presence(base.HikariModel):
 
     #: The activities the member currently is doing.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.presence.PresenceActivity`
+    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.presences.PresenceActivity`
     activities: typing.Sequence[PresenceActivity]
 
     #: Overall account status.
     #:
-    #: :type: :class:`hikari.core.models.presence.Status`
+    #: :type: :class:`hikari.core.models.presences.Status`
     status: Status
 
     #: The web client status for the member.
     #:
-    #: :type: :class:`hikari.core.models.presence.Status`
+    #: :type: :class:`hikari.core.models.presences.Status`
     web_status: Status
 
     #: The desktop client status for the member.
     #:
-    #: :type: :class:`hikari.core.models.presence.Status`
+    #: :type: :class:`hikari.core.models.presences.Status`
     desktop_status: Status
 
     #: The mobile client status for the member.
     #:
-    #: :type: :class:`hikari.core.models.presence.Status`
+    #: :type: :class:`hikari.core.models.presences.Status`
     mobile_status: Status
 
     __repr__ = auto_repr.repr_of("status")
@@ -92,7 +94,7 @@ class Presence(base.HikariModel):
         client_status = payload.get("client_status", data_structures.EMPTY_DICT)
 
         if "activities" in payload:
-            self.activities = [PresenceActivity(a) for a in payload["activities"]]
+            self.activities = [parse_presence_activity(a) for a in payload["activities"]]
 
         if "status" in payload:
             self.status = transformations.try_cast(payload["status"], Status.from_discord_name, Status.OFFLINE)
@@ -113,8 +115,44 @@ class Presence(base.HikariModel):
             )
 
 
-@dataclasses.dataclass()
 class PresenceActivity(base.HikariModel):
+    """
+    A non-rich presence-style activity.
+
+    Note:
+        This can only be received from the gateway, not sent to it.
+    """
+
+    __slots__ = (
+        "name",
+        "type",
+        "url",
+    )
+
+    #: The name of the activity.
+    #:
+    #: :type: :class:`str`
+    name: str
+
+    #: The type of the activity.
+    #:
+    #: :type: :class:`str`
+    type: str
+
+    #: The URL of the activity, if applicable
+    #:
+    #: :type: :class:`str` or `None`
+    url: typing.Optional[str]
+
+    def __init__(self, payload):
+        self.name = payload.get("name")
+        self.type = transformations.try_cast(payload.get("type"), ActivityType)
+        self.url = payload.get("url")
+
+    update_state = NotImplemented
+
+
+class RichPresenceActivity(PresenceActivity):
     """
     Rich presence-style activity.
 
@@ -124,9 +162,6 @@ class PresenceActivity(base.HikariModel):
 
     __slots__ = (
         "id",
-        "name",
-        "type",
-        "url",
         "timestamps",
         "application_id",
         "details",
@@ -145,24 +180,9 @@ class PresenceActivity(base.HikariModel):
     #:     Unlike most IDs in this API, this is a :class:`str`, and *NOT* an :class:`int`
     id: str
 
-    #: The name of the activity.
-    #:
-    #: :type: :class:`str`
-    name: str
-
-    #: The type of the activity.
-    #:
-    #: :type: :class:`str`
-    type: str
-
-    #: The URL of the activity, if applicable
-    #:
-    #: :type: :class:`str` or `None`
-    url: typing.Optional[str]
-
     #: The start and end timestamps for the activity, if applicable, else `None`
     #:
-    #: :type: :class:`hikari.core.models.presence.ActivityTimestamps` or `None`
+    #: :type: :class:`hikari.core.models.presences.ActivityTimestamps` or `None`
     timestamps: typing.Optional[ActivityTimestamps]
 
     #: The ID of the application, or `None`
@@ -182,26 +202,24 @@ class PresenceActivity(base.HikariModel):
 
     #: The party in the activity, or `None`
     #:
-    #: :type: :class:`hikari.core.models.presence.ActivityParty` or `None`
+    #: :type: :class:`hikari.core.models.presences.ActivityParty` or `None`
     party: typing.Optional[ActivityParty]
 
     #: Any assets provided with the activity, or `None`
     #:
-    #: :type: :class:`hikari.core.models.presence.ActivityAssets` or `None`
+    #: :type: :class:`hikari.core.models.presences.ActivityAssets` or `None`
     assets: typing.Optional[ActivityAssets]
 
     #: Any flags on the activity.
     #:
-    #: :type: :class:`hikari.core.models.presence.ActivityFlag`
+    #: :type: :class:`hikari.core.models.presences.ActivityFlag`
     flags: ActivityFlag
 
     __repr__ = auto_repr.repr_of("id", "name", "type")
 
     def __init__(self, payload):
+        super().__init__(payload)
         self.id = payload.get("id")
-        self.name = payload.get("name")
-        self.type = transformations.try_cast(payload.get("type"), ActivityType)
-        self.url = payload.get("url")
         self.timestamps = transformations.nullable_cast(payload.get("timestamps"), ActivityTimestamps)
         self.application_id = transformations.nullable_cast(payload.get("application_id"), int)
         self.details = payload.get("details")
@@ -210,20 +228,50 @@ class PresenceActivity(base.HikariModel):
         self.assets = transformations.nullable_cast(payload.get("assets"), ActivityAssets)
         self.flags = transformations.nullable_cast(payload.get("flags"), ActivityFlag) or 0
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
-        # We don't bother with this here.
-        raise NotImplementedError
+    update_state = NotImplemented
+
+
+def parse_presence_activity(
+    payload: data_structures.DiscordObjectT,
+) -> typing.Union[PresenceActivity, RichPresenceActivity]:
+    """
+    Consumes a payload and decides the type of activity it represents. A corresponding object is then
+    constructed and returned as appropriate.
+
+    Returns:
+        either a :class:`PresenceActivity` or a :class:`RichPresenceActivity` depending on the
+        implementation details provided.
+    """
+    impl = RichPresenceActivity if any(slot in payload for slot in RichPresenceActivity.__slots__) else PresenceActivity
+    return impl(payload)
 
 
 class ActivityType(enum.IntEnum):
-    UNKNOWN = -1
+    """
+    The activity state. Can be more than one using bitwise-combinations.
+    """
+
+    #: Shows up as `Playing <name>`
     PLAYING = 0
+    #: Shows up as `Streaming <name>`.
+    #:
+    #: Warning:
+    #:     Corresponding presences must be associated with VALID Twitch stream URLS!
     STREAMING = 1
+    #: Shows up as `Listening to <name>`.
     LISTENING = 2
+    #: Shows up as `Watching <name>`.
     WATCHING = 3
+    #: A custom status. Note that this is not yet fully supported by the API in a documented way,
+    #: so information pertaining to the emoji associated with the presence is not yet available.
+    CUSTOM = 4
 
 
 class ActivityFlag(enum.IntFlag):
+    """
+    The activity state. Can be more than one using bitwise-combinations.
+    """
+
     INSTANCE = 0x1
     JOIN = 0x2
     SPECTATE = 0x4
@@ -232,8 +280,12 @@ class ActivityFlag(enum.IntFlag):
     PLAY = 0x20
 
 
-@dataclasses.dataclass()
 class ActivityParty(base.HikariModel):
+    """
+    A description of a party of players in the same rich-presence activity. This
+    is used to describe multiplayer sessions, and the likes.
+    """
+
     __slots__ = ("id", "current_size", "max_size")
 
     #: The ID of the party, if applicable, else `None`
@@ -266,8 +318,11 @@ class ActivityParty(base.HikariModel):
         raise NotImplementedError
 
 
-@dataclasses.dataclass()
 class ActivityAssets(base.HikariModel):
+    """
+    Any rich assets such as tooltip data and image/icon data for a rich presence activity.
+    """
+
     __slots__ = ("large_image", "large_text", "small_image", "small_text")
 
     #: Large image asset, or `None`.
@@ -302,8 +357,12 @@ class ActivityAssets(base.HikariModel):
         raise NotImplementedError
 
 
-@dataclasses.dataclass()
 class ActivityTimestamps(base.HikariModel):
+    """
+    Timestamps for a rich presence activity object that define when and for how long the
+    user has been undergoing an activity.
+    """
+
     __slots__ = ("start", "end")
 
     #: The start timestamp, or `None` if not specified.
@@ -338,6 +397,8 @@ __all__ = [
     "Status",
     "Presence",
     "PresenceActivity",
+    "RichPresenceActivity",
+    "parse_presence_activity",
     "ActivityType",
     "ActivityFlag",
     "ActivityAssets",

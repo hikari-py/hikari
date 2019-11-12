@@ -140,7 +140,7 @@ def timestamps():
 
 
 @pytest.fixture()
-def activity(assets, party, timestamps):
+def rich_presence_activity(assets, party, timestamps):
     return {
         "type": 2,
         "state": "Working on hikari.core",
@@ -153,6 +153,15 @@ def activity(assets, party, timestamps):
         "application_id": "384215522050572288",
         "flags": 3,
         "party": party,
+    }
+
+
+@pytest.fixture()
+def legacy_presence_activity():
+    return {
+        "type": 0,
+        "name": "with yo mama",
+        "url": None,
     }
 
 
@@ -210,8 +219,15 @@ class TestPresence:
 
 
 @pytest.mark.model
-def test_parse_activity(activity):
-    a = presences.PresenceActivity(activity)
+def test_parse_PresenceActivity(legacy_presence_activity):
+    a = presences.PresenceActivity(legacy_presence_activity)
+    assert a.name == "with yo mama"
+    assert a.type == presences.ActivityType.PLAYING
+
+
+@pytest.mark.model
+def test_parse_RichPresenceActivity(rich_presence_activity):
+    a = presences.RichPresenceActivity(rich_presence_activity)
     assert a.type == presences.ActivityType.LISTENING
     assert a.timestamps is not None
     assert a.state == "Working on hikari.core"
@@ -223,6 +239,20 @@ def test_parse_activity(activity):
     assert a.flags & presences.ActivityFlag.INSTANCE
     assert a.flags & presences.ActivityFlag.JOIN
     assert a.party is not None
+
+
+@pytest.mark.model
+def test_parse_presence_activity_for_PresenceActivity(legacy_presence_activity):
+    a = presences.parse_presence_activity(legacy_presence_activity)
+    # It must be the class exactly, not a derivative.
+    assert type(a) is presences.PresenceActivity
+
+
+@pytest.mark.model
+def test_parse_presence_activity_for_RichPresenceActivity(rich_presence_activity):
+    a = presences.parse_presence_activity(rich_presence_activity)
+    # It must be the class exactly, not a derivative.
+    assert type(a) is presences.RichPresenceActivity
 
 
 @pytest.mark.model

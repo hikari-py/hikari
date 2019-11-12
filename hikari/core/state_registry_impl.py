@@ -58,7 +58,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
     Cache accesses are not asynchronous. This means that this implementation is not suitable for interfacing with a
     distributed cache (e.g. Redis). If you wish to instead use that sort of implementation, you should create an
-    implementation from :class:`hikari.core.internal.state_registry.StateRegistry` and implement each
+    implementation from :class:`hikari.state_registry.StateRegistry` and implement each
     method as a coroutine function. You will also need to update the models that access the cache, and the event
     adapter that calls this cache, appropriately.
     """
@@ -234,7 +234,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
         if channel_obj is not None:
             channel_obj.update_state(channel_payload)
         else:
-            channel_obj = channels.channel_from_dict(self, channel_payload)
+            channel_obj = channels.parse_channel(self, channel_payload)
             if channels.is_channel_type_dm(channel_payload["type"]):
                 self._dm_channels[channel_id] = channel_obj
             else:
@@ -265,7 +265,7 @@ class StateRegistryImpl(state_registry.StateRegistry):
             existing_emoji.update_state(emoji_payload)
             return existing_emoji
 
-        new_emoji = emojis.emoji_from_dict(self, emoji_payload, owned_guild_id)
+        new_emoji = emojis.parse_emoji(self, emoji_payload, owned_guild_id)
         if isinstance(new_emoji, emojis.GuildEmoji):
             guild_obj = self.get_guild_by_id(owned_guild_id)
             guild_obj.emojis[new_emoji.id] = new_emoji

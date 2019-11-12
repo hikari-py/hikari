@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019
 #
 # This file is part of Hikari.
@@ -14,30 +16,19 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import pytest
 
-.merge_request_testing: &merge_request_testing
-    only:
-        - branches
-        - merge_requests
-        - tags
-        - schedules
-
-# Run a cache per branch per job
-.per_job_branch_cache: &per_job_branch_cache
-    cache:
-        paths:
-            - $CI_PROJECT_DIR/.cache/pip
-            - .nox/
-        key: $CI_COMMIT_REF_SLUG-$CI_JOB_STAGE-$CI_JOB_NAME
-        policy: pull-push
+from hikari.core.models import emojis
+from hikari.core.models import messages
+from hikari.core.models import reactions
+from tests.hikari import _helpers
 
 
-.cache_job:
-    <<: *per_job_branch_cache
-
-.merge_job:
-    <<: *merge_request_testing
-
-.cache_merge_job:
-    <<: *per_job_branch_cache
-    <<: *merge_request_testing
+@pytest.mark.model
+def test_parse_Reaction():
+    m = _helpers.mock_model(messages.Message)
+    e = _helpers.mock_model(emojis.Emoji)
+    r = reactions.Reaction(9, e, m)
+    assert r.message is m
+    assert r.emoji is e
+    assert r.count == 9

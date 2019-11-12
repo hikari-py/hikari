@@ -21,15 +21,12 @@ Reactions to a message.
 """
 from __future__ import annotations
 
-import dataclasses
-
 from hikari.core.models import base
 from hikari.core.models import emojis as _emoji
 from hikari.core.models import messages as _message
 from hikari.internal_utilities import auto_repr
 
 
-@dataclasses.dataclass()
 class Reaction(base.HikariModel):
     """
     Model for a message reaction object
@@ -48,13 +45,18 @@ class Reaction(base.HikariModel):
 
     #: The emoji used for the reaction.
     #:
-    #: :type: :class:`hikari.core.models.emoji.AbstractEmoji`
+    #: :type: :class:`hikari.core.models.emojis.AbstractEmoji`
     emoji: _emoji.Emoji
 
     #: The message that was reacted on.
     #:
-    #: :type: :class:`hikari.core.models.message.Message`
+    #: :type: :class:`hikari.core.models.messages.Message`
     message: _message.Message
+
+    def __init__(self, count: int, emoji: _emoji.Emoji, message: _message.Message) -> None:
+        self.count = count
+        self.emoji = emoji
+        self.message = message
 
     __repr__ = auto_repr.repr_of("count", "emoji", "message.id")
 

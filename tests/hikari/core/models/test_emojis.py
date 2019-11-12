@@ -115,26 +115,26 @@ def test_GuildEmoji___init__(mock_state, guild_emoji_payload, user_payload):
 
 @pytest.mark.model
 def test_emoji_from_dict_with_unicode_emoji(mock_state, unicode_emoji_payload):
-    assert isinstance(emojis.emoji_from_dict(mock_state, unicode_emoji_payload), emojis.UnicodeEmoji)
+    assert isinstance(emojis.parse_emoji(mock_state, unicode_emoji_payload), emojis.UnicodeEmoji)
 
 
 @pytest.mark.model
 def test_emoji_from_dict_with_unknown_emoji(mock_state, unknown_emoji_payload):
-    e = emojis.emoji_from_dict(mock_state, unknown_emoji_payload)
+    e = emojis.parse_emoji(mock_state, unknown_emoji_payload)
     assert isinstance(e, emojis.UnknownEmoji)
     assert not isinstance(e, emojis.GuildEmoji)
 
 
 @pytest.mark.model
 def test_emoji_from_dict_with_guild_emoji_but_no_guild(mock_state, guild_emoji_payload):
-    e = emojis.emoji_from_dict(mock_state, guild_emoji_payload, None)
+    e = emojis.parse_emoji(mock_state, guild_emoji_payload, None)
     assert isinstance(e, emojis.UnknownEmoji)
     assert not isinstance(e, emojis.GuildEmoji)
 
 
 @pytest.mark.model
 def test_emoji_from_dict_with_guild_emoji_and_passed_guild_id(mock_state, guild_emoji_payload):
-    e = emojis.emoji_from_dict(mock_state, guild_emoji_payload, 1234)
+    e = emojis.parse_emoji(mock_state, guild_emoji_payload, 1234)
     assert isinstance(e, emojis.GuildEmoji)
 
 
@@ -161,3 +161,15 @@ def test_GuildEmoji_guild_property(mock_state, guild_emoji_payload):
     mock_state.get_guild_by_id = mock.MagicMock(return_value=guild)
     assert emoji.guild is guild
     mock_state.get_guild_by_id.assert_called_once_with(1234)
+
+
+@pytest.mark.model
+def test_UnknownEmoji___hash__(unknown_emoji_payload):
+    e = emojis.UnknownEmoji(unknown_emoji_payload)
+    assert hash(e) == hash(e.id)
+
+
+@pytest.mark.model
+def test_GuildEmoji___hash__(mock_state, guild_emoji_payload):
+    e = emojis.GuildEmoji(mock_state, guild_emoji_payload, 1234)
+    assert hash(e) == hash(e.id)

@@ -21,7 +21,6 @@ Account integrations.
 """
 from __future__ import annotations
 
-import dataclasses
 import datetime
 
 from hikari import state_registry
@@ -31,7 +30,6 @@ from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import date_helpers
 
 
-@dataclasses.dataclass()
 class IntegrationAccount(base.HikariModel, base.Snowflake):
     """
     An account used for an integration.
@@ -59,7 +57,6 @@ class IntegrationAccount(base.HikariModel, base.Snowflake):
         self.name = payload.get("name")
 
 
-@dataclasses.dataclass()
 class Integration(base.HikariModel, base.Snowflake):
     """
     A guild integration.
@@ -114,12 +111,12 @@ class Integration(base.HikariModel, base.Snowflake):
 
     #: The user for this integration
     #:
-    #: :type: :class:`hikari.core.models.user.User`
+    #: :type: :class:`hikari.core.models.users.User`
     user: users.User
 
     #: Integration account information.
     #:
-    #: :type: :class:`hikari.core.models.integration.IntegrationAccount`
+    #: :type: :class:`hikari.core.models.integrations.IntegrationAccount`
     account: IntegrationAccount
 
     #: The time when the integration last synchronized.
