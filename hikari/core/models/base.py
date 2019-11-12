@@ -115,6 +115,22 @@ class Snowflake:
     def __ge__(self, other) -> bool:
         return self > other or self == other
 
+    def __init_subclass__(cls, **kwargs):
+        """
+        Force subclasses to implement `__hash__` if not already defined.
+        """
+        super().__init_subclass__()
+
+        # Dataclasses can set this to None to hide it implementing the parent class hash,
+        # which is exactly what I want to achieve as I know the safety implications, but it won't
+        # let me. I could set this to NotImplemented, additionally. If no `hash` was derived from
+        # a subclass, then it could additionally be the empty slotted descriptor provided in `object`.
+        # Thus, we have several potential values to check against before injecting an implementation.
+        # The easiest way is to just check if the `__hash__` is in the cls dict, as that contains
+        # the namespaces we care about.
+        if "__hash__" not in cls.__dict__:
+            setattr(cls, "__hash__", lambda self: hash(self.id))
+
 
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
@@ -147,6 +163,8 @@ class HikariModel:
         """
         When the subclass gets inited, resolve the `__copy_by_ref__` for all base classes as well.
         """
+        super().__init_subclass__()
+
         if "__slots__" not in cls.__dict__:
             raise TypeError(f"{cls.__module__}.{cls.__qualname__} must be slotted to derive from HikariModel.")
 
