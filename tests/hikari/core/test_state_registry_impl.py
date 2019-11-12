@@ -1152,7 +1152,6 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         registry.get_guild_by_id = mock.MagicMock(return_value=None, spec_set=registry.get_guild_by_id)
-        presence = _helpers.mock_model(presences.Presence)
         payload = {
             "user": {"id": "339767912841871360"},
             "status": "online",
@@ -1172,7 +1171,6 @@ class TestStateRegistryImpl:
         registry._guilds = {guild_obj.id: guild_obj}
         member_obj = _helpers.mock_model(members.Member, id=456)
         guild_obj.members = {}
-        presence = _helpers.mock_model(presences.Presence)
         payload = {
             "user": {"id": "339767912841871360"},
             "status": "online",
@@ -1265,3 +1263,53 @@ class TestStateRegistryImpl:
 
         assert new is original_role_obj, "existing role was not used as target for update!"
         assert old is cloned_role_obj, "existing role did not get the old state copied and returned!"
+
+    def test_update_guild_emojis_when_existing_guild_does_not_exist_returns_None(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, emojis={})
+        registry._guilds = {}
+        payload = {
+            "emojis": [{"id": "456", "name": "roundCheck"}],
+            "guild_id": guild_obj.id,
+        }
+
+        diff = registry.update_guild_emojis(payload, guild_obj.id)
+
+        assert diff is None
+
+    def test_update_guild_emojis_when_when_existing_guild_exists_returns_old_state_copy_and_updated_new_state(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        guild_id = 9999
+        existing_emoji_1 = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="bowsettebaka", animated=False)
+        existing_emoji_2 = _helpers.mock_model(emojis.GuildEmoji, id=1235, name="bowsettel00d", animated=False)
+        existing_emoji_3 = _helpers.mock_model(emojis.GuildEmoji, id=1236, name="bowsetteowo", animated=True)
+
+        initial_emoji_map = {
+            existing_emoji_1.id: existing_emoji_1,
+            existing_emoji_2.id: existing_emoji_2,
+            existing_emoji_3.id: existing_emoji_3,
+        }
+
+        guild_obj = _helpers.mock_model(guilds.Guild, id=guild_id, emojis=dict(initial_emoji_map))
+        registry._guilds = {guild_obj.id: guild_obj}
+
+        registry.parse_emoji = mock.MagicMock(side_effect=[existing_emoji_1, existing_emoji_2])
+
+        payload = {
+            "emojis": [
+                {"id": "1234", "name": "bowsettebaka", "animated": False},
+                {"id": "1235", "name": "bowsettel00d", "animated": False},
+            ],
+            "guild_id": guild_obj.id,
+        }
+
+        diff = registry.update_guild_emojis(payload, guild_obj.id)
+
+        assert diff is not None
+
+        before, after = diff
+
+        assert before == set(initial_emoji_map.values())
+        assert after == {existing_emoji_1, existing_emoji_2}
