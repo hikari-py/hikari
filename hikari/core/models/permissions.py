@@ -89,12 +89,12 @@ class Permission(enum.IntFlag):
         my_perms = ~Permission.ADMINISTRATOR
     
     """
-    
+
     #: Empty permission.
     NONE = 0x0
     #: Allows creation of instant invites.
     CREATE_INSTANT_INVITE = 0x1
-    #: Allows kicking members	
+    #: Allows kicking members
     KICK_MEMBERS = 0x2
     #: Allows banning members.
     BAN_MEMBERS = 0x4
@@ -165,8 +165,8 @@ class Permission(enum.IntFlag):
 
 for name, value in Permission.__members__.items():
     globals()[name] = value
-    
-    
+
+
 #: All valid permissions set.
 all_permissions = Permission.all()
 
