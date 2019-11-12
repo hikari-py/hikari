@@ -23,7 +23,6 @@
         paths:
             - $CI_PROJECT_DIR/.pytest_cache
             - $CI_PROJECT_DIR/.nox
-            - $CI_PROJECT_DIR/.venv
             - $CI_PROJECT_DIR/.cache/pip
             - $CI_PROJECT_DIR/poetry.lock
         key: $CI_COMMIT_REF_SLUG-$CI_JOB_STAGE-$CI_JOB_NAME
@@ -37,7 +36,7 @@
         - apt-get install graphviz -qy || apt-get update && apt-get install graphviz -qy
         - pip install virtualenv
         - >
-            if [[ "${CI_IS_SCHEDULED}" -eq "1" ]] || [[ ! -f .venv ]]; then
+            if [[ "${CI_IS_SCHEDULED}" -eq "1" ]] || [[ ! -d .venv ]]; then
                 echo "Installing new venv and installing poetry inside it."
                 rm poetry.lock .cache/pip .venv/ .nox/ .pytest_cache/ -Rf || true
                 python -m venv .venv
