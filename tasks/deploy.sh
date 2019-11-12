@@ -54,7 +54,7 @@ function deploy-to-svc() {
     git push ${REMOTE_NAME} ${PROD_BRANCH} || true
     (git tag "${current_version}" && git push ${REMOTE_NAME} "${current_version}") || true
     git checkout ${PREPROD_BRANCH}
-    (git merge ${PROD_BRANCH} --no-ff --strategy-option theirs -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_CI COMMIT_PHRASE}" && git push ${REMOTE_NAME} ${PREPROD_BRANCH}) || true
+    (git merge ${PROD_BRANCH} --no-ff --strategy-option theirs -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_CI_COMMIT_PHRASE}" && git push ${REMOTE_NAME} ${PREPROD_BRANCH}) || true
     set +x
 }
 
