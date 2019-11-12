@@ -16,7 +16,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 .deploy:
-    extends: .cache_job
     allow_failure: false
     stage: deploy
     image: python:3-stretch

@@ -19,18 +19,37 @@
 ### TEMPLATE FOR TEST AND PROD DOCUMENTATION GENERATION JOBS.
 ###
 .pages:
-    extends: .cache_job
+    cache:
+        paths:
+            - $CI_PROJECT_DIR/.pytest_cache
+            - $CI_PROJECT_DIR/.nox
+            - $CI_PROJECT_DIR/.venv
+            - $CI_PROJECT_DIR/.cache/pip
+            - $CI_PROJECT_DIR/poetry.lock
+        key: $CI_COMMIT_REF_SLUG-$CI_JOB_STAGE-$CI_JOB_NAME
+        policy: pull-push
     allow_failure: false
     image: python:3.7.5
     before_script:
-        - source tasks/config.sh
-        - apt-get update
-        - apt-get install git -y
-        - apt-get install graphviz -y
-        - pip install poetry nox
-        - git fetch --all --prune
         - rm public -Rvf || true
         - mkdir public || true
+        - apt-get install -qy git gcc g++ make
+        - apt-get install graphviz -qy || apt-get update && apt-get install graphviz -qy
+        - pip install virtualenv
+        - >
+            if [[ -v ${CI_IS_SCHEDULED} ]] || [[ ! -f .venv ]]; then
+                echo "Installing new venv and installing poetry inside it."
+                rm poetry.lock .cache/pip .venv/ .nox/ .pytest_cache/ -Rf || true
+                python -m venv .venv
+                source .venv/bin/activate
+                pip install poetry
+                poetry update
+            else
+                echo "Reusing existing venv."
+                source .venv/bin/activate
+            fi
+        - source tasks/config.sh
+        - git fetch --all --prune --depth=1
 
 pages:
     stage: pages
@@ -64,7 +83,7 @@ pages:
         - staging
 
 
-test-pages:
+pages-dry-run:
     stage: test
     extends: .pages
     allow_failure: true

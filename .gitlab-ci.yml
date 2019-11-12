@@ -19,6 +19,7 @@ stages:
     - test
     - pages
     - deploy
+    - verify
 
 variables:
     DOCKER_DRIVER: "overlay2"
@@ -26,7 +27,6 @@ variables:
 
 
 include:
-    -   local: "tasks/jobs/abc.yaml"
     -   local: "/tasks/jobs/test.yaml"
     -   local: "/tasks/jobs/pages.yaml"
     -   local: "/tasks/jobs/deploy.yaml"
