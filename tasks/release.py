@@ -26,6 +26,8 @@ import subprocess
 import sys
 import traceback
 
+from distutils.version import LooseVersion
+
 import gcg.entrypoint
 import requests
 
@@ -37,10 +39,11 @@ token = os.environ["GITLAB_RELEASE_TOKEN"]
 
 
 def get_most_recent_tag_hash():
-    # We skip one as we expect a new tag to just have been created a few moments ago.
-    return subprocess.check_output(
-        ["git", "rev-list", "--tags", "--skip=1", "--max-count=1"], universal_newlines=True
-    ).strip()
+    version = LooseVersion(release).version
+    # We did a new release...
+    version[-1] -= 1
+    return '.'.join(map(str, version))
+    
 
 
 def try_to_get_changelog():
