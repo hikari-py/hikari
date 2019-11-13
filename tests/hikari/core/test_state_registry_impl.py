@@ -526,12 +526,14 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         payload = {"id": "1234"}
-        channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=5678)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=9873)
+        registry._guilds = {guild_obj.id: guild_obj}
+        channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=5678, guild=guild_obj)
         registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
         with contextlib.suppress(Exception):
-            registry.parse_channel(payload, 1234)
+            registry.parse_channel(payload, guild_obj)
 
-        assert payload["guild_id"] == 1234
+        assert payload["guild_id"] == 9873
 
     def test_parse_channel_updates_state_if_already_cached(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234"}
@@ -625,9 +627,8 @@ class TestStateRegistryImpl:
         payload = {"id": "1234"}
         registry._emojis = {}
         registry._guilds = {guild_obj.id: guild_obj}
-        guild_id = guild_obj.id
         with _helpers.mock_patch(emojis.parse_emoji, return_value=emoji_obj):
-            registry.parse_emoji(payload, guild_id)
+            registry.parse_emoji(payload, guild_obj)
             assert registry._emojis == {emoji_obj.id: emoji_obj}
 
     def test_parse_guild_emoji_when_valid_guild_caches_emoji_on_guild(
@@ -637,9 +638,8 @@ class TestStateRegistryImpl:
         emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, guild=guild_obj)
         payload = {"id": "1234"}
         registry._guilds = {guild_obj.id: guild_obj}
-        guild_id = guild_obj.id
         with _helpers.mock_patch(emojis.parse_emoji, return_value=emoji_obj):
-            registry.parse_emoji(payload, guild_id)
+            registry.parse_emoji(payload, guild_obj)
             assert emoji_obj in guild_obj.emojis.values()
 
     def test_parse_guild_emoji_when_valid_guild_returns_guild_emoji(
@@ -649,9 +649,8 @@ class TestStateRegistryImpl:
         emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, guild=guild_obj)
         payload = {"id": "1234"}
         registry._guilds = {guild_obj.id: guild_obj}
-        guild_id = guild_obj.id
         with _helpers.mock_patch(emojis.parse_emoji, return_value=emoji_obj):
-            assert registry.parse_emoji(payload, guild_id) is emoji_obj
+            assert registry.parse_emoji(payload, guild_obj) is emoji_obj
 
     def test_parse_guild_emoji_when_already_cached_returns_cached_emoji(
         self, registry: state_registry_impl.StateRegistryImpl
@@ -1080,28 +1079,6 @@ class TestStateRegistryImpl:
         assert new is original_guild_obj, "existing guild was not used as target for update!"
         assert old is cloned_guild_obj, "existing guild did not get the old state copied and returned!"
 
-    def test_update_member_when_guild_does_not_exist_returns_None(
-        self, registry: state_registry_impl.StateRegistryImpl
-    ):
-        guild_obj = _helpers.mock_model(guilds.Guild, id=456, roles={}, members={})
-        registry._guilds = {}
-        registry.get_guild_by_id = mock.MagicMock(return_value=None, spec_set=registry.get_guild_by_id)
-
-        diff = registry.update_member(guild_obj.id, guild_obj.roles, None, 123)
-
-        assert diff is None
-
-    def test_update_member_when_existing_member_does_not_exist_returns_None(
-        self, registry: state_registry_impl.StateRegistryImpl
-    ):
-        guild_obj = _helpers.mock_model(guilds.Guild, id=456, roles={}, members={})
-        registry._guilds = {guild_obj.id: guild_obj}
-        registry.get_member_by_id = mock.MagicMock(return_value=None, spec_set=registry.get_member_by_id)
-
-        diff = registry.update_member(guild_obj.id, guild_obj.roles, None, 123)
-
-        assert diff is None
-
     def test_update_member_when_existing_member_exists_returns_old_state_copy_and_updated_new_state(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
@@ -1118,7 +1095,7 @@ class TestStateRegistryImpl:
         original_member_obj.copy = mock.MagicMock(spec_set=original_member_obj.copy, return_value=cloned_member_obj)
         guild_obj.members = {original_member_obj.id: original_member_obj}
 
-        old, new = registry.update_member(guild_obj.id, roles_map.keys(), "potatoboi", original_member_obj.id)
+        old, new = registry.update_member(original_member_obj, list(roles_map.values()), "potatoboi")
 
         assert old is not None
         assert new is not None
@@ -1126,62 +1103,7 @@ class TestStateRegistryImpl:
         assert new is original_member_obj, "existing member was not used as target for update!"
         assert old is cloned_member_obj, "existing member did not get the old state copied and returned!"
 
-        new.update_state.assert_called_with([role_1, role_2, role_3], "potatoboi")
-
-    def test_update_member_when_existing_member_exists_but_role_is_missing_gets_skipped(
-        self, registry: state_registry_impl.StateRegistryImpl
-    ):
-        role_1 = _helpers.mock_model(roles.Role, id=111)
-        role_2 = _helpers.mock_model(roles.Role, id=112)
-        role_3 = _helpers.mock_model(roles.Role, id=113)
-
-        roles_map = {role_1.id: role_1, role_2.id: role_2, role_3.id: role_3}
-        guild_obj = _helpers.mock_model(guilds.Guild, id=124, roles=roles_map)
-
-        registry._guilds = {guild_obj.id: guild_obj}
-        original_member_obj = _helpers.mock_model(members.Member, id=123)
-        cloned_member_obj = _helpers.mock_model(members.Member, id=123, roles=roles_map)
-        original_member_obj.copy = mock.MagicMock(spec_set=original_member_obj.copy, return_value=cloned_member_obj)
-        guild_obj.members = {original_member_obj.id: original_member_obj}
-
-        old, new = registry.update_member(guild_obj.id, [111, 114], None, original_member_obj.id)
-
-        new.update_state.assert_called_with([role_1], None)
-
-    def test_update_member_presence_when_guild_does_not_exist_returns_None(
-        self, registry: state_registry_impl.StateRegistryImpl
-    ):
-        registry.get_guild_by_id = mock.MagicMock(return_value=None, spec_set=registry.get_guild_by_id)
-        payload = {
-            "user": {"id": "339767912841871360"},
-            "status": "online",
-            "game": None,
-            "client_status": {"desktop": "online"},
-            "activities": [],
-        }
-
-        diff = registry.update_member_presence(123, 456, payload)
-
-        assert diff is None
-
-    def test_update_member_presence_when_existing_member_does_not_exist_returns_None(
-        self, registry: state_registry_impl.StateRegistryImpl
-    ):
-        guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={})
-        registry._guilds = {guild_obj.id: guild_obj}
-        member_obj = _helpers.mock_model(members.Member, id=456)
-        guild_obj.members = {}
-        payload = {
-            "user": {"id": "339767912841871360"},
-            "status": "online",
-            "game": None,
-            "client_status": {"desktop": "online"},
-            "activities": [],
-        }
-
-        diff = registry.update_member_presence(guild_obj.id, member_obj.id, payload)
-
-        assert diff is None
+        new.update_state.assert_called_with(list(roles_map.values()), "potatoboi")
 
     def test_update_member_presence_when_existing_member_exists_returns_old_state_copy_and_updated_new_state(
         self, registry: state_registry_impl.StateRegistryImpl
@@ -1201,7 +1123,7 @@ class TestStateRegistryImpl:
             "activities": [],
         }
 
-        member_obj, old, new = registry.update_member_presence(guild_obj.id, original_member_obj.id, payload)
+        member_obj, old, new = registry.update_member_presence(original_member_obj, payload)
 
         assert old is not None
         assert new is not None
@@ -1239,10 +1161,11 @@ class TestStateRegistryImpl:
     def test_update_role_when_existing_role_does_not_exist_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=5678, roles={})
         registry.get_role_by_id = mock.MagicMock(return_value=None, spec_set=registry.get_role_by_id)
         payload = {"id": "1234"}
 
-        diff = registry.update_role(123, payload)
+        diff = registry.update_role(guild_obj, payload)
 
         assert diff is None
 
@@ -1256,27 +1179,13 @@ class TestStateRegistryImpl:
         registry._guilds = {guild_obj.id: guild_obj}
         payload = {"id": "123"}
 
-        old, new = registry.update_role(guild_obj.id, payload)
+        old, new = registry.update_role(guild_obj, payload)
 
         assert old is not None
         assert new is not None
 
         assert new is original_role_obj, "existing role was not used as target for update!"
         assert old is cloned_role_obj, "existing role did not get the old state copied and returned!"
-
-    def test_update_guild_emojis_when_existing_guild_does_not_exist_returns_None(
-        self, registry: state_registry_impl.StateRegistryImpl
-    ):
-        guild_obj = _helpers.mock_model(guilds.Guild, id=123, emojis={})
-        registry._guilds = {}
-        payload = {
-            "emojis": [{"id": "456", "name": "roundCheck"}],
-            "guild_id": guild_obj.id,
-        }
-
-        diff = registry.update_guild_emojis(payload, guild_obj.id)
-
-        assert diff is None
 
     def test_update_guild_emojis_when_when_existing_guild_exists_returns_old_state_copy_and_updated_new_state(
         self, registry: state_registry_impl.StateRegistryImpl
@@ -1305,7 +1214,7 @@ class TestStateRegistryImpl:
             "guild_id": guild_obj.id,
         }
 
-        diff = registry.update_guild_emojis(payload, guild_obj.id)
+        diff = registry.update_guild_emojis(payload, guild_obj)
 
         assert diff is not None
 
