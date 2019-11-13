@@ -63,17 +63,16 @@ class _RestartConnection(websockets.ConnectionClosed):
 
 #: The signature of an event dispatcher function. Consumes three arguments. The first is the gateway that triggered
 #: the event. The second is an event name from the gateway, the third is the payload which is assumed to always be a
-#: :class:`dict` with :class:`str` keys. This should be a coroutine function; if it is not, it should be expected to be
-#: promoted to a coroutine function internally.
-#:
-#: Example:
-#:     >>> async def on_dispatch(gateway, event: str, payload: typing.Any) -> None:
-#:     ...     logger.info("Dispatching %s with payload %r", event, payload)
-DispatchHandler = typing.Callable[["GatewayClient", str, typing.Any], typing.Union[None, typing.Awaitable[None]]]
+#: :class:`dict` with :class:`str` keys. This should be a coroutine function.
+DispatchHandler = typing.Callable[["GatewayClient", str, typing.Any], typing.Awaitable[None]]
 
 
 # Version of the gateway in use.
 _IMPL_VERSION = 7
+
+
+async def _default_dispatch(gateway, event, payload) -> None:
+    ...
 
 
 class GatewayClientV7:
@@ -192,7 +191,7 @@ class GatewayClientV7:
         host: str,
         *,
         connector=websockets.connect,
-        dispatch: DispatchHandler = lambda self, t, d: None,
+        dispatch: DispatchHandler = _default_dispatch,
         initial_presence: typing.Optional[data_structures.DiscordObjectT] = None,
         large_threshold: int = 50,
         loop: asyncio.AbstractEventLoop = None,
@@ -205,16 +204,8 @@ class GatewayClientV7:
         #: Logger adapter used to dump information to the console.
         self.logger = logging_helpers.get_named_logger(*logger_args)
 
-        if not asyncio.iscoroutinefunction(dispatch):
-
-            async def async_dispatch(*args, **kwargs):
-                return dispatch(*args, **kwargs)
-
-            # noinspection PyTypeChecker
-            dispatch: DispatchHandler = async_dispatch
-
         #: The coroutine function to dispatch any events to.
-        self.dispatch = dispatch
+        self.dispatch: DispatchHandler = dispatch
 
         loop = loop or asyncio.get_running_loop()
 

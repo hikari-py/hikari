@@ -270,7 +270,7 @@ class StateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def parse_channel(
-        self, channel_payload: data_structures.DiscordObjectT, guild_id: typing.Optional[int]
+        self, channel_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild
     ) -> channels.Channel:
         """
         Parses a channel payload into a workable object
@@ -278,9 +278,8 @@ class StateRegistry(abc.ABC):
         Args:
             channel_payload:
                 the payload of the channel.
-            guild_id:
-                the guild ID, if we know it, otherwise None. This is used to resolve missing guild_id information
-                due to an inconsistency in the public Discord API when parsing guild channels.
+            guild_obj:
+                the guild object the channel is in, or None if it isn't a guild channel.
 
         Returns:
             a :class:`hikari.core.models.channels.Channel` object.
@@ -288,7 +287,7 @@ class StateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def parse_emoji(
-        self, emoji_payload: data_structures.DiscordObjectT, guild_id: typing.Optional[int]
+        self, emoji_payload: data_structures.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild]
     ) -> emojis.Emoji:
         """
         Parses a emoji payload into a workable object
@@ -296,8 +295,8 @@ class StateRegistry(abc.ABC):
         Args:
             emoji_payload:
                 the payload of the emoji.
-            guild_id:
-                the ID of the guild the emoji is from.
+            guild_obj:
+                the guild the emoji is from, or None if it is not a known guild emoji.
 
         Returns:
             a :class:`hikari.core.models.emojis.AbstractEmoji` object.
@@ -500,7 +499,6 @@ class StateRegistry(abc.ABC):
         self, guild_payload: data_structures.DiscordObjectT
     ) -> typing.Optional[typing.Tuple[guilds.Guild, guilds.Guild]]:
         """
-
         Update the given guild represented by the guild payload.
 
         Args:
@@ -514,60 +512,52 @@ class StateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_guild_emojis(
-        self, emoji_list: typing.List[data_structures.DiscordObjectT], guild_id: int
-    ) -> typing.Optional[typing.Tuple[typing.FrozenSet[emojis.GuildEmoji], typing.FrozenSet[emojis.GuildEmoji]]]:
+        self, emoji_list: typing.List[data_structures.DiscordObjectT], guild_obj: guilds.Guild
+    ) -> typing.Tuple[typing.FrozenSet[emojis.GuildEmoji], typing.FrozenSet[emojis.GuildEmoji]]:
         """
         Update the emojis in a given guild.
 
         Args:
             emoji_list:
                 the list of the new unparsed emojis.
-            guild_id:
-                the ID of the guild the emojis were updated in.
+            guild_obj:
+                the guild the emojis were updated in.
 
         Returns:
             Two :class:`frozenset` of :class:`hikari.core.models.emojis.GuildEmoji` objects.
-            The first set contains all the old emojis. The second set contains all the new emojis. If the guild was
-            not cached, this will just return `None`
-
-            Note that this is not ordered.
+            The first set contains all the old emojis. The second set contains all the new emojis.
         """
 
     @abc.abstractmethod
     def update_member(
-        self, guild_id: int, role_ids: typing.List[int], nick: typing.Optional[str], user_id: int
-    ) -> typing.Optional[typing.Tuple[members.Member, members.Member]]:
+        self, member_obj: members.Member, role_objs: typing.List[roles.Role], nick: typing.Optional[str]
+    ) -> typing.Tuple[members.Member, members.Member]:
         """
         Update a member in a given guild. If the member is not already registered, nothing is returned.
 
         Args:
-            guild_id:
-                the ID of the guild the member is in.
-            role_ids:
+            member_obj:
+                the member to update.
+            role_objs:
                 the list of roles the member should have.
             nick:
                 the nickname of the member.
-            user_id:
-                the ID of the member to update.
 
         Returns:
             Two :class:`hikari.core.models.members.Member` objects. The first being the old state of the member and the
-            second being the new state (if the member exists). If it does not exist in that guild, or the guild itself
-            is not cached, then `None` is returned instead.
+            second being the new state (if the member exists).
         """
 
     @abc.abstractmethod
     def update_member_presence(
-        self, guild_id: int, user_id: int, presence_payload: data_structures.DiscordObjectT
-    ) -> typing.Optional[typing.Tuple[members.Member, presences.Presence, presences.Presence]]:
+        self, member_obj: members.Member, presence_payload: data_structures.DiscordObjectT
+    ) -> typing.Tuple[members.Member, presences.Presence, presences.Presence]:
         """
         Update the presence for a given user in a given guild.
 
         Args:
-            guild_id:
-                The guild of the member.
-            user_id:
-                The ID of the member.
+            member_obj:
+                The member to update the presence for.
             presence_payload:
                 The new presence to set.
 
@@ -575,7 +565,6 @@ class StateRegistry(abc.ABC):
             Three items. The first being the :class:`hikari.core.models.members.Member` that was updated, the second
             being the :class:`hikari.core.models.presences.Presence` before, and the third being the
             :class:`hikari.core.models.presences.Presence` now.
-            If the user, member, or guild does not exist in the cache, then `None` is returned instead.
         """
 
     @abc.abstractmethod
@@ -597,14 +586,14 @@ class StateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_role(
-        self, guild_id: int, role_payload: data_structures.DiscordObjectT
-    ) -> typing.Optional[typing.Tuple[roles.Role, roles.Role]]:
+        self, guild_obj: guilds.Guild, role_payload: data_structures.DiscordObjectT
+    ) -> typing.Tuple[roles.Role, roles.Role]:
         """
         Update the given role in a given guild.
 
         Args:
-            guild_id:
-                The ID of the guild.
+            guild_obj:
+                The guild the role is in.
             role_payload:
                 The role to update.
 
