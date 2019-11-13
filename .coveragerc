@@ -3,7 +3,8 @@ omit =
     hikari/__init__.py
 parallel = false
 branch = true
-timid  = true
+# Uncomment if coverage starts appearing to be incorrect. This makes the tests run at least twice as slowly.
+#timid  = true
 
 [report]
 precision = 1
