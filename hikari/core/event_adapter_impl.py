@@ -31,21 +31,20 @@ from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import transformations
 
 
-class EventAdapterImpl(event_adapter.EventAdapter):
+class DispatchingEventAdapterImpl(event_adapter.DispatchingEventAdapter):
     """
     Basic implementation of event management logic.
     """
+
     __slots__ = ("dispatch", "state_registry", "_ignored_events")
 
-    def __init__(
-        self, state_registry_obj: state_registry.StateRegistry, dispatch: typing.Callable[..., None]
-    ) -> None:
+    def __init__(self, state_registry_obj: state_registry.StateRegistry, dispatch: typing.Callable[..., None]) -> None:
         super().__init__()
         self.dispatch = dispatch
         self.state_registry: state_registry.StateRegistry = state_registry_obj
         self._ignored_events = set()
 
-    async def drain_unrecognised_event(self, gateway, event_name, payload):
+    async def drain_unrecognised_event(self, _, event_name, payload):
         self.dispatch("raw_" + event_name.lower(), payload)
         if event_name not in self._ignored_events:
             self.logger.warning("Received unrecognised event %s, so will ignore it in the future.", event_name)
@@ -54,19 +53,19 @@ class EventAdapterImpl(event_adapter.EventAdapter):
     async def handle_disconnect(self, gateway, payload):
         self.dispatch(events.DISCONNECT, gateway, payload.get("code"), payload.get("reason"))
 
-    async def handle_connect(self, gateway, payload):
+    async def handle_connect(self, gateway, _):
         self.dispatch(events.CONNECT, gateway)
 
     async def handle_invalid_session(self, gateway, payload: bool):
         self.dispatch(events.INVALID_SESSION, gateway, payload)
 
-    async def handle_reconnect(self, gateway, payload):
+    async def handle_reconnect(self, gateway, _):
         self.dispatch(events.RECONNECT, gateway)
 
-    async def handle_resumed(self, gateway, payload):
+    async def handle_resumed(self, gateway, _):
         self.dispatch(events.RESUMED, gateway)
 
-    async def handle_channel_create(self, gateway, payload):
+    async def handle_channel_create(self, _, payload):
         self.dispatch(events.RAW_CHANNEL_CREATE, payload)
 
         guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
@@ -83,7 +82,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
                 channel_obj.id,
             )
 
-    async def handle_channel_update(self, gateway, payload):
+    async def handle_channel_update(self, _, payload):
         self.dispatch(events.RAW_CHANNEL_UPDATE, payload)
 
         channel_id = int(payload["id"])
@@ -96,7 +95,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         else:
             self.logger.warning("ignoring received CHANNEL_UPDATE for unknown channel %s", channel_id)
 
-    async def handle_channel_delete(self, gateway, payload):
+    async def handle_channel_delete(self, _, payload):
         # Update the channel meta data just for this call.
         self.dispatch(events.RAW_CHANNEL_DELETE, payload)
 
@@ -106,7 +105,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         event = events.DM_CHANNEL_DELETE if channel_obj.is_dm else events.GUILD_CHANNEL_DELETE
         self.dispatch(event, channel_obj)
 
-    async def handle_channel_pins_update(self, gateway, payload):
+    async def handle_channel_pins_update(self, _, payload):
         self.dispatch(events.RAW_CHANNEL_PINS_UPDATE, payload)
 
         channel_id = int(payload["channel_id"])
@@ -138,7 +137,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
                 channel_id,
             )
 
-    async def handle_guild_create(self, gateway, payload):
+    async def handle_guild_create(self, _, payload):
         self.dispatch(events.RAW_GUILD_CREATE, payload)
 
         guild_id = int(payload["id"])
@@ -152,7 +151,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         if not unavailable:
             self.dispatch(events.GUILD_AVAILABLE, guild)
 
-    async def handle_guild_update(self, gateway, payload):
+    async def handle_guild_update(self, _, payload):
         self.dispatch(events.RAW_GUILD_UPDATE, payload)
 
         guild_diff = self.state_registry.update_guild(payload)
@@ -162,7 +161,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         else:
             self.logger.warning("ignoring GUILD_UPDATE for unknown guild %s which was not previously cached")
 
-    async def handle_guild_delete(self, gateway, payload):
+    async def handle_guild_delete(self, _, payload):
         self.dispatch(events.RAW_GUILD_DELETE, payload)
         # This should always be unspecified if the guild was left,
         # but if discord suddenly send "False" instead, it will still work.
@@ -190,7 +189,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         self.state_registry.delete_guild(guild)
         self.dispatch(events.GUILD_LEAVE, guild)
 
-    async def handle_guild_ban_add(self, gateway, payload):
+    async def handle_guild_ban_add(self, _, payload):
         self.dispatch(events.RAW_GUILD_BAN_ADD, payload)
 
         guild_id = int(payload["guild_id"])
@@ -209,7 +208,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         else:
             self.logger.warning("ignoring GUILD_BAN_ADD for user %s in unknown guild %s", user.id, guild_id)
 
-    async def handle_guild_ban_remove(self, gateway, payload):
+    async def handle_guild_ban_remove(self, _, payload):
         self.dispatch(events.RAW_GUILD_BAN_REMOVE, payload)
 
         guild_id = int(payload["guild_id"])
@@ -220,7 +219,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         else:
             self.logger.warning("ignoring GUILD_BAN_REMOVE for user %s in unknown guild %s", user.id, guild_id)
 
-    async def handle_guild_emojis_update(self, gateway, payload):
+    async def handle_guild_emojis_update(self, _, payload):
         self.dispatch(events.RAW_GUILD_EMOJIS_UPDATE, payload)
 
         guild_id = int(payload["guild_id"])
@@ -231,7 +230,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         else:
             self.logger.warning("ignoring GUILD_EMOJIS_UPDATE for unknown guild %s", guild_id)
 
-    async def handle_guild_integrations_update(self, gateway, payload):
+    async def handle_guild_integrations_update(self, _, payload):
         self.dispatch(events.RAW_GUILD_INTEGRATIONS_UPDATE, payload)
 
         guild_id = int(payload["guild_id"])
@@ -241,7 +240,7 @@ class EventAdapterImpl(event_adapter.EventAdapter):
         else:
             self.logger.warning("ignoring GUILD_INTEGRATIONS_UPDATE for unknown guild %s", guild_id)
 
-    async def handle_guild_member_add(self, gateway, payload):
+    async def handle_guild_member_add(self, _, payload):
         self.dispatch(events.RAW_GUILD_MEMBER_ADD, payload)
 
         guild_id = int(payload.pop("guild_id"))

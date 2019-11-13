@@ -19,60 +19,8 @@
 """
 Expected events that this framework can dispatch.
 """
-
-#: Fired when a gateway connection is made and the gateway has sent a HELLO payload.
-#:
-#: Args:
-#:     gateway:
-#:         the gateway instance that sent this signal.
-CONNECT = "connect"
-
-#: Fired when a gateway connection closes due to some connection error or if requested by Discord's servers.
-#:
-#: Args:
-#:     gateway:
-#:         the gateway instance that sent this signal.
-#:     code:
-#:         the integer closure code given by the gateway.
-#:     reason:
-#:         the optional string reason for the closure given by the gateway.
-DISCONNECT = "disconnect"
-
-#: Fired if an INVALID_SESSION payload is sent.
-#:
-#: |selfHealing|
-#:
-#: Args:
-#:     gateway:
-#:         the gateway instance that sent this signal.
-#:     can_resume:
-#:         `True` if we expect the connection to be resumed (that is, it disconnects and reconnects without the initial
-#:         identification handshake and parsing of guild information). If `False`, the connection will be restarted as
-#:         if a fresh connection from scratch, which will take longer.
-INVALID_SESSION = "invalid_session"
-
-#: Fired if the gateway requested we reconnect.
-#:
-#: |selfHealing|
-#:
-#: Args:
-#:     gateway:
-#:         the gateway instance that sent this signal.
-RECONNECT = "reconnect"
-
-#: Fired if a connection was successfully resumed.
-#:
-#: Args:
-#:     gateway:
-#:         the gateway instance that sent this signal.
-RESUMED = "resumed"
-
-#: Fired if the gateway is told to shutdown by your code. The gateway will not automatically restart in this case.
-#:
-#: Args:
-#:     gateway:
-#:         the gateway instance that sent this signal.
-SHUTDOWN = "shutdown"
+# noinspection PyUnresolvedReferences
+from hikari.net.extra_gateway_events import *
 
 #: Triggered when Discord notifies the gateway of some channel being created.
 #:

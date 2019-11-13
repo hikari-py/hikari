@@ -42,7 +42,8 @@ class StateRegistry(abc.ABC):
     """
     Provides the relational interface between different types of objects and the overall cache.
 
-    This class provides abstract definitions only to enable a user to implement their own cache system if they prefer.
+    This class provides abstract definitions only to enable a user to implement their own cache system if they prefer,
+    such as a distributed Redis cache for massive bots in a swarm.
     """
 
     __slots__ = ()
