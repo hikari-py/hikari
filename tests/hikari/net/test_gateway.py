@@ -49,9 +49,9 @@ class Context:
         pass
 
 
-class MockGateway(gateway.GatewayClient):
+class MockGateway(gateway.GatewayClientV7):
     def __init__(self, **kwargs):
-        gateway.GatewayClient.__init__(self, **kwargs)
+        gateway.GatewayClientV7.__init__(self, **kwargs)
 
         self._ws = Context()
         self._connector = lambda *a, **k: self._ws
@@ -100,7 +100,7 @@ def mock_run_once_parts(timeout=10):
 class TestGateway:
     async def test_init_produces_valid_url(self, event_loop):
         """GatewayConnection.__init__ should produce a valid query fragment for the URL."""
-        gw = gateway.GatewayClient(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
+        gw = gateway.GatewayClientV7(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
         bits: urlparse.ParseResult = urlparse.urlparse(gw.uri)
 
         assert bits.scheme == "wss"
@@ -192,7 +192,7 @@ class TestGateway:
             recv_value = "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}"
             gw.ws.recv = asynctest.CoroutineMock(return_value=recv_value)
             await gw._receive_json()
-            # noinspection PyUnresolvedReferences,PyUnresolvedReferences
+            # noinspection PyUnresolvedReferences
             json.loads.assert_called_with(recv_value, object_hook=data_structures.ObjectProxy)
 
     async def test_receive_json_when_receiving_zlib_payloads_collects_before_decoding(self, event_loop):
@@ -208,7 +208,7 @@ class TestGateway:
 
             gw.ws.recv = asynctest.CoroutineMock(side_effect=chunks)
             await gw._receive_json()
-            # noinspection PyUnresolvedReferences,PyUnresolvedReferences
+            # noinspection PyUnresolvedReferences
             json.loads.assert_called_with(recv_value.decode("utf-8"), object_hook=data_structures.ObjectProxy)
 
     async def test_small_zlib_payloads_leave_buffer_alone(self, event_loop):
@@ -410,7 +410,7 @@ class TestGateway:
             large_threshold=69,
         )
         gw._process_one_event = asynctest.CoroutineMock()
-        gw.closed_event.set()
+        gw._closed_event.set()
         await gw._process_events()
         gw._process_one_event.assert_not_awaited()
 
@@ -453,7 +453,7 @@ class TestGateway:
         )
 
         async def flag_death_on_call():
-            gw.closed_event.set()
+            gw._closed_event.set()
             return {"op": 0, "d": {}, "t": "explosion"}
 
         gw._receive_json = flag_death_on_call
@@ -473,7 +473,7 @@ class TestGateway:
         )
 
         async def flag_death_on_call():
-            gw.closed_event.set()
+            gw._closed_event.set()
             return {"op": 1, "d": {}}
 
         gw._receive_json = flag_death_on_call
@@ -493,7 +493,7 @@ class TestGateway:
         )
 
         async def flag_death_on_call():
-            gw.closed_event.set()
+            gw._closed_event.set()
             return {"op": 11, "d": {}}
 
         gw._receive_json = flag_death_on_call
@@ -513,7 +513,7 @@ class TestGateway:
         )
 
         async def flag_death_on_call():
-            gw.closed_event.set()
+            gw._closed_event.set()
             return {"op": 7, "d": {}}
 
         gw._receive_json = flag_death_on_call
@@ -533,7 +533,7 @@ class TestGateway:
         )
 
         async def flag_death_on_call():
-            gw.closed_event.set()
+            gw._closed_event.set()
             return {"op": 9, "d": True}
 
         gw._receive_json = flag_death_on_call
@@ -553,7 +553,7 @@ class TestGateway:
         )
 
         async def flag_death_on_call():
-            gw.closed_event.set()
+            gw._closed_event.set()
             return {"op": 9, "d": False}
 
         gw._receive_json = flag_death_on_call
@@ -573,7 +573,7 @@ class TestGateway:
         )
 
         async def flag_death_on_call():
-            gw.closed_event.set()
+            gw._closed_event.set()
             return {"op": -1, "d": False}
 
         gw._receive_json = flag_death_on_call
@@ -633,7 +633,7 @@ class TestGateway:
         )
         gw.ws.wait_closed = asynctest.CoroutineMock()
         await gw.close(False)
-        assert gw.closed_event.is_set()
+        assert gw._closed_event.is_set()
         gw.ws.wait_closed.assert_not_awaited()
 
     async def test_blocking_close(self, event_loop):
@@ -647,7 +647,7 @@ class TestGateway:
         )
         gw.ws.wait_closed = asynctest.CoroutineMock()
         await gw.close(True)
-        assert gw.closed_event.is_set()
+        assert gw._closed_event.is_set()
         gw.ws.wait_closed.assert_awaited()
 
     async def test_shut_down_run_does_not_loop(self, event_loop):
@@ -660,7 +660,7 @@ class TestGateway:
             large_threshold=69,
         )
         gw._receive_json = asynctest.CoroutineMock()
-        gw.closed_event.set()
+        gw._closed_event.set()
         await gw.run()
 
     async def test_invalid_session_when_cannot_resume_does_not_resume(self, event_loop):
@@ -823,7 +823,7 @@ class TestGateway:
         )
 
         async def side_effect(*_, **__):
-            gw.closed_event.set()
+            gw._closed_event.set()
 
         gw._process_one_event = asynctest.CoroutineMock(side_effect=side_effect)
         await gw._process_events()
@@ -840,7 +840,7 @@ class TestGateway:
         )
 
         async def side_effect(*_, **__):
-            gw.closed_event.set()
+            gw._closed_event.set()
 
         gw.run_once = asynctest.CoroutineMock(side_effect=side_effect)
         await gw.run()

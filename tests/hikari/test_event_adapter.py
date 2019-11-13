@@ -23,7 +23,7 @@ import pytest
 from hikari import event_adapter
 
 
-class Impl(event_adapter.EventAdapter):
+class Impl(event_adapter.DispatchingEventAdapter):
     # noinspection PyMissingConstructor
     def __init__(self):
         pass

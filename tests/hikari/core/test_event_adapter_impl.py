@@ -45,12 +45,12 @@ def dispatch_impl():
 
 @pytest.fixture()
 def gateway_impl():
-    return mock.MagicMock(spec_set=_gateway.GatewayClient)
+    return mock.MagicMock(spec_set=_gateway.GatewayClientV7)
 
 
 @pytest.fixture()
 def adapter_impl(state_registry_impl, dispatch_impl, logger_impl):
-    instance = _helpers.unslot_class(event_adapter_impl.EventAdapterImpl)(state_registry_impl, dispatch_impl)
+    instance = _helpers.unslot_class(event_adapter_impl.DispatchingEventAdapterImpl)(state_registry_impl, dispatch_impl)
     instance.logger = logger_impl
     return instance
 
@@ -59,9 +59,7 @@ def adapter_impl(state_registry_impl, dispatch_impl, logger_impl):
 @pytest.mark.state
 class TestStateRegistryImpl:
     @pytest.mark.asyncio
-    async def test_drain_unrecognised_event_first_time_adds_to_ignored_events_set(
-        self, adapter_impl, gateway_impl
-    ):
+    async def test_drain_unrecognised_event_first_time_adds_to_ignored_events_set(self, adapter_impl, gateway_impl):
         adapter_impl._ignored_events.clear()
         assert not adapter_impl._ignored_events, "ignored events were not empty at the start!"
 
@@ -70,9 +68,7 @@ class TestStateRegistryImpl:
         assert "try_to_do_something" in adapter_impl._ignored_events
 
     @pytest.mark.asyncio
-    async def test_drain_unrecognised_event_first_time_logs_warning(
-        self, adapter_impl, gateway_impl
-    ):
+    async def test_drain_unrecognised_event_first_time_logs_warning(self, adapter_impl, gateway_impl):
         adapter_impl._ignored_events.clear()
         assert not adapter_impl._ignored_events, "ignored events were not empty at the start!"
 
@@ -81,9 +77,7 @@ class TestStateRegistryImpl:
         adapter_impl.logger.warning.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_drain_unrecognised_event_second_time_does_not_log_anything(
-        self, adapter_impl, gateway_impl
-    ):
+    async def test_drain_unrecognised_event_second_time_does_not_log_anything(self, adapter_impl, gateway_impl):
         adapter_impl._ignored_events = {"try_to_do_something"}
 
         await adapter_impl.drain_unrecognised_event(gateway_impl, "try_to_do_something", ...)
@@ -92,9 +86,7 @@ class TestStateRegistryImpl:
         adapter_impl.logger.warning.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_drain_unrecognised_event_invokes_raw_dispatch(
-        self, adapter_impl, gateway_impl, dispatch_impl
-    ):
+    async def test_drain_unrecognised_event_invokes_raw_dispatch(self, adapter_impl, gateway_impl, dispatch_impl):
         await adapter_impl.drain_unrecognised_event(gateway_impl, "try_to_do_something", ...)
 
         dispatch_impl.assert_called_with("raw_try_to_do_something", ...)
