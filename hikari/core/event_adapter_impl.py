@@ -35,8 +35,11 @@ class EventAdapterImpl(event_adapter.EventAdapter):
     """
     Basic implementation of event management logic.
     """
+    __slots__ = ("dispatch", "state_registry", "_ignored_events")
 
-    def __init__(self, state_registry_obj: state_registry.StateRegistry, dispatch) -> None:
+    def __init__(
+        self, state_registry_obj: state_registry.StateRegistry, dispatch: typing.Callable[..., None]
+    ) -> None:
         super().__init__()
         self.dispatch = dispatch
         self.state_registry: state_registry.StateRegistry = state_registry_obj
