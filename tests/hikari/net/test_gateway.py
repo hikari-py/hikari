@@ -79,7 +79,7 @@ class MockGateway(gateway.GatewayClientV7):
         gateway.GatewayClientV7.__init__(self, **kwargs)
         self.ws = ws
         self.ws.close = asynctest.CoroutineMock()
-        self.ws.send = asynctest.CoroutineMock()
+        self.ws.send_str = asynctest.CoroutineMock()
         self.ws.receive_any_str = asynctest.CoroutineMock()
         self.ws.wait_closed = self._wait_closed
         self.client_session.close()
@@ -164,7 +164,7 @@ class TestGateway:
         with _helpers.mock_patch(asyncio.sleep, new=fake_sleep):
             await gw._send_json({}, False)
 
-        gw.ws.send.assert_awaited_once_with("{}")
+        gw.ws.send_str.assert_awaited_once_with("{}")
 
     async def test_ratelimiting_on_send(self, event_loop):
         gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
@@ -285,7 +285,7 @@ class TestGateway:
             await asyncio.sleep(0.5)
         finally:
             task.cancel()
-            gw.ws.send.assert_awaited_with('{"op": 1, "d": null}')
+            gw.ws.send_str.assert_awaited_with('{"op": 1, "d": null}')
 
     async def test_heartbeat_shuts_down_when_closure_request(self, event_loop):
         gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
