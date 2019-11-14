@@ -51,10 +51,18 @@ function deploy-to-svc() {
     git status
     git diff
     git commit -am "Deployed ${current_version} ${SKIP_CI_COMMIT_PHRASE}" --allow-empty
-    git push ${REMOTE_NAME} ${PROD_BRANCH} || true
-    (git tag "${current_version}" && git push ${REMOTE_NAME} "${current_version}") || true
+    git push ${REMOTE_NAME} ${PROD_BRANCH}
+    git tag "${current_version}" && git push ${REMOTE_NAME} "${current_version}"
+    git -c color.status=always log --all --decorate --oneline --graph -n 50
+    git fetch --all --prune
+    git gc --aggressive --prune=now
+    git fsck
+    git reset --hard origin/${PROD_BRANCH}
     git checkout ${PREPROD_BRANCH}
-    (git merge ${PROD_BRANCH} --no-ff --strategy-option theirs -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_CI_COMMIT_PHRASE}" && git push ${REMOTE_NAME} ${PREPROD_BRANCH}) || true
+    git reset --hard origin/${PREPROD_BRANCH}
+    git -c color.status=always log --all --decorate --oneline --graph -n 50
+    git merge origin/${PROD_BRANCH} --no-ff --strategy-option theirs --allow-unrelated-histories -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_CI_COMMIT_PHRASE}"
+    git push ${REMOTE_NAME} ${PREPROD_BRANCH}
     set +x
 }
 
@@ -70,6 +78,8 @@ function do-deployment() {
     current_version=$(python tasks/make-version-string.py "${COMMIT_REF}")
 
     poetry config repositories.${POETRY_REPOSITORY_PROPERTY_NAME} "${PYPI_REPO}"
+
+    which git && echo "\e[1;35mCurrent repository state:\e[0m" && git -c color.status=always log --all --decorate --oneline --graph -n 50
 
     case "${COMMIT_REF}" in
         ${PROD_BRANCH})
