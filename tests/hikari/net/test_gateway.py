@@ -82,7 +82,6 @@ class MockGateway(gateway.GatewayClientV7):
         self.ws.send_str = asynctest.CoroutineMock()
         self.ws.receive_any_str = asynctest.CoroutineMock()
         self.ws.wait_closed = self._wait_closed
-        self.client_session.close()
         self.client_session = MockSession(self.ws)
 
     @staticmethod
@@ -90,7 +89,7 @@ class MockGateway(gateway.GatewayClientV7):
         await asyncio.sleep(0.5)
 
 
-def mock_run_once_parts(timeout=10):
+def mock_run_once_parts():
     def decorator(coro):
         async def wrapper(*args, **kwargs):
             gw = MockGateway(
@@ -101,12 +100,12 @@ def mock_run_once_parts(timeout=10):
                 shard_count=1234,
                 large_threshold=69,
             )
-            gw._receive_hello = asynctest.CoroutineMock(spec_set=gw._receive_hello)
-            gw._send_resume = asynctest.CoroutineMock(spec_set=gw._send_resume)
-            gw._send_heartbeat = asynctest.CoroutineMock(spec_set=gw._send_heartbeat)
-            gw._send_identify = asynctest.CoroutineMock(spec_set=gw._send_identify)
-            gw._keep_alive = asynctest.CoroutineMock(spec_set=gw._keep_alive)
-            gw._process_events = asynctest.CoroutineMock(spec_set=gw._process_events)
+            gw._receive_hello = asynctest.CoroutineMock()
+            gw._send_resume = asynctest.CoroutineMock()
+            gw._send_heartbeat = asynctest.CoroutineMock()
+            gw._send_identify = asynctest.CoroutineMock()
+            gw._keep_alive = asynctest.CoroutineMock()
+            gw._process_events = asynctest.CoroutineMock()
 
             await coro(*args, **kwargs, gw=gw)
 

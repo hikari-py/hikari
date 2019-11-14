@@ -472,7 +472,7 @@ class BaseHTTPClient:
                 body = self.json_unmarshaller(body, object_hook=self.json_unmarshaller_object_hook)
             elif r.content_type in (_TEXT_PLAIN, _TEXT_HTML):
                 # Cloudflare commonly will cause text/html (e.g. Discord is down)
-                self.logger.warning("Received {}-type response. Is Discord down?", r.content_type)
+                self.logger.warning("Received %s-type response. Is Discord down?", r.content_type)
                 body = body.decode()
 
         # Do this pre-emptively before anything else can fail.
@@ -492,7 +492,7 @@ class BaseHTTPClient:
 
     def _log_rate_limit_already_in_progress(self, resource):
         name = f"local rate limit for {resource.bucket}" if resource is not None else "global rate limit"
-        self.logger.debug("a %s is already active, and the call is being    suspended", name)
+        self.logger.debug("a %s is already active, and the call is being suspended", name)
 
     def _is_rate_limited(self, resource, response_code, headers, body) -> bool:
         """
