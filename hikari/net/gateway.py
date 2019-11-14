@@ -34,11 +34,12 @@ import asyncio
 import contextlib
 import datetime
 import json
+import ssl
 import time
 import typing
 import zlib
 
-import websockets
+import aiohttp.typedefs
 
 from hikari import errors
 from hikari.internal_utilities import data_structures
@@ -47,15 +48,16 @@ from hikari.internal_utilities import user_agent
 from hikari.net import extra_gateway_events
 from hikari.net import opcodes
 from hikari.net import rates
+from hikari.net import ws
 
 
-class _ResumeConnection(websockets.ConnectionClosed):
+class _ResumeConnection(ws.WebSocketClosure):
     """Request to restart the client connection using a resume. This is only used internally."""
 
     __slots__ = ()
 
 
-class _RestartConnection(websockets.ConnectionClosed):
+class _RestartConnection(ws.WebSocketClosure):
     """Request by the gateway to completely reconnect using a fresh connection. This is only used internally."""
 
     __slots__ = ()
@@ -65,7 +67,6 @@ class _RestartConnection(websockets.ConnectionClosed):
 #: the event. The second is an event name from the gateway, the third is the payload which is assumed to always be a
 #: :class:`dict` with :class:`str` keys. This should be a coroutine function.
 DispatchHandler = typing.Callable[["GatewayClient", str, typing.Any], typing.Awaitable[None]]
-
 
 # Version of the gateway in use.
 _IMPL_VERSION = 7
@@ -83,19 +84,46 @@ class GatewayClientV7:
     This implementation targets v7 of the gateway. 
 
     Args:
+        client_session:
+            **Required**. The :class:`hikari.net.ws.WebSocketClientSession` to use to make the websocket connection.
+
+            Note:
+                this must be closed manually.
+        token:
+            the token to use to authenticate with the gateway.
+        uri:
+            the host to connect to, in the format `wss://gateway.net` or `wss://gateway.net:port`.
+
+            Warning:
+                This must NOT contain a query or a fragment!
+
+    Optional args:
         connector:
-            the method used to create a websockets connection. You usually don't want to change this.
+            the :class:`aiohttp.BaseConnector` to use for the client session, or `None` if you wish to use the
+            default instead.
         dispatch:
             A coroutine function that consumes a string event name and a JSON dispatch event payload consumed
-            from the gateway to call each time a dispatch occurs. This payload will be a dict as described on the
-            Gateway documentation. If it is not a coroutine function, it will get cast to a coroutine function first.
-        host:
-            the host to connect to, in the format `wss://gateway.net` or `wss://gateway.net:port` without a query
-            fragment.
+            from the gateway to call each time a dispatch occurs. The payload will vary between events.
+            If unspecified, this will default to an empty callback that does nothing.
         initial_presence:
             A JSON-serializable dict containing the initial presence to set, or `None` to just appear
             `online`. See https://discordapp.com/developers/docs/topics/gateway#update-status for a description
             of this `update-status` payload object.
+        json_marshaller:
+            a callable that consumes a Python object and returns a JSON-encoded string.
+            This defaults to :func:`json.dumps`.
+        json_unmarshaller:
+            a callable that consumes a JSON-encoded string and returns a Python object.
+            This defaults to :func:`json.loads`.
+        json_unmarshaller_object_hook:
+            the object hook to use to parse a JSON object into a Python object. Defaults to
+            :class:`hikari.internal_utilities.data_structures.ObjectProxy`. This means that you can use any
+            received dict as a regular dict, or use "JavaScript"-like dot-notation to access members.
+
+            .. code-block:: python
+
+                d = ObjectProxy(...)
+                assert d.foo[1].bar == d["foo"][1]["bar"]
         large_threshold:
             the large threshold limit. Defaults to 50.
         loop:
@@ -106,27 +134,27 @@ class GatewayClientV7:
             of memory usage, since the gateway can send payloads tens of megabytes in size potentially. Without
             truncating, the payload will remain at the largest allocated size even when no longer required to provide
             that capacity.
+        proxy_auth:
+            optional proxy authentication to use.
+        proxy_headers:
+            optional proxy headers to pass.
+        proxy_url:
+            optional proxy URL to use.
         shard_count:
             the shard count to use, or `None` if sharding is to be disabled (default).
         shard_id:
             the shard ID to use, or `None` if sharding is to be disabled (default).
-        token:
-            the token to use to authenticate with the gateway.
+        ssl_context:
+            optional SSL context to use.
+        verify_ssl:
+            defaulting to True, setting this to false will disable SSL verification.
+        timeout:
+            optional timeout to apply to individual HTTP requests.
 
     Warning:
         It is highly recommended to not alter any attributes of this object whilst the gateway is running unless clearly
         specified otherwise. Any change to internal state may result in undefined behaviour or effects. This is designed
         to be a low-level interface to the gateway, and not a general-use object.
-
-    Note:
-        Any dicts that get parsed in any form of nested structure from a JSON payload will be parsed as an
-        :class:`hikari.core.utils.custom_types.ObjectProxy`. This means that you can use the dict as a regular dict,
-        or use "JavaScript"-like dot-notation to access members.
-
-        .. code-block:: python
-
-            d = ObjectProxy(...)
-            assert d.foo[1].bar == d["foo"][1]["bar"]
 
     Events
     ~~~~~~
@@ -148,34 +176,43 @@ class GatewayClientV7:
     """
 
     __slots__ = (
-        "dispatch",
-        "_connector",
-        "_client_identifier",
         "_in_buffer",
-        "_zlib_decompressor",
-        "shard_count",
-        "shard_id",
-        "heartbeat_interval",
         "_closed_event",
+        "client_session",
+        "dispatch",
+        "fingerprint",
+        "heartbeat_interval",
         "heartbeat_latency",
         "in_count",
         "initial_presence",
+        "json_marshaller",
+        "json_unmarshaller",
+        "json_unmarshaller_object_hook",
         "large_threshold",
         "last_ack_received",
         "last_heartbeat_sent",
         "logger",
         "loop",
+        "proxy_auth",
+        "proxy_headers",
+        "proxy_url",
         "max_persistent_buffer_size",
         "out_count",
         "rate_limit",
         "seq",
         "session_id",
+        "shard_count",
+        "shard_id",
+        "ssl_context",
         "started_at",
-        "trace",
+        "timeout",
         "token",
+        "trace",
         "uri",
-        "_ws",
+        "verify_ssl",
         "version",
+        "ws",
+        "zlib_decompressor",
     )
 
     #: The API version we should request the use of.
@@ -188,86 +225,235 @@ class GatewayClientV7:
 
     def __init__(
         self,
-        host: str,
         *,
-        connector=websockets.connect,
-        dispatch: DispatchHandler = _default_dispatch,
+        # required args:
+        uri: str,
+        token: str,
+        # optional args:
+        json_unmarshaller: typing.Callable = None,
+        json_unmarshaller_object_hook: typing.Type[dict] = None,
+        json_marshaller: typing.Callable = None,
+        dispatch: DispatchHandler = None,
         initial_presence: typing.Optional[data_structures.DiscordObjectT] = None,
         large_threshold: int = 50,
         loop: asyncio.AbstractEventLoop = None,
         max_persistent_buffer_size: int = 3 * 1024 ** 2,
         shard_id: typing.Optional[int] = None,
         shard_count: typing.Optional[int] = None,
-        token: str,
+        connector: aiohttp.BaseConnector = None,
+        proxy_headers: aiohttp.typedefs.LooseHeaders = None,
+        proxy_auth: aiohttp.BasicAuth = None,
+        proxy_url: str = None,
+        ssl_context: ssl.SSLContext = None,
+        verify_ssl: bool = True,
+        timeout: float = None,
     ) -> None:
+        #: Raw buffer that gets filled by messages. You should not interfere with this field ever.
+        #:
+        #:
+        self._in_buffer: bytearray = bytearray()
+
+        #: An :class:`asyncio.Event` that will be triggered whenever the gateway disconnects.
+        #: This is only used internally.
+        self._closed_event = asyncio.Event(loop=loop)
+
+        #: Callable used to marshal (serialize) payloads into JSON-encoded strings from native Python objects.
+        #:
+        #: Defaults to :func:`json.dumps`. You may want to override this if you choose to use a different
+        #: JSON library, such as one that is compiled.
+        self.json_marshaller = json_marshaller or json.dumps
+
+        #: Callable used to unmarshal (deserialize) JSON-encoded payloads into native Python objects.
+        #:
+        #: Defaults to :func:`json.loads`. You may want to override this if you choose to use a different
+        #: JSON library, such as one that is compiled.
+        self.json_unmarshaller = json_unmarshaller or json.loads
+
+        #: Dict-derived type to use for unmarshalled JSON objects.
+        #:
+        #: For convenience, this defaults to :class:`hikari.internal_utilities.data_structures.ObjectProxy`, since
+        #: this provides a benefit of allowing you to use dicts as if they were normal python objects. If you wish
+        #: to use another implementation, or just default to :class:`dict` instead, it is worth changing this
+        #: attribute.
+        self.json_unmarshaller_object_hook = json_unmarshaller_object_hook or data_structures.ObjectProxy
+
         logger_args = (self, shard_id, shard_count) if shard_id is not None and shard_count is not None else (self,)
-        #: Logger adapter used to dump information to the console.
+
+        #: Logger used to dump information to the console.
+        #:
+        #: :type: :class:`logging.Logger`
         self.logger = logging_helpers.get_named_logger(*logger_args)
 
         #: The coroutine function to dispatch any events to.
-        self.dispatch: DispatchHandler = dispatch
+        #:
+        #: :type: :class:`hikari.net.gateway.DispatchHandler`
+        self.dispatch: DispatchHandler = dispatch or _default_dispatch
 
         loop = loop or asyncio.get_running_loop()
 
-        self._client_identifier = {
+        #: The event loop to use.
+        #:
+        #: :type: :class:`asyncio.AbstractEventLoop`
+        self.loop: asyncio.AbstractEventLoop = loop
+
+        #: The fingerprint payload used to identify this connection to the gateway.
+        #:
+        #: :type: :class:`dict`
+        self.fingerprint = {
             "$os": user_agent.system_type(),
             "$browser": user_agent.library_version(),
             "$device": user_agent.python_version(),
         }
 
-        self._connector = connector
-        self._in_buffer: bytearray = bytearray()
-        self._zlib_decompressor: typing.Any = zlib.decompressobj()
+        #: ZLIB decompression context.
+        #:
+        #: :type: :class:`zlib.decompressobj`
+        self.zlib_decompressor: typing.Any = zlib.decompressobj()
+
+        #: Client session to make the websocket connection from.
+        #:
+        #: :type: :class:`hikari.net.ws.WebSocketClientSession`
+        self.client_session = ws.WebSocketClientSession(
+            connector=connector,
+            loop=self.loop,
+            json_serialize=json_marshaller,
+            version=aiohttp.HttpVersion11,
+        )
 
         #: Number of shards in use, or `None` if not sharded.
+        #:
+        #: :type: :class:`int` or :class:`None`
         self.shard_count = shard_count
+
         #: Current shard ID, or `None` if not sharded.
+        #:
+        #: :type: :class:`int` or :class:`None`
         self.shard_id = shard_id
 
         #: The heartbeat interval. This is `float('nan')` until the gateway provides us a value to use on startup.
+        #:
+        #: :type: :class:`float`
         self.heartbeat_interval = float("nan")
-        #: An :class:`asyncio.Event` that will be triggered whenever the gateway disconnects.
-        self._closed_event = asyncio.Event(loop=loop)
+
         #: The time period in seconds that the last heartbeat we sent took to be acknowledged by the gateway. This
         #: will be `float('inf')` until the first heartbeat is performed and acknowledged.
+        #:
+        #: :type: :class:`float`
         self.heartbeat_latency = float("inf")
+
         #: Number of packets that have been received since startup.
+        #:
+        #: :type: :class:`int`
         self.in_count = 0
+
         #: The initial presence to use for the bot status once IDENTIFYing with the shard.
+        #:
+        #: :type: :class:`dict` or :class:`None`
         self.initial_presence = initial_presence
+
         #: What we regard to be a large guild in member numbers.
+        #:
+        #: :type: :class:`int`
         self.large_threshold = large_threshold
+
         #: The :func:`time.perf_counter` that the last heartbeat was acknowledged at. Is `float('nan')` until then.
+        #:
+        #: :type: :class:`float`
         self.last_ack_received = float("nan")
+
         #: The :func:`time.perf_counter` that the last heartbeat was sent at. Is `float('nan')` until then.
+        #:
+        #: :type: :class:`float`
         self.last_heartbeat_sent = float("nan")
-        #: The event loop to use.
-        self.loop: asyncio.AbstractEventLoop = loop
+
         #: What we consider to be a large size for the internal buffer. Any packet over this size results in the buffer
         #: being completely recreated.
+        #:
+        #: :type: :class:`int`
         self.max_persistent_buffer_size = max_persistent_buffer_size
+
         #: Number of packets that have been sent since startup.
+        #:
+        #: :type: :class:`int`
         self.out_count = 0
+
         #: Rate limit bucket for the gateway.
+        #:
+        #: :type: :class:`hikari.net.rates.TimedTokenBucket`
         self.rate_limit = rates.TimedTokenBucket(120, 60, loop)
+
         #: The `seq` flag value, if there is one set.
+        #:
+        #: :type: :class:`int` or :class:`None`
         self.seq = None
+
         #: The session ID in use, if there is one set.
+        #:
+        #: :type: :class:`int` or :class:`None`
         self.session_id = None
-        #: When the gateway connection was started
+
+        #: When the gateway connection was started, as a unix timestamp.
+        #:
+        #: :type: :class:`int` or :class:`None`
         self.started_at: typing.Optional[int] = None
+
         #: A list of gateway servers that are connected to, once connected.
+        #:
+        #: :type: :class`list` of :class:`str`
         self.trace: typing.List[str] = []
+
         #: Token used to authenticate with the gateway.
+        #:
+        #: :type: :class:`str`
         self.token = token.strip()
+
         #: The URI being connected to.
-        self.uri = f"{host}?v={self._REQUESTED_VERSION}&encoding=json&compression=zlib-stream"
-        #: The :class:`websockets.WebSocketClientProtocol` handling the low-level connection logic. Populated only while
+        #:
+        #: :type: :class:`str`
+        self.uri = f"{uri}?v={self._REQUESTED_VERSION}&encoding=json&compression=zlib-stream"
+
+        #: The active websocket connection handling the low-level connection logic. Populated only while
         #: connected.
-        self._ws: typing.Optional[websockets.WebSocketClientProtocol] = None
+        #:
+        #: :type: :class:`aiohttp.ClientWebSocketResponse` or :class:`None`
+        self.ws: typing.Optional[ws.WebSocketClientResponse] = None
+
         #: Gateway protocol version. Starts as the requested version, updated once ready with the actual version being
         #: used.
+        #:
+        #: :type: :class:`int`
         self.version = self._REQUESTED_VERSION
+
+        #: Optional SSL context to use.
+        #:
+        #: :type: :class:`ssl.SSLContext`
+        self.ssl_context: ssl.SSLContext = ssl_context
+
+        #: Optional proxy URL to use for HTTP requests.
+        #:
+        #: :type: :class:`str`
+        self.proxy_url = proxy_url
+
+        #: Optional authorization to use if using a proxy.
+        #:
+        #: :type: :class:`aiohttp.BasicAuth`
+        self.proxy_auth = proxy_auth
+
+        #: Optional proxy headers to pass.
+        #:
+        #: :type: :class:`aiohttp.typedefs.LooseHeaders`
+        self.proxy_headers = proxy_headers
+
+        #: If `true`, this will enforce SSL signed certificate verification, otherwise it will
+        #: ignore potentially malicious SSL certificates.
+        #:
+        #: :type: :class:`bool`
+        self.verify_ssl = verify_ssl
+
+        #: Optional timeout for the initial HTTP request.
+        #:
+        #: :type: :class:`float`
+        self.timeout = timeout
 
     @property
     def up_time(self) -> datetime.timedelta:
@@ -283,12 +469,12 @@ class GatewayClientV7:
 
     async def _trigger_resume(self, code: int, reason: str) -> typing.NoReturn:
         """Trigger a `RESUME` operation. This will raise a :class:`ResumableConnectionClosed` exception."""
-        await self._ws.close(code=code, reason=reason)
+        await self.ws.close(code=code, reason=reason)
         raise _ResumeConnection(code=code, reason=reason)
 
     async def _trigger_identify(self, code: int, reason: str) -> typing.NoReturn:
         """Trigger a re-`IDENTIFY` operation. This will raise a :class:`GatewayRequestedReconnection` exception."""
-        await self._ws.close(code=code, reason=reason)
+        await self.ws.close(code=code, reason=reason)
         raise _RestartConnection(code=code, reason=reason)
 
     async def _send_json(self, payload, skip_rate_limit) -> None:
@@ -299,23 +485,23 @@ class GatewayClientV7:
         if not skip_rate_limit:
             await self.rate_limit.acquire(self._warn_about_internal_rate_limit)
 
-        raw = json.dumps(payload)
+        raw = self.json_marshaller(payload)
         if len(raw) > 4096:
             self._handle_payload_oversize(payload)
         else:
             self.out_count += 1
-            await self._ws.send(raw)
+            await self.ws.send(raw)
 
     async def _receive_json(self) -> data_structures.DiscordObjectT:
-        msg = await self._ws.recv()
+        msg = await self.ws.receive_any_str()
 
         if isinstance(msg, (bytes, bytearray)):
             self._in_buffer.extend(msg)
             while not self._in_buffer.endswith(b"\x00\x00\xff\xff"):
-                msg = await self._ws.recv()
+                msg = await self.ws.receive_any_str()
                 self._in_buffer.extend(msg)
 
-            msg = self._zlib_decompressor.decompress(self._in_buffer).decode("utf-8")
+            msg = self.zlib_decompressor.decompress(self._in_buffer).decode("utf-8")
 
             # Prevent large packets persisting a massive buffer we never utilise.
             if len(self._in_buffer) > self.max_persistent_buffer_size:
@@ -323,7 +509,7 @@ class GatewayClientV7:
             else:
                 self._in_buffer.clear()
 
-        payload = json.loads(msg, object_hook=data_structures.ObjectProxy)
+        payload = self.json_unmarshaller(msg, object_hook=self.json_unmarshaller_object_hook)
 
         if not isinstance(payload, dict):
             return await self._trigger_identify(code=opcodes.GatewayClosure.TYPE_ERROR, reason="Expected JSON object.")
@@ -422,7 +608,7 @@ class GatewayClientV7:
                 "token": self.token,
                 "compress": False,
                 "large_threshold": self.large_threshold,
-                "properties": self._client_identifier,
+                "properties": self.fingerprint,
             },
         }
 
@@ -580,33 +766,29 @@ class GatewayClientV7:
         while not self._closed_event.is_set():
             await self.run_once()
 
-    async def run_once(self, **kwargs) -> None:
+    async def run_once(self) -> None:
         """
         Run the gateway once, then finish regardless of the closure reason.
 
-        Args:
-            **kwargs:
-                Other arguments to pass to the websockets connect method.
-
         Raises:
-            :class:`hikari.core.errors.GatewayError`:
+            :class:`hikari.errors.GatewayError`:
                 if the token provided is invalidated.
-            :class:`websockets.exceptions.ConnectionClosed`:
+            :class:`hikari.net.ws.WebSocketClosure`:
                 if the connection is unexpectedly closed before we can start processing.
-
-        Note:
-             By default, if the `uri`, `loop`, or `compression` options were not specified, then they default to
-             the `uri` and `loop` stored in this object, and `None` for compression. Specifying these flags will allow
-             you to override this behaviour if you need to, although you should not usually need to manipulate this.
         """
-        kwargs.setdefault("uri", self.uri)
-        kwargs.setdefault("loop", self.loop)
-        kwargs.setdefault("compression", None)
+        kwargs = dict(
+            proxy=self.proxy_url,
+            proxy_auth=self.proxy_auth,
+            proxy_headers=self.proxy_headers,
+            verify_ssl=self.verify_ssl,
+            ssl_context=self.ssl_context,
+            compress=0,
+        )
 
         try:
             self.started_at = time.perf_counter()
 
-            async with self._connector(**kwargs) as self._ws:
+            async with self.client_session.ws_connect(self.uri, **kwargs) as self.ws:
                 try:
                     await self._receive_hello()
                     is_resume = self.seq is not None and self.session_id is not None
@@ -614,7 +796,7 @@ class GatewayClientV7:
                     await self._send_heartbeat()
                     await asyncio.gather(self._keep_alive(), self._process_events())
                     self._dispatch(extra_gateway_events.SHUTDOWN)
-                except (_RestartConnection, _ResumeConnection, websockets.ConnectionClosed) as ex:
+                except ws.WebSocketClosure as ex:
                     code, reason = opcodes.GatewayClosure(ex.code), ex.reason or "no reason"
 
                     self._dispatch(extra_gateway_events.DISCONNECT, {"code": code, "reason": reason})
@@ -641,7 +823,7 @@ class GatewayClientV7:
         """
         self._closed_event.set()
         if block:
-            await self._ws.wait_closed()
+            await self.ws.wait_closed()
 
     def _dispatch(self, event_name: str, payload=None) -> None:
         # This prevents us blocking any task such as the READY handler.
