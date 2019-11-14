@@ -330,11 +330,13 @@ class TestGateway:
 
     async def test_send_resume(self, event_loop):
         gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-        gw.session_id = 1234321
-        gw.seq = 69_420
+        gw.session_id = 1_234_321
+        gw.seq = 69420
         gw._send_json = asynctest.CoroutineMock()
         await gw._send_resume()
-        gw._send_json.assert_called_with({"op": 6, "d": {"token": "1234", "session_id": 1234321, "seq": 69_420}}, False)
+        gw._send_json.assert_called_with(
+            {"op": 6, "d": {"token": "1234", "session_id": 1_234_321, "seq": 69420}}, False
+        )
 
     async def test_send_identify(self, event_loop):
         with contextlib.ExitStack() as stack:
@@ -345,8 +347,8 @@ class TestGateway:
             gw = MockGateway(
                 host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None, large_threshold=69
             )
-            gw.session_id = 1234321
-            gw.seq = 69_420
+            gw.session_id = 1_234_321
+            gw.seq = 69420
             gw._send_json = asynctest.CoroutineMock()
 
             await gw._send_identify()

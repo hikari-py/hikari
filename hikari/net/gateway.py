@@ -352,7 +352,7 @@ class GatewayClientV7:
         self.logger.warning(
             "took %sms to send HEARTBEAT, which is more than 15%% of the heartbeat interval. "
             "Your connection may be poor or the event loop may be blocked or under excessive load",
-            time_taken * 1_000,
+            time_taken * 1000,
         )
 
     async def _send_heartbeat(self) -> None:
@@ -403,7 +403,7 @@ class GatewayClientV7:
         d = hello["d"]
         self.trace = d["_trace"]
         hb = d["heartbeat_interval"]
-        self.heartbeat_interval = hb / 1_000.0
+        self.heartbeat_interval = hb / 1000.0
         self.logger.info("received HELLO. heartbeat interval is %sms", hb)
         self._dispatch(extra_gateway_events.CONNECT)
 

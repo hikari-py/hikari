@@ -49,10 +49,10 @@ def test_roles_payloads():
         {
             "id": "41771983423143936",
             "name": "WE DEM BOYZZ!!!!!!",
-            "color": 3447003,
+            "color": 3_447_003,
             "hoist": True,
             "position": 0,
-            "permissions": 66321471,
+            "permissions": 66_321_471,
             "managed": False,
             "mentionable": False,
         },
@@ -154,10 +154,10 @@ def test_guild_payload(test_emoji_payload, test_roles_payloads, test_channel_pay
         "large": False,
         "unavailable": False,
         "voice_states": [],
-        "permissions": 66321471,
+        "permissions": 66_321_471,
         "members": [test_member_payload],
         "channels": test_channel_payloads,
-        "max_members": 25_000,
+        "max_members": 25000,
         "vanity_url_code": "loool",
         "description": "This is a server I guess, its a bit crap though",
         "banner": "1a2b3c",
@@ -174,12 +174,12 @@ class TestGuild:
         s = mock.MagicMock(spec_set=state_registry.StateRegistry)
         g = guilds.Guild(s, test_guild_payload)
 
-        assert g.id == 123456
-        assert g._afk_channel_id == 99998888777766
-        assert g._owner_id == 6969696
+        assert g.id == 123_456
+        assert g._afk_channel_id == 99_998_888_777_766
+        assert g._owner_id == 6_969_696
         assert g._voice_region == "eu-central"
-        assert g._system_channel_id == 19216801
-        assert g.creator_application_id == 10987654321
+        assert g._system_channel_id == 19_216_801
+        assert g.creator_application_id == 10_987_654_321
         assert g.name == "L33t guild"
         assert g.icon_hash == "1a2b3c4d"
         assert g.splash_hash == "0ff0ff0ff"
@@ -213,7 +213,7 @@ class TestGuild:
             | permissions.Permission.KICK_MEMBERS
             | permissions.Permission.CREATE_INSTANT_INVITE
         )
-        assert g.max_members == 25_000
+        assert g.max_members == 25000
         assert g.vanity_url_code == "loool"
         assert g.description == "This is a server I guess, its a bit crap though"
         assert g.banner_hash == "1a2b3c"
@@ -232,7 +232,7 @@ class TestGuild:
         s = mock.MagicMock(spec_set=state_registry.StateRegistry)
         g = guilds.Guild(s, {"id": "12345678910", "unavailable": True})
 
-        assert g.id == 12345678910
+        assert g.id == 12_345_678_910
         assert g.unavailable
 
     def test_Ban(self):
