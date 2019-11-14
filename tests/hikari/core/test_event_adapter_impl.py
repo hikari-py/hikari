@@ -95,29 +95,36 @@ class TestStateRegistryImpl:
         dispatch_impl.assert_called_with("raw_try_to_do_something", ...)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_disconnect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+        payload = {"code": 123, "reason": "test"}
+        await adapter_impl.handle_disconnect(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(
+            "disconnect", gateway_impl, payload.get("code"), payload.get("reason"))
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_connect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+        await adapter_impl.handle_connect(gateway_impl, ...)
+
+        dispatch_impl.assert_called_with("connect", gateway_impl)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_invalid_session_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+        await adapter_impl.handle_invalid_session(gateway_impl, False)
+
+        dispatch_impl.assert_called_with("invalid_session", gateway_impl, False)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_reconnect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+        await adapter_impl.handle_reconnect(gateway_impl, ...)
+
+        dispatch_impl.assert_called_with("reconnect", gateway_impl)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_resumed_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+        await adapter_impl.handle_resumed(gateway_impl, ...)
+
+        dispatch_impl.assert_called_with("resumed", gateway_impl)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
