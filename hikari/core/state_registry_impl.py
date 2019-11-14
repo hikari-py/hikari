@@ -223,13 +223,13 @@ class StateRegistryImpl(state_registry.StateRegistry):
         return self._user
 
     def parse_channel(
-        self, channel_payload: data_structures.DiscordObjectT, guild_id: typing.Optional[int] = None
+        self, channel_payload: data_structures.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild] = None
     ) -> channels.Channel:
         channel_id = int(channel_payload["id"])
         channel_obj = self.get_channel_by_id(channel_id)
 
-        if guild_id is not None:
-            channel_payload["guild_id"] = guild_id
+        if guild_obj is not None:
+            channel_payload["guild_id"] = guild_obj.id
 
         if channel_obj is not None:
             channel_obj.update_state(channel_payload)
@@ -245,14 +245,14 @@ class StateRegistryImpl(state_registry.StateRegistry):
 
     # These fix typing issues in the update_guild_emojis method.
     @typing.overload
-    def parse_emoji(self, emoji_payload: data_structures.DiscordObjectT, guild_id: int) -> emojis.GuildEmoji:
+    def parse_emoji(self, emoji_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
         ...
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: data_structures.DiscordObjectT, guild_id: None) -> emojis.Emoji:
+    def parse_emoji(self, emoji_payload: data_structures.DiscordObjectT, guild_obj: None) -> emojis.Emoji:
         ...
 
-    def parse_emoji(self, emoji_payload, owned_guild_id):
+    def parse_emoji(self, emoji_payload, guild_obj):
         existing_emoji = None
         # While it is true the API docs state that we always get an ID back, I don't trust discord wont break this
         # in the future, so I am playing it safe.
@@ -265,9 +265,9 @@ class StateRegistryImpl(state_registry.StateRegistry):
             existing_emoji.update_state(emoji_payload)
             return existing_emoji
 
-        new_emoji = emojis.parse_emoji(self, emoji_payload, owned_guild_id)
+        new_emoji = emojis.parse_emoji(self, emoji_payload, guild_obj.id if guild_obj is not None else None)
         if isinstance(new_emoji, emojis.GuildEmoji):
-            guild_obj = self.get_guild_by_id(owned_guild_id)
+            guild_obj = self.get_guild_by_id(guild_obj.id)
             guild_obj.emojis[new_emoji.id] = new_emoji
             self._emojis[new_emoji.id] = new_emoji
 
@@ -428,50 +428,27 @@ class StateRegistryImpl(state_registry.StateRegistry):
         return None
 
     def update_guild_emojis(
-        self, emoji_list: typing.List[data_structures.DiscordObjectT], guild_id: int
+        self, emoji_list: typing.List[data_structures.DiscordObjectT], guild_obj: guilds.Guild
     ) -> typing.Optional[typing.Tuple[typing.FrozenSet[emojis.GuildEmoji], typing.FrozenSet[emojis.GuildEmoji]]]:
-        guild_obj = self.get_guild_by_id(guild_id)
-        if guild_obj is not None:
-            old_emojis = frozenset(guild_obj.emojis.values())
-            new_emojis = frozenset(self.parse_emoji(emoji_obj, guild_id) for emoji_obj in emoji_list)
-            guild_obj.emojis = transformations.id_map(new_emojis)
-            return old_emojis, new_emojis
-        return None
+        old_emojis = frozenset(guild_obj.emojis.values())
+        new_emojis = frozenset(self.parse_emoji(emoji_obj, guild_obj) for emoji_obj in emoji_list)
+        guild_obj.emojis = transformations.id_map(new_emojis)
+        return old_emojis, new_emojis
 
     def update_member(
-        self, guild_id: int, role_ids: typing.List[int], nick: typing.Optional[str], user_id: int
+        self, member_obj: members.Member, role_objs: typing.List[roles.Role], nick: typing.Optional[str]
     ) -> typing.Optional[typing.Tuple[members.Member, members.Member]]:
-        guild_obj = self.get_guild_by_id(guild_id)
-
-        if guild_obj is not None and user_id in guild_obj.members:
-            new_member = guild_obj.members[user_id]
-            old_member = new_member.copy()
-            role_objs = []
-
-            for role_id in role_ids:
-                try:
-                    role_objs.append(guild_obj.roles[role_id])
-                except KeyError:
-                    # If we cant resolve a role, just skip the step, but don't abort.
-                    self.logger.warning(
-                        "unresolvable role ID %s on member %s in guild %s will be ignored", role_id, user_id, guild_id
-                    )
-
-            new_member.update_state(role_objs, nick)
-            return old_member, new_member
-        return None
+        new_member = member_obj
+        old_member = new_member.copy()
+        new_member.update_state(role_objs, nick)
+        return old_member, new_member
 
     def update_member_presence(
-        self, guild_id: int, user_id: int, presence_payload: data_structures.DiscordObjectT
+        self, member_obj: members.Member, presence_payload: data_structures.DiscordObjectT
     ) -> typing.Optional[typing.Tuple[members.Member, presences.Presence, presences.Presence]]:
-        guild_obj = self.get_guild_by_id(guild_id)
-
-        if guild_obj is not None and user_id in guild_obj.members:
-            member_obj = guild_obj.members[user_id]
-            old_presence = member_obj.presence
-            new_presence = self.parse_presence(member_obj, presence_payload)
-            return member_obj, old_presence, new_presence
-        return None
+        old_presence = member_obj.presence
+        new_presence = self.parse_presence(member_obj, presence_payload)
+        return member_obj, old_presence, new_presence
 
     def update_message(
         self, payload: data_structures.DiscordObjectT
@@ -485,10 +462,10 @@ class StateRegistryImpl(state_registry.StateRegistry):
         return None
 
     def update_role(
-        self, guild_id: int, payload: data_structures.DiscordObjectT
+        self, guild_obj: guilds.Guild, payload: data_structures.DiscordObjectT
     ) -> typing.Optional[typing.Tuple[roles.Role, roles.Role]]:
         role_id = int(payload["id"])
-        existing_role = self.get_role_by_id(guild_id, role_id)
+        existing_role = guild_obj.roles.get(role_id)
 
         if existing_role is not None:
             old_role = existing_role.copy()

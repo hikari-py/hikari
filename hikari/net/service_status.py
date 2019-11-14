@@ -23,6 +23,10 @@ Note:
     This API is not overly well documented, and the API documentation does not directly tarry up with the API
     specification. Thus, some details may be undocumented or omitted or incorrect.
 
+Note:
+    There is currently no proxy or SSL configuration support for this module. If required, please open
+    an issue at https://gitlab.com/nekokatt/hikari/issues to request this to be implemented.
+
 See:
     https://status.discordapp.com/api/v2
 """
