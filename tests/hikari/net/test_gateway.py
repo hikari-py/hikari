@@ -34,6 +34,7 @@ from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import user_agent
 from hikari.net import gateway
 from hikari.net import opcodes
+from hikari.net import ws
 from tests.hikari import _helpers
 
 
@@ -49,28 +50,50 @@ class Context:
         pass
 
 
-class MockGateway(gateway.GatewayClient):
-    def __init__(self, **kwargs):
-        gateway.GatewayClient.__init__(self, **kwargs)
+class MockSession(ws.WebSocketClientSession):
+    def __init__(self, ws):
+        self.ws = ws
+        self._closed = False
+        self.ws_connect = asynctest.MagicMock(wraps=self.ws_connect, spec_set=self.ws_connect)
 
-        self._ws = Context()
-        self._connector = lambda *a, **k: self._ws
-        self.ws = self._ws
+    async def __aenter__(self):
+        return
+
+    async def __aexit__(self, *_, **__):
+        self._closed = True
+
+    def __del__(self):
+        pass
+
+    @property
+    def closed(self):
+        return self._closed
+
+    def ws_connect(self, url: str, **kwargs):
+        return self
+
+
+class MockGateway(gateway.GatewayClientV7):
+    def __init__(self, **kwargs):
+        ws = Context()
+        gateway.GatewayClientV7.__init__(self, **kwargs)
+        self.ws = ws
         self.ws.close = asynctest.CoroutineMock()
-        self.ws.send = asynctest.CoroutineMock()
-        self.ws.recv = asynctest.CoroutineMock()
+        self.ws.send_str = asynctest.CoroutineMock()
+        self.ws.receive_any_str = asynctest.CoroutineMock()
         self.ws.wait_closed = self._wait_closed
+        self.client_session = MockSession(self.ws)
 
     @staticmethod
     async def _wait_closed():
         await asyncio.sleep(0.5)
 
 
-def mock_run_once_parts(timeout=10):
+def mock_run_once_parts():
     def decorator(coro):
         async def wrapper(*args, **kwargs):
             gw = MockGateway(
-                host="wss://gateway.discord.gg:4949/",
+                uri="wss://gateway.discord.gg:4949/",
                 loop=asyncio.get_event_loop(),
                 token="1234",
                 shard_id=917,
@@ -79,6 +102,7 @@ def mock_run_once_parts(timeout=10):
             )
             gw._receive_hello = asynctest.CoroutineMock()
             gw._send_resume = asynctest.CoroutineMock()
+            gw._send_heartbeat = asynctest.CoroutineMock()
             gw._send_identify = asynctest.CoroutineMock()
             gw._keep_alive = asynctest.CoroutineMock()
             gw._process_events = asynctest.CoroutineMock()
@@ -100,7 +124,8 @@ def mock_run_once_parts(timeout=10):
 class TestGateway:
     async def test_init_produces_valid_url(self, event_loop):
         """GatewayConnection.__init__ should produce a valid query fragment for the URL."""
-        gw = gateway.GatewayClient(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
+        # noinspection PyTypeChecker
+        gw = gateway.GatewayClientV7(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
         bits: urlparse.ParseResult = urlparse.urlparse(gw.uri)
 
         assert bits.scheme == "wss"
@@ -110,7 +135,7 @@ class TestGateway:
         assert not bits.fragment
 
     async def test_do_resume_triggers_correct_signals(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
 
         try:
             await gw._trigger_resume(69, "boom")
@@ -119,7 +144,7 @@ class TestGateway:
             gw.ws.close.assert_awaited_once_with(code=69, reason="boom")
 
     async def test_do_reidentify_triggers_correct_signals(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
 
         try:
             await gw._trigger_identify(69, "boom")
@@ -128,7 +153,7 @@ class TestGateway:
             gw.ws.close.assert_awaited_once_with(code=69, reason="boom")
 
     async def test_send_json_calls_websocket(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw._logger = asynctest.MagicMock()
 
         # pretend to sleep only
@@ -138,10 +163,10 @@ class TestGateway:
         with _helpers.mock_patch(asyncio.sleep, new=fake_sleep):
             await gw._send_json({}, False)
 
-        gw.ws.send.assert_awaited_once_with("{}")
+        gw.ws.send_str.assert_awaited_once_with("{}")
 
     async def test_ratelimiting_on_send(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw._warn_about_internal_rate_limit = asynctest.MagicMock(wraps=gw._warn_about_internal_rate_limit)
         gw.rate_limit._per = 1.5
         gw.rate_limit.reset_at = time.perf_counter() + 1.5
@@ -152,7 +177,7 @@ class TestGateway:
         gw._warn_about_internal_rate_limit.assert_called()
 
     async def test_ratelimiting_on_send_can_be_overridden(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw._warn_about_internal_rate_limit = asynctest.MagicMock(wraps=gw._warn_about_internal_rate_limit)
         gw.rate_limit._per = 3
         gw.rate_limit.reset_at = time.perf_counter() + 3
@@ -163,89 +188,95 @@ class TestGateway:
         gw._warn_about_internal_rate_limit.assert_not_called()
 
     async def test_send_json_wont_send_massive_payloads(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw._handle_payload_oversize = asynctest.MagicMock(wraps=gw._handle_payload_oversize)
         pl = {"d": {"lolololilolo": "lol" * 4096}, "op": "1", "blah": 2}
         await gw._send_json(pl, False)
         gw._handle_payload_oversize.assert_called_once_with(pl)
 
-    async def test_receive_json_calls_recv_at_least_once(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-        gw.ws.recv = asynctest.CoroutineMock(return_value="{}")
+    async def test_receive_json_calls_receive_any_str_at_least_once(self, event_loop):
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw.ws.receive_any_str = asynctest.CoroutineMock(return_value="{}")
         await gw._receive_json()
-        gw.ws.recv.assert_any_call()
+        gw.ws.receive_any_str.assert_any_call()
 
     async def test_receive_json_closes_connection_if_payload_was_not_a_dict(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw._trigger_identify = asynctest.CoroutineMock()
-        gw.ws.recv = asynctest.CoroutineMock(return_value="[]")
+        gw.ws.receive_any_str = asynctest.CoroutineMock(return_value="[]")
         await gw._receive_json()
-        gw.ws.recv.assert_any_call()
+        gw.ws.receive_any_str.assert_any_call()
         gw._trigger_identify.assert_awaited_once_with(
             code=opcodes.GatewayClosure.TYPE_ERROR, reason="Expected JSON object."
         )
 
     async def test_receive_json_when_receiving_string_decodes_immediately(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-
-        with _helpers.mock_patch(json.loads, new=asynctest.MagicMock(return_value={})):
-            recv_value = "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}"
-            gw.ws.recv = asynctest.CoroutineMock(return_value=recv_value)
+        with asynctest.patch("json.loads", new=asynctest.MagicMock(return_value={})) as json_loads:
+            gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+            receive_any_str_value = "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}"
+            gw.ws.receive_any_str = asynctest.CoroutineMock(return_value=receive_any_str_value)
             await gw._receive_json()
-            # noinspection PyUnresolvedReferences,PyUnresolvedReferences
-            json.loads.assert_called_with(recv_value, object_hook=data_structures.ObjectProxy)
+            # noinspection PyUnresolvedReferences
+            json_loads.assert_called_with(receive_any_str_value, object_hook=data_structures.ObjectProxy)
 
     async def test_receive_json_when_receiving_zlib_payloads_collects_before_decoding(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        with asynctest.patch("json.loads", new=asynctest.MagicMock(return_value={})) as json_loads:
+            gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+            receive_any_str_value = (
+                "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}".encode("utf-8")
+            )
 
-        with _helpers.mock_patch(json.loads, new=asynctest.MagicMock(return_value={})):
-            recv_value = "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}".encode("utf-8")
-
-            payload = zlib.compress(recv_value) + b"\x00\x00\xff\xff"
+            payload = zlib.compress(receive_any_str_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
             chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
 
-            gw.ws.recv = asynctest.CoroutineMock(side_effect=chunks)
+            gw.ws.receive_any_str = asynctest.CoroutineMock(side_effect=chunks)
             await gw._receive_json()
-            # noinspection PyUnresolvedReferences,PyUnresolvedReferences
-            json.loads.assert_called_with(recv_value.decode("utf-8"), object_hook=data_structures.ObjectProxy)
+            # noinspection PyUnresolvedReferences
+            json_loads.assert_called_with(
+                receive_any_str_value.decode("utf-8"), object_hook=data_structures.ObjectProxy
+            )
 
     async def test_small_zlib_payloads_leave_buffer_alone(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
 
         with _helpers.mock_patch(json.loads, new=asynctest.MagicMock(return_value={})):
-            recv_value = "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}".encode("utf-8")
+            receive_any_str_value = (
+                "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}".encode("utf-8")
+            )
 
-            payload = zlib.compress(recv_value) + b"\x00\x00\xff\xff"
+            payload = zlib.compress(receive_any_str_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
             chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
 
             first_array = gw._in_buffer
-            gw.ws.recv = asynctest.CoroutineMock(side_effect=chunks)
+            gw.ws.receive_any_str = asynctest.CoroutineMock(side_effect=chunks)
             await gw._receive_json()
             assert gw._in_buffer is first_array
 
     async def test_massive_zlib_payloads_cause_buffer_replacement(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
 
         with _helpers.mock_patch(json.loads, new=asynctest.MagicMock(return_value={})):
-            recv_value = "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}".encode("utf-8")
+            receive_any_str_value = (
+                "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}".encode("utf-8")
+            )
 
-            payload = zlib.compress(recv_value) + b"\x00\x00\xff\xff"
+            payload = zlib.compress(receive_any_str_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
             chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
 
             first_array = gw._in_buffer
             gw.max_persistent_buffer_size = 3
-            gw.ws.recv = asynctest.CoroutineMock(side_effect=chunks)
+            gw.ws.receive_any_str = asynctest.CoroutineMock(side_effect=chunks)
             await gw._receive_json()
             assert gw._in_buffer is not first_array
 
     async def test_heartbeat_beats_at_interval(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw.heartbeat_interval = 0.01
 
         task = asyncio.create_task(gw._keep_alive())
@@ -253,10 +284,10 @@ class TestGateway:
             await asyncio.sleep(0.5)
         finally:
             task.cancel()
-            gw.ws.send.assert_awaited_with('{"op": 1, "d": null}')
+            gw.ws.send_str.assert_awaited_with('{"op": 1, "d": null}')
 
     async def test_heartbeat_shuts_down_when_closure_request(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw.heartbeat_interval = 0.01
 
         task = asyncio.create_task(gw._keep_alive())
@@ -267,7 +298,7 @@ class TestGateway:
             await task
 
     async def test_heartbeat_if_not_acknowledged_in_time_closes_connection_with_resume(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw.last_heartbeat_sent = -float("inf")
         gw.heartbeat_interval = 0
 
@@ -279,7 +310,7 @@ class TestGateway:
         gw.ws.close.assert_awaited_once()
 
     async def test_slow_loop_produces_warning(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw.heartbeat_interval = 0
         gw.heartbeat_latency = 0
         gw._handle_slow_client = asynctest.MagicMock(wraps=gw._handle_slow_client)
@@ -291,25 +322,25 @@ class TestGateway:
         gw._handle_slow_client.assert_called_once()
 
     async def test_send_heartbeat(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw._send_json = asynctest.CoroutineMock()
         await gw._send_heartbeat()
         gw._send_json.assert_called_with({"op": 1, "d": None}, True)
 
     async def test_send_ack(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw._send_json = asynctest.CoroutineMock()
         await gw._send_ack()
         gw._send_json.assert_called_with({"op": 11}, True)
 
     async def test_handle_ack(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw.last_heartbeat_sent = 0
         await gw._handle_ack()
         assert not math.isnan(gw.heartbeat_latency) and not math.isinf(gw.heartbeat_latency)
 
-    async def test_recv_hello_when_is_hello(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+    async def test_receive_any_str_hello_when_is_hello(self, event_loop):
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw._receive_json = asynctest.CoroutineMock(
             return_value={"op": 10, "d": {"heartbeat_interval": 12345, "_trace": ["foo"]}}
         )
@@ -318,8 +349,8 @@ class TestGateway:
         assert gw.trace == ["foo"]
         assert gw.heartbeat_interval == 12.345
 
-    async def test_recv_hello_when_is_not_hello_causes_resume(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+    async def test_receive_any_str_hello_when_is_not_hello_causes_resume(self, event_loop):
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw._receive_json = asynctest.CoroutineMock(
             return_value={"op": 9, "d": {"heartbeat_interval": 12345, "_trace": ["foo"]}}
         )
@@ -329,7 +360,7 @@ class TestGateway:
         gw._trigger_resume.assert_awaited()
 
     async def test_send_resume(self, event_loop):
-        gw = MockGateway(host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw.session_id = 1234321
         gw.seq = 69_420
         gw._send_json = asynctest.CoroutineMock()
@@ -343,7 +374,7 @@ class TestGateway:
             stack.enter_context(_helpers.mock_patch(platform.system, new=lambda: "leenuks"))
 
             gw = MockGateway(
-                host="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None, large_threshold=69
+                uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None, large_threshold=69
             )
             gw.session_id = 1234321
             gw.seq = 69_420
@@ -365,7 +396,7 @@ class TestGateway:
 
     async def test_send_identify_includes_sharding_info_if_present(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -383,7 +414,7 @@ class TestGateway:
 
     async def test_send_identify_includes_status_info_if_present(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -402,7 +433,7 @@ class TestGateway:
 
     async def test_process_events_halts_if_closed_event_is_set(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -410,13 +441,13 @@ class TestGateway:
             large_threshold=69,
         )
         gw._process_one_event = asynctest.CoroutineMock()
-        gw.closed_event.set()
+        gw._closed_event.set()
         await gw._process_events()
         gw._process_one_event.assert_not_awaited()
 
     async def test_process_one_event_updates_seq_if_provided_from_payload(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -429,7 +460,7 @@ class TestGateway:
 
     async def test_process_events_does_not_update_seq_if_not_provided_from_payload(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -444,7 +475,7 @@ class TestGateway:
 
     async def test_process_events_on_dispatch_opcode(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -453,7 +484,7 @@ class TestGateway:
         )
 
         async def flag_death_on_call():
-            gw.closed_event.set()
+            gw._closed_event.set()
             return {"op": 0, "d": {}, "t": "explosion"}
 
         gw._receive_json = flag_death_on_call
@@ -464,7 +495,7 @@ class TestGateway:
 
     async def test_process_events_on_heartbeat_opcode(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -473,7 +504,7 @@ class TestGateway:
         )
 
         async def flag_death_on_call():
-            gw.closed_event.set()
+            gw._closed_event.set()
             return {"op": 1, "d": {}}
 
         gw._receive_json = flag_death_on_call
@@ -484,7 +515,7 @@ class TestGateway:
 
     async def test_process_events_on_heartbeat_ack_opcode(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -493,7 +524,7 @@ class TestGateway:
         )
 
         async def flag_death_on_call():
-            gw.closed_event.set()
+            gw._closed_event.set()
             return {"op": 11, "d": {}}
 
         gw._receive_json = flag_death_on_call
@@ -504,7 +535,7 @@ class TestGateway:
 
     async def test_process_events_on_reconnect_opcode(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -513,7 +544,7 @@ class TestGateway:
         )
 
         async def flag_death_on_call():
-            gw.closed_event.set()
+            gw._closed_event.set()
             return {"op": 7, "d": {}}
 
         gw._receive_json = flag_death_on_call
@@ -524,7 +555,7 @@ class TestGateway:
 
     async def test_process_events_on_resumable_invalid_session_opcode(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -533,7 +564,7 @@ class TestGateway:
         )
 
         async def flag_death_on_call():
-            gw.closed_event.set()
+            gw._closed_event.set()
             return {"op": 9, "d": True}
 
         gw._receive_json = flag_death_on_call
@@ -544,7 +575,7 @@ class TestGateway:
 
     async def test_process_events_on_non_resumable_invalid_session_opcode(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -553,7 +584,7 @@ class TestGateway:
         )
 
         async def flag_death_on_call():
-            gw.closed_event.set()
+            gw._closed_event.set()
             return {"op": 9, "d": False}
 
         gw._receive_json = flag_death_on_call
@@ -564,7 +595,7 @@ class TestGateway:
 
     async def test_process_events_on_unrecognised_opcode_passes_silently(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -573,7 +604,7 @@ class TestGateway:
         )
 
         async def flag_death_on_call():
-            gw.closed_event.set()
+            gw._closed_event.set()
             return {"op": -1, "d": False}
 
         gw._receive_json = flag_death_on_call
@@ -581,7 +612,7 @@ class TestGateway:
 
     async def test_request_guild_members(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -594,7 +625,7 @@ class TestGateway:
 
     async def test_update_status(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -609,7 +640,7 @@ class TestGateway:
 
     async def test_update_voice_state(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -624,7 +655,7 @@ class TestGateway:
 
     async def test_no_blocking_close(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -633,12 +664,12 @@ class TestGateway:
         )
         gw.ws.wait_closed = asynctest.CoroutineMock()
         await gw.close(False)
-        assert gw.closed_event.is_set()
+        assert gw._closed_event.is_set()
         gw.ws.wait_closed.assert_not_awaited()
 
     async def test_blocking_close(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -647,12 +678,12 @@ class TestGateway:
         )
         gw.ws.wait_closed = asynctest.CoroutineMock()
         await gw.close(True)
-        assert gw.closed_event.is_set()
+        assert gw._closed_event.is_set()
         gw.ws.wait_closed.assert_awaited()
 
     async def test_shut_down_run_does_not_loop(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -660,12 +691,12 @@ class TestGateway:
             large_threshold=69,
         )
         gw._receive_json = asynctest.CoroutineMock()
-        gw.closed_event.set()
+        gw._closed_event.set()
         await gw.run()
 
     async def test_invalid_session_when_cannot_resume_does_not_resume(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -686,7 +717,7 @@ class TestGateway:
 
     async def test_invalid_session_when_can_resume_does_resume(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -707,7 +738,7 @@ class TestGateway:
 
     async def test_dispatch_ready(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -748,7 +779,7 @@ class TestGateway:
 
     async def test_dispatch_resume(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -764,7 +795,7 @@ class TestGateway:
 
     async def test_handle_ready(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -802,7 +833,7 @@ class TestGateway:
 
     async def test_handle_resume(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -814,7 +845,7 @@ class TestGateway:
 
     async def test_process_events_calls_process_one_event(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -823,7 +854,7 @@ class TestGateway:
         )
 
         async def side_effect(*_, **__):
-            gw.closed_event.set()
+            gw._closed_event.set()
 
         gw._process_one_event = asynctest.CoroutineMock(side_effect=side_effect)
         await gw._process_events()
@@ -831,7 +862,7 @@ class TestGateway:
 
     async def test_run_calls_run_once(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -840,7 +871,7 @@ class TestGateway:
         )
 
         async def side_effect(*_, **__):
-            gw.closed_event.set()
+            gw._closed_event.set()
 
         gw.run_once = asynctest.CoroutineMock(side_effect=side_effect)
         await gw.run()
@@ -848,36 +879,19 @@ class TestGateway:
 
     @mock_run_once_parts()
     async def test_run_once_opens_connection(_, gw):
-        class MockConnector:
-            def __init__(self):
-                self.init = None
-                self.aenter = None
-                self.aexit = None
-
-            async def __aenter__(self):
-                self.aenter = True
-                return self
-
-            async def __aexit__(self, exc_type, exc_val, exc_tb):
-                self.aexit = True
-                return self
-
-            def __call__(self, *args, **kwargs):
-                self.init = [(args, kwargs)]
-                return self
-
-        gw._receive_hello = asynctest.CoroutineMock(side_effect=StopIteration)
-        gw.uri = "uri"
-        gw.loop = "loop"
-        gw._connector = MockConnector()
+        # Stop the ws going further than the hello part.
+        gw._receive_hello = asynctest.CoroutineMock(side_effect=ws.WebSocketClosure(1000, "idk"))
+        gw.uri = "ws://uri"
         await gw.run_once()
-        assert gw._connector.init
-        assert gw._connector.aenter
-        assert gw._connector.aexit
-        assert ((), {"uri": "uri", "loop": "loop", "compression": None}) in gw._connector.init
+        gw.client_session.ws_connect.assert_called_once_with(
+            gw.uri, compress=0, proxy=None, proxy_auth=None, proxy_headers=None, ssl_context=None, verify_ssl=True,
+        )
 
     @mock_run_once_parts()
     async def test_run_once_waits_for_hello(_, gw):
+        # Stop the WS going further than the hello part.
+        gw._receive_hello = asynctest.CoroutineMock(side_effect=ws.WebSocketClosure(1000, "idk"))
+        gw.uri = "ws://uri"
         await gw.run_once()
         gw._receive_hello.assert_awaited_once()
 
@@ -987,7 +1001,7 @@ class TestGateway:
 
     async def test_up_time_when_not_running(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -999,7 +1013,7 @@ class TestGateway:
 
     async def test_up_time_when_running(self, event_loop):
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,
@@ -1020,7 +1034,7 @@ class TestGateway:
 
         dispatch = asynctest.CoroutineMock(wraps=callback)
         gw = MockGateway(
-            host="wss://gateway.discord.gg:4949/",
+            uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
             token="1234",
             shard_id=917,

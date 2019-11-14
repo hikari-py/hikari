@@ -36,6 +36,8 @@ class HikariError(RuntimeError, abc.ABC):
         You should never initialize this exception directly.
     """
 
+    __slots__ = ("message",)
+
     @abc.abstractmethod
     def __init__(self, message: str = ""):
         super().__init__()

@@ -22,10 +22,11 @@ Implementation of the base components required for working with the V7 HTTP REST
 from __future__ import annotations
 
 import asyncio
-import json as libjson
+import json
+import ssl
 import typing
 
-import aiohttp
+import aiohttp.typedefs
 
 from hikari import errors
 from hikari.internal_utilities import data_structures
@@ -40,14 +41,18 @@ from hikari.net import rates
 #: Format string for the default Discord API URL.
 _DISCORD_API_URI_FORMAT = "https://discordapp.com/api/v{VERSION}"
 
-# Headers for rate limiting
+# Common strings and values I reused a lot
 _ACCEPT = "Accept"
+_AUTHORIZATION = "Authorization"
 _APPLICATION_JSON = "application/json"
+_TEXT_HTML = "text/html"
+_TEXT_PLAIN = "text/plain"
 _DATE = "Date"
 _GRAINULARITY = "millisecond"
 _GRAINULARITY_MULTIPLIER = 1 / 1000
 _RETRY_AFTER = "Retry-After"
 _USER_AGENT = "User-Agent"
+_X_AUDIT_LOG_REASON = "X-Audit-Log-Reason"
 _X_RATELIMIT_GLOBAL = "X-RateLimit-Global"
 _X_RATELIMIT_LIMIT = "X-RateLimit-Limit"
 _X_RATELIMIT_PRECISION = "X-RateLimit-Precision"
@@ -125,17 +130,26 @@ class BaseHTTPClient:
     """
 
     __slots__ = [
-        "_correlation_id",
         "allow_redirects",
+        "authorization",
+        "client_session",
         "buckets",
         "base_uri",
         "global_rate_limit",
-        "max_retries",
-        "session",
-        "authorization",
+        "in_count",
+        "json_marshaller",
+        "json_unmarshaller",
+        "json_unmarshaller_object_hook",
         "logger",
         "loop",
+        "max_retries",
+        "proxy_auth",
+        "proxy_headers",
+        "proxy_url",
+        "ssl_context",
+        "timeout",
         "user_agent",
+        "verify_ssl",
     ]
 
     #: The target API version.
@@ -147,64 +161,186 @@ class BaseHTTPClient:
         loop: asyncio.AbstractEventLoop = None,
         allow_redirects: bool = False,
         max_retries: int = 5,
-        token: str = unspecified.UNSPECIFIED,
-        base_uri: str = _DISCORD_API_URI_FORMAT.format(VERSION=VERSION),
-        **aiohttp_arguments,
+        token: str = None,
+        base_uri: str = None,
+        json_unmarshaller: typing.Callable = None,
+        json_unmarshaller_object_hook: typing.Type[dict] = None,
+        json_marshaller: typing.Callable = None,
+        connector: aiohttp.BaseConnector = None,
+        proxy_headers: aiohttp.typedefs.LooseHeaders = None,
+        proxy_auth: aiohttp.BasicAuth = None,
+        proxy_url: str = None,
+        ssl_context: ssl.SSLContext = None,
+        verify_ssl: bool = True,
+        timeout: float = None,
     ) -> None:
         """
-        Args:
-            loop:
-                the asyncio event loop to run on.
-            token:
-                the token to use for authentication. This should not start with `Bearer` or `Bot`. If this is not 
-                specified, no Authentication is used by default. This enables this client to be used by endpoints that 
-                do not require active authentication.
+        Optional Keyword Arguments:
             allow_redirects:
                 defaults to False for security reasons. If you find you are receiving multiple redirection responses
                 causing requests to fail, it is probably worth enabling this.
-            max_retries:
-                The max number of times to retry in certain scenarios before giving up on making the request.
             base_uri:
                 optional HTTP API base URI to hit. If unspecified, this defaults to Discord's API URI. This exists for
                 the purpose of mocking for functional testing. Any URI should NOT end with a trailing forward slash, and
                 any instance of `{VERSION}` in the URL will be replaced.
-            **aiohttp_arguments:
-                additional arguments to pass to the internal :class:`aiohttp.ClientSession` constructor used for making
-                HTTP requests.
+            connector:
+                the :class:`aiohttp.BaseConnector` to use for the client session, or `None` if you wish to use the
+                default instead.
+            json_marshaller:
+                a callable that consumes a Python object and returns a JSON-encoded string.
+                This defaults to :func:`json.dumps`.
+            json_unmarshaller:
+                a callable that consumes a JSON-encoded string and returns a Python object.
+                This defaults to :func:`json.loads`.
+            json_unmarshaller_object_hook:
+                the object hook to use to parse a JSON object into a Python object. Defaults to
+                :class:`hikari.internal_utilities.data_structures.ObjectProxy`. This means that you can use any
+                received dict as a regular dict, or use "JavaScript"-like dot-notation to access members.
+            loop:
+                the asyncio event loop to run on.
+            max_retries:
+                The max number of times to retry in certain scenarios before giving up on making the request.
+            proxy_auth:
+                optional proxy authentication to use.
+            proxy_headers:
+                optional proxy headers to pass.
+            proxy_url:
+                optional proxy URL to use.
+            ssl_context:
+                optional SSL context to use.
+            verify_ssl:
+                defaulting to True, setting this to false will disable SSL verification.
+            timeout:
+                optional timeout to apply to individual HTTP requests.
+            token:
+                the token to use for authentication. This should not start with `Bearer` or `Bot`. If this is not
+                specified, no Authentication is used by default. This enables this client to be used by endpoints that
+                do not require active authentication.
         """
-        # Used for internal bookkeeping
-        self._correlation_id = 0
+        #: How many responses have been received.
+        #:
+        #: :type: :class:`int`
+        self.in_count = 0
+
         #: The asyncio event loop to run on.
+        #:
+        #: :type: :class:`asyncio.AbstractEventLoop`
         self.loop = loop or asyncio.get_running_loop()
+
         #: Whether to allow redirects or not.
+        #:
+        #: :type: :class:`bool`
         self.allow_redirects = allow_redirects
+
         #: Local rate limit buckets.
+        #:
+        #: :type: :class:`dict` mapping :class:`Resource` keys to :class:`hikari.net.rates.VariableTokenBucket`
         self.buckets: typing.Dict[Resource, rates.VariableTokenBucket] = {}
+
         #: The base URI to target.
-        self.base_uri = base_uri
+        #:
+        #: :type: :class:`str`
+        self.base_uri = base_uri or _DISCORD_API_URI_FORMAT.format(VERSION=self.VERSION)
+
         #: The global rate limit bucket.
+        #:
+        #: :type: :class:`hikari.net.rates.TimedLatchBucket`
         self.global_rate_limit = rates.TimedLatchBucket(loop=self.loop)
+
         #: Max number of times to retry before giving up.
+        #:
+        #: :type: :class:`int`
         self.max_retries = max_retries
-        #: The HTTP session to target.
-        self.session = aiohttp.ClientSession(**aiohttp_arguments)
-        #: The session `Authorization` header to use.
-        if token is unspecified.UNSPECIFIED:
-            self.authorization = None
+
+        #: The HTTP client session to use.
+        #:
+        #: :type: :class:`aiohttp.ClientSession`
+        self.client_session = aiohttp.ClientSession(
+            connector=connector, loop=self.loop, json_serialize=json_marshaller, version=aiohttp.HttpVersion11,
+        )
+
+        #: Callable used to marshal (serialize) payloads into JSON-encoded strings from native Python objects.
+        #:
+        #: Defaults to :func:`json.dumps`. You may want to override this if you choose to use a different
+        #: JSON library, such as one that is compiled.
+        self.json_marshaller = json_marshaller or json.dumps
+
+        #: Callable used to unmarshal (deserialize) JSON-encoded payloads into native Python objects.
+        #:
+        #: Defaults to :func:`json.loads`. You may want to override this if you choose to use a different
+        #: JSON library, such as one that is compiled.
+        self.json_unmarshaller = json_unmarshaller or json.loads
+
+        #: Dict-derived type to use for unmarshalled JSON objects.
+        #:
+        #: For convenience, this defaults to :class:`hikari.internal_utilities.data_structures.ObjectProxy`, since
+        #: this provides a benefit of allowing you to use dicts as if they were normal python objects. If you wish
+        #: to use another implementation, or just default to :class:`dict` instead, it is worth changing this
+        #: attribute.
+        self.json_unmarshaller_object_hook = json_unmarshaller_object_hook or data_structures.ObjectProxy
+
+        if token is None:
+            #: The session `Authorization` header to use.
+            #:
+            #: :type: :class:`str`
+            self.authorization: typing.Optional[str] = None
         elif "." in token:
-            self.authorization = f"Bot {token}"
+            #: The session `Authorization` header to use.
+            #:
+            #: :type: :class:`str`
+            self.authorization: typing.Optional[str] = f"Bot {token}"
         else:
-            self.authorization = f"Bearer {token}"
+            #: The session `Authorization` header to use.
+            #:
+            #: :type: :class:`str`
+            self.authorization: typing.Optional[str] = f"Bearer {token}"
+
         #: The logger to use for this object.
+        #:
+        #: :type: :class:`logging.Logger`
+
         self.logger = logging_helpers.get_named_logger(self)
-        #: User agent to use
+        #: User agent to use.
+        #:
+        #: :type: :class:`str`
         self.user_agent = user_agent.user_agent()
+
+        #: If `true`, this will enforce SSL signed certificate verification, otherwise it will
+        #: ignore potentially malicious SSL certificates.
+        #:
+        #: :type: :class:`bool`
+        self.verify_ssl = verify_ssl
+
+        #: Optional proxy URL to use for HTTP requests.
+        #:
+        #: :type: :class:`str`
+        self.proxy_url = proxy_url
+
+        #: Optional authorization to use if using a proxy.
+        #:
+        #: :type: :class:`aiohttp.BasicAuth`
+        self.proxy_auth = proxy_auth
+
+        #: Optional proxy headers to pass.
+        #:
+        #: :type: :class:`aiohttp.typedefs.LooseHeaders`
+        self.proxy_headers = proxy_headers
+
+        #: Optional SSL context to use.
+        #:
+        #: :type: :class:`ssl.SSLContext`
+        self.ssl_context: ssl.SSLContext = ssl_context
+
+        #: Optional timeout for HTTP requests.
+        #:
+        #: :type: :class:`float`
+        self.timeout = timeout
 
     async def close(self):
         """
         Close the HTTP connection.
         """
-        await self.session.close()
+        await self.client_session.close()
 
     async def request(
         self,
@@ -281,15 +417,16 @@ class BaseHTTPClient:
 
         headers.setdefault(_USER_AGENT, self.user_agent)
         headers.setdefault(_ACCEPT, _APPLICATION_JSON)
+        # Allows us to request millisecond durations for greater accuracy as per
         # https://github.com/discordapp/discord-api-docs/pull/1064
         headers.setdefault(_X_RATELIMIT_PRECISION, _GRAINULARITY)
 
         # Prevent inconsistencies causing weird behaviour: check both args.
         if reason is not None and reason is not unspecified.UNSPECIFIED:
-            headers.setdefault("X-Audit-Log-Reason", reason)
+            headers.setdefault(_X_AUDIT_LOG_REASON, reason)
 
         if self.authorization is not None:
-            headers.setdefault("Authorization", self.authorization)
+            headers.setdefault(_AUTHORIZATION, self.authorization)
 
         # Wait on the global bucket
         await self.global_rate_limit.acquire(self._log_rate_limit_already_in_progress, bucket_id=None)
@@ -297,21 +434,29 @@ class BaseHTTPClient:
         if resource in self.buckets:
             await self.buckets[resource].acquire(self._log_rate_limit_already_in_progress, resource=resource)
 
-        self._correlation_id += 1
-        self.logger.debug("[%s] %s %s", self._correlation_id, resource.method, resource.uri)
+        self.in_count += 1
+        self.logger.debug("[%s] %s %s", self.in_count, resource.method, resource.uri)
 
-        async with self.session.request(
-            resource.method,
+        kwargs = dict(
+            method=resource.method,
             url=resource.uri,
             headers=headers,
             data=data,
             json=json,
             allow_redirects=self.allow_redirects,
             params=query,
-        ) as r:
+            proxy=self.proxy_url,
+            proxy_auth=self.proxy_auth,
+            proxy_headers=self.proxy_headers,
+            verify_ssl=self.verify_ssl,
+            ssl_context=self.ssl_context,
+            timeout=self.timeout,
+        )
+
+        async with self.client_session.request(**kwargs) as r:
             self.logger.debug(
                 "[%s] %s %s %s content_type=%s size=%s",
-                self._correlation_id,
+                self.in_count,
                 resource.uri,
                 r.status,
                 r.reason,
@@ -323,10 +468,11 @@ class BaseHTTPClient:
             status = opcodes.HTTPStatus(r.status)
             body = await r.read()
 
-            if r.content_type == "application/json":
-                body = libjson.loads(body, object_hook=data_structures.ObjectProxy)
-            elif r.content_type in ("text/plain", "text/html"):
+            if r.content_type == _APPLICATION_JSON:
+                body = self.json_unmarshaller(body, object_hook=self.json_unmarshaller_object_hook)
+            elif r.content_type in (_TEXT_PLAIN, _TEXT_HTML):
                 # Cloudflare commonly will cause text/html (e.g. Discord is down)
+                self.logger.warning("Received %s-type response. Is Discord down?", r.content_type)
                 body = body.decode()
 
         # Do this pre-emptively before anything else can fail.
@@ -346,7 +492,7 @@ class BaseHTTPClient:
 
     def _log_rate_limit_already_in_progress(self, resource):
         name = f"local rate limit for {resource.bucket}" if resource is not None else "global rate limit"
-        self.logger.debug("a %s is already active, and the call is being    suspended", name)
+        self.logger.debug("a %s is already active, and the call is being suspended", name)
 
     def _is_rate_limited(self, resource, response_code, headers, body) -> bool:
         """
