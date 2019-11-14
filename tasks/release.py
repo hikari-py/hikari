@@ -45,19 +45,23 @@ def get_most_recent_tag_hash():
     return '.'.join(map(str, version))
     
 
-
 def try_to_get_changelog():
     sio = io.StringIO()
     try:
         with contextlib.redirect_stdout(sio):
-            gcg.entrypoint.main([sys.argv[0], "-O", "rpm", "-s", get_most_recent_tag_hash()])
+            args = [sys.argv[0], "-O", "rpm", "-s", get_most_recent_tag_hash()]
+            print("Invoking", *args, file=sys.stderr)
+            gcg.entrypoint.main(args)
         return sio.getvalue()
     except Exception as ex:
         traceback.print_exception(type(ex), ex, ex.__traceback__)
         with contextlib.redirect_stdout(sio):
-            gcg.entrypoint.main(["-O", "rpm"])
+            print("Invoking", *args, file=sys.stderr)
+            args = [sys.argv[0], "-O", "rpm"]
+            gcg.entrypoint.main(args)
     finally:
-        return sio.getvalue()
+        # Only keep the 75 most recent entries in the changelog
+        return '\n'.join(sio.getvalue().split("\n")[:75])
 
 
 change_log = try_to_get_changelog()
