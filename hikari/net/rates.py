@@ -274,7 +274,7 @@ class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
 
     def __init__(self, loop: asyncio.AbstractEventLoop) -> None:
         self._locked = False
-        self._unlock_event = asyncio.Event(loop=loop)
+        self._unlock_event = asyncio.Event()
         self.loop = assertions.assert_not_none(loop)
 
     @property
@@ -308,7 +308,7 @@ class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
         """
         self._locked = True
         self._unlock_event.clear()
-        task = asyncio.shield(asyncio.sleep(unlock_after), loop=self.loop)
+        task = asyncio.shield(asyncio.sleep(unlock_after))
         task.add_done_callback(lambda *_: self.unlock())
 
     def unlock(self) -> None:
