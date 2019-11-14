@@ -126,11 +126,7 @@ class TestGateway:
     async def test_init_produces_valid_url(self, event_loop):
         """GatewayConnection.__init__ should produce a valid query fragment for the URL."""
         # noinspection PyTypeChecker
-        gw = gateway.GatewayClientV7(
-            uri="wss://gateway.discord.gg:4949/",
-            loop=event_loop,
-            token="1234"
-        )
+        gw = gateway.GatewayClientV7(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
         bits: urlparse.ParseResult = urlparse.urlparse(gw.uri)
 
         assert bits.scheme == "wss"
@@ -227,31 +223,34 @@ class TestGateway:
     async def test_receive_json_when_receiving_zlib_payloads_collects_before_decoding(self, event_loop):
         with asynctest.patch("json.loads", new=asynctest.MagicMock(return_value={})) as json_loads:
             gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-            receive_any_str_value = "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}".encode(
-                "utf-8")
+            receive_any_str_value = (
+                "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}".encode("utf-8")
+            )
 
             payload = zlib.compress(receive_any_str_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
-            chunks = [payload[i: i + chunk_size] for i in range(0, len(payload), chunk_size)]
+            chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
 
             gw.ws.receive_any_str = asynctest.CoroutineMock(side_effect=chunks)
             await gw._receive_json()
             # noinspection PyUnresolvedReferences
-            json_loads.assert_called_with(receive_any_str_value.decode("utf-8"),
-                                          object_hook=data_structures.ObjectProxy)
+            json_loads.assert_called_with(
+                receive_any_str_value.decode("utf-8"), object_hook=data_structures.ObjectProxy
+            )
 
     async def test_small_zlib_payloads_leave_buffer_alone(self, event_loop):
         gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
 
         with _helpers.mock_patch(json.loads, new=asynctest.MagicMock(return_value={})):
-            receive_any_str_value = "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}".encode(
-                "utf-8")
+            receive_any_str_value = (
+                "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}".encode("utf-8")
+            )
 
             payload = zlib.compress(receive_any_str_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
-            chunks = [payload[i: i + chunk_size] for i in range(0, len(payload), chunk_size)]
+            chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
 
             first_array = gw._in_buffer
             gw.ws.receive_any_str = asynctest.CoroutineMock(side_effect=chunks)
@@ -262,13 +261,14 @@ class TestGateway:
         gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
 
         with _helpers.mock_patch(json.loads, new=asynctest.MagicMock(return_value={})):
-            receive_any_str_value = "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}".encode(
-                "utf-8")
+            receive_any_str_value = (
+                "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}".encode("utf-8")
+            )
 
             payload = zlib.compress(receive_any_str_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
-            chunks = [payload[i: i + chunk_size] for i in range(0, len(payload), chunk_size)]
+            chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
 
             first_array = gw._in_buffer
             gw.max_persistent_buffer_size = 3
@@ -885,13 +885,7 @@ class TestGateway:
         gw.uri = "ws://uri"
         await gw.run_once()
         gw.client_session.ws_connect.assert_called_once_with(
-            gw.uri,
-            compress=0,
-            proxy=None,
-            proxy_auth=None,
-            proxy_headers=None,
-            ssl_context=None,
-            verify_ssl=True,
+            gw.uri, compress=0, proxy=None, proxy_auth=None, proxy_headers=None, ssl_context=None, verify_ssl=True,
         )
 
     @mock_run_once_parts()

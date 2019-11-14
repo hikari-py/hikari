@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import dataclasses
 import typing
+import warnings
 
 import aiohttp.client
 
@@ -39,6 +40,7 @@ class WebSocketClosure(RuntimeError):
     """
     Raised when the server shuts down the connection unexpectedly.
     """
+
     __slots__ = ("code", "reason")
 
     #: The closure code provided.
@@ -50,32 +52,37 @@ class WebSocketClosure(RuntimeError):
 _NO_REASON = "no reason"
 
 
-# noinspection PyMethodOverriding
-class WebSocketClientSession(aiohttp.ClientSession):
-    """
-    Wraps an aiohttp ClientSession and provides the defaults needed to work with websockets
-    easily.
-    """
-    __slots__ = ()
+# Ignore the warning aiohttp provides us.
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-    def __init__(self, **kwargs) -> None:
-        kwargs["ws_response_class"] = WebSocketClientResponse
-        super().__init__(**kwargs)
-
-    # noinspection PyProtectedMember
-    def ws_connect(self, url: str, **kwargs):
+    # noinspection PyMethodOverriding
+    class WebSocketClientSession(aiohttp.ClientSession):
         """
-        Wraps around :meth:`aiohttp.ClientSession.ws_connect` to provide sane defaults.
-        All arguments are otherwise inherited normally, except for `max_msg_size` which is
-        disabled in this implementation unless specified by default; `autoping` which is
-        forced to be enabled, and `autoclose` which is forced to be disabled.
+        Wraps an aiohttp ClientSession and provides the defaults needed to work with websockets
+        easily.
         """
-        # Disable max message size, as Discord is awkward with how they chunk messages.
 
-        kwargs.setdefault("max_msg_size", 0)
-        kwargs["autoclose"] = False
-        kwargs["autoping"] = True
-        return super().ws_connect(url, **kwargs)
+        __slots__ = ()
+
+        def __init__(self, **kwargs) -> None:
+            kwargs["ws_response_class"] = WebSocketClientResponse
+            super().__init__(**kwargs)
+
+        # noinspection PyProtectedMember
+        def ws_connect(self, url: str, **kwargs):
+            """
+            Wraps around :meth:`aiohttp.ClientSession.ws_connect` to provide sane defaults.
+            All arguments are otherwise inherited normally, except for `max_msg_size` which is
+            disabled in this implementation unless specified by default; `autoping` which is
+            forced to be enabled, and `autoclose` which is forced to be disabled.
+            """
+            # Disable max message size, as Discord is awkward with how they chunk messages.
+
+            kwargs.setdefault("max_msg_size", 0)
+            kwargs["autoclose"] = False
+            kwargs["autoping"] = True
+            return super().ws_connect(url, **kwargs)
 
 
 # noinspection PyMethodOverriding
@@ -87,13 +94,11 @@ class WebSocketClientResponse(aiohttp.ClientWebSocketResponse):
     Also provides a :class:`str`-based interface for handling closure messages rather than relying
     on manual decoding and encoding.
     """
+
     __slots__ = ()
 
     def close(
-        self,
-        *,
-        code: int = opcodes.GatewayClosure.NORMAL_CLOSURE,
-        reason: str = _NO_REASON
+        self, *, code: int = opcodes.GatewayClosure.NORMAL_CLOSURE, reason: str = _NO_REASON
     ) -> typing.Awaitable[bool]:
         """
         Closes the connection.
@@ -133,14 +138,16 @@ class WebSocketClientResponse(aiohttp.ClientWebSocketResponse):
     async def receive(self, timeout: typing.Optional[float] = None) -> aiohttp.WSMessage:
         response = await super().receive(timeout)
         if response.type == aiohttp.WSMsgType.CLOSE:
-            close_code = self._close_code
             await self.close()
 
             try:
-                reason = opcodes.GatewayClosure(close_code).name
-            except KeyError:
+                reason = opcodes.GatewayClosure(self.close_code).name
+            except ValueError:
                 reason = _NO_REASON
 
-            raise WebSocketClosure(close_code, reason)
+            raise WebSocketClosure(self.close_code, reason)
 
         return response
+
+
+__all__ = ("WebSocketClosure", "WebSocketClientSession", "WebSocketClientResponse")
