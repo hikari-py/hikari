@@ -233,6 +233,6 @@ async def test_File_open():
 
 
 @pytest.mark.model
-@pytest.mark.parametrize("file", [media.File("foo",), media.InMemoryFile("foo", "foo")])
+@pytest.mark.parametrize("file", [media.File("foo"), media.InMemoryFile("foo", "foo")])
 def test_hash_File(file):
     assert hash(file) == hash(file.name)

@@ -79,52 +79,52 @@ class GatewayClosure(enum.IntEnum):
     """
 
     #: We are shutting down normally, we might come back up soon.
-    NORMAL_CLOSURE = 1_000
+    NORMAL_CLOSURE = 1000
 
     #: We are shutting down for the foreseeable future (our process is stopping).
-    GOING_AWAY = 1_001
+    GOING_AWAY = 1001
 
     #: We expected a specific payload or opcode but Discord failed to provide it to us.
-    PROTOCOL_VIOLATION = 1_002
+    PROTOCOL_VIOLATION = 1002
 
     #: We expected a specific type of object but Discord failed to provide the correct type to us.
-    TYPE_ERROR = 1_003
+    TYPE_ERROR = 1003
 
     #: Something has failed internally in the Hikari Gateway code.
-    INTERNAL_ERROR = 1_011
+    INTERNAL_ERROR = 1011
 
     #: We're not sure what went wrong. Try reconnecting?
-    UNKNOWN_ERROR = 4_000
+    UNKNOWN_ERROR = 4000
 
     #: You sent an invalid Gateway opcode or an invalid payload for an opcode. Don't do that!
-    UNKNOWN_OPCODE = 4_001
+    UNKNOWN_OPCODE = 4001
 
     #: You sent an invalid payload to us. Don't do that!
-    DECODE_ERROR = 4_002
+    DECODE_ERROR = 4002
 
     #: You sent us a payload prior to identifying.
-    NOT_AUTHENTICATED = 4_003
+    NOT_AUTHENTICATED = 4003
 
     #: The account token sent with your identify payload is incorrect.
-    AUTHENTICATION_FAILED = 4_004
+    AUTHENTICATION_FAILED = 4004
 
     #: You sent more than one identify payload. Don't do that!
-    ALREADY_AUTHENTICATED = 4_005
+    ALREADY_AUTHENTICATED = 4005
 
     #: The sequence sent when resuming the session was invalid. Reconnect and start a new session.
-    INVALID_SEQ = 4_007
+    INVALID_SEQ = 4007
 
     #: Woah nelly! You're sending payloads to us too quickly. Slow it down!
-    RATE_LIMITED = 4_008
+    RATE_LIMITED = 4008
 
     #: Your session timed out. Reconnect and start a new one.
-    SESSION_TIMEOUT = 4_009
+    SESSION_TIMEOUT = 4009
 
     #: You sent us an invalid shard when identifying.
-    INVALID_SHARD = 4_010
+    INVALID_SHARD = 4010
 
     #: The session would have handled too many guilds - you are required to shard your connection in order to connect.
-    SHARDING_REQUIRED = 4_011
+    SHARDING_REQUIRED = 4011
 
 
 class JSONErrorCode(enum.IntEnum):
@@ -133,165 +133,165 @@ class JSONErrorCode(enum.IntEnum):
     """
 
     #: Unknown account
-    UNKNOWN_ACCOUNT = 10_001
+    UNKNOWN_ACCOUNT = 10001
 
     #: Unknown application
-    UNKNOWN_APPLICATION = 10_002
+    UNKNOWN_APPLICATION = 10002
 
     #: Unknown channel
-    UNKNOWN_CHANNEL = 10_003
+    UNKNOWN_CHANNEL = 10003
 
     #: Unknown guild
-    UNKNOWN_GUILD = 10_004
+    UNKNOWN_GUILD = 10004
 
     #: Unknown integration
-    UNKNOWN_INTEGRATION = 10_005
+    UNKNOWN_INTEGRATION = 10005
 
     #: Unknown invite
-    UNKNOWN_INVITE = 10_006
+    UNKNOWN_INVITE = 10006
 
     #: Unknown member
-    UNKNOWN_MEMBER = 10_007
+    UNKNOWN_MEMBER = 10007
 
     #: Unknown message
-    UNKNOWN_MESSAGE = 10_008
+    UNKNOWN_MESSAGE = 10008
 
     #: Unknown overwrite
-    UNKNOWN_OVERWRITE = 10_009
+    UNKNOWN_OVERWRITE = 10009
 
     #: Unknown provider
-    UNKNOWN_PROVIDER = 10_010
+    UNKNOWN_PROVIDER = 10010
 
     #: Unknown role
-    UNKNOWN_ROLE = 10_011
+    UNKNOWN_ROLE = 10011
 
     #: Unknown token
-    UNKNOWN_TOKEN = 10_012
+    UNKNOWN_TOKEN = 10012
 
     #: Unknown user
-    UNKNOWN_USER = 10_013
+    UNKNOWN_USER = 10013
 
     #: Unknown AbstractEmoji
-    UNKNOWN_EMOJI = 10_014
+    UNKNOWN_EMOJI = 10014
 
     #: Unknown Webhook
-    UNKNOWN_WEBHOOK = 10_015
+    UNKNOWN_WEBHOOK = 10015
 
     #: Maximum number of pins reached (50)
-    MAX_PINS_REACHED = 30_003
+    MAX_PINS_REACHED = 30003
 
     #: Maximum number of guild roles reached (250)
-    MAX_GUILD_ROLES_REACHED = 30_005
+    MAX_GUILD_ROLES_REACHED = 30005
 
     #: Maximum number of reactions reached (20)
-    MAX_REACTIONS_REACHED = 30_010
+    MAX_REACTIONS_REACHED = 30010
 
     #: Maximum number of guild channels reached (500)
-    MAX_GUILD_CHANNELS_REACHED = 30_013
+    MAX_GUILD_CHANNELS_REACHED = 30013
 
     #: Unauthorized
-    UNAUTHORIZED = 40_001
+    UNAUTHORIZED = 40001
 
     #: Missing access
-    MISSING_ACCESS = 50_001
+    MISSING_ACCESS = 50001
 
     #: Invalid account type
-    INVALID_ACCOUNT_TYPE = 50_002
+    INVALID_ACCOUNT_TYPE = 50002
 
     #: Cannot execute action on a DM channel
-    CANNOT_EXECUTE_ACTION_ON_DM_CHANNEL = 50_003
+    CANNOT_EXECUTE_ACTION_ON_DM_CHANNEL = 50003
 
     #: Widget Disabled
-    WIDGET_DISABLED = 50_004
+    WIDGET_DISABLED = 50004
 
     #: Cannot edit a message authored by another user
-    CANNOT_EDIT_A_MESSAGE_AUTHORED_BY_ANOTHER_USER = 50_005
+    CANNOT_EDIT_A_MESSAGE_AUTHORED_BY_ANOTHER_USER = 50005
 
     #: Cannot send an empty message
-    CANNOT_SEND_AN_EMPTY_MESSAGE = 50_006
+    CANNOT_SEND_AN_EMPTY_MESSAGE = 50006
 
     #: Cannot send messages to this user
-    CANNOT_SEND_MESSAGES_TO_THIS_USER = 50_007
+    CANNOT_SEND_MESSAGES_TO_THIS_USER = 50007
 
     #: Cannot send messages in a voice channel
-    CANNOT_SEND_MESSAGES_IN_VOICE_CHANNEL = 50_008
+    CANNOT_SEND_MESSAGES_IN_VOICE_CHANNEL = 50008
 
     #: Channel verification level is too high
-    CHANNEL_VERIFICATION_TOO_HIGH = 50_009
+    CHANNEL_VERIFICATION_TOO_HIGH = 50009
 
     #: OAuth2 application does not have a bot
-    OAUTH2_APPLICATION_DOES_NOT_HAVE_A_BOT = 50_010
+    OAUTH2_APPLICATION_DOES_NOT_HAVE_A_BOT = 50010
 
     #: OAuth2 application limit reached
-    OAUTH2_APPLICATION_LIMIT_REACHED = 50_011
+    OAUTH2_APPLICATION_LIMIT_REACHED = 50011
 
     #: Invalid OAuth state
-    INVALID_OAUTH2_STATE = 50_012
+    INVALID_OAUTH2_STATE = 50012
 
     #: Missing permissions
-    MISSING_PERMISSIONS = 50_013
+    MISSING_PERMISSIONS = 50013
 
     #: Invalid authentication token
-    INVALID_AUTHENTICATION_TOKEN = 50_014
+    INVALID_AUTHENTICATION_TOKEN = 50014
 
     #: Note is too long
-    NOTE_IS_TOO_LONG = 50_015
+    NOTE_IS_TOO_LONG = 50015
 
     #: Provided too few or too many messages to delete. Must provide at least 2 and fewer than 100 messages to delete.
-    INVALID_NUMBER_OF_MESSAGES_TO_DELETE = 50_016
+    INVALID_NUMBER_OF_MESSAGES_TO_DELETE = 50016
 
     #: A message can only be pinned to the channel it was sent in
-    CANNOT_PIN_A_MESSAGE_IN_A_DIFFERENT_CHANNEL = 50_019
+    CANNOT_PIN_A_MESSAGE_IN_A_DIFFERENT_CHANNEL = 50019
 
     #: Invite code is either invalid or taken.
-    INVALID_INVITE = 50_020
+    INVALID_INVITE = 50020
 
     #: Cannot execute action on a system message
-    CANNOT_EXECUTE_ACTION_ON_SYSTEM_MESSAGE = 50_021
+    CANNOT_EXECUTE_ACTION_ON_SYSTEM_MESSAGE = 50021
 
     #: Invalid OAuth2 access token
-    INVALID_OAUTH2_TOKEN = 50_025
+    INVALID_OAUTH2_TOKEN = 50025
 
     #: A message provided was too old to bulk delete
-    MESSAGE_PROVIDED_WAS_TOO_OLD_TO_BULK_DELETE = 50_034
+    MESSAGE_PROVIDED_WAS_TOO_OLD_TO_BULK_DELETE = 50034
 
     #: Invalid Form Body
-    INVALID_FORM_BODY = 50_035
+    INVALID_FORM_BODY = 50035
 
     #: An invite was accepted to a guild the application's bot is not in
-    ACCEPTED_INVITE_TO_GUILD_BOT_IS_NOT_IN = 50_036
+    ACCEPTED_INVITE_TO_GUILD_BOT_IS_NOT_IN = 50036
 
     #: Invalid API version
-    INVALID_API_VERSION = 50_041
+    INVALID_API_VERSION = 50041
 
     #: Reaction blocked
-    REACTION_BLOCKED = 90_001
+    REACTION_BLOCKED = 90001
 
     #: Bots cannot use this endpoint
     #:
     #: Note:
     #:     You should never expect to receive this in normal API usage.
-    USERS_ONLY = 20_001
+    USERS_ONLY = 20001
 
     #: Only bots can use this endpoint.
     #:
     #: Note:
     #:     You should never expect to receive this in normal API usage.
-    BOTS_ONLY = 20_002
+    BOTS_ONLY = 20002
 
     #: Maximum number of guilds reached (100)
     #:
     #: Note:
     #:     You should never expect to receive this in normal API usage as this only applies to user accounts.
     #:     This is unlimited for bot accounts.
-    MAX_GUILDS_REACHED = 30_001
+    MAX_GUILDS_REACHED = 30001
 
     #: Maximum number of friends reached (1000)
     #:
     #: Note:
     #:     You should never expect to receive this in normal API usage as this only applies to user accounts.
     #:     Bots cannot have friends.
-    MAX_FRIENDS_REACHED = 30_002
+    MAX_FRIENDS_REACHED = 30002
 
 
 class HTTPStatus(enum.IntEnum):

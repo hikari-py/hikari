@@ -389,7 +389,7 @@ class BaseHTTPClient:
             # This header only exists if we get a TOO_MANY_REQUESTS first, annoyingly, and it isn't
             # in the body...
             retry_after = transformations.nullable_cast(headers.get(_RETRY_AFTER), float)
-            retry_after = retry_after / 1_000 if retry_after is not None else reset_at - now
+            retry_after = retry_after / 1000 if retry_after is not None else reset_at - now
 
             if resource not in self.buckets:
                 # Make new bucket first

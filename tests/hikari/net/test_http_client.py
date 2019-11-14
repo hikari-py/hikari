@@ -794,7 +794,7 @@ class TestChannel:
             ("topic", "eating donkey"),
             ("nsfw", True),
             ("rate_limit_per_user", 420),
-            ("bitrate", 69_000),
+            ("bitrate", 69000),
             ("user_limit", 69),
             ("parent_id", "999999"),
             (
@@ -816,7 +816,7 @@ class TestChannel:
             ("topic", "eating donkey"),
             ("nsfw", True),
             ("rate_limit_per_user", 420),
-            ("bitrate", 69_000),
+            ("bitrate", 69000),
             ("user_limit", 69),
             (
                 "permission_overwrites",
@@ -959,7 +959,7 @@ class TestGateway:
         payload = {
             "url": "http://somehost.com",
             "shards": 123,
-            "session_start_limit": {"total": 1000, "remaining": 999, "reset_after": 14400000},
+            "session_start_limit": {"total": 1000, "remaining": 999, "reset_after": 14_400_000},
         }
         http_client.request = asynctest.CoroutineMock(return_value=payload)
         obj = await http_client.get_gateway_bot()

@@ -99,8 +99,7 @@ class TestStateRegistryImpl:
         payload = {"code": 123, "reason": "test"}
         await adapter_impl.handle_disconnect(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(
-            "disconnect", gateway_impl, payload.get("code"), payload.get("reason"))
+        dispatch_impl.assert_called_with("disconnect", gateway_impl, payload.get("code"), payload.get("reason"))
 
     @pytest.mark.asyncio
     async def test_handle_connect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):

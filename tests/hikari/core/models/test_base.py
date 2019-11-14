@@ -33,7 +33,7 @@ class DummySnowflake(base.Snowflake):
 
 @pytest.fixture()
 def neko_snowflake():
-    return DummySnowflake(537340989808050216)
+    return DummySnowflake(537_340_989_808_050_216)
 
 
 class DummyNamedEnum(base.NamedEnum, enum.IntEnum):
