@@ -487,7 +487,7 @@ class GatewayClientV7:
             self._handle_payload_oversize(payload)
         else:
             self.out_count += 1
-            await self.ws.send(raw)
+            await self.ws.send_str(raw)
 
     async def _receive_json(self) -> data_structures.DiscordObjectT:
         msg = await self.ws.receive_any_str()
