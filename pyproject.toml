@@ -21,7 +21,7 @@ build-backend   = "poetry.masonry.api"
 
 [tool.poetry]
 name            = "hikari"
-version         = "0.0.36"
+version         = "0.0.37"
 description     = "A sane Discord API for Python using asyncio | Core client"
 authors         = ["Nekokatt <nekoka.tt@outlook.com>"]
 license         = "LGPL-3.0-ONLY"
