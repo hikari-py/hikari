@@ -39,7 +39,6 @@ token = os.environ["GITLAB_RELEASE_TOKEN"]
 
 
 def get_most_recent_tag_hash():
-    subprocess.check_call("git", "fetch", "--tags", "--all")
     version = LooseVersion(release).version
     # We did a new release...
     version[-1] -= 1

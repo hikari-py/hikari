@@ -53,8 +53,12 @@ function deploy-to-svc() {
     git commit -am "Deployed ${current_version} ${SKIP_CI_COMMIT_PHRASE}" --allow-empty
     git push ${REMOTE_NAME} ${PROD_BRANCH} || true
     (git tag "${current_version}" && git push ${REMOTE_NAME} "${current_version}") || true
+    git reset --hard origin/${PROD_BRANCH}
     git checkout ${PREPROD_BRANCH}
-    (git merge ${PROD_BRANCH} --no-ff --strategy-option theirs -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_CI_COMMIT_PHRASE}" && git push ${REMOTE_NAME} ${PREPROD_BRANCH}) || true
+    git reset --hard origin/${PREPROD_BRANCH}
+    git fetch --all --prune || true
+    git log --graph --pretty -n 20
+    (git merge origin/${PROD_BRANCH} --no-ff --strategy-option theirs -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_CI_COMMIT_PHRASE}" && git push ${REMOTE_NAME} ${PREPROD_BRANCH}) || true
     set +x
 }
 
