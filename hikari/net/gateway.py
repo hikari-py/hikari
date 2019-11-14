@@ -314,10 +314,7 @@ class GatewayClientV7:
         #:
         #: :type: :class:`hikari.net.ws.WebSocketClientSession`
         self.client_session = ws.WebSocketClientSession(
-            connector=connector,
-            loop=self.loop,
-            json_serialize=json_marshaller,
-            version=aiohttp.HttpVersion11,
+            connector=connector, loop=self.loop, json_serialize=json_marshaller, version=aiohttp.HttpVersion11,
         )
 
         #: Number of shards in use, or `None` if not sharded.

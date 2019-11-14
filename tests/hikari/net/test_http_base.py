@@ -238,7 +238,9 @@ async def test_request_does_not_retry_on_success(mock_http_connection):
 
 @pytest.mark.asyncio
 async def test_reason_header_is_not_added_if_None_during_request(mock_http_connection):
-    mock_http_connection.client_session.request = asynctest.MagicMock(return_value=mock_http_connection.client_session.mock_response)
+    mock_http_connection.client_session.request = asynctest.MagicMock(
+        return_value=mock_http_connection.client_session.mock_response
+    )
     await mock_http_connection.request("get", "/foo/bar", reason=None)
     args, kwargs = mock_http_connection.client_session.request.call_args
     headers = kwargs["headers"]
@@ -247,7 +249,9 @@ async def test_reason_header_is_not_added_if_None_during_request(mock_http_conne
 
 @pytest.mark.asyncio
 async def test_reason_header_is_not_added_if_unspecified_during_request(mock_http_connection):
-    mock_http_connection.client_session.request = asynctest.MagicMock(return_value=mock_http_connection.client_session.mock_response)
+    mock_http_connection.client_session.request = asynctest.MagicMock(
+        return_value=mock_http_connection.client_session.mock_response
+    )
     await mock_http_connection.request("get", "/foo/bar", reason=unspecified.UNSPECIFIED)
     args, kwargs = mock_http_connection.client_session.request.call_args
     headers = kwargs["headers"]
@@ -256,7 +260,9 @@ async def test_reason_header_is_not_added_if_unspecified_during_request(mock_htt
 
 @pytest.mark.asyncio
 async def test_reason_header_is_added_if_provided_during_request(mock_http_connection):
-    mock_http_connection.client_session.request = asynctest.MagicMock(return_value=mock_http_connection.client_session.mock_response)
+    mock_http_connection.client_session.request = asynctest.MagicMock(
+        return_value=mock_http_connection.client_session.mock_response
+    )
     await mock_http_connection.request("get", "/foo/bar", reason="because i can")
     args, kwargs = mock_http_connection.client_session.request.call_args
     headers = kwargs["headers"]
@@ -265,7 +271,9 @@ async def test_reason_header_is_added_if_provided_during_request(mock_http_conne
 
 @pytest.mark.asyncio
 async def test_request_once_calls_session_request_with_expected_arguments(mock_http_connection):
-    mock_http_connection.client_session.request = asynctest.MagicMock(return_value=mock_http_connection.client_session.mock_response)
+    mock_http_connection.client_session.request = asynctest.MagicMock(
+        return_value=mock_http_connection.client_session.mock_response
+    )
     path = "/foo/bar/{channel_id}"
     res = http_base.Resource(mock_http_connection.base_uri, "get", path, channel_id="12321")
     headers = {
@@ -610,13 +618,16 @@ async def test_HTTP_request_has_Accept_header(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_some_response_that_has_a_json_object_body_gets_decoded_as_expected(mock_http_connection, res):
-    mock_http_connection = mock_methods_on(mock_http_connection, except_=[
-        "_request_once",
-        "_is_rate_limited",
-        "json_marshaller",
-        "json_unmarshaller",
-        "json_unmarshaller_object_hook"
-    ])
+    mock_http_connection = mock_methods_on(
+        mock_http_connection,
+        except_=[
+            "_request_once",
+            "_is_rate_limited",
+            "json_marshaller",
+            "json_unmarshaller",
+            "json_unmarshaller_object_hook",
+        ],
+    )
 
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.OK)
@@ -627,13 +638,16 @@ async def test_some_response_that_has_a_json_object_body_gets_decoded_as_expecte
 
 @pytest.mark.asyncio
 async def test_plain_text_gets_decoded_as_unicode(mock_http_connection, res):
-    mock_http_connection = mock_methods_on(mock_http_connection, except_=[
-        "_request_once",
-        "_is_rate_limited",
-        "json_marshaller",
-        "json_unmarshaller",
-        "json_unmarshaller_object_hook"
-    ])
+    mock_http_connection = mock_methods_on(
+        mock_http_connection,
+        except_=[
+            "_request_once",
+            "_is_rate_limited",
+            "json_marshaller",
+            "json_unmarshaller",
+            "json_unmarshaller_object_hook",
+        ],
+    )
 
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "text/plain"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.OK)
@@ -644,13 +658,16 @@ async def test_plain_text_gets_decoded_as_unicode(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_html_gets_decoded_as_unicode(mock_http_connection, res):
-    mock_http_connection = mock_methods_on(mock_http_connection, except_=[
-        "_request_once",
-        "_is_rate_limited",
-        "json_marshaller",
-        "json_unmarshaller",
-        "json_unmarshaller_object_hook"
-    ])
+    mock_http_connection = mock_methods_on(
+        mock_http_connection,
+        except_=[
+            "_request_once",
+            "_is_rate_limited",
+            "json_marshaller",
+            "json_unmarshaller",
+            "json_unmarshaller_object_hook",
+        ],
+    )
 
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "text/html"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.OK)
@@ -663,13 +680,16 @@ async def test_html_gets_decoded_as_unicode(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_NO_CONTENT_response_with_no_body_present(mock_http_connection, res):
-    mock_http_connection = mock_methods_on(mock_http_connection, except_=[
-        "_request_once",
-        "_is_rate_limited",
-        "json_marshaller",
-        "json_unmarshaller",
-        "json_unmarshaller_object_hook"
-    ])
+    mock_http_connection = mock_methods_on(
+        mock_http_connection,
+        except_=[
+            "_request_once",
+            "_is_rate_limited",
+            "json_marshaller",
+            "json_unmarshaller",
+            "json_unmarshaller_object_hook",
+        ],
+    )
     mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=None)
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = None
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.NO_CONTENT)
@@ -680,13 +700,16 @@ async def test_NO_CONTENT_response_with_no_body_present(mock_http_connection, re
 
 @pytest.mark.asyncio
 async def test_some_response_that_has_an_unrecognised_content_type_returns_bytes(mock_http_connection, res):
-    mock_http_connection = mock_methods_on(mock_http_connection, except_=[
-        "_request_once",
-        "_is_rate_limited",
-        "json_marshaller",
-        "json_unmarshaller",
-        "json_unmarshaller_object_hook"
-    ])
+    mock_http_connection = mock_methods_on(
+        mock_http_connection,
+        except_=[
+            "_request_once",
+            "_is_rate_limited",
+            "json_marshaller",
+            "json_unmarshaller",
+            "json_unmarshaller_object_hook",
+        ],
+    )
 
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "mac-and/cheese"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.CREATED)
@@ -697,13 +720,16 @@ async def test_some_response_that_has_an_unrecognised_content_type_returns_bytes
 
 @pytest.mark.asyncio
 async def test_4xx_hits_handle_client_error_response(mock_http_connection, res):
-    mock_http_connection = mock_methods_on(mock_http_connection, except_=[
-        "_request_once",
-        "_is_rate_limited",
-        "json_marshaller",
-        "json_unmarshaller",
-        "json_unmarshaller_object_hook"
-    ])
+    mock_http_connection = mock_methods_on(
+        mock_http_connection,
+        except_=[
+            "_request_once",
+            "_is_rate_limited",
+            "json_marshaller",
+            "json_unmarshaller",
+            "json_unmarshaller_object_hook",
+        ],
+    )
 
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.BAD_REQUEST)
@@ -716,13 +742,16 @@ async def test_4xx_hits_handle_client_error_response(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_5xx_hits_handle_server_error_response(mock_http_connection, res):
-    mock_http_connection = mock_methods_on(mock_http_connection, except_=[
-        "_request_once",
-        "_is_rate_limited",
-        "json_marshaller",
-        "json_unmarshaller",
-        "json_unmarshaller_object_hook"
-    ])
+    mock_http_connection = mock_methods_on(
+        mock_http_connection,
+        except_=[
+            "_request_once",
+            "_is_rate_limited",
+            "json_marshaller",
+            "json_unmarshaller",
+            "json_unmarshaller_object_hook",
+        ],
+    )
 
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.GATEWAY_TIMEOUT)
@@ -735,13 +764,16 @@ async def test_5xx_hits_handle_server_error_response(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_ValueError_on_unrecognised_HTTP_status(mock_http_connection, res):
-    mock_http_connection = mock_methods_on(mock_http_connection, except_=[
-        "_request_once",
-        "_is_rate_limited",
-        "json_marshaller",
-        "json_unmarshaller",
-        "json_unmarshaller_object_hook"
-    ])
+    mock_http_connection = mock_methods_on(
+        mock_http_connection,
+        except_=[
+            "_request_once",
+            "_is_rate_limited",
+            "json_marshaller",
+            "json_unmarshaller",
+            "json_unmarshaller_object_hook",
+        ],
+    )
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
     mock_http_connection.client_session.mock_response.status = 669
     mock_http_connection.client_session.mock_response.headers = {"foo": "bar", "baz": "bork"}
@@ -755,13 +787,16 @@ async def test_ValueError_on_unrecognised_HTTP_status(mock_http_connection, res)
 
 @pytest.mark.asyncio
 async def test_2xx_returns_object(mock_http_connection, res):
-    mock_http_connection = mock_methods_on(mock_http_connection, except_=[
-        "_request_once",
-        "_is_rate_limited",
-        "json_marshaller",
-        "json_unmarshaller",
-        "json_unmarshaller_object_hook"
-    ])
+    mock_http_connection = mock_methods_on(
+        mock_http_connection,
+        except_=[
+            "_request_once",
+            "_is_rate_limited",
+            "json_marshaller",
+            "json_unmarshaller",
+            "json_unmarshaller_object_hook",
+        ],
+    )
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
     mock_http_connection.client_session.mock_response.status = 201
     mock_http_connection.client_session.mock_response.headers = {"foo": "bar", "baz": "bork"}
@@ -773,13 +808,16 @@ async def test_2xx_returns_object(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_3xx_returns_tuple(mock_http_connection, res):
-    mock_http_connection = mock_methods_on(mock_http_connection, except_=[
-        "_request_once",
-        "_is_rate_limited",
-        "json_marshaller",
-        "json_unmarshaller",
-        "json_unmarshaller_object_hook"
-    ])
+    mock_http_connection = mock_methods_on(
+        mock_http_connection,
+        except_=[
+            "_request_once",
+            "_is_rate_limited",
+            "json_marshaller",
+            "json_unmarshaller",
+            "json_unmarshaller_object_hook",
+        ],
+    )
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
     mock_http_connection.client_session.mock_response.status = 304
     mock_http_connection.client_session.mock_response.headers = {"foo": "bar", "baz": "bork"}
@@ -791,13 +829,16 @@ async def test_3xx_returns_tuple(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_4xx_is_handled_as_4xx_error_response(mock_http_connection, res):
-    mock_http_connection = mock_methods_on(mock_http_connection, except_=[
-        "_request_once",
-        "_is_rate_limited",
-        "json_marshaller",
-        "json_unmarshaller",
-        "json_unmarshaller_object_hook"
-    ])
+    mock_http_connection = mock_methods_on(
+        mock_http_connection,
+        except_=[
+            "_request_once",
+            "_is_rate_limited",
+            "json_marshaller",
+            "json_unmarshaller",
+            "json_unmarshaller_object_hook",
+        ],
+    )
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
     mock_http_connection.client_session.mock_response.status = 401
     mock_http_connection.client_session.mock_response.headers = {"foo": "bar", "baz": "bork"}
@@ -810,13 +851,16 @@ async def test_4xx_is_handled_as_4xx_error_response(mock_http_connection, res):
 
 @pytest.mark.asyncio
 async def test_5xx_is_handled_as_5xx_error_response(mock_http_connection, res):
-    mock_http_connection = mock_methods_on(mock_http_connection, except_=[
-        "_request_once",
-        "_is_rate_limited",
-        "json_marshaller",
-        "json_unmarshaller",
-        "json_unmarshaller_object_hook"
-    ])
+    mock_http_connection = mock_methods_on(
+        mock_http_connection,
+        except_=[
+            "_request_once",
+            "_is_rate_limited",
+            "json_marshaller",
+            "json_unmarshaller",
+            "json_unmarshaller_object_hook",
+        ],
+    )
     mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
     mock_http_connection.client_session.mock_response.status = 501
     mock_http_connection.client_session.mock_response.headers = {"foo": "bar", "baz": "bork"}
