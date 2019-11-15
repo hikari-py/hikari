@@ -34,7 +34,7 @@ from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import transformations
 
 
-class Channel(interfaces.ISnowflake, interfaces.IStateful, abc.ABC):
+class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStateful):
     """
     A generic type of channel.
 
@@ -83,7 +83,7 @@ class Channel(interfaces.ISnowflake, interfaces.IStateful, abc.ABC):
         cls.is_dm = kwargs.pop("is_dm", NotImplemented)
 
 
-class TextChannel(Channel, abc.ABC):
+class TextChannel(Channel):
     """
     Any class that can have messages sent to it.
 
@@ -103,7 +103,7 @@ class TextChannel(Channel, abc.ABC):
         super().__init__(global_state, payload)
 
 
-class GuildChannel(Channel, abc.ABC, is_dm=False):
+class GuildChannel(Channel, is_dm=False):
     """
     A channel that belongs to a guild.
     """
