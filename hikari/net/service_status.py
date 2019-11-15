@@ -36,7 +36,7 @@ import typing
 
 import aiohttp
 
-from hikari.core.models import service_status
+from hikari.state.models import service_status
 
 _BASE_URI = "https://status.discordapp.com/api/v2"
 

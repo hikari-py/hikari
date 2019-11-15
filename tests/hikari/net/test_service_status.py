@@ -21,10 +21,10 @@ import dataclasses
 
 import pytest
 
-from hikari.core.models import service_status as status_model
+from hikari.state.models import service_status as status_model
 from hikari.net import service_status
 from tests.hikari import _helpers
-from tests.hikari.core.testdata import *
+from tests.hikari.state.testdata import *
 
 _base = "https://status.discordapp.com/api/v2"
 
