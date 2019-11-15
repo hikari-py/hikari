@@ -31,7 +31,7 @@ from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 
 
-class Emoji(interfaces.IStateful, abc.ABC):
+class Emoji(abc.ABC, interfaces.IStateful):
     """Base for any emoji type."""
 
     __slots__ = ()

@@ -21,12 +21,14 @@ Generic users not bound to a guild, and guild-bound member definitions.
 """
 from __future__ import annotations
 
+import abc
+
 from hikari.state import state_registry
 from hikari.state.models import interfaces
 from hikari.internal_utilities import auto_repr
 
 
-class BaseUser(interfaces.IStateful, interfaces.ISnowflake):
+class IUser(abc.ABC, interfaces.IStateful, interfaces.ISnowflake):
     """
     Representation of a user account.
     """
@@ -63,10 +65,12 @@ class BaseUser(interfaces.IStateful, interfaces.ISnowflake):
     __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot")
 
     #: This is an abstract implementation that should be overridden.
-    __init__ = NotImplemented
+    @abc.abstractmethod
+    def __init__(self):
+        ...
 
 
-class User(BaseUser):
+class User(IUser):
     """
     Implementation of the user data type.
     """
@@ -114,4 +118,4 @@ class BotUser(User):
         self.mfa_enabled = payload.get("mfa_enabled", False)
 
 
-__all__ = ["BaseUser", "User", "BotUser"]
+__all__ = ["IUser", "User", "BotUser"]
