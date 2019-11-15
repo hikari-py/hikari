@@ -360,8 +360,7 @@ class TestGateway:
         gw._trigger_resume.assert_awaited()
 
     async def test_send_resume(self, event_loop):
-        gw = MockGateway(uri="wss://gateway.discord.gg:4949/",
-                         loop=event_loop, token="1234", shard_id=None)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw.session_id = 1_234_321
         gw.seq = 69420
         gw._send_json = asynctest.CoroutineMock()
