@@ -255,7 +255,7 @@ class GatewayClientV7:
 
         #: An :class:`asyncio.Event` that will be triggered whenever the gateway disconnects.
         #: This is only used internally.
-        self._closed_event = asyncio.Event(loop=loop)
+        self._closed_event = asyncio.Event()
 
         #: Callable used to marshal (serialize) payloads into JSON-encoded strings from native Python objects.
         #:
