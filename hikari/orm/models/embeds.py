@@ -27,19 +27,19 @@ import datetime
 import typing
 import weakref
 
-from hikari.orm.models import interfaces
-from hikari.orm.models import colors
-from hikari.orm.models import media
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import transformations
+from hikari.orm.models import colors
+from hikari.orm.models import interfaces
+from hikari.orm.models import media
 
 _MAX_EMBED_SIZE = 6000
 
 
-class EmbedPart(interfaces.IStateful, abc.ABC):
+class EmbedPart(interfaces.IModel, abc.ABC):
     """
     Abstract base for any internal component for an embed.
 
@@ -220,7 +220,7 @@ DictFactoryT = typing.Union[typing.Type[DictImplT], typing.Callable[[], DictImpl
 
 
 @dataclasses.dataclass()
-class BaseEmbed:
+class BaseEmbed(interfaces.IModel):
     """
     Abstract definition of what makes up any type of embed.
 

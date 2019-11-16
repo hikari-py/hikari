@@ -23,22 +23,19 @@ from __future__ import annotations
 
 import typing
 
-from hikari.orm import state_registry
+from hikari.internal_utilities import auto_repr
 from hikari.orm.models import interfaces
 from hikari.orm.models import users
-from hikari.internal_utilities import auto_repr
 
 
-class Webhook(interfaces.IStateful, interfaces.ISnowflake):
+class Webhook(interfaces.FabricatedMixin, interfaces.ISnowflake):
     """
     Describes a webhook. This is an HTTP endpoint that can be used to send messages to certain
     channels without spinning up a complete bot implementation elsewhere (such as for CI pipelines).
     """
 
-    __slots__ = ("_state", "id", "guild_id", "channel_id", "user", "name", "avatar_hash", "token")
+    __slots__ = ("_fabric", "id", "guild_id", "channel_id", "user", "name", "avatar_hash", "token")
     __copy_by_ref__ = ("user",)
-
-    _state: state_registry.IStateRegistry
 
     #: The ID of the guild that the webhook is in.
     guild_id: int
@@ -73,12 +70,12 @@ class Webhook(interfaces.IStateful, interfaces.ISnowflake):
 
     __repr__ = auto_repr.repr_of("id", "name")
 
-    def __init__(self, global_state: state_registry.IStateRegistry, payload):
-        self._state = global_state
+    def __init__(self, fabric_obj, payload):
+        self._fabric = fabric_obj
         self.id = int(payload["id"])
         self.guild_id = int(payload["guild_id"])
         self.channel_id = int(payload["channel_id"])
-        self.user = global_state.parse_user(payload.get("user"))
+        self.user = fabric_obj.state_registry.parse_user(payload.get("user"))
         self.name = payload.get("name")
         self.avatar_hash = payload.get("avatar_hash")
         self.token = payload.get("token")

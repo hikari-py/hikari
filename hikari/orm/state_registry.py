@@ -25,6 +25,7 @@ import abc
 import datetime
 import typing
 
+from hikari.internal_utilities import data_structures
 from hikari.orm.models import channels
 from hikari.orm.models import emojis
 from hikari.orm.models import guilds
@@ -35,7 +36,6 @@ from hikari.orm.models import reactions
 from hikari.orm.models import roles
 from hikari.orm.models import users
 from hikari.orm.models import webhooks
-from hikari.internal_utilities import data_structures
 
 
 class IStateRegistry(abc.ABC):

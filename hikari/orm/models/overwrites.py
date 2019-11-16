@@ -22,13 +22,15 @@ Permission overwrites.
 from __future__ import annotations
 
 import enum
+import typing
 
+from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import transformations
 from hikari.orm.models import interfaces
 from hikari.orm.models import members
 from hikari.orm.models import permissions
 from hikari.orm.models import roles
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import transformations
 
 
 class OverwriteEntityType(interfaces.INamedEnum, enum.Enum):
@@ -50,14 +52,14 @@ class OverwriteEntityType(interfaces.INamedEnum, enum.Enum):
     #: A role.
     ROLE = roles.Role
 
-    def __instancecheck__(self, instance):
+    def __instancecheck__(self, instance: typing.Any) -> bool:
         return isinstance(instance, self.value)
 
-    def __subclasscheck__(self, subclass):
+    def __subclasscheck__(self, subclass: typing.Type) -> bool:
         return issubclass(subclass, self.value)
 
 
-class Overwrite(interfaces.IStateful, interfaces.ISnowflake):
+class Overwrite(interfaces.IModel, interfaces.ISnowflake):
     """
     Representation of some permissions that have been explicitly allowed or denied as an override from the defaults.
     """
@@ -95,7 +97,7 @@ class Overwrite(interfaces.IStateful, interfaces.ISnowflake):
         # noinspection PyTypeChecker
         return permissions.Permission(permissions.Permission.all() ^ (self.allow | self.deny))
 
-    def __init__(self, payload):
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.type = OverwriteEntityType.from_discord_name(payload["type"])
         self.allow = transformations.try_cast(payload["allow"], permissions.Permission)

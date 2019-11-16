@@ -21,23 +21,23 @@ A role within a guild.
 """
 from __future__ import annotations
 
-from hikari.orm import state_registry
-from hikari.orm.models import interfaces
-from hikari.orm.models import colors as _color
-from hikari.orm.models import guilds
-from hikari.orm.models import permissions as _permission
 from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
+from hikari.orm import fabric
+from hikari.orm.models import colors as _color
+from hikari.orm.models import guilds
+from hikari.orm.models import interfaces
+from hikari.orm.models import permissions as _permission
 
 
-class Role(interfaces.ISnowflake, interfaces.IStateful):
+class Role(interfaces.ISnowflake, interfaces.FabricatedMixin):
     """
     Representation of a role within a guild.
     """
 
     __slots__ = (
-        "_state",
-        "guild_id",
+        "_fabric",
+        "guild",
         "id",
         "name",
         "color",
@@ -49,12 +49,10 @@ class Role(interfaces.ISnowflake, interfaces.IStateful):
         "__weakref__",
     )
 
-    _state: state_registry.IStateRegistry
-
-    #: The ID of the guild the role is in.
+    #: The guild that the role is in.
     #:
     #: :type: :class:`int`
-    guild_id: int
+    guild: guilds.Guild
 
     #: The ID of the role.
     #:
@@ -98,9 +96,11 @@ class Role(interfaces.ISnowflake, interfaces.IStateful):
 
     __repr__ = auto_repr.repr_of("id", "name", "position", "managed", "mentionable", "hoist")
 
-    def __init__(self, global_state, payload, guild_id: int):
-        self._state = global_state
-        self.guild_id = guild_id
+    def __init__(
+        self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild
+    ) -> None:
+        self._fabric = fabric_obj
+        self.guild = guild_obj
         self.id = int(payload["id"])
         self.update_state(payload)
 
@@ -112,11 +112,6 @@ class Role(interfaces.ISnowflake, interfaces.IStateful):
         self.permissions = _permission.Permission(payload["permissions"])
         self.managed = payload["managed"]
         self.mentionable = payload["mentionable"]
-
-    @property
-    def guild(self) -> guilds.Guild:
-        """The guild that the role belongs to."""
-        return self._state.get_guild_by_id(self.guild_id)
 
 
 __all__ = ["Role"]

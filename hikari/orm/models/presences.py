@@ -26,11 +26,11 @@ import datetime
 import enum
 import typing
 
-from hikari.orm.models import interfaces
 from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import transformations
+from hikari.orm.models import interfaces
 
 
 class Status(interfaces.INamedEnum, enum.Enum):
@@ -48,7 +48,7 @@ class Status(interfaces.INamedEnum, enum.Enum):
     OFFLINE = enum.auto()
 
 
-class Presence(interfaces.IStateful):
+class Presence(interfaces.IModel):
     """
     The presence of a member. This includes their status and info on what they are doing currently.
     """
@@ -82,7 +82,7 @@ class Presence(interfaces.IStateful):
 
     __repr__ = auto_repr.repr_of("status")
 
-    def __init__(self, payload):
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.activities = data_structures.EMPTY_SEQUENCE
         self.status = Status.OFFLINE
         self.web_status = Status.OFFLINE
@@ -115,7 +115,7 @@ class Presence(interfaces.IStateful):
             )
 
 
-class PresenceActivity(interfaces.IStateful):
+class PresenceActivity(interfaces.IModel):
     """
     A non-rich presence-style activity.
 
@@ -140,7 +140,7 @@ class PresenceActivity(interfaces.IStateful):
     #: :type: :class:`str` or `None`
     url: typing.Optional[str]
 
-    def __init__(self, payload):
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.name = payload.get("name")
         self.type = transformations.try_cast(payload.get("type"), ActivityType)
         self.url = payload.get("url")
@@ -203,7 +203,7 @@ class RichPresenceActivity(PresenceActivity):
 
     __repr__ = auto_repr.repr_of("id", "name", "type")
 
-    def __init__(self, payload):
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         super().__init__(payload)
         self.id = payload.get("id")
         self.timestamps = transformations.nullable_cast(payload.get("timestamps"), ActivityTimestamps)
@@ -213,8 +213,6 @@ class RichPresenceActivity(PresenceActivity):
         self.party = transformations.nullable_cast(payload.get("party"), ActivityParty)
         self.assets = transformations.nullable_cast(payload.get("assets"), ActivityAssets)
         self.flags = transformations.nullable_cast(payload.get("flags"), ActivityFlag) or 0
-
-    update_state = NotImplemented
 
 
 def parse_presence_activity(
@@ -266,7 +264,7 @@ class ActivityFlag(enum.IntFlag):
     PLAY = 0x20
 
 
-class ActivityParty(interfaces.IStateful):
+class ActivityParty(interfaces.IModel):
     """
     A description of a party of players in the same rich-presence activity. This
     is used to describe multiplayer sessions, and the likes.
@@ -295,16 +293,13 @@ class ActivityParty(interfaces.IStateful):
 
     __repr__ = auto_repr.repr_of("id", "current_size", "max_size")
 
-    def __init__(self, payload):
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.id = payload.get("id")
         self.current_size = transformations.nullable_cast(payload.get("current_size"), int)
         self.max_size = transformations.nullable_cast(payload.get("max_size"), int)
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
-        raise NotImplementedError
 
-
-class ActivityAssets(interfaces.IStateful):
+class ActivityAssets(interfaces.IModel):
     """
     Any rich assets such as tooltip data and image/icon data for a rich presence activity.
     """
@@ -333,17 +328,14 @@ class ActivityAssets(interfaces.IStateful):
 
     __repr__ = auto_repr.repr_of()
 
-    def __init__(self, payload):
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.large_image = payload.get("large_image")
         self.large_text = payload.get("large_text")
         self.small_image = payload.get("small_image")
         self.small_text = payload.get("small_text")
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
-        raise NotImplementedError
 
-
-class ActivityTimestamps(interfaces.IStateful):
+class ActivityTimestamps(interfaces.IModel):
     """
     Timestamps for a rich presence activity object that define when and for how long the
     user has been undergoing an activity.
@@ -363,7 +355,7 @@ class ActivityTimestamps(interfaces.IStateful):
 
     __repr__ = auto_repr.repr_of("start", "end", "duration")
 
-    def __init__(self, payload):
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.start = transformations.nullable_cast(payload.get("start"), date_helpers.unix_epoch_to_ts)
         self.end = transformations.nullable_cast(payload.get("end"), date_helpers.unix_epoch_to_ts)
 
@@ -374,9 +366,6 @@ class ActivityTimestamps(interfaces.IStateful):
               a timedelta if both the start and end is specified, else `None`
         """
         return self.end - self.start if self.start is not None and self.end is not None else None
-
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
-        raise NotImplementedError
 
 
 __all__ = [

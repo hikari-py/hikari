@@ -21,6 +21,7 @@ from unittest import mock
 
 import pytest
 
+from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import integrations
 
@@ -29,6 +30,7 @@ from hikari.orm.models import integrations
 class TestIntegration:
     def test_Integration(self):
         test_state = mock.MagicMock(state_set=state_registry.IStateRegistry)
+        test_fabric = fabric.Fabric(None, test_state)
 
         user_dict = {
             "username": "Luigi",
@@ -40,7 +42,7 @@ class TestIntegration:
         account_dict = {"id": "123456789", "name": "lasagna"}
 
         integration_obj = integrations.Integration(
-            test_state,
+            test_fabric,
             {
                 "id": "1234567",
                 "name": "peepohappy",
@@ -73,8 +75,9 @@ class TestIntegration:
 class TestIntegrationAccount:
     def test_IntegrationAccount(self):
         test_state = mock.MagicMock(state_set=state_registry.IStateRegistry)
+        test_fabric = fabric.Fabric(None, test_state)
 
-        inteacc = integrations.IntegrationAccount(test_state, {"id": "1234567", "name": "memes"})
+        inteacc = integrations.IntegrationAccount(test_fabric, {"id": "1234567", "name": "memes"})
 
         assert inteacc.id == 1234567
         assert inteacc.name == "memes"

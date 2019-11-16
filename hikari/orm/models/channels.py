@@ -24,17 +24,18 @@ from __future__ import annotations
 import abc
 import typing
 
-from hikari.orm import state_registry
-from hikari.orm.models import interfaces
-from hikari.orm.models import guilds as _guild
-from hikari.orm.models import overwrites
-from hikari.orm.models import users
+from hikari.internal_utilities import assertions
 from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import transformations
+from hikari.orm import fabric
+from hikari.orm.models import guilds as _guild
+from hikari.orm.models import interfaces
+from hikari.orm.models import overwrites
+from hikari.orm.models import users
 
 
-class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStateful):
+class Channel(abc.ABC, interfaces.ISnowflake, interfaces.FabricatedMixin):
     """
     A generic type of channel.
 
@@ -44,7 +45,7 @@ class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStateful):
         or the fields will not be initialized when accessed.
     """
 
-    __slots__ = ("_state", "id")
+    __slots__ = ("_fabric", "id")
 
     #: Channel implementations provided.
     _channel_implementations: typing.ClassVar[typing.Dict[int, typing.Type[Channel]]] = {}
@@ -59,22 +60,27 @@ class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStateful):
     #: :type: :class:`int`
     type: typing.ClassVar[int]
 
-    _state: state_registry.IStateRegistry
-
     #: The ID of the channel.
     #:
     #: :type: :class:`int`
     id: int
 
     @abc.abstractmethod
-    def __init__(self, global_state: state_registry.IStateRegistry, payload: data_structures.DiscordObjectT):
-        self._state = global_state
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+        self._fabric = fabric_obj
         self.id = int(payload["id"])
         self.update_state(payload)
 
-    @abc.abstractmethod
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
-        ...
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if "type" in kwargs:
+            cls.type = kwargs.pop("type")
+            existing_type = cls._channel_implementations.get(cls.type)
+            assertions.assert_that(
+                existing_type is None, f"Channel type {cls.type} is already registered to {existing_type}"
+            )
+            cls._channel_implementations[cls.type] = cls
+        cls.is_dm = kwargs.pop("is_dm", NotImplemented)
 
     def __init_subclass__(cls, **kwargs):
         if "type" in kwargs:
@@ -97,10 +103,6 @@ class TextChannel(Channel):
     #:
     #: :type: :class:`int` or `None`
     last_message_id: typing.Optional[int]
-
-    @abc.abstractmethod
-    def __init__(self, global_state, payload):
-        super().__init__(global_state, payload)
 
 
 class GuildChannel(Channel, is_dm=False):
@@ -136,9 +138,9 @@ class GuildChannel(Channel, is_dm=False):
     name: str
 
     @abc.abstractmethod
-    def __init__(self, global_state: state_registry.IStateRegistry, payload: data_structures.DiscordObjectT):
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         self.guild_id = int(payload["guild_id"])
-        super().__init__(global_state, payload)
+        super().__init__(fabric_obj, payload)
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         self.position = int(payload["position"])
@@ -155,7 +157,7 @@ class GuildChannel(Channel, is_dm=False):
 
     @property
     def guild(self) -> _guild.Guild:
-        return self._state.get_guild_by_id(self.guild_id)
+        return self._fabric.state_registry.get_guild_by_id(self.guild_id)
 
     @property
     def parent(self) -> typing.Optional[GuildCategory]:
@@ -191,8 +193,8 @@ class GuildTextChannel(GuildChannel, TextChannel, type=0, is_dm=False):
 
     __repr__ = auto_repr.repr_of("id", "name", "guild.name", "nsfw")
 
-    def __init__(self, global_state: state_registry.IStateRegistry, payload: data_structures.DiscordObjectT):
-        super().__init__(global_state, payload)
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+        super().__init__(fabric_obj, payload)
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
@@ -222,8 +224,8 @@ class DMChannel(TextChannel, type=1, is_dm=True):
     __repr__ = auto_repr.repr_of("id")
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state: state_registry.IStateRegistry, payload: data_structures.DiscordObjectT):
-        super().__init__(global_state, payload)
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+        super().__init__(fabric_obj, payload)
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
@@ -250,9 +252,8 @@ class GuildVoiceChannel(GuildChannel, type=2, is_dm=False):
 
     __repr__ = auto_repr.repr_of("id", "name", "guild.name", "bitrate", "user_limit")
 
-    # noinspection PyMissingConstructor
-    def __init__(self, global_state: state_registry.IStateRegistry, payload: data_structures.DiscordObjectT):
-        super().__init__(global_state, payload)
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+        super().__init__(fabric_obj, payload)
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
@@ -291,8 +292,8 @@ class GroupDMChannel(DMChannel, type=3, is_dm=True):
     __repr__ = auto_repr.repr_of("id", "name")
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state: state_registry.IStateRegistry, payload: data_structures.DiscordObjectT) -> None:
-        super().__init__(global_state, payload)
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+        super().__init__(fabric_obj, payload)
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
@@ -311,8 +312,8 @@ class GuildCategory(GuildChannel, type=4, is_dm=False):
 
     __repr__ = auto_repr.repr_of("id", "name", "guild.name")
 
-    def __init__(self, global_state: state_registry.IStateRegistry, payload: data_structures.DiscordObjectT) -> None:
-        super().__init__(global_state, payload)
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+        super().__init__(fabric_obj, payload)
 
 
 class GuildNewsChannel(GuildChannel, type=5, is_dm=False):
@@ -340,8 +341,8 @@ class GuildNewsChannel(GuildChannel, type=5, is_dm=False):
     __repr__ = auto_repr.repr_of("id", "name", "guild.name", "nsfw")
 
     # noinspection PyMissingConstructor
-    def __init__(self, global_state: state_registry.IStateRegistry, payload: data_structures.DiscordObjectT) -> None:
-        super().__init__(global_state, payload)
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+        super().__init__(fabric_obj, payload)
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
@@ -359,8 +360,8 @@ class GuildStoreChannel(GuildChannel, type=6, is_dm=False):
 
     __repr__ = auto_repr.repr_of("id", "name", "guild.name")
 
-    def __init__(self, global_state: state_registry.IStateRegistry, payload: data_structures.DiscordObjectT) -> None:
-        super().__init__(global_state, payload)
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+        super().__init__(fabric_obj, payload)
 
 
 # noinspection PyProtectedMember
@@ -376,7 +377,7 @@ def is_channel_type_dm(channel_type: int) -> bool:
 
 # noinspection PyProtectedMember
 def parse_channel(
-    global_state, payload
+    fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT
 ) -> typing.Union[
     GuildTextChannel, DMChannel, GuildVoiceChannel, GroupDMChannel, GuildCategory, GuildNewsChannel, GuildStoreChannel
 ]:
@@ -384,8 +385,8 @@ def parse_channel(
     Parse a channel from a channel payload from an API call.
 
     Args:
-        global_state:
-            the global state object.
+        fabric_obj:
+            the global fabric.
         payload:
             the payload to parse.
 
@@ -396,7 +397,7 @@ def parse_channel(
 
     if channel_type in Channel._channel_implementations:
         channel_type = Channel._channel_implementations[channel_type]
-        channel = channel_type(global_state, payload)
+        channel = channel_type(fabric_obj, payload)
         return channel
     else:
         raise TypeError(f"Invalid channel type {channel_type}") from None

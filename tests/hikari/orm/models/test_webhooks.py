@@ -20,15 +20,24 @@ from unittest import mock
 
 import pytest
 
+from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import webhooks
 
 
+@pytest.fixture()
+def mock_state_registry():
+    return mock.MagicMock(spec_set=state_registry.IStateRegistry)
+
+
+@pytest.fixture()
+def fabric_obj(mock_state_registry):
+    return fabric.Fabric(state_registry=mock_state_registry)
+
+
 @pytest.mark.model
 class TestWebhook:
-    def test_Emoji(self):
-        test_state = mock.MagicMock(state_set=state_registry.IStateRegistry)
-
+    def test_parse_webhook(self, fabric_obj):
         user_dict = {
             "username": "Luigi",
             "discriminator": "0002",
@@ -37,7 +46,7 @@ class TestWebhook:
         }
 
         wh = webhooks.Webhook(
-            test_state,
+            fabric_obj,
             {
                 "name": "test webhook",
                 "channel_id": "199737254929760256",
@@ -57,4 +66,4 @@ class TestWebhook:
         )
         assert wh.avatar_hash is None
         assert wh.guild_id == 199737254929760256
-        test_state.parse_user.assert_called_with(user_dict)
+        fabric_obj.state_registry.parse_user.assert_called_with(user_dict)

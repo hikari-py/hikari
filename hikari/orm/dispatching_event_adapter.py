@@ -17,56 +17,23 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Abstract definition of an event handler.
+Core event adapter implementation for dispatching events.
+
+The purpose of this is to provide a base for an implementation to define how
+to handle events.
 """
 import abc
-
+import logging
 import typing
 
-from hikari.net import gateway
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import logging_helpers
+from hikari.net import gateway
+from hikari.orm import event_handler
+from hikari.orm import fabric as _fabric
 
 
-class IEventHandler(abc.ABC):
-    """
-    An abstract interface for an event handler.
-
-    The purpose of this is to provide a single unified interface that any type and shape of event
-    handler can implement and automatically be compatible with the rest of Hikari's infrastructure.
-
-    This library provides a :class:`DispatchingEventAdapter` subinterface that is implemented to
-    provide capability for single-process bots, but one may choose to extend this in a different
-    way to store event payloads on a message queue such as RabbitMQ, ActiveMQ, IBM MQ, etc. This
-    would allow a distributed bot to be designed to the user's specific use case, and allows Hikari
-    to become much more expandable and flexible for large bots in the future.
-    """
-
-    __slots__ = ()
-
-    @abc.abstractmethod
-    def consume_raw_event(self, shard: gateway.GatewayClientV7, event_name: str, payload: typing.Any) -> None:
-        """
-        This is invoked by a gateway client instance whenever an event of any type occurs. These are
-        defined in :mod:`hikari.events` for convenience and documentation purposes.
-
-        This is a standard method that is expected to handle the given event information in some way.
-        How it does this depends on what the implementation is expected to do, but a general pattern
-        that will be followed will be to invoke another method elsewhere or schedule an awaitable
-        on the running event loop.
-
-        Args:
-            shard:
-                The gateway client that provided this event.
-            event_name:
-                The raw event name. See :mod:`hikari.events`.
-            payload:
-                The raw payload. This will be potentially any form of information and will vary between
-                events.
-        """
-
-
-class DispatchingEventAdapter(abc.ABC):
+class DispatchingEventAdapter(event_handler.IEventHandler):
     """
     Stubbed definition of an event handler. This automatically implements an underlying handler for every documented
     event that Discord can dispatch to us that performs no operation, so unimplemented events in subclasses go ignored
@@ -75,11 +42,18 @@ class DispatchingEventAdapter(abc.ABC):
     A couple of additional events are defined that can be produced by the gateway implementation for Hikari.
     """
 
-    __slots__ = ("logger",)
+    __slots__ = ("logger", "fabric")
+
+    #: The logger used for this event adapter.
+    logger: logging.Logger
+
+    #: The application fabric.
+    fabric: _fabric.Fabric
 
     @abc.abstractmethod
-    def __init__(self) -> None:
+    def __init__(self, fabric_obj: _fabric.Fabric) -> None:
         self.logger = logging_helpers.get_named_logger(self)
+        self.fabric = fabric_obj
 
     async def consume_raw_event(self, shard, event_name: str, payload: typing.Any) -> None:
         try:

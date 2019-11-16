@@ -20,15 +20,25 @@ from unittest import mock
 
 import pytest
 
+from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import users
 
 
+@pytest.fixture()
+def mock_state_registry():
+    return mock.MagicMock(spec_set=state_registry.IStateRegistry)
+
+
+@pytest.fixture()
+def fabric_obj(mock_state_registry):
+    return fabric.Fabric(state_registry=mock_state_registry)
+
+
 @pytest.mark.model
-def test_User_when_not_a_bot():
-    s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    u = users.User(
-        s,
+def test_User_when_not_a_bot(fabric_obj):
+    user_obj = users.User(
+        fabric_obj,
         {
             "id": "123456",
             "username": "Boris Johnson",
@@ -40,32 +50,30 @@ def test_User_when_not_a_bot():
         },
     )
 
-    assert u.id == 123456
-    assert u.username == "Boris Johnson"
-    assert u.discriminator == 6969
-    assert u.avatar_hash == "1a2b3c4d"
-    assert u.bot is False
+    assert user_obj.id == 123456
+    assert user_obj.username == "Boris Johnson"
+    assert user_obj.discriminator == 6969
+    assert user_obj.avatar_hash == "1a2b3c4d"
+    assert user_obj.bot is False
 
 
 @pytest.mark.model
-def test_User_when_is_a_bot():
-    s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    u = users.User(
-        s, {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": None, "bot": True}
+def test_User_when_is_a_bot(fabric_obj):
+    user_obj = users.User(
+        fabric_obj, {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": None, "bot": True}
     )
 
-    assert u.id == 123456
-    assert u.username == "Boris Johnson"
-    assert u.discriminator == 6969
-    assert u.avatar_hash is None
-    assert u.bot is True
+    assert user_obj.id == 123456
+    assert user_obj.username == "Boris Johnson"
+    assert user_obj.discriminator == 6969
+    assert user_obj.avatar_hash is None
+    assert user_obj.bot is True
 
 
 @pytest.mark.model
-def test_BotUser():
-    s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    u = users.BotUser(
-        s,
+def test_BotUser(fabric_obj):
+    user_obj = users.BotUser(
+        fabric_obj,
         {
             "id": "123456",
             "username": "Boris Johnson",
@@ -79,10 +87,10 @@ def test_BotUser():
         },
     )
 
-    assert u.id == 123456
-    assert u.username == "Boris Johnson"
-    assert u.discriminator == 6969
-    assert u.avatar_hash == "1a2b3c4d"
-    assert u.bot is False
-    assert u.verified is True
-    assert u.mfa_enabled is True
+    assert user_obj.id == 123456
+    assert user_obj.username == "Boris Johnson"
+    assert user_obj.discriminator == 6969
+    assert user_obj.avatar_hash == "1a2b3c4d"
+    assert user_obj.bot is False
+    assert user_obj.verified is True
+    assert user_obj.mfa_enabled is True

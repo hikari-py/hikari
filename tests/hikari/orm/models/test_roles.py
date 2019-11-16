@@ -20,15 +20,22 @@ from unittest import mock
 
 import pytest
 
+from hikari.orm import fabric
 from hikari.orm import state_registry
-from hikari.orm.models import guilds as _guild
+from hikari.orm.models import guilds
 from hikari.orm.models import permissions
 from hikari.orm.models import roles
+from tests.hikari import _helpers
 
 
 @pytest.fixture
-def state():
+def mock_state_registry():
     return mock.MagicMock(spec_set=state_registry.IStateRegistry)
+
+
+@pytest.fixture()
+def fabric_obj(mock_state_registry):
+    return fabric.Fabric(state_registry=mock_state_registry)
 
 
 @pytest.fixture
@@ -46,16 +53,17 @@ def payload():
 
 
 @pytest.mark.model
-def test_Role(state, payload):
-    r = roles.Role(state, payload, 1234)
+def test_Role(fabric_obj, payload):
+    guild_obj = _helpers.mock_model(guilds.Guild)
+    role_obj = roles.Role(fabric_obj, payload, guild_obj)
 
-    assert r.id == 41771983423143936
-    assert r.name == "WE DEM BOYZZ!!!!!!"
-    assert r.color == 0x3498DB
-    assert r.hoist is True
-    assert r.position == 1
-    assert r.guild_id == 1234
-    assert r.permissions == (
+    assert role_obj.id == 41771983423143936
+    assert role_obj.name == "WE DEM BOYZZ!!!!!!"
+    assert role_obj.color == 0x3498DB
+    assert role_obj.hoist is True
+    assert role_obj.position == 1
+    assert role_obj.guild == guild_obj
+    assert role_obj.permissions == (
         permissions.Permission.USE_VAD
         | permissions.Permission.MOVE_MEMBERS
         | permissions.Permission.DEAFEN_MEMBERS
@@ -77,14 +85,5 @@ def test_Role(state, payload):
         | permissions.Permission.KICK_MEMBERS
         | permissions.Permission.CREATE_INSTANT_INVITE
     )
-    assert r.managed is False
-    assert r.mentionable is False
-
-
-@pytest.mark.model
-def test_Role_guild(state, payload):
-    r = roles.Role(state, payload, 1234)
-    guild = mock.MagicMock(spec_set=_guild.Guild)
-    state.get_guild_by_id = mock.MagicMock(return_value=guild)
-    assert r.guild is guild
-    state.get_guild_by_id.assert_called_with(1234)
+    assert role_obj.managed is False
+    assert role_obj.mentionable is False

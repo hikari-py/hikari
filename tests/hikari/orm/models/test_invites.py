@@ -21,21 +21,30 @@ from unittest import mock
 
 import pytest
 
+from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import invites
 
 
+@pytest.fixture()
+def mock_state_registry():
+    return mock.MagicMock(spec_set=state_registry.IStateRegistry)
+
+
+@pytest.fixture()
+def fabric_obj(mock_state_registry):
+    return fabric.Fabric(state_registry=mock_state_registry)
+
+
 @pytest.mark.model
 class TestInvite:
-    def test_Invite(self):
-        test_state = mock.MagicMock(state_set=state_registry.IStateRegistry)
-
+    def test_Invite(self, fabric_obj):
         guild_dict = {"id": "165176875973476352", "name": "CS:GO Fraggers Only", "splash": None, "icon": None}
         channel_dict = {"id": "165176875973476352", "name": "illuminati", "type": 0}
         user_dict = {"id": "165176875973476352", "username": "bob", "avatar": "deadbeef", "discriminator": "#1234"}
 
         inv = invites.Invite(
-            test_state,
+            fabric_obj,
             {
                 "code": "0vCdhLbwjZZTWZLD",
                 "guild": guild_dict,
@@ -50,15 +59,13 @@ class TestInvite:
         assert inv.code == "0vCdhLbwjZZTWZLD"
         assert inv.approximate_presence_count == 69
         assert inv.approximate_member_count == 420
-        test_state.parse_guild.assert_called_with(guild_dict)
-        test_state.parse_channel.assert_called_with(channel_dict)
+        fabric_obj.state_registry.parse_guild.assert_called_with(guild_dict)
+        fabric_obj.state_registry.parse_channel.assert_called_with(channel_dict)
 
 
 @pytest.mark.model
 class TestInviteMetadata:
-    def test_InviteMetadata(self):
-        test_state = mock.MagicMock(state_set=state_registry.IStateRegistry)
-
+    def test_InviteMetadata(self, fabric_obj):
         user_dict = {
             "id": "80351110224678912",
             "username": "Nelly",
@@ -71,7 +78,7 @@ class TestInviteMetadata:
         }
 
         invm = invites.InviteMetadata(
-            test_state,
+            fabric_obj,
             {
                 "inviter": user_dict,
                 "uses": 69,
@@ -89,4 +96,4 @@ class TestInviteMetadata:
         assert invm.temporary is True
         assert invm.revoked is True
         assert invm.created_at == datetime.datetime(2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc)
-        test_state.parse_user.assert_called_with(user_dict)
+        fabric_obj.state_registry.parse_user.assert_called_with(user_dict)

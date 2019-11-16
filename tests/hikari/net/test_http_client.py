@@ -22,7 +22,6 @@
 import io
 import json
 
-import aiohttp
 import asynctest
 import pytest
 

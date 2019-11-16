@@ -23,26 +23,42 @@ from __future__ import annotations
 
 import typing
 
-from hikari.orm import event_adapter
-from hikari import events
-from hikari.orm import state_registry
-from hikari.orm.models import channels
 from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import transformations
+from hikari.orm import dispatching_event_adapter
+from hikari.orm import events
+from hikari.orm import fabric as _fabric
+from hikari.orm import state_registry as _state_registry
+from hikari.orm.models import channels
 
 
-class DispatchingEventAdapterImpl(event_adapter.DispatchingEventAdapter):
+class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdapter):
     """
-    Basic implementation of event management logic.
+    Basic implementation of event management logic for single-application bots.
+
+    This handles parsing incoming events from Discord and translating the JSON objects
+    and arrays provided into meaningful objects with respect to this ORM. Events as
+    defined in the :mod:`hikari.orm.events` module are then dispatched to the given
+    dispatcher function.
+
+    Args:
+        fabric_obj:
+            The ORM fabric to use.
+        dispatch:
+            The callable to dispatch every event to once adapted to an object in the object
+            graph.
     """
 
-    __slots__ = ("dispatch", "state_registry", "_ignored_events")
+    __slots__ = ("dispatch", "_ignored_events")
 
-    def __init__(self, state_registry_obj: state_registry.IStateRegistry, dispatch: typing.Callable[..., None]) -> None:
-        super().__init__()
+    def __init__(self, fabric_obj: _fabric.Fabric, dispatch: typing.Callable[..., None]) -> None:
+        super().__init__(fabric_obj)
         self.dispatch = dispatch
-        self.state_registry: state_registry.IStateRegistry = state_registry_obj
         self._ignored_events = set()
+
+    @property
+    def state_registry(self) -> _state_registry.IStateRegistry:
+        return self.fabric.state_registry
 
     async def drain_unrecognised_event(self, _, event_name, payload):
         self.dispatch("raw_" + event_name.lower(), payload)

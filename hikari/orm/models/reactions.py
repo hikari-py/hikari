@@ -21,13 +21,13 @@ Reactions to a message.
 """
 from __future__ import annotations
 
-from hikari.orm.models import interfaces
-from hikari.orm.models import emojis as _emoji
-from hikari.orm.models import messages as _message
 from hikari.internal_utilities import auto_repr
+from hikari.orm.models import emojis as _emoji
+from hikari.orm.models import interfaces
+from hikari.orm.models import messages as _message
 
 
-class Reaction(interfaces.IStateful):
+class Reaction(interfaces.IModel):
     """
     Model for a message reaction object
     """

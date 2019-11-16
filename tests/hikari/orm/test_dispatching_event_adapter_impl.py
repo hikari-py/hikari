@@ -24,12 +24,10 @@ from unittest import mock
 import asynctest
 import pytest
 
-from hikari import events
-from hikari.orm import state_registry
-from hikari.orm import event_adapter_impl
-from hikari.orm.models import channels
-from hikari.orm.models import guilds
 from hikari.net import gateway as _gateway
+from hikari.orm import dispatching_event_adapter_impl
+from hikari.orm import events
+from hikari.orm import state_registry
 from tests.hikari import _helpers
 
 
@@ -55,7 +53,9 @@ def gateway_impl():
 
 @pytest.fixture()
 def adapter_impl(state_registry_impl, dispatch_impl, logger_impl):
-    instance = _helpers.unslot_class(event_adapter_impl.DispatchingEventAdapterImpl)(state_registry_impl, dispatch_impl)
+    instance = _helpers.unslot_class(dispatching_event_adapter_impl.DispatchingEventAdapterImpl)(
+        state_registry_impl, dispatch_impl
+    )
     instance.logger = logger_impl
     return instance
 

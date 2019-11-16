@@ -24,24 +24,24 @@ from __future__ import annotations
 import datetime
 import typing
 
-from hikari.orm import state_registry
-from hikari.orm.models import interfaces
-from hikari.orm.models import channels
-from hikari.orm.models import guilds
-from hikari.orm.models import users
 from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import transformations
+from hikari.orm import fabric
+from hikari.orm import state_registry
+from hikari.orm.models import channels
+from hikari.orm.models import guilds
+from hikari.orm.models import interfaces
+from hikari.orm.models import users
 
 
-class Invite(interfaces.IStateful):
+class Invite(interfaces.IModel):
     """
     Represents a code that when used, adds a user to a guild or group DM channel.
     """
 
-    __slots__ = ("_state", "code", "guild", "channel", "approximate_presence_count", "approximate_member_count")
-
-    _state: typing.Any
+    __slots__ = ("code", "guild", "channel", "approximate_presence_count", "approximate_member_count")
 
     #: The unique invite code
     #:
@@ -70,22 +70,21 @@ class Invite(interfaces.IStateful):
 
     __repr__ = auto_repr.repr_of("code", "guild", "channel")
 
-    def __init__(self, global_state: state_registry.IStateRegistry, payload):
-        self._state = global_state
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         self.code = payload.get("code")
-        self.guild = global_state.parse_guild(payload.get("guild"))
+        self.guild = fabric_obj.state_registry.parse_guild(payload.get("guild"))
         # noinspection PyTypeChecker
-        self.channel = global_state.parse_channel(payload.get("channel"))
+        self.channel = fabric_obj.state_registry.parse_channel(payload.get("channel"))
         self.approximate_presence_count = transformations.nullable_cast(payload.get("approximate_presence_count"), int)
         self.approximate_member_count = transformations.nullable_cast(payload.get("approximate_member_count"), int)
 
 
-class InviteMetadata(interfaces.IStateful):
+class InviteMetadata(interfaces.IModel):
     """
     Metadata relating to a specific invite object.
     """
 
-    __slots__ = ("_state", "inviter", "uses", "max_uses", "max_age", "temporary", "created_at", "revoked")
+    __slots__ = ("inviter", "uses", "max_uses", "max_age", "temporary", "created_at", "revoked")
 
     _state: state_registry.IStateRegistry
 
@@ -126,9 +125,8 @@ class InviteMetadata(interfaces.IStateful):
 
     __repr__ = auto_repr.repr_of("inviter", "uses", "max_uses", "created_at")
 
-    def __init__(self, global_state: state_registry.IStateRegistry, payload):
-        self._state = global_state
-        self.inviter = global_state.parse_user(payload["inviter"])
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+        self.inviter = fabric_obj.state_registry.parse_user(payload["inviter"])
         self.uses = int(payload["uses"])
         self.max_uses = int(payload["max_uses"])
         self.max_age = int(payload["max_age"])

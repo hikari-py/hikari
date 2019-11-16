@@ -24,20 +24,20 @@ from __future__ import annotations
 import datetime
 import typing
 
-from hikari.orm import state_registry
-from hikari.orm.models import guilds
-from hikari.orm.models import presences
-from hikari.orm.models import roles as _roles
-from hikari.orm.models import users
 from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import delegate
 from hikari.internal_utilities import transformations
+from hikari.orm import fabric
+from hikari.orm.models import guilds
+from hikari.orm.models import presences
+from hikari.orm.models import roles as _roles
+from hikari.orm.models import users
 
 
 @delegate.delegate_to(users.IUser, "user")
-class Member(users.IUser):
+class Member(users.IUser, delegate_fabricated=True):
     """
     A specialization of a user which provides implementation details for a specific guild.
 
@@ -81,16 +81,14 @@ class Member(users.IUser):
     __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot", "guild", "nick", "joined_at")
 
     # noinspection PyMissingConstructor
-    def __init__(
-        self, global_state: state_registry.IStateRegistry, guild: guilds.Guild, payload: data_structures.DiscordObjectT
-    ) -> None:
-        self.user = global_state.parse_user(payload["user"])
+    def __init__(self, fabric_obj: fabric.Fabric, guild: guilds.Guild, payload: data_structures.DiscordObjectT) -> None:
+        self.user = fabric_obj.state_registry.parse_user(payload["user"])
         self.guild = guild
         self.joined_at = date_helpers.parse_iso_8601_ts(payload.get("joined_at"))
         self.premium_since = transformations.nullable_cast(payload.get("premium_since"), date_helpers.parse_iso_8601_ts)
 
         role_objs = [
-            global_state.get_role_by_id(self.guild.id, int(rid))
+            fabric_obj.state_registry.get_role_by_id(self.guild.id, int(rid))
             for rid in payload.get("role_ids", data_structures.EMPTY_SEQUENCE)
         ]
 

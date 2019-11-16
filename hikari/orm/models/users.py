@@ -23,19 +23,16 @@ from __future__ import annotations
 
 import abc
 
-from hikari.orm import state_registry
-from hikari.orm.models import interfaces
 from hikari.internal_utilities import auto_repr
+from hikari.orm.models import interfaces
 
 
-class IUser(abc.ABC, interfaces.IStateful, interfaces.ISnowflake):
+class IUser(abc.ABC, interfaces.FabricatedMixin, interfaces.ISnowflake, interface=True):
     """
     Representation of a user account.
     """
 
     __slots__ = ()
-
-    _state: state_registry.IStateRegistry
 
     #: ID of the user.
     #:
@@ -75,10 +72,10 @@ class User(IUser):
     Implementation of the user data type.
     """
 
-    __slots__ = ("_state", "id", "username", "discriminator", "avatar_hash", "bot", "__weakref__")
+    __slots__ = ("_fabric", "id", "username", "discriminator", "avatar_hash", "bot", "__weakref__")
 
-    def __init__(self, global_state: state_registry.IStateRegistry, payload):
-        self._state = global_state
+    def __init__(self, fabric_obj, payload):
+        self._fabric = fabric_obj
         self.id = int(payload["id"])
         # We don't expect this to ever change...
         self.bot = payload.get("bot", False)
@@ -109,8 +106,8 @@ class BotUser(User):
 
     __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot", "verified", "mfa_enabled")
 
-    def __init__(self, global_state: state_registry.IStateRegistry, payload):
-        super().__init__(global_state, payload)
+    def __init__(self, fabric_obj, payload):
+        super().__init__(fabric_obj, payload)
 
     def update_state(self, payload) -> None:
         super().update_state(payload)

@@ -24,21 +24,19 @@ from __future__ import annotations
 import abc
 import typing
 
-from hikari.orm import state_registry
-from hikari.orm.models import interfaces
-from hikari.orm.models import guilds
 from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
+from hikari.orm import fabric
+from hikari.orm.models import guilds
+from hikari.orm.models import interfaces
 
 
-class Emoji(abc.ABC, interfaces.IStateful):
+class Emoji(interfaces.IModel, abc.ABC):
     """Base for any emoji type."""
 
     __slots__ = ()
 
-    @abc.abstractmethod
-    def __init__(self):
-        ...
+    __init__ = NotImplemented
 
     @property
     @abc.abstractmethod
@@ -110,14 +108,13 @@ class UnknownEmoji(Emoji, interfaces.ISnowflake):
         return False
 
 
-class GuildEmoji(UnknownEmoji):
+class GuildEmoji(UnknownEmoji, interfaces.FabricatedMixin):
     """
-    Represents an AbstractEmoji in a guild that the user is a member of.
+    Represents an emoji in a guild that the user is a member of.
     """
 
-    __slots__ = ("_state", "_role_ids", "_guild_id", "require_colons", "managed", "animated", "user", "__weakref__")
+    __slots__ = ("_fabric", "_role_ids", "_guild_id", "require_colons", "managed", "animated", "user", "__weakref__")
 
-    _state: state_registry.IStateRegistry
     _role_ids: typing.Sequence[int]
     _guild_id: typing.Optional[int]
 
@@ -143,13 +140,11 @@ class GuildEmoji(UnknownEmoji):
 
     __repr__ = auto_repr.repr_of("id", "name", "animated")
 
-    def __init__(
-        self, global_state: state_registry.IStateRegistry, payload: data_structures.DiscordObjectT, guild_id: int
-    ) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_id: int) -> None:
         super().__init__(payload)
-        self._state = global_state
+        self._fabric = fabric_obj
         self._guild_id = guild_id
-        self.user = global_state.parse_user(payload.get("user")) if "user" in payload else None
+        self.user = fabric_obj.state_registry.parse_user(payload.get("user")) if "user" in payload else None
         self.require_colons = payload.get("require_colons", True)
         self.animated = payload.get("animated", False)
         self.managed = payload.get("managed", False)
@@ -157,7 +152,7 @@ class GuildEmoji(UnknownEmoji):
 
     @property
     def guild(self) -> guilds.Guild:
-        return self._state.get_guild_by_id(self._guild_id)
+        return self._fabric.state_registry.get_guild_by_id(self._guild_id)
 
 
 def is_payload_guild_emoji_candidate(payload: data_structures.DiscordObjectT) -> bool:
@@ -172,16 +167,14 @@ def is_payload_guild_emoji_candidate(payload: data_structures.DiscordObjectT) ->
 
 
 def parse_emoji(
-    global_state: state_registry.IStateRegistry,
-    payload: data_structures.DiscordObjectT,
-    guild_id: typing.Optional[int] = None,
+    fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_id: typing.Optional[int] = None,
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:
     """
     Parse the given emoji payload into an appropriate implementation of Emoji.
 
     Args:
-        global_state:
-            The global state object.
+        fabric_obj:
+            The global fabric.
         payload:
             the payload to parse.
         guild_id:
@@ -191,7 +184,7 @@ def parse_emoji(
         One of :class:`UnicodeEmoji`, :class:`UnknownEmoji`, :class:`GuildEmoji`.
     """
     if is_payload_guild_emoji_candidate(payload) and guild_id is not None:
-        return GuildEmoji(global_state, payload, guild_id)
+        return GuildEmoji(fabric_obj, payload, guild_id)
     elif payload.get("id") is not None:
         return UnknownEmoji(payload)
     else:

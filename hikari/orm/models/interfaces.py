@@ -28,6 +28,7 @@ import typing
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
+from hikari.orm import fabric
 
 
 @assertions.assert_is_mixin
@@ -137,11 +138,12 @@ class ISnowflake:
 
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
-class IStateful:
+class IModel:
     """
-    Marks a class that is allowed to have its state periodically updated, rather than being recreated.
+    Base type for any model in this API.
 
-    Any classes with this as a subclass should not be assumed to have consistent state between awaiting other elements.
+    Provides several key functionalities such as the ability to control how internal references get
+    copied if :meth:`copy`ing this object.
 
     If you need some fields to be copied across by reference regardless of being requested to produce a new copy, you
     should specify their names in the `__copy_byref__` class var. This will prevent :func:`copy.copy` being
@@ -151,7 +153,7 @@ class IStateful:
         Copy functionality on this base is only implemented for slotted derived classes.
     """
 
-    __slots__ = []
+    __slots__ = ()
 
     #: We want a fast way of knowing all the slotted fields instances of this subclass may provide without heavy
     #: recursive introspection every time an update event occurs and we need to create a shallow one-level-deep copy
@@ -159,16 +161,16 @@ class IStateful:
     __all_slots__ = ()
 
     #: Tracks the fields we shouldn't clone. This always includes the state.
-    __copy_by_ref__: typing.ClassVar[typing.Tuple] = ("_state",)
+    __copy_by_ref__: typing.ClassVar[typing.Tuple] = ("_fabric",)
 
     def __init_subclass__(cls, **kwargs):
-        """
-        When the subclass gets inited, resolve the `__copy_by_ref__` for all base classes as well.
-        """
         super().__init_subclass__()
-
         if "__slots__" not in cls.__dict__:
-            raise TypeError(f"{cls.__module__}.{cls.__qualname__} must be slotted to derive from HikariModel.")
+            raise TypeError(
+                f"{cls.__module__}.{cls.__qualname__} must be slotted to derive from {FabricatedMixin.__name__}."
+            )
+
+        assertions.assert_subclasses(type(cls.__slots__), tuple, "__slots__ should be a tuple")
 
         copy_by_ref = set()
         slots = set()
@@ -183,12 +185,6 @@ class IStateful:
 
         cls.__copy_by_ref__ = tuple(copy_by_ref)
         cls.__all_slots__ = tuple(slots)
-
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
-        """
-        Updates the internal state of an existing instance of this object from a raw Discord payload.
-        """
-        return NotImplemented
 
     def copy(self, copy_func=copy.copy):
         """
@@ -217,5 +213,44 @@ class IStateful:
 
         return instance
 
+    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+        """
+        Updates the internal state of an existing instance of this object from a raw Discord payload.
+        """
+        return NotImplemented
 
-__all__ = ("ISnowflake", "INamedEnum", "IStateful")
+
+@assertions.assert_is_mixin
+@assertions.assert_is_slotted
+class FabricatedMixin(IModel):
+    """
+    Base information and utilities for any model that is expected to have a reference to a `_fabric`.
+
+    Each implementation is expected to provide a `_fabric` slot and implement a constructor that
+    sets that slot where appropriate.
+    """
+
+    #: Since this is a mixin, all slots must be empty. This prevents issues from subclassing other slotted classes
+    #: and then mixing in this one later.
+    __slots__ = ()
+
+    #: The base fabric for the ORM instance.
+    _fabric: fabric.Fabric
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        is_interface_or_mixin = kwargs.get("interface", False)
+        delegate_fabricated = kwargs.get("delegate_fabricated", False)
+        has_fabric_slot = len(cls.__all_slots__) > 0 and "_fabric" in cls.__all_slots__
+
+        if not (is_interface_or_mixin or delegate_fabricated or has_fabric_slot):
+            raise TypeError(
+                f"{cls.__module__}.{cls.__qualname__} derives from {FabricatedMixin.__name__}, "
+                f"but does not provide '_fabric' as a slotted member in this or any base classes. "
+                f"If this is meant to be an interface, pass the 'interface' or 'delegate_fabricated' "
+                f"kwarg to the class constructor (e.g. `class Foo(Fabricated, interface=True)`) to "
+                f"suppress this error."
+            )
+
+
+__all__ = ("ISnowflake", "INamedEnum", "FabricatedMixin", "IModel")

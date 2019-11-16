@@ -25,9 +25,10 @@ import string
 import typing
 
 from hikari.internal_utilities import assertions
+from hikari.orm.models import interfaces
 
 
-class Color(int, typing.SupportsInt):
+class Color(int, typing.SupportsInt, interfaces.IModel):
     """
     Representation of a color. This value is immutable.
 

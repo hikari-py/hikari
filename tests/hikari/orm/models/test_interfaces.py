@@ -174,9 +174,9 @@ def test_dataclass_does_not_overwrite_existing_hash_if_explicitly_defined():
 
 
 @pytest.mark.model
-def test_Volatile_clone_shallow():
+def test_IModel_copy():
     @dataclasses.dataclass()
-    class Test(interfaces.IStateful):
+    class Test(interfaces.IModel):
         __slots__ = ("data", "whatever")
         data: typing.List[int]
         whatever: object
@@ -197,9 +197,9 @@ def test_Volatile_clone_shallow():
 
 
 @pytest.mark.model
-def test_HikariModel_does_not_clone_ownership_fields():
+def test_IModel_does_not_clone_fields_in___copy_by_ref___():
     @dataclasses.dataclass()
-    class Test(interfaces.IStateful):
+    class Test(interfaces.IModel):
         __copy_by_ref__ = ("data",)
         __slots__ = ("data",)
         data: typing.List[int]
@@ -212,25 +212,25 @@ def test_HikariModel_does_not_clone_ownership_fields():
 
 
 @pytest.mark.model
-def test_HikariModel_does_not_clone_state_by_default_fields():
+def test_IModel_does_not_clone_state_by_default_fields():
     @dataclasses.dataclass()
-    class Test(interfaces.IStateful):
+    class Test(interfaces.IModel):
         __copy_by_ref__ = ("foo",)
-        __slots__ = ("foo", "_state")
-        _state: typing.List[int]
+        __slots__ = ("foo", "_fabric")
+        _fabric: typing.List[int]
         foo: int
 
-    state = [1, 2, 3]
+    fabric = [1, 2, 3]
     foo = 12
-    test = Test(state, foo)
+    test = Test(fabric, foo)
 
     assert test.copy() is not test
-    assert test.copy()._state is state
+    assert test.copy()._fabric is fabric
 
 
 @pytest.mark.model
-def test_HikariModel___copy_by_ref___is_inherited():
-    class Base1(interfaces.IStateful):
+def test_IModel___copy_by_ref___is_inherited():
+    class Base1(interfaces.IModel):
         __copy_by_ref__ = ["a", "b", "c"]
         __slots__ = ("a", "b", "c")
 
@@ -247,8 +247,8 @@ def test_HikariModel___copy_by_ref___is_inherited():
 
 
 @pytest.mark.model
-def test_HikariModel___all_slots___is_inherited():
-    class Base1(interfaces.IStateful):
+def test_IModel___all_slots___is_inherited():
+    class Base1(interfaces.IModel):
         __copy_by_ref__ = ["a", "b", "c"]
         __slots__ = ("a", "b", "c")
 
@@ -265,10 +265,10 @@ def test_HikariModel___all_slots___is_inherited():
 
 
 @pytest.mark.model
-def test_non_slotted_HikariModel_refuses_to_initialize():
+def test_non_slotted_IModel_refuses_to_initialize():
     try:
 
-        class BadClass(interfaces.IStateful):
+        class BadClass(interfaces.IModel):
             # look ma, no slots.
             pass
 
@@ -277,11 +277,41 @@ def test_non_slotted_HikariModel_refuses_to_initialize():
 
 
 @pytest.mark.model
-def test_slotted_HikariModel_can_initialize():
+def test_slotted_IModel_can_initialize():
     try:
 
-        class GoodClass(interfaces.IStateful):
+        class GoodClass(interfaces.IModel):
             __slots__ = ()
 
     except TypeError as ex:
         raise AssertionError from ex
+
+
+@pytest.mark.model
+def test_interface_FabricatedMixin_does_not_need_fabric():
+    class Interface(interfaces.FabricatedMixin, interface=True):
+        __slots__ = ()
+
+
+@pytest.mark.model
+def test_delegate_fabricated_FabricatedMixin_does_not_need_fabric():
+    class Delegated(interfaces.FabricatedMixin, delegate_fabricated=True):
+        __slots__ = ()
+
+
+@pytest.mark.model
+def test_regular_FabricatedMixin_fails_to_initialize_without_fabric_slot():
+    try:
+
+        class Regular(interfaces.FabricatedMixin):
+            __slots__ = ()
+
+        assert False, "No TypeError was raised."
+    except TypeError:
+        assert True, "passed"
+
+
+@pytest.mark.model
+def test_regular_FabricatedMixin_can_initialize_with_fabric_slot():
+    class Regular(interfaces.FabricatedMixin):
+        __slots__ = ("_fabric",)

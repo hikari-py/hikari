@@ -23,21 +23,20 @@ from __future__ import annotations
 
 import datetime
 
-from hikari.orm import state_registry
+from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import date_helpers
+from hikari.orm import fabric
 from hikari.orm.models import interfaces
 from hikari.orm.models import users
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import date_helpers
 
 
-class IntegrationAccount(interfaces.IStateful, interfaces.ISnowflake):
+class IntegrationAccount(interfaces.FabricatedMixin, interfaces.ISnowflake):
     """
     An account used for an integration.
     """
 
-    __slots__ = ("_state", "id", "name")
-
-    _state: state_registry.IStateRegistry
+    __slots__ = ("_fabric", "id", "name")
 
     #: The id for the account
     #:
@@ -51,19 +50,19 @@ class IntegrationAccount(interfaces.IStateful, interfaces.ISnowflake):
 
     __repr__ = auto_repr.repr_of("id", "name")
 
-    def __init__(self, global_state: state_registry.IStateRegistry, payload):
-        self._state = global_state
+    def __init__(self, fabric_obj, payload):
+        self._fabric = fabric_obj
         self.id = int(payload["id"])
         self.name = payload.get("name")
 
 
-class Integration(interfaces.IStateful, interfaces.ISnowflake):
+class Integration(interfaces.FabricatedMixin, interfaces.ISnowflake):
     """
     A guild integration.
     """
 
     __slots__ = (
-        "_state",
+        "_fabric",
         "id",
         "name",
         "type",
@@ -76,7 +75,6 @@ class Integration(interfaces.IStateful, interfaces.ISnowflake):
         "synced_at",
     )
 
-    _state: state_registry.IStateRegistry
     _role_id: int
 
     #: The integration ID
@@ -126,8 +124,8 @@ class Integration(interfaces.IStateful, interfaces.ISnowflake):
 
     __repr__ = auto_repr.repr_of("id", "name")
 
-    def __init__(self, global_state: state_registry.IStateRegistry, payload):
-        self._state = global_state
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+        self._fabric = fabric_obj
         self.id = int(payload["id"])
         self.name = payload["name"]
         self.type = payload["type"]
@@ -135,8 +133,8 @@ class Integration(interfaces.IStateful, interfaces.ISnowflake):
         self.syncing = payload["syncing"]
         self._role_id = int(payload["role_id"])
         self.expire_grace_period = int(payload["expire_grace_period"])
-        self.user = global_state.parse_user(payload["user"])
-        self.account = IntegrationAccount(global_state, payload["account"])
+        self.user = self._fabric.state_registry.parse_user(payload["user"])
+        self.account = IntegrationAccount(self._fabric.state_registry, payload["account"])
         self.synced_at = date_helpers.parse_iso_8601_ts(payload["synced_at"])
 
 
