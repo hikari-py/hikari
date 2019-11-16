@@ -16,17 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import pytest
 
-from . import commands
-from . import errors
-from . import events
-from . import net
-from . import orm
+from hikari.orm.models import colors
+from hikari.orm.models import colours
 
 
-__author__ = "Nekokatt"
-__contributors__ = {"LunarCoffee", "raatty", "Tmpod", "Zach", "thomm.o", "rock500", "davfsa"}
-__copyright__ = f"© 2019 Nekokatt"
-__license__ = "LGPLv3"
-__version__ = "0.0.39"
-__url__ = "https://gitlab.com/nekokatt/hikari"
+@pytest.mark.model
+def test_colours():
+    assert colors.Color is colours.Colour
