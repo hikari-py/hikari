@@ -25,21 +25,21 @@ import datetime
 import enum
 import typing
 
-from hikari.orm import state_registry
-from hikari.orm.models import interfaces
-from hikari.orm.models import channels
-from hikari.orm.models import emojis
-from hikari.orm.models import members
-from hikari.orm.models import permissions
-from hikari.orm.models import roles
-from hikari.orm.models import users
 from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import transformations
+from hikari.orm import fabric
+from hikari.orm.models import channels
+from hikari.orm.models import emojis
+from hikari.orm.models import interfaces
+from hikari.orm.models import members
+from hikari.orm.models import permissions
+from hikari.orm.models import roles
+from hikari.orm.models import users
 
 
-class Guild(interfaces.ISnowflake, interfaces.IStateful):
+class Guild(interfaces.ISnowflake, interfaces.FabricatedMixin):
     """
     Implementation of a Guild.
     """
@@ -54,7 +54,7 @@ class Guild(interfaces.ISnowflake, interfaces.IStateful):
     #    widget_channel_id
 
     __slots__ = (
-        "_state",
+        "_fabric",
         "id",
         "afk_channel_id",
         "owner_id",
@@ -91,10 +91,24 @@ class Guild(interfaces.ISnowflake, interfaces.IStateful):
 
     __copy_by_ref__ = ("roles", "emojis", "members", "channels")
 
-    _state: state_registry.IStateRegistry
+    #: The AFK channel ID.
+    #:
+    #: :type: :class:`int`
     afk_channel_id: typing.Optional[int]
+
+    #: The owner's ID.
+    #:
+    #: :type: :class:`int`
     owner_id: int
+
+    #: The system channel ID.
+    #:
+    #: :type: :class:`int`
     system_channel_id: typing.Optional[int]
+
+    #: The voice region.
+    #:
+    #: :type: :class:`str`
     voice_region: typing.Optional[str]
 
     #: The guild ID.
@@ -241,12 +255,12 @@ class Guild(interfaces.ISnowflake, interfaces.IStateful):
 
     __repr__ = auto_repr.repr_of("id", "name", "unavailable", "large", "member_count")
 
-    def __init__(self, global_state, payload):
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+        self._fabric = fabric_obj
         self.id = transformations.nullable_cast(payload.get("id"), int)
-        self._state = global_state
         self.update_state(payload)
 
-    def update_state(self, payload):
+    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         self.afk_channel_id = transformations.nullable_cast(payload.get("afk_channel_id"), int)
         self.owner_id = transformations.nullable_cast(payload.get("owner_id"), int)
         self.voice_region = payload.get("region")
@@ -265,10 +279,12 @@ class Guild(interfaces.ISnowflake, interfaces.IStateful):
             payload.get("explicit_content_filter"), ExplicitContentFilterLevel
         )
         self.roles = transformations.id_map(
-            self._state.parse_role(r, self.id) for r in payload.get("roles", data_structures.EMPTY_SEQUENCE)
+            self._fabric.state_registry.parse_role(r, self)
+            for r in payload.get("roles", data_structures.EMPTY_SEQUENCE)
         )
         self.emojis = transformations.id_map(
-            self._state.parse_emoji(e, self.id) for e in payload.get("emojis", data_structures.EMPTY_SEQUENCE)
+            self._fabric.state_registry.parse_emoji(e, self)
+            for e in payload.get("emojis", data_structures.EMPTY_SEQUENCE)
         )
         self.features = {
             transformations.try_cast(f, Feature.from_discord_name)
@@ -281,10 +297,12 @@ class Guild(interfaces.ISnowflake, interfaces.IStateful):
         self.large = payload.get("large", False)
         self.unavailable = payload.get("unavailable", False)
         self.members = transformations.id_map(
-            self._state.parse_member(m, self.id) for m in payload.get("members", data_structures.EMPTY_SEQUENCE)
+            self._fabric.state_registry.parse_member(m, self)
+            for m in payload.get("members", data_structures.EMPTY_SEQUENCE)
         )
         self.channels = transformations.id_map(
-            self._state.parse_channel(c, self.id) for c in payload.get("channels", data_structures.EMPTY_SEQUENCE)
+            self._fabric.state_registry.parse_channel(c, self)
+            for c in payload.get("channels", data_structures.EMPTY_SEQUENCE)
         )
         self.max_members = payload.get("max_members", 0)
         self.vanity_url_code = payload.get("vanity_url_code")
@@ -395,7 +413,7 @@ class PremiumTier(enum.IntEnum):
     TIER_3 = 3
 
 
-class Ban:
+class Ban(interfaces.IModel):
     """
     A user that was banned, along with the reason for the ban.
     """
@@ -414,9 +432,9 @@ class Ban:
 
     __repr__ = auto_repr.repr_of("user", "reason")
 
-    def __init__(self, global_state: state_registry.IStateRegistry, payload: dict):
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         self.reason = payload.get("reason")
-        self.user = global_state.parse_user(payload.get("user"))
+        self.user = fabric_obj.state_registry.parse_user(payload.get("user"))
 
 
 __all__ = [

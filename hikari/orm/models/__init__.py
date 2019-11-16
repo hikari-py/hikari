@@ -19,7 +19,6 @@
 """
 All models used in Hikari's public API.
 """
-from . import interfaces
 from . import channels
 from . import colors
 from . import colours
@@ -27,6 +26,7 @@ from . import embeds
 from . import emojis
 from . import guilds
 from . import integrations
+from . import interfaces
 from . import invites
 from . import media
 from . import members

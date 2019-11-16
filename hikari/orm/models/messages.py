@@ -25,20 +25,20 @@ import datetime
 import enum
 import typing
 
-from hikari.orm import state_registry
-from hikari.orm.models import interfaces
+from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import transformations
+from hikari.orm import fabric
 from hikari.orm.models import channels
 from hikari.orm.models import embeds
 from hikari.orm.models import guilds
+from hikari.orm.models import interfaces
 from hikari.orm.models import media
 from hikari.orm.models import members
 from hikari.orm.models import reactions
 from hikari.orm.models import users
 from hikari.orm.models import webhooks
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import date_helpers
-from hikari.internal_utilities import transformations
 
 
 class MessageType(enum.IntEnum):
@@ -110,13 +110,13 @@ class MessageFlag(enum.IntFlag):
 # information is not documented. Timestamp is pointless as it is able to be found from the ID anyway.
 
 
-class Message(interfaces.ISnowflake, interfaces.IStateful):
+class Message(interfaces.ISnowflake, interfaces.FabricatedMixin):
     """
     A message that was sent on Discord.
     """
 
     __slots__ = (
-        "_state",
+        "_fabric",
         "channel_id",
         "guild_id",
         "author",
@@ -137,8 +137,6 @@ class Message(interfaces.ISnowflake, interfaces.IStateful):
     )
 
     __copy_by_ref__ = ("author",)
-
-    _state: state_registry.IStateRegistry
 
     #: The channel ID of the channel the message was sent in.
     channel_id: int
@@ -181,8 +179,8 @@ class Message(interfaces.ISnowflake, interfaces.IStateful):
 
     #: List of embeds on this message, if any.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.embeds.Embed`
-    embeds: typing.Sequence[embeds.Embed]
+    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.embeds.ReceivedEmbed`
+    embeds: typing.Sequence[embeds.ReceivedEmbed]
 
     #: Whether this message is pinned or not.
     #:
@@ -221,17 +219,12 @@ class Message(interfaces.ISnowflake, interfaces.IStateful):
 
     __repr__ = auto_repr.repr_of("id", "author", "type", "tts", "created_at", "edited_at")
 
-    def __init__(self, global_state: state_registry.IStateRegistry, payload):
-        self._state = global_state
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+        self._fabric = fabric_obj
         self.id = int(payload["id"])
 
         self.channel_id = int(payload["channel_id"])
         self.guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
-
-        if "webhook_id" in payload:
-            self.author = global_state.parse_webhook(payload["author"])
-        else:
-            self.author = global_state.parse_user(payload["author"])
 
         self.tts = payload["tts"]
         self.crosspost_of = MessageCrosspost(payload["message_reference"]) if "message_reference" in payload else None
@@ -258,7 +251,11 @@ class Message(interfaces.ISnowflake, interfaces.IStateful):
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         if "member" in payload:
-            self.author = self._state.parse_member(payload["member"], self.guild_id)
+            self.author = self._fabric.state_registry.parse_member(payload["member"], self.guild)
+        elif "webhook_id" in payload:
+            self.author = self._fabric.state_registry.parse_webhook(payload["author"])
+        elif "author" in payload:
+            self.author = self._fabric.state_registry.parse_user(payload["author"])
 
         if "edited_timestamp" in payload:
             self.edited_at = transformations.nullable_cast(
@@ -272,7 +269,7 @@ class Message(interfaces.ISnowflake, interfaces.IStateful):
             self.attachments = [media.Attachment(a) for a in payload["attachments"]]
 
         if "embeds" in payload:
-            self.embeds = [embeds.Embed.from_dict(e) for e in payload["embeds"]]
+            self.embeds = [embeds.ReceivedEmbed.from_dict(e) for e in payload["embeds"]]
 
         if "pinned" in payload:
             self.pinned = payload["pinned"]
@@ -289,11 +286,11 @@ class Message(interfaces.ISnowflake, interfaces.IStateful):
         if "reactions" in payload:
             self.reactions = []
             for reaction_payload in payload.get("reactions"):
-                self._state.parse_reaction(reaction_payload)
+                self._fabric.state_registry.parse_reaction(reaction_payload)
 
     @property
     def guild(self) -> typing.Optional[guilds.Guild]:
-        return self._state.get_guild_by_id(self.guild_id) if self.guild_id else None
+        return self._fabric.state_registry.get_guild_by_id(self.guild_id) if self.guild_id else None
 
     @property
     def channel(
@@ -308,7 +305,7 @@ class Message(interfaces.ISnowflake, interfaces.IStateful):
         # We may as well just use this to get it. It is pretty much as fast, but it reduces the amount of testing
         # needed for code that is essentially the same.
         # noinspection PyTypeChecker
-        return self._state.get_channel_by_id(self.channel_id)
+        return self._fabric.state_registry.get_channel_by_id(self.channel_id)
 
 
 class MessageActivity:
@@ -330,7 +327,7 @@ class MessageActivity:
 
     __repr__ = auto_repr.repr_of("type", "party_id")
 
-    def __init__(self, payload):
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.type = transformations.try_cast(payload.get("type"), MessageActivityType)
         self.party_id = transformations.nullable_cast(payload.get("party_id"), int)
 
@@ -369,7 +366,7 @@ class MessageApplication(interfaces.ISnowflake):
 
     __repr__ = auto_repr.repr_of("id", "name")
 
-    def __init__(self, payload):
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.cover_image_id = transformations.nullable_cast(payload.get("cover_image"), int)
         self.description = payload["description"]

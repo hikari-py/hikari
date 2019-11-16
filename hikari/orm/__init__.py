@@ -17,13 +17,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-A lightweight, flexible, customizable Discord API wrapper for Python.
+The Hikari Object Relational Model.
 
-This package contains the core components for this framework. This includes the basic network level, models, rate
-limiting, and basic client.
+This provides an object-oriented interface to the Discord API, and provides features
+such as the ability to cache certain objects and details that the API provides us, as
+well as providing an expandable and extendable interface to wrap them together in.
 """
-from . import event_adapter
-from . import event_adapter_impl
+from . import dispatching_event_adapter_impl
 from . import models
 from . import state_registry
 from . import state_registry_impl

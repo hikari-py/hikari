@@ -19,10 +19,3 @@
 """
 Network components for the Hikari Discord API.
 """
-from . import extra_gateway_events
-from . import gateway
-from . import http_base
-from . import http_client
-from . import opcodes
-from . import rates
-from . import service_status

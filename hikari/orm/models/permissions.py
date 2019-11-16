@@ -166,9 +166,7 @@ class Permission(enum.IntFlag):
 for name, value in Permission.__members__.items():
     globals()[name] = value
 
-
 #: All valid permissions set.
 all_permissions = Permission.all()
-
 
 __all__ = ["Permission", *Permission.__members__.keys(), "all_permissions"]

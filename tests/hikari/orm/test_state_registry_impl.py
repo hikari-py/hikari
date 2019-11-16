@@ -65,8 +65,8 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         message_obj = _helpers.mock_model(messages.Message)
-        emoji_obj = _helpers.mock_model(emojis.Emoji)
-        other_emoji_obj = _helpers.mock_model(emojis.Emoji)
+        emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
+        other_emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
         reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
         other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
         message_obj.reactions = [other_reaction_obj, reaction_obj]
@@ -79,8 +79,8 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         message_obj = _helpers.mock_model(messages.Message)
-        emoji_obj = _helpers.mock_model(emojis.Emoji)
-        other_emoji_obj = _helpers.mock_model(emojis.Emoji)
+        emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
+        other_emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
         reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
         other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
         message_obj.reactions = [other_reaction_obj, reaction_obj]
@@ -91,7 +91,7 @@ class TestStateRegistryImpl:
 
     def test_increment_reaction_count_for_new_reaction(self, registry: state_registry_impl.StateRegistryImpl):
         message_obj = _helpers.mock_model(messages.Message)
-        emoji_obj = _helpers.mock_model(emojis.Emoji)
+        emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
         message_obj.reactions = []
 
         new_reaction_obj = registry.increment_reaction_count(message_obj, emoji_obj)
@@ -103,8 +103,8 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         message_obj = _helpers.mock_model(messages.Message)
-        emoji_obj = _helpers.mock_model(emojis.Emoji)
-        other_emoji_obj = _helpers.mock_model(emojis.Emoji)
+        emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
+        other_emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
         reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
         other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
         message_obj.reactions = [other_reaction_obj, reaction_obj]
@@ -117,8 +117,8 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         message_obj = _helpers.mock_model(messages.Message)
-        emoji_obj = _helpers.mock_model(emojis.Emoji)
-        other_emoji_obj = _helpers.mock_model(emojis.Emoji)
+        emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
+        other_emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
         reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
         other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
         message_obj.reactions = [other_reaction_obj, reaction_obj]
@@ -131,8 +131,8 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         message_obj = _helpers.mock_model(messages.Message)
-        emoji_obj = _helpers.mock_model(emojis.Emoji)
-        other_emoji_obj = _helpers.mock_model(emojis.Emoji)
+        emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
+        other_emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
         reaction_obj = reactions.Reaction(1, emoji_obj, message_obj)
         other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
         message_obj.reactions = [other_reaction_obj, reaction_obj]
@@ -146,8 +146,8 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         message_obj = _helpers.mock_model(messages.Message)
-        emoji_obj = _helpers.mock_model(emojis.Emoji)
-        other_emoji_obj = _helpers.mock_model(emojis.Emoji)
+        emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
+        other_emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
         reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
         other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
         message_obj.reactions = [other_reaction_obj, reaction_obj]
@@ -160,7 +160,7 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         message_obj = _helpers.mock_model(messages.Message)
-        emoji_obj = _helpers.mock_model(emojis.Emoji)
+        emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
         message_obj.reactions = []
 
         new_reaction_obj = registry.decrement_reaction_count(message_obj, emoji_obj)
@@ -171,8 +171,8 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         message_obj = _helpers.mock_model(messages.Message)
-        emoji_obj = _helpers.mock_model(emojis.Emoji)
-        other_emoji_obj = _helpers.mock_model(emojis.Emoji)
+        emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
+        other_emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
         reaction_obj = reactions.Reaction(5, emoji_obj, message_obj)
         other_reaction_obj = reactions.Reaction(17, other_emoji_obj, message_obj)
         message_obj.reactions = [other_reaction_obj, reaction_obj]
@@ -292,8 +292,8 @@ class TestStateRegistryImpl:
         assert True, "this should exit silently"
 
     def test_delete_reaction_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        emoji_obj_to_remove = _helpers.mock_model(emojis.Emoji)
-        emoji_obj_to_keep = _helpers.mock_model(emojis.Emoji)
+        emoji_obj_to_remove = _helpers.mock_model(emojis.UnicodeEmoji)
+        emoji_obj_to_keep = _helpers.mock_model(emojis.UnicodeEmoji)
         user_obj = _helpers.mock_model(users.User, id=6789)
         message_obj = _helpers.mock_model(messages.Message, id=1234)
         message_obj.reactions = [
@@ -306,8 +306,8 @@ class TestStateRegistryImpl:
         assert len(message_obj.reactions) == 1
 
     def test_delete_reaction_cached_sets_reaction_count_to_0(self, registry: state_registry_impl.StateRegistryImpl):
-        emoji_obj_to_remove = _helpers.mock_model(emojis.Emoji)
-        emoji_obj_to_keep = _helpers.mock_model(emojis.Emoji)
+        emoji_obj_to_remove = _helpers.mock_model(emojis.UnicodeEmoji)
+        emoji_obj_to_keep = _helpers.mock_model(emojis.UnicodeEmoji)
         user_obj = _helpers.mock_model(users.User, id=6789)
         message_obj = _helpers.mock_model(messages.Message, id=1234)
         reaction_obj_to_delete = reactions.Reaction(5, emoji_obj_to_remove, message_obj)
@@ -320,7 +320,7 @@ class TestStateRegistryImpl:
         assert reaction_obj_to_keep.count == 7
 
     def test_delete_reaction_uncached(self, registry: state_registry_impl.StateRegistryImpl):
-        emoji_obj = _helpers.mock_model(emojis.Emoji)
+        emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
         user_obj = _helpers.mock_model(users.User, id=6789)
         message_obj = _helpers.mock_model(messages.Message, id=1234)
 

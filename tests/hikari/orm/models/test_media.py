@@ -19,8 +19,8 @@
 import asynctest
 import pytest
 
-from hikari.orm.models import media
 from hikari.internal_utilities import io_helpers
+from hikari.orm.models import media
 from tests.hikari import _helpers
 from tests.hikari.orm.testdata import *
 

@@ -26,6 +26,9 @@ import datetime
 import typing
 import weakref
 
+from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import logging_helpers
+from hikari.internal_utilities import transformations
 from hikari.orm import state_registry
 from hikari.orm.models import channels
 from hikari.orm.models import emojis
@@ -37,9 +40,6 @@ from hikari.orm.models import reactions
 from hikari.orm.models import roles
 from hikari.orm.models import users
 from hikari.orm.models import webhooks
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import logging_helpers
-from hikari.internal_utilities import transformations
 
 
 class StateRegistryImpl(state_registry.IStateRegistry):

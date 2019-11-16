@@ -20,10 +20,10 @@
 import asynctest
 import pytest
 
-from hikari.orm import event_adapter
+from hikari.orm import dispatching_event_adapter
 
 
-class Impl(event_adapter.DispatchingEventAdapter):
+class Impl(dispatching_event_adapter.DispatchingEventAdapter):
     # noinspection PyMissingConstructor
     def __init__(self):
         pass

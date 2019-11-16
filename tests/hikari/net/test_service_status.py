@@ -21,8 +21,8 @@ import dataclasses
 
 import pytest
 
-from hikari.orm.models import service_status as status_model
 from hikari.net import service_status
+from hikari.orm.models import service_status as status_model
 from tests.hikari import _helpers
 from tests.hikari.orm.testdata import *
 

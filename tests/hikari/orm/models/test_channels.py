@@ -20,6 +20,7 @@ from unittest import mock
 
 import pytest
 
+from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
@@ -29,12 +30,13 @@ from tests.hikari import _helpers
 @pytest.mark.model
 def test_GuildChannel_permission_overwrites_aggregation():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
+    f = fabric.Fabric(None, s)
     g = mock.MagicMock(spec_set=guilds.Guild)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     g.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
 
     c = channels.GuildTextChannel(
-        s,
+        f,
         {
             "type": 0,
             "id": "1234567",
@@ -56,12 +58,13 @@ def test_GuildChannel_permission_overwrites_aggregation():
 @pytest.mark.model
 def test_GuildChannel_parent_when_specified():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
+    f = fabric.Fabric(None, s)
     g = mock.MagicMock(spec_set=guilds.Guild)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     g.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
 
     c = channels.GuildTextChannel(
-        s,
+        f,
         {
             "type": 0,
             "id": "1234567",
@@ -82,12 +85,13 @@ def test_GuildChannel_parent_when_specified():
 @pytest.mark.model
 def test_GuildChannel_parent_when_unspecified():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
+    f = fabric.Fabric(None, s)
     g = mock.MagicMock(spec_set=guilds.Guild)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     g.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
 
     c = channels.GuildTextChannel(
-        s,
+        f,
         {
             "type": 0,
             "id": "1234567",
@@ -329,7 +333,10 @@ def test_channel_failure_case():
 )
 def test_channel_guild(impl):
     cache = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    obj = impl(cache, {"id": "1", "position": 2, "permission_overwrites": [], "name": "milfchnl", "guild_id": "91827"})
+    fabric_obj = fabric.Fabric(None, cache)
+    obj = impl(
+        fabric_obj, {"id": "1", "position": 2, "permission_overwrites": [], "name": "milfchnl", "guild_id": "91827"}
+    )
     guild = mock.MagicMock()
     cache.get_guild_by_id = mock.MagicMock(return_value=guild)
 

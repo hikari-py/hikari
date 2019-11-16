@@ -27,7 +27,7 @@ from tests.hikari import _helpers
 @pytest.mark.model
 def test_parse_Reaction():
     m = _helpers.mock_model(messages.Message)
-    e = _helpers.mock_model(emojis.Emoji)
+    e = _helpers.mock_model(emojis.UnicodeEmoji)
     r = reactions.Reaction(9, e, m)
     assert r.message is m
     assert r.emoji is e

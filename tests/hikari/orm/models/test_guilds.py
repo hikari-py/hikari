@@ -20,6 +20,7 @@ from unittest import mock
 
 import pytest
 
+from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import guilds
 from hikari.orm.models import permissions
@@ -168,36 +169,39 @@ def test_guild_payload(test_emoji_payload, test_roles_payloads, test_channel_pay
     }
 
 
+@pytest.fixture()
+def mock_state_registry():
+    return mock.MagicMock(spec_set=state_registry.IStateRegistry)
+
+
+@pytest.fixture()
+def fabric_obj(mock_state_registry):
+    return fabric.Fabric(state_registry=mock_state_registry)
+
+
 @pytest.mark.model
 class TestGuild:
-    def test_available_Guild(self, test_guild_payload, test_emoji_payload, test_member_payload):
-        s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-        g = guilds.Guild(s, test_guild_payload)
+    def test_available_Guild(self, test_guild_payload, test_emoji_payload, test_member_payload, fabric_obj):
+        guild_obj = guilds.Guild(fabric_obj, test_guild_payload)
 
-        assert g.id == 123_456
-        assert g._afk_channel_id == 99_998_888_777_766
-        assert g._owner_id == 6_969_696
-        assert g._voice_region == "eu-central"
-        assert g._system_channel_id == 19_216_801
-        assert g.creator_application_id == 10_987_654_321
-        assert g.id == 123456
-        assert g.afk_channel_id == 99998888777766
-        assert g.owner_id == 6969696
-        assert g.voice_region == "eu-central"
-        assert g.system_channel_id == 19216801
-        assert g.creator_application_id == 10987654321
-        assert g.name == "L33t guild"
-        assert g.icon_hash == "1a2b3c4d"
-        assert g.splash_hash == "0ff0ff0ff"
-        assert g.afk_timeout == 1200
-        assert g.verification_level == guilds.VerificationLevel.VERY_HIGH
-        assert g.message_notification_level == guilds.NotificationLevel.ONLY_MENTIONS
-        assert g.explicit_content_filter_level == guilds.ExplicitContentFilterLevel.ALL_MEMBERS
-        assert len(g.features) == 4
-        assert guilds.Feature.ANIMATED_ICON in g.features
-        assert g.member_count == 14
-        assert g.mfa_level == guilds.MFALevel.ELEVATED
-        assert g.my_permissions == (
+        assert guild_obj.id == 123456
+        assert guild_obj.afk_channel_id == 99998888777766
+        assert guild_obj.owner_id == 6969696
+        assert guild_obj.voice_region == "eu-central"
+        assert guild_obj.system_channel_id == 19216801
+        assert guild_obj.creator_application_id == 10987654321
+        assert guild_obj.name == "L33t guild"
+        assert guild_obj.icon_hash == "1a2b3c4d"
+        assert guild_obj.splash_hash == "0ff0ff0ff"
+        assert guild_obj.afk_timeout == 1200
+        assert guild_obj.verification_level == guilds.VerificationLevel.VERY_HIGH
+        assert guild_obj.message_notification_level == guilds.NotificationLevel.ONLY_MENTIONS
+        assert guild_obj.explicit_content_filter_level == guilds.ExplicitContentFilterLevel.ALL_MEMBERS
+        assert len(guild_obj.features) == 4
+        assert guilds.Feature.ANIMATED_ICON in guild_obj.features
+        assert guild_obj.member_count == 14
+        assert guild_obj.mfa_level == guilds.MFALevel.ELEVATED
+        assert guild_obj.my_permissions == (
             permissions.Permission.USE_VAD
             | permissions.Permission.MOVE_MEMBERS
             | permissions.Permission.DEAFEN_MEMBERS
@@ -219,31 +223,29 @@ class TestGuild:
             | permissions.Permission.KICK_MEMBERS
             | permissions.Permission.CREATE_INSTANT_INVITE
         )
-        assert g.max_members == 25000
-        assert g.vanity_url_code == "loool"
-        assert g.description == "This is a server I guess, its a bit crap though"
-        assert g.banner_hash == "1a2b3c"
-        assert g.premium_tier == guilds.PremiumTier.TIER_2
-        assert g.premium_subscription_count == 1
-        assert g.system_channel_flags & guilds.SystemChannelFlag.PREMIUM_SUBSCRIPTION
-        assert g.system_channel_flags & guilds.SystemChannelFlag.USER_JOIN
-        assert g.preferred_locale == "en-GB"
+        assert guild_obj.max_members == 25_000
+        assert guild_obj.vanity_url_code == "loool"
+        assert guild_obj.description == "This is a server I guess, its a bit crap though"
+        assert guild_obj.banner_hash == "1a2b3c"
+        assert guild_obj.premium_tier == guilds.PremiumTier.TIER_2
+        assert guild_obj.premium_subscription_count == 1
+        assert guild_obj.system_channel_flags & guilds.SystemChannelFlag.PREMIUM_SUBSCRIPTION
+        assert guild_obj.system_channel_flags & guilds.SystemChannelFlag.USER_JOIN
+        assert guild_obj.preferred_locale == "en-GB"
 
-        assert s.parse_role.call_count == 2
-        s.parse_emoji.assert_called_once_with(test_emoji_payload, g.id)
-        s.parse_member.assert_called_once_with(test_member_payload, g.id)
-        assert s.parse_channel.call_count == 3
+        assert fabric_obj.state_registry.parse_role.call_count == 2
+        fabric_obj.state_registry.parse_emoji.assert_called_once_with(test_emoji_payload, guild_obj)
+        fabric_obj.state_registry.parse_member.assert_called_once_with(test_member_payload, guild_obj)
+        assert fabric_obj.state_registry.parse_channel.call_count == 3
 
-    def test_unavailable_Guild(self):
-        s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-        g = guilds.Guild(s, {"id": "12345678910", "unavailable": True})
+    def test_unavailable_Guild(self, fabric_obj):
+        guild_obj = guilds.Guild(fabric_obj, {"id": "12345678910", "unavailable": True})
 
-        assert g.id == 12_345_678_910
-        assert g.unavailable
+        assert guild_obj.id == 12345678910
+        assert guild_obj.unavailable
 
-    def test_Ban(self):
-        s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
+    def test_Ban(self, fabric_obj):
         user = object()
-        ban = guilds.Ban(s, {"user": user, "reason": "being bad"})
+        ban = guilds.Ban(fabric_obj, {"user": user, "reason": "being bad"})
         assert ban.reason == "being bad"
-        s.parse_user.assert_called_once_with(user)
+        fabric_obj.state_registry.parse_user.assert_called_once_with(user)

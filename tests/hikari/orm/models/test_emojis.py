@@ -20,6 +20,7 @@ from unittest import mock
 
 import pytest
 
+from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import emojis
 from hikari.orm.models import guilds
@@ -28,6 +29,11 @@ from hikari.orm.models import guilds
 @pytest.fixture
 def mock_state():
     return mock.MagicMock(spec_set=state_registry.IStateRegistry)
+
+
+@pytest.fixture
+def fabric_obj(mock_state):
+    return fabric.Fabric(None, mock_state)
 
 
 @pytest.fixture
@@ -97,10 +103,10 @@ def test_UnknownEmoji___init__(unknown_emoji_payload):
 
 
 @pytest.mark.model
-def test_GuildEmoji___init__(mock_state, guild_emoji_payload, user_payload):
+def test_GuildEmoji___init__(mock_state, fabric_obj, guild_emoji_payload, user_payload):
     user = mock.MagicMock()
     mock_state.parse_user = mock.MagicMock(return_value=user)
-    e = emojis.GuildEmoji(mock_state, guild_emoji_payload, 98765)
+    e = emojis.GuildEmoji(fabric_obj, guild_emoji_payload, 98765)
 
     assert e.id == 41771983429993937
     assert e.name == "LUL"
@@ -114,27 +120,27 @@ def test_GuildEmoji___init__(mock_state, guild_emoji_payload, user_payload):
 
 
 @pytest.mark.model
-def test_emoji_from_dict_with_unicode_emoji(mock_state, unicode_emoji_payload):
-    assert isinstance(emojis.parse_emoji(mock_state, unicode_emoji_payload), emojis.UnicodeEmoji)
+def test_emoji_from_dict_with_unicode_emoji(fabric_obj, unicode_emoji_payload):
+    assert isinstance(emojis.parse_emoji(fabric_obj, unicode_emoji_payload), emojis.UnicodeEmoji)
 
 
 @pytest.mark.model
-def test_emoji_from_dict_with_unknown_emoji(mock_state, unknown_emoji_payload):
-    e = emojis.parse_emoji(mock_state, unknown_emoji_payload)
+def test_emoji_from_dict_with_unknown_emoji(fabric_obj, unknown_emoji_payload):
+    e = emojis.parse_emoji(fabric_obj, unknown_emoji_payload)
     assert isinstance(e, emojis.UnknownEmoji)
     assert not isinstance(e, emojis.GuildEmoji)
 
 
 @pytest.mark.model
-def test_emoji_from_dict_with_guild_emoji_but_no_guild(mock_state, guild_emoji_payload):
-    e = emojis.parse_emoji(mock_state, guild_emoji_payload, None)
+def test_emoji_from_dict_with_guild_emoji_but_no_guild(fabric_obj, guild_emoji_payload):
+    e = emojis.parse_emoji(fabric_obj, guild_emoji_payload, None)
     assert isinstance(e, emojis.UnknownEmoji)
     assert not isinstance(e, emojis.GuildEmoji)
 
 
 @pytest.mark.model
-def test_emoji_from_dict_with_guild_emoji_and_passed_guild_id(mock_state, guild_emoji_payload):
-    e = emojis.parse_emoji(mock_state, guild_emoji_payload, 1234)
+def test_emoji_from_dict_with_guild_emoji_and_passed_guild_id(fabric_obj, guild_emoji_payload):
+    e = emojis.parse_emoji(fabric_obj, guild_emoji_payload, 1234)
     assert isinstance(e, emojis.GuildEmoji)
 
 
@@ -149,15 +155,15 @@ def test_UnknownEmoji_is_unicode(unknown_emoji_payload):
 
 
 @pytest.mark.model
-def test_GuildEmoji_is_unicode(mock_state, guild_emoji_payload):
-    assert not emojis.GuildEmoji(mock_state, guild_emoji_payload, 98765).is_unicode
+def test_GuildEmoji_is_unicode(fabric_obj, guild_emoji_payload):
+    assert not emojis.GuildEmoji(fabric_obj, guild_emoji_payload, 98765).is_unicode
 
 
 @pytest.mark.model
-def test_GuildEmoji_guild_property(mock_state, guild_emoji_payload):
+def test_GuildEmoji_guild_property(fabric_obj, mock_state, guild_emoji_payload):
     guild = mock.MagicMock(spec_state=guilds.Guild)
     guild.id = 1234
-    emoji = emojis.GuildEmoji(mock_state, guild_emoji_payload, guild.id)
+    emoji = emojis.GuildEmoji(fabric_obj, guild_emoji_payload, guild.id)
     mock_state.get_guild_by_id = mock.MagicMock(return_value=guild)
     assert emoji.guild is guild
     mock_state.get_guild_by_id.assert_called_once_with(1234)
@@ -170,6 +176,6 @@ def test_UnknownEmoji___hash__(unknown_emoji_payload):
 
 
 @pytest.mark.model
-def test_GuildEmoji___hash__(mock_state, guild_emoji_payload):
-    e = emojis.GuildEmoji(mock_state, guild_emoji_payload, 1234)
+def test_GuildEmoji___hash__(fabric_obj, guild_emoji_payload):
+    e = emojis.GuildEmoji(fabric_obj, guild_emoji_payload, 1234)
     assert hash(e) == hash(e.id)

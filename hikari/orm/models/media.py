@@ -29,20 +29,22 @@ import io
 import mimetypes
 import re
 import typing
+
 from concurrent import futures
 
 import aiofiles
 import aiohttp
 
-from hikari.orm.models import interfaces
 from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import io_helpers
 from hikari.internal_utilities import transformations
+from hikari.orm.models import interfaces
 
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
 
-class Avatar(interfaces.IStateful):
+class Avatar(interfaces.IModel):
     """
     Represents an Avatar. This contains compressed raw byte data of the given image.
 
@@ -120,7 +122,7 @@ class Avatar(interfaces.IStateful):
         return len(self.data)
 
 
-class Attachment(interfaces.IStateful, interfaces.ISnowflake):
+class Attachment(interfaces.IModel, interfaces.ISnowflake):
     """
     An attachment that is received from Discord in a message.
     """
@@ -164,7 +166,7 @@ class Attachment(interfaces.IStateful, interfaces.ISnowflake):
 
     __repr__ = auto_repr.repr_of("id", "filename", "size")
 
-    def __init__(self, payload):
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.filename = payload["filename"]
         self.size = int(payload["size"])
@@ -202,7 +204,7 @@ class Attachment(interfaces.IStateful, interfaces.ISnowflake):
 
 
 @dataclasses.dataclass()
-class AbstractFile(interfaces.IStateful, abc.ABC):
+class AbstractFile(interfaces.IModel, abc.ABC):
     """
     Provides base functionality for a file-like object of some sort to enable reading it
     efficiently with :mod:`asyncio`.
@@ -227,7 +229,7 @@ class AbstractFile(interfaces.IStateful, abc.ABC):
         *,
         loop: typing.Optional[asyncio.AbstractEventLoop] = None,
         executor: typing.Optional[futures.Executor] = None,
-    ) -> aiofiles.threadpool.AsyncFileIO:
+    ) -> io.IOBase:
         """
         Reads the contents of the file safely.
 
@@ -249,6 +251,7 @@ class AbstractFile(interfaces.IStateful, abc.ABC):
 
             >>> # Reading a file in text mode, one line at a time.
             >>> file = File("banner.txt")
+            >>>
             >>> async with file.open() as afp:
             ...     async for line in afp:
             ...         # Technically this can block too, but just ignore that for the sake of this example.
@@ -256,22 +259,27 @@ class AbstractFile(interfaces.IStateful, abc.ABC):
 
             >>> # Reading an entire file at once, reading it in binary mode.
             >>> file = File("cat.png")
+            >>>
             >>> async with file.open("b") as afp:
             ...     data = await afp.read()
 
             >>> # Taking an MD5 hash of the PC's hostname
             >>> # and then using a custom thread pool to write it to a file.
+            >>> import platform, concurrent.futures, hashlib
+            >>>
             >>> hostname = platform.uname()[1]
             >>> md5_hash = hashlib.md5().digest()
             >>> tpe = concurrent.futures.ThreadPoolExecutor()
+            >>>
             >>> file = File("important-stuff.sh")
+            >>>
             >>> async with file.open("wb", executor=tpe, loop=loop) as afp:
             ...     await afp.write(md5_hash)
 
         """
 
     @abc.abstractmethod
-    def __hash__(self):
+    def __hash__(self) -> int:
         """
         Our name makes us unique.
 
@@ -297,7 +305,7 @@ class InMemoryFile(AbstractFile):
     #: :type: :class:`hikari.internal_utilities.io_helpers.BytesLikeT`
     data: io_helpers.BytesLikeT
 
-    def open(self, *args, **kwargs):
+    def open(self, *args, **kwargs) -> io.IOBase:
         """
         Returns a seekable object across the contents of the file. This will either
         be a :class:`io.StringIO` if a string-like object, or otherwise a :class:`io.BytesIO`.
@@ -310,7 +318,7 @@ class InMemoryFile(AbstractFile):
         """
         return io_helpers.make_resource_seekable(self.data)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.name)
 
 
@@ -325,10 +333,10 @@ class File(AbstractFile):
 
     __slots__ = ()
 
-    def open(self, *args, **kwargs):
+    def open(self, *args, **kwargs) -> aiofiles.threadpool.AsyncFileIO:
         return aiofiles.open(self.name, *args, **kwargs)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.name)
 
 

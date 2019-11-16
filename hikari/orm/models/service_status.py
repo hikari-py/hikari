@@ -28,10 +28,11 @@ import typing
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import transformations
+from hikari.orm.models import interfaces
 
 
 @dataclasses.dataclass()
-class Subscriber:
+class Subscriber(interfaces.IModel):
     """
     A subscription to an incident.
     """
@@ -77,7 +78,7 @@ class Subscriber:
     purge_at: typing.Optional[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(payload: data_structures.DiscordObjectT) -> Subscriber:
         return Subscriber(
             id=payload["id"],
             email=payload["email"],
@@ -92,7 +93,7 @@ class Subscriber:
 
 
 @dataclasses.dataclass()
-class Subscription:
+class Subscription(interfaces.IModel):
     """
     A subscription to an incident.
     """
@@ -105,12 +106,12 @@ class Subscription:
     subscriber: Subscriber
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(payload: data_structures.DiscordObjectT) -> Subscription:
         return Subscription(subscriber=Subscriber.from_dict(payload["subscriber"]))
 
 
 @dataclasses.dataclass()
-class Page:
+class Page(interfaces.IModel):
     """
     A page element.
     """
@@ -141,7 +142,7 @@ class Page:
     updated_at: datetime.datetime
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(payload: data_structures.DiscordObjectT) -> Page:
         return Page(
             id=payload["id"],
             name=payload["name"],
@@ -151,7 +152,7 @@ class Page:
 
 
 @dataclasses.dataclass()
-class Status:
+class Status(interfaces.IModel):
     """
     A status description.
     """
@@ -169,7 +170,7 @@ class Status:
     description: typing.Optional[str]
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(payload: data_structures.DiscordObjectT) -> Status:
         return Status(indicator=payload.get("indicator"), description=payload.get("description"))
 
 
@@ -223,7 +224,7 @@ class Component:
     description: typing.Optional[str]
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(payload: data_structures.DiscordObjectT) -> Component:
         return Component(
             id=payload["id"],
             name=payload["name"],
@@ -236,7 +237,7 @@ class Component:
 
 
 @dataclasses.dataclass()
-class Components:
+class Components(interfaces.IModel):
     """
     A collection of :class:`Component` objects.
     """
@@ -254,7 +255,7 @@ class Components:
     components: typing.Sequence[Component]
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(payload: data_structures.DiscordObjectT) -> Components:
         return Components(
             page=Page.from_dict(payload["page"]),
             components=[Component.from_dict(c) for c in payload.get("components", [])],
@@ -262,7 +263,7 @@ class Components:
 
 
 @dataclasses.dataclass()
-class IncidentUpdate:
+class IncidentUpdate(interfaces.IModel):
     """
     An informative status update for a specific incident.
     """
@@ -311,7 +312,7 @@ class IncidentUpdate:
     updated_at: typing.Optional[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(payload: data_structures.DiscordObjectT) -> IncidentUpdate:
         return IncidentUpdate(
             id=payload["id"],
             body=payload["body"],
@@ -324,7 +325,7 @@ class IncidentUpdate:
 
 
 @dataclasses.dataclass()
-class Incident:
+class Incident(interfaces.IModel):
     """
     An incident.
     """
@@ -399,7 +400,7 @@ class Incident:
     updated_at: datetime.datetime
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(payload: data_structures.DiscordObjectT) -> Incident:
         return Incident(
             id=payload["id"],
             name=payload["name"],
@@ -435,12 +436,12 @@ class Incidents:
     incidents: typing.Sequence[Incident]
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(payload: data_structures.DiscordObjectT) -> Incidents:
         return Incidents(Page.from_dict(payload["page"]), [Incident.from_dict(i) for i in payload["incidents"]])
 
 
 @dataclasses.dataclass()
-class ScheduledMaintenance:
+class ScheduledMaintenance(interfaces.IModel):
     """
     A description of a maintenance that is scheduled to be performed.
     """
@@ -521,7 +522,7 @@ class ScheduledMaintenance:
     updated_at: datetime.datetime
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(payload: data_structures.DiscordObjectT) -> ScheduledMaintenance:
         return ScheduledMaintenance(
             id=payload["id"],
             name=payload["name"],
@@ -540,7 +541,7 @@ class ScheduledMaintenance:
 
 
 @dataclasses.dataclass()
-class ScheduledMaintenances:
+class ScheduledMaintenances(interfaces.IModel):
     """
     A collection of maintenance events.
     """
@@ -558,7 +559,7 @@ class ScheduledMaintenances:
     scheduled_maintenances: typing.Sequence[ScheduledMaintenance]
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(payload: data_structures.DiscordObjectT) -> ScheduledMaintenances:
         return ScheduledMaintenances(
             page=Page.from_dict(payload["page"]),
             scheduled_maintenances=[ScheduledMaintenance.from_dict(sm) for sm in payload["scheduled_maintenances"]],
@@ -566,7 +567,7 @@ class ScheduledMaintenances:
 
 
 @dataclasses.dataclass()
-class Summary:
+class Summary(interfaces.IModel):
     """
     A description of the overall API status.
     """
@@ -599,7 +600,7 @@ class Summary:
     scheduled_maintenances: typing.Sequence[ScheduledMaintenance]
 
     @staticmethod
-    def from_dict(payload):
+    def from_dict(payload: data_structures.DiscordObjectT) -> Summary:
         return Summary(
             page=Page.from_dict(payload["page"]),
             scheduled_maintenances=[ScheduledMaintenance.from_dict(sm) for sm in payload["scheduled_maintenances"]],
