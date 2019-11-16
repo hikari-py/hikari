@@ -16,10 +16,19 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import pytest
+
+from hikari.orm.models import emojis
+from hikari.orm.models import messages
+from hikari.orm.models import reactions
+from tests.hikari import _helpers
 
 
-def test_events():
-    """Ensure we still get some coverage if we don't get to import this."""
-    from hikari.orm import events
-
-    assert events  # ¯\_(ツ)_/¯
+@pytest.mark.model
+def test_parse_Reaction():
+    m = _helpers.mock_model(messages.Message)
+    e = _helpers.mock_model(emojis.UnicodeEmoji)
+    r = reactions.Reaction(9, e, m)
+    assert r.message is m
+    assert r.emoji is e
+    assert r.count == 9
