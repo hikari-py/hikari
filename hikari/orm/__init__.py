@@ -16,14 +16,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import warnings
+"""
+The Hikari Object Relational Model.
 
-# Python 3.8 is much more vocal about deprecation warnings; it also deprecates @asyncio.coroutine
-# which a lot of stuff still relies on, so I get spammed with warnings that I have little
-# control over. This shuts some of those up.
-for old_module in [
-    "asynctest", "asynctest.mock", "aiofiles.base", "aiofiles.threadpool.utils", "aiohttp.helpers",
-    "aiofiles.threadpool"
-]:
-    print("Suppressing deprecation warnings in", old_module)
-    warnings.filterwarnings("ignore", category=DeprecationWarning, module=old_module)
+This provides an object-oriented interface to the Discord API, and provides features
+such as the ability to cache certain objects and details that the API provides us, as
+well as providing an expandable and extendable interface to wrap them together in.
+"""
+from . import dispatching_event_adapter_impl
+from . import models
+from . import state_registry_impl

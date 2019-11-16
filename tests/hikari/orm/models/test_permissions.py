@@ -16,14 +16,23 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import warnings
 
-# Python 3.8 is much more vocal about deprecation warnings; it also deprecates @asyncio.coroutine
-# which a lot of stuff still relies on, so I get spammed with warnings that I have little
-# control over. This shuts some of those up.
-for old_module in [
-    "asynctest", "asynctest.mock", "aiofiles.base", "aiofiles.threadpool.utils", "aiohttp.helpers",
-    "aiofiles.threadpool"
-]:
-    print("Suppressing deprecation warnings in", old_module)
-    warnings.filterwarnings("ignore", category=DeprecationWarning, module=old_module)
+import pytest
+
+from hikari.orm.models import permissions
+
+
+@pytest.mark.model
+def test_Permission_all():
+    all = permissions.Permission.all()
+
+    sum_permissions = 0
+    for pm in permissions.Permission.__members__.values():
+        sum_permissions |= pm
+
+    assert bin(sum_permissions) == bin(all)
+
+
+@pytest.mark.model
+def test_permission_module___getattr__():
+    assert permissions.MANAGE_MESSAGES == permissions.Permission.MANAGE_MESSAGES
