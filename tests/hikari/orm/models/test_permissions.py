@@ -17,16 +17,22 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-from . import commands
-from . import errors
-from . import events
-from . import net
-from . import orm
+import pytest
+
+from hikari.orm.models import permissions
 
 
-__author__ = "Nekokatt"
-__contributors__ = {"LunarCoffee", "raatty", "Tmpod", "Zach", "thomm.o", "rock500", "davfsa"}
-__copyright__ = f"© 2019 Nekokatt"
-__license__ = "LGPLv3"
-__version__ = "0.0.39"
-__url__ = "https://gitlab.com/nekokatt/hikari"
+@pytest.mark.model
+def test_Permission_all():
+    all = permissions.Permission.all()
+
+    sum_permissions = 0
+    for pm in permissions.Permission.__members__.values():
+        sum_permissions |= pm
+
+    assert bin(sum_permissions) == bin(all)
+
+
+@pytest.mark.model
+def test_permission_module___getattr__():
+    assert permissions.MANAGE_MESSAGES == permissions.Permission.MANAGE_MESSAGES
