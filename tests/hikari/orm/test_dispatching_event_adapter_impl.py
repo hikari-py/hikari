@@ -27,7 +27,10 @@ import pytest
 from hikari.net import gateway as _gateway
 from hikari.orm import dispatching_event_adapter_impl
 from hikari.orm import events
+from hikari.orm import fabric
 from hikari.orm import state_registry
+from hikari.orm.models import channels
+from hikari.orm.models import guilds
 from tests.hikari import _helpers
 
 
@@ -52,9 +55,14 @@ def gateway_impl():
 
 
 @pytest.fixture()
-def adapter_impl(state_registry_impl, dispatch_impl, logger_impl):
+def fabric_impl(state_registry_impl, gateway_impl):
+    return fabric.Fabric(state_registry=state_registry_impl, gateways={None: gateway_impl})
+
+
+@pytest.fixture()
+def adapter_impl(fabric_impl, dispatch_impl, logger_impl):
     instance = _helpers.unslot_class(dispatching_event_adapter_impl.DispatchingEventAdapterImpl)(
-        state_registry_impl, dispatch_impl
+        fabric_impl, dispatch_impl
     )
     instance.logger = logger_impl
     return instance
@@ -187,84 +195,94 @@ class TestStateRegistryImpl:
 
     @pytest.mark.asyncio
     async def test_handle_channel_create_for_valid_guild_channel_dispatches_GUILD_CHANNEL_CREATE(
-        self, adapter_impl, gateway_impl, dispatch_impl, state_registry_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         guild_obj = _helpers.mock_model(guilds.Guild, id=123)
         channel_obj = _helpers.mock_model(channels.GuildChannel, is_dm=False)
         payload = {"guild_id": guild_obj.id}
-        state_registry_impl.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
-        state_registry_impl.parse_channel = mock.MagicMock(return_value=channel_obj)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.parse_channel = mock.MagicMock(return_value=channel_obj)
         await adapter_impl.handle_channel_create(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with("guild_channel_create", channel_obj)
+        dispatch_impl.assert_called_with(events.GUILD_CHANNEL_CREATE, channel_obj)
 
     @pytest.mark.asyncio
     async def test_handle_channel_create_for_guild_channel_in_unknown_guild_does_not_dispatch(
-        self, adapter_impl, gateway_impl, dispatch_impl, state_registry_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         payload = {"guild_id": 123}
-        state_registry_impl.get_guild_by_id = mock.MagicMock(return_value=None)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
         await adapter_impl.handle_channel_create(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with("raw_channel_create", payload)
+        dispatch_impl.assert_called_with(events.RAW_CHANNEL_CREATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_channel_create_for_dm_channel_dispatches_DM_CHANNEL_CREATE(
-        self, adapter_impl, gateway_impl, dispatch_impl, state_registry_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         channel_obj = _helpers.mock_model(channels.DMChannel, is_dm=True)
         payload = {"guild_id": None}
-        state_registry_impl.get_guild_by_id = mock.MagicMock(return_value=None)
-        state_registry_impl.parse_channel = mock.MagicMock(return_value=channel_obj)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
+        fabric_impl.state_registry.parse_channel = mock.MagicMock(return_value=channel_obj)
         await adapter_impl.handle_channel_create(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with("dm_channel_create", channel_obj)
+        dispatch_impl.assert_called_with(events.DM_CHANNEL_CREATE, channel_obj)
 
     @pytest.mark.asyncio
-    async def test_handle_channel_create_parses_channel(self, adapter_impl, gateway_impl, dispatch_impl, state_registry_impl):
+    async def test_handle_channel_create_parses_channel(self, adapter_impl, gateway_impl, fabric_impl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=123)
         channel_obj = _helpers.mock_model(channels.GuildChannel, is_dm=False)
         payload = {"guild_id": guild_obj.id}
-        state_registry_impl.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
-        parse_channel = state_registry_impl.parse_channel
-        state_registry_impl.parse_channel = mock.MagicMock(return_value=parse_channel)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.parse_channel = mock.MagicMock(return_value=channel_obj)
         await adapter_impl.handle_channel_create(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with("dm_channel_create", parse_channel)
+        fabric_impl.state_registry.parse_channel.assert_called_with(payload, guild_obj)
 
     @pytest.mark.asyncio
     async def test_handle_channel_update_for_invalid_update_event_dispatches_nothing(
-        self, adapter_impl, gateway_impl, dispatch_impl, state_registry_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         payload = {"id": 123}
-        state_registry_impl.update_channel = mock.MagicMock(return_value=None)
+        fabric_impl.state_registry.update_channel = mock.MagicMock(return_value=None)
         await adapter_impl.handle_channel_update(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with("raw_channel_update", payload)
+        dispatch_impl.assert_called_with(events.RAW_CHANNEL_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_channel_update_for_valid_dm_channel_update_dispatches_DM_CHANNEL_UPDATE(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        channel_obj = _helpers.mock_model(channels.DMChannel, is_dm=True)
-        payload = {"id": channel_obj.id, "type": channel_obj.is_dm}
-        state_registry_impl.update_channel = mock.MagicMock(return_value=channel_obj)
+        channel_obj_before = _helpers.mock_model(channels.GroupDMChannel, is_dm=True, name="original")
+        channel_obj_after = _helpers.mock_model(channels.GroupDMChannel, is_dm=True, name="updated")
+        payload = {"id": channel_obj_after.id, "type": channel_obj_after.is_dm}
+        fabric_impl.state_registry.update_channel = mock.MagicMock(
+            return_value=(channel_obj_before, channel_obj_after)
+        )
         await adapter_impl.handle_channel_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with("dm_channel_update")
+        dispatch_impl.assert_called_with(events.DM_CHANNEL_UPDATE, channel_obj_before, channel_obj_after)
 
     @pytest.mark.asyncio
     async def test_handle_channel_update_for_valid_guild_channel_update_dispatches_GUILD_CHANNEL_UPDATE(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        channel_obj = _helpers.mock_model(channels.GuildChannel, is_dm=False)
-        payload = {"id": channel_obj.id, "type": channel_obj.is_dm}
-        state_registry_impl.update_channel = mock.MagicMock(return_value=channel_obj)
+        channel_obj_before = _helpers.mock_model(channels.GuildTextChannel, is_dm=False, name="original")
+        channel_obj_after = _helpers.mock_model(channels.GuildTextChannel, is_dm=False, name="updated")
+        payload = {"id": channel_obj_after.id, "type": channel_obj_after.is_dm}
+        fabric_impl.state_registry.update_channel = mock.MagicMock(
+            return_value=(channel_obj_before, channel_obj_after)
+        )
+        fabric_impl.state_registry.update_channel = mock.MagicMock(
+            return_value=(channel_obj_before, channel_obj_after)
+        )
         await adapter_impl.handle_channel_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with("guild_channel_update")
+        dispatch_impl.assert_called_with(events.GUILD_CHANNEL_UPDATE, channel_obj_before, channel_obj_after)
 
     @pytest.mark.asyncio
     @pytest.mark.skip(reason="Not implemented")
