@@ -19,6 +19,7 @@
 import inspect
 import logging
 import traceback
+import datetime
 from unittest import mock
 
 import asynctest
@@ -285,70 +286,129 @@ class TestStateRegistryImpl:
         dispatch_impl.assert_called_with(events.GUILD_CHANNEL_UPDATE, channel_obj_before, channel_obj_after)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
-    async def test_handle_channel_update_invokes_update_channel(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+    async def test_handle_channel_update_invokes_update_channel(self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl):
+        payload = {"id": 123, "type": True}
+        await adapter_impl.handle_channel_update(gateway_impl, payload)
+
+        fabric_impl.state_registry.update_channel.assert_called_with(payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
-    async def test_handle_channel_delete_parses_channel(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+    async def test_handle_channel_delete_parses_channel(self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123)
+        channel_obj = _helpers.mock_model(channels.GuildChannel, is_dm=False)
+        payload = {"guild_id": guild_obj.id}
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
+            return_value=guild_obj)
+        fabric_impl.state_registry.parse_channel = mock.MagicMock(
+            return_value=channel_obj)
+        await adapter_impl.handle_channel_delete(gateway_impl, payload)
+
+        fabric_impl.state_registry.parse_channel.assert_called_with(
+            payload, guild_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_channel_delete_for_dm_channel_dispatches_DM_CHANNEL_DELETE(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        channel_obj = _helpers.mock_model(channels.DMChannel, is_dm=True)
+        payload = {"guild_id": None}
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
+            return_value=None)
+        fabric_impl.state_registry.parse_channel = mock.MagicMock(
+            return_value=channel_obj)
+        await adapter_impl.handle_channel_delete(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.DM_CHANNEL_DELETE, channel_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_channel_delete_for_guild_channel_dispatches_GUILD_CHANNEL_DELETE(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123)
+        channel_obj = _helpers.mock_model(channels.GuildChannel, is_dm=False)
+        payload = {"guild_id": guild_obj.id}
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
+            return_value=guild_obj)
+        fabric_impl.state_registry.parse_channel = mock.MagicMock(
+            return_value=channel_obj)
+        await adapter_impl.handle_channel_delete(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(
+            events.GUILD_CHANNEL_DELETE, channel_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_channel_pins_update_for_unknown_channel_dispatches_nothing(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        payload = {"channel_id": 123, "type": False, "last_pin_timestamp": None}
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=None)
+        await adapter_impl.handle_channel_pins_update(gateway_impl, payload)
+
+        # Not called other than the raw from earlier.
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_CHANNEL_PINS_UPDATE, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_channel_pins_update_for_known_channel_invokes_set_last_pinned_timestamp_on_state(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        channel_obj = _helpers.mock_model(channels.GuildChannel, is_dm=False)
+        timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+        payload = {"channel_id": 123, "type": False, "last_pin_timestamp": timestamp.isoformat()}
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
+        await adapter_impl.handle_channel_pins_update(gateway_impl, payload)
+
+        fabric_impl.state_registry.set_last_pinned_timestamp.assert_called_with(
+            channel_obj, timestamp)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_channel_pins_update_for_adding_pin_to_guild_channel_invokes_GUILD_CHANNEL_PIN_ADDED(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        channel_obj = _helpers.mock_model(channels.GuildChannel, is_dm=False)
+        timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+        payload = {"channel_id": channel_obj.id, "type": channel_obj.is_dm,
+                   "last_pin_timestamp": timestamp.isoformat()}
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
+        await adapter_impl.handle_channel_pins_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.GUILD_CHANNEL_PIN_ADDED, timestamp)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_channel_pins_update_for_adding_pin_to_dm_channel_invokes_DM_CHANNEL_PIN_ADDED(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        channel_obj = _helpers.mock_model(channels.DMChannel, is_dm=True)
+        payload = {"channel_id": channel_obj.id, "type": channel_obj.is_dm,
+                   "last_pin_timestamp": None}
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
+        await adapter_impl.handle_channel_pins_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.DM_CHANNEL_PIN_REMOVED)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_channel_pins_update_for_removing_pin_from_guild_channel_invokes_GUILD_CHANNEL_PIN_REMOVED(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        channel_obj = _helpers.mock_model(channels.GuildChannel, is_dm=False)
+        payload = {"channel_id": channel_obj.id, "type": channel_obj.is_dm,
+                   "last_pin_timestamp": None}
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
+        await adapter_impl.handle_channel_pins_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.GUILD_CHANNEL_PIN_REMOVED)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_channel_pins_update_for_removing_pin_from_dm_channel_invokes_DM_CHANNEL_PIN_REMOVED(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        channel_obj = _helpers.mock_model(channels.GuildChannel, is_dm=False)
+        payload = {"channel_id": channel_obj.id, "type": channel_obj.is_dm,
+                   "last_pin_timestamp": None}
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
+        await adapter_impl.handle_channel_pins_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.GUILD_CHANNEL_PIN_REMOVED)
 
     @pytest.mark.asyncio
     @pytest.mark.skip(reason="Not implemented")
