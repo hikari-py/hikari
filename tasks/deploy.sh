@@ -50,6 +50,7 @@ function deploy-to-svc() {
     git config user.email "${CI_ROBOT_EMAIL}"
     git status
     git diff
+    gcg -O rpm > CHANGELOG
     git commit -am "Deployed ${current_version} ${SKIP_CI_COMMIT_PHRASE}" --allow-empty
     git push ${REMOTE_NAME} ${PROD_BRANCH}
     git tag "${current_version}" && git push ${REMOTE_NAME} "${current_version}"
