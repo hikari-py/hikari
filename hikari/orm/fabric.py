@@ -25,6 +25,9 @@ from __future__ import annotations
 
 import dataclasses
 
+import typing
+
+from hikari.net import gateway
 from hikari.orm import event_handler as _event_handler
 from hikari.orm import state_registry as _state_registry
 
@@ -43,3 +46,9 @@ class Fabric:
     #: Application state information. This stores information about any users the application
     #: can see, any guilds it is in, any channels that are available, and the likes.
     state_registry: _state_registry.IStateRegistry = NotImplemented
+
+    #: A mapping of shard ID's to gateways that are running.
+    #:
+    #: If no shards are running, then this defaults to one shard under the `None` key.
+    gateways: typing.Dict[typing.Optional[int], gateway.GatewayClientV7] \
+        = dataclasses.field(default_factory=dict)

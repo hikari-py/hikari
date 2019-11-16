@@ -82,14 +82,8 @@ class Channel(abc.ABC, interfaces.ISnowflake, interfaces.FabricatedMixin):
             cls._channel_implementations[cls.type] = cls
         cls.is_dm = kwargs.pop("is_dm", NotImplemented)
 
-    def __init_subclass__(cls, **kwargs):
-        if "type" in kwargs:
-            cls.type = kwargs.pop("type")
-            cls._channel_implementations[cls.type] = cls
-        cls.is_dm = kwargs.pop("is_dm", NotImplemented)
 
-
-class TextChannel(Channel):
+class TextChannel(Channel, abc.ABC):
     """
     Any class that can have messages sent to it.
 
