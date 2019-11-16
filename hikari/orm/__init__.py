@@ -16,10 +16,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""
+The Hikari Object Relational Model.
 
-
-def test_events():
-    """Ensure we still get some coverage if we don't get to import this."""
-    from hikari.orm import events
-
-    assert events  # ¯\_(ツ)_/¯
+This provides an object-oriented interface to the Discord API, and provides features
+such as the ability to cache certain objects and details that the API provides us, as
+well as providing an expandable and extendable interface to wrap them together in.
+"""
+from . import dispatching_event_adapter_impl
+from . import models
+from . import state_registry_impl

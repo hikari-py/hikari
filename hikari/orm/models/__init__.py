@@ -16,10 +16,26 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-
-
-def test_events():
-    """Ensure we still get some coverage if we don't get to import this."""
-    from hikari.orm import events
-
-    assert events  # ¯\_(ツ)_/¯
+"""
+All models used in Hikari's public API.
+"""
+from . import channels
+from . import colors
+from . import colours
+from . import embeds
+from . import emojis
+from . import guilds
+from . import integrations
+from . import interfaces
+from . import invites
+from . import media
+from . import members
+from . import messages
+from . import overwrites
+from . import permissions
+from . import presences
+from . import reactions
+from . import roles
+from . import service_status
+from . import users
+from . import webhooks

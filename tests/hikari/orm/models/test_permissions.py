@@ -17,9 +17,22 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
+import pytest
 
-def test_events():
-    """Ensure we still get some coverage if we don't get to import this."""
-    from hikari.orm import events
+from hikari.orm.models import permissions
 
-    assert events  # ¯\_(ツ)_/¯
+
+@pytest.mark.model
+def test_Permission_all():
+    all = permissions.Permission.all()
+
+    sum_permissions = 0
+    for pm in permissions.Permission.__members__.values():
+        sum_permissions |= pm
+
+    assert bin(sum_permissions) == bin(all)
+
+
+@pytest.mark.model
+def test_permission_module___getattr__():
+    assert permissions.MANAGE_MESSAGES == permissions.Permission.MANAGE_MESSAGES

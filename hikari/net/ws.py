@@ -51,7 +51,6 @@ class WebSocketClosure(RuntimeError):
 
 _NO_REASON = "no reason"
 
-
 # Ignore the warning aiohttp provides us.
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
