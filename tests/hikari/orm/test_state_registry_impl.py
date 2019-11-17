@@ -23,6 +23,7 @@ from unittest import mock
 
 import pytest
 
+from hikari.orm import fabric
 from hikari.orm import state_registry_impl
 from hikari.orm.models import channels
 from hikari.orm.models import emojis
@@ -39,8 +40,12 @@ from tests.hikari import _helpers
 
 @pytest.fixture()
 def registry():
+    fabric_obj = fabric.Fabric()
+
     # We cant overwrite methods on a slotted class... subclass it to remove that constraint.
-    return _helpers.unslot_class(state_registry_impl.StateRegistryImpl)(999, 999)
+    state_registry_obj = _helpers.unslot_class(state_registry_impl.StateRegistryImpl)(fabric_obj, 999, 999)
+    fabric_obj.state_registry = fabric_obj
+    return state_registry_obj
 
 
 # noinspection PyPropertyAccess,PyProtectedMember,PyTypeChecker,PyDunderSlots,PyUnresolvedReferences
@@ -360,8 +365,8 @@ class TestStateRegistryImpl:
         role_obj_to_keep = _helpers.mock_model(roles.Role, id=1235)
         guild_obj = _helpers.mock_model(guilds.Guild, id=5678)
         guild_obj.roles = {role_obj_to_remove.id: role_obj_to_remove, role_obj_to_keep.id: role_obj_to_keep}
-        role_obj_to_remove.guild = guild_obj
-        role_obj_to_keep.guild = guild_obj
+        role_obj_to_remove.guild_id = guild_obj.id
+        role_obj_to_keep.guild_id = guild_obj.id
         member_obj = _helpers.mock_model(members.Member, id=9101112)
         member_obj.roles = [role_obj_to_keep, role_obj_to_remove]
         other_member_obj = _helpers.mock_model(members.Member, id=13141516)
@@ -463,7 +468,7 @@ class TestStateRegistryImpl:
 
     def test_get_role_by_id_cached_guild_cached_role(self, registry: state_registry_impl.StateRegistryImpl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=1)
-        role_obj = _helpers.mock_model(roles.Role, id=2, guild=guild_obj)
+        role_obj = _helpers.mock_model(roles.Role, id=2, guild_id=guild_obj.id)
         guild_obj.roles = {role_obj.id: role_obj}
         registry._guilds = {guild_obj.id: guild_obj}
 
@@ -691,7 +696,7 @@ class TestStateRegistryImpl:
 
         with _helpers.mock_patch(guilds.Guild, return_value=guild_obj) as Guild:
             registry.parse_guild(payload)
-            Guild.assert_called_once_with(registry, payload)
+            Guild.assert_called_once_with(registry.fabric, payload)
             assert guild_obj in registry._guilds.values()
 
     def test_parse_guild_when_not_cached_returns_new_guild(self, registry: state_registry_impl.StateRegistryImpl):

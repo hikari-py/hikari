@@ -195,7 +195,7 @@ class TestGuild:
         assert guild_obj.splash_hash == "0ff0ff0ff"
         assert guild_obj.afk_timeout == 1200
         assert guild_obj.verification_level == guilds.VerificationLevel.VERY_HIGH
-        assert guild_obj.message_notification_level == guilds.NotificationLevel.ONLY_MENTIONS
+        assert guild_obj.message_notification_level == guilds.DefaultMessageNotificationsLevel.ONLY_MENTIONS
         assert guild_obj.explicit_content_filter_level == guilds.ExplicitContentFilterLevel.ALL_MEMBERS
         assert len(guild_obj.features) == 4
         assert guilds.Feature.ANIMATED_ICON in guild_obj.features
