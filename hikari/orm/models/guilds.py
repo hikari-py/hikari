@@ -160,7 +160,7 @@ class Guild(interfaces.ISnowflake, interfaces.FabricatedMixin):
     #: Default level for message notifications in this guild.
     #:
     #: :type: :class:`hikari.core.models.guilds.NotificationLevel`
-    message_notification_level: NotificationLevel
+    message_notification_level: DefaultMessageNotificationsLevel
 
     #: Explicit content filtering level.
     #:
@@ -273,7 +273,7 @@ class Guild(interfaces.ISnowflake, interfaces.FabricatedMixin):
         self.verification_level = transformations.try_cast(payload.get("verification_level"), VerificationLevel)
         self.preferred_locale = payload.get("preferred_locale")
         self.message_notification_level = transformations.try_cast(
-            payload.get("default_message_notifications"), NotificationLevel
+            payload.get("default_message_notifications"), DefaultMessageNotificationsLevel
         )
         self.explicit_content_filter_level = transformations.try_cast(
             payload.get("explicit_content_filter"), ExplicitContentFilterLevel
@@ -324,7 +324,7 @@ class SystemChannelFlag(enum.IntFlag):
     PREMIUM_SUBSCRIPTION = 2
 
 
-class Feature(interfaces.INamedEnum, enum.Enum):
+class Feature(interfaces.NamedEnumMixin, enum.Enum):
     """
     Features that a guild can provide.
     """
@@ -345,7 +345,7 @@ class Feature(interfaces.INamedEnum, enum.Enum):
     VIP_REGIONS = enum.auto()
 
 
-class NotificationLevel(enum.IntEnum):
+class DefaultMessageNotificationsLevel(enum.IntEnum):
     """Setting for message notifications."""
 
     #: Notify users when any message is sent.
@@ -441,7 +441,7 @@ __all__ = [
     "Guild",
     "SystemChannelFlag",
     "Feature",
-    "NotificationLevel",
+    "DefaultMessageNotificationsLevel",
     "ExplicitContentFilterLevel",
     "MFALevel",
     "VerificationLevel",

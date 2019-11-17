@@ -65,7 +65,7 @@ pytest-testdox  = "~1.2"
 requests        = "~2.22"
 sphinx          = "~2.2"
 sphinx-bootstrap-theme = "~0.7"
-sphinx-autodoc-typehints = "~1.9"
+sphinx-autodoc-typehints = "~1.10"
 Jinja2          = "~2.10"
 
 # Sphinx seems to die without this, annoyingly.

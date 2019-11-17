@@ -122,7 +122,7 @@ class Avatar(interfaces.IModel):
         return len(self.data)
 
 
-class Attachment(interfaces.IModel, interfaces.ISnowflake):
+class Attachment(interfaces.ISnowflake):
     """
     An attachment that is received from Discord in a message.
     """

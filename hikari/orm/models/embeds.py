@@ -36,7 +36,7 @@ from hikari.orm.models import colors
 from hikari.orm.models import interfaces
 from hikari.orm.models import media
 
-_MAX_EMBED_SIZE = 6_000
+_MAX_EMBED_SIZE = 6000
 
 
 class EmbedPart(interfaces.IModel, abc.ABC):
@@ -84,7 +84,7 @@ class EmbedVideo(EmbedPart):
     #: A :class:`int` containing the width of the video.
     width: int
 
-    def __init__(self, url: str = None, height: int = None, width: int = None,) -> None:
+    def __init__(self, url: str = None, height: int = None, width: int = None) -> None:
         super().__init__()
         self.url = url
         self.height = height
@@ -110,7 +110,7 @@ class EmbedImage(EmbedPart):
     #: A :class:`int` containing the width of the image.
     width: int
 
-    def __init__(self, url: str = None, proxy_url: str = None, height: int = None, width: int = None,) -> None:
+    def __init__(self, url: str = None, proxy_url: str = None, height: int = None, width: int = None) -> None:
         super().__init__()
         self.url = url
         self.proxy_url = proxy_url
@@ -158,7 +158,7 @@ class EmbedAuthor(EmbedPart):
     #: A :class:`str` containing the proxy URL link for the author's icon in the embed.
     proxy_icon_url: str
 
-    def __init__(self, name: str = None, url: str = None, icon_url: str = None, proxy_icon_url: str = None,) -> None:
+    def __init__(self, name: str = None, url: str = None, icon_url: str = None, proxy_icon_url: str = None) -> None:
         super().__init__()
         self.name = name
         self.url = url
@@ -183,7 +183,7 @@ class EmbedFooter(EmbedPart):
     #: A :class:`str` containing the proxied URL to the icon of this footer.
     proxy_icon_url: str
 
-    def __init__(self, icon_url: str = None, text: str = None, proxy_icon_url: str = None,) -> None:
+    def __init__(self, icon_url: str = None, text: str = None, proxy_icon_url: str = None) -> None:
         super().__init__()
         self.icon_url = icon_url
         self.text = text
@@ -548,10 +548,7 @@ class ReceivedEmbed(BaseEmbed):
     **You should never need to create one of these directly. Use the Embed class instead for that.**
     """
 
-    __slots__ = (
-        "_video",
-        "_provider",
-    )
+    __slots__ = ("_video", "_provider")
 
     _video: typing.Optional[EmbedVideo]
     _provider: typing.Optional[EmbedProvider]
@@ -738,7 +735,7 @@ class Embed(BaseEmbed):
         self._maybe_ref_file_obj(self._thumbnail, file)
         return self
 
-    def set_author(self: EmbedT, *, name: str = None, url: str = None, icon: FileOrUrlT = None,) -> EmbedT:
+    def set_author(self: EmbedT, *, name: str = None, url: str = None, icon: FileOrUrlT = None) -> EmbedT:
         """
         Set the author of this embed.
 

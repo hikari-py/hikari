@@ -50,10 +50,10 @@ def test_roles_payloads():
         {
             "id": "41771983423143936",
             "name": "WE DEM BOYZZ!!!!!!",
-            "color": 3447003,
+            "color": 3_447_003,
             "hoist": True,
             "position": 0,
-            "permissions": 66321471,
+            "permissions": 66_321_471,
             "managed": False,
             "mentionable": False,
         },
@@ -155,10 +155,10 @@ def test_guild_payload(test_emoji_payload, test_roles_payloads, test_channel_pay
         "large": False,
         "unavailable": False,
         "voice_states": [],
-        "permissions": 66321471,
+        "permissions": 66_321_471,
         "members": [test_member_payload],
         "channels": test_channel_payloads,
-        "max_members": 25_000,
+        "max_members": 25000,
         "vanity_url_code": "loool",
         "description": "This is a server I guess, its a bit crap though",
         "banner": "1a2b3c",
@@ -195,7 +195,7 @@ class TestGuild:
         assert guild_obj.splash_hash == "0ff0ff0ff"
         assert guild_obj.afk_timeout == 1200
         assert guild_obj.verification_level == guilds.VerificationLevel.VERY_HIGH
-        assert guild_obj.message_notification_level == guilds.NotificationLevel.ONLY_MENTIONS
+        assert guild_obj.message_notification_level == guilds.DefaultMessageNotificationsLevel.ONLY_MENTIONS
         assert guild_obj.explicit_content_filter_level == guilds.ExplicitContentFilterLevel.ALL_MEMBERS
         assert len(guild_obj.features) == 4
         assert guilds.Feature.ANIMATED_ICON in guild_obj.features
