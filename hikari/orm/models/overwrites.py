@@ -59,7 +59,7 @@ class OverwriteEntityType(interfaces.INamedEnum, enum.Enum):
         return issubclass(subclass, self.value)
 
 
-class Overwrite(interfaces.IModel, interfaces.ISnowflake):
+class Overwrite(interfaces.ISnowflake):
     """
     Representation of some permissions that have been explicitly allowed or denied as an override from the defaults.
     """

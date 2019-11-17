@@ -21,6 +21,8 @@ A role within a guild.
 """
 from __future__ import annotations
 
+import typing
+
 from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.orm import fabric
@@ -37,7 +39,7 @@ class Role(interfaces.ISnowflake, interfaces.FabricatedMixin):
 
     __slots__ = (
         "_fabric",
-        "guild",
+        "guild_id",
         "id",
         "name",
         "color",
@@ -49,10 +51,11 @@ class Role(interfaces.ISnowflake, interfaces.FabricatedMixin):
         "__weakref__",
     )
 
-    #: The guild that the role is in.
+    #: The guild that the role is in. This is always specified unless the role is inside an
+    #: audit log entry.
     #:
     #: :type: :class:`int`
-    guild: guilds.Guild
+    guild_id: typing.Optional[int]
 
     #: The ID of the role.
     #:
@@ -96,11 +99,9 @@ class Role(interfaces.ISnowflake, interfaces.FabricatedMixin):
 
     __repr__ = auto_repr.repr_of("id", "name", "position", "managed", "mentionable", "hoist")
 
-    def __init__(
-        self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild
-    ) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_id: int) -> None:
         self._fabric = fabric_obj
-        self.guild = guild_obj
+        self.guild_id = guild_id
         self.id = int(payload["id"])
         self.update_state(payload)
 

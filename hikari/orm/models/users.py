@@ -27,7 +27,7 @@ from hikari.internal_utilities import auto_repr
 from hikari.orm.models import interfaces
 
 
-class IUser(abc.ABC, interfaces.FabricatedMixin, interfaces.ISnowflake, interface=True):
+class IUser(interfaces.FabricatedMixin, interfaces.ISnowflake, interface=True):
     """
     Representation of a user account.
     """
@@ -61,11 +61,6 @@ class IUser(abc.ABC, interfaces.FabricatedMixin, interfaces.ISnowflake, interfac
 
     __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot")
 
-    #: This is an abstract implementation that should be overridden.
-    @abc.abstractmethod
-    def __init__(self):
-        ...
-
 
 class User(IUser):
     """
@@ -74,6 +69,7 @@ class User(IUser):
 
     __slots__ = ("_fabric", "id", "username", "discriminator", "avatar_hash", "bot", "__weakref__")
 
+    # noinspection PyMissingConstructor
     def __init__(self, fabric_obj, payload):
         self._fabric = fabric_obj
         self.id = int(payload["id"])
