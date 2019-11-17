@@ -33,6 +33,7 @@ class GatewayBot(interfaces.IModel):
 
     This should not be cached.
     """
+
     __slots__ = ("url", "shards", "session_start_limit")
 
     #: The URL to connect to.
@@ -56,6 +57,7 @@ class SessionStartLimit(interfaces.IModel):
 
     If you exceed this, you will have your token reset by Discord.
     """
+
     __slots__ = ("total", "remaining", "reset_at")
 
     #: Total number of times you can IDENTIFY with the gateway.

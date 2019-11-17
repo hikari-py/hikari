@@ -31,6 +31,7 @@ class HTTPAdapter:
     wraps it in a unit of processing that can handle parsing API objects into Hikari ORM objects,
     and can handle keeping the state up to date as required.
     """
+
     def __init__(self, fabric_obj: fabric.Fabric) -> None:
         #: The fabric of this application.
         self.fabric: fabric.Fabric = fabric_obj
