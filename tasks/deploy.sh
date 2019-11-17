@@ -29,6 +29,7 @@ function notify() {
 }
 
 function create-changelog() {
+    pip install gcg # Git Changelog Generator
     local changelog="./CHANGELOG"
     echo "Generating ${changelog}."
     echo "CHANGELOG" > ${changelog}
