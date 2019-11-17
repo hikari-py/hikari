@@ -69,4 +69,3 @@ class TestHTTPAdapter:
             result = await fabric_impl.http_adapter.get_gateway_bot()
 
             assert result is mock_gateway_bot
-
