@@ -53,6 +53,9 @@ class HTTPClient(http_base.BaseHTTPClient):
         """
         Returns:
             A static URL to use to connect to the gateway with.
+
+        Note:
+            Users are expected to attempt to cache this result.
         """
         result = await self.request(GET, "/gateway")
         return result["url"]

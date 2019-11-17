@@ -70,8 +70,8 @@ def adapter_impl(fabric_impl, dispatch_impl, logger_impl):
 
 
 # noinspection PyProtectedMember
-@pytest.mark.state
-class TestStateRegistryImpl:
+@pytest.mark.orm
+class TestDispatchingEventAdapterImpl:
     @pytest.mark.asyncio
     async def test_drain_unrecognised_event_first_time_adds_to_ignored_events_set(self, adapter_impl, gateway_impl):
         adapter_impl._ignored_events.clear()
