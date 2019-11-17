@@ -28,6 +28,23 @@ from tests.hikari import _helpers
 
 
 @pytest.mark.model
+@pytest.mark.parametrize(
+    "expected_type",
+    [
+        channels.GroupDMChannel,
+        channels.DMChannel,
+        channels.GuildTextChannel,
+        channels.GuildNewsChannel,
+        channels.GuildCategory,
+        channels.GuildStoreChannel,
+        channels.GuildVoiceChannel,
+    ],
+)
+def test_Channel_get_channel_class_from_type(expected_type):
+    assert channels.Channel.get_channel_class_from_type(expected_type.type) is expected_type
+
+
+@pytest.mark.model
 def test_GuildChannel_permission_overwrites_aggregation():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
     f = fabric.Fabric(None, s)

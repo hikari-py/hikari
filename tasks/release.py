@@ -22,7 +22,6 @@ Pushes a release to GitLab via the release API.
 import contextlib
 import io
 import os
-import subprocess
 import sys
 import traceback
 
@@ -44,21 +43,27 @@ def get_most_recent_tag_hash():
     version[-1] -= 1
     return '.'.join(map(str, version))
     
+    
+def get_full_changelog(sio):
+    print("Invoking", *args, file=sys.stderr)
+    args = [sys.argv[0], "-O", "rpm"]
+    with contextlib.redirect_stdout(sio):
+        gcg.entrypoint.main(args)
+    sio.seek(0)
+    
 
 def try_to_get_changelog():
     sio = io.StringIO()
     try:
+        args = [sys.argv[0], "-O", "rpm", "-s", get_most_recent_tag_hash()]
+        print("Invoking", *args)
         with contextlib.redirect_stdout(sio):
-            args = [sys.argv[0], "-O", "rpm", "-s", get_most_recent_tag_hash()]
-            print("Invoking", *args, file=sys.stderr)
             gcg.entrypoint.main(args)
+        sio.seek(0)
         return sio.getvalue()
     except Exception as ex:
         traceback.print_exception(type(ex), ex, ex.__traceback__)
-        with contextlib.redirect_stdout(sio):
-            print("Invoking", *args, file=sys.stderr)
-            args = [sys.argv[0], "-O", "rpm"]
-            gcg.entrypoint.main(args)
+        get_full_changelog(sio)
     finally:
         # Only keep the 75 most recent entries in the changelog
         return '\n'.join(sio.getvalue().split("\n")[:75])
@@ -86,5 +91,5 @@ print("Sending payload", payload)
 
 with requests.post(f"https://gitlab.com/api/v4/projects/{project_id}/releases", json=payload, headers=headers) as resp:
     resp.raise_for_status()
-    print(resp.status_code, resp.reason)
-    print(resp.json())
+    print("Received", resp.status_code, resp.reason)
+

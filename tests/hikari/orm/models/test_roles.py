@@ -54,15 +54,15 @@ def payload():
 
 @pytest.mark.model
 def test_Role(fabric_obj, payload):
-    guild_obj = _helpers.mock_model(guilds.Guild)
-    role_obj = roles.Role(fabric_obj, payload, guild_obj)
+    guild_obj = _helpers.mock_model(guilds.Guild, id=6969)
+    role_obj = roles.Role(fabric_obj, payload, guild_obj.id)
 
     assert role_obj.id == 41771983423143936
     assert role_obj.name == "WE DEM BOYZZ!!!!!!"
     assert role_obj.color == 0x3498DB
     assert role_obj.hoist is True
     assert role_obj.position == 1
-    assert role_obj.guild == guild_obj
+    assert role_obj.guild_id == guild_obj.id
     assert role_obj.permissions == (
         permissions.Permission.USE_VAD
         | permissions.Permission.MOVE_MEMBERS

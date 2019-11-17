@@ -25,10 +25,12 @@ import string
 import typing
 
 from hikari.internal_utilities import assertions
-from hikari.orm.models import interfaces
 
 
-class Color(int, typing.SupportsInt, interfaces.IModel):
+# NOTE!!!
+# SupportsInt on Python3.7 uses a special metaclass; this means it cannot be an IModel as there will
+# be a metaclass conflict, so do NOT add it and assume it is OK just because it works on Python 3.8+!
+class Color(int, typing.SupportsInt):
     """
     Representation of a color. This value is immutable.
 

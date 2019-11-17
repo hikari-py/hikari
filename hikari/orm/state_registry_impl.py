@@ -29,6 +29,7 @@ import weakref
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import logging_helpers
 from hikari.internal_utilities import transformations
+from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import channels
 from hikari.orm.models import emojis
@@ -63,11 +64,22 @@ class StateRegistryImpl(state_registry.IStateRegistry):
     adapter that calls this cache, appropriately.
     """
 
-    __slots__ = ("_dm_channels", "_emojis", "_guilds", "_guild_channels", "_message_cache", "_users", "_user", "logger")
+    __slots__ = (
+        "fabric",
+        "_dm_channels",
+        "_emojis",
+        "_guilds",
+        "_guild_channels",
+        "_message_cache",
+        "_users",
+        "_user",
+        "logger",
+    )
 
-    def __init__(self, message_cache_size: int, user_dm_channel_size: int) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, message_cache_size: int, user_dm_channel_size: int) -> None:
         # Users may be cached while we can see them, or they may be cached as a member. Regardless, we only
         # retain them while they are referenced from elsewhere to keep things tidy.
+        self.fabric = fabric_obj
         self._dm_channels: typing.MutableMapping[int, channels.DMChannel] = data_structures.LRUDict(
             user_dm_channel_size
         )
@@ -174,8 +186,10 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
     # noinspection PyProtectedMember
     def delete_role(self, role_obj: roles.Role) -> None:
-        guild_obj = role_obj.guild
+        guild_id = role_obj.guild_id
         with contextlib.suppress(KeyError):
+            guild_obj = self._guilds[guild_id]
+
             del guild_obj.roles[role_obj.id]
 
             for member in guild_obj.members.values():
@@ -234,7 +248,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         if channel_obj is not None:
             channel_obj.update_state(channel_payload)
         else:
-            channel_obj = channels.parse_channel(self, channel_payload)
+            channel_obj = channels.parse_channel(self.fabric, channel_payload)
             if channels.is_channel_type_dm(channel_payload["type"]):
                 self._dm_channels[channel_id] = channel_obj
             else:
@@ -265,7 +279,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             existing_emoji.update_state(emoji_payload)
             return existing_emoji
 
-        new_emoji = emojis.parse_emoji(self, emoji_payload, guild_obj.id if guild_obj is not None else None)
+        new_emoji = emojis.parse_emoji(self.fabric, emoji_payload, guild_obj.id if guild_obj is not None else None)
         if isinstance(new_emoji, emojis.GuildEmoji):
             guild_obj = self.get_guild_by_id(guild_obj.id)
             guild_obj.emojis[new_emoji.id] = new_emoji
@@ -286,7 +300,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             else:
                 guild_obj.update_state(guild_payload)
         else:
-            guild_obj = guilds.Guild(self, guild_payload)
+            guild_obj = guilds.Guild(self.fabric, guild_payload)
             self._guilds[guild_id] = guild_obj
 
         return guild_obj
@@ -301,7 +315,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             member_obj.update_state(role_objs, nick)
             return member_obj
 
-        member_obj = members.Member(self, guild_obj, member_payload)
+        member_obj = members.Member(self.fabric, guild_obj, member_payload)
 
         guild_obj.members[member_id] = member_obj
         return member_obj
@@ -314,7 +328,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         channel_obj = self.get_channel_by_id(channel_id)
 
         if channel_obj is not None:
-            message_obj = messages.Message(self, message_payload)
+            message_obj = messages.Message(self.fabric, message_payload)
             message_obj.channel.last_message_id = message_id
 
             self._message_cache[message_id] = message_obj
@@ -356,7 +370,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             role.update_state(role_payload)
             return role
         else:
-            role_payload = roles.Role(self, role_payload, guild_obj.id)
+            role_payload = roles.Role(self.fabric, role_payload, guild_obj.id)
             guild_obj.roles[role_payload.id] = role_payload
             return role_payload
 
