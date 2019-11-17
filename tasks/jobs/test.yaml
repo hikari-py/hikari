@@ -53,7 +53,8 @@
         - mkdir public || true
         - poetry show -v
     script:
-        - nox --sessions pytest bandit stats --report public/nox.json
+        - nox --sesiions stats
+        - nox --sessions pytest bandit --report public/nox.json
         - nox --sessions black -- --check
     artifacts:
         paths:
@@ -69,14 +70,30 @@ unittest-py38:
     image: python:3.8.0
     extends: .test
 
-test-pip-install:
+test-pip-install-37:
     image: python:3.8.0
     extends: .test
     stage: test
     script:
         - nox --sessions install
 
-verify-pypi-release:
+test-pip-install-38:
+    image: python:3.8.0
+    extends: .test
+    stage: test
+    script:
+        - nox --sessions install
+
+verify-pypi-release37:
+    image: python:3.7.5
+    extends: .test
+    stage: verify
+    script:
+        - nox --sessions install -- --showtime
+    only:
+        - master
+
+verify-pypi-release38:
     image: python:3.8.0
     extends: .test
     stage: verify
