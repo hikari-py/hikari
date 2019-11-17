@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 
 from hikari.internal_utilities import meta
+from hikari.internal_utilities import unspecified
 from hikari.orm.models import gateway_bot
 from . import fabric
 
@@ -67,3 +68,13 @@ class HTTPAdapter:
         """
         gateway_bot_payload = await self.fabric.http_client.get_gateway_bot()
         return gateway_bot.GatewayBot(gateway_bot_payload)
+
+    async def get_guild_audit_log(
+        self,
+        guild_id: int,
+        *,
+        user_id: int = unspecified.UNSPECIFIED,
+        action_type: int = unspecified.UNSPECIFIED,
+        limit: int = unspecified.UNSPECIFIED,
+    ):
+        raise NotImplementedError
