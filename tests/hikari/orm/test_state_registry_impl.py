@@ -44,7 +44,7 @@ def registry():
 
 
 # noinspection PyPropertyAccess,PyProtectedMember,PyTypeChecker,PyDunderSlots,PyUnresolvedReferences
-@pytest.mark.state
+@pytest.mark.orm
 class TestStateRegistryImpl:
     def test_message_cache_property_returns_message_cache(self, registry: state_registry_impl.StateRegistryImpl):
         cache = _helpers.mock_model(dict)
