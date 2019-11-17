@@ -22,7 +22,6 @@ Pushes a release to GitLab via the release API.
 import contextlib
 import io
 import os
-import subprocess
 import sys
 import traceback
 
@@ -92,5 +91,5 @@ print("Sending payload", payload)
 
 with requests.post(f"https://gitlab.com/api/v4/projects/{project_id}/releases", json=payload, headers=headers) as resp:
     resp.raise_for_status()
-    print(resp.status_code, resp.reason)
-    print(resp.json())
+    print("Received", resp.status_code, resp.reason)
+

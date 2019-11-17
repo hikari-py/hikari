@@ -28,6 +28,26 @@ function notify() {
     set +x
 }
 
+function create-changelog() {
+    local changelog="./CHANGELOG"
+    echo "Generating ${changelog}."
+    echo "CHANGELOG" > ${changelog}
+    echo "=========" >> ${changelog}
+    echo >> ${changelog}
+    echo "Automatically generated from git history up to ${COMMIT_REF} at $(date) by CI." >> ${changelog}
+    echo >> ${changelog}
+    gcg -O rpm >> ${changelog}
+    echo >> ${changelog}
+}
+
+function create-requirements() {
+    local requirements="./requirements.txt"
+    echo "Generating ${requirements}."
+    echo "# Automatically generated from pyproject.toml for ${COMMIT_REF} at $(date) by CI." > ${requirements}
+    poetry run pip freeze >> ${requirements}
+    echo >> ${requirements}
+}
+
 function deploy-to-svc() {
     set -x
     local repo
@@ -49,19 +69,20 @@ function deploy-to-svc() {
     git config user.name "${CI_ROBOT_NAME}"
     git config user.email "${CI_ROBOT_EMAIL}"
     git status
+    create-changelog
+    create-requirements
     git diff
-    gcg -O rpm > CHANGELOG
     git commit -am "Deployed ${current_version} ${SKIP_CI_COMMIT_PHRASE}" --allow-empty
     git push ${REMOTE_NAME} ${PROD_BRANCH}
     git tag "${current_version}" && git push ${REMOTE_NAME} "${current_version}"
-    git -c color.status=always log --all --decorate --oneline --graph -n 50
+    # git -c color.status=always log --all --decorate --oneline --graph -n 50
     git fetch --all --prune
     git gc --aggressive --prune=now
     git fsck
     git reset --hard origin/${PROD_BRANCH}
     git checkout ${PREPROD_BRANCH}
     git reset --hard origin/${PREPROD_BRANCH}
-    git -c color.status=always log --all --decorate --oneline --graph -n 50
+    # git -c color.status=always log --all --decorate --oneline --graph -n 50
     git merge origin/${PROD_BRANCH} --no-ff --strategy-option theirs --allow-unrelated-histories -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_CI_COMMIT_PHRASE}"
     git push ${REMOTE_NAME} ${PREPROD_BRANCH}
     set +x
