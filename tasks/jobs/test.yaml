@@ -53,7 +53,7 @@
         - mkdir public || true
         - poetry show -v
     script:
-        - nox --sesiions stats
+        - nox --sessions stats
         - nox --sessions pytest bandit --report public/nox.json
         - nox --sessions black -- --check
     artifacts:
