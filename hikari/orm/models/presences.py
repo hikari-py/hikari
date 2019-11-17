@@ -123,11 +123,7 @@ class PresenceActivity(interfaces.IModel):
         This can only be received from the gateway, not sent to it.
     """
 
-    __slots__ = (
-        "name",
-        "type",
-        "url",
-    )
+    __slots__ = ("name", "type", "url")
 
     #: The name of the activity.
     #:
@@ -160,17 +156,7 @@ class RichPresenceActivity(PresenceActivity):
         This can only be received from the gateway, not sent to it.
     """
 
-    __slots__ = (
-        "id",
-        "timestamps",
-        "application_id",
-        "details",
-        "state",
-        "party",
-        "assets",
-        "secrets",
-        "flags",
-    )
+    __slots__ = ("id", "timestamps", "application_id", "details", "state", "party", "assets", "secrets", "flags")
 
     #: The ID of the activity.
     #:

@@ -933,7 +933,7 @@ async def test_handle_client_error_response_when_only_message_in_json_body(
 async def test_handle_client_error_response_when_only_error_code_in_json_body(
     status, exception_type, mock_http_connection, res
 ):
-    pl = {"foo": "bar", "code": 10_001}
+    pl = {"foo": "bar", "code": 10001}
     try:
         mock_http_connection._handle_client_error_response(res, status, pl)
         assert False, "No exception was raised"
