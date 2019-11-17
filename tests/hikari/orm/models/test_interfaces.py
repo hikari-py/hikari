@@ -38,7 +38,13 @@ def neko_snowflake():
     return DummySnowflake(537_340_989_808_050_216)
 
 
-class DummyNamedEnum(interfaces.INamedEnum, enum.IntEnum):
+class DummyNamedEnum(interfaces.NamedEnumMixin, enum.IntEnum):
+    FOO = 9
+    BAR = 18
+    BAZ = 27
+
+
+class DummyBestEffortEnum(interfaces.BestEffortEnumMixin, enum.IntEnum):
     FOO = 9
     BAR = 18
     BAZ = 27
@@ -149,6 +155,32 @@ def test_NamedEnumMixin_from_discord_name():
 @pytest.mark.parametrize("cast", [str, repr], ids=lambda it: it.__qualname__)
 def test_NamedEnumMixin_str_and_repr(cast):
     assert cast(DummyNamedEnum.BAZ) == "BAZ"
+
+
+@pytest.mark.model
+def test_BestEffortEnumMixin_get_best_effort_from_name_happy_path():
+    assert DummyBestEffortEnum.get_best_effort_from_name("BAR") == DummyBestEffortEnum.BAR
+
+
+@pytest.mark.model
+def test_BestEffortEnumMixin_get_best_effort_from_name_sad_path():
+    assert DummyBestEffortEnum.get_best_effort_from_name("BARr") == "BARr"
+
+
+@pytest.mark.model
+def test_BestEffortEnumMixin_get_best_effort_from_value_happy_path():
+    assert DummyBestEffortEnum.get_best_effort_from_value(18) == DummyBestEffortEnum.BAR
+
+
+@pytest.mark.model
+def test_BestEffortEnumMixin_get_best_effort_from_value_sad_path():
+    assert DummyBestEffortEnum.get_best_effort_from_value("BARr") == "BARr"
+
+
+@pytest.mark.model
+@pytest.mark.parametrize("cast", [str, repr], ids=lambda it: it.__qualname__)
+def test_BestEffortEnumMixin_str_and_repr(cast):
+    assert cast(DummyBestEffortEnum.BAZ) == "BAZ"
 
 
 #: ASSUMPTION

@@ -82,6 +82,10 @@ class Channel(abc.ABC, interfaces.ISnowflake, interfaces.FabricatedMixin):
             cls._channel_implementations[cls.type] = cls
         cls.is_dm = kwargs.pop("is_dm", NotImplemented)
 
+    @classmethod
+    def get_channel_class_from_type(cls, type: int) -> typing.Optional[typing.Type[Channel]]:
+        return cls._channel_implementations.get(type)
+
 
 class TextChannel(Channel, abc.ABC):
     """

@@ -33,7 +33,7 @@ from hikari.internal_utilities import transformations
 from hikari.orm.models import interfaces
 
 
-class Status(interfaces.INamedEnum, enum.Enum):
+class Status(interfaces.NamedEnumMixin, enum.Enum):
     """
     The status of a member.
     """

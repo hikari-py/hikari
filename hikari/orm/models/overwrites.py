@@ -33,7 +33,7 @@ from hikari.orm.models import permissions
 from hikari.orm.models import roles
 
 
-class OverwriteEntityType(interfaces.INamedEnum, enum.Enum):
+class OverwriteEntityType(interfaces.NamedEnumMixin, enum.Enum):
     """
     The type of "thing" that a permission overwrite sets the permissions for.
 

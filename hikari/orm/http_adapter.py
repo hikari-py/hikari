@@ -22,6 +22,7 @@ import asyncio
 
 from hikari.internal_utilities import meta
 from hikari.internal_utilities import unspecified
+from hikari.orm.models import audit_logs
 from hikari.orm.models import gateway_bot
 from . import fabric
 
@@ -74,7 +75,13 @@ class HTTPAdapter:
         guild_id: int,
         *,
         user_id: int = unspecified.UNSPECIFIED,
-        action_type: int = unspecified.UNSPECIFIED,
+        action_type: audit_logs.AuditLogEvent = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
     ):
-        raise NotImplementedError
+        audit_payload = await self.fabric.http_client.get_guild_audit_log(
+            guild_id=str(guild_id),
+            user_id=str(user_id) if user_id is not unspecified.UNSPECIFIED else user_id,
+            action_type=int(action_type) if action_type is not unspecified.UNSPECIFIED else unspecified.UNSPECIFIED,
+            limit=limit,
+        )
+        return audit_logs.AuditLog(self.fabric, audit_payload)

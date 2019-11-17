@@ -21,6 +21,7 @@ Custom data structures and constant values.
 """
 import types
 import typing
+from typing import Iterator
 
 from hikari.internal_utilities import assertions
 
@@ -95,6 +96,32 @@ class LRUDict(typing.MutableMapping[HashableT, ValueT]):
 
     def __iter__(self) -> typing.Iterator[ValueT]:
         yield from self._data
+
+
+class DefaultImmutableMapping(typing.Mapping[HashableT, ValueT]):
+    """
+    A special type of immutable mapping that wraps a mapping of some sort and provides
+    an interface allowing either a stored or default value to be returned depending on
+    whether the query exists as a key or not.
+    """
+
+    __slots__ = ("_data", "_default")
+
+    def __init__(self, data: typing.Mapping[HashableT, ValueT], default: typing.Any):
+        self._data = types.MappingProxyType(data)
+        self._default = default
+
+    def __getitem__(self, item):
+        try:
+            return self._data[item]
+        except KeyError:
+            return self._default
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __iter__(self) -> Iterator[HashableT]:
+        return iter(self._data)
 
 
 #: An immutable indexable container of elements with zero size.

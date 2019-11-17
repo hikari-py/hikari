@@ -324,7 +324,7 @@ class SystemChannelFlag(enum.IntFlag):
     PREMIUM_SUBSCRIPTION = 2
 
 
-class Feature(interfaces.INamedEnum, enum.Enum):
+class Feature(interfaces.NamedEnumMixin, enum.Enum):
     """
     Features that a guild can provide.
     """
