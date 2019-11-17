@@ -147,238 +147,174 @@ class TestSnowflake:
 
 
 @pytest.mark.model
-def test_NamedEnumMixin_from_discord_name():
-    assert DummyNamedEnum.from_discord_name("bar") == DummyNamedEnum.BAR
+class TestNamedEnumMixin:
+    def test_from_discord_name(self):
+        assert DummyNamedEnum.from_discord_name("bar") == DummyNamedEnum.BAR
+
+    @pytest.mark.parametrize("cast", [str, repr], ids=lambda it: it.__qualname__)
+    def test_str_and_repr(self, cast):
+        assert cast(DummyNamedEnum.BAZ) == "BAZ"
 
 
 @pytest.mark.model
-@pytest.mark.parametrize("cast", [str, repr], ids=lambda it: it.__qualname__)
-def test_NamedEnumMixin_str_and_repr(cast):
-    assert cast(DummyNamedEnum.BAZ) == "BAZ"
+class TestBestEffortEnumMixin:
+    def test_get_best_effort_from_name_happy_path(self):
+        assert DummyBestEffortEnum.get_best_effort_from_name("BAR") == DummyBestEffortEnum.BAR
+
+    def test_get_best_effort_from_name_sad_path(self):
+        assert DummyBestEffortEnum.get_best_effort_from_name("BARr") == "BARr"
+
+    def test_get_best_effort_from_value_happy_path(self):
+        assert DummyBestEffortEnum.get_best_effort_from_value(18) == DummyBestEffortEnum.BAR
+
+    def test_get_best_effort_from_value_sad_path(self):
+        assert DummyBestEffortEnum.get_best_effort_from_value("BARr") == "BARr"
+
+    @pytest.mark.parametrize("cast", [str, repr], ids=lambda it: it.__qualname__)
+    def test_str_and_repr(self, cast):
+        assert cast(DummyBestEffortEnum.BAZ) == "BAZ"
 
 
 @pytest.mark.model
-def test_BestEffortEnumMixin_get_best_effort_from_name_happy_path():
-    assert DummyBestEffortEnum.get_best_effort_from_name("BAR") == DummyBestEffortEnum.BAR
-
-
-@pytest.mark.model
-def test_BestEffortEnumMixin_get_best_effort_from_name_sad_path():
-    assert DummyBestEffortEnum.get_best_effort_from_name("BARr") == "BARr"
-
-
-@pytest.mark.model
-def test_BestEffortEnumMixin_get_best_effort_from_value_happy_path():
-    assert DummyBestEffortEnum.get_best_effort_from_value(18) == DummyBestEffortEnum.BAR
-
-
-@pytest.mark.model
-def test_BestEffortEnumMixin_get_best_effort_from_value_sad_path():
-    assert DummyBestEffortEnum.get_best_effort_from_value("BARr") == "BARr"
-
-
-@pytest.mark.model
-@pytest.mark.parametrize("cast", [str, repr], ids=lambda it: it.__qualname__)
-def test_BestEffortEnumMixin_str_and_repr(cast):
-    assert cast(DummyBestEffortEnum.BAZ) == "BAZ"
-
-
-#: ASSUMPTION
-@pytest.mark.model
-def test_no_hash_is_applied_to_dataclass_without_id():
-    @dataclasses.dataclass()
-    class NonIDDataClass:
-        foo: int
-        bar: float
-        baz: str
-        bork: object
-
-    first = NonIDDataClass(10, 10.5, "11.0", object())
-    second = NonIDDataClass(10, 10.9, "11.5", object())
-
-    try:
-        assert hash(first) != hash(second)
-        assert False
-    except TypeError as ex:
-        assert "unhashable type" in str(ex)
-
-
-@pytest.mark.model
-def test_dataclass_does_not_overwrite_existing_hash_if_explicitly_defined():
-    class Base:
-        def __hash__(self):
-            return 69
-
-    @dataclasses.dataclass()
-    class Impl(Base):
-        def __hash__(self):
-            return 70
-
-    i = Impl()
-
-    assert hash(i) == 70
-
-
-@pytest.mark.model
-def test_IModel_injects_dummy_init_if_interface():
-    class Test(interfaces.IModel, interface=True):
-        __slots__ = ()
-
-    try:
-        Test()
-        assert False, "Expected TypeError"
-    except TypeError:
-        traceback.print_exc()
-        assert True
-
-
-@pytest.mark.model
-def test_IModel_does_not_inject_dummy_init_if_not_interface():
-    class Test(interfaces.IModel, interface=False):
-        __slots__ = ()
-
-    assert Test()  # *shrug emoji*
-
-
-@pytest.mark.model
-def test_IModel_copy():
-    @dataclasses.dataclass()
-    class Test(interfaces.IModel):
-        __slots__ = ("data", "whatever")
-        data: typing.List[int]
-        whatever: object
-
-        def __eq__(self, other):
-            return self.data == other.data
-
-    data = [1, 2, 3, object(), object()]
-    whatever = object()
-    test = Test(data, whatever)
-
-    assert test.copy() is not test
-    assert test.copy() == test
-    assert test.copy().data is not data
-    assert test.copy().data == data
-
-    assert test.copy().whatever is not whatever
-
-
-@pytest.mark.model
-def test_IModel_does_not_clone_fields_in___copy_by_ref___():
-    @dataclasses.dataclass()
-    class Test(interfaces.IModel):
-        __copy_by_ref__ = ("data",)
-        __slots__ = ("data",)
-        data: typing.List[int]
-
-    data = [1, 2, 3]
-    test = Test(data)
-
-    assert test.copy() is not test
-    assert test.copy().data is data
-
-
-@pytest.mark.model
-def test_IModel_does_not_clone_state_by_default_fields():
-    @dataclasses.dataclass()
-    class Test(interfaces.IModel):
-        __copy_by_ref__ = ("foo",)
-        __slots__ = ("foo", "_fabric")
-        _fabric: typing.List[int]
-        foo: int
-
-    fabric = [1, 2, 3]
-    foo = 12
-    test = Test(fabric, foo)
-
-    assert test.copy() is not test
-    assert test.copy()._fabric is fabric
-
-
-@pytest.mark.model
-def test_IModel___copy_by_ref___is_inherited():
-    class Base1(interfaces.IModel):
-        __copy_by_ref__ = ["a", "b", "c"]
-        __slots__ = ("a", "b", "c")
-
-    class Base2(Base1):
-        __copy_by_ref__ = ["d", "e", "f"]
-        __slots__ = ("d", "e", "f")
-
-    class Base3(Base2):
-        __copy_by_ref__ = ["g", "h", "i"]
-        __slots__ = ("g", "h", "i")
-
-    for letter in "abcdefghi":
-        assert letter in Base3.__copy_by_ref__, f"{letter!r} was not inherited into __copy_by_ref__"
-
-
-@pytest.mark.model
-def test_IModel___all_slots___is_inherited():
-    class Base1(interfaces.IModel):
-        __copy_by_ref__ = ["a", "b", "c"]
-        __slots__ = ("a", "b", "c")
-
-    class Base2(Base1):
-        __copy_by_ref__ = ["d", "e", "f"]
-        __slots__ = ("d", "e", "f")
-
-    class Base3(Base2):
-        __copy_by_ref__ = ["g", "h", "i"]
-        __slots__ = ("g", "h", "i")
-
-    for letter in "abcdefghi":
-        assert letter in Base3.__all_slots__, f"{letter!r} was not inherited into __all_slots__"
-
-
-@pytest.mark.model
-def test_non_slotted_IModel_refuses_to_initialize():
-    try:
-
-        class BadClass(interfaces.IModel):
-            # look ma, no slots.
-            pass
-
-    except TypeError:
-        assert True
-
-
-@pytest.mark.model
-def test_slotted_IModel_can_initialize():
-    try:
-
-        class GoodClass(interfaces.IModel):
+class TestIModel:
+    def test_injects_dummy_init_if_interface(self):
+        class Test(interfaces.IModel, interface=True):
             __slots__ = ()
 
-    except TypeError as ex:
-        raise AssertionError from ex
+        try:
+            Test()
+            assert False, "Expected TypeError"
+        except TypeError:
+            traceback.print_exc()
+            assert True
+
+    def test_does_not_inject_dummy_init_if_not_interface(self):
+        class Test(interfaces.IModel, interface=False):
+            __slots__ = ()
+
+        assert Test()  # *shrug emoji*
+
+    def test_copy(self):
+        @dataclasses.dataclass()
+        class Test(interfaces.IModel):
+            __slots__ = ("data", "whatever")
+            data: typing.List[int]
+            whatever: object
+
+            def __eq__(self, other):
+                return self.data == other.data
+
+        data = [1, 2, 3, object(), object()]
+        whatever = object()
+        test = Test(data, whatever)
+
+        assert test.copy() is not test
+        assert test.copy() == test
+        assert test.copy().data is not data
+        assert test.copy().data == data
+
+        assert test.copy().whatever is not whatever
+
+    def test_does_not_clone_fields_in___copy_by_ref___(self):
+        @dataclasses.dataclass()
+        class Test(interfaces.IModel):
+            __copy_by_ref__ = ("data",)
+            __slots__ = ("data",)
+            data: typing.List[int]
+
+        data = [1, 2, 3]
+        test = Test(data)
+
+        assert test.copy() is not test
+        assert test.copy().data is data
+
+    def test_does_not_clone_state_by_default_fields(self):
+        @dataclasses.dataclass()
+        class Test(interfaces.IModel):
+            __copy_by_ref__ = ("foo",)
+            __slots__ = ("foo", "_fabric")
+            _fabric: typing.List[int]
+            foo: int
+
+        fabric = [1, 2, 3]
+        foo = 12
+        test = Test(fabric, foo)
+
+        assert test.copy() is not test
+        assert test.copy()._fabric is fabric
+
+    def test___copy_by_ref___is_inherited(self):
+        class Base1(interfaces.IModel):
+            __copy_by_ref__ = ["a", "b", "c"]
+            __slots__ = ("a", "b", "c")
+
+        class Base2(Base1):
+            __copy_by_ref__ = ["d", "e", "f"]
+            __slots__ = ("d", "e", "f")
+
+        class Base3(Base2):
+            __copy_by_ref__ = ["g", "h", "i"]
+            __slots__ = ("g", "h", "i")
+
+        for letter in "abcdefghi":
+            assert letter in Base3.__copy_by_ref__, f"{letter!r} was not inherited into __copy_by_ref__"
+
+    def test___all_slots___is_inherited(self):
+        class Base1(interfaces.IModel):
+            __copy_by_ref__ = ["a", "b", "c"]
+            __slots__ = ("a", "b", "c")
+
+        class Base2(Base1):
+            __copy_by_ref__ = ["d", "e", "f"]
+            __slots__ = ("d", "e", "f")
+
+        class Base3(Base2):
+            __copy_by_ref__ = ["g", "h", "i"]
+            __slots__ = ("g", "h", "i")
+
+        for letter in "abcdefghi":
+            assert letter in Base3.__all_slots__, f"{letter!r} was not inherited into __all_slots__"
+
+    def test_non_slotted_IModel_refuses_to_initialize(self):
+        try:
+
+            class BadClass(interfaces.IModel):
+                # look ma, no slots.
+                pass
+
+        except TypeError:
+            assert True
+
+    def test_slotted_IModel_can_initialize(self):
+        try:
+
+            class GoodClass(interfaces.IModel):
+                __slots__ = ()
+
+        except TypeError as ex:
+            raise AssertionError from ex
 
 
 @pytest.mark.model
-def test_interface_FabricatedMixin_does_not_need_fabric():
-    class Interface(interfaces.FabricatedMixin, interface=True):
-        __slots__ = ()
+class TestFabricatedMixin:
+    def test_interface_FabricatedMixin_does_not_need_fabric(self):
+        class Interface(interfaces.FabricatedMixin, interface=True):
+            __slots__ = ()
 
+    def test_delegate_fabricated_FabricatedMixin_does_not_need_fabric(self):
+        class Delegated(interfaces.FabricatedMixin, delegate_fabricated=True):
+            __slots__ = ()
 
-@pytest.mark.model
-def test_delegate_fabricated_FabricatedMixin_does_not_need_fabric():
-    class Delegated(interfaces.FabricatedMixin, delegate_fabricated=True):
-        __slots__ = ()
+    def test_regular_FabricatedMixin_fails_to_initialize_without_fabric_slot(self):
+        try:
 
+            class Regular(interfaces.FabricatedMixin):
+                __slots__ = ()
 
-@pytest.mark.model
-def test_regular_FabricatedMixin_fails_to_initialize_without_fabric_slot():
-    try:
+            assert False, "No TypeError was raised."
+        except TypeError:
+            assert True, "passed"
 
+    def test_regular_FabricatedMixin_can_initialize_with_fabric_slot(self):
         class Regular(interfaces.FabricatedMixin):
-            __slots__ = ()
-
-        assert False, "No TypeError was raised."
-    except TypeError:
-        assert True, "passed"
-
-
-@pytest.mark.model
-def test_regular_FabricatedMixin_can_initialize_with_fabric_slot():
-    class Regular(interfaces.FabricatedMixin):
-        __slots__ = ("_fabric",)
+            __slots__ = ("_fabric",)
