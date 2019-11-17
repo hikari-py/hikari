@@ -886,7 +886,7 @@ class TestGateway:
         gw.uri = "ws://uri"
         await gw.run_once()
         gw.client_session.ws_connect.assert_called_once_with(
-            gw.uri, compress=0, proxy=None, proxy_auth=None, proxy_headers=None, ssl_context=None, verify_ssl=True,
+            gw.uri, compress=0, proxy=None, proxy_auth=None, proxy_headers=None, ssl_context=None, verify_ssl=True
         )
 
     @mock_run_once_parts()
