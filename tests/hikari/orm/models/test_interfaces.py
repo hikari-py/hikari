@@ -19,6 +19,7 @@
 import dataclasses
 import datetime
 import enum
+import traceback
 import typing
 
 import pytest
@@ -28,6 +29,7 @@ from hikari.orm.models import interfaces
 
 @dataclasses.dataclass()
 class DummySnowflake(interfaces.ISnowflake):
+    __slots__ = ("id",)
     id: int
 
 
@@ -91,6 +93,8 @@ class TestSnowflake:
 
     def test___eq___when_matching_type_and_matching_id(self):
         class SnowflakeImpl(interfaces.ISnowflake):
+            __slots__ = ("id",)
+
             def __init__(self):
                 self.id = 1
 
@@ -98,6 +102,8 @@ class TestSnowflake:
 
     def test___eq___when_matching_type_but_no_matching_id(self):
         class SnowflakeImpl(interfaces.ISnowflake):
+            __slots__ = ("id",)
+
             def __init__(self, id_):
                 self.id = id_
 
@@ -105,10 +111,14 @@ class TestSnowflake:
 
     def test___eq___when_no_matching_type_but_matching_id(self):
         class SnowflakeImpl1(interfaces.ISnowflake):
+            __slots__ = ("id",)
+
             def __init__(self, id_):
                 self.id = id_
 
         class SnowflakeImpl2(interfaces.ISnowflake):
+            __slots__ = ("id",)
+
             def __init__(self, id_):
                 self.id = id_
 
@@ -116,10 +126,14 @@ class TestSnowflake:
 
     def test___eq___when_no_matching_type_and_no_matching_id(self):
         class SnowflakeImpl1(interfaces.ISnowflake):
+            __slots__ = ("id",)
+
             def __init__(self, id_):
                 self.id = id_
 
         class SnowflakeImpl2(interfaces.ISnowflake):
+            __slots__ = ("id",)
+
             def __init__(self, id_):
                 self.id = id_
 
@@ -171,6 +185,27 @@ def test_dataclass_does_not_overwrite_existing_hash_if_explicitly_defined():
     i = Impl()
 
     assert hash(i) == 70
+
+
+@pytest.mark.model
+def test_IModel_injects_dummy_init_if_interface():
+    class Test(interfaces.IModel, interface=True):
+        __slots__ = ()
+
+    try:
+        Test()
+        assert False, "Expected TypeError"
+    except TypeError:
+        traceback.print_exc()
+        assert True
+
+
+@pytest.mark.model
+def test_IModel_does_not_inject_dummy_init_if_not_interface():
+    class Test(interfaces.IModel, interface=False):
+        __slots__ = ()
+
+    assert Test()  # *shrug emoji*
 
 
 @pytest.mark.model
