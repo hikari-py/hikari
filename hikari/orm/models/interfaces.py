@@ -31,10 +31,44 @@ from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
 from hikari.orm import fabric
 
+T = typing.TypeVar("T")
+U = typing.TypeVar("U")
+
 
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
-class INamedEnum:
+class BestEffortEnumMixin:
+    """
+    An enum interface extension that allows for trying to get a parsed value or falling back to the original input.
+    """
+
+    __slots__ = ()
+
+    @classmethod
+    def get_best_effort_from_name(cls: typing.Type[T], value: U) -> typing.Union[T, U]:
+        """Attempt to parse the given value into an enum instance, or if failing, return the input value."""
+        try:
+            return cls[value]
+        except KeyError:
+            return value
+
+    @classmethod
+    def get_best_effort_from_value(cls: typing.Type[T], value: U) -> typing.Union[T, U]:
+        """Attempt to parse the given value into an enum instance, or if failing, return the input value."""
+        try:
+            return cls(value)
+        except ValueError:
+            return value
+
+    def __str__(self):
+        return self.name
+
+    __repr__ = __str__
+
+
+@assertions.assert_is_mixin
+@assertions.assert_is_slotted
+class NamedEnumMixin:
     """
     A mixin for an enum that is produced from a string by Discord. This ensures that the key can be looked up from a
     lowercase value that discord provides and use a Pythonic key name that is in upper case.
@@ -97,7 +131,7 @@ class IModel(metaclass=abc.ABCMeta):
         if is_interface and "__init__" not in cls.__dict__:
 
             @abc.abstractmethod
-            def __init__(self, *init_args, **init_kwargs):
+            def __init__(_self, *init_args, **init_kwargs):
                 super().__init__(*init_args, **init_kwargs)
 
             setattr(cls, "__init__", __init__)
@@ -266,4 +300,4 @@ class FabricatedMixin(IModel):
             )
 
 
-__all__ = ("ISnowflake", "INamedEnum", "FabricatedMixin", "IModel")
+__all__ = ("ISnowflake", "BestEffortEnumMixin", "NamedEnumMixin", "FabricatedMixin", "IModel")
