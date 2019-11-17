@@ -24,9 +24,10 @@ from . import errors
 from . import net
 from . import orm
 
-__author__ = "Nekoka.tt"
+
+__author__ = "Nekokatt"
 __contributors__ = {"LunarCoffee", "raatty", "Tmpod", "Zach", "thomm.o", "rock500", "davfsa"}
-__copyright__ = f"© 2019 Nekoka.tt"
+__copyright__ = f"© 2019 Nekokatt"
 __license__ = "LGPLv3"
 __version__ = "0.0.40"
 __url__ = "https://gitlab.com/nekokatt/hikari"

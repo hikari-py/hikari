@@ -110,9 +110,7 @@ def stats(_) -> None:
 @nox.session(python=False)
 def pytest(session) -> None:
     """Run pytest"""
-    session.run(
-        "python", "-W", "ignore::DeprecationWarning", "-m", "pytest", *PYTEST_ARGS, *session.posargs, TEST_PATH,
-    )
+    session.run("python", "-W", "ignore::DeprecationWarning", "-m", "pytest", *PYTEST_ARGS, *session.posargs, TEST_PATH)
 
 
 @nox.session(python=False)

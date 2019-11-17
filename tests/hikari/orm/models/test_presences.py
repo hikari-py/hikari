@@ -158,11 +158,7 @@ def rich_presence_activity(assets, party, timestamps):
 
 @pytest.fixture()
 def legacy_presence_activity():
-    return {
-        "type": 0,
-        "name": "with yo mama",
-        "url": None,
-    }
+    return {"type": 0, "name": "with yo mama", "url": None}
 
 
 @pytest.mark.model

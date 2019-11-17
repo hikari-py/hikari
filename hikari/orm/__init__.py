@@ -25,4 +25,5 @@ well as providing an expandable and extendable interface to wrap them together i
 """
 from . import dispatching_event_adapter_impl
 from . import models
+from . import state_registry
 from . import state_registry_impl

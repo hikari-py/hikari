@@ -62,7 +62,9 @@ class IUser(abc.ABC, interfaces.FabricatedMixin, interfaces.ISnowflake, interfac
     __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot")
 
     #: This is an abstract implementation that should be overridden.
-    __init__ = NotImplemented
+    @abc.abstractmethod
+    def __init__(self):
+        ...
 
 
 class User(IUser):

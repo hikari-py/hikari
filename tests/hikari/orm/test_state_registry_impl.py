@@ -312,10 +312,7 @@ class TestStateRegistryImpl:
         message_obj = _helpers.mock_model(messages.Message, id=1234)
         reaction_obj_to_delete = reactions.Reaction(5, emoji_obj_to_remove, message_obj)
         reaction_obj_to_keep = reactions.Reaction(7, emoji_obj_to_keep, message_obj)
-        message_obj.reactions = [
-            reaction_obj_to_keep,
-            reaction_obj_to_delete,
-        ]
+        message_obj.reactions = [reaction_obj_to_keep, reaction_obj_to_delete]
 
         registry.delete_reaction(message_obj, user_obj, emoji_obj_to_remove)
 
