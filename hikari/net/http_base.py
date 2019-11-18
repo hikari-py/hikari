@@ -256,7 +256,7 @@ class BaseHTTPClient:
         #:
         #: :type: :class:`aiohttp.ClientSession`
         self.client_session = aiohttp.ClientSession(
-            connector=connector, loop=self.loop, json_serialize=json_marshaller, version=aiohttp.HttpVersion11,
+            connector=connector, loop=self.loop, json_serialize=json_marshaller, version=aiohttp.HttpVersion11
         )
 
         #: Callable used to marshal (serialize) payloads into JSON-encoded strings from native Python objects.
