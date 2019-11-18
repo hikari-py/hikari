@@ -184,12 +184,12 @@ class TestGuild:
     def test_available_Guild(self, test_guild_payload, test_emoji_payload, test_member_payload, fabric_obj):
         guild_obj = guilds.Guild(fabric_obj, test_guild_payload)
 
-        assert guild_obj.id == 123456
-        assert guild_obj.afk_channel_id == 99998888777766
-        assert guild_obj.owner_id == 6969696
+        assert guild_obj.id == 123_456
+        assert guild_obj.afk_channel_id == 99_998_888_777_766
+        assert guild_obj.owner_id == 6_969_696
         assert guild_obj.voice_region == "eu-central"
-        assert guild_obj.system_channel_id == 19216801
-        assert guild_obj.creator_application_id == 10987654321
+        assert guild_obj.system_channel_id == 19_216_801
+        assert guild_obj.creator_application_id == 10_987_654_321
         assert guild_obj.name == "L33t guild"
         assert guild_obj.icon_hash == "1a2b3c4d"
         assert guild_obj.splash_hash == "0ff0ff0ff"
@@ -223,7 +223,7 @@ class TestGuild:
             | permissions.Permission.KICK_MEMBERS
             | permissions.Permission.CREATE_INSTANT_INVITE
         )
-        assert guild_obj.max_members == 25_000
+        assert guild_obj.max_members == 25000
         assert guild_obj.vanity_url_code == "loool"
         assert guild_obj.description == "This is a server I guess, its a bit crap though"
         assert guild_obj.banner_hash == "1a2b3c"
@@ -241,7 +241,7 @@ class TestGuild:
     def test_unavailable_Guild(self, fabric_obj):
         guild_obj = guilds.Guild(fabric_obj, {"id": "12345678910", "unavailable": True})
 
-        assert guild_obj.id == 12345678910
+        assert guild_obj.id == 12_345_678_910
         assert guild_obj.unavailable
 
     def test_Ban(self, fabric_obj):

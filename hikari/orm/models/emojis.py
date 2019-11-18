@@ -167,7 +167,7 @@ def is_payload_guild_emoji_candidate(payload: data_structures.DiscordObjectT) ->
 
 
 def parse_emoji(
-    fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_id: typing.Optional[int] = None,
+    fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_id: typing.Optional[int] = None
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:
     """
     Parse the given emoji payload into an appropriate implementation of Emoji.

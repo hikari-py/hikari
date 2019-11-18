@@ -32,6 +32,8 @@ from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
+from hikari.orm.models import members
+from hikari.orm.models import users
 from tests.hikari import _helpers
 
 
@@ -525,6 +527,7 @@ class TestDispatchingEventAdapterImpl:
     @pytest.mark.asyncio
     async def test__handle_guild_leave_parses_guild(self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl):
         payload = {"id": 123, "unavailable": False}
+
         await adapter_impl._handle_guild_leave(payload)
 
         fabric_impl.state_registry.parse_guild.assert_called_with(payload)
@@ -532,8 +535,9 @@ class TestDispatchingEventAdapterImpl:
     @pytest.mark.asyncio
     async def test__handle_guild_leave_deletes_guild(self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=123, unavailable=False)
-        payload = {"id": guild_obj.id, "unavailable": guild_obj.unavailable}
         fabric_impl.state_registry.parse_guild = mock.MagicMock(return_value=guild_obj)
+        payload = {"id": guild_obj.id, "unavailable": guild_obj.unavailable}
+
         await adapter_impl._handle_guild_leave(payload)
 
         fabric_impl.state_registry.delete_guild.assert_called_with(guild_obj)
@@ -543,44 +547,76 @@ class TestDispatchingEventAdapterImpl:
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         guild_obj = _helpers.mock_model(guilds.Guild, id=123, unavailable=False)
-        payload = {"id": guild_obj.id, "unavailable": guild_obj.unavailable}
         fabric_impl.state_registry.parse_guild = mock.MagicMock(return_value=guild_obj)
+        payload = {"id": guild_obj.id, "unavailable": guild_obj.unavailable}
+
         await adapter_impl._handle_guild_leave(payload)
 
         dispatch_impl.assert_called_with(events.GUILD_LEAVE, guild_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
-    async def test_handle_guild_ban_add_parses_user(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+    async def test_handle_guild_ban_add_parses_user(self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl):
+        payload = {"guild_id": 123, "user": {"id": 456}}
+
+        await adapter_impl.handle_guild_ban_add(gateway_impl, payload)
+
+        fabric_impl.state_registry.parse_user.assert_called_with(payload["user"])
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_ban_add_resolves_member_if_available_and_guild_is_cached(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={})
+        user_obj = _helpers.mock_model(users.User, id=456)
+        member_obj = _helpers.mock_model(members.Member, id=456)
+        guild_obj.members = {member_obj.id: member_obj}
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.parse_user = mock.MagicMock(return_value=user_obj)
+        payload = {"guild_id": guild_obj.id, "user": {"id": user_obj.id}}
+
+        await adapter_impl.handle_guild_ban_add(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.GUILD_BAN_ADD, guild_obj, member_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_ban_add_uses_user_if_member_is_not_cached_but_guild_is_cached(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={})
+        user_obj = _helpers.mock_model(users.User, id=456)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.parse_user = mock.MagicMock(return_value=user_obj)
+        payload = {"guild_id": guild_obj.id, "user": {"id": user_obj.id}}
+
+        await adapter_impl.handle_guild_ban_add(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.GUILD_BAN_ADD, guild_obj, user_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_ban_add_when_guild_is_cached_dispatches_GUILD_BAN_ADD(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={})
+        user_obj = _helpers.mock_model(users.User, id=456)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.parse_user = mock.MagicMock(return_value=user_obj)
+        payload = {"guild_id": guild_obj.id, "user": {"id": user_obj.id}}
+
+        await adapter_impl.handle_guild_ban_add(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.GUILD_BAN_ADD, guild_obj, user_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_ban_add_when_guild_not_cached_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
+        payload = {"guild_id": 123, "user": {"id": 456}}
+
+        await adapter_impl.handle_guild_ban_add(gateway_impl, payload)
+
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_GUILD_BAN_ADD, payload)
 
     @pytest.mark.asyncio
     @pytest.mark.skip(reason="Not implemented")
