@@ -683,46 +683,90 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(events.RAW_GUILD_BAN_REMOVE, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_emojis_update_when_guild_is_not_cached_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
+            return_value=None)
+        payload = {"guild_id": "123", "emojis": [
+            {"id": "1234", "name": "bowsettebaka", "animated": False},
+            {"id": "1235", "name": "bowsettel00d", "animated": False},
+        ], }
+
+        await adapter_impl.handle_guild_emojis_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_GUILD_EMOJIS_UPDATE, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_emojis_update_when_guild_is_cached_dispatches_GUILD_EMOJIS_UPDATE(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={})
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
+            return_value=guild_obj)
+        payload = {"guild_id": str(guild_obj.id), "emojis": [
+            {"id": "1234", "name": "bowsettebaka", "animated": False},
+            {"id": "1235", "name": "bowsettel00d", "animated": False},
+        ], }
+
+        await adapter_impl.handle_guild_emojis_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.GUILD_EMOJIS_UPDATE, guild_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_integrations_update_when_guild_is_not_cached_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
+        payload = {"guild_id": "123"}
+
+        await adapter_impl.handle_guild_integrations_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_GUILD_INTEGRATIONS_UPDATE, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_integrations_update_when_guild_is_cached_dispatches_GUILD_INTEGRATIONS_UPDATE(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={})
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
+            return_value=guild_obj)
+        payload = {"guild_id": str(guild_obj.id)}
+
+        await adapter_impl.handle_guild_integrations_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.GUILD_INTEGRATIONS_UPDATE, guild_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_member_add_when_guild_is_not_cached_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
+            return_value=None)
+        payload = {"guild_id": "123", "user": {"id": "123", "nick": None, "roles": {}}}
+
+        await adapter_impl.handle_guild_member_add(gateway_impl, payload)
+
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_GUILD_MEMBER_ADD, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_member_add_when_guild_is_cached_dispatches_GUILD_MEMBER_ADD(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={})
+        member_obj = _helpers.mock_model(members.Member, id=123)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
+            return_value=guild_obj)
+        fabric_impl.state_registry.parse_member = mock.MagicMock(
+            return_value=member_obj)
+        payload = {"guild_id": guild_obj.id, "user": {"id": "123", "nick": None, "roles": {}}}
+
+        await adapter_impl.handle_guild_member_add(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.GUILD_MEMBER_ADD, member_obj)
 
     @pytest.mark.asyncio
     @pytest.mark.skip(reason="Not implemented")
