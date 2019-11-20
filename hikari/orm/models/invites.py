@@ -50,12 +50,12 @@ class Invite(interfaces.IModel):
 
     #: The guild the invite is for
     #:
-    #: :type: :class:`hikari.core.models.guilds.Guild`
+    #: :type: :class:`hikari.orm.models.guilds.Guild`
     guild: guilds.Guild
 
     #: The channel the invite points to
     #:
-    #: :type: :class:`hikari.core.models.channels.GuildChannel`
+    #: :type: :class:`hikari.orm.models.channels.GuildChannel`
     channel: channels.GuildChannel
 
     #: Approximate count of online members.
@@ -90,7 +90,7 @@ class InviteMetadata(interfaces.IModel):
 
     #: The user who created the invite.
     #:
-    #: :type: :class:`hikari.core.models.users.User`
+    #: :type: :class:`hikari.orm.models.users.User`
     inviter: users.User
 
     #: The number of times the invite has been used.
