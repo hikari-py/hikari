@@ -34,6 +34,7 @@ from hikari.orm.models import channels
 from hikari.orm.models import guilds
 from hikari.orm.models import members
 from hikari.orm.models import users
+from hikari.orm.models import roles
 from tests.hikari import _helpers
 
 
@@ -745,7 +746,7 @@ class TestDispatchingEventAdapterImpl:
     ):
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
             return_value=None)
-        payload = {"guild_id": "123", "user": {"id": "123", "nick": None, "roles": {}}}
+        payload = {"guild_id": "123"}
 
         await adapter_impl.handle_guild_member_add(gateway_impl, payload)
 
@@ -756,52 +757,103 @@ class TestDispatchingEventAdapterImpl:
     async def test_handle_guild_member_add_when_guild_is_cached_dispatches_GUILD_MEMBER_ADD(
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={})
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123)
         member_obj = _helpers.mock_model(members.Member, id=123)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
             return_value=guild_obj)
         fabric_impl.state_registry.parse_member = mock.MagicMock(
             return_value=member_obj)
-        payload = {"guild_id": guild_obj.id, "user": {"id": "123", "nick": None, "roles": {}}}
+        payload = {"guild_id": guild_obj.id}
 
         await adapter_impl.handle_guild_member_add(gateway_impl, payload)
 
         dispatch_impl.assert_called_with(events.GUILD_MEMBER_ADD, member_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_member_update_when_guild_is_not_cached_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
+            return_value=None)
+        payload = {"guild_id": "123", "user": {"id": "123"}, "roles": [],  "nick": None}
+
+        await adapter_impl.handle_guild_member_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_GUILD_MEMBER_UPDATE, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_member_update_when_member_is_not_cached_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={})
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
+            return_value=guild_obj)
+        payload = {"guild_id": str(guild_obj.id), "user": {"id": "123"}, "roles": [],  "nick": None}
+
+        await adapter_impl.handle_guild_member_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_GUILD_MEMBER_UPDATE, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_member_update_when_role_is_not_cached_does_not_pass_update_member_that_role(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        role_obj = _helpers.mock_model(roles.Role, id=1)
+        member_obj = _helpers.mock_model(members.Member, id=123, nick=None)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={}, roles={})
+        guild_obj.members = {member_obj.id: member_obj}
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
+            return_value=guild_obj)
+        fabric_impl.state_registry.get_role_by_id = mock.MagicMock(
+            return_value=None)
+        payload = {"guild_id": str(guild_obj.id), "user": {"id": str(member_obj.id)}, "nick": "potatoboi", "roles": [role_obj.id]}
+
+        await adapter_impl.handle_guild_member_update(gateway_impl, payload)
+
+        fabric_impl.state_registry.update_member.assert_called_with(member_obj, [], "potatoboi")
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_member_update_calls_update_member_with_roles_and_nick(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        role_obj = _helpers.mock_model(roles.Role, id=1)
+        member_obj = _helpers.mock_model(members.Member, id=123, nick=None)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={}, roles={})
+        guild_obj.members = {member_obj.id: member_obj}
+        guild_obj.roles = {role_obj.id: role_obj}
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
+            return_value=guild_obj)
+        fabric_impl.state_registry.get_role_by_id = mock.MagicMock(
+            return_value=role_obj)
+        payload = {"guild_id": str(guild_obj.id), "user": {"id": str(
+            member_obj.id)}, "nick": "potatoboi", "roles": [role_obj.id]}
+
+        await adapter_impl.handle_guild_member_update(gateway_impl, payload)
+
+        fabric_impl.state_registry.update_member.assert_called_with(member_obj, [role_obj], "potatoboi")
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_member_update_when_member_is_cached_dispatches_GUILD_MEMBER_UPDATE(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        role_obj = _helpers.mock_model(roles.Role, id=1)
+        member_obj = _helpers.mock_model(members.Member, id=123, nick=None)
+        guild_obj = _helpers.mock_model(
+            guilds.Guild, id=123, members={}, roles={})
+        guild_obj.members = {member_obj.id: member_obj}
+        guild_obj.roles = {role_obj.id: role_obj}
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
+            return_value=guild_obj)
+        fabric_impl.state_registry.get_role_by_id = mock.MagicMock(
+            return_value=role_obj)
+        payload = {"guild_id": str(guild_obj.id), "user": {"id": str(
+            member_obj.id)}, "nick": "potatoboi", "roles": [role_obj.id]}
+
+        await adapter_impl.handle_guild_member_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.GUILD_MEMBER_UPDATE)
 
     @pytest.mark.asyncio
     @pytest.mark.skip(reason="Not implemented")
