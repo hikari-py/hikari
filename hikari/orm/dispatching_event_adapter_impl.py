@@ -246,8 +246,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
         guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
         if guild_obj is not None:
             diff = self.fabric.state_registry.update_guild_emojis(payload["emojis"], guild_obj)
-            guild = self.fabric.state_registry.get_guild_by_id(guild_id)
-            self.dispatch(events.GUILD_EMOJIS_UPDATE, guild, *diff)
+            self.dispatch(events.GUILD_EMOJIS_UPDATE, guild_obj, *diff)
         else:
             self.logger.warning("ignoring GUILD_EMOJIS_UPDATE for unknown guild %s", guild_id)
 
