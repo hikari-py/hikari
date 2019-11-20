@@ -36,7 +36,7 @@ ScalarT = typing.Union[dict, list, int, float, str, bool, None]
 #: Type hint for a Discord-compatible object.
 #:
 #: This is a :class:`builtins.dict` of :class:`builtins.str` keys that map to any value. Since the
-#: :mod:`hikari.core.net`module does not enforce concrete models for values sent and received, mappings are passed
+#: :mod:`hikari.net`module does not enforce concrete models for values sent and received, mappings are passed
 #: around to represent request and response data. This allows an implementation to use this layer as desired.
 DiscordObjectT = typing.Dict[str, ScalarT]
 

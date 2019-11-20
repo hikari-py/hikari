@@ -174,12 +174,12 @@ class Message(interfaces.ISnowflake, interfaces.FabricatedMixin):
 
     #: List of attachments on this message, if any.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.media.Attachment`
+    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.media.Attachment`
     attachments: typing.Sequence[media.Attachment]
 
     #: List of embeds on this message, if any.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.embeds.ReceivedEmbed`
+    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.embeds.ReceivedEmbed`
     embeds: typing.Sequence[embeds.ReceivedEmbed]
 
     #: Whether this message is pinned or not.
@@ -189,32 +189,32 @@ class Message(interfaces.ISnowflake, interfaces.FabricatedMixin):
 
     #: The application associated with this message (applicable for rich presence-related chat embeds only).
     #:
-    #: :type: :class:`hikari.core.models.messages.MessageApplication` or `None`
+    #: :type: :class:`hikari.orm.models.messages.MessageApplication` or `None`
     application: typing.Optional[MessageApplication]
 
     #: The activity associated with this message (applicable for rich presence-related chat embeds only).
     #:
-    #: :type: :class:`hikari.core.models.messages.MessageActivity` or `None`
+    #: :type: :class:`hikari.orm.models.messages.MessageActivity` or `None`
     activity: typing.Optional[MessageActivity]
 
     #: The type of message.
     #:
-    #: :type: :class:`hikari.core.models.messages.MessageType`
+    #: :type: :class:`hikari.orm.models.messages.MessageType`
     type: MessageType
 
     #: Flags applied to the message.
     #:
-    #: :type: :class:`hikari.core.models.messages.MessageFlag`
+    #: :type: :class:`hikari.orm.models.messages.MessageFlag`
     flags: MessageFlag
 
     #: Message reactions, if any.
     #:
-    #: :type: :class:`typing.List` of :class:`hikari.core.models.reactions.Reaction`
+    #: :type: :class:`typing.List` of :class:`hikari.orm.models.reactions.Reaction`
     reactions: typing.List[reactions.Reaction]
 
     #: Optional crossposting reference. Only valid if the message is a cross post.
     #:
-    #: :type: :class:`hikari.core.models.messages.MessageCrossPost` or `None` if not a cross post.
+    #: :type: :class:`hikari.orm.models.messages.MessageCrossPost` or `None` if not a cross post.
     crosspost_of: typing.Optional[MessageCrosspost]
 
     __repr__ = auto_repr.repr_of("id", "author", "type", "tts", "created_at", "edited_at")
@@ -317,7 +317,7 @@ class MessageActivity:
 
     #: The activity type of the message.
     #:
-    #: :type: :class:`hikari.core.models.messages.MessageActivityType`
+    #: :type: :class:`hikari.orm.models.messages.MessageActivityType`
     type: MessageActivityType
 
     #: The optional party ID associated with the message.

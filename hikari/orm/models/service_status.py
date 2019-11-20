@@ -102,7 +102,7 @@ class Subscription(interfaces.IModel):
 
     #: The subscription body.
     #:
-    #: :type: :class:`hikari.core.models.service_status.Subscriber`
+    #: :type: :class:`hikari.orm.models.service_status.Subscriber`
     subscriber: Subscriber
 
     @staticmethod
@@ -246,12 +246,12 @@ class Components(interfaces.IModel):
 
     #: The page for this list of components.
     #:
-    #: :type: :class:`hikari.core.models.service_status.Page`
+    #: :type: :class:`hikari.orm.models.service_status.Page`
     page: Page
 
     #: The list of components.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.service_status.Component`
+    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.service_status.Component`
     components: typing.Sequence[Component]
 
     @staticmethod
@@ -363,7 +363,7 @@ class Incident(interfaces.IModel):
 
     #: A list of zero or more updates to the status of this incident.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.service_status.IncidentUpdate`
+    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.service_status.IncidentUpdate`
     incident_updates: typing.Sequence[IncidentUpdate]
 
     #: The date and time, if applicable, that the faulty component(s) were being monitored at.
@@ -427,12 +427,12 @@ class Incidents:
 
     #: The page listing the incidents.
     #:
-    #: :type: :class:`hikari.core.models.service_status.Page`
+    #: :type: :class:`hikari.orm.models.service_status.Page`
     page: Page
 
     #: The list of incidents on the page.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.service_status.Incident`
+    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.service_status.Incident`
     incidents: typing.Sequence[Incident]
 
     @staticmethod
@@ -480,7 +480,7 @@ class ScheduledMaintenance(interfaces.IModel):
 
     #: Zero or more updates to this event.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.service_status.IncidentUpdate`
+    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.service_status.IncidentUpdate`
     incident_updates: typing.Sequence[IncidentUpdate]
 
     #: The date and time the event was being monitored since, if applicable.
@@ -550,12 +550,12 @@ class ScheduledMaintenances(interfaces.IModel):
 
     #: The page containing this information.
     #:
-    #: :type: :class:`hikari.core.models.service_status.Page`
+    #: :type: :class:`hikari.orm.models.service_status.Page`
     page: Page
 
     #: The list of items on the page.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.service_status.ScheduledMaintenance`
+    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.service_status.ScheduledMaintenance`
     scheduled_maintenances: typing.Sequence[ScheduledMaintenance]
 
     @staticmethod
@@ -576,27 +576,27 @@ class Summary(interfaces.IModel):
 
     #: The page describing this summary.
     #:
-    #: :type: :class:`hikari.core.models.service_status.Page`
+    #: :type: :class:`hikari.orm.models.service_status.Page`
     page: Page
 
     #: The overall system status.
     #:
-    #: :type: :class:`hikari.core.models.service_status.Status`
+    #: :type: :class:`hikari.orm.models.service_status.Status`
     status: Status
 
     #: The status of each component in the system.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.service_status.Component`
+    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.service_status.Component`
     components: typing.Sequence[Component]
 
     #: The list of incidents that have occurred/are occurring to components in this system.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.service_status.Incident`
+    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.service_status.Incident`
     incidents: typing.Sequence[Incident]
 
     #: A list of maintenance tasks that have been/will be undertaken.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.service_status.ScheduledMaintenance`
+    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.service_status.ScheduledMaintenance`
     scheduled_maintenances: typing.Sequence[ScheduledMaintenance]
 
     @staticmethod

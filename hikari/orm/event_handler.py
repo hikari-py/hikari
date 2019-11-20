@@ -42,7 +42,7 @@ class IEventHandler(abc.ABC):
     __slots__ = ()
 
     @abc.abstractmethod
-    def consume_raw_event(self, shard: gateway.GatewayClientV7, event_name: str, payload: typing.Any,) -> None:
+    def consume_raw_event(self, shard: gateway.GatewayClientV7, event_name: str, payload: typing.Any) -> None:
         """
         This is invoked by a gateway client instance whenever an event of any type occurs. These are
         defined in :mod:`hikari.events` for convenience and documentation purposes.
