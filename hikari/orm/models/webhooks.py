@@ -21,11 +21,23 @@ Webhooks.
 """
 from __future__ import annotations
 
+import enum
 import typing
 
 from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import transformations
 from hikari.orm.models import interfaces
 from hikari.orm.models import users
+
+
+class WebhookType(enum.IntEnum):
+    """
+    The type of a webhook.
+    """
+    # Incoming webhooks that can be posted using Discord's token endpoint.
+    INCOMING = 1
+    # Channel follows webhooks that are posted to by discord announcement channels.
+    CHANNEL_FOLLOWER = 2
 
 
 class Webhook(interfaces.FabricatedMixin, interfaces.ISnowflake):
@@ -34,7 +46,7 @@ class Webhook(interfaces.FabricatedMixin, interfaces.ISnowflake):
     channels without spinning up a complete bot implementation elsewhere (such as for CI pipelines).
     """
 
-    __slots__ = ("_fabric", "id", "guild_id", "channel_id", "user", "name", "avatar_hash", "token")
+    __slots__ = ("_fabric", "id", "type", "guild_id", "channel_id", "user", "name", "avatar_hash", "token")
     __copy_by_ref__ = ("user",)
 
     #: The ID of the guild that the webhook is in.
@@ -47,6 +59,11 @@ class Webhook(interfaces.FabricatedMixin, interfaces.ISnowflake):
     #:
     #: :type: :class:`int`
     id: int
+
+    #: The type of the webhook.
+    #:
+    #: :type:  :class:`hikari.orm.models.webhooks.WebhookType`
+    type: WebhookType
 
     #: The optional user for the webhook.
     #:
@@ -73,6 +90,7 @@ class Webhook(interfaces.FabricatedMixin, interfaces.ISnowflake):
     def __init__(self, fabric_obj, payload):
         self._fabric = fabric_obj
         self.id = int(payload["id"])
+        self.type = transformations.try_cast(payload.get("type"), WebhookType)
         self.guild_id = int(payload["guild_id"])
         self.channel_id = int(payload["channel_id"])
         self.user = fabric_obj.state_registry.parse_user(payload.get("user"))
