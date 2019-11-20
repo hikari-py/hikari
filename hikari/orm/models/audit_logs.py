@@ -290,4 +290,4 @@ class AuditLogChange(interfaces.IModel):
         self.key = AuditLogChangeKey.get_best_effort_from_value(payload["key"])
         converter = AUDIT_LOG_ENTRY_CONVERTERS[self.key]
         self.old_value = transformations.nullable_cast(payload["old_value"], converter)
-        self.new_value = transformations.nullable_cast(payload["]new_value"], converter)
+        self.new_value = transformations.nullable_cast(payload["new_value"], converter)
