@@ -125,7 +125,7 @@ class GuildEmoji(UnknownEmoji, interfaces.FabricatedMixin):
 
     #: The user who made the object, if available.
     #:
-    #: :type: :class:`hikari.core.models.users.User` or `None`
+    #: :type: :class:`hikari.orm.models.users.User` or `None`
     user: typing.Optional[user.User]
 
     #: `True` if the emoji is managed as part of an integration with Twitch, `False` otherwise.
@@ -167,7 +167,7 @@ def is_payload_guild_emoji_candidate(payload: data_structures.DiscordObjectT) ->
 
 
 def parse_emoji(
-    fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_id: typing.Optional[int] = None,
+    fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_id: typing.Optional[int] = None
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:
     """
     Parse the given emoji payload into an appropriate implementation of Emoji.
