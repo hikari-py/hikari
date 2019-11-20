@@ -286,7 +286,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
 
             for role_id in role_ids:
                 role_obj = self.fabric.state_registry.get_role_by_id(guild_id, role_id)
-                if role_objs is not None:
+                if role_obj is not None:
                     role_objs.append(role_obj)
                 else:
                     self.logger.warning(
@@ -305,7 +305,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
     async def handle_guild_member_remove(self, gateway, payload):
         self.dispatch(events.RAW_GUILD_MEMBER_REMOVE, payload)
 
-        user_id = int(payload["id"])
+        user_id = int(payload["user"]["id"])
         guild_id = int(payload["guild_id"])
         member_obj = self.fabric.state_registry.get_member_by_id(user_id, guild_id)
 
