@@ -286,7 +286,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
 
             for role_id in role_ids:
                 role_obj = self.fabric.state_registry.get_role_by_id(guild_id, role_id)
-                if role_objs is not None:
+                if role_obj is not None:
                     role_objs.append(role_obj)
                 else:
                     self.logger.warning(
