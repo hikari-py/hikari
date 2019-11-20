@@ -73,7 +73,7 @@ class Member(users.IUser, delegate_fabricated=True):
 
     #: The user's online presence.
     #:
-    #: :type: :class:`hikari.core.models.presences.Presence`
+    #: :type: :class:`hikari.orm.models.presences.Presence`
     presence: presences.Presence
 
     __copy_by_ref__ = ("presence", "guild")

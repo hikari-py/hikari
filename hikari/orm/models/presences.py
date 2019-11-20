@@ -57,27 +57,27 @@ class Presence(interfaces.IModel):
 
     #: The activities the member currently is doing.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.core.models.presences.PresenceActivity`
+    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.presences.PresenceActivity`
     activities: typing.Sequence[PresenceActivity]
 
     #: Overall account status.
     #:
-    #: :type: :class:`hikari.core.models.presences.Status`
+    #: :type: :class:`hikari.orm.models.presences.Status`
     status: Status
 
     #: The web client status for the member.
     #:
-    #: :type: :class:`hikari.core.models.presences.Status`
+    #: :type: :class:`hikari.orm.models.presences.Status`
     web_status: Status
 
     #: The desktop client status for the member.
     #:
-    #: :type: :class:`hikari.core.models.presences.Status`
+    #: :type: :class:`hikari.orm.models.presences.Status`
     desktop_status: Status
 
     #: The mobile client status for the member.
     #:
-    #: :type: :class:`hikari.core.models.presences.Status`
+    #: :type: :class:`hikari.orm.models.presences.Status`
     mobile_status: Status
 
     __repr__ = auto_repr.repr_of("status")
@@ -168,7 +168,7 @@ class RichPresenceActivity(PresenceActivity):
 
     #: The start and end timestamps for the activity, if applicable, else `None`
     #:
-    #: :type: :class:`hikari.core.models.presences.ActivityTimestamps` or `None`
+    #: :type: :class:`hikari.orm.models.presences.ActivityTimestamps` or `None`
     timestamps: typing.Optional[ActivityTimestamps]
 
     #: The ID of the application, or `None`
@@ -188,17 +188,17 @@ class RichPresenceActivity(PresenceActivity):
 
     #: The party in the activity, or `None`
     #:
-    #: :type: :class:`hikari.core.models.presences.ActivityParty` or `None`
+    #: :type: :class:`hikari.orm.models.presences.ActivityParty` or `None`
     party: typing.Optional[ActivityParty]
 
     #: Any assets provided with the activity, or `None`
     #:
-    #: :type: :class:`hikari.core.models.presences.ActivityAssets` or `None`
+    #: :type: :class:`hikari.orm.models.presences.ActivityAssets` or `None`
     assets: typing.Optional[ActivityAssets]
 
     #: Any flags on the activity.
     #:
-    #: :type: :class:`hikari.core.models.presences.ActivityFlag`
+    #: :type: :class:`hikari.orm.models.presences.ActivityFlag`
     flags: ActivityFlag
 
     __repr__ = auto_repr.repr_of("id", "name", "type")

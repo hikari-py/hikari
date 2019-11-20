@@ -109,12 +109,12 @@ class Integration(interfaces.FabricatedMixin, interfaces.ISnowflake):
 
     #: The user for this integration
     #:
-    #: :type: :class:`hikari.core.models.users.User`
+    #: :type: :class:`hikari.orm.models.users.User`
     user: users.User
 
     #: Integration account information.
     #:
-    #: :type: :class:`hikari.core.models.integrations.IntegrationAccount`
+    #: :type: :class:`hikari.orm.models.integrations.IntegrationAccount`
     account: IntegrationAccount
 
     #: The time when the integration last synchronized.
