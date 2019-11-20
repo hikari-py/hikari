@@ -288,8 +288,6 @@ class AuditLogChange(interfaces.IModel):
 
     def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.key = AuditLogChangeKey.get_best_effort_from_value(payload["key"])
-        print(payload)
         converter = AUDIT_LOG_ENTRY_CONVERTERS[self.key]
-        print(converter)
-        self.old_value = transformations.nullable_cast(payload.get("old_value"), converter)
-        self.new_value = transformations.nullable_cast(payload.get("new_value"), converter)
+        self.old_value = transformations.nullable_cast(payload["old_value"], converter)
+        self.new_value = transformations.nullable_cast(payload["]new_value"], converter)
