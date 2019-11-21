@@ -371,7 +371,7 @@ class BaseEmbed(interfaces.IModel):
         """
         The color of the embed. Can be set and removed using the `del` operator additionally.
 
-        Can be a :class:`hikari.core.models.colors.Color` or an :class:`int`.
+        Can be a :class:`hikari.orm.models.colors.Color` or an :class:`int`.
         """
         return self._color
 

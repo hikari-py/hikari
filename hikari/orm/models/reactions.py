@@ -45,12 +45,12 @@ class Reaction(interfaces.IModel):
 
     #: The emoji used for the reaction.
     #:
-    #: :type: :class:`hikari.core.models.emojis.AbstractEmoji`
+    #: :type: :class:`hikari.orm.models.emojis.AbstractEmoji`
     emoji: _emoji.Emoji
 
     #: The message that was reacted on.
     #:
-    #: :type: :class:`hikari.core.models.messages.Message`
+    #: :type: :class:`hikari.orm.models.messages.Message`
     message: _message.Message
 
     def __init__(self, count: int, emoji: _emoji.Emoji, message: _message.Message) -> None:

@@ -386,7 +386,7 @@ class BaseHTTPClient:
 
         Note:
             Any dicts that get parsed in any form of nested structure from a JSON payload will be parsed as an
-            :class:`hikari.core.utils.custom_types.ObjectProxy`. This means that you can use the dict as a regular dict,
+            :class:`hikari.internal_utilities.data_structures.ObjectProxy`. This means that you can use the dict as a regular dict,
             or use "JavaScript"-like dot-notation to access members.
 
             .. code-block:: python

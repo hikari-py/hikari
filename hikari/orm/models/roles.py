@@ -69,7 +69,7 @@ class Role(interfaces.ISnowflake, interfaces.FabricatedMixin):
 
     #: The color of the role.
     #:
-    #: :type: :class:`hikari.core.models.colors.Color`
+    #: :type: :class:`hikari.orm.models.colors.Color`
     color: _color.Color
 
     #: Whether the role will be hoisted (show as a separate list in the member list)
@@ -84,7 +84,7 @@ class Role(interfaces.ISnowflake, interfaces.FabricatedMixin):
 
     #: The permissions for the role.
     #:
-    #: :type: :class:`hikari.core.models.permissions.Permission`
+    #: :type: :class:`hikari.orm.models.permissions.Permission`
     permissions: _permission.Permission
 
     #: True if the role is created by an integration or by adding a bot to the server, or False otherwise.

@@ -54,6 +54,7 @@ class TestWebhook:
                 "avatar": None,
                 "guild_id": "199737254929760256",
                 "id": "223704706495545344",
+                "type": 1,
                 "user": user_dict,
             },
         )
@@ -66,4 +67,5 @@ class TestWebhook:
         )
         assert wh.avatar_hash is None
         assert wh.guild_id == 199737254929760256
+        assert wh.type is webhooks.WebhookType.INCOMING
         fabric_obj.state_registry.parse_user.assert_called_with(user_dict)
