@@ -39,6 +39,10 @@ from hikari.orm.models import webhooks
 
 
 class AuditLog(interfaces.IModel):
+    """
+    Implementation of an Audit Log.
+    """
+
     __slots__ = ("webhooks", "users", "audit_log_entries")
 
     webhooks: typing.Set[webhooks.Webhook]
@@ -47,9 +51,12 @@ class AuditLog(interfaces.IModel):
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         self.webhooks = {
-            webhooks.Webhook(fabric_obj, wh) for wh in payload.get("webhooks", data_structures.EMPTY_SEQUENCE)
+            fabric_obj.state_registry.parse_webhook(wh)
+            for wh in payload.get("webhooks", data_structures.EMPTY_SEQUENCE)
         }
-        self.users = {users.User(fabric_obj, u) for u in payload.get("users", data_structures.EMPTY_SEQUENCE)}
+        self.users = {
+            fabric_obj.state_registry.parse_user(u) for u in payload.get("users", data_structures.EMPTY_SEQUENCE)
+        }
         self.audit_log_entries = [
             AuditLogEntry(audit_log_entry)
             for audit_log_entry in payload.get("audit_log_entries", data_structures.EMPTY_SEQUENCE)
@@ -57,6 +64,10 @@ class AuditLog(interfaces.IModel):
 
 
 class AuditLogEntry(interfaces.ISnowflake):
+    """
+    Implementation of an Audit Log Entry.
+    """
+
     __slots__ = ("id", "target_id", "changes", "user_id", "action_type", "options", "reason")
 
     target_id: typing.Optional[int]
@@ -73,7 +84,7 @@ class AuditLogEntry(interfaces.ISnowflake):
         self.changes = [AuditLogChange(change) for change in payload.get("changes", data_structures.EMPTY_SEQUENCE)]
         self.user_id = int(payload["user_id"])
         self.id = int(payload["id"])
-        self.action_type = AuditLogEvent.get_best_effort_from_value(payload)
+        self.action_type = AuditLogEvent.get_best_effort_from_value(payload["action_type"])
 
 
 class AuditLogEvent(interfaces.BestEffortEnumMixin, enum.IntEnum):
@@ -92,6 +103,9 @@ class AuditLogEvent(interfaces.BestEffortEnumMixin, enum.IntEnum):
     MEMBER_BAN_REMOVE = 23
     MEMBER_UPDATE = 24
     MEMBER_ROLE_UPDATE = 25
+    MEMBER_MOVE = 26
+    MEMBER_DISCONNECT = 27
+    BOT_ADD = 28
     ROLE_CREATE = 30
     ROLE_UPDATE = 31
     ROLE_DELETE = 32
@@ -105,6 +119,12 @@ class AuditLogEvent(interfaces.BestEffortEnumMixin, enum.IntEnum):
     EMOJI_UPDATE = 61
     EMOJI_DELETE = 62
     MESSAGE_DELETE = 72
+    MESSAGE_BLUK_DELETE = 73
+    MESSAGE_PIN = 74
+    MESSAGE_UNPIN = 75
+    INTEGRATION_CREATE = 80
+    INTEGRATION_UPDATE = 81
+    INTEGRATION_DELETE = 82
 
 
 class IAuditLogEntryInfo(interfaces.IModel, interface=True):
@@ -244,7 +264,7 @@ def _new_id_map_of(converter):
 
 
 def _new_sequence_of(converter):
-    return lambda items: [converter(fabric, item) for item in items]
+    return lambda items: [converter(item) for item in items]
 
 
 def _type_converter(type_entity):
@@ -263,8 +283,8 @@ AUDIT_LOG_ENTRY_CONVERTERS = {
     AuditLogChangeKey.VERIFICATION_LEVEL: guilds.VerificationLevel,
     AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: guilds.ExplicitContentFilterLevel,
     AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guilds.DefaultMessageNotificationsLevel,
-    AuditLogChangeKey.ADD_ROLE_TO_MEMBER: _new_id_map_of(roles.Role),
-    AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: _new_id_map_of(roles.Role),
+    AuditLogChangeKey.ADD_ROLE_TO_MEMBER: _new_id_map_of(roles.PartialRole),
+    AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: _new_id_map_of(roles.PartialRole),
     AuditLogChangeKey.WIDGET_CHANNEL_ID: int,
     AuditLogChangeKey.PERMISSION_OVERWRITES: _new_sequence_of(overwrites.Overwrite),
     AuditLogChangeKey.APPLICATION_ID: int,
@@ -288,6 +308,6 @@ class AuditLogChange(interfaces.IModel):
 
     def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.key = AuditLogChangeKey.get_best_effort_from_value(payload["key"])
-        converter = AUDIT_LOG_ENTRY_CONVERTERS[self.key]
-        self.old_value = transformations.nullable_cast(payload["old_value"], converter)
-        self.new_value = transformations.nullable_cast(payload["new_value"], converter)
+        converter = AUDIT_LOG_ENTRY_CONVERTERS.get(self.key, str)
+        self.old_value = transformations.nullable_cast(payload.get("old_value"), converter)
+        self.new_value = transformations.nullable_cast(payload.get("new_value"), converter)
