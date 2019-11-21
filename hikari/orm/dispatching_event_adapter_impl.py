@@ -340,12 +340,12 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
         guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 
         if guild_obj is not None:
-            diff = self.fabric.state_registry.update_role(guild_obj, payload)
+            diff = self.fabric.state_registry.update_role(guild_obj, payload["role"])
 
             if diff is not None:
                 self.dispatch(events.GUILD_ROLE_UPDATE, *diff)
             else:
-                role_id = int(payload["id"])
+                role_id = int(payload["role"]["id"])
                 self.logger.warning("ignoring GUILD_ROLE_UPDATE for unknown role %s in guild %s", role_id, guild_id)
         else:
             self.logger.warning("ignoring GUILD_ROLE_UPDATE for unknown guild %s", guild_id)
