@@ -919,11 +919,16 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(events.GUILD_ROLE_CREATE, role_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_role_update_when_guild_is_not_cached_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
+        payload = {"guild_id": "123", "role": {"id": "123"}}
+
+        await adapter_impl.handle_guild_role_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_GUILD_ROLE_UPDATE, payload)
 
     @pytest.mark.asyncio
     @pytest.mark.skip(reason="Not implemented")
