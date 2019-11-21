@@ -755,7 +755,7 @@ class GatewayClientV7:
         Run the gateway and attempt to keep it alive for as long as possible using restarts and resumes if needed.
 
         Raises:
-            :class:`hikari.core.errors.DiscordGatewayError`:
+            :class:`hikari.errors.GatewayError`:
                 if the token provided is invalidated.
             :class:`websockets.exceptions.ConnectionClosed`:
                 if the connection is unexpectedly closed before we can start processing.

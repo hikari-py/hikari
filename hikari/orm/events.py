@@ -28,7 +28,7 @@ from hikari.net.extra_gateway_events import *
 #:
 #: Args:
 #:    channel:
-#:        a :class:`hikari.core.utils.custom_types.ObjectProxy` corresponding to
+#:        a :class:`hikari.internal_utilities.data_structures.ObjectProxy` corresponding to
 #:        the definition at https://discordapp.com/developers/docs/resources/channel#channel-object
 RAW_CHANNEL_CREATE = "raw_channel_create"
 
@@ -36,7 +36,7 @@ RAW_CHANNEL_CREATE = "raw_channel_create"
 #:
 #: Args:
 #:     channel:
-#           the :class:`hikari.core.models.channels.DMChannel` or :class:`hikari.core.models.channels.GroupDMChannel`
+#           the :class:`hikari.orm.models.channels.DMChannel` or :class:`hikari.orm.models.channels.GroupDMChannel`
 #           that was created.
 DM_CHANNEL_CREATE = "dm_channel_create"
 
@@ -44,7 +44,7 @@ DM_CHANNEL_CREATE = "dm_channel_create"
 #:
 #: Args:
 #:     channel:
-#:         the :class:`hikari.core.models.channels.GuildChannel` derivative that was created.
+#:         the :class:`hikari.orm.models.channels.GuildChannel` derivative that was created.
 #:
 #: Note:
 #:     If the guild of a channel that was created was not cached, then this event will not fire. See

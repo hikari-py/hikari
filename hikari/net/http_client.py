@@ -247,10 +247,10 @@ class HTTPClient(http_base.BaseHTTPClient):
 
         Warning:
             You can only specify a maximum of one from `before`, `after`, and `around`. Specifying more than one will
-            cause a :class:`hikari.core.errors.BadRequest` to be raised.
+            cause a :class:`hikari.errors.BadRequest` to be raised.
 
         Note:
-            If you are missing the `VIEW_CHANNEL` permission, you will receive a :class:`hikari.core.errors.Forbidden`.
+            If you are missing the `VIEW_CHANNEL` permission, you will receive a :class:`hikari.errors.Forbidden`.
             If you are instead missing the `READ_MESSAGE_HISTORY` permission, you will always receive zero results, and
             thus an empty list will be returned instead.
 
@@ -258,12 +258,12 @@ class HTTPClient(http_base.BaseHTTPClient):
             A list of message objects.
 
         Raises:
-            hikari.core.errors.Forbidden:
+            hikari.errors.Forbidden:
                 If you lack permission to read the channel.
-            hikari.core.errors.BadRequest:
+            hikari.errors.BadRequest:
                 If your query is malformed, has an invalid value for `limit`, or contains more than one of `after`,
                 `before` and `around`.
-            hikari.core.errors.NotFound:
+            hikari.errors.NotFound:
                 If the given `channel_id` was not found, or the message ID provided for one of the filter arguments
                 is not found.
         """
@@ -299,41 +299,6 @@ class HTTPClient(http_base.BaseHTTPClient):
         """
         return await self.request(
             GET, "/channels/{channel_id}/messages/{message_id}", channel_id=channel_id, message_id=message_id
-        )
-
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    @meta.unofficial
-    async def suppress_embeds(self, channel_id: str, message_id: str, *, suppress=True) -> None:
-        """
-        Either suppresses or un-suppresses any embeds on the given message in the given channel.
-
-        Args:
-            channel_id:
-                The channel to look in.
-            message_id:
-                The message to retrieve.
-            suppress:
-                `True` (default) to suppress any embeds, and `False` to un-suppress embeds.
-
-        Returns:
-            A message object.
-
-        Note:
-            This requires the `READ_MESSAGE_HISTORY` and `MANAGE_MESSAGES` permission to be set.
-
-        Raises:
-            hikari.errors.Forbidden:
-                If you lack permission to see the message, are not in the guild, or lack the latter-mentioned
-                permissions in the target channel.
-            hikari.errors.NotFound:
-                If the message ID or channel ID is not found.
-        """
-        return await self.request(
-            POST,
-            "/channels/{channel_id}/messages/{message_id}/suppress-embeds",
-            channel_id=channel_id,
-            message_id=message_id,
-            json={"suppress": suppress},
         )
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
@@ -423,7 +388,7 @@ class HTTPClient(http_base.BaseHTTPClient):
                 permission. If you lack `READ_MESSAGE_HISTORY`, this may also raise this error.
             hikari.errors.NotFound:
                 if the channel or message is not found, or if the emoji is not found.
-            hikari.core.errors.BadRequest:
+            hikari.errors.BadRequest:
                 if the emoji is not valid, unknown, or formatted incorrectly
         """
         await self.request(
@@ -571,6 +536,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         *,
         content: str = unspecified.UNSPECIFIED,
         embed: data_structures.DiscordObjectT = unspecified.UNSPECIFIED,
+        flags: int = unspecified.UNSPECIFIED,
     ) -> data_structures.DiscordObjectT:
         """
         Update the given message.
@@ -584,6 +550,8 @@ class HTTPClient(http_base.BaseHTTPClient):
                 Optional string content to replace with in the message. If unspecified, it is not changed.
             embed:
                 Optional embed to replace with in the message. If unspecified, it is not changed.
+            flags:
+                Optional integer to replace the message's current flags. If unspecified, it is not changed.
 
         Returns:
             A replacement message object.
@@ -595,11 +563,13 @@ class HTTPClient(http_base.BaseHTTPClient):
                 if the embed exceeds any of the embed limits if specified, or the content is specified and consists
                 only of whitespace, is empty, or is more than 2,000 characters in length.
             hikari.errors.Forbidden:
-                if you did not author the message.
+                if you try to edit content or embed on a message you did not author or try to edit the flags
+                on a message you did not author without the `MANAGE_MESSAGES` permission.
         """
         payload = {}
         transformations.put_if_specified(payload, "content", content)
         transformations.put_if_specified(payload, "embed", embed)
+        transformations.put_if_specified(payload, "flags", flags)
         return await self.request(
             PATCH,
             "/channels/{channel_id}/messages/{message_id}",

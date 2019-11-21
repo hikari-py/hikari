@@ -70,7 +70,7 @@ class IStateRegistry(abc.ABC):
                 the message the reaction was on.
 
         Returns:
-            a :class:`hikari.core.models.reactions.Reaction` object.
+            a :class:`hikari.orm.models.reactions.Reaction` object.
         """
 
     @abc.abstractmethod
@@ -90,7 +90,7 @@ class IStateRegistry(abc.ABC):
             If the count reaches zero, the reaction will be removed from the message additionally.
 
         Returns:
-            a :class:`hikari.core.models.reactions.Reaction` object if the reaction existed already in the
+            a :class:`hikari.orm.models.reactions.Reaction` object if the reaction existed already in the
             cache, otherwise `None`.
         """
 
@@ -182,7 +182,7 @@ class IStateRegistry(abc.ABC):
                 the channel ID.
 
         Returns:
-            a :class:`hikari.core.models.channels.Channel` derivative, or `None` if nothing is found.
+            a :class:`hikari.orm.models.channels.Channel` derivative, or `None` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -195,7 +195,7 @@ class IStateRegistry(abc.ABC):
                 the ID of the guild to look up.
 
         Returns:
-            a :class:`hikari.core.models.guilds.Guild` object, or `None` if one was not found.
+            a :class:`hikari.orm.models.guilds.Guild` object, or `None` if one was not found.
         """
 
     @abc.abstractmethod
@@ -208,7 +208,7 @@ class IStateRegistry(abc.ABC):
                 the ID of the message to look up.
 
         Returns:
-            a :class:`hikari.core.models.messages.Message` object, or `None` if one was not found.
+            a :class:`hikari.orm.models.messages.Message` object, or `None` if one was not found.
         """
 
     @abc.abstractmethod
@@ -223,7 +223,7 @@ class IStateRegistry(abc.ABC):
                 the ID of the role to look up.
 
         Returns:
-            a :class:`hikari.core.models.roles.Role` object, or `None` if a role/guild was not found matching the given
+            a :class:`hikari.orm.models.roles.Role` object, or `None` if a role/guild was not found matching the given
             IDs.
         """
 
@@ -237,7 +237,7 @@ class IStateRegistry(abc.ABC):
                 the ID of the user to look up.
 
         Returns:
-            a :class:`hikari.core.models.users.User` object, or `None` if one was not found.
+            a :class:`hikari.orm.models.users.User` object, or `None` if one was not found.
         """
 
     @abc.abstractmethod
@@ -252,7 +252,7 @@ class IStateRegistry(abc.ABC):
                 the ID of the guild to look in.
 
         Returns:
-            a :class:`hikari.core.models.members.Member` object, or `None` if one was not found.
+            a :class:`hikari.orm.models.members.Member` object, or `None` if one was not found.
         """
 
     @abc.abstractmethod
@@ -265,7 +265,7 @@ class IStateRegistry(abc.ABC):
                 the payload of the bot user.
 
         Returns:
-            a :class:`hikari.core.models.users.BotUser` object.
+            a :class:`hikari.orm.models.users.BotUser` object.
         """
 
     @abc.abstractmethod
@@ -282,7 +282,7 @@ class IStateRegistry(abc.ABC):
                 the guild object the channel is in, or None if it isn't a guild channel.
 
         Returns:
-            a :class:`hikari.core.models.channels.Channel` object.
+            a :class:`hikari.orm.models.channels.Channel` object.
         """
 
     @abc.abstractmethod
@@ -299,7 +299,7 @@ class IStateRegistry(abc.ABC):
                 the guild the emoji is from, or None if it is not a known guild emoji.
 
         Returns:
-            a :class:`hikari.core.models.emojis.AbstractEmoji` object.
+            a :class:`hikari.orm.models.emojis.AbstractEmoji` object.
         """
 
     @abc.abstractmethod
@@ -312,7 +312,7 @@ class IStateRegistry(abc.ABC):
                 the payload of the guild.
 
         Returns:
-            a :class:`hikari.core.models.guilds.Guild` object.
+            a :class:`hikari.orm.models.guilds.Guild` object.
         """
 
     @abc.abstractmethod
@@ -327,7 +327,7 @@ class IStateRegistry(abc.ABC):
                 the guild the member should be placed in.
 
         Returns:
-            a :class:`hikari.core.models.members.Member` object.
+            a :class:`hikari.orm.models.members.Member` object.
         """
 
     @abc.abstractmethod
@@ -340,7 +340,7 @@ class IStateRegistry(abc.ABC):
                 the payload of the message.
 
         Returns:
-            a :class:`hikari.core.models.messages.Message` object. If the channel doesn't exist, it will refuse to
+            a :class:`hikari.orm.models.messages.Message` object. If the channel doesn't exist, it will refuse to
             parse the object and return `None` instead.
 
         Warning:
@@ -365,7 +365,7 @@ class IStateRegistry(abc.ABC):
                 the payload containing the presence.
 
         Returns:
-            a :class:`hikari.core.models.presences.Presence` object.
+            a :class:`hikari.orm.models.presences.Presence` object.
         """
 
     @abc.abstractmethod
@@ -378,7 +378,7 @@ class IStateRegistry(abc.ABC):
                 the reaction object to parse.
 
         Returns:
-            a :class:`hikari.core.models.reactions.Reaction` object. If message channel doesn't exist, it will refuse to
+            a :class:`hikari.orm.models.reactions.Reaction` object. If message channel doesn't exist, it will refuse to
             parse the object and return `None` instead.
         """
 
@@ -394,7 +394,7 @@ class IStateRegistry(abc.ABC):
                 the guild the role is in.
 
         Returns:
-            a :class:`hikari.core.models.roles.Role` object.
+            a :class:`hikari.orm.models.roles.Role` object.
         """
 
     @abc.abstractmethod
@@ -407,7 +407,7 @@ class IStateRegistry(abc.ABC):
                 the payload of the user.
 
         Returns:
-            a :class:`hikari.core.models.users.User` object.
+            a :class:`hikari.orm.models.users.User` object.
 
         Note:
             If the user is detected to be the bot user for the account you are signed in as, then one can expect
@@ -427,7 +427,7 @@ class IStateRegistry(abc.ABC):
                 the payload of the webhook.
 
         Returns:
-            a :class:`hikari.core.models.webhooks.Webhook` object.
+            a :class:`hikari.orm.models.webhooks.Webhook` object.
         """
 
     @abc.abstractmethod
@@ -490,7 +490,7 @@ class IStateRegistry(abc.ABC):
                 the raw payload to update the channel with. This contains the ID of the channel also.
 
         Returns:
-            Two :class:`hikari.core.models.channels.Channel` objects. The first represents the old channel state, and
+            Two :class:`hikari.orm.models.channels.Channel` objects. The first represents the old channel state, and
             the second represents the new channel state. If no channel was cached, this returns `None`.
         """
 
@@ -506,7 +506,7 @@ class IStateRegistry(abc.ABC):
                 The raw guild payload to update. This contains the ID of the guild also.
 
         Returns:
-            Two :class:`hikari.core.models.guilds.Guild` objects. The first represents the old guild state, and
+            Two :class:`hikari.orm.models.guilds.Guild` objects. The first represents the old guild state, and
             the second represents the new guild state. If no guild was cached, this returns `None`.
         """
 
@@ -524,7 +524,7 @@ class IStateRegistry(abc.ABC):
                 the guild the emojis were updated in.
 
         Returns:
-            Two :class:`frozenset` of :class:`hikari.core.models.emojis.GuildEmoji` objects.
+            Two :class:`frozenset` of :class:`hikari.orm.models.emojis.GuildEmoji` objects.
             The first set contains all the old emojis. The second set contains all the new emojis.
         """
 
@@ -544,7 +544,7 @@ class IStateRegistry(abc.ABC):
                 the nickname of the member.
 
         Returns:
-            Two :class:`hikari.core.models.members.Member` objects. The first being the old state of the member and the
+            Two :class:`hikari.orm.models.members.Member` objects. The first being the old state of the member and the
             second being the new state (if the member exists).
         """
 
@@ -562,9 +562,9 @@ class IStateRegistry(abc.ABC):
                 The new presence to set.
 
         Returns:
-            Three items. The first being the :class:`hikari.core.models.members.Member` that was updated, the second
-            being the :class:`hikari.core.models.presences.Presence` before, and the third being the
-            :class:`hikari.core.models.presences.Presence` now.
+            Three items. The first being the :class:`hikari.orm.models.members.Member` that was updated, the second
+            being the :class:`hikari.orm.models.presences.Presence` before, and the third being the
+            :class:`hikari.orm.models.presences.Presence` now.
         """
 
     @abc.abstractmethod
@@ -579,8 +579,8 @@ class IStateRegistry(abc.ABC):
                 The message_update payload to parse.
 
         Returns:
-            Two items. The first being the old :class:`hikari.core.models.messages.Message` and the second being the
-            new :class:`hikari.core.models.messages.Message`. If the message was not cached, then `None` is returned
+            Two items. The first being the old :class:`hikari.orm.models.messages.Message` and the second being the
+            new :class:`hikari.orm.models.messages.Message`. If the message was not cached, then `None` is returned
             instead of a tuple.
         """
 
@@ -598,8 +598,8 @@ class IStateRegistry(abc.ABC):
                 The role to update.
 
         Returns:
-            A :class:`tuple` of two items: the first being the old :class:`hikari.core.models.roles.Role` state and the
-            second being the new :class:`hikari.core.models.roles.Role` state. If the `guild_id` does not correspond to
+            A :class:`tuple` of two items: the first being the old :class:`hikari.orm.models.roles.Role` state and the
+            second being the new :class:`hikari.orm.models.roles.Role` state. If the `guild_id` does not correspond to
             a guild in the cache, then `None` is returned instead.
         """
 
