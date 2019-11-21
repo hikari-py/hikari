@@ -976,7 +976,7 @@ class TestDispatchingEventAdapterImpl:
     ):
         role_obj_before = _helpers.mock_model(roles.Role, id=12, name="original")
         role_obj_after = _helpers.mock_model(roles.Role, id=12, name="updated")
-        guild_obj = _helpers.mock_model(guilds.Guild, id="123", roles={role_obj_before.id: role_obj_before})
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, roles={role_obj_before.id: role_obj_before})
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
         fabric_impl.state_registry.update_role = mock.MagicMock(return_value=(role_obj_before, role_obj_after))
         payload = {"guild_id": str(guild_obj.id), "role": {"id": role_obj_after.id}}
@@ -990,7 +990,7 @@ class TestDispatchingEventAdapterImpl:
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
-        payload = {"guild_id": "123", "role_id": "123"}
+        payload = {"guild_id": "123", "role_id": "12"}
 
         await adapter_impl.handle_guild_role_delete(gateway_impl, payload)
 
