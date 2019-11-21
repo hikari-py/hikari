@@ -35,6 +35,7 @@ from hikari.orm.models import guilds
 from hikari.orm.models import members
 from hikari.orm.models import users
 from hikari.orm.models import roles
+from hikari.orm.models import emojis
 from tests.hikari import _helpers
 
 
@@ -280,7 +281,6 @@ class TestDispatchingEventAdapterImpl:
         channel_obj_before = _helpers.mock_model(channels.GuildTextChannel, id=123, is_dm=False, name="original")
         channel_obj_after = _helpers.mock_model(channels.GuildTextChannel, id=123, is_dm=False, name="updated")
         fabric_impl.state_registry.update_channel = mock.MagicMock(return_value=(channel_obj_before, channel_obj_after))
-        fabric_impl.state_registry.update_channel = mock.MagicMock(return_value=(channel_obj_before, channel_obj_after))
         payload = {"id": str(channel_obj_after.id), "type": channel_obj_after.is_dm}
 
         await adapter_impl.handle_channel_update(gateway_impl, payload)
@@ -471,13 +471,14 @@ class TestDispatchingEventAdapterImpl:
     async def test_handle_guild_update_when_valid_dispatches_GUILD_UPDATE(
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        guild_obj = _helpers.mock_model(guilds.Guild, id=123)
-        fabric_impl.state_registry.update_guild = mock.MagicMock(return_value=(guild_obj, guild_obj))
-        payload = {"id": str(guild_obj.id)}
+        guild_obj_before = _helpers.mock_model(guilds.Guild, id=123, name="original")
+        guild_obj_after = _helpers.mock_model(guilds.Guild, id=123, name="updated")
+        fabric_impl.state_registry.update_guild = mock.MagicMock(return_value=(guild_obj_before, guild_obj_after))
+        payload = {"id": str(guild_obj_after.id)}
 
         await adapter_impl.handle_guild_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_UPDATE, guild_obj, guild_obj)
+        dispatch_impl.assert_called_with(events.GUILD_UPDATE, guild_obj_before, guild_obj_after)
 
     @pytest.mark.asyncio
     async def test_handle_guild_update_when_invalid_dispatches_nothing(
@@ -710,8 +711,20 @@ class TestDispatchingEventAdapterImpl:
     async def test_handle_guild_emojis_update_when_guild_is_cached_dispatches_GUILD_EMOJIS_UPDATE(
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={})
+        existing_emoji_1 = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="bowsettebaka", animated=False)
+        existing_emoji_2 = _helpers.mock_model(emojis.GuildEmoji, id=1235, name="bowsettel00d", animated=False)
+        existing_emoji_3 = _helpers.mock_model(emojis.GuildEmoji, id=1236, name="bowsetteowo", animated=True)
+
+        initial_emoji_map = {
+            existing_emoji_1.id: existing_emoji_1,
+            existing_emoji_2.id: existing_emoji_2,
+            existing_emoji_3.id: existing_emoji_3,
+        }
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, emojis=dict(initial_emoji_map))
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.update_guild_emojis = mock.MagicMock(
+            return_value=(set(initial_emoji_map.values()), {existing_emoji_1})
+        )
         payload = {
             "guild_id": str(guild_obj.id),
             "emojis": [
@@ -722,7 +735,9 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_emojis_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_EMOJIS_UPDATE, guild_obj)
+        dispatch_impl.assert_called_with(
+            events.GUILD_EMOJIS_UPDATE, guild_obj, set(initial_emoji_map.values()), {existing_emoji_1}
+        )
 
     @pytest.mark.asyncio
     async def test_handle_guild_integrations_update_when_guild_is_not_cached_does_not_dispatch_anything(
@@ -934,8 +949,7 @@ class TestDispatchingEventAdapterImpl:
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         guild_obj = _helpers.mock_model(guilds.Guild, id="123", roles={})
-        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(
-            return_value=guild_obj)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
         fabric_impl.state_registry.update_role = mock.MagicMock(return_value=None)
         payload = {"guild_id": str(guild_obj.id), "role": {"id": "12"}}
 
@@ -944,13 +958,20 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_GUILD_ROLE_UPDATE, payload)
 
-
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_guild_role_update_when_diff_is_valid_dispatches_GUILD_ROLE_UPDATE(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        role_obj_before = _helpers.mock_model(roles.Role, id=12, name="original")
+        role_obj_after = _helpers.mock_model(roles.Role, id=12, name="updated")
+        guild_obj = _helpers.mock_model(guilds.Guild, id="123", roles={role_obj_before.id: role_obj_before})
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.update_role = mock.MagicMock(return_value=(role_obj_before, role_obj_after))
+        payload = {"guild_id": str(guild_obj.id), "role": {"id": role_obj_after.id}}
+
+        await adapter_impl.handle_guild_role_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.GUILD_ROLE_UPDATE, role_obj_before, role_obj_after)
 
     @pytest.mark.asyncio
     @pytest.mark.skip(reason="Not implemented")
