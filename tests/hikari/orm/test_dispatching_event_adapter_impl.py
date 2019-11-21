@@ -653,6 +653,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_ban_add(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_GUILD_BAN_ADD, payload)
 
@@ -687,6 +688,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_ban_remove(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_GUILD_BAN_REMOVE, payload)
 
@@ -705,6 +707,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_emojis_update(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_GUILD_EMOJIS_UPDATE, payload)
 
@@ -749,6 +752,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_integrations_update(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_GUILD_INTEGRATIONS_UPDATE, payload)
 
@@ -773,6 +777,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_member_add(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_GUILD_MEMBER_ADD, payload)
 
@@ -799,6 +804,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_member_update(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_GUILD_MEMBER_UPDATE, payload)
 
@@ -812,6 +818,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_member_update(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_GUILD_MEMBER_UPDATE, payload)
 
@@ -881,6 +888,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_member_remove(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_GUILD_MEMBER_REMOVE, payload)
 
@@ -917,6 +925,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_role_create(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_GUILD_ROLE_CREATE, payload)
 
@@ -942,6 +951,7 @@ class TestDispatchingEventAdapterImpl:
         payload = {"guild_id": "123", "role": {"id": "12"}}
         await adapter_impl.handle_guild_role_update(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_GUILD_ROLE_UPDATE, payload)
 
@@ -956,6 +966,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_role_update(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_GUILD_ROLE_UPDATE, payload)
 
@@ -996,6 +1007,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_role_delete(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_GUILD_ROLE_DELETE, payload)
 
@@ -1034,6 +1046,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_create(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_MESSAGE_CREATE, payload)
 
@@ -1059,6 +1072,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_update(gateway_impl, payload)
 
+        # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
         dispatch_impl.assert_called_with(events.RAW_MESSAGE_UPDATE, payload)
 
