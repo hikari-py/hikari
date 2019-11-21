@@ -1041,8 +1041,7 @@ class TestDispatchingEventAdapterImpl:
     async def test_handle_message_create_when_channel_exists_dispatches_MESSAGE_CREATE(
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        message_obj = _helpers.mock_model(
-            messages.Message, id=123, content="potatoboi test message")
+        message_obj = _helpers.mock_model(messages.Message, id=123, content="potatoboi test message")
         channel_obj = _helpers.mock_model(channels.Channel, id=456)
         fabric_impl.state_registry.parse_message = mock.MagicMock(return_value=message_obj)
         payload = {"id": str(message_obj.id), "channel_id": str(channel_obj.id), "content": message_obj.content}
@@ -1069,8 +1068,7 @@ class TestDispatchingEventAdapterImpl:
     ):
         message_obj_before = _helpers.mock_model(messages.Message, id=123, content="original")
         message_obj_after = _helpers.mock_model(messages.Message, id=123, content="updated")
-        fabric_impl.state_registry.update_message = mock.MagicMock(
-            return_value=(message_obj_before, message_obj_after))
+        fabric_impl.state_registry.update_message = mock.MagicMock(return_value=(message_obj_before, message_obj_after))
         payload = {"id": str(message_obj_after.id), "channel_id": "456", "content": message_obj_after.content}
 
         await adapter_impl.handle_message_update(gateway_impl, payload)
