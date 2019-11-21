@@ -603,9 +603,7 @@ class TestChannel:
 
     async def test_edit_message_flags_and_embed_and_content(self, http_client):
         http_client.request = asynctest.CoroutineMock()
-        await http_client.edit_message(
-            "696969", "12", flags=0, embed={"title": "ayy lmao im a duck"}, content="quack"
-        )
+        await http_client.edit_message("696969", "12", flags=0, embed={"title": "ayy lmao im a duck"}, content="quack")
         http_client.request.assert_awaited_once_with(
             "patch",
             "/channels/{channel_id}/messages/{message_id}",
