@@ -373,8 +373,9 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
         if message is not None:
             self.dispatch(events.MESSAGE_CREATE, message)
         else:
+            message_id = int(payload["id"])
             channel_id = int(payload["channel_id"])
-            self.logger.warning("ignoring MESSAGE_CREATE for message %s in unknown channel %s", message.id, channel_id)
+            self.logger.warning("ignoring MESSAGE_CREATE for message %s in unknown channel %s", message_id, channel_id)
 
     async def handle_message_update(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_UPDATE, payload)
