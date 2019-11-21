@@ -979,7 +979,7 @@ class TestDispatchingEventAdapterImpl:
         guild_obj = _helpers.mock_model(guilds.Guild, id=123, roles={role_obj_before.id: role_obj_before})
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
         fabric_impl.state_registry.update_role = mock.MagicMock(return_value=(role_obj_before, role_obj_after))
-        payload = {"guild_id": str(guild_obj.id), "role": {"id": role_obj_after.id}}
+        payload = {"guild_id": str(guild_obj.id), "role": {"id": str(role_obj_after.id)}}
 
         await adapter_impl.handle_guild_role_update(gateway_impl, payload)
 
