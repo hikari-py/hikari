@@ -25,6 +25,10 @@ package.
 """
 import enum
 import inspect
+import typing
+
+
+T = typing.TypeVar("T")
 
 
 class APIResource(enum.Enum):
@@ -42,7 +46,7 @@ class APIResource(enum.Enum):
     GATEWAY = "/topics/gateway"
 
 
-def link_developer_portal(scope: APIResource, specific_resource: str = None):
+def link_developer_portal(scope: APIResource, specific_resource: str = None) -> typing.Callable[[T], T]:
     """Injects some common documentation into the given member's docstring."""
 
     def decorator(obj):
@@ -58,20 +62,4 @@ def link_developer_portal(scope: APIResource, specific_resource: str = None):
     return decorator
 
 
-def unofficial(obj):
-    """
-    Marks an element that had to be reverse engineered to work out how to use it, rather than being documented
-    properly...
-    """
-    doc = inspect.cleandoc(inspect.getdoc(obj) or "")
-    setattr(
-        obj,
-        "__doc__",
-        f"{doc}\nNote:\n    Oh boy! Undocumented functionality! This is currently not documented in Discord's API "
-        "documentation, so use this at your own risk. It may break if Discord change their implementation, and "
-        "the expected functionality is purely based on speculation and reverse engineering.",
-    )
-    return obj
-
-
-__all__ = ("APIResource", "link_developer_portal", "unofficial")
+__all__ = ("APIResource", "link_developer_portal")
