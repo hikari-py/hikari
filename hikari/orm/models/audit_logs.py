@@ -85,6 +85,8 @@ class AuditLogEntry(interfaces.ISnowflake):
         self.user_id = int(payload["user_id"])
         self.id = int(payload["id"])
         self.action_type = AuditLogEvent.get_best_effort_from_value(payload["action_type"])
+        self.options = parse_audit_log_entry_info(payload.get("options"), self.action_type)
+        self.reason = transformations.nullable_cast(payload.get("reason"), str)
 
 
 class AuditLogEvent(interfaces.BestEffortEnumMixin, enum.IntEnum):
@@ -119,7 +121,7 @@ class AuditLogEvent(interfaces.BestEffortEnumMixin, enum.IntEnum):
     EMOJI_UPDATE = 61
     EMOJI_DELETE = 62
     MESSAGE_DELETE = 72
-    MESSAGE_BLUK_DELETE = 73
+    MESSAGE_BULK_DELETE = 73
     MESSAGE_PIN = 74
     MESSAGE_UNPIN = 75
     INTEGRATION_CREATE = 80
@@ -189,7 +191,9 @@ def parse_audit_log_entry_info(
     """
     try:
         # noinspection PyProtectedMember
-        return IAuditLogEntryInfo._implementations[event_type](audit_log_entry_info_payload)
+        return transformations.nullable_cast(
+            audit_log_entry_info_payload, IAuditLogEntryInfo._implementations[event_type]
+        )
     except KeyError:
         return None
 
