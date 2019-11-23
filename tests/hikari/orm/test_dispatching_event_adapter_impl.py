@@ -16,10 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import contextlib
 import inspect
 import logging
-import traceback
 import datetime
+
 from unittest import mock
 
 import asynctest
@@ -37,6 +38,7 @@ from hikari.orm.models import users
 from hikari.orm.models import roles
 from hikari.orm.models import emojis
 from hikari.orm.models import messages
+
 from tests.hikari import _helpers
 
 
@@ -72,6 +74,31 @@ def adapter_impl(fabric_impl, dispatch_impl, logger_impl):
     )
     instance.logger = logger_impl
     return instance
+
+
+@pytest.fixture()
+def discord_ready_payload():
+    return {
+        # https://discordapp.com/developers/docs/topics/gateway#ready-ready-event-fields
+        "v": 69,
+        "_trace": ["potato.com", "tomato.net"],
+        "session_id": "69420lmaolmao",
+        "guilds": [{"id": "9182736455463", "unavailable": True}, {"id": "72819099110270", "unavailable": True}],
+        "private_channels": [],  # always empty /shrug
+        "user": {
+            "id": "81624",
+            "username": "Ben_Dover",
+            "discriminator": 9921,
+            "avatar": "a_d41d8cd98f00b204e9800998ecf8427e",
+            "bot": bool("of course i am"),
+            "mfa_enabled": True,
+            "locale": "en_gb",
+            "verified": False,
+            "email": "chestylaroo@boing.biz",
+            "flags": 69,
+            "premimum_type": 0,
+        },
+    }
 
 
 # noinspection PyProtectedMember
@@ -115,31 +142,52 @@ class TestDispatchingEventAdapterImpl:
         payload = {"code": 123, "reason": "test"}
         await adapter_impl.handle_disconnect(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with("disconnect", gateway_impl, payload.get("code"), payload.get("reason"))
+        dispatch_impl.assert_called_with(events.DISCONNECT, gateway_impl, payload.get("code"), payload.get("reason"))
 
     @pytest.mark.asyncio
-    async def test_handle_connect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
-        await adapter_impl.handle_connect(gateway_impl, ...)
+    async def test_handle_connect_dispatches_event(
+        self, discord_ready_payload, adapter_impl, gateway_impl, dispatch_impl
+    ):
+        await adapter_impl.handle_connect(gateway_impl, discord_ready_payload)
+        dispatch_impl.assert_called_with(events.CONNECT, gateway_impl)
 
-        dispatch_impl.assert_called_with("connect", gateway_impl)
+    @pytest.mark.asyncio
+    async def test_handle_connect_adds_application_user(
+        self, discord_ready_payload, fabric_impl, adapter_impl, gateway_impl,
+    ):
+        await adapter_impl.handle_connect(gateway_impl, discord_ready_payload)
+
+        fabric_impl.state_registry.parse_application_user.assert_called_with(discord_ready_payload["user"])
+
+    @pytest.mark.asyncio
+    async def test_handle_connect_adds_partial_guilds(
+        self, discord_ready_payload, fabric_impl, adapter_impl, gateway_impl,
+    ):
+        await adapter_impl.handle_connect(gateway_impl, discord_ready_payload)
+
+        raw_guild_1 = {"id": "9182736455463", "unavailable": True}
+        raw_guild_2 = {"id": "72819099110270", "unavailable": True}
+
+        fabric_impl.state_registry.parse_guild.assert_any_call(raw_guild_1)
+        fabric_impl.state_registry.parse_guild.assert_any_call(raw_guild_2)
 
     @pytest.mark.asyncio
     async def test_handle_invalid_session_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
         await adapter_impl.handle_invalid_session(gateway_impl, False)
 
-        dispatch_impl.assert_called_with("invalid_session", gateway_impl, False)
+        dispatch_impl.assert_called_with(events.INVALID_SESSION, gateway_impl, False)
 
     @pytest.mark.asyncio
     async def test_handle_reconnect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
         await adapter_impl.handle_reconnect(gateway_impl, ...)
 
-        dispatch_impl.assert_called_with("reconnect", gateway_impl)
+        dispatch_impl.assert_called_with(events.RECONNECT, gateway_impl)
 
     @pytest.mark.asyncio
-    async def test_handle_resumed_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
-        await adapter_impl.handle_resumed(gateway_impl, ...)
+    async def test_handle_resume_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
+        await adapter_impl.handle_resume(gateway_impl, ...)
 
-        dispatch_impl.assert_called_with("resumed", gateway_impl)
+        dispatch_impl.assert_called_with(events.RESUME, gateway_impl)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -187,10 +235,8 @@ class TestDispatchingEventAdapterImpl:
 
         # Being lazy, I just brute force this as it is the first thing that happens ever in any event, so meh.
         # Any exception raised afterwards can be ignored unless the assertion fails.
-        try:
+        with contextlib.suppress(Exception):
             await handler(gateway_impl, payload)
-        except Exception:
-            traceback.print_exc()
 
         assert len(dispatch_impl.call_args_list) > 0, f"dispatch did not get invoked for {handler_name}"
         args, kwargs = dispatch_impl.call_args_list[0]
@@ -289,9 +335,7 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(events.GUILD_CHANNEL_UPDATE, channel_obj_before, channel_obj_after)
 
     @pytest.mark.asyncio
-    async def test_handle_channel_update_invokes_update_channel(
-        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
-    ):
+    async def test_handle_channel_update_invokes_update_channel(self, adapter_impl, gateway_impl, fabric_impl):
         payload = {"id": "123", "type": True}
 
         await adapter_impl.handle_channel_update(gateway_impl, payload)
@@ -312,7 +356,7 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(events.RAW_CHANNEL_DELETE, payload)
 
     @pytest.mark.asyncio
-    async def test_handle_channel_delete_parses_channel(self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl):
+    async def test_handle_channel_delete_parses_channel(self, adapter_impl, gateway_impl, fabric_impl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=123)
         channel_obj = _helpers.mock_model(channels.GuildChannel, is_dm=False)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
@@ -365,7 +409,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_channel_pins_update_for_known_channel_invokes_set_last_pinned_timestamp_on_state(
-        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+        self, adapter_impl, gateway_impl, fabric_impl
     ):
         channel_obj = _helpers.mock_model(channels.GuildChannel, id=123, is_dm=False)
         timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
@@ -435,7 +479,7 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(events.DM_CHANNEL_PIN_REMOVED)
 
     @pytest.mark.asyncio
-    async def test_handle_guild_create_parses_guild(self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl):
+    async def test_handle_guild_create_parses_guild(self, adapter_impl, gateway_impl, fabric_impl):
         payload = {"id": "123", "unavailable": False}
 
         await adapter_impl.handle_guild_create(gateway_impl, payload)
@@ -496,7 +540,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_guild_delete_when_unavailable_invokes__handle_guild_unavailable(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl
     ):
         adapter_impl._handle_guild_unavailable = asynctest.CoroutineMock()
         payload = {"id": "123", "unavailable": True}
@@ -506,9 +550,7 @@ class TestDispatchingEventAdapterImpl:
         adapter_impl._handle_guild_unavailable.assert_awaited_with(payload)
 
     @pytest.mark.asyncio
-    async def test_handle_guild_delete_when_available_invokes__handle_guild_leave(
-        self, adapter_impl, gateway_impl, dispatch_impl
-    ):
+    async def test_handle_guild_delete_when_available_invokes__handle_guild_leave(self, adapter_impl, gateway_impl):
         adapter_impl._handle_guild_leave = asynctest.CoroutineMock()
         payload = {"id": "123", "unavailable": False}
 
@@ -517,9 +559,7 @@ class TestDispatchingEventAdapterImpl:
         adapter_impl._handle_guild_leave.assert_awaited_with(payload)
 
     @pytest.mark.asyncio
-    async def test__handle_guild_unavailable_when_not_cached_parses_guild(
-        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
-    ):
+    async def test__handle_guild_unavailable_when_not_cached_parses_guild(self, adapter_impl, fabric_impl):
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
         payload = {"id": "123", "unavailable": False}
 
@@ -529,7 +569,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test__handle_guild_unavailable_when_not_cached_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+        self, adapter_impl, dispatch_impl, fabric_impl
     ):
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
         payload = {"id": "123", "unavailable": True}
@@ -540,7 +580,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test__handle_guild_unavailable_when_cached_dispatches_GUILD_UNAVAILABLE(
-        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+        self, adapter_impl, dispatch_impl, fabric_impl
     ):
         guild_obj = _helpers.mock_model(guilds.Guild, id=123, unavailable=True)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
@@ -551,9 +591,7 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(events.GUILD_UNAVAILABLE, guild_obj)
 
     @pytest.mark.asyncio
-    async def test__handle_guild_unavailable_when_cached_sets_guild_unavailablility(
-        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
-    ):
+    async def test__handle_guild_unavailable_when_cached_sets_guild_unavailablility(self, adapter_impl, fabric_impl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=123, unavailable=True)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
         payload = {"id": str(guild_obj.id), "unavailable": guild_obj.unavailable}
@@ -563,7 +601,7 @@ class TestDispatchingEventAdapterImpl:
         fabric_impl.state_registry.set_guild_unavailability.assert_called_with(guild_obj, True)
 
     @pytest.mark.asyncio
-    async def test__handle_guild_leave_parses_guild(self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl):
+    async def test__handle_guild_leave_parses_guild(self, adapter_impl, fabric_impl):
         payload = {"id": "123", "unavailable": False}
 
         await adapter_impl._handle_guild_leave(payload)
@@ -571,7 +609,7 @@ class TestDispatchingEventAdapterImpl:
         fabric_impl.state_registry.parse_guild.assert_called_with(payload)
 
     @pytest.mark.asyncio
-    async def test__handle_guild_leave_deletes_guild(self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl):
+    async def test__handle_guild_leave_deletes_guild(self, adapter_impl, fabric_impl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=123, unavailable=False)
         fabric_impl.state_registry.parse_guild = mock.MagicMock(return_value=guild_obj)
         payload = {"id": str(guild_obj.id), "unavailable": guild_obj.unavailable}
@@ -581,9 +619,7 @@ class TestDispatchingEventAdapterImpl:
         fabric_impl.state_registry.delete_guild.assert_called_with(guild_obj)
 
     @pytest.mark.asyncio
-    async def test__handle_guild_leave_dispatches_GUILD_LEAVE(
-        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
-    ):
+    async def test__handle_guild_leave_dispatches_GUILD_LEAVE(self, adapter_impl, dispatch_impl, fabric_impl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=123, unavailable=False)
         fabric_impl.state_registry.parse_guild = mock.MagicMock(return_value=guild_obj)
         payload = {"id": guild_obj.id, "unavailable": guild_obj.unavailable}
@@ -593,7 +629,7 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(events.GUILD_LEAVE, guild_obj)
 
     @pytest.mark.asyncio
-    async def test_handle_guild_ban_add_parses_user(self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl):
+    async def test_handle_guild_ban_add_parses_user(self, adapter_impl, gateway_impl, fabric_impl):
         payload = {"guild_id": "123", "user": {"id": "456"}}
 
         await adapter_impl.handle_guild_ban_add(gateway_impl, payload)
@@ -658,7 +694,7 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(events.RAW_GUILD_BAN_ADD, payload)
 
     @pytest.mark.asyncio
-    async def test_handle_guild_ban_remove_parses_user(self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl):
+    async def test_handle_guild_ban_remove_parses_user(self, adapter_impl, gateway_impl, fabric_impl):
         payload = {"guild_id": "123", "user": {"id": "456"}}
 
         await adapter_impl.handle_guild_ban_remove(gateway_impl, payload)
@@ -824,7 +860,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_update_when_role_is_not_cached_does_not_pass_update_member_that_role(
-        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+        self, adapter_impl, gateway_impl, fabric_impl
     ):
         role_obj = _helpers.mock_model(roles.Role, id=1)
         member_obj = _helpers.mock_model(members.Member, id=123, nick=None)
@@ -845,7 +881,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_update_calls_update_member_with_roles_and_nick(
-        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+        self, adapter_impl, gateway_impl, fabric_impl
     ):
         role_obj = _helpers.mock_model(roles.Role, id=1)
         member_obj = _helpers.mock_model(members.Member, id=123, nick=None)
@@ -894,7 +930,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_remove_when_member_is_cached_deletes_member(
-        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+        self, adapter_impl, gateway_impl, fabric_impl
     ):
         member_obj = _helpers.mock_model(members.Member, id=123)
         fabric_impl.state_registry.get_member_by_id = mock.MagicMock(return_value=member_obj)
@@ -1013,7 +1049,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_delete_when_role_is_cached_deletes_the_role(
-        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+        self, adapter_impl, gateway_impl, fabric_impl
     ):
         role_obj = _helpers.mock_model(roles.Role, id=12)
         guild_obj = _helpers.mock_model(guilds.Guild, id=123, roles={role_obj.id: role_obj})
