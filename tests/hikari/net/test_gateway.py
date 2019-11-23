@@ -52,6 +52,7 @@ class Context:
 
 
 class MockSession(ws.WebSocketClientSession):
+    # noinspection PyMissingConstructor,PyShadowingNames
     def __init__(self, ws):
         self.ws = ws
         self._closed = False
@@ -63,6 +64,7 @@ class MockSession(ws.WebSocketClientSession):
     async def __aexit__(self, *_, **__):
         self._closed = True
 
+    # noinspection PyMethodOverriding
     def __del__(self):
         pass
 
@@ -76,6 +78,7 @@ class MockSession(ws.WebSocketClientSession):
 
 class MockGateway(gateway.GatewayClientV7):
     def __init__(self, **kwargs):
+        # noinspection PyShadowingNames
         ws = Context()
         gateway.GatewayClientV7.__init__(self, **kwargs)
         self.ws = ws
@@ -91,7 +94,7 @@ class MockGateway(gateway.GatewayClientV7):
 
 
 def mock_run_once_parts():
-    def decorator(coro):
+    def decorator(coroutine):
         async def wrapper(*args, **kwargs):
             gw = MockGateway(
                 uri="wss://gateway.discord.gg:4949/",
@@ -108,10 +111,10 @@ def mock_run_once_parts():
             gw._keep_alive = asynctest.CoroutineMock()
             gw._process_events = asynctest.CoroutineMock()
 
-            await coro(*args, **kwargs, gw=gw)
+            await coroutine(*args, **kwargs, gw=gw)
 
-        wrapper.__name__ = coro.__name__
-        wrapper.__qualname__ = coro.__qualname__
+        wrapper.__name__ = coroutine.__name__
+        wrapper.__qualname__ = coroutine.__qualname__
         return wrapper
 
     return decorator
@@ -217,7 +220,6 @@ class TestGateway:
             receive_any_str_value = "{" '  "foo": "bar",' '  "baz": "bork",' '  "qux": ["q", "u", "x", "x"]' "}"
             gw.ws.receive_any_str = asynctest.CoroutineMock(return_value=receive_any_str_value)
             await gw._receive_json()
-            # noinspection PyUnresolvedReferences
             json_loads.assert_called_with(receive_any_str_value, object_hook=data_structures.ObjectProxy)
 
     async def test_receive_json_when_receiving_zlib_payloads_collects_before_decoding(self, event_loop):
@@ -230,7 +232,8 @@ class TestGateway:
             payload = zlib.compress(receive_any_str_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
-            chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
+            chunk_slices = (slice(i, i + chunk_size) for i in range(0, len(payload), chunk_size))
+            chunks = [payload[chunk_slice] for chunk_slice in chunk_slices]
 
             gw.ws.receive_any_str = asynctest.CoroutineMock(side_effect=chunks)
             await gw._receive_json()
@@ -250,7 +253,8 @@ class TestGateway:
             payload = zlib.compress(receive_any_str_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
-            chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
+            chunk_slices = (slice(i, i + chunk_size) for i in range(0, len(payload), chunk_size))
+            chunks = [payload[chunk_slice] for chunk_slice in chunk_slices]
 
             first_array = gw._in_buffer
             gw.ws.receive_any_str = asynctest.CoroutineMock(side_effect=chunks)
@@ -268,7 +272,8 @@ class TestGateway:
             payload = zlib.compress(receive_any_str_value) + b"\x00\x00\xff\xff"
 
             chunk_size = 16
-            chunks = [payload[i : i + chunk_size] for i in range(0, len(payload), chunk_size)]
+            chunk_slices = (slice(i, i + chunk_size) for i in range(0, len(payload), chunk_size))
+            chunks = [payload[chunk_slice] for chunk_slice in chunk_slices]
 
             first_array = gw._in_buffer
             gw.max_persistent_buffer_size = 3
@@ -370,7 +375,8 @@ class TestGateway:
             {"op": 6, "d": {"token": "1234", "session_id": 1_234_321, "seq": 69420}}, False
         )
 
-    async def test_send_identify(self, event_loop):
+    @pytest.mark.parametrize("guild_subscriptions", [True, False])
+    async def test_send_identify(self, event_loop, guild_subscriptions):
         with contextlib.ExitStack() as stack:
             stack.enter_context(_helpers.mock_patch(user_agent.python_version, new=lambda: "python3"))
             stack.enter_context(_helpers.mock_patch(user_agent.library_version, new=lambda: "vx.y.z"))
@@ -382,6 +388,7 @@ class TestGateway:
             gw.session_id = 1_234_321
             gw.seq = 69420
             gw._send_json = asynctest.CoroutineMock()
+            gw._enable_guild_subscription_events = guild_subscriptions
 
             await gw._send_identify()
             gw._send_json.assert_called_with(
@@ -392,6 +399,7 @@ class TestGateway:
                         "compress": False,
                         "large_threshold": 69,
                         "properties": {"$os": "leenuks", "$browser": "vx.y.z", "$device": "python3"},
+                        "guild_subscriptions": guild_subscriptions,
                     },
                 },
                 False,
@@ -415,7 +423,8 @@ class TestGateway:
         assert "shard" in payload["d"]
         assert payload["d"]["shard"] == [917, 1234]
 
-    async def test_send_identify_includes_status_info_if_present(self, event_loop):
+    @pytest.mark.parametrize("is_present", [True, False])
+    async def test_send_identify_includes_presence_info_if_present(self, event_loop, is_present):
         gw = MockGateway(
             uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
@@ -423,7 +432,7 @@ class TestGateway:
             shard_id=917,
             shard_count=1234,
             large_threshold=69,
-            initial_presence={"foo": "bar"},
+            initial_presence={"foo": "bar"} if is_present else None,
         )
         gw._send_json = asynctest.CoroutineMock()
 
@@ -431,8 +440,11 @@ class TestGateway:
         payload = gw._send_json.call_args[0][0]
 
         assert "d" in payload
-        assert "status" in payload["d"]
-        assert payload["d"]["status"] == {"foo": "bar"}
+        if is_present:
+            assert "presence" in payload["d"]
+            assert payload["d"]["presence"] == {"foo": "bar"}
+        else:
+            assert "presence" not in payload["d"]
 
     async def test_process_events_halts_if_closed_event_is_set(self, event_loop):
         gw = MockGateway(
@@ -924,7 +936,7 @@ class TestGateway:
         pl = {
             "op": 0,
             "t": "RESUMED",
-            "d": {"_trace": ["potato.com", "tomato.net"], "seq": 192, "session_id": "168ayylmao",},
+            "d": {"_trace": ["potato.com", "tomato.net"], "seq": 192, "session_id": "168ayylmao"},
         }
         await gw._handle_resumed(pl["d"])
 
@@ -963,7 +975,7 @@ class TestGateway:
         gw.run_once.assert_awaited_once()
 
     @mock_run_once_parts()
-    async def test_run_once_opens_connection(_, gw):
+    async def test_run_once_opens_connection(self, gw):
         # Stop the ws going further than the hello part.
         gw._receive_hello = asynctest.CoroutineMock(side_effect=ws.WebSocketClosure(1000, "idk"))
         gw.uri = "ws://uri"
@@ -973,7 +985,7 @@ class TestGateway:
         )
 
     @mock_run_once_parts()
-    async def test_run_once_waits_for_hello(_, gw):
+    async def test_run_once_waits_for_hello(self, gw):
         # Stop the WS going further than the hello part.
         gw._receive_hello = asynctest.CoroutineMock(side_effect=ws.WebSocketClosure(1000, "idk"))
         gw.uri = "ws://uri"
@@ -981,7 +993,7 @@ class TestGateway:
         gw._receive_hello.assert_awaited_once()
 
     @mock_run_once_parts()
-    async def test_run_once_heart_beats_before_keep_alive_but_after_send_identify(_, gw):
+    async def test_run_once_heart_beats_before_keep_alive_but_after_send_identify(self, gw):
         send_identify_time = -float("inf")
         heartbeat_time = -float("inf")
         keep_alive_time = -float("inf")
@@ -1013,13 +1025,13 @@ class TestGateway:
         assert send_identify_time < heartbeat_time < keep_alive_time
 
     @mock_run_once_parts()
-    async def test_run_once_identifies_normally(_, gw):
+    async def test_run_once_identifies_normally(self, gw):
         await gw.run_once()
         gw._send_identify.assert_awaited_once()
         gw._send_resume.assert_not_awaited()
 
     @mock_run_once_parts()
-    async def test_run_once_resumes_when_seq_and_session_id_set(_, gw):
+    async def test_run_once_resumes_when_seq_and_session_id_set(self, gw):
         gw.seq = 59
         gw.session_id = 1234
         await gw.run_once()
@@ -1027,17 +1039,17 @@ class TestGateway:
         gw._send_identify.assert_not_awaited()
 
     @mock_run_once_parts()
-    async def test_run_once_spins_up_heartbeat_keep_alive_task(_, gw):
+    async def test_run_once_spins_up_heartbeat_keep_alive_task(self, gw):
         await gw.run_once()
         gw._keep_alive.assert_awaited()
 
     @mock_run_once_parts()
-    async def test_run_once_spins_up_event_processing_task(_, gw):
+    async def test_run_once_spins_up_event_processing_task(self, gw):
         await gw.run_once()
         gw._process_events.assert_awaited()
 
     @mock_run_once_parts()
-    async def test_run_once_never_reconnect_is_raised_via_RestartConnection(_, gw):
+    async def test_run_once_never_reconnect_is_raised_via_RestartConnection(self, gw):
         gw._process_events = asynctest.CoroutineMock(
             side_effect=gateway._RestartConnection(gw._NEVER_RECONNECT_CODES[0], "some lazy message")
         )
@@ -1048,7 +1060,7 @@ class TestGateway:
             assert isinstance(ex.__cause__, gateway._RestartConnection)
 
     @mock_run_once_parts()
-    async def test_run_once_never_reconnect_is_raised_via_ResumeConnection(_, gw):
+    async def test_run_once_never_reconnect_is_raised_via_ResumeConnection(self, gw):
         gw._process_events = asynctest.CoroutineMock(
             side_effect=gateway._ResumeConnection(gw._NEVER_RECONNECT_CODES[0], "some lazy message")
         )
@@ -1059,7 +1071,7 @@ class TestGateway:
             assert isinstance(ex.__cause__, gateway._ResumeConnection)
 
     @mock_run_once_parts()
-    async def test_run_once_RestartConnection(_, gw):
+    async def test_run_once_RestartConnection(self, gw):
         gw._process_events = asynctest.CoroutineMock(
             side_effect=gateway._RestartConnection(opcodes.GatewayClosure.INVALID_SEQ, "some lazy message")
         )
@@ -1073,7 +1085,7 @@ class TestGateway:
         assert gw.trace == [], "trace was not cleared"
 
     @mock_run_once_parts()
-    async def test_run_once_ResumeConnection(_, gw):
+    async def test_run_once_ResumeConnection(self, gw):
         gw._process_events = asynctest.CoroutineMock(
             side_effect=gateway._ResumeConnection(opcodes.GatewayClosure.RATE_LIMITED, "some lazy message")
         )
