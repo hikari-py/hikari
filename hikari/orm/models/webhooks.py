@@ -34,6 +34,7 @@ class WebhookType(enum.IntEnum):
     """
     The type of a webhook.
     """
+
     # Incoming webhooks that can be posted using Discord's token endpoint.
     INCOMING = 1
     # Channel follows webhooks that are posted to by discord announcement channels.

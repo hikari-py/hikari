@@ -39,14 +39,7 @@ function create-changelog() {
     echo >> ${changelog}
     gcg -O rpm >> ${changelog}
     echo >> ${changelog}
-}
-
-function create-requirements() {
-    local requirements="./requirements.txt"
-    echo "Generating ${requirements}."
-    echo "# Automatically generated from pyproject.toml for ${COMMIT_REF} at $(date) by CI." > ${requirements}
-    poetry run pip freeze >> ${requirements}
-    echo >> ${requirements}
+    git add ${changelog}
 }
 
 function deploy-to-svc() {
@@ -71,7 +64,6 @@ function deploy-to-svc() {
     git config user.email "${CI_ROBOT_EMAIL}"
     git status
     create-changelog
-    create-requirements
     git diff
     git commit -am "Deployed ${current_version} ${SKIP_CI_COMMIT_PHRASE}" --allow-empty
     git push ${REMOTE_NAME} ${PROD_BRANCH}
@@ -91,6 +83,12 @@ function deploy-to-svc() {
 
 function do-deployment() {
     set -x
+    
+    if git log -1 --pretty=%B | grep -iq '\[skip deploy\]'; then
+        echo -e "\e[1;33mSKIPPING DEPLOYMENT STEP\e[0m"
+        exit 0
+    fi
+    
     local old_version
     local current_version
 

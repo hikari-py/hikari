@@ -71,8 +71,8 @@ def test_User_when_is_a_bot(fabric_obj):
 
 
 @pytest.mark.model
-def test_BotUser(fabric_obj):
-    user_obj = users.BotUser(
+def test_OAuth2User(fabric_obj):
+    user_obj = users.OAuth2User(
         fabric_obj,
         {
             "id": "123456",
@@ -83,7 +83,7 @@ def test_BotUser(fabric_obj):
             "verified": True,
             "locale": "en-GB",
             "flags": 0b00101101,
-            "premium_type": 0b1101101,
+            "premium_type": 2,
         },
     )
 
@@ -94,3 +94,33 @@ def test_BotUser(fabric_obj):
     assert user_obj.bot is False
     assert user_obj.verified is True
     assert user_obj.mfa_enabled is True
+    assert user_obj.locale == "en-GB"
+
+
+@pytest.mark.model
+@pytest.mark.parametrize(
+    ["payload", "expected_type"],
+    [
+        (
+            {
+                "id": "123456",
+                "username": "Boris Johnson",
+                "discriminator": "6969",
+                "avatar": "1a2b3c4d",
+                "mfa_enabled": True,
+                "verified": True,
+                "locale": "en-GB",
+                "flags": 0b00101101,
+                "premium_type": 2,
+            },
+            users.OAuth2User,
+        ),
+        (
+            {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": None, "bot": True},
+            users.User,
+        ),
+    ],
+)
+def test_parse_user(fabric_obj, payload, expected_type):
+    user = users.parse_user(fabric_obj, payload)
+    assert isinstance(user, expected_type)

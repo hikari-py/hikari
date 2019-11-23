@@ -71,9 +71,6 @@ class DispatchingEventAdapter(event_handler.IEventHandler):
     async def handle_connect(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_ready(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
-        ...
-
     async def handle_resumed(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
         ...
 
