@@ -947,6 +947,18 @@ class TestStateRegistryImpl:
 
         registry.parse_application_user.assert_called_with(payload)
 
+    def test_parse_user_invokes_users_parse_user(
+        self,
+        registry: state_registry_impl.StateRegistryImpl,
+    ):
+        payload = {"id": "1234"}
+        user_obj = _helpers.mock_model(users.User, id=1234)
+        registry._users = {}
+
+        with _helpers.mock_patch(users.parse_user, return_value=user_obj) as parse_user:
+            registry.parse_user(payload)
+            parse_user.assert_called_with(registry.fabric, payload)
+
     def test_parse_user_when_OAuth2_user_returns_OAuth2_user(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234", "mfa_enabled": False, "verified": True}
         oa2_user_obj = _helpers.mock_model(users.OAuth2User)
