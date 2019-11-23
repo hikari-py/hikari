@@ -463,18 +463,19 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
         message_id = int(payload["message_id"])
         user_id = int(payload["user_id"])
         message_obj = self.fabric.state_registry.get_message_by_id(message_id)
+        guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 
         if message_obj is None:
             # Message was not cached, so ignore
             return
 
+        emoji_obj = self.fabric.state_registry.parse_emoji(payload["emoji"], guild_obj)
+        reaction_obj = self.fabric.state_registry.decrement_reaction_count(message_obj, emoji_obj)
+
         if guild_id is not None:
             user_obj = self.fabric.state_registry.get_member_by_id(user_id, guild_id)
         else:
             user_obj = self.fabric.state_registry.get_user_by_id(user_id)
-
-        emoji_obj = self.fabric.state_registry.parse_emoji(payload["emoji"], None)
-        reaction_obj = self.fabric.state_registry.decrement_reaction_count(message_obj, emoji_obj)
 
         if reaction_obj is None:
             self.logger.warning(
