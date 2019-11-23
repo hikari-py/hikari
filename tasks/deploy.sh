@@ -84,11 +84,10 @@ function deploy-to-svc() {
 function do-deployment() {
     set -x
     
-    (
-        git log -1 --pretty=%B | grep -iq '\[skip deploy\]'
-        && (echo -e "\e[1;33mSKIPPING PYPI DEPLOYMENT\e[0m" && exit 0) 
-        || true
-    )
+    if git log -1 --pretty=%B | grep -iq '\[skip deploy\]'; then
+        echo -e "\e[1;33mSKIPPING DEPLOYMENT STEP\e[0m"
+        exit 0
+    fi
     
     local old_version
     local current_version
