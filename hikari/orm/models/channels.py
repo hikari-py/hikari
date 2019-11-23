@@ -314,9 +314,14 @@ class GuildCategory(GuildChannel, type=4, is_dm=False):
         super().__init__(fabric_obj, payload)
 
 
-class GuildNewsChannel(GuildChannel, type=5, is_dm=False):
+class GuildAnnouncementChannel(GuildChannel, type=5, is_dm=False):
     """
-    A channel for news topics within a guild.
+    A channel for announcement topics within a guild.
+
+    Note:
+        This channel type may also be known as a `news channel` internally. However, this was
+        announced to be renamed on August 22nd, 2019 by
+        this changelog entry: https://discordapp.com/developers/docs/change-log#august-22-2019
     """
 
     __slots__ = ("topic", "last_message_id", "nsfw")
@@ -409,6 +414,6 @@ __all__ = (
     "GuildVoiceChannel",
     "GroupDMChannel",
     "GuildCategory",
-    "GuildNewsChannel",
+    "GuildAnnouncementChannel",
     "GuildStoreChannel",
 )

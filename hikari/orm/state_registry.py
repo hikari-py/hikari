@@ -50,13 +50,17 @@ class IStateRegistry(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def me(self) -> users.BotUser:
-        ...
+    def me(self) -> typing.Optional[users.OAuth2User]:
+        """
+        The user for the bot connection. This user is who the bot will appear as on Discord when in the chat API.
+
+        If the user details have not yet been sent by the gateway or otherwise, then this will be `None` instead.
+        """
 
     @property
     @abc.abstractmethod
     def message_cache(self) -> typing.Mapping[int, messages.Message]:
-        ...
+        """A cache of the most recently received messages."""
 
     @abc.abstractmethod
     def increment_reaction_count(self, message_obj: messages.Message, emoji_obj: emojis.Emoji) -> reactions.Reaction:
@@ -256,16 +260,16 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_bot_user(self, bot_user_payload: data_structures.DiscordObjectT) -> users.BotUser:
+    def parse_application_user(self, application_user_payload: data_structures.DiscordObjectT) -> users.OAuth2User:
         """
-        Parses a bot user payload into a workable object
+        Parses an application user payload into a workable object.
 
         Args:
-            bot_user_payload:
-                the payload of the bot user.
+            application_user_payload:
+                the payload of the application user.
 
         Returns:
-            a :class:`hikari.orm.models.users.BotUser` object.
+            a :class:`hikari.orm.models.users.OAuth2User` object.
         """
 
     @abc.abstractmethod
