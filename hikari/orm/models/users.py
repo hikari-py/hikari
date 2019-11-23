@@ -140,7 +140,7 @@ class OAuth2User(User):
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
-    #: :type: :class:`bool` or `None` if not available.
+    #: :type: :class:`str` or `None` if not available.
     #:
     #: Note:
     #:     If you wish to obtain further information about a locale, and what it provides, you
