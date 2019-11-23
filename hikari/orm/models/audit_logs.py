@@ -75,7 +75,14 @@ class AuditLogEntry(interfaces.ISnowflake):
     user_id: int
     action_type: AuditLogEvent
     options: typing.Optional[
-        typing.Union[ChannelOverwriteAuditLogEntryInfo, MessageDeleteAuditLogEntryInfo, MemberPruneAuditLogEntryInfo]
+        typing.Union[
+            AuditLogEntryCountInfo,
+            MemberMoveAuditLogEntryInfo,
+            ChannelOverwriteAuditLogEntryInfo,
+            MessageDeleteAuditLogEntryInfo,
+            MemberPruneAuditLogEntryInfo,
+            MessagePinAuditLogEntryInfo,
+        ]
     ]
     reason: typing.Optional[str]
 
@@ -140,6 +147,27 @@ class IAuditLogEntryInfo(interfaces.IModel, interface=True):
             cls._implementations[event_type.value] = cls
 
 
+class AuditLogEntryCountInfo(
+    IAuditLogEntryInfo, event_types=[AuditLogEvent.MESSAGE_BULK_DELETE, AuditLogEvent.MEMBER_DISCONNECT]
+):
+    __slots__ = ("count",)
+
+    count: int
+
+    def __init__(self, payload) -> None:
+        self.count = int(payload["count"])
+
+
+class MemberMoveAuditLogEntryInfo(AuditLogEntryCountInfo, event_types=[AuditLogEvent.MEMBER_MOVE]):
+    __slots__ = ("channel_id", "count")
+
+    channel_id: int
+
+    def __init__(self, payload) -> None:
+        super().__init__(payload)
+        self.channel_id = int(payload["channel_id"])
+
+
 class MemberPruneAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEvent.MEMBER_PRUNE]):
     __slots__ = ("delete_member_days", "members_removed")
 
@@ -151,15 +179,26 @@ class MemberPruneAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEven
         self.members_removed = int(payload["members_removed"])
 
 
-class MessageDeleteAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEvent.MESSAGE_DELETE]):
+class MessageDeleteAuditLogEntryInfo(
+    AuditLogEntryCountInfo, event_types=[AuditLogEvent.MESSAGE_DELETE, AuditLogEvent.MESSAGE_BULK_DELETE]
+):
     __slots__ = ("channel_id", "count")
 
     channel_id: int
-    count: int
 
     def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+        super().__init__(payload)
         self.channel_id = int(payload["channel_id"])
-        self.count = int(payload["count"])
+
+
+class MessagePinAuditLogEntryInfo(
+    IAuditLogEntryInfo, event_types=[AuditLogEvent.MESSAGE_PIN, AuditLogEvent.MESSAGE_UNPIN]
+):
+    __slots__ = ("channel_id", "message_id")
+
+    def __init__(self, payload):
+        self.channel_id = int(payload["channel_id"])
+        self.message_id = int(payload["message_id"])
 
 
 class ChannelOverwriteAuditLogEntryInfo(
@@ -183,7 +222,13 @@ class ChannelOverwriteAuditLogEntryInfo(
 def parse_audit_log_entry_info(
     audit_log_entry_info_payload: data_structures.DiscordObjectT, event_type: int
 ) -> typing.Union[
-    MemberPruneAuditLogEntryInfo, MessageDeleteAuditLogEntryInfo, ChannelOverwriteAuditLogEntryInfo, None
+    AuditLogEntryCountInfo,
+    MemberMoveAuditLogEntryInfo,
+    ChannelOverwriteAuditLogEntryInfo,
+    MessageDeleteAuditLogEntryInfo,
+    MemberPruneAuditLogEntryInfo,
+    MessagePinAuditLogEntryInfo,
+    None,
 ]:
     """
     Parses a specific type of audit log entry info based on the given event type. If nothing corresponds
