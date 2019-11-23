@@ -72,7 +72,7 @@ DispatchHandler = typing.Callable[["GatewayClient", str, typing.Any], typing.Awa
 _IMPL_VERSION = 7
 
 
-async def _default_dispatch(gateway, event, payload) -> None:
+async def _default_dispatch(_gateway, _event, _payload) -> None:
     ...
 
 
@@ -564,7 +564,7 @@ class GatewayClientV7:
                 now = time.perf_counter()
                 if self.last_heartbeat_sent + self.heartbeat_interval < now:
                     last_sent = now - self.last_heartbeat_sent
-                    msg = f"Failed to receive an acknowledgement from the previous heartbeat sent ~{last_sent}s ago"
+                    msg = f"failed to receive an acknowledgement from the previous heartbeat sent ~{last_sent}s ago"
                     await self._trigger_resume(code=opcodes.GatewayClosure.PROTOCOL_VIOLATION, reason=msg)
 
                 await asyncio.wait_for(self._closed_event.wait(), timeout=self.heartbeat_interval)
@@ -615,13 +615,16 @@ class GatewayClientV7:
         }
 
         if self.initial_presence is not None:
-            payload["d"]["status"] = self.initial_presence
+            payload["d"]["presence"] = self.initial_presence
 
         if self.is_shard:
             # noinspection PyTypeChecker
             payload["d"]["shard"] = [self.shard_id, self.shard_count]
 
-        self.logger.info("sent IDENTIFY")
+        self.logger.info(
+            "sent IDENTIFY, guild subscriptions are %s",
+            "enabled" if self._enable_guild_subscription_events else "disabled",
+        )
         await self._send_json(payload, False)
 
     async def _handle_dispatch(self, event: str, payload: data_structures.DiscordObjectT) -> None:
