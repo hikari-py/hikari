@@ -32,6 +32,7 @@ import pytest
 from hikari import errors
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import user_agent
+from hikari.net import extra_gateway_events
 from hikari.net import gateway
 from hikari.net import opcodes
 from hikari.net import ws
@@ -797,15 +798,11 @@ class TestGateway:
         await gw._process_one_event()
         gw._handle_resumed.assert_awaited_once_with(pl["d"])
 
-    async def test_handle_ready(self, event_loop):
-        gw = MockGateway(
-            uri="wss://gateway.discord.gg:4949/",
-            loop=event_loop,
-            token="1234",
-            shard_id=917,
-            shard_count=1234,
-            large_threshold=69,
-        )
+    async def test_handle_ready_for_sharded_gateway_sets_shard_info(self, event_loop):
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", large_threshold=69,)
+        gw.shard_id = None
+        gw.shard_count = None
+
         #  *sweats furiously*
         pl = {
             "op": 0,
@@ -833,7 +830,87 @@ class TestGateway:
                 },
             },
         }
+
         await gw._handle_ready(pl["d"])
+
+        assert gw.trace == pl["d"]["_trace"]
+        assert gw.shard_id == pl["d"]["shard"][0]
+        assert gw.shard_count == pl["d"]["shard"][1]
+
+    async def test_handle_ready_for_unsharded_gateway_does_not_set_shard_info(self, event_loop):
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", large_threshold=69,)
+        gw.shard_id = None
+        gw.shard_count = None
+
+        #  *sweats furiously again*
+        pl = {
+            "op": 0,
+            "t": "READY",
+            "d": {
+                # https://discordapp.com/developers/docs/topics/gateway#ready-ready-event-fields
+                "v": 69,
+                "_trace": ["potato.com", "tomato.net"],
+                "session_id": "69420lmaolmao",
+                "guilds": [{"id": "9182736455463", "unavailable": True}, {"id": "72819099110270", "unavailable": True}],
+                "private_channels": [],  # always empty /shrug
+                "user": {
+                    "id": "81624",
+                    "username": "Ben_Dover",
+                    "discriminator": 9921,
+                    "avatar": "a_d41d8cd98f00b204e9800998ecf8427e",
+                    "bot": bool("of course i am"),
+                    "mfa_enabled": True,
+                    "locale": "en_gb",
+                    "verified": False,
+                    "email": "chestylaroo@boing.biz",
+                    "flags": 69,
+                    "premimum_type": 0,
+                },
+            },
+        }
+
+        await gw._handle_ready(pl["d"])
+
+        assert gw.trace == pl["d"]["_trace"]
+        assert gw.shard_id is None
+        assert gw.shard_count is None
+
+    async def test_handle_ready_dispatches_CONNECT_event(self, event_loop):
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", large_threshold=69,)
+        gw._dispatch = asynctest.MagicMock(spec_set=gw._dispatch)
+        gw.shard_id = None
+        gw.shard_count = None
+
+        #  *sweats furiously again*
+        pl = {
+            "op": 0,
+            "t": "READY",
+            "d": {
+                # https://discordapp.com/developers/docs/topics/gateway#ready-ready-event-fields
+                "v": 69,
+                "_trace": ["potato.com", "tomato.net"],
+                "session_id": "69420lmaolmao",
+                "guilds": [{"id": "9182736455463", "unavailable": True}, {"id": "72819099110270", "unavailable": True}],
+                "private_channels": [],  # always empty /shrug
+                "user": {
+                    "id": "81624",
+                    "username": "Ben_Dover",
+                    "discriminator": 9921,
+                    "avatar": "a_d41d8cd98f00b204e9800998ecf8427e",
+                    "bot": bool("of course i am"),
+                    "mfa_enabled": True,
+                    "locale": "en_gb",
+                    "verified": False,
+                    "email": "chestylaroo@boing.biz",
+                    "flags": 69,
+                    "premimum_type": 0,
+                },
+            },
+        }
+
+        await gw._handle_ready(pl["d"])
+
+        gw._dispatch.assert_called_with(extra_gateway_events.CONNECT, pl["d"])
 
     async def test_handle_resume(self, event_loop):
         gw = MockGateway(
@@ -844,7 +921,11 @@ class TestGateway:
             shard_count=1234,
             large_threshold=69,
         )
-        pl = {"op": 0, "t": "RESUMED", "d": {"_trace": ["potato.com", "tomato.net"]}}
+        pl = {
+            "op": 0,
+            "t": "RESUMED",
+            "d": {"_trace": ["potato.com", "tomato.net"], "seq": 192, "session_id": "168ayylmao",},
+        }
         await gw._handle_resumed(pl["d"])
 
     async def test_process_events_calls_process_one_event(self, event_loop):
