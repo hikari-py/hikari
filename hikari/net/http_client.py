@@ -302,41 +302,6 @@ class HTTPClient(http_base.BaseHTTPClient):
         )
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    @meta.unofficial
-    async def suppress_embeds(self, channel_id: str, message_id: str, *, suppress=True) -> None:
-        """
-        Either suppresses or un-suppresses any embeds on the given message in the given channel.
-
-        Args:
-            channel_id:
-                The channel to look in.
-            message_id:
-                The message to retrieve.
-            suppress:
-                `True` (default) to suppress any embeds, and `False` to un-suppress embeds.
-
-        Returns:
-            A message object.
-
-        Note:
-            This requires the `READ_MESSAGE_HISTORY` and `MANAGE_MESSAGES` permission to be set.
-
-        Raises:
-            hikari.errors.Forbidden:
-                If you lack permission to see the message, are not in the guild, or lack the latter-mentioned
-                permissions in the target channel.
-            hikari.errors.NotFound:
-                If the message ID or channel ID is not found.
-        """
-        return await self.request(
-            POST,
-            "/channels/{channel_id}/messages/{message_id}/suppress-embeds",
-            channel_id=channel_id,
-            message_id=message_id,
-            json={"suppress": suppress},
-        )
-
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
     async def create_message(
         self,
         channel_id: str,
@@ -571,6 +536,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         *,
         content: str = unspecified.UNSPECIFIED,
         embed: data_structures.DiscordObjectT = unspecified.UNSPECIFIED,
+        flags: int = unspecified.UNSPECIFIED,
     ) -> data_structures.DiscordObjectT:
         """
         Update the given message.
@@ -584,6 +550,8 @@ class HTTPClient(http_base.BaseHTTPClient):
                 Optional string content to replace with in the message. If unspecified, it is not changed.
             embed:
                 Optional embed to replace with in the message. If unspecified, it is not changed.
+            flags:
+                Optional integer to replace the message's current flags. If unspecified, it is not changed.
 
         Returns:
             A replacement message object.
@@ -595,11 +563,13 @@ class HTTPClient(http_base.BaseHTTPClient):
                 if the embed exceeds any of the embed limits if specified, or the content is specified and consists
                 only of whitespace, is empty, or is more than 2,000 characters in length.
             hikari.errors.Forbidden:
-                if you did not author the message.
+                if you try to edit content or embed on a message you did not author or try to edit the flags
+                on a message you did not author without the `MANAGE_MESSAGES` permission.
         """
         payload = {}
         transformations.put_if_specified(payload, "content", content)
         transformations.put_if_specified(payload, "embed", embed)
+        transformations.put_if_specified(payload, "flags", flags)
         return await self.request(
             PATCH,
             "/channels/{channel_id}/messages/{message_id}",

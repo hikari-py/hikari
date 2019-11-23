@@ -120,9 +120,7 @@ class IModel(metaclass=abc.ABCMeta):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__()
         if "__slots__" not in cls.__dict__:
-            raise TypeError(
-                f"{cls.__module__}.{cls.__qualname__} must be slotted to derive from {FabricatedMixin.__name__}."
-            )
+            raise TypeError(f"{cls.__module__}.{cls.__qualname__} must be slotted to derive from {IModel.__name__}.")
 
         is_interface = kwargs.get("interface", False)
 
