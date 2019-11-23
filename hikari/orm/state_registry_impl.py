@@ -90,13 +90,13 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         self._message_cache: typing.MutableMapping[int, messages.Message] = data_structures.LRUDict(message_cache_size)
 
         #: The bot user.
-        self._user: typing.Optional[users.BotUser] = None
+        self._user: typing.Optional[users.OAuth2User] = None
 
         #: Our logger.
         self.logger = logging_helpers.get_named_logger(self)
 
     @property
-    def me(self) -> users.BotUser:
+    def me(self) -> typing.Optional[users.OAuth2User]:
         return self._user
 
     @property
@@ -228,11 +228,11 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return self._users.get(user_id)
 
-    def parse_bot_user(self, bot_user_payload: data_structures.DiscordObjectT) -> users.BotUser:
+    def parse_application_user(self, application_user_payload: data_structures.DiscordObjectT) -> users.OAuth2User:
         if self._user is not None:
-            self._user.update_state(bot_user_payload)
+            self._user.update_state(application_user_payload)
         else:
-            self._user = users.BotUser(self, bot_user_payload)
+            self._user = users.OAuth2User(self.fabric, application_user_payload)
 
         return self._user
 
@@ -381,12 +381,12 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         user_id = int(user_payload["id"])
 
         if self._user and user_id == self._user.id or "mfa_enabled" in user_payload or "verified" in user_payload:
-            return self.parse_bot_user(user_payload)
+            return self.parse_application_user(user_payload)
 
         user_obj = self.get_user_by_id(user_id)
 
         if user_obj is None:
-            user_obj = users.User(self, user_payload)
+            user_obj = users.parse_user(self.fabric, user_payload)
             self._users[user_id] = user_obj
             return user_obj
 
@@ -398,7 +398,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
     def parse_webhook(self, webhook_payload: data_structures.DiscordObjectT):
         # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
         # so that it isn't coupling dependent classes of this one to the model implementation as much.
-        return webhooks.Webhook(self, webhook_payload)
+        return webhooks.Webhook(self.fabric, webhook_payload)
 
     def set_guild_unavailability(self, guild_obj: guilds.Guild, unavailability: bool) -> None:
         # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
