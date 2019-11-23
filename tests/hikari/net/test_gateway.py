@@ -370,7 +370,8 @@ class TestGateway:
             {"op": 6, "d": {"token": "1234", "session_id": 1_234_321, "seq": 69420}}, False
         )
 
-    async def test_send_identify(self, event_loop):
+    @pytest.mark.parametrize("guild_subscriptions", [True, False])
+    async def test_send_identify(self, event_loop, guild_subscriptions):
         with contextlib.ExitStack() as stack:
             stack.enter_context(_helpers.mock_patch(user_agent.python_version, new=lambda: "python3"))
             stack.enter_context(_helpers.mock_patch(user_agent.library_version, new=lambda: "vx.y.z"))
@@ -382,6 +383,7 @@ class TestGateway:
             gw.session_id = 1_234_321
             gw.seq = 69420
             gw._send_json = asynctest.CoroutineMock()
+            gw._enable_guild_subscription_events = guild_subscriptions
 
             await gw._send_identify()
             gw._send_json.assert_called_with(
@@ -392,6 +394,7 @@ class TestGateway:
                         "compress": False,
                         "large_threshold": 69,
                         "properties": {"$os": "leenuks", "$browser": "vx.y.z", "$device": "python3"},
+                        "guild_subscriptions": guild_subscriptions
                     },
                 },
                 False,

@@ -100,6 +100,10 @@ class GatewayClientV7:
             A coroutine function that consumes a string event name and a JSON dispatch event payload consumed
             from the gateway to call each time a dispatch occurs. The payload will vary between events.
             If unspecified, this will default to an empty callback that does nothing.
+        enable_guild_subscription_events:
+            Defaulting to `True`, this will make the gateway emit events for changes to presence in guilds, and
+            for any user-typing events. If you set this to `False`, those events will be ignored and will not
+            be sent by Discord, reducing overall load on the bot significantly in large numbers of guilds.
         initial_presence:
             A JSON-serializable dict containing the initial presence to set, or `None` to just appear
             `online`. See https://discordapp.com/developers/docs/topics/gateway#update-status for a description
@@ -173,6 +177,7 @@ class GatewayClientV7:
     __slots__ = (
         "_in_buffer",
         "_closed_event",
+        "_enable_guild_subscription_events",
         "client_session",
         "dispatch",
         "fingerprint",
@@ -229,6 +234,7 @@ class GatewayClientV7:
         json_unmarshaller_object_hook: typing.Type[dict] = None,
         json_marshaller: typing.Callable = None,
         dispatch: DispatchHandler = None,
+        enable_guild_subscription_events = True,
         initial_presence: typing.Optional[data_structures.DiscordObjectT] = None,
         large_threshold: int = 50,
         loop: asyncio.AbstractEventLoop = None,
@@ -251,6 +257,10 @@ class GatewayClientV7:
         #: An :class:`asyncio.Event` that will be triggered whenever the gateway disconnects.
         #: This is only used internally.
         self._closed_event = asyncio.Event()
+
+        #: True if we want the guild to send events for presence changes and typing events. This is
+        #: private as it cannot be adjusted once initially set without re-identifying.
+        self._enable_guild_subscription_events = enable_guild_subscription_events
 
         #: Callable used to marshal (serialize) payloads into JSON-encoded strings from native Python objects.
         #:
@@ -600,6 +610,7 @@ class GatewayClientV7:
                 "compress": False,
                 "large_threshold": self.large_threshold,
                 "properties": self.fingerprint,
+                "guild_subscriptions": self._enable_guild_subscription_events,
             },
         }
 
