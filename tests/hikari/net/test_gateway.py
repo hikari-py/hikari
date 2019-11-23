@@ -758,7 +758,9 @@ class TestGateway:
                 "shard": [9, 18],
                 "session_id": "69420lmaolmao",
                 "guilds": [{"id": "9182736455463", "unavailable": True}, {"id": "72819099110270", "unavailable": True}],
-                "private_channels": [],  # always empty /shrug
+                # always empty:
+                # https://discordapp.com/developers/docs/change-log#documentation-fix-list-of-open-dms-in-certain-payloads
+                "private_channels": [],
                 "user": {
                     "id": "81624",
                     "username": "Ben_Dover",

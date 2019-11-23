@@ -57,8 +57,8 @@ class TestStateRegistryImpl:
 
         assert registry.message_cache is cache
 
-    def test_me_property_returns_bot_user_when_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        user = _helpers.mock_model(users.BotUser)
+    def test_me_property_returns_OAuth2_user_when_cached(self, registry: state_registry_impl.StateRegistryImpl):
+        user = _helpers.mock_model(users.OAuth2User)
         registry._user = user
 
         assert registry.me is user
@@ -486,8 +486,8 @@ class TestStateRegistryImpl:
 
         assert registry.get_role_by_id(1, 2) is None
 
-    def test_get_user_by_id_cached_bot_user(self, registry: state_registry_impl.StateRegistryImpl):
-        user_obj = _helpers.mock_model(users.BotUser, id=1)
+    def test_get_user_by_id_cached_oauth2_user(self, registry: state_registry_impl.StateRegistryImpl):
+        user_obj = _helpers.mock_model(users.OAuth2User, id=1)
         registry._user = user_obj
         registry._users = {}
 
@@ -495,7 +495,7 @@ class TestStateRegistryImpl:
 
     def test_get_user_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
         user_obj = _helpers.mock_model(users.User, id=1)
-        registry._user = _helpers.mock_model(users.BotUser, id=2)
+        registry._user = _helpers.mock_model(users.OAuth2User, id=2)
         registry._users = {user_obj.id: user_obj}
 
         assert registry.get_user_by_id(user_obj.id) is user_obj
@@ -506,23 +506,25 @@ class TestStateRegistryImpl:
 
         assert registry.get_user_by_id(1) is None
 
-    def test_parse_bot_user_given_user_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        bot_user = mock.MagicMock(spec_set=users.BotUser)
-        registry._user = bot_user
-        with _helpers.mock_patch(users.BotUser, return_value=bot_user) as BotUser:
-            parsed_obj = registry.parse_bot_user({})
-            assert parsed_obj is bot_user
+    def test_parse_application_user_given_user_cached(self, registry: state_registry_impl.StateRegistryImpl):
+        oa2_user = mock.MagicMock(spec_set=users.OAuth2User)
+        registry._user = oa2_user
+        with _helpers.mock_patch(users.OAuth2User, return_value=oa2_user) as OAuth2User:
+            parsed_obj = registry.parse_application_user({})
+            assert parsed_obj is oa2_user
             assert parsed_obj is registry.me
-            BotUser.assert_not_called()
-            bot_user.update_state.assert_called_once_with({})
+            OAuth2User.assert_not_called()
+            oa2_user.update_state.assert_called_once_with({})
 
-    def test_parse_bot_user_given_no_previous_user_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        bot_user = mock.MagicMock(spec_set=users.BotUser)
-        with _helpers.mock_patch(users.BotUser, return_value=bot_user) as BotUser:
-            parsed_obj = registry.parse_bot_user({})
-            assert parsed_obj is bot_user
+    def test_parse_application_user_given_no_previous_user_cached(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        oa2_user = mock.MagicMock(spec_set=users.OAuth2User)
+        with _helpers.mock_patch(users.OAuth2User, return_value=oa2_user) as OAuth2User:
+            parsed_obj = registry.parse_application_user({})
+            assert parsed_obj is oa2_user
             assert parsed_obj is registry.me
-            BotUser.assert_called_once_with(registry, {})
+            OAuth2User.assert_called_once_with(registry.fabric, {})
 
     def test_parse_channel_sets_guild_id_on_guild_channel_payload_if_guild_id_param_is_not_None(
         self, registry: state_registry_impl.StateRegistryImpl
@@ -934,21 +936,23 @@ class TestStateRegistryImpl:
         with _helpers.mock_patch(roles.Role, return_value=role_obj):
             assert registry.parse_role(payload, guild_obj) is role_obj
 
-    def test_parse_user_when_bot_user_calls_parse_bot_user(self, registry: state_registry_impl.StateRegistryImpl):
+    def test_parse_user_when_bot_user_calls_parse_application_user(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
         payload = {"id": "1234", "mfa_enabled": False, "verified": True}
-        bot_user_obj = _helpers.mock_model(users.BotUser)
-        registry.parse_bot_user = mock.MagicMock(return_value=bot_user_obj)
+        application_user_obj = _helpers.mock_model(users.OAuth2User)
+        registry.parse_application_user = mock.MagicMock(return_value=application_user_obj)
 
         registry.parse_user(payload)
 
-        registry.parse_bot_user.assert_called_with(payload)
+        registry.parse_application_user.assert_called_with(payload)
 
-    def test_parse_user_when_bot_user_returns_bot_user(self, registry: state_registry_impl.StateRegistryImpl):
+    def test_parse_user_when_OAuth2_user_returns_OAuth2_user(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234", "mfa_enabled": False, "verified": True}
-        bot_user_obj = _helpers.mock_model(users.BotUser)
-        registry.parse_bot_user = mock.MagicMock(return_value=bot_user_obj)
+        oa2_user_obj = _helpers.mock_model(users.OAuth2User)
+        registry.parse_application_user = mock.MagicMock(return_value=oa2_user_obj)
 
-        assert registry.parse_user(payload) is bot_user_obj
+        assert registry.parse_user(payload) is oa2_user_obj
 
     def test_parse_user_when_uncached_user_caches_new_user(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234"}
