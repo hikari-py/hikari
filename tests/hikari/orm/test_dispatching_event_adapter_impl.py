@@ -154,7 +154,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_connect_adds_application_user(
-        self, discord_ready_payload, fabric_impl, adapter_impl, gateway_impl,
+        self, discord_ready_payload, fabric_impl, adapter_impl, gateway_impl
     ):
         await adapter_impl.handle_connect(gateway_impl, discord_ready_payload)
 
@@ -162,7 +162,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_connect_adds_partial_guilds(
-        self, discord_ready_payload, fabric_impl, adapter_impl, gateway_impl,
+        self, discord_ready_payload, fabric_impl, adapter_impl, gateway_impl
     ):
         await adapter_impl.handle_connect(gateway_impl, discord_ready_payload)
 
@@ -736,10 +736,7 @@ class TestDispatchingEventAdapterImpl:
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
         payload = {
             "guild_id": "123",
-            "emojis": [
-                {"id": "1234", "name": "bowsettebaka", "animated": False},
-                {"id": "1235", "name": "bowsettel00d", "animated": False},
-            ],
+            "emojis": [{"id": "1234", "name": "bowsettebaka"}, {"id": "1235", "name": "bowsettel00d"}],
         }
 
         await adapter_impl.handle_guild_emojis_update(gateway_impl, payload)
@@ -768,10 +765,7 @@ class TestDispatchingEventAdapterImpl:
         )
         payload = {
             "guild_id": str(guild_obj.id),
-            "emojis": [
-                {"id": "1234", "name": "bowsettebaka", "animated": False},
-                {"id": "1235", "name": "bowsettel00d", "animated": False},
-            ],
+            "emojis": [{"id": "1234", "name": "bowsettebaka"}, {"id": "1235", "name": "bowsettel00d"}],
         }
 
         await adapter_impl.handle_guild_emojis_update(gateway_impl, payload)
@@ -1235,7 +1229,7 @@ class TestDispatchingEventAdapterImpl:
             "user_id": "123",
             "channel_id": "456",
             "message_id": "789",
-            "emoji": {"id": "1234", "name": "potatobiofire", "animated": False},
+            "emoji": {"id": "1234", "name": "potatobiofire"},
         }
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
@@ -1254,7 +1248,7 @@ class TestDispatchingEventAdapterImpl:
             "user_id": "123",
             "channel_id": "456",
             "message_id": str(message_obj.id),
-            "emoji": {"id": "1234", "name": "potatobiofire", "animated": False},
+            "emoji": {"id": "1234", "name": "potatobiofire"},
         }
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
@@ -1273,7 +1267,7 @@ class TestDispatchingEventAdapterImpl:
             "user_id": "123",
             "channel_id": "456",
             "message_id": str(message_obj.id),
-            "emoji": {"id": str(emoji_obj.id), "name": emoji_obj.name, "animated": emoji_obj.animated},
+            "emoji": {"id": str(emoji_obj.id), "name": emoji_obj.name},
         }
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
@@ -1295,7 +1289,7 @@ class TestDispatchingEventAdapterImpl:
             "channel_id": "456",
             "message_id": str(message_obj.id),
             "guild_id": str(guild_obj.id),
-            "emoji": {"id": str(emoji_obj.id), "name": emoji_obj.name, "animated": emoji_obj.animated},
+            "emoji": {"id": str(emoji_obj.id), "name": emoji_obj.name},
         }
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
@@ -1315,7 +1309,7 @@ class TestDispatchingEventAdapterImpl:
             "user_id": "123",
             "channel_id": "456",
             "message_id": str(message_obj.id),
-            "emoji": {"id": str(emoji_obj.id), "name": emoji_obj.name, "animated": emoji_obj.animated},
+            "emoji": {"id": str(emoji_obj.id), "name": emoji_obj.name},
         }
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
@@ -1336,7 +1330,7 @@ class TestDispatchingEventAdapterImpl:
             "user_id": "123",
             "channel_id": "456",
             "message_id": str(message_obj.id),
-            "emoji": {"id": str(emoji_obj.id), "name": emoji_obj.name, "animated": emoji_obj.animated},
+            "emoji": {"id": str(emoji_obj.id), "name": emoji_obj.name},
         }
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
@@ -1361,7 +1355,7 @@ class TestDispatchingEventAdapterImpl:
             "channel_id": "456",
             "message_id": str(message_obj.id),
             "guild_id": str(guild_obj.id),
-            "emoji": {"id": str(emoji_obj.id), "name": emoji_obj.name, "animated": emoji_obj.animated},
+            "emoji": {"id": str(emoji_obj.id), "name": emoji_obj.name},
         }
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
@@ -1389,7 +1383,7 @@ class TestDispatchingEventAdapterImpl:
             "channel_id": "456",
             "message_id": str(message_obj.id),
             "guild_id": str(guild_obj.id),
-            "emoji": {"id": str(emoji_obj.id), "name": emoji_obj.name, "animated": emoji_obj.animated},
+            "emoji": {"id": str(emoji_obj.id), "name": emoji_obj.name},
         }
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
@@ -1413,7 +1407,7 @@ class TestDispatchingEventAdapterImpl:
             "user_id": str(user_obj.id),
             "channel_id": "456",
             "message_id": str(message_obj.id),
-            "emoji": {"id": str(emoji_obj.id), "name": emoji_obj.name, "animated": emoji_obj.animated},
+            "emoji": {"id": str(emoji_obj.id), "name": emoji_obj.name},
         }
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
