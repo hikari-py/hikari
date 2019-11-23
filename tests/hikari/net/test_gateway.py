@@ -811,7 +811,7 @@ class TestGateway:
         gw._handle_resumed.assert_awaited_once_with(pl["d"])
 
     async def test_handle_ready_for_sharded_gateway_sets_shard_info(self, event_loop):
-        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", large_threshold=69,)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", large_threshold=69)
         gw.shard_id = None
         gw.shard_count = None
 
@@ -850,7 +850,7 @@ class TestGateway:
         assert gw.shard_count == pl["d"]["shard"][1]
 
     async def test_handle_ready_for_unsharded_gateway_does_not_set_shard_info(self, event_loop):
-        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", large_threshold=69,)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", large_threshold=69)
         gw.shard_id = None
         gw.shard_count = None
 
@@ -888,7 +888,7 @@ class TestGateway:
         assert gw.shard_count is None
 
     async def test_handle_ready_dispatches_CONNECT_event(self, event_loop):
-        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", large_threshold=69,)
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", large_threshold=69)
         gw._dispatch = asynctest.MagicMock(spec_set=gw._dispatch)
         gw.shard_id = None
         gw.shard_count = None
