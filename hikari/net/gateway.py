@@ -234,7 +234,7 @@ class GatewayClientV7:
         json_unmarshaller_object_hook: typing.Type[dict] = None,
         json_marshaller: typing.Callable = None,
         dispatch: DispatchHandler = None,
-        enable_guild_subscription_events = True,
+        enable_guild_subscription_events=True,
         initial_presence: typing.Optional[data_structures.DiscordObjectT] = None,
         large_threshold: int = 50,
         loop: asyncio.AbstractEventLoop = None,
