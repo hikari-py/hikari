@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Audit Log models.
+Models for the Audit Log API.
 """
 from __future__ import annotations
 
