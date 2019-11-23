@@ -34,7 +34,7 @@ from tests.hikari import _helpers
         channels.GroupDMChannel,
         channels.DMChannel,
         channels.GuildTextChannel,
-        channels.GuildNewsChannel,
+        channels.GuildAnnouncementChannel,
         channels.GuildCategory,
         channels.GuildStoreChannel,
         channels.GuildVoiceChannel,
@@ -47,7 +47,7 @@ def test_Channel_get_channel_class_from_type(expected_type):
 @pytest.mark.model
 def test_GuildChannel_permission_overwrites_aggregation():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    f = fabric.Fabric(None, s)
+    f = fabric.Fabric(NotImplemented, s)
     g = mock.MagicMock(spec_set=guilds.Guild)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     g.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
@@ -75,7 +75,7 @@ def test_GuildChannel_permission_overwrites_aggregation():
 @pytest.mark.model
 def test_GuildChannel_parent_when_specified():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    f = fabric.Fabric(None, s)
+    f = fabric.Fabric(NotImplemented, s)
     g = mock.MagicMock(spec_set=guilds.Guild)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     g.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
@@ -102,7 +102,7 @@ def test_GuildChannel_parent_when_specified():
 @pytest.mark.model
 def test_GuildChannel_parent_when_unspecified():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    f = fabric.Fabric(None, s)
+    f = fabric.Fabric(NotImplemented, s)
     g = mock.MagicMock(spec_set=guilds.Guild)
     s.get_guild_by_id = mock.MagicMock(return_value=g)
     g.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
@@ -249,9 +249,9 @@ def test_GuildCategory():
 
 
 @pytest.mark.model
-def test_GuildNewsChannel():
+def test_GuildAnnouncementChannel():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    gnc = channels.GuildNewsChannel(
+    gnc = channels.GuildAnnouncementChannel(
         s,
         {
             "type": 5,
@@ -313,7 +313,7 @@ def test_GuildStoreChannel():
         (2, channels.GuildVoiceChannel),
         (3, channels.GroupDMChannel),
         (4, channels.GuildCategory),
-        (5, channels.GuildNewsChannel),
+        (5, channels.GuildAnnouncementChannel),
         (6, channels.GuildStoreChannel),
     ],
 )
@@ -321,6 +321,7 @@ def test_channel_from_dict_success_case(type_field, expected_class):
     args = NotImplemented, {"type": type_field}
     is_dm = expected_class.is_dm
     if not is_dm:
+        # noinspection PyTypeChecker
         args[1]["guild_id"] = "1234"
 
     with _helpers.mock_patch(expected_class.__init__, wraps=expected_class, return_value=None) as m:
@@ -344,13 +345,13 @@ def test_channel_failure_case():
         channels.GuildTextChannel,
         channels.GuildVoiceChannel,
         channels.GuildStoreChannel,
-        channels.GuildNewsChannel,
+        channels.GuildAnnouncementChannel,
         channels.GuildCategory,
     ],
 )
 def test_channel_guild(impl):
     cache = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    fabric_obj = fabric.Fabric(None, cache)
+    fabric_obj = fabric.Fabric(NotImplemented, cache)
     obj = impl(
         fabric_obj, {"id": "1", "position": 2, "permission_overwrites": [], "name": "milfchnl", "guild_id": "91827"}
     )
