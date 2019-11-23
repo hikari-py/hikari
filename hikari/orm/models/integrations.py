@@ -56,26 +56,12 @@ class IntegrationAccount(interfaces.FabricatedMixin, interfaces.ISnowflake):
         self.name = payload.get("name")
 
 
-class Integration(interfaces.FabricatedMixin, interfaces.ISnowflake):
+class PartialIntegration(interfaces.ISnowflake):
     """
-    A guild integration.
+    A partial guild integration, seen in AuditLogs.
     """
 
-    __slots__ = (
-        "_fabric",
-        "id",
-        "name",
-        "type",
-        "enabled",
-        "syncing",
-        "_role_id",
-        "expire_grace_period",
-        "user",
-        "account",
-        "synced_at",
-    )
-
-    _role_id: int
+    __slots__ = ("id", "name", "type")
 
     #: The integration ID
     #:
@@ -92,6 +78,34 @@ class Integration(interfaces.FabricatedMixin, interfaces.ISnowflake):
     #: :type: :class:`str`
     type: str
 
+    def __init__(self, payload) -> None:
+        self.id = int(payload["id"])
+        self.name = payload["name"]
+        self.type = payload["type"]
+
+
+class Integration(PartialIntegration, interfaces.FabricatedMixin):
+    """
+    A guild integration.
+    """
+
+    __slots__ = (
+        "_fabric",
+        "id",
+        "name",
+        "type",
+        "enabled",
+        "syncing",
+        "_role_id",
+        "enable_emoticons",
+        "expire_grace_period",
+        "user",
+        "account",
+        "synced_at",
+    )
+
+    _role_id: int
+
     #: Whether the integration is enabled or not.
     #:
     #: :type: :class:`bool`
@@ -101,6 +115,11 @@ class Integration(interfaces.FabricatedMixin, interfaces.ISnowflake):
     #:
     #: :type: :class:`bool`
     syncing: bool
+
+    #: The status of emoticons for a twitch integration.
+    #:
+    #: :type: :class:`bool`
+    enable_emoticons: bool
 
     #: The grace period for expiring subscribers.
     #:
@@ -125,17 +144,16 @@ class Integration(interfaces.FabricatedMixin, interfaces.ISnowflake):
     __repr__ = auto_repr.repr_of("id", "name")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+        super().__init__(payload)
         self._fabric = fabric_obj
-        self.id = int(payload["id"])
-        self.name = payload["name"]
-        self.type = payload["type"]
         self.enabled = payload["enabled"]
         self.syncing = payload["syncing"]
         self._role_id = int(payload["role_id"])
+        self.enable_emoticons = payload.get("enable_emoticons")
         self.expire_grace_period = int(payload["expire_grace_period"])
         self.user = self._fabric.state_registry.parse_user(payload["user"])
         self.account = IntegrationAccount(self._fabric.state_registry, payload["account"])
         self.synced_at = date_helpers.parse_iso_8601_ts(payload["synced_at"])
 
 
-__all__ = ["Integration", "IntegrationAccount"]
+__all__ = ["Integration", "IntegrationAccount", "PartialIntegration"]
