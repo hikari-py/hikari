@@ -58,6 +58,7 @@ pages:
     script:
         # Build staging AND master.
         - source tasks/deploy.sh
+        - git fetch --all --prune
 
         - git checkout origin/staging -f || true
         - git status || true

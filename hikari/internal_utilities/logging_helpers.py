@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Utilities for logging tools.
+Utilities for creating and naming loggers in this library in a consistent way.
 """
 import inspect
 import logging
@@ -48,7 +48,16 @@ def get_named_logger(obj: typing.Optional[typing.Any] = None, *extras: typing.An
     """
     try:
         if obj is None:
-            obj = inspect.getmodule(inspect.stack()[1][0])
+            stack = inspect.stack()
+            frame = stack[1]
+            module_name = frame[0]
+
+            # https://docs.python.org/3/library/inspect.html#the-interpreter-stack
+            # prevents "leaking memory" on the interpreter stack if the user disabled gc cyclic
+            # reference detection.
+            del stack, frame
+
+            obj = inspect.getmodule(module_name)
 
             # No module was found... maybe we are in an interactive session or some compiled module?
             if obj is None:
@@ -62,9 +71,9 @@ def get_named_logger(obj: typing.Optional[typing.Any] = None, *extras: typing.An
             obj = f"{obj.__module__}.{obj.__qualname__}"
     except AttributeError:
         obj = str(uuid.uuid4())
-    finally:
-        if extras:
-            extras = ", ".join(map(str, extras))
-            obj = f"{obj}[{extras}]"
 
-        return logging.getLogger(obj)
+    if extras:
+        extras = ", ".join(map(str, extras))
+        obj = f"{obj}[{extras}]"
+
+    return logging.getLogger(obj)

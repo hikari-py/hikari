@@ -21,15 +21,21 @@ Generic users not bound to a guild, and guild-bound member definitions.
 """
 from __future__ import annotations
 
-import abc
+import enum
+import typing
 
 from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import transformations
+from hikari.orm import fabric
 from hikari.orm.models import interfaces
 
 
 class IUser(interfaces.FabricatedMixin, interfaces.ISnowflake, interface=True):
     """
-    Representation of a user account.
+    Interface that any type of user account should provide. This is used by
+    implementations of object such as those provided by delegates
+    (:class:`hikari.orm.models.members.Member`, etc).
     """
 
     __slots__ = ()
@@ -70,45 +76,146 @@ class User(IUser):
     __slots__ = ("_fabric", "id", "username", "discriminator", "avatar_hash", "bot", "__weakref__")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj, payload):
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT):
         self._fabric = fabric_obj
         self.id = int(payload["id"])
         # We don't expect this to ever change...
         self.bot = payload.get("bot", False)
         self.update_state(payload)
 
-    def update_state(self, payload) -> None:
+    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         self.username = payload.get("username")
         self.discriminator = int(payload["discriminator"])
         self.avatar_hash = payload.get("avatar")
 
 
-class BotUser(User):
+class UserFlag(enum.IntFlag):
     """
-    A special instance of user to represent the bot that is signed in.
+    OAuth2-specified user flags. These can be used to find out the badges that a user has on their
+    profile, et cetera.
     """
 
-    __slots__ = ("verified", "mfa_enabled")
+    NONE = 0
+    DISCORD_EMPLOYEE = 1 << 0
+    DISCORD_PARTNER = 1 << 1
+    HYPESQUAD_EVENTS = 1 << 2
+    BUG_HUNTER = 1 << 3
+    HYPESQUAD_HOUSE_BRAVERY = 1 << 6
+    HYPESQUAD_HOUSE_BRILLIANCE = 1 << 7
+    HYPESQUAD_HOUSE_BALANCE = 1 << 8
+    EARLY_SUPPORTER = 1 << 9
+    TEAM_USER = 1 << 10
 
-    #: Whether the account is verified or not.
-    #:
-    #: :type: :class:`bool`
-    verified: bool
 
-    #: Whether MFA is enabled or not.
+class PremiumType(enum.IntEnum):
+    #: No premium account.
+    NONE = 0
+    #: Includes app perks like animated emojis and avatars, but not games or server boosting.
+    NITRO_CLASSIC = 1
+    #: Includes app perks as well as the games subscription service and server boosting.
+    NITRO = 2
+
+
+class Locale:
+    """
+    A representation of a locale. This is created by parsing a locale alias.
+    """
+
+
+class OAuth2User(User):
+    """
+    An extension of a regular user that provides additional OAuth2-scoped information.
+    """
+
+    __slots__ = ("mfa_enabled", "locale", "verified", "email", "flags", "premium_type")
+
+    #: True if the user has multi-factor-authentication enabled.
     #:
-    #: :type: :class:`bool`
-    mfa_enabled: bool
+    #: Requires the `identify` OAuth2 scope.
+    #:
+    #: :type: :class:`bool` or `None` if not available.
+    mfa_enabled: typing.Optional[bool]
+
+    #: The user's chosen language option.
+    #:
+    #: Requires the `identify` OAuth2 scope.
+    #:
+    #: :type: :class:`str` or `None` if not available.
+    #:
+    #: Note:
+    #:     If you wish to obtain further information about a locale, and what it provides, you
+    #:     should consider using the `babel <http://babel.pocoo.org/>`_ library. This will enable
+    #:     you to cater content output formats to specific locales and languages easily.
+    #:
+    #:     A brief example of that usage would be as follows:
+    #:
+    #:     .. code-block:: python
+    #:
+    #:        >>> import babel
+    #:        >>>
+    #:        >>> locale_string = some_oauth2_user.locale
+    #:        >>> # Note the second parameter for the separator!
+    #:        >>> locale = babel.core.Locale.parse(locale_string, "-")
+    #:        >>>
+    #:        >>> # Get the name of the 4th day of the week for that locale
+    #:        >>> locale.days['format']['wide'][3]
+    #:        "Donnerstag"
+    #:        >>> # Get the standard locale currency format
+    #:        >>> locale.currency_formats['standard']
+    #:        <NumberPattern '#,##0.00\xa0¤'>
+    locale: typing.Optional[str]
+
+    #: True if the user has verified their email address.
+    #:
+    #: Requires the `email` OAuth2 scope.
+    #:
+    #: :type: :class:`bool` or `None` if not available.
+    verified: typing.Optional[bool]
+
+    #: The user's email address.
+    #:
+    #: Requires the `email` OAuth2 scope.
+    #:
+    #: :type: :class:`str` or `None` if not available`
+    email: typing.Optional[str]
+
+    #: The flags on a user's account. Describes the type of badges the user will have on their
+    #: profile, amongst other things.
+    #:
+    #: Requires the `identify` OAuth2 scope.
+    #:
+    #: :type: :class:`UserFlag` or `None` if not available.
+    flags: typing.Optional[UserFlag]
+
+    #: The type of Nitro subscription that the user has.
+    #:
+    #: Requires the `identify` OAuth2 scope.
+    #:
+    #: :type: :class:`PremiumType` or `None` if not available.
+    premium_type: PremiumType
 
     __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot", "verified", "mfa_enabled")
 
-    def __init__(self, fabric_obj, payload):
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT):
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload) -> None:
+    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
-        self.verified = payload.get("verified", False)
-        self.mfa_enabled = payload.get("mfa_enabled", False)
+
+        self.mfa_enabled = payload.get("mfa_enabled")
+        self.locale = payload.get("locale")
+        self.verified = payload.get("verified")
+        self.email = payload.get("email")
+        self.flags = transformations.nullable_cast(payload.get("flags"), UserFlag)
+        self.premium_type = transformations.nullable_cast(payload.get("premium_type"), PremiumType)
 
 
-__all__ = ["IUser", "User", "BotUser"]
+def parse_user(fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT):
+    return (
+        OAuth2User(fabric_obj, payload)
+        if any(field in OAuth2User.__slots__ for field in payload)
+        else User(fabric_obj, payload)
+    )
+
+
+__all__ = ["IUser", "User", "UserFlag", "PremiumType", "OAuth2User"]
