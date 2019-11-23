@@ -48,12 +48,12 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
             graph.
     """
 
-    __slots__ = ("dispatch", "_ignored_events")
-
-    def __init__(self, fabric_obj: _fabric.Fabric, dispatch: typing.Callable[..., None]) -> None:
+    def __init__(self, fabric_obj: _fabric.Fabric, dispatch: typing.Callable[..., None],) -> None:
         super().__init__(fabric_obj)
         self.dispatch = dispatch
-        self._ignored_events = set()
+        # IDs of guilds still not ready while the bot is initializing. This is a set of ints.
+        self._guild_ids_waiting_to_load: typing.MutableSet[int] = set()
+        self._ignored_events: typing.MutableSet[str] = set()
 
     async def drain_unrecognised_event(self, _, event_name, payload):
         self.dispatch("raw_" + event_name.lower(), payload)
@@ -61,11 +61,22 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
             self.logger.warning("Received unrecognised event %s, so will ignore it in the future.", event_name)
             self._ignored_events.add(event_name)
 
+    async def handle_connect(self, gateway, payload):
+        user_payload = payload["user"]
+
+        self.fabric.state_registry.parse_application_user(user_payload)
+
+        guilds = payload["guilds"]
+
+        for guild_payload in guilds:
+            # Parse unavailable guild.
+            guild_obj = self.fabric.state_registry.parse_guild(guild_payload)
+            self._guild_ids_waiting_to_load.add(guild_obj.id)
+
+        self.dispatch(events.CONNECT, gateway)
+
     async def handle_disconnect(self, gateway, payload):
         self.dispatch(events.DISCONNECT, gateway, payload.get("code"), payload.get("reason"))
-
-    async def handle_connect(self, gateway, _):
-        self.dispatch(events.CONNECT, gateway)
 
     async def handle_invalid_session(self, gateway, payload: bool):
         self.dispatch(events.INVALID_SESSION, gateway, payload)
@@ -73,8 +84,8 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
     async def handle_reconnect(self, gateway, _):
         self.dispatch(events.RECONNECT, gateway)
 
-    async def handle_resumed(self, gateway, _):
-        self.dispatch(events.RESUMED, gateway)
+    async def handle_resume(self, gateway, _):
+        self.dispatch(events.RESUME, gateway)
 
     async def handle_channel_create(self, _, payload):
         self.dispatch(events.RAW_CHANNEL_CREATE, payload)
@@ -165,6 +176,8 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
         was_already_loaded = self.fabric.state_registry.get_guild_by_id(guild_id) is not None
         guild = self.fabric.state_registry.parse_guild(payload)
 
+        # TODO: do not fire this event if the guild is in the initial unready id set.
+        # TODO: if the guild just became ready and was in the initial unready id set, invoke the READY event.
         if not was_already_loaded:
             self.dispatch(events.GUILD_CREATE, guild)
 
@@ -580,3 +593,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
             self.logger.warning("ignoring WEBHOOKS_UPDATE in unknown channel %s", channel_id)
         else:
             self.dispatch(events.WEBHOOKS_UPDATE, channel_obj)
+
+    #: TODO: fire internally when READY for real and all internal states are resolved.
+    async def _handle_ready(self, gateway, payload):
+        raise NotImplementedError

@@ -17,13 +17,22 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Additional events the gateway implementation can provide.
+Events the gateway implementation will provide special implementations for that are noteworthy.
 """
-#: Fired when a gateway connection is made and the gateway has sent a HELLO payload.
+#: Fired when the connection has completed the initial handshake. This is triggered before the gateway has finished
+#: loading all guilds. The Discord API refers to this as a `READY` event, however, to prevent confusion for bot
+#: creators, this is referred to as `CONNECT` instead.
+#:
+#: Note:
+#:    This is fired when the initial handshake has completed, but guilds will not yet have become available.
+#:    Implementations should track the guilds that become available as they become available to determine when
+#:    the full initialization has completed.
 #:
 #: Args:
-#:     gateway:
-#:         the gateway instance that sent this signal.
+#:    gateway:
+#:        the gateway object that is connected.
+#:    payload:
+#:        a ready event as described by https://discordapp.com/developers/docs/topics/gateway#ready-ready-event-fields
 CONNECT = "connect"
 
 #: Fired when a gateway connection closes due to some connection error or if requested by Discord's servers.
@@ -64,7 +73,7 @@ RECONNECT = "reconnect"
 #: Args:
 #:     gateway:
 #:         the gateway instance that sent this signal.
-RESUMED = "resumed"
+RESUME = "resume"
 
 #: Fired if the gateway is told to shutdown by your code. The gateway will not automatically restart in this case.
 #:
