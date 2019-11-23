@@ -394,7 +394,7 @@ class TestGateway:
                         "compress": False,
                         "large_threshold": 69,
                         "properties": {"$os": "leenuks", "$browser": "vx.y.z", "$device": "python3"},
-                        "guild_subscriptions": guild_subscriptions
+                        "guild_subscriptions": guild_subscriptions,
                     },
                 },
                 False,
