@@ -27,6 +27,18 @@ from hikari.orm.models import integrations
 
 
 @pytest.mark.model
+def test_PartialIntegration():
+    partial_integration_obj = integrations.PartialIntegration({
+        "id": "53242",
+        "name": "OwO",
+        "type": "twitch",
+    })
+    assert partial_integration_obj.id == 53242
+    assert partial_integration_obj.name == "OwO"
+    assert partial_integration_obj.type == "twitch"
+
+
+@pytest.mark.model
 class TestIntegration:
     def test_Integration(self):
         test_state = mock.MagicMock(state_set=state_registry.IStateRegistry)
@@ -50,6 +62,7 @@ class TestIntegration:
                 "enabled": True,
                 "syncing": False,
                 "role_id": "69696969",
+                "enable_emoticons": True,
                 "expire_behavior": 2,
                 "expire_grace_period": 420,
                 "user": user_dict,
@@ -64,6 +77,7 @@ class TestIntegration:
         assert integration_obj.enabled is True
         assert integration_obj.syncing is False
         assert integration_obj._role_id == 69696969
+        assert integration_obj.enable_emoticons is True
         assert integration_obj.expire_grace_period == 420
         assert integration_obj.synced_at == datetime.datetime(
             2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc
