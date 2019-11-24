@@ -127,7 +127,7 @@ class OAuth2User(User):
     An extension of a regular user that provides additional OAuth2-scoped information.
     """
 
-    __slots__ = ("verifed", "mfa_enabled", "locale", "verified", "email", "flags", "premium_type")
+    __slots__ = ("mfa_enabled", "locale", "verified", "email", "flags", "premium_type")
 
     #: True if the user has multi-factor-authentication enabled.
     #:
@@ -140,7 +140,7 @@ class OAuth2User(User):
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
-    #: :type: :class:`bool` or `None` if not available.
+    #: :type: :class:`str` or `None` if not available.
     #:
     #: Note:
     #:     If you wish to obtain further information about a locale, and what it provides, you

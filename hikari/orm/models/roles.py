@@ -27,35 +27,17 @@ from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.orm import fabric
 from hikari.orm.models import colors as _color
-from hikari.orm.models import guilds
 from hikari.orm.models import interfaces
 from hikari.orm.models import permissions as _permission
 
 
-class Role(interfaces.ISnowflake, interfaces.FabricatedMixin):
+class PartialRole(interfaces.ISnowflake):
     """
-    Representation of a role within a guild.
+    A partial role object where we only know the ID and name. These are usually
+    only seen attached to the changes of an audit log entry.
     """
 
-    __slots__ = (
-        "_fabric",
-        "guild_id",
-        "id",
-        "name",
-        "color",
-        "hoist",
-        "position",
-        "permissions",
-        "managed",
-        "mentionable",
-        "__weakref__",
-    )
-
-    #: The guild that the role is in. This is always specified unless the role is inside an
-    #: audit log entry.
-    #:
-    #: :type: :class:`int`
-    guild_id: typing.Optional[int]
+    __slots__ = ("id", "name")
 
     #: The ID of the role.
     #:
@@ -66,6 +48,35 @@ class Role(interfaces.ISnowflake, interfaces.FabricatedMixin):
     #:
     #: :type: :class:`str`
     name: str
+
+    __repr__ = auto_repr.repr_of("id", "name")
+
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+        self.id = int(payload["id"])
+        self.name = payload["name"]
+
+
+class Role(PartialRole, interfaces.FabricatedMixin):
+    """
+    Representation of a role within a guild.
+    """
+
+    __slots__ = (
+        "_fabric",
+        "guild_id",
+        "color",
+        "hoist",
+        "position",
+        "permissions",
+        "managed",
+        "mentionable",
+        "__weakref__",
+    )
+
+    #: The guild that the role is in.
+    #:
+    #: :type: :class:`int`
+    guild_id: int
 
     #: The color of the role.
     #:
@@ -100,9 +111,9 @@ class Role(interfaces.ISnowflake, interfaces.FabricatedMixin):
     __repr__ = auto_repr.repr_of("id", "name", "position", "managed", "mentionable", "hoist")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_id: int) -> None:
+        super().__init__(payload)
         self._fabric = fabric_obj
         self.guild_id = guild_id
-        self.id = int(payload["id"])
         self.update_state(payload)
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
@@ -115,4 +126,4 @@ class Role(interfaces.ISnowflake, interfaces.FabricatedMixin):
         self.mentionable = payload["mentionable"]
 
 
-__all__ = ["Role"]
+__all__ = ["PartialRole", "Role"]

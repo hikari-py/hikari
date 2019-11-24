@@ -39,14 +39,7 @@ function create-changelog() {
     echo >> ${changelog}
     gcg -O rpm >> ${changelog}
     echo >> ${changelog}
-}
-
-function create-requirements() {
-    local requirements="./requirements.txt"
-    echo "Generating ${requirements}."
-    echo "# Automatically generated from pyproject.toml for ${COMMIT_REF} at $(date) by CI." > ${requirements}
-    poetry run pip freeze >> ${requirements}
-    echo >> ${requirements}
+    git add ${changelog}
 }
 
 function deploy-to-svc() {
@@ -71,7 +64,6 @@ function deploy-to-svc() {
     git config user.email "${CI_ROBOT_EMAIL}"
     git status
     create-changelog
-    create-requirements
     git diff
     git commit -am "Deployed ${current_version} ${SKIP_CI_COMMIT_PHRASE}" --allow-empty
     git push ${REMOTE_NAME} ${PROD_BRANCH}
@@ -84,13 +76,15 @@ function deploy-to-svc() {
     git checkout ${PREPROD_BRANCH}
     git reset --hard origin/${PREPROD_BRANCH}
     # git -c color.status=always log --all --decorate --oneline --graph -n 50
-    git merge origin/${PROD_BRANCH} --no-ff --strategy-option theirs --allow-unrelated-histories -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_CI_COMMIT_PHRASE}"
+    # Use [skip deploy] instead of [skip ci] so that our pages rebuild still...
+    git merge origin/${PROD_BRANCH} --no-ff --strategy-option theirs --allow-unrelated-histories -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_DEPLOY_COMMIT_PHRASE}"
     git push ${REMOTE_NAME} ${PREPROD_BRANCH}
     set +x
 }
 
 function do-deployment() {
     set -x
+    
     local old_version
     local current_version
 

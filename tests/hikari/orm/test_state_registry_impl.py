@@ -947,9 +947,7 @@ class TestStateRegistryImpl:
 
         registry.parse_application_user.assert_called_with(payload)
 
-    def test_parse_user_invokes_users_parse_user(
-        self, registry: state_registry_impl.StateRegistryImpl,
-    ):
+    def test_parse_user_invokes_users_parse_user(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234"}
         user_obj = _helpers.mock_model(users.User, id=1234)
         registry._users = {}

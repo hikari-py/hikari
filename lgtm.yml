@@ -1,0 +1,13 @@
+path_classifiers:
+    test:
+        -   exclude: "/"
+        - "tests"
+        - "noxfile.py"
+    docs:
+        - "docs"
+        -   exclude: "/"
+    library:
+        - "tasks"
+        -   exclude: "/"
+queries:
+    -   exclude: py/unsafe-cyclic-import
