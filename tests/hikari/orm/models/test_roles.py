@@ -39,7 +39,12 @@ def fabric_obj(mock_state_registry):
 
 
 @pytest.fixture
-def payload():
+def partial_role_payload():
+    return {"name": "I am a role", "id": "583692435939524624"}
+
+
+@pytest.fixture
+def role_payload():
     return {
         "id": "41771983423143936",
         "name": "WE DEM BOYZZ!!!!!!",
@@ -53,9 +58,16 @@ def payload():
 
 
 @pytest.mark.model
-def test_Role(fabric_obj, payload):
+def test_PartialRole(partial_role_payload):
+    partial_role_obj = roles.PartialRole(partial_role_payload)
+    assert partial_role_obj.name == "I am a role"
+    assert partial_role_obj.id == 583692435939524624
+
+
+@pytest.mark.model
+def test_Role(fabric_obj, role_payload):
     guild_obj = _helpers.mock_model(guilds.Guild, id=6969)
-    role_obj = roles.Role(fabric_obj, payload, guild_obj.id)
+    role_obj = roles.Role(fabric_obj, role_payload, guild_obj.id)
 
     assert role_obj.id == 41771983423143936
     assert role_obj.name == "WE DEM BOYZZ!!!!!!"
