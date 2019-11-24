@@ -45,7 +45,7 @@ class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStatefulModel):
         or the fields will not be initialized when accessed.
     """
 
-    __slots__ = ("_fabric", "id")
+    __slots__ = ("_fabric", "id", "__weakref__")
 
     #: Channel implementations provided.
     _channel_implementations: typing.ClassVar[typing.Dict[int, typing.Type[Channel]]] = {}

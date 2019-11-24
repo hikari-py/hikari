@@ -77,10 +77,13 @@ class TestMessage:
     def test_Message_parsing_Member(self, mock_message, mock_user, fabric_obj):
         mock_message["guild_id"] = "909090"
         mock_message["member"] = {"foo": "bar", "baz": "bork"}
+        mock_message["author"] = {"ayy": "lmao"}
         guild_obj = _helpers.mock_model(guilds.Guild, id=909090)
         fabric_obj.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
         messages.Message(fabric_obj, mock_message)
-        fabric_obj.state_registry.parse_member.assert_called_with({"foo": "bar", "baz": "bork"}, guild_obj)
+        fabric_obj.state_registry.parse_partial_member.assert_called_with(
+            {"foo": "bar", "baz": "bork"}, {"ayy": "lmao"}, guild_obj
+        )
         fabric_obj.state_registry.parse_webhook.assert_not_called()
 
     def test_Message_parsing_Webhook(self, mock_message, mock_user, fabric_obj):
