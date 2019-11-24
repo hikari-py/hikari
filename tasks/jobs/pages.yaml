@@ -57,6 +57,7 @@ pages:
     stage: pages
     extends: .pages
     script:
+        - "git log -1 --pretty=%B | grep -iq '\\[skip pages\\]' && (echo 'Page generation was skipped by commit message.' && exit 0)"
         # Build staging AND master.
         - source tasks/deploy.sh
         - git fetch --all --prune
@@ -94,6 +95,7 @@ pages-dry-run:
     extends: .pages
     allow_failure: true
     script:
+        - "git log -1 --pretty=%B | grep -iq '\\[skip pages\\]' && (echo 'Page generation was skipped by commit message.' && exit 0)"
         - source tasks/deploy.sh
         - set-versions "$(python tasks/make-version-string.py staging).${CI_PIPELINE_IID}"
         - nox -ssphinx

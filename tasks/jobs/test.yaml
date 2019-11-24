@@ -34,7 +34,6 @@
     stage: test
     before_script:
         - apt-get install -qy git gcc g++ make
-        - "git log -1 --pretty=%B | grep -iq '\\[skip tests\\]' && (echo 'Testing was skipped by commit message.' && exit 0)"
         - >
             if [[ "${CI_IS_SCHEDULED}" -eq "1" ]] || [[ ! -d .venv ]]; then
                 echo -e "\e[0;35mInstalling new venv and installing poetry inside it.\e[0m"

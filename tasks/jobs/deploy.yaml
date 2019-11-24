@@ -24,7 +24,6 @@
         - "[[ \"$CI_PROJECT_URL\" = \"$ORIGINAL_REPO_URL\" ]] || (echo 'You are running off of a fork, so deployment is skipped.' && exit 0)"
         - apt-get update
         - apt-get install curl git openssh-client -y
-        - "git log -1 --pretty=%B | grep -iq '\\[skip deploy\\]' && (echo 'Deployment was skipped by commit message.' && exit 0)"
         - pip install poetry requests
         - poetry install -v
         - poetry show -v
@@ -41,6 +40,7 @@ deploy-to-staging:
         RELEASE_WEBHOOK_NAME: "pypi (prerelease only)"
         RELEASE_WEBHOOK_COLOUR: "0xd34615"
     script:
+        - "git log -1 --pretty=%B | grep -iq '\\[skip deploy\\]' && (echo 'Deployment was skipped by commit message.' && exit 0)"
         - export RELEASE_WEBHOOK_DESCRIPTION=''
         - source tasks/deploy.sh
         - do-deployment
@@ -60,6 +60,7 @@ deploy-to-prod:
         RELEASE_WEBHOOK_NAME: "pypi"
         RELEASE_WEBHOOK_COLOUR: "0x5c2040"
     script:
+        - "git log -1 --pretty=%B | grep -iq '\\[skip deploy\\]' && (echo 'Deployment was skipped by commit message.' && exit 0)"
         - export RELEASE_WEBHOOK_DESCRIPTION=''
         - source tasks/deploy.sh
         - do-deployment
