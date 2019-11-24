@@ -1,3 +1,5 @@
+:orphan:
+
 Hikari Technical Documentation
 ##############################
 

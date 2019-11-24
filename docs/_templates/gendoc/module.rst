@@ -1,3 +1,5 @@
+:orphan:
+
 {{ module }}
 {{ rule }}
 
@@ -19,4 +21,4 @@ Documentation
 
 
 .. inheritance-diagram:: {{ module }} {% for m in submodules %}{{ m }} {% endfor %}
-    :parts: 1
+    :parts: -1

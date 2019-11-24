@@ -31,7 +31,7 @@ from hikari.orm import fabric
 from hikari.orm.models import interfaces
 
 
-class IUser(interfaces.FabricatedMixin, interfaces.ISnowflake, interface=True):
+class IUser(interfaces.IStatefulModel, interfaces.ISnowflake, interface=True):
     """
     Interface that any type of user account should provide. This is used by
     implementations of object such as those provided by delegates

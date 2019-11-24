@@ -39,7 +39,7 @@ from hikari.orm.models import roles
 from hikari.orm.models import users
 
 
-class Guild(interfaces.ISnowflake, interfaces.FabricatedMixin):
+class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
     """
     Implementation of a Guild.
     """
@@ -324,7 +324,7 @@ class SystemChannelFlag(enum.IntFlag):
     PREMIUM_SUBSCRIPTION = 2
 
 
-class Feature(interfaces.NamedEnumMixin, enum.Enum):
+class Feature(interfaces.INamedEnum, enum.Enum):
     """
     Features that a guild can provide.
     """

@@ -28,11 +28,7 @@ from hikari.orm.models import integrations
 
 @pytest.mark.model
 def test_PartialIntegration():
-    partial_integration_obj = integrations.PartialIntegration({
-        "id": "53242",
-        "name": "OwO",
-        "type": "twitch",
-    })
+    partial_integration_obj = integrations.PartialIntegration({"id": "53242", "name": "OwO", "type": "twitch",})
     assert partial_integration_obj.id == 53242
     assert partial_integration_obj.name == "OwO"
     assert partial_integration_obj.type == "twitch"

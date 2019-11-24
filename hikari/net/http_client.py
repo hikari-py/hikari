@@ -128,7 +128,7 @@ class HTTPClient(http_base.BaseHTTPClient):
         return await self.request(GET, "/channels/{channel_id}", channel_id=channel_id)
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    async def modify_channel(
+    async def modify_channel(  # lgtm [py/similar-function]
         self,
         channel_id: str,
         *,
@@ -1054,7 +1054,7 @@ class HTTPClient(http_base.BaseHTTPClient):
 
     # pylint: disable=too-many-locals
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def modify_guild(
+    async def modify_guild(  # lgtm [py/similar-function]
         self,
         guild_id: str,
         *,

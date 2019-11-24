@@ -108,7 +108,7 @@ class UnknownEmoji(Emoji, interfaces.ISnowflake):
         return False
 
 
-class GuildEmoji(UnknownEmoji, interfaces.FabricatedMixin):
+class GuildEmoji(UnknownEmoji, interfaces.IStatefulModel):
     """
     Represents an emoji in a guild that the user is a member of.
     """
