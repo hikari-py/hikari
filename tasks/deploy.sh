@@ -65,7 +65,7 @@ function deploy-to-svc() {
     git status
     create-changelog
     git diff
-    git commit -am "Deployed ${current_version} ${SKIP_DEPLOY_COMMIT_PHRASE}" --allow-empty
+    git commit -am "Deployed ${current_version} ${SKIP_CI_COMMIT_PHRASE}" --allow-empty
     git push ${REMOTE_NAME} ${PROD_BRANCH}
     git tag "${current_version}" && git push ${REMOTE_NAME} "${current_version}"
     # git -c color.status=always log --all --decorate --oneline --graph -n 50
@@ -77,7 +77,7 @@ function deploy-to-svc() {
     git reset --hard origin/${PREPROD_BRANCH}
     # git -c color.status=always log --all --decorate --oneline --graph -n 50
     # Use [skip deploy] instead of [skip ci] so that our pages rebuild still...
-    git merge origin/${PROD_BRANCH} --no-ff --strategy-option theirs --allow-unrelated-histories -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_DEPLOY_COMMIT_PHRASE}"
+    git merge origin/${PROD_BRANCH} --no-ff --strategy-option theirs --allow-unrelated-histories -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_CI_COMMIT_PHRASE}"
     git push ${REMOTE_NAME} ${PREPROD_BRANCH}
     set +x
 }
