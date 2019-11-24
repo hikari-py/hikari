@@ -147,7 +147,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_connect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
-        await adapter_impl.handle_connect(gateway_impl)
+        await adapter_impl.handle_connect(gateway_impl, {})
         dispatch_impl.assert_called_with(events.CONNECT, gateway_impl)
 
     @pytest.mark.asyncio

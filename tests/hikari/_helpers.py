@@ -23,6 +23,8 @@ import functools
 import inspect
 import logging
 import typing
+import weakref
+from typing import Iterator
 from unittest import mock
 
 import asynctest
@@ -121,7 +123,14 @@ def fqn2(module, item_identifier):
 T = typing.TypeVar("T")
 
 
-def mock_model(spec_set: typing.Type[T] = object, hash_code_provider=lambda self: hash(id(self)), **kwargs) -> T:
+def _can_weakref(spec_set):
+    for cls in spec_set.mro()[:-1]:
+        if "__weakref__" in getattr(cls, "__slots__", ()):
+            return True
+    return False
+
+
+def mock_model(spec_set: typing.Type[T] = object, hash_code_provider=None, **kwargs) -> T:
     # Enables type hinting for my own reference, and quick attribute setting.
     obj = mock.MagicMock(spec_set=spec_set)
     for name, value in kwargs.items():
@@ -129,7 +138,7 @@ def mock_model(spec_set: typing.Type[T] = object, hash_code_provider=lambda self
 
     obj.__eq__ = lambda self, other: other is self
     obj.__ne__ = lambda self, other: other is not self
-    obj.__hash__ = hash_code_provider
+    obj.__hash__ = hash_code_provider or spec_set.__hash__
     return obj
 
 
@@ -146,3 +155,26 @@ def mock_patch(what, *args, **kwargs):
         fqn = fqn1(what)
 
     return asynctest.patch(fqn, *args, **kwargs)
+
+
+class StrongWeakValuedDict(typing.MutableMapping):
+    def __init__(self):
+        self.strong = {}
+        self.weak = weakref.WeakValueDictionary()
+
+    def __setitem__(self, k, v) -> None:
+        self.strong[k] = v
+        self.weak[k] = v
+
+    def __delitem__(self, k) -> None:
+        del self.strong[k]
+
+    def __getitem__(self, k):
+        return self.strong[k]
+
+    def __len__(self) -> int:
+        assert len(self.strong) == len(self.weak)
+        return len(self.strong)
+
+    def __iter__(self) -> Iterator:
+        return iter(self.strong)

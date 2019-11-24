@@ -59,7 +59,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
             self.logger.warning("Received unrecognised event %s, so will ignore it in the future.", event_name)
             self._ignored_events.add(event_name)
 
-    async def handle_connect(self, gateway):
+    async def handle_connect(self, gateway, _):
         self.dispatch(events.CONNECT, gateway)
 
     async def handle_ready(self, gateway, payload):
