@@ -65,8 +65,6 @@ class Role(PartialRole, interfaces.FabricatedMixin):
     __slots__ = (
         "_fabric",
         "guild_id",
-        "id",
-        "name",
         "color",
         "hoist",
         "position",
