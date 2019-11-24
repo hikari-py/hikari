@@ -1,6 +1,6 @@
-@import url('https://fonts.googleapis.com/css?family=Kalam|Montserrat:300');
-@import url('https://fonts.googleapis.com/css?family=Permanent+Marker');
-@import url('https://cdn.jsdelivr.net/gh/tonsky/FiraCode@1.206/distr/fira_code.css');
+@import url('https://fonts.googleapis.com/css?family=Open+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Indie+Flower|Open+Sans&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/tonsky/FiraCode@1.207/distr/fira_code.css');
 
 /*
  * Copyright © Nekoka.tt 2019
@@ -21,6 +21,81 @@
  * along with Hikari. If not, see <https://www.gnu.org/licenses/>.
  */
 
+
+/**************************** dark theme ****************************/
+
+body {
+    background-color: #272822;
+    color: #f8f9fa;
+}
+
+/* whyyyyy */
+code, .literal, .literal > span.pre {
+    color: #F92672 !important;
+    background-color: 0 !important;
+}
+
+.highlight > pre {
+    background-color: transparent;
+    border-color: #3B3A32;
+}
+
+/* syntax highlighting: https://tmtheme-editor.herokuapp.com/#!/editor/theme/Monokai */
+/* yes, i hate myself for spending this much time deciphering this. */
+.c1, .c2, .c3 { color: #8F8C7E !important; }  /* single line comment */
+.gp { color: #F92672 !important; }  /* >>> symbol */
+.nb { color: #FD971F !important; font-style: italic; }  /* builtin name */
+.nn { color: #FD971F !important; font-style: italic; }  /* namespace name */
+.nc { color: #A6E22E !important; text-decoration: underline; } /* class name */
+.ne { color: #FD971F !important; font-style: italic; } /* exception name */
+.nd { color: #FD971F !important; } /* decorator name */
+.nf { color: #A6E22E !important; } /* function name */
+.k { color: #F92672 !important; }   /* keyword */
+.kn { color: #F92672 !important; }   /* keyword for start of import declaration? */
+.kc { color: #FD971F !important; font-style: italic; font-weight: bold;}  /* singleton literal (False, True, None, etc) */
+.bp { color: #D6D2BC !important; font-style: italic; font-weight: bold; text-decoration: underline; }  /* base parameter (self, cls, etc) */
+.n { color: #D6D2BC !important; font-style: italic; }   /* name */
+.o { color: #F92672 !important; }   /* operator */
+.p { color: #75715E !important; }   /* parenthesis */
+.go { color: #FFFFFF !important; }  /* output text */
+.mi { color: #AE81FF !important; }  /* int literal */
+.mf { color: #AE81FF !important; }  /* float literal */
+.mh { color: #AE81FF !important; }  /* hex literal */
+.mo { color: #AE81FF !important; }  /* octal literal */
+.mb { color: #AE81FF !important; }  /* bool literal */
+.sd { color: #8F8C7E !important; }  /* multiple line docstring */
+.vm { color: #D6D2BC !important; font-style: italic; font-weight: bold; }  /* magic attribute? */
+.fm { color: #D6D2BC !important; font-style: italic; font-weight: bold; }  /* magic attribute? */
+.s1, .s2 { color: #E6DB74 !important; }  /* string literal */
+
+.viewcode-link, .headerlink {
+    color: #66D9EF;
+}
+
+.reference {
+    color: #a6e22e !important;
+}
+
+.external {
+    color: #fd971f !important;
+}
+
+nav, .alert, .admonition {
+    background-image: none !important;
+}
+
+.navbar {
+    background-image: none !important;
+    background-color: #404238 !important;
+    border-color: transparent !important;
+}
+
+/*************************** layout fixes ***************************/
+
+h1, h2, h3, h4, h5, h6 {
+    word-wrap: break-word;
+}
+
 /*
  * Apparently if it is too thin in width on display: block, it makes the html
  * element not fit the window, and then the text just flows off the viewport,
@@ -28,6 +103,7 @@
  * flex, it mediates this but then on large devices the viewport snaps rather
  * than being responsive.
  */
+
 html {
     display: flex !important;
 }
@@ -37,7 +113,6 @@ html {
         display: block !important;
     }    
 }
-
 
 /*
  * Make body fill the viewport always
@@ -90,17 +165,13 @@ html {
     margin-right: 1em;
 }
 
-a {
-    color: #772953 !important;
-}
-
-a:hover {
-    color: #511c39 !important;
+.navbar-text {
+    /* bootswatch bugfix for version not aligning with logo i guess */
+    line-height: 21px;
 }
 
 #navbar {
     border-radius: 0px !important;
-
 }
 
 .navbar a, .footer a {
@@ -115,21 +186,8 @@ a:hover {
     padding-left: 1em;
 }
 
-.dropdown-menu {
-    color: #772953 !important;
-    background-color: #fff !important;
-}
-
-.dropdown-menu a, .dropdown-menu .caption {
-    color: #772953 !important;
-}
-
-.dropdown-menu a:hover {
-    color: #511c39 !important;
-}
-
 .nav {
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: 'Open Sans', sans-serif !important;
 }
 
 footer:before {
@@ -144,14 +202,32 @@ footer.footer {
     color: white;
 }
 
-code, .highlight {
-    font-family: 'Fira Code', monospace;
-    font-feature-settings: "calt" 1;
-    font-variant-ligatures: contextual;
+code {
+    font-family: 'Fira Code', monospace !important;
+    font-feature-settings: "calt" 1 !important;
+    font-variant-ligatures: contextual !important;
+}
+
+.highlight {
+    font-family: 'Fira Code', monospace !important;
+    font-feature-settings: "calt" 1 !important;
+    font-variant-ligatures: contextual !important;
+}
+
+.pre {
+    font-family: 'Fira Code', monospace !important;
+    font-feature-settings: "calt" 1 !important;
+    font-variant-ligatures: contextual !important;
+}
+
+@supports (font-variation-settings: normal) {
+  code { font-family: 'Fira Code VF', monospace; }
+  .highlight { font-family: 'Fira Code VF', monospace; }
+  pre { font-family: 'Fira Code VF', monospace; }
 }
 
 .navbar-brand, h1, h2, h3, h4, h5, h6 {
-    font-family: 'Permanent Marker', cursive !important;
+    font-family: 'Indie Flower', cursive;
 }
 
 dl {
