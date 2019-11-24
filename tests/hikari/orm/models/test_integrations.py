@@ -27,6 +27,18 @@ from hikari.orm.models import integrations
 
 
 @pytest.mark.model
+def test_PartialIntegration():
+    partial_integration_obj = integrations.PartialIntegration({
+        "id": "53242",
+        "name": "OwO",
+        "type": "twitch",
+    })
+    assert partial_integration_obj.id == 53242
+    assert partial_integration_obj.name == "OwO"
+    assert partial_integration_obj.type == "twitch"
+
+
+@pytest.mark.model
 class TestIntegration:
     def test_Integration(self):
         test_state = mock.MagicMock(state_set=state_registry.IStateRegistry)
