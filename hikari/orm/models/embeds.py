@@ -279,7 +279,7 @@ class BaseEmbed(interfaces.IModel):
         self.description = description
         self.url = url
         self.timestamp = timestamp
-        self.color = colors.Color(color) if color is not None else None
+        self.color = color
         self._footer = None
         self._image = None
         self._thumbnail = None
