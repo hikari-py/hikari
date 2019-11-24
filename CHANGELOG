@@ -1,9 +1,10 @@
 CHANGELOG
 =========
 
-Automatically generated from git history up to master at Sun Nov 24 18:52:21 UTC 2019 by CI.
+Automatically generated from git history up to master at Sun Nov 24 18:56:59 UTC 2019 by CI.
 
-* Sun Nov 24 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+* Sun Nov 24 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.47
+- Deployed 0.0.47 [skip deploy] (rev.1d862905)
 - Merge branch 'staging' into 'master' (rev.70eb814d)
 - Fixed unused import (rev.7e629ada)
 - Fixed tags skipping CI on master (rev.a2bab144)
