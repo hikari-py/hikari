@@ -48,7 +48,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
             graph.
     """
 
-    def __init__(self, fabric_obj: _fabric.Fabric, dispatch: typing.Callable[..., None],) -> None:
+    def __init__(self, fabric_obj: _fabric.Fabric, dispatch: typing.Callable[..., None]) -> None:
         super().__init__(fabric_obj)
         self.dispatch = dispatch
         # IDs of guilds still not ready while the bot is initializing. This is a set of ints.

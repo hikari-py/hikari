@@ -35,6 +35,7 @@
         - mkdir public || true
         - apt-get update -q  # graphviz won't resovle without this???
         - apt-get install -qy git gcc g++ make graphviz
+        - "git log -1 --pretty=%B | grep -iq '\\[skip pages\\]' && (echo 'Page generation was skipped by commit message.' && exit 0)"
         - >
             if [[ "${CI_IS_SCHEDULED}" -eq "1" ]] || [[ ! -d .venv ]]; then
                 echo "Installing new venv and installing poetry inside it."
@@ -56,8 +57,10 @@ pages:
     stage: pages
     extends: .pages
     script:
+        - "git log -1 --pretty=%B | grep -iq '\\[skip pages\\]' && (echo 'Page generation was skipped by commit message.' && exit 0)"
         # Build staging AND master.
         - source tasks/deploy.sh
+        - git fetch --all --prune
 
         - git checkout origin/staging -f || true
         - git status || true
@@ -80,7 +83,10 @@ pages:
         paths:
             - public
     only:
-        - master
+        # Ignore master, I added a workaround because pages were not renewing on master due to the mid-pipeline
+        # merge that takes place. The workaround reruns the staging pipeline after the merge but does not deploy
+        # to pypi, only running the pages.
+        # - master
         - staging
 
 
@@ -89,6 +95,7 @@ pages-dry-run:
     extends: .pages
     allow_failure: true
     script:
+        - "git log -1 --pretty=%B | grep -iq '\\[skip pages\\]' && (echo 'Page generation was skipped by commit message.' && exit 0)"
         - source tasks/deploy.sh
         - set-versions "$(python tasks/make-version-string.py staging).${CI_PIPELINE_IID}"
         - nox -ssphinx

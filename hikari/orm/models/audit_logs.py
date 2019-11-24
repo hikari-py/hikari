@@ -36,20 +36,47 @@ from hikari.orm.models import permissions
 from hikari.orm.models import roles
 from hikari.orm.models import users
 from hikari.orm.models import webhooks
+from hikari.orm.models import integrations
 
 
 class AuditLog(interfaces.IModel):
-    __slots__ = ("webhooks", "users", "audit_log_entries")
+    """
+    Implementation of an Audit Log.
+    """
 
+    __slots__ = ("webhooks", "users", "integrations", "audit_log_entries")
+
+    #: Set of the webhooks found in the audit log.
+    #:
+    #: :type: :class:`set` of :class:`hikari.orm.models.webhooks.Webhook`
     webhooks: typing.Set[webhooks.Webhook]
+
+    #: Set of the users found in the audit log.
+    #:
+    #: :type: :class:`set` of :class:`hikari.orm.models.users.IUser`
     users: typing.Set[users.IUser]
+
+    #: Set of the integrations found in the audit log.
+    #:
+    #: :type: :class:`set` of :class:`hikari.orm.models.integrations.PartialIntegration`
+    integrations: typing.Set[integrations.PartialIntegration]
+
+    #: Sequence of audit log entries.
+    #:
+    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.audit_logs.AuditLogEntry`
     audit_log_entries: typing.Sequence[AuditLogEntry]
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         self.webhooks = {
-            webhooks.Webhook(fabric_obj, wh) for wh in payload.get("webhooks", data_structures.EMPTY_SEQUENCE)
+            fabric_obj.state_registry.parse_webhook(wh)
+            for wh in payload.get("webhooks", data_structures.EMPTY_SEQUENCE)
         }
-        self.users = {users.User(fabric_obj, u) for u in payload.get("users", data_structures.EMPTY_SEQUENCE)}
+        self.users = {
+            fabric_obj.state_registry.parse_user(u) for u in payload.get("users", data_structures.EMPTY_SEQUENCE)
+        }
+        self.integrations = {
+            integrations.PartialIntegration(i) for i in payload.get("integrations", data_structures.EMPTY_SEQUENCE)
+        }
         self.audit_log_entries = [
             AuditLogEntry(audit_log_entry)
             for audit_log_entry in payload.get("audit_log_entries", data_structures.EMPTY_SEQUENCE)
@@ -57,15 +84,40 @@ class AuditLog(interfaces.IModel):
 
 
 class AuditLogEntry(interfaces.ISnowflake):
+    """
+    Implementation of an Audit Log Entry.
+    """
+
     __slots__ = ("id", "target_id", "changes", "user_id", "action_type", "options", "reason")
 
+    #: The id of the effected entity.
+    #:
+    #: :type: :class:`int`
     target_id: typing.Optional[int]
+
+    #: Sequence of changes made to the target entity.
+    #:
+    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.audit_logs.AuditLogChange`
     changes: typing.Sequence[AuditLogChange]
+
+    #: The id of the user who made the changes.
+    #:
+    #: :type: :class:`int`
     user_id: int
+
+    #: The type of action for this entry.
+    #:
+    #: :type: :class:`hikari.orm.models.audit_logs.AuditLogEvent`
     action_type: AuditLogEvent
-    options: typing.Optional[
-        typing.Union[ChannelOverwriteAuditLogEntryInfo, MessageDeleteAuditLogEntryInfo, MemberPruneAuditLogEntryInfo]
-    ]
+
+    #: Extra information provided for certain audit log events.
+    #:
+    #: :type: implementation of :class:`hikari.orm.models.audit_logs.IAuditLogEntryInfo` or `None`
+    options: typing.Optional[IAuditLogEntryInfo]
+
+    #: The reason for these changes.
+    #:
+    #: :type: :class:`str` or `None`
     reason: typing.Optional[str]
 
     def __init__(self, payload: data_structures.DiscordObjectT) -> None:
@@ -73,7 +125,9 @@ class AuditLogEntry(interfaces.ISnowflake):
         self.changes = [AuditLogChange(change) for change in payload.get("changes", data_structures.EMPTY_SEQUENCE)]
         self.user_id = int(payload["user_id"])
         self.id = int(payload["id"])
-        self.action_type = AuditLogEvent.get_best_effort_from_value(payload)
+        self.action_type = AuditLogEvent.get_best_effort_from_value(payload["action_type"])
+        self.options = parse_audit_log_entry_info(payload.get("options"), self.action_type)
+        self.reason = payload.get("reason")
 
 
 class AuditLogEvent(interfaces.BestEffortEnumMixin, enum.IntEnum):
@@ -92,6 +146,9 @@ class AuditLogEvent(interfaces.BestEffortEnumMixin, enum.IntEnum):
     MEMBER_BAN_REMOVE = 23
     MEMBER_UPDATE = 24
     MEMBER_ROLE_UPDATE = 25
+    MEMBER_MOVE = 26
+    MEMBER_DISCONNECT = 27
+    BOT_ADD = 28
     ROLE_CREATE = 30
     ROLE_UPDATE = 31
     ROLE_DELETE = 32
@@ -105,9 +162,17 @@ class AuditLogEvent(interfaces.BestEffortEnumMixin, enum.IntEnum):
     EMOJI_UPDATE = 61
     EMOJI_DELETE = 62
     MESSAGE_DELETE = 72
+    MESSAGE_BULK_DELETE = 73
+    MESSAGE_PIN = 74
+    MESSAGE_UNPIN = 75
+    INTEGRATION_CREATE = 80
+    INTEGRATION_UPDATE = 81
+    INTEGRATION_DELETE = 82
 
 
 class IAuditLogEntryInfo(interfaces.IModel, interface=True):
+    """An interface that all audit log entry option models inherit from."""
+
     _implementations: typing.ClassVar[typing.Dict[int, IAuditLogEntryInfo]] = {}
 
     __slots__ = ()
@@ -118,10 +183,61 @@ class IAuditLogEntryInfo(interfaces.IModel, interface=True):
             cls._implementations[event_type.value] = cls
 
 
+class AuditLogEntryCountInfo(
+    IAuditLogEntryInfo, event_types=[AuditLogEvent.MESSAGE_BULK_DELETE, AuditLogEvent.MEMBER_DISCONNECT]
+):
+    """
+    Extra information for MESSAGE_BULK_DELETE and MEMBER_DISCONNECT entries.
+    """
+
+    __slots__ = ("count",)
+
+    #: The amount of entities targeted.
+    #:
+    #: :type: :class:`int`
+    count: int
+
+    def __init__(self, payload) -> None:
+        self.count = int(payload["count"])
+
+
+class MemberMoveAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEvent.MEMBER_MOVE]):
+    """
+    Extra information for MEMBER_MOVE entries.
+    """
+
+    __slots__ = ("channel_id", "count")
+
+    #: The amount of members moved.
+    #:
+    #: :type: :class:`int`
+    count: int
+
+    #: The id of the channel that the members were moved to.
+    #:
+    #: :type: :class:`int`
+    channel_id: int
+
+    def __init__(self, payload) -> None:
+        self.count = int(payload["count"])
+        self.channel_id = int(payload["channel_id"])
+
+
 class MemberPruneAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEvent.MEMBER_PRUNE]):
+    """
+    Extra information for MEMBER_PRUNE entries.
+    """
+
     __slots__ = ("delete_member_days", "members_removed")
 
+    #: The number of days after which inactive members were pruned.
+    #:
+    #: :type: :class:`int`
     delete_member_days: int
+
+    #: The amount of members removed.
+    #:
+    #: :type: :class:`int`
     members_removed: int
 
     def __init__(self, payload) -> None:
@@ -130,14 +246,49 @@ class MemberPruneAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEven
 
 
 class MessageDeleteAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEvent.MESSAGE_DELETE]):
+    """
+    Extra information for MESSAGE_DELETE entries
+    """
+
     __slots__ = ("channel_id", "count")
 
-    channel_id: int
+    #: The amount of messages deleted.
+    #:
+    #: :type: :class:`int`
     count: int
 
+    #: The id of the channel where the messages were deleted.
+    #:
+    #: :type: :class:`int`
+    channel_id: int
+
     def __init__(self, payload: data_structures.DiscordObjectT) -> None:
-        self.channel_id = int(payload["channel_id"])
         self.count = int(payload["count"])
+        self.channel_id = int(payload["channel_id"])
+
+
+class MessagePinAuditLogEntryInfo(
+    IAuditLogEntryInfo, event_types=[AuditLogEvent.MESSAGE_PIN, AuditLogEvent.MESSAGE_UNPIN]
+):
+    """
+    Extra information for Message Pin related entries.
+    """
+
+    __slots__ = ("channel_id", "message_id")
+
+    #: The id of the channel where the message was pinned.
+    #:
+    #: :type: :class:`int`
+    channel_id: int
+
+    #: The id of the message that was pinned.
+    #:
+    #: :type: :class:`int`
+    message_id: int
+
+    def __init__(self, payload) -> None:
+        self.channel_id = int(payload["channel_id"])
+        self.message_id = int(payload["message_id"])
 
 
 class ChannelOverwriteAuditLogEntryInfo(
@@ -148,9 +299,20 @@ class ChannelOverwriteAuditLogEntryInfo(
         AuditLogEvent.CHANNEL_OVERWRITE_DELETE,
     ],
 ):
+    """
+    Extra information for Channel Overwrite related entries.
+    """
+
     __slots__ = ("id", "type")
 
+    #: The id of the entity that was overwritten.
+    #:
+    #: :type: :class:`int`
     id: int
+
+    #: The type of entity that was overwritten.
+    #:
+    #: :type: :class:`hikari.orm.models.overwrites.OverwriteEntityType`
     type: overwrites.OverwriteEntityType
 
     def __init__(self, payload: data_structures.DiscordObjectT) -> None:
@@ -160,16 +322,16 @@ class ChannelOverwriteAuditLogEntryInfo(
 
 def parse_audit_log_entry_info(
     audit_log_entry_info_payload: data_structures.DiscordObjectT, event_type: int
-) -> typing.Union[
-    MemberPruneAuditLogEntryInfo, MessageDeleteAuditLogEntryInfo, ChannelOverwriteAuditLogEntryInfo, None
-]:
+) -> typing.Optional[IAuditLogEntryInfo]:
     """
     Parses a specific type of audit log entry info based on the given event type. If nothing corresponds
     to the additional info passed or the event_type given, then `None` is returned instead.
     """
     try:
         # noinspection PyProtectedMember
-        return IAuditLogEntryInfo._implementations[event_type](audit_log_entry_info_payload)
+        return transformations.nullable_cast(
+            audit_log_entry_info_payload, IAuditLogEntryInfo._implementations[event_type]
+        )
     except KeyError:
         return None
 
@@ -228,6 +390,10 @@ class AuditLogChangeKey(str, interfaces.BestEffortEnumMixin, enum.Enum):
     AVATAR_HASH = "avatar_hash"
     ID = "id"
     TYPE = "type"
+    ACCOUNT_ID = "account_id"
+    ENABLE_EMOTICONS = "enable_emoticons"
+    EXPIRE_BEHAVIOR = "expire_behavior"
+    EXPIRE_GRACE_PERIOD = "expire_grace_period"
 
     #: |undocumented|
     RATE_LIMIT_PER_USER = "rate_limit_per_user"
@@ -244,7 +410,7 @@ def _new_id_map_of(converter):
 
 
 def _new_sequence_of(converter):
-    return lambda items: [converter(fabric, item) for item in items]
+    return lambda items: [converter(item) for item in items]
 
 
 def _type_converter(type_entity):
@@ -263,8 +429,8 @@ AUDIT_LOG_ENTRY_CONVERTERS = {
     AuditLogChangeKey.VERIFICATION_LEVEL: guilds.VerificationLevel,
     AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: guilds.ExplicitContentFilterLevel,
     AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guilds.DefaultMessageNotificationsLevel,
-    AuditLogChangeKey.ADD_ROLE_TO_MEMBER: _new_id_map_of(roles.Role),
-    AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: _new_id_map_of(roles.Role),
+    AuditLogChangeKey.ADD_ROLE_TO_MEMBER: _new_id_map_of(roles.PartialRole),
+    AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: _new_id_map_of(roles.PartialRole),
     AuditLogChangeKey.WIDGET_CHANNEL_ID: int,
     AuditLogChangeKey.PERMISSION_OVERWRITES: _new_sequence_of(overwrites.Overwrite),
     AuditLogChangeKey.APPLICATION_ID: int,
@@ -276,18 +442,37 @@ AUDIT_LOG_ENTRY_CONVERTERS = {
     AuditLogChangeKey.INVITER_ID: int,
     AuditLogChangeKey.ID: int,
     AuditLogChangeKey.TYPE: _type_converter,
+    AuditLogChangeKey.ACCOUNT_ID: int,
+    AuditLogChangeKey.ENABLE_EMOTICONS: bool,
+    AuditLogChangeKey.EXPIRE_BEHAVIOR: int,
+    AuditLogChangeKey.EXPIRE_GRACE_PERIOD: int,
 }
 
 
 class AuditLogChange(interfaces.IModel):
+    """
+    Implementation of the Audit Log Change Object.
+    """
+
     __slots__ = ("key", "old_value", "new_value")
 
+    #: The name of the audit log change key.
+    #:
+    #: :type: :class:`str`
     key: str
+
+    #: The old value of the key.
+    #:
+    #: :type: :class:`typing.Any` or `None`
     old_value: typing.Optional[typing.Any]
+
+    #: The new value of the key.
+    #:
+    #: :type: :class:`typing.Any` or `None`
     new_value: typing.Optional[typing.Any]
 
     def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.key = AuditLogChangeKey.get_best_effort_from_value(payload["key"])
-        converter = AUDIT_LOG_ENTRY_CONVERTERS[self.key]
-        self.old_value = transformations.nullable_cast(payload["old_value"], converter)
-        self.new_value = transformations.nullable_cast(payload["new_value"], converter)
+        converter = AUDIT_LOG_ENTRY_CONVERTERS.get(self.key, lambda x: x)
+        self.old_value = transformations.nullable_cast(payload.get("old_value"), converter)
+        self.new_value = transformations.nullable_cast(payload.get("new_value"), converter)

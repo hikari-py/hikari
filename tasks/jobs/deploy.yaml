@@ -40,6 +40,7 @@ deploy-to-staging:
         RELEASE_WEBHOOK_NAME: "pypi (prerelease only)"
         RELEASE_WEBHOOK_COLOUR: "0xd34615"
     script:
+        - "git log -1 --pretty=%B | grep -iq '\\[skip deploy\\]' && (echo 'Deployment was skipped by commit message.' && exit 0)"
         - export RELEASE_WEBHOOK_DESCRIPTION=''
         - source tasks/deploy.sh
         - do-deployment
@@ -59,6 +60,7 @@ deploy-to-prod:
         RELEASE_WEBHOOK_NAME: "pypi"
         RELEASE_WEBHOOK_COLOUR: "0x5c2040"
     script:
+        - "git log -1 --pretty=%B | grep -iq '\\[skip deploy\\]' && (echo 'Deployment was skipped by commit message.' && exit 0)"
         - export RELEASE_WEBHOOK_DESCRIPTION=''
         - source tasks/deploy.sh
         - do-deployment
