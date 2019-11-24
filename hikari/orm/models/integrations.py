@@ -78,6 +78,8 @@ class PartialIntegration(interfaces.ISnowflake):
     #: :type: :class:`str`
     type: str
 
+    __repr__ = auto_repr.repr_of("id", "name")
+
     def __init__(self, payload) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
@@ -91,13 +93,9 @@ class Integration(PartialIntegration, interfaces.FabricatedMixin):
 
     __slots__ = (
         "_fabric",
-        "id",
-        "name",
-        "type",
         "enabled",
         "syncing",
         "_role_id",
-        "enable_emoticons",
         "expire_grace_period",
         "user",
         "account",
@@ -115,11 +113,6 @@ class Integration(PartialIntegration, interfaces.FabricatedMixin):
     #:
     #: :type: :class:`bool`
     syncing: bool
-
-    #: The status of emoticons for a twitch integration.
-    #:
-    #: :type: :class:`bool`
-    enable_emoticons: bool
 
     #: The grace period for expiring subscribers.
     #:
@@ -141,15 +134,12 @@ class Integration(PartialIntegration, interfaces.FabricatedMixin):
     #: :type: :class:`datetime.datetime`
     synced_at: datetime.datetime
 
-    __repr__ = auto_repr.repr_of("id", "name")
-
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self.enabled = payload["enabled"]
         self.syncing = payload["syncing"]
         self._role_id = int(payload["role_id"])
-        self.enable_emoticons = payload.get("enable_emoticons")
         self.expire_grace_period = int(payload["expire_grace_period"])
         self.user = self._fabric.state_registry.parse_user(payload["user"])
         self.account = IntegrationAccount(self._fabric.state_registry, payload["account"])

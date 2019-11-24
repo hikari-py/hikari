@@ -26,7 +26,7 @@ def mock_user_payload():
         "avatar": "1a2b3c4d",
         "locale": "gb",
         "flags": 0b00101101,
-        "premium_type": 0b1101101,
+        "premium_type": 0,
     }
 
 
@@ -70,7 +70,7 @@ def test_AuditLog(fabric_obj, mock_audit_log_payload, mock_user_payload, mock_we
     assert audit_log_obj.audit_log_entries[0].user_id == 115590097100865541
     assert audit_log_obj.audit_log_entries[0].target_id == 39494939485734849
     assert audit_log_obj.audit_log_entries[0].action_type is audit_logs.AuditLogEvent.MEMBER_ROLE_UPDATE
-    assert audit_log_obj.audit_log_entries[0].changes[0].key == "$add"
+    assert audit_log_obj.audit_log_entries[0].changes[0].key is audit_logs.AuditLogChangeKey.ADD_ROLE_TO_MEMBER
     assert audit_log_obj.audit_log_entries[0].changes[0].new_value[2356343234234].name == "I am a role"
     assert audit_log_obj.audit_log_entries[0].changes[0].new_value[2356343234234].id == 2356343234234
     assert audit_log_obj.audit_log_entries[0].reason == "Very good reason"
@@ -96,7 +96,7 @@ def test_afk_channel_change():
     assert entry_obj.user_id == 115590097100865541
     assert entry_obj.target_id == 561884984214814744
     assert entry_obj.action_type is audit_logs.AuditLogEvent.GUILD_UPDATE
-    assert entry_obj.changes[0].key == "afk_channel_id"
+    assert entry_obj.changes[0].key is audit_logs.AuditLogChangeKey.AFK_CHANNEL_ID
     assert entry_obj.changes[0].old_value == 561887595798462499
     assert entry_obj.changes[0].new_value == 561886693339168770
 
