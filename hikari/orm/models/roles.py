@@ -27,7 +27,6 @@ from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.orm import fabric
 from hikari.orm.models import colors as _color
-from hikari.orm.models import guilds
 from hikari.orm.models import interfaces
 from hikari.orm.models import permissions as _permission
 
