@@ -35,7 +35,7 @@
         - mkdir public || true
         - apt-get update -q  # graphviz won't resovle without this???
         - apt-get install -qy git gcc g++ make graphviz
-        - "git log -1 --pretty=%B | grep -iq '\[skip pages\]' && (echo 'Page generation was skipped by commit message.' && exit 0)"
+        - "git log -1 --pretty=%B | grep -iq '\\[skip pages\\]' && (echo 'Page generation was skipped by commit message.' && exit 0)"
         - >
             if [[ "${CI_IS_SCHEDULED}" -eq "1" ]] || [[ ! -d .venv ]]; then
                 echo "Installing new venv and installing poetry inside it."
