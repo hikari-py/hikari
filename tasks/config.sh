@@ -24,8 +24,8 @@ do_export CI_ROBOT_EMAIL="$(echo ${API_NAME} | sed 's/ /-/g')-ci@${GIT_SVC_HOST}
 
 do_export SKIP_CI_COMMIT_PHRASE='[skip ci]'
 do_export SKIP_DEPLOY_COMMIT_PHRASE='[skip deploy]'
-do_export SKIP_TESTS_COMMIT_PHRASE = '[skip tests]'
-do_export SKIP_PAGES_COMMIT_PHRASE = '[skip pages]'
+do_export SKIP_TESTS_COMMIT_PHRASE='[skip tests]'
+do_export SKIP_PAGES_COMMIT_PHRASE='[skip pages]'
 
 do_export PROD_BRANCH="master"
 do_export PREPROD_BRANCH="staging"
