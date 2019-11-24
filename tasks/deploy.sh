@@ -76,18 +76,14 @@ function deploy-to-svc() {
     git checkout ${PREPROD_BRANCH}
     git reset --hard origin/${PREPROD_BRANCH}
     # git -c color.status=always log --all --decorate --oneline --graph -n 50
-    git merge origin/${PROD_BRANCH} --no-ff --strategy-option theirs --allow-unrelated-histories -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_CI_COMMIT_PHRASE}"
+    # Use [skip deploy] instead of [skip ci] so that our pages rebuild still...
+    git merge origin/${PROD_BRANCH} --no-ff --strategy-option theirs --allow-unrelated-histories -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_DEPLOY_COMMIT_PHRASE}"
     git push ${REMOTE_NAME} ${PREPROD_BRANCH}
     set +x
 }
 
 function do-deployment() {
     set -x
-    
-    if git log -1 --pretty=%B | grep -iq '\[skip deploy\]'; then
-        echo -e "\e[1;33mSKIPPING DEPLOYMENT STEP\e[0m"
-        exit 0
-    fi
     
     local old_version
     local current_version

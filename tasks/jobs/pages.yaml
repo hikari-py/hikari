@@ -35,6 +35,7 @@
         - mkdir public || true
         - apt-get update -q  # graphviz won't resovle without this???
         - apt-get install -qy git gcc g++ make graphviz
+        - "git log -1 --pretty=%B | grep -iq '\[skip pages\]' && (echo 'Page generation was skipped by commit message.' && exit 0)"
         - >
             if [[ "${CI_IS_SCHEDULED}" -eq "1" ]] || [[ ! -d .venv ]]; then
                 echo "Installing new venv and installing poetry inside it."
@@ -81,7 +82,10 @@ pages:
         paths:
             - public
     only:
-        - master
+        # Ignore master, I added a workaround because pages were not renewing on master due to the mid-pipeline
+        # merge that takes place. The workaround reruns the staging pipeline after the merge but does not deploy
+        # to pypi, only running the pages.
+        # - master
         - staging
 
 

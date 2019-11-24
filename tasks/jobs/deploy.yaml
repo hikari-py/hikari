@@ -24,6 +24,7 @@
         - "[[ \"$CI_PROJECT_URL\" = \"$ORIGINAL_REPO_URL\" ]] || (echo 'You are running off of a fork, so deployment is skipped.' && exit 0)"
         - apt-get update
         - apt-get install curl git openssh-client -y
+        - "git log -1 --pretty=%B | grep -iq '\[skip deploy\]' && (echo 'Deployment was skipped by commit message.' && exit 0)"
         - pip install poetry requests
         - poetry install -v
         - poetry show -v
