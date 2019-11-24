@@ -24,6 +24,8 @@ Sphinx documentation configuration.
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
+import contextlib
+import datetime
 import os
 import shutil
 import sys
@@ -41,7 +43,6 @@ copyright = author
 version = "0.0.44"
 
 is_staging = "dev" in version
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -95,7 +96,7 @@ html_theme_options = {
         ("CI", "http://gitlab.com/nekokatt/hikari/pipelines", True),
     ],
     # Render the next and previous page links in navbar. (Default: true)
-    "navbar_sidebarrel": False,
+    "navbar_sidebarrel": True,
     # Render the current pages TOC in the navbar. (Default: true)
     "navbar_pagenav": False,
     # Tab name for the current pages TOC. (Default: "Page")
@@ -131,7 +132,7 @@ html_theme_options = {
     # Currently, the supported themes are:
     # - Bootstrap 2: https://bootswatch.com/2
     # - Bootstrap 3: https://bootswatch.com/3
-    "bootswatch_theme": "united",
+    "bootswatch_theme": None,
     # Choose Bootstrap version.
     # Values: "3" (default) or "2" (in quotes)
     "bootstrap_version": "3",
@@ -216,3 +217,9 @@ else:
 
 def setup(app):
     app.add_stylesheet("style.css")
+    print(dir(app), type(app))
+
+    # Little easteregg.
+    with contextlib.suppress(Exception):
+        if datetime.datetime.now().month in (12, 1, 2):
+            app.add_javascript("http://www.schillmania.com/projects/snowstorm/snowstorm.js")
