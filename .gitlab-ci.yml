@@ -16,17 +16,17 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 stages:
-    - test
-    - deploy
-    - verify
-    - pages
+  - test
+  - deploy
+  - verify
+  - pages
 
 variables:
-    DOCKER_DRIVER: "overlay2"
-    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  DOCKER_DRIVER: "overlay2"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 
 include:
-    -   local: "/tasks/jobs/test.yaml"
-    -   local: "/tasks/jobs/pages.yaml"
-    -   local: "/tasks/jobs/deploy.yaml"
+  - local: "/tasks/jobs/test.yml"
+  - local: "/tasks/jobs/pages.yml"
+  - local: "/tasks/jobs/deploy.yml"

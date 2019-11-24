@@ -35,7 +35,7 @@ from hikari.orm.models import overwrites
 from hikari.orm.models import users
 
 
-class Channel(abc.ABC, interfaces.ISnowflake, interfaces.FabricatedMixin):
+class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStatefulModel):
     """
     A generic type of channel.
 
@@ -71,6 +71,7 @@ class Channel(abc.ABC, interfaces.ISnowflake, interfaces.FabricatedMixin):
         self.id = int(payload["id"])
         self.update_state(payload)
 
+    @classmethod
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         if "type" in kwargs:
@@ -379,11 +380,7 @@ def is_channel_type_dm(channel_type: int) -> bool:
 
 
 # noinspection PyProtectedMember
-def parse_channel(
-    fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT
-) -> typing.Union[
-    GuildTextChannel, DMChannel, GuildVoiceChannel, GroupDMChannel, GuildCategory, GuildNewsChannel, GuildStoreChannel
-]:
+def parse_channel(fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> Channel:
     """
     Parse a channel from a channel payload from an API call.
 

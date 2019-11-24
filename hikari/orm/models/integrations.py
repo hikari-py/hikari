@@ -31,7 +31,7 @@ from hikari.orm.models import interfaces
 from hikari.orm.models import users
 
 
-class IntegrationAccount(interfaces.FabricatedMixin, interfaces.ISnowflake):
+class IntegrationAccount(interfaces.IStatefulModel, interfaces.ISnowflake):
     """
     An account used for an integration.
     """
@@ -86,7 +86,7 @@ class PartialIntegration(interfaces.ISnowflake):
         self.type = payload["type"]
 
 
-class Integration(PartialIntegration, interfaces.FabricatedMixin):
+class Integration(PartialIntegration, interfaces.IStatefulModel):
     """
     A guild integration.
     """

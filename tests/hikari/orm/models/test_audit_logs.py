@@ -7,6 +7,7 @@ from hikari.orm import state_registry
 from hikari.orm.models import audit_logs
 from hikari.orm.models import roles
 
+
 @pytest.fixture()
 def mock_state_registry():
     return mock.MagicMock(spec_set=state_registry.IStateRegistry)

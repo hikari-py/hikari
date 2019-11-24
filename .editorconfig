@@ -152,3 +152,5 @@ ij_continuation_indent_size = 2
 ij_visual_guides = 80
 ij_yaml_keep_indents_on_empty_lines = false
 ij_yaml_keep_line_breaks = true
+tab_width = 2
+indent_size = 2

@@ -19,7 +19,6 @@
 """
 Increments the next version
 """
-import datetime
 import os
 import re
 import sys

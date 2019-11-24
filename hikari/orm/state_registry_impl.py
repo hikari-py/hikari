@@ -357,9 +357,9 @@ class StateRegistryImpl(state_registry.IStateRegistry):
                 if existing_reaction_obj.emoji == new_reaction_obj.emoji:
                     existing_reaction_obj.count = new_reaction_obj.count
                     return existing_reaction_obj
-            else:
-                message_obj.reactions.append(new_reaction_obj)
-                return new_reaction_obj
+
+            message_obj.reactions.append(new_reaction_obj)
+            return new_reaction_obj
         else:
             return None
 

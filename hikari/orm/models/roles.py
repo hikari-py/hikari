@@ -54,7 +54,7 @@ class PartialRole(interfaces.ISnowflake):
         self.name = payload["name"]
 
 
-class Role(PartialRole, interfaces.FabricatedMixin):
+class Role(PartialRole, interfaces.IStatefulModel):
     """
     Representation of a role within a guild.
     """

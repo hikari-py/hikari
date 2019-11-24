@@ -68,7 +68,7 @@ class BestEffortEnumMixin:
 
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
-class NamedEnumMixin:
+class INamedEnum:
     """
     A mixin for an enum that is produced from a string by Discord. This ensures that the key can be looked up from a
     lowercase value that discord provides and use a Pythonic key name that is in upper case.
@@ -117,6 +117,7 @@ class IModel(metaclass=abc.ABCMeta):
     #: Tracks the fields we shouldn't clone. This always includes the state.
     __copy_by_ref__: typing.ClassVar[typing.Tuple] = ("_fabric",)
 
+    @classmethod
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__()
         if "__slots__" not in cls.__dict__:
@@ -166,7 +167,7 @@ class IModel(metaclass=abc.ABCMeta):
         # This also ensures all methods are referenced, but no instance variables get bound, which is just what we need.
 
         # noinspection PySuperArguments
-        instance = super(type, cls).__new__(cls)
+        instance = super(IModel, cls).__new__(cls)
 
         for attr in cls.__all_slots__:
             attr_val = getattr(self, attr)
@@ -267,7 +268,7 @@ class ISnowflake(IModel):
 
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
-class FabricatedMixin(IModel):
+class IStatefulModel(IModel):
     """
     Base information and utilities for any model that is expected to have a reference to a `_fabric`.
 
@@ -282,6 +283,7 @@ class FabricatedMixin(IModel):
     #: The base fabric for the ORM instance.
     _fabric: fabric.Fabric
 
+    @classmethod
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         is_interface_or_mixin = kwargs.get("interface", False)
@@ -290,7 +292,7 @@ class FabricatedMixin(IModel):
 
         if not (is_interface_or_mixin or delegate_fabricated or has_fabric_slot):
             raise TypeError(
-                f"{cls.__module__}.{cls.__qualname__} derives from {FabricatedMixin.__name__}, "
+                f"{cls.__module__}.{cls.__qualname__} derives from {IStatefulModel.__name__}, "
                 f"but does not provide '_fabric' as a slotted member in this or any base classes. "
                 f"If this is meant to be an interface, pass the 'interface' or 'delegate_fabricated' "
                 f"kwarg to the class constructor (e.g. `class Foo(Fabricated, interface=True)`) to "
@@ -298,4 +300,4 @@ class FabricatedMixin(IModel):
             )
 
 
-__all__ = ("ISnowflake", "BestEffortEnumMixin", "NamedEnumMixin", "FabricatedMixin", "IModel")
+__all__ = ("ISnowflake", "BestEffortEnumMixin", "INamedEnum", "IStatefulModel", "IModel")

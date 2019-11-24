@@ -110,7 +110,7 @@ class MessageFlag(enum.IntFlag):
 # information is not documented. Timestamp is pointless as it is able to be found from the ID anyway.
 
 
-class Message(interfaces.ISnowflake, interfaces.FabricatedMixin):
+class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
     """
     A message that was sent on Discord.
     """
