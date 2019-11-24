@@ -1,19 +1,33 @@
 CHANGELOG
 =========
 
-Automatically generated from git history up to master at Sun Nov 24 19:15:47 UTC 2019 by CI.
+Automatically generated from git history up to master at Sun Nov 24 19:26:09 UTC 2019 by CI.
+
+* Sun Nov 24 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+- Merge branch 'staging' of gitlab.com:nekokatt/hikari.core into staging (rev.d1deb6eb)
+- Readded skip CI as it triggered recursive deployment flow (rev.1bfe0f69)
+- Merged master 0.0.52 into staging [skip deploy] (rev.a46d965e)
+
+* Sun Nov 24 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.52
+- Deployed 0.0.52 [skip deploy] (rev.d78c2bae)
+- Fixed LGTM warnings and naming inconsistencies (rev.3b63252a)
+- Merged master 0.0.51 into staging [skip deploy] (rev.de01e752)
 
 * Sun Nov 24 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.51
 - Deployed 0.0.51 [skip deploy] (rev.2cf1f564)
+- Merged master 0.0.50 into staging [skip deploy] (rev.79a867f7)
 
 * Sun Nov 24 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.50
 - Deployed 0.0.50 [skip deploy] (rev.850f30d2)
+- Merged master 0.0.49 into staging [skip deploy] (rev.fce32a4b)
 
 * Sun Nov 24 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.49
 - Deployed 0.0.49 [skip deploy] (rev.0289d7a1)
+- Merged master 0.0.48 into staging [skip deploy] (rev.fc7521b7)
 
 * Sun Nov 24 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.48
 - Deployed 0.0.48 [skip deploy] (rev.17e064f2)
+- Merged master 0.0.47 into staging [skip deploy] (rev.fa2a7f42)
 
 * Sun Nov 24 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.47
 - Deployed 0.0.47 [skip deploy] (rev.1d862905)
@@ -1040,3 +1054,6 @@ Automatically generated from git history up to master at Sun Nov 24 19:15:47 UTC
 - Updated Pipfile, Pipfile.lock and ci-yml (rev.8e54a57f)
 - Initial commit (rev.5529dcbf)
 - Add README.md (rev.328f0099)
+
+
+
