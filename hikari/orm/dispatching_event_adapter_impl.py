@@ -495,6 +495,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
                 "user" if user_id is None else f"guild {guild_id} and member",
                 user_id,
             )
+            return
 
         self.dispatch(events.MESSAGE_REACTION_REMOVE, reaction_obj, user_obj)
 
