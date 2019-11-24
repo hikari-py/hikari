@@ -61,6 +61,25 @@ class Color(int, typing.SupportsInt):
         (255, 5, 26)
         >>> c.rgb_float
         (1.0, 0.0196078431372549, 0.10196078431372549)
+    
+    Alternatively, if you have an arbitrary input in one of the above formats that you wish to become a color, you can
+    use the get-attribute operator on the class itself to automatically attempt to resolve the color:
+        >>> Color[0xFF051A]
+        Color(r=0xff, g=0x5, b=0x1a)
+        >>> Color[16712986]
+        Color(r=0xff, g=0x5, b=0x1a)
+        >>> c = Color[(255, 5, 26)]
+        Color(r=0xff, g=0x5, b=1xa)
+        >>> c = Color[[0xFF, 0x5, 0x1a]]
+        Color(r=0xff, g=0x5, b=1xa)
+        >>> c = Color["#1a2b3c"]
+        Color(r=0x1a, g=0x2b, b=0x3c)
+        >>> c = Color["#1AB"]
+        Color(r=0x11, g=0xaa, b=0xbb)
+        >>> c = Color[(1.0, 0.0196078431372549, 0.10196078431372549)]
+        Color(r=0xff, g=0x5, b=0x1a)
+        >>> c = Color[[1.0, 0.0196078431372549, 0.10196078431372549]]
+        Color(r=0xff, g=0x5, b=0x1a)
 
     Examples of initialization of Color objects from given formats:
         >>> c = Color(16712986)
@@ -133,7 +152,7 @@ class Color(int, typing.SupportsInt):
     @property
     def is_web_safe(self) -> bool:
         """
-        True if this colour is a web-safe colour, False otherwise.
+        True if this color is a web-safe color, False otherwise.
         """
         hex_code = self.raw_hex_code
         return all(_all_same(*c) for c in (hex_code[:2], hex_code[2:4], hex_code[4:]))
@@ -235,7 +254,7 @@ class Color(int, typing.SupportsInt):
 
         Args:
             i:
-                The raw colour integer.
+                The raw color integer.
 
         Returns:
             The Color object.
@@ -244,13 +263,42 @@ class Color(int, typing.SupportsInt):
 
     # Partially chose to override these as the docstrings contain typos according to Sphinx.
     @classmethod
-    def from_bytes(cls, bytes: typing.Sequence[int], byteorder: str, *, signed: bool = ...) -> Color:
+    def from_bytes(cls, bytes_: typing.Sequence[int], byteorder: str, *, signed: bool = ...) -> Color:
         """Converts the color from bytes."""
-        return Color(super().from_bytes(bytes, byteorder, signed=signed))
+        return Color(super().from_bytes(bytes_, byteorder, signed=signed))
 
     def to_bytes(self, length: int, byteorder: str, *, signed: bool = ...) -> bytes:
         """Converts the color code to bytes."""
         return super().to_bytes(length, byteorder, signed=signed)
+
+    @classmethod
+    def __class_getitem__(cls, color):
+        if isinstance(color, cls):
+            return color
+        elif isinstance(color, int):
+            return cls.from_int(color)
+        elif isinstance(color, (list, tuple)):
+            assertions.assert_that(
+                len(color) == 3, f"color must be an RGB triplet if set to a {type(color).__name__} type"
+            )
+
+            if _all_same(*map(type, color)):
+                first = color[0]
+                if isinstance(first, float):
+                    return cls.from_rgb_float(*color)
+                if isinstance(first, int):
+                    return cls.from_rgb(*color)
+
+                raise ValueError(
+                    "all three channels must be all int or all float types if setting the color " "to an RGB triplet"
+                )
+        if isinstance(color, str):
+            is_start_hash_or_hex_literal = color.casefold().startswith(("#", "0x"))
+            is_hex_digits = all(c in string.hexdigits for c in color) and len(color) in (3, 6)
+            if is_start_hash_or_hex_literal or is_hex_digits:
+                return cls.from_hex_code(color)
+
+        raise ValueError(f"Could not transform {color!r} into a {cls.__qualname__} object")
 
 
 def _all_same(first, *rest):
