@@ -146,25 +146,30 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(events.DISCONNECT, gateway_impl, payload.get("code"), payload.get("reason"))
 
     @pytest.mark.asyncio
-    async def test_handle_connect_dispatches_event(
-        self, discord_ready_payload, adapter_impl, gateway_impl, dispatch_impl
-    ):
-        await adapter_impl.handle_connect(gateway_impl, discord_ready_payload)
+    async def test_handle_connect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
+        await adapter_impl.handle_connect(gateway_impl)
         dispatch_impl.assert_called_with(events.CONNECT, gateway_impl)
 
     @pytest.mark.asyncio
-    async def test_handle_connect_adds_application_user(
+    async def test_handle_ready_dispatches_event(
+        self, discord_ready_payload, adapter_impl, gateway_impl, dispatch_impl
+    ):
+        await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
+        dispatch_impl.assert_called_with(events.READY, gateway_impl)
+
+    @pytest.mark.asyncio
+    async def test_handle_ready_adds_application_user(
         self, discord_ready_payload, fabric_impl, adapter_impl, gateway_impl
     ):
-        await adapter_impl.handle_connect(gateway_impl, discord_ready_payload)
+        await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
 
         fabric_impl.state_registry.parse_application_user.assert_called_with(discord_ready_payload["user"])
 
     @pytest.mark.asyncio
-    async def test_handle_connect_adds_partial_guilds(
+    async def test_handle_ready_adds_partial_guilds(
         self, discord_ready_payload, fabric_impl, adapter_impl, gateway_impl
     ):
-        await adapter_impl.handle_connect(gateway_impl, discord_ready_payload)
+        await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
 
         raw_guild_1 = {"id": "9182736455463", "unavailable": True}
         raw_guild_2 = {"id": "72819099110270", "unavailable": True}

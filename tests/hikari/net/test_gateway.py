@@ -32,7 +32,6 @@ import pytest
 from hikari import errors
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import user_agent
-from hikari.net import extra_gateway_events
 from hikari.net import gateway
 from hikari.net import opcodes
 from hikari.net import ws
@@ -355,6 +354,17 @@ class TestGateway:
         assert gw.trace == ["foo"]
         assert gw.heartbeat_interval == 12.345
 
+    async def test_receive_hello_dispatches_connect(self, event_loop):
+        gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
+        gw._receive_json = asynctest.CoroutineMock(
+            return_value={"op": 10, "d": {"heartbeat_interval": 12345, "_trace": ["foo"]}}
+        )
+        gw.dispatch_new_event = asynctest.MagicMock(spec_set=gw.dispatch_new_event)
+
+        await gw._receive_hello()
+
+        gw.dispatch_new_event.assert_called_with(gateway.Event.CONNECT)
+
     async def test_receive_any_str_hello_when_is_not_hello_causes_resume(self, event_loop):
         gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw._receive_json = asynctest.CoroutineMock(
@@ -504,9 +514,9 @@ class TestGateway:
 
         gw._receive_json = flag_death_on_call
 
-        gw._dispatch = asynctest.MagicMock()
+        gw.dispatch_new_event = asynctest.MagicMock()
         await gw._process_one_event()
-        gw._dispatch.assert_called_with("explosion", {})
+        gw.dispatch_new_event.assert_called_with("explosion", {})
 
     async def test_process_events_on_heartbeat_opcode(self, event_loop):
         gw = MockGateway(
@@ -887,9 +897,9 @@ class TestGateway:
         assert gw.shard_id is None
         assert gw.shard_count is None
 
-    async def test_handle_ready_dispatches_CONNECT_event(self, event_loop):
+    async def test_handle_ready_dispatches_READY_event(self, event_loop):
         gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", large_threshold=69)
-        gw._dispatch = asynctest.MagicMock(spec_set=gw._dispatch)
+        gw.dispatch_new_event = asynctest.MagicMock(spec_set=gw.dispatch_new_event)
         gw.shard_id = None
         gw.shard_count = None
 
@@ -922,7 +932,7 @@ class TestGateway:
 
         await gw._handle_ready(pl["d"])
 
-        gw._dispatch.assert_called_with(extra_gateway_events.CONNECT, pl["d"])
+        gw.dispatch_new_event.assert_called_with(gateway.Event.READY, pl["d"])
 
     async def test_handle_resume(self, event_loop):
         gw = MockGateway(
@@ -1140,7 +1150,7 @@ class TestGateway:
             dispatch=dispatch,
         )
 
-        gw._dispatch("explosion", {"brains collected": 55})
+        gw.dispatch_new_event("explosion", {"brains collected": 55})
         dispatch_task_created_at = time.perf_counter()
 
         await asyncio.sleep(0.1)
