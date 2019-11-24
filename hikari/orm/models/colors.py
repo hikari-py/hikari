@@ -290,7 +290,7 @@ class Color(int, typing.SupportsInt):
                     return cls.from_rgb(*color)
 
                 raise ValueError(
-                    "all three channels must be all int or all float types if setting the color " "to an RGB triplet"
+                    "all three channels must be all int or all float types if setting the color to an RGB triplet"
                 )
         if isinstance(color, str):
             is_start_hash_or_hex_literal = color.casefold().startswith(("#", "0x"))
