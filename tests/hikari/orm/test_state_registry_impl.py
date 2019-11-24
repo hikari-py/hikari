@@ -534,7 +534,7 @@ class TestStateRegistryImpl:
             channels.GuildCategory,
             channels.GuildTextChannel,
             channels.GuildStoreChannel,
-        ]
+        ],
     )
     def test_parse_channel_sets_guild_id_on_guild_channel_payload_if_guild_id_param_is_not_None(
         self, registry: state_registry_impl.StateRegistryImpl, impl_t
@@ -558,8 +558,8 @@ class TestStateRegistryImpl:
             channels.GuildTextChannel,
             channels.GuildStoreChannel,
             channels.DMChannel,
-            channels.GroupDMChannel
-        ]
+            channels.GroupDMChannel,
+        ],
     )
     def test_parse_channel_updates_state_if_already_cached(
         self, registry: state_registry_impl.StateRegistryImpl, impl_t
@@ -579,8 +579,8 @@ class TestStateRegistryImpl:
             channels.GuildTextChannel,
             channels.GuildStoreChannel,
             channels.DMChannel,
-            channels.GroupDMChannel
-        ]
+            channels.GroupDMChannel,
+        ],
     )
     def test_parse_channel_returns_existing_channel_if_already_cached(
         self, registry: state_registry_impl.StateRegistryImpl, impl_t
@@ -591,13 +591,7 @@ class TestStateRegistryImpl:
         result = registry.parse_channel(payload)
         assert result is channel_obj
 
-    @pytest.mark.parametrize(
-        "impl_t",
-        [
-            channels.DMChannel,
-            channels.GroupDMChannel,
-        ]
-    )
+    @pytest.mark.parametrize("impl_t", [channels.DMChannel, channels.GroupDMChannel,])
     def test_parse_channel_caches_dm_channel_if_uncached_dm_channel(
         self, registry: state_registry_impl.StateRegistryImpl, impl_t
     ):
@@ -619,7 +613,7 @@ class TestStateRegistryImpl:
             channels.GuildCategory,
             channels.GuildTextChannel,
             channels.GuildStoreChannel,
-        ]
+        ],
     )
     def test_parse_channel_caches_guild_channel_if_uncached_guild_channel(
         self, registry: state_registry_impl.StateRegistryImpl, impl_t
@@ -646,8 +640,8 @@ class TestStateRegistryImpl:
             channels.GuildTextChannel,
             channels.GuildStoreChannel,
             channels.DMChannel,
-            channels.GroupDMChannel
-        ]
+            channels.GroupDMChannel,
+        ],
     )
     def test_parse_channel_returns_new_channel_if_uncached(
         self, registry: state_registry_impl.StateRegistryImpl, impl_t
@@ -777,8 +771,7 @@ class TestStateRegistryImpl:
             assert registry.parse_guild(payload) is guild_obj
 
     def test_parse_partial_member_calls_parse_member_correctly_and_returns_result(
-        self,
-        registry: state_registry_impl.StateRegistryImpl
+        self, registry: state_registry_impl.StateRegistryImpl
     ):
         partial_member = {"roles": ["9", "18", "27"], "nick": "Roy Rodgers McFreely"}
         user = {"id": "1234"}

@@ -367,17 +367,18 @@ class BaseEmbed(interfaces.IModel):
         self._description = None
 
     @property
-    def color(self) -> typing.Optional[typing.Union[colors.Color, int]]:
+    def color(self) -> typing.Optional[colors.Color]:
         """
         The color of the embed. Can be set and removed using the `del` operator additionally.
 
-        Can be a :class:`hikari.orm.models.colors.Color` or an :class:`int`.
+        Returns:
+            :class:`hikari.orm.models.colors.Color` or `None`
         """
         return self._color
 
     @color.setter
-    def color(self, color: typing.Optional[typing.Union[colors.Color, int]]) -> None:
-        self._color = colors.Color(color) if color is not None and not isinstance(color, colors.Color) else color
+    def color(self, color: typing.Optional[typing.Union[colors.Color, int, tuple, list, str]]) -> None:
+        self._color = colors.Color[color] if color is not None else None
 
     @color.deleter
     def color(self):
