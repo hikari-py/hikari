@@ -65,7 +65,7 @@ function deploy-to-svc() {
     git status
     create-changelog
     git diff
-    git commit -am "Deployed ${current_version} ${SKIP_CI_COMMIT_PHRASE}" --allow-empty
+    git commit -am "Deployed ${current_version} ${SKIP_DEPLOY_COMMIT_PHRASE}" --allow-empty
     git push ${REMOTE_NAME} ${PROD_BRANCH}
     git tag "${current_version}" && git push ${REMOTE_NAME} "${current_version}"
     # git -c color.status=always log --all --decorate --oneline --graph -n 50
