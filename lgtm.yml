@@ -9,6 +9,5 @@ path_classifiers:
     library:
         - "tasks"
         -   exclude: "/"
-    code: "hikari"
 queries:
-    -   exclude: "py/unsafe-cyclic-import"
+    -   exclude: py/unsafe-cyclic-import
