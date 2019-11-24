@@ -21,8 +21,6 @@ A role within a guild.
 """
 from __future__ import annotations
 
-import typing
-
 from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.orm import fabric
