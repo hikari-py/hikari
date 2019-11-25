@@ -452,6 +452,7 @@ AUDIT_LOG_ENTRY_CONVERTERS = {
     AuditLogChangeKey.ENABLE_EMOTICONS: bool,
     AuditLogChangeKey.EXPIRE_BEHAVIOR: int,
     AuditLogChangeKey.EXPIRE_GRACE_PERIOD: int,
+    AuditLogChangeKey.RATE_LIMIT_PER_USER: int,
     AuditLogChangeKey.SYSTEM_CHANNEL_ID: int,
 }
 
