@@ -94,7 +94,7 @@ class Webhook(interfaces.IStatefulModel, interfaces.ISnowflake):
         self.type = transformations.try_cast(payload.get("type"), WebhookType)
         self.guild_id = int(payload["guild_id"])
         self.channel_id = int(payload["channel_id"])
-        self.user = fabric_obj.state_registry.parse_user(payload.get("user"))
+        self.user = transformations.nullable_cast(payload.get("user"), fabric_obj.state_registry.parse_user)
         self.name = payload.get("name")
         self.avatar_hash = payload.get("avatar_hash")
         self.token = payload.get("token")
