@@ -36,7 +36,7 @@ code, .literal, .literal > span.pre {
 }
 
 .highlight > pre {
-    background-color: transparent;
+    background-color: #272822; 
     border-color: #3B3A32;
 }
 

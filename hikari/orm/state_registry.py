@@ -320,6 +320,31 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
+    def parse_partial_member(
+        self,
+        partial_member_payload: data_structures.DiscordObjectT,
+        user_payload: data_structures.DiscordObjectT,
+        guild_obj: guilds.Guild,
+    ) -> members.Member:
+        """
+        Parses a partial member payload and the corresponding user payload into a workable object
+
+        This is provided for cases such as https://discordapp.com/developers/docs/resources/channel#message-object
+        where the provided member is only partially constructed.
+
+        Args:
+            partial_member_payload:
+                the payload of the member.
+            user_payload:
+                the corresponding user payload.
+            guild_obj:
+                the guild the member should be placed in.
+
+        Returns:
+            a :class:`hikari.orm.models.members.Member` object.
+        """
+
+    @abc.abstractmethod
     def parse_member(self, member_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> members.Member:
         """
         Parses a member payload into a workable object

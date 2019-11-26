@@ -177,6 +177,7 @@ class IAuditLogEntryInfo(interfaces.IModel, interface=True):
 
     __slots__ = ()
 
+    @classmethod
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__()
         for event_type in kwargs["event_types"]:

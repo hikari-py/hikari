@@ -305,6 +305,16 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return guild_obj
 
+    def parse_partial_member(
+        self,
+        partial_member_payload: data_structures.DiscordObjectT,
+        user_payload: data_structures.DiscordObjectT,
+        guild_obj: guilds.Guild,
+    ) -> members.Member:
+        # Cheap workaround for Discord's inconsistency here.
+        partial_member_payload["user"] = user_payload
+        return self.parse_member(partial_member_payload, guild_obj)
+
     def parse_member(self, member_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild):
         member_id = int(member_payload["user"]["id"])
 

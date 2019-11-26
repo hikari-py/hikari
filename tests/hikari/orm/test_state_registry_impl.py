@@ -257,7 +257,7 @@ class TestStateRegistryImpl:
 
     def test_delete_guild_uncached(self, registry: state_registry_impl.StateRegistryImpl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=1234)
-        registry._guilds = {}
+        registry._guilds = _helpers.StrongWeakValuedDict()
 
         registry.delete_guild(guild_obj)
 
@@ -441,7 +441,7 @@ class TestStateRegistryImpl:
 
     def test_get_member_by_id_cached_guild_uncached_user(self, registry: state_registry_impl.StateRegistryImpl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=1)
-        guild_obj.members = {}
+        guild_obj.members = _helpers.StrongWeakValuedDict()
         registry._guilds = {guild_obj.id: guild_obj}
 
         assert registry.get_member_by_id(1, guild_obj.id) is None
@@ -476,20 +476,20 @@ class TestStateRegistryImpl:
 
     def test_get_role_by_id_cached_guild_uncached_role(self, registry: state_registry_impl.StateRegistryImpl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=1)
-        guild_obj.roles = {}
+        guild_obj.roles = _helpers.StrongWeakValuedDict()
         registry._guilds = {guild_obj.id: guild_obj}
 
         assert registry.get_role_by_id(guild_obj.id, 2) is None
 
     def test_get_role_by_id_uncached_guild_uncached_role(self, registry: state_registry_impl.StateRegistryImpl):
-        registry._guilds = {}
+        registry._guilds = _helpers.StrongWeakValuedDict()
 
         assert registry.get_role_by_id(1, 2) is None
 
     def test_get_user_by_id_cached_oauth2_user(self, registry: state_registry_impl.StateRegistryImpl):
         user_obj = _helpers.mock_model(users.OAuth2User, id=1)
         registry._user = user_obj
-        registry._users = {}
+        registry._users = _helpers.StrongWeakValuedDict()
 
         assert registry.get_user_by_id(user_obj.id) is registry._user
 
@@ -502,7 +502,7 @@ class TestStateRegistryImpl:
 
     def test_get_user_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         registry._user = None
-        registry._users = {}
+        registry._users = _helpers.StrongWeakValuedDict()
 
         assert registry.get_user_by_id(1) is None
 
@@ -526,41 +526,78 @@ class TestStateRegistryImpl:
             assert parsed_obj is registry.me
             OAuth2User.assert_called_once_with(registry.fabric, {})
 
+    @pytest.mark.parametrize(
+        "impl_t",
+        [
+            channels.GuildAnnouncementChannel,
+            channels.GuildVoiceChannel,
+            channels.GuildCategory,
+            channels.GuildTextChannel,
+            channels.GuildStoreChannel,
+        ],
+    )
     def test_parse_channel_sets_guild_id_on_guild_channel_payload_if_guild_id_param_is_not_None(
-        self, registry: state_registry_impl.StateRegistryImpl
+        self, registry: state_registry_impl.StateRegistryImpl, impl_t
     ):
         payload = {"id": "1234"}
         guild_obj = _helpers.mock_model(guilds.Guild, id=9873)
         registry._guilds = {guild_obj.id: guild_obj}
-        channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=5678, guild=guild_obj)
+        channel_obj = _helpers.mock_model(impl_t, id=5678, guild=guild_obj)
         registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
         with contextlib.suppress(Exception):
             registry.parse_channel(payload, guild_obj)
 
         assert payload["guild_id"] == 9873
 
-    def test_parse_channel_updates_state_if_already_cached(self, registry: state_registry_impl.StateRegistryImpl):
+    @pytest.mark.parametrize(
+        "impl_t",
+        [
+            channels.GuildAnnouncementChannel,
+            channels.GuildVoiceChannel,
+            channels.GuildCategory,
+            channels.GuildTextChannel,
+            channels.GuildStoreChannel,
+            channels.DMChannel,
+            channels.GroupDMChannel,
+        ],
+    )
+    def test_parse_channel_updates_state_if_already_cached(
+        self, registry: state_registry_impl.StateRegistryImpl, impl_t
+    ):
         payload = {"id": "1234"}
-        channel_obj = _helpers.mock_model(channels.Channel, id=1234)
+        channel_obj = _helpers.mock_model(impl_t, id=1234)
         registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
         registry.parse_channel(payload)
         channel_obj.update_state.assert_called_once_with(payload)
 
+    @pytest.mark.parametrize(
+        "impl_t",
+        [
+            channels.GuildAnnouncementChannel,
+            channels.GuildVoiceChannel,
+            channels.GuildCategory,
+            channels.GuildTextChannel,
+            channels.GuildStoreChannel,
+            channels.DMChannel,
+            channels.GroupDMChannel,
+        ],
+    )
     def test_parse_channel_returns_existing_channel_if_already_cached(
-        self, registry: state_registry_impl.StateRegistryImpl
+        self, registry: state_registry_impl.StateRegistryImpl, impl_t
     ):
         payload = {"id": "1234"}
-        channel_obj = _helpers.mock_model(channels.Channel, id=1234)
+        channel_obj = _helpers.mock_model(impl_t, id=1234)
         registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
         result = registry.parse_channel(payload)
         assert result is channel_obj
 
+    @pytest.mark.parametrize("impl_t", [channels.DMChannel, channels.GroupDMChannel,])
     def test_parse_channel_caches_dm_channel_if_uncached_dm_channel(
-        self, registry: state_registry_impl.StateRegistryImpl
+        self, registry: state_registry_impl.StateRegistryImpl, impl_t
     ):
         payload = {"id": "1234", "type": -1}
-        channel_obj = _helpers.mock_model(channels.DMChannel, id=1234)
-        registry._dm_channels = {}
+        channel_obj = _helpers.mock_model(impl_t, id=1234)
+        registry._dm_channels = _helpers.StrongWeakValuedDict()
         registry.get_channel_by_id = mock.MagicMock(return_value=None)
         with _helpers.mock_patch(channels.parse_channel, return_value=channel_obj):
             with _helpers.mock_patch(channels.is_channel_type_dm, return_value=True):
@@ -568,14 +605,24 @@ class TestStateRegistryImpl:
                 assert channel_obj in registry._dm_channels.values()
                 assert channel_obj not in registry._guild_channels.values()
 
+    @pytest.mark.parametrize(
+        "impl_t",
+        [
+            channels.GuildAnnouncementChannel,
+            channels.GuildVoiceChannel,
+            channels.GuildCategory,
+            channels.GuildTextChannel,
+            channels.GuildStoreChannel,
+        ],
+    )
     def test_parse_channel_caches_guild_channel_if_uncached_guild_channel(
-        self, registry: state_registry_impl.StateRegistryImpl
+        self, registry: state_registry_impl.StateRegistryImpl, impl_t
     ):
         payload = {"id": "1234", "type": -1}
         guild_obj = _helpers.mock_model(guilds.Guild, id=100, channels={})
-        channel_obj = _helpers.mock_model(channels.GuildChannel, id=1234, guild=guild_obj)
-        registry._dm_channels = {}
-        registry._guild_channels = {}
+        channel_obj = _helpers.mock_model(impl_t, id=1234, guild=guild_obj)
+        registry._dm_channels = _helpers.StrongWeakValuedDict()
+        registry._guild_channels = _helpers.StrongWeakValuedDict()
         registry.get_channel_by_id = mock.MagicMock(return_value=None)
         with _helpers.mock_patch(channels.parse_channel, return_value=channel_obj):
             with _helpers.mock_patch(channels.is_channel_type_dm, return_value=False):
@@ -584,9 +631,23 @@ class TestStateRegistryImpl:
                 assert channel_obj in registry._guild_channels.values()
                 assert guild_obj.channels[channel_obj.id] is channel_obj
 
-    def test_parse_channel_returns_new_channel_if_uncached(self, registry: state_registry_impl.StateRegistryImpl):
+    @pytest.mark.parametrize(
+        "impl_t",
+        [
+            channels.GuildAnnouncementChannel,
+            channels.GuildVoiceChannel,
+            channels.GuildCategory,
+            channels.GuildTextChannel,
+            channels.GuildStoreChannel,
+            channels.DMChannel,
+            channels.GroupDMChannel,
+        ],
+    )
+    def test_parse_channel_returns_new_channel_if_uncached(
+        self, registry: state_registry_impl.StateRegistryImpl, impl_t
+    ):
         payload = {"id": "1234", "type": -1}
-        channel_obj = _helpers.mock_model(channels.Channel, id=1234)
+        channel_obj = _helpers.mock_model(impl_t, id=1234)
         registry.get_channel_by_id = mock.MagicMock(return_value=None)
         with _helpers.mock_patch(channels.parse_channel, return_value=channel_obj):
             with _helpers.mock_patch(channels.is_channel_type_dm, return_value=True):
@@ -596,11 +657,11 @@ class TestStateRegistryImpl:
     def test_parse_unicode_emoji_does_not_change_cache(self, registry: state_registry_impl.StateRegistryImpl):
         emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
         payload = {"id": "1234"}
-        registry._emojis = {}
+        registry._emojis = _helpers.StrongWeakValuedDict()
         guild_id = None
         with _helpers.mock_patch(emojis.parse_emoji, return_value=emoji_obj):
             registry.parse_emoji(payload, guild_id)
-            assert registry._emojis == {}
+            assert registry._emojis == _helpers.StrongWeakValuedDict()
 
     def test_parse_unicode_emoji_returns_unicode_emoji(self, registry: state_registry_impl.StateRegistryImpl):
         emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
@@ -612,11 +673,11 @@ class TestStateRegistryImpl:
     def test_parse_unknown_emoji_does_not_change_cache(self, registry: state_registry_impl.StateRegistryImpl):
         emoji_obj = _helpers.mock_model(emojis.UnknownEmoji)
         payload = {"id": "1234"}
-        registry._emojis = {}
+        registry._emojis = _helpers.StrongWeakValuedDict()
         guild_id = None
         with _helpers.mock_patch(emojis.parse_emoji, return_value=emoji_obj):
             registry.parse_emoji(payload, guild_id)
-            assert registry._emojis == {}
+            assert registry._emojis == _helpers.StrongWeakValuedDict()
 
     def test_parse_unknown_emoji_returns_unknown_emoji(self, registry: state_registry_impl.StateRegistryImpl):
         emoji_obj = _helpers.mock_model(emojis.UnknownEmoji)
@@ -629,7 +690,7 @@ class TestStateRegistryImpl:
         guild_obj = _helpers.mock_model(guilds.Guild, id=5678)
         emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, guild=guild_obj)
         payload = {"id": "1234"}
-        registry._emojis = {}
+        registry._emojis = _helpers.StrongWeakValuedDict()
         registry._guilds = {guild_obj.id: guild_obj}
         with _helpers.mock_patch(emojis.parse_emoji, return_value=emoji_obj):
             registry.parse_emoji(payload, guild_obj)
@@ -694,7 +755,7 @@ class TestStateRegistryImpl:
     def test_parse_guild_when_not_cached_caches_new_guild(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234", "unavailable": False}
         guild_obj = _helpers.mock_model(guilds.Guild, id=1234, unavailable=False)
-        registry._guilds = {}
+        registry._guilds = _helpers.StrongWeakValuedDict()
 
         with _helpers.mock_patch(guilds.Guild, return_value=guild_obj) as Guild:
             registry.parse_guild(payload)
@@ -704,10 +765,23 @@ class TestStateRegistryImpl:
     def test_parse_guild_when_not_cached_returns_new_guild(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234", "unavailable": False}
         guild_obj = _helpers.mock_model(guilds.Guild, id=1234, unavailable=False)
-        registry._guilds = {}
+        registry._guilds = _helpers.StrongWeakValuedDict()
 
         with _helpers.mock_patch(guilds.Guild, return_value=guild_obj):
             assert registry.parse_guild(payload) is guild_obj
+
+    def test_parse_partial_member_calls_parse_member_correctly_and_returns_result(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        partial_member = {"roles": ["9", "18", "27"], "nick": "Roy Rodgers McFreely"}
+        user = {"id": "1234"}
+        guild = _helpers.mock_model(guilds.Guild, id=659)
+        mock_result = _helpers.mock_model(members.Member, id=1234)
+        registry.parse_member = mock.MagicMock(spec_set=registry.parse_member, return_value=mock_result)
+        assert registry.parse_partial_member(partial_member, user, guild) is mock_result
+        registry.parse_member.assert_called_with(
+            {"roles": ["9", "18", "27"], "nick": "Roy Rodgers McFreely", "user": {"id": "1234"}}, guild
+        )
 
     def test_parse_member_when_existing_member_updates_state(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"user": {"id": "1234"}, "roles": ["9", "18", "27"], "nick": "Roy Rodgers McFreely"}
@@ -771,8 +845,8 @@ class TestStateRegistryImpl:
 
     def test_parse_message_when_channel_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234", "channel_id": "4567"}
-        registry._guild_channels = {}
-        registry._dm_channels = {}
+        registry._guild_channels = _helpers.StrongWeakValuedDict()
+        registry._dm_channels = _helpers.StrongWeakValuedDict()
 
         assert registry.parse_message(payload) is None
 
@@ -782,7 +856,7 @@ class TestStateRegistryImpl:
         payload = {"id": "1234", "channel_id": "4567"}
         channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=4567, last_message_id=9999)
         registry._guild_channels = {channel_obj.id: channel_obj}
-        registry._dm_channels = {}
+        registry._dm_channels = _helpers.StrongWeakValuedDict()
         mock_message = _helpers.mock_model(messages.Message, id=1234, channel=channel_obj)
 
         with _helpers.mock_patch(messages.Message, return_value=mock_message):
@@ -793,7 +867,7 @@ class TestStateRegistryImpl:
         payload = {"id": "1234", "channel_id": "4567"}
         channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=4567, last_message_id=9999)
         registry._guild_channels = {channel_obj.id: channel_obj}
-        registry._dm_channels = {}
+        registry._dm_channels = _helpers.StrongWeakValuedDict()
         mock_message = _helpers.mock_model(messages.Message, id=1234, channel=channel_obj)
 
         with _helpers.mock_patch(messages.Message, return_value=mock_message):
@@ -803,7 +877,7 @@ class TestStateRegistryImpl:
     def test_parse_presence_updates_member(self, registry: state_registry_impl.StateRegistryImpl):
         member_obj = _helpers.mock_model(members.Member, presence=None)
         presence_obj = _helpers.mock_model(presences.Presence)
-        payload = {}
+        payload = _helpers.StrongWeakValuedDict()
 
         with _helpers.mock_patch(presences.Presence, return_value=presence_obj):
             registry.parse_presence(member_obj, payload)
@@ -812,7 +886,7 @@ class TestStateRegistryImpl:
     def test_parse_presence_returns_presence(self, registry: state_registry_impl.StateRegistryImpl):
         member_obj = _helpers.mock_model(members.Member, presence=None)
         presence_obj = _helpers.mock_model(presences.Presence)
-        payload = {}
+        payload = _helpers.StrongWeakValuedDict()
 
         with _helpers.mock_patch(presences.Presence, return_value=presence_obj):
             parsed_presence = registry.parse_presence(member_obj, payload)
@@ -820,7 +894,7 @@ class TestStateRegistryImpl:
 
     def test_parse_reaction_parses_emoji(self, registry: state_registry_impl.StateRegistryImpl):
         registry.parse_emoji = mock.MagicMock(spec_set=registry.parse_emoji)
-        registry._message_cache = {}
+        registry._message_cache = _helpers.StrongWeakValuedDict()
         emoji_payload = {"name": "\N{OK HAND SIGN}", "id": None}
         payload = {"message_id": "1234", "count": 12, "emoji": emoji_payload}
 
@@ -882,7 +956,7 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         payload = {"message_id": "1234", "count": 12, "emoji": {"name": "\N{OK HAND SIGN}", "id": None}}
-        registry._message_cache = {}
+        registry._message_cache = _helpers.StrongWeakValuedDict()
 
         assert registry.parse_reaction(payload) is None
 
@@ -950,7 +1024,7 @@ class TestStateRegistryImpl:
     def test_parse_user_invokes_users_parse_user(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234"}
         user_obj = _helpers.mock_model(users.User, id=1234)
-        registry._users = {}
+        registry._users = _helpers.StrongWeakValuedDict()
 
         with _helpers.mock_patch(users.parse_user, return_value=user_obj) as parse_user:
             registry.parse_user(payload)
@@ -966,7 +1040,7 @@ class TestStateRegistryImpl:
     def test_parse_user_when_uncached_user_caches_new_user(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234"}
         user_obj = _helpers.mock_model(users.User, id=1234)
-        registry._users = {}
+        registry._users = _helpers.StrongWeakValuedDict()
 
         with _helpers.mock_patch(users.User, return_value=user_obj):
             registry.parse_user(payload)
@@ -976,7 +1050,7 @@ class TestStateRegistryImpl:
     def test_parse_user_when_uncached_user_returns_new_user(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234"}
         user_obj = _helpers.mock_model(users.User, id=1234)
-        registry._users = {}
+        registry._users = _helpers.StrongWeakValuedDict()
 
         with _helpers.mock_patch(users.User, return_value=user_obj):
             assert registry.parse_user(payload) is user_obj
@@ -1149,7 +1223,7 @@ class TestStateRegistryImpl:
     def test_update_message_when_existing_message_uncached_returns_None(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        registry._message_cache = {}
+        registry._message_cache = _helpers.StrongWeakValuedDict()
         payload = {"message_id": "1234"}
 
         diff = registry.update_message(payload)
