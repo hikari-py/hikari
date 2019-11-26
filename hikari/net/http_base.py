@@ -252,13 +252,6 @@ class BaseHTTPClient:
         #: :type: :class:`int`
         self.max_retries = max_retries
 
-        #: The HTTP client session to use.
-        #:
-        #: :type: :class:`aiohttp.ClientSession`
-        self.client_session = aiohttp.ClientSession(
-            connector=connector, loop=self.loop, json_serialize=json_marshaller, version=aiohttp.HttpVersion11
-        )
-
         #: Callable used to marshal (serialize) payloads into JSON-encoded strings from native Python objects.
         #:
         #: Defaults to :func:`json.dumps`. You may want to override this if you choose to use a different
@@ -278,6 +271,13 @@ class BaseHTTPClient:
         #: to use another implementation, or just default to :class:`dict` instead, it is worth changing this
         #: attribute.
         self.json_unmarshaller_object_hook = json_unmarshaller_object_hook or data_structures.ObjectProxy
+
+        #: The HTTP client session to use.
+        #:
+        #: :type: :class:`aiohttp.ClientSession`
+        self.client_session = aiohttp.ClientSession(
+            connector=connector, loop=self.loop, json_serialize=self.json_marshaller, version=aiohttp.HttpVersion11
+        )
 
         if token is None:
             #: The session `Authorization` header to use.
