@@ -1,9 +1,31 @@
 CHANGELOG
 =========
 
-Automatically generated from git history up to master at Sun Nov 24 19:26:09 UTC 2019 by CI.
+Automatically generated from git history up to master at Tue Nov 26 23:21:49 UTC 2019 by CI.
 
-* Sun Nov 24 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+* Tue Nov 26 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+- Merge branch 'staging' into 'master' (rev.04658f92)
+- Merge branch 'bugfix/json-marshaller-http-client' into 'staging' (rev.2f12f9df)
+- Added test for fix (rev.6e1f2233)
+- Using the wrong json_marshaller (rev.5c32fa4f)
+- Update style.css to fix bad formatting in docs (rev.86246ebd)
+- Merge branch 'task/test-event-adapter-impl' into 'staging' (rev.24e009b2)
+- Added tests for `handle_message_reatcion_remove()` (rev.50ad365b)
+- Missing a return (rev.19ac6b2b)
+- Fixed not parsing emoji correctly (rev.b9edf86e)
+- Fixed formatting issue [skip ci] (rev.542fc6cd)
+- Fixed slight color bug I missed for embeds... (rev.c47c5dde)
+- Added colour guess-parser for embeds. (rev.e32161ee)
+- Merge branch 'bugfix/last-lgtm-issues' into 'staging' (rev.c218a0b8)
+- Fixed last two LGTM issues (rev.90227280)
+- Merge branch 'bugfix/partial-members-in-message' into 'staging' (rev.ef89fb6e)
+- Several member, channel, and message-based bugfixes. (rev.c78cc39a)
+- Merge branch 'task/ready-event-tweak' into 'staging' (rev.3c7a80ac)
+- Replaced ready event with saner logic (rev.748984be)
+- Merged master 0.0.53 into staging [skip ci] (rev.e4e5a763)
+
+* Sun Nov 24 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.53
+- Deployed 0.0.53 [skip ci] (rev.ba19018a)
 - Merge branch 'staging' of gitlab.com:nekokatt/hikari.core into staging (rev.d1deb6eb)
 - Readded skip CI as it triggered recursive deployment flow (rev.1bfe0f69)
 - Merged master 0.0.52 into staging [skip deploy] (rev.a46d965e)
