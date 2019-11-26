@@ -130,3 +130,51 @@ class TestColor:
         c = colors.Color(0xFFAAFF)
         b = c.to_bytes(10, "little")
         assert b == b"\xff\xaa\xff\x00\x00\x00\x00\x00\x00\x00"
+
+    @pytest.mark.parametrize(
+        ["input", "expected_result"],
+        [
+            (0xFF051A, colors.Color(0xFF051A)),
+            (16712986, colors.Color(0xFF051A)),
+            ((255, 5, 26), colors.Color(0xFF051A)),
+            ([0xFF, 0x5, 0x1A], colors.Color(0xFF051A)),
+            ("#1a2b3c", colors.Color(0x1A2B3C)),
+            ("#123", colors.Color(0x112233)),
+            ("0x1a2b3c", colors.Color(0x1A2B3C)),
+            ("0x123", colors.Color(0x112233)),
+            ("0X1a2b3c", colors.Color(0x1A2B3C)),
+            ("0X123", colors.Color(0x112233)),
+            ("1a2b3c", colors.Color(0x1A2B3C)),
+            ("123", colors.Color(0x112233)),
+            ((1.0, 0.0196078431372549, 0.10196078431372549), colors.Color(0xFF051A)),
+            ([1.0, 0.0196078431372549, 0.10196078431372549], colors.Color(0xFF051A)),
+        ],
+    )
+    def test_Color__cls_getattr___happy_path(self, input, expected_result):
+        assert colors.Color[input] == expected_result, f"{input}"
+
+    @pytest.mark.parametrize(
+        "input",
+        [
+            "blah",
+            "0xfff1",
+            lambda: 22,
+            NotImplementedError,
+            NotImplemented,
+            (1, 1, 1, 1),
+            (1, "a", 1),
+            (1, 1.1, 1),
+            (),
+            {},
+            [],
+            {1, 1, 1},
+            set(),
+            b"1ff1ff",
+        ],
+    )
+    def test_Color__cls_getattr___sad_path(self, input):
+        try:
+            result = colors.Color[input]
+            assert False, f"Expected ValueError, got {result} returned safely instead"
+        except ValueError:
+            pass

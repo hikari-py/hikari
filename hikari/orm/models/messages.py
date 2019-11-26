@@ -251,7 +251,10 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         if "member" in payload:
-            self.author = self._fabric.state_registry.parse_member(payload["member"], self.guild)
+            # Messages always contain partial members, not full members.
+            self.author = self._fabric.state_registry.parse_partial_member(
+                payload["member"], payload["author"], self.guild
+            )
         elif "webhook_id" in payload:
             self.author = self._fabric.state_registry.parse_webhook(payload["author"])
         elif "author" in payload:
@@ -297,7 +300,7 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
         self,
     ) -> typing.Union[
         channels.GuildTextChannel,
-        channels.GuildNewsChannel,
+        channels.GuildAnnouncementChannel,
         channels.GuildStoreChannel,
         channels.DMChannel,
         channels.GroupDMChannel,

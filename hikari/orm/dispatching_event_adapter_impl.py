@@ -51,8 +51,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
     def __init__(self, fabric_obj: _fabric.Fabric, dispatch: typing.Callable[..., None]) -> None:
         super().__init__(fabric_obj)
         self.dispatch = dispatch
-        # IDs of guilds still not ready while the bot is initializing. This is a set of ints.
-        self._guild_ids_waiting_to_load: typing.MutableSet[int] = set()
         self._ignored_events: typing.MutableSet[str] = set()
 
     async def drain_unrecognised_event(self, _, event_name, payload):
@@ -61,7 +59,10 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
             self.logger.warning("Received unrecognised event %s, so will ignore it in the future.", event_name)
             self._ignored_events.add(event_name)
 
-    async def handle_connect(self, gateway, payload):
+    async def handle_connect(self, gateway, _):
+        self.dispatch(events.CONNECT, gateway)
+
+    async def handle_ready(self, gateway, payload):
         user_payload = payload["user"]
 
         self.fabric.state_registry.parse_application_user(user_payload)
@@ -70,10 +71,9 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
 
         for guild_payload in guilds:
             # Parse unavailable guild.
-            guild_obj = self.fabric.state_registry.parse_guild(guild_payload)
-            self._guild_ids_waiting_to_load.add(guild_obj.id)
+            self.fabric.state_registry.parse_guild(guild_payload)
 
-        self.dispatch(events.CONNECT, gateway)
+        self.dispatch(events.READY, gateway)
 
     async def handle_disconnect(self, gateway, payload):
         self.dispatch(events.DISCONNECT, gateway, payload.get("code"), payload.get("reason"))
@@ -463,18 +463,19 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
         message_id = int(payload["message_id"])
         user_id = int(payload["user_id"])
         message_obj = self.fabric.state_registry.get_message_by_id(message_id)
+        guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 
         if message_obj is None:
             # Message was not cached, so ignore
             return
 
+        emoji_obj = self.fabric.state_registry.parse_emoji(payload["emoji"], guild_obj)
+        reaction_obj = self.fabric.state_registry.decrement_reaction_count(message_obj, emoji_obj)
+
         if guild_id is not None:
             user_obj = self.fabric.state_registry.get_member_by_id(user_id, guild_id)
         else:
             user_obj = self.fabric.state_registry.get_user_by_id(user_id)
-
-        emoji_obj = self.fabric.state_registry.parse_emoji(payload["emoji"], None)
-        reaction_obj = self.fabric.state_registry.decrement_reaction_count(message_obj, emoji_obj)
 
         if reaction_obj is None:
             self.logger.warning(
@@ -494,6 +495,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
                 "user" if user_id is None else f"guild {guild_id} and member",
                 user_id,
             )
+            return
 
         self.dispatch(events.MESSAGE_REACTION_REMOVE, reaction_obj, user_obj)
 
@@ -593,7 +595,3 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
             self.logger.warning("ignoring WEBHOOKS_UPDATE in unknown channel %s", channel_id)
         else:
             self.dispatch(events.WEBHOOKS_UPDATE, channel_obj)
-
-    #: TODO: fire internally when READY for real and all internal states are resolved.
-    async def _handle_ready(self, gateway, payload):
-        raise NotImplementedError

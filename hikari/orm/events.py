@@ -19,8 +19,6 @@
 """
 Expected events that this framework can dispatch.
 """
-from hikari.net import extra_gateway_events
-
 #: Triggered when Discord notifies the gateway of some channel being created.
 #:
 #: |rawEvent|
@@ -146,9 +144,10 @@ VOICE_SERVER_UPDATE = "voice_server_update"
 RAW_WEBHOOKS_UPDATE = "raw_webhooks_update"
 WEBHOOKS_UPDATE = "webhooks_update"
 
-CONNECT = extra_gateway_events.CONNECT
-DISCONNECT = extra_gateway_events.DISCONNECT
-INVALID_SESSION = extra_gateway_events.INVALID_SESSION
-RECONNECT = extra_gateway_events.RECONNECT
-RESUME = extra_gateway_events.RESUME
-SHUTDOWN = extra_gateway_events.SHUTDOWN
+CONNECT = "connect"
+READY = "ready"
+DISCONNECT = "disconnect"
+INVALID_SESSION = "invalid_session"
+RECONNECT = "reconnect"
+RESUME = "resume"
+SHUTDOWN = "shutdown"
