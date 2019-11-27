@@ -309,7 +309,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         self,
         partial_member_payload: data_structures.DiscordObjectT,
         user_payload: data_structures.DiscordObjectT,
-        guild_obj: guilds.Guild
+        guild_obj: guilds.Guild,
     ) -> members.Member:
         # Cheap workaround for Discord's inconsistency here.
         partial_member_payload["user"] = user_payload
