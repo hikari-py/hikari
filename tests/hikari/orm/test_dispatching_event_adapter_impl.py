@@ -1552,25 +1552,41 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(events.MESSAGE_REACTION_REMOVE, reaction_obj, user_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_message_reaction_remove_all_when_uncached_message_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=None)
+        payload = {"channel_id": "123", "message_id": "456"}
+
+        await adapter_impl.handle_message_reaction_remove_all(gateway_impl, payload)
+
+        # Not called other than the raw from earlier.
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_MESSAGE_REACTION_REMOVE_ALL, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_message_reaction_remove_all_deletes_all_reactions(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        message_obj = _helpers.mock_model(messages.Message, id=456)
+        fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
+        payload = {"channel_id": "123", "message_id": str(message_obj.id)}
+
+        await adapter_impl.handle_message_reaction_remove_all(gateway_impl, payload)
+
+        fabric_impl.state_registry.delete_all_reactions(message_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_message_reaction_remove_all_dispatches_MESSAGE_REACTION_REMOVE_ALL(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        message_obj = _helpers.mock_model(messages.Message, id=456)
+        fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
+        payload = {"channel_id": "123", "message_id": str(message_obj.id)}
+
+        await adapter_impl.handle_message_reaction_remove_all(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.MESSAGE_REACTION_REMOVE_ALL, message_obj)
 
     @pytest.mark.asyncio
     @pytest.mark.skip(reason="Not implemented")
@@ -1645,20 +1661,38 @@ class TestDispatchingEventAdapterImpl:
         ...
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
-    async def test_handle_user_update_dispatches_USER_UPDATE(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+    async def test_handle_user_update_dispatches_USER_UPDATE(
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+    ):
+        user_obj = _helpers.mock_model(users.User, id=123)
+        fabric_impl.state_registry.parse_user = mock.MagicMock(return_value=user_obj)
+        payload = {"id": str(user_obj.id)}
+
+        await adapter_impl.handle_user_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.USER_UPDATE, user_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_webhooks_update_when_channel_not_cached_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=None)
+        payload = {"guild_id": "123", "channel_id": "456"}
+
+        await adapter_impl.handle_webhooks_update(gateway_impl, payload)
+
+        # Not called other than the raw from earlier.
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_WEBHOOKS_UPDATE, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_webhooks_update_when_channel_cached_dispatches_WEBHOOKS_UPDATE(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        channel_obj = _helpers.mock_model(channels.GuildChannel, id=456)
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
+        payload = {"guild_id": "123", "channel_id": str(channel_obj.id)}
+
+        await adapter_impl.handle_webhooks_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.WEBHOOKS_UPDATE, channel_obj)
