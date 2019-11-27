@@ -390,7 +390,6 @@ class AuditLogChangeKey(str, interfaces.BestEffortEnumMixin, enum.Enum):
     AVATAR_HASH = "avatar_hash"
     ID = "id"
     TYPE = "type"
-    ACCOUNT_ID = "account_id"
     ENABLE_EMOTICONS = "enable_emoticons"
     EXPIRE_BEHAVIOR = "expire_behavior"
     EXPIRE_GRACE_PERIOD = "expire_grace_period"
@@ -448,7 +447,6 @@ AUDIT_LOG_ENTRY_CONVERTERS = {
     AuditLogChangeKey.MAX_AGE: int,
     AuditLogChangeKey.ID: int,
     AuditLogChangeKey.TYPE: _type_converter,
-    AuditLogChangeKey.ACCOUNT_ID: int,
     AuditLogChangeKey.ENABLE_EMOTICONS: bool,
     AuditLogChangeKey.EXPIRE_BEHAVIOR: int,
     AuditLogChangeKey.EXPIRE_GRACE_PERIOD: int,
