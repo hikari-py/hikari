@@ -4,21 +4,19 @@
 # source "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"/config.sh
 
 function set-versions() {
-    set -x
     bash tasks/transform-versions.sh $1
-    set +x
 }
 
 function deploy-to-pypi() {
     poetry build
+    set +x
     poetry publish --username="${PYPI_USER}" --password="${PYPI_PASS}" --repository=${POETRY_REPOSITORY_PROPERTY_NAME}
+    set -x
 }
 
 function notify() {
-    set -x
     local version=${1}
     python tasks/notify.py "${version}" "${API_NAME}" "${PYPI_REPO}"
-    set +x
 }
 
 function create-changelog() {
@@ -36,7 +34,6 @@ function create-changelog() {
 }
 
 function deploy-to-svc() {
-    set -x
     local repo
     local old_version=${1}
     local current_version=${2}
@@ -70,12 +67,14 @@ function deploy-to-svc() {
     # Use [skip deploy] instead of [skip ci] so that our pages rebuild still...
     git merge origin/${PROD_BRANCH} --no-ff --strategy-option theirs --allow-unrelated-histories -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_CI_COMMIT_PHRASE}"
     git push ${REMOTE_NAME} ${PREPROD_BRANCH}
-    set +x
 }
 
 function trigger-gitlab-housekeeping() {
     # TODO: use per-runner token if they start supporting it on #29566: https://docs.gitlab.com/ee/user/project/new_ci_build_permissions_model.html
-    curl https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/housekeeping -X POST --header "PRIVATE-TOKEN:  ${GITLAB_API_TOKEN}" || return 0
+    echo -e "\e[1;33mTRIGGERING HOUSEKEEPING JOB ON GITLAB\e[0m"
+    set +x
+    curl https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/housekeeping -X POST --header "PRIVATE-TOKEN: ${GITLAB_API_TOKEN}" || return 0
+    set -x
     echo -e "\e[1;32mTRIGGERED HOUSEKEEPING JOB ON GITLAB\e[0m"
 }
 

@@ -26,7 +26,6 @@
     - mkdir public || true
     - apt-get update -q  # graphviz won't resovle without this???
     - apt-get install -qy git gcc g++ make graphviz
-    - "git log -1 --pretty=%B | grep -iq '\\[skip pages\\]' && (echo 'Page generation was skipped by commit message.' && exit 0)"
     - pip install virtualenv
     - python -m venv .venv
     - source .venv/bin/activate
@@ -40,28 +39,8 @@ pages:
   stage: pages
   extends: .pages
   script:
-    - "git log -1 --pretty=%B | grep -iq '\\[skip pages\\]' && (echo 'Page generation was skipped by commit message.' && exit 0)"
-
-    # Build staging AND master so we have the dev documentation and the staging documentation always together.
     - source tasks/deploy.sh
-    - git fetch --all --prune
-
-    - git checkout origin/staging -f || true
-    - git status || true
-
     - set-versions "$(python tasks/make-version-string.py staging)" || true
-
-    # If staging is messed up, just ignore it...
-    - nox -r -s documentation || true
-
-    - mv public staging || true
-    - mkdir public || true
-    - mv staging public/staging
-
-    - git reset --hard origin/staging
-    - git checkout origin/master -f
-    - git status
-
     - nox -r -s documentation
   artifacts:
     paths:
