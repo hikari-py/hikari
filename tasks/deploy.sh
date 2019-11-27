@@ -14,13 +14,6 @@ function deploy-to-pypi() {
     poetry publish --username="${PYPI_USER}" --password="${PYPI_PASS}" --repository=${POETRY_REPOSITORY_PROPERTY_NAME}
 }
 
-function deploy-to-release-api() {
-    set -x
-    pip install gcg # Git Changelog Generator
-    python tasks/release.py "${API_NAME}" "${1}"
-    set +x
-}
-
 function notify() {
     set -x
     local version=${1}
@@ -58,7 +51,7 @@ function deploy-to-svc() {
     ssh-keyscan -t rsa ${GIT_SVC_HOST} >> ~/.ssh/known_hosts
     ssh-add ~/.ssh/id_rsa
     # Verify the key works.
-    ssh ${GIT_TEST_SSH_PATH}
+    ssh "${GIT_TEST_SSH_PATH}"
     git remote set-url ${REMOTE_NAME} "${REPOSITORY_URL}"
     git config user.name "${CI_ROBOT_NAME}"
     git config user.email "${CI_ROBOT_EMAIL}"
@@ -70,8 +63,6 @@ function deploy-to-svc() {
     git tag "${current_version}" && git push ${REMOTE_NAME} "${current_version}"
     # git -c color.status=always log --all --decorate --oneline --graph -n 50
     git fetch --all --prune
-    git gc --aggressive --prune=now
-    git fsck
     git reset --hard origin/${PROD_BRANCH}
     git checkout ${PREPROD_BRANCH}
     git reset --hard origin/${PREPROD_BRANCH}
@@ -80,6 +71,12 @@ function deploy-to-svc() {
     git merge origin/${PROD_BRANCH} --no-ff --strategy-option theirs --allow-unrelated-histories -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_CI_COMMIT_PHRASE}"
     git push ${REMOTE_NAME} ${PREPROD_BRANCH}
     set +x
+}
+
+function trigger-gitlab-housekeeping() {
+    # TODO: use per-runner token if they start supporting it on #29566: https://docs.gitlab.com/ee/user/project/new_ci_build_permissions_model.html
+    curl https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/housekeeping -X POST --header "PRIVATE-TOKEN:  ${GITLAB_API_TOKEN}" || return 0
+    echo -e "\e[1;32mTRIGGERED HOUSEKEEPING JOB ON GITLAB\e[0m"
 }
 
 function do-deployment() {
@@ -96,8 +93,6 @@ function do-deployment() {
 
     poetry config repositories.${POETRY_REPOSITORY_PROPERTY_NAME} "${PYPI_REPO}"
 
-    which git && echo "\e[1;35mCurrent repository state:\e[0m" && git -c color.status=always log --all --decorate --oneline --graph -n 50
-
     case "${COMMIT_REF}" in
         ${PROD_BRANCH})
             # Ensure we have the staging ref as well as the master one
@@ -106,11 +101,12 @@ function do-deployment() {
             # Push to GitLab and update both master and staging.
             deploy-to-pypi
             deploy-to-svc "${old_version}" "${current_version}"
-            deploy-to-release-api "${current_version}" || true
+            trigger-gitlab-housekeeping
             ;;
         ${PREPROD_BRANCH})
             set-versions "${current_version}"
             deploy-to-pypi
+            trigger-gitlab-housekeeping
             ;;
         *)
             echo -e "\e[1;31m${COMMIT_REF} is not ${PROD_BRANCH} or ${PREPROD_BRANCH}, so will not be updated.\e[0m"
