@@ -43,7 +43,7 @@ def try_cast(value: typing.Any, cast: CastT, default: DefaultT = None) -> typing
 
 
 def put_if_specified(
-    mapping: typing.Dict[typing.Hashable, typing.Any], key: typing.Hashable, value: typing.Any
+    mapping: typing.Dict[typing.Hashable, typing.Any], key: typing.Hashable, value: typing.Any, type_after: CastT = None
 ) -> None:
     """
     Add a value to the mapping under the given key as long as the value is not :attr:`UNSPECIFIED`
@@ -55,13 +55,18 @@ def put_if_specified(
             The key to add the value under.
         value:
             The value to add.
+        type_after:
+            Optional type to apply to the value when added. Defaults to `None`
     """
     if value is not unspecified.UNSPECIFIED:
-        mapping[key] = value
+        if type_after is not None:
+            mapping[key] = type_after(value)
+        else:
+            mapping[key] = value
 
 
 def put_if_not_none(
-    mapping: typing.Dict[typing.Hashable, typing.Any], key: typing.Hashable, value: typing.Optional[typing.Any]
+    mapping: typing.Dict[typing.Hashable, typing.Any], key: typing.Hashable, value: typing.Any, type_after: CastT = None
 ) -> None:
     """
     Add a value to the mapping under the given key as long as the value is not :attr:`None`
@@ -73,9 +78,14 @@ def put_if_not_none(
             The key to add the value under.
         value:
             The value to add.
+        type_after:
+            Optional type to apply to the value when added. Defaults to `None`
     """
     if value is not None:
-        mapping[key] = value
+        if type_after is not None:
+            mapping[key] = type_after(value)
+        else:
+            mapping[key] = value
 
 
 class SafeFormatDict(dict):

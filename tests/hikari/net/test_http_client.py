@@ -1570,7 +1570,7 @@ class TestInvite:
         http_client.request = asynctest.CoroutineMock()
         await http_client.get_invite("424242", with_counts=True)
         http_client.request.assert_awaited_once_with(
-            "get", "/invites/{invite_code}", invite_code="424242", query={"with_counts": True}
+            "get", "/invites/{invite_code}", invite_code="424242", query={"with_counts": "True"}
         )
 
 
