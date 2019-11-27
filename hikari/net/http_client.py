@@ -2202,7 +2202,7 @@ class HTTPClient(http_base.BaseHTTPClient):
     @meta.link_developer_portal(meta.APIResource.USER)
     async def get_current_user(self) -> data_structures.DiscordObjectT:
         """
-        Gets the currently the user that is represented by token given to the client.
+        Gets the current user that is represented by token given to the client.
 
         Returns:
             The current user object.
@@ -2251,6 +2251,18 @@ class HTTPClient(http_base.BaseHTTPClient):
         transformations.put_if_specified(payload, "username", username)
         transformations.put_if_specified(payload, "avatar", avatar)
         return await self.request(PATCH, "/users/@me", json=payload)
+
+    @meta.link_developer_portal(meta.APIResource.USER)
+    async def get_current_user_connections(self) -> typing.List[data_structures.DiscordObjectT]:
+        """
+        Gets the current user's connections. This endpoint can be used with both Bearer and Bot tokens
+        but will usually return an empty list for bots (with there being some exceptions to this
+        like user accounts that have been converted to bots).
+
+        Returns:
+            A list of connection objects.
+        """
+        return await self.request(GET, "/users/@me/connections")
 
     @meta.link_developer_portal(meta.APIResource.USER)
     async def get_current_user_guilds(

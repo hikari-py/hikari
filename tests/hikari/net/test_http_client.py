@@ -1631,6 +1631,20 @@ class TestUser:
         await http_client.get_current_user()
         http_client.request.assert_awaited_once_with("get", "/users/@me")
 
+    async def test_get_current_user_connections(self, http_client):
+        resp = {
+            "type": "spotify",
+            "id": "123521",
+            "name": "Robin_Williams",
+            "visibility": 1,
+            "friend_sync": True,
+            "show_activity": True,
+            "verified": False,
+        }
+        http_client.request = asynctest.CoroutineMock(return_value=resp)
+        assert await http_client.get_current_user_connections() == resp
+        http_client.request.assert_awaited_once_with("get", "/users/@me/connections")
+
     async def test_get_current_user_guilds_no_args(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.get_current_user_guilds()
