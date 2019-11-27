@@ -69,15 +69,6 @@ function deploy-to-svc() {
     git push ${REMOTE_NAME} ${PREPROD_BRANCH}
 }
 
-function trigger-gitlab-housekeeping() {
-    # TODO: use per-runner token if they start supporting it on #29566: https://docs.gitlab.com/ee/user/project/new_ci_build_permissions_model.html
-    echo -e "\e[1;33mTRIGGERING HOUSEKEEPING JOB ON GITLAB\e[0m"
-    set +x
-    curl https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/housekeeping -X POST --header "PRIVATE-TOKEN: ${GITLAB_API_TOKEN}" || return 0
-    set -x
-    echo -e "\e[1;32mTRIGGERED HOUSEKEEPING JOB ON GITLAB\e[0m"
-}
-
 function do-deployment() {
     set -x
     
@@ -100,12 +91,10 @@ function do-deployment() {
             # Push to GitLab and update both master and staging.
             deploy-to-pypi
             deploy-to-svc "${old_version}" "${current_version}"
-            trigger-gitlab-housekeeping
             ;;
         ${PREPROD_BRANCH})
             set-versions "${current_version}"
             deploy-to-pypi
-            trigger-gitlab-housekeeping
             ;;
         *)
             echo -e "\e[1;31m${COMMIT_REF} is not ${PROD_BRANCH} or ${PREPROD_BRANCH}, so will not be updated.\e[0m"
