@@ -170,7 +170,7 @@ async def test_request_forwards_known_arguments_to_request_once(mock_http_connec
 @pytest.mark.asyncio
 async def test_default_json_parameters(event_loop):
     with asynctest.patch("aiohttp.ClientSession") as ClientSession:
-        http_base.BaseHTTPClient(loop=event_loop, json_marshaller= None)
+        http_base.BaseHTTPClient(loop=event_loop, json_marshaller=None)
         _, kwargs = ClientSession.call_args
         assert "json_serialize" in kwargs, str(kwargs)
         assert kwargs["json_serialize"] is json.dumps
