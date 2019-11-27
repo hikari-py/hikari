@@ -19,15 +19,6 @@
 ### TEMPLATE FOR TEST AND PROD DOCUMENTATION GENERATION JOBS.
 ###
 .pages:
-  cache:
-    paths:
-      - $CI_PROJECT_DIR/.pytest_cache
-      - $CI_PROJECT_DIR/.nox
-      - $CI_PROJECT_DIR/.venv
-      - $CI_PROJECT_DIR/.cache/pip
-      - $CI_PROJECT_DIR/poetry.lock
-    key: $CI_COMMIT_REF_SLUG-$CI_JOB_STAGE-$CI_JOB_NAME
-    policy: pull-push
   allow_failure: false
   image: python:3.8.0
   before_script:
@@ -36,20 +27,12 @@
     - apt-get update -q  # graphviz won't resovle without this???
     - apt-get install -qy git gcc g++ make graphviz
     - "git log -1 --pretty=%B | grep -iq '\\[skip pages\\]' && (echo 'Page generation was skipped by commit message.' && exit 0)"
-    - >
-      if [[ "${CI_IS_SCHEDULED}" -eq "1" ]] || [[ ! -d .venv ]]; then
-          echo "Installing new venv and installing poetry inside it."
-          rm poetry.lock .cache/pip .venv/ .nox/ .pytest_cache/ -Rf || true
-          pip install virtualenv
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install -U pip
-          pip install poetry
-          poetry update
-      else
-          echo "Reusing existing venv."
-          source .venv/bin/activate
-      fi
+    - pip install virtualenv
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install -U pip
+    - pip install poetry
+    - poetry update
     - source tasks/config.sh
     - git fetch --all --prune --depth=1
 
