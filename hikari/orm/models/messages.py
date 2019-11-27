@@ -253,9 +253,7 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
         if "member" in payload:
             # Messages always contain partial members, not full members.
             self.author = self._fabric.state_registry.parse_partial_member(
-                payload["member"],
-                payload["author"],
-                self.guild
+                payload["member"], payload["author"], self.guild
             )
         elif "webhook_id" in payload:
             self.author = self._fabric.state_registry.parse_webhook(payload["author"])

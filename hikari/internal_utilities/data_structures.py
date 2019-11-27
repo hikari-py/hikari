@@ -21,7 +21,6 @@ Custom data structures and constant values.
 """
 import types
 import typing
-from typing import Iterator
 
 from hikari.internal_utilities import assertions
 
@@ -120,7 +119,7 @@ class DefaultImmutableMapping(typing.Mapping[HashableT, ValueT]):
     def __len__(self) -> int:
         return len(self._data)
 
-    def __iter__(self) -> Iterator[HashableT]:
+    def __iter__(self) -> typing.Iterator[HashableT]:
         return iter(self._data)
 
 

@@ -324,7 +324,7 @@ class IStateRegistry(abc.ABC):
         self,
         partial_member_payload: data_structures.DiscordObjectT,
         user_payload: data_structures.DiscordObjectT,
-        guild_obj: guilds.Guild
+        guild_obj: guilds.Guild,
     ) -> members.Member:
         """
         Parses a partial member payload and the corresponding user payload into a workable object
