@@ -53,6 +53,8 @@ pages:
     - mv public staging || true
     - mkdir public || true
     - mv staging public/staging
+    
+    - set-versions "$(python tasks/make-version-string.py master)" || true
 
     # Check out the master hikari source code.
     - git checkout origin/master -- hikari/
