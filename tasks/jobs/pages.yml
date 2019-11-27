@@ -40,8 +40,25 @@ pages:
   extends: .pages
   script:
     - source tasks/deploy.sh
+    - git fetch --all --prune
+
+    - git checkout origin/staging -f || true
+    - git status || true
+
     - set-versions "$(python tasks/make-version-string.py staging)" || true
-    - nox -r -s documentation
+
+    # If staging is messed up, just ignore it...
+    - nox -r -sdocumentation || true
+
+    - mv public staging || true
+    - mkdir public || true
+    - mv staging public/staging
+
+    - git reset --hard origin/staging
+    - git checkout origin/master -f
+    - git status
+    
+    - nox -r -sdocumentation
   artifacts:
     paths:
       - public
