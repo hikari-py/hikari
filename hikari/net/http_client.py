@@ -2152,9 +2152,9 @@ class HTTPClient(http_base.BaseHTTPClient):
             hikari.errors.NotFound:
                 If the invite is not found.
         """
-        payload = {}
-        transformations.put_if_specified(payload, "with_counts", with_counts)
-        return await self.request(GET, "/invites/{invite_code}", invite_code=invite_code, query=payload)
+        query = {}
+        transformations.put_if_specified(query, "with_counts", with_counts, str)
+        return await self.request(GET, "/invites/{invite_code}", invite_code=invite_code, query=query)
 
     @meta.link_developer_portal(meta.APIResource.INVITE)
     async def delete_invite(
