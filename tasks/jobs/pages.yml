@@ -47,17 +47,15 @@ pages:
 
     - set-versions "$(python tasks/make-version-string.py staging)" || true
 
-    # If staging is messed up, just ignore it...
-    - nox -r -sdocumentation || true
+    # Staging should work always.
+    - nox -r -sdocumentation
 
     - mv public staging || true
     - mkdir public || true
     - mv staging public/staging
 
-    - git reset --hard origin/staging
-    - git checkout origin/master -f
-    - git status
-    
+    # Check out the master hikari source code.
+    - git checkout origin/master -- hikari/
     - nox -r -sdocumentation
   artifacts:
     paths:
