@@ -46,32 +46,37 @@ packages        = [
 ]
 
 [tool.poetry.dependencies]
-python          = ">=3.7,<3.9"
-aiofiles        = "~0.4"
-aiohttp         = "~3.6"
+python                   = ">=3.7,<3.9"
+aiofiles                 = "~0.4"
+aiohttp                  = "~3.6"
 
 [tool.poetry.dev-dependencies]
-asynctest       = "~0.13"
-async-timeout   = "~3.0"
-bandit          = "~1.6"
-black           = { git = "https://github.com/psf/black", branch = "master" }
-coverage        = "~4.5"
-nox             = ">2018"
-pytest          = "~5.2"
-pytest-asyncio  = "~0.10"
-pytest-cov      = "~2.8"
-pytest-html     = "~2.0"
-pytest-testdox  = "~1.2"
-requests        = "~2.22"
-sphinx          = "~2.2"
-sphinx-bootstrap-theme = "~0.7"
-sphinx-autodoc-typehints = "~1.10"
-Jinja2          = "~2.10"
+# Utilities used during unit tests.
+asynctest                = "~0.13"
+async-timeout            = "~3.0"
 
-# Sphinx seems to die without this, annoyingly.
-importlib-metadata = "0.23"
+# PyTest related packages.
+coverage                 = "~4.5"
+pytest                   = "~5.2"
+pytest-asyncio           = "~0.10"
+pytest-cov               = "~2.8"
+pytest-html              = "~2.0"
+pytest-testdox           = "~1.2"
+
+# Used in CI stages to manage firing webhooks and getting PyPi deployment information.
+requests                 = "~2.22"
+
+# Sphinx requirements for documentation generation.
+importlib-metadata       = "0.23"
+Jinja2                   = "~2.10"
+sphinx                   = "~2.2"
+sphinx-bootstrap-theme   = "~0.7"
+sphinx-autodoc-typehints = "~1.10"
+
+# Projects on continual release that can be expected to remain working.
+nox                      = "*"
 
 [tool.black]
 line-length     = 120
-target-version  = ["py37"]
+target-version  = ["py37", "py38"]
 include         = ".*py$"

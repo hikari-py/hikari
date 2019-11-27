@@ -53,51 +53,50 @@
     - mkdir public || true
     - poetry show -v
   script:
-    - nox --sessions stats
-    - nox --sessions pytest bandit --report public/nox.json
-    - nox --sessions black -- --check
+    - nox --sessions test sast safety --report public/nox.json
+    - nox --sessions format -- --check
   artifacts:
     paths:
       - public/coverage/
       - public/nox.json
   coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
 
-unittest-py37:
+"CPy3.7 unit testing":
   image: python:3.7.5
   extends: .test
 
-unittest-py38:
+"CPy3.8 unit testing":
   image: python:3.8.0
   extends: .test
 
-test-pip-install-37:
+"CPy3.7 installation test":
+  image: python:3.7.5
+  extends: .test
+  stage: test
+  script:
+    - nox --sessions pip
+
+"CPy3.8 installation test":
   image: python:3.8.0
   extends: .test
   stage: test
   script:
-    - nox --sessions install
+    - nox --sessions pip
 
-test-pip-install-38:
-  image: python:3.8.0
-  extends: .test
-  stage: test
-  script:
-    - nox --sessions install
-
-verify-pypi-release37:
+"CPy3.7 PyPI verification":
   image: python:3.7.5
   extends: .test
   stage: verify
   script:
-    - nox --sessions install -- --showtime
+    - nox --sessions pip -- --showtime
   only:
     - master
 
-verify-pypi-release38:
+"CPy3.8 PyPI verification":
   image: python:3.8.0
   extends: .test
   stage: verify
   script:
-    - nox --sessions install -- --showtime
+    - nox --sessions pip -- --showtime
   only:
     - master
