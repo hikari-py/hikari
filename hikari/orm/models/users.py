@@ -65,7 +65,12 @@ class IUser(interfaces.IStatefulModel, interfaces.ISnowflake, interface=True):
     #: :type: :class:`bool`
     bot: bool
 
-    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot")
+    #: If this is an Official Discord System user (urgent message system).
+    #:
+    #: :type: :class:`bool`
+    system: bool
+
+    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot", "system")
 
 
 class User(IUser):
@@ -73,14 +78,15 @@ class User(IUser):
     Implementation of the user data type.
     """
 
-    __slots__ = ("_fabric", "id", "username", "discriminator", "avatar_hash", "bot", "__weakref__")
+    __slots__ = ("_fabric", "id", "username", "discriminator", "avatar_hash", "bot", "system", "__weakref__")
 
     # noinspection PyMissingConstructor
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT):
         self._fabric = fabric_obj
         self.id = int(payload["id"])
-        # We don't expect this to ever change...
+        # We don't expect these to ever change...
         self.bot = payload.get("bot", False)
+        self.system = payload.get("system", False)
         self.update_state(payload)
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
@@ -105,6 +111,7 @@ class UserFlag(enum.IntFlag):
     HYPESQUAD_HOUSE_BALANCE = 1 << 8
     EARLY_SUPPORTER = 1 << 9
     TEAM_USER = 1 << 10
+    System = 1 << 12
 
 
 class PremiumType(enum.IntEnum):
