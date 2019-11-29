@@ -102,6 +102,10 @@ class MessageFlag(enum.IntFlag):
     IS_CROSSPOST = 0x2
     #: Any embeds on this message should be omitted when serializing the message.
     SUPPRESS_EMBEDS = 0x4
+    #: The message this crosspost originated from was deleted via channel following.
+    SOURCE_MESSAGE_DELETED = 0x8
+    #: This message came from the urgent message system.
+    URGENT = 0x10
 
 
 # Note: a lot of fields exist in the Message implementation that are not included here. Much of this information is

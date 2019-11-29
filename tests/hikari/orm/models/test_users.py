@@ -36,7 +36,7 @@ def fabric_obj(mock_state_registry):
 
 
 @pytest.mark.model
-def test_User_when_not_a_bot(fabric_obj):
+def test_User_when_not_a_bot_or_system(fabric_obj):
     user_obj = users.User(
         fabric_obj,
         {
@@ -55,12 +55,21 @@ def test_User_when_not_a_bot(fabric_obj):
     assert user_obj.discriminator == 6969
     assert user_obj.avatar_hash == "1a2b3c4d"
     assert user_obj.bot is False
+    assert user_obj.system is False
 
 
 @pytest.mark.model
-def test_User_when_is_a_bot(fabric_obj):
+def test_User_when_is_a_bot_and_system(fabric_obj):
     user_obj = users.User(
-        fabric_obj, {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": None, "bot": True}
+        fabric_obj,
+        {
+            "id": "123456",
+            "username": "Boris Johnson",
+            "discriminator": "6969",
+            "avatar": None,
+            "bot": True,
+            "system": True,
+        },
     )
 
     assert user_obj.id == 123456
@@ -68,6 +77,7 @@ def test_User_when_is_a_bot(fabric_obj):
     assert user_obj.discriminator == 6969
     assert user_obj.avatar_hash is None
     assert user_obj.bot is True
+    assert user_obj.system is True
 
 
 @pytest.mark.model
@@ -92,6 +102,7 @@ def test_OAuth2User(fabric_obj):
     assert user_obj.discriminator == 6969
     assert user_obj.avatar_hash == "1a2b3c4d"
     assert user_obj.bot is False
+    assert user_obj.system is False
     assert user_obj.verified is True
     assert user_obj.mfa_enabled is True
     assert user_obj.locale == "en-GB"
