@@ -42,7 +42,7 @@ def json(file):
 
 def raw(file):
     def reader():
-        with open(in_here(file), "rb") as fp:
+        with open(in_here(file), "r") as fp:
             return fp.read()
 
     return reader
