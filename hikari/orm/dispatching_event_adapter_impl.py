@@ -567,6 +567,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
 
         if user_obj is None:
             self.logger.warning("ignoring TYPING_START by unknown user %s in channel %s", user_id, channel_id)
+            return
 
         self.dispatch(events.TYPING_START, user_obj, channel_obj)
 
