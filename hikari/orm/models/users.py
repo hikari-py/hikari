@@ -70,7 +70,7 @@ class IUser(interfaces.IStatefulModel, interfaces.ISnowflake, interface=True):
     #: :type: :class:`bool`
     system: bool
 
-    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot", "system")
+    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot")
 
 
 class User(IUser):
