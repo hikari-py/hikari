@@ -68,9 +68,6 @@ class _RestartConnection(ws.WebSocketClosure):
 #: :class:`dict` with :class:`str` keys. This should be a coroutine function.
 DispatchHandler = typing.Callable[["GatewayClient", str, typing.Any], typing.Awaitable[None]]
 
-# Version of the gateway in use.
-_IMPL_VERSION = 7
-
 
 async def _default_dispatch(_gateway, _event, _payload) -> None:
     ...
@@ -152,7 +149,7 @@ class Event(str, enum.Enum):
     SHUTDOWN = "shutdown"
 
 
-class GatewayClientV7:
+class GatewayClient:
     """
     Implementation of the gateway communication layer. This is single threaded and can represent the connection for
     an un-sharded bot, or for a specific gateway shard. This does not implement voice activity.
@@ -286,13 +283,10 @@ class GatewayClientV7:
         "trace",
         "uri",
         "verify_ssl",
-        "version",
         "ws",
         "zlib_decompressor",
     )
 
-    #: The API version we should request the use of.
-    _REQUESTED_VERSION = _IMPL_VERSION
     _NEVER_RECONNECT_CODES = (
         opcodes.GatewayClosure.AUTHENTICATION_FAILED,
         opcodes.GatewayClosure.INVALID_SHARD,
@@ -488,19 +482,13 @@ class GatewayClientV7:
         #: The URI being connected to.
         #:
         #: :type: :class:`str`
-        self.uri = f"{uri}?v={self._REQUESTED_VERSION}&encoding=json&compression=zlib-stream"
+        self.uri = f"{uri}?v={self.version}&encoding=json&compression=zlib-stream"
 
         #: The active websocket connection handling the low-level connection logic. Populated only while
         #: connected.
         #:
         #: :type: :class:`aiohttp.ClientWebSocketResponse` or :class:`None`
         self.ws: typing.Optional[ws.WebSocketClientResponse] = None
-
-        #: Gateway protocol version. Starts as the requested version, updated once ready with the actual version being
-        #: used.
-        #:
-        #: :type: :class:`int`
-        self.version = self._REQUESTED_VERSION
 
         #: Optional SSL context to use.
         #:
@@ -532,6 +520,11 @@ class GatewayClientV7:
         #:
         #: :type: :class:`float`
         self.timeout = timeout
+
+    @property
+    def version(self) -> int:
+        """The version of the gateway being used."""
+        return 7
 
     @property
     def up_time(self) -> datetime.timedelta:
@@ -716,7 +709,6 @@ class GatewayClientV7:
     async def _handle_ready(self, ready_payload: data_structures.DiscordObjectT) -> None:
         self.trace = ready_payload["_trace"]
         self.session_id = ready_payload["session_id"]
-        self.version = ready_payload["v"]
         shard = ready_payload.get("shard")
 
         if shard is not None:
@@ -926,4 +918,4 @@ class GatewayClientV7:
         self.loop.create_task(self.dispatch(self, event_name, payload))
 
 
-__all__ = ["GatewayClientV7"]
+__all__ = ["GatewayClient"]

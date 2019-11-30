@@ -21,7 +21,7 @@ from unittest import mock
 import asynctest
 import pytest
 
-from hikari.net import http_client
+from hikari.net import http_api
 from hikari.orm import fabric
 from hikari.orm import http_adapter
 from hikari.orm import state_registry
@@ -38,7 +38,7 @@ class TestHTTPAdapter:
     def fabric_impl(self):
         fabric_impl = fabric.Fabric()
 
-        http_client_impl = asynctest.MagicMock(spec_set=http_client.HTTPClient)
+        http_client_impl = asynctest.MagicMock(spec_set=http_api.HTTPAPI)
         state_registry_impl = mock.MagicMock(spec_set=state_registry.IStateRegistry)
         http_adapter_impl = http_adapter.HTTPAdapter(fabric_impl)
 
