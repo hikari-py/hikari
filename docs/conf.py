@@ -53,20 +53,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
-    "sphinx.ext.inheritance_diagram",
-    "sphinx.ext.graphviz",
 ]
-
-if shutil.which("dot"):
-    print("GRAPHVIZ INSTALLED, WILL GENERATE PRETTY DIAGRAMS :)")
-
-    extensions += ("sphinx.ext.inheritance_diagram", "sphinx.ext.graphviz")
-else:
-    print("dot WAS NOT INSTALLED, PLEASE INSTALL GRAPHVIZ PROPERLY FOR dot DIAGRAMS TO RENDER")
-
-# Apply our code that fixes weird issues in graphviz
-with open(os.path.join(os.path.dirname(__name__), "graphviz_hacks.py")) as fp:
-    exec(fp.read(), globals(), locals())  # nosec
 
 templates_path = ["_templates"]
 exclude_patterns = []
@@ -159,32 +146,6 @@ intersphinx_mapping = {
     "websockets": ("https://websockets.readthedocs.io/en/stable/", None),
 }
 
-# -- Inheritance diagram options ---------------------------------------------
-
-
-# https://www.graphviz.org/doc/info/attrs.html
-# https://www.graphviz.org/doc/info/arrows.html
-inheritance_graph_attrs = dict(
-    layout="twopi",  # dot neato twopi circo fdp
-    rankdir="TD",
-    fontsize=10,
-    ratio="compress",
-    # splines="ortho",
-    pad=0.5,
-    nodesep=4,
-    ranksep=4,
-    # Use a stupidly large size we will never reach, then let the compress ratio fix itself.
-    size='"100000.0 100000.0"',
-    splines="straight",
-)
-
-inheritance_node_attrs = dict(
-    fontsize=10, fontname='"monospace"', color='"#772953"', style='"filled,rounded"', fontcolor="white"
-)
-
-inheritance_edge_attrs = dict(color='"#772953"', arrowhead="onormal", arrowsize=1)
-
-graphviz_output_format = "svg"
 
 # -- Epilog to inject into each page... ---------------------------------------------
 
