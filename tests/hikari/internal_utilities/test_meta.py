@@ -16,19 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import hikari.internal_utilities.user_agent
+from hikari.internal_utilities import meta
 
 
-def test_library_version_is_callable_and_produces_string():
-    result = hikari.internal_utilities.user_agent.library_version()
-    assert result.startswith("hikari ")
-
-
-def test_python_version_is_callable_and_produces_string():
-    result = hikari.internal_utilities.user_agent.python_version()
-    assert isinstance(result, str) and len(result.strip()) > 0
-
-
-def test_system_type_produces_string():
-    result = hikari.internal_utilities.user_agent.system_type()
-    assert isinstance(result, str) and len(result.strip()) > 0
+def test_can_apply_link_developer_portal_with_no_impl_uri():
+    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    def foo():
+        pass

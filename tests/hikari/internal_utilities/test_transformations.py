@@ -32,7 +32,7 @@ from hikari.internal_utilities import unspecified
         (None, int, None),
         ("22", lambda a: float(a) / 10 + 7, 9.2),
         (None, lambda a: float(a) / 10 + 7, None),
-    ]
+    ],
 )
 def test_nullable_cast(value, cast, expect):
     assert transformations.nullable_cast(value, cast) == expect
@@ -45,7 +45,7 @@ def test_nullable_cast(value, cast, expect):
         ("22", int, "dead", 22),
         ("22", lambda n: n + 4, ..., ...),
         (22, lambda n: n + 4, ..., 26),
-    ]
+    ],
 )
 def test_try_cast(value, cast, default, expect):
     assert transformations.try_cast(value, cast, default) == expect
@@ -97,8 +97,8 @@ def test_put_if_not_none_when_type_after_passed():
     [
         ("{foo} {bar} {baz}", dict(foo=9, baz=27), "9 {bar} 27"),
         ("{foo} {foo} {FOO}", dict(foo=9, baz=27), "9 9 {FOO}"),
-        ("{{foo}} {foo} {FOO}", dict(foo=9, baz=27), "{foo} 9 {FOO}")
-    ]
+        ("{{foo}} {foo} {FOO}", dict(foo=9, baz=27), "{foo} 9 {FOO}"),
+    ],
 )
 def test_format_present_placeholders(fmt, kwargs, expect):
     assert transformations.format_present_placeholders(fmt, **kwargs) == expect
