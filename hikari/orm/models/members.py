@@ -45,7 +45,7 @@ class Member(users.IUser, delegate_fabricated=True):
     and fields to a wrapped user object which is shared with the corresponding member in every guild the user is in.
     """
 
-    __slots__ = ("user", "guild", "roles", "joined_at", "nick", "premium_since", "presence")
+    __slots__ = ("user", "guild", "roles", "joined_at", "nick", "premium_since", "presence", "is_deaf", "is_mute")
 
     #: The underlying user object.
     user: users.User
@@ -71,6 +71,16 @@ class Member(users.IUser, delegate_fabricated=True):
     #: :type: :class:`datetime.datetime` or `None`
     premium_since: typing.Optional[datetime.datetime]
 
+    #: Whether the user is deafened in voice.
+    #:
+    #: :type: :class:`bool`
+    is_deaf: bool
+
+    #: Whether the user is muted in voice.
+    #:
+    #: :type: :class:`bool`
+    is_mute: bool
+
     #: The user's online presence.
     #:
     #: :type: :class:`hikari.orm.models.presences.Presence`
@@ -85,19 +95,21 @@ class Member(users.IUser, delegate_fabricated=True):
         self.user = fabric_obj.state_registry.parse_user(payload["user"])
         self.guild = guild
         self.joined_at = date_helpers.parse_iso_8601_ts(payload.get("joined_at"))
-        self.premium_since = transformations.nullable_cast(payload.get("premium_since"), date_helpers.parse_iso_8601_ts)
 
         role_objs = [
             fabric_obj.state_registry.get_role_by_id(self.guild.id, int(rid))
             for rid in payload.get("role_ids", data_structures.EMPTY_SEQUENCE)
         ]
 
-        self.update_state(role_objs, payload.get("nick"))
+        self.update_state(role_objs, payload)
 
     # noinspection PyMethodOverriding
-    def update_state(self, role_objs: typing.Sequence[_roles.Role], nick: typing.Optional[str]) -> None:
+    def update_state(self, role_objs: typing.Sequence[_roles.Role], payload: data_structures.DiscordObjectT) -> None:
         self.roles = list(role_objs)
-        self.nick = nick
+        self.premium_since = transformations.nullable_cast(payload.get("premium_since"), date_helpers.parse_iso_8601_ts)
+        self.nick = payload.get("nick")
+        self.is_deaf = payload.get("deaf", False)
+        self.is_mute = payload.get("mute", False)
 
 
 __all__ = ["Member"]
