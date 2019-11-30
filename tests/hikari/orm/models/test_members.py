@@ -70,6 +70,8 @@ def test_Member_with_filled_fields(fabric_obj):
     assert member_obj.nick == "foobarbaz"
     assert member_obj.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, datetime.timezone.utc)
     assert member_obj.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, datetime.timezone.utc)
+    assert member_obj.is_deaf is False
+    assert member_obj.is_mute is True
     assert member_obj.guild is guild_obj
     member_obj.__repr__()
     fabric_obj.state_registry.parse_user.assert_called_with(user_dict)
@@ -92,6 +94,8 @@ def test_Member_with_no_optional_fields(fabric_obj):
     assert member_obj.nick is None
     assert member_obj.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, datetime.timezone.utc)
     assert member_obj.premium_since is None
+    assert member_obj.is_deaf is False
+    assert member_obj.is_mute is False
     assert member_obj.guild is guild_obj
     fabric_obj.state_registry.parse_user.assert_called_with(user_dict)
 
@@ -112,12 +116,16 @@ def test_Member_update_state(fabric_obj):
         {
             "roles": ["11111", "22222", "33333", "44444"],
             "joined_at": "2015-04-26T06:26:56.936000+00:00",
+            "premium_since": "2019-05-17T06:26:56.936000+00:00",
             "user": user_dict,
         },
     )
 
-    member_obj.update_state(role_objs, "potato")
+    member_obj.update_state(role_objs, {"nick": "potato", "deaf": True, "mute": True})
     assert member_obj.nick == "potato"
+    assert member_obj.is_deaf is True
+    assert member_obj.is_mute is True
+    assert member_obj.premium_since is None
     assert member_obj.roles == role_objs
 
 

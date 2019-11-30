@@ -35,6 +35,7 @@ from hikari.orm.models import reactions
 from hikari.orm.models import roles
 from hikari.orm.models import users
 from hikari.orm.models import webhooks
+from hikari.orm.models import voices
 from tests.hikari import _helpers
 
 
@@ -44,7 +45,7 @@ def registry():
 
     # We cant overwrite methods on a slotted class... subclass it to remove that constraint.
     state_registry_obj = _helpers.unslot_class(state_registry_impl.StateRegistryImpl)(fabric_obj, 999, 999)
-    fabric_obj.state_registry = fabric_obj
+    fabric_obj.state_registry = state_registry_obj
     return state_registry_obj
 
 
@@ -770,6 +771,33 @@ class TestStateRegistryImpl:
         with _helpers.mock_patch(guilds.Guild, return_value=guild_obj):
             assert registry.parse_guild(payload) is guild_obj
 
+    def test_parse_voice_state(self, registry: state_registry_impl.StateRegistryImpl):
+        registry._guilds[69] = guild_obj = _helpers.mock_model(guilds.Guild, id=69, voice_states={})
+        voice_obj = _helpers.mock_model(voices.VoiceState, session_id="nz2o312")
+
+        with _helpers.mock_patch(voices.VoiceState, return_value=voice_obj):
+            registry.parse_voice_state(
+                guild_obj,
+                {"session_id": "nz2o312", "channel_id": "115590097143215541", "user_id": "432341", "guild_id": 69,},
+            )
+            assert guild_obj.voice_states[432341] == voice_obj
+
+    def test_parse_voice_state_when_existing_voice_state(self, registry: state_registry_impl.StateRegistryImpl):
+        payload = {
+            "user_id": "4333",
+            "session_id": "39ksdjefoi",
+            "channel_id": "115590097143215541",
+            "guild_id": "777",
+            "deaf": True,
+            "mute": True,
+        }
+        voice_state_obj = _helpers.mock_model(voices.VoiceState, user_id=4333)
+        registry._guilds[777] = guild_obj = _helpers.mock_model(
+            guilds.Guild, id=777, voice_states={4333: voice_state_obj}
+        )
+        registry.parse_voice_state(guild_obj, payload)
+        voice_state_obj.update_state.assert_called_with(payload)
+
     def test_parse_partial_member_calls_parse_member_correctly_and_returns_result(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
@@ -808,7 +836,7 @@ class TestStateRegistryImpl:
 
         registry.parse_member(payload, guild_obj)
 
-        member_obj.update_state.assert_called_with(expected_roles, "Roy Rodgers McFreely")
+        member_obj.update_state.assert_called_with(expected_roles, payload)
 
     def test_parse_member_when_existing_member_returns_existing_member(
         self, registry: state_registry_impl.StateRegistryImpl
