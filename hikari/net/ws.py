@@ -84,6 +84,7 @@ with warnings.catch_warnings():
             return super().ws_connect(url, **kwargs)
 
         # Suppress inheritance DeprecationWarning.
+        @classmethod
         def __init_subclass__(cls, **kwargs):
             pass
 
