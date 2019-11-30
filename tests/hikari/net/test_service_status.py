@@ -16,118 +16,381 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-
 import dataclasses
 
+import asynctest
 import pytest
 
 from hikari.net import service_status
-from hikari.orm.models import service_status as status_model
-from tests.hikari import _helpers
-from tests.hikari.orm.testdata import *
-
-_base = "https://status.discordapp.com/api/v2"
 
 
-def _get_data(name):
-    return with_test_data(raw(f"service_status_{name}.json"))
+@pytest.fixture()
+def active_scheduled_maintenances_pl():
+    return {
+        "page": {
+            "id": "srhpyqt94yxb",
+            "name": "Discord",
+            "url": "http://status.discordapp.com",
+            "time_zone": "America/Tijuana",
+            "updated_at": "2019-06-24T06:07:14.473-07:00",
+        },
+        "scheduled_maintenances": [],
+    }
 
 
-endpoints = {
-    f"{_base}/scheduled-maintenances/active.json": _get_data("active_scheduled_maintenances"),
-    f"{_base}/components.json": _get_data("components"),
-    f"{_base}/incidents.json": _get_data("incidents"),
-    f"{_base}/scheduled-maintenances.json": _get_data("scheduled_maintenances"),
-    f"{_base}/status.json": _get_data("status"),
-    f"{_base}/summary.json": _get_data("summary"),
-    f"{_base}/incidents/unresolved.json": _get_data("unresolved"),
-    f"{_base}/scheduled-maintenances/upcoming.json": _get_data("upcoming"),
-    f"{_base}/subscribers.json": _get_data("subscriber"),
-    f"{_base}/subscribers/1a2b3c.json": _get_data("subscriber"),
-    f"{_base}/subscriptions/1a2b3c/resend_confirmation": "{}",
-}
+@pytest.fixture()
+def components_pl():
+    return {
+        "page": {
+            "id": "srhpyqt94yxb",
+            "name": "Discord",
+            "url": "http://status.discordapp.com",
+            "time_zone": "America/Tijuana",
+            "updated_at": "2019-06-24T06:07:14.473-07:00",
+        },
+        "components": [
+            {
+                "id": "rhznvxg4v7yh",
+                "name": "API",
+                "status": "operational",
+                "created_at": "2015-07-30T18:55:43.739-07:00",
+                "updated_at": "2019-05-31T15:49:13.651-07:00",
+                "position": 1,
+                "description": None,
+                "showcase": True,
+                "group_id": None,
+                "page_id": "srhpyqt94yxb",
+                "group": False,
+                "only_show_if_degraded": False,
+            },
+            {
+                "id": "0cwvg0jp5cbg",
+                "name": "EU West",
+                "status": "operational",
+                "created_at": "2015-07-30T20:36:41.891-07:00",
+                "updated_at": "2018-07-17T13:00:35.378-07:00",
+                "position": 1,
+                "description": None,
+                "showcase": False,
+                "group_id": "jk03xttfcz9b",
+                "page_id": "srhpyqt94yxb",
+                "group": False,
+                "only_show_if_degraded": False,
+            },
+            {
+                "id": "jk03xttfcz9b",
+                "name": "Voice",
+                "status": "operational",
+                "created_at": "2015-07-30T20:39:36.003-07:00",
+                "updated_at": "2017-09-29T06:48:54.042-07:00",
+                "position": 5,
+                "description": None,
+                "showcase": False,
+                "group_id": None,
+                "page_id": "srhpyqt94yxb",
+                "group": True,
+                "only_show_if_degraded": False,
+                "components": [
+                    "0cwvg0jp5cbg",
+                    "fc8y53dfg85y",
+                    "q0lbnfc59j35",
+                    "qbt7ryjc5tcd",
+                    "nhlpbmmcffcl",
+                    "kdz8bp5dp08v",
+                    "gmppldfdghcd",
+                    "334vzyzzwlfs",
+                    "sg02vq1rbfrr",
+                    "0ysw0jy8hnsr",
+                    "ccgfj3l84lvt",
+                    "xggnf9hnngkt",
+                    "b5v9r9bdppvm",
+                ],
+            },
+        ],
+    }
 
 
-@dataclasses.dataclass
-class Response:
-    body: str
+@pytest.fixture()
+def incidents_pl():
+    return {
+        "page": {
+            "id": "srhpyqt94yxb",
+            "name": "Discord",
+            "url": "http://status.discordapp.com",
+            "time_zone": "America/Tijuana",
+            "updated_at": "2019-06-24T06:07:14.473-07:00",
+        },
+        "incidents": [
+            {
+                "id": "2gztsrksff0v",
+                "name": "Global Unavailability",
+                "status": "investigating",
+                "created_at": "2019-06-24T05:25:57.666-07:00",
+                "updated_at": "2019-06-24T06:07:14.465-07:00",
+                "monitoring_at": None,
+                "resolved_at": None,
+                "impact": "none",
+                "shortlink": "http://stspg.io/15e073752",
+                "started_at": "2019-06-24T05:25:57.659-07:00",
+                "page_id": "srhpyqt94yxb",
+                "incident_updates": [
+                    {
+                        "id": "xxqwgv42dnx5",
+                        "status": "investigating",
+                        "body": "We are working on resolving some internal technical problems now.",
+                        "incident_id": "2gztsrksff0v",
+                        "created_at": "2019-06-24T06:07:14.463-07:00",
+                        "updated_at": "2019-06-24T06:07:14.463-07:00",
+                        "display_at": "2019-06-24T06:07:14.463-07:00",
+                        "affected_components": None,
+                        "deliver_notifications": False,
+                        "custom_tweet": None,
+                        "tweet_id": None,
+                    },
+                    {
+                        "id": "jvrfncktc4yp",
+                        "status": "investigating",
+                        "body": "Discord is affected by the general internet outage. Hang tight.  Pet your cats.",
+                        "incident_id": "2gztsrksff0v",
+                        "created_at": "2019-06-24T05:25:57.698-07:00",
+                        "updated_at": "2019-06-24T05:25:57.698-07:00",
+                        "display_at": "2019-06-24T05:25:57.698-07:00",
+                        "affected_components": None,
+                        "deliver_notifications": False,
+                        "custom_tweet": None,
+                        "tweet_id": None,
+                    },
+                ],
+                "components": [],
+            }
+        ],
+    }
 
-    async def json(self):
-        return libjson.loads(self.body)
 
-    def raise_for_status(self):
-        pass
+@pytest.fixture()
+def scheduled_maintenances_pl():
+    return {
+        "page": {
+            "id": "srhpyqt94yxb",
+            "name": "Discord",
+            "url": "http://status.discordapp.com",
+            "time_zone": "America/Tijuana",
+            "updated_at": "2019-06-24T06:07:14.473-07:00",
+        },
+        "scheduled_maintenances": [
+            {
+                "id": "ymm0202y77k6",
+                "name": "Potentially Disruptive Upgrade",
+                "status": "completed",
+                "created_at": "2016-10-16T16:57:33.416-07:00",
+                "updated_at": "2016-10-19T02:39:00.299-07:00",
+                "monitoring_at": None,
+                "resolved_at": "2016-10-19T02:39:00.274-07:00",
+                "impact": "maintenance",
+                "shortlink": "http://stspg.io/4ERc",
+                "started_at": "2016-10-16T16:57:00.000-07:00",
+                "page_id": "srhpyqt94yxb",
+                "incident_updates": [
+                    {
+                        "id": "ptphhdp7zzy8",
+                        "status": "completed",
+                        "body": "The maintenance has completed as planned with no outage or service interruption.\r\n\r\nNothing broke. Nothing caught fire. Everything is OK.",
+                        "incident_id": "ymm0202y77k6",
+                        "created_at": "2016-10-19T02:39:00.274-07:00",
+                        "updated_at": "2016-10-19T02:39:00.274-07:00",
+                        "display_at": "2016-10-19T02:39:00.274-07:00",
+                        "affected_components": [{"name": "No components were affected by this update."}],
+                        "deliver_notifications": True,
+                        "custom_tweet": None,
+                        "tweet_id": None,
+                    },
+                    {
+                        "id": "jd5jjsflj0x5",
+                        "status": "in_progress",
+                        "body": "This maintenance is currently in progress.",
+                        "incident_id": "ymm0202y77k6",
+                        "created_at": "2016-10-19T02:07:00.712-07:00",
+                        "updated_at": "2016-10-19T02:07:00.712-07:00",
+                        "display_at": "2016-10-19T02:07:00.712-07:00",
+                        "affected_components": [{"name": "No components were affected by this update."}],
+                        "deliver_notifications": True,
+                        "custom_tweet": None,
+                        "tweet_id": None,
+                    },
+                    {
+                        "id": "vw800012grtl",
+                        "status": "scheduled",
+                        "body": 'On September 23rd we attempted to release a code upgrade that involved some of our real-time servers that we upgrade without disruption using a method called "handoffs." After over a year of working fine, Discord\'s growth revealed flaws in the handoff implementation at our current scale. We have implemented changes in the handoff system and will attempt to do a code upgrade without disruption, but if something goes wrong we might have to force everyone to reconnect which can cause up to 30 minutes of disruption.',
+                        "incident_id": "ymm0202y77k6",
+                        "created_at": "2016-10-16T16:57:33.923-07:00",
+                        "updated_at": "2016-10-16T16:59:23.526-07:00",
+                        "display_at": "2016-10-16T16:57:00.000-07:00",
+                        "affected_components": [{"name": "No components were affected by this update."}],
+                        "deliver_notifications": True,
+                        "custom_tweet": None,
+                        "tweet_id": None,
+                    },
+                ],
+                "components": [],
+                "scheduled_for": "2016-10-19T02:00:00.000-07:00",
+                "scheduled_until": "2016-10-19T03:00:00.000-07:00",
+            },
+        ],
+    }
 
-    async def __aenter__(self):
-        return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-
-class Router:
-    def __call__(self, method, uri, **kwargs):
-        return Response(endpoints[uri])
-
-
-@pytest.fixture
-def patched_request():
-    # Forces us to use a dummy router rather than hitting discord directly.
-    router = Router()
-    with _helpers.mock_patch("aiohttp.request", new=router):
-        yield router
+@pytest.fixture()
+def subscriber_pl():
+    return {
+        "subscriber": {
+            "created_at": "2019-06-24T07:29:43.684-07:00",
+            "skip_confirmation_notification": False,
+            "quarantined_at": None,
+            "id": "82kp04j58dhm",
+            "mode": "email",
+            "purge_at": None,
+            "email": "xxx@yyy.com",
+        }
+    }
 
 
-@pytest.mark.asyncio
-@pytest.mark.model
-class TestServiceStatus:
-    async def test_get_status(self, patched_request):
-        assert isinstance(await service_status.get_status(), status_model.Status)
+@pytest.fixture()
+def summary_pl():
+    return {
+        "page": {
+            "id": "srhpyqt94yxb",
+            "name": "Discord",
+            "url": "http://status.discordapp.com",
+            "time_zone": "America/Tijuana",
+            "updated_at": "2019-06-24T06:07:14.473-07:00",
+        },
+        "components": [
+            {
+                "id": "rhznvxg4v7yh",
+                "name": "API",
+                "status": "operational",
+                "created_at": "2015-07-30T18:55:43.739-07:00",
+                "updated_at": "2019-05-31T15:49:13.651-07:00",
+                "position": 1,
+                "description": None,
+                "showcase": True,
+                "group_id": None,
+                "page_id": "srhpyqt94yxb",
+                "group": False,
+                "only_show_if_degraded": False,
+            },
+            {
+                "id": "0cwvg0jp5cbg",
+                "name": "EU West",
+                "status": "operational",
+                "created_at": "2015-07-30T20:36:41.891-07:00",
+                "updated_at": "2018-07-17T13:00:35.378-07:00",
+                "position": 1,
+                "description": None,
+                "showcase": False,
+                "group_id": "jk03xttfcz9b",
+                "page_id": "srhpyqt94yxb",
+                "group": False,
+                "only_show_if_degraded": False,
+            },
+            {
+                "id": "fc8y53dfg85y",
+                "name": "EU Central",
+                "status": "operational",
+                "created_at": "2015-12-10T23:45:29.114-08:00",
+                "updated_at": "2018-12-03T09:58:22.515-08:00",
+                "position": 2,
+                "description": None,
+                "showcase": False,
+                "group_id": "jk03xttfcz9b",
+                "page_id": "srhpyqt94yxb",
+                "group": False,
+                "only_show_if_degraded": False,
+            },
+        ],
+    }
 
-    async def test_get_summary(self, patched_request):
-        assert isinstance(await service_status.get_summary(), status_model.Summary)
 
-    async def test_get_components(self, patched_request):
-        assert isinstance(await service_status.get_components(), status_model.Components)
+@pytest.fixture()
+def unresolved_pl():
+    return {
+        "page": {
+            "id": "srhpyqt94yxb",
+            "name": "Discord",
+            "url": "http://status.discordapp.com",
+            "time_zone": "America/Tijuana",
+            "updated_at": "2019-06-24T06:07:14.473-07:00",
+        },
+        "incidents": [
+            {
+                "id": "2gztsrksff0v",
+                "name": "Global Unavailability",
+                "status": "investigating",
+                "created_at": "2019-06-24T05:25:57.666-07:00",
+                "updated_at": "2019-06-24T06:07:14.465-07:00",
+                "monitoring_at": None,
+                "resolved_at": None,
+                "impact": "none",
+                "shortlink": "http://stspg.io/15e073752",
+                "started_at": "2019-06-24T05:25:57.659-07:00",
+                "page_id": "srhpyqt94yxb",
+                "incident_updates": [
+                    {
+                        "id": "xxqwgv42dnx5",
+                        "status": "investigating",
+                        "body": "We are working on resolving some internal technical problems now.",
+                        "incident_id": "2gztsrksff0v",
+                        "created_at": "2019-06-24T06:07:14.463-07:00",
+                        "updated_at": "2019-06-24T06:07:14.463-07:00",
+                        "display_at": "2019-06-24T06:07:14.463-07:00",
+                        "affected_components": None,
+                        "deliver_notifications": False,
+                        "custom_tweet": None,
+                        "tweet_id": None,
+                    },
+                    {
+                        "id": "jvrfncktc4yp",
+                        "status": "investigating",
+                        "body": "Discord is affected by the general internet outage. Hang tight.  Pet your cats.",
+                        "incident_id": "2gztsrksff0v",
+                        "created_at": "2019-06-24T05:25:57.698-07:00",
+                        "updated_at": "2019-06-24T05:25:57.698-07:00",
+                        "display_at": "2019-06-24T05:25:57.698-07:00",
+                        "affected_components": None,
+                        "deliver_notifications": False,
+                        "custom_tweet": None,
+                        "tweet_id": None,
+                    },
+                ],
+                "components": [],
+            }
+        ],
+    }
 
-    async def test_get_all_incidents(self, patched_request):
-        assert isinstance(await service_status.get_all_incidents(), status_model.Incidents)
 
-    async def test_get_unresolved_incidents(self, patched_request):
-        assert isinstance(await service_status.get_unresolved_incidents(), status_model.Incidents)
+@pytest.fixture()
+def upcoming_scheduled_maintenances_pl():
+    return {
+        "page": {
+            "id": "srhpyqt94yxb",
+            "name": "Discord",
+            "url": "http://status.discordapp.com",
+            "time_zone": "America/Tijuana",
+            "updated_at": "2019-06-24T06:07:14.473-07:00",
+        },
+        "scheduled_maintenances": [],
+    }
 
-    async def test_get_all_scheduled_maintenances(self, patched_request):
-        assert isinstance(await service_status.get_all_scheduled_maintenances(), status_model.ScheduledMaintenances)
 
-    async def test_get_upcoming_scheduled_maintenances(self, patched_request):
-        assert isinstance(
-            await service_status.get_upcoming_scheduled_maintenances(), status_model.ScheduledMaintenances
-        )
-
-    async def test_get_active_scheduled_maintenances(self, patched_request):
-        assert isinstance(await service_status.get_active_scheduled_maintenances(), status_model.ScheduledMaintenances)
-
-    async def test_subscribe_email_to_all_incidents(self, patched_request):
-        assert isinstance(await service_status.subscribe_email_to_all_incidents("foo@bar.com"), status_model.Subscriber)
-
-    async def test_subscribe_email_to_incidents(self, patched_request):
-        subscription = await service_status.subscribe_email_to_incident("foo@bar.com", "1a2b3c")
-        assert isinstance(subscription, status_model.Subscriber)
-
-    async def test_subscribe_webhook_to_all_incidents(self, patched_request):
-        assert isinstance(
-            await service_status.subscribe_webhook_to_all_incidents("foo@bar.com", "localhost:8080/lol"),
-            status_model.Subscriber,
-        )
-
-    async def test_subscribe_webhook_to_incidents(self, patched_request):
-        assert isinstance(
-            await service_status.subscribe_webhook_to_incident("foo@bar.com", "localhost:8080/lol", "1a2b3c"),
-            status_model.Subscriber,
-        )
-
-    async def test_unsubscribe(self, patched_request):
-        assert await service_status.unsubscribe_from("1a2b3c") is None
-
-    async def test_resend_confirmation_email(self, patched_request):
-        assert await service_status.resend_confirmation_email("1a2b3c") is None
+@pytest.fixture()
+def status_pl():
+    return {
+        "page": {
+            "id": "srhpyqt94yxb",
+            "name": "Discord",
+            "url": "http://status.discordapp.com",
+            "time_zone": "America/Tijuana",
+            "updated_at": "2019-06-24T06:07:14.473-07:00",
+        },
+        "status": {"indicator": "none", "description": "All Systems Operational"},
+    }
