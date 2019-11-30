@@ -59,6 +59,7 @@ class TestInvite:
         assert inv.code == "0vCdhLbwjZZTWZLD"
         assert inv.approximate_presence_count == 69
         assert inv.approximate_member_count == 420
+        inv.__repr__()
         fabric_obj.state_registry.parse_guild.assert_called_with(guild_dict)
         fabric_obj.state_registry.parse_channel.assert_called_with(channel_dict)
 
@@ -93,7 +94,8 @@ class TestInviteMetadata:
         assert invm.uses == 69
         assert invm.max_uses == 420
         assert invm.max_age == 99999
-        assert invm.temporary is True
-        assert invm.revoked is True
+        assert invm.is_temporary is True
+        assert invm.is_revoked is True
         assert invm.created_at == datetime.datetime(2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc)
+        invm.__repr__()
         fabric_obj.state_registry.parse_user.assert_called_with(user_dict)

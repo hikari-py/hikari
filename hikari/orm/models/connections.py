@@ -48,11 +48,11 @@ class Connection(interfaces.IStatefulModel, interfaces.ISnowflake):
         "id",
         "name",
         "type",
-        "revoked",
+        "is_revoked",
         "integrations",
-        "verified",
-        "friend_sync",
-        "show_activity",
+        "is_verified",
+        "is_friend_synced",
+        "is_showing_activity",
         "visibility",
     )
 
@@ -74,7 +74,7 @@ class Connection(interfaces.IStatefulModel, interfaces.ISnowflake):
     #: The state of the connection.
     #:
     #: :type: :class:`bool`
-    revoked: bool
+    is_revoked: bool
 
     #: The server integrations related to this connection.
     #:
@@ -84,17 +84,17 @@ class Connection(interfaces.IStatefulModel, interfaces.ISnowflake):
     #: The verification status of this connection.
     #:
     #: :type: :class:`bool`
-    verified: bool
+    is_verified: bool
 
     #: The status of friend sync for this connection
     #:
     #: :type: :class:`bool`
-    friend_sync: bool
+    is_friend_synced: bool
 
     #: Whether activities related to this connection are shared in presence update events.
     #:
     #: :type: :class:`bool`
-    show_activity: bool
+    is_showing_activity: bool
 
     #: The visibility of this connection.
     #:
@@ -108,13 +108,13 @@ class Connection(interfaces.IStatefulModel, interfaces.ISnowflake):
         self.id = payload["id"]
         self.name = payload["name"]
         self.type = payload["type"]
-        self.revoked = payload.get("revoked", False)
+        self.is_revoked = payload.get("revoked", False)
         self.integrations = [
             integrations.PartialIntegration(i) for i in payload.get("integrations", data_structures.EMPTY_SEQUENCE)
         ]
-        self.verified = payload["verified"]
-        self.friend_sync = payload["friend_sync"]
-        self.show_activity = payload["show_activity"]
+        self.is_verified = payload["verified"]
+        self.is_friend_synced = payload["friend_sync"]
+        self.is_showing_activity = payload["show_activity"]
         self.visibility = ConnectionVisibility(payload["visibility"])
 
 

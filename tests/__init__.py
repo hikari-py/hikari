@@ -22,8 +22,12 @@ import warnings
 # which a lot of stuff still relies on, so I get spammed with warnings that I have little
 # control over. This shuts some of those up.
 for old_module in [
-    "asynctest", "asynctest.mock", "aiofiles.base", "aiofiles.threadpool.utils", "aiohttp.helpers",
-    "aiofiles.threadpool"
+    "asynctest",
+    "asynctest.mock",
+    "aiofiles.base",
+    "aiofiles.threadpool.utils",
+    "aiohttp.helpers",
+    "aiofiles.threadpool",
 ]:
     print("Suppressing deprecation warnings in", old_module)
     warnings.filterwarnings("ignore", category=DeprecationWarning, module=old_module)

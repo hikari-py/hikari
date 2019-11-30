@@ -54,8 +54,9 @@ def test_User_when_not_a_bot_or_system(fabric_obj):
     assert user_obj.username == "Boris Johnson"
     assert user_obj.discriminator == 6969
     assert user_obj.avatar_hash == "1a2b3c4d"
-    assert user_obj.bot is False
+    assert user_obj.is_bot is False
     assert user_obj.system is False
+    user_obj.__repr__()
 
 
 @pytest.mark.model
@@ -76,8 +77,9 @@ def test_User_when_is_a_bot_and_system(fabric_obj):
     assert user_obj.username == "Boris Johnson"
     assert user_obj.discriminator == 6969
     assert user_obj.avatar_hash is None
-    assert user_obj.bot is True
+    assert user_obj.is_bot is True
     assert user_obj.system is True
+    user_obj.__repr__()
 
 
 @pytest.mark.model
@@ -101,11 +103,12 @@ def test_OAuth2User(fabric_obj):
     assert user_obj.username == "Boris Johnson"
     assert user_obj.discriminator == 6969
     assert user_obj.avatar_hash == "1a2b3c4d"
-    assert user_obj.bot is False
+    assert user_obj.is_bot is False
     assert user_obj.system is False
     assert user_obj.verified is True
     assert user_obj.mfa_enabled is True
     assert user_obj.locale == "en-GB"
+    user_obj.__repr__()
 
 
 @pytest.mark.model

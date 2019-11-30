@@ -69,3 +69,4 @@ class TestWebhook:
         assert wh.guild_id == 199737254929760256
         assert wh.type is webhooks.WebhookType.INCOMING
         fabric_obj.state_registry.parse_user.assert_called_with(user_dict)
+        wh.__repr__()

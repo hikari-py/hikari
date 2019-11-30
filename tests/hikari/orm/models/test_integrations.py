@@ -36,6 +36,7 @@ def test_PartialIntegration():
     assert partial_integration_obj.type == "twitch"
     assert partial_integration_obj.account.name == "FStream"
     assert partial_integration_obj.account.id == 1234567
+    partial_integration_obj.__repr__()
 
 
 @pytest.mark.model
@@ -73,13 +74,14 @@ class TestIntegration:
         assert integration_obj.id == 1234567
         assert integration_obj.name == "peepohappy"
         assert integration_obj.type == "twitch"
-        assert integration_obj.enabled is True
-        assert integration_obj.syncing is False
+        assert integration_obj.is_enabled is True
+        assert integration_obj.is_syncing is False
         assert integration_obj._role_id == 69696969
         assert integration_obj.expire_grace_period == 420
         assert integration_obj.synced_at == datetime.datetime(
             2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc
         )
+        integration_obj.__repr__()
         test_state.parse_user.assert_called_with(user_dict)
 
 
@@ -90,3 +92,4 @@ class TestIntegrationAccount:
 
         assert inteacc.id == 1234567
         assert inteacc.name == "memes"
+        inteacc.__repr__()
