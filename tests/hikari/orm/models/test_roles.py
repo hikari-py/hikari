@@ -62,6 +62,7 @@ def test_PartialRole(partial_role_payload):
     partial_role_obj = roles.PartialRole(partial_role_payload)
     assert partial_role_obj.name == "I am a role"
     assert partial_role_obj.id == 583692435939524624
+    partial_role_obj.__repr__()
 
 
 @pytest.mark.model
@@ -72,7 +73,7 @@ def test_Role(fabric_obj, role_payload):
     assert role_obj.id == 41771983423143936
     assert role_obj.name == "WE DEM BOYZZ!!!!!!"
     assert role_obj.color == 0x3498DB
-    assert role_obj.hoist is True
+    assert role_obj.is_hoisted is True
     assert role_obj.position == 1
     assert role_obj.guild_id == guild_obj.id
     assert role_obj.permissions == (
@@ -97,5 +98,6 @@ def test_Role(fabric_obj, role_payload):
         | permissions.Permission.KICK_MEMBERS
         | permissions.Permission.CREATE_INSTANT_INVITE
     )
-    assert role_obj.managed is False
-    assert role_obj.mentionable is False
+    assert role_obj.is_managed is False
+    assert role_obj.is_mentionable is False
+    role_obj.__repr__()

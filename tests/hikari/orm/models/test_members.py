@@ -71,6 +71,7 @@ def test_Member_with_filled_fields(fabric_obj):
     assert member_obj.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, datetime.timezone.utc)
     assert member_obj.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, datetime.timezone.utc)
     assert member_obj.guild is guild_obj
+    member_obj.__repr__()
     fabric_obj.state_registry.parse_user.assert_called_with(user_dict)
 
 

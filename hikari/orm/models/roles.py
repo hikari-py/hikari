@@ -63,11 +63,11 @@ class Role(PartialRole, interfaces.IStatefulModel):
         "_fabric",
         "guild_id",
         "color",
-        "hoist",
+        "is_hoisted",
         "position",
         "permissions",
-        "managed",
-        "mentionable",
+        "is_managed",
+        "is_mentionable",
         "__weakref__",
     )
 
@@ -84,7 +84,7 @@ class Role(PartialRole, interfaces.IStatefulModel):
     #: Whether the role will be hoisted (show as a separate list in the member list)
     #:
     #: :type: :class:`bool`
-    hoist: bool
+    is_hoisted: bool
 
     #: The position of the role.
     #:
@@ -99,14 +99,14 @@ class Role(PartialRole, interfaces.IStatefulModel):
     #: True if the role is created by an integration or by adding a bot to the server, or False otherwise.
     #:
     #: :type: :class:`bool`
-    managed: bool
+    is_managed: bool
 
     #: True if you can mention this role and thus ping all members in that role at once, False if you can not.
     #:
     #: :type: :class:`bool`
-    mentionable: bool
+    is_mentionable: bool
 
-    __repr__ = auto_repr.repr_of("id", "name", "position", "managed", "mentionable", "hoist")
+    __repr__ = auto_repr.repr_of("id", "name", "position", "is_managed", "is_mentionable", "is_hoisted")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_id: int) -> None:
         super().__init__(payload)
@@ -117,11 +117,11 @@ class Role(PartialRole, interfaces.IStatefulModel):
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         self.name = payload["name"]
         self.color = _color.Color(payload["color"])
-        self.hoist = payload["hoist"]
+        self.is_hoisted = payload["hoist"]
         self.position = payload["position"]
         self.permissions = _permission.Permission(payload["permissions"])
-        self.managed = payload["managed"]
-        self.mentionable = payload["mentionable"]
+        self.is_managed = payload["managed"]
+        self.is_mentionable = payload["mentionable"]
 
 
 __all__ = ["PartialRole", "Role"]

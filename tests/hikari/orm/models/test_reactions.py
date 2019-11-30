@@ -32,3 +32,4 @@ def test_parse_Reaction():
     assert r.message is m
     assert r.emoji is e
     assert r.count == 9
+    r.__repr__()
