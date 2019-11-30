@@ -72,6 +72,7 @@ def guild_emoji_payload(user_payload):
 @pytest.mark.model
 def test_UnicodeEmoji___init__(unicode_emoji_payload):
     assert emojis.UnicodeEmoji(unicode_emoji_payload).value == "\N{OK HAND SIGN}"
+    emojis.UnicodeEmoji(unicode_emoji_payload).__repr__()
 
 
 @pytest.mark.model
@@ -100,6 +101,7 @@ def test_UnknownEmoji___init__(unknown_emoji_payload):
     e = emojis.UnknownEmoji(unknown_emoji_payload)
     assert e.id == 100000000001110010
     assert e.name == "asshat123"
+    e.__repr__()
 
 
 @pytest.mark.model
@@ -112,10 +114,11 @@ def test_GuildEmoji___init__(mock_state, fabric_obj, guild_emoji_payload, user_p
     assert e.name == "LUL"
     assert e._role_ids == [41771983429993000, 41771983429993111]
     assert e.user is user
-    assert e.require_colons is True
-    assert e.managed is False
-    assert e.animated is False
+    assert e.is_requiring_colons is True
+    assert e.is_managed is False
+    assert e.is_animated is False
     assert e._guild_id == 98765
+    e.__repr__()
     mock_state.parse_user.assert_called_with(user_payload)
 
 

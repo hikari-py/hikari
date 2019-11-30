@@ -98,8 +98,8 @@ class Integration(PartialIntegration, interfaces.IStatefulModel):
 
     __slots__ = (
         "_fabric",
-        "enabled",
-        "syncing",
+        "is_enabled",
+        "is_syncing",
         "_role_id",
         "expire_grace_period",
         "user",
@@ -112,12 +112,12 @@ class Integration(PartialIntegration, interfaces.IStatefulModel):
     #: Whether the integration is enabled or not.
     #:
     #: :type: :class:`bool`
-    enabled: bool
+    is_enabled: bool
 
     #: Whether the integration is currently synchronizing.
     #:
     #: :type: :class:`bool`
-    syncing: bool
+    is_syncing: bool
 
     #: The grace period for expiring subscribers.
     #:
@@ -137,8 +137,8 @@ class Integration(PartialIntegration, interfaces.IStatefulModel):
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
-        self.enabled = payload["enabled"]
-        self.syncing = payload["syncing"]
+        self.is_enabled = payload["enabled"]
+        self.is_syncing = payload["syncing"]
         self._role_id = int(payload["role_id"])
         self.expire_grace_period = int(payload["expire_grace_period"])
         self.user = self._fabric.state_registry.parse_user(payload["user"])

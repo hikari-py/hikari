@@ -54,7 +54,8 @@ def test_Connection(fabric_obj):
     assert connection_obj.id == "12was12"
     assert connection_obj.name == "Robin_Williams"
     assert connection_obj.visibility is connections.ConnectionVisibility.NONE
-    assert connection_obj.revoked is True
-    assert connection_obj.friend_sync is False
-    assert connection_obj.show_activity is True
-    assert connection_obj.verified is True
+    assert connection_obj.is_revoked is True
+    assert connection_obj.is_friend_synced is False
+    assert connection_obj.is_showing_activity is True
+    assert connection_obj.is_verified is True
+    connection_obj.__repr__()

@@ -102,11 +102,11 @@ class TestMessage:
         assert message_obj.channel_id == 67890
         assert message_obj.guild_id is None
         assert message_obj.edited_at is None
-        assert message_obj.tts is True
-        assert message_obj.mentions_everyone is False
+        assert message_obj.is_tts is True
+        assert message_obj.is_mentioning_everyone is False
         assert len(message_obj.attachments) == 0
         assert len(message_obj.embeds) == 0
-        assert message_obj.pinned is False
+        assert message_obj.is_pinned is False
         assert message_obj.application is None
         assert message_obj.activity is None
         assert message_obj.content == "ayyyyyyy lmao"
@@ -121,10 +121,10 @@ class TestMessage:
         updated.update_state({})
         assert initial.author == updated.author
         assert initial.edited_at == updated.edited_at
-        assert initial.mentions_everyone == updated.mentions_everyone
+        assert initial.is_mentioning_everyone == updated.is_mentioning_everyone
         assert initial.attachments == updated.attachments
         assert initial.embeds == updated.embeds
-        assert initial.pinned == updated.pinned
+        assert initial.is_pinned == updated.is_pinned
         assert initial.application == updated.application
         assert initial.activity == updated.activity
         assert initial.content == updated.content
@@ -195,10 +195,11 @@ class TestMessage:
         assert message_obj.edited_at == datetime.datetime(
             2019, 10, 10, 5, 22, 33, 23456, tzinfo=datetime.timezone(datetime.timedelta(hours=2, minutes=30))
         )
-        assert message_obj.tts is False
-        assert message_obj.mentions_everyone is True
-        assert message_obj.pinned is True
+        assert message_obj.is_tts is False
+        assert message_obj.is_mentioning_everyone is True
+        assert message_obj.is_pinned is True
         assert message_obj.content == "some pointless text"
+        message_obj.__repr__()
 
         assert len(message_obj.attachments) == 1
         assert len(message_obj.embeds) == 2
@@ -287,6 +288,7 @@ def test_MessageActivity():
 
     assert ma.type == messages.MessageActivityType.LISTEN
     assert ma.party_id == 999
+    ma.__repr__()
 
 
 @pytest.mark.model
@@ -300,6 +302,7 @@ def test_MessageApplication():
     assert ma.cover_image_id == 112233
     assert ma.description == "potato"
     assert ma.name == "poof"
+    ma.__repr__()
 
 
 @pytest.mark.model
@@ -311,3 +314,4 @@ def test_MessageCrosspost():
     assert mcp.channel_id == 278325129692446722
     assert mcp.message_id == 306588351130107906
     assert mcp.guild_id == 278325129692446720
+    mcp.__repr__()

@@ -289,13 +289,13 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
     def parse_guild(self, guild_payload: data_structures.DiscordObjectT):
         guild_id = int(guild_payload["id"])
-        unavailable = guild_payload.get("unavailable", False)
+        is_unavailable = guild_payload.get("unavailable", False)
 
         if guild_id in self._guilds:
             # Always try to update an existing guild first.
             guild_obj = self.get_guild_by_id(guild_id)
 
-            if unavailable:
+            if is_unavailable:
                 self.set_guild_unavailability(guild_obj, True)
             else:
                 guild_obj.update_state(guild_payload)
@@ -410,10 +410,10 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         # so that it isn't coupling dependent classes of this one to the model implementation as much.
         return webhooks.Webhook(self.fabric, webhook_payload)
 
-    def set_guild_unavailability(self, guild_obj: guilds.Guild, unavailability: bool) -> None:
+    def set_guild_unavailability(self, guild_obj: guilds.Guild, is_unavailable: bool) -> None:
         # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
         # so that it isn't coupling dependent classes of this one to the model implementation as much.
-        guild_obj.unavailable = unavailability
+        guild_obj.is_unavailable = is_unavailable
 
     def set_last_pinned_timestamp(
         self, channel_obj: channels.TextChannel, timestamp: typing.Optional[datetime.datetime]

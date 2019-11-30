@@ -744,17 +744,17 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         payload = {"id": "1234", "unavailable": True}
-        guild_obj = _helpers.mock_model(guilds.Guild, id=1234, unavailable=False)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1234, is_unavailable=False)
         registry._guilds = {guild_obj.id: guild_obj}
 
         registry.parse_guild(payload)
 
         guild_obj.update_state.assert_not_called()
-        assert guild_obj.unavailable is True
+        assert guild_obj.is_unavailable is True
 
     def test_parse_guild_when_not_cached_caches_new_guild(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234", "unavailable": False}
-        guild_obj = _helpers.mock_model(guilds.Guild, id=1234, unavailable=False)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1234, is_unavailable=False)
         registry._guilds = _helpers.StrongWeakValuedDict()
 
         with _helpers.mock_patch(guilds.Guild, return_value=guild_obj) as Guild:
@@ -764,7 +764,7 @@ class TestStateRegistryImpl:
 
     def test_parse_guild_when_not_cached_returns_new_guild(self, registry: state_registry_impl.StateRegistryImpl):
         payload = {"id": "1234", "unavailable": False}
-        guild_obj = _helpers.mock_model(guilds.Guild, id=1234, unavailable=False)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1234, is_unavailable=False)
         registry._guilds = _helpers.StrongWeakValuedDict()
 
         with _helpers.mock_patch(guilds.Guild, return_value=guild_obj):
@@ -1085,9 +1085,9 @@ class TestStateRegistryImpl:
     def test_set_guild_unavailability(
         self, initial_unavailability, new_unavailability, registry: state_registry_impl.StateRegistryImpl
     ):
-        guild_obj = _helpers.mock_model(guilds.Guild, unavailable=initial_unavailability)
+        guild_obj = _helpers.mock_model(guilds.Guild, is_unavailable=initial_unavailability)
         registry.set_guild_unavailability(guild_obj, new_unavailability)
-        assert guild_obj.unavailable is new_unavailability
+        assert guild_obj.is_unavailable is new_unavailability
 
     @pytest.mark.parametrize("timestamp", [datetime.datetime.now(), None])
     def test_set_last_pinned_timestamp_for_cached_channel_id_exits_silently(
@@ -1280,9 +1280,9 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         guild_id = 9999
-        existing_emoji_1 = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="bowsettebaka", animated=False)
-        existing_emoji_2 = _helpers.mock_model(emojis.GuildEmoji, id=1235, name="bowsettel00d", animated=False)
-        existing_emoji_3 = _helpers.mock_model(emojis.GuildEmoji, id=1236, name="bowsetteowo", animated=True)
+        existing_emoji_1 = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="bowsettebaka", is_animated=False)
+        existing_emoji_2 = _helpers.mock_model(emojis.GuildEmoji, id=1235, name="bowsettel00d", is_animated=False)
+        existing_emoji_3 = _helpers.mock_model(emojis.GuildEmoji, id=1236, name="bowsetteowo", is_animated=True)
 
         initial_emoji_map = {
             existing_emoji_1.id: existing_emoji_1,

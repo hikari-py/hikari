@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 from unittest import mock
+import datetime
 
 import pytest
 
@@ -201,6 +202,9 @@ class TestGuild:
         assert guilds.Feature.ANIMATED_ICON in guild_obj.features
         assert guild_obj.member_count == 14
         assert guild_obj.mfa_level == guilds.MFALevel.ELEVATED
+        assert guild_obj.joined_at == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, datetime.timezone.utc)
+        assert guild_obj.is_large is False
+        assert guild_obj.is_unavailable is False
         assert guild_obj.my_permissions == (
             permissions.Permission.USE_VAD
             | permissions.Permission.MOVE_MEMBERS
@@ -232,6 +236,7 @@ class TestGuild:
         assert guild_obj.system_channel_flags & guilds.SystemChannelFlag.PREMIUM_SUBSCRIPTION
         assert guild_obj.system_channel_flags & guilds.SystemChannelFlag.USER_JOIN
         assert guild_obj.preferred_locale == "en-GB"
+        guild_obj.__repr__()
 
         assert fabric_obj.state_registry.parse_role.call_count == 2
         fabric_obj.state_registry.parse_emoji.assert_called_once_with(test_emoji_payload, guild_obj)
@@ -242,10 +247,12 @@ class TestGuild:
         guild_obj = guilds.Guild(fabric_obj, {"id": "12345678910", "unavailable": True})
 
         assert guild_obj.id == 12_345_678_910
-        assert guild_obj.unavailable
+        assert guild_obj.is_unavailable
+        guild_obj.__repr__()
 
     def test_Ban(self, fabric_obj):
         user = object()
         ban = guilds.Ban(fabric_obj, {"user": user, "reason": "being bad"})
         assert ban.reason == "being bad"
+        ban.__repr__()
         fabric_obj.state_registry.parse_user.assert_called_once_with(user)

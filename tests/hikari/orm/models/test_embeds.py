@@ -156,6 +156,7 @@ class TestEmbed:
         embed.set_thumbnail(image="https://hornpub.com/corny-photo.png")
         embed._image = _embed.EmbedImage(url="https://hornpub.com/corny-photo.jpeg")
         embed.set_author(name="me me me")
+        embed.__repr__()
 
         d = embed.to_dict()
 
@@ -216,27 +217,35 @@ class TestEmbed:
         assert embed.url == "https://gitlab.com/nekokatt/hikari"
         assert embed.timestamp == now
         assert embed.color == _color.Color(color)
+        embed.__repr__()
         assert len(embed.fields) == 2
         assert embed.fields[0] == _embed.EmbedField(name="this is field1", value="isn't it nice", inline=True)
         assert embed.fields[1] == _embed.EmbedField(
             name="this is field2", value="embeds are kinda broken though", inline=False
         )
+        embed.fields[1].__repr__()
         assert embed.footer.text == "meals from 10am"
         assert embed.footer.icon_url == "https://hornpub.com/logo.png"
+        embed.footer.__repr__()
         assert embed.image.url == "https://hornpub.com/corny-photo.png"
         assert embed.image.proxy_url == "https://cdn.hornpub.com/corny-photo.png"
         assert embed.image.height == 420
         assert embed.image.width == 45
+        embed.image.__repr__()
         assert embed.thumbnail.url == "https://hornpub.com/corny-photo.jpeg"
         assert embed.thumbnail.proxy_url == "https://cdn.hornpub.com/corny-photo.jpeg"
         assert embed.thumbnail.width == 1111
         assert embed.thumbnail.height == 9999
+        embed.thumbnail.__repr__()
         assert embed.author.name == "me me me"
+        embed.author.__repr__()
         assert embed.provider.name == "jobs in carpal tunnel therapy"
         assert embed.provider.url == "hand-jobs.com"
+        embed.provider.__repr__()
         assert embed.video.url == "youchube.tom"
         assert embed.video.height == 69
         assert embed.video.width == 96
+        embed.video.__repr__()
 
     def test_ReceivedEmbed_from_dict_when_empty(self):
         embed = _embed.ReceivedEmbed.from_dict(dict(type="your mother"))
