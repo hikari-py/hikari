@@ -44,7 +44,9 @@ with requests.get(pypi_json_url) as resp:
         data = []
     else:
         resp.raise_for_status()
-        data = resp.json()["releases"]
+        root = resp.json()
+        releases = root["releases"]
+        current_version = root["info"]["version"]
 
 
 # Inspect the version in pyproject.toml
@@ -61,7 +63,7 @@ if is_staging:
     previous_micro += 1
 
     current_dev_releases = [
-        LooseVersion(v) for v in data if v.startswith(f"{previous_major}.{previous_minor}.{previous_micro}")
+        LooseVersion(v) for v in releases if v.startswith(f"{previous_major}.{previous_minor}.{previous_micro}")
     ]
 
     print("Releases under this major/minor/micro combination are:", *[v.version for v in current_dev_releases],
@@ -84,9 +86,7 @@ else:
         current_version = "0.0.1"
         print("There was no previous release", file=sys.stderr)
     else:
-        releases = [LooseVersion(version) for version in data]
-        non_dev_releases = [r for r in releases if all(isinstance(number, int) for number in r.version)]
-        most_major_release = max(non_dev_releases)
+        most_major_release = LooseVersion(current_version)
         print("Most recent non-dev PyPi release was", most_major_release, file=sys.stderr)
         major, minor, micro = most_major_release.version[:3]
 
@@ -97,6 +97,7 @@ else:
         else:
             print("We are using the version in pyproject.toml as a major or minor version isn't the same. "
                   "If this fails, please update the file manually.", file=sys.stderr)
+                  
             # Else we should use the version in pyproject.toml, as something is being changed.
             current_version = previous_version
 
