@@ -1170,7 +1170,8 @@ class TestDispatchingEventAdapterImpl:
         message_obj2 = _helpers.mock_model(messages.Message, id=1235)
 
         channel_obj = _helpers.mock_model(channels.Channel, id=456)
-        fabric_impl.state_registry.delete_message = mock.MagicMock(side_effect=[message_obj1, message_obj2])
+        fabric_impl.state_registry.delete_message = mock.MagicMock(return_value=None)
+        fabric_impl.state_registry.get_message_by_id = mock.MagicMock(side_effect=[message_obj1, message_obj2])
         fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
 
         payload = {"ids": [str(message_obj1.id), str(message_obj2.id)], "channel_id": str(channel_obj.id)}
@@ -1190,7 +1191,8 @@ class TestDispatchingEventAdapterImpl:
         message_obj3 = _helpers.mock_model(messages.Message, id=1236)
 
         channel_obj = _helpers.mock_model(channels.Channel, id=456)
-        fabric_impl.state_registry.delete_message = mock.MagicMock(side_effect=[message_obj1, message_obj2, None])
+        fabric_impl.state_registry.delete_message = mock.MagicMock(return_value=None)
+        fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=None)
         fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
 
         payload = {
@@ -1203,7 +1205,7 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(
             events.MESSAGE_DELETE_BULK,
             channel_obj,
-            {message_obj1.id: message_obj1, message_obj2.id: message_obj2, message_obj3.id: None},
+            {message_obj1.id: None, message_obj2.id: None, message_obj3.id: None},
         )
 
     @pytest.mark.asyncio
