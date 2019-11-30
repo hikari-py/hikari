@@ -185,7 +185,6 @@ class TestIModel:
             Test()
             assert False, "Expected TypeError"
         except TypeError:
-            traceback.print_exc()
             assert True
 
     def test_does_not_inject_dummy_init_if_not_interface(self):

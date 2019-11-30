@@ -83,6 +83,11 @@ with warnings.catch_warnings():
             kwargs["autoping"] = True
             return super().ws_connect(url, **kwargs)
 
+        # Suppress inheritance DeprecationWarning.
+        @classmethod
+        def __init_subclass__(cls, **kwargs):
+            pass
+
 
 # noinspection PyMethodOverriding
 class WebSocketClientResponse(aiohttp.ClientWebSocketResponse):

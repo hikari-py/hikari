@@ -168,7 +168,7 @@ class GuildTextChannel(GuildChannel, TextChannel, type=0, is_dm=False):
     A text channel.
     """
 
-    __slots__ = ("topic", "rate_limit_per_user", "last_message_id", "nsfw")
+    __slots__ = ("topic", "rate_limit_per_user", "last_message_id", "is_nsfw")
 
     #: The channel topic.
     #:
@@ -188,16 +188,16 @@ class GuildTextChannel(GuildChannel, TextChannel, type=0, is_dm=False):
     #: Whether the channel is NSFW or not
     #:
     #: :type: :class:`bool`
-    nsfw: bool
+    is_nsfw: bool
 
-    __repr__ = auto_repr.repr_of("id", "name", "guild.name", "nsfw")
+    __repr__ = auto_repr.repr_of("id", "name", "guild.name", "is_nsfw")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         super().__init__(fabric_obj, payload)
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
-        self.nsfw = payload.get("nsfw", False)
+        self.is_nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
         self.rate_limit_per_user = payload.get("rate_limit_per_user", 0)
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
@@ -325,7 +325,7 @@ class GuildAnnouncementChannel(GuildChannel, type=5, is_dm=False):
         this changelog entry: https://discordapp.com/developers/docs/change-log#august-22-2019
     """
 
-    __slots__ = ("topic", "last_message_id", "nsfw")
+    __slots__ = ("topic", "last_message_id", "is_nsfw")
 
     #: The channel topic.
     #:
@@ -340,9 +340,9 @@ class GuildAnnouncementChannel(GuildChannel, type=5, is_dm=False):
     #: Whether the channel is NSFW or not
     #:
     #: :type: :class:`bool`
-    nsfw: bool
+    is_nsfw: bool
 
-    __repr__ = auto_repr.repr_of("id", "name", "guild.name", "nsfw")
+    __repr__ = auto_repr.repr_of("id", "name", "guild.name", "is_nsfw")
 
     # noinspection PyMissingConstructor
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
@@ -350,7 +350,7 @@ class GuildAnnouncementChannel(GuildChannel, type=5, is_dm=False):
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
-        self.nsfw = payload.get("nsfw", False)
+        self.is_nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
 

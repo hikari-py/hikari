@@ -28,10 +28,15 @@ from hikari.orm.models import integrations
 
 @pytest.mark.model
 def test_PartialIntegration():
-    partial_integration_obj = integrations.PartialIntegration({"id": "53242", "name": "OwO", "type": "twitch",})
+    partial_integration_obj = integrations.PartialIntegration(
+        {"id": "53242", "name": "OwO", "type": "twitch", "account": {"name": "FStream", "id": "1234567"}}
+    )
     assert partial_integration_obj.id == 53242
     assert partial_integration_obj.name == "OwO"
     assert partial_integration_obj.type == "twitch"
+    assert partial_integration_obj.account.name == "FStream"
+    assert partial_integration_obj.account.id == 1234567
+    partial_integration_obj.__repr__()
 
 
 @pytest.mark.model
@@ -69,23 +74,22 @@ class TestIntegration:
         assert integration_obj.id == 1234567
         assert integration_obj.name == "peepohappy"
         assert integration_obj.type == "twitch"
-        assert integration_obj.enabled is True
-        assert integration_obj.syncing is False
+        assert integration_obj.is_enabled is True
+        assert integration_obj.is_syncing is False
         assert integration_obj._role_id == 69696969
         assert integration_obj.expire_grace_period == 420
         assert integration_obj.synced_at == datetime.datetime(
             2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc
         )
+        integration_obj.__repr__()
         test_state.parse_user.assert_called_with(user_dict)
 
 
 @pytest.mark.model
 class TestIntegrationAccount:
     def test_IntegrationAccount(self):
-        test_state = mock.MagicMock(state_set=state_registry.IStateRegistry)
-        test_fabric = fabric.Fabric(None, test_state)
-
-        inteacc = integrations.IntegrationAccount(test_fabric, {"id": "1234567", "name": "memes"})
+        inteacc = integrations.IntegrationAccount({"id": "1234567", "name": "memes"})
 
         assert inteacc.id == 1234567
         assert inteacc.name == "memes"
+        inteacc.__repr__()

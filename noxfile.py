@@ -19,13 +19,8 @@
 import fnmatch
 import os
 import shutil
-import time
 
 import nox.sessions
-
-
-print("Before you go any further, please read https://gitlab.com/nekokatt/hikari/wikis/Contributing")
-time.sleep(2)
 
 
 def pathify(arg, *args, root=False):
@@ -65,57 +60,15 @@ PYTEST_ARGS = [
 ]
 
 
-def line_count(directories, file_include_globs=("*.py",), dir_exclude_globs=("__pycache__",)):
-    def match_globs(names, globs):
-        results = set()
-        for glob in globs:
-            results |= set(fnmatch.filter(names, glob))
-        return results
-
-    def get_files_matching():
-        for root, dirs, files in os.walk(directory, topdown=True):
-            for exclude in match_globs(dirs, dir_exclude_globs):
-                dirs.remove(exclude)
-
-            for file in match_globs(files, file_include_globs):
-                yield os.path.join(root, file)
-
-    def print_line_count(count, file):
-        print(f"{count: >10.0f}", file)
-
-    total_lines = 0
-    for directory in directories:
-        total_sub_lines = 0
-        print()
-        print("Line count in", directory)
-        for file in sorted(get_files_matching()):
-            with open(file) as fp:
-                file_lines = fp.read().count("\n")
-                print_line_count(file_lines, file)
-                total_sub_lines += file_lines
-                total_lines += file_lines
-
-        print_line_count(total_sub_lines, "TOTAL in " + directory)
-
-    print()
-    print_line_count(total_lines, "TOTAL")
-
-
 @nox.session(python=False)
-def stats(_) -> None:
-    """Count lines of code."""
-    line_count([TEST_PATH, MAIN_PACKAGE_PATH])
-
-
-@nox.session(python=False)
-def pytest(session) -> None:
-    """Run pytest"""
+def test(session) -> None:
+    """Run unit tests in Pytest."""
     session.run("python", "-W", "ignore::DeprecationWarning", "-m", "pytest", *PYTEST_ARGS, *session.posargs, TEST_PATH)
 
 
 @nox.session(python=False)
-def sphinx(session) -> None:
-    """Generate documentation."""
+def documentation(session) -> None:
+    """Generate documentation using Sphinx for the current branch."""
     session.env["SPHINXOPTS"] = SPHINX_OPTS
     tech_dir = pathify(DOCUMENTATION_DIR, TECHNICAL_DIR)
     shutil.rmtree(tech_dir, ignore_errors=True, onerror=lambda *_: None)
@@ -132,22 +85,32 @@ def sphinx(session) -> None:
     session.run("python", "-m", "sphinx.cmd.build", DOCUMENTATION_DIR, ARTIFACT_DIR, "-b", "html")
 
 
-@nox.session(python=False)
-def bandit(session) -> None:
-    """Run static application security analysis."""
+@nox.session()
+def sast(session) -> None:
+    """Run static application security testing with Bandit."""
+    session.install("bandit")
     pkg = MAIN_PACKAGE.split(".")[0]
     session.run("bandit", pkg, "-r")
 
 
-@nox.session(python=False)
-def black(session) -> None:
-    """Check formatting."""
+@nox.session()
+def safety(session) -> None:
+    """Run safety checks against a vulnerability database using Safety."""
+    session.run("poetry", "update", "--no-dev", external=True)
+    session.install("safety")
+    session.run("safety", "check")
+
+
+@nox.session()
+def format(session) -> None:
+    """Reformat code with Black. Pass the '--check' flag to check formatting only."""
+    session.install("black")
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *session.posargs)
 
 
 @nox.session()
-def install(session: nox.sessions.Session):
-    """Test installing PyPI package or zipped code bundle if running locally."""
+def pip(session: nox.sessions.Session):
+    """Run through sandboxed install of PyPI package (if running on CI) or of installing package locally."""
     if os.getenv("CI", False):
         if "--showtime" in session.posargs:
             session.log("Testing we can install packaged pypi object")
