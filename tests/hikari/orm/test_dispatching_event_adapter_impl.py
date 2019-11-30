@@ -60,7 +60,7 @@ def dispatch_impl():
 
 @pytest.fixture()
 def gateway_impl():
-    return mock.MagicMock(spec_set=_gateway.GatewayClientV7)
+    return mock.MagicMock(spec_set=_gateway.GatewayClient)
 
 
 @pytest.fixture()

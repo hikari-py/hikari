@@ -75,11 +75,11 @@ class MockSession(ws.WebSocketClientSession):
         return self
 
 
-class MockGateway(gateway.GatewayClientV7):
+class MockGateway(gateway.GatewayClient):
     def __init__(self, **kwargs):
         # noinspection PyShadowingNames
         ws = Context()
-        gateway.GatewayClientV7.__init__(self, **kwargs)
+        gateway.GatewayClient.__init__(self, **kwargs)
         self.ws = ws
         self.ws.close = asynctest.CoroutineMock()
         self.ws.send_str = asynctest.CoroutineMock()
@@ -128,7 +128,7 @@ class TestGateway:
     async def test_init_produces_valid_url(self, event_loop):
         """GatewayConnection.__init__ should produce a valid query fragment for the URL."""
         # noinspection PyTypeChecker
-        gw = gateway.GatewayClientV7(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
+        gw = gateway.GatewayClient(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
         bits: urlparse.ParseResult = urlparse.urlparse(gw.uri)
 
         assert bits.scheme == "wss"
@@ -388,9 +388,15 @@ class TestGateway:
     @pytest.mark.parametrize("guild_subscriptions", [True, False])
     async def test_send_identify(self, event_loop, guild_subscriptions):
         with contextlib.ExitStack() as stack:
-            stack.enter_context(_helpers.mock_patch(user_agent.python_version, new=lambda: "python3"))
-            stack.enter_context(_helpers.mock_patch(user_agent.library_version, new=lambda: "vx.y.z"))
-            stack.enter_context(_helpers.mock_patch(platform.system, new=lambda: "leenuks"))
+            stack.enter_context(
+                asynctest.patch("hikari.internal_utilities.user_agent.python_version", new=lambda: "python3")
+            )
+            stack.enter_context(
+                asynctest.patch("hikari.internal_utilities.user_agent.library_version", new=lambda: "vx.y.z")
+            )
+            stack.enter_context(
+                asynctest.patch("hikari.internal_utilities.user_agent.system_type", new=lambda: "leenuks")
+            )
 
             gw = MockGateway(
                 uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None, large_threshold=69
@@ -403,7 +409,7 @@ class TestGateway:
             await gw._send_identify()
             gw._send_json.assert_called_with(
                 {
-                    "op": 2,
+                    "op": opcodes.GatewayOpcode.IDENTIFY,
                     "d": {
                         "token": "1234",
                         "compress": False,
