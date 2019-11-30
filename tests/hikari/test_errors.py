@@ -24,13 +24,13 @@ from http import HTTPStatus as HTTP
 import pytest
 
 from hikari import errors
-from hikari.net import http_base
+from hikari.net import http_api_client_base
 from hikari.net.opcodes import GatewayClosure as GSE
 from hikari.net.opcodes import JSONErrorCode as JSON
 
 _LOGGER = logging.getLogger(__name__)
 
-res = http_base.Resource("http://you.local", "get", "/it/now")
+res = http_api_client_base.Resource("http://you.local", "get", "/it/now")
 
 
 @pytest.mark.parametrize(
