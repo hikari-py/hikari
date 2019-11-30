@@ -68,7 +68,7 @@ class IUser(interfaces.IStatefulModel, interfaces.ISnowflake, interface=True):
     #: If this is an Official Discord System user (urgent message system).
     #:
     #: :type: :class:`bool`
-    system: bool
+    is_system: bool
 
     __repr__ = auto_repr.repr_of("id", "username", "discriminator", "is_bot")
 
@@ -78,7 +78,7 @@ class User(IUser):
     Implementation of the user data type.
     """
 
-    __slots__ = ("_fabric", "id", "username", "discriminator", "avatar_hash", "is_bot", "system", "__weakref__")
+    __slots__ = ("_fabric", "id", "username", "discriminator", "avatar_hash", "is_bot", "is_system", "__weakref__")
 
     # noinspection PyMissingConstructor
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT):
@@ -86,7 +86,7 @@ class User(IUser):
         self.id = int(payload["id"])
         # We don't expect these to ever change...
         self.is_bot = payload.get("bot", False)
-        self.system = payload.get("system", False)
+        self.is_system = payload.get("system", False)
         self.update_state(payload)
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
@@ -134,14 +134,14 @@ class OAuth2User(User):
     An extension of a regular user that provides additional OAuth2-scoped information.
     """
 
-    __slots__ = ("mfa_enabled", "locale", "verified", "email", "flags", "premium_type")
+    __slots__ = ("is_mfa_enabled", "locale", "is_verified", "email", "flags", "premium_type")
 
     #: True if the user has multi-factor-authentication enabled.
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
     #: :type: :class:`bool` or `None` if not available.
-    mfa_enabled: typing.Optional[bool]
+    is_mfa_enabled: typing.Optional[bool]
 
     #: The user's chosen language option.
     #:
@@ -177,7 +177,7 @@ class OAuth2User(User):
     #: Requires the `email` OAuth2 scope.
     #:
     #: :type: :class:`bool` or `None` if not available.
-    verified: typing.Optional[bool]
+    is_verified: typing.Optional[bool]
 
     #: The user's email address.
     #:
@@ -201,7 +201,7 @@ class OAuth2User(User):
     #: :type: :class:`PremiumType` or `None` if not available.
     premium_type: PremiumType
 
-    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "is_bot", "verified", "mfa_enabled")
+    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "is_bot", "is_verified", "is_mfa_enabled")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT):
         super().__init__(fabric_obj, payload)
@@ -209,9 +209,9 @@ class OAuth2User(User):
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
 
-        self.mfa_enabled = payload.get("mfa_enabled")
+        self.is_mfa_enabled = payload.get("mfa_enabled")
         self.locale = payload.get("locale")
-        self.verified = payload.get("verified")
+        self.is_verified = payload.get("verified")
         self.email = payload.get("email")
         self.flags = transformations.nullable_cast(payload.get("flags"), UserFlag)
         self.premium_type = transformations.nullable_cast(payload.get("premium_type"), PremiumType)
