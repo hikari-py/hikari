@@ -391,13 +391,11 @@ class AuditLogChangeKey(str, interfaces.BestEffortEnumMixin, enum.Enum):
     AVATAR_HASH = "avatar_hash"
     ID = "id"
     TYPE = "type"
-    ACCOUNT_ID = "account_id"
     ENABLE_EMOTICONS = "enable_emoticons"
     EXPIRE_BEHAVIOR = "expire_behavior"
     EXPIRE_GRACE_PERIOD = "expire_grace_period"
-
-    #: |undocumented|
     RATE_LIMIT_PER_USER = "rate_limit_per_user"
+    SYSTEM_CHANNEL_ID = "system_channel_id"
 
     #: Alias for "COLOR"
     COLOUR = COLOR
@@ -426,13 +424,17 @@ def _type_converter(type_entity):
 AUDIT_LOG_ENTRY_CONVERTERS = {
     AuditLogChangeKey.OWNER_ID: int,
     AuditLogChangeKey.AFK_CHANNEL_ID: int,
+    AuditLogChangeKey.AFK_TIMEOUT: int,
     AuditLogChangeKey.MFA_LEVEL: guilds.MFALevel,
     AuditLogChangeKey.VERIFICATION_LEVEL: guilds.VerificationLevel,
     AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: guilds.ExplicitContentFilterLevel,
     AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guilds.DefaultMessageNotificationsLevel,
     AuditLogChangeKey.ADD_ROLE_TO_MEMBER: _new_id_map_of(roles.PartialRole),
     AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: _new_id_map_of(roles.PartialRole),
+    AuditLogChangeKey.PRUNE_DELETE_DAYS: int,
     AuditLogChangeKey.WIDGET_CHANNEL_ID: int,
+    AuditLogChangeKey.POSITION: int,
+    AuditLogChangeKey.BITRATE: int,
     AuditLogChangeKey.PERMISSION_OVERWRITES: _new_sequence_of(overwrites.Overwrite),
     AuditLogChangeKey.APPLICATION_ID: int,
     AuditLogChangeKey.PERMISSIONS: permissions.Permission,
@@ -441,12 +443,16 @@ AUDIT_LOG_ENTRY_CONVERTERS = {
     AuditLogChangeKey.DENY: permissions.Permission,
     AuditLogChangeKey.CHANNEL_ID: int,
     AuditLogChangeKey.INVITER_ID: int,
+    AuditLogChangeKey.MAX_USES: int,
+    AuditLogChangeKey.USES: int,
+    AuditLogChangeKey.MAX_AGE: int,
     AuditLogChangeKey.ID: int,
     AuditLogChangeKey.TYPE: _type_converter,
-    AuditLogChangeKey.ACCOUNT_ID: int,
     AuditLogChangeKey.ENABLE_EMOTICONS: bool,
     AuditLogChangeKey.EXPIRE_BEHAVIOR: int,
     AuditLogChangeKey.EXPIRE_GRACE_PERIOD: int,
+    AuditLogChangeKey.RATE_LIMIT_PER_USER: int,
+    AuditLogChangeKey.SYSTEM_CHANNEL_ID: int,
 }
 
 

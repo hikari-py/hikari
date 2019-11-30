@@ -36,6 +36,7 @@ from hikari.orm.models import reactions
 from hikari.orm.models import roles
 from hikari.orm.models import users
 from hikari.orm.models import webhooks
+from hikari.orm.models import voices
 
 
 class IStateRegistry(abc.ABC):
@@ -317,6 +318,22 @@ class IStateRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.guilds.Guild` object.
+        """
+
+    @abc.abstractmethod
+    def parse_voice_state(
+        self, guild_obj: guilds.Guild, voice_state_payload: data_structures.DiscordObjectT
+    ) -> voices.VoiceState:
+        """
+        Parse a voice state payload into a workable object.
+
+        Params:
+            voice_state_payload:
+                The payload of the voice state.
+            guild_obj:
+                The guild the voice state should be placed in.
+        Returns:
+            A :class:`hikari.orm.models.voices.VoiceState` object.
         """
 
     @abc.abstractmethod

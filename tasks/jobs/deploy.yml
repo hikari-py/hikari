@@ -28,7 +28,7 @@
     - poetry install -v
     - poetry show -v
 
-deploy-to-staging:
+"Deploy a new dev prerelease":
   extends: .deploy
   only:
     - staging
@@ -48,7 +48,7 @@ deploy-to-staging:
     name:
       staging
 
-deploy-to-prod:
+"Deploy a new release":
   extends: .deploy
   only:
     - master

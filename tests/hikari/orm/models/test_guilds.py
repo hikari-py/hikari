@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 from unittest import mock
+import datetime
 
 import pytest
 
@@ -131,7 +132,24 @@ def test_member_payload():
 
 
 @pytest.fixture
-def test_guild_payload(test_emoji_payload, test_roles_payloads, test_channel_payloads, test_member_payload):
+def test_voice_state_payload():
+    return {
+        "channel_id": "432123321",
+        "user_id": "6543453",
+        "session_id": "350a109226bd6f43c81f12c7c08de20a",
+        "deaf": False,
+        "mute": True,
+        "self_deaf": True,
+        "self_mute": False,
+        "self_stream": True,
+        "suppress": False,
+    }
+
+
+@pytest.fixture
+def test_guild_payload(
+    test_emoji_payload, test_roles_payloads, test_channel_payloads, test_member_payload, test_voice_state_payload
+):
     return {
         "id": "123456",
         "afk_channel_id": "99998888777766",
@@ -149,12 +167,12 @@ def test_guild_payload(test_emoji_payload, test_roles_payloads, test_channel_pay
         "roles": test_roles_payloads,
         "emojis": [test_emoji_payload],
         "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
+        "voice_states": [test_voice_state_payload],
         "member_count": 14,
         "mfa_level": 1,
         "joined_at": "2019-05-17T06:26:56.936000+00:00",
         "large": False,
         "unavailable": False,
-        "voice_states": [],
         "permissions": 66_321_471,
         "members": [test_member_payload],
         "channels": test_channel_payloads,
@@ -181,7 +199,9 @@ def fabric_obj(mock_state_registry):
 
 @pytest.mark.model
 class TestGuild:
-    def test_available_Guild(self, test_guild_payload, test_emoji_payload, test_member_payload, fabric_obj):
+    def test_available_Guild(
+        self, test_guild_payload, test_emoji_payload, test_member_payload, test_voice_state_payload, fabric_obj
+    ):
         guild_obj = guilds.Guild(fabric_obj, test_guild_payload)
 
         assert guild_obj.id == 123_456
@@ -201,6 +221,9 @@ class TestGuild:
         assert guilds.Feature.ANIMATED_ICON in guild_obj.features
         assert guild_obj.member_count == 14
         assert guild_obj.mfa_level == guilds.MFALevel.ELEVATED
+        assert guild_obj.joined_at == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, datetime.timezone.utc)
+        assert guild_obj.is_large is False
+        assert guild_obj.is_unavailable is False
         assert guild_obj.my_permissions == (
             permissions.Permission.USE_VAD
             | permissions.Permission.MOVE_MEMBERS
@@ -232,20 +255,24 @@ class TestGuild:
         assert guild_obj.system_channel_flags & guilds.SystemChannelFlag.PREMIUM_SUBSCRIPTION
         assert guild_obj.system_channel_flags & guilds.SystemChannelFlag.USER_JOIN
         assert guild_obj.preferred_locale == "en-GB"
+        guild_obj.__repr__()
 
         assert fabric_obj.state_registry.parse_role.call_count == 2
         fabric_obj.state_registry.parse_emoji.assert_called_once_with(test_emoji_payload, guild_obj)
         fabric_obj.state_registry.parse_member.assert_called_once_with(test_member_payload, guild_obj)
         assert fabric_obj.state_registry.parse_channel.call_count == 3
+        fabric_obj.state_registry.parse_voice_state.assert_called_once_with(test_voice_state_payload, guild_obj)
 
     def test_unavailable_Guild(self, fabric_obj):
         guild_obj = guilds.Guild(fabric_obj, {"id": "12345678910", "unavailable": True})
 
         assert guild_obj.id == 12_345_678_910
-        assert guild_obj.unavailable
+        assert guild_obj.is_unavailable
+        guild_obj.__repr__()
 
     def test_Ban(self, fabric_obj):
         user = object()
         ban = guilds.Ban(fabric_obj, {"user": user, "reason": "being bad"})
         assert ban.reason == "being bad"
+        ban.__repr__()
         fabric_obj.state_registry.parse_user.assert_called_once_with(user)

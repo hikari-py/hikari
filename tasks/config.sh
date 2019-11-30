@@ -38,8 +38,8 @@ cat > /dev/null << EOF
   SECURE VARIABLES TO DEFINE IN CI
   ================================
 
-  PyPi credentials:
-    PYPI_USER
+  PyPI credentials:
+    PYPI_USER (should always be __token__ if using token auth)
     PYPI_PASS
 
   SSH:
@@ -52,7 +52,7 @@ cat > /dev/null << EOF
     RELEASE_WEBHOOK_COLOUR (integer colour code)
 
   GitLab API:
-    GITLAB_RELEASE_TOKEN (user API token used to create a new release with over https)
+    GITLAB_API_TOKEN (user API token used to trigger certain API endpoints such as to trigger housekeeping)
     CI_PROJECT_ID (the project ID on GitLab, this is predefined by the CI environment)
 
   VARIABLES TO DEFINE IN CI PER ENVIRONMENT
@@ -70,9 +70,9 @@ cat > /dev/null << EOF
   VARIABLES TO DEFINE IN SCHEDULED JOBS
   =====================================
 
-      CI_IS_SCHEDULED - set to 1 and the job will discard any pypi cache. This has the effect that
-                        the job will automatically renew its cache first. This also means the cache can be
-                        kept up-to-date by schedules, keeping repeated builds running quickly.
+    CI_IS_SCHEDULED - set to 1 and the job will discard any pypi cache. This has the effect that
+                      the job will automatically renew its cache first. This also means the cache can be
+                      kept up-to-date by schedules, keeping repeated builds running quickly.
 EOF
 
 echo "=============END CONFIGURATION============="

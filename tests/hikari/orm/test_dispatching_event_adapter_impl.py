@@ -60,7 +60,7 @@ def dispatch_impl():
 
 @pytest.fixture()
 def gateway_impl():
-    return mock.MagicMock(spec_set=_gateway.GatewayClientV7)
+    return mock.MagicMock(spec_set=_gateway.GatewayClient)
 
 
 @pytest.fixture()
@@ -588,9 +588,9 @@ class TestDispatchingEventAdapterImpl:
     async def test__handle_guild_unavailable_when_cached_dispatches_GUILD_UNAVAILABLE(
         self, adapter_impl, dispatch_impl, fabric_impl
     ):
-        guild_obj = _helpers.mock_model(guilds.Guild, id=123, unavailable=True)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, is_unavailable=True)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
-        payload = {"id": str(guild_obj.id), "unavailable": guild_obj.unavailable}
+        payload = {"id": str(guild_obj.id), "unavailable": guild_obj.is_unavailable}
 
         await adapter_impl._handle_guild_unavailable(payload)
 
@@ -598,9 +598,9 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test__handle_guild_unavailable_when_cached_sets_guild_unavailablility(self, adapter_impl, fabric_impl):
-        guild_obj = _helpers.mock_model(guilds.Guild, id=123, unavailable=True)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, is_unavailable=True)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
-        payload = {"id": str(guild_obj.id), "unavailable": guild_obj.unavailable}
+        payload = {"id": str(guild_obj.id), "unavailable": guild_obj.is_unavailable}
 
         await adapter_impl._handle_guild_unavailable(payload)
 
@@ -616,9 +616,9 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test__handle_guild_leave_deletes_guild(self, adapter_impl, fabric_impl):
-        guild_obj = _helpers.mock_model(guilds.Guild, id=123, unavailable=False)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, is_unavailable=False)
         fabric_impl.state_registry.parse_guild = mock.MagicMock(return_value=guild_obj)
-        payload = {"id": str(guild_obj.id), "unavailable": guild_obj.unavailable}
+        payload = {"id": str(guild_obj.id), "unavailable": guild_obj.is_unavailable}
 
         await adapter_impl._handle_guild_leave(payload)
 
@@ -626,9 +626,9 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test__handle_guild_leave_dispatches_GUILD_LEAVE(self, adapter_impl, dispatch_impl, fabric_impl):
-        guild_obj = _helpers.mock_model(guilds.Guild, id=123, unavailable=False)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, is_unavailable=False)
         fabric_impl.state_registry.parse_guild = mock.MagicMock(return_value=guild_obj)
-        payload = {"id": guild_obj.id, "unavailable": guild_obj.unavailable}
+        payload = {"id": guild_obj.id, "unavailable": guild_obj.is_unavailable}
 
         await adapter_impl._handle_guild_leave(payload)
 
@@ -754,9 +754,9 @@ class TestDispatchingEventAdapterImpl:
     async def test_handle_guild_emojis_update_when_guild_is_cached_dispatches_GUILD_EMOJIS_UPDATE(
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        existing_emoji_1 = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="bowsettebaka", animated=False)
-        existing_emoji_2 = _helpers.mock_model(emojis.GuildEmoji, id=1235, name="bowsettel00d", animated=False)
-        existing_emoji_3 = _helpers.mock_model(emojis.GuildEmoji, id=1236, name="bowsetteowo", animated=True)
+        existing_emoji_1 = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="bowsettebaka", is_animated=False)
+        existing_emoji_2 = _helpers.mock_model(emojis.GuildEmoji, id=1235, name="bowsettel00d", is_animated=False)
+        existing_emoji_3 = _helpers.mock_model(emojis.GuildEmoji, id=1236, name="bowsetteowo", is_animated=True)
 
         initial_emoji_map = {
             existing_emoji_1.id: existing_emoji_1,
@@ -1170,7 +1170,8 @@ class TestDispatchingEventAdapterImpl:
         message_obj2 = _helpers.mock_model(messages.Message, id=1235)
 
         channel_obj = _helpers.mock_model(channels.Channel, id=456)
-        fabric_impl.state_registry.delete_message = mock.MagicMock(side_effect=[message_obj1, message_obj2])
+        fabric_impl.state_registry.delete_message = mock.MagicMock(return_value=None)
+        fabric_impl.state_registry.get_message_by_id = mock.MagicMock(side_effect=[message_obj1, message_obj2])
         fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
 
         payload = {"ids": [str(message_obj1.id), str(message_obj2.id)], "channel_id": str(channel_obj.id)}
@@ -1190,7 +1191,8 @@ class TestDispatchingEventAdapterImpl:
         message_obj3 = _helpers.mock_model(messages.Message, id=1236)
 
         channel_obj = _helpers.mock_model(channels.Channel, id=456)
-        fabric_impl.state_registry.delete_message = mock.MagicMock(side_effect=[message_obj1, message_obj2])
+        fabric_impl.state_registry.delete_message = mock.MagicMock(return_value=None)
+        fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=None)
         fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
 
         payload = {
@@ -1203,7 +1205,7 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(
             events.MESSAGE_DELETE_BULK,
             channel_obj,
-            {message_obj1.id: message_obj1, message_obj2.id: message_obj2, message_obj3.id: None},
+            {message_obj1.id: None, message_obj2.id: None, message_obj3.id: None},
         )
 
     @pytest.mark.asyncio
@@ -1214,7 +1216,7 @@ class TestDispatchingEventAdapterImpl:
         message_obj2 = _helpers.mock_model(messages.Message, id=1235)
         message_obj3 = _helpers.mock_model(messages.Message, id=1236)
 
-        fabric_impl.state_registry.delete_message = mock.MagicMock(side_effect=[message_obj1, message_obj2])
+        fabric_impl.state_registry.delete_message = mock.MagicMock(side_effect=[message_obj1, message_obj2, None])
         fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=None)
 
         payload = {"ids": [str(message_obj1.id), str(message_obj2.id), str(message_obj3.id)], "channel_id": "456"}
@@ -1265,7 +1267,7 @@ class TestDispatchingEventAdapterImpl:
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         message_obj = _helpers.mock_model(messages.Message, id=789)
-        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", animated=False)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.parse_emoji = mock.MagicMock(return_value=emoji_obj)
         payload = {
@@ -1285,7 +1287,7 @@ class TestDispatchingEventAdapterImpl:
     ):
         message_obj = _helpers.mock_model(messages.Message, id=789)
         guild_obj = _helpers.mock_model(guilds.Guild, id=345)
-        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", animated=False)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
         fabric_impl.state_registry.parse_emoji = mock.MagicMock(return_value=emoji_obj)
@@ -1306,7 +1308,7 @@ class TestDispatchingEventAdapterImpl:
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         message_obj = _helpers.mock_model(messages.Message, id=789)
-        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", animated=False)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
         fabric_impl.state_registry.parse_emoji = mock.MagicMock(return_value=emoji_obj)
@@ -1326,7 +1328,7 @@ class TestDispatchingEventAdapterImpl:
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         message_obj = _helpers.mock_model(messages.Message, id=789)
-        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", animated=False)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
         fabric_impl.state_registry.get_user_by_id = mock.MagicMock(return_value=None)
@@ -1350,7 +1352,7 @@ class TestDispatchingEventAdapterImpl:
     ):
         message_obj = _helpers.mock_model(messages.Message, id=789)
         guild_obj = _helpers.mock_model(guilds.Guild, id=345)
-        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", animated=False)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
         fabric_impl.state_registry.get_member_by_id = mock.MagicMock(return_value=None)
@@ -1376,7 +1378,7 @@ class TestDispatchingEventAdapterImpl:
         member_obj = _helpers.mock_model(members.Member, id=123)
         message_obj = _helpers.mock_model(messages.Message, id=789)
         guild_obj = _helpers.mock_model(guilds.Guild, id=345)
-        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", animated=False)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
         reaction_obj = _helpers.mock_model(reactions.Reaction, count=1, emoji=emoji_obj, message=message_obj)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
@@ -1401,7 +1403,7 @@ class TestDispatchingEventAdapterImpl:
     ):
         user_obj = _helpers.mock_model(users.User, id=123)
         message_obj = _helpers.mock_model(messages.Message, id=789)
-        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", animated=False)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
         reaction_obj = _helpers.mock_model(reactions.Reaction, count=1, emoji=emoji_obj, message=message_obj)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
@@ -1443,7 +1445,7 @@ class TestDispatchingEventAdapterImpl:
     ):
         message_obj = _helpers.mock_model(messages.Message, id=789)
         guild_obj = _helpers.mock_model(guilds.Guild, id=345)
-        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", animated=False)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
         fabric_impl.state_registry.parse_emoji = mock.MagicMock(return_value=emoji_obj)
@@ -1464,7 +1466,7 @@ class TestDispatchingEventAdapterImpl:
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         message_obj = _helpers.mock_model(messages.Message, id=789)
-        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", animated=False)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
         fabric_impl.state_registry.parse_emoji = mock.MagicMock(return_value=emoji_obj)
@@ -1484,7 +1486,7 @@ class TestDispatchingEventAdapterImpl:
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         message_obj = _helpers.mock_model(messages.Message, id=789)
-        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", animated=False)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
         fabric_impl.state_registry.parse_emoji = mock.MagicMock(return_value=emoji_obj)
@@ -1507,7 +1509,7 @@ class TestDispatchingEventAdapterImpl:
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         message_obj = _helpers.mock_model(messages.Message, id=789)
-        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", animated=False)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
         reaction_obj = _helpers.mock_model(reactions.Reaction, count=0, emoji=emoji_obj, message=message_obj)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
@@ -1533,7 +1535,7 @@ class TestDispatchingEventAdapterImpl:
     ):
         user_obj = _helpers.mock_model(users.User, id=123)
         message_obj = _helpers.mock_model(messages.Message, id=789)
-        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", animated=False)
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
         reaction_obj = _helpers.mock_model(reactions.Reaction, count=0, emoji=emoji_obj, message=message_obj)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
@@ -1552,113 +1554,315 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(events.MESSAGE_REACTION_REMOVE, reaction_obj, user_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_message_reaction_remove_all_when_uncached_message_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=None)
+        payload = {"channel_id": "123", "message_id": "456"}
+
+        await adapter_impl.handle_message_reaction_remove_all(gateway_impl, payload)
+
+        # Not called other than the raw from earlier.
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_MESSAGE_REACTION_REMOVE_ALL, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_message_reaction_remove_all_deletes_all_reactions(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        message_obj = _helpers.mock_model(messages.Message, id=456)
+        fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
+        payload = {"channel_id": "123", "message_id": str(message_obj.id)}
+
+        await adapter_impl.handle_message_reaction_remove_all(gateway_impl, payload)
+
+        fabric_impl.state_registry.delete_all_reactions(message_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_message_reaction_remove_all_dispatches_MESSAGE_REACTION_REMOVE_ALL(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        message_obj = _helpers.mock_model(messages.Message, id=456)
+        fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
+        payload = {"channel_id": "123", "message_id": str(message_obj.id)}
+
+        await adapter_impl.handle_message_reaction_remove_all(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.MESSAGE_REACTION_REMOVE_ALL, message_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_presence_update_when_guild_not_cached_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
+        payload = {
+            "user": {"id": "123"},
+            "roles": ["456", "654", "4"],
+            "game": None,
+            "guild_id": "789",
+            "status": "idle",
+            "activities": [],
+            "client_status": {"desktop": "online"},
+        }
+
+        await adapter_impl.handle_presence_update(gateway_impl, payload)
+
+        # Not called other than the raw from earlier.
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_PRESENCE_UPDATE, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_presence_update_when_user_not_cached_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        guild_obj = _helpers.mock_model(guilds.Guild, id=789)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.get_user_by_id = mock.MagicMock(return_value=None)
+        payload = {
+            "user": {"id": "123"},
+            "roles": ["456", "654", "4"],
+            "game": None,
+            "guild_id": str(guild_obj.id),
+            "status": "idle",
+            "activities": [],
+            "client_status": {"desktop": "online"},
+        }
+        await adapter_impl.handle_presence_update(gateway_impl, payload)
+
+        # Not called other than the raw from earlier.
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_PRESENCE_UPDATE, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_presence_update_when_member_not_cached_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        guild_obj = _helpers.mock_model(guilds.Guild, id=789)
+        user_obj = _helpers.mock_model(users.User, id=123)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.get_user_by_id = mock.MagicMock(return_value=user_obj)
+        fabric_impl.state_registry.get_member_by_id = mock.MagicMock(return_value=None)
+        payload = {
+            "user": {"id": str(user_obj.id)},
+            "roles": ["456", "654", "4"],
+            "game": None,
+            "guild_id": str(guild_obj.id),
+            "status": "idle",
+            "activities": [],
+            "client_status": {"desktop": "online"},
+        }
+        await adapter_impl.handle_presence_update(gateway_impl, payload)
+
+        # Not called other than the raw from earlier.
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_PRESENCE_UPDATE, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_presence_update_when_cached_member_invokes_update_member_presence(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        guild_obj = _helpers.mock_model(guilds.Guild, id=789)
+        user_obj = _helpers.mock_model(users.User, id=123)
+        member_obj = _helpers.mock_model(members.Member, id=123)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.get_user_by_id = mock.MagicMock(return_value=user_obj)
+        fabric_impl.state_registry.get_member_by_id = mock.MagicMock(return_value=member_obj)
+        payload = {
+            "user": {"id": str(user_obj.id)},
+            "roles": ["456", "654", "4"],
+            "game": None,
+            "guild_id": str(guild_obj.id),
+            "status": "idle",
+            "activities": [],
+            "client_status": {"desktop": "online"},
+        }
+        await adapter_impl.handle_presence_update(gateway_impl, payload)
+
+        fabric_impl.state_registry.update_member_presence.assert_called_with(member_obj, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
-    async def test_handle_presence_update_ignores_unknown_roles(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+    async def test_handle_presence_update_ignores_unknown_roles(
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+    ):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=789)
+        user_obj = _helpers.mock_model(users.User, id=123)
+        member_obj = _helpers.mock_model(members.Member, id=123)
+        role_obj1 = _helpers.mock_model(roles.Role, id=456)
+        role_obj2 = _helpers.mock_model(roles.Role, id=654)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.get_user_by_id = mock.MagicMock(return_value=user_obj)
+        fabric_impl.state_registry.get_member_by_id = mock.MagicMock(return_value=member_obj)
+        fabric_impl.state_registry.get_role_by_id = mock.MagicMock(side_effect=[role_obj1, role_obj2, None])
+        payload = {
+            "user": {"id": str(user_obj.id)},
+            "roles": [str(role_obj1.id), str(role_obj2.id), "4"],
+            "game": None,
+            "guild_id": str(guild_obj.id),
+            "status": "idle",
+            "activities": [],
+            "client_status": {"desktop": "online"},
+        }
+        await adapter_impl.handle_presence_update(gateway_impl, payload)
+
+        fabric_impl.state_registry.set_roles_for_member.assert_called_with([role_obj1, role_obj2], member_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
-    async def test_handle_presence_update_sets_roles_for_member(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+    async def test_handle_presence_update_sets_roles_for_member(
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+    ):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=789)
+        user_obj = _helpers.mock_model(users.User, id=123)
+        member_obj = _helpers.mock_model(members.Member, id=123)
+        role_obj1 = _helpers.mock_model(roles.Role, id=456)
+        role_obj2 = _helpers.mock_model(roles.Role, id=654)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.get_user_by_id = mock.MagicMock(return_value=user_obj)
+        fabric_impl.state_registry.get_member_by_id = mock.MagicMock(return_value=member_obj)
+        fabric_impl.state_registry.get_role_by_id = mock.MagicMock(side_effect=[role_obj1, role_obj2, None])
+        payload = {
+            "user": {"id": str(user_obj.id)},
+            "roles": [str(role_obj1.id), str(role_obj2.id), "4"],
+            "game": None,
+            "guild_id": str(guild_obj.id),
+            "status": "idle",
+            "activities": [],
+            "client_status": {"desktop": "online"},
+        }
+        await adapter_impl.handle_presence_update(gateway_impl, payload)
+
+        fabric_impl.state_registry.set_roles_for_member.assert_called_with([role_obj1, role_obj2], member_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
-    async def test_handle_presence_update_dispatches_PRESENCE_UPDATE(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+    async def test_handle_presence_update_dispatches_PRESENCE_UPDATE(
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+    ):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=789)
+        user_obj = _helpers.mock_model(users.User, id=123)
+        member_obj = _helpers.mock_model(members.Member, id=123)
+        role_obj1 = _helpers.mock_model(roles.Role, id=456)
+        role_obj2 = _helpers.mock_model(roles.Role, id=654)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.get_user_by_id = mock.MagicMock(return_value=user_obj)
+        fabric_impl.state_registry.get_member_by_id = mock.MagicMock(return_value=member_obj)
+        fabric_impl.state_registry.get_role_by_id = mock.MagicMock(side_effect=[role_obj1, role_obj2, None])
+        payload = {
+            "user": {"id": str(user_obj.id)},
+            "roles": [str(role_obj1.id), str(role_obj2.id), "4"],
+            "game": None,
+            "guild_id": str(guild_obj.id),
+            "status": "idle",
+            "activities": [],
+            "client_status": {"desktop": "online"},
+        }
+        await adapter_impl.handle_presence_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.PRESENCE_UPDATE)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_typing_start_in_uncached_channel_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=None)
+        payload = {"channel_id": "123", "user_id": "456", "timestamp": timestamp.isoformat()}
+
+        await adapter_impl.handle_typing_start(gateway_impl, payload)
+
+        # Not called other than the raw from earlier.
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_TYPING_START, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_typing_start_by_unknown_user_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+        channel_obj = _helpers.mock_model(channels.DMChannel, id=123, is_dm=True)
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
+        fabric_impl.state_registry.get_user_by_id = mock.MagicMock(return_value=None)
+        payload = {"channel_id": str(channel_obj.id), "user_id": "456", "timestamp": timestamp.isoformat()}
+
+        await adapter_impl.handle_typing_start(gateway_impl, payload)
+
+        # Not called other than the raw from earlier.
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_TYPING_START, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
-    async def test_handle_typing_start_in_guild_resolves_member(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+    async def test_handle_typing_start_in_guild_resolves_member(
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+    ):
+        timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+        channel_obj = _helpers.mock_model(channels.GuildChannel, id=123, is_dm=False)
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
+        payload = {"channel_id": str(channel_obj.id), "user_id": "456", "timestamp": timestamp.isoformat()}
+
+        await adapter_impl.handle_typing_start(gateway_impl, payload)
+
+        channel_obj.guild.members.get.assert_called_with(456)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
-    async def test_handle_typing_start_in_non_guild_resolves_user(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+    async def test_handle_typing_start_in_non_guild_resolves_user(
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+    ):
+        timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+        channel_obj = _helpers.mock_model(channels.DMChannel, id=123, is_dm=True)
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
+        fabric_impl.state_registry.get_user_by_id = mock.MagicMock(return_value=None)
+        payload = {"channel_id": str(channel_obj.id), "user_id": "456", "timestamp": timestamp.isoformat()}
+
+        await adapter_impl.handle_typing_start(gateway_impl, payload)
+
+        fabric_impl.state_registry.get_user_by_id.assert_called_with(456)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
-    async def test_handle_typing_start_dispatches_TYPING_START(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+    async def test_handle_typing_start_dispatches_TYPING_START(
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+    ):
+        timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+        channel_obj = _helpers.mock_model(channels.DMChannel, id=123, is_dm=True)
+        user_obj = _helpers.mock_model(users.User, id=456)
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
+        fabric_impl.state_registry.get_user_by_id = mock.MagicMock(return_value=user_obj)
+        payload = {"channel_id": str(channel_obj.id), "user_id": str(user_obj.id), "timestamp": timestamp.isoformat()}
+
+        await adapter_impl.handle_typing_start(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.TYPING_START, user_obj, channel_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
-    async def test_handle_user_update_dispatches_USER_UPDATE(self, adapter_impl, gateway_impl, dispatch_impl):
-        ...
+    async def test_handle_user_update_dispatches_USER_UPDATE(
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+    ):
+        user_obj = _helpers.mock_model(users.User, id=123)
+        fabric_impl.state_registry.parse_user = mock.MagicMock(return_value=user_obj)
+        payload = {"id": str(user_obj.id)}
+
+        await adapter_impl.handle_user_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.USER_UPDATE, user_obj)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_webhooks_update_when_channel_not_cached_does_not_dispatch_anything(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=None)
+        payload = {"guild_id": "123", "channel_id": "456"}
+
+        await adapter_impl.handle_webhooks_update(gateway_impl, payload)
+
+        # Not called other than the raw from earlier.
+        dispatch_impl.assert_called_once()
+        dispatch_impl.assert_called_with(events.RAW_WEBHOOKS_UPDATE, payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Not implemented")
     async def test_handle_webhooks_update_when_channel_cached_dispatches_WEBHOOKS_UPDATE(
-        self, adapter_impl, gateway_impl, dispatch_impl
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        ...
+        channel_obj = _helpers.mock_model(channels.GuildChannel, id=456)
+        fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
+        payload = {"guild_id": "123", "channel_id": str(channel_obj.id)}
+
+        await adapter_impl.handle_webhooks_update(gateway_impl, payload)
+
+        dispatch_impl.assert_called_with(events.WEBHOOKS_UPDATE, channel_obj)

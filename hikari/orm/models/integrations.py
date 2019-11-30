@@ -31,12 +31,12 @@ from hikari.orm.models import interfaces
 from hikari.orm.models import users
 
 
-class IntegrationAccount(interfaces.IStatefulModel, interfaces.ISnowflake):
+class IntegrationAccount(interfaces.ISnowflake):
     """
     An account used for an integration.
     """
 
-    __slots__ = ("_fabric", "id", "name")
+    __slots__ = ("id", "name")
 
     #: The id for the account
     #:
@@ -50,8 +50,7 @@ class IntegrationAccount(interfaces.IStatefulModel, interfaces.ISnowflake):
 
     __repr__ = auto_repr.repr_of("id", "name")
 
-    def __init__(self, fabric_obj, payload):
-        self._fabric = fabric_obj
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.name = payload.get("name")
 
@@ -61,7 +60,7 @@ class PartialIntegration(interfaces.ISnowflake):
     A partial guild integration, seen in AuditLogs.
     """
 
-    __slots__ = ("id", "name", "type")
+    __slots__ = ("id", "name", "type", "account")
 
     #: The integration ID
     #:
@@ -78,12 +77,18 @@ class PartialIntegration(interfaces.ISnowflake):
     #: :type: :class:`str`
     type: str
 
+    #: Integration account information.
+    #:
+    #: :type: :class:`hikari.orm.models.integrations.IntegrationAccount`
+    account: IntegrationAccount
+
     __repr__ = auto_repr.repr_of("id", "name")
 
-    def __init__(self, payload) -> None:
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
         self.type = payload["type"]
+        self.account = IntegrationAccount(payload["account"])
 
 
 class Integration(PartialIntegration, interfaces.IStatefulModel):
@@ -93,8 +98,8 @@ class Integration(PartialIntegration, interfaces.IStatefulModel):
 
     __slots__ = (
         "_fabric",
-        "enabled",
-        "syncing",
+        "is_enabled",
+        "is_syncing",
         "_role_id",
         "expire_grace_period",
         "user",
@@ -107,12 +112,12 @@ class Integration(PartialIntegration, interfaces.IStatefulModel):
     #: Whether the integration is enabled or not.
     #:
     #: :type: :class:`bool`
-    enabled: bool
+    is_enabled: bool
 
     #: Whether the integration is currently synchronizing.
     #:
     #: :type: :class:`bool`
-    syncing: bool
+    is_syncing: bool
 
     #: The grace period for expiring subscribers.
     #:
@@ -124,11 +129,6 @@ class Integration(PartialIntegration, interfaces.IStatefulModel):
     #: :type: :class:`hikari.orm.models.users.User`
     user: users.User
 
-    #: Integration account information.
-    #:
-    #: :type: :class:`hikari.orm.models.integrations.IntegrationAccount`
-    account: IntegrationAccount
-
     #: The time when the integration last synchronized.
     #:
     #: :type: :class:`datetime.datetime`
@@ -137,12 +137,11 @@ class Integration(PartialIntegration, interfaces.IStatefulModel):
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
-        self.enabled = payload["enabled"]
-        self.syncing = payload["syncing"]
+        self.is_enabled = payload["enabled"]
+        self.is_syncing = payload["syncing"]
         self._role_id = int(payload["role_id"])
         self.expire_grace_period = int(payload["expire_grace_period"])
         self.user = self._fabric.state_registry.parse_user(payload["user"])
-        self.account = IntegrationAccount(self._fabric.state_registry, payload["account"])
         self.synced_at = date_helpers.parse_iso_8601_ts(payload["synced_at"])
 
 

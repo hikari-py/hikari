@@ -151,7 +151,9 @@ class TestColor:
         ],
     )
     def test_Color__cls_getattr___happy_path(self, input, expected_result):
-        assert colors.Color[input] == expected_result, f"{input}"
+        result = colors.Color[input]
+        assert result == expected_result, f"{input}"
+        result.__repr__()
 
     @pytest.mark.parametrize(
         "input",
@@ -178,3 +180,6 @@ class TestColor:
             assert False, f"Expected ValueError, got {result} returned safely instead"
         except ValueError:
             pass
+
+    def test_Color_repr(self):
+        colors.Color["#1a2b3c"].__repr__()

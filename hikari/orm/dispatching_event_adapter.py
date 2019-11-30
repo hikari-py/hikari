@@ -62,131 +62,129 @@ class DispatchingEventAdapter(event_handler.IEventHandler):
         except AttributeError:
             await self.drain_unrecognised_event(shard, event_name, payload)
 
-    async def handle_disconnect(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_disconnect(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_reconnect(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_reconnect(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_connect(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_connect(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_ready(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_ready(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_resumed(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_resumed(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_invalid_session(self, shard: gateway.GatewayClientV7, payload: bool):
+    async def handle_invalid_session(self, shard: gateway.GatewayClient, payload: bool):
         ...
 
-    async def handle_channel_create(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_channel_create(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_channel_update(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_channel_update(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_channel_delete(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_channel_delete(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_channel_pins_update(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_channel_pins_update(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_guild_create(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_guild_create(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_guild_update(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_guild_update(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_guild_delete(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_guild_delete(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_guild_ban_add(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_guild_ban_add(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_guild_ban_remove(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_guild_ban_remove(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_guild_emojis_update(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_guild_emojis_update(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
     async def handle_guild_integrations_update(
-        self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT
+        self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT
     ):
         ...
 
-    async def handle_guild_member_add(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_guild_member_add(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_guild_member_update(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_guild_member_update(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_guild_member_remove(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_guild_member_remove(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_guild_members_chunk(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_guild_members_chunk(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_guild_role_create(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_guild_role_create(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_guild_role_update(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_guild_role_update(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_guild_role_delete(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_guild_role_delete(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_message_create(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_message_create(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_message_update(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_message_update(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_message_delete(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_message_delete(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_message_delete_bulk(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_message_delete_bulk(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_message_reaction_add(
-        self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT
-    ):
+    async def handle_message_reaction_add(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
     async def handle_message_reaction_remove(
-        self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT
+        self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT
     ):
         ...
 
     async def handle_message_reaction_remove_all(
-        self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT
+        self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT
     ):
         ...
 
-    async def handle_presence_update(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_presence_update(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_typing_start(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_typing_start(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_user_update(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_user_update(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_voice_state_update(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_voice_state_update(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_voice_server_update(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_voice_server_update(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_webhooks_update(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_webhooks_update(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_presences_replace(self, shard: gateway.GatewayClientV7, payload: data_structures.DiscordObjectT):
+    async def handle_presences_replace(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         # This should not be implemented, as it is for users only and is not documented. This exists to allow us to
         # ignore it silently rather than producing spam.
         ...
 
     async def drain_unrecognised_event(
-        self, shard: gateway.GatewayClientV7, event_name: str, payload: data_structures.DiscordObjectT
+        self, shard: gateway.GatewayClient, event_name: str, payload: data_structures.DiscordObjectT
     ):
         ...

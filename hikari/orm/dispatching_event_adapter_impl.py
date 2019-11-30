@@ -410,15 +410,18 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
             self.dispatch(events.MESSAGE_DELETE, message_obj)
         # If this does not fire, we can just ignore it, as it just means the message is no longer cached.
 
+    def _fetch_message_and_delete_it_if_exists(self, message_id):
+        message_obj = self.fabric.state_registry.get_message_by_id(message_id)
+        if message_obj is not None:
+            self.fabric.state_registry.delete_message(message_obj)
+        return message_obj
+
     async def handle_message_delete_bulk(self, gateway, payload):
         self.dispatch(events.RAW_MESSAGE_DELETE_BULK, payload)
 
         channel_id = int(payload["channel_id"])
         messages = (int(message_id) for message_id in payload["ids"])
-        messages = {
-            message_id: transformations.try_cast(message_id, self.fabric.state_registry.delete_message, None)
-            for message_id in messages
-        }
+        messages = {message_id: self._fetch_message_and_delete_it_if_exists(message_id) for message_id in messages}
 
         channel_obj = self.fabric.state_registry.get_channel_by_id(channel_id)
         if channel_obj is not None:
@@ -567,6 +570,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
 
         if user_obj is None:
             self.logger.warning("ignoring TYPING_START by unknown user %s in channel %s", user_id, channel_id)
+            return
 
         self.dispatch(events.TYPING_START, user_obj, channel_obj)
 

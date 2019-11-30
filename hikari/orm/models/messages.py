@@ -102,6 +102,10 @@ class MessageFlag(enum.IntFlag):
     IS_CROSSPOST = 0x2
     #: Any embeds on this message should be omitted when serializing the message.
     SUPPRESS_EMBEDS = 0x4
+    #: The message this crosspost originated from was deleted via channel following.
+    SOURCE_MESSAGE_DELETED = 0x8
+    #: This message came from the urgent message system.
+    URGENT = 0x10
 
 
 # Note: a lot of fields exist in the Message implementation that are not included here. Much of this information is
@@ -124,11 +128,11 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
         "edited_at",
         "reactions",
         "content",
-        "tts",
-        "mentions_everyone",
+        "is_tts",
+        "is_mentioning_everyone",
         "attachments",
         "embeds",
-        "pinned",
+        "is_pinned",
         "application",
         "activity",
         "type",
@@ -165,12 +169,12 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
     #: True if this message was a TTS message, False otherwise.
     #:
     #: :type: :class:`bool`
-    tts: bool
+    is_tts: bool
 
     #: Whether this message mentions @everyone/@here or not.
     #:
     #: :type: :class:`bool`
-    mentions_everyone: bool
+    is_mentioning_everyone: bool
 
     #: List of attachments on this message, if any.
     #:
@@ -185,7 +189,7 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
     #: Whether this message is pinned or not.
     #:
     #: :type: :class:`bool`
-    pinned: bool
+    is_pinned: bool
 
     #: The application associated with this message (applicable for rich presence-related chat embeds only).
     #:
@@ -217,7 +221,7 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
     #: :type: :class:`hikari.orm.models.messages.MessageCrossPost` or `None` if not a cross post.
     crosspost_of: typing.Optional[MessageCrosspost]
 
-    __repr__ = auto_repr.repr_of("id", "author", "type", "tts", "created_at", "edited_at")
+    __repr__ = auto_repr.repr_of("id", "author", "type", "is_tts", "created_at", "edited_at")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         self._fabric = fabric_obj
@@ -226,7 +230,7 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
         self.channel_id = int(payload["channel_id"])
         self.guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
 
-        self.tts = payload["tts"]
+        self.is_tts = payload["tts"]
         self.crosspost_of = MessageCrosspost(payload["message_reference"]) if "message_reference" in payload else None
         self.flags = transformations.try_cast(payload.get("flags"), MessageFlag, 0)
         self.type = transformations.try_cast(payload.get("type"), MessageType)
@@ -239,10 +243,10 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
         self.activity = None
         self.application = None
         self.edited_at = None
-        self.mentions_everyone = False
+        self.is_mentioning_everyone = False
         self.attachments = data_structures.EMPTY_SEQUENCE
         self.embeds = data_structures.EMPTY_SEQUENCE
-        self.pinned = False
+        self.is_pinned = False
         self.application = None
         self.activity = None
         self.content = None
@@ -266,7 +270,7 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
             )
 
         if "mention_everyone" in payload:
-            self.mentions_everyone = payload["mention_everyone"]
+            self.is_mentioning_everyone = payload["mention_everyone"]
 
         if "attachments" in payload:
             self.attachments = [media.Attachment(a) for a in payload["attachments"]]
@@ -275,7 +279,7 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
             self.embeds = [embeds.ReceivedEmbed.from_dict(e) for e in payload["embeds"]]
 
         if "pinned" in payload:
-            self.pinned = payload["pinned"]
+            self.is_pinned = payload["pinned"]
 
         if "application" in payload:
             self.application = transformations.nullable_cast(payload.get("application"), MessageApplication)

@@ -70,6 +70,8 @@ def test_GuildChannel_permission_overwrites_aggregation():
 
     assert len(c.permission_overwrites) == 1
     assert c.permission_overwrites[0].id == 123
+    c.__repr__()
+    c.permission_overwrites[0].__repr__()
 
 
 @pytest.mark.model
@@ -97,6 +99,7 @@ def test_GuildChannel_parent_when_specified():
     )
 
     assert c.parent is g.channels[1234]
+    c.__repr__()
 
 
 @pytest.mark.model
@@ -124,13 +127,16 @@ def test_GuildChannel_parent_when_unspecified():
     )
 
     assert c.parent is None
+    c.__repr__()
 
 
 @pytest.mark.model
 def test_GuildTextChannel():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
+    f = fabric.Fabric(NotImplemented, s)
+
     gtc = channels.GuildTextChannel(
-        s,
+        f,
         {
             "type": 0,
             "id": "1234567",
@@ -149,30 +155,35 @@ def test_GuildTextChannel():
     assert gtc.guild_id == 696969
     assert gtc.position == 100
     assert gtc.permission_overwrites == []
-    assert gtc.nsfw is True
+    assert gtc.is_nsfw is True
     assert gtc.parent_id is None
     assert gtc.rate_limit_per_user == 420
     assert gtc.topic == "nsfw stuff"
     assert gtc.name == "shh!"
     assert not gtc.is_dm
+    gtc.__repr__()
 
 
 @pytest.mark.model
 def test_DMChannel():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    dmc = channels.DMChannel(s, {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []})
+    f = fabric.Fabric(NotImplemented, s)
+    dmc = channels.DMChannel(f, {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []})
 
     assert dmc.id == 929292
     assert dmc.last_message_id == 12345
     assert dmc.recipients == []
     assert dmc.is_dm
+    dmc.__repr__()
 
 
 @pytest.mark.model
 def test_GuildVoiceChannel():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
+    f = fabric.Fabric(NotImplemented, s)
+
     gvc = channels.GuildVoiceChannel(
-        s,
+        f,
         {
             "type": 2,
             "id": "9292929",
@@ -195,13 +206,16 @@ def test_GuildVoiceChannel():
     assert gvc.user_limit is None
     assert gvc.parent_id == 42
     assert not gvc.is_dm
+    gvc.__repr__()
 
 
 @pytest.mark.model
 def test_GroupDMChannel():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
+    f = fabric.Fabric(NotImplemented, s)
+
     gdmc = channels.GroupDMChannel(
-        s,
+        f,
         {
             "type": 3,
             "id": "99999999999",
@@ -222,14 +236,16 @@ def test_GroupDMChannel():
     assert gdmc.owner_application_id == 111111
     assert gdmc.owner_id == 111111
     assert gdmc.is_dm
+    gdmc.__repr__()
 
 
 @pytest.mark.model
 def test_GuildCategory():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
+    f = fabric.Fabric(NotImplemented, s)
 
     gc = channels.GuildCategory(
-        s,
+        f,
         {
             "type": 4,
             "id": "123456",
@@ -246,13 +262,16 @@ def test_GuildCategory():
     assert gc.id == 123456
     assert gc.permission_overwrites == []
     assert not gc.is_dm
+    gc.__repr__()
 
 
 @pytest.mark.model
 def test_GuildAnnouncementChannel():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
+    f = fabric.Fabric(NotImplemented, s)
+
     gnc = channels.GuildAnnouncementChannel(
-        s,
+        f,
         {
             "type": 5,
             "id": "4444",
@@ -272,18 +291,21 @@ def test_GuildAnnouncementChannel():
     assert gnc.position == 24
     assert gnc.permission_overwrites == []
     assert gnc.name
-    assert gnc.nsfw is False
+    assert gnc.is_nsfw is False
     assert gnc.parent_id == 3232
     assert gnc.topic == "crap and stuff"
     assert gnc.last_message_id is None
     assert not gnc.is_dm
+    gnc.__repr__()
 
 
 @pytest.mark.model
 def test_GuildStoreChannel():
     s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
+    f = fabric.Fabric(NotImplemented, s)
+
     gsc = channels.GuildStoreChannel(
-        s,
+        f,
         {
             "type": 6,
             "id": "9876",
@@ -302,6 +324,7 @@ def test_GuildStoreChannel():
     assert gsc.name == "a"
     assert gsc.parent_id == 32
     assert not gsc.is_dm
+    gsc.__repr__()
 
 
 @pytest.mark.model

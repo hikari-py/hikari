@@ -34,7 +34,7 @@ def json(file):
     def reader():
         file_path = in_here(file) + ".json"
 
-        with open(file_path, encoding="utf-8") as fp:
+        with open(file_path, "rb", encoding="utf-8") as fp:
             return libjson.load(fp)
 
     return reader
@@ -42,7 +42,7 @@ def json(file):
 
 def raw(file):
     def reader():
-        with open(in_here(file)) as fp:
+        with open(in_here(file), "r") as fp:
             return fp.read()
 
     return reader

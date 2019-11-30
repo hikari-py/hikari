@@ -22,7 +22,7 @@ Implementation of the base components required for working with the V7 HTTP REST
 from __future__ import annotations
 
 import asyncio
-import json
+import json as _json
 import ssl
 import typing
 
@@ -31,35 +31,35 @@ import aiohttp.typedefs
 from hikari import errors
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
-from hikari.internal_utilities import logging_helpers
 from hikari.internal_utilities import transformations
 from hikari.internal_utilities import unspecified
-from hikari.internal_utilities import user_agent
+from hikari.net import http_client
 from hikari.net import opcodes
 from hikari.net import rates
 
-#: Format string for the default Discord API URL.
-_DISCORD_API_URI_FORMAT = "https://discordapp.com/api/v{VERSION}"
-
 # Common strings and values I reused a lot
-_ACCEPT = "Accept"
-_AUTHORIZATION = "Authorization"
-_APPLICATION_JSON = "application/json"
-_TEXT_HTML = "text/html"
-_TEXT_PLAIN = "text/plain"
-_DATE = "Date"
-_GRAINULARITY = "millisecond"
-_GRAINULARITY_MULTIPLIER = 1 / 1000
-_RETRY_AFTER = "Retry-After"
-_USER_AGENT = "User-Agent"
-_X_AUDIT_LOG_REASON = "X-Audit-Log-Reason"
-_X_RATELIMIT_GLOBAL = "X-RateLimit-Global"
-_X_RATELIMIT_LIMIT = "X-RateLimit-Limit"
-_X_RATELIMIT_PRECISION = "X-RateLimit-Precision"
-_X_RATELIMIT_REMAINING = "X-RateLimit-Remaining"
-_X_RATELIMIT_RESET = "X-RateLimit-Reset"
-_X_RATELIMIT_RESET_AFTER = "X-RateLimit-Reset-After"
-_X_RATELIMIT_LOCALS = [_X_RATELIMIT_LIMIT, _X_RATELIMIT_REMAINING, _X_RATELIMIT_RESET, _DATE]
+_ACCEPT_HEADER = "Accept"
+_AUTHORIZATION_HEADER = "Authorization"
+_APPLICATION_JSON_MIMETYPE = "application/json"
+_TEXT_HTML_MIMETYPE = "text/html"
+_TEXT_PLAIN_MIMETYPE = "text/plain"
+_DATE_HEADER = "Date"
+_GRAINULARITY, _GRAINULARITY_MULTIPLIER = "millisecond", 1 / 1_000
+_RETRY_AFTER_HEADER = "Retry-After"
+_USER_AGENT_HEADER = "User-Agent"
+_X_AUDIT_LOG_REASON_HEADER = "X-Audit-Log-Reason"
+_X_RATELIMIT_GLOBAL_HEADER = "X-RateLimit-Global"
+_X_RATELIMIT_LIMIT_HEADER = "X-RateLimit-Limit"
+_X_RATELIMIT_PRECISION_HEADER = "X-RateLimit-Precision"
+_X_RATELIMIT_REMAINING_HEADER = "X-RateLimit-Remaining"
+_X_RATELIMIT_RESET_HEADER = "X-RateLimit-Reset"
+_X_RATELIMIT_RESET_AFTER_HEADER = "X-RateLimit-Reset-After"
+_X_RATELIMIT_LOCALS = [
+    _X_RATELIMIT_LIMIT_HEADER,
+    _X_RATELIMIT_REMAINING_HEADER,
+    _X_RATELIMIT_RESET_HEADER,
+    _DATE_HEADER,
+]
 
 _RequestReturnSignature = typing.Tuple[opcodes.HTTPStatus, typing.Mapping, typing.Any]
 
@@ -121,39 +121,22 @@ class Resource:
     __str__ = __repr__
 
 
-class BaseHTTPClient:
+class HTTPAPIClientBase(http_client.HTTPClient):
     """
-    The core low level logic for any HTTP components that require rate-limiting and consistent logging to be
+    The core low level logic for any HTTP-API components that require rate-limiting and consistent logging to be
     implemented.
 
-    Any HTTP components should derive their implementation from this class.
+    Any HTTP API-specific components should derive their implementation from this class.
     """
 
     __slots__ = [
-        "allow_redirects",
         "authorization",
-        "client_session",
         "buckets",
         "base_uri",
         "global_rate_limit",
-        "in_count",
-        "json_marshaller",
         "json_unmarshaller",
         "json_unmarshaller_object_hook",
-        "logger",
-        "loop",
-        "max_retries",
-        "proxy_auth",
-        "proxy_headers",
-        "proxy_url",
-        "ssl_context",
-        "timeout",
-        "user_agent",
-        "verify_ssl",
     ]
-
-    #: The target API version.
-    VERSION = 7
 
     def __init__(
         self,
@@ -217,20 +200,19 @@ class BaseHTTPClient:
                 specified, no Authentication is used by default. This enables this client to be used by endpoints that
                 do not require active authentication.
         """
-        #: How many responses have been received.
-        #:
-        #: :type: :class:`int`
-        self.in_count = 0
-
-        #: The asyncio event loop to run on.
-        #:
-        #: :type: :class:`asyncio.AbstractEventLoop`
-        self.loop = loop or asyncio.get_running_loop()
-
-        #: Whether to allow redirects or not.
-        #:
-        #: :type: :class:`bool`
-        self.allow_redirects = allow_redirects
+        super().__init__(
+            loop=loop,
+            allow_redirects=allow_redirects,
+            max_retries=max_retries,
+            json_marshaller=json_marshaller,
+            connector=connector,
+            proxy_headers=proxy_headers,
+            proxy_auth=proxy_auth,
+            proxy_url=proxy_url,
+            ssl_context=ssl_context,
+            verify_ssl=verify_ssl,
+            timeout=timeout,
+        )
 
         #: Local rate limit buckets.
         #:
@@ -240,29 +222,18 @@ class BaseHTTPClient:
         #: The base URI to target.
         #:
         #: :type: :class:`str`
-        self.base_uri = base_uri or _DISCORD_API_URI_FORMAT.format(VERSION=self.VERSION)
+        self.base_uri = (base_uri or "https://discordapp.com/api/v{version}").format(version=self.version)
 
         #: The global rate limit bucket.
         #:
         #: :type: :class:`hikari.net.rates.TimedLatchBucket`
         self.global_rate_limit = rates.TimedLatchBucket(loop=self.loop)
 
-        #: Max number of times to retry before giving up.
-        #:
-        #: :type: :class:`int`
-        self.max_retries = max_retries
-
-        #: Callable used to marshal (serialize) payloads into JSON-encoded strings from native Python objects.
-        #:
-        #: Defaults to :func:`json.dumps`. You may want to override this if you choose to use a different
-        #: JSON library, such as one that is compiled.
-        self.json_marshaller = json_marshaller or json.dumps
-
         #: Callable used to unmarshal (deserialize) JSON-encoded payloads into native Python objects.
         #:
         #: Defaults to :func:`json.loads`. You may want to override this if you choose to use a different
         #: JSON library, such as one that is compiled.
-        self.json_unmarshaller = json_unmarshaller or json.loads
+        self.json_unmarshaller = json_unmarshaller or _json.loads
 
         #: Dict-derived type to use for unmarshalled JSON objects.
         #:
@@ -271,13 +242,6 @@ class BaseHTTPClient:
         #: to use another implementation, or just default to :class:`dict` instead, it is worth changing this
         #: attribute.
         self.json_unmarshaller_object_hook = json_unmarshaller_object_hook or data_structures.ObjectProxy
-
-        #: The HTTP client session to use.
-        #:
-        #: :type: :class:`aiohttp.ClientSession`
-        self.client_session = aiohttp.ClientSession(
-            connector=connector, loop=self.loop, json_serialize=self.json_marshaller, version=aiohttp.HttpVersion11
-        )
 
         if token is None:
             #: The session `Authorization` header to use.
@@ -295,52 +259,10 @@ class BaseHTTPClient:
             #: :type: :class:`str`
             self.authorization: typing.Optional[str] = f"Bearer {token}"
 
-        #: The logger to use for this object.
-        #:
-        #: :type: :class:`logging.Logger`
-
-        self.logger = logging_helpers.get_named_logger(self)
-        #: User agent to use.
-        #:
-        #: :type: :class:`str`
-        self.user_agent = user_agent.user_agent()
-
-        #: If `true`, this will enforce SSL signed certificate verification, otherwise it will
-        #: ignore potentially malicious SSL certificates.
-        #:
-        #: :type: :class:`bool`
-        self.verify_ssl = verify_ssl
-
-        #: Optional proxy URL to use for HTTP requests.
-        #:
-        #: :type: :class:`str`
-        self.proxy_url = proxy_url
-
-        #: Optional authorization to use if using a proxy.
-        #:
-        #: :type: :class:`aiohttp.BasicAuth`
-        self.proxy_auth = proxy_auth
-
-        #: Optional proxy headers to pass.
-        #:
-        #: :type: :class:`aiohttp.typedefs.LooseHeaders`
-        self.proxy_headers = proxy_headers
-
-        #: Optional SSL context to use.
-        #:
-        #: :type: :class:`ssl.SSLContext`
-        self.ssl_context: ssl.SSLContext = ssl_context
-
-        #: Optional timeout for HTTP requests.
-        #:
-        #: :type: :class:`float`
-        self.timeout = timeout
-
-    async def close(self):
-        """
-        Close the HTTP connection.
-        """
-        await self.client_session.close()
+    @property
+    def version(self) -> int:
+        """The version of the client being used."""
+        return 7
 
     async def request(
         self,
@@ -386,8 +308,8 @@ class BaseHTTPClient:
 
         Note:
             Any dicts that get parsed in any form of nested structure from a JSON payload will be parsed as an
-            :class:`hikari.internal_utilities.data_structures.ObjectProxy`. This means that you can use the dict as a regular dict,
-            or use "JavaScript"-like dot-notation to access members.
+            :class:`hikari.internal_utilities.data_structures.ObjectProxy`. This means that you can use the dict as a
+            regular dict, or use "JavaScript"-like dot-notation to access members.
 
             .. code-block:: python
 
@@ -398,7 +320,7 @@ class BaseHTTPClient:
 
         while True:
             try:
-                result = await self._request_once(
+                result = await self.request_once(
                     resource=resource, query=query, headers=headers, data=data, json=json, reason=reason
                 )
             except _RateLimited:
@@ -409,24 +331,24 @@ class BaseHTTPClient:
             else:
                 return result
 
-    async def _request_once(
+    async def request_once(
         self, *, resource, query=None, headers=None, data=None, json=None, reason=None
     ) -> typing.Any:
         headers = headers if headers else {}
         query = query if query else {}
 
-        headers.setdefault(_USER_AGENT, self.user_agent)
-        headers.setdefault(_ACCEPT, _APPLICATION_JSON)
+        headers.setdefault(_USER_AGENT_HEADER, self.user_agent)
+        headers.setdefault(_ACCEPT_HEADER, _APPLICATION_JSON_MIMETYPE)
         # Allows us to request millisecond durations for greater accuracy as per
         # https://github.com/discordapp/discord-api-docs/pull/1064
-        headers.setdefault(_X_RATELIMIT_PRECISION, _GRAINULARITY)
+        headers.setdefault(_X_RATELIMIT_PRECISION_HEADER, _GRAINULARITY)
 
         # Prevent inconsistencies causing weird behaviour: check both args.
         if reason is not None and reason is not unspecified.UNSPECIFIED:
-            headers.setdefault(_X_AUDIT_LOG_REASON, reason)
+            headers.setdefault(_X_AUDIT_LOG_REASON_HEADER, reason)
 
         if self.authorization is not None:
-            headers.setdefault(_AUTHORIZATION, self.authorization)
+            headers.setdefault(_AUTHORIZATION_HEADER, self.authorization)
 
         # Wait on the global bucket
         await self.global_rate_limit.acquire(self._log_rate_limit_already_in_progress, bucket_id=None)
@@ -437,46 +359,31 @@ class BaseHTTPClient:
         self.in_count += 1
         self.logger.debug("[%s] %s %s", self.in_count, resource.method, resource.uri)
 
-        kwargs = dict(
-            method=resource.method,
-            url=resource.uri,
-            headers=headers,
-            data=data,
-            json=json,
-            allow_redirects=self.allow_redirects,
-            params=query,
-            proxy=self.proxy_url,
-            proxy_auth=self.proxy_auth,
-            proxy_headers=self.proxy_headers,
-            verify_ssl=self.verify_ssl,
-            ssl_context=self.ssl_context,
-            timeout=self.timeout,
-        )
+        kwargs = dict(headers=headers, data=data, json=json, params=query,)
 
-        async with self.client_session.request(**kwargs) as r:
+        async with super()._request(resource.method, resource.uri, **kwargs) as response:
             self.logger.debug(
                 "[%s] %s %s %s content_type=%s size=%s",
                 self.in_count,
                 resource.uri,
-                r.status,
-                r.reason,
-                r.content_type,
-                r.content_length,
+                response.status,
+                response.reason,
+                response.content_type,
+                response.content_length,
             )
+            headers = response.headers
+            status = opcodes.HTTPStatus(response.status)
+            body = await response.read()
 
-            headers = r.headers
-            status = opcodes.HTTPStatus(r.status)
-            body = await r.read()
-
-            if r.content_type == _APPLICATION_JSON:
+            if response.content_type == _APPLICATION_JSON_MIMETYPE:
                 body = self.json_unmarshaller(body, object_hook=self.json_unmarshaller_object_hook)
-            elif r.content_type in (_TEXT_PLAIN, _TEXT_HTML):
+            elif response.content_type in (_TEXT_PLAIN_MIMETYPE, _TEXT_HTML_MIMETYPE):
                 # Cloudflare commonly will cause text/html (e.g. Discord is down)
-                self.logger.warning("Received %s-type response. Is Discord down?", r.content_type)
+                self.logger.warning("Received %s-type response. Is Discord down?", response.content_type)
                 body = body.decode()
 
         # Do this pre-emptively before anything else can fail.
-        if self._is_rate_limited(resource, r.status, headers, body):
+        if self._is_rate_limited(resource, response.status, headers, body):
             raise _RateLimited()
 
         # 2xx, 3xx do not indicate errors. 4xx indicates an error our side, 5xx is usually the server unable to
@@ -511,30 +418,30 @@ class BaseHTTPClient:
             True if we are being rate limited and the current call failed, False if it succeeded and we do not need
             to try again.
         """
-        is_global = headers.get(_X_RATELIMIT_GLOBAL) == "true"
+        is_global = headers.get(_X_RATELIMIT_GLOBAL_HEADER) == "true"
         is_being_rate_limited = response_code == opcodes.HTTPStatus.TOO_MANY_REQUESTS
 
         # assume that is_global only ever occurs on TOO_MANY_REQUESTS response codes.
         if is_global and is_being_rate_limited:
             # Retry-after is always in milliseconds.
             # This is only in the body if we get ratelimited, which is a pain, but who
-            # could expect an API to have consistent behaviour, amirite?
+            # could expect an API to have consistent behaviour.
             retry_after = body.get("retry_after", 0) * _GRAINULARITY_MULTIPLIER
             self.global_rate_limit.lock(retry_after)
 
         if all(header in headers for header in _X_RATELIMIT_LOCALS):
             # If we don't get all the info we need, just forget about the rate limit as we can't act on missing
             # information.
-            now = date_helpers.parse_http_date(headers[_DATE]).timestamp()
-            total = transformations.nullable_cast(headers.get(_X_RATELIMIT_LIMIT), int)
+            now = date_helpers.parse_http_date(headers[_DATE_HEADER]).timestamp()
+            total = transformations.nullable_cast(headers.get(_X_RATELIMIT_LIMIT_HEADER), int)
             # https://github.com/discordapp/discord-api-docs/pull/1064
-            reset_after = transformations.nullable_cast(headers.get(_X_RATELIMIT_RESET_AFTER), float) or 0
+            reset_after = transformations.nullable_cast(headers.get(_X_RATELIMIT_RESET_AFTER_HEADER), float) or 0
             reset_at = now + reset_after
-            remaining = transformations.nullable_cast(headers.get(_X_RATELIMIT_REMAINING), int)
+            remaining = transformations.nullable_cast(headers.get(_X_RATELIMIT_REMAINING_HEADER), int)
 
             # This header only exists if we get a TOO_MANY_REQUESTS first, annoyingly, and it isn't
             # in the body...
-            retry_after = transformations.nullable_cast(headers.get(_RETRY_AFTER), float)
+            retry_after = transformations.nullable_cast(headers.get(_RETRY_AFTER_HEADER), float)
             retry_after = retry_after / 1000 if retry_after is not None else reset_at - now
 
             if resource not in self.buckets:
@@ -593,4 +500,4 @@ class BaseHTTPClient:
         raise errors.ServerError(resource, status, error_message)
 
 
-__all__ = ["BaseHTTPClient"]
+__all__ = ["HTTPAPIClientBase"]

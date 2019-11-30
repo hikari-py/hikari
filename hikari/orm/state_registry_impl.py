@@ -40,6 +40,7 @@ from hikari.orm.models import presences
 from hikari.orm.models import reactions
 from hikari.orm.models import roles
 from hikari.orm.models import users
+from hikari.orm.models import voices
 from hikari.orm.models import webhooks
 
 
@@ -289,13 +290,13 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
     def parse_guild(self, guild_payload: data_structures.DiscordObjectT):
         guild_id = int(guild_payload["id"])
-        unavailable = guild_payload.get("unavailable", False)
+        is_unavailable = guild_payload.get("unavailable", False)
 
         if guild_id in self._guilds:
             # Always try to update an existing guild first.
             guild_obj = self.get_guild_by_id(guild_id)
 
-            if unavailable:
+            if is_unavailable:
                 self.set_guild_unavailability(guild_obj, True)
             else:
                 guild_obj.update_state(guild_payload)
@@ -304,6 +305,20 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             self._guilds[guild_id] = guild_obj
 
         return guild_obj
+
+    def parse_voice_state(
+        self, guild_obj: guilds.Guild, voice_state_payload: data_structures.DiscordObjectT
+    ) -> voices.VoiceState:
+        user_id = int(voice_state_payload["user_id"])
+
+        if user_id in guild_obj.voice_states:
+            voice_state_obj = guild_obj.voice_states[user_id]
+            voice_state_obj.update_state(voice_state_payload)
+            return voice_state_obj
+
+        voice_state_obj = voices.VoiceState(self.fabric, guild_obj, voice_state_payload)
+        guild_obj.voice_states[user_id] = voice_state_obj
+        return voice_state_obj
 
     def parse_partial_member(
         self,
@@ -320,9 +335,8 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         if member_id in guild_obj.members:
             member_obj = guild_obj.members[member_id]
-            nick = member_payload.get("nick")
             role_objs = [self.get_role_by_id(guild_obj.id, int(role_id)) for role_id in member_payload["roles"]]
-            member_obj.update_state(role_objs, nick)
+            member_obj.update_state(role_objs, member_payload)
             return member_obj
 
         member_obj = members.Member(self.fabric, guild_obj, member_payload)
@@ -410,10 +424,10 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         # so that it isn't coupling dependent classes of this one to the model implementation as much.
         return webhooks.Webhook(self.fabric, webhook_payload)
 
-    def set_guild_unavailability(self, guild_obj: guilds.Guild, unavailability: bool) -> None:
+    def set_guild_unavailability(self, guild_obj: guilds.Guild, is_unavailable: bool) -> None:
         # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
         # so that it isn't coupling dependent classes of this one to the model implementation as much.
-        guild_obj.unavailable = unavailability
+        guild_obj.is_unavailable = is_unavailable
 
     def set_last_pinned_timestamp(
         self, channel_obj: channels.TextChannel, timestamp: typing.Optional[datetime.datetime]
