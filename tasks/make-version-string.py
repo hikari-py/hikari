@@ -80,7 +80,7 @@ else:
     # Prod uses semver, this has some special rules annoyingly.
 
     # If prod, we use semver
-    if len(data) == 0:
+    if len(releases) == 0:
         current_version = "0.0.1"
         print("There was no previous release", file=sys.stderr)
     else:
