@@ -40,6 +40,7 @@ from hikari.orm.models import presences
 from hikari.orm.models import reactions
 from hikari.orm.models import roles
 from hikari.orm.models import users
+from hikari.orm.models import voices
 from hikari.orm.models import webhooks
 
 
@@ -305,6 +306,20 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return guild_obj
 
+    def parse_voice_state(
+        self, guild_obj: guilds.Guild, voice_state_payload: data_structures.DiscordObjectT
+    ) -> voices.VoiceState:
+        user_id = int(voice_state_payload["user_id"])
+
+        if user_id in guild_obj.voice_states:
+            voice_state_obj = guild_obj.voice_states[user_id]
+            voice_state_obj.update_state(voice_state_payload)
+            return voice_state_obj
+
+        voice_state_obj = voices.VoiceState(self.fabric, guild_obj, voice_state_payload)
+        guild_obj.voice_states[user_id] = voice_state_obj
+        return voice_state_obj
+
     def parse_partial_member(
         self,
         partial_member_payload: data_structures.DiscordObjectT,
@@ -320,9 +335,8 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         if member_id in guild_obj.members:
             member_obj = guild_obj.members[member_id]
-            nick = member_payload.get("nick")
             role_objs = [self.get_role_by_id(guild_obj.id, int(role_id)) for role_id in member_payload["roles"]]
-            member_obj.update_state(role_objs, nick)
+            member_obj.update_state(role_objs, member_payload)
             return member_obj
 
         member_obj = members.Member(self.fabric, guild_obj, member_payload)
