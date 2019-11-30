@@ -113,7 +113,16 @@ class GuildEmoji(UnknownEmoji, interfaces.IStatefulModel):
     Represents an emoji in a guild that the user is a member of.
     """
 
-    __slots__ = ("_fabric", "_role_ids", "_guild_id", "require_colons", "managed", "animated", "user", "__weakref__")
+    __slots__ = (
+        "_fabric",
+        "_role_ids",
+        "_guild_id",
+        "is_requiring_colons",
+        "is_managed",
+        "is_animated",
+        "user",
+        "__weakref__",
+    )
 
     _role_ids: typing.Sequence[int]
     _guild_id: typing.Optional[int]
@@ -121,7 +130,7 @@ class GuildEmoji(UnknownEmoji, interfaces.IStatefulModel):
     #: `True` if the emoji requires colons to be mentioned; `False` otherwise.
     #:
     #: :type: :class:`bool`
-    require_colons: bool
+    is_requiring_colons: bool
 
     #: The user who made the object, if available.
     #:
@@ -131,23 +140,23 @@ class GuildEmoji(UnknownEmoji, interfaces.IStatefulModel):
     #: `True` if the emoji is managed as part of an integration with Twitch, `False` otherwise.
     #:
     #: :type: :class:`bool`
-    managed: bool
+    is_managed: bool
 
     #: `True` if the emoji is animated; `False` otherwise.
     #:
     #: :type: :class:`bool
-    animated: bool
+    is_animated: bool
 
-    __repr__ = auto_repr.repr_of("id", "name", "animated")
+    __repr__ = auto_repr.repr_of("id", "name", "is_animated")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_id: int) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self._guild_id = guild_id
         self.user = fabric_obj.state_registry.parse_user(payload.get("user")) if "user" in payload else None
-        self.require_colons = payload.get("require_colons", True)
-        self.animated = payload.get("animated", False)
-        self.managed = payload.get("managed", False)
+        self.is_requiring_colons = payload.get("require_colons", True)
+        self.is_animated = payload.get("animated", False)
+        self.is_managed = payload.get("managed", False)
         self._role_ids = [int(r) for r in payload.get("roles", data_structures.EMPTY_SEQUENCE)]
 
     @property

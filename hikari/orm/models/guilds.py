@@ -76,8 +76,8 @@ class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
         "mfa_level",
         "my_permissions",
         "joined_at",
-        "large",
-        "unavailable",
+        "is_large",
+        "is_unavailable",
         "members",
         "channels",
         "max_members",
@@ -201,12 +201,12 @@ class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
     #: threshold for the gateway is set to.
     #:
     #: :type: :class:`bool`
-    large: bool
+    is_large: bool
 
     #: True if the guild is considered to be unavailable, or False if it is not.
     #:
     #: :type: :class:`bool`
-    unavailable: bool
+    is_unavailable: bool
 
     #: Members in the guild.
     #:
@@ -253,7 +253,7 @@ class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
     #: :type: :class:`hikari.orm.models.guilds.SystemChannelFlag`
     system_channel_flags: typing.Optional[SystemChannelFlag]
 
-    __repr__ = auto_repr.repr_of("id", "name", "unavailable", "large", "member_count")
+    __repr__ = auto_repr.repr_of("id", "name", "is_unavailable", "is_large", "member_count")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         self._fabric = fabric_obj
@@ -294,8 +294,8 @@ class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
         self.mfa_level = transformations.try_cast(payload.get("mfa_level"), MFALevel)
         self.my_permissions = permissions.Permission(payload.get("permissions", 0))
         self.joined_at = transformations.nullable_cast(payload.get("joined_at"), date_helpers.parse_iso_8601_ts)
-        self.large = payload.get("large", False)
-        self.unavailable = payload.get("unavailable", False)
+        self.is_large = payload.get("large", False)
+        self.is_unavailable = payload.get("unavailable", False)
         self.members = transformations.id_map(
             self._fabric.state_registry.parse_member(m, self)
             for m in payload.get("members", data_structures.EMPTY_SEQUENCE)

@@ -84,7 +84,7 @@ class InviteMetadata(interfaces.IModel):
     Metadata relating to a specific invite object.
     """
 
-    __slots__ = ("inviter", "uses", "max_uses", "max_age", "temporary", "created_at", "revoked")
+    __slots__ = ("inviter", "uses", "max_uses", "max_age", "is_temporary", "created_at", "is_revoked")
 
     _state: state_registry.IStateRegistry
 
@@ -111,7 +111,7 @@ class InviteMetadata(interfaces.IModel):
     #: Whether or not the invite only grants temporary membership.
     #:
     #: :type: :class:`bool`
-    temporary: bool
+    is_temporary: bool
 
     #: When the invite was created.
     #:
@@ -121,7 +121,7 @@ class InviteMetadata(interfaces.IModel):
     #: Whether or not the invite has been revoked.
     #:
     #: :type: :class:`bool`
-    revoked: bool
+    is_revoked: bool
 
     __repr__ = auto_repr.repr_of("inviter", "uses", "max_uses", "created_at")
 
@@ -130,9 +130,9 @@ class InviteMetadata(interfaces.IModel):
         self.uses = int(payload["uses"])
         self.max_uses = int(payload["max_uses"])
         self.max_age = int(payload["max_age"])
-        self.temporary = payload.get("temporary", False)
+        self.is_temporary = payload.get("temporary", False)
         self.created_at = date_helpers.parse_iso_8601_ts(payload["created_at"])
-        self.revoked = payload.get("revoked", False)
+        self.is_revoked = payload.get("revoked", False)
 
 
 __all__ = ["Invite", "InviteMetadata"]

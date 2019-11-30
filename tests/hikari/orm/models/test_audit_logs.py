@@ -96,6 +96,9 @@ def test_AuditLog(fabric_obj, mock_audit_log_payload, mock_user_payload, mock_we
 
     fabric_obj.state_registry.parse_user.assert_called_once_with(mock_user_payload)
     fabric_obj.state_registry.parse_webhook.assert_called_once_with(mock_webhook_payload)
+    audit_log_obj.audit_log_entries[0].changes.__repr__()
+    audit_log_obj.audit_log_entries[0].__repr__()
+    audit_log_obj.__repr__()
 
 
 @pytest.mark.model
@@ -118,6 +121,8 @@ def test_afk_channel_change():
     assert entry_obj.changes[0].key is audit_logs.AuditLogChangeKey.AFK_CHANNEL_ID
     assert entry_obj.changes[0].old_value == 561887595798462499
     assert entry_obj.changes[0].new_value == 561886693339168770
+    entry_obj.changes[0].__repr__()
+    entry_obj.__repr__()
 
 
 @pytest.mark.model
@@ -131,6 +136,7 @@ def test_AuditLogEntryCountInfo():
     info_obj = audit_logs.parse_audit_log_entry_info({"count": 64}, audit_logs.AuditLogEvent.MESSAGE_BULK_DELETE)
     assert isinstance(info_obj, audit_logs.AuditLogEntryCountInfo)
     assert info_obj.count == 64
+    info_obj.__repr__()
 
 
 @pytest.mark.model
@@ -141,6 +147,7 @@ def test_MemberMoveAuditLogEntryInfo():
     assert isinstance(info_obj, audit_logs.MemberMoveAuditLogEntryInfo)
     assert info_obj.count == 44
     assert info_obj.channel_id == 234123312213321
+    info_obj.__repr__()
 
 
 @pytest.mark.model
@@ -151,6 +158,7 @@ def test_MemberPruneAuditLogEntryInfo():
     assert isinstance(info_obj, audit_logs.MemberPruneAuditLogEntryInfo)
     assert info_obj.delete_member_days == 7
     assert info_obj.members_removed == 49
+    info_obj.__repr__()
 
 
 @pytest.mark.model
@@ -161,6 +169,7 @@ def test_MessageDeleteAuditLogEntryInfo():
     assert isinstance(info_obj, audit_logs.MessageDeleteAuditLogEntryInfo)
     assert info_obj.count == 7
     assert info_obj.channel_id == 4949494949494949
+    info_obj.__repr__()
 
 
 @pytest.mark.model
@@ -171,6 +180,7 @@ def test_MessagePinAuditLogEntryInfo():
     assert isinstance(info_obj, audit_logs.MessagePinAuditLogEntryInfo)
     assert info_obj.channel_id == 3333333333333
     assert info_obj.message_id == 4949494949494949
+    info_obj.__repr__()
 
 
 @pytest.mark.model
@@ -181,3 +191,4 @@ def test_ChannelOverwriteAuditLogEntryInfo():
     assert isinstance(info_obj, audit_logs.ChannelOverwriteAuditLogEntryInfo)
     assert info_obj.id == 115590097100865541
     assert info_obj.type.value is roles.Role
+    info_obj.__repr__()

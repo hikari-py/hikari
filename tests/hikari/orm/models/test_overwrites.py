@@ -57,6 +57,7 @@ class TestOverwrite:
         expected_inverse ^= permissions.Permission.ADD_REACTIONS
 
         assert bin(o.default) == bin(expected_inverse)
+        o.__repr__()
 
 
 @pytest.mark.model

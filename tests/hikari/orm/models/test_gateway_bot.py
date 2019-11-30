@@ -40,6 +40,7 @@ def test_GatewayBot(gateway_bot_payload):
     assert gateway_bot_obj.url == "wss://gateway.discord.gg/"
     assert gateway_bot_obj.shards == 9
     assert isinstance(gateway_bot_obj.session_start_limit, gateway_bot.SessionStartLimit)
+    gateway_bot_obj.__repr__()
 
 
 @pytest.mark.model
@@ -58,3 +59,4 @@ def test_SessionStartLimit(session_start_payload):
     assert session_start_limit_obj.remaining == 999
     assert session_start_limit_obj.reset_at == expected_reset_date
     assert session_start_limit_obj.used == 1
+    session_start_limit_obj.__repr__()

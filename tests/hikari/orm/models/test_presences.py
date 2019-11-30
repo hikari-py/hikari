@@ -172,6 +172,7 @@ class TestPresence:
         assert p.mobile_status == presences.Status.OFFLINE
 
         assert len(p.activities) == 0
+        p.__repr__()
 
     def test_parse_legacy_Presence(self, legacy_presence):
         p = presences.Presence(legacy_presence)
@@ -219,6 +220,7 @@ def test_parse_PresenceActivity(legacy_presence_activity):
     a = presences.PresenceActivity(legacy_presence_activity)
     assert a.name == "with yo mama"
     assert a.type == presences.ActivityType.PLAYING
+    a.__repr__()
 
 
 @pytest.mark.model
@@ -235,6 +237,7 @@ def test_parse_RichPresenceActivity(rich_presence_activity):
     assert a.flags & presences.ActivityFlag.INSTANCE
     assert a.flags & presences.ActivityFlag.JOIN
     assert a.party is not None
+    a.__repr__()
 
 
 @pytest.mark.model
@@ -242,6 +245,7 @@ def test_parse_presence_activity_for_PresenceActivity(legacy_presence_activity):
     a = presences.parse_presence_activity(legacy_presence_activity)
     # It must be the class exactly, not a derivative.
     assert type(a) is presences.PresenceActivity
+    a.__repr__()
 
 
 @pytest.mark.model
@@ -249,6 +253,7 @@ def test_parse_presence_activity_for_RichPresenceActivity(rich_presence_activity
     a = presences.parse_presence_activity(rich_presence_activity)
     # It must be the class exactly, not a derivative.
     assert type(a) is presences.RichPresenceActivity
+    a.__repr__()
 
 
 @pytest.mark.model
@@ -258,6 +263,7 @@ def test_parse_assets(assets):
     assert a.small_image == "387095349199896578"
     assert a.large_text == "Editing a Scratch file"
     assert a.large_image == "565945769958572037"
+    a.__repr__()
 
 
 @pytest.mark.model
@@ -266,6 +272,7 @@ def test_parse_party(party):
     assert p.id == "1a2b3c"
     assert p.current_size == 4
     assert p.max_size == 5
+    p.__repr__()
 
 
 @pytest.mark.model
@@ -274,6 +281,7 @@ class TestActivityTimestamps:
         t = presences.ActivityTimestamps(timestamps)
         assert t.start == datetime.datetime(2019, 8, 18, 8, 22, 32, 964000, datetime.timezone.utc)
         assert t.end == datetime.datetime(2019, 8, 18, 13, 44, 52, 633000, datetime.timezone.utc)
+        t.__repr__()
 
     def test_duration(self, timestamps):
         t = presences.ActivityTimestamps(timestamps)

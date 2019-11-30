@@ -37,7 +37,15 @@ class Subscriber(interfaces.IModel):
     A subscription to an incident.
     """
 
-    __slots__ = ("id", "email", "mode", "quarantined_at", "incident", "skip_confirmation_notification", "purge_at")
+    __slots__ = (
+        "id",
+        "email",
+        "mode",
+        "quarantined_at",
+        "incident",
+        "is_skipped_confirmation_notification",
+        "purge_at",
+    )
 
     #: The ID of the subscriber.
     #:
@@ -70,7 +78,7 @@ class Subscriber(interfaces.IModel):
     #: True if the confirmation notification is skipped.
     #:
     #: :type: :class:`bool` or `None`
-    skip_confirmation_notification: typing.Optional[bool]
+    is_skipped_confirmation_notification: typing.Optional[bool]
 
     #: The optional date/time to stop the subscription..
     #:
@@ -85,7 +93,7 @@ class Subscriber(interfaces.IModel):
             mode=payload["mode"],
             quarantined_at=transformations.nullable_cast(payload.get("quarantined_at"), date_helpers.parse_iso_8601_ts),
             incident=transformations.nullable_cast(payload.get("incident"), Incident.from_dict),
-            skip_confirmation_notification=transformations.nullable_cast(
+            is_skipped_confirmation_notification=transformations.nullable_cast(
                 payload.get("skip_confirmation_notification"), bool
             ),
             purge_at=transformations.nullable_cast(payload.get("purge_at"), date_helpers.parse_iso_8601_ts),

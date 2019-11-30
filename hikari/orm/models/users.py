@@ -63,14 +63,14 @@ class IUser(interfaces.IStatefulModel, interfaces.ISnowflake, interface=True):
     #: True if the user is a bot, False otherwise
     #:
     #: :type: :class:`bool`
-    bot: bool
+    is_bot: bool
 
     #: If this is an Official Discord System user (urgent message system).
     #:
     #: :type: :class:`bool`
     system: bool
 
-    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot")
+    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "is_bot")
 
 
 class User(IUser):
@@ -78,14 +78,14 @@ class User(IUser):
     Implementation of the user data type.
     """
 
-    __slots__ = ("_fabric", "id", "username", "discriminator", "avatar_hash", "bot", "system", "__weakref__")
+    __slots__ = ("_fabric", "id", "username", "discriminator", "avatar_hash", "is_bot", "system", "__weakref__")
 
     # noinspection PyMissingConstructor
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT):
         self._fabric = fabric_obj
         self.id = int(payload["id"])
         # We don't expect these to ever change...
-        self.bot = payload.get("bot", False)
+        self.is_bot = payload.get("bot", False)
         self.system = payload.get("system", False)
         self.update_state(payload)
 
@@ -201,7 +201,7 @@ class OAuth2User(User):
     #: :type: :class:`PremiumType` or `None` if not available.
     premium_type: PremiumType
 
-    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "bot", "verified", "mfa_enabled")
+    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "is_bot", "verified", "mfa_enabled")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT):
         super().__init__(fabric_obj, payload)
