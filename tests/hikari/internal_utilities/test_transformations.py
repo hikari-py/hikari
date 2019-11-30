@@ -35,6 +35,13 @@ def test_put_if_specified_when_unspecified():
     assert d == {}
 
 
+def test_put_if_specified_when_type_after_passed():
+    d = {}
+    transformations.put_if_specified(d, "foo", 69, str)
+    transformations.put_if_specified(d, "bar", "69", int)
+    assert d == {"foo": "69", "bar": 69}
+
+
 def test_put_if_not_None_when_not_None():
     d = {}
     transformations.put_if_not_none(d, "foo", 69)
@@ -46,6 +53,13 @@ def test_put_if_not_None_when_None():
     d = {}
     transformations.put_if_not_none(d, "bar", None)
     assert d == {}
+
+
+def test_put_if_not_none_when_type_after_passed():
+    d = {}
+    transformations.put_if_not_none(d, "foo", 69, str)
+    transformations.put_if_not_none(d, "bar", "69", int)
+    assert d == {"foo": "69", "bar": 69}
 
 
 def test_format_present_placeholders():
