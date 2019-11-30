@@ -24,8 +24,6 @@
   before_script:
     - rm public -Rvf || true
     - mkdir public || true
-    - apt-get update -q  # graphviz won't resovle without this???
-    - apt-get install -qy git gcc g++ make graphviz
     - pip install virtualenv
     - python -m venv .venv
     - source .venv/bin/activate
