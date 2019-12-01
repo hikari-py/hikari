@@ -32,7 +32,7 @@ import pytest
 
 from hikari import errors
 from hikari.internal_utilities import unspecified
-from hikari.net import http_api_client_base
+from hikari.net import http_api_base
 from hikari.net import opcodes
 from hikari.net import rates
 from tests.hikari import _helpers
@@ -89,7 +89,7 @@ class MockAiohttpSession:
     close = asynctest.CoroutineMock()
 
 
-class MockBaseHTTPClient(http_api_client_base.HTTPAPIClientBase):
+class MockBaseHTTPClient(http_api_base.HTTPAPIBase):
     def __init__(self, *a, **k):
         with _helpers.mock_patch("aiohttp.ClientSession", new=MockAiohttpSession):
             super().__init__(*a, **k)
@@ -116,7 +116,7 @@ def mock_http_connection(event_loop):
 
 @pytest.fixture
 def res():
-    return http_api_client_base.Resource("http://test.lan", "get", "/foo/bar")
+    return http_api_base.Resource("http://test.lan", "get", "/foo/bar")
 
 
 ########################################################################################################################
@@ -146,7 +146,7 @@ async def test_request_forwards_known_arguments_to_request_once(mock_http_connec
         channel_id="912000",
     )
 
-    res = http_api_client_base.Resource(
+    res = http_api_base.Resource(
         mock_http_connection.base_uri,
         "get",
         "/foo/bar/{channel_id}",
@@ -169,7 +169,7 @@ async def test_request_forwards_known_arguments_to_request_once(mock_http_connec
 async def test_default_json_parameters():
     with asynctest.patch("aiohttp.ClientSession") as ClientSession:
 
-        class Deriv(http_api_client_base.HTTPAPIClientBase):
+        class Deriv(http_api_base.HTTPAPIBase):
             @property
             def version(self) -> int:
                 return 69
@@ -213,7 +213,7 @@ async def test_request_retries_indefinitely(mock_http_connection):
         if count >= 100:
             return
         else:
-            raise http_api_client_base._RateLimited()
+            raise http_api_base._RateLimited()
 
     mock_http_connection.request_once = asynctest.CoroutineMock(wraps=_request_once)
 
@@ -227,12 +227,7 @@ async def test_request_retries_indefinitely(mock_http_connection):
 @pytest.mark.asyncio
 async def test_request_seeks_to_zero_on_each_error_for_each_reseekable_resource_given(mock_http_connection):
     mock_http_connection.request_once = asynctest.CoroutineMock(
-        side_effect=[
-            http_api_client_base._RateLimited,
-            http_api_client_base._RateLimited,
-            http_api_client_base._RateLimited,
-            None,
-        ]
+        side_effect=[http_api_base._RateLimited, http_api_base._RateLimited, http_api_base._RateLimited, None,]
     )
 
     re_seekable_resources = [asynctest.MagicMock(), asynctest.MagicMock(), asynctest.MagicMock()]
@@ -247,7 +242,7 @@ async def test_request_seeks_to_zero_on_each_error_for_each_reseekable_resource_
 async def test_request_does_not_retry_on_success(mock_http_connection):
     expected_result = object()
     mock_http_connection.request_once = asynctest.CoroutineMock(
-        side_effect=[http_api_client_base._RateLimited(), http_api_client_base._RateLimited(), expected_result]
+        side_effect=[http_api_base._RateLimited(), http_api_base._RateLimited(), expected_result]
     )
     actual_result = await mock_http_connection.request(method="get", path="/foo/bar")
     assert mock_http_connection.request_once.call_count == 3
@@ -293,7 +288,7 @@ async def test_request_once_calls_session_request_with_expected_arguments(mock_h
         return_value=mock_http_connection.client_session.mock_response
     )
     path = "/foo/bar/{channel_id}"
-    res = http_api_client_base.Resource(mock_http_connection.base_uri, "get", path, channel_id="12321")
+    res = http_api_base.Resource(mock_http_connection.base_uri, "get", path, channel_id="12321")
     headers = {
         "foo": "bar",
         "baz": "bork",
@@ -331,7 +326,7 @@ async def test_request_once_acquires_global_rate_limit_bucket(mock_http_connecti
     try:
         await mock_http_connection.request_once(resource=res, data={})
         assert False
-    except http_api_client_base._RateLimited:
+    except http_api_base._RateLimited:
         mock_http_connection.global_rate_limit.acquire.assert_awaited_once()
 
 
@@ -345,7 +340,7 @@ async def test_request_once_acquires_local_rate_limit_bucket(mock_http_connectio
     try:
         await mock_http_connection.request_once(resource=res, data={})
         assert False
-    except http_api_client_base._RateLimited:
+    except http_api_base._RateLimited:
         bucket.acquire.assert_awaited_once()
 
 
@@ -356,7 +351,7 @@ async def test_request_once_calls_rate_limit_handler(mock_http_connection, res):
     try:
         await mock_http_connection.request_once(resource=res)
         assert False
-    except http_api_client_base._RateLimited:
+    except http_api_base._RateLimited:
         mock_http_connection._is_rate_limited.assert_called_once()
 
 
@@ -368,7 +363,7 @@ async def test_request_once_raises_RateLimited_if_rate_limit_handler_returned_tr
     try:
         await mock_http_connection.request_once(resource=res)
         assert False
-    except http_api_client_base._RateLimited:
+    except http_api_base._RateLimited:
         pass
 
 
@@ -711,7 +706,7 @@ async def test_NO_CONTENT_response_with_no_body_present(mock_http_connection, re
     mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=None)
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = None
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.NO_CONTENT)
-    res = http_api_client_base.Resource("http://test.lan", "get", "/foo/bar")
+    res = http_api_base.Resource("http://test.lan", "get", "/foo/bar")
     body = await mock_http_connection.request_once(resource=res)
     assert not body
 
@@ -1011,7 +1006,7 @@ async def test_handle_server_error_response_when_body_is_not_a_dict(mock_http_co
 
 
 def test_Resource_bucket():
-    a = http_api_client_base.Resource(
+    a = http_api_base.Resource(
         "http://base.lan",
         "get",
         "/foo/bar",
@@ -1020,7 +1015,7 @@ def test_Resource_bucket():
         guild_id="5678",
         webhook_id="91011",
     )
-    b = http_api_client_base.Resource(
+    b = http_api_base.Resource(
         "http://base.lan",
         "GET",
         "/foo/bar",
@@ -1029,10 +1024,10 @@ def test_Resource_bucket():
         guild_id="5678",
         webhook_id="91011",
     )
-    c = http_api_client_base.Resource(
+    c = http_api_base.Resource(
         "http://base.lan", "get", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011"
     )
-    d = http_api_client_base.Resource(
+    d = http_api_base.Resource(
         "http://base.lan", "post", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011"
     )
 
@@ -1045,7 +1040,7 @@ def test_Resource_bucket():
 
 
 def test_Resource_hash():
-    a = http_api_client_base.Resource(
+    a = http_api_base.Resource(
         "http://base.lan",
         "get",
         "/foo/bar",
@@ -1054,7 +1049,7 @@ def test_Resource_hash():
         guild_id="5678",
         webhook_id="91011",
     )
-    b = http_api_client_base.Resource(
+    b = http_api_base.Resource(
         "http://base.lan",
         "GET",
         "/foo/bar",
@@ -1063,10 +1058,10 @@ def test_Resource_hash():
         guild_id="5678",
         webhook_id="91011",
     )
-    c = http_api_client_base.Resource(
+    c = http_api_base.Resource(
         "http://base.lan", "get", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011"
     )
-    d = http_api_client_base.Resource(
+    d = http_api_base.Resource(
         "http://base.lan", "post", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011"
     )
 
@@ -1079,7 +1074,7 @@ def test_Resource_hash():
 
 
 def test_Resource_equality():
-    a = http_api_client_base.Resource(
+    a = http_api_base.Resource(
         "http://base.lan",
         "get",
         "/foo/bar",
@@ -1088,7 +1083,7 @@ def test_Resource_equality():
         guild_id="5678",
         webhook_id="91011",
     )
-    b = http_api_client_base.Resource(
+    b = http_api_base.Resource(
         "http://base.lan",
         "GET",
         "/foo/bar",
@@ -1097,10 +1092,10 @@ def test_Resource_equality():
         guild_id="5678",
         webhook_id="91011",
     )
-    c = http_api_client_base.Resource(
+    c = http_api_base.Resource(
         "http://base.lan", "get", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011"
     )
-    d = http_api_client_base.Resource(
+    d = http_api_base.Resource(
         "http://base.lan", "post", "/foo/bar", channel_id="1234", potatos="toast", guild_id="5678", webhook_id="91011"
     )
 
@@ -1114,7 +1109,7 @@ def test_Resource_equality():
 
 
 def test_resource_get_uri():
-    a = http_api_client_base.Resource(
+    a = http_api_base.Resource(
         "http://foo.com",
         "get",
         "/foo/{channel_id}/bar/{guild_id}/baz/{potatos}",
@@ -1126,7 +1121,7 @@ def test_resource_get_uri():
 
 
 def test_resource_repr():
-    a = http_api_client_base.Resource(
+    a = http_api_base.Resource(
         "http://foo.com",
         "get",
         "/foo/{channel_id}/bar/{guild_id}/baz/{potatos}",
