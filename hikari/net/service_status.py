@@ -58,6 +58,7 @@ class Subscriber:
         "id",
         "email",
         "mode",
+        "created_at",
         "quarantined_at",
         "incident",
         "is_skipped_confirmation_notification",
@@ -81,6 +82,11 @@ class Subscriber:
     #:
     #: :type: :class:`str`
     mode: str
+
+    #: The date/time the description was created at.
+    #:
+    #: :type: :class:`datetime.datetime`
+    created_at: datetime.datetime
 
     #: The date/time the description was quarantined at, if applicable.
     #:
@@ -108,6 +114,7 @@ class Subscriber:
             id=payload["id"],
             email=payload["email"],
             mode=payload["mode"],
+            created_at=date_helpers.parse_iso_8601_ts(payload["created_at"]),
             quarantined_at=transformations.nullable_cast(payload.get("quarantined_at"), date_helpers.parse_iso_8601_ts),
             incident=transformations.nullable_cast(payload.get("incident"), Incident.from_dict),
             is_skipped_confirmation_notification=transformations.nullable_cast(
@@ -205,7 +212,7 @@ class Component:
     A component description.
     """
 
-    __slots__ = ("id", "name", "created_at", "page_id", "position", "updated_at", "description")
+    __slots__ = ("id", "name", "created_at", "page_id", "position", "updated_at", "description", "status")
 
     #: The ID of the component.
     #:
@@ -248,6 +255,11 @@ class Component:
     #: :type: :class:`str` or `None`
     description: typing.Optional[str]
 
+    #: The status of this component.
+    #:
+    #: :type: :class:`str` or `None`
+    status: typing.Optional[str]
+
     @staticmethod
     def from_dict(payload: data_structures.DiscordObjectT) -> Component:
         return Component(
@@ -258,6 +270,7 @@ class Component:
             position=transformations.nullable_cast(payload.get("position"), int),
             updated_at=transformations.nullable_cast(payload.get("updated_at"), date_helpers.parse_iso_8601_ts),
             description=payload.get("description"),
+            status=payload.get("status"),
         )
 
 
@@ -360,12 +373,14 @@ class Incident:
         "name",
         "impact",
         "incident_updates",
+        "created_at",
         "monitoring_at",
         "page_id",
         "resolved_at",
         "shortlink",
         "status",
         "updated_at",
+        "started_at",
     )
 
     #: The ID of the incident.
@@ -390,6 +405,11 @@ class Incident:
     #:
     #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.IncidentUpdate`
     incident_updates: typing.Sequence[IncidentUpdate]
+
+    #: The date and time, if applicable, that the faulty component(s) were created at.
+    #:
+    #: :type: :class:`datetime.datetime`
+    created_at: datetime.datetime
 
     #: The date and time, if applicable, that the faulty component(s) were being monitored at.
     #:
@@ -421,8 +441,13 @@ class Incident:
 
     #: The last time the status of the incident was updated.
     #:
-    #: :type: :class:`datetime.datetime`
-    updated_at: datetime.datetime
+    #: :type: :class:`datetime.datetime` or `None`
+    updated_at: typing.Optional[datetime.datetime]
+
+    #: The date and time, if applicable, that the faulty component(s) began to malfunction.
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
+    started_at: typing.Optional[datetime.datetime]
 
     @staticmethod
     def from_dict(payload: data_structures.DiscordObjectT) -> Incident:
@@ -430,6 +455,7 @@ class Incident:
             id=payload["id"],
             name=payload["name"],
             status=payload["status"],
+            created_at=transformations.try_cast(payload["created_at"], date_helpers.parse_iso_8601_ts),
             updated_at=transformations.try_cast(payload.get("updated_at"), date_helpers.parse_iso_8601_ts),
             incident_updates=[
                 IncidentUpdate.from_dict(i) for i in payload.get("incident_updates", data_structures.EMPTY_SEQUENCE)
@@ -439,6 +465,7 @@ class Incident:
             shortlink=payload["shortlink"],
             page_id=payload["page_id"],
             impact=payload["impact"],
+            started_at=transformations.try_cast(payload.get("started_at"), date_helpers.parse_iso_8601_ts),
         )
 
 
@@ -476,6 +503,7 @@ class ScheduledMaintenance:
         "name",
         "impact",
         "incident_updates",
+        "created_at",
         "monitoring_at",
         "page_id",
         "resolved_at",
@@ -483,6 +511,8 @@ class ScheduledMaintenance:
         "scheduled_until",
         "status",
         "updated_at",
+        "started_at",
+        "shortlink",
     )
 
     #: The ID of the entry.
@@ -507,6 +537,11 @@ class ScheduledMaintenance:
     #:
     #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.IncidentUpdate`
     incident_updates: typing.Sequence[IncidentUpdate]
+
+    #: The date and time the event was created at.
+    #:
+    #: :type: :class:`datetime.datetime`
+    created_at: datetime.datetime
 
     #: The date and time the event was being monitored since, if applicable.
     #:
@@ -546,6 +581,16 @@ class ScheduledMaintenance:
     #: :type: :class:`datetime.datetime`
     updated_at: datetime.datetime
 
+    #: The URL to the status page for more details.
+    #:
+    #: :type: :class:`str`
+    shortlink: str
+
+    #: The date and time, if applicable, that the event began.
+    #:
+    #: :type: :class:`datetime.datetime` or `None`
+    started_at: typing.Optional[datetime.datetime]
+
     @staticmethod
     def from_dict(payload: data_structures.DiscordObjectT) -> ScheduledMaintenance:
         return ScheduledMaintenance(
@@ -562,13 +607,17 @@ class ScheduledMaintenance:
             scheduled_until=transformations.try_cast(payload.get("scheduled_until"), date_helpers.parse_iso_8601_ts),
             status=payload["status"],
             updated_at=transformations.try_cast(payload.get("updated_at"), date_helpers.parse_iso_8601_ts),
+            created_at=transformations.try_cast(payload["created_at"], date_helpers.parse_iso_8601_ts),
+            shortlink=payload["shortlink"],
+            started_at=transformations.try_cast(payload["started_at"], date_helpers.parse_iso_8601_ts),
         )
 
 
 @dataclasses.dataclass(frozen=True)
 class ScheduledMaintenances:
     """
-    A collection of maintenance events.
+    A collection of maintenance events
+    .
     """
 
     __slots__ = ("page", "scheduled_maintenances")
@@ -615,8 +664,13 @@ class OverallStatus:
 
 
 @dataclasses.dataclass(frozen=True)
-class Summary(OverallStatus):
-    __slots__ = ("components", "incidents", "scheduled_maintenances")
+class Summary:
+    __slots__ = ("page", "components", "incidents", "scheduled_maintenances")
+
+    #: The page describing this summary.
+    #:
+    #: :type: :class:`hikari.orm.models.Page`
+    page: Page
 
     #: The status of each component in the system.
     #:
@@ -637,14 +691,24 @@ class Summary(OverallStatus):
     def from_dict(payload: data_structures.DiscordObjectT) -> Summary:
         return Summary(
             page=Page.from_dict(payload["page"]),
-            status=Status.from_dict(payload["status"]),
-            scheduled_maintenances=[ScheduledMaintenance.from_dict(sm) for sm in payload["scheduled_maintenances"]],
-            incidents=[Incident.from_dict(i) for i in payload["incidents"]],
-            components=[Component.from_dict(c) for c in payload["components"]],
+            scheduled_maintenances=[
+                ScheduledMaintenance.from_dict(sm)
+                for sm in payload.get("scheduled_maintenances", data_structures.EMPTY_SEQUENCE)
+            ],
+            incidents=[Incident.from_dict(i) for i in payload.get("incidents", data_structures.EMPTY_SEQUENCE)],
+            components=[Component.from_dict(c) for c in payload.get("components", data_structures.EMPTY_SEQUENCE)],
         )
 
 
-class DiscordServiceStatusClient(http_client.HTTPClient):
+class ServiceStatusClient(http_client.HTTPClient):
+    """
+    A generic client to allow you to check the current status of Discord's services.
+
+    Warning:
+        This must be initialized within a coroutine while an event loop is active
+        and registered to the current thread.
+    """
+
     __slots__ = ("uri",)
 
     @typing.overload
@@ -705,7 +769,7 @@ class DiscordServiceStatusClient(http_client.HTTPClient):
     def version(self) -> int:
         return 2
 
-    async def _perform_request(self, route: str, cast: typing.Type[T], data=None, method=None) -> T:
+    async def _perform_request(self, route: str, cast: typing.Optional[typing.Type[T]], data=None, method=None) -> T:
         coro = super()._request(method or self.GET, self.uri + route, data=data)
 
         async with coro as resp:
@@ -716,35 +780,58 @@ class DiscordServiceStatusClient(http_client.HTTPClient):
             resp.raise_for_status()
             data = await resp.json()
 
-        return cast.from_dict(data)
+        return cast.from_dict(data) if cast else None
 
     async def fetch_summary(self) -> Summary:
+        """Fetch the overall service summary."""
         return await self._perform_request("/summary.json", Summary)
 
     async def fetch_status(self) -> OverallStatus:
+        """Fetch the overall service status."""
         return await self._perform_request("/status.json", OverallStatus)
 
     async def fetch_components(self) -> Components:
+        """Fetch information on the status of all API components."""
         return await self._perform_request("/components.json", Components)
 
     async def fetch_all_incidents(self) -> Incidents:
+        """Fetch information on all incidents both past and present."""
         return await self._perform_request("/incidents.json", Incidents)
 
     async def fetch_unresolved_incidents(self) -> Incidents:
+        """Fetch information on all incidents that are ongoing."""
         return await self._perform_request("/incidents/unresolved.json", Incidents)
 
     async def fetch_all_scheduled_maintenances(self) -> ScheduledMaintenances:
+        """Fetch information on all scheduled maintenances both past, present, and future."""
         return await self._perform_request("/scheduled-maintenances.json", ScheduledMaintenances)
 
     async def fetch_upcoming_scheduled_maintenances(self) -> ScheduledMaintenances:
+        """Fetch information on scheduled maintenances that are upcoming."""
         return await self._perform_request("/scheduled-maintenances/upcoming.json", ScheduledMaintenances)
 
     async def fetch_active_scheduled_maintenances(self) -> ScheduledMaintenances:
+        """Fetch information on all ongoing scheduled maintenances."""
         return await self._perform_request("/scheduled-maintenances/active.json", ScheduledMaintenances)
 
     async def subscribe_email_to_incidents(
-        self, email: str, incident: typing.Optional[typing.Union[str, Incident]],
+        self, email: str, incident: typing.Optional[typing.Union[str, Incident]] = None,
     ) -> Subscriber:
+        """
+        Subscribe to a specific incident or all incidents for email updates.
+
+        Args:
+            email:
+                The email address to send updates to.
+            incident:
+                If `None`, all updates for any incident will be sent. If an incident or incident ID,
+                then only updates for that incident will be sent.
+
+        Returns:
+            a subscription definition that can be used later to unsubscribe from that update
+            programmatically.
+        """
+
         body = {"subscriber[email]": email}
 
         if incident is not None:
@@ -754,8 +841,23 @@ class DiscordServiceStatusClient(http_client.HTTPClient):
         return result.subscriber
 
     async def subscribe_webhook_to_incidents(
-        self, url: str, incident: typing.Optional[typing.Union[str, Incident]],
+        self, url: str, incident: typing.Optional[typing.Union[str, Incident]] = None,
     ) -> Subscriber:
+        """
+        Subscribe to a specific incident or all incidents for webhook updates. This means the given
+        webhook will be hit when an update occurs.
+
+        Args:
+            url:
+                The webhook to hit.
+            incident:
+                If `None`, all updates for any incident will be sent. If an incident or incident ID,
+                then only updates for that incident will be sent.
+
+        Returns:
+            a subscription definition that can be used later to unsubscribe from that update
+            programmatically.
+        """
         body = {"subscriber[endpoint]": url}
 
         if incident is not None:
@@ -765,12 +867,24 @@ class DiscordServiceStatusClient(http_client.HTTPClient):
         return result.subscriber
 
     async def unsubscribe(self, subscriber: typing.Union[str, Subscriber]) -> None:
+        """
+        Unsubscribe from a given subscription described by a subscription ID or subscriber object.
+
+        Args:
+            subscriber:
+                Either a subscription ID or subscriber object.
+        """
         sub_id = subscriber.id if isinstance(subscriber, Subscriber) else subscriber
-        await self._perform_request(f"/subscribers/{sub_id}.json", lambda _: _, None, self.DELETE)
+        await self._perform_request(f"/subscribers/{sub_id}.json", None, None, self.DELETE)
 
     async def resend_confirmation_email(self, subscriber: typing.Union[str, Subscriber]) -> None:
+        """
+        Resend the confirmation email for a given subscriber ID or subscriber object.
+
+
+        """
         sub_id = subscriber.id if isinstance(subscriber, Subscriber) else subscriber
-        await self._perform_request(f"/subscribers/{sub_id}/resend_confirmation", lambda _: _, None, self.POST)
+        await self._perform_request(f"/subscribers/{sub_id}/resend_confirmation", None, None, self.POST)
 
 
 __all__ = [
@@ -787,5 +901,5 @@ __all__ = [
     "ScheduledMaintenances",
     "Summary",
     "OverallStatus",
-    "DiscordServiceStatusClient",
+    "ServiceStatusClient",
 ]

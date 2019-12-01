@@ -27,7 +27,9 @@ Sphinx documentation configuration.
 import contextlib
 import datetime
 import os
-import shutil
+import traceback
+
+import requests
 import sys
 import textwrap
 
@@ -40,7 +42,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "Hikari"
 author = "Nekokatt"
 copyright = author
-version = "0.0.54"
+version = "0.0.56"
 
 is_staging = "dev" in version
 
@@ -53,20 +55,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
-    "sphinx.ext.inheritance_diagram",
-    "sphinx.ext.graphviz",
 ]
-
-if shutil.which("dot"):
-    print("GRAPHVIZ INSTALLED, WILL GENERATE PRETTY DIAGRAMS :)")
-
-    extensions += ("sphinx.ext.inheritance_diagram", "sphinx.ext.graphviz")
-else:
-    print("dot WAS NOT INSTALLED, PLEASE INSTALL GRAPHVIZ PROPERLY FOR dot DIAGRAMS TO RENDER")
-
-# Apply our code that fixes weird issues in graphviz
-with open(os.path.join(os.path.dirname(__name__), "graphviz_hacks.py")) as fp:
-    exec(fp.read(), globals(), locals())  # nosec
 
 templates_path = ["_templates"]
 exclude_patterns = []
@@ -159,32 +148,6 @@ intersphinx_mapping = {
     "websockets": ("https://websockets.readthedocs.io/en/stable/", None),
 }
 
-# -- Inheritance diagram options ---------------------------------------------
-
-
-# https://www.graphviz.org/doc/info/attrs.html
-# https://www.graphviz.org/doc/info/arrows.html
-inheritance_graph_attrs = dict(
-    layout="twopi",  # dot neato twopi circo fdp
-    rankdir="TD",
-    fontsize=10,
-    ratio="compress",
-    # splines="ortho",
-    pad=0.5,
-    nodesep=4,
-    ranksep=4,
-    # Use a stupidly large size we will never reach, then let the compress ratio fix itself.
-    size='"100000.0 100000.0"',
-    splines="straight",
-)
-
-inheritance_node_attrs = dict(
-    fontsize=10, fontname='"monospace"', color='"#772953"', style='"filled,rounded"', fontcolor="white"
-)
-
-inheritance_edge_attrs = dict(color='"#772953"', arrowhead="onormal", arrowsize=1)
-
-graphviz_output_format = "svg"
 
 # -- Epilog to inject into each page... ---------------------------------------------
 
@@ -217,9 +180,13 @@ else:
 
 def setup(app):
     app.add_stylesheet("style.css")
-    print(dir(app), type(app))
-
     # Little easteregg.
-    with contextlib.suppress(Exception):
-        if datetime.datetime.now().month in (12, 1, 2):
-            app.add_javascript("http://www.schillmania.com/projects/snowstorm/snowstorm.js")
+    try:
+        if datetime.datetime.now().month == 12:
+            with requests.get("http://www.schillmania.com/projects/snowstorm/snowstorm.js") as resp:
+                resp.raise_for_status()
+                with open("docs/_static/snowstorm.js", "w") as fp:
+                    fp.write(resp.text)
+            app.add_javascript("snowstorm.js")
+    except Exception:
+        traceback.print_exc()
