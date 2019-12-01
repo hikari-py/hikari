@@ -228,6 +228,10 @@ class GatewayClient:
         specified otherwise. Any change to internal state may result in undefined behaviour or effects. This is designed
         to be a low-level interface to the gateway, and not a general-use object.
 
+    Warning:
+        This must be initialized within a coroutine while an event loop is active
+        and registered to the current thread.
+
     Events
     ~~~~~~
 

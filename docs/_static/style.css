@@ -35,9 +35,10 @@ code, .literal, .literal > span.pre {
     background-color: 0 !important;
 }
 
-.highlight > pre {
-    background-color: #272822; 
-    border-color: #3B3A32;
+dt:target, span.highlighted {
+    background-color: transparent !important;
+    text-decoration: underline;
+    text-decoration-color: #F92672;
 }
 
 /* syntax highlighting: https://tmtheme-editor.herokuapp.com/#!/editor/theme/Monokai */

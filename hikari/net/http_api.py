@@ -38,6 +38,10 @@ from hikari.net import http_api_client_base
 class HTTPAPI(http_api_client_base.HTTPAPIClientBase):
     """
     Combination of all components for API handling logic for the V7 Discord HTTP API.
+
+    Warning:
+        This must be initialized within a coroutine while an event loop is active
+        and registered to the current thread.
     """
 
     #: The target API version.

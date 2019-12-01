@@ -52,6 +52,10 @@ class HTTPClient(abc.ABC):
             async with client.request("GET", "https://some-websi.te") as resp:
                 resp.raise_for_status()
                 body = await resp.read()
+
+    Warning:
+        This must be initialized within a coroutine while an event loop is active
+        and registered to the current thread.
     """
 
     DELETE = "delete"

@@ -16,10 +16,6 @@ Packages and submodules
     {% for m in modules %}{{ m }}
     {% endfor %}
 
-.. inheritance-diagram::
-    {% for m in modules %}{{ m }}
-    {% endfor %}
-
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`

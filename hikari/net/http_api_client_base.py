@@ -127,6 +127,10 @@ class HTTPAPIClientBase(http_client.HTTPClient):
     implemented.
 
     Any HTTP API-specific components should derive their implementation from this class.
+
+    Warning:
+        This must be initialized within a coroutine while an event loop is active
+        and registered to the current thread.
     """
 
     __slots__ = [
