@@ -32,7 +32,7 @@ is_staging = len(sys.argv) > 1 and "staging" in sys.argv[1:]
 is_pages = len(sys.argv) > 1 and "pages" in sys.argv[1:]
 print("Will use", "staging" if is_staging else "prod", "configuration for this next version", file=sys.stderr)
 if is_pages:
-    print("Will not bump versions up, this is just for gitlab pages.")
+    print("Will not bump versions up, this is just for gitlab pages.", file=sys.stderr)
 pypi_server = "pypi.org"
 api_name = os.environ["API_NAME"]
 pypi_json_url = f"https://{pypi_server}/pypi/{api_name}/json"
