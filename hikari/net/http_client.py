@@ -23,6 +23,7 @@ proxying, SSL configuration, and a standard easy-to-use interface.
 import abc
 import asyncio
 import json
+import logging
 import ssl
 import typing
 
@@ -52,6 +53,10 @@ class HTTPClient(abc.ABC):
             async with client.request("GET", "https://some-websi.te") as resp:
                 resp.raise_for_status()
                 body = await resp.read()
+
+    Warning:
+        This must be initialized within a coroutine while an event loop is active
+        and registered to the current thread.
     """
 
     DELETE = "delete"
@@ -76,13 +81,84 @@ class HTTPClient(abc.ABC):
         "verify_ssl",
     ]
 
+
+    #: Whether to allow following of redirects or not. Generally you do not want this.
+    #: as it poses a security risk.
+    #:
+    #: :type: :class:`bool`
+    allow_redirects: bool
+
+    #: The underlying client session used to make low level HTTP requests.
+    #:
+    #: :type: :class:`aiohttp.ClientSession`
+    client_session: aiohttp.ClientSession
+
+    #: The number of requests that have been made. This acts as a unique ID for each request.
+    #:
+    #: :type: :class:`int`
+    in_count: int
+
+    #: The logger used to write log messages.
+    #: 
+    #: :type: :class:`logging.Logger`
+    logger: logging.Logger
+
+    #: The asyncio event loop being used.
+    #:
+    #: :type: :class:`asyncio.AbstractEventLoop`
+    loop: asyncio.AbstractEventLoop
+
+    #: Proxy authorization info.
+    #:
+    #: :type: :class:`aiohttp.BasicAuth` or `None`
+    proxy_auth: typing.Optional[aiohttp.BasicAuth]
+
+    #: Proxy headers.
+    #:
+    #: :type: :class:`aiohttp.typedefs.LooseHeaders` or `None`
+    proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders]
+
+    #: Proxy URL to use.
+    #:
+    #: :type: :class:`str` or `None`
+    proxy_url: typing.Optional[str]
+
+    #: SSL context to use.
+    #:
+    #: :type: :class:`ssl.SSLContext` or `None`
+    ssl_context: typing.Optional[ssl.SSLContext]
+
+    #: Response timeout.
+    #:
+    #: :type: :class:`float` or `None` if using the default for `aiohttp`.
+    timeout: typing.Optional[float]
+
+    #: The user agent being used.
+    #:
+    #: Warning:
+    #:     Certain areas of the Discord API may enforce specific user agents
+    #:     to be used for requests. You should not overwrite this generated value 
+    #:     unless you know what you are doing. Invalid useragents may lead to 
+    #:     bot account deauthorization.
+    #:
+    #: :type: :class:`str`
+    user_agent: str 
+
+    #: Whether to verify SSL certificates or not. Generally you want this turned on
+    #: to prevent the risk of fake certificates being used to perform a 
+    #: "man-in-the-middle" (MITM) attack on your application. However, if you are
+    #: stuck behind a proxy that cannot verify the certificates correctly, or are
+    #: having other SSL-related issues, you may wish to turn this off.
+    #:
+    #: :type: :class:`bool`
+    verify_ssl: bool
+
     @abc.abstractmethod
     def __init__(
         self,
         *,
         loop: asyncio.AbstractEventLoop = None,
         allow_redirects: bool = False,
-        max_retries: int = 5,
         json_marshaller: typing.Callable = None,
         connector: aiohttp.BaseConnector = None,
         proxy_headers: aiohttp.typedefs.LooseHeaders = None,
@@ -93,7 +169,7 @@ class HTTPClient(abc.ABC):
         timeout: float = None,
     ) -> None:
         """
-        Optional Keyword Arguments:
+        Args:
             allow_redirects:
                 defaults to False for security reasons. If you find you are receiving multiple redirection responses
                 causing requests to fail, it is probably worth enabling this.
@@ -105,15 +181,13 @@ class HTTPClient(abc.ABC):
                 This defaults to :func:`json.dumps`.
             loop:
                 the asyncio event loop to run on.
-            max_retries:
-                The max number of times to retry in certain scenarios before giving up on making the request.
             proxy_auth:
                 optional proxy authentication to use.
             proxy_headers:
                 optional proxy headers to pass.
             proxy_url:
                 optional proxy URL to use.
-            ssl_con7text:
+            ssl_context:
                 optional SSL context to use.
             verify_ssl:
                 defaulting to True, setting this to false will disable SSL verification.
@@ -130,11 +204,6 @@ class HTTPClient(abc.ABC):
         #:
         #: :type: :class:`bool`
         self.allow_redirects = allow_redirects
-
-        #: Max number of times to retry before giving up.
-        #:
-        #: :type: :class:`int`
-        self.max_retries = max_retries
 
         #: The HTTP client session to use.
         #:

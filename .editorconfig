@@ -66,7 +66,7 @@ ij_html_text_wrap = normal
 
 [{*.md,*.markdown}]
 ij_visual_guides = 80,100,120
-ij_wrap_on_typing = true
+ij_wrap_on_typing = false
 
 [{*.pyw,*.py}]
 ij_continuation_indent_size = 4
