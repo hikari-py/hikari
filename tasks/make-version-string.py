@@ -63,8 +63,6 @@ with open("pyproject.toml") as fp:
 if is_staging:
     # If development, we release a patch.
     # Increment staging version to next version, as that is sensible
-    if not is_pages:
-        previous_micro += 1
 
     current_dev_releases = [
         LooseVersion(v) for v in releases if v.startswith(f"{previous_major}.{previous_minor}.{previous_micro}")
@@ -75,7 +73,9 @@ if is_staging:
 
     if current_dev_releases:
         latest = max(current_dev_releases)
-        latest_patch = latest.version[-1] + 1
+        latest_patch = latest.version[-1]
+        if not is_pages:
+            latest_patch += 1
     else:
         latest_patch = 1
 
