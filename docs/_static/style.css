@@ -48,7 +48,7 @@ dt:target, span.highlighted {
 }
 
 /* Offset anchors from the top a bit to compensate for the header. */
-dt[id^='hikari'] {
+dt[id^='hikari'], div.section[id^='hikari'] {
   padding-top: 40px;
   margin-top: -40px;
   display: inline-block; /* required for webkit browsers */
