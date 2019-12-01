@@ -49,6 +49,7 @@ with requests.get(pypi_json_url) as resp:
         resp.raise_for_status()
         root = resp.json()
         releases = root["releases"]
+        print("Releases", releases, file=sys.stderr)
         current_version = root["info"]["version"]
 
 
@@ -63,12 +64,13 @@ with open("pyproject.toml") as fp:
 if is_staging:
     # If development, we release a patch.
     # Increment staging version to next version, as that is sensible
+    previous_micro += 1
 
     current_dev_releases = [
         LooseVersion(v) for v in releases if v.startswith(f"{previous_major}.{previous_minor}.{previous_micro}")
     ]
 
-    print("Releases under this major/minor/micro combination are:", *[v.version for v in current_dev_releases],
+    print("Releases under this major/minor/micro combination are:", *[v for v in current_dev_releases],
           file=sys.stderr)
 
     if current_dev_releases:
