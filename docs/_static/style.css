@@ -48,7 +48,7 @@ dt:target, span.highlighted {
 }
 
 /* Offset anchors from the top a bit to compensate for the header. */
-.reference.internal {
+dt[id^='hikari'] {
   padding-top: 40px;
   margin-top: -40px;
   display: inline-block; /* required for webkit browsers */
