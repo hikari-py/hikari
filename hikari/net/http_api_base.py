@@ -137,6 +137,7 @@ class HTTPAPIBase(http_client.HTTPClient):
         "authorization",
         "buckets",
         "base_uri",
+        "max_retries",
         "global_rate_limit",
         "json_unmarshaller",
         "json_unmarshaller_object_hook",
@@ -207,7 +208,6 @@ class HTTPAPIBase(http_client.HTTPClient):
         super().__init__(
             loop=loop,
             allow_redirects=allow_redirects,
-            max_retries=max_retries,
             json_marshaller=json_marshaller,
             connector=connector,
             proxy_headers=proxy_headers,
@@ -217,6 +217,11 @@ class HTTPAPIBase(http_client.HTTPClient):
             verify_ssl=verify_ssl,
             timeout=timeout,
         )
+
+        #: Number of times to retry a request before giving up.
+        #:
+        #: :type: :class:`int`
+        self.max_retries = max_retries
 
         #: Local rate limit buckets.
         #:
