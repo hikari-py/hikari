@@ -45,6 +45,7 @@ def test_VoiceServer(mock_fabric):
     assert voice_server_obj.token == "awoooooooo"
     assert voice_server_obj.guild_id == 41771983423143937
     assert voice_server_obj.endpoint == "smart.loyal.discord.gg"
+    voice_server_obj.__repr__()
 
 
 @pytest.fixture
@@ -97,6 +98,7 @@ def test_VoiceState(mock_member, mock_fabric, mock_guild, has_member):
     else:
         assert voice_obj.member is None
         mock_fabric.state_registry.parse_member.assert_not_called()
+    voice_obj.__repr__()
 
 
 @pytest.mark.model
@@ -121,6 +123,7 @@ def test_VoiceState_update():
         assert voice_obj.is_self_mute is True
         assert voice_obj.is_self_stream is True
         assert voice_obj.is_suppressed is True
+        voice_obj.__repr__()
 
 
 @pytest.mark.model
@@ -134,3 +137,4 @@ def test_VoiceRegion():
     assert voice_region_obj.is_optimal is False
     assert voice_region_obj.is_deprecated is False
     assert voice_region_obj.is_custom is False
+    voice_region_obj.__repr__()
