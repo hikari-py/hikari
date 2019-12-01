@@ -121,18 +121,23 @@ class Resource:
     __str__ = __repr__
 
 
-class HTTPAPIClientBase(http_client.HTTPClient):
+class HTTPAPIBase(http_client.HTTPClient):
     """
     The core low level logic for any HTTP-API components that require rate-limiting and consistent logging to be
     implemented.
 
     Any HTTP API-specific components should derive their implementation from this class.
+
+    Warning:
+        This must be initialized within a coroutine while an event loop is active
+        and registered to the current thread.
     """
 
     __slots__ = [
         "authorization",
         "buckets",
         "base_uri",
+        "max_retries",
         "global_rate_limit",
         "json_unmarshaller",
         "json_unmarshaller_object_hook",
@@ -203,7 +208,6 @@ class HTTPAPIClientBase(http_client.HTTPClient):
         super().__init__(
             loop=loop,
             allow_redirects=allow_redirects,
-            max_retries=max_retries,
             json_marshaller=json_marshaller,
             connector=connector,
             proxy_headers=proxy_headers,
@@ -213,6 +217,11 @@ class HTTPAPIClientBase(http_client.HTTPClient):
             verify_ssl=verify_ssl,
             timeout=timeout,
         )
+
+        #: Number of times to retry a request before giving up.
+        #:
+        #: :type: :class:`int`
+        self.max_retries = max_retries
 
         #: Local rate limit buckets.
         #:
@@ -500,4 +509,4 @@ class HTTPAPIClientBase(http_client.HTTPClient):
         raise errors.ServerError(resource, status, error_message)
 
 
-__all__ = ["HTTPAPIClientBase"]
+__all__ = ["HTTPAPIBase"]

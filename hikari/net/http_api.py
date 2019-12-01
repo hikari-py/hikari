@@ -32,12 +32,16 @@ from hikari.internal_utilities import io_helpers
 from hikari.internal_utilities import meta
 from hikari.internal_utilities import transformations
 from hikari.internal_utilities import unspecified
-from hikari.net import http_api_client_base
+from hikari.net import http_api_base
 
 
-class HTTPAPI(http_api_client_base.HTTPAPIClientBase):
+class HTTPAPI(http_api_base.HTTPAPIBase):
     """
     Combination of all components for API handling logic for the V7 Discord HTTP API.
+
+    Warning:
+        This must be initialized within a coroutine while an event loop is active
+        and registered to the current thread.
     """
 
     #: The target API version.
@@ -1342,7 +1346,7 @@ class HTTPAPI(http_api_client_base.HTTPAPIClientBase):
         return await self.request(self.GET, "/guilds/{guild_id}/members", guild_id=guild_id, json=payload)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def modify_guild_member(
+    async def modify_guild_member(  # lgtm [py/similar-function]
         self,
         guild_id: str,
         user_id: str,
@@ -1725,7 +1729,7 @@ class HTTPAPI(http_api_client_base.HTTPAPIClientBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def modify_guild_role(
+    async def modify_guild_role(  # lgtm [py/similar-function]
         self,
         guild_id: str,
         role_id: str,

@@ -24,14 +24,13 @@
   before_script:
     - rm public -Rvf || true
     - mkdir public || true
-    - apt-get update -q  # graphviz won't resovle without this???
-    - apt-get install -qy git gcc g++ make graphviz
+    - bash tasks/retry-aborts.sh pip install virtualenv
     - pip install virtualenv
     - python -m venv .venv
     - source .venv/bin/activate
-    - pip install -U pip
-    - pip install poetry
-    - poetry update
+    - bash tasks/retry-aborts.sh pip install -U pip
+    - bash tasks/retry-aborts.sh pip install poetry
+    - bash tasks/retry-aborts.sh poetry update
     - source tasks/config.sh
     - git fetch --all --prune --depth=1
 
@@ -45,7 +44,7 @@ pages:
     - git checkout origin/staging -f || true
     - git status || true
 
-    - set-versions "$(python tasks/make-version-string.py staging)" || true
+    - set-versions "$(python tasks/make-version-string.py staging pages)" || true
 
     # Staging should work always.
     - nox -r -sdocumentation
@@ -54,7 +53,7 @@ pages:
     - mkdir public || true
     - mv staging public/staging
     
-    - set-versions "$(python tasks/make-version-string.py master)" || true
+    - set-versions "$(python tasks/make-version-string.py master pages)" || true
 
     # Check out the master hikari source code.
     - git checkout origin/master -- hikari/
