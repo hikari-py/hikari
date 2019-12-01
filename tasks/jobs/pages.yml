@@ -44,7 +44,7 @@ pages:
     - git checkout origin/staging -f || true
     - git status || true
 
-    - set-versions "$(python tasks/make-version-string.py staging)" || true
+    - set-versions "$(python tasks/make-version-string.py staging pages)" || true
 
     # Staging should work always.
     - nox -r -sdocumentation
@@ -53,7 +53,7 @@ pages:
     - mkdir public || true
     - mv staging public/staging
     
-    - set-versions "$(python tasks/make-version-string.py master)" || true
+    - set-versions "$(python tasks/make-version-string.py master pages)" || true
 
     # Check out the master hikari source code.
     - git checkout origin/master -- hikari/

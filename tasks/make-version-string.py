@@ -28,8 +28,11 @@ from distutils.version import LooseVersion
 import requests
 
 
-is_staging = len(sys.argv) > 1 and sys.argv[1].casefold() == "staging"
+is_staging = len(sys.argv) > 1 and "staging" in sys.argv[1:]
+is_pages = len(sys.argv) > 1 and "pages" in sys.argv[1:]
 print("Will use", "staging" if is_staging else "prod", "configuration for this next version", file=sys.stderr)
+if is_pages:
+    print("Will not bump versions up, this is just for gitlab pages.")
 pypi_server = "pypi.org"
 api_name = os.environ["API_NAME"]
 pypi_json_url = f"https://{pypi_server}/pypi/{api_name}/json"
@@ -60,7 +63,8 @@ with open("pyproject.toml") as fp:
 if is_staging:
     # If development, we release a patch.
     # Increment staging version to next version, as that is sensible
-    previous_micro += 1
+    if not is_pages:
+        previous_micro += 1
 
     current_dev_releases = [
         LooseVersion(v) for v in releases if v.startswith(f"{previous_major}.{previous_minor}.{previous_micro}")
@@ -93,7 +97,9 @@ else:
         if major == previous_major and minor == previous_minor:
             print("We are just incrementing the micro version, as major and minor is the same", file=sys.stderr)
             # If it is a micro version release (most of the time it will be), increment the minor version
-            current_version = '.'.join(map(str, [major, minor, micro + 1]))
+            if not is_pages:
+                micro += 1
+            current_version = '.'.join(map(str, [major, minor, micro]))
         else:
             print("We are using the version in pyproject.toml as a major or minor version isn't the same. "
                   "If this fails, please update the file manually.", file=sys.stderr)
