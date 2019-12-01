@@ -63,7 +63,8 @@ def mock_member():
 
 
 @pytest.mark.model()
-def test_VoiceState(mock_member, mock_fabric, mock_guild):
+@pytest.mark.parametrize("has_member", [True, False])
+def test_VoiceState(mock_member, mock_fabric, mock_guild, has_member):
     voice_obj = voices.VoiceState(
         mock_fabric,
         mock_guild,
@@ -71,7 +72,7 @@ def test_VoiceState(mock_member, mock_fabric, mock_guild):
             "guild_id": "381870553235193857",
             "user_id": "115590097100865541",
             "channel_id": "115590097143215541",
-            "member": mock_member,
+            "member": mock_member if has_member else None,
             "session_id": "350a109226bd6f43c81f12c7c08de20a",
             "deaf": False,
             "mute": True,
@@ -90,7 +91,12 @@ def test_VoiceState(mock_member, mock_fabric, mock_guild):
     assert voice_obj.is_self_mute is False
     assert voice_obj.is_self_stream is True
     assert voice_obj.is_suppressed is False
-    mock_fabric.state_registry.parse_member.assert_called_once_with(mock_member, mock_guild)
+    if has_member:
+        assert voice_obj.member is not None
+        mock_fabric.state_registry.parse_member.assert_called_once_with(mock_member, mock_guild)
+    else:
+        assert voice_obj.member is None
+        mock_fabric.state_registry.parse_member.assert_not_called()
 
 
 @pytest.mark.model
