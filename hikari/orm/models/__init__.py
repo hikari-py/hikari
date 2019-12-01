@@ -19,11 +19,14 @@
 """
 All models used in Hikari's public API.
 """
+from . import audit_logs
 from . import channels
 from . import colors
 from . import colours
+from . import connections
 from . import embeds
 from . import emojis
+from . import gateway_bot
 from . import guilds
 from . import integrations
 from . import interfaces
@@ -36,6 +39,5 @@ from . import permissions
 from . import presences
 from . import reactions
 from . import roles
-from . import service_status
 from . import users
 from . import webhooks

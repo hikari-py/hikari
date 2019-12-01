@@ -22,13 +22,14 @@ import pytest
 from hikari.internal_utilities import io_helpers
 from hikari.orm.models import media
 from tests.hikari import _helpers
-from tests.hikari.orm.testdata import *
 
 
 @pytest.fixture
-@fixture_test_data(raw("avatar.jpeg.b64"))
-def test_avatar_data_uri(test_data):
-    return test_data.rstrip()
+def test_avatar_data_uri():
+    return (
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAE0lEQVR42mP8/5+hngENMNJAEAD4tAx3yVEBjwAA"
+        "AABJRU5ErkJggg=="
+    )
 
 
 @pytest.mark.model
@@ -40,8 +41,7 @@ class TestAvatar:
 
     def test_Avatar_get_file_types(self, test_avatar_data_uri):
         guesses = media.Avatar.from_data_uri_scheme(test_avatar_data_uri).get_file_types()
-        assert ".jpg" in guesses
-        assert ".jpeg" in guesses
+        assert ".png" in guesses
 
     def test_Avatar_to_file_objects(self, test_avatar_data_uri):
         avatar = media.Avatar.from_data_uri_scheme(test_avatar_data_uri)
