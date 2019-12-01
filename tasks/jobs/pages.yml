@@ -26,12 +26,12 @@
     - mkdir public || true
     - apt-get update -q  # graphviz won't resovle without this???
     - apt-get install -qy git gcc g++ make graphviz
-    - pip install virtualenv
+    - bash tasks/retry-aborts.sh pip install virtualenv
     - python -m venv .venv
     - source .venv/bin/activate
-    - pip install -U pip
-    - pip install poetry
-    - poetry update
+    - bash tasks/retry-aborts.sh pip install -U pip
+    - bash tasks/retry-aborts.sh pip install poetry
+    - bash tasks/retry-aborts.sh poetry update
     - source tasks/config.sh
     - git fetch --all --prune --depth=1
 

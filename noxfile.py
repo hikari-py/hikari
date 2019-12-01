@@ -19,6 +19,7 @@
 import fnmatch
 import os
 import shutil
+import traceback
 
 import nox.sessions
 
@@ -60,6 +61,22 @@ PYTEST_ARGS = [
 ]
 
 
+# Guard against connection resets by retring installs several times before actually giving up.
+def failsafe_install(session, *args):
+    ex = None
+    for i in range(10):
+        try:
+            session.install(*args)
+            ex = None
+            break
+        except Exception as ex:
+            traceback.print_exc()
+            print("trying again...")
+
+    if ex is not None:
+        raise ex
+
+
 @nox.session(python=False)
 def test(session) -> None:
     """Run unit tests in Pytest."""
@@ -88,7 +105,7 @@ def documentation(session) -> None:
 @nox.session()
 def sast(session) -> None:
     """Run static application security testing with Bandit."""
-    session.install("bandit")
+    failsafe_install(session, "bandit")
     pkg = MAIN_PACKAGE.split(".")[0]
     session.run("bandit", pkg, "-r")
 
@@ -97,14 +114,14 @@ def sast(session) -> None:
 def safety(session) -> None:
     """Run safety checks against a vulnerability database using Safety."""
     session.run("poetry", "update", "--no-dev", external=True)
-    session.install("safety")
+    failsafe_install(session, "safety")
     session.run("safety", "check")
 
 
 @nox.session()
 def format(session) -> None:
     """Reformat code with Black. Pass the '--check' flag to check formatting only."""
-    session.install("black")
+    failsafe_install(session, "black")
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *session.posargs)
 
 
