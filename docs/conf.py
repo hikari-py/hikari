@@ -27,6 +27,7 @@ Sphinx documentation configuration.
 import contextlib
 import datetime
 import os
+import request
 import shutil
 import sys
 import textwrap
@@ -183,4 +184,8 @@ def setup(app):
     # Little easteregg.
     with contextlib.suppress(Exception):
         if datetime.datetime.now().month in (12, 1, 2):
-            app.add_javascript("http://www.schillmania.com/projects/snowstorm/snowstorm.js")
+            with requests.get("http://www.schillmania.com/projects/snowstorm/snowstorm.js") as resp:
+                resp.raise_for_status()
+                with open("_static/snowstorm.js", "w") as fp:
+                    fp.write(resp.read())
+            app.add_javascript("snowstorm.js")
