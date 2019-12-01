@@ -45,13 +45,15 @@ class VoiceServer(interfaces.IStatefulModel):
 
     #: The id of the guild this server is hosting.
     #:
-    #: :type: :class:`int`.
+    #: :type: :class:`int`
     guild_id: int
 
     #: The endpoint of the voice server host
     #:
     #: :type: :class:`str`
     endpoint: str
+
+    __repr__ = auto_repr.repr_of("guild_id", "endpoint")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         self._fabric = fabric_obj
@@ -203,7 +205,7 @@ class VoiceRegion(interfaces.IModel):
     #: :type: :class:`bool`
     is_custom: bool
 
-    __repr__ = auto_repr.repr_of("name", "vip", "deprecated")
+    __repr__ = auto_repr.repr_of("name", "is_vip", "is_deprecated")
 
     def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.id = payload["id"]
@@ -214,4 +216,4 @@ class VoiceRegion(interfaces.IModel):
         self.is_custom = payload["custom"]
 
 
-__all__ = ["VoiceState", "VoiceRegion"]
+__all__ = ["VoiceServer", "VoiceState", "VoiceRegion"]
