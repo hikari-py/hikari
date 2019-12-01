@@ -35,10 +35,21 @@ code, .literal, .literal > span.pre {
     background-color: 0 !important;
 }
 
+pre {
+    background-color: 0 !important;
+}
+
 dt:target, span.highlighted {
     background-color: transparent !important;
     text-decoration: underline;
     text-decoration-color: #F92672;
+}
+
+/* Offset anchors from the top a bit to compensate for the header. */
+.reference.internal {
+  padding-top: 40px;
+  margin-top: -40px;
+  display: inline-block; /* required for webkit browsers */
 }
 
 /* syntax highlighting: https://tmtheme-editor.herokuapp.com/#!/editor/theme/Monokai */
