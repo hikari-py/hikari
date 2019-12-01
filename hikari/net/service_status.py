@@ -20,12 +20,10 @@
 Retrieves the status of Discord systems, and can subscribe to update lists via Email and webhooks.
 
 Note:
-    This API is not overly well documented, and the API documentation does not directly tarry up with the API
-    specification. Thus, some details may be undocumented or omitted or incorrect.
-
-Note:
-    There is currently no proxy or SSL configuration support for this module. If required, please open
-    an issue at https://gitlab.com/nekokatt/hikari/issues to request this to be implemented.
+    This API is not overly well documented on a low level, and the API documentation often does not directly
+    tarry up with the underlying specification. Thus, some details may be undocumented or omitted or 
+    incorrect. If you notice anything that may be erraneous, please file a ticket on the bugtracker
+    at https://gitlab.com/nekokatt/hikari/issues.
 
 See:
     https://status.discordapp.com/api/v2
@@ -728,8 +726,11 @@ class ServiceStatusClient(http_client.HTTPClient):
         verify_ssl: bool = True,
         timeout: float = None,
     ) -> None:
+        ...
+
+    def __init__(self, **kwargs):
         """
-        Optional Keyword Arguments:
+        Args:
             allow_redirects:
                 defaults to False for security reasons. If you find you are receiving multiple redirection responses
                 causing requests to fail, it is probably worth enabling this.
@@ -760,8 +761,6 @@ class ServiceStatusClient(http_client.HTTPClient):
             timeout:
                 optional timeout to apply to individual HTTP requests.
         """
-
-    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.uri = f"https://status.discordapp.com/api/v{self.version}"
 
