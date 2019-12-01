@@ -32,11 +32,13 @@ body {
 /* whyyyyy */
 code, .literal, .literal > span.pre {
     color: #F92672 !important;
-    background-color: 0 !important;
+    background-color: transparent !important;
+    border-color: transparent !important;
 }
 
 pre {
-    background-color: 0 !important;
+    background-color: transparent !important;
+    border-color: transparent !important;
 }
 
 dt:target, span.highlighted {
