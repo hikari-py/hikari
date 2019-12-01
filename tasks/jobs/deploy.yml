@@ -24,8 +24,8 @@
     - "[[ \"$CI_PROJECT_URL\" = \"$ORIGINAL_REPO_URL\" ]] || (echo 'You are running off of a fork, so deployment is skipped.' && exit 0)"
     - apt-get update
     - apt-get install curl git openssh-client -y
-    - pip install poetry requests
-    - poetry install -v
+    - bash tasks/retry-aborts.sh pip install poetry requests
+    - bash tasks/retry-aborts.sh poetry install -v
     - poetry show -v
 
 "Deploy a new dev prerelease":

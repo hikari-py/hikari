@@ -60,6 +60,10 @@ with warnings.catch_warnings():
         """
         Wraps an aiohttp ClientSession and provides the defaults needed to work with websockets
         easily.
+
+        Warning:
+            This must be initialized within a coroutine while an event loop is active
+            and registered to the current thread.
         """
 
         __slots__ = ()

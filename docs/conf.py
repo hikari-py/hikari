@@ -27,7 +27,9 @@ Sphinx documentation configuration.
 import contextlib
 import datetime
 import os
-import shutil
+import traceback
+
+import requests
 import sys
 import textwrap
 
@@ -178,9 +180,13 @@ else:
 
 def setup(app):
     app.add_stylesheet("style.css")
-    print(dir(app), type(app))
-
     # Little easteregg.
-    with contextlib.suppress(Exception):
-        if datetime.datetime.now().month in (12, 1, 2):
-            app.add_javascript("http://www.schillmania.com/projects/snowstorm/snowstorm.js")
+    try:
+        if datetime.datetime.now().month == 12:
+            with requests.get("http://www.schillmania.com/projects/snowstorm/snowstorm.js") as resp:
+                resp.raise_for_status()
+                with open("docs/_static/snowstorm.js", "w") as fp:
+                    fp.write(resp.text)
+            app.add_javascript("snowstorm.js")
+    except Exception:
+        traceback.print_exc()
