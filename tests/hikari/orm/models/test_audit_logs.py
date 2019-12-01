@@ -23,6 +23,7 @@ import pytest
 from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import audit_logs
+from hikari.orm.models import channels
 from hikari.orm.models import roles
 
 
@@ -132,6 +133,12 @@ def test_new_sequence_of():
 
 
 @pytest.mark.model
+@pytest.mark.parametrize(["type_entity", "expected_result"], [[4, channels.GuildCategory], [str, str], [16, 16]])
+def test_type_convert(type_entity, expected_result):
+    assert audit_logs._type_converter(type_entity) is expected_result
+
+
+@pytest.mark.model
 def test_AuditLogEntryCountInfo():
     info_obj = audit_logs.parse_audit_log_entry_info({"count": 64}, audit_logs.AuditLogEvent.MESSAGE_BULK_DELETE)
     assert isinstance(info_obj, audit_logs.AuditLogEntryCountInfo)
@@ -192,3 +199,18 @@ def test_ChannelOverwriteAuditLogEntryInfo():
     assert info_obj.id == 115590097100865541
     assert info_obj.type.value is roles.Role
     info_obj.__repr__()
+
+
+@pytest.mark.model
+def test_AuditLogChange_without_converter():
+    audit_log_change_obj = audit_logs.AuditLogChange(
+        {
+            "key": "avatar_hash",
+            "old_value": "0e2aad94b8c086865c4e62009b925e0f",
+            "new_value": "a_d3f77f408fb58925024e887ddc4a555d",
+        }
+    )
+    assert audit_log_change_obj.key is audit_logs.AuditLogChangeKey.AVATAR_HASH
+    assert str(audit_log_change_obj.key) == "AVATAR_HASH"
+    assert audit_log_change_obj.old_value == "0e2aad94b8c086865c4e62009b925e0f"
+    assert audit_log_change_obj.new_value == "a_d3f77f408fb58925024e887ddc4a555d"
