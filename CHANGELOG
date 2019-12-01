@@ -1,9 +1,36 @@
 CHANGELOG
 =========
 
-Automatically generated from git history up to master at Sat Nov 30 20:10:36 UTC 2019 by CI.
+Automatically generated from git history up to master at Sun Dec  1 17:06:33 UTC 2019 by CI.
 
-* Sat Nov 30 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+* Sun Dec 01 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+- Merge branch 'staging' into 'master' (rev.ee1c92d9)
+- Documentation fixes (rev.cebfecd1)
+- Merge branch 'audit_logs' into 'staging' (rev.0999ad2f)
+- Bugfix for versioning strategy (rev.c596321b)
+- Add more tests for audit_logs (rev.21572f94)
+- Updated README and index.rst (rev.e9d7b9e7)
+- Anchor css bugfix (again) (rev.4c794e75)
+- Another CSS bugfix [skip deploy] (rev.63a910bd)
+- Update make-version-string.py to fix another pages bug [skip deploy] (rev.53441102)
+- Update style.css [skip deploy] (rev.0ea00437)
+- Merge branch '__repr__fix' into 'staging' (rev.386acb9b)
+- Fix repr on VoiceRegion and add VoiceServer to voices.__all__. (rev.a5c65baf)
+- Update make-version-string.py with version number bugfix [skip deploy] (rev.2a7d99c3)
+- Update layout.html to include favicons [skip deploy] (rev.1130d1bd)
+- Fixed issue where documentation showed next version rather than current one. (rev.07336321)
+- Suppressed LGTM false positive, fixed http api naming consistency. (rev.34f93f79)
+- Merge branch 'task/service_status_rewrite' into 'staging' (rev.edd12631)
+- Missing test branch coverage for voice_state implemented (rev.93e44e24)
+- Fixes #103, Merging documentation bugfix and added all service_status tests (rev.0d529d43)
+- Update conf.py (rev.53650a1b)
+- Fixes #106, also removes test data (rev.c3e1e045)
+- Rewrote service status client (rev.d5b78f3c)
+- Fixes #105 by removing diagrams and fixing iffy CSS sphinx defaulted to (rev.203b6baf)
+- Merged master 0.0.56 into staging [skip ci] (rev.a76c58f6)
+
+* Sat Nov 30 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.56
+- Deployed 0.0.56 [skip ci] (rev.75f73fa9)
 - Merge remote-tracking branch 'origin/master' into staging (rev.242089c0)
 - Update make-version-string.py (rev.be8aa35d)
 - Update make-version-string.py to use root version instead of intrinsic release on prod from pypi json slab (rev.ad896d97)
