@@ -121,7 +121,7 @@ class Resource:
     __str__ = __repr__
 
 
-class HTTPAPIClientBase(http_client.HTTPClient):
+class HTTPAPIBase(http_client.HTTPClient):
     """
     The core low level logic for any HTTP-API components that require rate-limiting and consistent logging to be
     implemented.
@@ -504,4 +504,4 @@ class HTTPAPIClientBase(http_client.HTTPClient):
         raise errors.ServerError(resource, status, error_message)
 
 
-__all__ = ["HTTPAPIClientBase"]
+__all__ = ["HTTPAPIBase"]
