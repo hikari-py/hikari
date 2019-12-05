@@ -81,7 +81,6 @@ class HTTPClient(abc.ABC):
         "verify_ssl",
     ]
 
-
     #: Whether to allow following of redirects or not. Generally you do not want this.
     #: as it poses a security risk.
     #:
@@ -99,7 +98,7 @@ class HTTPClient(abc.ABC):
     in_count: int
 
     #: The logger used to write log messages.
-    #: 
+    #:
     #: :type: :class:`logging.Logger`
     logger: logging.Logger
 
@@ -137,15 +136,15 @@ class HTTPClient(abc.ABC):
     #:
     #: Warning:
     #:     Certain areas of the Discord API may enforce specific user agents
-    #:     to be used for requests. You should not overwrite this generated value 
-    #:     unless you know what you are doing. Invalid useragents may lead to 
+    #:     to be used for requests. You should not overwrite this generated value
+    #:     unless you know what you are doing. Invalid useragents may lead to
     #:     bot account deauthorization.
     #:
     #: :type: :class:`str`
-    user_agent: str 
+    user_agent: str
 
     #: Whether to verify SSL certificates or not. Generally you want this turned on
-    #: to prevent the risk of fake certificates being used to perform a 
+    #: to prevent the risk of fake certificates being used to perform a
     #: "man-in-the-middle" (MITM) attack on your application. However, if you are
     #: stuck behind a proxy that cannot verify the certificates correctly, or are
     #: having other SSL-related issues, you may wish to turn this off.
