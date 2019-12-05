@@ -639,6 +639,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         allow: int,
         deny: int,
         type_: str,
+        *,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
         """
@@ -925,7 +926,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @meta.link_developer_portal(meta.APIResource.EMOJI)
     async def modify_guild_emoji(
-        self, guild_id: str, emoji_id: str, name: str, roles: typing.List[str], reason: str = unspecified.UNSPECIFIED
+        self, guild_id: str, emoji_id: str, name: str, roles: typing.List[str], *, reason: str = unspecified.UNSPECIFIED
     ) -> data_structures.DiscordObjectT:
         """
         Edits an emoji of a given guild
@@ -1837,7 +1838,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def begin_guild_prune(
-        self, guild_id: str, days: int, compute_prune_count: bool = False, reason: str = unspecified.UNSPECIFIED
+        self, guild_id: str, days: int, compute_prune_count: bool = False, *, reason: str = unspecified.UNSPECIFIED
     ) -> typing.Optional[int]:
         """
         Prunes members of a given guild based on the number of inactive days.
@@ -1928,7 +1929,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def create_guild_integration(
-        self, guild_id: str, type_: str, integration_id: str, reason: str = unspecified.UNSPECIFIED
+        self, guild_id: str, type_: str, integration_id: str, *, reason: str = unspecified.UNSPECIFIED
     ) -> None:
         """
         Creates an integrations for a given guild.
@@ -2080,7 +2081,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def modify_guild_embed(
-        self, guild_id: str, embed: data_structures.DiscordObjectT, reason: str = unspecified.UNSPECIFIED
+        self, guild_id: str, embed: data_structures.DiscordObjectT, *, reason: str = unspecified.UNSPECIFIED
     ) -> data_structures.DiscordObjectT:
         """
         Edits the embed for a given guild.
@@ -2450,7 +2451,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)
     async def modify_webhook(
-        self, webhook_id: str, name: str, avatar: bytes, channel_id: str, reason: str = unspecified.UNSPECIFIED
+        self, webhook_id: str, name: str, avatar: bytes, channel_id: str, *, reason: str = unspecified.UNSPECIFIED
     ) -> data_structures.DiscordObjectT:
         """
         Edits a given webhook.
