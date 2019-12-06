@@ -1,9 +1,25 @@
 CHANGELOG
 =========
 
-Automatically generated from git history up to master at Sun Dec  1 17:06:33 UTC 2019 by CI.
+Automatically generated from git history up to master at Fri Dec  6 21:56:27 UTC 2019 by CI.
 
-* Sun Dec 01 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+* Fri Dec 06 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+- Merge branch 'staging' into 'master' (rev.7754cf0d)
+- Merge branch 'task/!77-teams' into 'staging' (rev.54ec479d)
+- Fixes !77. Implements team member objects. (rev.b5eaa684)
+- Merge branch 'task/crown-fasterspeeding' into 'staging' (rev.2254248d)
+- Update __init__.py (rev.2b99dad5)
+- Removed importlib-metadata [skip deploy] (rev.00b4e0b7)
+- Merge branch 'update_invite' into 'staging' (rev.0943a813)
+- [Fixes #104] Add partial guild and channel objs + add attrs to Invite. (rev.7110353d)
+- Merge branch 'task/fix-kwargs-state-registry-impl' into 'staging' (rev.f0994163)
+- [Fixes #100] Made optional arguments kwargs (rev.0c9a247e)
+- Merge branch 'task/update-coverage-report' into 'staging' (rev.4ef3540a)
+- removed hikari/__init__.py being omitted from coverage, set precision to 2 decimal places (rev.953df262)
+- Merged master 0.0.57 into staging [skip ci] (rev.d3940be2)
+
+* Sun Dec 01 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.57
+- Deployed 0.0.57 [skip ci] (rev.b4aae652)
 - Merge branch 'staging' into 'master' (rev.ee1c92d9)
 - Documentation fixes (rev.cebfecd1)
 - Merge branch 'audit_logs' into 'staging' (rev.0999ad2f)
