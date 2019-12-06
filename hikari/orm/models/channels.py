@@ -22,6 +22,7 @@ Channel models.
 from __future__ import annotations
 
 import abc
+import enum
 import typing
 
 from hikari.internal_utilities import assertions
@@ -33,6 +34,33 @@ from hikari.orm.models import guilds as _guild
 from hikari.orm.models import interfaces
 from hikari.orm.models import overwrites
 from hikari.orm.models import users
+
+
+class ChannelType(interfaces.BestEffortEnumMixin, enum.IntEnum):
+    """
+    The types of channels returned by the api.
+    """
+
+    #: A text channel in a guild.
+    GUILD_TEXT = 0
+
+    #: A direct channel between two users.
+    DM = 1
+
+    #: A voice channel in a guild.
+    GUILD_VOICE = 2
+
+    #: A direct channel between multiple users.
+    GROUP_DM = 3
+
+    #: An category used for organizing channels in a guild.
+    GUILD_CATEGORY = 4
+
+    #: A channel that can be followed and can crosspost.
+    GUILD_ANNOUNCEMENT = 5
+
+    #: A channel that show's a game's store page.
+    GUILD_STORE = 6
 
 
 class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStatefulModel):
@@ -55,10 +83,10 @@ class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStatefulModel):
     #: :type: :class:`bool`
     is_dm: typing.ClassVar[bool]
 
-    #: The integer type of the class.
+    #: The type of the class.
     #:
-    #: :type: :class:`int`
-    type: typing.ClassVar[int]
+    #: :type: :class:`ChannelType`
+    type: typing.ClassVar[ChannelType]
 
     #: The ID of the channel.
     #:
@@ -84,8 +112,33 @@ class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStatefulModel):
         cls.is_dm = kwargs.pop("is_dm", NotImplemented)
 
     @classmethod
-    def get_channel_class_from_type(cls, type: int) -> typing.Optional[typing.Type[Channel]]:
+    def get_channel_class_from_type(cls, type: typing.Union[ChannelType, int]) -> typing.Optional[typing.Type[Channel]]:
         return cls._channel_implementations.get(type)
+
+
+class PartialChannel(Channel):
+    """
+    A generic partial Channel object used when we only know a channel's name and type.
+    """
+
+    __slots__ = ("name", "type")
+
+    #: The name of the channel.
+    #:
+    #: :type: :class:`str`
+    name: str
+
+    #: The type of channel this represents.
+    #:
+    #: :type: :class:`ChannelType` or :class:`int`
+    type: typing.Union[ChannelType, int]
+
+    __repr__ = auto_repr.repr_of("id", "name", "type")
+
+    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+        self.name = payload["name"]
+        self.type = ChannelType.get_best_effort_from_value(payload["type"])
+        super().__init__(fabric_obj, payload)
 
 
 class TextChannel(Channel, abc.ABC):
@@ -163,7 +216,7 @@ class GuildChannel(Channel, is_dm=False):
         return self.guild.channels[self.parent_id] if self.parent_id is not None else None
 
 
-class GuildTextChannel(GuildChannel, TextChannel, type=0, is_dm=False):
+class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT, is_dm=False):
     """
     A text channel.
     """
@@ -203,7 +256,7 @@ class GuildTextChannel(GuildChannel, TextChannel, type=0, is_dm=False):
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
 
 
-class DMChannel(TextChannel, type=1, is_dm=True):
+class DMChannel(TextChannel, type=ChannelType.DM, is_dm=True):
     """
     A DM channel between users.
     """
@@ -232,7 +285,7 @@ class DMChannel(TextChannel, type=1, is_dm=True):
         self.recipients = [self._state.parse_user(u) for u in payload.get("recipients", data_structures.EMPTY_SEQUENCE)]
 
 
-class GuildVoiceChannel(GuildChannel, type=2, is_dm=False):
+class GuildVoiceChannel(GuildChannel, type=ChannelType.GUILD_VOICE, is_dm=False):
     """
     A voice channel within a guild.
     """
@@ -260,7 +313,7 @@ class GuildVoiceChannel(GuildChannel, type=2, is_dm=False):
         self.user_limit = payload.get("user_limit") or None
 
 
-class GroupDMChannel(DMChannel, type=3, is_dm=True):
+class GroupDMChannel(DMChannel, type=ChannelType.GROUP_DM, is_dm=True):
     """
     A DM group chat.
     """
@@ -302,7 +355,7 @@ class GroupDMChannel(DMChannel, type=3, is_dm=True):
         self.owner_id = transformations.nullable_cast(payload.get("owner_id"), int)
 
 
-class GuildCategory(GuildChannel, type=4, is_dm=False):
+class GuildCategory(GuildChannel, type=ChannelType.GUILD_CATEGORY, is_dm=False):
     """
     A category within a guild.
     """
@@ -315,7 +368,7 @@ class GuildCategory(GuildChannel, type=4, is_dm=False):
         super().__init__(fabric_obj, payload)
 
 
-class GuildAnnouncementChannel(GuildChannel, type=5, is_dm=False):
+class GuildAnnouncementChannel(GuildChannel, type=ChannelType.GUILD_ANNOUNCEMENT, is_dm=False):
     """
     A channel for announcement topics within a guild.
 
@@ -355,7 +408,7 @@ class GuildAnnouncementChannel(GuildChannel, type=5, is_dm=False):
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
 
 
-class GuildStoreChannel(GuildChannel, type=6, is_dm=False):
+class GuildStoreChannel(GuildChannel, type=ChannelType.GUILD_STORE, is_dm=False):
     """
     A store channel for selling of games within a guild.
     """
@@ -404,7 +457,9 @@ def parse_channel(fabric_obj: fabric.Fabric, payload: data_structures.DiscordObj
 
 
 __all__ = (
+    "ChannelType",
     "Channel",
+    "PartialChannel",
     "GuildChannel",
     "GuildTextChannel",
     "DMChannel",

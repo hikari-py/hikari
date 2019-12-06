@@ -40,7 +40,89 @@ from hikari.orm.models import users
 from hikari.orm.models import voices
 
 
-class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
+class PartialGuild(interfaces.ISnowflake):
+    """
+    Implementation of a partial guild object, found in places like invites.
+    """
+
+    __slots__ = (
+        "id",
+        "name",
+        "splash_hash",
+        "banner_hash",
+        "description",
+        "icon_hash",
+        "features",
+        "verification_level",
+        "vanity_url_code",
+    )
+
+    #: The guild ID.
+    #:
+    #: :type: :class:`int`
+    id: int
+
+    #: The name of the guild.
+    #:
+    #: :type: :class:`str`
+    name: str
+
+    #: The hash of the splash for the guild.
+    #:
+    #: :type: :class:`str`
+    splash_hash: str
+
+    #: Hash code for the guild banner, if it has one.
+    #:
+    #: :type: :class:`str` or `None`
+    banner_hash: typing.Optional[str]
+
+    #: Guild description, if the guild has one assigned. Currently this only applies to discoverable guilds.
+    #:
+    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.orm.models.roles.Role` objects
+    description: typing.Optional[str]
+
+    #: The hash of the icon of the guild.
+    #:
+    #: :type: :class:`str`
+    icon_hash: str
+
+    #: Enabled features in this guild.
+    #:
+    #: :type: :class:`set` of :class:`hikari.orm.models.guilds.Feature` enum values.
+    features: typing.Set[Feature]
+
+    #: Verification level for this guild.
+    #:
+    #: :type: :class:`hikari.orm.models.guilds.GuildVerificationLevel`
+    verification_level: VerificationLevel
+
+    #: Code for the vanity URL, if the guild has one.
+    #:
+    #: :type: :class:`str` or `None`
+    vanity_url_code: typing.Optional[str]
+
+    __repr__ = auto_repr.repr_of("id", "name")
+
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+        self.id = transformations.nullable_cast(payload.get("id"), int)
+        self.update_state(payload)
+
+    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+        self.name = payload.get("name")
+        self.icon_hash = payload.get("icon")
+        self.splash_hash = payload.get("splash")
+        self.verification_level = transformations.try_cast(payload.get("verification_level"), VerificationLevel)
+        self.features = {
+            transformations.try_cast(f, Feature.from_discord_name)
+            for f in payload.get("features", data_structures.EMPTY_SEQUENCE)
+        }
+        self.vanity_url_code = payload.get("vanity_url_code")
+        self.description = payload.get("description")
+        self.banner_hash = payload.get("banner")
+
+
+class Guild(PartialGuild, interfaces.IStatefulModel):
     """
     Implementation of a Guild.
     """
@@ -56,23 +138,17 @@ class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
 
     __slots__ = (
         "_fabric",
-        "id",
         "afk_channel_id",
         "owner_id",
         "voice_region",
         "system_channel_id",
         "creator_application_id",
-        "name",
-        "icon_hash",
-        "splash_hash",
         "afk_timeout",
-        "verification_level",
         "preferred_locale",
         "message_notification_level",
         "explicit_content_filter_level",
         "roles",
         "emojis",
-        "features",
         "member_count",
         "voice_states",
         "mfa_level",
@@ -83,9 +159,6 @@ class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
         "members",
         "channels",
         "max_members",
-        "vanity_url_code",
-        "description",
-        "banner_hash",
         "premium_tier",
         "premium_subscription_count",
         "system_channel_flags",  # not documented...
@@ -113,30 +186,10 @@ class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
     #: :type: :class:`str`
     voice_region: typing.Optional[str]
 
-    #: The guild ID.
-    #:
-    #: :type: :class:`int`
-    id: int
-
     #: The application ID of the creator of the guild. This is always `None` unless the guild was made by a bot.
     #:
     #: :type: :class:`int` or `None`
     creator_application_id: typing.Optional[int]
-
-    #: The name of the guild.
-    #:
-    #: :type: :class:`str`
-    name: str
-
-    #: The hash of the icon of the guild.
-    #:
-    #: :type: :class:`str`
-    icon_hash: str
-
-    #: The hash of the splash for the guild.
-    #:
-    #: :type: :class:`str`
-    splash_hash: str
 
     #: Permissions for our user in the guild, minus channel overrides, if the user is in the guild.
     #:
@@ -147,11 +200,6 @@ class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
     #:
     #: :type: :class:`int`
     afk_timeout: int
-
-    #: Verification level for this guild.
-    #:
-    #: :type: :class:`hikari.orm.models.guilds.GuildVerificationLevel`
-    verification_level: VerificationLevel
 
     #: The preferred locale of the guild. This is only populated if the guild has the
     # :attr:`hikari.orm.models.guild.GuildFeature`
@@ -172,17 +220,12 @@ class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
     #: Roles in this guild. Maps IDs to the role object they represent.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.orm.models.roles.Role` objects
-    roles: typing.Dict[int, roles.Role]
+    roles: typing.MutableMapping[int, roles.Role]
 
     #: Emojis in this guild. Maps IDs to the role object they represent.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.orm.models.emojis.GuildEmoji` objects
-    emojis: typing.Dict[int, emojis.GuildEmoji]
-
-    #: Enabled features in this guild.
-    #:
-    #: :type: :class:`set` of :class:`hikari.orm.models.guilds.Feature` enum values.
-    features: typing.Set[Feature]
+    emojis: typing.MutableMapping[int, emojis.GuildEmoji]
 
     #: Number of members. Only stored if the information is actively available.
     #:
@@ -230,21 +273,6 @@ class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
     #: :type: :class:`int`
     max_members: int
 
-    #: Code for the vanity URL, if the guild has one.
-    #:
-    #: :type: :class:`str` or `None`
-    vanity_url_code: typing.Optional[str]
-
-    #: Guild description, if the guild has one assigned. Currently this only applies to discoverable guilds.
-    #:
-    #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.orm.models.roles.Role` objects
-    description: typing.Optional[str]
-
-    #: Hash code for the guild banner, if it has one.
-    #:
-    #: :type: :class:`str` or `None`
-    banner_hash: typing.Optional[str]
-
     #: Premium tier.
     #:
     #: :type: :class:`hikari.orm.models.guilds.PremiumTier`
@@ -264,20 +292,16 @@ class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         self._fabric = fabric_obj
-        self.id = transformations.nullable_cast(payload.get("id"), int)
-        self.update_state(payload)
+        super().__init__(payload)
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+        super().update_state(payload)
         self.afk_channel_id = transformations.nullable_cast(payload.get("afk_channel_id"), int)
         self.owner_id = transformations.nullable_cast(payload.get("owner_id"), int)
         self.voice_region = payload.get("region")
         self.system_channel_id = transformations.nullable_cast(payload.get("system_channel_id"), int)
         self.creator_application_id = transformations.nullable_cast(payload.get("application_id"), int)
-        self.name = payload.get("name")
-        self.icon_hash = payload.get("icon")
-        self.splash_hash = payload.get("splash")
         self.afk_timeout = payload.get("afk_timeout", float("inf"))
-        self.verification_level = transformations.try_cast(payload.get("verification_level"), VerificationLevel)
         self.preferred_locale = payload.get("preferred_locale")
         self.message_notification_level = transformations.try_cast(
             payload.get("default_message_notifications"), DefaultMessageNotificationsLevel
@@ -293,10 +317,6 @@ class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
             self._fabric.state_registry.parse_emoji(e, self)
             for e in payload.get("emojis", data_structures.EMPTY_SEQUENCE)
         )
-        self.features = {
-            transformations.try_cast(f, Feature.from_discord_name)
-            for f in payload.get("features", data_structures.EMPTY_SEQUENCE)
-        }
         self.member_count = transformations.nullable_cast(payload.get("member_count"), int)
         self.voice_states = {
             int(vs["user_id"]): self._fabric.state_registry.parse_voice_state(vs, self)
@@ -316,9 +336,6 @@ class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
             for c in payload.get("channels", data_structures.EMPTY_SEQUENCE)
         )
         self.max_members = payload.get("max_members", 0)
-        self.vanity_url_code = payload.get("vanity_url_code")
-        self.description = payload.get("description")
-        self.banner_hash = payload.get("banner")
         self.premium_tier = transformations.try_cast(payload.get("premium_tier"), PremiumTier)
         self.premium_subscription_count = payload.get("premium_subscription_count", 0)
         self.system_channel_flags = transformations.try_cast(payload.get("system_channel_flags"), SystemChannelFlag)
@@ -327,6 +344,9 @@ class Guild(interfaces.ISnowflake, interfaces.IStatefulModel):
 class SystemChannelFlag(enum.IntFlag):
     """
     Defines what is enabled to be displayed in the system channel.
+
+    Note:
+        These flags are inverted so if they're set then the relevant setting has been disabled.
     """
 
     #: Display a message about new users joining.
@@ -449,6 +469,7 @@ class Ban(interfaces.IModel):
 
 
 __all__ = [
+    "PartialGuild",
     "Guild",
     "SystemChannelFlag",
     "Feature",
