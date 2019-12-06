@@ -66,7 +66,6 @@ pytest-testdox           = "~1.2"
 requests                 = "~2.22"
 
 # Sphinx requirements for documentation generation.
-importlib-metadata       = "0.23"
 Jinja2                   = "~2.10"
 sphinx                   = "~2.2"
 sphinx-bootstrap-theme   = "~0.7"
