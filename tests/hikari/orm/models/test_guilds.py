@@ -198,6 +198,33 @@ def fabric_obj(mock_state_registry):
 
 
 @pytest.mark.model
+def test_PartialGuild():
+    partial_guild_obj = guilds.PartialGuild(
+        {
+            "id": "515260097702789121",
+            "name": "Catgirls Affinity",
+            "splash": "03lf834sa3",
+            "banner": "9s9f9f94d",
+            "description": "Nyaa",
+            "icon": "bb71f469c158984e265093a81b3397fb",
+            "features": ["VANITY_URL"],
+            "verification_level": 2,
+            "vanity_url_code": "nekotime",
+        }
+    )
+    assert partial_guild_obj.id == 515260097702789121
+    assert partial_guild_obj.name == "Catgirls Affinity"
+    assert partial_guild_obj.splash_hash == "03lf834sa3"
+    assert partial_guild_obj.banner_hash == "9s9f9f94d"
+    assert partial_guild_obj.description == "Nyaa"
+    assert partial_guild_obj.icon_hash == "bb71f469c158984e265093a81b3397fb"
+    assert partial_guild_obj.features.pop() is guilds.Feature.VANITY_URL
+    assert partial_guild_obj.verification_level is guilds.VerificationLevel.MEDIUM
+    assert partial_guild_obj.vanity_url_code == "nekotime"
+    partial_guild_obj.__repr__()
+
+
+@pytest.mark.model
 class TestGuild:
     def test_available_Guild(
         self, test_guild_payload, test_emoji_payload, test_member_payload, test_voice_state_payload, fabric_obj

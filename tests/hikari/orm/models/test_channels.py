@@ -41,7 +41,9 @@ from tests.hikari import _helpers
     ],
 )
 def test_Channel_get_channel_class_from_type(expected_type):
+    # Make sure that this will successfully parse from both the enum and raw integer type.
     assert channels.Channel.get_channel_class_from_type(expected_type.type) is expected_type
+    assert channels.Channel.get_channel_class_from_type(expected_type.type.value) is expected_type
 
 
 @pytest.mark.model
@@ -151,6 +153,7 @@ def test_GuildTextChannel():
         },
     )
 
+    assert gtc.type is channels.ChannelType.GUILD_TEXT
     assert gtc.id == 1234567
     assert gtc.guild_id == 696969
     assert gtc.position == 100
@@ -170,6 +173,7 @@ def test_DMChannel():
     f = fabric.Fabric(NotImplemented, s)
     dmc = channels.DMChannel(f, {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []})
 
+    assert dmc.type is channels.ChannelType.DM
     assert dmc.id == 929292
     assert dmc.last_message_id == 12345
     assert dmc.recipients == []
@@ -197,6 +201,7 @@ def test_GuildVoiceChannel():
         },
     )
 
+    assert gvc.type is channels.ChannelType.GUILD_VOICE
     assert gvc.id == 9292929
     assert gvc.guild_id == 929
     assert gvc.position == 66
@@ -228,6 +233,7 @@ def test_GroupDMChannel():
         },
     )
 
+    assert gdmc.type is channels.ChannelType.GROUP_DM
     assert gdmc.id == 99999999999
     assert gdmc.last_message_id is None
     assert gdmc.recipients == []
@@ -256,6 +262,7 @@ def test_GuildCategory():
         },
     )
 
+    assert gc.type is channels.ChannelType.GUILD_CATEGORY
     assert gc.name == "dank category"
     assert gc.position == 69
     assert gc.guild_id == 54321
@@ -286,6 +293,7 @@ def test_GuildAnnouncementChannel():
         },
     )
 
+    assert gnc.type is channels.ChannelType.GUILD_ANNOUNCEMENT
     assert gnc.id == 4444
     assert gnc.guild_id == 1111
     assert gnc.position == 24
@@ -317,6 +325,7 @@ def test_GuildStoreChannel():
         },
     )
 
+    assert gsc.type is channels.ChannelType.GUILD_STORE
     assert gsc.id == 9876
     assert gsc.guild_id == 7676
     assert gsc.position == 9
@@ -325,6 +334,18 @@ def test_GuildStoreChannel():
     assert gsc.parent_id == 32
     assert not gsc.is_dm
     gsc.__repr__()
+
+
+@pytest.mark.model
+def test_partial_channel():
+    fabric_obj = mock.MagicMock(fabric.Fabric)
+    partial_channel_obj = channels.PartialChannel(
+        fabric_obj, {"id": "455344577423428035", "name": "Neko Zone", "type": 2}
+    )
+    assert partial_channel_obj.id == 455344577423428035
+    assert partial_channel_obj.name == "Neko Zone"
+    assert partial_channel_obj.type is channels.ChannelType.GUILD_VOICE
+    partial_channel_obj.__repr__()
 
 
 @pytest.mark.model

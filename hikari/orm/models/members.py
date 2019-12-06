@@ -48,7 +48,7 @@ class Member(users.IUser, delegate_fabricated=True):
     __slots__ = ("user", "guild", "roles", "joined_at", "nick", "premium_since", "presence", "is_deaf", "is_mute")
 
     #: The underlying user object.
-    user: users.User
+    user: users.IUser
 
     #: The guild that the member is in.
     guild: guilds.Guild
