@@ -23,6 +23,7 @@ import pytest
 
 from hikari.orm import fabric
 from hikari.orm import state_registry
+from hikari.orm.models import channels
 from hikari.orm.models import invites
 
 
@@ -57,11 +58,23 @@ class TestInvite:
         )
 
         assert inv.code == "0vCdhLbwjZZTWZLD"
+        assert inv.target_user_type is invites.InviteTargetUserType.STREAM
         assert inv.approximate_presence_count == 69
         assert inv.approximate_member_count == 420
+        assert inv.channel.id == 165176875973476352
+        assert inv.channel.name == "illuminati"
+        assert inv.channel.type is channels.ChannelType.GUILD_TEXT
+        assert inv.guild.id == 165176875973476352
+        assert inv.guild.name == "CS:GO Fraggers Only"
+        assert inv.guild.splash_hash is None
+        assert inv.guild.icon_hash is None
+        assert inv.guild.vanity_url_code is None
+        assert inv.guild.features == set()
+        assert inv.guild.description is None
+        assert inv.guild.verification_level is None
+        assert inv.guild.banner_hash is None
         inv.__repr__()
-        fabric_obj.state_registry.parse_guild.assert_called_with(guild_dict)
-        fabric_obj.state_registry.parse_channel.assert_called_with(channel_dict)
+        fabric_obj.state_registry.parse_user.assert_called_with(user_dict)
 
 
 @pytest.mark.model
