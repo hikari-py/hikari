@@ -22,6 +22,7 @@ Invitations to guilds.
 from __future__ import annotations
 
 import datetime
+import enum
 import typing
 
 from hikari.internal_utilities import auto_repr
@@ -36,12 +37,29 @@ from hikari.orm.models import interfaces
 from hikari.orm.models import users
 
 
+class InviteTargetUserType(enum.IntEnum):
+    """
+    Why an invite targets a user.
+    """
+
+    #: Targeting a Go Live stream.
+    STREAM = 1
+
+
 class Invite(interfaces.IModel):
     """
     Represents a code that when used, adds a user to a guild or group DM channel.
     """
 
-    __slots__ = ("code", "guild", "channel", "approximate_presence_count", "approximate_member_count")
+    __slots__ = (
+        "code",
+        "guild",
+        "channel",
+        "target_user",
+        "target_user_type",
+        "approximate_presence_count",
+        "approximate_member_count",
+    )
 
     #: The unique invite code
     #:
@@ -50,13 +68,23 @@ class Invite(interfaces.IModel):
 
     #: The guild the invite is for
     #:
-    #: :type: :class:`hikari.orm.models.guilds.Guild`
-    guild: guilds.Guild
+    #: :type: :class:`hikari.orm.models.guilds.PartialGuild`
+    guild: guilds.PartialGuild
 
     #: The channel the invite points to
     #:
-    #: :type: :class:`hikari.orm.models.channels.GuildChannel`
-    channel: channels.GuildChannel
+    #: :type: :class:`hikari.orm.models.channels.PartialChannel`
+    channel: channels.PartialChannel
+
+    #: The user this invite is targeting.
+    #:
+    #: :type: :class:`hikari.orm.models.users.User` or `None`
+    target_user: typing.Optional[users.User]
+
+    #: The reason this invite targets a user
+    #:
+    #: :type: :class:`hikari.orm.models.invites.InviteTargetUserType` or `None`
+    target_user_type: typing.Optional[InviteTargetUserType]
 
     #: Approximate count of online members.
     #:
@@ -71,12 +99,15 @@ class Invite(interfaces.IModel):
     __repr__ = auto_repr.repr_of("code", "guild", "channel")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
-        self.code = payload.get("code")
-        self.guild = fabric_obj.state_registry.parse_guild(payload.get("guild"))
-        # noinspection PyTypeChecker
-        self.channel = fabric_obj.state_registry.parse_channel(payload.get("channel"))
-        self.approximate_presence_count = transformations.nullable_cast(payload.get("approximate_presence_count"), int)
-        self.approximate_member_count = transformations.nullable_cast(payload.get("approximate_member_count"), int)
+        self.code = payload["code"]
+        self.guild = transformations.nullable_cast(payload.get("guild"), guilds.PartialGuild)
+        self.channel = channels.PartialChannel(fabric_obj, payload["channel"])
+        self.target_user = transformations.nullable_cast(
+            payload.get("target_user"), fabric_obj.state_registry.parse_user
+        )
+        self.target_user_type = transformations.nullable_cast(payload.get("target_user_type"), InviteTargetUserType)
+        self.approximate_presence_count = payload.get("approximate_presence_count")
+        self.approximate_member_count = payload.get("approximate_member_count")
 
 
 class InviteMetadata(interfaces.IModel):
@@ -135,4 +166,4 @@ class InviteMetadata(interfaces.IModel):
         self.is_revoked = payload.get("revoked", False)
 
 
-__all__ = ["Invite", "InviteMetadata"]
+__all__ = ["Invite", "InviteMetadata", "InviteTargetUserType"]
