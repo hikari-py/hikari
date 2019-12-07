@@ -31,25 +31,14 @@ def member_payload():
         "membership_state": 2,
         "permissions": ["*"],
         "team_id": "1234321",
-        "user": {
-            "avatar": "1a2b3c",
-            "discriminator": 1234,
-            "id": "9876789",
-            "username": "BenDover7"
-        }
+        "user": {"avatar": "1a2b3c", "discriminator": 1234, "id": "9876789", "username": "BenDover7"},
     }
 
 
 @pytest.fixture()
 def team_payload(member_payload):
-    return {
-        "icon": "1a2b3c",
-        "id": "1234321",
-        "members": [
-            member_payload
-        ],
-        "owner_user_id": "9876789"
-    }
+    return {"icon": "1a2b3c", "id": "1234321", "members": [member_payload], "owner_user_id": "9876789"}
+
 
 @pytest.fixture()
 def fabric_obj():

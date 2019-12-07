@@ -330,9 +330,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
 
     async def handle_guild_members_chunk(self, gateway, payload):
         self.dispatch(events.RAW_GUILD_MEMBERS_CHUNK, payload)
-
-        # TODO: implement this feature properly.
-        self.logger.warning("received GUILD_MEMBERS_CHUNK but that is not implemented yet")
+        await self.fabric.chunker.handle_next_chunk(payload, gateway.shard_id)
 
     async def handle_guild_role_create(self, gateway, payload):
         self.dispatch(events.RAW_GUILD_ROLE_CREATE, payload)
