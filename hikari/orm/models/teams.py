@@ -37,6 +37,7 @@ class Team(interfaces.IStatefulModel, interfaces.ISnowflake):
     """
     A representation of a team that can contain one or more members in a managed application.
     """
+
     __slots__ = ("_fabric", "id", "icon", "members", "owner_user_id")
 
     #: The ID of the team.
@@ -72,6 +73,7 @@ class TeamMember(users.IUser, delegate_fabricated=True):
     """
     A representation of a team member.
     """
+
     __slots__ = ("team_id", "permissions", "membership_state", "user")
 
     #: The ID of the team the member is in.
@@ -107,6 +109,7 @@ class MembershipState(enum.IntEnum):
     """
     The state of membership for a team member.
     """
+
     #: The user has been invited but has not yet responded.
     INVITED = 1
     #: The user has accepted an invite and is a team member officially.

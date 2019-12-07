@@ -34,6 +34,7 @@ import asyncio
 import contextlib
 import datetime
 import enum
+import functools
 import json
 import ssl
 import time
@@ -648,10 +649,6 @@ class GatewayClient:
 
                 if time_taken > 0.15 * self.heartbeat_latency:
                     self._handle_slow_client(time_taken)
-            finally:
-                # Yield to the event loop for a little while. Prevents some buggy behaviour with PyPy, and prevents
-                # any mutation of the heartbeat interval immediately tanking the CPU, so may as well keep it here.
-                await asyncio.sleep(1)
 
     async def _receive_hello(self) -> None:
         hello = await self._receive_json()
@@ -779,27 +776,52 @@ class GatewayClient:
         else:
             self.logger.warning("received unrecognised opcode %s", op)
 
-    async def request_guild_members(self, guild_id: str, query: str = "", limit: int = 0) -> None:
+    async def request_guild_members(
+        self,
+        guild_id: str,
+        *guild_ids: str,
+        limit: int = 0,
+        query: str = None,
+        presences: bool = True,
+        user_ids: typing.Sequence[str] = None,
+    ) -> None:
         """
         Requests guild members from the given Guild ID. This can be used to retrieve all members available in a guild.
 
         Args:
-            guild_id: the guild ID to request members from.
-            query: member names to search for, or empty string to remove the constraint.
-            limit: max number of members to retrieve, or zero to remove the constraint.
+            guild_id:
+                the first guild ID to request members from.
+            *guild_ids:
+                zero or more additional guild IDs to request members from.
+            query:
+                member names to search for, or empty string to remove the constraint.
+            limit:
+                max number of members to retrieve, or zero to remove the constraint.
+            presences:
+                `True` to return presences, `False` otherwise.
+            user_ids:
+                An optional sequence of user IDs to get the details for.
 
         Warning:
             Results will be dispatched as events in chunks of 1000 members per guild using the
-            :attr:`hikari.events.GUILD_MEMBERS_CHUNK` event. You will need to listen to these yourself and decode them
-            in case more than one occurs at once.
+            `GUILD_MEMBERS_CHUNK` event. You will need to listen to these yourself and decode
+            them in case more than one occurs at once.
+
+        Warning:
+            You may not specify both `query` and `user_ids` in this call.
         """
-        self.logger.debug("requesting members for guild %r with query %r and limit %r", guild_id, query, limit)
+        payload = {"guild_id": [guild_id, *guild_ids], "limit": limit, "presences": presences}
+
+        if user_ids is not None:
+            if query is not None:
+                raise RuntimeError("Cannot specify both user_ids and query together")
+            payload["user_ids"] = [*user_ids]
+        elif query is not None:
+            payload["query"] = query
+
+        self.logger.debug("requesting members with constraints %s", payload)
         await self._send_json(
-            {
-                "op": opcodes.GatewayOpcode.REQUEST_GUILD_MEMBERS,
-                "d": {"guild_id": guild_id, "query": query, "limit": limit},
-            },
-            False,
+            {"op": opcodes.GatewayOpcode.REQUEST_GUILD_MEMBERS, "d": payload}, False,
         )
 
     async def update_status(
