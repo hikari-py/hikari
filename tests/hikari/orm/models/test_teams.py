@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -63,6 +63,7 @@ def test_Team(team_payload, fabric_obj, member_payload):
     assert obj.owner_user_id == 9876789
     assert len(obj.members) == 1
     team_member.assert_called_once_with(fabric_obj, member_payload)
+    assert isinstance(obj.members, dict)
     assert obj.id == 1234321
     assert obj.icon == "1a2b3c"
 
