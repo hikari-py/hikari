@@ -737,7 +737,7 @@ class TestStateRegistryImpl:
         guild_obj = _helpers.mock_model(guilds.Guild, id=1234)
         registry._guilds = {guild_obj.id: guild_obj}
 
-        registry.parse_guild(payload)
+        registry.parse_guild(payload, 9999)
 
         guild_obj.update_state.assert_called_with(payload)
 
@@ -748,7 +748,7 @@ class TestStateRegistryImpl:
         guild_obj = _helpers.mock_model(guilds.Guild, id=1234, is_unavailable=False)
         registry._guilds = {guild_obj.id: guild_obj}
 
-        registry.parse_guild(payload)
+        registry.parse_guild(payload, 9999)
 
         guild_obj.update_state.assert_not_called()
         assert guild_obj.is_unavailable is True
@@ -759,8 +759,8 @@ class TestStateRegistryImpl:
         registry._guilds = _helpers.StrongWeakValuedDict()
 
         with _helpers.mock_patch(guilds.Guild, return_value=guild_obj) as Guild:
-            registry.parse_guild(payload)
-            Guild.assert_called_once_with(registry.fabric, payload)
+            registry.parse_guild(payload, 5432)
+            Guild.assert_called_once_with(registry.fabric, payload, 5432)
             assert guild_obj in registry._guilds.values()
 
     def test_parse_guild_when_not_cached_returns_new_guild(self, registry: state_registry_impl.StateRegistryImpl):
@@ -769,7 +769,7 @@ class TestStateRegistryImpl:
         registry._guilds = _helpers.StrongWeakValuedDict()
 
         with _helpers.mock_patch(guilds.Guild, return_value=guild_obj):
-            assert registry.parse_guild(payload) is guild_obj
+            assert registry.parse_guild(payload, 5432) is guild_obj
 
     def test_parse_voice_state(self, registry: state_registry_impl.StateRegistryImpl):
         registry._guilds[69] = guild_obj = _helpers.mock_model(guilds.Guild, id=69, voice_states={})

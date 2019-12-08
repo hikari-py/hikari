@@ -288,7 +288,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return new_emoji
 
-    def parse_guild(self, guild_payload: data_structures.DiscordObjectT):
+    def parse_guild(self, guild_payload: data_structures.DiscordObjectT, shard_id: typing.Optional[int]):
         guild_id = int(guild_payload["id"])
         is_unavailable = guild_payload.get("unavailable", False)
 
@@ -301,7 +301,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             else:
                 guild_obj.update_state(guild_payload)
         else:
-            guild_obj = guilds.Guild(self.fabric, guild_payload)
+            guild_obj = guilds.Guild(self.fabric, guild_payload, shard_id)
             self._guilds[guild_id] = guild_obj
 
         return guild_obj

@@ -21,7 +21,6 @@ import asyncio
 import contextlib
 import json
 import math
-import platform
 import time
 import urllib.parse as urlparse
 import zlib
@@ -31,7 +30,7 @@ import pytest
 
 from hikari import errors
 from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import user_agent
+from hikari.net import rates
 from hikari.net import gateway
 from hikari.net import opcodes
 from hikari.net import ws
@@ -89,7 +88,7 @@ class MockGateway(gateway.GatewayClient):
 
     @staticmethod
     async def _wait_closed():
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.05)
 
 
 def mock_run_once_parts():
@@ -119,7 +118,7 @@ def mock_run_once_parts():
     return decorator
 
 
-# noinspection PyProtectedMember,SpellCheckingInspection,PyUnresolvedReferences
+# noinspection PyProtectedMember
 @pytest.mark.asyncio
 @pytest.mark.gateway
 @pytest.mark.slow
@@ -171,10 +170,11 @@ class TestGateway:
     async def test_ratelimiting_on_send(self, event_loop):
         gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw._warn_about_internal_rate_limit = asynctest.MagicMock(wraps=gw._warn_about_internal_rate_limit)
-        gw.rate_limit._per = 1.5
-        gw.rate_limit.reset_at = time.perf_counter() + 1.5
 
-        for i in range(121):
+        gw.rate_limit = rates.TimedTokenBucket(10, 0.1, event_loop)
+        gw.rate_limit.reset_at = time.perf_counter() + gw.rate_limit._per
+
+        for i in range(20):
             await gw._send_json({}, False)
 
         gw._warn_about_internal_rate_limit.assert_called()
@@ -182,10 +182,10 @@ class TestGateway:
     async def test_ratelimiting_on_send_can_be_overridden(self, event_loop):
         gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw._warn_about_internal_rate_limit = asynctest.MagicMock(wraps=gw._warn_about_internal_rate_limit)
-        gw.rate_limit._per = 3
-        gw.rate_limit.reset_at = time.perf_counter() + 3
+        gw.rate_limit._per = 0.1
+        gw.rate_limit.reset_at = time.perf_counter() + gw.rate_limit._per
 
-        for i in range(121):
+        for i in range(20):
             await gw._send_json({}, True)
 
         gw._warn_about_internal_rate_limit.assert_not_called()
@@ -286,7 +286,7 @@ class TestGateway:
 
         task = asyncio.create_task(gw._keep_alive())
         try:
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.1)
         finally:
             task.cancel()
             gw.ws.send_str.assert_awaited_with('{"op": 1, "d": null}')
@@ -297,7 +297,7 @@ class TestGateway:
 
         task = asyncio.create_task(gw._keep_alive())
         try:
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.1)
         finally:
             await gw.close(True)
             await task
@@ -309,7 +309,7 @@ class TestGateway:
 
         task = asyncio.create_task(gw._keep_alive())
 
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
 
         task.cancel()
         gw.ws.close.assert_awaited_once()
@@ -317,11 +317,12 @@ class TestGateway:
     async def test_slow_loop_produces_warning(self, event_loop):
         gw = MockGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw.heartbeat_interval = 0
+        # will always make the latency appear slow.
         gw.heartbeat_latency = 0
         gw._handle_slow_client = asynctest.MagicMock(wraps=gw._handle_slow_client)
         task = asyncio.create_task(gw._keep_alive())
 
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
 
         task.cancel()
         gw._handle_slow_client.assert_called_once()
@@ -641,7 +642,11 @@ class TestGateway:
         gw._receive_json = flag_death_on_call
         await gw._process_one_event()
 
-    async def test_request_guild_members(self, event_loop):
+    @pytest.mark.parametrize("guild_ids", [["123"], ["1234", "5678"], ["1234", "5678", "9101112"]])
+    @pytest.mark.parametrize(
+        "user_ids", [[], ["9"], ["9", "17", "25"], ["9", "17", "25", "9", "9"], ("9", "17", "25", "9", "9")]
+    )
+    async def test_request_guild_members_with_user_ids(self, event_loop, user_ids, guild_ids):
         gw = MockGateway(
             uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
@@ -650,9 +655,84 @@ class TestGateway:
             shard_count=1234,
             large_threshold=69,
         )
+        # Mock coroutines so we don't have to fight with testing `create_task` being called properly with
+        # a coroutine, and so that we don't have to ensure a coro gets called in the implementation
+        coro = asynctest.MagicMock()
+        gw._send_json = asynctest.MagicMock(return_value=coro)
+        with asynctest.patch("asyncio.create_task") as create_task:
+            gw.request_guild_members(*guild_ids, limit=69, user_ids=user_ids, presences=True)
+            gw._send_json.assert_called_with(
+                {"op": 8, "d": {"guild_id": guild_ids, "user_ids": list(user_ids), "limit": 69, "presences": True}},
+                False,
+            )
+            create_task.assert_called_with(coro)
+
+    @pytest.mark.parametrize("guild_ids", [["123"], ["1234", "5678"], ["1234", "5678", "9101112"]])
+    @pytest.mark.parametrize("query", ["", " ", "   ", "\0", "ayy lmao"])
+    async def test_request_guild_members_with_query(self, event_loop, query, guild_ids):
+        gw = MockGateway(
+            uri="wss://gateway.discord.gg:4949/",
+            loop=event_loop,
+            token="1234",
+            shard_id=917,
+            shard_count=1234,
+            large_threshold=69,
+        )
+
+        # Mock coroutines so we don't have to fight with testing `create_task` being called properly with
+        # a coroutine, and so that we don't have to ensure a coro gets called in the implementation
+        coro = asynctest.MagicMock()
+        gw._send_json = asynctest.MagicMock(return_value=coro)
+        with asynctest.patch("asyncio.create_task") as create_task:
+            gw.request_guild_members(*guild_ids, limit=69, query=query, presences=True)
+            gw._send_json.assert_called_with(
+                {"op": 8, "d": {"guild_id": guild_ids, "query": query, "limit": 69, "presences": True}}, False
+            )
+            create_task.assert_called_with(coro)
+
+    @pytest.mark.parametrize("guild_ids", [["123"], ["1234", "5678"]])
+    @pytest.mark.parametrize("user_ids", [[], ["9"], ["9", "17", "25"], ("9", "17", "25", "9", "9")])
+    @pytest.mark.parametrize("query", ["", " ", "that_guy123"])
+    async def test_request_guild_members_with_query_and_user_ids_should_error(
+        self, event_loop, query, user_ids, guild_ids
+    ):
+        gw = MockGateway(
+            uri="wss://gateway.discord.gg:4949/",
+            loop=event_loop,
+            token="1234",
+            shard_id=917,
+            shard_count=1234,
+            large_threshold=69,
+        )
+        # Who cares.
         gw._send_json = asynctest.CoroutineMock()
-        await gw.request_guild_members("1234")
-        gw._send_json.assert_called_with({"op": 8, "d": {"guild_id": "1234", "query": "", "limit": 0}}, False)
+        try:
+            # noinspection PyArgumentList
+            await gw.request_guild_members(*guild_ids, limit=69, query=query, presences=True, user_ids=user_ids)
+            assert False, "No error"
+        except RuntimeError:
+            pass  # we expect this to error to pass this test.
+
+    @pytest.mark.parametrize("guild_ids", [["123"], ["1234", "5678"]])
+    async def test_request_guild_members_with_no_filter(self, event_loop, guild_ids):
+        gw = MockGateway(
+            uri="wss://gateway.discord.gg:4949/",
+            loop=event_loop,
+            token="1234",
+            shard_id=917,
+            shard_count=1234,
+            large_threshold=69,
+        )
+        # Mock coroutines so we don't have to fight with testing `create_task` being called properly with
+        # a coroutine, and so that we don't have to ensure a coro gets called in the implementation
+        coro = asynctest.MagicMock()
+        gw._send_json = asynctest.MagicMock(return_value=coro)
+        with asynctest.patch("asyncio.create_task") as create_task:
+            gw.request_guild_members(*guild_ids, limit=69, user_ids=None, query=None, presences=True)
+            gw._send_json.assert_called_with(
+                {"op": 8, "d": {"guild_id": guild_ids, "limit": 69, "presences": True}}, False
+            )
+            create_task.assert_called_with(coro)
 
     async def test_update_status(self, event_loop):
         gw = MockGateway(
@@ -1093,7 +1173,6 @@ class TestGateway:
         )
         start = 1, 2, ["foo"]
         gw.seq, gw.session_id, gw.trace = start
-        # Speed up the test by mocking asyncio.sleep
         await gw.run_once()
 
         assert gw.seq is None, "seq was not reset"
