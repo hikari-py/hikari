@@ -1,9 +1,22 @@
 CHANGELOG
 =========
 
-Automatically generated from git history up to master at Fri Dec  6 21:56:27 UTC 2019 by CI.
+Automatically generated from git history up to master at Sun Dec  8 17:01:16 UTC 2019 by CI.
 
-* Fri Dec 06 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+* Sun Dec 08 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+- Merge branch 'staging' into 'master' (rev.d83e142f)
+- Merge branch 'task/chunking' into 'staging' (rev.fab9c6ee)
+- Fixes #97. Finishes testing chunking (rev.020eed36)
+- Fixes #108 and implements new chunking fields. (rev.bd0a3000)
+- Merge branch 'Channel.is_dm' into 'staging' (rev.233c5e29)
+- replace class specific Channel.is_dm with type check and fix invite.target_user type for #107 (rev.0e85774b)
+- Merge branch 'update_member_patch' into 'staging' (rev.3b94361c)
+- update_member fixes. (rev.120add4f)
+- Updated copyright notice (rev.d34b7a0e)
+- Merged master 0.0.58 into staging [skip ci] (rev.ecfcf941)
+
+* Fri Dec 06 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.58
+- Deployed 0.0.58 [skip ci] (rev.5dc030e5)
 - Merge branch 'staging' into 'master' (rev.7754cf0d)
 - Merge branch 'task/!77-teams' into 'staging' (rev.54ec479d)
 - Fixes !77. Implements team member objects. (rev.b5eaa684)
