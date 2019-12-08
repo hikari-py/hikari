@@ -309,8 +309,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
                         guild_id,
                     )
 
-            nick = payload["nick"]
-            member_diff = self.fabric.state_registry.update_member(member_obj, role_objs, nick)
+            member_diff = self.fabric.state_registry.update_member(member_obj, role_objs, payload)
             self.dispatch(events.GUILD_MEMBER_UPDATE, *member_diff)
         else:
             self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)

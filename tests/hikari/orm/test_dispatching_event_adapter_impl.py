@@ -877,7 +877,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_member_update(gateway_impl, payload)
 
-        fabric_impl.state_registry.update_member.assert_called_with(member_obj, [], "potatoboi")
+        fabric_impl.state_registry.update_member.assert_called_with(member_obj, [], payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_update_calls_update_member_with_roles_and_nick(
@@ -899,7 +899,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_member_update(gateway_impl, payload)
 
-        fabric_impl.state_registry.update_member.assert_called_with(member_obj, [role_obj], "potatoboi")
+        fabric_impl.state_registry.update_member.assert_called_with(member_obj, [role_obj], payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_update_when_member_is_cached_dispatches_GUILD_MEMBER_UPDATE(

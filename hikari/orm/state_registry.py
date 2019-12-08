@@ -576,7 +576,10 @@ class IStateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_member(
-        self, member_obj: members.Member, role_objs: typing.List[roles.Role], nick: typing.Optional[str]
+        self,
+        member_obj: members.Member,
+        role_objs: typing.Sequence[roles.Role],
+        payload: data_structures.DiscordObjectT,
     ) -> typing.Tuple[members.Member, members.Member]:
         """
         Update a member in a given guild. If the member is not already registered, nothing is returned.
@@ -586,8 +589,8 @@ class IStateRegistry(abc.ABC):
                 the member to update.
             role_objs:
                 the list of roles the member should have.
-            nick:
-                the nickname of the member.
+            payload:
+                the new member object data.
 
         Returns:
             Two :class:`hikari.orm.models.members.Member` objects. The first being the old state of the member and the
