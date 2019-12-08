@@ -1,9 +1,22 @@
 CHANGELOG
 =========
 
-Automatically generated from git history up to master at Sun Dec  8 17:01:16 UTC 2019 by CI.
+Automatically generated from git history up to master at Sun Dec  8 21:49:24 UTC 2019 by CI.
 
 * Sun Dec 08 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+- Merge branch 'staging' into 'master' (rev.faa85fcf)
+- Merge branch 'task/remove-reason-where-not-needed' into 'staging' (rev.c6905eb1)
+- Removed the reason argument from some functions (rev.131e5918)
+- Merge branch 'task/create_guild_ban-typo' into 'staging' (rev.159704ff)
+- Fixed a typo with delete-message-days (rev.1d83c847)
+- Added new links (rev.edbb6226)
+- Merge branch 'task/serializable-presence' into 'staging' (rev.9dfae237)
+- [Fixes #96] Made Presence serializable (rev.03e7fd94)
+- Update presences.py with emoji details and YouTube stream details. (rev.c883e6d5)
+- Merged master 0.0.59 into staging [skip ci] (rev.009bd570)
+
+* Sun Dec 08 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.59
+- Deployed 0.0.59 [skip ci] (rev.98ff3318)
 - Merge branch 'staging' into 'master' (rev.d83e142f)
 - Merge branch 'task/chunking' into 'staging' (rev.fab9c6ee)
 - Fixes #97. Finishes testing chunking (rev.020eed36)
