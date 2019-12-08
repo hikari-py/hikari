@@ -308,13 +308,17 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_guild(self, guild_payload: data_structures.DiscordObjectT) -> guilds.Guild:
+    def parse_guild(
+        self, guild_payload: data_structures.DiscordObjectT, shard_id: typing.Optional[int]
+    ) -> guilds.Guild:
         """
         Parses a guild payload into a workable object
 
         Args:
             guild_payload:
                 the payload of the guild.
+            shard_id:
+                the shard ID, if known. May be `None` if not sharded or the information is not applicable.
 
         Returns:
             a :class:`hikari.orm.models.guilds.Guild` object.
@@ -406,7 +410,7 @@ class IStateRegistry(abc.ABC):
 
         Args:
             member_obj:
-                the member to update the presence for.
+                the member to update the presence for. This should be found from the ID of the `user` object internally.
             presence_payload:
                 the payload containing the presence.
 
