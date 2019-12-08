@@ -1593,7 +1593,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         query = {}
-        transformations.put_if_specified(query, "delete_message_days", delete_message_days)
+        transformations.put_if_specified(query, "delete-message-days", delete_message_days)
         transformations.put_if_specified(query, "reason", reason)
         return await self.request(
             self.PUT, "/guilds/{guild_id}/bans/{user_id}", guild_id=guild_id, user_id=user_id, query=query
