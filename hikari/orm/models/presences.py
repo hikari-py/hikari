@@ -240,14 +240,17 @@ class ActivityType(enum.IntEnum):
     #: Shows up as `Streaming <name>`.
     #:
     #: Warning:
-    #:     Corresponding presences must be associated with VALID Twitch stream URLS!
+    #:     Corresponding presences must be associated with VALID Twitch or YouTube stream URLS!
     STREAMING = 1
     #: Shows up as `Listening to <name>`.
     LISTENING = 2
-    #: Shows up as `Watching <name>`.
+    #: Shows up as `Watching <name>`. Note that this is not officially documented, so will be likely removed
+    #: in the near future.
     WATCHING = 3
-    #: A custom status. Note that this is not yet fully supported by the API in a documented way,
-    #: so information pertaining to the emoji associated with the presence is not yet available.
+    #: A custom status. 
+    #: 
+    #: To set an emoji with the status, place a unicode emoji or Discord emoji (`:smiley:`) as the first
+    #: part of the status activity name.
     CUSTOM = 4
 
 
