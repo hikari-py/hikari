@@ -62,6 +62,10 @@ class ChannelType(interfaces.BestEffortEnumMixin, enum.IntEnum):
     #: A channel that show's a game's store page.
     GUILD_STORE = 6
 
+    @property
+    def is_dm(self) -> bool:
+        return not self.name.startswith("GUILD_")
+
 
 class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStatefulModel):
     """
@@ -77,11 +81,6 @@ class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStatefulModel):
 
     #: Channel implementations provided.
     _channel_implementations: typing.ClassVar[typing.Dict[int, typing.Type[Channel]]] = {}
-
-    #: True if the class is a DM channel class, False otherwise.
-    #:
-    #: :type: :class:`bool`
-    is_dm: typing.ClassVar[bool]
 
     #: The type of the class.
     #:
@@ -109,11 +108,21 @@ class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStatefulModel):
                 existing_type is None, f"Channel type {cls.type} is already registered to {existing_type}"
             )
             cls._channel_implementations[cls.type] = cls
-        cls.is_dm = kwargs.pop("is_dm", NotImplemented)
 
     @classmethod
-    def get_channel_class_from_type(cls, type: typing.Union[ChannelType, int]) -> typing.Optional[typing.Type[Channel]]:
-        return cls._channel_implementations.get(type)
+    def get_channel_class_from_type(
+        cls, type_id: typing.Union[ChannelType, int]
+    ) -> typing.Optional[typing.Type[Channel]]:
+        return cls._channel_implementations.get(type_id)
+
+    @property
+    def is_dm(self) -> typing.Optional[bool]:
+        channel_type = getattr(self, "type", None)
+        # If type isn't set or is unknown then return None
+        if not isinstance(channel_type, ChannelType):
+            return None
+
+        return channel_type.is_dm
 
 
 class PartialChannel(Channel):
@@ -157,7 +166,7 @@ class TextChannel(Channel, abc.ABC):
     last_message_id: typing.Optional[int]
 
 
-class GuildChannel(Channel, is_dm=False):
+class GuildChannel(Channel):
     """
     A channel that belongs to a guild.
     """
@@ -216,7 +225,7 @@ class GuildChannel(Channel, is_dm=False):
         return self.guild.channels[self.parent_id] if self.parent_id is not None else None
 
 
-class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT, is_dm=False):
+class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT):
     """
     A text channel.
     """
@@ -256,7 +265,7 @@ class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT, i
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
 
 
-class DMChannel(TextChannel, type=ChannelType.DM, is_dm=True):
+class DMChannel(TextChannel, type=ChannelType.DM):
     """
     A DM channel between users.
     """
@@ -285,7 +294,7 @@ class DMChannel(TextChannel, type=ChannelType.DM, is_dm=True):
         self.recipients = [self._state.parse_user(u) for u in payload.get("recipients", data_structures.EMPTY_SEQUENCE)]
 
 
-class GuildVoiceChannel(GuildChannel, type=ChannelType.GUILD_VOICE, is_dm=False):
+class GuildVoiceChannel(GuildChannel, type=ChannelType.GUILD_VOICE):
     """
     A voice channel within a guild.
     """
@@ -313,7 +322,7 @@ class GuildVoiceChannel(GuildChannel, type=ChannelType.GUILD_VOICE, is_dm=False)
         self.user_limit = payload.get("user_limit") or None
 
 
-class GroupDMChannel(DMChannel, type=ChannelType.GROUP_DM, is_dm=True):
+class GroupDMChannel(DMChannel, type=ChannelType.GROUP_DM):
     """
     A DM group chat.
     """
@@ -355,7 +364,7 @@ class GroupDMChannel(DMChannel, type=ChannelType.GROUP_DM, is_dm=True):
         self.owner_id = transformations.nullable_cast(payload.get("owner_id"), int)
 
 
-class GuildCategory(GuildChannel, type=ChannelType.GUILD_CATEGORY, is_dm=False):
+class GuildCategory(GuildChannel, type=ChannelType.GUILD_CATEGORY):
     """
     A category within a guild.
     """
@@ -368,7 +377,7 @@ class GuildCategory(GuildChannel, type=ChannelType.GUILD_CATEGORY, is_dm=False):
         super().__init__(fabric_obj, payload)
 
 
-class GuildAnnouncementChannel(GuildChannel, type=ChannelType.GUILD_ANNOUNCEMENT, is_dm=False):
+class GuildAnnouncementChannel(GuildChannel, type=ChannelType.GUILD_ANNOUNCEMENT):
     """
     A channel for announcement topics within a guild.
 
@@ -408,7 +417,7 @@ class GuildAnnouncementChannel(GuildChannel, type=ChannelType.GUILD_ANNOUNCEMENT
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
 
 
-class GuildStoreChannel(GuildChannel, type=ChannelType.GUILD_STORE, is_dm=False):
+class GuildStoreChannel(GuildChannel, type=ChannelType.GUILD_STORE):
     """
     A store channel for selling of games within a guild.
     """
@@ -422,14 +431,17 @@ class GuildStoreChannel(GuildChannel, type=ChannelType.GUILD_STORE, is_dm=False)
 
 
 # noinspection PyProtectedMember
-def is_channel_type_dm(channel_type: int) -> bool:
+def is_channel_type_dm(channel_type: typing.Union[int, ChannelType]) -> bool:
     """
     Returns True if a raw channel type is for a DM. If a channel type is given that is not recognised, then it returns
     `False` regardless.
 
     This is only used internally, there is no other reason for you to use this outside of framework-internal code.
     """
-    return getattr(Channel._channel_implementations.get(channel_type), "is_dm", False)
+    try:
+        return ChannelType(channel_type).is_dm
+    except ValueError:
+        return False
 
 
 # noinspection PyProtectedMember
