@@ -14,6 +14,7 @@
 [![](https://img.shields.io/pypi/status/hikari)](?)
 [![](https://img.shields.io/pypi/pyversions/hikari)](?)
 [![](https://img.shields.io/badge/code%20style-black-000000.svg)](?)
+[![](https://img.shields.io/sourcegraph/rrc/gitlab.com/nekokatt/hikari/)](https://sourcegraph.com/gitlab.com/nekokatt/hikari@master)
 
 # hikari
 
@@ -24,7 +25,11 @@ VERSION INCREMENTATION. ALL FEATURES ARE PROVISIONAL AND CAN CHANGE AT ANY TIME 
 STATE FOR A FULL FIRST RELEASE.**
  
  **[Please VISIT MY DISCORD](https://discord.gg/HMnGbsv) if you wish to receive progress updates or help out, any
- help and contribution is more than welcome :-)** 
+ help and contribution is more than welcome :-)**
+ 
+If you wish to explore the code in an online interactive viewer, you can use Sourcegraph on 
+[master](https://sourcegraph.com/gitlab.com/nekokatt/hikari@master) and [staging](https://sourcegraph.com/gitlab.com/nekokatt/hikari@staging)
+too!
 
 ## What is this API?
 
