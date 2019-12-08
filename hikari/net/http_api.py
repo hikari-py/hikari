@@ -195,15 +195,13 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL, "deleteclose-channel")  # nonstandard spelling in URI
-    async def delete_close_channel(self, channel_id: str, *, reason: str = unspecified.UNSPECIFIED) -> None:
+    async def delete_close_channel(self, channel_id: str) -> None:
         """
         Delete the given channel ID, or if it is a DM, close it.
 
         Args:
             channel_id:
                 The channel ID to delete, or the user ID of the direct message to close.
-            reason:
-                an optional audit log reason explaining why the change was made.
 
         Returns:
             Nothing, unlike what the API specifies. This is done to maintain consistency with other calls of a similar
@@ -218,7 +216,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.Forbidden:
                 if you do not have permission to delete the channel.
         """
-        await self.request(self.DELETE, "/channels/{channel_id}", channel_id=channel_id, reason=reason)
+        await self.request(self.DELETE, "/channels/{channel_id}", channel_id=channel_id)
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
     async def get_channel_messages(
@@ -739,9 +737,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    async def delete_channel_permission(
-        self, channel_id: str, overwrite_id: str, *, reason: str = unspecified.UNSPECIFIED
-    ) -> None:
+    async def delete_channel_permission(self, channel_id: str, overwrite_id: str) -> None:
         """
         Delete a channel permission overwrite for a user or a role in a channel.
 
@@ -750,8 +746,6 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 the channel ID to delete from.
             overwrite_id:
                 the override ID to remove.
-            reason:
-                an optional audit log reason explaining why the change was made.
 
         Raises:
             hikari.errors.NotFound:
@@ -764,7 +758,6 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             "/channels/{channel_id}/permissions/{overwrite_id}",
             channel_id=channel_id,
             overwrite_id=overwrite_id,
-            reason=reason,
         )
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
@@ -963,7 +956,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.EMOJI)
-    async def delete_guild_emoji(self, guild_id: str, emoji_id: str, *, reason: str = unspecified.UNSPECIFIED) -> None:
+    async def delete_guild_emoji(self, guild_id: str, emoji_id: str) -> None:
         """
         Deletes an emoji from a given guild
 
@@ -972,8 +965,6 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 The ID of the guild to delete the emoji from
             emoji_id:
                 The ID of the emoji to be deleted
-            reason:
-                an optional audit log reason explaining why the change was made.
 
          Raises:
             hikari.errors.NotFound:
@@ -982,7 +973,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
         """
         return await self.request(
-            self.DELETE, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id, reason=reason
+            self.DELETE, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id
         )
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
@@ -1593,7 +1584,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         query = {}
-        transformations.put_if_specified(query, "delete_message_days", delete_message_days)
+        transformations.put_if_specified(query, "delete-message-days", delete_message_days)
         transformations.put_if_specified(query, "reason", reason)
         return await self.request(
             self.PUT, "/guilds/{guild_id}/bans/{user_id}", guild_id=guild_id, user_id=user_id, query=query
@@ -1790,7 +1781,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def delete_guild_role(self, guild_id: str, role_id: str, *, reason: str = unspecified.UNSPECIFIED) -> None:
+    async def delete_guild_role(self, guild_id: str, role_id: str) -> None:
         """
         Deletes a role from a given guild.
 
@@ -1799,8 +1790,6 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 The ID of the guild you want to remove the role from.
             role_id:
                 The ID of the role you want to delete.
-            reason:
-                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
             hikari.errors.NotFound:
@@ -1808,9 +1797,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
-        return await self.request(
-            self.DELETE, "/guilds/{guild_id}/roles/{role_id}", guild_id=guild_id, role_id=role_id, reason=reason
-        )
+        return await self.request(self.DELETE, "/guilds/{guild_id}/roles/{role_id}", guild_id=guild_id, role_id=role_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def get_guild_prune_count(self, guild_id: str, days: int) -> int:
@@ -2174,17 +2161,13 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/invites/{invite_code}", invite_code=invite_code, query=query)
 
     @meta.link_developer_portal(meta.APIResource.INVITE)
-    async def delete_invite(
-        self, invite_code: str, *, reason: str = unspecified.UNSPECIFIED
-    ) -> data_structures.DiscordObjectT:
+    async def delete_invite(self, invite_code: str) -> data_structures.DiscordObjectT:
         """
         Deletes a given invite.
 
         Args:
             invite_code:
                 The ID for the invite to be deleted.
-            reason:
-                an optional audit log reason explaining why the change was made.
 
         Returns:
             The deleted invite object.
@@ -2196,7 +2179,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If you lack either `MANAGE_CHANNELS` on the channel the invite belongs to or `MANAGE_GUILD` for
                 guild-global delete.
         """
-        return await self.request(self.DELETE, "/invites/{invite_code}", invite_code=invite_code, reason=reason)
+        return await self.request(self.DELETE, "/invites/{invite_code}", invite_code=invite_code)
 
     ##########
     # OAUTH2 #
@@ -2487,15 +2470,13 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)
-    async def delete_webhook(self, webhook_id: str, *, reason: str = unspecified.UNSPECIFIED) -> None:
+    async def delete_webhook(self, webhook_id: str) -> None:
         """
         Deletes a given webhook.
 
         Args:
             webhook_id:
                 The ID of the webhook to delete
-            reason:
-                an optional audit log reason explaining why the change was made.
 
         Raises:
             hikari.errors.NotFound:
@@ -2503,7 +2484,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.Forbidden:
                 If you're not the webhook owner.
         """
-        return await self.request(self.DELETE, "/webhooks/{webhook_id}", webhook_id=webhook_id, reason=reason)
+        return await self.request(self.DELETE, "/webhooks/{webhook_id}", webhook_id=webhook_id)
 
 
 __all__ = ["HTTPAPI"]
