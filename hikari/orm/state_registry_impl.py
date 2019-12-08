@@ -474,11 +474,14 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         return old_emojis, new_emojis
 
     def update_member(
-        self, member_obj: members.Member, role_objs: typing.List[roles.Role], nick: typing.Optional[str]
+        self,
+        member_obj: members.Member,
+        role_objs: typing.Sequence[roles.Role],
+        payload: data_structures.DiscordObjectT,
     ) -> typing.Optional[typing.Tuple[members.Member, members.Member]]:
         new_member = member_obj
         old_member = new_member.copy()
-        new_member.update_state(role_objs, nick)
+        new_member.update_state(role_objs, payload)
         return old_member, new_member
 
     def update_member_presence(
