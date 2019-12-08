@@ -58,7 +58,7 @@ class Presence(interfaces.IModel):
     #: The activities the member currently is doing.
     #:
     #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.presences.PresenceActivity`
-    activities: typing.Sequence[PresenceActivity]
+    activities: typing.Sequence[Activity]
 
     #: Overall account status.
     #:
@@ -115,7 +115,7 @@ class Presence(interfaces.IModel):
             )
 
 
-class PresenceActivity(interfaces.IModel):
+class Activity(interfaces.IModel):
     """
     A non-rich presence-style activity.
 
@@ -147,8 +147,13 @@ class PresenceActivity(interfaces.IModel):
 
     update_state = NotImplemented
 
+    def to_dict(self, *, dict_factory: DictFactoryT = dict) -> DictImplT:
+        attrs = {a: getattr(self, a) for a in self.__slots__}
+        # noinspection PyArgumentList,PyTypeChecker
+        return dict_factory(**{k: v for k, v in attrs.items() if v is not None})
 
-class RichPresenceActivity(PresenceActivity):
+
+class RichActivity(Activity):
     """
     Rich presence-style activity.
 
@@ -215,9 +220,7 @@ class RichPresenceActivity(PresenceActivity):
         self.flags = transformations.nullable_cast(payload.get("flags"), ActivityFlag) or 0
 
 
-def parse_presence_activity(
-    payload: data_structures.DiscordObjectT,
-) -> typing.Union[PresenceActivity, RichPresenceActivity]:
+def parse_presence_activity(payload: data_structures.DiscordObjectT,) -> typing.Union[Activity, RichActivity]:
     """
     Consumes a payload and decides the type of activity it represents. A corresponding object is then
     constructed and returned as appropriate.
@@ -226,7 +229,7 @@ def parse_presence_activity(
         either a :class:`PresenceActivity` or a :class:`RichPresenceActivity` depending on the
         implementation details provided.
     """
-    impl = RichPresenceActivity if any(slot in payload for slot in RichPresenceActivity.__slots__) else PresenceActivity
+    impl = RichActivity if any(slot in payload for slot in RichActivity.__slots__) else Activity
     return impl(payload)
 
 
@@ -240,14 +243,17 @@ class ActivityType(enum.IntEnum):
     #: Shows up as `Streaming <name>`.
     #:
     #: Warning:
-    #:     Corresponding presences must be associated with VALID Twitch stream URLS!
+    #:     Corresponding presences must be associated with VALID Twitch or YouTube stream URLS!
     STREAMING = 1
     #: Shows up as `Listening to <name>`.
     LISTENING = 2
-    #: Shows up as `Watching <name>`.
+    #: Shows up as `Watching <name>`. Note that this is not officially documented, so will be likely removed
+    #: in the near future.
     WATCHING = 3
-    #: A custom status. Note that this is not yet fully supported by the API in a documented way,
-    #: so information pertaining to the emoji associated with the presence is not yet available.
+    #: A custom status. 
+    #: 
+    #: To set an emoji with the status, place a unicode emoji or Discord emoji (`:smiley:`) as the first
+    #: part of the status activity name.
     CUSTOM = 4
 
 
@@ -371,8 +377,8 @@ class ActivityTimestamps(interfaces.IModel):
 __all__ = [
     "Status",
     "Presence",
-    "PresenceActivity",
-    "RichPresenceActivity",
+    "Activity",
+    "RichActivity",
     "parse_presence_activity",
     "ActivityType",
     "ActivityFlag",

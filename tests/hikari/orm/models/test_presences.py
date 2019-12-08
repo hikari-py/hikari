@@ -24,6 +24,11 @@ import pytest
 from hikari.orm.models import presences
 
 
+@pytest.fixture
+def activity():
+    return presences.Activity({})
+
+
 @pytest.fixture()
 def no_presence():
     return {
@@ -140,7 +145,7 @@ def timestamps():
 
 
 @pytest.fixture()
-def rich_presence_activity(assets, party, timestamps):
+def rich_activity(assets, party, timestamps):
     return {
         "type": 2,
         "state": "Working on hikari.core",
@@ -157,7 +162,7 @@ def rich_presence_activity(assets, party, timestamps):
 
 
 @pytest.fixture()
-def legacy_presence_activity():
+def legacy_activity():
     return {"type": 0, "name": "with yo mama", "url": None}
 
 
@@ -216,16 +221,16 @@ class TestPresence:
 
 
 @pytest.mark.model
-def test_parse_PresenceActivity(legacy_presence_activity):
-    a = presences.PresenceActivity(legacy_presence_activity)
+def test_parse_Activity(legacy_activity):
+    a = presences.Activity(legacy_activity)
     assert a.name == "with yo mama"
     assert a.type == presences.ActivityType.PLAYING
     a.__repr__()
 
 
 @pytest.mark.model
-def test_parse_RichPresenceActivity(rich_presence_activity):
-    a = presences.RichPresenceActivity(rich_presence_activity)
+def test_parse_RichActivity(rich_activity):
+    a = presences.RichActivity(rich_activity)
     assert a.type == presences.ActivityType.LISTENING
     assert a.timestamps is not None
     assert a.state == "Working on hikari.core"
@@ -241,18 +246,18 @@ def test_parse_RichPresenceActivity(rich_presence_activity):
 
 
 @pytest.mark.model
-def test_parse_presence_activity_for_PresenceActivity(legacy_presence_activity):
-    a = presences.parse_presence_activity(legacy_presence_activity)
+def test_parse_presence_activity_for_Activity(legacy_activity):
+    a = presences.parse_presence_activity(legacy_activity)
     # It must be the class exactly, not a derivative.
-    assert type(a) is presences.PresenceActivity
+    assert type(a) is presences.Activity
     a.__repr__()
 
 
 @pytest.mark.model
-def test_parse_presence_activity_for_RichPresenceActivity(rich_presence_activity):
-    a = presences.parse_presence_activity(rich_presence_activity)
+def test_parse_presence_activity_for_RichActivity(rich_activity):
+    a = presences.parse_presence_activity(rich_activity)
     # It must be the class exactly, not a derivative.
-    assert type(a) is presences.RichPresenceActivity
+    assert type(a) is presences.RichActivity
     a.__repr__()
 
 
@@ -286,3 +291,15 @@ class TestActivityTimestamps:
     def test_duration(self, timestamps):
         t = presences.ActivityTimestamps(timestamps)
         assert math.isclose(t.duration.total_seconds(), 1566135892.633 - 1566116552.964)
+
+    def test_Activity_to_dict_when_filled(self, activity):
+        activity.name = "Tests :)"
+        activity.type = "1"
+        activity.url = "https://www.witch.tv/"
+
+        d = activity.to_dict()
+
+        assert d == dict(name="Tests :)", type="1", url="https://www.witch.tv/",)
+
+    def test_Activity_to_dict_when_empty(self, activity):
+        assert activity.to_dict() == {}
