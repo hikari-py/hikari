@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -78,8 +78,8 @@ class Invite(interfaces.IModel):
 
     #: The user this invite is targeting.
     #:
-    #: :type: :class:`hikari.orm.models.users.User` or `None`
-    target_user: typing.Optional[users.User]
+    #: :type: :class:`hikari.orm.models.users.IUser` or `None`
+    target_user: typing.Optional[users.IUser]
 
     #: The reason this invite targets a user
     #:

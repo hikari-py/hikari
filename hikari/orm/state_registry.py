@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -308,13 +308,17 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_guild(self, guild_payload: data_structures.DiscordObjectT) -> guilds.Guild:
+    def parse_guild(
+        self, guild_payload: data_structures.DiscordObjectT, shard_id: typing.Optional[int]
+    ) -> guilds.Guild:
         """
         Parses a guild payload into a workable object
 
         Args:
             guild_payload:
                 the payload of the guild.
+            shard_id:
+                the shard ID, if known. May be `None` if not sharded or the information is not applicable.
 
         Returns:
             a :class:`hikari.orm.models.guilds.Guild` object.
@@ -406,7 +410,7 @@ class IStateRegistry(abc.ABC):
 
         Args:
             member_obj:
-                the member to update the presence for.
+                the member to update the presence for. This should be found from the ID of the `user` object internally.
             presence_payload:
                 the payload containing the presence.
 
@@ -576,7 +580,10 @@ class IStateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_member(
-        self, member_obj: members.Member, role_objs: typing.List[roles.Role], nick: typing.Optional[str]
+        self,
+        member_obj: members.Member,
+        role_objs: typing.Sequence[roles.Role],
+        payload: data_structures.DiscordObjectT,
     ) -> typing.Tuple[members.Member, members.Member]:
         """
         Update a member in a given guild. If the member is not already registered, nothing is returned.
@@ -586,8 +593,8 @@ class IStateRegistry(abc.ABC):
                 the member to update.
             role_objs:
                 the list of roles the member should have.
-            nick:
-                the nickname of the member.
+            payload:
+                the new member object data.
 
         Returns:
             Two :class:`hikari.orm.models.members.Member` objects. The first being the old state of the member and the

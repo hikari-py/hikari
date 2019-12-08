@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -229,8 +229,9 @@ class TestGuild:
     def test_available_Guild(
         self, test_guild_payload, test_emoji_payload, test_member_payload, test_voice_state_payload, fabric_obj
     ):
-        guild_obj = guilds.Guild(fabric_obj, test_guild_payload)
+        guild_obj = guilds.Guild(fabric_obj, test_guild_payload, 9876)
 
+        assert guild_obj.shard_id == 9876
         assert guild_obj.id == 123_456
         assert guild_obj.afk_channel_id == 99_998_888_777_766
         assert guild_obj.owner_id == 6_969_696
@@ -291,8 +292,9 @@ class TestGuild:
         fabric_obj.state_registry.parse_voice_state.assert_called_once_with(test_voice_state_payload, guild_obj)
 
     def test_unavailable_Guild(self, fabric_obj):
-        guild_obj = guilds.Guild(fabric_obj, {"id": "12345678910", "unavailable": True})
+        guild_obj = guilds.Guild(fabric_obj, {"id": "12345678910", "unavailable": True}, 9876)
 
+        assert guild_obj.shard_id == 9876
         assert guild_obj.id == 12_345_678_910
         assert guild_obj.is_unavailable
         guild_obj.__repr__()

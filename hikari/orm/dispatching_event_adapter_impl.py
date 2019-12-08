@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -309,8 +309,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
                         guild_id,
                     )
 
-            nick = payload["nick"]
-            member_diff = self.fabric.state_registry.update_member(member_obj, role_objs, nick)
+            member_diff = self.fabric.state_registry.update_member(member_obj, role_objs, payload)
             self.dispatch(events.GUILD_MEMBER_UPDATE, *member_diff)
         else:
             self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)
@@ -330,9 +329,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
 
     async def handle_guild_members_chunk(self, gateway, payload):
         self.dispatch(events.RAW_GUILD_MEMBERS_CHUNK, payload)
-
-        # TODO: implement this feature properly.
-        self.logger.warning("received GUILD_MEMBERS_CHUNK but that is not implemented yet")
+        await self.fabric.chunker.handle_next_chunk(payload, gateway.shard_id)
 
     async def handle_guild_role_create(self, gateway, payload):
         self.dispatch(events.RAW_GUILD_ROLE_CREATE, payload)

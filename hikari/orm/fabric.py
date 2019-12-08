@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -27,15 +27,12 @@ import dataclasses
 
 import typing
 
-from hikari.net import gateway as _gateway
 from hikari.net import http_api as _http_client
+from hikari.net import gateway as _gateway
+from hikari.orm import chunker as _chunker
 from hikari.orm import event_handler as _event_handler
 from hikari.orm import http_adapter as _http_adapter
 from hikari.orm import state_registry as _state_registry
-
-
-#: Mapping of shards to their active gateway implementation.
-ShardedGatewayMappingT = typing.Mapping[typing.Optional[int], _gateway.GatewayClient]
 
 
 @dataclasses.dataclass()
@@ -56,7 +53,7 @@ class Fabric:
     #: A mapping of shard ID's to gateways that are running.
     #:
     #: If no shards are running, then this defaults to one shard under the `None` key.
-    gateways: ShardedGatewayMappingT = dataclasses.field(default_factory=dict)
+    gateways: typing.Dict[typing.Optional[int], _gateway.GatewayClient] = dataclasses.field(default_factory=dict)
 
     #: The base HTTP client for making HTTP requests.
     http_client: _http_client.HTTPAPI = dataclasses.field(default=NotImplemented)
@@ -64,3 +61,6 @@ class Fabric:
     #: HTTP adapter bridge component to convert raw HTTP call responses to their ORM
     #: representation.
     http_adapter: _http_adapter.HTTPAdapter = dataclasses.field(default=NotImplemented)
+
+    #: Provides a mechanism to handle
+    chunker: _chunker.IChunker = dataclasses.field(default=NotImplemented)

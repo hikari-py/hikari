@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -737,7 +737,7 @@ class TestStateRegistryImpl:
         guild_obj = _helpers.mock_model(guilds.Guild, id=1234)
         registry._guilds = {guild_obj.id: guild_obj}
 
-        registry.parse_guild(payload)
+        registry.parse_guild(payload, 9999)
 
         guild_obj.update_state.assert_called_with(payload)
 
@@ -748,7 +748,7 @@ class TestStateRegistryImpl:
         guild_obj = _helpers.mock_model(guilds.Guild, id=1234, is_unavailable=False)
         registry._guilds = {guild_obj.id: guild_obj}
 
-        registry.parse_guild(payload)
+        registry.parse_guild(payload, 9999)
 
         guild_obj.update_state.assert_not_called()
         assert guild_obj.is_unavailable is True
@@ -759,8 +759,8 @@ class TestStateRegistryImpl:
         registry._guilds = _helpers.StrongWeakValuedDict()
 
         with _helpers.mock_patch(guilds.Guild, return_value=guild_obj) as Guild:
-            registry.parse_guild(payload)
-            Guild.assert_called_once_with(registry.fabric, payload)
+            registry.parse_guild(payload, 5432)
+            Guild.assert_called_once_with(registry.fabric, payload, 5432)
             assert guild_obj in registry._guilds.values()
 
     def test_parse_guild_when_not_cached_returns_new_guild(self, registry: state_registry_impl.StateRegistryImpl):
@@ -769,7 +769,7 @@ class TestStateRegistryImpl:
         registry._guilds = _helpers.StrongWeakValuedDict()
 
         with _helpers.mock_patch(guilds.Guild, return_value=guild_obj):
-            assert registry.parse_guild(payload) is guild_obj
+            assert registry.parse_guild(payload, 5432) is guild_obj
 
     def test_parse_voice_state(self, registry: state_registry_impl.StateRegistryImpl):
         registry._guilds[69] = guild_obj = _helpers.mock_model(guilds.Guild, id=69, voice_states={})
@@ -1212,7 +1212,7 @@ class TestStateRegistryImpl:
         original_member_obj.copy = mock.MagicMock(spec_set=original_member_obj.copy, return_value=cloned_member_obj)
         guild_obj.members = {original_member_obj.id: original_member_obj}
 
-        old, new = registry.update_member(original_member_obj, list(roles_map.values()), "potatoboi")
+        old, new = registry.update_member(original_member_obj, list(roles_map.values()), {"nick": "potatoboi"})
 
         assert old is not None
         assert new is not None
@@ -1220,7 +1220,7 @@ class TestStateRegistryImpl:
         assert new is original_member_obj, "existing member was not used as target for update!"
         assert old is cloned_member_obj, "existing member did not get the old state copied and returned!"
 
-        new.update_state.assert_called_with(list(roles_map.values()), "potatoboi")
+        new.update_state.assert_called_with(list(roles_map.values()), {"nick": "potatoboi"})
 
     def test_update_member_presence_when_existing_member_exists_returns_old_state_copy_and_updated_new_state(
         self, registry: state_registry_impl.StateRegistryImpl
