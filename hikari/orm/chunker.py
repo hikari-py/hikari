@@ -40,7 +40,7 @@ class IChunker(abc.ABC):
     __slots__ = ()
 
     @abc.abstractmethod
-    async def load_members_for(
+    def load_members_for(
         self,
         guild_obj: guilds.Guild,
         *guild_objs: guilds.Guild,

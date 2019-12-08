@@ -34,7 +34,6 @@ import asyncio
 import contextlib
 import datetime
 import enum
-import functools
 import json
 import ssl
 import time
@@ -776,7 +775,7 @@ class GatewayClient:
         else:
             self.logger.warning("received unrecognised opcode %s", op)
 
-    async def request_guild_members(
+    def request_guild_members(
         self,
         guild_id: str,
         *guild_ids: str,
@@ -820,9 +819,7 @@ class GatewayClient:
             payload["query"] = query
 
         self.logger.debug("requesting members with constraints %s", payload)
-        await self._send_json(
-            {"op": opcodes.GatewayOpcode.REQUEST_GUILD_MEMBERS, "d": payload}, False,
-        )
+        asyncio.create_task(self._send_json({"op": opcodes.GatewayOpcode.REQUEST_GUILD_MEMBERS, "d": payload}, False,))
 
     async def update_status(
         self,

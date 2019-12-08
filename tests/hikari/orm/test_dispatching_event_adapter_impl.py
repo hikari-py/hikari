@@ -27,6 +27,7 @@ import asynctest
 import pytest
 
 from hikari.net import gateway as _gateway
+from hikari.orm import chunker as _chunker
 from hikari.orm import dispatching_event_adapter_impl
 from hikari.orm import events
 from hikari.orm import fabric
@@ -951,6 +952,18 @@ class TestDispatchingEventAdapterImpl:
         await adapter_impl.handle_guild_member_remove(gateway_impl, payload)
 
         dispatch_impl.assert_called_with(events.GUILD_MEMBER_REMOVE, member_obj)
+
+    @pytest.mark.asyncio
+    async def test_handle_guild_members_chunk_calls_chunker(self, adapter_impl, fabric_impl, gateway_impl):
+        fabric_impl.chunker = asynctest.MagicMock(spec_set=_chunker.IChunker)
+        fabric_impl.chunker.handle_next_chunk = asynctest.CoroutineMock(spec_set=fabric_impl.chunker.handle_next_chunk)
+
+        payload = {...}
+
+        await adapter_impl.handle_guild_members_chunk(gateway_impl, payload)
+
+        fabric_impl.chunker.handle_next_chunk.assert_awaited_once_with(payload, gateway_impl.shard_id)
+
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_create_when_guild_is_not_cached_does_not_dispatch_anything(
