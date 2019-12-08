@@ -655,11 +655,17 @@ class TestGateway:
             shard_count=1234,
             large_threshold=69,
         )
-        gw._send_json = asynctest.CoroutineMock()
-        await gw.request_guild_members(*guild_ids, limit=69, user_ids=user_ids, presences=True)
-        gw._send_json.assert_called_with(
-            {"op": 8, "d": {"guild_id": guild_ids, "user_ids": list(user_ids), "limit": 69, "presences": True}}, False
-        )
+        # Mock coroutines so we don't have to fight with testing `create_task` being called properly with
+        # a coroutine, and so that we don't have to ensure a coro gets called in the implementation
+        coro = asynctest.MagicMock()
+        gw._send_json = asynctest.MagicMock(return_value=coro)
+        with asynctest.patch("asyncio.create_task") as create_task:
+            gw.request_guild_members(*guild_ids, limit=69, user_ids=user_ids, presences=True)
+            gw._send_json.assert_called_with(
+                {"op": 8, "d": {"guild_id": guild_ids, "user_ids": list(user_ids), "limit": 69, "presences": True}},
+                False,
+            )
+            create_task.assert_called_with(coro)
 
     @pytest.mark.parametrize("guild_ids", [["123"], ["1234", "5678"], ["1234", "5678", "9101112"]])
     @pytest.mark.parametrize("query", ["", " ", "   ", "\0", "ayy lmao"])
@@ -672,11 +678,17 @@ class TestGateway:
             shard_count=1234,
             large_threshold=69,
         )
-        gw._send_json = asynctest.CoroutineMock()
-        await gw.request_guild_members(*guild_ids, limit=69, query=query, presences=True)
-        gw._send_json.assert_called_with(
-            {"op": 8, "d": {"guild_id": guild_ids, "query": query, "limit": 69, "presences": True}}, False
-        )
+
+        # Mock coroutines so we don't have to fight with testing `create_task` being called properly with
+        # a coroutine, and so that we don't have to ensure a coro gets called in the implementation
+        coro = asynctest.MagicMock()
+        gw._send_json = asynctest.MagicMock(return_value=coro)
+        with asynctest.patch("asyncio.create_task") as create_task:
+            gw.request_guild_members(*guild_ids, limit=69, query=query, presences=True)
+            gw._send_json.assert_called_with(
+                {"op": 8, "d": {"guild_id": guild_ids, "query": query, "limit": 69, "presences": True}}, False
+            )
+            create_task.assert_called_with(coro)
 
     @pytest.mark.parametrize("guild_ids", [["123"], ["1234", "5678"]])
     @pytest.mark.parametrize("user_ids", [[], ["9"], ["9", "17", "25"], ("9", "17", "25", "9", "9")])
@@ -692,6 +704,7 @@ class TestGateway:
             shard_count=1234,
             large_threshold=69,
         )
+        # Who cares.
         gw._send_json = asynctest.CoroutineMock()
         try:
             # noinspection PyArgumentList
@@ -699,6 +712,27 @@ class TestGateway:
             assert False, "No error"
         except RuntimeError:
             pass  # we expect this to error to pass this test.
+
+    @pytest.mark.parametrize("guild_ids", [["123"], ["1234", "5678"]])
+    async def test_request_guild_members_with_no_filter(self, event_loop, guild_ids):
+        gw = MockGateway(
+            uri="wss://gateway.discord.gg:4949/",
+            loop=event_loop,
+            token="1234",
+            shard_id=917,
+            shard_count=1234,
+            large_threshold=69,
+        )
+        # Mock coroutines so we don't have to fight with testing `create_task` being called properly with
+        # a coroutine, and so that we don't have to ensure a coro gets called in the implementation
+        coro = asynctest.MagicMock()
+        gw._send_json = asynctest.MagicMock(return_value=coro)
+        with asynctest.patch("asyncio.create_task") as create_task:
+            gw.request_guild_members(*guild_ids, limit=69, user_ids=None, query=None, presences=True)
+            gw._send_json.assert_called_with(
+                {"op": 8, "d": {"guild_id": guild_ids, "limit": 69, "presences": True}}, False
+            )
+            create_task.assert_called_with(coro)
 
     async def test_update_status(self, event_loop):
         gw = MockGateway(

@@ -16,15 +16,18 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""
+Basic implementation of a chunker.
+"""
 from __future__ import annotations
 
-import asyncio
+import itertools
 import typing
 
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import logging_helpers
-from hikari.orm import fabric
 from hikari.orm import chunker
+from hikari.orm import fabric
 from hikari.orm.models import guilds
 
 
@@ -49,17 +52,16 @@ class ChunkerImpl(chunker.IChunker):
         query: str = None,
         user_ids: typing.Optional[typing.Sequence[int]] = None,
     ) -> None:
-        if user_ids is not None and query is not None:
-            raise RuntimeError("you may not specify both a query and user_ids when requesting member chunks")
+        if user_ids is not None:
+            if query is not None:
+                raise RuntimeError("you may not specify both a query and user_ids when requesting member chunks")
+            user_ids = list(map(str, user_ids))
 
-        guild_ids = [guild_obj.id, *(extra_guild_obj.id for extra_guild_obj in guild_objs)]
-
-        # Does this risk a race condition if the chunks got sent back before we finished awaiting?
-        await asyncio.create_task(
-            self.fabric.gateways[guild_obj.shard_id].request_guild_members(
-                *map(str, guild_ids), limit=limit, presences=presences, query=query, user_ids=user_ids,
+        # We should request the guild info on the shard the guild is using, so aggregate the guilds by the shard id.
+        for shard_id, guild_objs in itertools.groupby((guild_obj, *guild_objs), lambda g: g.shard_id):
+            self.fabric.gateways[shard_id].request_guild_members(
+                *map(lambda g: str(g.id), guild_objs), limit=limit, presences=presences, query=query, user_ids=user_ids,
             )
-        )
 
     async def handle_next_chunk(self, chunk_payload: data_structures.DiscordObjectT, shard_id: int) -> None:
         guild_id = int(chunk_payload["guild_id"])
@@ -76,12 +78,7 @@ class ChunkerImpl(chunker.IChunker):
         # noinspection PyTypeChecker
         presences = {int(presence_payload["user"]["id"]): presence_payload for presence_payload in presences}
 
-        not_found = chunk_payload.get("not_found", data_structures.EMPTY_SEQUENCE)
-
         self.logger.info("received a chunk of %s members for guild %s from shard %s", len(members), guild_id, shard_id)
-
-        if not_found:
-            self.logger.debug("some user ids did not actually exist: %s", not_found)
 
         for member_payload in members:
             member_obj = self.fabric.state_registry.parse_member(member_payload, guild_obj)
