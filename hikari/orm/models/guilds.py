@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -138,6 +138,7 @@ class Guild(PartialGuild, interfaces.IStatefulModel):
 
     __slots__ = (
         "_fabric",
+        "shard_id",
         "afk_channel_id",
         "owner_id",
         "voice_region",
@@ -161,10 +162,17 @@ class Guild(PartialGuild, interfaces.IStatefulModel):
         "max_members",
         "premium_tier",
         "premium_subscription_count",
-        "system_channel_flags",  # not documented...
+        "system_channel_flags",
     )
 
     __copy_by_ref__ = ("roles", "emojis", "members", "channels")
+
+    #: The shard ID that this guild is being served by.
+    #:
+    #: If the bot is not sharded, this will be `None`.
+    #:
+    #: :type: :class:`int` or `None`
+    shard_id: typing.Optional[int]
 
     #: The AFK channel ID.
     #:
@@ -288,10 +296,13 @@ class Guild(PartialGuild, interfaces.IStatefulModel):
     #: :type: :class:`hikari.orm.models.guilds.SystemChannelFlag`
     system_channel_flags: typing.Optional[SystemChannelFlag]
 
-    __repr__ = auto_repr.repr_of("id", "name", "is_unavailable", "is_large", "member_count")
+    __repr__ = auto_repr.repr_of("id", "name", "is_unavailable", "is_large", "member_count", "shard_id")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(
+        self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, shard_id: typing.Optional[int]
+    ) -> None:
         self._fabric = fabric_obj
+        self.shard_id = shard_id
         super().__init__(payload)
 
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:

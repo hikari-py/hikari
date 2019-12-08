@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -288,7 +288,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return new_emoji
 
-    def parse_guild(self, guild_payload: data_structures.DiscordObjectT):
+    def parse_guild(self, guild_payload: data_structures.DiscordObjectT, shard_id: typing.Optional[int]):
         guild_id = int(guild_payload["id"])
         is_unavailable = guild_payload.get("unavailable", False)
 
@@ -301,7 +301,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             else:
                 guild_obj.update_state(guild_payload)
         else:
-            guild_obj = guilds.Guild(self.fabric, guild_payload)
+            guild_obj = guilds.Guild(self.fabric, guild_payload, shard_id)
             self._guilds[guild_id] = guild_obj
 
         return guild_obj
@@ -474,11 +474,14 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         return old_emojis, new_emojis
 
     def update_member(
-        self, member_obj: members.Member, role_objs: typing.List[roles.Role], nick: typing.Optional[str]
+        self,
+        member_obj: members.Member,
+        role_objs: typing.Sequence[roles.Role],
+        payload: data_structures.DiscordObjectT,
     ) -> typing.Optional[typing.Tuple[members.Member, members.Member]]:
         new_member = member_obj
         old_member = new_member.copy()
-        new_member.update_state(role_objs, nick)
+        new_member.update_state(role_objs, payload)
         return old_member, new_member
 
     def update_member_presence(

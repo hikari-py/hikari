@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #

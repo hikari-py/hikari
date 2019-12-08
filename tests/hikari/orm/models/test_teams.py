@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -31,25 +31,14 @@ def member_payload():
         "membership_state": 2,
         "permissions": ["*"],
         "team_id": "1234321",
-        "user": {
-            "avatar": "1a2b3c",
-            "discriminator": 1234,
-            "id": "9876789",
-            "username": "BenDover7"
-        }
+        "user": {"avatar": "1a2b3c", "discriminator": 1234, "id": "9876789", "username": "BenDover7"},
     }
 
 
 @pytest.fixture()
 def team_payload(member_payload):
-    return {
-        "icon": "1a2b3c",
-        "id": "1234321",
-        "members": [
-            member_payload
-        ],
-        "owner_user_id": "9876789"
-    }
+    return {"icon": "1a2b3c", "id": "1234321", "members": [member_payload], "owner_user_id": "9876789"}
+
 
 @pytest.fixture()
 def fabric_obj():
@@ -63,6 +52,7 @@ def test_Team(team_payload, fabric_obj, member_payload):
     assert obj.owner_user_id == 9876789
     assert len(obj.members) == 1
     team_member.assert_called_once_with(fabric_obj, member_payload)
+    assert isinstance(obj.members, dict)
     assert obj.id == 1234321
     assert obj.icon == "1a2b3c"
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -27,7 +27,7 @@ from . import orm
 
 __author__ = "Nekokatt"
 __contributors__ = {"FasterSpeeding", "LunarCoffee", "raatty", "Tmpod", "Zach", "thomm.o", "rock500", "davfsa"}
-__copyright__ = f"© 2019 Nekokatt"
+__copyright__ = f"© 2019-2020 Nekokatt"
 __license__ = "LGPLv3"
 __version__ = "0.0.58"
 __url__ = "https://gitlab.com/nekokatt/hikari"
