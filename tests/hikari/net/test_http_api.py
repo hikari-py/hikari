@@ -1053,7 +1053,7 @@ class TestGuild:
             "/guilds/{guild_id}/bans/{user_id}",
             guild_id="424242",
             user_id="696969",
-            query={"delete_message_days": 10},
+            query={"delete-message-days": 10},
         )
 
     async def test_create_guild_ban_with_optional_reason(self, http_client):
