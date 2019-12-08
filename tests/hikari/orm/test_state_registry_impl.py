@@ -1212,7 +1212,7 @@ class TestStateRegistryImpl:
         original_member_obj.copy = mock.MagicMock(spec_set=original_member_obj.copy, return_value=cloned_member_obj)
         guild_obj.members = {original_member_obj.id: original_member_obj}
 
-        old, new = registry.update_member(original_member_obj, list(roles_map.values()), "potatoboi")
+        old, new = registry.update_member(original_member_obj, list(roles_map.values()), {"nick": "potatoboi"})
 
         assert old is not None
         assert new is not None
@@ -1220,7 +1220,7 @@ class TestStateRegistryImpl:
         assert new is original_member_obj, "existing member was not used as target for update!"
         assert old is cloned_member_obj, "existing member did not get the old state copied and returned!"
 
-        new.update_state.assert_called_with(list(roles_map.values()), "potatoboi")
+        new.update_state.assert_called_with(list(roles_map.values()), {"nick": "potatoboi"})
 
     def test_update_member_presence_when_existing_member_exists_returns_old_state_copy_and_updated_new_state(
         self, registry: state_registry_impl.StateRegistryImpl
