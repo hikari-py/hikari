@@ -466,31 +466,13 @@ class TestChannel:
         http_client.request = asynctest.CoroutineMock()
         await http_client.delete_channel_permission("696969", "123456")
         http_client.request.assert_awaited_once_with(
-            "delete",
-            "/channels/{channel_id}/permissions/{overwrite_id}",
-            channel_id="696969",
-            overwrite_id="123456",
-            reason=unspecified.UNSPECIFIED,
+            "delete", "/channels/{channel_id}/permissions/{overwrite_id}", channel_id="696969", overwrite_id="123456",
         )
-
-    async def test_delete_channel_permission_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.delete_channel_permission("696969", "123456", reason="because i can")
-        args, kwargs = http_client.request.call_args
-        assert kwargs["reason"] == "because i can"
 
     async def test_delete_close_channel(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.delete_close_channel("12345")
-        http_client.request.assert_awaited_once_with(
-            "delete", "/channels/{channel_id}", channel_id="12345", reason=unspecified.UNSPECIFIED
-        )
-
-    async def test_delete_close_channel_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.delete_close_channel("696969", reason="because i can")
-        args, kwargs = http_client.request.call_args
-        assert kwargs["reason"] == "because i can"
+        http_client.request.assert_awaited_once_with("delete", "/channels/{channel_id}", channel_id="12345")
 
     async def test_delete_message(self, http_client):
         http_client.request = asynctest.CoroutineMock()
@@ -888,18 +870,8 @@ class TestEmoji:
         http_client.request = asynctest.CoroutineMock()
         await http_client.delete_guild_emoji("424242", "696969")
         http_client.request.assert_awaited_once_with(
-            "delete",
-            "/guilds/{guild_id}/emojis/{emoji_id}",
-            guild_id="424242",
-            emoji_id="696969",
-            reason=unspecified.UNSPECIFIED,
+            "delete", "/guilds/{guild_id}/emojis/{emoji_id}", guild_id="424242", emoji_id="696969",
         )
-
-    async def test_delete_guild_emoji_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.delete_guild_emoji("696969", "123456", reason="because i can")
-        args, kwargs = http_client.request.call_args
-        assert kwargs["reason"] == "because i can"
 
     async def test_get_guild_emoji(self, http_client):
         http_client.request = asynctest.CoroutineMock()
@@ -1169,18 +1141,8 @@ class TestGuild:
         http_client.request = asynctest.CoroutineMock()
         await http_client.delete_guild_role("424242", "696969")
         http_client.request.assert_awaited_once_with(
-            "delete",
-            "/guilds/{guild_id}/roles/{role_id}",
-            guild_id="424242",
-            role_id="696969",
-            reason=unspecified.UNSPECIFIED,
+            "delete", "/guilds/{guild_id}/roles/{role_id}", guild_id="424242", role_id="696969",
         )
-
-    async def test_delete_guild_role_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.delete_guild_role("424242", "696969", reason="baz")
-        args, kwargs = http_client.request.call_args
-        assert kwargs["reason"] == "baz"
 
     async def test_get_guild(self, http_client):
         http_client.request = asynctest.CoroutineMock()
@@ -1551,15 +1513,7 @@ class TestInvite:
     async def test_delete_invite(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.delete_invite("424242")
-        http_client.request.assert_awaited_once_with(
-            "delete", "/invites/{invite_code}", invite_code="424242", reason=unspecified.UNSPECIFIED
-        )
-
-    async def test_delete_invite_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.delete_invite("696969", reason="because i can")
-        args, kwargs = http_client.request.call_args
-        assert kwargs["reason"] == "because i can"
+        http_client.request.assert_awaited_once_with("delete", "/invites/{invite_code}", invite_code="424242")
 
     async def test_get_invite_without_counts(self, http_client):
         http_client.request = asynctest.CoroutineMock()
@@ -1754,15 +1708,7 @@ class TestWebhook:
     async def test_delete_webhook(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.delete_webhook("424242")
-        http_client.request.assert_awaited_once_with(
-            "delete", "/webhooks/{webhook_id}", webhook_id="424242", reason=unspecified.UNSPECIFIED
-        )
-
-    async def test_delete_webhook_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.delete_webhook("696969", reason="because i can")
-        args, kwargs = http_client.request.call_args
-        assert kwargs["reason"] == "because i can"
+        http_client.request.assert_awaited_once_with("delete", "/webhooks/{webhook_id}", webhook_id="424242")
 
     async def test_get_channel_webhooks(self, http_client):
         http_client.request = asynctest.CoroutineMock()
