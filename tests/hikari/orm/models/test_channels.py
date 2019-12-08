@@ -345,6 +345,20 @@ def test_partial_channel():
     assert partial_channel_obj.id == 455344577423428035
     assert partial_channel_obj.name == "Neko Zone"
     assert partial_channel_obj.type is channels.ChannelType.GUILD_VOICE
+    assert partial_channel_obj.is_dm is False
+    partial_channel_obj.__repr__()
+
+
+@pytest.mark.model
+def test_partial_channel_with_unknown_type():
+    fabric_obj = mock.MagicMock(fabric.Fabric)
+    partial_channel_obj = channels.PartialChannel(
+        fabric_obj, {"id": "115590097100865541", "name": "Neko Chilla", "type": 6969}
+    )
+    assert partial_channel_obj.id == 115590097100865541
+    assert partial_channel_obj.name == "Neko Chilla"
+    assert partial_channel_obj.type == 6969
+    assert partial_channel_obj.is_dm is None
     partial_channel_obj.__repr__()
 
 
@@ -410,7 +424,19 @@ def test_channel_guild(impl):
 
 @pytest.mark.model
 @pytest.mark.parametrize(
-    ["type_id", "is_dm"], [[0, False], [1, True], [2, False], [3, True], [4, False], [5, False], [6, False]]
+    ["channel_type", "is_dm"],
+    [
+        [channels.ChannelType.GUILD_TEXT, False],
+        [channels.ChannelType.DM, True],
+        [channels.ChannelType.GUILD_VOICE, False],
+        [channels.ChannelType.GROUP_DM, True],
+        [channels.ChannelType.GUILD_CATEGORY, False],
+        [channels.ChannelType.GUILD_ANNOUNCEMENT, False],
+        [channels.ChannelType.GUILD_STORE, False],
+        [6969, False],
+    ],
 )
-def test_is_channel_type_dm(type_id, is_dm):
-    assert channels.is_channel_type_dm(type_id) is is_dm
+def test_is_channel_type_dm(channel_type, is_dm):
+    assert channels.is_channel_type_dm(channel_type) is is_dm
+    if hasattr(channel_type, "value"):
+        assert channels.is_channel_type_dm(channel_type.value) is is_dm
