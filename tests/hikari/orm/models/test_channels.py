@@ -27,6 +27,27 @@ from hikari.orm.models import guilds
 from tests.hikari import _helpers
 
 
+@pytest.fixture
+def mock_fabric():
+    mock_state = mock.MagicMock(spec_set=state_registry.IStateRegistry)
+    return fabric.Fabric(NotImplemented, mock_state)
+
+
+@pytest.fixture
+def mock_guild():
+    return mock.MagicMock(spec_set=guilds.Guild)
+
+
+@pytest.fixture
+def mock_user():
+    return {
+        "id": "379953393319542784",
+        "username": "OwO Chan",
+        "discriminator": "2880",
+        "avatar": "7aa35e8df9db77085a1232bd3d99f7ac",
+    }
+
+
 @pytest.mark.model
 @pytest.mark.parametrize(
     "expected_type",
@@ -46,16 +67,13 @@ def test_Channel_get_channel_class_from_type(expected_type):
     assert channels.Channel.get_channel_class_from_type(expected_type.type.value) is expected_type
 
 
-@pytest.mark.model
-def test_GuildChannel_permission_overwrites_aggregation():
-    s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    f = fabric.Fabric(NotImplemented, s)
-    g = mock.MagicMock(spec_set=guilds.Guild)
-    s.get_guild_by_id = mock.MagicMock(return_value=g)
-    g.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
+@pytest.mark.model()
+def test_GuildChannel_permission_overwrites_aggregation(mock_fabric, mock_guild):
+    mock_fabric.state_registry.get_guild_by_id = mock.MagicMock(return_value=mock_guild)
+    mock_guild.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
 
-    c = channels.GuildTextChannel(
-        f,
+    guild_text_channel_obj = channels.GuildTextChannel(
+        mock_fabric,
         {
             "type": 0,
             "id": "1234567",
@@ -70,22 +88,19 @@ def test_GuildChannel_permission_overwrites_aggregation():
         },
     )
 
-    assert len(c.permission_overwrites) == 1
-    assert c.permission_overwrites[0].id == 123
-    c.__repr__()
-    c.permission_overwrites[0].__repr__()
+    assert len(guild_text_channel_obj.permission_overwrites) == 1
+    assert guild_text_channel_obj.permission_overwrites[0].id == 123
+    guild_text_channel_obj.__repr__()
+    guild_text_channel_obj.permission_overwrites[0].__repr__()
 
 
 @pytest.mark.model
-def test_GuildChannel_parent_when_specified():
-    s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    f = fabric.Fabric(NotImplemented, s)
-    g = mock.MagicMock(spec_set=guilds.Guild)
-    s.get_guild_by_id = mock.MagicMock(return_value=g)
-    g.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
+def test_GuildChannel_parent_when_specified(mock_fabric, mock_guild):
+    mock_fabric.state_registry.get_guild_by_id = mock.MagicMock(return_value=mock_guild)
+    mock_guild.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
 
-    c = channels.GuildTextChannel(
-        f,
+    guild_text_channel_obj = channels.GuildTextChannel(
+        mock_fabric,
         {
             "type": 0,
             "id": "1234567",
@@ -100,20 +115,17 @@ def test_GuildChannel_parent_when_specified():
         },
     )
 
-    assert c.parent is g.channels[1234]
-    c.__repr__()
+    assert guild_text_channel_obj.parent is mock_guild.channels[1234]
+    guild_text_channel_obj.__repr__()
 
 
 @pytest.mark.model
-def test_GuildChannel_parent_when_unspecified():
-    s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    f = fabric.Fabric(NotImplemented, s)
-    g = mock.MagicMock(spec_set=guilds.Guild)
-    s.get_guild_by_id = mock.MagicMock(return_value=g)
-    g.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
+def test_GuildChannel_parent_when_unspecified(mock_fabric, mock_guild):
+    mock_fabric.state_registry.get_guild_by_id = mock.MagicMock(return_value=mock_guild)
+    mock_guild.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
 
-    c = channels.GuildTextChannel(
-        f,
+    guild_text_channel_obj = channels.GuildTextChannel(
+        mock_fabric,
         {
             "type": 0,
             "id": "1234567",
@@ -128,17 +140,14 @@ def test_GuildChannel_parent_when_unspecified():
         },
     )
 
-    assert c.parent is None
-    c.__repr__()
+    assert guild_text_channel_obj.parent is None
+    guild_text_channel_obj.__repr__()
 
 
-@pytest.mark.model
-def test_GuildTextChannel():
-    s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    f = fabric.Fabric(NotImplemented, s)
-
-    gtc = channels.GuildTextChannel(
-        f,
+@pytest.mark.model()
+def test_GuildTextChannel(mock_fabric):
+    guild_text_channel_obj = channels.GuildTextChannel(
+        mock_fabric,
         {
             "type": 0,
             "id": "1234567",
@@ -153,41 +162,39 @@ def test_GuildTextChannel():
         },
     )
 
-    assert gtc.type is channels.ChannelType.GUILD_TEXT
-    assert gtc.id == 1234567
-    assert gtc.guild_id == 696969
-    assert gtc.position == 100
-    assert gtc.permission_overwrites == []
-    assert gtc.is_nsfw is True
-    assert gtc.parent_id is None
-    assert gtc.rate_limit_per_user == 420
-    assert gtc.topic == "nsfw stuff"
-    assert gtc.name == "shh!"
-    assert not gtc.is_dm
-    gtc.__repr__()
+    assert guild_text_channel_obj.type is channels.ChannelType.GUILD_TEXT
+    assert guild_text_channel_obj.id == 1234567
+    assert guild_text_channel_obj.guild_id == 696969
+    assert guild_text_channel_obj.position == 100
+    assert guild_text_channel_obj.permission_overwrites == []
+    assert guild_text_channel_obj.is_nsfw is True
+    assert guild_text_channel_obj.parent_id is None
+    assert guild_text_channel_obj.rate_limit_per_user == 420
+    assert guild_text_channel_obj.topic == "nsfw stuff"
+    assert guild_text_channel_obj.name == "shh!"
+    assert not guild_text_channel_obj.is_dm
+    guild_text_channel_obj.__repr__()
 
 
-@pytest.mark.model
-def test_DMChannel():
-    s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    f = fabric.Fabric(NotImplemented, s)
-    dmc = channels.DMChannel(f, {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": []})
+@pytest.mark.model()
+def test_DMChannel(mock_user, mock_fabric):
+    dm_channel_obj = channels.DMChannel(
+        mock_fabric, {"type": 1, "id": "929292", "last_message_id": "12345", "recipients": [mock_user]}
+    )
 
-    assert dmc.type is channels.ChannelType.DM
-    assert dmc.id == 929292
-    assert dmc.last_message_id == 12345
-    assert dmc.recipients == []
-    assert dmc.is_dm
-    dmc.__repr__()
+    assert dm_channel_obj.type is channels.ChannelType.DM
+    assert dm_channel_obj.id == 929292
+    assert dm_channel_obj.last_message_id == 12345
+    assert len(dm_channel_obj.recipients) == 1
+    assert dm_channel_obj.is_dm
+    mock_fabric.state_registry.parse_user.assert_called_once_with(mock_user)
+    dm_channel_obj.__repr__()
 
 
-@pytest.mark.model
-def test_GuildVoiceChannel():
-    s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    f = fabric.Fabric(NotImplemented, s)
-
-    gvc = channels.GuildVoiceChannel(
-        f,
+@pytest.mark.model()
+def test_GuildVoiceChannel(mock_fabric):
+    guild_voice_channel_obj = channels.GuildVoiceChannel(
+        mock_fabric,
         {
             "type": 2,
             "id": "9292929",
@@ -201,31 +208,28 @@ def test_GuildVoiceChannel():
         },
     )
 
-    assert gvc.type is channels.ChannelType.GUILD_VOICE
-    assert gvc.id == 9292929
-    assert gvc.guild_id == 929
-    assert gvc.position == 66
-    assert gvc.permission_overwrites == []
-    assert gvc.name == "roy rodgers mc freely"
-    assert gvc.bitrate == 999
-    assert gvc.user_limit is None
-    assert gvc.parent_id == 42
-    assert not gvc.is_dm
-    gvc.__repr__()
+    assert guild_voice_channel_obj.type is channels.ChannelType.GUILD_VOICE
+    assert guild_voice_channel_obj.id == 9292929
+    assert guild_voice_channel_obj.guild_id == 929
+    assert guild_voice_channel_obj.position == 66
+    assert guild_voice_channel_obj.permission_overwrites == []
+    assert guild_voice_channel_obj.name == "roy rodgers mc freely"
+    assert guild_voice_channel_obj.bitrate == 999
+    assert guild_voice_channel_obj.user_limit is None
+    assert guild_voice_channel_obj.parent_id == 42
+    assert not guild_voice_channel_obj.is_dm
+    guild_voice_channel_obj.__repr__()
 
 
-@pytest.mark.model
-def test_GroupDMChannel():
-    s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    f = fabric.Fabric(NotImplemented, s)
-
-    gdmc = channels.GroupDMChannel(
-        f,
+@pytest.mark.model()
+def test_GroupDMChannel(mock_user, mock_fabric):
+    group_dm_channel_obj = channels.GroupDMChannel(
+        mock_fabric,
         {
             "type": 3,
             "id": "99999999999",
             "last_message_id": None,
-            "recipients": [],
+            "recipients": [mock_user],
             "icon": "1a2b3c4d",
             "name": "shitposting 101",
             "application_id": "111111",
@@ -233,25 +237,23 @@ def test_GroupDMChannel():
         },
     )
 
-    assert gdmc.type is channels.ChannelType.GROUP_DM
-    assert gdmc.id == 99999999999
-    assert gdmc.last_message_id is None
-    assert gdmc.recipients == []
-    assert gdmc.icon_hash == "1a2b3c4d"
-    assert gdmc.name == "shitposting 101"
-    assert gdmc.owner_application_id == 111111
-    assert gdmc.owner_id == 111111
-    assert gdmc.is_dm
-    gdmc.__repr__()
+    assert group_dm_channel_obj.type is channels.ChannelType.GROUP_DM
+    assert group_dm_channel_obj.id == 99999999999
+    assert group_dm_channel_obj.last_message_id is None
+    assert len(group_dm_channel_obj.recipients) == 1
+    assert group_dm_channel_obj.icon_hash == "1a2b3c4d"
+    assert group_dm_channel_obj.name == "shitposting 101"
+    assert group_dm_channel_obj.owner_application_id == 111111
+    assert group_dm_channel_obj.owner_id == 111111
+    assert group_dm_channel_obj.is_dm
+    mock_fabric.state_registry.parse_user.assert_called_once_with(mock_user)
+    group_dm_channel_obj.__repr__()
 
 
-@pytest.mark.model
-def test_GuildCategory():
-    s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    f = fabric.Fabric(NotImplemented, s)
-
-    gc = channels.GuildCategory(
-        f,
+@pytest.mark.model()
+def test_GuildCategory(mock_fabric):
+    guild_category_obj = channels.GuildCategory(
+        mock_fabric,
         {
             "type": 4,
             "id": "123456",
@@ -262,23 +264,20 @@ def test_GuildCategory():
         },
     )
 
-    assert gc.type is channels.ChannelType.GUILD_CATEGORY
-    assert gc.name == "dank category"
-    assert gc.position == 69
-    assert gc.guild_id == 54321
-    assert gc.id == 123456
-    assert gc.permission_overwrites == []
-    assert not gc.is_dm
-    gc.__repr__()
+    assert guild_category_obj.type is channels.ChannelType.GUILD_CATEGORY
+    assert guild_category_obj.name == "dank category"
+    assert guild_category_obj.position == 69
+    assert guild_category_obj.guild_id == 54321
+    assert guild_category_obj.id == 123456
+    assert guild_category_obj.permission_overwrites == []
+    assert not guild_category_obj.is_dm
+    guild_category_obj.__repr__()
 
 
-@pytest.mark.model
-def test_GuildAnnouncementChannel():
-    s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    f = fabric.Fabric(NotImplemented, s)
-
-    gnc = channels.GuildAnnouncementChannel(
-        f,
+@pytest.mark.model()
+def test_GuildAnnouncementChannel(mock_fabric):
+    guild_announcement_channe_obj = channels.GuildAnnouncementChannel(
+        mock_fabric,
         {
             "type": 5,
             "id": "4444",
@@ -293,27 +292,24 @@ def test_GuildAnnouncementChannel():
         },
     )
 
-    assert gnc.type is channels.ChannelType.GUILD_ANNOUNCEMENT
-    assert gnc.id == 4444
-    assert gnc.guild_id == 1111
-    assert gnc.position == 24
-    assert gnc.permission_overwrites == []
-    assert gnc.name
-    assert gnc.is_nsfw is False
-    assert gnc.parent_id == 3232
-    assert gnc.topic == "crap and stuff"
-    assert gnc.last_message_id is None
-    assert not gnc.is_dm
-    gnc.__repr__()
+    assert guild_announcement_channe_obj.type is channels.ChannelType.GUILD_ANNOUNCEMENT
+    assert guild_announcement_channe_obj.id == 4444
+    assert guild_announcement_channe_obj.guild_id == 1111
+    assert guild_announcement_channe_obj.position == 24
+    assert guild_announcement_channe_obj.permission_overwrites == []
+    assert guild_announcement_channe_obj.name
+    assert guild_announcement_channe_obj.is_nsfw is False
+    assert guild_announcement_channe_obj.parent_id == 3232
+    assert guild_announcement_channe_obj.topic == "crap and stuff"
+    assert guild_announcement_channe_obj.last_message_id is None
+    assert not guild_announcement_channe_obj.is_dm
+    guild_announcement_channe_obj.__repr__()
 
 
-@pytest.mark.model
-def test_GuildStoreChannel():
-    s = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    f = fabric.Fabric(NotImplemented, s)
-
-    gsc = channels.GuildStoreChannel(
-        f,
+@pytest.mark.model()
+def test_GuildStoreChannel(mock_fabric):
+    guild_store_channel_obj = channels.GuildStoreChannel(
+        mock_fabric,
         {
             "type": 6,
             "id": "9876",
@@ -325,22 +321,21 @@ def test_GuildStoreChannel():
         },
     )
 
-    assert gsc.type is channels.ChannelType.GUILD_STORE
-    assert gsc.id == 9876
-    assert gsc.guild_id == 7676
-    assert gsc.position == 9
-    assert gsc.permission_overwrites == []
-    assert gsc.name == "a"
-    assert gsc.parent_id == 32
-    assert not gsc.is_dm
-    gsc.__repr__()
+    assert guild_store_channel_obj.type is channels.ChannelType.GUILD_STORE
+    assert guild_store_channel_obj.id == 9876
+    assert guild_store_channel_obj.guild_id == 7676
+    assert guild_store_channel_obj.position == 9
+    assert guild_store_channel_obj.permission_overwrites == []
+    assert guild_store_channel_obj.name == "a"
+    assert guild_store_channel_obj.parent_id == 32
+    assert not guild_store_channel_obj.is_dm
+    guild_store_channel_obj.__repr__()
 
 
-@pytest.mark.model
-def test_partial_channel():
-    fabric_obj = mock.MagicMock(fabric.Fabric)
+@pytest.mark.model()
+def test_partial_channel(mock_fabric):
     partial_channel_obj = channels.PartialChannel(
-        fabric_obj, {"id": "455344577423428035", "name": "Neko Zone", "type": 2}
+        mock_fabric, {"id": "455344577423428035", "name": "Neko Zone", "type": 2}
     )
     assert partial_channel_obj.id == 455344577423428035
     assert partial_channel_obj.name == "Neko Zone"
@@ -349,11 +344,10 @@ def test_partial_channel():
     partial_channel_obj.__repr__()
 
 
-@pytest.mark.model
-def test_partial_channel_with_unknown_type():
-    fabric_obj = mock.MagicMock(fabric.Fabric)
+@pytest.mark.model()
+def test_partial_channel_with_unknown_type(mock_fabric):
     partial_channel_obj = channels.PartialChannel(
-        fabric_obj, {"id": "115590097100865541", "name": "Neko Chilla", "type": 6969}
+        mock_fabric, {"id": "115590097100865541", "name": "Neko Chilla", "type": 6969}
     )
     assert partial_channel_obj.id == 115590097100865541
     assert partial_channel_obj.name == "Neko Chilla"
@@ -396,7 +390,7 @@ def test_channel_failure_case():
         pass
 
 
-@pytest.mark.model
+@pytest.mark.model()
 @pytest.mark.parametrize(
     "impl",
     [
@@ -407,19 +401,17 @@ def test_channel_failure_case():
         channels.GuildCategory,
     ],
 )
-def test_channel_guild(impl):
-    cache = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-    fabric_obj = fabric.Fabric(NotImplemented, cache)
+def test_channel_guild(impl, mock_fabric):
     obj = impl(
-        fabric_obj, {"id": "1", "position": 2, "permission_overwrites": [], "name": "milfchnl", "guild_id": "91827"}
+        mock_fabric, {"id": "1", "position": 2, "permission_overwrites": [], "name": "milfchnl", "guild_id": "91827"}
     )
     guild = mock.MagicMock()
-    cache.get_guild_by_id = mock.MagicMock(return_value=guild)
+    mock_fabric.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild)
 
     g = obj.guild
     assert g is guild
 
-    cache.get_guild_by_id.assert_called_with(91827)
+    mock_fabric.state_registry.get_guild_by_id.assert_called_with(91827)
 
 
 @pytest.mark.model
