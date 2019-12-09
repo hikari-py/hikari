@@ -291,7 +291,9 @@ class DMChannel(TextChannel, type=ChannelType.DM):
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
-        self.recipients = [self._state.parse_user(u) for u in payload.get("recipients", data_structures.EMPTY_SEQUENCE)]
+        self.recipients = [
+            self._fabric.state_registry.parse_user(u) for u in payload.get("recipients", data_structures.EMPTY_SEQUENCE)
+        ]
 
 
 class GuildVoiceChannel(GuildChannel, type=ChannelType.GUILD_VOICE):
