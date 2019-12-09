@@ -69,7 +69,7 @@ def test_Channel_get_channel_class_from_type(expected_type):
 
 @pytest.mark.model()
 def test_GuildChannel_permission_overwrites_aggregation(mock_fabric, mock_guild):
-    mock_fabric.state_registry.get_guild_by_id = mock.MagicMock(return_value=mock_guild)
+    mock_fabric.state_registry.get_guild_by_id.return_value = mock_guild
     mock_guild.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
 
     guild_text_channel_obj = channels.GuildTextChannel(
@@ -96,7 +96,7 @@ def test_GuildChannel_permission_overwrites_aggregation(mock_fabric, mock_guild)
 
 @pytest.mark.model
 def test_GuildChannel_parent_when_specified(mock_fabric, mock_guild):
-    mock_fabric.state_registry.get_guild_by_id = mock.MagicMock(return_value=mock_guild)
+    mock_fabric.state_registry.get_guild_by_id.return_value = mock_guild
     mock_guild.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
 
     guild_text_channel_obj = channels.GuildTextChannel(
@@ -121,7 +121,7 @@ def test_GuildChannel_parent_when_specified(mock_fabric, mock_guild):
 
 @pytest.mark.model
 def test_GuildChannel_parent_when_unspecified(mock_fabric, mock_guild):
-    mock_fabric.state_registry.get_guild_by_id = mock.MagicMock(return_value=mock_guild)
+    mock_fabric.state_registry.get_guild_by_id.return_value = mock_guild
     mock_guild.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
 
     guild_text_channel_obj = channels.GuildTextChannel(
@@ -401,15 +401,14 @@ def test_channel_failure_case():
         channels.GuildCategory,
     ],
 )
-def test_channel_guild(impl, mock_fabric):
+def test_channel_guild(impl, mock_fabric, mock_guild):
     obj = impl(
         mock_fabric, {"id": "1", "position": 2, "permission_overwrites": [], "name": "milfchnl", "guild_id": "91827"}
     )
-    guild = mock.MagicMock()
-    mock_fabric.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild)
+    mock_fabric.state_registry.get_guild_by_id.return_value = mock_guild
 
-    g = obj.guild
-    assert g is guild
+    guild_obj = obj.guild
+    assert guild_obj is mock_guild
 
     mock_fabric.state_registry.get_guild_by_id.assert_called_with(91827)
 
