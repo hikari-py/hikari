@@ -71,7 +71,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
 
         for guild_payload in guilds:
             # Parse unavailable guild.
-            self.fabric.state_registry.parse_guild(guild_payload)
+            self.fabric.state_registry.parse_guild(guild_payload, gateway.shard_id)
 
         self.dispatch(events.READY, gateway)
 
@@ -168,13 +168,13 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
                 channel_id,
             )
 
-    async def handle_guild_create(self, _, payload):
+    async def handle_guild_create(self, gateway, payload):
         self.dispatch(events.RAW_GUILD_CREATE, payload)
 
         guild_id = int(payload["id"])
         unavailable = payload.get("unavailable", False)
         was_already_loaded = self.fabric.state_registry.get_guild_by_id(guild_id) is not None
-        guild = self.fabric.state_registry.parse_guild(payload)
+        guild = self.fabric.state_registry.parse_guild(payload, gateway.shard_id)
 
         # TODO: do not fire this event if the guild is in the initial unready id set.
         # TODO: if the guild just became ready and was in the initial unready id set, invoke the READY event.
@@ -194,16 +194,16 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
         else:
             self.logger.warning("ignoring GUILD_UPDATE for unknown guild %s which was not previously cached")
 
-    async def handle_guild_delete(self, _, payload):
+    async def handle_guild_delete(self, gateway, payload):
         self.dispatch(events.RAW_GUILD_DELETE, payload)
         # This should always be unspecified if the guild was left,
         # but if discord suddenly send "False" instead, it will still work.
         if payload.get("unavailable", False):
-            await self._handle_guild_unavailable(payload)
+            await self._handle_guild_unavailable(gateway, payload)
         else:
-            await self._handle_guild_leave(payload)
+            await self._handle_guild_leave(gateway, payload)
 
-    async def _handle_guild_unavailable(self, payload):
+    async def _handle_guild_unavailable(self, gateway, payload):
         # We shouldn't ever need to parse this payload unless we have inconsistent state, but if that happens,
         # lets attempt to fix it.
         guild_id = int(payload["id"])
@@ -215,10 +215,10 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
         else:
             # We don't have a guild parsed yet. That shouldn't happen but if it does, we can make a note of this
             # so that we don't fail on other events later, and pre-emptively parse this information now.
-            self.fabric.state_registry.parse_guild(payload)
+            self.fabric.state_registry.parse_guild(payload, gateway.shard_id)
 
-    async def _handle_guild_leave(self, payload):
-        guild = self.fabric.state_registry.parse_guild(payload)
+    async def _handle_guild_leave(self, gateway, payload):
+        guild = self.fabric.state_registry.parse_guild(payload, gateway.shard_id)
         self.fabric.state_registry.delete_guild(guild)
         self.dispatch(events.GUILD_LEAVE, guild)
 
