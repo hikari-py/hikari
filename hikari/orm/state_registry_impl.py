@@ -402,7 +402,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             guild_obj.roles[role_payload.id] = role_payload
             return role_payload
 
-    def parse_user(self, user_payload: data_structures.DiscordObjectT) -> typing.Union[users.User, users.OAuth2User]:
+    def parse_user(self, user_payload: data_structures.DiscordObjectT) -> users.IUser:
         # If the user already exists, then just return their existing object. We expect discord to tell us if they
         # get updated if they are a member, and for anything else the object will just be disposed of once we are
         # finished with it anyway.
