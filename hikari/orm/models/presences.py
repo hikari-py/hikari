@@ -250,8 +250,8 @@ class ActivityType(enum.IntEnum):
     #: Shows up as `Watching <name>`. Note that this is not officially documented, so will be likely removed
     #: in the near future.
     WATCHING = 3
-    #: A custom status. 
-    #: 
+    #: A custom status.
+    #:
     #: To set an emoji with the status, place a unicode emoji or Discord emoji (`:smiley:`) as the first
     #: part of the status activity name.
     CUSTOM = 4

@@ -199,7 +199,7 @@ class OAuth2User(User):
     #: Requires the `identify` OAuth2 scope.
     #:
     #: :type: :class:`PremiumType` or `None` if not available.
-    premium_type: PremiumType
+    premium_type: typing.Optional[PremiumType]
 
     __repr__ = auto_repr.repr_of("id", "username", "discriminator", "is_bot", "is_verified", "is_mfa_enabled")
 
@@ -217,7 +217,7 @@ class OAuth2User(User):
         self.premium_type = transformations.nullable_cast(payload.get("premium_type"), PremiumType)
 
 
-def parse_user(fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT):
+def parse_user(fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> typing.Union[OAuth2User, User]:
     return (
         OAuth2User(fabric_obj, payload)
         if any(field in OAuth2User.__slots__ for field in payload)

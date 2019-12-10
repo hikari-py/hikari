@@ -448,7 +448,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_user(self, user_payload: data_structures.DiscordObjectT) -> users.User:
+    def parse_user(self, user_payload: data_structures.DiscordObjectT) -> typing.Union[users.User, users.IUser]:
         """
         Parses a user payload into a workable object
 
@@ -457,7 +457,7 @@ class IStateRegistry(abc.ABC):
                 the payload of the user.
 
         Returns:
-            a :class:`hikari.orm.models.users.User` object.
+            a :class:`hikari.orm.models.users.User` object or a :class:`hikari.orm.models.users.OAuth2User` object.
 
         Note:
             If the user is detected to be the bot user for the account you are signed in as, then one can expect
