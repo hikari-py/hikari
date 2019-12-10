@@ -448,7 +448,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_user(self, user_payload: data_structures.DiscordObjectT) -> typing.Union[users.User, users.IUser]:
+    def parse_user(self, user_payload: data_structures.DiscordObjectT) -> users.IUser:
         """
         Parses a user payload into a workable object
 
