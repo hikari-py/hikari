@@ -53,6 +53,11 @@
   image: python:3.8.0
   extends: .test
 
+"CPy3.9 unit testing":
+  image: python:3.9-rc
+  extends: .test
+  allow_failure: true
+
 "CPy3.7 installation test":
   image: python:3.7.5
   extends: .test
@@ -66,6 +71,14 @@
   stage: test
   script:
     - nox --sessions pip
+
+"CPy3.9 installation test":
+  image: python:3.9-rc
+  extends: .test
+  stage: test
+  script:
+    - nox --sessions pip
+  allow_failure: true
 
 "CPy3.7 PyPI verification":
   image: python:3.7.5
@@ -84,3 +97,15 @@
     - nox --sessions pip -- --showtime
   only:
     - master
+
+"CPy3.9 PyPI verification":
+  image: python:3.9-rc
+  extends: .test
+  stage: verify
+  script:
+    - nox --sessions pip -- --showtime
+  only:
+    - master
+  allow_failure: true
+
+
