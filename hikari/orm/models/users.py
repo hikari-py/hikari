@@ -217,7 +217,7 @@ class OAuth2User(User):
         self.premium_type = transformations.nullable_cast(payload.get("premium_type"), PremiumType)
 
 
-def parse_user(fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> typing.Union[OAuth2User, User]:
+def parse_user(fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> IUser:
     return (
         OAuth2User(fabric_obj, payload)
         if any(field in OAuth2User.__slots__ for field in payload)
