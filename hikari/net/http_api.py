@@ -266,12 +266,12 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If the given `channel_id` was not found, or the message ID provided for one of the filter arguments
                 is not found.
         """
-        payload = {}
-        transformations.put_if_specified(payload, "limit", limit)
-        transformations.put_if_specified(payload, "before", before)
-        transformations.put_if_specified(payload, "after", after)
-        transformations.put_if_specified(payload, "around", around)
-        return await self.request(self.GET, "/channels/{channel_id}/messages", channel_id=channel_id, json=payload)
+        query = {}
+        transformations.put_if_specified(query, "limit", limit)
+        transformations.put_if_specified(query, "before", before)
+        transformations.put_if_specified(query, "after", after)
+        transformations.put_if_specified(query, "around", around)
+        return await self.request(self.GET, "/channels/{channel_id}/messages", channel_id=channel_id, query=query)
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
     async def get_channel_message(self, channel_id: str, message_id: str) -> data_structures.DiscordObjectT:
@@ -490,17 +490,17 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         Returns:
             A list of user objects.
         """
-        payload = {}
-        transformations.put_if_specified(payload, "before", before)
-        transformations.put_if_specified(payload, "after", after)
-        transformations.put_if_specified(payload, "limit", limit)
+        query = {}
+        transformations.put_if_specified(query, "before", before)
+        transformations.put_if_specified(query, "after", after)
+        transformations.put_if_specified(query, "limit", limit)
         return await self.request(
             self.GET,
             "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}",
             channel_id=channel_id,
             message_id=message_id,
             emoji=emoji,
-            json=payload,
+            query=query,
         )
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL, "/resources/channel#delete-all-reactions")
@@ -779,7 +779,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         await self.request(self.POST, "/channels/{channel_id}/typing", channel_id=channel_id)
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    async def get_pinned_messages(self, channel_id: str) -> None:
+    async def get_pinned_messages(self, channel_id: str) -> typing.List[data_structures.DiscordObject]:
         """
         Get pinned messages for a given channel.
 
