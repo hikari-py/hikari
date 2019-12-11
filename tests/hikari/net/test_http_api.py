@@ -631,56 +631,56 @@ class TestChannel:
         http_client.request = asynctest.CoroutineMock()
         await http_client.get_channel_messages("696969")
         http_client.request.assert_awaited_once_with(
-            "get", "/channels/{channel_id}/messages", channel_id="696969", json={}
+            "get", "/channels/{channel_id}/messages", channel_id="696969", query={}
         )
 
     async def test_get_channel_messages_with_limit(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.get_channel_messages("696969", limit=12)
         http_client.request.assert_awaited_once_with(
-            "get", "/channels/{channel_id}/messages", channel_id="696969", json={"limit": 12}
+            "get", "/channels/{channel_id}/messages", channel_id="696969", query={"limit": 12}
         )
 
     async def test_get_channel_messages_with_before(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.get_channel_messages("696969", before="12")
         http_client.request.assert_awaited_once_with(
-            "get", "/channels/{channel_id}/messages", channel_id="696969", json={"before": "12"}
+            "get", "/channels/{channel_id}/messages", channel_id="696969", query={"before": "12"}
         )
 
     async def test_get_channel_messages_with_after(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.get_channel_messages("696969", after="12")
         http_client.request.assert_awaited_once_with(
-            "get", "/channels/{channel_id}/messages", channel_id="696969", json={"after": "12"}
+            "get", "/channels/{channel_id}/messages", channel_id="696969", query={"after": "12"}
         )
 
     async def test_get_channel_messages_with_around(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.get_channel_messages("696969", around="12")
         http_client.request.assert_awaited_once_with(
-            "get", "/channels/{channel_id}/messages", channel_id="696969", json={"around": "12"}
+            "get", "/channels/{channel_id}/messages", channel_id="696969", query={"around": "12"}
         )
 
     async def test_get_channel_messages_with_before_and_limit(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.get_channel_messages("696969", before="12", limit=12)
         http_client.request.assert_awaited_once_with(
-            "get", "/channels/{channel_id}/messages", channel_id="696969", json={"before": "12", "limit": 12}
+            "get", "/channels/{channel_id}/messages", channel_id="696969", query={"before": "12", "limit": 12}
         )
 
     async def test_get_channel_messages_with_after_and_limit(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.get_channel_messages("696969", after="12", limit=12)
         http_client.request.assert_awaited_once_with(
-            "get", "/channels/{channel_id}/messages", channel_id="696969", json={"after": "12", "limit": 12}
+            "get", "/channels/{channel_id}/messages", channel_id="696969", query={"after": "12", "limit": 12}
         )
 
     async def test_get_channel_messages_with_around_and_limit(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.get_channel_messages("696969", around="12", limit=12)
         http_client.request.assert_awaited_once_with(
-            "get", "/channels/{channel_id}/messages", channel_id="696969", json={"around": "12", "limit": 12}
+            "get", "/channels/{channel_id}/messages", channel_id="696969", query={"around": "12", "limit": 12}
         )
 
     async def test_get_pinned_messages(self, http_client):
@@ -697,7 +697,7 @@ class TestChannel:
             channel_id="12345",
             message_id="54321",
             emoji="99887766",
-            json={},
+            query={},
         )
 
     async def test_get_reactions_before(self, http_client):
@@ -709,7 +709,7 @@ class TestChannel:
             channel_id="12345",
             message_id="54321",
             emoji="99887766",
-            json={"before": "707"},
+            query={"before": "707"},
         )
 
     async def test_get_reactions_after(self, http_client):
@@ -721,7 +721,7 @@ class TestChannel:
             channel_id="12345",
             message_id="54321",
             emoji="99887766",
-            json={"after": "707"},
+            query={"after": "707"},
         )
 
     async def test_get_reactions_limit(self, http_client):
@@ -733,7 +733,7 @@ class TestChannel:
             channel_id="12345",
             message_id="54321",
             emoji="99887766",
-            json={"limit": 10},
+            query={"limit": 10},
         )
 
     async def test_get_reactions_limit_and_before(self, http_client):
@@ -745,7 +745,7 @@ class TestChannel:
             channel_id="12345",
             message_id="54321",
             emoji="99887766",
-            json={"limit": 10, "before": "707"},
+            query={"limit": 10, "before": "707"},
         )
 
     async def test_get_reactions_limit_and_after(self, http_client):
@@ -757,7 +757,7 @@ class TestChannel:
             channel_id="12345",
             message_id="54321",
             emoji="99887766",
-            json={"limit": 10, "after": "707"},
+            query={"limit": 10, "after": "707"},
         )
 
     async def test_modify_channel_no_kwargs(self, http_client):
