@@ -1,9 +1,34 @@
 CHANGELOG
 =========
 
-Automatically generated from git history up to master at Sun Dec  8 21:49:24 UTC 2019 by CI.
+Automatically generated from git history up to master at Fri Dec 13 19:16:05 UTC 2019 by CI.
 
-* Sun Dec 08 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+* Fri Dec 13 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+- Merge branch 'staging' into 'master' (rev.c49918e3)
+- Merge branch 'task/fix-docstrings' into 'staging' (rev.a2e614d6)
+- Fixed docstrings and return values (rev.f4642525)
+- Merge branch 'task/111-python3.9' into 'staging' (rev.0e755254)
+- Added provisional python3.9 support to pyproject.toml (even if poetry is broken on 3.9 currently) (rev.4fc78a16)
+- Updated pipelines to not run black, bandit, nor safety, multiple times (rev.d6c790d0)
+- Added workaround for https://github.com/html5lib/html5lib-python/issues/419 and https://github.com/python-poetry/poetry/issues/1733 on Python3.9 (rev.5b4bd1f6)
+- Added support for Python3.9 within CI as part of the docker images (rev.cb414aa6)
+- Merge branch 'applications' into 'staging' (rev.bebdcaf0)
+- Application.is_bot_requiring_code_grant -> is_bot_code_grant_required (rev.7f41c445)
+- Merge branch 'bugfix/query-as-json' into 'staging' (rev.730575aa)
+- Another query as json fix (rev.c3abf228)
+- Merge branch 'patch' into 'staging' (rev.b6e1e0bb)
+- Update users.py (rev.9b6305b2)
+- Merge branch 'bugfix/query-as-json' into 'staging' (rev.189c165d)
+- Fixed some queries being passed as json and some docs (rev.566c7791)
+- typing.Union[...] -> users.IUser and more :class:`None` (rev.efde3eb6)
+- * Consistency changes (inc typing and docs) (rev.5f0684ee)
+- Merge branch 'patch' into 'staging' (rev.820ea802)
+- Avoid unnecessarily making MagicMocks (rev.4c13feaa)
+- Fix _state call in DMChannel and readability changes in channels tests. (rev.f5d8ec20)
+- Merged master 0.0.60 into staging [skip ci] (rev.c17b2912)
+
+* Sun Dec 08 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.60
+- Deployed 0.0.60 [skip ci] (rev.9cfa3094)
 - Merge branch 'staging' into 'master' (rev.faa85fcf)
 - Merge branch 'task/remove-reason-where-not-needed' into 'staging' (rev.c6905eb1)
 - Removed the reason argument from some functions (rev.131e5918)
