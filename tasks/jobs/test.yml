@@ -29,45 +29,70 @@
     - bash tasks/retry-aborts.sh pip install virtualenv
     - python -m venv .venv
     - source .venv/bin/activate
-    - bash tasks/retry-aborts.sh pip install -U pip
-    - bash tasks/retry-aborts.sh pip install poetry
+    # Install html5lib explicitly from GitHub until https://github.com/python-poetry/poetry/issues/1733
+    # and/or https://github.com/html5lib/html5lib-python/issues/419 is resolved
+    - bash tasks/retry-aborts.sh pip install poetry https://github.com/html5lib/html5lib-python/zipball/af19281fa28788830684b4c8fc6d0c588b092616
     - bash tasks/retry-aborts.sh poetry update
     - source tasks/config.sh
-    - python -V
     - mkdir public || true
-    - poetry show -v
   script:
-    - nox --sessions test sast safety --report public/nox.json
-    - nox --sessions format -- --check
+    - nox -stest
   artifacts:
     paths:
-      - public/coverage/
-      - public/nox.json
+      - public/coverage
   coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
 
-"CPy3.7 unit testing":
+.tool-test:
+  only:
+    - branches
+    - merge_requests
+    - tags
+    - schedules
+  allow_failure: false
+  stage: test
+  before_script:
+    - bash tasks/retry-aborts.sh pip install nox
+  image: python:3.8.0
+
+"3.7 pytest":
   image: python:3.7.5
   extends: .test
 
-"CPy3.8 unit testing":
+"3.8 pytest":
   image: python:3.8.0
   extends: .test
 
-"CPy3.7 installation test":
+"3.9 pytest":
+  image: python:3.9-rc
+  extends: .test
+  allow_failure: true
+
+"3.7 setup.py test":
   image: python:3.7.5
   extends: .test
   stage: test
   script:
     - nox --sessions pip
 
-"CPy3.8 installation test":
+"3.8 setup.py test":
   image: python:3.8.0
   extends: .test
   stage: test
   script:
     - nox --sessions pip
 
-"CPy3.7 PyPI verification":
+###########################################################################################################
+# Uncomment once https://github.com/html5lib/html5lib-python/issues/419 is resolved and pip isn't broken. #
+###########################################################################################################
+# "3.9 setup.py test":
+#   image: python:3.9-rc
+#   extends: .test
+#   stage: test
+#   script:
+#     - nox --sessions pip
+#   allow_failure: true
+
+"3.7 verify PyPI release":
   image: python:3.7.5
   extends: .test
   stage: verify
@@ -76,7 +101,7 @@
   only:
     - master
 
-"CPy3.8 PyPI verification":
+"3.8 verify PyPI release":
   image: python:3.8.0
   extends: .test
   stage: verify
@@ -84,3 +109,31 @@
     - nox --sessions pip -- --showtime
   only:
     - master
+
+###########################################################################################################
+# Uncomment once https://github.com/html5lib/html5lib-python/issues/419 is resolved and pip isn't broken. #
+###########################################################################################################
+# "3.9 verify PyPI release":
+#   image: python:3.9-rc
+#   extends: .test
+#   stage: verify
+#   script:
+#     - nox --sessions pip -- --showtime
+#   only:
+#     - master
+#   allow_failure: true
+
+"Black":
+  extends: .tool-test
+  script:
+    - nox -sformat
+
+"Bandit":
+  extends: .tool-test
+  script:
+    - nox -ssast
+
+"Safety":
+  extends: .tool-test
+  script:
+    - nox -ssast
