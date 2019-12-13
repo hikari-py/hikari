@@ -511,7 +511,19 @@ class TestChannel:
             user_id="101",
         )
 
-    async def test_edit_channel_permissions(self, http_client):
+    async def test_edit_channel_permissions_without_kwargs(self, http_client):
+        http_client.request = asynctest.CoroutineMock()
+        await http_client.edit_channel_permissions("69", "420")
+        http_client.request.assert_awaited_once_with(
+            "put",
+            "/channels/{channel_id}/permissions/{overwrite_id}",
+            channel_id="69",
+            overwrite_id="420",
+            json={},
+            reason=unspecified.UNSPECIFIED,
+        )
+
+    async def test_edit_channel_permissions_with_kwargs(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.edit_channel_permissions("69", "420", allow=192, deny=168, type_="member")
         http_client.request.assert_awaited_once_with(
@@ -1210,7 +1222,14 @@ class TestGuild:
         await http_client.get_guild_voice_regions("424242")
         http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/regions", guild_id="424242")
 
-    async def test_get_guild_widget_image(self, http_client):
+    async def test_get_guild_widget_image_without_style(self, http_client):
+        http_client.base_uri = "https://potato.com/api/v12"
+        assert (
+            http_client.get_guild_widget_image("1234")
+            == "https://potato.com/api/v12/guilds/1234/widget.png"
+        )
+
+    async def test_get_guild_widget_image_with_style(self, http_client):
         http_client.base_uri = "https://potato.com/api/v12"
         assert (
             http_client.get_guild_widget_image("1234", style="banner3")

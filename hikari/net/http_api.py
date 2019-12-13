@@ -636,10 +636,10 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         self,
         channel_id: str,
         overwrite_id: str,
-        allow: int,
-        deny: int,
-        type_: str,
         *,
+        allow: int = unspecified.UNSPECIFIED,
+        deny: int = unspecified.UNSPECIFIED,
+        type_: str = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
         """
@@ -659,7 +659,10 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             reason:
                 an optional audit log reason explaining why the change was made.
         """
-        payload = {"allow": allow, "deny": deny, "type": type_}
+        payload = {}
+        transformations.put_if_specified(payload, "allow", allow)
+        transformations.put_if_specified(payload, "deny", deny)
+        transformations.put_if_specified(payload, "type", type_)
         await self.request(
             self.PUT,
             "/channels/{channel_id}/permissions/{overwrite_id}",
@@ -2115,7 +2118,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/vanity-url", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    def get_guild_widget_image(self, guild_id: str, style: str) -> str:
+    def get_guild_widget_image(self, guild_id: str, *, style: str = unspecified.UNSPECIFIED) -> str:
         """
         Get the URL for a guild widget.
 
@@ -2123,7 +2126,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             guild_id:
                 The guild ID to use for the widget.
             style:
-                One of "shield", "banner1", "banner2", "banner3" or "banner4".
+                Optional and one of "shield", "banner1", "banner2", "banner3" or "banner4".
 
         Returns:
             A URL to retrieve a PNG widget for your guild.
@@ -2135,7 +2138,9 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         Warning:
             The guild must have the widget enabled in the guild settings for this to be valid.
         """
-        return f"{self.base_uri}/guilds/{guild_id}/widget.png?style={style}"
+        query = "" if style is unspecified.UNSPECIFIED else f"?style={style}"
+        return f"{self.base_uri}/guilds/{guild_id}/widget.png" + query
+
 
     @meta.link_developer_portal(meta.APIResource.INVITE)
     async def get_invite(
