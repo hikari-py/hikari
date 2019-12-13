@@ -18,17 +18,19 @@
 .deploy:
   allow_failure: false
   stage: deploy
-  image: python:3-stretch
+  image: python:3.8.0
   before_script:
     - source tasks/config.sh
     - "[[ \"$CI_PROJECT_URL\" = \"$ORIGINAL_REPO_URL\" ]] || (echo 'You are running off of a fork, so deployment is skipped.' && exit 0)"
     - apt-get update
     - apt-get install curl git openssh-client -y
-    - bash tasks/retry-aborts.sh pip install poetry requests
+    # Install html5lib explicitly from GitHub until https://github.com/python-poetry/poetry/issues/1733
+    # and/or https://github.com/html5lib/html5lib-python/issues/419 is resolved
+    - bash tasks/retry-aborts.sh pip install poetry requests https://github.com/html5lib/html5lib-python/zipball/af19281fa28788830684b4c8fc6d0c588b092616
     - bash tasks/retry-aborts.sh poetry install -v
     - poetry show -v
 
-"Deploy a new dev prerelease":
+"Make prerelease":
   extends: .deploy
   only:
     - staging
@@ -48,7 +50,7 @@
     name:
       staging
 
-"Deploy a new release":
+"Make release":
   extends: .deploy
   only:
     - master

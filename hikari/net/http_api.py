@@ -44,7 +44,6 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         and registered to the current thread.
     """
 
-    #: The target API version.
     __slots__ = []
 
     @meta.link_developer_portal(meta.APIResource.GATEWAY)
@@ -98,9 +97,9 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Raises:
             hikari.errors.Forbidden:
-                if you lack the given permissions to view an audit log.
+                If you lack the given permissions to view an audit log.
             hikari.errors.NotFound:
-                if the guild does not exist.
+                If the guild does not exist.
         """
         query = {}
         transformations.put_if_specified(query, "user_id", user_id)
@@ -115,14 +114,14 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Args:
             channel_id:
-                the channel ID to look up.
+                The channel ID to look up.
 
         Returns:
             The channel object that has been found.
 
         Raises:
             hikari.errors.NotFound:
-                if the channel does not exist.
+                If the channel does not exist.
         """
         return await self.request(self.GET, "/channels/{channel_id}", channel_id=channel_id)
 
@@ -159,26 +158,29 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 not apply to bots, or to members with `manage_messages` or `manage_channel` permissions. This must be
                 between 0 and 21600 seconds. This only applies to text channels.
             bitrate:
-                the optional bitrate in bits per second allowable for the channel. This only applies to voice channels
+                The optional bitrate in bits per second allowable for the channel. This only applies to voice channels
                 and must be between 8000 and 96000 or 128000 for VIP servers.
             user_limit:
-                the optional max number of users to allow in a voice channel. This must be between 0 and 99 inclusive,
+                The optional max number of users to allow in a voice channel. This must be between 0 and 99 inclusive,
                 where 0 implies no limit.
             permission_overwrites:
-                an optional list of permission overwrites that are category specific to replace the existing overwrites
+                An optional list of permission overwrites that are category specific to replace the existing overwrites
                 with.
             parent_id:
                 The optional parent category ID to set for the channel.
             reason:
-                an optional audit log reason explaining why the change was made.
+                An optional audit log reason explaining why the change was made.
+        
+         Returns:
+            The channel object that has been modified.
 
         Raises:
             hikari.errors.NotFound:
-                if the channel does not exist.
+                If the channel does not exist.
             hikari.errors.Forbidden:
-                if you lack the permission to make the change.
+                If you lack the permission to make the change.
             hikari.errors.BadRequest:
-                if you provide incorrect options for the corresponding channel type (e.g. a `bitrate` for a text
+                If you provide incorrect options for the corresponding channel type (e.g. a `bitrate` for a text
                 channel).
         """
         payload = {}
@@ -212,9 +214,9 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Raises:
             hikari.errors.NotFound:
-                if the channel does not exist
+                If the channel does not exist
             hikari.errors.Forbidden:
-                if you do not have permission to delete the channel.
+                If you do not have permission to delete the channel.
         """
         await self.request(self.DELETE, "/channels/{channel_id}", channel_id=channel_id)
 
@@ -266,12 +268,12 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If the given `channel_id` was not found, or the message ID provided for one of the filter arguments
                 is not found.
         """
-        payload = {}
-        transformations.put_if_specified(payload, "limit", limit)
-        transformations.put_if_specified(payload, "before", before)
-        transformations.put_if_specified(payload, "after", after)
-        transformations.put_if_specified(payload, "around", around)
-        return await self.request(self.GET, "/channels/{channel_id}/messages", channel_id=channel_id, json=payload)
+        query = {}
+        transformations.put_if_specified(query, "limit", limit)
+        transformations.put_if_specified(query, "before", before)
+        transformations.put_if_specified(query, "after", after)
+        transformations.put_if_specified(query, "around", around)
+        return await self.request(self.GET, "/channels/{channel_id}/messages", channel_id=channel_id, query=query)
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
     async def get_channel_message(self, channel_id: str, message_id: str) -> data_structures.DiscordObjectT:
@@ -320,12 +322,12 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             content:
                 The message content to send.
             nonce:
-                an optional ID to send for opportunistic message creation. This doesn't serve any real purpose for
+                An optional ID to send for opportunistic message creation. This doesn't serve any real purpose for
                 general use, and can usually be ignored.
             tts:
-                if specified and `True`, then the message will be sent.
+                If specified and `True`, then the message will be sent.
             files:
-                if specified, this should be a list of between 1 and 5 tuples. Each tuple should consist of the
+                If specified, this should be a list of between 1 and 5 tuples. Each tuple should consist of the
                 file name, and either raw :class:`bytes` or an :class:`io.IOBase` derived object with a seek that
                 points to a buffer containing said file.
             embed:
@@ -333,12 +335,12 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Raises:
             hikari.errors.NotFound:
-                if the channel ID is not found.
+                If the channel ID is not found.
             hikari.errors.BadRequest:
-                if the file is too large, the embed exceeds the defined limits, if the message content is specified and
+                If the file is too large, the embed exceeds the defined limits, if the message content is specified and
                 empty or greater than 2000 characters, or if neither of content, file or embed are specified.
             hikari.errors.Forbidden:
-                if you lack permissions to send to this channel.
+                If you lack permissions to send to this channel.
 
         Returns:
             The created message object.
@@ -383,12 +385,12 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Raises:
             hikari.errors.Forbidden:
-                if this is the first reaction using this specific emoji on this message and you lack the `ADD_REACTIONS`
+                If this is the first reaction using this specific emoji on this message and you lack the `ADD_REACTIONS`
                 permission. If you lack `READ_MESSAGE_HISTORY`, this may also raise this error.
             hikari.errors.NotFound:
-                if the channel or message is not found, or if the emoji is not found.
+                If the channel or message is not found, or if the emoji is not found.
             hikari.errors.BadRequest:
-                if the emoji is not valid, unknown, or formatted incorrectly
+                If the emoji is not valid, unknown, or formatted incorrectly
         """
         await self.request(
             self.PUT,
@@ -414,7 +416,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Raises:
             hikari.errors.NotFound:
-                if the channel or message or emoji is not found.
+                If the channel or message or emoji is not found.
         """
         await self.request(
             self.DELETE,
@@ -431,9 +433,9 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Args:
             channel_id:
-                the channel ID to remove from.
+                The channel ID to remove from.
             message_id:
-                the message ID to remove from.
+                The message ID to remove from.
             emoji:
                 The emoji to delete. This can either be a series of unicode characters making up a valid Discord
                 emoji, or it can be a snowflake ID for a custom emoji.
@@ -442,9 +444,9 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Raises:
             hikari.errors.NotFound:
-                if the channel or message or emoji or user is not found.
+                If the channel or message or emoji or user is not found.
             hikari.errors.Forbidden:
-                if you lack the `MANAGE_MESSAGES` permission, or are in DMs.
+                If you lack the `MANAGE_MESSAGES` permission, or are in DMs.
         """
         await self.request(
             self.DELETE,
@@ -471,9 +473,9 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Args:
             channel_id:
-                the channel to get the message from.
+                The channel to get the message from.
             message_id:
-                the ID of the message to retrieve.
+                The ID of the message to retrieve.
             emoji:
                 The emoji to get. This can either be a series of unicode characters making up a valid Discord
                 emoji, or it can be a snowflake ID for a custom emoji.
@@ -490,17 +492,17 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         Returns:
             A list of user objects.
         """
-        payload = {}
-        transformations.put_if_specified(payload, "before", before)
-        transformations.put_if_specified(payload, "after", after)
-        transformations.put_if_specified(payload, "limit", limit)
+        query = {}
+        transformations.put_if_specified(query, "before", before)
+        transformations.put_if_specified(query, "after", after)
+        transformations.put_if_specified(query, "limit", limit)
         return await self.request(
             self.GET,
             "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}",
             channel_id=channel_id,
             message_id=message_id,
             emoji=emoji,
-            json=payload,
+            query=query,
         )
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL, "/resources/channel#delete-all-reactions")
@@ -516,9 +518,9 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Raises:
             hikari.errors.NotFound:
-                if the channel_id or message_id was not found.
+                If the channel_id or message_id was not found.
             hikari.errors.Forbidden:
-                if you lack the `MANAGE_MESSAGES` permission.
+                If you lack the `MANAGE_MESSAGES` permission.
         """
         await self.request(
             self.DELETE,
@@ -557,12 +559,12 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Raises:
             hikari.errors.NotFound:
-                if the channel_id or message_id is not found.
+                If the channel_id or message_id is not found.
             hikari.errors.BadRequest:
-                if the embed exceeds any of the embed limits if specified, or the content is specified and consists
+                If the embed exceeds any of the embed limits if specified, or the content is specified and consists
                 only of whitespace, is empty, or is more than 2,000 characters in length.
             hikari.errors.Forbidden:
-                if you try to edit content or embed on a message you did not author or try to edit the flags
+                If you try to edit content or embed on a message you did not author or try to edit the flags
                 on a message you did not author without the `MANAGE_MESSAGES` permission.
         """
         payload = {}
@@ -584,16 +586,16 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Args:
             channel_id:
-                the channel ID or user ID that the message was sent to.
+                The channel ID or user ID that the message was sent to.
             message_id:
-                the message ID that was sent.
+                The message ID that was sent.
 
         Raises:
             hikari.errors.Forbidden:
-                if you did not author the message and are in a DM, or if you did not author the message and lack the
+                If you did not author the message and are in a DM, or if you did not author the message and lack the
                 `MANAGE_MESSAGES` permission in a guild channel.
             hikari.errors.NotFound:
-                if the channel or message was not found.
+                If the channel or message was not found.
         """
         await self.request(
             self.DELETE, "/channels/{channel_id}/messages/{message_id}", channel_id=channel_id, message_id=message_id
@@ -606,15 +608,15 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Args:
             channel_id:
-                the channel_id to delete from.
+                The channel_id to delete from.
             messages:
                 a list of 2-100 message IDs to remove in the channel.
 
         Raises:
             hikari.errors.NotFound:
-                if the channel_id is not found.
+                If the channel_id is not found.
             hikari.errors.Forbidden:
-                if you lack the `MANAGE_MESSAGES` permission in the channel.
+                If you lack the `MANAGE_MESSAGES` permission in the channel.
 
         Notes:
             This can only be used on guild text channels.
@@ -645,13 +647,13 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Args:
             channel_id:
-                the channel to edit permissions for.
+                The channel to edit permissions for.
             overwrite_id:
-                the overwrite ID to edit.
+                The overwrite ID to edit.
             allow:
-                the bitwise value of all permissions to set to be allowed.
+                The bitwise value of all permissions to set to be allowed.
             deny:
-                the bitwise value of all permissions to set to be denied.
+                The bitwise value of all permissions to set to be denied.
             type_:
                 "member" if it is for a member, or "role" if it is for a role.
             reason:
@@ -674,16 +676,16 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Args:
             channel_id:
-                the channel to get invites for.
+                The channel to get invites for.
 
         Returns:
             a list of invite objects.
 
         Raises:
             hikari.errors.Forbidden:
-                if you lack the `MANAGE_CHANNELS` permission.
+                If you lack the `MANAGE_CHANNELS` permission.
             hikari.errors.NotFound:
-                if the channel does not exist.
+                If the channel does not exist.
         """
         return await self.request(self.GET, "/channels/{channel_id}/invites", channel_id=channel_id)
 
@@ -703,16 +705,16 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Args:
             channel_id:
-                the channel ID to create the invite for.
+                The channel ID to create the invite for.
             max_age:
-                the max age of the invite in seconds, defaults to 86400 (24 hours). Set to 0 to never expire.
+                The max age of the invite in seconds, defaults to 86400 (24 hours). Set to 0 to never expire.
             max_uses:
-                the max number of uses this invite can have, or 0 for unlimited (as per the default).
+                The max number of uses this invite can have, or 0 for unlimited (as per the default).
             temporary:
-                if `True`, grant temporary membership, meaning the user is kicked when their session ends unless they
+                If `True`, grant temporary membership, meaning the user is kicked when their session ends unless they
                 are given a role. Defaults to `False`.
             unique:
-                if `True`, never reuse a similar invite. Defaults to `False`.
+                If `True`, never reuse a similar invite. Defaults to `False`.
             reason:
                 an optional audit log reason explaining why the change was made.
 
@@ -721,11 +723,11 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Raises:
             hikari.errors.Forbidden:
-                if you lack the `CREATE_INSTANT_MESSAGES` permission.
+                If you lack the `CREATE_INSTANT_MESSAGES` permission.
             hikari.errors.NotFound:
-                if the channel does not exist.
+                If the channel does not exist.
             hikari.errors.BadRequest:
-                if the arguments provided are not valid (e.g. negative age, etc).
+                If the arguments provided are not valid (e.g. negative age, etc).
         """
         payload = {}
         transformations.put_if_specified(payload, "max_age", max_age)
@@ -743,15 +745,15 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Args:
             channel_id:
-                the channel ID to delete from.
+                The channel ID to delete from.
             overwrite_id:
-                the override ID to remove.
+                The override ID to remove.
 
         Raises:
             hikari.errors.NotFound:
-                if the overwrite or channel ID does not exist.
+                If the overwrite or channel ID does not exist.
             hikari.errors.Forbidden:
-                if you lack the `MANAGE_ROLES` permission for that channel.
+                If you lack the `MANAGE_ROLES` permission for that channel.
         """
         await self.request(
             self.DELETE,
@@ -767,32 +769,32 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Args:
             channel_id:
-                the channel ID to appear to be typing in. This may be a user ID if you wish to appear to be typing
+                The channel ID to appear to be typing in. This may be a user ID if you wish to appear to be typing
                 in DMs.
 
         Raises:
             hikari.errors.NotFound:
-                if the channel is not found.
+                If the channel is not found.
             hikari.errors.Forbidden:
-                if you are not in the guild the channel is in
+                If you are not in the guild the channel is in
         """
         await self.request(self.POST, "/channels/{channel_id}/typing", channel_id=channel_id)
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    async def get_pinned_messages(self, channel_id: str) -> None:
+    async def get_pinned_messages(self, channel_id: str) -> typing.List[data_structures.DiscordObject]:
         """
         Get pinned messages for a given channel.
 
         Args:
             channel_id:
-                the channel ID to get messages for.
+                The channel ID to get messages for.
 
         Returns:
             A list of messages.
 
         Raises:
             hikari.errors.NotFound:
-                if no channel matching the ID exists.
+                If no channel matching the ID exists.
         """
         return await self.request(self.GET, "/channels/{channel_id}/pins", channel_id=channel_id)
 
@@ -803,15 +805,15 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Args:
             channel_id:
-                the channel ID to add a pin to.
+                The channel ID to add a pin to.
             message_id:
-                the message in the channel to pin.
+                The message in the channel to pin.
 
         Raises:
             hikari.errors.Forbidden:
-                if you lack the `MANAGE_MESSAGES` permission.
+                If you lack the `MANAGE_MESSAGES` permission.
             hikari.errors.NotFound:
-                if the message or channel does not exist.
+                If the message or channel does not exist.
         """
         await self.request(
             self.PUT, "/channels/{channel_id}/pins/{message_id}", channel_id=channel_id, message_id=message_id
@@ -824,15 +826,15 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         Args:
             channel_id:
-                the channel ID to remove a pin from.
+                The channel ID to remove a pin from.
             message_id:
-                the message in the channel to unpin.
+                The message in the channel to unpin.
 
         Raises:
             hikari.errors.Forbidden:
-                if you lack the `MANAGE_MESSAGES` permission.
+                If you lack the `MANAGE_MESSAGES` permission.
             hikari.errors.NotFound:
-                if the message or channel does not exist.
+                If the message or channel does not exist.
         """
         await self.request(
             self.DELETE, "/channels/{channel_id}/pins/{message_id}", channel_id=channel_id, message_id=message_id
@@ -972,7 +974,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.Forbidden:
                 If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
         """
-        return await self.request(
+        await self.request(
             self.DELETE, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id
         )
 
@@ -1140,7 +1142,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.Forbidden:
                 If you're not the guild owner.
         """
-        return await self.request(self.DELETE, "/guilds/{guild_id}", guild_id=guild_id)
+        await self.request(self.DELETE, "/guilds/{guild_id}", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def get_guild_channels(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
@@ -1249,7 +1251,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             guild_id:
                 The ID of the guild in which to edit the channels.
             channel:
-                the first channel to change the position of. This is a tuple of the channel ID and the integer position.
+                The first channel to change the position of. This is a tuple of the channel ID and the integer position.
             channels:
                 optional additional channels to change the position of. These must be tuples of the channel ID and the
                 integer positions to change to.
@@ -1261,12 +1263,12 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If either the guild or any of the channels aren't found.
             hikari.errors.Forbidden:
                 If you either lack the `MANAGE_CHANNELS` permission or are not a member of said guild or are not in
-                the guild.
+                The guild.
             hikari.errors.BadRequest:
                 If you provide anything other than the `id` and `position` fields for the channels.
         """
         payload = [{"id": ch[0], "position": ch[1]} for ch in (channel, *channels)]
-        return await self.request(
+        await self.request(
             self.PATCH, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload, reason=reason
         )
 
@@ -1332,10 +1334,10 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.BadRequest:
                 If you provide invalid values for the `limit` and `after` fields.
         """
-        payload = {}
-        transformations.put_if_specified(payload, "limit", limit)
-        transformations.put_if_specified(payload, "after", after)
-        return await self.request(self.GET, "/guilds/{guild_id}/members", guild_id=guild_id, json=payload)
+        query = {}
+        transformations.put_if_specified(query, "limit", limit)
+        transformations.put_if_specified(query, "after", after)
+        return await self.request(self.GET, "/guilds/{guild_id}/members", guild_id=guild_id, query=query)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def modify_guild_member(  # lgtm [py/similar-function]
@@ -1387,7 +1389,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         transformations.put_if_specified(payload, "mute", mute)
         transformations.put_if_specified(payload, "deaf", deaf)
         transformations.put_if_specified(payload, "channel_id", channel_id)
-        return await self.request(
+        await self.request(
             self.PATCH,
             "/guilds/{guild_id}/members/{user_id}",
             guild_id=guild_id,
@@ -1449,7 +1451,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
-        return await self.request(
+        await self.request(
             self.PUT,
             "/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
             guild_id=guild_id,
@@ -1481,7 +1483,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
-        return await self.request(
+        await self.request(
             self.DELETE,
             "/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
             guild_id=guild_id,
@@ -1509,7 +1511,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.Forbidden:
                 If you lack the `KICK_MEMBERS` permission or are not in the guild.
         """
-        return await self.request(
+        await self.request(
             self.DELETE, "/guilds/{guild_id}/members/{user_id}", guild_id=guild_id, user_id=user_id, reason=reason
         )
 
@@ -1586,7 +1588,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         query = {}
         transformations.put_if_specified(query, "delete-message-days", delete_message_days)
         transformations.put_if_specified(query, "reason", reason)
-        return await self.request(
+        await self.request(
             self.PUT, "/guilds/{guild_id}/bans/{user_id}", guild_id=guild_id, user_id=user_id, query=query
         )
 
@@ -1609,7 +1611,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.Forbidden:
                 If you lack the `BAN_MEMBERS` permission or are not a in the guild.
         """
-        return await self.request(
+        await self.request(
             self.DELETE, "/guilds/{guild_id}/bans/{user_id}", guild_id=guild_id, user_id=user_id, reason=reason
         )
 
@@ -1690,7 +1692,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         role: typing.Tuple[str, int],
         *roles: typing.Tuple[str, int],
         reason: str = unspecified.UNSPECIFIED,
-    ) -> None:
+    ) -> typing.List[data_structures.DiscordObjectT]:
         """
         Edits the position of two or more roles in a given guild.
 
@@ -1732,7 +1734,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         hoist: bool = unspecified.UNSPECIFIED,
         mentionable: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> None:
+    ) -> data_structures.DiscordObjectT:
         """
         Edits a role in a given guild.
 
@@ -1797,7 +1799,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
-        return await self.request(self.DELETE, "/guilds/{guild_id}/roles/{role_id}", guild_id=guild_id, role_id=role_id)
+        await self.request(self.DELETE, "/guilds/{guild_id}/roles/{role_id}", guild_id=guild_id, role_id=role_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def get_guild_prune_count(self, guild_id: str, days: int) -> int:
@@ -1917,7 +1919,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def create_guild_integration(
         self, guild_id: str, type_: str, integration_id: str, *, reason: str = unspecified.UNSPECIFIED
-    ) -> None:
+    ) -> data_structures.DiscordObjectT:
         """
         Creates an integrations for a given guild.
 
@@ -1984,7 +1986,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             "expire_grace_period": expire_grace_period,
             "enable_emoticons": enable_emoticons,
         }
-        return await self.request(
+        await self.request(
             self.PATCH,
             "/guilds/{guild_id}/integrations/{integration_id}",
             guild_id=guild_id,
@@ -2014,7 +2016,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
-        return await self.request(
+        await self.request(
             self.DELETE,
             "/guilds/{guild_id}/integrations/{integration_id}",
             guild_id=guild_id,
@@ -2039,7 +2041,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
-        return await self.request(
+        await self.request(
             self.POST,
             "/guilds/{guild_id}/integrations/{integration_id}/sync",
             guild_id=guild_id,
@@ -2297,11 +2299,11 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             guild_id:
                 The ID of the guild to leave.
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
                 If the guild is not found.
         """
-        return await self.request(self.DELETE, "/users/@me/guilds/{guild_id}", guild_id=guild_id)
+        await self.request(self.DELETE, "/users/@me/guilds/{guild_id}", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.USER)
     async def create_dm(self, recipient_id: str) -> data_structures.DiscordObjectT:
@@ -2484,7 +2486,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.Forbidden:
                 If you're not the webhook owner.
         """
-        return await self.request(self.DELETE, "/webhooks/{webhook_id}", webhook_id=webhook_id)
+        await self.request(self.DELETE, "/webhooks/{webhook_id}", webhook_id=webhook_id)
 
 
 __all__ = ["HTTPAPI"]

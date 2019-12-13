@@ -162,7 +162,7 @@ class TextChannel(Channel, abc.ABC):
 
     #: The optional ID of the last message to be sent.
     #:
-    #: :type: :class:`int` or `None`
+    #: :type: :class:`int` or :class:`None`
     last_message_id: typing.Optional[int]
 
 
@@ -188,7 +188,7 @@ class GuildChannel(Channel):
     #: :type: :class:`int`
     position: int
 
-    #: A sequence t of permission overwrites for this channel.
+    #: A sequence of permission overwrites for this channel.
     #:
     #: :type: :class:`typing.Sequence` of :attr:`hikari.orm.models.overwrites.Overwrite`
     permission_overwrites: typing.Sequence[overwrites.Overwrite]
@@ -234,7 +234,7 @@ class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT):
 
     #: The channel topic.
     #:
-    #: :type: :class:`str` or `None`
+    #: :type: :class:`str` or :class:`None`
     topic: typing.Optional[str]
 
     #: How many seconds a user has to wait before sending consecutive messages.
@@ -244,7 +244,7 @@ class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT):
 
     #: The optional ID of the last message to be sent.
     #:
-    #: :type: :class:`int` or `None`
+    #: :type: :class:`int` or :class:`None`
     last_message_id: typing.Optional[int]
 
     #: Whether the channel is NSFW or not
@@ -274,7 +274,7 @@ class DMChannel(TextChannel, type=ChannelType.DM):
 
     #: The optional ID of the last message to be sent.
     #:
-    #: :type: :class:`int` or `None`
+    #: :type: :class:`int` or :class:`None`
     last_message_id: typing.Optional[int]
 
     #: Sequence of recipients in the DM chat.
@@ -291,7 +291,9 @@ class DMChannel(TextChannel, type=ChannelType.DM):
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
-        self.recipients = [self._state.parse_user(u) for u in payload.get("recipients", data_structures.EMPTY_SEQUENCE)]
+        self.recipients = [
+            self._fabric.state_registry.parse_user(u) for u in payload.get("recipients", data_structures.EMPTY_SEQUENCE)
+        ]
 
 
 class GuildVoiceChannel(GuildChannel, type=ChannelType.GUILD_VOICE):
@@ -308,7 +310,7 @@ class GuildVoiceChannel(GuildChannel, type=ChannelType.GUILD_VOICE):
 
     #: The max number of users in the voice channel, or None if there is no limit.
     #:
-    #: :type: :class:`int` or `None`
+    #: :type: :class:`int` or :class:`None`
     user_limit: typing.Optional[int]
 
     __repr__ = auto_repr.repr_of("id", "name", "guild.name", "bitrate", "user_limit")
@@ -336,18 +338,18 @@ class GroupDMChannel(DMChannel, type=ChannelType.GROUP_DM):
 
     #: Hash of the icon for the chat, if there is one.
     #:
-    #: :type: :class:`str` or `None`
+    #: :type: :class:`str` or :class:`None`
     icon_hash: typing.Optional[str]
 
     #: Name for the chat, if there is one.
     #:
-    #: :type: :class:`str` or `None`
+    #: :type: :class:`str` or :class:`None`
     name: typing.Optional[str]
 
     #: If the chat was made by a bot, this will be the application ID of the bot that made it. For all other cases it
     #: will be `None`.
     #:
-    #: :type: :class:`int` or `None`
+    #: :type: :class:`int` or :class:`None`
     owner_application_id: typing.Optional[int]
 
     __repr__ = auto_repr.repr_of("id", "name")
@@ -391,12 +393,12 @@ class GuildAnnouncementChannel(GuildChannel, type=ChannelType.GUILD_ANNOUNCEMENT
 
     #: The channel topic.
     #:
-    #: :type: :class:`str` or `None`
+    #: :type: :class:`str` or :class:`None`
     topic: typing.Optional[str]
 
     #: The optional ID of the last message to be sent.
     #:
-    #: :type: :class:`int` or `None`
+    #: :type: :class:`int` or :class:`None`
     last_message_id: typing.Optional[int]
 
     #: Whether the channel is NSFW or not
