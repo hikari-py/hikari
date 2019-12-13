@@ -140,14 +140,14 @@ class OAuth2User(User):
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
-    #: :type: :class:`bool` or `None` if not available.
+    #: :type: :class:`bool` or :class:`None` if not available.
     is_mfa_enabled: typing.Optional[bool]
 
     #: The user's chosen language option.
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
-    #: :type: :class:`str` or `None` if not available.
+    #: :type: :class:`str` or :class:`None` if not available.
     #:
     #: Note:
     #:     If you wish to obtain further information about a locale, and what it provides, you
@@ -176,14 +176,14 @@ class OAuth2User(User):
     #:
     #: Requires the `email` OAuth2 scope.
     #:
-    #: :type: :class:`bool` or `None` if not available.
+    #: :type: :class:`bool` or :class:`None` if not available.
     is_verified: typing.Optional[bool]
 
     #: The user's email address.
     #:
     #: Requires the `email` OAuth2 scope.
     #:
-    #: :type: :class:`str` or `None` if not available`
+    #: :type: :class:`str` or :class:`None` if not available`
     email: typing.Optional[str]
 
     #: The flags on a user's account. Describes the type of badges the user will have on their
@@ -191,15 +191,15 @@ class OAuth2User(User):
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
-    #: :type: :class:`UserFlag` or `None` if not available.
+    #: :type: :class:`UserFlag` or :class:`None` if not available.
     flags: typing.Optional[UserFlag]
 
     #: The type of Nitro subscription that the user has.
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
-    #: :type: :class:`PremiumType` or `None` if not available.
-    premium_type: PremiumType
+    #: :type: :class:`PremiumType` or :class:`None` if not available.
+    premium_type: typing.Optional[PremiumType]
 
     __repr__ = auto_repr.repr_of("id", "username", "discriminator", "is_bot", "is_verified", "is_mfa_enabled")
 
@@ -217,7 +217,7 @@ class OAuth2User(User):
         self.premium_type = transformations.nullable_cast(payload.get("premium_type"), PremiumType)
 
 
-def parse_user(fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT):
+def parse_user(fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> IUser:
     return (
         OAuth2User(fabric_obj, payload)
         if any(field in OAuth2User.__slots__ for field in payload)
