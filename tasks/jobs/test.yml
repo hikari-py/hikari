@@ -26,9 +26,6 @@
   before_script:
     - apt-get install -qy git gcc g++ make
     - rm poetry.lock .cache/pip .venv/ .nox/ .pytest_cache/ -Rf || true
-    - bash tasks/retry-aborts.sh pip install virtualenv
-    - python -m venv .venv
-    - source .venv/bin/activate
     # Install html5lib explicitly from GitHub until https://github.com/python-poetry/poetry/issues/1733
     # and/or https://github.com/html5lib/html5lib-python/issues/419 is resolved
     - bash tasks/retry-aborts.sh pip install poetry https://github.com/html5lib/html5lib-python/zipball/af19281fa28788830684b4c8fc6d0c588b092616
