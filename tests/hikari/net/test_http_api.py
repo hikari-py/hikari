@@ -1220,13 +1220,13 @@ class TestGuild:
     async def test_list_guild_members_no_args(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.list_guild_members("424242")
-        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/members", guild_id="424242", json={})
+        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/members", guild_id="424242", query={})
 
     async def test_list_guild_members_with_args(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.list_guild_members("424242", limit=10, after="696969")
         http_client.request.assert_awaited_once_with(
-            "get", "/guilds/{guild_id}/members", guild_id="424242", json={"limit": 10, "after": "696969"}
+            "get", "/guilds/{guild_id}/members", guild_id="424242", query={"limit": 10, "after": "696969"}
         )
 
     async def test_modify_current_user_nick_to_string(self, http_client):

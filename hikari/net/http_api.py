@@ -1332,10 +1332,10 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.BadRequest:
                 If you provide invalid values for the `limit` and `after` fields.
         """
-        payload = {}
-        transformations.put_if_specified(payload, "limit", limit)
-        transformations.put_if_specified(payload, "after", after)
-        return await self.request(self.GET, "/guilds/{guild_id}/members", guild_id=guild_id, json=payload)
+        query = {}
+        transformations.put_if_specified(query, "limit", limit)
+        transformations.put_if_specified(query, "after", after)
+        return await self.request(self.GET, "/guilds/{guild_id}/members", guild_id=guild_id, query=query)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def modify_guild_member(  # lgtm [py/similar-function]
