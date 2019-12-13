@@ -81,13 +81,16 @@
   script:
     - nox --sessions pip
 
-"3.9 setup.py test":
-  image: python:3.9-rc
-  extends: .test
-  stage: test
-  script:
-    - nox --sessions pip
-  allow_failure: true
+###########################################################################################################
+# Uncomment once https://github.com/html5lib/html5lib-python/issues/419 is resolved and pip isn't broken. #
+###########################################################################################################
+# "3.9 setup.py test":
+#   image: python:3.9-rc
+#   extends: .test
+#   stage: test
+#   script:
+#     - nox --sessions pip
+#   allow_failure: true
 
 "3.7 verify PyPI release":
   image: python:3.7.5
@@ -107,15 +110,18 @@
   only:
     - master
 
-"3.9 verify PyPI release":
-  image: python:3.9-rc
-  extends: .test
-  stage: verify
-  script:
-    - nox --sessions pip -- --showtime
-  only:
-    - master
-  allow_failure: true
+###########################################################################################################
+# Uncomment once https://github.com/html5lib/html5lib-python/issues/419 is resolved and pip isn't broken. #
+###########################################################################################################
+# "3.9 verify PyPI release":
+#   image: python:3.9-rc
+#   extends: .test
+#   stage: verify
+#   script:
+#     - nox --sessions pip -- --showtime
+#   only:
+#     - master
+#   allow_failure: true
 
 "Black":
   extends: .tool-test
