@@ -33,7 +33,7 @@
     - source tasks/config.sh
     - mkdir public || true
   script:
-    - nox -stest
+    - poetry run nox -stest
   artifacts:
     paths:
       - public/coverage
@@ -133,4 +133,4 @@
 "Safety":
   extends: .test
   script:
-    - nox -ssafety
+    - poetry run nox -ssafety
