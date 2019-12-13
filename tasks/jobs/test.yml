@@ -131,6 +131,7 @@
     - nox -ssast
 
 "Safety":
+  image: python:3.8.0
   extends: .test
   script:
     - poetry run nox -ssafety
