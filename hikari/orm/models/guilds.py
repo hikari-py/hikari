@@ -74,7 +74,7 @@ class PartialGuild(interfaces.ISnowflake):
 
     #: Hash code for the guild banner, if it has one.
     #:
-    #: :type: :class:`str` or `None`
+    #: :type: :class:`str` or :class:`None`
     banner_hash: typing.Optional[str]
 
     #: Guild description, if the guild has one assigned. Currently this only applies to discoverable guilds.
@@ -99,7 +99,7 @@ class PartialGuild(interfaces.ISnowflake):
 
     #: Code for the vanity URL, if the guild has one.
     #:
-    #: :type: :class:`str` or `None`
+    #: :type: :class:`str` or :class:`None`
     vanity_url_code: typing.Optional[str]
 
     __repr__ = auto_repr.repr_of("id", "name")
@@ -171,7 +171,7 @@ class Guild(PartialGuild, interfaces.IStatefulModel):
     #:
     #: If the bot is not sharded, this will be `None`.
     #:
-    #: :type: :class:`int` or `None`
+    #: :type: :class:`int` or :class:`None`
     shard_id: typing.Optional[int]
 
     #: The AFK channel ID.
@@ -196,12 +196,12 @@ class Guild(PartialGuild, interfaces.IStatefulModel):
 
     #: The application ID of the creator of the guild. This is always `None` unless the guild was made by a bot.
     #:
-    #: :type: :class:`int` or `None`
+    #: :type: :class:`int` or :class:`None`
     creator_application_id: typing.Optional[int]
 
     #: Permissions for our user in the guild, minus channel overrides, if the user is in the guild.
     #:
-    #: :type: :class:`hikari.orm.models.permissions.Permission` or `None`
+    #: :type: :class:`hikari.orm.models.permissions.Permission` or :class:`None`
     my_permissions: typing.Optional[permissions.Permission]
 
     #: Timeout before a user is classed as being AFK in seconds.
@@ -212,7 +212,7 @@ class Guild(PartialGuild, interfaces.IStatefulModel):
     #: The preferred locale of the guild. This is only populated if the guild has the
     # :attr:`hikari.orm.models.guild.GuildFeature`
     #:
-    #: :type: :class:`str` or `None`
+    #: :type: :class:`str` or :class:`None`
     preferred_locale: typing.Optional[str]
 
     #: Default level for message notifications in this guild.
@@ -237,7 +237,7 @@ class Guild(PartialGuild, interfaces.IStatefulModel):
 
     #: Number of members. Only stored if the information is actively available.
     #:
-    #: :type: :class:`int` or `None`
+    #: :type: :class:`int` or :class:`None`
     member_count: typing.Optional[int]
 
     #: MFA level for this guild.
@@ -245,9 +245,9 @@ class Guild(PartialGuild, interfaces.IStatefulModel):
     #: :type: :class:`hikari.orm.models.guilds.MFALevel`
     mfa_level: MFALevel
 
-    #: The date/time the bot user joined this guild, or `None` if the bot is not in this guild.
+    #: The date/time the bot user joined this guild, or :class:`None` if the bot is not in this guild.
     #:
-    #: :type: :class:`datetime.datetime` or `None`
+    #: :type: :class:`datetime.datetime` or :class:`None`
     joined_at: typing.Optional[datetime.datetime]
 
     #: True if the guild is considered to be large, or False if it is not. This is defined by whatever the large
@@ -464,7 +464,7 @@ class Ban(interfaces.IModel):
 
     #: The reason for the ban, if there is one given.
     #:
-    #: :type: :class:`str` or `None`
+    #: :type: :class:`str` or :class:`None`
     reason: typing.Optional[str]
 
     #: The user who is banned.

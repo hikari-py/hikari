@@ -288,7 +288,9 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return new_emoji
 
-    def parse_guild(self, guild_payload: data_structures.DiscordObjectT, shard_id: typing.Optional[int]):
+    def parse_guild(
+        self, guild_payload: data_structures.DiscordObjectT, shard_id: typing.Optional[int]
+    ) -> guilds.Guild:
         guild_id = int(guild_payload["id"])
         is_unavailable = guild_payload.get("unavailable", False)
 
@@ -330,7 +332,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         partial_member_payload["user"] = user_payload
         return self.parse_member(partial_member_payload, guild_obj)
 
-    def parse_member(self, member_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild):
+    def parse_member(self, member_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> members.Member:
         member_id = int(member_payload["user"]["id"])
 
         if member_id in guild_obj.members:
@@ -344,7 +346,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         guild_obj.members[member_id] = member_obj
         return member_obj
 
-    def parse_message(self, message_payload: data_structures.DiscordObjectT):
+    def parse_message(self, message_payload: data_structures.DiscordObjectT) -> messages.Message:
         # Always update the cache with the new message.
         message_id = int(message_payload["id"])
 
@@ -360,12 +362,14 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return None
 
-    def parse_presence(self, member_obj: members.Member, presence_payload: data_structures.DiscordObjectT):
+    def parse_presence(
+        self, member_obj: members.Member, presence_payload: data_structures.DiscordObjectT
+    ) -> presences.Presence:
         presence_obj = presences.Presence(presence_payload)
         member_obj.presence = presence_obj
         return presence_obj
 
-    def parse_reaction(self, reaction_payload: data_structures.DiscordObjectT):
+    def parse_reaction(self, reaction_payload: data_structures.DiscordObjectT) -> typing.Optional[reactions.Reaction]:
         message_id = int(reaction_payload["message_id"])
         message_obj = self.get_message_by_id(message_id)
         count = int(reaction_payload["count"])
@@ -387,7 +391,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         else:
             return None
 
-    def parse_role(self, role_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild):
+    def parse_role(self, role_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> roles.Role:
         role_id = int(role_payload["id"])
         if role_id in guild_obj.roles:
             role = guild_obj.roles[role_id]
@@ -398,7 +402,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             guild_obj.roles[role_payload.id] = role_payload
             return role_payload
 
-    def parse_user(self, user_payload: data_structures.DiscordObjectT):
+    def parse_user(self, user_payload: data_structures.DiscordObjectT) -> users.IUser:
         # If the user already exists, then just return their existing object. We expect discord to tell us if they
         # get updated if they are a member, and for anything else the object will just be disposed of once we are
         # finished with it anyway.
@@ -419,7 +423,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return existing_user
 
-    def parse_webhook(self, webhook_payload: data_structures.DiscordObjectT):
+    def parse_webhook(self, webhook_payload: data_structures.DiscordObjectT) -> webhooks.Webhook:
         # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
         # so that it isn't coupling dependent classes of this one to the model implementation as much.
         return webhooks.Webhook(self.fabric, webhook_payload)

@@ -34,6 +34,7 @@ classifiers     = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Communications :: Chat",
@@ -45,7 +46,7 @@ packages        = [
 ]
 
 [tool.poetry.dependencies]
-python                   = ">=3.7,<3.9"
+python                   = ">=3.7,<=3.9"
 aiofiles                 = "~0.4"
 aiohttp                  = "~3.6"
 
