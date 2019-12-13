@@ -136,4 +136,4 @@
 "Safety":
   extends: .tool-test
   script:
-    - nox -ssast
+    - nox -ssafety
