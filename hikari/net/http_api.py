@@ -611,7 +611,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             channel_id:
                 The channel_id to delete from.
             messages:
-                a list of 2-100 message IDs to remove in the channel.
+                A list of 2-100 message IDs to remove in the channel.
 
         Raises:
             hikari.errors.NotFound:
@@ -658,7 +658,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             type_:
                 "member" if it is for a member, or "role" if it is for a role.
             reason:
-                an optional audit log reason explaining why the change was made.
+                An optional audit log reason explaining why the change was made.
         """
         payload = {}
         transformations.put_if_specified(payload, "allow", allow)
@@ -683,7 +683,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 The channel to get invites for.
 
         Returns:
-            a list of invite objects.
+            A list of invite objects.
 
         Raises:
             hikari.errors.Forbidden:
@@ -720,7 +720,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             unique:
                 If `True`, never reuse a similar invite. Defaults to `False`.
             reason:
-                an optional audit log reason explaining why the change was made.
+                An optional audit log reason explaining why the change was made.
 
         Returns:
             An invite object.
@@ -941,7 +941,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             roles:
                 A list of IDs for the new whitelisted roles.
             reason:
-                an optional audit log reason explaining why the change was made.
+                An optional audit log reason explaining why the change was made.
 
         Returns:
             The updated emoji object.
@@ -1241,11 +1241,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def modify_guild_channel_positions(
-        self,
-        guild_id: str,
-        channel: typing.Tuple[str, int],
-        *channels: typing.Tuple[str, int],
-        reason: str = unspecified.UNSPECIFIED,
+        self, guild_id: str, channel: typing.Tuple[str, int], *channels: typing.Tuple[str, int]
     ) -> None:
         """
         Edits the position of one or more given channels.
@@ -1256,10 +1252,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             channel:
                 The first channel to change the position of. This is a tuple of the channel ID and the integer position.
             channels:
-                optional additional channels to change the position of. These must be tuples of the channel ID and the
+                Optional additional channels to change the position of. These must be tuples of the channel ID and the
                 integer positions to change to.
-            reason:
-                optional reason to add to the audit log for making this change.
 
         Raises:
             hikari.errors.NotFound:
@@ -1271,7 +1265,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If you provide anything other than the `id` and `position` fields for the channels.
         """
         payload = [{"id": ch[0], "position": ch[1]} for ch in (channel, *channels)]
-        await self.request(self.PATCH, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload, reason=reason)
+        await self.request(self.PATCH, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def get_guild_member(self, guild_id: str, user_id: str) -> data_structures.DiscordObjectT:
@@ -1688,11 +1682,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def modify_guild_role_positions(
-        self,
-        guild_id: str,
-        role: typing.Tuple[str, int],
-        *roles: typing.Tuple[str, int],
-        reason: str = unspecified.UNSPECIFIED,
+        self, guild_id: str, role: typing.Tuple[str, int], *roles: typing.Tuple[str, int]
     ) -> typing.List[data_structures.DiscordObjectT]:
         """
         Edits the position of two or more roles in a given guild.
@@ -1704,8 +1694,6 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 The first role to move.
             roles:
                 Optional extra roles to move.
-            reason:
-                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Returns:
             A list of all the guild roles.
@@ -1719,9 +1707,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If you provide invalid values for the `position` fields.
         """
         payload = [{"id": r[0], "position": r[1]} for r in (role, *roles)]
-        return await self.request(
-            self.PATCH, "/guilds/{guild_id}/roles", guild_id=guild_id, json=payload, reason=reason
-        )
+        return await self.request(self.PATCH, "/guilds/{guild_id}/roles", guild_id=guild_id, json=payload)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def modify_guild_role(  # lgtm [py/similar-function]
@@ -2195,7 +2181,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         Get the current application information.
 
         Returns:
-             An application info object.
+            An application info object.
         """
         return await self.request(self.GET, "/oauth2/applications/@me")
 
@@ -2359,7 +2345,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             avatar:
                 The avatar image in bytes form.
             reason:
-                an optional audit log reason explaining why the change was made.
+                An optional audit log reason explaining why the change was made.
 
         Returns:
             The newly created webhook object.
@@ -2438,7 +2424,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)
     async def modify_webhook(
-        self, webhook_id: str, name: str, avatar: bytes, channel_id: str, *, reason: str = unspecified.UNSPECIFIED
+        self, webhook_id: str, *, name: str, avatar: bytes, channel_id: str, reason: str = unspecified.UNSPECIFIED
     ) -> data_structures.DiscordObjectT:
         """
         Edits a given webhook.
@@ -2453,7 +2439,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             channel_id:
                 The ID of the new channel the given webhook should be moved to.
             reason:
-                an optional audit log reason explaining why the change was made.
+                An optional audit log reason explaining why the change was made.
 
         Returns:
             The updated webhook object.

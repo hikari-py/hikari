@@ -37,7 +37,7 @@ def test_image_bytes_to_image_data_img_types(img_bytes, expect):
 
 
 def test_image_bytes_to_image_data_when_None_returns_None():
-    assert media_transformations.image_bytes_to_image_data(None) == None
+    assert media_transformations.image_bytes_to_image_data(None) is None
 
 
 def test_image_bytes_to_image_data_when_unsuported_image_type_raises_value_error():

@@ -1346,14 +1346,7 @@ class TestGuild:
             "/guilds/{guild_id}/channels",
             guild_id="424242",
             json=[{"id": "696969", "position": 1}, {"id": "404101", "position": 2}],
-            reason=unspecified.UNSPECIFIED,
         )
-
-    async def test_modify_guild_channel_positions_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.modify_guild_channel_positions("424242", ("696969", 1), ("404101", 2), reason="baz")
-        args, kwargs = http_client.request.call_args
-        assert kwargs["reason"] == "baz"
 
     async def test_modify_guild_integration(self, http_client):
         http_client.request = asynctest.CoroutineMock()
@@ -1449,14 +1442,7 @@ class TestGuild:
             "/guilds/{guild_id}/roles",
             guild_id="424242",
             json=[{"id": "696969", "position": 1}, {"id": "404101", "position": 2}],
-            reason=unspecified.UNSPECIFIED,
         )
-
-    async def test_modify_guild_role_positions_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.modify_guild_role_positions("424242", "696969", reason="baz")
-        args, kwargs = http_client.request.call_args
-        assert kwargs["reason"] == "baz"
 
     async def test_modify_guild_embed_empty_embed_provided(self, http_client):
         http_client.request = asynctest.CoroutineMock()
@@ -1775,7 +1761,7 @@ class TestWebhook:
 
     async def test_modify_webhook(self, http_client):
         http_client.request = asynctest.CoroutineMock()
-        await http_client.modify_webhook("424242", "asdf", b"\211PNG\r\n\032\n", "696969")
+        await http_client.modify_webhook("424242", name="asdf", avatar=b"\211PNG\r\n\032\n", channel_id="696969")
         http_client.request.assert_awaited_once_with(
             "patch",
             "/webhooks/{webhook_id}",
@@ -1786,6 +1772,8 @@ class TestWebhook:
 
     async def test_modify_webhook_with_optional_reason(self, http_client):
         http_client.request = asynctest.CoroutineMock()
-        await http_client.modify_webhook("696969", "123456", b"\211PNG\r\n\032\n", "1234", reason="because i can")
+        await http_client.modify_webhook(
+            "696969", name="123456", avatar=b"\211PNG\r\n\032\n", channel_id="1234", reason="because i can"
+        )
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "because i can"
