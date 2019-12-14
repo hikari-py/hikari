@@ -31,6 +31,7 @@ from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import io_helpers
 from hikari.internal_utilities import meta
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import media_transformations
 from hikari.internal_utilities import unspecified
 from hikari.net import http_api_base
 
@@ -917,7 +918,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.BadRequest:
                 If you attempt to upload an image larger than 256kb, an empty image or an invalid image format.
         """
-        payload = {"name": name, "image": image, "roles": roles}
+        payload = {"name": name, "roles": roles}
+        payload["image"] = media_transformations.image_bytes_to_image_data(image)
         return await self.request(
             self.POST, "/guilds/{guild_id}/emojis", guild_id=guild_id, json=payload, reason=reason
         )
@@ -977,9 +979,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.Forbidden:
                 If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
         """
-        await self.request(
-            self.DELETE, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id
-        )
+        await self.request(self.DELETE, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def create_guild(
@@ -1027,13 +1027,13 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         payload = {
             "name": name,
             "region": region,
-            "icon": icon,
             "verification_level": verification_level,
             "default_message_notifications": default_message_notifications,
             "explicit_content_filter": explicit_content_filter,
             "roles": roles,
             "channels": channels,
         }
+        payload["icon"] = media_transformations.image_bytes_to_image_data(icon)
         return await self.request(self.POST, "/guilds", json=payload)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
@@ -1122,9 +1122,9 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         transformations.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
         transformations.put_if_specified(payload, "afk_channel_id", afk_channel_id)
         transformations.put_if_specified(payload, "afk_timeout", afk_timeout)
-        transformations.put_if_specified(payload, "icon", icon)
+        transformations.put_if_specified(payload, "icon", icon, media_transformations.image_bytes_to_image_data)
         transformations.put_if_specified(payload, "owner_id", owner_id)
-        transformations.put_if_specified(payload, "splash", splash)
+        transformations.put_if_specified(payload, "splash", splash, media_transformations.image_bytes_to_image_data)
         transformations.put_if_specified(payload, "system_channel_id", system_channel_id)
         return await self.request(self.PATCH, "/guilds/{guild_id}", guild_id=guild_id, json=payload, reason=reason)
 
@@ -1271,9 +1271,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If you provide anything other than the `id` and `position` fields for the channels.
         """
         payload = [{"id": ch[0], "position": ch[1]} for ch in (channel, *channels)]
-        await self.request(
-            self.PATCH, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload, reason=reason
-        )
+        await self.request(self.PATCH, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload, reason=reason)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def get_guild_member(self, guild_id: str, user_id: str) -> data_structures.DiscordObjectT:
@@ -2141,7 +2139,6 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         query = "" if style is unspecified.UNSPECIFIED else f"?style={style}"
         return f"{self.base_uri}/guilds/{guild_id}/widget.png" + query
 
-
     @meta.link_developer_portal(meta.APIResource.INVITE)
     async def get_invite(
         self, invite_code: str, *, with_counts: bool = unspecified.UNSPECIFIED
@@ -2256,7 +2253,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         payload = {}
         transformations.put_if_specified(payload, "username", username)
-        transformations.put_if_specified(payload, "avatar", avatar)
+        transformations.put_if_specified(payload, "avatar", avatar, media_transformations.image_bytes_to_image_data)
         return await self.request(self.PATCH, "/users/@me", json=payload)
 
     @meta.link_developer_portal(meta.APIResource.USER)
@@ -2376,7 +2373,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If the avatar image is too big or the format is invalid.
         """
         payload = {"name": name}
-        transformations.put_if_specified(payload, "avatar", avatar)
+        transformations.put_if_specified(payload, "avatar", avatar, media_transformations.image_bytes_to_image_data)
         return await self.request(
             self.POST, "/channels/{channel_id}/webhooks", channel_id=channel_id, json=payload, reason=reason
         )
@@ -2470,8 +2467,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         payload = {}
         transformations.put_if_specified(payload, "name", name)
-        transformations.put_if_specified(payload, "avatar", avatar)
         transformations.put_if_specified(payload, "channel_id", channel_id)
+        transformations.put_if_specified(payload, "avatar", avatar, media_transformations.image_bytes_to_image_data)
         return await self.request(
             self.PATCH, "/webhooks/{webhook_id}", webhook_id=webhook_id, json=payload, reason=reason
         )
