@@ -31,7 +31,6 @@ CachedFunctionT = typing.Callable[..., ReturnT]
 CachedPropertyFunctionT = typing.Callable[[ClassT], ReturnT]
 
 
-
 class CachedFunction:
     """
     Wraps a call, some arguments, and some keyword arguments in a partial and stores the
@@ -61,11 +60,13 @@ class CachedFunction:
     def _awaitable_call_wrapper(self, call, args, kwargs):
         def call_wrapper():
             self._value = asyncio.create_task(call(*args, **kwargs))
+
         return call_wrapper
 
     def _standard_call_wrapper(self, call, args, kwargs):
         def call_wrapper():
             self._value = call(*args, **kwargs)
+
         return call_wrapper
 
 
@@ -78,6 +79,7 @@ class CachedProperty:
     non-instance functions. For general functions, you should consider :class:`CachedFunction`
     instead.
     """
+
     __slots__ = ("func", "_cache_attr", "__dict__", "__name__", "__qualname__")
 
     def __init__(self, func: CachedPropertyFunctionT, cache_attr: typing.Optional[str]) -> None:
@@ -105,6 +107,7 @@ class AsyncCachedProperty(CachedProperty):
     """
     Cached property implementation that supports awaitable coroutines.
     """
+
     __slots__ = ()
 
     def __get__(self, instance: typing.Optional[ClassT], owner: typing.Type[ClassT]) -> typing.Awaitable[ReturnT]:
@@ -133,19 +136,21 @@ def cached_function(*args, **kwargs) -> typing.Callable[[CachedFunctionT], typin
         **kwargs:
             Any kwargs to call the call with.
     """
+
     def decorator(func):
         return CachedFunction(func, args, kwargs)
+
     return decorator
 
 
 def cached_property(
-    *,
-    cache_name=None
+    *, cache_name=None
 ) -> typing.Callable[[CachedPropertyFunctionT], typing.Union[CachedProperty, AsyncCachedProperty]]:
     """
     Makes a slots-compatible cached property. If using slots, you should specify the `cache_name`
     directly.
     """
+
     def decorator(func: CachedPropertyFunctionT) -> typing.Union[CachedProperty, AsyncCachedProperty]:
         if asyncio.iscoroutinefunction(func):
             return AsyncCachedProperty(func, cache_name)
@@ -156,4 +161,3 @@ def cached_property(
 
 
 __all__ = ["cached_property", "cached_function"]
-

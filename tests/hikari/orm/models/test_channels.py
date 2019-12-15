@@ -24,6 +24,7 @@ from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
+from hikari.orm.models import permissions
 from tests.hikari import _helpers
 
 
@@ -67,33 +68,6 @@ def test_Channel_get_channel_class_from_type(expected_type):
     assert channels.Channel.get_channel_class_from_type(expected_type.type.value) is expected_type
 
 
-@pytest.mark.model()
-def test_GuildChannel_permission_overwrites_aggregation(mock_fabric, mock_guild):
-    mock_fabric.state_registry.get_guild_by_id.return_value = mock_guild
-    mock_guild.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
-
-    guild_text_channel_obj = channels.GuildTextChannel(
-        mock_fabric,
-        {
-            "type": 0,
-            "id": "1234567",
-            "guild_id": "696969",
-            "position": 100,
-            "permission_overwrites": [{"id": "123", "allow": 456, "deny": 789, "type": "member"}],
-            "nsfw": True,
-            "parent_id": "1234",
-            "rate_limit_per_user": 420,
-            "topic": "nsfw stuff",
-            "name": "shh!",
-        },
-    )
-
-    assert len(guild_text_channel_obj.permission_overwrites) == 1
-    assert guild_text_channel_obj.permission_overwrites[0].id == 123
-    guild_text_channel_obj.__repr__()
-    guild_text_channel_obj.permission_overwrites[0].__repr__()
-
-
 @pytest.mark.model
 def test_GuildChannel_parent_when_specified(mock_fabric, mock_guild):
     mock_fabric.state_registry.get_guild_by_id.return_value = mock_guild
@@ -106,7 +80,18 @@ def test_GuildChannel_parent_when_specified(mock_fabric, mock_guild):
             "id": "1234567",
             "guild_id": "696969",
             "position": 100,
-            "permission_overwrites": [],
+            "permission_overwrites": [
+                {
+                    "id": "1234567890",
+                    "type": "role",
+                    "allow": int(
+                        permissions.Permission.ADD_REACTIONS
+                        | permissions.Permission.BAN_MEMBERS
+                        | permissions.Permission.CREATE_INSTANT_INVITE
+                    ),
+                    "deny": int(permissions.Permission.MANAGE_MESSAGES | permissions.Permission.SEND_TTS_MESSAGES),
+                }
+            ],
             "nsfw": True,
             "parent_id": "1234",
             "rate_limit_per_user": 420,

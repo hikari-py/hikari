@@ -273,9 +273,19 @@ class IStateRegistry(abc.ABC):
             a :class:`hikari.orm.models.users.OAuth2User` object.
         """
 
-    @abc.abstractmethod
+    @typing.overload
+    def parse_channel(self, channel_payload: data_structures.DiscordObjectT, guild_obj: None) -> channels.Channel:
+        ...
+
+    @typing.overload
     def parse_channel(
         self, channel_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild
+    ) -> channels.GuildChannel:
+        ...
+
+    @abc.abstractmethod
+    def parse_channel(
+        self, channel_payload: data_structures.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild]
     ) -> channels.Channel:
         """
         Parses a channel payload into a workable object
@@ -289,6 +299,14 @@ class IStateRegistry(abc.ABC):
         Returns:
             a :class:`hikari.orm.models.channels.Channel` object.
         """
+
+    @typing.overload
+    def parse_emoji(self, emoji_payload: data_structures.DiscordObjectT, guild_obj: None) -> emojis.Emoji:
+        ...
+
+    @typing.overload
+    def parse_emoji(self, emoji_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
+        ...
 
     @abc.abstractmethod
     def parse_emoji(
@@ -326,7 +344,7 @@ class IStateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def parse_voice_state(
-        self, guild_obj: guilds.Guild, voice_state_payload: data_structures.DiscordObjectT
+        self, voice_state_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild
     ) -> voices.VoiceState:
         """
         Parse a voice state payload into a workable object.
@@ -448,7 +466,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_user(self, user_payload: data_structures.DiscordObjectT) -> users.IUser:
+    def parse_user(self, user_payload: data_structures.DiscordObjectT) -> typing.Union[users.User, users.OAuth2User]:
         """
         Parses a user payload into a workable object
 

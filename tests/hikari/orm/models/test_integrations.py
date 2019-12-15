@@ -76,7 +76,7 @@ class TestIntegration:
         assert integration_obj.type == "twitch"
         assert integration_obj.is_enabled is True
         assert integration_obj.is_syncing is False
-        assert integration_obj._role_id == 69696969
+        assert integration_obj.role_id == 69696969
         assert integration_obj.expire_grace_period == 420
         assert integration_obj.synced_at == datetime.datetime(
             2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc

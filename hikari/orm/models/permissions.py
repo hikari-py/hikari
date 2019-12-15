@@ -18,10 +18,21 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
 Guild permissions.
+
+Note:
+    All the permissions defined in the :class:`Permissions` class are also
+    exported into this module namespace. This means you can omit the `Permission`
+    part when referring to permissions:
+
+        >>> from hikari.orm.models import permissions
+        >>> MODERATOR = permissions.MANAGE_GUILD | permissions.MANAGE_CHANNELS
+
 """
 from __future__ import annotations
 
 import enum
+
+import typing
 
 
 class Permission(enum.IntFlag):
@@ -79,9 +90,7 @@ class Permission(enum.IntFlag):
             print("Please give me the MANAGE_CHANNELS permission!")
     
     Lastly, if you need all the permissions set except the permission you want,
-    you can use the inversion operator "`~`" to do that. Note that Discord does
-    not officially document their behaviour with specifying undocumented
-    permissions (which this will do), so your mileage may vary.
+    you can use the inversion operator "`~`" to do that.
     
     .. code-block:: python
         
@@ -154,19 +163,43 @@ class Permission(enum.IntFlag):
     #: Allows management and editing of emojis.
     MANAGE_EMOJIS = 0x40_00_00_00
 
-    @classmethod
-    def all(cls) -> Permission:
-        permission = cls.NONE
-        # noinspection PyTypeChecker
-        for member in cls.__members__.values():
-            permission |= member
-        return permission
+
+# Note, these are explicitly defined to aid type checkers that will not evaluate dynamically injected globals.
+NONE = Permission.NONE
+CREATE_INSTANT_INVITE = Permission.CREATE_INSTANT_INVITE
+KICK_MEMBERS = Permission.KICK_MEMBERS
+BAN_MEMBERS = Permission.BAN_MEMBERS
+ADMINISTRATOR = Permission.ADMINISTRATOR
+MANAGE_CHANNELS = Permission.MANAGE_CHANNELS
+MANAGE_GUILD = Permission.MANAGE_GUILD
+ADD_REACTIONS = Permission.ADD_REACTIONS
+VIEW_AUDIT_LOG = Permission.VIEW_AUDIT_LOG
+PRIORITY_SPEAKER = Permission.PRIORITY_SPEAKER
+STREAM = Permission.STREAM
+VIEW_CHANNEL = Permission.VIEW_CHANNEL
+SEND_MESSAGES = Permission.SEND_MESSAGES
+SEND_TTS_MESSAGES = Permission.SEND_TTS_MESSAGES
+MANAGE_MESSAGES = Permission.MANAGE_MESSAGES
+EMBED_LINKS = Permission.EMBED_LINKS
+ATTACH_FILES = Permission.ATTACH_FILES
+READ_MESSAGE_HISTORY = Permission.READ_MESSAGE_HISTORY
+MENTION_EVERYONE = Permission.MENTION_EVERYONE
+USE_EXTERNAL_EMOJIS = Permission.USE_EXTERNAL_EMOJIS
+CONNECT = Permission.CONNECT
+SPEAK = Permission.SPEAK
+MUTE_MEMBERS = Permission.MUTE_MEMBERS
+DEAFEN_MEMBERS = Permission.DEAFEN_MEMBERS
+MOVE_MEMBERS = Permission.MOVE_MEMBERS
+USE_VAD = Permission.USE_VAD
+CHANGE_NICKNAME = Permission.CHANGE_NICKNAME
+MANAGE_NICKNAMES = Permission.MANAGE_NICKNAMES
+MANAGE_ROLES = Permission.MANAGE_ROLES
+MANAGE_WEBHOOKS = Permission.MANAGE_WEBHOOKS
+MANAGE_EMOJIS = Permission.MANAGE_EMOJIS
+
+#: A valid permissions set. This might be an :class:`int`, a :class:`typing.Collection` of :class:`str` permission
+#: names, or a :class:`Permission` object.
+PermissionLikeT = typing.Union[int, typing.Collection[str], Permission]
 
 
-for name, value in Permission.__members__.items():
-    globals()[name] = value
-
-#: All valid permissions set.
-all_permissions = Permission.all()
-
-__all__ = ["Permission", *Permission.__members__.keys(), "all_permissions"]
+__all__ = ["Permission", "PermissionLikeT"]

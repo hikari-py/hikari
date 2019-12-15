@@ -145,6 +145,15 @@ class TestSnowflake:
 
         assert SnowflakeImpl1(1) != SnowflakeImpl2(2)
 
+    def test_cast_snowflake_to_int(self):
+        class SnowflakeImpl(interfaces.ISnowflake):
+            __slots__ = ("id",)
+
+            def __init__(self, id_):
+                self.id = id_
+
+        assert int(SnowflakeImpl(9182736)) == 9182736
+
 
 @pytest.mark.model
 class TestNamedEnumMixin:

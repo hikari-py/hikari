@@ -23,6 +23,8 @@ from __future__ import annotations
 
 import datetime
 
+import typing
+
 from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
@@ -100,14 +102,14 @@ class Integration(PartialIntegration, interfaces.IStatefulModel):
         "_fabric",
         "is_enabled",
         "is_syncing",
-        "_role_id",
+        "role_id",
         "expire_grace_period",
         "user",
         "account",
         "synced_at",
     )
 
-    _role_id: int
+    role_id: int
 
     #: Whether the integration is enabled or not.
     #:
@@ -139,10 +141,18 @@ class Integration(PartialIntegration, interfaces.IStatefulModel):
         self._fabric = fabric_obj
         self.is_enabled = payload["enabled"]
         self.is_syncing = payload["syncing"]
-        self._role_id = int(payload["role_id"])
+        self.role_id = int(payload["role_id"])
         self.expire_grace_period = int(payload["expire_grace_period"])
         self.user = self._fabric.state_registry.parse_user(payload["user"])
         self.synced_at = date_helpers.parse_iso_8601_ts(payload["synced_at"])
 
 
-__all__ = ["Integration", "IntegrationAccount", "PartialIntegration"]
+#: Any type of :class:`PartialIntegration` (including :class:`Integration`),
+#: or the :class:`int`/:class:`str` ID of one.
+PartialIntegrationLikeT = typing.Union[interfaces.RawSnowflakeT, PartialIntegration]
+
+
+#: An instance of :class:`Integration`, or the :class:`int`/:class:`str` ID of one.
+IntegrationLikeT = typing.Union[interfaces.RawSnowflakeT, Integration]
+
+__all__ = ["Integration", "IntegrationAccount", "PartialIntegration", "PartialIntegrationLikeT", "IntegrationLikeT"]

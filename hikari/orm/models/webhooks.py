@@ -100,4 +100,8 @@ class Webhook(interfaces.IStatefulModel, interfaces.ISnowflake):
         self.token = payload.get("token")
 
 
-__all__ = ["Webhook"]
+#: A :class:`Webhook` instance, or the :class:`int`/:class:`str` ID of one.
+WebhookLikeT = typing.Union[interfaces.RawSnowflakeT, Webhook]
+
+
+__all__ = ["Webhook", "WebhookLikeT"]

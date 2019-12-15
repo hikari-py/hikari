@@ -113,6 +113,9 @@ class MessageFlag(enum.IntFlag):
 # as there is no general use for it. Mentions can be found by scanning the message with a regular expression. Call
 # information is not documented. Timestamp is pointless as it is able to be found from the ID anyway.
 
+#: A valid message author.
+AuthorT = typing.Union[users.User, users.OAuth2User, members.Member, webhooks.Webhook]
+
 
 class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
     """
@@ -144,12 +147,13 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
 
     #: The channel ID of the channel the message was sent in.
     channel_id: int
+
     #: The optional guild ID of the guild the message was sent in, where applicable.
     guild_id: typing.Optional[int]
 
     #: Either a :type:`user.User`, a :type:`member.Member` or a :type:`webhook.Webhook` depending on what created the
     #: message and where.
-    author: typing.Union[users.User, members.Member, webhooks.Webhook]
+    author: AuthorT
 
     #: The ID of the message.
     #:
@@ -262,7 +266,7 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
         elif "webhook_id" in payload:
             self.author = self._fabric.state_registry.parse_webhook(payload["author"])
         elif "author" in payload:
-            self.author = self._fabric.state_registry.parse_user(payload["author"])
+            self.author = typing.cast(AuthorT, self._fabric.state_registry.parse_user(payload["author"]))
 
         if "edited_timestamp" in payload:
             self.edited_at = transformations.nullable_cast(
@@ -420,7 +424,12 @@ class MessageCrosspost:
         self.guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
 
 
+#: A :class:`Message`, or an :class:`int`/:class:`str` ID of one.
+MessageLikeT = typing.Union[interfaces.RawSnowflakeT, Message]
+
+
 __all__ = [
+    "AuthorT",
     "MessageType",
     "MessageActivityType",
     "Message",
@@ -428,4 +437,5 @@ __all__ = [
     "MessageApplication",
     "MessageCrosspost",
     "MessageFlag",
+    "MessageLikeT",
 ]
