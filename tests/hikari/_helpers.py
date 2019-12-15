@@ -92,14 +92,14 @@ def mock_methods_on(obj, except_=(), also_mock=()):
     return copy_
 
 
-def assert_raises(type_):
+def assert_raises(test = None, *, type_):
     def decorator(test):
         @pytest.mark.asyncio
         @functools.wraps(test)
         async def impl(*args, **kwargs):
             try:
                 result = test(*args, **kwargs)
-                if asyncio.iscoroutinefunction(test):
+                if asyncio.iscoroutine(result):
                     await result
                 assert False, f"{type_.__name__} was not raised."
             except type_:
@@ -109,7 +109,33 @@ def assert_raises(type_):
 
         return impl
 
-    return decorator
+    if test is not None:
+        return decorator(test)
+    else:
+        return decorator
+
+
+def assert_does_not_raise(test = None, *, type_=Exception, excludes=(AssertionError,)):
+    def decorator(test):
+        @pytest.mark.asyncio
+        @functools.wraps(test)
+        async def impl(*args, **kwargs):
+            try:
+                result = test(*args, **kwargs)
+                if asyncio.iscoroutine(result):
+                    await result
+            except type_ as ex:
+                if not any(isinstance(ex, exclude) for exclude in excludes):
+                    assert False, f"{type_.__qualname__} thrown unexpectedly"
+                else:
+                    raise ex
+
+        return impl
+
+    if test is not None:
+        return decorator(test)
+    else:
+        return decorator
 
 
 def fqn1(obj_):

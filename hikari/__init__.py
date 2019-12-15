@@ -19,10 +19,10 @@
 
 from hikari.orm import events
 from hikari.orm import state_registry
-from . import commands
-from . import errors
-from . import net
-from . import orm
+from hikari import commands
+from hikari import errors
+from hikari import net
+from hikari import orm
 
 
 __author__ = "Nekokatt"

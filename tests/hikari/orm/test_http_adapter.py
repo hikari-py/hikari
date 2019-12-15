@@ -43,20 +43,20 @@ class TestHTTPAdapter:
         http_adapter_impl = http_adapter.HTTPAdapter(fabric_impl)
 
         fabric_impl.state_registry = state_registry_impl
-        fabric_impl.http_client = http_client_impl
+        fabric_impl.http_api = http_client_impl
         fabric_impl.http_adapter = http_adapter_impl
 
         return fabric_impl
 
     @pytest.mark.asyncio
-    async def test_get_gateway(self, fabric_impl):
+    async def test_fetch_gateway(self, fabric_impl):
         # noinspection PyUnresolvedReferences
-        fabric_impl.http_client.get_gateway = asynctest.CoroutineMock(return_value="wss://some-site.com")
+        fabric_impl.http_api.get_gateway = asynctest.CoroutineMock(return_value="wss://some-site.com")
 
         for _ in range(15):
-            assert await fabric_impl.http_adapter.get_gateway() == "wss://some-site.com"
+            assert await fabric_impl.http_adapter.gateway_url == "wss://some-site.com"
 
-        fabric_impl.http_client.get_gateway.assert_awaited_once()
+        fabric_impl.http_api.get_gateway.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_get_gateway_bot(self, fabric_impl):
@@ -64,8 +64,8 @@ class TestHTTPAdapter:
         with _helpers.mock_patch(gateway_bot.GatewayBot, return_value=mock_gateway_bot):
             mock_payload = mock.MagicMock(spec_set=dict)
             # noinspection PyUnresolvedReferences
-            fabric_impl.http_client.get_gateway_bot = asynctest.CoroutineMock(return_value=mock_payload)
+            fabric_impl.http_api.get_gateway_bot = asynctest.CoroutineMock(return_value=mock_payload)
 
-            result = await fabric_impl.http_adapter.get_gateway_bot()
+            result = await fabric_impl.http_adapter.fetch_gateway_bot()
 
             assert result is mock_gateway_bot
