@@ -30,10 +30,15 @@ body {
 }
 
 /* whyyyyy */
-code, .literal, .literal > span.pre {
+code, .literal, .literal > span.pre, .highlight {
     color: #F92672 !important;
     background-color: #272822 !important;
     border-color: transparent !important;
+}
+
+.highlight {
+    /* bootstrap.css:5011 */
+    border-radius: 4px !important;
 }
 
 pre {

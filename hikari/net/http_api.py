@@ -27,6 +27,7 @@ import typing
 
 import aiohttp
 
+from hikari.internal_utilities import assertions
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import io_helpers
 from hikari.internal_utilities import meta
@@ -137,7 +138,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         rate_limit_per_user: int = unspecified.UNSPECIFIED,
         bitrate: int = unspecified.UNSPECIFIED,
         user_limit: int = unspecified.UNSPECIFIED,
-        permission_overwrites: typing.List[data_structures.DiscordObjectT] = unspecified.UNSPECIFIED,
+        permission_overwrites: typing.Sequence[data_structures.DiscordObjectT] = unspecified.UNSPECIFIED,
         parent_id: str = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> data_structures.DiscordObjectT:
@@ -172,7 +173,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             reason:
                 An optional audit log reason explaining why the change was made.
         
-         Returns:
+        Returns:
             The channel object that has been modified.
 
         Raises:
@@ -230,7 +231,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         after: str = unspecified.UNSPECIFIED,
         before: str = unspecified.UNSPECIFIED,
         around: str = unspecified.UNSPECIFIED,
-    ) -> typing.List[data_structures.DiscordObjectT]:
+    ) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Retrieve message history for a given channel. If a user is provided, retrieve the DM history.
 
@@ -311,7 +312,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         content: str = unspecified.UNSPECIFIED,
         nonce: str = unspecified.UNSPECIFIED,
         tts: bool = False,
-        files: typing.List[io_helpers.FileLikeT] = unspecified.UNSPECIFIED,
+        files: typing.Sequence[io_helpers.FileLikeT] = unspecified.UNSPECIFIED,
         embed: data_structures.DiscordObjectT = unspecified.UNSPECIFIED,
     ) -> data_structures.DiscordObjectT:
         """
@@ -468,7 +469,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         before: str = unspecified.UNSPECIFIED,
         after: str = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
-    ) -> typing.List[data_structures.DiscordObjectT]:
+    ) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Get a list of users who reacted with the given emoji on the given message in the given channel or user DM.
 
@@ -603,7 +604,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    async def bulk_delete_messages(self, channel_id: str, messages: typing.List[str]) -> None:
+    async def bulk_delete_messages(self, channel_id: str, messages: typing.Sequence[str]) -> None:
         """
         Delete multiple messages in one request.
 
@@ -674,7 +675,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    async def get_channel_invites(self, channel_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_channel_invites(self, channel_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Get invites for a given channel.
 
@@ -785,7 +786,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         await self.request(self.POST, "/channels/{channel_id}/typing", channel_id=channel_id)
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    async def get_pinned_messages(self, channel_id: str) -> typing.List[data_structures.DiscordObject]:
+    async def get_pinned_messages(self, channel_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Get pinned messages for a given channel.
 
@@ -845,7 +846,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.EMOJI)
-    async def list_guild_emojis(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets emojis for a given guild ID.
 
@@ -890,7 +891,13 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @meta.link_developer_portal(meta.APIResource.EMOJI)
     async def create_guild_emoji(
-        self, guild_id: str, name: str, image: bytes, roles: typing.List[str], *, reason: str = unspecified.UNSPECIFIED
+        self,
+        guild_id: str,
+        name: str,
+        image: bytes,
+        *,
+        roles: typing.Sequence[str] = data_structures.EMPTY_SEQUENCE,
+        reason: str = unspecified.UNSPECIFIED,
     ) -> data_structures.DiscordObjectT:
         """
         Creates a new emoji for a given guild.
@@ -903,7 +910,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             image:
                 The 128x128 image in bytes form.
             roles:
-                A list of roles for which the emoji will be whitelisted.
+                A list of roles for which the emoji will be whitelisted. If empty, all roles are whitelisted.
             reason:
                 An optional audit log reason explaining why the change was made.
 
@@ -918,15 +925,22 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.BadRequest:
                 If you attempt to upload an image larger than 256kb, an empty image or an invalid image format.
         """
-        payload = {"name": name, "roles": roles}
-        payload["image"] = media_transformations.image_bytes_to_image_data(image)
+        assertions.assert_not_none(image, "image must be a valid image")
+        payload = {"name": name, "roles": roles, "image": media_transformations.image_bytes_to_image_data(image)}
+
         return await self.request(
             self.POST, "/guilds/{guild_id}/emojis", guild_id=guild_id, json=payload, reason=reason
         )
 
     @meta.link_developer_portal(meta.APIResource.EMOJI)
     async def modify_guild_emoji(
-        self, guild_id: str, emoji_id: str, name: str, roles: typing.List[str], *, reason: str = unspecified.UNSPECIFIED
+        self,
+        guild_id: str,
+        emoji_id: str,
+        *,
+        name: str = unspecified.UNSPECIFIED,
+        roles: typing.Sequence[str] = unspecified.UNSPECIFIED,
+        reason: str = unspecified.UNSPECIFIED,
     ) -> data_structures.DiscordObjectT:
         """
         Edits an emoji of a given guild
@@ -937,9 +951,11 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             emoji_id:
                 The ID of the edited emoji.
             name:
-                The new emoji name string.
+                The new emoji name string. Keep unspecified to keep the name the same.
             roles:
                 A list of IDs for the new whitelisted roles.
+                Set to an empty list to whitelist all roles.
+                Keep unspecified to leave the same roles already set.
             reason:
                 An optional audit log reason explaining why the change was made.
 
@@ -973,7 +989,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             emoji_id:
                 The ID of the emoji to be deleted
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
                 If either the guild or the emoji aren't found.
             hikari.errors.Forbidden:
@@ -981,6 +997,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         await self.request(self.DELETE, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id)
 
+    # TODO: find out what is optional, as it is not documented but I know for a fact that guilds should not need an icon
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def create_guild(
         self,
@@ -990,8 +1007,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         verification_level: int,
         default_message_notifications: int,
         explicit_content_filter: int,
-        roles: typing.List[data_structures.DiscordObjectT],
-        channels: typing.List[data_structures.DiscordObjectT],
+        roles: typing.Sequence[data_structures.DiscordObjectT],
+        channels: typing.Sequence[data_structures.DiscordObjectT],
     ) -> data_structures.DiscordObjectT:
         """
         Creates a new guild. Can only be used by bots in less than 10 guilds.
@@ -1032,8 +1049,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             "explicit_content_filter": explicit_content_filter,
             "roles": roles,
             "channels": channels,
+            "icon": media_transformations.image_bytes_to_image_data(icon),
         }
-        payload["icon"] = media_transformations.image_bytes_to_image_data(icon)
         return await self.request(self.POST, "/guilds", json=payload)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
@@ -1148,7 +1165,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         await self.request(self.DELETE, "/guilds/{guild_id}", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_channels(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_guild_channels(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets all the channels for a given guild.
 
@@ -1179,7 +1196,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         user_limit: int = unspecified.UNSPECIFIED,
         rate_limit_per_user: int = unspecified.UNSPECIFIED,
         position: int = unspecified.UNSPECIFIED,
-        permission_overwrites: typing.List[data_structures.DiscordObjectT] = unspecified.UNSPECIFIED,
+        permission_overwrites: typing.Sequence[data_structures.DiscordObjectT] = unspecified.UNSPECIFIED,
         parent_id: str = unspecified.UNSPECIFIED,
         nsfw: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
@@ -1290,7 +1307,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def list_guild_members(
         self, guild_id: str, *, limit: int = unspecified.UNSPECIFIED, after: str = unspecified.UNSPECIFIED
-    ) -> typing.List[data_structures.DiscordObjectT]:
+    ) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Lists all members of a given guild.
 
@@ -1341,7 +1358,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         user_id: str,
         *,
         nick: typing.Optional[str] = unspecified.UNSPECIFIED,
-        roles: typing.List[str] = unspecified.UNSPECIFIED,
+        roles: typing.Sequence[str] = unspecified.UNSPECIFIED,
         mute: bool = unspecified.UNSPECIFIED,
         deaf: bool = unspecified.UNSPECIFIED,
         channel_id: typing.Optional[str] = unspecified.UNSPECIFIED,
@@ -1511,7 +1528,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_bans(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_guild_bans(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the bans for a given guild.
 
@@ -1611,7 +1628,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_roles(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_guild_roles(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the roles for a given guild.
 
@@ -1683,7 +1700,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def modify_guild_role_positions(
         self, guild_id: str, role: typing.Tuple[str, int], *roles: typing.Tuple[str, int]
-    ) -> typing.List[data_structures.DiscordObjectT]:
+    ) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Edits the position of two or more roles in a given guild.
 
@@ -1800,7 +1817,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 The number of days to count prune for (at least 1).
 
         Returns:
-            A dict containing a `pruned` key which holds the estimated prune count.
+            the number of members estimated to be pruned.
 
         Raises:
             hikari.errors.NotFound:
@@ -1810,11 +1827,12 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.BadRequest:
                 If you pass an invalid amount of days.
         """
-        return await self.request(self.GET, "/guilds/{guild_id}/prune", guild_id=guild_id, query={"days": days})
+        result = await self.request(self.GET, "/guilds/{guild_id}/prune", guild_id=guild_id, query={"days": days})
+        return int(result["pruned"])
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def begin_guild_prune(
-        self, guild_id: str, days: int, compute_prune_count: bool = False, *, reason: str = unspecified.UNSPECIFIED
+        self, guild_id: str, days: int, *, compute_prune_count: bool = False, reason: str = unspecified.UNSPECIFIED
     ) -> typing.Optional[int]:
         """
         Prunes members of a given guild based on the number of inactive days.
@@ -1830,7 +1848,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Returns:
-            Either None or an object containing a `pruned` key which holds the pruned member count.
+            :class:`None` if `compute_prune_count` is `False`, or an :class:`int` representing the number
+            of members who were kicked.
 
         Raises:
             hikari.errors.NotFound:
@@ -1841,10 +1860,17 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If you provide invalid values for the `days` and `compute_prune_count` fields.
         """
         query = {"days": days, "compute_prune_count": compute_prune_count}
-        return await self.request(self.POST, "/guilds/{guild_id}/prune", guild_id=guild_id, query=query, reason=reason)
+        result = await self.request(
+            self.POST, "/guilds/{guild_id}/prune", guild_id=guild_id, query=query, reason=reason
+        )
+
+        try:
+            return int(result["pruned"])
+        except (TypeError, KeyError):
+            return None
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_voice_regions(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_guild_voice_regions(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the voice regions for a given guild.
 
@@ -1864,7 +1890,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/regions", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_invites(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_guild_invites(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the invites for a given guild.
 
@@ -1884,7 +1910,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/invites", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_integrations(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the integrations for a given guild.
 
@@ -1914,7 +1940,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             guild_id:
                 The ID of the guild to create the integrations in.
             type_:
-                The integration type string (e.g. "twitch").
+                The integration type string (e.g. "twitch" or "youtube").
             integration_id:
                 The ID for the new integration.
             reason:
@@ -1942,7 +1968,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         *,
         expire_behaviour: int = unspecified.UNSPECIFIED,
         expire_grace_period: int = unspecified.UNSPECIFIED,
-        enable_emoticons: bool = unspecified.UNSPECIFIED,
+        enable_emojis: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
         """
@@ -1957,8 +1983,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 The behaviour for when an integration subscription lapses.
             expire_grace_period:
                 Time interval in seconds in which the integration will ignore lapsed subscriptions.
-            enable_emoticons:
-                Whether emoticons should be synced for this integration.
+            enable_emojis:
+                Whether emojis should be synced for this integration.
             reason:
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
@@ -1971,7 +1997,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         payload = {
             "expire_behaviour": expire_behaviour,
             "expire_grace_period": expire_grace_period,
-            "enable_emoticons": enable_emoticons,
+            # This is inconsistently named in their API.
+            "enable_emoticons": enable_emojis,
         }
         await self.request(
             self.PATCH,
@@ -2022,7 +2049,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             integration_id:
                 The ID of the integration to sync.
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
                 If either the guild or the integration aren't found.
             hikari.errors.Forbidden:
@@ -2243,7 +2270,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.PATCH, "/users/@me", json=payload)
 
     @meta.link_developer_portal(meta.APIResource.USER)
-    async def get_current_user_connections(self) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_current_user_connections(self) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the current user's connections. This endpoint can be used with both Bearer and Bot tokens
         but will usually return an empty list for bots (with there being some exceptions to this
@@ -2261,7 +2288,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         before: str = unspecified.UNSPECIFIED,
         after: str = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
-    ) -> typing.List[data_structures.DiscordObjectT]:
+    ) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the guilds the current user is in.
 
@@ -2312,7 +2339,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.POST, "/users/@me/channels", json={"recipient_id": recipient_id})
 
     @meta.link_developer_portal(meta.APIResource.VOICE)
-    async def list_voice_regions(self) -> typing.List[data_structures.DiscordObjectT]:
+    async def list_voice_regions(self) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Get the voice regions that are available.
 
@@ -2365,7 +2392,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)
-    async def get_channel_webhooks(self, channel_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets all webhooks from a given channel.
 
@@ -2385,7 +2412,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/channels/{channel_id}/webhooks", channel_id=channel_id)
 
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)
-    async def get_guild_webhooks(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets all webhooks for a given guild.
 
@@ -2424,7 +2451,13 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)
     async def modify_webhook(
-        self, webhook_id: str, *, name: str, avatar: bytes, channel_id: str, reason: str = unspecified.UNSPECIFIED
+        self,
+        webhook_id: str,
+        *,
+        name: str = unspecified.UNSPECIFIED,
+        avatar: bytes = unspecified.UNSPECIFIED,
+        channel_id: str = unspecified.UNSPECIFIED,
+        reason: str = unspecified.UNSPECIFIED,
     ) -> data_structures.DiscordObjectT:
         """
         Edits a given webhook.

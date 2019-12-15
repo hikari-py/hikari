@@ -37,7 +37,7 @@ def test_init_CachedFunction_sets_value_to_sentinel():
 def test_call_CachedFunction_first_time_sets_value():
     call = mock.MagicMock(return_value=27)
 
-    cached_call = cache.CachedFunction(call, [9], {"k":18})
+    cached_call = cache.CachedFunction(call, [9], {"k": 18})
 
     cached_call()
 
@@ -56,7 +56,7 @@ def test_call_CachedFunction_first_time_returns_value():
 
 def test_call_CachedFunction_second_time_does_not_reset_value():
     call = mock.MagicMock(return_value=27)
-    cached_call = cache.CachedFunction(call, [9], {"k":18})
+    cached_call = cache.CachedFunction(call, [9], {"k": 18})
 
     cached_call()
     sentinel = object()
@@ -67,7 +67,7 @@ def test_call_CachedFunction_second_time_does_not_reset_value():
 
 def test_call_CachedFunction_second_time_returns_value():
     call = mock.MagicMock(return_value=27)
-    cached_call = cache.CachedFunction(call, [9], {"k":18})
+    cached_call = cache.CachedFunction(call, [9], {"k": 18})
 
     cached_call()
     sentinel = object()
@@ -93,8 +93,7 @@ async def test_async_call_CachedFunction_first_time_sets_value():
         assert kwargs["k"] == 18
         return 27
 
-
-    cached_call = cache.CachedFunction(call, [9], {"k":18})
+    cached_call = cache.CachedFunction(call, [9], {"k": 18})
 
     await cached_call()
 
@@ -113,7 +112,7 @@ async def test_async_call_CachedFunction_first_time_returns_value():
 @pytest.mark.asyncio
 async def test_async_call_CachedFunction_second_time_does_not_reset_value():
     call = asynctest.CoroutineMock(return_value=27)
-    cached_call = cache.CachedFunction(call, [9], {"k":18})
+    cached_call = cache.CachedFunction(call, [9], {"k": 18})
 
     async def sentinel_test_value():
         return 22
@@ -127,7 +126,7 @@ async def test_async_call_CachedFunction_second_time_does_not_reset_value():
 @pytest.mark.asyncio
 async def test_async_call_CachedFunction_second_time_returns_value():
     call = asynctest.CoroutineMock(return_value=27)
-    cached_call = cache.CachedFunction(call, [9], {"k":18})
+    cached_call = cache.CachedFunction(call, [9], {"k": 18})
 
     await cached_call()
 
@@ -200,7 +199,6 @@ def async_cached_property_usage():
             return self.call_count
 
     return CachedPropertyUsage()
-
 
 
 def test_cached_property_makes_property_that_caches_result(cached_property_usage):
@@ -279,7 +277,7 @@ def test_cached_property_works_on_slots_for_call():
     value = 0
 
     class Slotted:
-        __slots__ = ("_cp_foo")
+        __slots__ = ("_cp_foo",)
 
         @cache.cached_property()
         def foo(self):
@@ -301,7 +299,7 @@ async def test_async_cached_property_works_on_slots_for_call():
     value = 0
 
     class Slotted:
-        __slots__ = ("_cp_foo")
+        __slots__ = ("_cp_foo",)
 
         @cache.cached_property()
         async def foo(self):
@@ -322,7 +320,7 @@ def test_cached_property_works_on_slots_for_del():
     value = 0
 
     class Slotted:
-        __slots__ = ("_cp_foo")
+        __slots__ = ("_cp_foo",)
 
         @cache.cached_property()
         def foo(self):
@@ -347,7 +345,7 @@ async def test_async_cached_property_works_on_slots_for_del():
     value = 0
 
     class Slotted:
-        __slots__ = ("_cp_foo")
+        __slots__ = ("_cp_foo",)
 
         @cache.cached_property()
         async def foo(self):

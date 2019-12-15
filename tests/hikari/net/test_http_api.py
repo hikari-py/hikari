@@ -863,7 +863,7 @@ AbstractEmoji Unit Tests
 class TestEmoji:
     async def test_create_guild_emoji(self, http_client):
         http_client.request = asynctest.CoroutineMock()
-        await http_client.create_guild_emoji("424242", "asdf", b"\211PNG\r\n\032\n", [])
+        await http_client.create_guild_emoji("424242", "asdf", b"\211PNG\r\n\032\n", roles=[])
         http_client.request.assert_awaited_once_with(
             "post",
             "/guilds/{guild_id}/emojis",
@@ -874,7 +874,7 @@ class TestEmoji:
 
     async def test_create_guild_emoji_with_optional_reason(self, http_client):
         http_client.request = asynctest.CoroutineMock()
-        await http_client.create_guild_emoji("696969", "123456", b"\211PNG\r\n\032\n", [], reason="because i can")
+        await http_client.create_guild_emoji("696969", "123456", b"\211PNG\r\n\032\n", roles=[], reason="because i can")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "because i can"
 
@@ -899,7 +899,7 @@ class TestEmoji:
 
     async def test_modify_guild_emoji(self, http_client):
         http_client.request = asynctest.CoroutineMock()
-        await http_client.modify_guild_emoji("424242", "696969", "asdf", [])
+        await http_client.modify_guild_emoji("424242", "696969", name="asdf", roles=[])
         http_client.request.assert_awaited_once_with(
             "patch",
             "/guilds/{guild_id}/emojis/{emoji_id}",
@@ -911,7 +911,7 @@ class TestEmoji:
 
     async def test_modify_guild_emoji_with_optional_reason(self, http_client):
         http_client.request = asynctest.CoroutineMock()
-        await http_client.modify_guild_emoji("696969", "123456", "asdf", [], reason="because i can")
+        await http_client.modify_guild_emoji("696969", "123456", name="asdf", roles=[], reason="because i can")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "because i can"
 
@@ -983,9 +983,9 @@ class TestGuild:
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
-    async def test_begin_guild_prune(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.begin_guild_prune("424242", 10, False)
+    async def test_begin_guild_prune_with_no_count(self, http_client):
+        http_client.request = asynctest.CoroutineMock(return_value=None)
+        count = await http_client.begin_guild_prune("424242", 10, compute_prune_count=False)
         http_client.request.assert_awaited_once_with(
             "post",
             "/guilds/{guild_id}/prune",
@@ -993,10 +993,23 @@ class TestGuild:
             query={"days": 10, "compute_prune_count": False},
             reason=unspecified.UNSPECIFIED,
         )
+        assert count is None
+
+    async def test_begin_guild_prune_with_count(self, http_client):
+        http_client.request = asynctest.CoroutineMock(return_value={"pruned": 180})
+        count = await http_client.begin_guild_prune("424242", 10, compute_prune_count=True)
+        http_client.request.assert_awaited_once_with(
+            "post",
+            "/guilds/{guild_id}/prune",
+            guild_id="424242",
+            query={"days": 10, "compute_prune_count": True},
+            reason=unspecified.UNSPECIFIED,
+        )
+        assert count == 180
 
     async def test_begin_guild_prune_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.begin_guild_prune("424242", 10, False, reason="baz")
+        http_client.request = asynctest.CoroutineMock(return_value=None)
+        await http_client.begin_guild_prune("424242", 10, compute_prune_count=False, reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
@@ -1218,11 +1231,12 @@ class TestGuild:
         )
 
     async def test_get_guild_prune_count(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.get_guild_prune_count("424242", days=10)
+        http_client.request = asynctest.CoroutineMock(return_value={"pruned": 69})
+        count = await http_client.get_guild_prune_count("424242", days=10)
         http_client.request.assert_awaited_once_with(
             "get", "/guilds/{guild_id}/prune", guild_id="424242", query={"days": 10}
         )
+        assert count == 69
 
     async def test_get_guild_roles(self, http_client):
         http_client.request = asynctest.CoroutineMock()
@@ -1351,7 +1365,7 @@ class TestGuild:
     async def test_modify_guild_integration(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.modify_guild_integration(
-            "424242", "696969", expire_behaviour=1, expire_grace_period=10, enable_emoticons=True
+            "424242", "696969", expire_behaviour=1, expire_grace_period=10, enable_emojis=True
         )
         http_client.request.assert_awaited_once_with(
             "patch",
@@ -1365,7 +1379,7 @@ class TestGuild:
     async def test_modify_guild_integration_with_optional_reason(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.modify_guild_integration(
-            "424242", "696969", expire_behaviour=1, expire_grace_period=10, enable_emoticons=True, reason="baz"
+            "424242", "696969", expire_behaviour=1, expire_grace_period=10, enable_emojis=True, reason="baz"
         )
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
