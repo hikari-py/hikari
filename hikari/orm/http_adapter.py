@@ -18,13 +18,11 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
-import asyncio
-
-from hikari.internal_utilities import meta
 from hikari.internal_utilities import unspecified
 from hikari.orm.models import audit_logs
 from hikari.orm.models import gateway_bot
-from . import fabric
+from hikari.orm import fabric
+from hikari.internal_utilities import cache
 
 
 class HTTPAdapter:
@@ -33,18 +31,14 @@ class HTTPAdapter:
     wraps it in a unit of processing that can handle parsing API objects into Hikari ORM objects,
     and can handle keeping the state up to date as required.
     """
+    __slots__ = ("fabric", "_cp_gateway_url")
 
     def __init__(self, fabric_obj: fabric.Fabric) -> None:
         #: The fabric of this application.
         self.fabric: fabric.Fabric = fabric_obj
 
-        # We are expected to cache this call. We use a future with an immediate callback
-        # so that we can await the result without a race condition due to the await context
-        # switch.
-        self._get_gateway_future = None
-
-    @meta.link_developer_portal(meta.APIResource.GATEWAY)
-    async def get_gateway(self) -> str:
+    @cache.cached_property()
+    async def gateway_url(self) -> str:
         """
         Returns:
             A static URL to use to connect to the gateway with.
@@ -53,13 +47,9 @@ class HTTPAdapter:
             This call is cached after the first invocation. This does not require authorization
             to work.
         """
-        if self._get_gateway_future is None:
-            self._get_gateway_future = asyncio.create_task(self.fabric.http_client.get_gateway())
+        return await self.fabric.http_api.get_gateway()
 
-        return await self._get_gateway_future
-
-    @meta.link_developer_portal(meta.APIResource.GATEWAY)
-    async def get_gateway_bot(self) -> gateway_bot.GatewayBot:
+    async def fetch_gateway_bot(self) -> gateway_bot.GatewayBot:
         """
         Returns:
             The gateway bot details to use as a recommendation for sharding and bot initialization.
@@ -67,10 +57,10 @@ class HTTPAdapter:
         Note:
             Unlike :meth:`get_gateway`, this requires valid Bot authorization to work.
         """
-        gateway_bot_payload = await self.fabric.http_client.get_gateway_bot()
+        gateway_bot_payload = await self.fabric.http_api.get_gateway_bot()
         return gateway_bot.GatewayBot(gateway_bot_payload)
 
-    async def get_guild_audit_log(
+    async def fetch_guild_audit_log(
         self,
         guild_id: int,
         *,
@@ -78,9 +68,9 @@ class HTTPAdapter:
         action_type: audit_logs.AuditLogEvent = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
     ):
-        audit_payload = await self.fabric.http_client.get_guild_audit_log(
+        audit_payload = await self.fabric.http_api.get_guild_audit_log(
             guild_id=str(guild_id),
-            user_id=str(user_id) if user_id is not unspecified.UNSPECIFIED else user_id,
+            user_id=str(user_id) if user_id is not unspecified.UNSPECIFIED else unspecified.UNSPECIFIED,
             action_type=int(action_type) if action_type is not unspecified.UNSPECIFIED else unspecified.UNSPECIFIED,
             limit=limit,
         )

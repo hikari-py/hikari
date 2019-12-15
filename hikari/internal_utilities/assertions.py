@@ -56,6 +56,14 @@ def assert_is_slotted(cls: typing.Type[ValueT], message: typing.Optional[str] = 
     return cls
 
 
+def assert_not_slotted(cls: typing.Type[ValueT], message: typing.Optional[str] = None) -> typing.Type[ValueT]:
+    """Raises a TypeError if the class is not slotted."""
+    message = message or f"Class {cls.__qualname__} is required to not be slotted."
+    if hasattr(cls, "__slots__"):
+        raise TypeError(message)
+    return cls
+
+
 def assert_subclasses(
     cls: typing.Type[ValueT], base: typing.Union[type, typing.Type[BaseTypeInstanceT]], message: str = None
 ) -> typing.Type[ValueT]:

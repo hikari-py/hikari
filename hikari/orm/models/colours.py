@@ -19,6 +19,6 @@
 """
 Alias for the :mod:`hikari.orm.models.colors` module.
 """
-from .colors import Color as Colour
+from hikari.orm.models.colors import Color as Colour
 
 __all__ = ["Colour"]
