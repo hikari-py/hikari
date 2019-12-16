@@ -38,9 +38,9 @@ from hikari.orm.models import embeds as _embeds
 from hikari.orm.models import emojis as _emojis
 from hikari.orm.models import gateway_bot as _gateway_bot
 from hikari.orm.models import guilds as _guilds
+from hikari.orm.models import integrations as _integrations
 from hikari.orm.models import interfaces
 from hikari.orm.models import invites as _invites
-from hikari.orm.models import integrations as _integrations
 from hikari.orm.models import media as _media
 from hikari.orm.models import members as _members
 from hikari.orm.models import messages as _messages

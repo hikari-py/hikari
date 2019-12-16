@@ -35,8 +35,8 @@ from hikari.orm.models import presences
 from hikari.orm.models import reactions
 from hikari.orm.models import roles
 from hikari.orm.models import users
-from hikari.orm.models import webhooks
 from hikari.orm.models import voices
+from hikari.orm.models import webhooks
 
 
 class IStateRegistry(abc.ABC):

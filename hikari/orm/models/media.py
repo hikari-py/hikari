@@ -23,13 +23,10 @@ from __future__ import annotations
 
 import abc
 import asyncio
-import base64
 import dataclasses
 import io
-import mimetypes
 import re
 import typing
-
 from concurrent import futures
 
 import aiofiles
@@ -38,7 +35,6 @@ import aiohttp
 from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import io_helpers
-from hikari.internal_utilities import media_transformations
 from hikari.internal_utilities import transformations
 from hikari.orm.models import interfaces
 

@@ -19,8 +19,8 @@
 """
 Media tranformation utilities.
 """
-import typing
 import base64
+import typing
 
 
 def image_bytes_to_image_data(img_bytes: bytes) -> typing.Optional[str]:

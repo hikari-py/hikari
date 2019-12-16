@@ -17,13 +17,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-from hikari.orm import events
-from hikari.orm import state_registry
 from hikari import commands
 from hikari import errors
 from hikari import net
 from hikari import orm
-
+from hikari.orm import events
+from hikari.orm import state_registry
 
 __author__ = "Nekokatt"
 __contributors__ = {"FasterSpeeding", "LunarCoffee", "raatty", "Tmpod", "Zach", "thomm.o", "rock500", "davfsa"}
