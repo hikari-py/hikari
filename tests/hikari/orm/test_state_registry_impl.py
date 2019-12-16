@@ -777,8 +777,8 @@ class TestStateRegistryImpl:
 
         with _helpers.mock_patch(voices.VoiceState, return_value=voice_obj):
             registry.parse_voice_state(
+                {"session_id": "nz2o312", "channel_id": "115590097143215541", "user_id": "432341", "guild_id": 69},
                 guild_obj,
-                {"session_id": "nz2o312", "channel_id": "115590097143215541", "user_id": "432341", "guild_id": 69,},
             )
             assert guild_obj.voice_states[432341] == voice_obj
 
@@ -795,7 +795,7 @@ class TestStateRegistryImpl:
         registry._guilds[777] = guild_obj = _helpers.mock_model(
             guilds.Guild, id=777, voice_states={4333: voice_state_obj}
         )
-        registry.parse_voice_state(guild_obj, payload)
+        registry.parse_voice_state(payload, guild_obj)
         voice_state_obj.update_state.assert_called_with(payload)
 
     def test_parse_partial_member_calls_parse_member_correctly_and_returns_result(

@@ -92,7 +92,7 @@ def mock_methods_on(obj, except_=(), also_mock=()):
     return copy_
 
 
-def assert_raises(test = None, *, type_):
+def assert_raises(test=None, *, type_):
     def decorator(test):
         @pytest.mark.asyncio
         @functools.wraps(test)
@@ -115,7 +115,7 @@ def assert_raises(test = None, *, type_):
         return decorator
 
 
-def assert_does_not_raise(test = None, *, type_=Exception, excludes=(AssertionError,)):
+def assert_does_not_raise(test=None, *, type_=Exception, excludes=(AssertionError,)):
     def decorator(test):
         @pytest.mark.asyncio
         @functools.wraps(test)

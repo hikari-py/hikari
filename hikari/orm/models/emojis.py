@@ -200,4 +200,14 @@ def parse_emoji(
         return UnicodeEmoji(payload)
 
 
-__all__ = ["Emoji", "UnicodeEmoji", "UnknownEmoji", "GuildEmoji"]
+#: The type of a known emoji.
+KnownEmojiT = typing.Union[UnicodeEmoji, GuildEmoji]
+
+#: A :class:`GuildEmoji`, or an :class:`int`/:class:`str` ID of one.
+GuildEmojiLikeT = typing.Union[interfaces.RawSnowflakeT, GuildEmoji]
+
+#: A :class:`GuildEmoji`, an :class:`int` ID of one, a :class:`UnicodeEmoji`, or a :class:`str` representation of one.
+KnownEmojiLikeT = typing.Union[int, str, KnownEmojiT]
+
+
+__all__ = ["Emoji", "UnicodeEmoji", "UnknownEmoji", "GuildEmoji", "KnownEmojiT", "GuildEmojiLikeT", "KnownEmojiLikeT"]

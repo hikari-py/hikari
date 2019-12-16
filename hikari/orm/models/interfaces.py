@@ -265,6 +265,9 @@ class ISnowflake(IModel):
     def __ne__(self, other) -> bool:
         return not self == other
 
+    def __int__(self) -> int:
+        return self.id
+
 
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
@@ -300,4 +303,19 @@ class IStatefulModel(IModel):
             )
 
 
-__all__ = ("ISnowflake", "BestEffortEnumMixin", "INamedEnum", "IStatefulModel", "IModel")
+#: The valid types of a raw unformatted snowflake.
+RawSnowflakeT = typing.Union[int, str]
+
+#: A raw snowflake type or an :class:`ISnowflake` instance.
+SnowflakeLikeT = typing.Union[RawSnowflakeT, ISnowflake]
+
+
+__all__ = [
+    "ISnowflake",
+    "BestEffortEnumMixin",
+    "INamedEnum",
+    "IStatefulModel",
+    "IModel",
+    "RawSnowflakeT",
+    "SnowflakeLikeT",
+]

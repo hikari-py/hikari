@@ -109,6 +109,9 @@ class Invite(interfaces.IModel):
         self.approximate_presence_count = payload.get("approximate_presence_count")
         self.approximate_member_count = payload.get("approximate_member_count")
 
+    def __str__(self):
+        return self.code
+
 
 class InviteMetadata(interfaces.IModel):
     """
@@ -166,4 +169,8 @@ class InviteMetadata(interfaces.IModel):
         self.is_revoked = payload.get("revoked", False)
 
 
-__all__ = ["Invite", "InviteMetadata", "InviteTargetUserType"]
+#: An :class:`Invite` or the :class:`str` code of an invite object.
+InviteLikeT = typing.Union[str, Invite]
+
+
+__all__ = ["Invite", "InviteMetadata", "InviteTargetUserType", "InviteLikeT"]
