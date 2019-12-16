@@ -218,6 +218,12 @@ class OAuth2User(User):
 
 
 def parse_user(fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> IUser:
+    """
+    Consume a fabric object and some type of user payload and try to parse the appropriate type of :class:`IUser`
+    for the given payload.
+
+    The result is then returned.
+    """
     return (
         OAuth2User(fabric_obj, payload)
         if any(field in OAuth2User.__slots__ for field in payload)
@@ -225,4 +231,8 @@ def parse_user(fabric_obj: fabric.Fabric, payload: data_structures.DiscordObject
     )
 
 
-__all__ = ["IUser", "User", "UserFlag", "PremiumType", "OAuth2User"]
+#: Any type of :class:`IUser`, or an :class:`int`/:class:`str` ID of one.
+IUserLikeT = typing.Union[interfaces.RawSnowflakeT, IUser]
+
+
+__all__ = ["IUser", "User", "UserFlag", "PremiumType", "OAuth2User", "IUserLikeT"]

@@ -272,7 +272,7 @@ class Color(int, typing.SupportsInt):
         return super().to_bytes(length, byteorder, signed=signed)
 
     @classmethod
-    def __class_getitem__(cls, color):
+    def __class_getitem__(cls, color: ColorCompatibleT):
         if isinstance(color, cls):
             return color
         elif isinstance(color, int):
@@ -309,4 +309,16 @@ def _all_same(first, *rest):
     return True
 
 
-__all__ = ["Color"]
+#: Any type that can be converted into a color object.
+ColorCompatibleT = typing.Union[
+    Color,
+    typing.SupportsInt,
+    typing.Tuple[typing.SupportsInt, typing.SupportsInt, typing.SupportsInt],
+    typing.Tuple[typing.SupportsFloat, typing.SupportsFloat, typing.SupportsFloat],
+    typing.Sequence[typing.SupportsInt],
+    typing.Sequence[typing.SupportsFloat],
+    str,
+]
+
+
+__all__ = ["Color", "ColorCompatibleT"]

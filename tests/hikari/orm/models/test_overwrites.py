@@ -49,7 +49,7 @@ class TestOverwrite:
         assert o.deny & permissions.Permission.MANAGE_MESSAGES
         assert o.deny & permissions.Permission.SEND_TTS_MESSAGES
 
-        expected_inverse = permissions.all_permissions
+        expected_inverse = ~permissions.Permission.NONE
         expected_inverse ^= permissions.Permission.MANAGE_MESSAGES
         expected_inverse ^= permissions.Permission.SEND_TTS_MESSAGES
         expected_inverse ^= permissions.Permission.CREATE_INSTANT_INVITE

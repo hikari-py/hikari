@@ -25,6 +25,7 @@ from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import channels
 from hikari.orm.models import invites
+from tests.hikari import _helpers
 
 
 @pytest.fixture()
@@ -75,6 +76,12 @@ class TestInvite:
         assert inv.guild.banner_hash is None
         inv.__repr__()
         fabric_obj.state_registry.parse_user.assert_called_with(user_dict)
+
+
+@pytest.mark.model
+def test_invite___str__():
+    invite = _helpers.mock_model(invites.Invite, code="CAFEDEAD")
+    assert invites.Invite.__str__(invite) == "CAFEDEAD"
 
 
 @pytest.mark.model

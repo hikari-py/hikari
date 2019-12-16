@@ -309,7 +309,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         return guild_obj
 
     def parse_voice_state(
-        self, guild_obj: guilds.Guild, voice_state_payload: data_structures.DiscordObjectT
+        self, voice_state_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild
     ) -> voices.VoiceState:
         user_id = int(voice_state_payload["user_id"])
 

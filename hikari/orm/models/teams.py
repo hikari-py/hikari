@@ -28,7 +28,6 @@ from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import delegate
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
-
 from hikari.orm.models import interfaces
 from hikari.orm.models import users
 

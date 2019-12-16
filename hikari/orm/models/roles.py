@@ -21,6 +21,8 @@ A role within a guild.
 """
 from __future__ import annotations
 
+import typing
+
 from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.orm import fabric
@@ -124,4 +126,12 @@ class Role(PartialRole, interfaces.IStatefulModel):
         self.is_mentionable = payload["mentionable"]
 
 
-__all__ = ["PartialRole", "Role"]
+#: Any type of :class:`PartialRole` (including :class:`Role`), or the :class:`int`/:class:`str` ID of one.
+PartialRoleLikeT = typing.Union[interfaces.RawSnowflakeT, PartialRole]
+
+
+#: An instance of :class:`Role`, or the :class:`int`/:class:`str` ID of one.
+RoleLikeT = typing.Union[interfaces.RawSnowflakeT, PartialRole]
+
+
+__all__ = ["PartialRole", "Role", "PartialRoleLikeT", "RoleLikeT"]

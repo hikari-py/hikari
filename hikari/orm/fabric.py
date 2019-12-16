@@ -24,11 +24,10 @@ and data components that are being managed by the application.
 from __future__ import annotations
 
 import dataclasses
-
 import typing
 
-from hikari.net import http_api as _http_client
 from hikari.net import gateway as _gateway
+from hikari.net import http_api as _http_client
 from hikari.orm import chunker as _chunker
 from hikari.orm import event_handler as _event_handler
 from hikari.orm import http_adapter as _http_adapter
@@ -56,7 +55,7 @@ class Fabric:
     gateways: typing.Dict[typing.Optional[int], _gateway.GatewayClient] = dataclasses.field(default_factory=dict)
 
     #: The base HTTP client for making HTTP requests.
-    http_client: _http_client.HTTPAPI = dataclasses.field(default=NotImplemented)
+    http_api: _http_client.HTTPAPI = dataclasses.field(default=NotImplemented)
 
     #: HTTP adapter bridge component to convert raw HTTP call responses to their ORM
     #: representation.

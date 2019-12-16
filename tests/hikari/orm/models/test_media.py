@@ -25,37 +25,20 @@ from tests.hikari import _helpers
 
 
 @pytest.fixture
-def test_avatar_data_uri():
+def test_image_data_uri():
     return (
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAE0lEQVR42mP8/5+hngENMNJAEAD4tAx3yVEBjwAA"
         "AABJRU5ErkJggg=="
     )
 
 
-@pytest.mark.model
-class TestAvatar:
-    def test_Avatar_compress_then_decompress_gives_same_data(self, test_avatar_data_uri):
-        avatar = media.Avatar.from_data_uri_scheme(test_avatar_data_uri)
-        new_uri = avatar.to_data_uri()
-        assert test_avatar_data_uri == new_uri
-
-    def test_Avatar_get_file_types(self, test_avatar_data_uri):
-        guesses = media.Avatar.from_data_uri_scheme(test_avatar_data_uri).get_file_types()
-        assert ".png" in guesses
-
-    def test_Avatar_to_file_objects(self, test_avatar_data_uri):
-        avatar = media.Avatar.from_data_uri_scheme(test_avatar_data_uri)
-        assert hasattr(avatar.to_file_object(), "read")
-
-    def test_Avatar_len(self, test_avatar_data_uri):
-        assert len(test_avatar_data_uri) > len(media.Avatar.from_data_uri_scheme(test_avatar_data_uri))
-
-    def test_invalid_Avatar_uri_scheme(self):
-        try:
-            media.Avatar.from_data_uri_scheme("potato")
-            assert False, "No TypeError raised"
-        except TypeError:
-            pass
+@pytest.fixture
+def test_image_data():
+    return (
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x05\x00\x00\x00\x05\x08\x06\x00\x00\x00\x8do&\xe5\x00\x00\x00"
+        b"\x13IDATx\xdac\xfc\xff\x9f\xa1\x9e\x01\r0\xd2@\x10\x00\xf8\xb4\x0cw\xc9Q\x01\x8f\x00\x00\x00\x00IEND\xaeB`"
+        b"\x82"
+    )
 
 
 @pytest.mark.model
@@ -233,6 +216,6 @@ async def test_File_open():
 
 
 @pytest.mark.model
-@pytest.mark.parametrize("file", [media.File("foo"), media.InMemoryFile("foo", "foo")])
+@pytest.mark.parametrize("file", [media.File("foo"), media.InMemoryFile("foo", "bar")])
 def test_hash_File(file):
     assert hash(file) == hash(file.name)

@@ -95,13 +95,18 @@ class Overwrite(interfaces.ISnowflake):
             The bitfield of all permissions that were not changed in this overwrite.
         """
         # noinspection PyTypeChecker
-        return permissions.Permission(permissions.Permission.all() ^ (self.allow | self.deny))
+        all_perms = ~permissions.NONE
+        return permissions.Permission(all_perms ^ (self.allow | self.deny))
 
     def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.type = OverwriteEntityType.from_discord_name(payload["type"])
         self.allow = transformations.try_cast(payload["allow"], permissions.Permission)
         self.deny = transformations.try_cast(payload["deny"], permissions.Permission)
+
+
+#: A :class:`Overwrite`, or an :class:`int`/:class:`str` ID of one.
+OverwriteLikeT = typing.Union[interfaces.RawSnowflakeT, Overwrite]
 
 
 __all__ = ["Overwrite", "OverwriteEntityType"]
