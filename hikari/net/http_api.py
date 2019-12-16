@@ -30,9 +30,9 @@ import aiohttp
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import io_helpers
+from hikari.internal_utilities import media_transformations
 from hikari.internal_utilities import meta
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import media_transformations
 from hikari.internal_utilities import unspecified
 from hikari.net import http_api_base
 
