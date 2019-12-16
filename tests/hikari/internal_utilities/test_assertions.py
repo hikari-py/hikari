@@ -37,7 +37,6 @@ def test_assert_not_none_when_none():
     assertions.assert_not_none(None)
 
 
-
 @pytest.mark.parametrize("arg", [9, "foo", False, 0, 0.0, "", [], {}, set(), ..., NotImplemented])
 @_helpers.assert_does_not_raise(type_=ValueError)
 def test_assert_not_none_when_not_none(arg):
@@ -129,6 +128,7 @@ def test_assert_is_instance_sad_path():
         pass
 
     assertions.assert_is_instance(B(), A)
+
 
 @_helpers.assert_does_not_raise(type_=ValueError)
 def test_assert_is_natural_happy_path():

@@ -31,6 +31,7 @@ from hikari.internal_utilities import delegate
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import guilds
+from hikari.orm.models import interfaces
 from hikari.orm.models import presences
 from hikari.orm.models import roles as _roles
 from hikari.orm.models import users
@@ -110,6 +111,10 @@ class Member(users.IUser, delegate_fabricated=True):
         self.nick = payload.get("nick")
         self.is_deaf = payload.get("deaf", False)
         self.is_mute = payload.get("mute", False)
+
+
+#: A :class:`Member`, or an :class:`int`/:class:`str` ID of one.
+MemberLikeT = typing.Union[interfaces.RawSnowflakeT, Member]
 
 
 __all__ = ["Member"]
