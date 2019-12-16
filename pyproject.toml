@@ -46,7 +46,7 @@ packages        = [
 ]
 
 [tool.poetry.dependencies]
-python                   = ">=3.7,<=3.9"
+python                   = ">=3.7.5,<=3.9"
 aiofiles                 = "~0.4"
 aiohttp                  = "~3.6"
 
@@ -77,5 +77,5 @@ nox                      = "*"
 
 [tool.black]
 line-length     = 120
-target-version  = ["py37", "py38"]
+target-version  = ["py37", "py38", "py39"]
 include         = ".*py$"
