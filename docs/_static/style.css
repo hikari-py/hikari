@@ -30,10 +30,15 @@ body {
 }
 
 /* whyyyyy */
-code, .literal, .literal > span.pre {
+code, .literal, .literal > span.pre, .highlight {
     color: #F92672 !important;
-    background-color: transparent !important;
+    background-color: #272822 !important;
     border-color: transparent !important;
+}
+
+.highlight {
+    /* bootstrap.css:5011 */
+    border-radius: 4px !important;
 }
 
 pre {
@@ -81,6 +86,20 @@ dt[id^='hikari'], div.section[id^='hikari'] {
 .vm { color: #D6D2BC !important; font-style: italic; font-weight: bold; }  /* magic attribute? */
 .fm { color: #D6D2BC !important; font-style: italic; font-weight: bold; }  /* magic attribute? */
 .s1, .s2 { color: #E6DB74 !important; }  /* string literal */
+
+.alert {
+    border-color: transparent !important;
+}
+
+.alert-info {
+    background-color: #31708f;
+    color: #d9edf7;
+}
+
+.alert-warning {
+    background-color: #8a6d3b;
+    color: #fcf8e3;
+}
 
 .viewcode-link, .headerlink {
     color: #66D9EF;

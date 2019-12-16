@@ -26,17 +26,14 @@
   before_script:
     - apt-get install -qy git gcc g++ make
     - rm poetry.lock .cache/pip .venv/ .nox/ .pytest_cache/ -Rf || true
-    - bash tasks/retry-aborts.sh pip install virtualenv
-    - python -m venv .venv
-    - source .venv/bin/activate
     # Install html5lib explicitly from GitHub until https://github.com/python-poetry/poetry/issues/1733
     # and/or https://github.com/html5lib/html5lib-python/issues/419 is resolved
-    - bash tasks/retry-aborts.sh pip install poetry https://github.com/html5lib/html5lib-python/zipball/af19281fa28788830684b4c8fc6d0c588b092616
+    - bash tasks/retry-aborts.sh python -m pip install poetry https://github.com/html5lib/html5lib-python/zipball/af19281fa28788830684b4c8fc6d0c588b092616
     - bash tasks/retry-aborts.sh poetry update
     - source tasks/config.sh
     - mkdir public || true
   script:
-    - nox -stest
+    - poetry run nox -stest
   artifacts:
     paths:
       - public/coverage
@@ -72,14 +69,14 @@
   extends: .test
   stage: test
   script:
-    - nox --sessions pip
+    - poetry run nox --sessions pip
 
 "3.8 setup.py test":
   image: python:3.8.0
   extends: .test
   stage: test
   script:
-    - nox --sessions pip
+    - poetry run nox --sessions pip
 
 ###########################################################################################################
 # Uncomment once https://github.com/html5lib/html5lib-python/issues/419 is resolved and pip isn't broken. #
@@ -97,7 +94,7 @@
   extends: .test
   stage: verify
   script:
-    - nox --sessions pip -- --showtime
+    - poetry run nox --sessions pip -- --showtime
   only:
     - master
 
@@ -106,7 +103,7 @@
   extends: .test
   stage: verify
   script:
-    - nox --sessions pip -- --showtime
+    - poetry run nox --sessions pip -- --showtime
   only:
     - master
 
@@ -134,6 +131,7 @@
     - nox -ssast
 
 "Safety":
-  extends: .tool-test
+  image: python:3.8.0
+  extends: .test
   script:
-    - nox -ssast
+    - poetry run nox -ssafety

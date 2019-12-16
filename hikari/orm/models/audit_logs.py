@@ -30,13 +30,13 @@ from hikari.orm import fabric
 from hikari.orm.models import channels
 from hikari.orm.models import colors
 from hikari.orm.models import guilds
+from hikari.orm.models import integrations
 from hikari.orm.models import interfaces
 from hikari.orm.models import overwrites
 from hikari.orm.models import permissions
 from hikari.orm.models import roles
 from hikari.orm.models import users
 from hikari.orm.models import webhooks
-from hikari.orm.models import integrations
 
 
 class AuditLog(interfaces.IModel):

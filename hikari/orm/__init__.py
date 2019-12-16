@@ -23,7 +23,14 @@ This provides an object-oriented interface to the Discord API, and provides feat
 such as the ability to cache certain objects and details that the API provides us, as
 well as providing an expandable and extendable interface to wrap them together in.
 """
-from . import dispatching_event_adapter_impl
-from . import models
-from . import state_registry
-from . import state_registry_impl
+from hikari.orm import chunker
+from hikari.orm import chunker_impl
+from hikari.orm import dispatching_event_adapter
+from hikari.orm import dispatching_event_adapter_impl
+from hikari.orm import event_handler
+from hikari.orm import events
+from hikari.orm import fabric
+from hikari.orm import http_adapter
+from hikari.orm import models
+from hikari.orm import state_registry
+from hikari.orm import state_registry_impl

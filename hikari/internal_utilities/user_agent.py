@@ -24,14 +24,14 @@ import platform
 from hikari.internal_utilities import cache
 
 
-@cache.cached_call()
+@cache.cached_function()
 def library_version() -> str:
     from hikari import __version__
 
     return f"hikari {__version__}"
 
 
-@cache.cached_call()
+@cache.cached_function()
 def python_version() -> str:
     attrs = [
         platform.python_implementation(),
@@ -42,13 +42,13 @@ def python_version() -> str:
     return " ".join(a for a in attrs if a.strip())
 
 
-@cache.cached_call()
+@cache.cached_function()
 def system_type() -> str:
     # Might change this eventually to be more detailed, who knows.
     return platform.system()
 
 
-@cache.cached_call()
+@cache.cached_function()
 def user_agent() -> str:
     from hikari import __version__, __url__
 

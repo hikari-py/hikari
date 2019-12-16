@@ -24,11 +24,11 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import data_structures
 from hikari.orm import fabric
-from hikari.orm.models import interfaces
 from hikari.orm.models import integrations
+from hikari.orm.models import interfaces
 
 
 class ConnectionVisibility(enum.IntEnum):

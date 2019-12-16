@@ -27,8 +27,10 @@ import typing
 
 import aiohttp
 
+from hikari.internal_utilities import assertions
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import io_helpers
+from hikari.internal_utilities import media_transformations
 from hikari.internal_utilities import meta
 from hikari.internal_utilities import transformations
 from hikari.internal_utilities import unspecified
@@ -136,7 +138,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         rate_limit_per_user: int = unspecified.UNSPECIFIED,
         bitrate: int = unspecified.UNSPECIFIED,
         user_limit: int = unspecified.UNSPECIFIED,
-        permission_overwrites: typing.List[data_structures.DiscordObjectT] = unspecified.UNSPECIFIED,
+        permission_overwrites: typing.Sequence[data_structures.DiscordObjectT] = unspecified.UNSPECIFIED,
         parent_id: str = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> data_structures.DiscordObjectT:
@@ -171,7 +173,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             reason:
                 An optional audit log reason explaining why the change was made.
         
-         Returns:
+        Returns:
             The channel object that has been modified.
 
         Raises:
@@ -229,7 +231,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         after: str = unspecified.UNSPECIFIED,
         before: str = unspecified.UNSPECIFIED,
         around: str = unspecified.UNSPECIFIED,
-    ) -> typing.List[data_structures.DiscordObjectT]:
+    ) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Retrieve message history for a given channel. If a user is provided, retrieve the DM history.
 
@@ -310,7 +312,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         content: str = unspecified.UNSPECIFIED,
         nonce: str = unspecified.UNSPECIFIED,
         tts: bool = False,
-        files: typing.List[io_helpers.FileLikeT] = unspecified.UNSPECIFIED,
+        files: typing.Sequence[io_helpers.FileLikeT] = unspecified.UNSPECIFIED,
         embed: data_structures.DiscordObjectT = unspecified.UNSPECIFIED,
     ) -> data_structures.DiscordObjectT:
         """
@@ -467,7 +469,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         before: str = unspecified.UNSPECIFIED,
         after: str = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
-    ) -> typing.List[data_structures.DiscordObjectT]:
+    ) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Get a list of users who reacted with the given emoji on the given message in the given channel or user DM.
 
@@ -602,7 +604,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    async def bulk_delete_messages(self, channel_id: str, messages: typing.List[str]) -> None:
+    async def bulk_delete_messages(self, channel_id: str, messages: typing.Sequence[str]) -> None:
         """
         Delete multiple messages in one request.
 
@@ -610,7 +612,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             channel_id:
                 The channel_id to delete from.
             messages:
-                a list of 2-100 message IDs to remove in the channel.
+                A list of 2-100 message IDs to remove in the channel.
 
         Raises:
             hikari.errors.NotFound:
@@ -636,10 +638,10 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         self,
         channel_id: str,
         overwrite_id: str,
-        allow: int,
-        deny: int,
-        type_: str,
         *,
+        allow: int = unspecified.UNSPECIFIED,
+        deny: int = unspecified.UNSPECIFIED,
+        type_: str = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
         """
@@ -657,9 +659,12 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             type_:
                 "member" if it is for a member, or "role" if it is for a role.
             reason:
-                an optional audit log reason explaining why the change was made.
+                An optional audit log reason explaining why the change was made.
         """
-        payload = {"allow": allow, "deny": deny, "type": type_}
+        payload = {}
+        transformations.put_if_specified(payload, "allow", allow)
+        transformations.put_if_specified(payload, "deny", deny)
+        transformations.put_if_specified(payload, "type", type_)
         await self.request(
             self.PUT,
             "/channels/{channel_id}/permissions/{overwrite_id}",
@@ -670,7 +675,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    async def get_channel_invites(self, channel_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_channel_invites(self, channel_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Get invites for a given channel.
 
@@ -679,7 +684,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 The channel to get invites for.
 
         Returns:
-            a list of invite objects.
+            A list of invite objects.
 
         Raises:
             hikari.errors.Forbidden:
@@ -716,7 +721,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             unique:
                 If `True`, never reuse a similar invite. Defaults to `False`.
             reason:
-                an optional audit log reason explaining why the change was made.
+                An optional audit log reason explaining why the change was made.
 
         Returns:
             An invite object.
@@ -781,7 +786,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         await self.request(self.POST, "/channels/{channel_id}/typing", channel_id=channel_id)
 
     @meta.link_developer_portal(meta.APIResource.CHANNEL)
-    async def get_pinned_messages(self, channel_id: str) -> typing.List[data_structures.DiscordObject]:
+    async def get_pinned_messages(self, channel_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Get pinned messages for a given channel.
 
@@ -841,7 +846,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.EMOJI)
-    async def list_guild_emojis(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets emojis for a given guild ID.
 
@@ -886,7 +891,13 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @meta.link_developer_portal(meta.APIResource.EMOJI)
     async def create_guild_emoji(
-        self, guild_id: str, name: str, image: bytes, roles: typing.List[str], *, reason: str = unspecified.UNSPECIFIED
+        self,
+        guild_id: str,
+        name: str,
+        image: bytes,
+        *,
+        roles: typing.Sequence[str] = data_structures.EMPTY_SEQUENCE,
+        reason: str = unspecified.UNSPECIFIED,
     ) -> data_structures.DiscordObjectT:
         """
         Creates a new emoji for a given guild.
@@ -899,7 +910,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             image:
                 The 128x128 image in bytes form.
             roles:
-                A list of roles for which the emoji will be whitelisted.
+                A list of roles for which the emoji will be whitelisted. If empty, all roles are whitelisted.
             reason:
                 An optional audit log reason explaining why the change was made.
 
@@ -914,14 +925,22 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.BadRequest:
                 If you attempt to upload an image larger than 256kb, an empty image or an invalid image format.
         """
-        payload = {"name": name, "image": image, "roles": roles}
+        assertions.assert_not_none(image, "image must be a valid image")
+        payload = {"name": name, "roles": roles, "image": media_transformations.image_bytes_to_image_data(image)}
+
         return await self.request(
             self.POST, "/guilds/{guild_id}/emojis", guild_id=guild_id, json=payload, reason=reason
         )
 
     @meta.link_developer_portal(meta.APIResource.EMOJI)
     async def modify_guild_emoji(
-        self, guild_id: str, emoji_id: str, name: str, roles: typing.List[str], *, reason: str = unspecified.UNSPECIFIED
+        self,
+        guild_id: str,
+        emoji_id: str,
+        *,
+        name: str = unspecified.UNSPECIFIED,
+        roles: typing.Sequence[str] = unspecified.UNSPECIFIED,
+        reason: str = unspecified.UNSPECIFIED,
     ) -> data_structures.DiscordObjectT:
         """
         Edits an emoji of a given guild
@@ -932,11 +951,13 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             emoji_id:
                 The ID of the edited emoji.
             name:
-                The new emoji name string.
+                The new emoji name string. Keep unspecified to keep the name the same.
             roles:
                 A list of IDs for the new whitelisted roles.
+                Set to an empty list to whitelist all roles.
+                Keep unspecified to leave the same roles already set.
             reason:
-                an optional audit log reason explaining why the change was made.
+                An optional audit log reason explaining why the change was made.
 
         Returns:
             The updated emoji object.
@@ -968,16 +989,15 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             emoji_id:
                 The ID of the emoji to be deleted
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
                 If either the guild or the emoji aren't found.
             hikari.errors.Forbidden:
                 If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
         """
-        await self.request(
-            self.DELETE, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id
-        )
+        await self.request(self.DELETE, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id)
 
+    # TODO: find out what is optional, as it is not documented but I know for a fact that guilds should not need an icon
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def create_guild(
         self,
@@ -987,8 +1007,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         verification_level: int,
         default_message_notifications: int,
         explicit_content_filter: int,
-        roles: typing.List[data_structures.DiscordObjectT],
-        channels: typing.List[data_structures.DiscordObjectT],
+        roles: typing.Sequence[data_structures.DiscordObjectT],
+        channels: typing.Sequence[data_structures.DiscordObjectT],
     ) -> data_structures.DiscordObjectT:
         """
         Creates a new guild. Can only be used by bots in less than 10 guilds.
@@ -1024,12 +1044,12 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         payload = {
             "name": name,
             "region": region,
-            "icon": icon,
             "verification_level": verification_level,
             "default_message_notifications": default_message_notifications,
             "explicit_content_filter": explicit_content_filter,
             "roles": roles,
             "channels": channels,
+            "icon": media_transformations.image_bytes_to_image_data(icon),
         }
         return await self.request(self.POST, "/guilds", json=payload)
 
@@ -1119,9 +1139,9 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         transformations.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
         transformations.put_if_specified(payload, "afk_channel_id", afk_channel_id)
         transformations.put_if_specified(payload, "afk_timeout", afk_timeout)
-        transformations.put_if_specified(payload, "icon", icon)
+        transformations.put_if_specified(payload, "icon", icon, media_transformations.image_bytes_to_image_data)
         transformations.put_if_specified(payload, "owner_id", owner_id)
-        transformations.put_if_specified(payload, "splash", splash)
+        transformations.put_if_specified(payload, "splash", splash, media_transformations.image_bytes_to_image_data)
         transformations.put_if_specified(payload, "system_channel_id", system_channel_id)
         return await self.request(self.PATCH, "/guilds/{guild_id}", guild_id=guild_id, json=payload, reason=reason)
 
@@ -1145,7 +1165,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         await self.request(self.DELETE, "/guilds/{guild_id}", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_channels(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_guild_channels(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets all the channels for a given guild.
 
@@ -1176,7 +1196,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         user_limit: int = unspecified.UNSPECIFIED,
         rate_limit_per_user: int = unspecified.UNSPECIFIED,
         position: int = unspecified.UNSPECIFIED,
-        permission_overwrites: typing.List[data_structures.DiscordObjectT] = unspecified.UNSPECIFIED,
+        permission_overwrites: typing.Sequence[data_structures.DiscordObjectT] = unspecified.UNSPECIFIED,
         parent_id: str = unspecified.UNSPECIFIED,
         nsfw: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
@@ -1238,11 +1258,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def modify_guild_channel_positions(
-        self,
-        guild_id: str,
-        channel: typing.Tuple[str, int],
-        *channels: typing.Tuple[str, int],
-        reason: str = unspecified.UNSPECIFIED,
+        self, guild_id: str, channel: typing.Tuple[str, int], *channels: typing.Tuple[str, int]
     ) -> None:
         """
         Edits the position of one or more given channels.
@@ -1253,10 +1269,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             channel:
                 The first channel to change the position of. This is a tuple of the channel ID and the integer position.
             channels:
-                optional additional channels to change the position of. These must be tuples of the channel ID and the
+                Optional additional channels to change the position of. These must be tuples of the channel ID and the
                 integer positions to change to.
-            reason:
-                optional reason to add to the audit log for making this change.
 
         Raises:
             hikari.errors.NotFound:
@@ -1268,9 +1282,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If you provide anything other than the `id` and `position` fields for the channels.
         """
         payload = [{"id": ch[0], "position": ch[1]} for ch in (channel, *channels)]
-        await self.request(
-            self.PATCH, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload, reason=reason
-        )
+        await self.request(self.PATCH, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def get_guild_member(self, guild_id: str, user_id: str) -> data_structures.DiscordObjectT:
@@ -1295,7 +1307,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def list_guild_members(
         self, guild_id: str, *, limit: int = unspecified.UNSPECIFIED, after: str = unspecified.UNSPECIFIED
-    ) -> typing.List[data_structures.DiscordObjectT]:
+    ) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Lists all members of a given guild.
 
@@ -1346,7 +1358,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         user_id: str,
         *,
         nick: typing.Optional[str] = unspecified.UNSPECIFIED,
-        roles: typing.List[str] = unspecified.UNSPECIFIED,
+        roles: typing.Sequence[str] = unspecified.UNSPECIFIED,
         mute: bool = unspecified.UNSPECIFIED,
         deaf: bool = unspecified.UNSPECIFIED,
         channel_id: typing.Optional[str] = unspecified.UNSPECIFIED,
@@ -1516,7 +1528,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_bans(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_guild_bans(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the bans for a given guild.
 
@@ -1616,7 +1628,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_roles(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_guild_roles(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the roles for a given guild.
 
@@ -1687,12 +1699,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def modify_guild_role_positions(
-        self,
-        guild_id: str,
-        role: typing.Tuple[str, int],
-        *roles: typing.Tuple[str, int],
-        reason: str = unspecified.UNSPECIFIED,
-    ) -> typing.List[data_structures.DiscordObjectT]:
+        self, guild_id: str, role: typing.Tuple[str, int], *roles: typing.Tuple[str, int]
+    ) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Edits the position of two or more roles in a given guild.
 
@@ -1703,8 +1711,6 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 The first role to move.
             roles:
                 Optional extra roles to move.
-            reason:
-                Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Returns:
             A list of all the guild roles.
@@ -1718,9 +1724,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If you provide invalid values for the `position` fields.
         """
         payload = [{"id": r[0], "position": r[1]} for r in (role, *roles)]
-        return await self.request(
-            self.PATCH, "/guilds/{guild_id}/roles", guild_id=guild_id, json=payload, reason=reason
-        )
+        return await self.request(self.PATCH, "/guilds/{guild_id}/roles", guild_id=guild_id, json=payload)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def modify_guild_role(  # lgtm [py/similar-function]
@@ -1813,7 +1817,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 The number of days to count prune for (at least 1).
 
         Returns:
-            A dict containing a `pruned` key which holds the estimated prune count.
+            the number of members estimated to be pruned.
 
         Raises:
             hikari.errors.NotFound:
@@ -1823,11 +1827,12 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             hikari.errors.BadRequest:
                 If you pass an invalid amount of days.
         """
-        return await self.request(self.GET, "/guilds/{guild_id}/prune", guild_id=guild_id, query={"days": days})
+        result = await self.request(self.GET, "/guilds/{guild_id}/prune", guild_id=guild_id, query={"days": days})
+        return int(result["pruned"])
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
     async def begin_guild_prune(
-        self, guild_id: str, days: int, compute_prune_count: bool = False, *, reason: str = unspecified.UNSPECIFIED
+        self, guild_id: str, days: int, *, compute_prune_count: bool = False, reason: str = unspecified.UNSPECIFIED
     ) -> typing.Optional[int]:
         """
         Prunes members of a given guild based on the number of inactive days.
@@ -1843,7 +1848,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Returns:
-            Either None or an object containing a `pruned` key which holds the pruned member count.
+            :class:`None` if `compute_prune_count` is `False`, or an :class:`int` representing the number
+            of members who were kicked.
 
         Raises:
             hikari.errors.NotFound:
@@ -1854,10 +1860,17 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If you provide invalid values for the `days` and `compute_prune_count` fields.
         """
         query = {"days": days, "compute_prune_count": compute_prune_count}
-        return await self.request(self.POST, "/guilds/{guild_id}/prune", guild_id=guild_id, query=query, reason=reason)
+        result = await self.request(
+            self.POST, "/guilds/{guild_id}/prune", guild_id=guild_id, query=query, reason=reason
+        )
+
+        try:
+            return int(result["pruned"])
+        except (TypeError, KeyError):
+            return None
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_voice_regions(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_guild_voice_regions(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the voice regions for a given guild.
 
@@ -1877,7 +1890,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/regions", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_invites(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_guild_invites(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the invites for a given guild.
 
@@ -1897,7 +1910,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/invites", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    async def get_guild_integrations(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the integrations for a given guild.
 
@@ -1927,7 +1940,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             guild_id:
                 The ID of the guild to create the integrations in.
             type_:
-                The integration type string (e.g. "twitch").
+                The integration type string (e.g. "twitch" or "youtube").
             integration_id:
                 The ID for the new integration.
             reason:
@@ -1955,7 +1968,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         *,
         expire_behaviour: int = unspecified.UNSPECIFIED,
         expire_grace_period: int = unspecified.UNSPECIFIED,
-        enable_emoticons: bool = unspecified.UNSPECIFIED,
+        enable_emojis: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
         """
@@ -1970,8 +1983,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 The behaviour for when an integration subscription lapses.
             expire_grace_period:
                 Time interval in seconds in which the integration will ignore lapsed subscriptions.
-            enable_emoticons:
-                Whether emoticons should be synced for this integration.
+            enable_emojis:
+                Whether emojis should be synced for this integration.
             reason:
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
@@ -1984,7 +1997,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         payload = {
             "expire_behaviour": expire_behaviour,
             "expire_grace_period": expire_grace_period,
-            "enable_emoticons": enable_emoticons,
+            # This is inconsistently named in their API.
+            "enable_emoticons": enable_emojis,
         }
         await self.request(
             self.PATCH,
@@ -2035,7 +2049,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             integration_id:
                 The ID of the integration to sync.
 
-         Raises:
+        Raises:
             hikari.errors.NotFound:
                 If either the guild or the integration aren't found.
             hikari.errors.Forbidden:
@@ -2115,7 +2129,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/vanity-url", guild_id=guild_id)
 
     @meta.link_developer_portal(meta.APIResource.GUILD)
-    def get_guild_widget_image(self, guild_id: str, style: str) -> str:
+    def get_guild_widget_image(self, guild_id: str, *, style: str = unspecified.UNSPECIFIED) -> str:
         """
         Get the URL for a guild widget.
 
@@ -2123,7 +2137,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             guild_id:
                 The guild ID to use for the widget.
             style:
-                One of "shield", "banner1", "banner2", "banner3" or "banner4".
+                Optional and one of "shield", "banner1", "banner2", "banner3" or "banner4".
 
         Returns:
             A URL to retrieve a PNG widget for your guild.
@@ -2135,7 +2149,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         Warning:
             The guild must have the widget enabled in the guild settings for this to be valid.
         """
-        return f"{self.base_uri}/guilds/{guild_id}/widget.png?style={style}"
+        query = "" if style is unspecified.UNSPECIFIED else f"?style={style}"
+        return f"{self.base_uri}/guilds/{guild_id}/widget.png" + query
 
     @meta.link_developer_portal(meta.APIResource.INVITE)
     async def get_invite(
@@ -2193,7 +2208,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         Get the current application information.
 
         Returns:
-             An application info object.
+            An application info object.
         """
         return await self.request(self.GET, "/oauth2/applications/@me")
 
@@ -2251,11 +2266,11 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         payload = {}
         transformations.put_if_specified(payload, "username", username)
-        transformations.put_if_specified(payload, "avatar", avatar)
+        transformations.put_if_specified(payload, "avatar", avatar, media_transformations.image_bytes_to_image_data)
         return await self.request(self.PATCH, "/users/@me", json=payload)
 
     @meta.link_developer_portal(meta.APIResource.USER)
-    async def get_current_user_connections(self) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_current_user_connections(self) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the current user's connections. This endpoint can be used with both Bearer and Bot tokens
         but will usually return an empty list for bots (with there being some exceptions to this
@@ -2273,7 +2288,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         before: str = unspecified.UNSPECIFIED,
         after: str = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
-    ) -> typing.List[data_structures.DiscordObjectT]:
+    ) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the guilds the current user is in.
 
@@ -2324,7 +2339,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.POST, "/users/@me/channels", json={"recipient_id": recipient_id})
 
     @meta.link_developer_portal(meta.APIResource.VOICE)
-    async def list_voice_regions(self) -> typing.List[data_structures.DiscordObjectT]:
+    async def list_voice_regions(self) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Get the voice regions that are available.
 
@@ -2357,7 +2372,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             avatar:
                 The avatar image in bytes form.
             reason:
-                an optional audit log reason explaining why the change was made.
+                An optional audit log reason explaining why the change was made.
 
         Returns:
             The newly created webhook object.
@@ -2371,13 +2386,13 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If the avatar image is too big or the format is invalid.
         """
         payload = {"name": name}
-        transformations.put_if_specified(payload, "avatar", avatar)
+        transformations.put_if_specified(payload, "avatar", avatar, media_transformations.image_bytes_to_image_data)
         return await self.request(
             self.POST, "/channels/{channel_id}/webhooks", channel_id=channel_id, json=payload, reason=reason
         )
 
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)
-    async def get_channel_webhooks(self, channel_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets all webhooks from a given channel.
 
@@ -2397,7 +2412,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/channels/{channel_id}/webhooks", channel_id=channel_id)
 
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)
-    async def get_guild_webhooks(self, guild_id: str) -> typing.List[data_structures.DiscordObjectT]:
+    async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets all webhooks for a given guild.
 
@@ -2436,7 +2451,13 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @meta.link_developer_portal(meta.APIResource.WEBHOOK)
     async def modify_webhook(
-        self, webhook_id: str, name: str, avatar: bytes, channel_id: str, *, reason: str = unspecified.UNSPECIFIED
+        self,
+        webhook_id: str,
+        *,
+        name: str = unspecified.UNSPECIFIED,
+        avatar: bytes = unspecified.UNSPECIFIED,
+        channel_id: str = unspecified.UNSPECIFIED,
+        reason: str = unspecified.UNSPECIFIED,
     ) -> data_structures.DiscordObjectT:
         """
         Edits a given webhook.
@@ -2451,7 +2472,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             channel_id:
                 The ID of the new channel the given webhook should be moved to.
             reason:
-                an optional audit log reason explaining why the change was made.
+                An optional audit log reason explaining why the change was made.
 
         Returns:
             The updated webhook object.
@@ -2465,8 +2486,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         payload = {}
         transformations.put_if_specified(payload, "name", name)
-        transformations.put_if_specified(payload, "avatar", avatar)
         transformations.put_if_specified(payload, "channel_id", channel_id)
+        transformations.put_if_specified(payload, "avatar", avatar, media_transformations.image_bytes_to_image_data)
         return await self.request(
             self.PATCH, "/webhooks/{webhook_id}", webhook_id=webhook_id, json=payload, reason=reason
         )

@@ -22,6 +22,7 @@ Channel models.
 from __future__ import annotations
 
 import abc
+import contextlib
 import enum
 import typing
 
@@ -32,8 +33,16 @@ from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import guilds as _guild
 from hikari.orm.models import interfaces
+from hikari.orm.models import members
 from hikari.orm.models import overwrites
 from hikari.orm.models import users
+from hikari.orm.models import webhooks
+
+#: Valid types for a recipient of a DM.
+DMRecipientT = typing.Union[users.User, users.OAuth2User]
+
+#: Valid types for a recipient in a guild.
+GuildRecipientT = typing.Union[DMRecipientT, members.Member, webhooks.Webhook]
 
 
 class ChannelType(interfaces.BestEffortEnumMixin, enum.IntEnum):
@@ -280,7 +289,7 @@ class DMChannel(TextChannel, type=ChannelType.DM):
     #: Sequence of recipients in the DM chat.
     #:
     #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.users.User`
-    recipients: typing.Sequence[users.User]
+    recipients: typing.Sequence[DMRecipientT]
 
     __repr__ = auto_repr.repr_of("id")
 
@@ -291,9 +300,13 @@ class DMChannel(TextChannel, type=ChannelType.DM):
     def update_state(self, payload: data_structures.DiscordObjectT) -> None:
         super().update_state(payload)
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
-        self.recipients = [
-            self._fabric.state_registry.parse_user(u) for u in payload.get("recipients", data_structures.EMPTY_SEQUENCE)
-        ]
+        self.recipients = typing.cast(
+            typing.Sequence[DMRecipientT],
+            [
+                self._fabric.state_registry.parse_user(u)
+                for u in payload.get("recipients", data_structures.EMPTY_SEQUENCE)
+            ],
+        )
 
 
 class GuildVoiceChannel(GuildChannel, type=ChannelType.GUILD_VOICE):
@@ -470,7 +483,27 @@ def parse_channel(fabric_obj: fabric.Fabric, payload: data_structures.DiscordObj
         raise TypeError(f"Invalid channel type {channel_type}") from None
 
 
+class TypingIndicator(contextlib.AbstractAsyncContextManager):
+    """TODO: implement this."""
+
+
+#: Any type of channel, or an :class:`int`/:class:`str` ID of one.
+ChannelLikeT = typing.Union[interfaces.RawSnowflakeT, Channel]
+#: Any type of :class:`TextChannel`, or an :class:`int`/:class:`str` ID of one.
+TextChannelLikeT = typing.Union[interfaces.RawSnowflakeT, Channel]
+#: Any type of :class:`GuildChannel`, or an :class:`int`/:class:`str` ID of one.
+GuildChannelLikeT = typing.Union[interfaces.RawSnowflakeT, GuildChannel]
+#: A :class:`GuildCategory`, or an :class:`int`/:class:`str` ID of one.
+GuildCategoryLikeT = typing.Union[interfaces.RawSnowflakeT, GuildCategory]
+#: A :class:`GuildTextChannel`, or an :class:`int`/:class:`str` ID of one.
+GuildTextChannelLikeT = typing.Union[interfaces.RawSnowflakeT, GuildTextChannel]
+#: A :class:`GuildVoiceChannel`, or an :class:`int`/:class:`str` ID of one.
+GuildVoiceChannelLikeT = typing.Union[interfaces.RawSnowflakeT, GuildVoiceChannel]
+
+
 __all__ = (
+    "DMRecipientT",
+    "GuildRecipientT",
     "ChannelType",
     "Channel",
     "PartialChannel",
@@ -482,4 +515,11 @@ __all__ = (
     "GuildCategory",
     "GuildAnnouncementChannel",
     "GuildStoreChannel",
+    "TypingIndicator",
+    "ChannelLikeT",
+    "TextChannelLikeT",
+    "GuildChannelLikeT",
+    "GuildCategoryLikeT",
+    "GuildTextChannelLikeT",
+    "GuildVoiceChannelLikeT",
 )

@@ -329,10 +329,12 @@ class Guild(PartialGuild, interfaces.IStatefulModel):
             for e in payload.get("emojis", data_structures.EMPTY_SEQUENCE)
         )
         self.member_count = transformations.nullable_cast(payload.get("member_count"), int)
-        self.voice_states = {
-            int(vs["user_id"]): self._fabric.state_registry.parse_voice_state(vs, self)
+
+        voice_state_objs = (
+            self._fabric.state_registry.parse_voice_state(vs, self)
             for vs in payload.get("voice_states", data_structures.EMPTY_SEQUENCE)
-        }
+        )
+        self.voice_states = {vs.user_id: vs for vs in voice_state_objs}
         self.mfa_level = transformations.try_cast(payload.get("mfa_level"), MFALevel)
         self.my_permissions = permissions.Permission(payload.get("permissions", 0))
         self.joined_at = transformations.nullable_cast(payload.get("joined_at"), date_helpers.parse_iso_8601_ts)
@@ -470,13 +472,52 @@ class Ban(interfaces.IModel):
     #: The user who is banned.
     #:
     #: :type: :class:`hikari.orm.models.users.User`
-    user: users.User
+    user: users.IUser
 
     __repr__ = auto_repr.repr_of("user", "reason")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         self.reason = payload.get("reason")
         self.user = fabric_obj.state_registry.parse_user(payload.get("user"))
+
+
+class WidgetStyle(str, enum.Enum):
+    """
+    Valid styles of widget for a guild.
+    """
+
+    #: The default shield style. This will produce a widget PNG like this:
+    #:
+    #: .. image:: https://discordapp.com/api/v7/guilds/574921006817476608/widget.png?style=shield
+    #:     :alt: A preview of the shield style.
+    SHIELD = "shield"
+
+    #: The `banner1` style. This will produce a widget PNG like this:
+    #:
+    #: .. image:: https://discordapp.com/api/v7/guilds/574921006817476608/widget.png?style=banner1
+    #:     :alt: A preview of the banner1 style.
+    BANNER_1 = "banner1"
+
+    #: The `banner2` style. This will produce a widget PNG like this:
+    #:
+    #: .. image:: https://discordapp.com/api/v7/guilds/574921006817476608/widget.png?style=banner2
+    #:     :alt: A preview of the banner2 style.
+    BANNER_2 = "banner2"
+
+    #: The `banner3` style. This will produce a widget PNG like this:
+    #:
+    #: .. image:: https://discordapp.com/api/v7/guilds/574921006817476608/widget.png?style=banner3
+    #:     :alt: A preview of the banner3 style.
+    BANNER_3 = "banner3"
+
+    #: The `banner4` style. This will produce a widget PNG like this:
+    #:
+    #: .. image:: https://discordapp.com/api/v7/guilds/574921006817476608/widget.png?style=banner4
+    #:     :alt: A preview of the banner4 style.
+    BANNER_4 = "banner4"
+
+
+GuildLikeT = typing.Union[interfaces.RawSnowflakeT, Guild]
 
 
 __all__ = [
@@ -490,4 +531,6 @@ __all__ = [
     "VerificationLevel",
     "PremiumTier",
     "Ban",
+    "WidgetStyle",
+    "GuildLikeT",
 ]

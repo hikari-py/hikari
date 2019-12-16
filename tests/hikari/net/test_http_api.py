@@ -511,7 +511,19 @@ class TestChannel:
             user_id="101",
         )
 
-    async def test_edit_channel_permissions(self, http_client):
+    async def test_edit_channel_permissions_without_kwargs(self, http_client):
+        http_client.request = asynctest.CoroutineMock()
+        await http_client.edit_channel_permissions("69", "420")
+        http_client.request.assert_awaited_once_with(
+            "put",
+            "/channels/{channel_id}/permissions/{overwrite_id}",
+            channel_id="69",
+            overwrite_id="420",
+            json={},
+            reason=unspecified.UNSPECIFIED,
+        )
+
+    async def test_edit_channel_permissions_with_kwargs(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.edit_channel_permissions("69", "420", allow=192, deny=168, type_="member")
         http_client.request.assert_awaited_once_with(
@@ -851,18 +863,18 @@ AbstractEmoji Unit Tests
 class TestEmoji:
     async def test_create_guild_emoji(self, http_client):
         http_client.request = asynctest.CoroutineMock()
-        await http_client.create_guild_emoji("424242", "asdf", b"", [])
+        await http_client.create_guild_emoji("424242", "asdf", b"\211PNG\r\n\032\n", roles=[])
         http_client.request.assert_awaited_once_with(
             "post",
             "/guilds/{guild_id}/emojis",
             guild_id="424242",
-            json={"name": "asdf", "image": b"", "roles": []},
+            json={"name": "asdf", "image": "data:image/png;base64,iVBORw0KGgo=", "roles": []},
             reason=unspecified.UNSPECIFIED,
         )
 
     async def test_create_guild_emoji_with_optional_reason(self, http_client):
         http_client.request = asynctest.CoroutineMock()
-        await http_client.create_guild_emoji("696969", "123456", b"", [], reason="because i can")
+        await http_client.create_guild_emoji("696969", "123456", b"\211PNG\r\n\032\n", roles=[], reason="because i can")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "because i can"
 
@@ -887,7 +899,7 @@ class TestEmoji:
 
     async def test_modify_guild_emoji(self, http_client):
         http_client.request = asynctest.CoroutineMock()
-        await http_client.modify_guild_emoji("424242", "696969", "asdf", [])
+        await http_client.modify_guild_emoji("424242", "696969", name="asdf", roles=[])
         http_client.request.assert_awaited_once_with(
             "patch",
             "/guilds/{guild_id}/emojis/{emoji_id}",
@@ -899,7 +911,7 @@ class TestEmoji:
 
     async def test_modify_guild_emoji_with_optional_reason(self, http_client):
         http_client.request = asynctest.CoroutineMock()
-        await http_client.modify_guild_emoji("696969", "123456", "asdf", [], reason="because i can")
+        await http_client.modify_guild_emoji("696969", "123456", name="asdf", roles=[], reason="because i can")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "because i can"
 
@@ -971,9 +983,9 @@ class TestGuild:
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
-    async def test_begin_guild_prune(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.begin_guild_prune("424242", 10, False)
+    async def test_begin_guild_prune_with_no_count(self, http_client):
+        http_client.request = asynctest.CoroutineMock(return_value=None)
+        count = await http_client.begin_guild_prune("424242", 10, compute_prune_count=False)
         http_client.request.assert_awaited_once_with(
             "post",
             "/guilds/{guild_id}/prune",
@@ -981,10 +993,23 @@ class TestGuild:
             query={"days": 10, "compute_prune_count": False},
             reason=unspecified.UNSPECIFIED,
         )
+        assert count is None
+
+    async def test_begin_guild_prune_with_count(self, http_client):
+        http_client.request = asynctest.CoroutineMock(return_value={"pruned": 180})
+        count = await http_client.begin_guild_prune("424242", 10, compute_prune_count=True)
+        http_client.request.assert_awaited_once_with(
+            "post",
+            "/guilds/{guild_id}/prune",
+            guild_id="424242",
+            query={"days": 10, "compute_prune_count": True},
+            reason=unspecified.UNSPECIFIED,
+        )
+        assert count == 180
 
     async def test_begin_guild_prune_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.begin_guild_prune("424242", 10, False, reason="baz")
+        http_client.request = asynctest.CoroutineMock(return_value=None)
+        await http_client.begin_guild_prune("424242", 10, compute_prune_count=False, reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
@@ -992,7 +1017,24 @@ class TestGuild:
         test_all_args = {
             "name": "asdf",
             "region": "eu-west",
-            "icon": b"",
+            "icon": b"\211PNG\r\n\032\n",
+            "verification_level": 1,
+            "default_message_notifications": 1,
+            "explicit_content_filter": 1,
+            "roles": [{}, {"id": "424242", "color": 404, "hoist": True}],
+            "channels": [
+                {
+                    "name": "general",
+                    "type": 0,
+                    "permission_overwrites": [{"id": "424242", "type": "role", "allow": 101}],
+                }
+            ],
+        }
+
+        expected_args = {
+            "name": "asdf",
+            "region": "eu-west",
+            "icon": "data:image/png;base64,iVBORw0KGgo=",
             "verification_level": 1,
             "default_message_notifications": 1,
             "explicit_content_filter": 1,
@@ -1008,7 +1050,7 @@ class TestGuild:
 
         http_client.request = asynctest.CoroutineMock()
         await http_client.create_guild(**test_all_args)
-        http_client.request.assert_awaited_once_with("post", "/guilds", json=test_all_args)
+        http_client.request.assert_awaited_once_with("post", "/guilds", json=expected_args)
 
     async def test_create_guild_ban_no_message_deletion(self, http_client):
         http_client.request = asynctest.CoroutineMock()
@@ -1189,11 +1231,12 @@ class TestGuild:
         )
 
     async def test_get_guild_prune_count(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.get_guild_prune_count("424242", days=10)
+        http_client.request = asynctest.CoroutineMock(return_value={"pruned": 69})
+        count = await http_client.get_guild_prune_count("424242", days=10)
         http_client.request.assert_awaited_once_with(
             "get", "/guilds/{guild_id}/prune", guild_id="424242", query={"days": 10}
         )
+        assert count == 69
 
     async def test_get_guild_roles(self, http_client):
         http_client.request = asynctest.CoroutineMock()
@@ -1210,7 +1253,11 @@ class TestGuild:
         await http_client.get_guild_voice_regions("424242")
         http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/regions", guild_id="424242")
 
-    async def test_get_guild_widget_image(self, http_client):
+    async def test_get_guild_widget_image_without_style(self, http_client):
+        http_client.base_uri = "https://potato.com/api/v12"
+        assert http_client.get_guild_widget_image("1234") == "https://potato.com/api/v12/guilds/1234/widget.png"
+
+    async def test_get_guild_widget_image_with_style(self, http_client):
         http_client.base_uri = "https://potato.com/api/v12"
         assert (
             http_client.get_guild_widget_image("1234", style="banner3")
@@ -1273,16 +1320,30 @@ class TestGuild:
             "explicit_content_filter": 1,
             "afk_channel_id": "404101",
             "afk_timeout": 10,
-            "icon": b"",
+            "icon": b"\211PNG\r\n\032\n",
             "owner_id": "696969",
-            "splash": b"",
+            "splash": b"\211PNG\r\n\032\n",
+            "system_channel_id": "112",
+        }
+
+        expected_args = {
+            "name": "asdf",
+            "region": "eu-west",
+            "verification_level": 1,
+            "default_message_notifications": 1,
+            "explicit_content_filter": 1,
+            "afk_channel_id": "404101",
+            "afk_timeout": 10,
+            "icon": "data:image/png;base64,iVBORw0KGgo=",
+            "owner_id": "696969",
+            "splash": "data:image/png;base64,iVBORw0KGgo=",
             "system_channel_id": "112",
         }
 
         http_client.request = asynctest.CoroutineMock()
         await http_client.modify_guild("424242", **test_all_kwargs)
         http_client.request.assert_awaited_once_with(
-            "patch", "/guilds/{guild_id}", guild_id="424242", json=test_all_kwargs, reason=unspecified.UNSPECIFIED
+            "patch", "/guilds/{guild_id}", guild_id="424242", json=expected_args, reason=unspecified.UNSPECIFIED
         )
 
     async def test_modify_guild_with_optional_reason(self, http_client):
@@ -1299,19 +1360,12 @@ class TestGuild:
             "/guilds/{guild_id}/channels",
             guild_id="424242",
             json=[{"id": "696969", "position": 1}, {"id": "404101", "position": 2}],
-            reason=unspecified.UNSPECIFIED,
         )
-
-    async def test_modify_guild_channel_positions_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.modify_guild_channel_positions("424242", ("696969", 1), ("404101", 2), reason="baz")
-        args, kwargs = http_client.request.call_args
-        assert kwargs["reason"] == "baz"
 
     async def test_modify_guild_integration(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.modify_guild_integration(
-            "424242", "696969", expire_behaviour=1, expire_grace_period=10, enable_emoticons=True
+            "424242", "696969", expire_behaviour=1, expire_grace_period=10, enable_emojis=True
         )
         http_client.request.assert_awaited_once_with(
             "patch",
@@ -1325,7 +1379,7 @@ class TestGuild:
     async def test_modify_guild_integration_with_optional_reason(self, http_client):
         http_client.request = asynctest.CoroutineMock()
         await http_client.modify_guild_integration(
-            "424242", "696969", expire_behaviour=1, expire_grace_period=10, enable_emoticons=True, reason="baz"
+            "424242", "696969", expire_behaviour=1, expire_grace_period=10, enable_emojis=True, reason="baz"
         )
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
@@ -1402,14 +1456,7 @@ class TestGuild:
             "/guilds/{guild_id}/roles",
             guild_id="424242",
             json=[{"id": "696969", "position": 1}, {"id": "404101", "position": 2}],
-            reason=unspecified.UNSPECIFIED,
         )
-
-    async def test_modify_guild_role_positions_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
-        await http_client.modify_guild_role_positions("424242", "696969", reason="baz")
-        args, kwargs = http_client.request.call_args
-        assert kwargs["reason"] == "baz"
 
     async def test_modify_guild_embed_empty_embed_provided(self, http_client):
         http_client.request = asynctest.CoroutineMock()
@@ -1635,10 +1682,11 @@ class TestUser:
         http_client.request.assert_awaited_once_with("patch", "/users/@me", json={})
 
     async def test_modify_current_user_all_args(self, http_client):
-        test_args = {"username": "asdf", "avatar": b""}
+        test_args = {"username": "asdf", "avatar": b"\211PNG\r\n\032\n"}
+        expected_args = {"username": "asdf", "avatar": "data:image/png;base64,iVBORw0KGgo="}
         http_client.request = asynctest.CoroutineMock()
         await http_client.modify_current_user(**test_args)
-        http_client.request.assert_awaited_once_with("patch", "/users/@me", json=test_args)
+        http_client.request.assert_awaited_once_with("patch", "/users/@me", json=expected_args)
 
 
 r"""
@@ -1690,12 +1738,12 @@ class TestWebhook:
 
     async def test_create_webhook_with_avatar(self, http_client):
         http_client.request = asynctest.CoroutineMock()
-        await http_client.create_webhook("424242", "asdf", avatar=b"")
+        await http_client.create_webhook("424242", "asdf", avatar=b"\211PNG\r\n\032\n")
         http_client.request.assert_awaited_once_with(
             "post",
             "/channels/{channel_id}/webhooks",
             channel_id="424242",
-            json={"name": "asdf", "avatar": b""},
+            json={"name": "asdf", "avatar": "data:image/png;base64,iVBORw0KGgo="},
             reason=unspecified.UNSPECIFIED,
         )
 
@@ -1727,17 +1775,19 @@ class TestWebhook:
 
     async def test_modify_webhook(self, http_client):
         http_client.request = asynctest.CoroutineMock()
-        await http_client.modify_webhook("424242", "asdf", b"", "696969")
+        await http_client.modify_webhook("424242", name="asdf", avatar=b"\211PNG\r\n\032\n", channel_id="696969")
         http_client.request.assert_awaited_once_with(
             "patch",
             "/webhooks/{webhook_id}",
             webhook_id="424242",
-            json={"name": "asdf", "avatar": b"", "channel_id": "696969"},
+            json={"name": "asdf", "avatar": "data:image/png;base64,iVBORw0KGgo=", "channel_id": "696969"},
             reason=unspecified.UNSPECIFIED,
         )
 
     async def test_modify_webhook_with_optional_reason(self, http_client):
         http_client.request = asynctest.CoroutineMock()
-        await http_client.modify_webhook("696969", "123456", b"", "1234", reason="because i can")
+        await http_client.modify_webhook(
+            "696969", name="123456", avatar=b"\211PNG\r\n\032\n", channel_id="1234", reason="because i can"
+        )
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "because i can"

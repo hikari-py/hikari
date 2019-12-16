@@ -20,14 +20,14 @@
 Various utilities used internally within this API. These are not bound to the versioning contact, and are considered
 to be implementation detail that could change at any time, so should not be used outside this library.
 """
-from . import assertions
-from . import auto_repr
-from . import data_structures
-from . import date_helpers
-from . import delegate
-from . import io_helpers
-from . import logging_helpers
-from . import meta
-from . import transformations
-from . import unspecified
-from . import user_agent
+from hikari.internal_utilities import assertions
+from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import delegate
+from hikari.internal_utilities import io_helpers
+from hikari.internal_utilities import logging_helpers
+from hikari.internal_utilities import meta
+from hikari.internal_utilities import transformations
+from hikari.internal_utilities import unspecified
+from hikari.internal_utilities import user_agent
