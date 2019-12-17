@@ -22,6 +22,7 @@ Model ABCs and mixins.
 from __future__ import annotations
 
 import abc
+import asyncio
 import copy
 import datetime
 import typing
@@ -216,6 +217,14 @@ class ISnowflake(IModel):
     id: int
 
     @property
+    def is_resolved(self) -> bool:
+        """
+        Returns False if the object represents an uncached placeholder for an element that needs to
+        be fetched manually from the API. For all well formed models, this is always going to be True.
+        """
+        return True
+
+    @property
     def created_at(self) -> datetime.datetime:
         """When the object was created."""
         epoch = self.id >> 22
@@ -269,7 +278,7 @@ class ISnowflake(IModel):
         return self.id
 
 
-class UnknownObject(ISnowflake):
+class UnknownObject(typing.Generic[T], ISnowflake):
     """
     Represents an unresolved object with an ID that we cannot currently make sense of, or that
     may be only partially complete.
@@ -277,14 +286,77 @@ class UnknownObject(ISnowflake):
     This usually should not be returned for bots using a gateway with a valid cache. However, if
     the cache is incomplete, or you are using a static HTTP client only, this will likely occur
     regularly within models. The way to resolve these is to manually call the HTTP endpoint to fetch
-    the correct details.
+    the correct details, or to await the object, which acts as a lazy call to the HTTP endpoint you'd
+    usually want to call manually.
 
-    This can also be used as a placeholder for objects you do not currently have a full copy of.
+    You should never need to initialize this yourself.
+
+    Example usage:
+        >>> # Assuming we have no gateway running and are only using the HTTP API on its own.
+        >>> channel = await http.fetch_channel(1234)
+        >>> guild = channel.guild if channel.guild.is_resolved else await channel.guild
+        >>> assert channel.guild.is_resolved   # the channel's guild should now also be resolved
     """
-    __slots__ = ("id",)
 
-    def __init__(self, id: int) -> None:
+    __slots__ = ("id", "_future", "_callbacks", "__weakref__")
+
+    _CALLBACK_MUX_ALREADY_CALLED = ...
+
+    def __init__(self, id: int, resolver_partial: data_structures.PartialCoroutineProtocolT[T] = None,) -> None:
         self.id = id
+        self._future = resolver_partial
+        self._callbacks = []
+
+    # noinspection PyCallingNonCallable
+    def __await__(self) -> T:
+        if self._future is None:
+            raise NotImplementedError("Cannot resolve this value currently")
+        if not isinstance(self._future, asyncio.Future):
+            self._future = asyncio.create_task(self._future())
+            self._future.add_done_callback(self._invoke_callbacks)
+
+        yield from self._future
+        return self._future.result()
+
+    def _invoke_callbacks(self, completed_task) -> None:
+        # A callback multiplexer mechanism.
+        result = completed_task.result()
+        for callback in self._callbacks:
+            callback(result)
+        self._callbacks = self._CALLBACK_MUX_ALREADY_CALLED
+
+    def add_done_callback(self, callback: typing.Callable[[T], typing.Any]) -> None:
+        """
+        Store the given callback and execute it once this UnknownObject has been awaited
+        for the first time. This is scheduled as a callback on a multiplexer for the
+        underlying asyncio task that is created.
+
+        If the object has already been awaited, this is scheduled to be executed
+        as soon as possible on the event loop instead.
+
+        Warning:
+            It is important to note that these callbacks get scheduled on the
+            current asyncio eventloop. This means you must not do blocking work
+            in these calls. Consider delegating to a
+            :class:`concurrent.futures.Executor` implementation instead in this
+            scenario.
+
+        Args:
+            callback:
+                A normal function taking the resolved value to replace this object
+                with as the sole argument.
+        """
+        if self._callbacks is self._CALLBACK_MUX_ALREADY_CALLED:
+            asyncio.get_running_loop().call_soon(callback, self._future.result())
+        else:
+            self._callbacks.append(callback)
+
+    @property
+    def is_resolved(self) -> bool:
+        """
+        Returns False always.
+        """
+        return False
 
 
 @assertions.assert_is_mixin
@@ -326,7 +398,6 @@ RawSnowflakeT = typing.Union[int, str]
 
 #: A raw snowflake type or an :class:`ISnowflake` instance.
 SnowflakeLikeT = typing.Union[RawSnowflakeT, ISnowflake, UnknownObject]
-
 
 __all__ = [
     "ISnowflake",

@@ -27,8 +27,8 @@ from hikari.internal_utilities import cache
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import io_helpers
 from hikari.internal_utilities import unspecified
-from hikari.orm import http_adapter
 from hikari.orm import fabric as _fabric
+from hikari.orm import http_adapter
 from hikari.orm.models import applications as _applications
 from hikari.orm.models import audit_logs as _audit_logs
 from hikari.orm.models import channels as _channels
@@ -87,7 +87,8 @@ class HTTPAdapterImpl(http_adapter.IHTTPAdapter):
         return self.fabric.state_registry.parse_audit_log(audit_log_payload)
 
     async def fetch_channel(self, channel: _channels.ChannelLikeT) -> _channels.Channel:
-        channel_payload = await self.fabric.http_api.get_channel(str(int(channel)))
+        # channel_payload = await self.fabric.http_api.get_channel(str(int(channel)))
+        raise NotImplementedError
 
     async def update_channel(
         self,
