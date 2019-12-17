@@ -63,7 +63,7 @@ class TestRates:
     # Easier to test this on the underlying implementation than mock a bunch of stuff, and this ensures the correct
     # behaviour anyway.
     async def test_TimedTokenBucket_acquire_should_decrease_remaining_count_by_1(self, event_loop, timed_token_bucket):
-        b = timed_token_bucket(10, 0.25, event_loop)
+        b = timed_token_bucket(10, 0.1, event_loop)
         await b.acquire()
         assert b._remaining == 9
 
@@ -77,7 +77,7 @@ class TestRates:
     async def test_TimedTokenBucket_acquire_when_not_rate_limited_with_callback_does_not_call_it(
         self, event_loop, timed_token_bucket
     ):
-        b = timed_token_bucket(10, 0.25, event_loop)
+        b = timed_token_bucket(10, 0.1, event_loop)
         callback = asynctest.MagicMock()
         await b.acquire(callback)
         assert b._remaining == 9
@@ -96,31 +96,31 @@ class TestRates:
     async def test_TimedTokenBucket_acquire_when_rate_limiting_without_callback_functions_correctly(
         self, event_loop, timed_token_bucket
     ):
-        b = timed_token_bucket(1, 1, event_loop)
+        b = timed_token_bucket(1, 0.25, event_loop)
         await b.acquire()
         start = time.perf_counter()
         await b.acquire()
         time_taken = time.perf_counter() - start
         assert b._remaining == 0
-        assert math.isclose(time_taken, 1, abs_tol=0.25)
+        assert math.isclose(time_taken, 0.25, abs_tol=0.25)
 
     async def test_VariableTokenBucket_acquire_when_rate_limiting_without_callback_functions_correctly(
         self, event_loop, variable_token_bucket
     ):
         now = time.perf_counter()
-        b = variable_token_bucket(1, 1, now, now + 1, event_loop)
+        b = variable_token_bucket(1, 1, now, now + 0.25, event_loop)
         await b.acquire()
         start = time.perf_counter()
         await b.acquire()
         time_taken = time.perf_counter() - start
         assert b._remaining == 0
-        assert math.isclose(time_taken, 1, abs_tol=0.25)
+        assert math.isclose(time_taken, 0.25, abs_tol=0.1)
 
     # If this begins to fail, change the time to 2s, with abs_tol=1, or something
     async def test_TimedTokenBucket_acquire_when_rate_limiting_with_callback_should_invoke_the_callback_once(
         self, event_loop, timed_token_bucket
     ):
-        b = timed_token_bucket(1, 1, event_loop)
+        b = timed_token_bucket(1, 0.25, event_loop)
         await b.acquire()
         start = time.perf_counter()
         callback = asynctest.MagicMock()
@@ -128,14 +128,14 @@ class TestRates:
         time_taken = time.perf_counter() - start
         assert b._remaining == 0
 
-        assert math.isclose(time_taken, 1, abs_tol=0.25)
+        assert math.isclose(time_taken, 0.25, abs_tol=0.1)
         callback.assert_called_once()
 
     async def test_VariableTokenBucket_acquire_when_rate_limiting_with_callback_should_invoke_the_callback_once(
         self, event_loop, variable_token_bucket
     ):
         now = time.perf_counter()
-        b = variable_token_bucket(1, 1, now, now + 1, event_loop)
+        b = variable_token_bucket(1, 1, now, now + 0.25, event_loop)
         await b.acquire()
         start = time.perf_counter()
         callback = asynctest.MagicMock()
@@ -143,7 +143,7 @@ class TestRates:
         time_taken = time.perf_counter() - start
         assert b._remaining == 0
         # We should have been rate limited by 1 second.
-        assert math.isclose(time_taken, 1, abs_tol=0.25)
+        assert math.isclose(time_taken, 0.25, abs_tol=0.25)
         callback.assert_called_once()
 
     async def test_TimedTokenBucket_queue_should_make_an_incomplete_future(self, event_loop, timed_token_bucket):
@@ -262,7 +262,7 @@ class TestRates:
     async def test_TimedTokenBucket_reassess_must_run_as_many_tasks_as_possible_in_expected_time(
         self, event_loop, timed_token_bucket
     ):
-        b = timed_token_bucket(10, 1, event_loop)
+        b = timed_token_bucket(10, 0.15, event_loop)
 
         checked = False
 
@@ -281,13 +281,13 @@ class TestRates:
         elapsed = time.perf_counter() - start
         callback.assert_called()
         assert checked
-        assert math.isclose(elapsed, 2, abs_tol=0.25)
+        assert math.isclose(elapsed, 0.3, abs_tol=0.25)
 
     async def test_VariableTokenBucket_must_run_as_many_tasks_as_possible_in_expected_time(
         self, event_loop, variable_token_bucket
     ):
         now = time.perf_counter()
-        b = variable_token_bucket(10, 10, now, now + 1, event_loop)
+        b = variable_token_bucket(20, 5, now, now + 0.1, event_loop)
 
         checked = False
 
@@ -311,7 +311,7 @@ class TestRates:
 
         callback.assert_called()
         assert checked
-        assert math.isclose(elapsed, 2, abs_tol=0.25)
+        assert math.isclose(elapsed, 0.1, abs_tol=0.1)
 
     async def test_TimedLatchBucket_when_not_locked_will_return_immediately(self, event_loop, timed_latch_bucket):
         latch = timed_latch_bucket(event_loop)
@@ -339,9 +339,9 @@ class TestRates:
             assert latch.is_limiting
 
         callback = asynctest.MagicMock(wraps=assert_locked)
-        latch.lock(1)
+        latch.lock(0.1)
         # Yield for a moment to ensure the routine is triggered before we try to acquire.
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.01)
         start = time.perf_counter()
         await latch.acquire(callback, nine=9, eighteen=18, foo=27)
         end = time.perf_counter()
@@ -349,18 +349,18 @@ class TestRates:
         callback.assert_called_with(nine=9, eighteen=18, foo=27)
         assert checked
         # Assert we waited for about 3 seconds.
-        assert math.isclose(end - start, 1, abs_tol=0.25)
+        assert math.isclose(end - start, 0.1, abs_tol=0.1)
 
     async def test_TimedLatchBucket_when_locked_no_args(self, event_loop, timed_latch_bucket):
         latch = timed_latch_bucket(event_loop)
-        latch.lock(1)
+        latch.lock(0.1)
         # Yield for a moment to ensure the routine is triggered before we try to acquire.
         await asyncio.sleep(0.05)
         start = time.perf_counter()
         await latch.acquire()
         end = time.perf_counter()
-        # Assert we waited for about 3 seconds.
-        assert math.isclose(end - start, 1, abs_tol=0.25)
+        # Assert we waited for about 0.1 seconds.
+        assert math.isclose(end - start, .1, abs_tol=0.1)
 
     async def test_TimedLatchBucket_async_with_context_manager(self, event_loop, timed_latch_bucket):
         latch = timed_latch_bucket(event_loop)
