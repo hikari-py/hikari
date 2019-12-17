@@ -259,7 +259,7 @@ class HTTPAdapterImpl(http_adapter.IHTTPAdapter):
     async def fetch_guild_channels(self, guild: _guilds.GuildLikeT) -> typing.Sequence[_channels.GuildChannel]:
         raise NotImplementedError
 
-    async def create_guild_channel(
+    async def create_guild_channel(  # lgtm [py/similar-function]
         self,
         guild: _guilds.GuildLikeT,
         name: str,
@@ -350,7 +350,7 @@ class HTTPAdapterImpl(http_adapter.IHTTPAdapter):
     async def fetch_roles(self, guild: _guilds.GuildLikeT) -> typing.Sequence[_roles.Role]:
         raise NotImplementedError
 
-    async def create_role(
+    async def create_role(  # lgtm [py/similar-function]
         self,
         guild: _guilds.GuildLikeT,
         *,

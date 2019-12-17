@@ -290,7 +290,7 @@ class IHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def create_guild(self) -> None:
-        raise NotImplementedError("TODO: refine me")
+        ...
 
     @abc.abstractmethod
     async def fetch_guild(self, guild: _guilds.GuildLikeT) -> _guilds.Guild:
@@ -328,7 +328,7 @@ class IHTTPAdapter(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def create_guild_channel(
+    async def create_guild_channel(  # lgtm [py/similar-function]
         self,
         guild: _guilds.GuildLikeT,
         name: str,
@@ -433,7 +433,7 @@ class IHTTPAdapter(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def create_role(
+    async def create_role(  # lgtm [py/similar-function]
         self,
         guild: _guilds.GuildLikeT,
         *,
