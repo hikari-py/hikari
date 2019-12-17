@@ -269,6 +269,24 @@ class ISnowflake(IModel):
         return self.id
 
 
+class UnknownObject(ISnowflake):
+    """
+    Represents an unresolved object with an ID that we cannot currently make sense of, or that
+    may be only partially complete.
+
+    This usually should not be returned for bots using a gateway with a valid cache. However, if
+    the cache is incomplete, or you are using a static HTTP client only, this will likely occur
+    regularly within models. The way to resolve these is to manually call the HTTP endpoint to fetch
+    the correct details.
+
+    This can also be used as a placeholder for objects you do not currently have a full copy of.
+    """
+    __slots__ = ("id",)
+
+    def __init__(self, id: int) -> None:
+        self.id = id
+
+
 @assertions.assert_is_mixin
 @assertions.assert_is_slotted
 class IStatefulModel(IModel):
@@ -307,7 +325,7 @@ class IStatefulModel(IModel):
 RawSnowflakeT = typing.Union[int, str]
 
 #: A raw snowflake type or an :class:`ISnowflake` instance.
-SnowflakeLikeT = typing.Union[RawSnowflakeT, ISnowflake]
+SnowflakeLikeT = typing.Union[RawSnowflakeT, ISnowflake, UnknownObject]
 
 
 __all__ = [

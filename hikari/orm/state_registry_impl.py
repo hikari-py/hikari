@@ -31,9 +31,14 @@ from hikari.internal_utilities import logging_helpers
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm import state_registry
+from hikari.orm.models import applications
+from hikari.orm.models import audit_logs
 from hikari.orm.models import channels
+from hikari.orm.models import connections
 from hikari.orm.models import emojis
+from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
+from hikari.orm.models import interfaces
 from hikari.orm.models import members
 from hikari.orm.models import messages
 from hikari.orm.models import presences
@@ -229,6 +234,9 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return self._users.get(user_id)
 
+    def parse_application(self, application_payload: data_structures.DiscordObjectT) -> applications.Application:
+        return applications.Application(self.fabric, application_payload)
+
     def parse_application_user(self, application_user_payload: data_structures.DiscordObjectT) -> users.OAuth2User:
         if self._user is not None:
             self._user.update_state(application_user_payload)
@@ -236,6 +244,9 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             self._user = users.OAuth2User(self.fabric, application_user_payload)
 
         return self._user
+
+    def parse_audit_log(self, audit_log_payload: data_structures.DiscordObjectT) -> audit_logs.AuditLog:
+        return audit_logs.AuditLog(self.fabric, audit_log_payload)
 
     def parse_channel(
         self, channel_payload: data_structures.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild] = None
@@ -257,6 +268,9 @@ class StateRegistryImpl(state_registry.IStateRegistry):
                 channel_obj.guild.channels[channel_id] = channel_obj
 
         return channel_obj
+
+    def parse_connection(self, connection_payload: data_structures.DiscordObjectT) -> connections.Connection:
+        return connections.Connection(self.fabric, connection_payload)
 
     # These fix typing issues in the update_guild_emojis method.
     @typing.overload
@@ -287,6 +301,9 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             self._emojis[new_emoji.id] = new_emoji
 
         return new_emoji
+
+    def parse_gateway_bot(self, gateway_bot_payload: data_structures.DiscordObjectT) -> gateway_bot.GatewayBot:
+        return gateway_bot.GatewayBot(gateway_bot_payload)
 
     def parse_guild(
         self, guild_payload: data_structures.DiscordObjectT, shard_id: typing.Optional[int]
