@@ -21,12 +21,16 @@ from unittest import mock
 import asynctest
 import pytest
 
+from hikari.internal_utilities import unspecified
 from hikari.net import http_api
 from hikari.orm import fabric
 from hikari.orm import http_adapter_impl as _http_adapter_impl
 from hikari.orm import state_registry
+from hikari.orm.models import audit_logs
 
 from hikari.orm.models import gateway_bot
+from hikari.orm.models import guilds
+from hikari.orm.models import users
 
 from tests.hikari import _helpers
 
@@ -50,8 +54,9 @@ class TestHTTPAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_gateway_url(self, fabric_impl):
-        # noinspection PyUnresolvedReferences
-        fabric_impl.http_api.get_gateway = asynctest.CoroutineMock(return_value="wss://some-site.com")
+        fabric_impl.http_api.get_gateway = asynctest.CoroutineMock(
+            return_value="wss://some-site.com", spec_set=fabric_impl.http_api.get_gateway
+        )
 
         for _ in range(15):
             assert await fabric_impl.http_adapter.gateway_url == "wss://some-site.com"
@@ -63,9 +68,54 @@ class TestHTTPAdapterImpl:
         mock_gateway_bot = _helpers.mock_model(gateway_bot.GatewayBot)
         with _helpers.mock_patch(gateway_bot.GatewayBot, return_value=mock_gateway_bot):
             mock_payload = mock.MagicMock(spec_set=dict)
-            # noinspection PyUnresolvedReferences
-            fabric_impl.http_api.get_gateway_bot = asynctest.CoroutineMock(return_value=mock_payload)
+            fabric_impl.http_api.get_gateway_bot = asynctest.CoroutineMock(
+                return_value=mock_payload, spec_set=fabric_impl.http_api.get_gateway_bot
+            )
 
             result = await fabric_impl.http_adapter.fetch_gateway_bot()
 
+            fabric_impl.http_api.get_gateway_bot.assert_awaited_once_with()
             assert result is mock_gateway_bot
+
+    @pytest.mark.asyncio
+    @_helpers.parameterize_valid_id_formats_for_models("guild", 112233, guilds.Guild)
+    async def test_fetch_audit_log_with_default_args(self, fabric_impl, guild):
+        mock_audit_log = _helpers.mock_model(audit_logs.AuditLog)
+        with _helpers.mock_patch(audit_logs.AuditLog, return_value=mock_audit_log):
+            mock_payload = mock.MagicMock(spec_set=dict)
+            fabric_impl.http_api.get_guild_audit_log = asynctest.CoroutineMock(
+                return_value=mock_payload, spec_set=fabric_impl.http_api.get_guild_audit_log
+            )
+
+            result = await fabric_impl.http_adapter.fetch_audit_log(guild)
+
+            fabric_impl.http_api.get_guild_audit_log.assert_awaited_once_with(
+                guild_id="112233",
+                user_id=unspecified.UNSPECIFIED,
+                action_type=unspecified.UNSPECIFIED,
+                limit=unspecified.UNSPECIFIED,
+            )
+            assert result is mock_audit_log
+
+    @pytest.mark.asyncio
+    @_helpers.parameterize_valid_id_formats_for_models("guild", 112233, guilds.Guild)
+    @_helpers.parameterize_valid_id_formats_for_models("user", 334455, users.User, users.OAuth2User)
+    async def test_fetch_audit_log_with_optional_args_specified(self, fabric_impl, guild, user):
+        mock_audit_log = _helpers.mock_model(audit_logs.AuditLog)
+        with _helpers.mock_patch(audit_logs.AuditLog, return_value=mock_audit_log):
+            mock_payload = mock.MagicMock(spec_set=dict)
+            fabric_impl.http_api.get_guild_audit_log = asynctest.CoroutineMock(
+                return_value=mock_payload, spec_set=fabric_impl.http_api.get_guild_audit_log
+            )
+
+            result = await fabric_impl.http_adapter.fetch_audit_log(
+                guild, user=user, action_type=audit_logs.AuditLogEvent.CHANNEL_OVERWRITE_CREATE, limit=69,
+            )
+
+            fabric_impl.http_api.get_guild_audit_log.assert_awaited_once_with(
+                guild_id="112233",
+                user_id="334455",
+                action_type=int(audit_logs.AuditLogEvent.CHANNEL_OVERWRITE_CREATE),
+                limit=69,
+            )
+            assert result is mock_audit_log
