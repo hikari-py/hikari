@@ -16,15 +16,17 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import asyncio
 import dataclasses
 import datetime
 import enum
-import traceback
+import functools
 import typing
 
 import pytest
 
 from hikari.orm.models import interfaces
+from tests.hikari import _helpers
 
 
 @dataclasses.dataclass()
@@ -56,6 +58,9 @@ class TestSnowflake:
         instance = DummySnowflake(12345)
         assert instance is not None
         assert isinstance(instance, interfaces.ISnowflake)
+
+    def test_Snowflake_is_resolved(self):
+        assert DummySnowflake(12345).is_resolved is True
 
     def test_Snowflake_comparison(self):
         assert DummySnowflake(12345) < DummySnowflake(12346)
@@ -326,3 +331,89 @@ class TestFabricatedMixin:
     def test_regular_FabricatedMixin_can_initialize_with_fabric_slot(self):
         class Regular(interfaces.IStatefulModel):
             __slots__ = ("_fabric",)
+
+
+@pytest.mark.model
+class TestUnknownObject:
+    def test_is_resolved_is_False(self):
+        assert interfaces.UnknownObject(1234, ...).is_resolved is False
+
+    @pytest.mark.asyncio
+    async def test_await_creates_future(self):
+        async def coro(a, b, c):
+            return a + b + c
+
+        obj = interfaces.UnknownObject(1234, functools.partial(coro, 1, 2, 3))
+
+        await obj
+
+        assert isinstance(obj._future, asyncio.Future)
+
+    @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=NotImplementedError)
+    async def test_await_on_unawaitable_UnknownObject_errors(self):
+        obj = interfaces.UnknownObject(1234)
+        await obj
+
+    @pytest.mark.asyncio
+    async def test_await_yields_result(self):
+        call_count = 0
+
+        async def coro(a, b, c):
+            nonlocal call_count
+            call_count += 1
+            return a + b + c
+
+        obj = interfaces.UnknownObject(1234, functools.partial(coro, 1, 2, 3))
+
+        for i in range(3):
+            assert await obj == 6
+
+        assert call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_callback_is_invoked(self):
+        call_count = 0
+        received_result = ...
+
+        async def coro(a, b, c):
+            return a + b + c
+
+        def callback(result):
+            nonlocal received_result, call_count
+            call_count += 1
+            received_result = result
+
+        obj = interfaces.UnknownObject(1234, functools.partial(coro, 1, 2, 3))
+        obj.add_done_callback(callback)
+
+        for i in range(3):
+            await obj
+
+        assert call_count == 1
+        assert received_result == 6
+
+    @pytest.mark.asyncio
+    async def test_callback_is_invoked_after_finished_asap(self):
+        call_count = 0
+        received_result = ...
+
+        async def coro(a, b, c):
+            return a + b + c
+
+        def callback(result):
+            nonlocal received_result, call_count
+            call_count += 1
+            received_result = result
+
+        obj = interfaces.UnknownObject(1234, functools.partial(coro, 1, 2, 3))
+
+        for i in range(3):
+            await obj
+
+        obj.add_done_callback(callback)
+
+        await asyncio.sleep(0.1)
+
+        assert call_count == 1
+        assert received_result == 6

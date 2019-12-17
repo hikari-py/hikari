@@ -19,6 +19,7 @@
 """
 Custom data structures and constant values.
 """
+import sys
 import types
 import typing
 
@@ -121,6 +122,28 @@ class DefaultImmutableMapping(typing.Mapping[HashableT, ValueT]):
 
     def __iter__(self) -> typing.Iterator[HashableT]:
         return iter(self._data)
+
+
+ReturnT = typing.TypeVar("ReturnT")
+
+# Protocol is a Python3.8 thing, luckily I can make a hacky workaround for the time being.
+if sys.version_info < (3, 8):
+
+    class PartialCoroutineProtocolT(typing.Callable[[], typing.Coroutine[None, None, ReturnT]]):
+        """Represents the type of a :class:`functools.partial` wrapping an :mod:`asyncio` coroutine."""
+
+        @classmethod
+        def __class_getitem__(cls, item: ReturnT):
+            return cls
+
+
+else:
+
+    class PartialCoroutineProtocolT(typing.Protocol[ReturnT]):
+        """Represents the type of a :class:`functools.partial` wrapping an :mod:`asyncio` coroutine."""
+
+        def __call__(self) -> typing.Coroutine[None, None, ReturnT]:
+            ...
 
 
 #: An immutable indexable container of elements with zero size.
