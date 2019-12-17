@@ -27,8 +27,8 @@ from hikari.internal_utilities import cache
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import io_helpers
 from hikari.internal_utilities import unspecified
-from hikari.orm import http_adapter
 from hikari.orm import fabric as _fabric
+from hikari.orm import http_adapter
 from hikari.orm.models import applications as _applications
 from hikari.orm.models import audit_logs as _audit_logs
 from hikari.orm.models import channels as _channels
@@ -68,7 +68,7 @@ class HTTPAdapterImpl(http_adapter.IHTTPAdapter):
 
     async def fetch_gateway_bot(self) -> _gateway_bot.GatewayBot:
         gateway_bot_payload = await self.fabric.http_api.get_gateway_bot()
-        return _gateway_bot.GatewayBot(gateway_bot_payload)
+        return self.fabric.state_registry.parse_gateway_bot(gateway_bot_payload)
 
     async def fetch_audit_log(
         self,
@@ -78,15 +78,16 @@ class HTTPAdapterImpl(http_adapter.IHTTPAdapter):
         action_type: _audit_logs.AuditLogEvent = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
     ) -> _audit_logs.AuditLog:
-        audit_payload = await self.fabric.http_api.get_guild_audit_log(
+        audit_log_payload = await self.fabric.http_api.get_guild_audit_log(
             guild_id=str(int(guild)),
             user_id=str(int(user)) if user is not unspecified.UNSPECIFIED else unspecified.UNSPECIFIED,
             action_type=int(action_type) if action_type is not unspecified.UNSPECIFIED else unspecified.UNSPECIFIED,
             limit=limit,
         )
-        return _audit_logs.AuditLog(self.fabric, audit_payload)
+        return self.fabric.state_registry.parse_audit_log(audit_log_payload)
 
-    async def fetch_channel(self, channel_id: _channels.ChannelLikeT) -> _channels.Channel:
+    async def fetch_channel(self, channel: _channels.ChannelLikeT) -> _channels.Channel:
+        # channel_payload = await self.fabric.http_api.get_channel(str(int(channel)))
         raise NotImplementedError
 
     async def update_channel(
