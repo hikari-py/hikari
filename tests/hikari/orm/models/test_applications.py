@@ -20,9 +20,9 @@ from unittest import mock
 
 import pytest
 
-from hikari.orm.models import applications
 from hikari.orm import fabric
 from hikari.orm import state_registry
+from hikari.orm.models import applications
 
 
 @pytest.fixture

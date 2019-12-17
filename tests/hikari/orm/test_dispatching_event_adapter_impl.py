@@ -17,10 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
+import datetime
 import inspect
 import logging
-import datetime
-
 from unittest import mock
 
 import asynctest
@@ -33,14 +32,13 @@ from hikari.orm import events
 from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import channels
+from hikari.orm.models import emojis
 from hikari.orm.models import guilds
 from hikari.orm.models import members
-from hikari.orm.models import users
-from hikari.orm.models import roles
-from hikari.orm.models import emojis
-from hikari.orm.models import reactions
 from hikari.orm.models import messages
-
+from hikari.orm.models import reactions
+from hikari.orm.models import roles
+from hikari.orm.models import users
 from tests.hikari import _helpers
 
 
