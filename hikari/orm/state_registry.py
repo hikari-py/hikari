@@ -26,9 +26,14 @@ import datetime
 import typing
 
 from hikari.internal_utilities import data_structures
+from hikari.orm.models import applications
+from hikari.orm.models import audit_logs
 from hikari.orm.models import channels
+from hikari.orm.models import connections
 from hikari.orm.models import emojis
+from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
+from hikari.orm.models import interfaces
 from hikari.orm.models import members
 from hikari.orm.models import messages
 from hikari.orm.models import presences
@@ -191,6 +196,67 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
+    def get_mandatory_channel_by_id(
+        self,
+        channel_id: int,
+        callback_if_unresolved: typing.Optional[typing.Callable[[channels.Channel], typing.Any]] = None,
+    ) -> typing.Union[channels.Channel, interfaces.UnknownObject[channels.Channel]]:
+        """
+        Find a channel by a given ID. Guilds are searched first. If no match is found in a guild, then any open DM
+        channels are also checked. If nothing is found still, we return a
+        :class:`hikari.orm.models.interfaces.UnknownObject`.
+
+        Args:
+            channel_id:
+                the channel ID.
+            callback_if_unresolved:
+                optional callback to invoke with the resolved object if we resolve it later on.
+                This allows you to update dependencies with the fixed value where appropriate if desired.
+
+        Returns:
+            a :class:`hikari.orm.models.channels.Channel` derivative, or
+            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+        """
+
+    @abc.abstractmethod
+    def get_guild_emoji_by_id(self, emoji_id: int) -> typing.Optional[emojis.GuildEmoji]:
+        """
+        Find a guild emoji by an ID.
+
+        Args:
+            emoji_id:
+                the ID of the guild emoji to look up.
+
+        Returns:
+            a :class:`hikari.orm.models.emojis.GuildEmoji` object, or `None` if one was not found.
+        """
+
+    @abc.abstractmethod
+    def get_mandatory_guild_emoji_by_id(
+        self,
+        emoji_id: int,
+        guild_id: int,
+        callback_if_unresolved: typing.Optional[typing.Callable[[emojis.GuildEmoji], typing.Any]] = None,
+    ) -> typing.Union[emojis.GuildEmoji, interfaces.UnknownObject[emojis.GuildEmoji]]:
+        """
+        Find a guild emoji by a given ID. If nothing is found, we return a
+        :class:`hikari.orm.models.interfaces.UnknownObject`.
+
+        Args:
+            emoji_id:
+                the emoji ID.
+            guild_id:
+                the guild the emoji is in (needed for the potential resolution call possibility)
+            callback_if_unresolved:
+                optional callback to invoke with the resolved object if we resolve it later on.
+                This allows you to update dependencies with the fixed value where appropriate if desired.
+
+        Returns:
+            a :class:`hikari.orm.models.emojis.GuildEmoji` derivative, or
+            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+        """
+
+    @abc.abstractmethod
     def get_guild_by_id(self, guild_id: int) -> typing.Optional[guilds.Guild]:
         """
         Find a guild by an ID.
@@ -204,6 +270,26 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
+    def get_mandatory_guild_by_id(
+        self, guild_id: int, callback_if_unresolved: typing.Optional[typing.Callable[[guilds.Guild], typing.Any]] = None
+    ) -> typing.Union[guilds.Guild, interfaces.UnknownObject[guilds.Guild]]:
+        """
+        Find a guild by a given ID. If nothing is found, we return a
+        :class:`hikari.orm.models.interfaces.UnknownObject`.
+
+        Args:
+            guild_id:
+                the guild ID.
+            callback_if_unresolved:
+                optional callback to invoke with the resolved object if we resolve it later on.
+                This allows you to update dependencies with the fixed value where appropriate if desired.
+
+        Returns:
+            a :class:`hikari.orm.models.guilds.Guild` derivative, or
+            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+        """
+
+    @abc.abstractmethod
     def get_message_by_id(self, message_id: int) -> typing.Optional[messages.Message]:
         """
         Find a message by an ID.
@@ -214,6 +300,32 @@ class IStateRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.messages.Message` object, or `None` if one was not found.
+        """
+
+    @abc.abstractmethod
+    def get_mandatory_message_by_id(
+        self,
+        message_id: int,
+        channel_id: int,
+        callback_if_unresolved: typing.Optional[typing.Callable[[messages.Message], typing.Any]] = None,
+    ) -> typing.Union[messages.Message, interfaces.UnknownObject[messages.Message]]:
+        """
+        Find a message by a given ID. If nothing is found, we return a
+        :class:`hikari.orm.models.interfaces.UnknownObject`.
+
+        Args:
+            message_id:
+                the message ID.
+            channel_id:
+                the channel ID the message is in (required for a potential API call to resolve the message if not
+                found).
+            callback_if_unresolved:
+                optional callback to invoke with the resolved object if we resolve it later on.
+                This allows you to update dependencies with the fixed value where appropriate if desired.
+
+        Returns:
+            a :class:`hikari.orm.models.messages.Message` derivative, or
+            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -233,6 +345,31 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
+    def get_mandatory_role_by_id(
+        self,
+        guild_id: int,
+        role_id: int,
+        callback_if_unresolved: typing.Optional[typing.Callable[[roles.Role], typing.Any]] = None,
+    ) -> typing.Union[roles.Role, interfaces.UnknownObject[roles.Role]]:
+        """
+        Find a role by a given guild ID and role ID. If nothing is found, we return a
+        :class:`hikari.orm.models.interfaces.UnknownObject`.
+
+        Args:
+            guild_id:
+                the guild ID.
+            role_id:
+                the role ID.
+            callback_if_unresolved:
+                optional callback to invoke with the resolved object if we resolve it later on.
+                This allows you to update dependencies with the fixed value where appropriate if desired.
+
+        Returns:
+            a :class:`hikari.orm.models.roles.Role` derivative, or
+            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+        """
+
+    @abc.abstractmethod
     def get_user_by_id(self, user_id: int) -> typing.Optional[users.User]:
         """
         Find a user by an ID.
@@ -243,6 +380,26 @@ class IStateRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.users.User` object, or `None` if one was not found.
+        """
+
+    @abc.abstractmethod
+    def get_mandatory_user_by_id(
+        self, user_id: int, callback_if_unresolved: typing.Optional[typing.Callable[[users.User], typing.Any]] = None
+    ) -> typing.Union[users.User, interfaces.UnknownObject[users.User]]:
+        """
+        Find a user by a given ID. If nothing is found, we return a
+        :class:`hikari.orm.models.interfaces.UnknownObject`.
+
+        Args:
+            user_id:
+                the user's ID.
+            callback_if_unresolved:
+                optional callback to invoke with the resolved object if we resolve it later on.
+                This allows you to update dependencies with the fixed value where appropriate if desired.
+
+        Returns:
+            a :class:`hikari.orm.models.users.User` derivative, or
+            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -261,6 +418,44 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
+    def get_mandatory_member_by_id(
+        self,
+        user_id: int,
+        guild_id: int,
+        callback_if_unresolved: typing.Optional[typing.Callable[[members.Member], typing.Any]] = None,
+    ) -> typing.Union[members.MemberLikeT, interfaces.UnknownObject[members.Member]]:
+        """
+        Find a member by a given user ID and guild ID. If nothing is found, we return a
+        :class:`hikari.orm.models.interfaces.UnknownObject`.
+
+        Args:
+            user_id:
+                the user's ID.
+            guild_id:
+                the guild's ID.
+            callback_if_unresolved:
+                optional callback to invoke with the resolved object if we resolve it later on.
+                This allows you to update dependencies with the fixed value where appropriate if desired.
+
+        Returns:
+            a :class:`hikari.orm.models.members.Member` derivative, or
+            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+        """
+
+    @abc.abstractmethod
+    def parse_application(self, application_payload: data_structures.DiscordObjectT) -> applications.Application:
+        """
+        Parses an application payload into a workable object.
+
+        Args:
+            application_payload:
+                the payload of the application.
+
+        Returns:
+            a :class:`hikari.orm.models.applications.Application` object.
+        """
+
+    @abc.abstractmethod
     def parse_application_user(self, application_user_payload: data_structures.DiscordObjectT) -> users.OAuth2User:
         """
         Parses an application user payload into a workable object.
@@ -271,6 +466,19 @@ class IStateRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.users.OAuth2User` object.
+        """
+
+    @abc.abstractmethod
+    def parse_audit_log(self, audit_log_payload: data_structures.DiscordObjectT) -> audit_logs.AuditLog:
+        """
+        Parses an audit log payload into a workable object.
+
+        Args:
+            audit_log_payload:
+                The audit log payload to parse.
+
+        Returns:
+            a :class:`hikari.orm.models.audit_logs.AuditLog` object.
         """
 
     @typing.overload
@@ -288,7 +496,7 @@ class IStateRegistry(abc.ABC):
         self, channel_payload: data_structures.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild]
     ) -> channels.Channel:
         """
-        Parses a channel payload into a workable object
+        Parses a channel payload into a workable object.
 
         Args:
             channel_payload:
@@ -298,6 +506,19 @@ class IStateRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.channels.Channel` object.
+        """
+
+    @abc.abstractmethod
+    def parse_connection(self, connection_payload: data_structures.DiscordObjectT) -> connections.Connection:
+        """
+        Parses a connection payload into a workable object.
+
+        Args:
+            connection_payload:
+                the payload of the connection.
+
+        Returns:
+            a :class:`hikari.orm.models.connections.Connection` object.
         """
 
     @typing.overload
@@ -313,7 +534,7 @@ class IStateRegistry(abc.ABC):
         self, emoji_payload: data_structures.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild]
     ) -> emojis.Emoji:
         """
-        Parses a emoji payload into a workable object
+        Parses a emoji payload into a workable object.
 
         Args:
             emoji_payload:
@@ -326,11 +547,24 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
+    def parse_gateway_bot(self, gateway_bot_payload: data_structures.DiscordObjectT) -> gateway_bot.GatewayBot:
+        """
+        Parses a gateway bot payload into a workable object.
+
+        Args:
+            gateway_bot_payload:
+                the payload of the gateway bot.
+
+        Returns:
+            a :class:`hikari.orm.models.gateway_bot.GatewayBot` object.
+        """
+
+    @abc.abstractmethod
     def parse_guild(
         self, guild_payload: data_structures.DiscordObjectT, shard_id: typing.Optional[int]
     ) -> guilds.Guild:
         """
-        Parses a guild payload into a workable object
+        Parses a guild payload into a workable object.
 
         Args:
             guild_payload:
@@ -366,7 +600,7 @@ class IStateRegistry(abc.ABC):
         guild_obj: guilds.Guild,
     ) -> members.Member:
         """
-        Parses a partial member payload and the corresponding user payload into a workable object
+        Parses a partial member payload and the corresponding user payload into a workable object.
 
         This is provided for cases such as https://discordapp.com/developers/docs/resources/channel#message-object
         where the provided member is only partially constructed.
@@ -386,7 +620,7 @@ class IStateRegistry(abc.ABC):
     @abc.abstractmethod
     def parse_member(self, member_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> members.Member:
         """
-        Parses a member payload into a workable object
+        Parses a member payload into a workable object.
 
         Args:
             member_payload:
@@ -399,17 +633,16 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_message(self, message_payload: data_structures.DiscordObjectT) -> typing.Optional[messages.Message]:
+    def parse_message(self, message_payload: data_structures.DiscordObjectT) -> messages.Message:
         """
-        Parses a message payload into a workable object
+        Parses a message payload into a workable object.
 
         Args:
             message_payload:
                 the payload of the message.
 
         Returns:
-            a :class:`hikari.orm.models.messages.Message` object. If the channel doesn't exist, it will refuse to
-            parse the object and return `None` instead.
+            a :class:`hikari.orm.models.messages.Message` object.
 
         Warning:
             This will not validate whether internal channels and guilds exist. You must do that yourself, as there
@@ -437,7 +670,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_reaction(self, reaction_payload: data_structures.DiscordObjectT) -> typing.Optional[reactions.Reaction]:
+    def parse_reaction(self, reaction_payload: data_structures.DiscordObjectT) -> reactions.Reaction:
         """
         Attempt to parse a reaction object and store it on the corresponding message.
 
@@ -446,14 +679,13 @@ class IStateRegistry(abc.ABC):
                 the reaction object to parse.
 
         Returns:
-            a :class:`hikari.orm.models.reactions.Reaction` object. If message channel doesn't exist, it will refuse to
-            parse the object and return `None` instead.
+            a :class:`hikari.orm.models.reactions.Reaction` object.
         """
 
     @abc.abstractmethod
     def parse_role(self, role_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> roles.Role:
         """
-        Parses a role payload into a workable object
+        Parses a role payload into a workable object.
 
         Args:
             role_payload:
@@ -468,7 +700,7 @@ class IStateRegistry(abc.ABC):
     @abc.abstractmethod
     def parse_user(self, user_payload: data_structures.DiscordObjectT) -> typing.Union[users.User, users.OAuth2User]:
         """
-        Parses a user payload into a workable object
+        Parses a user payload into a workable object.
 
         Args:
             user_payload:
@@ -488,7 +720,7 @@ class IStateRegistry(abc.ABC):
     @abc.abstractmethod
     def parse_webhook(self, webhook_payload: data_structures.DiscordObjectT) -> webhooks.Webhook:
         """
-        Parses a webhook payload into a workable object
+        Parses a webhook payload into a workable object.
 
         Args:
             webhook_payload:

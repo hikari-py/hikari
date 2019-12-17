@@ -30,9 +30,9 @@ import pytest
 
 from hikari import errors
 from hikari.internal_utilities import data_structures
-from hikari.net import rates
 from hikari.net import gateway
 from hikari.net import opcodes
+from hikari.net import rates
 from hikari.net import ws
 from tests.hikari import _helpers
 

@@ -17,9 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import dataclasses
+import typing
 
 import pytest
-import typing
 
 from hikari.internal_utilities import transformations
 from hikari.internal_utilities import unspecified
