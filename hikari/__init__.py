@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019-2020
+# Copyright © Nekokatt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,9 +16,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""
+Hikari's core framework for writing Discord bots in Python.
+"""
 
-from hikari import commands
+
+from hikari import client
 from hikari import errors
+from hikari import internal_utilities
 from hikari import net
 from hikari import orm
 from hikari.orm import events
