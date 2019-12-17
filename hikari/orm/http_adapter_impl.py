@@ -17,17 +17,18 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Bridges the HTTP API and the state registry to provide an object-oriented interface
-to use to interact with the HTTP API.
+Implementation of a basic HTTP adapter.
 """
 from __future__ import annotations
 
-import abc
 import typing
 
+from hikari.internal_utilities import cache
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import io_helpers
 from hikari.internal_utilities import unspecified
+from hikari.orm import http_adapter
+from hikari.orm import fabric as _fabric
 from hikari.orm.models import applications as _applications
 from hikari.orm.models import audit_logs as _audit_logs
 from hikari.orm.models import channels as _channels
@@ -52,38 +53,23 @@ from hikari.orm.models import voices as _voices
 from hikari.orm.models import webhooks as _webhooks
 
 
-class IHTTPAdapter(abc.ABC):
-    """
-    Component that bridges the basic HTTP API exposed by :mod:`hikari.net.http_client` and
-    wraps it in a unit of processing that can handle parsing API objects into Hikari ORM objects,
-    and can handle keeping the state up to date as required.
-    """
+class HTTPAdapterImpl(http_adapter.IHTTPAdapter):
+    """Implementation of a basic HTTP adapter."""
 
-    __slots__ = ()
+    __slots__ = ("fabric", "_cp_gateway_url")
 
-    @property
-    @abc.abstractmethod
+    def __init__(self, fabric: _fabric.Fabric) -> None:
+        #: The fabric of this application.
+        self.fabric: _fabric.Fabric = fabric
+
+    @cache.cached_property()
     async def gateway_url(self) -> str:
-        """
-        Returns:
-            A static URL to use to connect to the gateway with.
+        return await self.fabric.http_api.get_gateway()
 
-        Note:
-            This call is cached after the first invocation. This does not require authorization
-            to work.
-        """
-
-    @abc.abstractmethod
     async def fetch_gateway_bot(self) -> _gateway_bot.GatewayBot:
-        """
-        Returns:
-            The gateway bot details to use as a recommendation for sharding and bot initialization.
+        gateway_bot_payload = await self.fabric.http_api.get_gateway_bot()
+        return _gateway_bot.GatewayBot(gateway_bot_payload)
 
-        Note:
-            Unlike :meth:`get_gateway`, this requires valid Bot authorization to work.
-        """
-
-    @abc.abstractmethod
     async def fetch_audit_log(
         self,
         guild: _guilds.GuildLikeT,
@@ -92,31 +78,17 @@ class IHTTPAdapter(abc.ABC):
         action_type: _audit_logs.AuditLogEvent = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
     ) -> _audit_logs.AuditLog:
-        """
-        Fetch the audit log for a given guild.
-        
-        Args:
-            guild:
-                The guild object or guild snowflake to retrieve the audit logs for.
-            user:
-                Filter the audit log entries by a specific user object or user snowflake. Leave unspecified to not
-                perform filtering.
-            action_type:
-                Filter the audit log entries by a specific action type. Leave unspecified to not perform
-                filtering.
-            limit:
-                The limit of the number of entries to return. Leave unspecified to return the maximum
-                number allowed.
-                
-        Returns:
-            An audit log object.
-        """
+        audit_payload = await self.fabric.http_api.get_guild_audit_log(
+            guild_id=str(int(guild)),
+            user_id=str(int(user)) if user is not unspecified.UNSPECIFIED else unspecified.UNSPECIFIED,
+            action_type=int(action_type) if action_type is not unspecified.UNSPECIFIED else unspecified.UNSPECIFIED,
+            limit=limit,
+        )
+        return _audit_logs.AuditLog(self.fabric, audit_payload)
 
-    @abc.abstractmethod
     async def fetch_channel(self, channel_id: _channels.ChannelLikeT) -> _channels.Channel:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def update_channel(
         self,
         channel: _channels.ChannelLikeT,
@@ -131,13 +103,11 @@ class IHTTPAdapter(abc.ABC):
         parent_category: typing.Optional[_channels.GuildCategoryLikeT] = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> _channels.Channel:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def delete_channel(self, channel: _channels.ChannelLikeT) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_messages(
         self,
         channel: _channels.TextChannelLikeT,
@@ -148,15 +118,13 @@ class IHTTPAdapter(abc.ABC):
         around: _messages.MessageLikeT = unspecified.UNSPECIFIED,
         in_order: bool = False,
     ) -> typing.AsyncIterator[_messages.Message]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_message(
         self, channel: _channels.TextChannelLikeT, message: _messages.MessageLikeT
     ) -> _messages.Message:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def create_message(
         self,
         channel: _channels.TextChannelLikeT,
@@ -166,23 +134,19 @@ class IHTTPAdapter(abc.ABC):
         files: typing.Collection[_media.AbstractFile] = unspecified.UNSPECIFIED,
         embed: _embeds.Embed = unspecified.UNSPECIFIED,
     ) -> _messages.Message:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def create_reaction(
         self, message: _messages.MessageLikeT, emoji: _emojis.KnownEmojiLikeT
     ) -> _reactions.Reaction:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def delete_reaction(self, reaction: _reactions.Reaction, user: _users.IUserLikeT) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def delete_all_reactions(self, message: _messages.MessageLikeT) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def update_message(
         self,
         message: _messages.MessageLikeT,
@@ -190,15 +154,13 @@ class IHTTPAdapter(abc.ABC):
         embed: typing.Optional[_embeds.Embed] = unspecified.UNSPECIFIED,
         flags: int = unspecified.UNSPECIFIED,
     ) -> _messages.Message:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def delete_messages(
         self, first_message: _messages.MessageLikeT, *additional_messages: _messages.MessageLikeT
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def update_channel_overwrite(
         self,
         channel: _channels.GuildChannelLikeT,
@@ -209,59 +171,38 @@ class IHTTPAdapter(abc.ABC):
         type_: _overwrites.OverwriteEntityType = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_invites_for_channel(self, channel: _channels.GuildChannelLikeT) -> typing.Sequence[_invites.Invite]:
-        ...
+        raise NotImplementedError
 
-    async def create_invite_for_channel(
-        self,
-        channel: _channels.GuildChannelLikeT,
-        *,
-        max_age: int = unspecified.UNSPECIFIED,
-        max_uses: int = unspecified.UNSPECIFIED,
-        temporary: bool = unspecified.UNSPECIFIED,
-        unique: bool = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
-    ) -> _invites.Invite:
-        ...
-
-    @abc.abstractmethod
     async def delete_channel_overwrite(
-        self, channel: _channels.GuildChannelLikeT, overwrite: _overwrites.OverwriteLikeT,
+        self, channel: _channels.GuildChannelLikeT, overwrite: _overwrites.OverwriteLikeT
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def trigger_typing(self, channel: _channels.TextChannelLikeT) -> _channels.TypingIndicator:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_pins(
         self, channel: _channels.TextChannelLikeT, *, in_order: bool = False
     ) -> typing.AsyncIterator[_messages.Message]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def pin_message(self, message: _messages.MessageLikeT) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def unpin_message(self, message: _messages.MessageLikeT) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_guild_emoji(
         self, emoji: _emojis.GuildEmojiLikeT, guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED
     ) -> _emojis.GuildEmoji:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_guild_emojis(self, guild: _guilds.GuildLikeT) -> typing.Collection[_emojis.GuildEmoji]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def create_guild_emoji(
         self,
         guild: _guilds.GuildLikeT,
@@ -271,9 +212,8 @@ class IHTTPAdapter(abc.ABC):
         roles: typing.Collection[_roles.RoleLikeT] = data_structures.EMPTY_COLLECTION,
         reason: str = unspecified.UNSPECIFIED,
     ) -> _emojis.GuildEmoji:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def update_guild_emoji(
         self,
         emoji: _emojis.GuildEmojiLikeT,
@@ -282,21 +222,18 @@ class IHTTPAdapter(abc.ABC):
         roles: typing.Collection[_roles.RoleLikeT] = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def delete_guild_emoji(self, emoji: _emojis.GuildEmojiLikeT) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def create_guild(self) -> None:
-        raise NotImplementedError("TODO: refine me")
+        #: TODO: refine what this needs to have in it.
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_guild(self, guild: _guilds.GuildLikeT) -> _guilds.Guild:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def update_guild(
         self,
         guild: _guilds.GuildLikeT,
@@ -309,25 +246,19 @@ class IHTTPAdapter(abc.ABC):
         afk_channel: _channels.GuildVoiceChannel = unspecified.UNSPECIFIED,
         afk_timeout: int = unspecified.UNSPECIFIED,
         icon_data: io_helpers.FileLikeT = unspecified.UNSPECIFIED,
-        #: TODO: While this will always be a member of the guild for it to work, do I want to allow any user here too?
         owner: _members.MemberLikeT = unspecified.UNSPECIFIED,
         splash: io_helpers.FileLikeT = unspecified.UNSPECIFIED,
-        #: TODO: Can this be an announcement (news) channel also?
         system_channel: _channels.GuildTextChannelLikeT = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def delete_guild(self, guild: _guilds.GuildLikeT) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_guild_channels(self, guild: _guilds.GuildLikeT) -> typing.Sequence[_channels.GuildChannel]:
-        # Sequence as it should be in channel positional order...
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def create_guild_channel(
         self,
         guild: _guilds.GuildLikeT,
@@ -344,32 +275,28 @@ class IHTTPAdapter(abc.ABC):
         nsfw: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> _channels.GuildChannel:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def reposition_guild_channels(
         self,
         guild: _guilds.GuildLikeT,
         first_channel: typing.Tuple[int, _channels.GuildChannelLikeT],
         *additional_channels: typing.Tuple[int, _channels.GuildChannelLikeT],
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_member(
         self,
         user: typing.Union[_users.IUserLikeT, _members.MemberLikeT],
         guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
     ) -> _members.Member:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_members(
-        self, guild: _guilds.GuildLikeT, *, limit: int = unspecified.UNSPECIFIED,
+        self, guild: _guilds.GuildLikeT, *, limit: int = unspecified.UNSPECIFIED
     ) -> typing.Collection[_members.Member]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def update_member(
         self,
         member: _members.MemberLikeT,
@@ -381,37 +308,30 @@ class IHTTPAdapter(abc.ABC):
         current_voice_channel: typing.Optional[_channels.GuildVoiceChannelLikeT] = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def update_member_nickname(self, member: _members.MemberLikeT, nick: typing.Optional[str]) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def add_role_to_member(
         self, role: _roles.RoleLikeT, member: _members.MemberLikeT, *, reason: str = unspecified.UNSPECIFIED
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def remove_role_from_member(
         self, role: _roles.RoleLikeT, member: _members.MemberLikeT, *, reason: str = unspecified.UNSPECIFIED
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def kick_member(self, member: _members.MemberLikeT, *, reason: str = unspecified.UNSPECIFIED) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_ban(self, guild: _guilds.GuildLikeT, user: _users.IUserLikeT) -> _guilds.Ban:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_bans(self, guild: _guilds.GuildLikeT) -> typing.Collection[_guilds.Ban]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def ban_member(
         self,
         guild: _guilds.GuildLikeT,
@@ -420,19 +340,16 @@ class IHTTPAdapter(abc.ABC):
         delete_message_days: typing.Optional[int] = None,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def unban_member(
-        self, guild: _guilds.GuildLikeT, user: _users.IUserLikeT, *, reason: str = unspecified.UNSPECIFIED,
+        self, guild: _guilds.GuildLikeT, user: _users.IUserLikeT, *, reason: str = unspecified.UNSPECIFIED
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_roles(self, guild: _guilds.GuildLikeT) -> typing.Sequence[_roles.Role]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def create_role(
         self,
         guild: _guilds.GuildLikeT,
@@ -444,18 +361,16 @@ class IHTTPAdapter(abc.ABC):
         mentionable: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> _roles.Role:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def reposition_roles(
         self,
         guild: _guilds.GuildLikeT,
         first_role: typing.Tuple[int, _roles.RoleLikeT],
         *additional_roles: typing.Tuple[int, _roles.RoleLikeT],
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def update_role(
         self,
         guild: _guilds.GuildLikeT,
@@ -468,17 +383,14 @@ class IHTTPAdapter(abc.ABC):
         mentionable: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def delete_role(self, guild: _guilds.GuildLikeT, role: _roles.RoleLikeT) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def estimate_guild_prune_count(self, guild: _guilds.GuildLikeT, days: int) -> int:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def begin_guild_prune(
         self,
         guild: _guilds.GuildLikeT,
@@ -487,21 +399,17 @@ class IHTTPAdapter(abc.ABC):
         compute_prune_count: bool = False,
         reason: str = unspecified.UNSPECIFIED,
     ) -> typing.Optional[int]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_guild_voice_regions(self, guild: _guilds.GuildLikeT) -> typing.Collection[_voices.VoiceRegion]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_guild_invites(self, guild: _guilds.GuildLikeT) -> typing.Collection[_invites.Invite]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_integrations(self, guild: _guilds.GuildLikeT) -> typing.Collection[_integrations.Integration]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def create_guild_integration(
         self,
         guild: _guilds.GuildLikeT,
@@ -510,143 +418,115 @@ class IHTTPAdapter(abc.ABC):
         *,
         reason: str = unspecified.UNSPECIFIED,
     ) -> _integrations.Integration:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def update_integration(
         self,
         guild: _guilds.GuildLikeT,
         integration: _integrations.IntegrationLikeT,
         *,
-        expire_behaviour: int = unspecified.UNSPECIFIED,  # TODO: is this documented?
-        expire_grace_period: int = unspecified.UNSPECIFIED,  #: TODO: is this days or seconds?
+        expire_behaviour: int = unspecified.UNSPECIFIED,
+        expire_grace_period: int = unspecified.UNSPECIFIED,
         enable_emojis: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def delete_integration(self, guild: _guilds.GuildLikeT, integration: _integrations.IntegrationLikeT) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def sync_guild_integration(
         self, guild: _guilds.GuildLikeT, integration: _integrations.IntegrationLikeT
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_guild_embed(self, guild: _guilds.GuildLikeT) -> _embeds.ReceivedEmbed:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def modify_guild_embed(
-        self, guild: _guilds.GuildLikeT, embed: _embeds.Embed, *, reason: str = unspecified.UNSPECIFIED,
+        self, guild: _guilds.GuildLikeT, embed: _embeds.Embed, *, reason: str = unspecified.UNSPECIFIED
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_guild_vanity_url(self, guild: _guilds.GuildLikeT) -> str:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     def fetch_guild_widget_image(
         self, guild: _guilds.GuildLikeT, *, style: _guilds.WidgetStyle = unspecified.UNSPECIFIED
     ) -> str:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_invite(self, invite_code: _invites.InviteLikeT) -> _invites.Invite:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def delete_invite(self, invite_code: _invites.InviteLikeT) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_user(self, user: _users.IUserLikeT) -> typing.Union[_users.User, _users.OAuth2User]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_application_info(self) -> _applications.Application:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_me(self) -> _users.OAuth2User:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def update_me(
-        self, *, username: str = unspecified.UNSPECIFIED, avatar: io_helpers.FileLikeT = unspecified.UNSPECIFIED,
+        self, *, username: str = unspecified.UNSPECIFIED, avatar: io_helpers.FileLikeT = unspecified.UNSPECIFIED
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_my_connections(self) -> typing.Sequence[_connections.Connection]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_my_guilds(
         self,
         before: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
         after: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_guilds.Guild]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def leave_guild(self, guild: _guilds.GuildLikeT) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def create_dm_channel(self, recipient: _users.IUserLikeT) -> _channels.DMChannel:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_voice_regions(self) -> typing.Collection[_voices.VoiceRegion]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def create_webhook(
         self,
-        #: TODO: Can we make webhooks to announcement channels/store channels?
         channel: _channels.GuildTextChannelLikeT,
         name: str,
         *,
         avatar: io_helpers.FileLikeT = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> _webhooks.Webhook:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_channel_webhooks(
-        #: TODO: Can we make webhooks to announcement channels/store channels?
-        self,
-        channel: _channels.GuildTextChannelLikeT,
+        self, channel: _channels.GuildTextChannelLikeT
     ) -> typing.Collection[_webhooks.Webhook]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_guild_webhooks(self, guild: _guilds.GuildLikeT) -> typing.Collection[_webhooks.Webhook]:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def fetch_webhook(self, webhook: _webhooks.WebhookLikeT) -> _webhooks.Webhook:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def update_webhook(
         self,
         webhook: _webhooks.WebhookLikeT,
         *,
         name: str = unspecified.UNSPECIFIED,
         avatar: bytes = unspecified.UNSPECIFIED,
-        #: TODO: Can we make webhooks to announcement channels/store channels?
         channel: _channels.GuildTextChannelLikeT = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod
     async def delete_webhook(self, webhook: _webhooks.WebhookLikeT) -> None:
-        ...
+        raise NotImplementedError
