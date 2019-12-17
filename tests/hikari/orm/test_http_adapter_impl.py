@@ -28,11 +28,9 @@ from hikari.orm import http_adapter_impl as _http_adapter_impl
 from hikari.orm import state_registry
 from hikari.orm.models import audit_logs
 from hikari.orm.models import channels
-
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
 from hikari.orm.models import users
-
 from tests.hikari import _helpers
 
 

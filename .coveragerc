@@ -16,6 +16,7 @@ exclude_lines =
     ^\s*raise$
     ^\s*pass$
     ^if __name__ == ['"]__main__['"]:$
+    ^if sys.version_info.*:$
     ^\s*...$
     ^\s*@abc.abstractmethod$
 sort = Cover

@@ -32,14 +32,15 @@ from hikari.orm.models import connections
 from hikari.orm.models import emojis
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
+from hikari.orm.models import interfaces
 from hikari.orm.models import members
 from hikari.orm.models import messages
 from hikari.orm.models import presences
 from hikari.orm.models import reactions
 from hikari.orm.models import roles
 from hikari.orm.models import users
-from hikari.orm.models import webhooks
 from hikari.orm.models import voices
+from hikari.orm.models import webhooks
 from tests.hikari import _helpers
 
 
@@ -416,13 +417,13 @@ class TestStateRegistryImpl:
         emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=69)
         registry._emojis = {emoji_obj.id: emoji_obj}
 
-        assert registry.get_emoji_by_id(emoji_obj.id) is emoji_obj
+        assert registry.get_guild_emoji_by_id(emoji_obj.id) is emoji_obj
 
     def test_get_emoji_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=69)
         registry._emojis = {emoji_obj.id: emoji_obj}
 
-        assert registry.get_emoji_by_id(70) is None
+        assert registry.get_guild_emoji_by_id(70) is None
 
     def test_get_guild_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=69)
@@ -903,13 +904,6 @@ class TestStateRegistryImpl:
             parsed_member_obj = registry.parse_member(payload, guild_obj)
             assert parsed_member_obj is member_obj
 
-    def test_parse_message_when_channel_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        payload = {"id": "1234", "channel_id": "4567"}
-        registry._guild_channels = _helpers.StrongWeakValuedDict()
-        registry._dm_channels = _helpers.StrongWeakValuedDict()
-
-        assert registry.parse_message(payload) is None
-
     def test_parse_message_when_channel_cached_updates_last_message_timestamp_on_channel(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
@@ -954,9 +948,10 @@ class TestStateRegistryImpl:
 
     def test_parse_reaction_parses_emoji(self, registry: state_registry_impl.StateRegistryImpl):
         registry.parse_emoji = mock.MagicMock(spec_set=registry.parse_emoji)
-        registry._message_cache = _helpers.StrongWeakValuedDict()
+        message_obj = _helpers.mock_model(messages.Message, id=42069)
+        registry._message_cache = {message_obj.id: message_obj}
         emoji_payload = {"name": "\N{OK HAND SIGN}", "id": None}
-        payload = {"message_id": "1234", "count": 12, "emoji": emoji_payload}
+        payload = {"message_id": "46029", "count": 12, "emoji": emoji_payload}
 
         registry.parse_reaction(payload)
 
@@ -1012,13 +1007,15 @@ class TestStateRegistryImpl:
         with _helpers.mock_patch(reactions.Reaction, return_value=reaction_obj):
             assert registry.parse_reaction(payload) is reaction_obj
 
-    def test_parse_reaction_when_message_is_uncached_returns_None(
+    def test_parse_reaction_when_message_is_uncached_returns_reaction_with_UnknownObject_for_message(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         payload = {"message_id": "1234", "count": 12, "emoji": {"name": "\N{OK HAND SIGN}", "id": None}}
         registry._message_cache = _helpers.StrongWeakValuedDict()
 
-        assert registry.parse_reaction(payload) is None
+        reaction = registry.parse_reaction(payload)
+        assert reaction is not None
+        assert isinstance(reaction.message, interfaces.UnknownObject)
 
     def test_parse_role_when_role_exists_does_not_update_role_mapping(
         self, registry: state_registry_impl.StateRegistryImpl

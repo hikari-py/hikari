@@ -22,7 +22,6 @@ import pytest
 
 from hikari.orm import fabric
 from hikari.orm.models import teams
-from hikari.orm.models import users
 
 
 @pytest.fixture()
