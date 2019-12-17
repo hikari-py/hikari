@@ -23,7 +23,7 @@ import pytest
 
 from hikari.net import http_api
 from hikari.orm import fabric
-from hikari.orm import http_adapter
+from hikari.orm import http_adapter_impl as _http_adapter_impl
 from hikari.orm import state_registry
 
 from hikari.orm.models import gateway_bot
@@ -33,14 +33,14 @@ from tests.hikari import _helpers
 
 # noinspection PyDunderSlots
 @pytest.mark.orm
-class TestHTTPAdapter:
+class TestHTTPAdapterImpl:
     @pytest.fixture()
     def fabric_impl(self):
         fabric_impl = fabric.Fabric()
 
         http_client_impl = asynctest.MagicMock(spec_set=http_api.HTTPAPI)
         state_registry_impl = mock.MagicMock(spec_set=state_registry.IStateRegistry)
-        http_adapter_impl = http_adapter.IHTTPAdapter(fabric_impl)
+        http_adapter_impl = _http_adapter_impl.HTTPAdapterImpl(fabric_impl)
 
         fabric_impl.state_registry = state_registry_impl
         fabric_impl.http_api = http_client_impl
