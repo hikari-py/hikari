@@ -165,6 +165,11 @@ def mock_model(spec_set: typing.Type[T] = object, hash_code_provider=None, **kwa
     obj.__eq__ = lambda self, other: other is self
     obj.__ne__ = lambda self, other: other is not self
     obj.__hash__ = hash_code_provider or spec_set.__hash__
+
+    special_attrs = ["__int__"]
+    for attr in special_attrs:
+        if hasattr(spec_set, attr):
+            setattr(obj, attr, lambda *args, **kws: getattr(spec_set, attr)(*args, **kws))
     return obj
 
 
@@ -204,3 +209,60 @@ class StrongWeakValuedDict(typing.MutableMapping):
 
     def __iter__(self) -> Iterator:
         return iter(self.strong)
+
+
+def _maybe_mock_type_name(value):
+    # noinspection PyProtectedMember
+    return (
+        value._spec_class.__name__
+        if any(mro.__name__ == "MagicMock" for mro in type(value).mro())
+        else type(value).__name__
+    )
+
+
+def _parameterize_ids_id(param_name):
+    def ids(param):
+        type_name = type(param).__name__ if isinstance(param, (str, int)) else _maybe_mock_type_name(param)
+        return f" type({param_name}) is {type_name} "
+
+    return ids
+
+
+def parameterize_valid_id_formats_for_models(param_name, id, model_type1, *model_types, **kwargs):
+    """
+    @pytest.mark.parameterize for a param that is an id-able object, but could be the ID in a string, the ID in an int,
+    or the ID in a given model type...
+
+    For example
+
+    >>> @parameterize_valid_id_formats_for_models("guild", 1234, guilds.Guild, unavailable=False)
+
+    ...would be the same as...
+
+    >>> @pytest.mark.parameterize(
+    ...     "guild",
+    ...     [
+    ...         1234,
+    ...         "1234",
+    ...         mock_model(guilds.Guild, id=1234, unavailable=False)
+    ...     ],
+    ...     id=lambda ...: ...
+    ... )
+
+    These are stackable as long as the parameter name is unique, as expected.
+    """
+    model_types = [model_type1, *model_types]
+
+    def decorator(func):
+        mock_models = []
+        for model_type in model_types:
+            assert "ISnowflake" in map(
+                lambda mro: mro.__name__, model_type.mro()
+            ), "model must be an ISnowflake derivative"
+            mock_models.append(mock_model(model_type, id=int(id), **kwargs))
+
+        return pytest.mark.parametrize(
+            param_name, [str(id), int(id), *mock_models], ids=_parameterize_ids_id(param_name)
+        )(func)
+
+    return decorator
