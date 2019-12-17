@@ -113,7 +113,7 @@ class IHTTPAdapter(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_channel(self, channel_id: _channels.ChannelLikeT) -> _channels.Channel:
+    async def fetch_channel(self, channel: _channels.ChannelLikeT) -> _channels.Channel:
         ...
 
     @abc.abstractmethod

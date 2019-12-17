@@ -266,3 +266,10 @@ def parameterize_valid_id_formats_for_models(param_name, id, model_type1, *model
         )(func)
 
     return decorator
+
+
+def todo_implement(fn=...):
+    def decorator(fn):
+        return pytest.mark.xfail(reason="Code for test case not yet implemented.")(fn)
+
+    return fn is ... and decorator or decorator(fn)

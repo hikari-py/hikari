@@ -26,9 +26,14 @@ import datetime
 import typing
 
 from hikari.internal_utilities import data_structures
+from hikari.orm.models import applications
+from hikari.orm.models import audit_logs
 from hikari.orm.models import channels
+from hikari.orm.models import connections
 from hikari.orm.models import emojis
+from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
+from hikari.orm.models import interfaces
 from hikari.orm.models import members
 from hikari.orm.models import messages
 from hikari.orm.models import presences
@@ -261,6 +266,19 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
+    def parse_application(self, application_payload: data_structures.DiscordObjectT) -> applications.Application:
+        """
+        Parses an application payload into a workable object.
+
+        Args:
+            application_payload:
+                the payload of the application.
+
+        Returns:
+            a :class:`hikari.orm.models.applications.Application` object.
+        """
+
+    @abc.abstractmethod
     def parse_application_user(self, application_user_payload: data_structures.DiscordObjectT) -> users.OAuth2User:
         """
         Parses an application user payload into a workable object.
@@ -271,6 +289,19 @@ class IStateRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.users.OAuth2User` object.
+        """
+
+    @abc.abstractmethod
+    def parse_audit_log(self, audit_log_payload: data_structures.DiscordObjectT) -> audit_logs.AuditLog:
+        """
+        Parses an audit log payload into a workable object.
+
+        Args:
+            audit_log_payload:
+                The audit log payload to parse.
+
+        Returns:
+            a :class:`hikari.orm.models.audit_logs.AuditLog` object.
         """
 
     @typing.overload
@@ -288,7 +319,7 @@ class IStateRegistry(abc.ABC):
         self, channel_payload: data_structures.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild]
     ) -> channels.Channel:
         """
-        Parses a channel payload into a workable object
+        Parses a channel payload into a workable object.
 
         Args:
             channel_payload:
@@ -298,6 +329,19 @@ class IStateRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.channels.Channel` object.
+        """
+
+    @abc.abstractmethod
+    def parse_connection(self, connection_payload: data_structures.DiscordObjectT) -> connections.Connection:
+        """
+        Parses a connection payload into a workable object.
+
+        Args:
+            connection_payload:
+                the payload of the connection.
+
+        Returns:
+            a :class:`hikari.orm.models.connections.Connection` object.
         """
 
     @typing.overload
@@ -313,7 +357,7 @@ class IStateRegistry(abc.ABC):
         self, emoji_payload: data_structures.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild]
     ) -> emojis.Emoji:
         """
-        Parses a emoji payload into a workable object
+        Parses a emoji payload into a workable object.
 
         Args:
             emoji_payload:
@@ -326,11 +370,24 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
+    def parse_gateway_bot(self, gateway_bot_payload: data_structures.DiscordObjectT) -> gateway_bot.GatewayBot:
+        """
+        Parses a gateway bot payload into a workable object.
+
+        Args:
+            gateway_bot_payload:
+                the payload of the gateway bot.
+
+        Returns:
+            a :class:`hikari.orm.models.gateway_bot.GatewayBot` object.
+        """
+
+    @abc.abstractmethod
     def parse_guild(
         self, guild_payload: data_structures.DiscordObjectT, shard_id: typing.Optional[int]
     ) -> guilds.Guild:
         """
-        Parses a guild payload into a workable object
+        Parses a guild payload into a workable object.
 
         Args:
             guild_payload:
@@ -366,7 +423,7 @@ class IStateRegistry(abc.ABC):
         guild_obj: guilds.Guild,
     ) -> members.Member:
         """
-        Parses a partial member payload and the corresponding user payload into a workable object
+        Parses a partial member payload and the corresponding user payload into a workable object.
 
         This is provided for cases such as https://discordapp.com/developers/docs/resources/channel#message-object
         where the provided member is only partially constructed.
@@ -386,7 +443,7 @@ class IStateRegistry(abc.ABC):
     @abc.abstractmethod
     def parse_member(self, member_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> members.Member:
         """
-        Parses a member payload into a workable object
+        Parses a member payload into a workable object.
 
         Args:
             member_payload:
@@ -401,7 +458,7 @@ class IStateRegistry(abc.ABC):
     @abc.abstractmethod
     def parse_message(self, message_payload: data_structures.DiscordObjectT) -> typing.Optional[messages.Message]:
         """
-        Parses a message payload into a workable object
+        Parses a message payload into a workable object.
 
         Args:
             message_payload:
@@ -453,7 +510,7 @@ class IStateRegistry(abc.ABC):
     @abc.abstractmethod
     def parse_role(self, role_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> roles.Role:
         """
-        Parses a role payload into a workable object
+        Parses a role payload into a workable object.
 
         Args:
             role_payload:
@@ -468,7 +525,7 @@ class IStateRegistry(abc.ABC):
     @abc.abstractmethod
     def parse_user(self, user_payload: data_structures.DiscordObjectT) -> typing.Union[users.User, users.OAuth2User]:
         """
-        Parses a user payload into a workable object
+        Parses a user payload into a workable object.
 
         Args:
             user_payload:
@@ -488,7 +545,7 @@ class IStateRegistry(abc.ABC):
     @abc.abstractmethod
     def parse_webhook(self, webhook_payload: data_structures.DiscordObjectT) -> webhooks.Webhook:
         """
-        Parses a webhook payload into a workable object
+        Parses a webhook payload into a workable object.
 
         Args:
             webhook_payload:
