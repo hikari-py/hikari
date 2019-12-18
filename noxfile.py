@@ -49,6 +49,7 @@ PYTEST_ARGS = [
     MAIN_PACKAGE,
     "--cov-config",
     COVERAGE_RC,
+    "--dist=load",
     "--cov-report",
     "term",
     "--cov-report",
@@ -82,16 +83,7 @@ def failsafe_install(session, *args):
 @nox.session(python=False)
 def test(session) -> None:
     """Run unit tests in Pytest."""
-    session.run(
-        "python",
-        "-W",
-        "ignore::DeprecationWarning",
-        "-m",
-        "pytest",
-        *PYTEST_ARGS,
-        *session.posargs,
-        TEST_PATH
-    )
+    session.run("python", "-W", "ignore::DeprecationWarning", "-m", "pytest", *PYTEST_ARGS, *session.posargs, TEST_PATH)
 
 
 @nox.session(python=False)

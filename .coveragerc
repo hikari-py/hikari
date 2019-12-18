@@ -20,3 +20,5 @@ exclude_lines =
     ^\s*...$
     ^\s*@abc.abstractmethod$
 sort = Cover
+omit =
+    hikari/internal_utilities/compat.py
