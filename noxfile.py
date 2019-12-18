@@ -83,7 +83,14 @@ def failsafe_install(session, *args):
 @nox.session(python=False)
 def test(session) -> None:
     """Run unit tests in Pytest."""
-    session.run("python", "-W", "ignore::DeprecationWarning", "-m", "pytest", *PYTEST_ARGS, *session.posargs, TEST_PATH)
+    session.run(
+        "python",
+        "-m",
+        "pytest",
+        *PYTEST_ARGS,
+        *session.posargs,
+        TEST_PATH
+    )
 
 
 @nox.session(python=False)
