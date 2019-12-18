@@ -49,6 +49,7 @@ PYTEST_ARGS = [
     MAIN_PACKAGE,
     "--cov-config",
     COVERAGE_RC,
+    "--dist=load",
     "--cov-report",
     "term",
     "--cov-report",
