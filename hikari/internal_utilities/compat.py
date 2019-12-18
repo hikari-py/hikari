@@ -48,8 +48,9 @@ class asyncio:
         create_task = _asyncio.create_task
     else:
 
+        # noinspection PyUnusedLocal
         @staticmethod
-        def create_task(coro, *, _=...) -> _asyncio.Task:
+        def create_task(coro, *, name=...) -> _asyncio.Task:
             return _asyncio.create_task(coro)
 
 
