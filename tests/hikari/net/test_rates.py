@@ -360,7 +360,7 @@ class TestRates:
         await latch.acquire()
         end = time.perf_counter()
         # Assert we waited for about 0.1 seconds.
-        assert math.isclose(end - start, .1, abs_tol=0.1)
+        assert math.isclose(end - start, 0.1, abs_tol=0.1)
 
     async def test_TimedLatchBucket_async_with_context_manager(self, event_loop, timed_latch_bucket):
         latch = timed_latch_bucket(event_loop)

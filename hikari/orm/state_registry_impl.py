@@ -287,8 +287,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         for role in roles:
             if role.id == role_id:
                 return role
-        # TODO: generify this exception
-        raise RuntimeError(f"No role could be found for ID {role_id} in guild {guild_id}")
+        raise ValueError(f"No role could be found for ID {role_id} in guild {guild_id}")
 
     def get_mandatory_role_by_id(
         self,
