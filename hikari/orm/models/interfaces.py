@@ -315,8 +315,7 @@ class UnknownObject(typing.Generic[T], ISnowflake):
         if not isinstance(self._future, asyncio.Future):
             # noinspection PyUnresolvedReferences
             self._future = compat.asyncio.create_task(
-                self._future(),
-                name=f"executing {self._future.func.__name__} on UnknownObject with ID {self.id}"
+                self._future(), name=f"executing {self._future.func.__name__} on UnknownObject with ID {self.id}"
             )
             self._future.add_done_callback(self._invoke_callbacks)
 

@@ -231,7 +231,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
     def get_guild_emoji_by_id(self, emoji_id: int) -> typing.Optional[emojis.GuildEmoji]:
         return self._emojis.get(emoji_id)
 
-    def get_mandatory_guild_emoji_by_id(  
+    def get_mandatory_guild_emoji_by_id(
         self,
         emoji_id: int,
         guild_id: int,

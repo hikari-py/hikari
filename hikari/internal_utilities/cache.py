@@ -122,9 +122,8 @@ class AsyncCachedProperty(CachedProperty):
                 instance,
                 self._cache_attr,
                 compat.asyncio.create_task(
-                    self.func(instance),
-                    name="pending AsyncCachedProperty coroutine completion"
-                )
+                    self.func(instance), name="pending AsyncCachedProperty coroutine completion"
+                ),
             )
         return getattr(instance, self._cache_attr)
 
