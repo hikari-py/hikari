@@ -21,7 +21,7 @@ import asyncio
 import math
 import time
 
-import asynctest
+import asyncmock as mock
 import pytest
 
 from hikari.net import rates
@@ -78,7 +78,7 @@ class TestRates:
         self, event_loop, timed_token_bucket
     ):
         b = timed_token_bucket(10, 0.1, event_loop)
-        callback = asynctest.MagicMock()
+        callback = mock.MagicMock()
         await b.acquire(callback)
         assert b._remaining == 9
         callback.assert_not_called()
@@ -88,7 +88,7 @@ class TestRates:
     ):
         now = time.perf_counter()
         b = variable_token_bucket(10, 10, now, now + 1, event_loop)
-        callback = asynctest.MagicMock()
+        callback = mock.MagicMock()
         await b.acquire(callback)
         assert b._remaining == 9
         callback.assert_not_called()
@@ -123,7 +123,7 @@ class TestRates:
         b = timed_token_bucket(1, 0.25, event_loop)
         await b.acquire()
         start = time.perf_counter()
-        callback = asynctest.MagicMock()
+        callback = mock.MagicMock()
         await b.acquire(callback)
         time_taken = time.perf_counter() - start
         assert b._remaining == 0
@@ -138,7 +138,7 @@ class TestRates:
         b = variable_token_bucket(1, 1, now, now + 0.25, event_loop)
         await b.acquire()
         start = time.perf_counter()
-        callback = asynctest.MagicMock()
+        callback = mock.MagicMock()
         await b.acquire(callback)
         time_taken = time.perf_counter() - start
         assert b._remaining == 0
@@ -162,26 +162,26 @@ class TestRates:
 
     async def test_TimedTokenBucket_async_with_context_manager(self, event_loop, timed_token_bucket):
         b = timed_token_bucket(10, 1, event_loop)
-        b.acquire = asynctest.CoroutineMock()
+        b.acquire = mock.AsyncMock()
         async with b:
             pass
 
-        b.acquire.assert_awaited_once()
+        b.acquire.assert_called_once()
 
     async def test_VariableTokenBucket_async_with_context_manager(self, event_loop, variable_token_bucket):
         b = variable_token_bucket(10, 1, 7, 12, event_loop)
-        b.acquire = asynctest.CoroutineMock()
+        b.acquire = mock.AsyncMock()
         async with b:
             pass
 
-        b.acquire.assert_awaited_once()
+        b.acquire.assert_called_once()
 
     async def test_VariableTokenBucket_update_when_still_under_limit_but_remaining_did_not_change_should_not_reassess(
         self, event_loop, variable_token_bucket
     ):
         now = time.perf_counter()
         b = variable_token_bucket(10, 1, now - 5, now + 5, event_loop)
-        b._reassess = asynctest.MagicMock()
+        b._reassess = mock.MagicMock()
         b.update(15, 1, now, now + 10, False)
         assert b._total == 15
         assert b._remaining == 1
@@ -195,7 +195,7 @@ class TestRates:
     ):
         now = time.perf_counter()
         b = variable_token_bucket(10, 1, now - 5, now + 5, event_loop)
-        b._reassess = asynctest.MagicMock()
+        b._reassess = mock.MagicMock()
         b.update(15, 15, now, now + 10, False)
         assert b._total == 15
         assert b._remaining == 15
@@ -209,7 +209,7 @@ class TestRates:
     ):
         now = time.perf_counter()
         b = variable_token_bucket(10, 1, now - 5, now - 1, event_loop)
-        b._reassess = asynctest.MagicMock()
+        b._reassess = mock.MagicMock()
         b.update(15, 1, now, now + 10, False)
         assert b._total == 15
         assert b._remaining == 1
@@ -223,7 +223,7 @@ class TestRates:
     ):
         now = time.perf_counter()
         b = variable_token_bucket(10, 1, now - 5, now - 1, event_loop)
-        b._reassess = asynctest.MagicMock()
+        b._reassess = mock.MagicMock()
         b.update(15, 15, now, now + 10, False)
         assert b._total == 15
         assert b._remaining == 15
@@ -271,7 +271,7 @@ class TestRates:
             checked = True
             assert b.is_limiting
 
-        callback = asynctest.MagicMock(wraps=assert_locked)
+        callback = mock.MagicMock(wraps=assert_locked)
 
         start = time.perf_counter()
 
@@ -296,7 +296,7 @@ class TestRates:
             checked = True
             assert b.is_limiting
 
-        callback = asynctest.MagicMock(wraps=assert_locked)
+        callback = mock.MagicMock(wraps=assert_locked)
 
         start = time.perf_counter()
 
@@ -317,7 +317,7 @@ class TestRates:
         latch = timed_latch_bucket(event_loop)
 
         start = time.perf_counter()
-        callback = asynctest.MagicMock()
+        callback = mock.MagicMock()
         await latch.acquire(callback)
         end = time.perf_counter()
 
@@ -338,7 +338,7 @@ class TestRates:
             assert foo == 27
             assert latch.is_limiting
 
-        callback = asynctest.MagicMock(wraps=assert_locked)
+        callback = mock.MagicMock(wraps=assert_locked)
         latch.lock(0.1)
         # Yield for a moment to ensure the routine is triggered before we try to acquire.
         await asyncio.sleep(0.01)
@@ -364,8 +364,8 @@ class TestRates:
 
     async def test_TimedLatchBucket_async_with_context_manager(self, event_loop, timed_latch_bucket):
         latch = timed_latch_bucket(event_loop)
-        latch.acquire = asynctest.CoroutineMock()
+        latch.acquire = mock.AsyncMock()
         async with latch:
             pass
 
-        latch.acquire.assert_awaited()
+        latch.acquire.assert_called()
