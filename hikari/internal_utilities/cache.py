@@ -23,6 +23,7 @@ import asyncio
 import inspect
 import typing
 
+from hikari.internal_utilities import compat
 
 ReturnT = typing.TypeVar("ReturnT")
 ClassT = typing.TypeVar("ClassT")
@@ -49,7 +50,7 @@ class CachedFunction:
         self.__name__ = getattr(call, "__name__", None)
         self.__dict__ = getattr(call, "__dict__", None)
         is_coro = inspect.iscoroutinefunction(call)
-        call_wrapper = self._awaitable_call_wrapper if is_coro else self._standard_call_wrapper
+        call_wrapper = self._coroutine_fn_wrapper if is_coro else self._fn_wrapper
         self._call = call_wrapper(call, args, kwargs)
 
     def __call__(self) -> ReturnT:
@@ -57,17 +58,19 @@ class CachedFunction:
             self._call()
         return self._value
 
-    def _awaitable_call_wrapper(self, call, args, kwargs):
-        def call_wrapper():
-            self._value = asyncio.create_task(call(*args, **kwargs))
+    def _coroutine_fn_wrapper(self, call, args, kwargs):
+        def fn_wrapper():
+            self._value = compat.asyncio.create_task(
+                call(*args, **kwargs), name="pending CachedFunction coroutine completion"
+            )
 
-        return call_wrapper
+        return fn_wrapper
 
-    def _standard_call_wrapper(self, call, args, kwargs):
-        def call_wrapper():
+    def _fn_wrapper(self, call, args, kwargs):
+        def fn_wrapper():
             self._value = call(*args, **kwargs)
 
-        return call_wrapper
+        return fn_wrapper
 
 
 class CachedProperty:
@@ -115,7 +118,14 @@ class AsyncCachedProperty(CachedProperty):
             return typing.cast(ReturnT, self)
 
         if not hasattr(instance, self._cache_attr):
-            setattr(instance, self._cache_attr, asyncio.create_task(self.func(instance)))
+            setattr(
+                instance,
+                self._cache_attr,
+                compat.asyncio.create_task(
+                    self.func(instance),
+                    name="pending AsyncCachedProperty coroutine completion"
+                )
+            )
         return getattr(instance, self._cache_attr)
 
 

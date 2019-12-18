@@ -28,6 +28,7 @@ import datetime
 import typing
 
 from hikari.internal_utilities import assertions
+from hikari.internal_utilities import compat
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
 from hikari.orm import fabric
@@ -312,7 +313,11 @@ class UnknownObject(typing.Generic[T], ISnowflake):
         if self._future is None:
             raise NotImplementedError("Cannot resolve this value currently")
         if not isinstance(self._future, asyncio.Future):
-            self._future = asyncio.create_task(self._future())
+            # noinspection PyUnresolvedReferences
+            self._future = compat.asyncio.create_task(
+                self._future(),
+                name=f"executing {self._future.func.__name__} on UnknownObject with ID {self.id}"
+            )
             self._future.add_done_callback(self._invoke_callbacks)
 
         yield from self._future
