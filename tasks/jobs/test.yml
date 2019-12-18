@@ -52,7 +52,7 @@
   image: python:3.8.0
 
 "3.7 pytest":
-  image: python:3.7.5
+  image: python:3.7.4
   extends: .test
 
 "3.8 pytest":
@@ -65,7 +65,7 @@
   allow_failure: true
 
 "3.7 setup.py test":
-  image: python:3.7.5
+  image: python:3.7.4
   extends: .test
   stage: test
   script:
@@ -90,7 +90,7 @@
 #   allow_failure: true
 
 "3.7 verify PyPI release":
-  image: python:3.7.5
+  image: python:3.7.4
   extends: .test
   stage: verify
   script:
