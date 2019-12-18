@@ -25,9 +25,8 @@ import logging
 import typing
 import weakref
 from typing import Iterator
-from unittest import mock
 
-import asynctest
+import asyncmock as mock
 import pytest
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,17 +74,17 @@ def mock_methods_on(obj, except_=(), also_mock=()):
             # print('Mocking', name, 'on', type(obj))
 
             if asyncio.iscoroutinefunction(method):
-                mock = asynctest.CoroutineMock()
+                _mock = mock.AsyncMock()
             else:
-                mock = asynctest.MagicMock()
+                _mock = mock.MagicMock()
 
-            setattr(copy_, name, mock)
+            setattr(copy_, name, _mock)
 
     for expr in also_mock:
         owner, _, attr = ("copy_." + expr).rpartition(".")
         # sue me.
         owner = eval(owner)
-        setattr(owner, attr, asynctest.CoroutineMock())
+        setattr(owner, attr, mock.MagicMock())
 
     assert not (except_ - checked), f"Some attributes didn't exist, so were not mocked: {except_ - checked}"
 
@@ -185,7 +184,7 @@ def mock_patch(what, *args, **kwargs):
     else:
         fqn = fqn1(what)
 
-    return asynctest.patch(fqn, *args, **kwargs)
+    return mock.patch(fqn, *args, **kwargs)
 
 
 class StrongWeakValuedDict(typing.MutableMapping):

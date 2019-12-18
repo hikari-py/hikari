@@ -25,47 +25,46 @@ and interpreter agnostic (for the most part).
 These members are subject to change at any time without prior warning.
 """
 import asyncio as _asyncio
-import sys
+import sys as _sys
 import typing as _typing
 
 
-def _namespace(cls):
-    cls.__new__ = NotImplemented
-    cls.__init__ = NotImplemented
+class _FakeModule:
+    def __init__(self, cascade_to):
+        self.__cascade_to = cascade_to
 
-    return cls
+    def __getattr__(self, item):
+        return getattr(self.__cascade_to, item)
 
-
-# noinspection PyPep8Naming
-@_namespace
-class asyncio:
-    ################################################################################
-    # asyncio.create_task                                                          #
-    #     introduced in Python 3.7.0, but only allows a string as the name of the  #
-    #     task from Python 3.8.0. Before 3.8.0, tasks were not able to have names. #
-    ################################################################################
-    if sys.version_info >= (3, 8):
-        create_task = _asyncio.create_task
-    else:
-
-        # noinspection PyUnusedLocal
-        @staticmethod
-        def create_task(coro, *, name=...) -> _asyncio.Task:
-            return _asyncio.create_task(coro)
+    def __setattr__(self, key, value):
+        self.__dict__[key] = value
 
 
-# noinspection PyPep8Naming
-@_namespace
-class typing:
-    ##################################
-    # typing.Protocol                #
-    #     introduced in Python 3.8.0 #
-    ##################################
-    if sys.version_info >= (3, 8):
-        Protocol = _typing.Protocol
-    else:
-        _ProtocolT = _typing.TypeVar("_ProtocolT")
+asyncio = _FakeModule(_asyncio)
+typing = _FakeModule(_typing)
 
-        @_typing.no_type_check
-        class Protocol(_typing.Generic[_ProtocolT]):
-            pass
+################################################################################
+# asyncio.create_task                                                          #
+#     introduced in Python 3.7.0, but only allows a string as the name of the  #
+#     task from Python 3.8.0. Before 3.8.0, tasks were not able to have names. #
+################################################################################
+if _sys.version_info >= (3, 8):
+    asyncio.create_task = _asyncio.create_task
+else:
+    asyncio.create_task = lambda coro, *, name=None: _asyncio.create_task(coro)
+
+
+##################################
+# typing.Protocol                #
+#     introduced in Python 3.8.0 #
+##################################
+if _sys.version_info >= (3, 8):
+    typing.Protocol = _typing.Protocol
+else:
+    typing._ProtocolT = _typing.TypeVar("_ProtocolT")
+
+    class Protocol(_typing.Generic[typing._ProtocolT]):
+        pass
+
+    typing.Protocol = Protocol
+    del Protocol
