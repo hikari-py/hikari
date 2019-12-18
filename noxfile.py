@@ -84,8 +84,6 @@ def test(session) -> None:
     """Run unit tests in Pytest."""
     session.run(
         "python",
-        "-W",
-        "ignore::DeprecationWarning",
         "-m",
         "pytest",
         *PYTEST_ARGS,
