@@ -21,21 +21,27 @@ import copy
 import datetime
 from unittest import mock
 
+import asynctest
 import pytest
 
 from hikari.orm import fabric
 from hikari.orm import state_registry_impl
+from hikari.orm.models import applications
+from hikari.orm.models import audit_logs
 from hikari.orm.models import channels
+from hikari.orm.models import connections
 from hikari.orm.models import emojis
+from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
+from hikari.orm.models import interfaces
 from hikari.orm.models import members
 from hikari.orm.models import messages
 from hikari.orm.models import presences
 from hikari.orm.models import reactions
 from hikari.orm.models import roles
 from hikari.orm.models import users
-from hikari.orm.models import webhooks
 from hikari.orm.models import voices
+from hikari.orm.models import webhooks
 from tests.hikari import _helpers
 
 
@@ -49,9 +55,20 @@ def registry():
     return state_registry_obj
 
 
-# noinspection PyPropertyAccess,PyProtectedMember,PyTypeChecker,PyDunderSlots,PyUnresolvedReferences
+# noinspection PyPropertyAccess,PyProtectedMember,PyTypeChecker,PyDunderSlots
 @pytest.mark.orm
 class TestStateRegistryImpl:
+    def test_prepare_unknown_with_callback(self, registry: state_registry_impl.StateRegistryImpl):
+        resolver = asynctest.CoroutineMock()
+        callback = mock.MagicMock()
+
+        unknown = registry._prepare_unknown_with_callback(1234, resolver, callback, 1, 2, 3, a="a", b="b", c="c")
+
+        assert unknown._future.func is resolver
+        assert unknown._future.args == (1, 2, 3)
+        assert unknown._future.keywords == dict(a="a", b="b", c="c")
+        assert callback in unknown._callbacks
+
     def test_message_cache_property_returns_message_cache(self, registry: state_registry_impl.StateRegistryImpl):
         cache = _helpers.mock_model(dict)
         registry._message_cache = cache
@@ -408,17 +425,73 @@ class TestStateRegistryImpl:
 
         assert registry.get_channel_by_id(1236) is None
 
-    def test_get_emoji_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
+    def test_get_mandatory_channel_by_id_cached_guild_channel(self, registry: state_registry_impl.StateRegistryImpl):
+        guild_channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=1234)
+        dm_channel_obj = _helpers.mock_model(channels.GroupDMChannel, id=1235)
+        registry._guild_channels = {guild_channel_obj.id: guild_channel_obj}
+        registry._dm_channels = {dm_channel_obj.id: dm_channel_obj}
+
+        assert registry.get_mandatory_channel_by_id(guild_channel_obj.id) is guild_channel_obj
+
+    def test_get_mandatory_channel_by_id_cached_dm_channel(self, registry: state_registry_impl.StateRegistryImpl):
+        guild_channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=1234)
+        dm_channel_obj = _helpers.mock_model(channels.GroupDMChannel, id=1235)
+        registry._guild_channels = {guild_channel_obj.id: guild_channel_obj}
+        registry._dm_channels = {dm_channel_obj.id: dm_channel_obj}
+
+        assert registry.get_mandatory_channel_by_id(dm_channel_obj.id) is dm_channel_obj
+
+    def test_get_mandatory_channel_by_id_uncached_returns_unknown(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        guild_channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=1234)
+        dm_channel_obj = _helpers.mock_model(channels.GroupDMChannel, id=1235)
+        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=1236)
+        callback_obj = mock.MagicMock()
+        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry._guild_channels = {guild_channel_obj.id: guild_channel_obj}
+        registry._dm_channels = {dm_channel_obj.id: dm_channel_obj}
+        registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
+
+        result = registry.get_mandatory_channel_by_id(1236, callback_obj)
+        assert result is unknown_obj
+        registry._prepare_unknown_with_callback.assert_called_with(
+            1236, registry.fabric.http_adapter.fetch_channel, callback_obj, 1236
+        )
+
+    def test_get_guild_emoji_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
         emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=69)
         registry._emojis = {emoji_obj.id: emoji_obj}
 
-        assert registry.get_emoji_by_id(emoji_obj.id) is emoji_obj
+        assert registry.get_guild_emoji_by_id(emoji_obj.id) is emoji_obj
 
-    def test_get_emoji_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
+    def test_get_guild_emoji_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
         emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=69)
         registry._emojis = {emoji_obj.id: emoji_obj}
 
-        assert registry.get_emoji_by_id(70) is None
+        assert registry.get_guild_emoji_by_id(70) is None
+
+    def test_get_mandatory_guild_emoji_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=69, _guild_id=70)
+        registry._emojis = {emoji_obj.id: emoji_obj}
+
+        assert registry.get_mandatory_guild_emoji_by_id(emoji_obj.id, emoji_obj.guild.id) is emoji_obj
+
+    def test_get_mandatory_guild_emoji_by_id_uncached_returns_unknown(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=69)
+        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=70)
+        callback_obj = mock.MagicMock()
+        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
+        registry._emojis = {emoji_obj.id: emoji_obj}
+
+        result = registry.get_mandatory_guild_emoji_by_id(70, 123, callback_obj)
+        assert result is unknown_obj
+        registry._prepare_unknown_with_callback.assert_called_with(
+            70, registry.fabric.http_adapter.fetch_guild_emoji, callback_obj, 70, 123
+        )
 
     def test_get_guild_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=69)
@@ -431,6 +504,206 @@ class TestStateRegistryImpl:
         registry._guilds = {guild_obj.id: guild_obj}
 
         assert registry.get_guild_by_id(70) is None
+
+    def test_get_mandatory_guild_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=69)
+        registry._guilds = {guild_obj.id: guild_obj}
+
+        assert registry.get_mandatory_guild_by_id(69) is guild_obj
+
+    def test_get_mandatory_guild_by_id_uncached_returns_unknown(self, registry: state_registry_impl.StateRegistryImpl):
+        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=70)
+        callback_obj = mock.MagicMock()
+        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
+
+        registry._guilds = {}
+
+        result = registry.get_mandatory_guild_by_id(70, callback_obj)
+
+        registry._prepare_unknown_with_callback.assert_called_with(
+            70, registry.fabric.http_adapter.fetch_guild, callback_obj, 70
+        )
+
+        assert result is unknown_obj
+
+    def test_get_message_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
+        message_obj = _helpers.mock_model(messages.Message, id=69)
+        registry._message_cache = {message_obj.id: message_obj}
+
+        assert registry.get_message_by_id(message_obj.id) is message_obj
+
+    def test_get_message_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
+        message_obj = _helpers.mock_model(messages.Message, id=69)
+        registry._message_cache = {message_obj.id: message_obj}
+
+        assert registry.get_message_by_id(70) is None
+
+    def test_get_mandatory_message_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
+        message_obj = _helpers.mock_model(messages.Message, id=69, channel_id=456)
+        registry._message_cache = {message_obj.id: message_obj}
+
+        assert registry.get_mandatory_message_by_id(message_obj.id, message_obj.channel_id) is message_obj
+
+    def test_get_mandatory_message_by_id_uncached_returns_unknown(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        registry._message_cache = {}
+        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=70)
+        callback_obj = mock.MagicMock()
+        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
+
+        result = registry.get_mandatory_message_by_id(70, 420, callback_obj)
+
+        registry._prepare_unknown_with_callback.assert_called_with(
+            70, registry.fabric.http_adapter.fetch_message, callback_obj, 420, 70
+        )
+
+        assert result is unknown_obj
+
+    def test_get_role_by_id_cached_guild_cached_role(self, registry: state_registry_impl.StateRegistryImpl):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1)
+        role_obj = _helpers.mock_model(roles.Role, id=2, guild_id=guild_obj.id)
+        guild_obj.roles = {role_obj.id: role_obj}
+        registry._guilds = {guild_obj.id: guild_obj}
+
+        assert registry.get_role_by_id(guild_obj.id, role_obj.id) is role_obj
+
+    def test_get_role_by_id_cached_guild_uncached_role(self, registry: state_registry_impl.StateRegistryImpl):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1)
+        guild_obj.roles = _helpers.StrongWeakValuedDict()
+        registry._guilds = {guild_obj.id: guild_obj}
+
+        assert registry.get_role_by_id(guild_obj.id, 2) is None
+
+    def test_get_role_by_id_uncached_guild_uncached_role(self, registry: state_registry_impl.StateRegistryImpl):
+        registry._guilds = _helpers.StrongWeakValuedDict()
+
+        assert registry.get_role_by_id(1, 2) is None
+
+    @pytest.mark.asyncio
+    async def test__role_fetcher_when_role_found(self, registry: state_registry_impl.StateRegistryImpl):
+        target = _helpers.mock_model(roles.Role, id=125, guild_id=120)
+        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry.fabric.http_adapter.fetch_roles = asynctest.CoroutineMock(
+            return_value=[
+                _helpers.mock_model(roles.Role, id=123, guild_id=120),
+                _helpers.mock_model(roles.Role, id=124, guild_id=120),
+                target,
+                _helpers.mock_model(roles.Role, id=127, guild_id=120),
+            ]
+        )
+
+        result = await registry._role_fetcher(120, 125)
+
+        registry.fabric.http_adapter.fetch_roles.assert_awaited_once_with(120)
+        assert result is target
+
+    @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=ValueError)
+    async def test__role_fetcher_when_role_not_found(self, registry: state_registry_impl.StateRegistryImpl):
+        target = _helpers.mock_model(roles.Role, id=125, guild_id=120)
+        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry.fabric.http_adapter.fetch_roles = asynctest.CoroutineMock(
+            return_value=[
+                _helpers.mock_model(roles.Role, id=123, guild_id=120),
+                _helpers.mock_model(roles.Role, id=124, guild_id=120),
+                target,
+                _helpers.mock_model(roles.Role, id=127, guild_id=120),
+            ]
+        )
+
+        await registry._role_fetcher(120, 126)
+
+    def test_get_mandatory_role_by_id_cached_guild_cached_role(self, registry: state_registry_impl.StateRegistryImpl):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1)
+        role_obj = _helpers.mock_model(roles.Role, id=2, guild_id=guild_obj.id)
+        guild_obj.roles = {role_obj.id: role_obj}
+        registry._guilds = {guild_obj.id: guild_obj}
+        callback_obj = mock.MagicMock()
+
+        assert registry.get_mandatory_role_by_id(guild_obj.id, role_obj.id, callback_obj) is role_obj
+
+    def test_get_mandatory_role_by_id_cached_guild_uncached_role_returns_unknown(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1)
+        guild_obj.roles = _helpers.StrongWeakValuedDict()
+        registry._guilds = {guild_obj.id: guild_obj}
+        callback_obj = mock.MagicMock()
+        registry._role_fetcher = asynctest.CoroutineMock(spec_set=registry._role_fetcher)
+        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=2)
+        registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
+
+        result = registry.get_mandatory_role_by_id(guild_obj.id, 2, callback_obj)
+        registry._prepare_unknown_with_callback.assert_called_with(
+            2, registry._role_fetcher, callback_obj, guild_obj.id, 2
+        )
+        assert result is unknown_obj
+
+    def test_get_mandatory_role_by_id_uncached_guild_uncached_role_returns_unknown(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        registry._guilds = _helpers.StrongWeakValuedDict()
+        callback_obj = mock.MagicMock()
+        registry._role_fetcher = asynctest.CoroutineMock(spec_set=registry._role_fetcher)
+        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=2)
+        registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
+
+        result = registry.get_mandatory_role_by_id(1, 2, callback_obj)
+        registry._prepare_unknown_with_callback.assert_called_with(2, registry._role_fetcher, callback_obj, 1, 2)
+        assert result is unknown_obj
+
+    def test_get_user_by_id_cached_oauth2_user(self, registry: state_registry_impl.StateRegistryImpl):
+        user_obj = _helpers.mock_model(users.OAuth2User, id=1)
+        registry._user = user_obj
+        registry._users = _helpers.StrongWeakValuedDict()
+
+        assert registry.get_user_by_id(user_obj.id) is registry._user
+
+    def test_get_user_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
+        user_obj = _helpers.mock_model(users.User, id=1)
+        registry._user = _helpers.mock_model(users.OAuth2User, id=2)
+        registry._users = {user_obj.id: user_obj}
+
+        assert registry.get_user_by_id(user_obj.id) is user_obj
+
+    def test_get_user_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
+        registry._user = None
+        registry._users = _helpers.StrongWeakValuedDict()
+
+        assert registry.get_user_by_id(1) is None
+
+    def test_get_mandatory_user_by_id_cached_oauth2_user(self, registry: state_registry_impl.StateRegistryImpl):
+        user_obj = _helpers.mock_model(users.OAuth2User, id=1)
+        registry._user = user_obj
+        registry._users = _helpers.StrongWeakValuedDict()
+
+        assert registry.get_mandatory_user_by_id(user_obj.id) is registry._user
+
+    def test_get_mandatory_user_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
+        user_obj = _helpers.mock_model(users.User, id=1)
+        registry._user = _helpers.mock_model(users.OAuth2User, id=2)
+        registry._users = {user_obj.id: user_obj}
+
+        assert registry.get_mandatory_user_by_id(user_obj.id) is user_obj
+
+    def test_get_mandatory_user_by_id_uncached_returns_unknown(self, registry: state_registry_impl.StateRegistryImpl):
+        registry._user = None
+        registry._users = _helpers.StrongWeakValuedDict()
+        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=1)
+        callback_obj = mock.MagicMock()
+        registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
+
+        result = registry.get_mandatory_user_by_id(1, callback_obj)
+
+        registry._prepare_unknown_with_callback.assert_called_with(
+            1, registry.fabric.http_adapter.fetch_user, callback_obj, 1
+        )
+
+        assert result is unknown_obj
 
     def test_get_member_by_id_cached_guild_cached_user(self, registry: state_registry_impl.StateRegistryImpl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=1)
@@ -455,57 +728,59 @@ class TestStateRegistryImpl:
 
         assert registry.get_member_by_id(3, 4) is None
 
-    def test_get_message_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        message_obj = _helpers.mock_model(messages.Message, id=69)
-        registry._message_cache = {message_obj.id: message_obj}
-
-        assert registry.get_message_by_id(message_obj.id) is message_obj
-
-    def test_get_message_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        message_obj = _helpers.mock_model(messages.Message, id=69)
-        registry._message_cache = {message_obj.id: message_obj}
-
-        assert registry.get_message_by_id(70) is None
-
-    def test_get_role_by_id_cached_guild_cached_role(self, registry: state_registry_impl.StateRegistryImpl):
+    def test_get_mandatory_member_by_id_cached_guild_cached_user(self, registry: state_registry_impl.StateRegistryImpl):
         guild_obj = _helpers.mock_model(guilds.Guild, id=1)
-        role_obj = _helpers.mock_model(roles.Role, id=2, guild_id=guild_obj.id)
-        guild_obj.roles = {role_obj.id: role_obj}
+        member_obj = _helpers.mock_model(members.Member, id=2, guild=guild_obj)
+        guild_obj.members = {member_obj.id: member_obj}
         registry._guilds = {guild_obj.id: guild_obj}
 
-        assert registry.get_role_by_id(guild_obj.id, role_obj.id) is role_obj
+        assert registry.get_mandatory_member_by_id(member_obj.id, guild_obj.id) is member_obj
 
-    def test_get_role_by_id_cached_guild_uncached_role(self, registry: state_registry_impl.StateRegistryImpl):
-        guild_obj = _helpers.mock_model(guilds.Guild, id=1)
-        guild_obj.roles = _helpers.StrongWeakValuedDict()
+    def test_get_mandatory_member_by_id_cached_guild_uncached_user(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=2)
+        guild_obj.members = _helpers.StrongWeakValuedDict()
         registry._guilds = {guild_obj.id: guild_obj}
+        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=1)
+        callback_obj = mock.MagicMock()
+        registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
 
-        assert registry.get_role_by_id(guild_obj.id, 2) is None
+        result = registry.get_mandatory_member_by_id(1, guild_obj.id, callback_obj)
 
-    def test_get_role_by_id_uncached_guild_uncached_role(self, registry: state_registry_impl.StateRegistryImpl):
-        registry._guilds = _helpers.StrongWeakValuedDict()
+        registry._prepare_unknown_with_callback.assert_called_with(
+            1, registry.fabric.http_adapter.fetch_member, callback_obj, 1, 2
+        )
 
-        assert registry.get_role_by_id(1, 2) is None
+        assert result is unknown_obj
 
-    def test_get_user_by_id_cached_oauth2_user(self, registry: state_registry_impl.StateRegistryImpl):
-        user_obj = _helpers.mock_model(users.OAuth2User, id=1)
-        registry._user = user_obj
-        registry._users = _helpers.StrongWeakValuedDict()
+    def test_get_mandatory_member_by_id_uncached_guild_uncached_user(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=1)
+        member_obj = _helpers.mock_model(members.Member, id=2, guild=guild_obj)
+        guild_obj.members = {member_obj.id: member_obj}
+        registry._guilds = {guild_obj.id: guild_obj}
+        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=1)
+        callback_obj = mock.MagicMock()
+        registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
 
-        assert registry.get_user_by_id(user_obj.id) is registry._user
+        result = registry.get_mandatory_member_by_id(3, 4, callback_obj)
 
-    def test_get_user_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        user_obj = _helpers.mock_model(users.User, id=1)
-        registry._user = _helpers.mock_model(users.OAuth2User, id=2)
-        registry._users = {user_obj.id: user_obj}
+        registry._prepare_unknown_with_callback.assert_called_with(
+            3, registry.fabric.http_adapter.fetch_member, callback_obj, 3, 4
+        )
 
-        assert registry.get_user_by_id(user_obj.id) is user_obj
+        assert result is unknown_obj
 
-    def test_get_user_by_id_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        registry._user = None
-        registry._users = _helpers.StrongWeakValuedDict()
-
-        assert registry.get_user_by_id(1) is None
+    def test_parse_application(self, registry: state_registry_impl.StateRegistryImpl):
+        application_obj = _helpers.mock_model(applications.Application)
+        with _helpers.mock_patch(applications.Application, return_value=application_obj) as Application:
+            parsed_obj = registry.parse_application({})
+            assert parsed_obj is application_obj
+            Application.assert_called_once_with(registry.fabric, {})
 
     def test_parse_application_user_given_user_cached(self, registry: state_registry_impl.StateRegistryImpl):
         oa2_user = mock.MagicMock(spec_set=users.OAuth2User)
@@ -526,6 +801,13 @@ class TestStateRegistryImpl:
             assert parsed_obj is oa2_user
             assert parsed_obj is registry.me
             OAuth2User.assert_called_once_with(registry.fabric, {})
+
+    def test_parse_audit_log(self, registry: state_registry_impl.StateRegistryImpl):
+        audit_log_obj = _helpers.mock_model(audit_logs.AuditLog)
+        with _helpers.mock_patch(audit_logs.AuditLog, return_value=audit_log_obj) as AuditLog:
+            parsed_obj = registry.parse_audit_log({})
+            assert parsed_obj is audit_log_obj
+            AuditLog.assert_called_once_with(registry.fabric, {})
 
     @pytest.mark.parametrize(
         "impl_t",
@@ -655,6 +937,13 @@ class TestStateRegistryImpl:
                 result = registry.parse_channel(payload)
                 assert result is channel_obj
 
+    def test_parse_connection(self, registry: state_registry_impl.StateRegistryImpl):
+        connection_obj = _helpers.mock_model(connections.Connection)
+        with _helpers.mock_patch(connections.Connection, return_value=connection_obj) as Connection:
+            parsed_obj = registry.parse_connection({})
+            assert parsed_obj is connection_obj
+            Connection.assert_called_once_with(registry.fabric, {})
+
     def test_parse_unicode_emoji_does_not_change_cache(self, registry: state_registry_impl.StateRegistryImpl):
         emoji_obj = _helpers.mock_model(emojis.UnicodeEmoji)
         payload = {"id": "1234"}
@@ -729,6 +1018,13 @@ class TestStateRegistryImpl:
         guild_id = guild_obj.id
 
         assert registry.parse_emoji(payload, guild_id) is emoji_obj
+
+    def test_parse_gateway_bot(self, registry: state_registry_impl.StateRegistryImpl):
+        gateway_bot_obj = _helpers.mock_model(gateway_bot.GatewayBot)
+        with _helpers.mock_patch(gateway_bot.GatewayBot, return_value=gateway_bot_obj) as GatewayBot:
+            parsed_obj = registry.parse_gateway_bot({})
+            assert parsed_obj is gateway_bot_obj
+            GatewayBot.assert_called_once_with({})
 
     def test_parse_guild_when_already_cached_and_payload_is_available_calls_update_state(
         self, registry: state_registry_impl.StateRegistryImpl
@@ -871,13 +1167,6 @@ class TestStateRegistryImpl:
             parsed_member_obj = registry.parse_member(payload, guild_obj)
             assert parsed_member_obj is member_obj
 
-    def test_parse_message_when_channel_uncached_returns_None(self, registry: state_registry_impl.StateRegistryImpl):
-        payload = {"id": "1234", "channel_id": "4567"}
-        registry._guild_channels = _helpers.StrongWeakValuedDict()
-        registry._dm_channels = _helpers.StrongWeakValuedDict()
-
-        assert registry.parse_message(payload) is None
-
     def test_parse_message_when_channel_cached_updates_last_message_timestamp_on_channel(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
@@ -922,9 +1211,10 @@ class TestStateRegistryImpl:
 
     def test_parse_reaction_parses_emoji(self, registry: state_registry_impl.StateRegistryImpl):
         registry.parse_emoji = mock.MagicMock(spec_set=registry.parse_emoji)
-        registry._message_cache = _helpers.StrongWeakValuedDict()
+        message_obj = _helpers.mock_model(messages.Message, id=42069)
+        registry._message_cache = {message_obj.id: message_obj}
         emoji_payload = {"name": "\N{OK HAND SIGN}", "id": None}
-        payload = {"message_id": "1234", "count": 12, "emoji": emoji_payload}
+        payload = {"message_id": "46029", "count": 12, "emoji": emoji_payload}
 
         registry.parse_reaction(payload)
 
@@ -980,13 +1270,15 @@ class TestStateRegistryImpl:
         with _helpers.mock_patch(reactions.Reaction, return_value=reaction_obj):
             assert registry.parse_reaction(payload) is reaction_obj
 
-    def test_parse_reaction_when_message_is_uncached_returns_None(
+    def test_parse_reaction_when_message_is_uncached_returns_reaction_with_UnknownObject_for_message(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         payload = {"message_id": "1234", "count": 12, "emoji": {"name": "\N{OK HAND SIGN}", "id": None}}
         registry._message_cache = _helpers.StrongWeakValuedDict()
 
-        assert registry.parse_reaction(payload) is None
+        reaction = registry.parse_reaction(payload)
+        assert reaction is not None
+        assert isinstance(reaction.message, interfaces.UnknownObject)
 
     def test_parse_role_when_role_exists_does_not_update_role_mapping(
         self, registry: state_registry_impl.StateRegistryImpl

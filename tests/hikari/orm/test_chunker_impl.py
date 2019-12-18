@@ -16,7 +16,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import asyncio
 import logging
 
 import asynctest
@@ -24,12 +23,10 @@ import pytest
 
 from hikari.net import gateway as _gateway
 from hikari.orm import chunker_impl
-
 from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import guilds
 from hikari.orm.models import members
-
 from tests.hikari import _helpers
 
 

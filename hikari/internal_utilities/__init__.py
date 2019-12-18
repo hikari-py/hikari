@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019-2020
+# Copyright © Nekokatt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -22,11 +22,14 @@ to be implementation detail that could change at any time, so should not be used
 """
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import cache
+from hikari.internal_utilities import compat
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import delegate
 from hikari.internal_utilities import io_helpers
 from hikari.internal_utilities import logging_helpers
+from hikari.internal_utilities import media_transformations
 from hikari.internal_utilities import meta
 from hikari.internal_utilities import transformations
 from hikari.internal_utilities import unspecified

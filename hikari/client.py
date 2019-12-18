@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019-2020
+# Copyright © Nekokatt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,3 +16,21 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""
+The primary client for writing a bot with Hikari.
+"""
+
+
+class UnshardedClient:
+    ...
+
+
+class ShardedClient:
+    ...
+
+
+class AutoshardedClient:
+    ...
+
+
+__all__ = ["UnshardedClient", "ShardedClient", "AutoshardedClient"]

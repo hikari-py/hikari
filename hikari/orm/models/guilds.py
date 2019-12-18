@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019-2020
+# Copyright © Nekokatt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -210,7 +210,7 @@ class Guild(PartialGuild, interfaces.IStatefulModel):
     afk_timeout: int
 
     #: The preferred locale of the guild. This is only populated if the guild has the
-    # :attr:`hikari.orm.models.guild.GuildFeature`
+    #: :attr:`hikari.orm.models.guild.GuildFeature`
     #:
     #: :type: :class:`str` or :class:`None`
     preferred_locale: typing.Optional[str]

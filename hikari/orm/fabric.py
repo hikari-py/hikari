@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019-2020
+# Copyright © Nekokatt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -59,7 +59,7 @@ class Fabric:
 
     #: HTTP adapter bridge component to convert raw HTTP call responses to their ORM
     #: representation.
-    http_adapter: _http_adapter.HTTPAdapter = dataclasses.field(default=NotImplemented)
+    http_adapter: _http_adapter.IHTTPAdapter = dataclasses.field(default=NotImplemented)
 
-    #: Provides a mechanism to handle
+    #: Provides a mechanism to handle the guild chunking events.
     chunker: _chunker.IChunker = dataclasses.field(default=NotImplemented)
