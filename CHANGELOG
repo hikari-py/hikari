@@ -1,9 +1,47 @@
 CHANGELOG
 =========
 
-Automatically generated from git history up to master at Mon Dec 16 22:55:42 UTC 2019 by CI.
+Automatically generated from git history up to master at Wed Dec 18 16:58:20 UTC 2019 by CI.
 
-* Mon Dec 16 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+* Wed Dec 18 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+- Merge branch 'staging' into 'master' (rev.6acd879d)
+- Fixed minor formatting inconsistencies caused by merges. (rev.d6f68a51)
+- Merge branch 'feature/http_adapter' into 'staging' (rev.37d7c14e)
+- Merge branch '#125-bump-dependencies' into 'staging' (rev.afdbe886)
+- Merge branch 'staging' into 'feature/http_adapter' (rev.7d048aad)
+- Merge branch '#129-cleanup-voices-model-tests' into 'staging' (rev.ceafdb3d)
+- Merge branch '#123-disable-warnings' into 'staging' (rev.dd9c48d7)
+- Cleanup and fix voices model tests. (rev.9ae97444)
+- Merge branch '#126-asyncio-create-task' into 'staging' (rev.b26f8aea)
+- Merge branch 'staging' into '#123-disable-warnings' (rev.9eabf5ee)
+- Merge branch '#124-compatibility-functions' into 'staging' (rev.e2b98e0b)
+- Merge branch '#117-missing-state-registry-tests' into 'feature/http_adapter' (rev.cec9666b)
+- Merge branch '#122-change-minimum-python-version' into 'staging' (rev.af067bbf)
+- Merge branch '#121-lgtm-false-positives' into 'staging' (rev.30cd9961)
+- Fixed bug in noxfile where repo branch could not contain a `#` without it being interpreted (rev.bb7368a2)
+- Fixes #126, implements symbolic names for tasks on Python3.8 where possible. (rev.060f122c)
+- Fixes #125, updates core dependencies. (rev.3fa09b65)
+- Fixes #123, disables annoying asyncio deprecation warnings made from asynctest once and for all. (rev.15e8734b)
+- Fixes #124, added initial compatibility functions and excluded from coverage. (rev.068abc4c)
+- Fixes #122, relaxes version constraints for Python version from [3.7.5,3.9] to [3.7.4,3.9] (rev.778466c1)
+- Fixes #121, suppresses LGTM duplicate-code false positives again. (rev.37c5a3e8)
+- Fixes #117, implements missing get_mandatory_* test cases. (rev.f30bd4d8)
+- Added speedups to tests for slow computers (rev.ab6a8ddb)
+- Merge branch 'feature/http_adapter' into 'staging' (rev.78c9b73a)
+- Merge branch 'task/http_adapter_impl+tests' into 'feature/http_adapter' (rev.d1b1fd89)
+- Reimplemented parts of the state registry to allow serving of a new UnknownObject (rev.64f02c2f)
+- Migrated Application, AuditLog, GatewayBot and Connection parsing to state registry. (rev.e3fbf93d)
+- Added fetch_audit_log test and added framework for quickly testing (rev.40ce9c68)
+- Merge branch 'task/abc-and-lgtm' into feature/http_adapter (rev.51041859)
+- Fixes #114, suppresses LGTM false positives. (rev.3691b077)
+- Fixes #115, extracts interface from HTTPAdapter (rev.c567de40)
+- Merge branch 'copyright-and-client' into 'staging' (rev.37a41927)
+- Updated my name in copyright notice, removed commands (rev.acdbe61e)
+- Update guilds.py to fix documentation bug [skip ci] (rev.3d0d1a1c)
+- Merged master 0.0.62 into staging [skip ci] (rev.cc72dd7f)
+
+* Mon Dec 16 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.62
+- Deployed 0.0.62 [skip ci] (rev.768c6d10)
 - Merge branch 'staging' into 'master' manually (GitLab runners not working) (rev.d7cd92b5)
 - Fixed unused imports and inconsistent import ordering (rev.02eea078)
 - Merge branch 'task/stubbing-http-adapter' into staging manually (GitLab runners (rev.a2551071)
