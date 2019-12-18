@@ -666,8 +666,7 @@ class TestGateway:
                 False,
             )
             create_task.assert_called_with(
-                coro,
-                name=f"send REQUEST_GUILD_MEMBERS (shard 917/1234)",
+                coro, name=f"send REQUEST_GUILD_MEMBERS (shard 917/1234)",
             )
 
     @pytest.mark.parametrize("guild_ids", [["123"], ["1234", "5678"], ["1234", "5678", "9101112"]])
@@ -692,8 +691,7 @@ class TestGateway:
                 {"op": 8, "d": {"guild_id": guild_ids, "query": query, "limit": 69, "presences": True}}, False
             )
             create_task.assert_called_with(
-                coro,
-                name=f"send REQUEST_GUILD_MEMBERS (shard 917/1234)",
+                coro, name=f"send REQUEST_GUILD_MEMBERS (shard 917/1234)",
             )
 
     @pytest.mark.parametrize("guild_ids", [["123"], ["1234", "5678"]])
@@ -739,8 +737,7 @@ class TestGateway:
                 {"op": 8, "d": {"guild_id": guild_ids, "limit": 69, "presences": True}}, False
             )
             create_task.assert_called_with(
-                coro,
-                name=f"send REQUEST_GUILD_MEMBERS (shard 917/1234)",
+                coro, name=f"send REQUEST_GUILD_MEMBERS (shard 917/1234)",
             )
 
     async def test_update_status(self, event_loop):
