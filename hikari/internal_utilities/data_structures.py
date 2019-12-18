@@ -19,11 +19,11 @@
 """
 Custom data structures and constant values.
 """
-import sys
 import types
 import typing
 
 from hikari.internal_utilities import assertions
+from hikari.internal_utilities import compat
 
 # If more than one empty-definition is used in the same context, the type checker will probably whinge, so we have
 # to keep separate types...
@@ -126,40 +126,29 @@ class DefaultImmutableMapping(typing.Mapping[HashableT, ValueT]):
 
 ReturnT = typing.TypeVar("ReturnT")
 
-# Protocol is a Python3.8 thing, luckily I can make a hacky workaround for the time being.
-if sys.version_info < (3, 8):
 
-    class PartialCoroutineProtocolT(typing.Callable[[], typing.Coroutine[None, None, ReturnT]]):
-        """Represents the type of a :class:`functools.partial` wrapping an :mod:`asyncio` coroutine."""
+class PartialCoroutineProtocolT(compat.typing.Protocol[ReturnT]):
+    """Represents the type of a :class:`functools.partial` wrapping an :mod:`asyncio` coroutine."""
 
-        @classmethod
-        def __class_getitem__(cls, item: ReturnT):
-            return cls
-
-
-else:
-
-    class PartialCoroutineProtocolT(typing.Protocol[ReturnT]):
-        """Represents the type of a :class:`functools.partial` wrapping an :mod:`asyncio` coroutine."""
-
-        def __call__(self) -> typing.Coroutine[None, None, ReturnT]:
-            ...
+    def __call__(self) -> typing.Coroutine[None, None, ReturnT]:
+        ...
 
 
 #: An immutable indexable container of elements with zero size.
-EMPTY_SEQUENCE: typing.Sequence[ValueT] = tuple()
+EMPTY_SEQUENCE: typing.Sequence = tuple()
 #: An immutable unordered container of elements with zero size.
-EMPTY_SET: typing.AbstractSet[HashableT] = frozenset()
+EMPTY_SET: typing.AbstractSet = frozenset()
 #: An immutable container of elements with zero size.
-EMPTY_COLLECTION: typing.Collection[ValueT] = EMPTY_SEQUENCE
+EMPTY_COLLECTION: typing.Collection = tuple()
 #: An immutable ordered mapping of key elements to value elements with zero size.
-EMPTY_DICT: typing.Mapping[HashableT, ValueT] = types.MappingProxyType({})
+EMPTY_DICT: typing.Mapping = types.MappingProxyType({})
 
 __all__ = (
     "ScalarT",
     "DiscordObjectT",
     "ObjectProxy",
     "LRUDict",
+    "PartialCoroutineProtocolT",
     "EMPTY_SEQUENCE",
     "EMPTY_SET",
     "EMPTY_COLLECTION",
