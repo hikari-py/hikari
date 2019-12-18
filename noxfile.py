@@ -82,16 +82,7 @@ def failsafe_install(session, *args):
 @nox.session(python=False)
 def test(session) -> None:
     """Run unit tests in Pytest."""
-    session.run(
-        "python",
-        "-W",
-        "ignore::DeprecationWarning",
-        "-m",
-        "pytest",
-        *PYTEST_ARGS,
-        *session.posargs,
-        TEST_PATH
-    )
+    session.run("python", "-W", "ignore::DeprecationWarning", "-m", "pytest", *PYTEST_ARGS, *session.posargs, TEST_PATH)
 
 
 @nox.session(python=False)
@@ -139,17 +130,24 @@ def format(session) -> None:
 @nox.session()
 def pip(session: nox.sessions.Session):
     """Run through sandboxed install of PyPI package (if running on CI) or of installing package locally."""
-    if os.getenv("CI", False):
-        if "--showtime" in session.posargs:
-            session.log("Testing we can install packaged pypi object")
-            session.run("pip", "install", MAIN_PACKAGE)
+    try:
+        if os.environ["CI"]:
+            if "--showtime" in session.posargs:
+                session.log("Testing we can install packaged pypi object")
+                session.run("pip", "install", MAIN_PACKAGE)
+            else:
+                try:
+                    session.log("Testing published ref can be installed as a package.")
+                    url = session.env.get("CI_PROJECT_URL", REPOSITORY)
+                    sha1 = session.env.get("CI_COMMIT_SHA", "master")
+                    slug = f"git+{url}.git@{sha1}"
+                    session.run("pip", "install", slug)
+                except Exception:
+                    session.log("Failed to install from GitLab. Resorting to local install.")
+                    raise KeyError from None
         else:
-            session.log("Testing published ref can be installed as a package.")
-            url = session.env.get("CI_PROJECT_URL", REPOSITORY)
-            ref = session.env.get("CI_COMMIT_REF_NAME", "master")
-            slug = f"git+{url}.git@{ref}"
-            session.run("pip", "install", slug)
-    else:
+            raise KeyError
+    except KeyError:
         session.log("Testing local repository can be installed as a package.")
         session.run("pip", "install", "--isolated", ".")
 
