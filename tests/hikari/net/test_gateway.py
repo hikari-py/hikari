@@ -659,13 +659,16 @@ class TestGateway:
         # a coroutine, and so that we don't have to ensure a coro gets called in the implementation
         coro = asynctest.MagicMock()
         gw._send_json = asynctest.MagicMock(return_value=coro)
-        with asynctest.patch("asyncio.create_task") as create_task:
+        with asynctest.patch("hikari.internal_utilities.compat.asyncio.create_task") as create_task:
             gw.request_guild_members(*guild_ids, limit=69, user_ids=user_ids, presences=True)
             gw._send_json.assert_called_with(
                 {"op": 8, "d": {"guild_id": guild_ids, "user_ids": list(user_ids), "limit": 69, "presences": True}},
                 False,
             )
-            create_task.assert_called_with(coro)
+            create_task.assert_called_with(
+                coro,
+                name=f"send REQUEST_GUILD_MEMBERS (shard 917/1234)",
+            )
 
     @pytest.mark.parametrize("guild_ids", [["123"], ["1234", "5678"], ["1234", "5678", "9101112"]])
     @pytest.mark.parametrize("query", ["", " ", "   ", "\0", "ayy lmao"])
@@ -683,12 +686,15 @@ class TestGateway:
         # a coroutine, and so that we don't have to ensure a coro gets called in the implementation
         coro = asynctest.MagicMock()
         gw._send_json = asynctest.MagicMock(return_value=coro)
-        with asynctest.patch("asyncio.create_task") as create_task:
+        with asynctest.patch("hikari.internal_utilities.compat.asyncio.create_task") as create_task:
             gw.request_guild_members(*guild_ids, limit=69, query=query, presences=True)
             gw._send_json.assert_called_with(
                 {"op": 8, "d": {"guild_id": guild_ids, "query": query, "limit": 69, "presences": True}}, False
             )
-            create_task.assert_called_with(coro)
+            create_task.assert_called_with(
+                coro,
+                name=f"send REQUEST_GUILD_MEMBERS (shard 917/1234)",
+            )
 
     @pytest.mark.parametrize("guild_ids", [["123"], ["1234", "5678"]])
     @pytest.mark.parametrize("user_ids", [[], ["9"], ["9", "17", "25"], ("9", "17", "25", "9", "9")])
@@ -727,12 +733,15 @@ class TestGateway:
         # a coroutine, and so that we don't have to ensure a coro gets called in the implementation
         coro = asynctest.MagicMock()
         gw._send_json = asynctest.MagicMock(return_value=coro)
-        with asynctest.patch("asyncio.create_task") as create_task:
+        with asynctest.patch("hikari.internal_utilities.compat.asyncio.create_task") as create_task:
             gw.request_guild_members(*guild_ids, limit=69, user_ids=None, query=None, presences=True)
             gw._send_json.assert_called_with(
                 {"op": 8, "d": {"guild_id": guild_ids, "limit": 69, "presences": True}}, False
             )
-            create_task.assert_called_with(coro)
+            create_task.assert_called_with(
+                coro,
+                name=f"send REQUEST_GUILD_MEMBERS (shard 917/1234)",
+            )
 
     async def test_update_status(self, event_loop):
         gw = MockGateway(

@@ -20,7 +20,7 @@
 ###
 .pages:
   allow_failure: false
-  image: python:3.8
+  image: python:3.8.0
   before_script:
     - rm public -Rvf || true
     - mkdir public || true
