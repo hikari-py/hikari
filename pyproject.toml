@@ -56,7 +56,7 @@ asynctest                = "~0.13"
 async-timeout            = "~3.0"
 
 # PyTest related packages.
-coverage                 = "~4.5"
+coverage                 = "~5.0"
 pytest                   = "~5.3"
 pytest-asyncio           = "~0.10"
 pytest-cov               = "~2.8"
@@ -69,7 +69,7 @@ requests                 = "~2.22"
 
 # Sphinx requirements for documentation generation.
 Jinja2                   = "~2.10"
-sphinx                   = "~2.2"
+sphinx                   = "~2.3"
 sphinx-bootstrap-theme   = "~0.7"
 sphinx-autodoc-typehints = "~1.10"
 
