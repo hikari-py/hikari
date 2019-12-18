@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019-2020
+# Copyright © Nekokatt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -43,6 +43,7 @@ import zlib
 import aiohttp.typedefs
 
 from hikari import errors
+from hikari.internal_utilities import compat
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import logging_helpers
 from hikari.internal_utilities import user_agent
@@ -819,7 +820,10 @@ class GatewayClient:
             payload["query"] = query
 
         self.logger.debug("requesting members with constraints %s", payload)
-        asyncio.create_task(self._send_json({"op": opcodes.GatewayOpcode.REQUEST_GUILD_MEMBERS, "d": payload}, False,))
+        compat.asyncio.create_task(
+            self._send_json({"op": opcodes.GatewayOpcode.REQUEST_GUILD_MEMBERS, "d": payload}, False,),
+            name=f"send REQUEST_GUILD_MEMBERS (shard {self.shard_id}/{self.shard_count})",
+        )
 
     async def update_status(
         self,

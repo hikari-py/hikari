@@ -66,7 +66,7 @@ def mock_member():
 @pytest.mark.model()
 @pytest.mark.parametrize("has_member", [True, False])
 def test_VoiceState(mock_member, mock_fabric, mock_guild, has_member):
-    voice_obj = voices.VoiceState(
+    voice_state_obj = voices.VoiceState(
         mock_fabric,
         mock_guild,
         {
@@ -83,47 +83,55 @@ def test_VoiceState(mock_member, mock_fabric, mock_guild, has_member):
             "suppress": False,
         },
     )
-    assert voice_obj.guild_id == 381870553235193857
-    assert voice_obj.user_id == 115590097100865541
-    assert voice_obj.channel_id == 115590097143215541
-    assert voice_obj.is_deaf is False
-    assert voice_obj.is_mute is True
-    assert voice_obj.is_self_deaf is True
-    assert voice_obj.is_self_mute is False
-    assert voice_obj.is_self_stream is True
-    assert voice_obj.is_suppressed is False
+    assert voice_state_obj.guild_id == 381870553235193857
+    assert voice_state_obj.user_id == 115590097100865541
+    assert voice_state_obj.channel_id == 115590097143215541
+    assert voice_state_obj.is_deaf is False
+    assert voice_state_obj.is_mute is True
+    assert voice_state_obj.is_self_deaf is True
+    assert voice_state_obj.is_self_mute is False
+    assert voice_state_obj.is_self_stream is True
+    assert voice_state_obj.is_suppressed is False
     if has_member:
-        assert voice_obj.member is not None
+        assert voice_state_obj.member is not None
         mock_fabric.state_registry.parse_member.assert_called_once_with(mock_member, mock_guild)
     else:
-        assert voice_obj.member is None
+        assert voice_state_obj.member is None
         mock_fabric.state_registry.parse_member.assert_not_called()
-    voice_obj.__repr__()
+    voice_state_obj.__repr__()
 
 
 @pytest.mark.model
-def test_VoiceState_update():
-    @pytest.mark.model()
-    def test_VoiceState(mock_member, mock_fabric):
-        voice_obj = voices.VoiceState(
-            mock_fabric,
-            {
-                "guild_id": "381870553235193857",
-                "user_id": "115590097100865541",
-                "channel_id": "115590097143215541",
-                "session_id": "350a109226bd6f43c81f12c7c08de20a",
-            },
-        )
-        voice_obj.update_state(
-            {"deaf": True, "mute": True, "self_deaf": True, "self_mute": True, "self_stream": True, "suppress": True,}
-        )
-        assert voice_obj.is_deaf is True
-        assert voice_obj.is_mute is True
-        assert voice_obj.is_self_deaf is True
-        assert voice_obj.is_self_mute is True
-        assert voice_obj.is_self_stream is True
-        assert voice_obj.is_suppressed is True
-        voice_obj.__repr__()
+def test_VoiceState_update(mock_member, mock_guild, mock_fabric):
+    voice_state_obj = voices.VoiceState(
+        mock_fabric,
+        mock_guild,
+        {
+            "guild_id": "381870553235193857",
+            "user_id": "115590097100865541",
+            "channel_id": "115590097143215541",
+            "session_id": "350a109226bd6f43c81f12c7c08de20a",
+        },
+    )
+    voice_state_obj.update_state(
+        {
+            "channel_id": "537340989808050216",
+            "deaf": True,
+            "mute": True,
+            "self_deaf": True,
+            "self_mute": True,
+            "self_stream": True,
+            "suppress": True,
+        }
+    )
+    assert voice_state_obj.channel_id == 537340989808050216
+    assert voice_state_obj.is_deaf is True
+    assert voice_state_obj.is_mute is True
+    assert voice_state_obj.is_self_deaf is True
+    assert voice_state_obj.is_self_mute is True
+    assert voice_state_obj.is_self_stream is True
+    assert voice_state_obj.is_suppressed is True
+    voice_state_obj.__repr__()
 
 
 @pytest.mark.model

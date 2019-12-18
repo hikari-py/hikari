@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019-2020
+# Copyright © Nekokatt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import contextlib
 import datetime
+import functools
 import typing
 import weakref
 
@@ -31,9 +32,14 @@ from hikari.internal_utilities import logging_helpers
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm import state_registry
+from hikari.orm.models import applications
+from hikari.orm.models import audit_logs
 from hikari.orm.models import channels
+from hikari.orm.models import connections
 from hikari.orm.models import emojis
+from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
+from hikari.orm.models import interfaces
 from hikari.orm.models import members
 from hikari.orm.models import messages
 from hikari.orm.models import presences
@@ -95,6 +101,11 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         #: Our logger.
         self.logger = logging_helpers.get_named_logger(self)
+
+    def _prepare_unknown_with_callback(self, id, resolver, callback, *resolver_args, **resolver_kwargs):
+        obj = interfaces.UnknownObject(id, functools.partial(resolver, *resolver_args, **resolver_kwargs))
+        callback is not None and obj.add_done_callback(callback)
+        return obj
 
     @property
     def me(self) -> typing.Optional[users.OAuth2User]:
@@ -204,30 +215,132 @@ class StateRegistryImpl(state_registry.IStateRegistry):
     def get_channel_by_id(self, channel_id: int) -> typing.Optional[channels.Channel]:
         return self._guild_channels.get(channel_id) or self._dm_channels.get(channel_id)
 
-    def get_emoji_by_id(self, emoji_id: int) -> typing.Optional[emojis.GuildEmoji]:
+    def get_mandatory_channel_by_id(
+        self,
+        channel_id: int,
+        callback_if_unresolved: typing.Optional[typing.Callable[[channels.Channel], typing.Any]] = None,
+    ) -> typing.Union[channels.Channel, interfaces.UnknownObject[channels.Channel]]:
+        obj = self.get_channel_by_id(channel_id)
+        if obj is not None:
+            return obj
+        else:
+            return self._prepare_unknown_with_callback(
+                channel_id, self.fabric.http_adapter.fetch_channel, callback_if_unresolved, channel_id
+            )
+
+    def get_guild_emoji_by_id(self, emoji_id: int) -> typing.Optional[emojis.GuildEmoji]:
         return self._emojis.get(emoji_id)
+
+    def get_mandatory_guild_emoji_by_id(
+        self,
+        emoji_id: int,
+        guild_id: int,
+        callback_if_unresolved: typing.Optional[typing.Callable[[emojis.GuildEmoji], typing.Any]] = None,
+    ) -> typing.Union[emojis.GuildEmoji, interfaces.UnknownObject[emojis.GuildEmoji]]:
+        obj = self.get_guild_emoji_by_id(emoji_id)
+        if obj is not None:
+            return obj
+        else:
+            return self._prepare_unknown_with_callback(
+                emoji_id, self.fabric.http_adapter.fetch_guild_emoji, callback_if_unresolved, emoji_id, guild_id
+            )
 
     def get_guild_by_id(self, guild_id: int) -> typing.Optional[guilds.Guild]:
         return self._guilds.get(guild_id)
 
-    def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[members.Member]:
-        if guild_id not in self._guilds:
-            return None
-        return self._guilds[guild_id].members.get(user_id)
+    def get_mandatory_guild_by_id(
+        self, guild_id: int, callback_if_unresolved: typing.Optional[typing.Callable[[guilds.Guild], typing.Any]] = None
+    ) -> typing.Union[guilds.Guild, interfaces.UnknownObject[guilds.Guild]]:
+        obj = self.get_guild_by_id(guild_id)
+        if obj is not None:
+            return obj
+        else:
+            return self._prepare_unknown_with_callback(
+                guild_id, self.fabric.http_adapter.fetch_guild, callback_if_unresolved, guild_id
+            )
 
     def get_message_by_id(self, message_id: int) -> typing.Optional[messages.Message]:
         return self._message_cache.get(message_id)
+
+    def get_mandatory_message_by_id(  # lgtm [py/similar-function]
+        self,
+        message_id: int,
+        channel_id: int,
+        callback_if_unresolved: typing.Optional[typing.Callable[[messages.Message], typing.Any]] = None,
+    ) -> typing.Union[messages.Message, interfaces.UnknownObject[messages.Message]]:
+        obj = self.get_message_by_id(message_id)
+        if obj is not None:
+            return obj
+        else:
+            return self._prepare_unknown_with_callback(
+                message_id, self.fabric.http_adapter.fetch_message, callback_if_unresolved, channel_id, message_id
+            )
 
     def get_role_by_id(self, guild_id: int, role_id: int) -> typing.Optional[roles.Role]:
         if guild_id not in self._guilds:
             return None
         return self._guilds[guild_id].roles.get(role_id)
 
+    async def _role_fetcher(self, guild_id, role_id):
+        # This isn't a standard endpoint, we have to search for it...
+        roles = await self.fabric.http_adapter.fetch_roles(guild_id)
+        for role in roles:
+            if role.id == role_id:
+                return role
+        raise ValueError(f"No role could be found for ID {role_id} in guild {guild_id}")
+
+    def get_mandatory_role_by_id(
+        self,
+        guild_id: int,
+        role_id: int,
+        callback_if_unresolved: typing.Optional[typing.Callable[[roles.Role], typing.Any]] = None,
+    ) -> typing.Union[roles.Role, interfaces.UnknownObject[roles.Role]]:
+        obj = self.get_role_by_id(guild_id, role_id)
+        if obj is not None:
+            return obj
+        else:
+            return self._prepare_unknown_with_callback(
+                role_id, self._role_fetcher, callback_if_unresolved, guild_id, role_id
+            )
+
     def get_user_by_id(self, user_id: int) -> typing.Optional[users.User]:
         if self._user is not None and self._user.id == user_id:
             return self._user
 
         return self._users.get(user_id)
+
+    def get_mandatory_user_by_id(
+        self, user_id: int, callback_if_unresolved: typing.Optional[typing.Callable[[users.User], typing.Any]] = None
+    ) -> typing.Union[users.User, interfaces.UnknownObject[users.User]]:
+        obj = self.get_user_by_id(user_id)
+        if obj is not None:
+            return obj
+        else:
+            return self._prepare_unknown_with_callback(
+                user_id, self.fabric.http_adapter.fetch_user, callback_if_unresolved, user_id
+            )
+
+    def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[members.Member]:
+        if guild_id not in self._guilds:
+            return None
+        return self._guilds[guild_id].members.get(user_id)
+
+    def get_mandatory_member_by_id(
+        self,
+        user_id: int,
+        guild_id: int,
+        callback_if_unresolved: typing.Optional[typing.Callable[[members.Member], typing.Any]] = None,
+    ) -> typing.Union[members.MemberLikeT, interfaces.UnknownObject[members.Member]]:
+        obj = self.get_member_by_id(user_id, guild_id)
+        if obj is not None:
+            return obj
+        else:
+            return self._prepare_unknown_with_callback(
+                user_id, self.fabric.http_adapter.fetch_member, callback_if_unresolved, user_id, guild_id
+            )
+
+    def parse_application(self, application_payload: data_structures.DiscordObjectT) -> applications.Application:
+        return applications.Application(self.fabric, application_payload)
 
     def parse_application_user(self, application_user_payload: data_structures.DiscordObjectT) -> users.OAuth2User:
         if self._user is not None:
@@ -236,6 +349,9 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             self._user = users.OAuth2User(self.fabric, application_user_payload)
 
         return self._user
+
+    def parse_audit_log(self, audit_log_payload: data_structures.DiscordObjectT) -> audit_logs.AuditLog:
+        return audit_logs.AuditLog(self.fabric, audit_log_payload)
 
     def parse_channel(
         self, channel_payload: data_structures.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild] = None
@@ -258,6 +374,9 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return channel_obj
 
+    def parse_connection(self, connection_payload: data_structures.DiscordObjectT) -> connections.Connection:
+        return connections.Connection(self.fabric, connection_payload)
+
     # These fix typing issues in the update_guild_emojis method.
     @typing.overload
     def parse_emoji(self, emoji_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
@@ -274,7 +393,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         emoji_id = transformations.nullable_cast(emoji_payload.get("id"), int)
 
         if emoji_id is not None:
-            existing_emoji = self.get_emoji_by_id(emoji_id)
+            existing_emoji = self.get_guild_emoji_by_id(emoji_id)
 
         if existing_emoji is not None:
             existing_emoji.update_state(emoji_payload)
@@ -282,11 +401,14 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         new_emoji = emojis.parse_emoji(self.fabric, emoji_payload, guild_obj.id if guild_obj is not None else None)
         if isinstance(new_emoji, emojis.GuildEmoji):
-            guild_obj = self.get_guild_by_id(guild_obj.id)
+            guild_obj = self.get_mandatory_guild_by_id(guild_obj.id)
             guild_obj.emojis[new_emoji.id] = new_emoji
             self._emojis[new_emoji.id] = new_emoji
 
         return new_emoji
+
+    def parse_gateway_bot(self, gateway_bot_payload: data_structures.DiscordObjectT) -> gateway_bot.GatewayBot:
+        return gateway_bot.GatewayBot(gateway_bot_payload)
 
     def parse_guild(
         self, guild_payload: data_structures.DiscordObjectT, shard_id: typing.Optional[int]
@@ -337,7 +459,9 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         if member_id in guild_obj.members:
             member_obj = guild_obj.members[member_id]
-            role_objs = [self.get_role_by_id(guild_obj.id, int(role_id)) for role_id in member_payload["roles"]]
+            role_objs = [
+                self.get_mandatory_role_by_id(guild_obj.id, int(role_id)) for role_id in member_payload["roles"]
+            ]
             member_obj.update_state(role_objs, member_payload)
             return member_obj
 
@@ -350,17 +474,11 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         # Always update the cache with the new message.
         message_id = int(message_payload["id"])
 
-        channel_id = int(message_payload["channel_id"])
-        channel_obj = self.get_channel_by_id(channel_id)
+        message_obj = messages.Message(self.fabric, message_payload)
+        message_obj.channel.last_message_id = message_id
 
-        if channel_obj is not None:
-            message_obj = messages.Message(self.fabric, message_payload)
-            message_obj.channel.last_message_id = message_id
-
-            self._message_cache[message_id] = message_obj
-            return message_obj
-
-        return None
+        self._message_cache[message_id] = message_obj
+        return message_obj
 
     def parse_presence(
         self, member_obj: members.Member, presence_payload: data_structures.DiscordObjectT
@@ -369,27 +487,25 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         member_obj.presence = presence_obj
         return presence_obj
 
-    def parse_reaction(self, reaction_payload: data_structures.DiscordObjectT) -> typing.Optional[reactions.Reaction]:
+    def parse_reaction(self, reaction_payload: data_structures.DiscordObjectT) -> reactions.Reaction:
         message_id = int(reaction_payload["message_id"])
-        message_obj = self.get_message_by_id(message_id)
         count = int(reaction_payload["count"])
         emoji_obj = self.parse_emoji(reaction_payload["emoji"], None)
 
-        if message_obj is not None:
-            # We might not add this, this is simpler than duplicating code to reparse this payload in two places,
-            # though, so we parse it first anyway and then either ditch or store it depending on whether the reaction
-            # already exists or not.
-            new_reaction_obj = reactions.Reaction(count, emoji_obj, message_obj)
+        # I hope this message won't ever be unresolved, honestly. Because I have no nice way of getting the info I need
+        # to fabricate this damn API call. Thanks Discord.
+        message_obj = self.get_message_by_id(message_id)
+        new_reaction_obj = reactions.Reaction(count, emoji_obj, message_obj or interfaces.UnknownObject(message_id))
 
+        if message_obj:
+            # Prevent attribute-erroring if the message was not cached...
             for existing_reaction_obj in message_obj.reactions:
                 if existing_reaction_obj.emoji == new_reaction_obj.emoji:
                     existing_reaction_obj.count = new_reaction_obj.count
                     return existing_reaction_obj
 
             message_obj.reactions.append(new_reaction_obj)
-            return new_reaction_obj
-        else:
-            return None
+        return new_reaction_obj
 
     def parse_role(self, role_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> roles.Role:
         role_id = int(role_payload["id"])

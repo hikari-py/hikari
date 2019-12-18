@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019-2020
+# Copyright © Nekokatt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -23,6 +23,7 @@ import types
 import typing
 
 from hikari.internal_utilities import assertions
+from hikari.internal_utilities import compat
 
 # If more than one empty-definition is used in the same context, the type checker will probably whinge, so we have
 # to keep separate types...
@@ -123,20 +124,31 @@ class DefaultImmutableMapping(typing.Mapping[HashableT, ValueT]):
         return iter(self._data)
 
 
+ReturnT = typing.TypeVar("ReturnT")
+
+
+class PartialCoroutineProtocolT(compat.typing.Protocol[ReturnT]):
+    """Represents the type of a :class:`functools.partial` wrapping an :mod:`asyncio` coroutine."""
+
+    def __call__(self) -> typing.Coroutine[None, None, ReturnT]:
+        ...
+
+
 #: An immutable indexable container of elements with zero size.
-EMPTY_SEQUENCE: typing.Sequence[ValueT] = tuple()
+EMPTY_SEQUENCE: typing.Sequence = tuple()
 #: An immutable unordered container of elements with zero size.
-EMPTY_SET: typing.AbstractSet[HashableT] = frozenset()
+EMPTY_SET: typing.AbstractSet = frozenset()
 #: An immutable container of elements with zero size.
-EMPTY_COLLECTION: typing.Collection[ValueT] = EMPTY_SEQUENCE
+EMPTY_COLLECTION: typing.Collection = tuple()
 #: An immutable ordered mapping of key elements to value elements with zero size.
-EMPTY_DICT: typing.Mapping[HashableT, ValueT] = types.MappingProxyType({})
+EMPTY_DICT: typing.Mapping = types.MappingProxyType({})
 
 __all__ = (
     "ScalarT",
     "DiscordObjectT",
     "ObjectProxy",
     "LRUDict",
+    "PartialCoroutineProtocolT",
     "EMPTY_SEQUENCE",
     "EMPTY_SET",
     "EMPTY_COLLECTION",
