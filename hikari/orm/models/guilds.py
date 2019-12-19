@@ -481,6 +481,35 @@ class Ban(interfaces.IModel):
         self.user = fabric_obj.state_registry.parse_user(payload.get("user"))
 
 
+class Embed(interfaces.IModel):
+    """
+    Implementation of the guild embed object.
+    """
+
+    __slots__ = ("is_enabled", "channel_id")
+
+    #: Whether the embed is enabled.
+    #:
+    #: :type: :class:`bool`
+    is_enabled: bool
+
+    #: The ID of the embed's target channel if set.
+    #:
+    #: :type: :class:`int` or :class:`None`
+    channel_id: typing.Optional[int]
+
+    __repr__ = auto_repr.repr_of("is_enabled", "channel_id")
+
+    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+        self.is_enabled = payload.get("enabled", False)
+        self.channel_id = transformations.nullable_cast(payload.get("channel_id"), int)
+
+    def to_dict(self, *, dict_factory: data_structures.DictFactoryT = dict) -> data_structures.DictImplT:
+        attrs = {a: getattr(self, a) for a in self.__slots__}
+        # noinspection PyArgumentList,PyTypeChecker
+        return dict_factory(**{k: v for k, v in attrs.items() if v is not None})
+
+
 class WidgetStyle(str, enum.Enum):
     """
     Valid styles of widget for a guild.
@@ -533,4 +562,5 @@ __all__ = [
     "Ban",
     "WidgetStyle",
     "GuildLikeT",
+    "Embed",
 ]
