@@ -22,7 +22,7 @@
 import io
 import json
 
-import asynctest
+import asyncmock as mock
 import pytest
 
 from hikari.internal_utilities import unspecified
@@ -53,13 +53,13 @@ class ClientMock(_http_client.HTTPAPI):
             return ClientMock(token="foobarsecret", loop=event_loop)
 
                 async def test_that_something_does_a_thing(self, http_client):
-            http_client.request = asynctest.CoroutineMock(return_value=69)
+            http_client.request = mock.AsyncMock(return_value=69)
             assert await http_client.something() == 69
 
     """
 
     def __init__(self, *args, **kwargs):
-        with _helpers.mock_patch("aiohttp.ClientSession", new=asynctest.MagicMock()):
+        with _helpers.mock_patch("aiohttp.ClientSession", new=mock.MagicMock()):
             super().__init__(*args, **kwargs)
 
     async def request(self, method, path, params=None, **kwargs):
@@ -107,11 +107,11 @@ Audit Log Unit Tests
 @pytest.mark.auditlog
 class TestAuditLog:
     async def test_audit_log_request_layout(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value={"foo": "bar"})
+        http_client.request = mock.AsyncMock(return_value={"foo": "bar"})
 
         result = await http_client.get_guild_audit_log("1234", user_id="5678", action_type=20, limit=18)
 
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get",
             "/guilds/{guild_id}/audit-logs",
             query={"user_id": "5678", "action_type": 20, "limit": 18},
@@ -121,11 +121,11 @@ class TestAuditLog:
         assert result == {"foo": "bar"}
 
     async def test_audit_log_request_default_args(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value={"foo": "bar"})
+        http_client.request = mock.AsyncMock(return_value={"foo": "bar"})
 
         result = await http_client.get_guild_audit_log("1234")
 
-        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/audit-logs", guild_id="1234", query={})
+        http_client.request.assert_called_once_with("get", "/guilds/{guild_id}/audit-logs", guild_id="1234", query={})
 
         assert result == {"foo": "bar"}
 
@@ -146,16 +146,16 @@ Channel Unit Tests
 @pytest.mark.channel
 class TestChannel:
     async def test_add_pinned_channel_message(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.add_pinned_channel_message("12345", "54321")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "put", "/channels/{channel_id}/pins/{message_id}", channel_id="12345", message_id="54321"
         )
 
     async def test_bulk_delete_messages(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.bulk_delete_messages("69", ["192", "168", "0", "1"])
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post",
             "/channels/{channel_id}/messages/bulk-delete",
             channel_id="69",
@@ -163,16 +163,16 @@ class TestChannel:
         )
 
     async def test_create_channel_invite_without_optional_args_has_empty_payload(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_channel_invite("696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post", "/channels/{channel_id}/invites", channel_id="696969", json={}, reason=unspecified.UNSPECIFIED
         )
 
     async def test_create_channel_invite_with_max_age(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_channel_invite("696969", max_age=10)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post",
             "/channels/{channel_id}/invites",
             channel_id="696969",
@@ -181,9 +181,9 @@ class TestChannel:
         )
 
     async def test_create_channel_invite_with_max_uses(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_channel_invite("696969", max_uses=10)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post",
             "/channels/{channel_id}/invites",
             channel_id="696969",
@@ -192,9 +192,9 @@ class TestChannel:
         )
 
     async def test_create_channel_invite_with_temporary(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_channel_invite("696969", temporary=True)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post",
             "/channels/{channel_id}/invites",
             channel_id="696969",
@@ -203,9 +203,9 @@ class TestChannel:
         )
 
     async def test_create_channel_invite_with_unique(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_channel_invite("696969", unique=True)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post",
             "/channels/{channel_id}/invites",
             channel_id="696969",
@@ -214,110 +214,110 @@ class TestChannel:
         )
 
     async def test_create_channel_invite_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_channel_invite("696969", reason="because i can")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "because i can"
 
     async def test_create_message_performs_a_post_request(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         await http_client.create_message("123456")
 
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         assert "post" in args
 
     async def test_create_message_sends_to_expected_endpoint(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         await http_client.create_message("123456")
 
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         assert "/channels/{channel_id}/messages" in args
         assert kwargs["channel_id"] == "123456"
 
     async def test_create_message_tts_flag_unspecified_will_be_false(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         await http_client.create_message("123456")
 
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         form = kwargs["data"]
         field_dict, headers, payload = form._fields[0]
         assert json.loads(payload) == {"tts": False}
         assert headers == {"Content-Type": "application/json"}
 
     async def test_create_message_tts_flag_false_will_be_false(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         await http_client.create_message("123456", tts=False)
 
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         form = kwargs["data"]
         field_dict, headers, payload = form._fields[0]
         assert json.loads(payload) == {"tts": False}
         assert headers == {"Content-Type": "application/json"}
 
     async def test_create_message_tts_flag_true_will_be_true(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         await http_client.create_message("123456", tts=True)
 
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         form = kwargs["data"]
         field_dict, headers, payload = form._fields[0]
         assert json.loads(payload) == {"tts": True}
         assert headers == {"Content-Type": "application/json"}
 
     async def test_create_message_specifying_content_allows_content_to_be_specified(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         await http_client.create_message("123456", content="ayy")
 
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         form = kwargs["data"]
         field_dict, headers, payload = form._fields[0]
         assert json.loads(payload) == {"tts": False, "content": "ayy"}
         assert headers == {"Content-Type": "application/json"}
 
     async def test_create_message_specifying_nonce_allows_nonce_to_be_specified(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         await http_client.create_message("123456", nonce="91827")
 
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         form = kwargs["data"]
         field_dict, headers, payload = form._fields[0]
         assert json.loads(payload) == {"tts": False, "nonce": "91827"}
         assert headers == {"Content-Type": "application/json"}
 
     async def test_create_message_specifying_embed_allows_embed_to_be_specified(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         await http_client.create_message("123456", embed={"foo": "bar"})
 
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         form = kwargs["data"]
         field_dict, headers, payload = form._fields[0]
         assert json.loads(payload) == {"tts": False, "embed": {"foo": "bar"}}
         assert headers == {"Content-Type": "application/json"}
 
     async def test_create_message_specifying_all_payload_json_fields(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         await http_client.create_message("123456", embed={"foo": "bar"}, nonce="69", content="ayy lmao", tts=True)
 
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         form = kwargs["data"]
         field_dict, headers, payload = form._fields[0]
         assert json.loads(payload) == {"tts": True, "embed": {"foo": "bar"}, "nonce": "69", "content": "ayy lmao"}
         assert headers == {"Content-Type": "application/json"}
 
     async def test_create_message_passing_bytes_as_file_converts_it_correctly_to_BytesIO(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         await http_client.create_message("123456", files=[("foo.png", b"1a2b3c")])
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         assert len(kwargs["re_seekable_resources"]) == 1
         form = kwargs["data"]
         fields = form._fields
@@ -331,10 +331,10 @@ class TestChannel:
         assert payload.readline() == b"1a2b3c"
 
     async def test_create_message_passing_bytearray_as_file_converts_it_correctly_to_BytesIO(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         await http_client.create_message("123456", files=[("foo.png", bytearray((0x9, 0x18, 0x27)))])
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         assert len(kwargs["re_seekable_resources"]) == 1
         form = kwargs["data"]
         fields = form._fields
@@ -348,13 +348,13 @@ class TestChannel:
         assert payload.readline() == b"\x09\x18\x27"
 
     async def test_create_message_passing_memoryview_as_file_converts_it_correctly_to_BytesIO(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         obj = b"Hello, World!"
         view = memoryview(obj)
 
         await http_client.create_message("123456", files=[("foo.png", view)])
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         assert len(kwargs["re_seekable_resources"]) == 1
         form = kwargs["data"]
         fields = form._fields
@@ -368,12 +368,12 @@ class TestChannel:
         assert payload.readline() == b"Hello, World!"
 
     async def test_create_message_passing_str_as_file_converts_it_correctly_to_StringIO(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         obj = "Hello, World!"
 
         await http_client.create_message("123456", files=[("foo.txt", obj)])
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         assert len(kwargs["re_seekable_resources"]) == 1
         form = kwargs["data"]
         fields = form._fields
@@ -387,12 +387,12 @@ class TestChannel:
         assert payload.readline() == "Hello, World!"
 
     async def test_create_message_passing_io_as_file_converts_it_correctly_to_StringIO(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         file = io.StringIO("blah")
 
         await http_client.create_message("123456", files=[("foo.txt", file)])
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         assert len(kwargs["re_seekable_resources"]) == 1
         form = kwargs["data"]
         fields = form._fields
@@ -406,12 +406,12 @@ class TestChannel:
         assert payload.readline() == "blah"
 
     async def test_create_message_passing_several_files_adds_several_files(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=(..., ..., ...))
+        http_client.request = mock.AsyncMock(return_value=(..., ..., ...))
 
         await http_client.create_message(
             "123456", files=[("foo.png", b"1a2b3c"), ("bar.png", b""), ("baz.png", b"blep")]
         )
-        args, kwargs = http_client.request.await_args
+        args, kwargs = http_client.request.call_args
         assert len(kwargs["re_seekable_resources"]) == 3
         form = kwargs["data"]
         fields = form._fields
@@ -445,9 +445,9 @@ class TestChannel:
         assert payload.readline() == b"blep"
 
     async def test_create_reaction(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_reaction("696969", "12", "\N{OK HAND SIGN}")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "put",
             "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me",
             channel_id="696969",
@@ -456,35 +456,35 @@ class TestChannel:
         )
 
     async def test_delete_all_reactions(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.delete_all_reactions("696969", "12")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "delete", "/channels/{channel_id}/messages/{message_id}/reactions", channel_id="696969", message_id="12"
         )
 
     async def test_delete_channel_permission(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.delete_channel_permission("696969", "123456")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "delete", "/channels/{channel_id}/permissions/{overwrite_id}", channel_id="696969", overwrite_id="123456",
         )
 
     async def test_delete_close_channel(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.delete_close_channel("12345")
-        http_client.request.assert_awaited_once_with("delete", "/channels/{channel_id}", channel_id="12345")
+        http_client.request.assert_called_once_with("delete", "/channels/{channel_id}", channel_id="12345")
 
     async def test_delete_message(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.delete_message("123456", "420420420")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "delete", "/channels/{channel_id}/messages/{message_id}", channel_id="123456", message_id="420420420"
         )
 
     async def test_delete_own_reaction(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.delete_own_reaction("696969", "12", "\N{OK HAND SIGN}")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "delete",
             "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me",
             channel_id="696969",
@@ -493,16 +493,16 @@ class TestChannel:
         )
 
     async def test_delete_pinned_channel_message(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.delete_pinned_channel_message("12345", "54321")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "delete", "/channels/{channel_id}/pins/{message_id}", channel_id="12345", message_id="54321"
         )
 
     async def test_delete_user_reaction(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.delete_user_reaction("696969", "12", "\N{OK HAND SIGN}", "101")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "delete",
             "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{user_id}",
             channel_id="696969",
@@ -512,9 +512,9 @@ class TestChannel:
         )
 
     async def test_edit_channel_permissions_without_kwargs(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.edit_channel_permissions("69", "420")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "put",
             "/channels/{channel_id}/permissions/{overwrite_id}",
             channel_id="69",
@@ -524,9 +524,9 @@ class TestChannel:
         )
 
     async def test_edit_channel_permissions_with_kwargs(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.edit_channel_permissions("69", "420", allow=192, deny=168, type_="member")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "put",
             "/channels/{channel_id}/permissions/{overwrite_id}",
             channel_id="69",
@@ -536,7 +536,7 @@ class TestChannel:
         )
 
     async def test_edit_channel_permissions_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.edit_channel_permissions(
             "696969", "123456", allow=123, deny=456, type_="me", reason="because i can"
         )
@@ -545,16 +545,16 @@ class TestChannel:
 
     async def test_edit_message_no_changes(self, http_client):
         # not sure if this is even valid, TODO: verify this
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.edit_message("123456", "6789012")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch", "/channels/{channel_id}/messages/{message_id}", channel_id="123456", message_id="6789012", json={}
         )
 
     async def test_edit_message_content(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.edit_message("123456", "6789012", content="ayy lmao im a duck")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/channels/{channel_id}/messages/{message_id}",
             channel_id="123456",
@@ -563,9 +563,9 @@ class TestChannel:
         )
 
     async def test_edit_message_embed(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.edit_message("123456", "6789012", embed={"title": "ayy lmao im a duck"})
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/channels/{channel_id}/messages/{message_id}",
             channel_id="123456",
@@ -574,9 +574,9 @@ class TestChannel:
         )
 
     async def test_edit_message_embed_and_content(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.edit_message("123456", "6789012", embed={"title": "ayy lmao im a duck"}, content="quack")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/channels/{channel_id}/messages/{message_id}",
             channel_id="123456",
@@ -585,9 +585,9 @@ class TestChannel:
         )
 
     async def test_edit_message_flags(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.edit_message("696969", "12", flags=4)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/channels/{channel_id}/messages/{message_id}",
             channel_id="696969",
@@ -596,9 +596,9 @@ class TestChannel:
         )
 
     async def test_edit_message_flags_and_embed_and_content(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.edit_message("696969", "12", flags=0, embed={"title": "ayy lmao im a duck"}, content="quack")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/channels/{channel_id}/messages/{message_id}",
             channel_id="696969",
@@ -607,11 +607,11 @@ class TestChannel:
         )
 
     async def test_edit_message_return_value(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value={"...": "..."})
+        http_client.request = mock.AsyncMock(return_value={"...": "..."})
         result = await http_client.edit_message(
             "123456", "6789012", embed={"title": "ayy lmao im a duck"}, content="quack"
         )
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/channels/{channel_id}/messages/{message_id}",
             channel_id="123456",
@@ -621,89 +621,89 @@ class TestChannel:
         assert result == {"...": "..."}
 
     async def test_get_channel(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value={"id": "696969", "name": "bobs and v"})
+        http_client.request = mock.AsyncMock(return_value={"id": "696969", "name": "bobs and v"})
         channel = await http_client.get_channel("696969")
-        http_client.request.assert_awaited_once_with("get", "/channels/{channel_id}", channel_id="696969")
+        http_client.request.assert_called_once_with("get", "/channels/{channel_id}", channel_id="696969")
         assert channel == {"id": "696969", "name": "bobs and v"}
 
     async def test_get_channel_invites(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value={"...": "..."})
+        http_client.request = mock.AsyncMock(return_value={"...": "..."})
         result = await http_client.get_channel_invites("123456")
-        http_client.request.assert_awaited_once_with("get", "/channels/{channel_id}/invites", channel_id="123456")
+        http_client.request.assert_called_once_with("get", "/channels/{channel_id}/invites", channel_id="123456")
         assert result == {"...": "..."}
 
     async def test_get_channel_message(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_channel_message("696969", "12")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/channels/{channel_id}/messages/{message_id}", channel_id="696969", message_id="12"
         )
 
     async def test_get_channel_messages_no_kwargs(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_channel_messages("696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/channels/{channel_id}/messages", channel_id="696969", query={}
         )
 
     async def test_get_channel_messages_with_limit(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_channel_messages("696969", limit=12)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/channels/{channel_id}/messages", channel_id="696969", query={"limit": 12}
         )
 
     async def test_get_channel_messages_with_before(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_channel_messages("696969", before="12")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/channels/{channel_id}/messages", channel_id="696969", query={"before": "12"}
         )
 
     async def test_get_channel_messages_with_after(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_channel_messages("696969", after="12")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/channels/{channel_id}/messages", channel_id="696969", query={"after": "12"}
         )
 
     async def test_get_channel_messages_with_around(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_channel_messages("696969", around="12")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/channels/{channel_id}/messages", channel_id="696969", query={"around": "12"}
         )
 
     async def test_get_channel_messages_with_before_and_limit(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_channel_messages("696969", before="12", limit=12)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/channels/{channel_id}/messages", channel_id="696969", query={"before": "12", "limit": 12}
         )
 
     async def test_get_channel_messages_with_after_and_limit(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_channel_messages("696969", after="12", limit=12)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/channels/{channel_id}/messages", channel_id="696969", query={"after": "12", "limit": 12}
         )
 
     async def test_get_channel_messages_with_around_and_limit(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_channel_messages("696969", around="12", limit=12)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/channels/{channel_id}/messages", channel_id="696969", query={"around": "12", "limit": 12}
         )
 
     async def test_get_pinned_messages(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_pinned_messages("12345")
-        http_client.request.assert_awaited_once_with("get", "/channels/{channel_id}/pins", channel_id="12345")
+        http_client.request.assert_called_once_with("get", "/channels/{channel_id}/pins", channel_id="12345")
 
     async def test_get_reactions_no_kwargs(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_reactions("12345", "54321", "99887766")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get",
             "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}",
             channel_id="12345",
@@ -713,9 +713,9 @@ class TestChannel:
         )
 
     async def test_get_reactions_before(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_reactions("12345", "54321", "99887766", before="707")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get",
             "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}",
             channel_id="12345",
@@ -725,9 +725,9 @@ class TestChannel:
         )
 
     async def test_get_reactions_after(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_reactions("12345", "54321", "99887766", after="707")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get",
             "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}",
             channel_id="12345",
@@ -737,9 +737,9 @@ class TestChannel:
         )
 
     async def test_get_reactions_limit(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_reactions("12345", "54321", "99887766", limit=10)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get",
             "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}",
             channel_id="12345",
@@ -749,9 +749,9 @@ class TestChannel:
         )
 
     async def test_get_reactions_limit_and_before(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_reactions("12345", "54321", "99887766", limit=10, before="707")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get",
             "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}",
             channel_id="12345",
@@ -761,9 +761,9 @@ class TestChannel:
         )
 
     async def test_get_reactions_limit_and_after(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_reactions("12345", "54321", "99887766", limit=10, after="707")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get",
             "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}",
             channel_id="12345",
@@ -774,9 +774,9 @@ class TestChannel:
 
     async def test_modify_channel_no_kwargs(self, http_client):
         # Not sure if this is even valid TODO: verify
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_channel("12345")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch", "/channels/{channel_id}", channel_id="12345", json={}, reason=unspecified.UNSPECIFIED
         )
 
@@ -797,9 +797,9 @@ class TestChannel:
         ],
     )
     async def test_modify_channel_with_one_kwarg(self, http_client, name, value):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_channel("12345", **{name: value})
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch", "/channels/{channel_id}", channel_id="12345", json={name: value}, reason=unspecified.UNSPECIFIED
         )
 
@@ -818,9 +818,9 @@ class TestChannel:
             ("parent_id", "999999"),
         ]
 
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_channel("12345", **{name: value for name, value in test_data_kwargs})
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/channels/{channel_id}",
             channel_id="12345",
@@ -829,20 +829,20 @@ class TestChannel:
         )
 
     async def test_modify_channel_return_value(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value={"...": "..."})
+        http_client.request = mock.AsyncMock(return_value={"...": "..."})
         result = await http_client.modify_channel("12345")
         assert result == {"...": "..."}
 
     async def test_modify_channel_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_channel("696969", reason="because i can")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "because i can"
 
     async def test_trigger_typing_indicator(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.trigger_typing_indicator("12345")
-        http_client.request.assert_awaited_once_with("post", "/channels/{channel_id}/typing", channel_id="12345")
+        http_client.request.assert_called_once_with("post", "/channels/{channel_id}/typing", channel_id="12345")
 
 
 r"""
@@ -862,9 +862,9 @@ AbstractEmoji Unit Tests
 @pytest.mark.emoji
 class TestEmoji:
     async def test_create_guild_emoji(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_guild_emoji("424242", "asdf", b"\211PNG\r\n\032\n", roles=[])
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post",
             "/guilds/{guild_id}/emojis",
             guild_id="424242",
@@ -873,34 +873,34 @@ class TestEmoji:
         )
 
     async def test_create_guild_emoji_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_guild_emoji("696969", "123456", b"\211PNG\r\n\032\n", roles=[], reason="because i can")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "because i can"
 
     async def test_delete_guild_emoji(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.delete_guild_emoji("424242", "696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "delete", "/guilds/{guild_id}/emojis/{emoji_id}", guild_id="424242", emoji_id="696969",
         )
 
     async def test_get_guild_emoji(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_guild_emoji("424242", "404101")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/guilds/{guild_id}/emojis/{emoji_id}", guild_id="424242", emoji_id="404101"
         )
 
     async def test_list_guild_emojis(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.list_guild_emojis("424242")
-        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/emojis", guild_id="424242")
+        http_client.request.assert_called_once_with("get", "/guilds/{guild_id}/emojis", guild_id="424242")
 
     async def test_modify_guild_emoji(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_emoji("424242", "696969", name="asdf", roles=[])
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/guilds/{guild_id}/emojis/{emoji_id}",
             guild_id="424242",
@@ -910,7 +910,7 @@ class TestEmoji:
         )
 
     async def test_modify_guild_emoji_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_emoji("696969", "123456", name="asdf", roles=[], reason="because i can")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "because i can"
@@ -933,9 +933,9 @@ Gateway Endpoint Unit Tests
 @pytest.mark.gateway
 class TestGateway:
     async def test_get_gateway(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value={"url": "http://somehost.com"})
+        http_client.request = mock.AsyncMock(return_value={"url": "http://somehost.com"})
         url = await http_client.get_gateway()
-        http_client.request.assert_awaited_once_with("get", "/gateway")
+        http_client.request.assert_called_once_with("get", "/gateway")
         assert url == "http://somehost.com"
 
     async def test_get_gateway_bot(self, http_client):
@@ -944,9 +944,9 @@ class TestGateway:
             "shards": 123,
             "session_start_limit": {"total": 1000, "remaining": 999, "reset_after": 14_400_000},
         }
-        http_client.request = asynctest.CoroutineMock(return_value=payload)
+        http_client.request = mock.AsyncMock(return_value=payload)
         obj = await http_client.get_gateway_bot()
-        http_client.request.assert_awaited_once_with("get", "/gateway/bot")
+        http_client.request.assert_called_once_with("get", "/gateway/bot")
         assert obj == payload
 
 
@@ -966,9 +966,9 @@ Guild Unit Tests
 @pytest.mark.guild
 class TestGuild:
     async def test_add_guild_member_role(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.add_guild_member_role("424242", "696969", "404101")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "put",
             "/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
             guild_id="424242",
@@ -978,15 +978,15 @@ class TestGuild:
         )
 
     async def test_add_guild_member_role_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.add_guild_member_role("424242", "696969", "404101", reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
     async def test_begin_guild_prune_with_no_count(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=None)
+        http_client.request = mock.AsyncMock(return_value=None)
         count = await http_client.begin_guild_prune("424242", 10, compute_prune_count=False)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post",
             "/guilds/{guild_id}/prune",
             guild_id="424242",
@@ -996,9 +996,9 @@ class TestGuild:
         assert count is None
 
     async def test_begin_guild_prune_with_count(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value={"pruned": 180})
+        http_client.request = mock.AsyncMock(return_value={"pruned": 180})
         count = await http_client.begin_guild_prune("424242", 10, compute_prune_count=True)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post",
             "/guilds/{guild_id}/prune",
             guild_id="424242",
@@ -1008,7 +1008,7 @@ class TestGuild:
         assert count == 180
 
     async def test_begin_guild_prune_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value=None)
+        http_client.request = mock.AsyncMock(return_value=None)
         await http_client.begin_guild_prune("424242", 10, compute_prune_count=False, reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
@@ -1048,21 +1048,21 @@ class TestGuild:
             ],
         }
 
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_guild(**test_all_args)
-        http_client.request.assert_awaited_once_with("post", "/guilds", json=expected_args)
+        http_client.request.assert_called_once_with("post", "/guilds", json=expected_args)
 
     async def test_create_guild_ban_no_message_deletion(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_guild_ban("424242", "696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "put", "/guilds/{guild_id}/bans/{user_id}", guild_id="424242", user_id="696969", query={}
         )
 
     async def test_create_guild_ban_with_message_deletion(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_guild_ban("424242", "696969", delete_message_days=10)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "put",
             "/guilds/{guild_id}/bans/{user_id}",
             guild_id="424242",
@@ -1071,18 +1071,18 @@ class TestGuild:
         )
 
     async def test_create_guild_ban_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_guild_ban("424242", "696969", reason="baz")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "put", "/guilds/{guild_id}/bans/{user_id}", guild_id="424242", user_id="696969", query={"reason": "baz"}
         )
         # args, kwargs = http_client.request.call_args
         # assert kwargs["reason"] == "baz"
 
     async def test_create_guild_channel_no_kwars(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_guild_channel("424242", "asdf")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post",
             "/guilds/{guild_id}/channels",
             guild_id="424242",
@@ -1102,9 +1102,9 @@ class TestGuild:
             "nsfw": True,
         }
 
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_guild_channel("424242", "asdf", type_=1, **test_args)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post",
             "/guilds/{guild_id}/channels",
             guild_id="424242",
@@ -1113,15 +1113,15 @@ class TestGuild:
         )
 
     async def test_create_guild_channel_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_guild_channel("424242", "asdf", reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
     async def test_create_guild_integration(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_guild_integration("424242", "twitch", "696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post",
             "/guilds/{guild_id}/integrations",
             guild_id="424242",
@@ -1130,42 +1130,42 @@ class TestGuild:
         )
 
     async def test_create_guild_integration_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_guild_integration("424242", "twitch", "696969", reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
     async def test_create_guild_role_no_kwargs(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_guild_role("424242")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post", "/guilds/{guild_id}/roles", guild_id="424242", json={}, reason=unspecified.UNSPECIFIED
         )
 
     async def test_create_guild_role_many_kwargs(self, http_client):
         test_many_args = {"name": "asdf", "permissions": 404, "hoist": True}
 
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_guild_role("424242", **test_many_args)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post", "/guilds/{guild_id}/roles", guild_id="424242", json=test_many_args, reason=unspecified.UNSPECIFIED
         )
 
     async def test_create_guild_role_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_guild_role("424242", reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
     async def test_delete_guild(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.delete_guild("424242")
-        http_client.request.assert_awaited_once_with("delete", "/guilds/{guild_id}", guild_id="424242")
+        http_client.request.assert_called_once_with("delete", "/guilds/{guild_id}", guild_id="424242")
 
     async def test_delete_guild_integration(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.delete_guild_integration("424242", "696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "delete",
             "/guilds/{guild_id}/integrations/{integration_id}",
             guild_id="424242",
@@ -1174,84 +1174,84 @@ class TestGuild:
         )
 
     async def test_delete_guild_integration_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.delete_guild_integration("424242", "696969", reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
     async def test_delete_guild_role(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.delete_guild_role("424242", "696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "delete", "/guilds/{guild_id}/roles/{role_id}", guild_id="424242", role_id="696969",
         )
 
     async def test_get_guild(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_guild("424242")
-        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}", guild_id="424242")
+        http_client.request.assert_called_once_with("get", "/guilds/{guild_id}", guild_id="424242")
 
     async def test_get_guild_ban(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_guild_ban("424242", "696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/guilds/{guild_id}/bans/{user_id}", guild_id="424242", user_id="696969"
         )
 
     async def test_get_guild_bans(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_guild_bans("424242")
-        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/bans", guild_id="424242")
+        http_client.request.assert_called_once_with("get", "/guilds/{guild_id}/bans", guild_id="424242")
 
     async def test_get_guild_channels(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_guild_channels("424242")
-        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/channels", guild_id="424242")
+        http_client.request.assert_called_once_with("get", "/guilds/{guild_id}/channels", guild_id="424242")
 
     async def test_get_guild_embed(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_guild_embed("424242")
-        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/embed", guild_id="424242")
+        http_client.request.assert_called_once_with("get", "/guilds/{guild_id}/embed", guild_id="424242")
 
     async def test_get_guild_integrations(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_guild_integrations("424242")
-        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/integrations", guild_id="424242")
+        http_client.request.assert_called_once_with("get", "/guilds/{guild_id}/integrations", guild_id="424242")
 
     async def test_get_guild_invites(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_guild_invites("424242")
-        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/invites", guild_id="424242")
+        http_client.request.assert_called_once_with("get", "/guilds/{guild_id}/invites", guild_id="424242")
 
     async def test_get_guild_member(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_guild_member("424242", "696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/guilds/{guild_id}/members/{user_id}", guild_id="424242", user_id="696969"
         )
 
     async def test_get_guild_prune_count(self, http_client):
-        http_client.request = asynctest.CoroutineMock(return_value={"pruned": 69})
+        http_client.request = mock.AsyncMock(return_value={"pruned": 69})
         count = await http_client.get_guild_prune_count("424242", days=10)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/guilds/{guild_id}/prune", guild_id="424242", query={"days": 10}
         )
         assert count == 69
 
     async def test_get_guild_roles(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_guild_roles("424242")
-        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/roles", guild_id="424242")
+        http_client.request.assert_called_once_with("get", "/guilds/{guild_id}/roles", guild_id="424242")
 
     async def test_get_guild_vanity_url(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_guild_vanity_url("424242")
-        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/vanity-url", guild_id="424242")
+        http_client.request.assert_called_once_with("get", "/guilds/{guild_id}/vanity-url", guild_id="424242")
 
     async def test_get_guild_voice_regions(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_guild_voice_regions("424242")
-        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/regions", guild_id="424242")
+        http_client.request.assert_called_once_with("get", "/guilds/{guild_id}/regions", guild_id="424242")
 
     async def test_get_guild_widget_image_without_style(self, http_client):
         http_client.base_uri = "https://potato.com/api/v12"
@@ -1265,21 +1265,21 @@ class TestGuild:
         )
 
     async def test_list_guild_members_no_args(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.list_guild_members("424242")
-        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/members", guild_id="424242", query={})
+        http_client.request.assert_called_once_with("get", "/guilds/{guild_id}/members", guild_id="424242", query={})
 
     async def test_list_guild_members_with_args(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.list_guild_members("424242", limit=10, after="696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/guilds/{guild_id}/members", guild_id="424242", query={"limit": 10, "after": "696969"}
         )
 
     async def test_modify_current_user_nick_to_string(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_current_user_nick("424242", "asdf")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/guilds/{guild_id}/members/@me/nick",
             guild_id="424242",
@@ -1288,9 +1288,9 @@ class TestGuild:
         )
 
     async def test_modify_current_user_nick_to_none(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_current_user_nick("424242", None)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/guilds/{guild_id}/members/@me/nick",
             guild_id="424242",
@@ -1299,15 +1299,15 @@ class TestGuild:
         )
 
     async def test_modify_current_user_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_current_user_nick("424242", "adsf", reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
     async def test_modify_guild_no_kwargs(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild("424242")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch", "/guilds/{guild_id}", guild_id="424242", json={}, reason=unspecified.UNSPECIFIED
         )
 
@@ -1340,22 +1340,22 @@ class TestGuild:
             "system_channel_id": "112",
         }
 
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild("424242", **test_all_kwargs)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch", "/guilds/{guild_id}", guild_id="424242", json=expected_args, reason=unspecified.UNSPECIFIED
         )
 
     async def test_modify_guild_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild("424242", reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
     async def test_modify_guild_channel_positions(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_channel_positions("424242", ("696969", 1), ("404101", 2))
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/guilds/{guild_id}/channels",
             guild_id="424242",
@@ -1363,11 +1363,11 @@ class TestGuild:
         )
 
     async def test_modify_guild_integration(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_integration(
             "424242", "696969", expire_behaviour=1, expire_grace_period=10, enable_emojis=True
         )
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/guilds/{guild_id}/integrations/{integration_id}",
             guild_id="424242",
@@ -1377,7 +1377,7 @@ class TestGuild:
         )
 
     async def test_modify_guild_integration_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_integration(
             "424242", "696969", expire_behaviour=1, expire_grace_period=10, enable_emojis=True, reason="baz"
         )
@@ -1385,9 +1385,9 @@ class TestGuild:
         assert kwargs["reason"] == "baz"
 
     async def test_modify_guild_member_no_kwargs(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_member("424242", "696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/guilds/{guild_id}/members/{user_id}",
             guild_id="424242",
@@ -1399,9 +1399,9 @@ class TestGuild:
     async def test_modify_guild_member_all_kwargs(self, http_client):
         test_args = {"nick": "asdf", "roles": ["404101"], "mute": True, "deaf": True, "channel_id": None}
 
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_member("424242", "696969", **test_args)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/guilds/{guild_id}/members/{user_id}",
             guild_id="424242",
@@ -1411,15 +1411,15 @@ class TestGuild:
         )
 
     async def test_modify_guild_member_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_member("424242", "696969", reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
     async def test_modify_guild_role_no_kwargs(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_role("424242", "696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/guilds/{guild_id}/roles/{role_id}",
             guild_id="424242",
@@ -1431,9 +1431,9 @@ class TestGuild:
     async def test_modify_guild_role_all_kwargs(self, http_client):
         test_args = {"name": "asdf", "permissions": 404, "color": 101, "hoist": True, "mentionable": False}
 
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_role("424242", "696969", **test_args)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/guilds/{guild_id}/roles/{role_id}",
             guild_id="424242",
@@ -1443,15 +1443,15 @@ class TestGuild:
         )
 
     async def test_modify_guild_role_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_role("424242", "696969", reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
     async def test_modify_guild_role_positions(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_role_positions("424242", ("696969", 1), ("404101", 2))
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/guilds/{guild_id}/roles",
             guild_id="424242",
@@ -1459,16 +1459,16 @@ class TestGuild:
         )
 
     async def test_modify_guild_embed_empty_embed_provided(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_embed("424242", {})
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch", "/guilds/{guild_id}/embed", guild_id="424242", json={}, reason=unspecified.UNSPECIFIED
         )
 
     async def test_modify_guild_embed_all_args(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_embed("424242", {"enabled": True, "channel_id": "696969"})
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/guilds/{guild_id}/embed",
             guild_id="424242",
@@ -1477,15 +1477,15 @@ class TestGuild:
         )
 
     async def test_modify_guild_embed_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_guild_embed("424242", {"enabled": True, "channel_id": "696969"}, reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
     async def test_remove_guild_ban(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.remove_guild_ban("424242", "696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "delete",
             "/guilds/{guild_id}/bans/{user_id}",
             guild_id="424242",
@@ -1494,15 +1494,15 @@ class TestGuild:
         )
 
     async def test_remove_guild_ban_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.remove_guild_ban("424242", "696969", reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
     async def test_remove_guild_member(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.remove_guild_member("424242", "696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "delete",
             "/guilds/{guild_id}/members/{user_id}",
             guild_id="424242",
@@ -1511,15 +1511,15 @@ class TestGuild:
         )
 
     async def test_remove_guild_member_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.remove_guild_member("424242", "696969", reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
     async def test_remove_guild_member_role(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.remove_guild_member_role("424242", "696969", "404101")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "delete",
             "/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
             guild_id="424242",
@@ -1529,15 +1529,15 @@ class TestGuild:
         )
 
     async def test_remove_guild_member_role_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.remove_guild_member_role("424242", "696969", "404101", reason="baz")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "baz"
 
     async def test_sync_guild_integration(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.sync_guild_integration("424242", "696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post", "/guilds/{guild_id}/integrations/{integration_id}/sync", guild_id="424242", integration_id="696969"
         )
 
@@ -1558,19 +1558,19 @@ Invite Unit Tests
 @pytest.mark.invite
 class TestInvite:
     async def test_delete_invite(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.delete_invite("424242")
-        http_client.request.assert_awaited_once_with("delete", "/invites/{invite_code}", invite_code="424242")
+        http_client.request.assert_called_once_with("delete", "/invites/{invite_code}", invite_code="424242")
 
     async def test_get_invite_without_counts(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_invite("424242")
-        http_client.request.assert_awaited_once_with("get", "/invites/{invite_code}", invite_code="424242", query={})
+        http_client.request.assert_called_once_with("get", "/invites/{invite_code}", invite_code="424242", query={})
 
     async def test_get_invite_with_counts(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_invite("424242", with_counts=True)
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "get", "/invites/{invite_code}", invite_code="424242", query={"with_counts": "True"}
         )
 
@@ -1601,7 +1601,7 @@ class TestOauth2:
             "bot_require_code_grant": False,
             "owner": {"username": "nekoka.tt", "discriminator": "1234", "id": "123456789", "avatar": None},
         }
-        http_client.request = asynctest.CoroutineMock(return_value=resp)
+        http_client.request = mock.AsyncMock(return_value=resp)
 
         info = await http_client.get_current_application_info()
         assert info == resp
@@ -1623,14 +1623,14 @@ User Unit Tests
 @pytest.mark.user
 class TestUser:
     async def test_create_dm(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_dm("424242")
-        http_client.request.assert_awaited_once_with("post", "/users/@me/channels", json={"recipient_id": "424242"})
+        http_client.request.assert_called_once_with("post", "/users/@me/channels", json={"recipient_id": "424242"})
 
     async def test_get_current_user(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_current_user()
-        http_client.request.assert_awaited_once_with("get", "/users/@me")
+        http_client.request.assert_called_once_with("get", "/users/@me")
 
     async def test_get_current_user_connections(self, http_client):
         resp = {
@@ -1642,51 +1642,51 @@ class TestUser:
             "show_activity": True,
             "verified": False,
         }
-        http_client.request = asynctest.CoroutineMock(return_value=resp)
+        http_client.request = mock.AsyncMock(return_value=resp)
         assert await http_client.get_current_user_connections() == resp
-        http_client.request.assert_awaited_once_with("get", "/users/@me/connections")
+        http_client.request.assert_called_once_with("get", "/users/@me/connections")
 
     async def test_get_current_user_guilds_no_args(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_current_user_guilds()
-        http_client.request.assert_awaited_once_with("get", "/users/@me/guilds", query={})
+        http_client.request.assert_called_once_with("get", "/users/@me/guilds", query={})
 
     async def test_get_current_user_guilds_with_before(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_current_user_guilds(before="424242")
-        http_client.request.assert_awaited_once_with("get", "/users/@me/guilds", query={"before": "424242"})
+        http_client.request.assert_called_once_with("get", "/users/@me/guilds", query={"before": "424242"})
 
     async def test_get_current_user_guilds_with_after(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_current_user_guilds(after="696969")
-        http_client.request.assert_awaited_once_with("get", "/users/@me/guilds", query={"after": "696969"})
+        http_client.request.assert_called_once_with("get", "/users/@me/guilds", query={"after": "696969"})
 
     async def test_get_current_user_guilds_with_limit(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_current_user_guilds(limit=10)
-        http_client.request.assert_awaited_once_with("get", "/users/@me/guilds", query={"limit": 10})
+        http_client.request.assert_called_once_with("get", "/users/@me/guilds", query={"limit": 10})
 
     async def test_get_user(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_user("424242")
-        http_client.request.assert_awaited_once_with("get", "/users/{user_id}", user_id="424242")
+        http_client.request.assert_called_once_with("get", "/users/{user_id}", user_id="424242")
 
     async def test_leave_guild(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.leave_guild("424242")
-        http_client.request.assert_awaited_once_with("delete", "/users/@me/guilds/{guild_id}", guild_id="424242")
+        http_client.request.assert_called_once_with("delete", "/users/@me/guilds/{guild_id}", guild_id="424242")
 
     async def test_modify_current_user_no_args(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_current_user()
-        http_client.request.assert_awaited_once_with("patch", "/users/@me", json={})
+        http_client.request.assert_called_once_with("patch", "/users/@me", json={})
 
     async def test_modify_current_user_all_args(self, http_client):
         test_args = {"username": "asdf", "avatar": b"\211PNG\r\n\032\n"}
         expected_args = {"username": "asdf", "avatar": "data:image/png;base64,iVBORw0KGgo="}
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_current_user(**test_args)
-        http_client.request.assert_awaited_once_with("patch", "/users/@me", json=expected_args)
+        http_client.request.assert_called_once_with("patch", "/users/@me", json=expected_args)
 
 
 r"""
@@ -1705,9 +1705,9 @@ Voice Endpoint Unit Tests
 @pytest.mark.voice
 class TestVoice:
     async def test_list_guild_regions(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.list_voice_regions()
-        http_client.request.assert_awaited_once_with("get", "/voice/regions")
+        http_client.request.assert_called_once_with("get", "/voice/regions")
 
 
 r"""
@@ -1726,9 +1726,9 @@ Webhook Unit Tests
 @pytest.mark.webhook
 class TestWebhook:
     async def test_create_webhook_without_avatar(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_webhook("424242", "asdf")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post",
             "/channels/{channel_id}/webhooks",
             channel_id="424242",
@@ -1737,9 +1737,9 @@ class TestWebhook:
         )
 
     async def test_create_webhook_with_avatar(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_webhook("424242", "asdf", avatar=b"\211PNG\r\n\032\n")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "post",
             "/channels/{channel_id}/webhooks",
             channel_id="424242",
@@ -1748,35 +1748,35 @@ class TestWebhook:
         )
 
     async def test_create_webhook_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.create_webhook("696969", "123456", reason="because i can")
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "because i can"
 
     async def test_delete_webhook(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.delete_webhook("424242")
-        http_client.request.assert_awaited_once_with("delete", "/webhooks/{webhook_id}", webhook_id="424242")
+        http_client.request.assert_called_once_with("delete", "/webhooks/{webhook_id}", webhook_id="424242")
 
     async def test_get_channel_webhooks(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_channel_webhooks("424242")
-        http_client.request.assert_awaited_once_with("get", "/channels/{channel_id}/webhooks", channel_id="424242")
+        http_client.request.assert_called_once_with("get", "/channels/{channel_id}/webhooks", channel_id="424242")
 
     async def test_get_guild_webhooks(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_guild_webhooks("424242")
-        http_client.request.assert_awaited_once_with("get", "/guilds/{guild_id}/webhooks", guild_id="424242")
+        http_client.request.assert_called_once_with("get", "/guilds/{guild_id}/webhooks", guild_id="424242")
 
     async def test_get_webhook(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.get_webhook("424242")
-        http_client.request.assert_awaited_once_with("get", "/webhooks/{webhook_id}", webhook_id="424242")
+        http_client.request.assert_called_once_with("get", "/webhooks/{webhook_id}", webhook_id="424242")
 
     async def test_modify_webhook(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_webhook("424242", name="asdf", avatar=b"\211PNG\r\n\032\n", channel_id="696969")
-        http_client.request.assert_awaited_once_with(
+        http_client.request.assert_called_once_with(
             "patch",
             "/webhooks/{webhook_id}",
             webhook_id="424242",
@@ -1785,7 +1785,7 @@ class TestWebhook:
         )
 
     async def test_modify_webhook_with_optional_reason(self, http_client):
-        http_client.request = asynctest.CoroutineMock()
+        http_client.request = mock.AsyncMock()
         await http_client.modify_webhook(
             "696969", name="123456", avatar=b"\211PNG\r\n\032\n", channel_id="1234", reason="because i can"
         )

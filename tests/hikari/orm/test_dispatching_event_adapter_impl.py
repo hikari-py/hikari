@@ -22,7 +22,7 @@ import inspect
 import logging
 from unittest import mock
 
-import asynctest
+import asyncmock as mock
 import pytest
 
 from hikari.net import gateway as _gateway
@@ -49,7 +49,7 @@ def logger_impl():
 
 @pytest.fixture()
 def state_registry_impl():
-    return asynctest.MagicMock(spec_set=state_registry.IStateRegistry)
+    return mock.MagicMock(spec_set=state_registry.IStateRegistry)
 
 
 @pytest.fixture()
@@ -547,21 +547,21 @@ class TestDispatchingEventAdapterImpl:
     async def test_handle_guild_delete_when_unavailable_invokes__handle_guild_unavailable(
         self, adapter_impl, gateway_impl
     ):
-        adapter_impl._handle_guild_unavailable = asynctest.CoroutineMock()
+        adapter_impl._handle_guild_unavailable = mock.AsyncMock()
         payload = {"id": "123", "unavailable": True}
 
         await adapter_impl.handle_guild_delete(gateway_impl, payload)
 
-        adapter_impl._handle_guild_unavailable.assert_awaited_with(gateway_impl, payload)
+        adapter_impl._handle_guild_unavailable.assert_called_with(gateway_impl, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_delete_when_available_invokes__handle_guild_leave(self, adapter_impl, gateway_impl):
-        adapter_impl._handle_guild_leave = asynctest.CoroutineMock()
+        adapter_impl._handle_guild_leave = mock.AsyncMock()
         payload = {"id": "123", "unavailable": False}
 
         await adapter_impl.handle_guild_delete(gateway_impl, payload)
 
-        adapter_impl._handle_guild_leave.assert_awaited_with(gateway_impl, payload)
+        adapter_impl._handle_guild_leave.assert_called_with(gateway_impl, payload)
 
     @pytest.mark.asyncio
     async def test__handle_guild_unavailable_when_not_cached_parses_guild(
@@ -959,14 +959,14 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_guild_members_chunk_calls_chunker(self, adapter_impl, fabric_impl, gateway_impl):
-        fabric_impl.chunker = asynctest.MagicMock(spec_set=_chunker.IChunker)
-        fabric_impl.chunker.handle_next_chunk = asynctest.CoroutineMock(spec_set=fabric_impl.chunker.handle_next_chunk)
+        fabric_impl.chunker = mock.MagicMock(spec_set=_chunker.IChunker)
+        fabric_impl.chunker.handle_next_chunk = mock.AsyncMock()
 
         payload = {...}
 
         await adapter_impl.handle_guild_members_chunk(gateway_impl, payload)
 
-        fabric_impl.chunker.handle_next_chunk.assert_awaited_once_with(payload, gateway_impl.shard_id)
+        fabric_impl.chunker.handle_next_chunk.assert_called_once_with(payload, gateway_impl.shard_id)
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_create_when_guild_is_not_cached_does_not_dispatch_anything(

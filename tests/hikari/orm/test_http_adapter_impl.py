@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 from unittest import mock
 
-import asynctest
+import asyncmock as mock
 import pytest
 
 from hikari.internal_utilities import unspecified
@@ -41,7 +41,7 @@ class TestHTTPAdapterImpl:
     def fabric_impl(self):
         fabric_impl = fabric.Fabric()
 
-        http_client_impl = asynctest.MagicMock(spec_set=http_api.HTTPAPI)
+        http_client_impl = mock.MagicMock(spec_set=http_api.HTTPAPI)
         state_registry_impl = mock.MagicMock(spec_set=state_registry.IStateRegistry)
         http_adapter_impl = _http_adapter_impl.HTTPAdapterImpl(fabric_impl)
 
@@ -53,24 +53,24 @@ class TestHTTPAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_gateway_url(self, fabric_impl):
-        fabric_impl.http_api.get_gateway = asynctest.CoroutineMock(return_value="wss://some-site.com")
+        fabric_impl.http_api.get_gateway = mock.AsyncMock(return_value="wss://some-site.com")
 
         for _ in range(15):
             assert await fabric_impl.http_adapter.gateway_url == "wss://some-site.com"
 
-        fabric_impl.http_api.get_gateway.assert_awaited_once()
+        fabric_impl.http_api.get_gateway.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_fetch_gateway_bot(self, fabric_impl):
         mock_model = _helpers.mock_model(gateway_bot.GatewayBot)
         mock_payload = mock.MagicMock(spec_set=dict)
-        fabric_impl.http_api.get_gateway_bot = asynctest.CoroutineMock(return_value=mock_payload)
+        fabric_impl.http_api.get_gateway_bot = mock.AsyncMock(return_value=mock_payload)
         fabric_impl.state_registry.parse_gateway_bot = mock.MagicMock(return_value=mock_model)
 
         result = await fabric_impl.http_adapter.fetch_gateway_bot()
 
         assert result is mock_model
-        fabric_impl.http_api.get_gateway_bot.assert_awaited_once_with()
+        fabric_impl.http_api.get_gateway_bot.assert_called_once_with()
         fabric_impl.state_registry.parse_gateway_bot.assert_called_once_with(mock_payload)
 
     @pytest.mark.asyncio
@@ -79,12 +79,12 @@ class TestHTTPAdapterImpl:
         mock_audit_log = _helpers.mock_model(audit_logs.AuditLog)
         mock_payload = mock.MagicMock(spec_set=dict)
 
-        fabric_impl.http_api.get_guild_audit_log = asynctest.CoroutineMock(return_value=mock_payload)
+        fabric_impl.http_api.get_guild_audit_log = mock.AsyncMock(return_value=mock_payload)
         fabric_impl.state_registry.parse_audit_log = mock.MagicMock(return_value=mock_audit_log)
 
         result = await fabric_impl.http_adapter.fetch_audit_log(guild)
 
-        fabric_impl.http_api.get_guild_audit_log.assert_awaited_once_with(
+        fabric_impl.http_api.get_guild_audit_log.assert_called_once_with(
             guild_id="112233",
             user_id=unspecified.UNSPECIFIED,
             action_type=unspecified.UNSPECIFIED,
@@ -102,14 +102,14 @@ class TestHTTPAdapterImpl:
         mock_audit_log = _helpers.mock_model(audit_logs.AuditLog)
         mock_payload = mock.MagicMock(spec_set=dict)
 
-        fabric_impl.http_api.get_guild_audit_log = asynctest.CoroutineMock(return_value=mock_payload)
+        fabric_impl.http_api.get_guild_audit_log = mock.AsyncMock(return_value=mock_payload)
         fabric_impl.state_registry.parse_audit_log = mock.MagicMock(return_value=mock_audit_log)
 
         result = await fabric_impl.http_adapter.fetch_audit_log(
             guild, user=user, action_type=audit_logs.AuditLogEvent.CHANNEL_OVERWRITE_CREATE, limit=69,
         )
 
-        fabric_impl.http_api.get_guild_audit_log.assert_awaited_once_with(
+        fabric_impl.http_api.get_guild_audit_log.assert_called_once_with(
             guild_id="112233",
             user_id="334455",
             action_type=int(audit_logs.AuditLogEvent.CHANNEL_OVERWRITE_CREATE),
@@ -127,11 +127,11 @@ class TestHTTPAdapterImpl:
         mock_channel = _helpers.mock_model(channels.Channel)
         mock_payload = mock.MagicMock(spec_set=dict)
 
-        fabric_impl.http_api.get_channel = asynctest.CoroutineMock(return_value=mock_payload)
+        fabric_impl.http_api.get_channel = mock.AsyncMock(return_value=mock_payload)
         fabric_impl.state_registry.parse_channel = mock.MagicMock(return_value=mock_channel)
 
         result = await fabric_impl.http_adapter.fetch_channel(channel)
 
-        fabric_impl.http_api.get_guild_audit_log.assert_awaited_once_with(channel_id="112233")
+        fabric_impl.http_api.get_guild_audit_log.assert_called_once_with(channel_id="112233")
         fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_payload)
         assert result is mock_channel

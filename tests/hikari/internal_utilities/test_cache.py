@@ -17,9 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
-from unittest import mock
 
-import asynctest
+import asyncmock as mock
 import pytest
 
 from hikari.internal_utilities import cache
@@ -101,7 +100,7 @@ async def test_async_call_CachedFunction_first_time_sets_value():
 
 @pytest.mark.asyncio
 async def test_async_call_CachedFunction_first_time_returns_value():
-    call = asynctest.CoroutineMock(return_value=27)
+    call = mock.AsyncMock(return_value=27)
 
     cached_call = cache.CachedFunction(call, [9], {"k": 18})
 
@@ -110,7 +109,7 @@ async def test_async_call_CachedFunction_first_time_returns_value():
 
 @pytest.mark.asyncio
 async def test_async_call_CachedFunction_second_time_does_not_reset_value():
-    call = asynctest.CoroutineMock(return_value=27)
+    call = mock.AsyncMock(return_value=27)
     cached_call = cache.CachedFunction(call, [9], {"k": 18})
 
     async def sentinel_test_value():
@@ -124,7 +123,7 @@ async def test_async_call_CachedFunction_second_time_does_not_reset_value():
 
 @pytest.mark.asyncio
 async def test_async_call_CachedFunction_second_time_returns_value():
-    call = asynctest.CoroutineMock(return_value=27)
+    call = mock.AsyncMock(return_value=27)
     cached_call = cache.CachedFunction(call, [9], {"k": 18})
 
     await cached_call()
