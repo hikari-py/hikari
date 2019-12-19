@@ -22,6 +22,8 @@ V7 Discord API.
 """
 from __future__ import annotations
 
+import enum
+import inspect
 import json
 import typing
 
@@ -31,10 +33,40 @@ from hikari.internal_utilities import assertions
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import io_helpers
 from hikari.internal_utilities import media_transformations
-from hikari.internal_utilities import meta
 from hikari.internal_utilities import transformations
 from hikari.internal_utilities import unspecified
 from hikari.net import http_api_base
+
+
+class _APIResource(str, enum.Enum):
+    """A documentation resource for the underlying API. This is used to inject URLs into API docstrings."""
+
+    AUDIT_LOG = "/resources/audit-log"
+    CHANNEL = "/resources/channel"
+    EMOJI = "/resources/emoji"
+    GUILD = "/resources/guild"
+    INVITE = "/resources/invite"
+    OAUTH2 = "/topics/oauth2"
+    USER = "/resources/user"
+    VOICE = "/resources/voice"
+    WEBHOOK = "/resources/webhook"
+    GATEWAY = "/topics/gateway"
+
+
+def _link_developer_portal(scope: _APIResource, specific_resource: str = None):
+    """Injects some common documentation into the given member's docstring."""
+
+    def decorator(obj):
+        base_url = "https://discordapp.com/developers/docs"
+        doc = inspect.cleandoc(inspect.getdoc(obj) or "")
+        base_resource = base_url + scope.value
+        frag = obj.__name__.lower().replace("_", "-") if specific_resource is None else specific_resource
+        uri = base_resource + "#" + frag
+
+        setattr(obj, "__doc__", f"Read the documentation on `Discord's developer portal <{uri}>`__.\n\n{doc}")
+        return obj
+
+    return decorator
 
 
 class HTTPAPI(http_api_base.HTTPAPIBase):
@@ -48,7 +80,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     __slots__ = []
 
-    @meta.link_developer_portal(meta.APIResource.GATEWAY)
+    @_link_developer_portal(_APIResource.GATEWAY)
     async def get_gateway(self) -> str:
         """
         Returns:
@@ -60,7 +92,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         result = await self.request(self.GET, "/gateway")
         return result["url"]
 
-    @meta.link_developer_portal(meta.APIResource.GATEWAY)
+    @_link_developer_portal(_APIResource.GATEWAY)
     async def get_gateway_bot(self) -> data_structures.DiscordObjectT:
         """
         Returns:
@@ -72,7 +104,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/gateway/bot")
 
-    @meta.link_developer_portal(meta.APIResource.AUDIT_LOG)
+    @_link_developer_portal(_APIResource.AUDIT_LOG)
     async def get_guild_audit_log(
         self,
         guild_id: str,
@@ -109,7 +141,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         transformations.put_if_specified(query, "limit", limit)
         return await self.request(self.GET, "/guilds/{guild_id}/audit-logs", query=query, guild_id=guild_id)
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def get_channel(self, channel_id: str) -> data_structures.DiscordObjectT:
         """
         Get a channel object from a given channel ID.
@@ -127,7 +159,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/channels/{channel_id}", channel_id=channel_id)
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def modify_channel(  # lgtm [py/similar-function]
         self,
         channel_id: str,
@@ -198,7 +230,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.PATCH, "/channels/{channel_id}", json=payload, channel_id=channel_id, reason=reason
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL, "deleteclose-channel")  # nonstandard spelling in URI
+    @_link_developer_portal(_APIResource.CHANNEL, "deleteclose-channel")  # nonstandard spelling in URI
     async def delete_close_channel(self, channel_id: str) -> None:
         """
         Delete the given channel ID, or if it is a DM, close it.
@@ -222,7 +254,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         await self.request(self.DELETE, "/channels/{channel_id}", channel_id=channel_id)
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def get_channel_messages(
         self,
         channel_id: str,
@@ -277,7 +309,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         transformations.put_if_specified(query, "around", around)
         return await self.request(self.GET, "/channels/{channel_id}/messages", channel_id=channel_id, query=query)
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def get_channel_message(self, channel_id: str, message_id: str) -> data_structures.DiscordObjectT:
         """
         Get the message with the given message ID from the channel with the given channel ID.
@@ -304,7 +336,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.GET, "/channels/{channel_id}/messages/{message_id}", channel_id=channel_id, message_id=message_id
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def create_message(
         self,
         channel_id: str,
@@ -371,7 +403,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             data=form,
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def create_reaction(self, channel_id: str, message_id: str, emoji: str) -> None:
         """
         Add a reaction to the given message in the given channel or user DM.
@@ -402,7 +434,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             emoji=emoji,
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def delete_own_reaction(self, channel_id: str, message_id: str, emoji: str) -> None:
         """
         Remove a reaction you made using a given emoji from a given message in a given channel or user DM.
@@ -428,7 +460,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             emoji=emoji,
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def delete_user_reaction(self, channel_id: str, message_id: str, emoji: str, user_id: str) -> None:
         """
         Remove a reaction made by a given user using a given emoji on a given message in a given channel or user DM.
@@ -459,7 +491,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             user_id=user_id,
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def get_reactions(
         self,
         channel_id: str,
@@ -507,7 +539,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             query=query,
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL, "/resources/channel#delete-all-reactions")
+    @_link_developer_portal(_APIResource.CHANNEL, "/resources/channel#delete-all-reactions")
     async def delete_all_reactions(self, channel_id: str, message_id: str) -> None:
         """
         Deletes all reactions from a given message in a given channel.
@@ -531,7 +563,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             message_id=message_id,
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def edit_message(
         self,
         channel_id: str,
@@ -581,7 +613,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             json=payload,
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def delete_message(self, channel_id: str, message_id: str) -> None:
         """
         Delete a message in a given channel.
@@ -603,7 +635,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.DELETE, "/channels/{channel_id}/messages/{message_id}", channel_id=channel_id, message_id=message_id
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def bulk_delete_messages(self, channel_id: str, messages: typing.Sequence[str]) -> None:
         """
         Delete multiple messages in one request.
@@ -633,7 +665,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.POST, "/channels/{channel_id}/messages/bulk-delete", channel_id=channel_id, json={"messages": messages}
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def edit_channel_permissions(
         self,
         channel_id: str,
@@ -674,7 +706,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             reason=reason,
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def get_channel_invites(self, channel_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Get invites for a given channel.
@@ -694,7 +726,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/channels/{channel_id}/invites", channel_id=channel_id)
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def create_channel_invite(
         self,
         channel_id: str,
@@ -743,7 +775,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.POST, "/channels/{channel_id}/invites", json=payload, channel_id=channel_id, reason=reason
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def delete_channel_permission(self, channel_id: str, overwrite_id: str) -> None:
         """
         Delete a channel permission overwrite for a user or a role in a channel.
@@ -767,7 +799,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             overwrite_id=overwrite_id,
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def trigger_typing_indicator(self, channel_id: str) -> None:
         """
         Trigger the account to appear to be typing for the next 10 seconds in the given channel.
@@ -785,7 +817,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         await self.request(self.POST, "/channels/{channel_id}/typing", channel_id=channel_id)
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def get_pinned_messages(self, channel_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Get pinned messages for a given channel.
@@ -803,7 +835,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/channels/{channel_id}/pins", channel_id=channel_id)
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def add_pinned_channel_message(self, channel_id: str, message_id: str) -> None:
         """
         Add a pinned message to the channel.
@@ -824,7 +856,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.PUT, "/channels/{channel_id}/pins/{message_id}", channel_id=channel_id, message_id=message_id
         )
 
-    @meta.link_developer_portal(meta.APIResource.CHANNEL)
+    @_link_developer_portal(_APIResource.CHANNEL)
     async def delete_pinned_channel_message(self, channel_id: str, message_id: str) -> None:
         """
         Remove a pinned message to the channel. This will only unpin the message. It will not delete it.
@@ -845,7 +877,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.DELETE, "/channels/{channel_id}/pins/{message_id}", channel_id=channel_id, message_id=message_id
         )
 
-    @meta.link_developer_portal(meta.APIResource.EMOJI)
+    @_link_developer_portal(_APIResource.EMOJI)
     async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets emojis for a given guild ID.
@@ -865,7 +897,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/guilds/{guild_id}/emojis", guild_id=guild_id)
 
-    @meta.link_developer_portal(meta.APIResource.EMOJI)
+    @_link_developer_portal(_APIResource.EMOJI)
     async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> data_structures.DiscordObjectT:
         """
         Gets an emoji from a given guild and emoji IDs
@@ -889,7 +921,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.GET, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id
         )
 
-    @meta.link_developer_portal(meta.APIResource.EMOJI)
+    @_link_developer_portal(_APIResource.EMOJI)
     async def create_guild_emoji(
         self,
         guild_id: str,
@@ -932,7 +964,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.POST, "/guilds/{guild_id}/emojis", guild_id=guild_id, json=payload, reason=reason
         )
 
-    @meta.link_developer_portal(meta.APIResource.EMOJI)
+    @_link_developer_portal(_APIResource.EMOJI)
     async def modify_guild_emoji(
         self,
         guild_id: str,
@@ -978,7 +1010,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             reason=reason,
         )
 
-    @meta.link_developer_portal(meta.APIResource.EMOJI)
+    @_link_developer_portal(_APIResource.EMOJI)
     async def delete_guild_emoji(self, guild_id: str, emoji_id: str) -> None:
         """
         Deletes an emoji from a given guild
@@ -998,7 +1030,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         await self.request(self.DELETE, "/guilds/{guild_id}/emojis/{emoji_id}", guild_id=guild_id, emoji_id=emoji_id)
 
     # TODO: find out what is optional, as it is not documented but I know for a fact that guilds should not need an icon
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def create_guild(
         self,
         name: str,
@@ -1053,7 +1085,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         }
         return await self.request(self.POST, "/guilds", json=payload)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def get_guild(self, guild_id: str) -> data_structures.DiscordObjectT:
         """
         Gets a given guild's object.
@@ -1072,7 +1104,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}", guild_id=guild_id)
 
     # pylint: disable=too-many-locals
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def modify_guild(  # lgtm [py/similar-function]
         self,
         guild_id: str,
@@ -1147,7 +1179,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     # pylint: enable=too-many-locals
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def delete_guild(self, guild_id: str) -> None:
         """
         Permanently deletes the given guild. You must be owner.
@@ -1164,7 +1196,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         await self.request(self.DELETE, "/guilds/{guild_id}", guild_id=guild_id)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def get_guild_channels(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets all the channels for a given guild.
@@ -1184,7 +1216,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/guilds/{guild_id}/channels", guild_id=guild_id)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def create_guild_channel(
         self,
         guild_id: str,
@@ -1256,7 +1288,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.POST, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload, reason=reason
         )
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def modify_guild_channel_positions(
         self, guild_id: str, channel: typing.Tuple[str, int], *channels: typing.Tuple[str, int]
     ) -> None:
@@ -1284,7 +1316,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         payload = [{"id": ch[0], "position": ch[1]} for ch in (channel, *channels)]
         await self.request(self.PATCH, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def get_guild_member(self, guild_id: str, user_id: str) -> data_structures.DiscordObjectT:
         """
         Gets a given guild member.
@@ -1304,7 +1336,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/guilds/{guild_id}/members/{user_id}", guild_id=guild_id, user_id=user_id)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def list_guild_members(
         self, guild_id: str, *, limit: int = unspecified.UNSPECIFIED, after: str = unspecified.UNSPECIFIED
     ) -> typing.Sequence[data_structures.DiscordObjectT]:
@@ -1351,7 +1383,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         transformations.put_if_specified(query, "after", after)
         return await self.request(self.GET, "/guilds/{guild_id}/members", guild_id=guild_id, query=query)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def modify_guild_member(  # lgtm [py/similar-function]
         self,
         guild_id: str,
@@ -1410,7 +1442,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             reason=reason,
         )
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def modify_current_user_nick(
         self, guild_id: str, nick: typing.Optional[str], *, reason: str = unspecified.UNSPECIFIED
     ) -> str:
@@ -1440,7 +1472,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.PATCH, "/guilds/{guild_id}/members/@me/nick", guild_id=guild_id, json={"nick": nick}, reason=reason
         )
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def add_guild_member_role(
         self, guild_id: str, user_id: str, role_id: str, *, reason: str = unspecified.UNSPECIFIED
     ) -> None:
@@ -1472,7 +1504,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             reason=reason,
         )
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def remove_guild_member_role(
         self, guild_id: str, user_id: str, role_id: str, *, reason: str = unspecified.UNSPECIFIED
     ) -> None:
@@ -1504,7 +1536,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             reason=reason,
         )
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def remove_guild_member(self, guild_id: str, user_id: str, *, reason: str = unspecified.UNSPECIFIED) -> None:
         """
         Kicks a user from a given guild.
@@ -1527,7 +1559,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.DELETE, "/guilds/{guild_id}/members/{user_id}", guild_id=guild_id, user_id=user_id, reason=reason
         )
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def get_guild_bans(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the bans for a given guild.
@@ -1547,7 +1579,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/guilds/{guild_id}/bans", guild_id=guild_id)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def get_guild_ban(self, guild_id: str, user_id: str) -> data_structures.DiscordObjectT:
         """
         Gets a ban from a given guild.
@@ -1569,7 +1601,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/guilds/{guild_id}/bans/{user_id}", guild_id=guild_id, user_id=user_id)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def create_guild_ban(
         self,
         guild_id: str,
@@ -1604,7 +1636,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.PUT, "/guilds/{guild_id}/bans/{user_id}", guild_id=guild_id, user_id=user_id, query=query
         )
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def remove_guild_ban(self, guild_id: str, user_id: str, *, reason: str = unspecified.UNSPECIFIED) -> None:
         """
         Un-bans a user from a given guild.
@@ -1627,7 +1659,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.DELETE, "/guilds/{guild_id}/bans/{user_id}", guild_id=guild_id, user_id=user_id, reason=reason
         )
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def get_guild_roles(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the roles for a given guild.
@@ -1647,7 +1679,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/guilds/{guild_id}/roles", guild_id=guild_id)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def create_guild_role(
         self,
         guild_id: str,
@@ -1697,7 +1729,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         transformations.put_if_specified(payload, "mentionable", mentionable)
         return await self.request(self.POST, "/guilds/{guild_id}/roles", guild_id=guild_id, json=payload, reason=reason)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def modify_guild_role_positions(
         self, guild_id: str, role: typing.Tuple[str, int], *roles: typing.Tuple[str, int]
     ) -> typing.Sequence[data_structures.DiscordObjectT]:
@@ -1726,7 +1758,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         payload = [{"id": r[0], "position": r[1]} for r in (role, *roles)]
         return await self.request(self.PATCH, "/guilds/{guild_id}/roles", guild_id=guild_id, json=payload)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def modify_guild_role(  # lgtm [py/similar-function]
         self,
         guild_id: str,
@@ -1786,7 +1818,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             reason=reason,
         )
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def delete_guild_role(self, guild_id: str, role_id: str) -> None:
         """
         Deletes a role from a given guild.
@@ -1805,7 +1837,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         await self.request(self.DELETE, "/guilds/{guild_id}/roles/{role_id}", guild_id=guild_id, role_id=role_id)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def get_guild_prune_count(self, guild_id: str, days: int) -> int:
         """
         Gets the estimated prune count for a given guild.
@@ -1830,7 +1862,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         result = await self.request(self.GET, "/guilds/{guild_id}/prune", guild_id=guild_id, query={"days": days})
         return int(result["pruned"])
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def begin_guild_prune(
         self, guild_id: str, days: int, *, compute_prune_count: bool = False, reason: str = unspecified.UNSPECIFIED
     ) -> typing.Optional[int]:
@@ -1869,7 +1901,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         except (TypeError, KeyError):
             return None
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def get_guild_voice_regions(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the voice regions for a given guild.
@@ -1889,7 +1921,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/guilds/{guild_id}/regions", guild_id=guild_id)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def get_guild_invites(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the invites for a given guild.
@@ -1909,7 +1941,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/guilds/{guild_id}/invites", guild_id=guild_id)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the integrations for a given guild.
@@ -1929,7 +1961,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/guilds/{guild_id}/integrations", guild_id=guild_id)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def create_guild_integration(
         self, guild_id: str, type_: str, integration_id: str, *, reason: str = unspecified.UNSPECIFIED
     ) -> data_structures.DiscordObjectT:
@@ -1960,7 +1992,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.POST, "/guilds/{guild_id}/integrations", guild_id=guild_id, json=payload, reason=reason
         )
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def modify_guild_integration(
         self,
         guild_id: str,
@@ -2009,7 +2041,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             reason=reason,
         )
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def delete_guild_integration(
         self, guild_id: str, integration_id: str, *, reason: str = unspecified.UNSPECIFIED
     ) -> None:
@@ -2038,7 +2070,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             reason=reason,
         )
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def sync_guild_integration(self, guild_id: str, integration_id: str) -> None:
         """
         Syncs the given integration.
@@ -2062,7 +2094,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             integration_id=integration_id,
         )
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def get_guild_embed(self, guild_id: str) -> data_structures.DiscordObjectT:
         """
         Gets the embed for a given guild.
@@ -2082,7 +2114,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/guilds/{guild_id}/embed", guild_id=guild_id)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def modify_guild_embed(
         self, guild_id: str, embed: data_structures.DiscordObjectT, *, reason: str = unspecified.UNSPECIFIED
     ) -> data_structures.DiscordObjectT:
@@ -2108,7 +2140,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.PATCH, "/guilds/{guild_id}/embed", guild_id=guild_id, json=embed, reason=reason)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     async def get_guild_vanity_url(self, guild_id: str) -> str:
         """
         Gets the vanity URL for a given guild.
@@ -2128,7 +2160,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/guilds/{guild_id}/vanity-url", guild_id=guild_id)
 
-    @meta.link_developer_portal(meta.APIResource.GUILD)
+    @_link_developer_portal(_APIResource.GUILD)
     def get_guild_widget_image(self, guild_id: str, *, style: str = unspecified.UNSPECIFIED) -> str:
         """
         Get the URL for a guild widget.
@@ -2152,7 +2184,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         query = "" if style is unspecified.UNSPECIFIED else f"?style={style}"
         return f"{self.base_uri}/guilds/{guild_id}/widget.png" + query
 
-    @meta.link_developer_portal(meta.APIResource.INVITE)
+    @_link_developer_portal(_APIResource.INVITE)
     async def get_invite(
         self, invite_code: str, *, with_counts: bool = unspecified.UNSPECIFIED
     ) -> data_structures.DiscordObjectT:
@@ -2177,7 +2209,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         transformations.put_if_specified(query, "with_counts", with_counts, str)
         return await self.request(self.GET, "/invites/{invite_code}", invite_code=invite_code, query=query)
 
-    @meta.link_developer_portal(meta.APIResource.INVITE)
+    @_link_developer_portal(_APIResource.INVITE)
     async def delete_invite(self, invite_code: str) -> data_structures.DiscordObjectT:
         """
         Deletes a given invite.
@@ -2202,7 +2234,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
     # OAUTH2 #
     ##########
 
-    @meta.link_developer_portal(meta.APIResource.OAUTH2)
+    @_link_developer_portal(_APIResource.OAUTH2)
     async def get_current_application_info(self) -> data_structures.DiscordObjectT:
         """
         Get the current application information.
@@ -2216,7 +2248,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
     # USERS  #
     ##########
 
-    @meta.link_developer_portal(meta.APIResource.USER)
+    @_link_developer_portal(_APIResource.USER)
     async def get_current_user(self) -> data_structures.DiscordObjectT:
         """
         Gets the current user that is represented by token given to the client.
@@ -2226,7 +2258,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/users/@me")
 
-    @meta.link_developer_portal(meta.APIResource.USER)
+    @_link_developer_portal(_APIResource.USER)
     async def get_user(self, user_id: str) -> data_structures.DiscordObjectT:
         """
         Gets a given user.
@@ -2244,7 +2276,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/users/{user_id}", user_id=user_id)
 
-    @meta.link_developer_portal(meta.APIResource.USER)
+    @_link_developer_portal(_APIResource.USER)
     async def modify_current_user(
         self, *, username: str = unspecified.UNSPECIFIED, avatar: bytes = unspecified.UNSPECIFIED
     ) -> data_structures.DiscordObjectT:
@@ -2269,7 +2301,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         transformations.put_if_specified(payload, "avatar", avatar, media_transformations.image_bytes_to_image_data)
         return await self.request(self.PATCH, "/users/@me", json=payload)
 
-    @meta.link_developer_portal(meta.APIResource.USER)
+    @_link_developer_portal(_APIResource.USER)
     async def get_current_user_connections(self) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets the current user's connections. This endpoint can be used with both Bearer and Bot tokens
@@ -2281,7 +2313,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/users/@me/connections")
 
-    @meta.link_developer_portal(meta.APIResource.USER)
+    @_link_developer_portal(_APIResource.USER)
     async def get_current_user_guilds(
         self,
         *,
@@ -2305,7 +2337,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         transformations.put_if_specified(query, "limit", limit)
         return await self.request(self.GET, "/users/@me/guilds", query=query)
 
-    @meta.link_developer_portal(meta.APIResource.USER)
+    @_link_developer_portal(_APIResource.USER)
     async def leave_guild(self, guild_id: str) -> None:
         """
         Makes the current user leave a given guild.
@@ -2320,7 +2352,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         await self.request(self.DELETE, "/users/@me/guilds/{guild_id}", guild_id=guild_id)
 
-    @meta.link_developer_portal(meta.APIResource.USER)
+    @_link_developer_portal(_APIResource.USER)
     async def create_dm(self, recipient_id: str) -> data_structures.DiscordObjectT:
         """
         Creates a new DM channel with a given user.
@@ -2338,7 +2370,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.POST, "/users/@me/channels", json={"recipient_id": recipient_id})
 
-    @meta.link_developer_portal(meta.APIResource.VOICE)
+    @_link_developer_portal(_APIResource.VOICE)
     async def list_voice_regions(self) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Get the voice regions that are available.
@@ -2352,7 +2384,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
         return await self.request(self.GET, "/voice/regions")
 
-    @meta.link_developer_portal(meta.APIResource.WEBHOOK)
+    @_link_developer_portal(_APIResource.WEBHOOK)
     async def create_webhook(
         self,
         channel_id: str,
@@ -2391,7 +2423,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.POST, "/channels/{channel_id}/webhooks", channel_id=channel_id, json=payload, reason=reason
         )
 
-    @meta.link_developer_portal(meta.APIResource.WEBHOOK)
+    @_link_developer_portal(_APIResource.WEBHOOK)
     async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets all webhooks from a given channel.
@@ -2411,7 +2443,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/channels/{channel_id}/webhooks", channel_id=channel_id)
 
-    @meta.link_developer_portal(meta.APIResource.WEBHOOK)
+    @_link_developer_portal(_APIResource.WEBHOOK)
     async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
         """
         Gets all webhooks for a given guild.
@@ -2431,7 +2463,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/guilds/{guild_id}/webhooks", guild_id=guild_id)
 
-    @meta.link_developer_portal(meta.APIResource.WEBHOOK)
+    @_link_developer_portal(_APIResource.WEBHOOK)
     async def get_webhook(self, webhook_id: str) -> data_structures.DiscordObjectT:
         """
         Gets a given webhook.
@@ -2449,7 +2481,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         return await self.request(self.GET, "/webhooks/{webhook_id}", webhook_id=webhook_id)
 
-    @meta.link_developer_portal(meta.APIResource.WEBHOOK)
+    @_link_developer_portal(_APIResource.WEBHOOK)
     async def modify_webhook(
         self,
         webhook_id: str,
@@ -2492,7 +2524,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             self.PATCH, "/webhooks/{webhook_id}", webhook_id=webhook_id, json=payload, reason=reason
         )
 
-    @meta.link_developer_portal(meta.APIResource.WEBHOOK)
+    @_link_developer_portal(_APIResource.WEBHOOK)
     async def delete_webhook(self, webhook_id: str) -> None:
         """
         Deletes a given webhook.

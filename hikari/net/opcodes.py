@@ -26,6 +26,8 @@ from __future__ import annotations
 
 import enum
 
+from hikari.internal_utilities import meta
+
 
 class GatewayOpcode(enum.IntEnum):
     """
@@ -369,3 +371,196 @@ class HTTPStatus(enum.IntEnum):
     #:     Discord does not explicitly specify that this can be raised in normal behaviour for the V7 API, however
     #:     it is handled regardless as a standard response that is possible from an HTTP API.
     GATEWAY_TIMEOUT = 504
+
+
+class GatewayEvent(str, enum.Enum):
+    """
+    Events that the Discord Gateway may send us.
+
+    Note:
+        This list may be incomplete, and only works off of events officially documented. Any undocumented
+        events should be ignored to be compliant with the Discord Gateway API specification.
+
+    See https://discordapp.com/developers/docs/topics/gateway#commands-and-events for the current list of documented
+    events and the descriptions of the payloads expected to be received with them.
+    """
+
+    HELLO = "HELLO"
+    READY = "READY"
+    RESUMED = "RESUMED"
+    RECONNECT = "RECONNECT"
+    INVALID_SESSION = "INVALID_SESSION"
+    CHANNEL_CREATE = "CHANNEL_CREATE"
+    CHANNEL_UPDATE = "CHANNEL_UPDATE"
+    CHANNEL_DELETE = "CHANNEL_DELETE"
+    CHANNEL_PINS_UPDATE = "CHANNEL_PINS_UPDATE"
+    GUILD_CREATE = "GUILD_CREATE"
+    GUILD_UPDATE = "GUILD_UPDATE"
+    GUILD_DELETE = "GUILD_DELETE"
+    GUILD_BAN_ADD = "GUILD_BAN_ADD"
+    GUILD_BAN_REMOVE = "GUILD_BAN_REMOVE"
+    GUILD_EMOJIS_UPDATE = "GUILD_EMOJIS_UPDATE"
+    GUILD_INTEGRATIONS_UPDATE = "GUILD_INTEGRATIONS_UPDATE"
+    GUILD_MEMBER_ADD = "GUILD_MEMBER_ADD"
+    GUILD_MEMBER_REMOVE = "GUILD_MEMBER_REMOVE"
+    GUILD_MEMBER_UPDATE = "GUILD_MEMBER_UPDATE"
+    GUILD_MEMBERS_CHUNK = "GUILD_MEMBERS_CHUNK"
+    GUILD_ROLE_CREATE = "GUILD_ROLE_CREATE"
+    GUILD_ROLE_UPDATE = "GUILD_ROLE_UPDATE"
+    GUILD_ROLE_DELETE = "GUILD_ROLE_DELETE"
+    MESSAGE_CREATE = "MESSAGE_CREATE"
+    MESSAGE_UPDATE = "MESSAGE_UPDATE"
+    MESSAGE_DELETE = "MESSAGE_DELETE"
+    MESSAGE_DELETE_BULK = "MESSAGE_DELETE_BULK"
+    MESSAGE_REACTION_ADD = "MESSAGE_REACTION_ADD"
+    MESSAGE_REACTION_REMOVE = "MESSAGE_REACTION_REMOVE"
+    MESSAGE_REACTION_REMOVE_ALL = "MESSAGE_REACTION_REMOVE_ALL"
+    PRESENCE_UPDATE = "PRESENCE_UPDATE"
+    TYPING_START = "TYPING_START"
+    USER_UPDATE = "USER_UPDATE"
+    VOICE_STATE_UPDATE = "VOICE_STATE_UPDATE"
+    VOICE_SERVER_UPDATE = "VOICE_SERVER_UPDATE"
+    WEBHOOKS_UPDATE = "WEBHOOKS_UPDATE"
+
+    # Not yet supported on the gateway, but official stuff exists mentioning them in upcoming changes:
+    # https://gist.github.com/msciotti/223272a6f976ce4fda22d271c23d72d9
+
+    #: A placeholder for a future event that will eventually be implemented on the gateway API.
+    #: For now, it will never be fired.
+    MESSAGE_REACTION_REMOVE_EMOJI = "MESSAGE_REACTION_REMOVE_EMOJI"
+    #: A placeholder for a future event that will eventually be implemented on the gateway API.
+    #: For now, it will never be fired.
+    INVITE_CREATE = "INVITE_CREATE"
+    #: A placeholder for a future event that will eventually be implemented on the gateway API.
+    #: For now, it will never be fired.
+    INVITE_DELETE = "INVITE_DELETE"
+
+
+class GatewayInternalEvent(str, enum.Enum):
+    """
+    Custom events hardcoded into the gateway implementation that may be fired. These are created by
+    Hikari, rather than being events received from the gateway itself.
+    """
+
+    #: Fired when the connection receives a HELLO payload from the gateway server. This will also be
+    #: fired on the gateway event dispatcher as a HELLO event.
+    #:
+    #: Args:
+    #:    gateway:
+    #:        the gateway object that is connected.
+    CONNECT = "CONNECT"
+
+    #: Fired when a gateway connection closes due to some connection error or if requested by Discord's servers.
+    #:
+    #: Args:
+    #:     gateway:
+    #:         the gateway instance that sent this signal.
+    #:     code:
+    #:         the integer closure code given by the gateway.
+    #:     reason:
+    #:         the optional string reason for the closure given by the gateway.
+    DISCONNECT = "DISCONNECT"
+
+    #: Fired if the gateway is told to shutdown by your code. The gateway will not automatically restart in this case.
+    #:
+    #: Args:
+    #:     gateway:
+    #:         the gateway instance that sent this signal.
+    MANUAL_SHUTDOWN = "SHUTDOWN"
+
+
+@meta.incubating()
+class GatewayIntent(enum.IntFlag):
+    """
+    Represents an intent on the gateway. This is a bitfield representation of all the categories of event
+    that you wish to receive.
+
+    Any events not in an intent category will be fired regardless of what intents you provide.
+
+    Note:
+        This will currently have no effect on the gateway until the solution is implemented on Discord's
+        gateway. Discussion of proposed interface can be found at
+        https://gist.github.com/msciotti/223272a6f976ce4fda22d271c23d72d9.
+    """
+
+    #: Subscribes to the following events:
+    #:     - GUILD_CREATE
+    #:     - GUILD_DELETE
+    #:     - GUILD_ROLE_CREATE
+    #:     - GUILD_ROLE_UPDATE
+    #:     - GUILD_ROLE_DELETE
+    #:     - CHANNEL_CREATE
+    #:     - CHANNEL_UPDATE
+    #:     - CHANNEL_DELETE
+    #:     - CHANNEL_PINS_UPDATE
+    GUILDS = 1 << 0
+
+    #: Subscribes to the following events:
+    #:     - GUILD_MEMBER_ADD
+    #:     - GUILD_MEMBER_UPDATE
+    #:     - GUILD_MEMBER_REMOVE
+    GUILD_MEMBERS = 1 << 1
+
+    #: Subscribes to the following events:
+    #:     - GUILD_BAN_ADD
+    #:     - GUILD_BAN_REMOVE
+    GUILD_BANS = 1 << 2
+
+    #: Subscribes to the following events:
+    #:     - GUILD_EMOJIS_UPDATE
+    GUILD_EMOJIS = 1 << 3
+
+    #: Subscribes to the following events:
+    #:     - GUILD_INTEGRATIONS_UPDATE
+    GUILD_INTEGRATIONS = 1 << 4
+
+    #: Subscribes to the following events:
+    #:     - WEBHOOKS_UPDATE
+    GUILD_WEBHOOKS = 1 << 5
+
+    #: Subscribes to the following events:
+    #:    - INVITE_CREATE
+    #:    - INVITE_DELETE
+    GUILD_INVITES = 1 << 6
+
+    #: Subscribes to the following events:
+    #:    - VOICE_STATE_UPDATE
+    GUILD_VOICE_STATES = 1 << 7
+
+    #: Subscribes to the following events:
+    #:    - PRESENCE_UPDATE
+    GUILD_PRESENCES = 1 << 8
+
+    #: Subscribes to the following events:
+    #:    - MESSAGE_CREATE
+    #:    - MESSAGE_UPDATE
+    #:    - MESSAGE_DELETE
+    GUILD_MESSAGES = 1 << 9
+
+    #: Subscribes to the following events:
+    #:    - MESSAGE_REACTION_ADD
+    #:    - MESSAGE_REACTION_REMOVE
+    #:    - MESSAGE_REACTION_REMOVE_ALL
+    #:    - MESSAGE_REACTION_REMOVE_EMOJI
+    GUILD_MESSAGE_REACTIONS = 1 << 10
+
+    #: Subscribes to the following events:
+    #:    - TYPING_START
+    GUILD_MESSAGE_TYPING = 1 << 11
+
+    #: Subscribes to the following events:
+    #:    - CHANNEL_CREATE
+    #:    - MESSAGE_CREATE
+    #:    - MESSAGE_UPDATE
+    #:    - MESSAGE_DELETE
+    DIRECT_MESSAGES = 1 << 12
+
+    #: Subscribes to the following events:
+    #:    - MESSAGE_REACTION_ADD
+    #:    - MESSAGE_REACTION_REMOVE
+    #:    - MESSAGE_REACTION_REMOVE_ALL
+    DIRECT_MESSAGE_REACTIONS = 1 << 13
+
+    #: Subscribes to the following events:
+    #:    - TYPING_START
+    DIRECT_MESSAGE_TYPING = 1 << 14

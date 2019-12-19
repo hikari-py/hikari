@@ -41,18 +41,16 @@ class HTTPClient(abc.ABC):
 
     This can be used in a context manager:
 
-    .. code-block:: python
-        class HTTPClientImpl(HTTPClient):
-            def __init__(self, *args, **kwargs):
-                super().__init__(*args, **kwargs)
+    >>> class HTTPClientImpl(HTTPClient):
+    ...     def __init__(self, *args, **kwargs):
+    ...         super().__init__(*args, **kwargs)
+    ...    def request(self, *args, **kwargs):
+    ...         return super()._request(*args, **kwargs)
 
-            def request(self, *args, **kwargs):
-                return super()._request(*args, **kwargs)
-
-        async with HTTPClientImpl() as client:
-            async with client.request("GET", "https://some-websi.te") as resp:
-                resp.raise_for_status()
-                body = await resp.read()
+    >>> async with HTTPClientImpl() as client:
+    ...     async with client.request("GET", "https://some-websi.te") as resp:
+    ...         resp.raise_for_status()
+    ...         body = await resp.read()
 
     Warning:
         This must be initialized within a coroutine while an event loop is active
@@ -289,4 +287,8 @@ class HTTPClient(abc.ABC):
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
+
+    async def close(self):
+        self.logger.debug("Closing HTTPAPI")
         await self.client_session.close()
