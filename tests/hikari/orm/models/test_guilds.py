@@ -305,3 +305,24 @@ class TestGuild:
         assert ban.reason == "being bad"
         ban.__repr__()
         fabric_obj.state_registry.parse_user.assert_called_once_with(user)
+
+
+@pytest.mark.model
+def test_embed():
+    embed_obj = guilds.GuildEmbed(enabled=True, channel_id=115590097100865541)
+    assert embed_obj.enabled is True
+    assert embed_obj.channel_id == 115590097100865541
+    assert embed_obj.to_dict() == {"enabled": True, "channel_id": 115590097100865541}
+
+
+@pytest.mark.model
+def test_embed_from_dict():
+    embed_obj = guilds.GuildEmbed.from_dict({"enabled": True, "channel_id": "115590097100865541"})
+    assert embed_obj.enabled is True
+    assert embed_obj.channel_id == 115590097100865541
+
+
+@pytest.mark.model
+def test_embed_to_dict_when_missing_channel_id():
+    embed_obj = guilds.GuildEmbed(enabled=False)
+    assert embed_obj.to_dict() == {"enabled": False}

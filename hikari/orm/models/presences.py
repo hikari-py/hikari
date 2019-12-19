@@ -147,7 +147,7 @@ class Activity(interfaces.IModel):
 
     update_state = NotImplemented
 
-    def to_dict(self, *, dict_factory: DictFactoryT = dict) -> DictImplT:
+    def to_dict(self, *, dict_factory: data_structures.DictFactoryT = dict) -> data_structures.DictImplT:
         attrs = {a: getattr(self, a) for a in self.__slots__}
         # noinspection PyArgumentList,PyTypeChecker
         return dict_factory(**{k: v for k, v in attrs.items() if v is not None})
