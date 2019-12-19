@@ -144,7 +144,7 @@ class GuildEmoji(UnknownEmoji, interfaces.IStatefulModel):
 
     #: `True` if the emoji is animated; `False` otherwise.
     #:
-    #: :type: :class:`bool
+    #: :type: :class:`bool`
     is_animated: bool
 
     __repr__ = auto_repr.repr_of("id", "name", "is_animated")

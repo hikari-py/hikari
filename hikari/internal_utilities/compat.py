@@ -26,11 +26,13 @@ These members are subject to change at any time without prior warning.
 """
 import asyncio as _asyncio
 import sys as _sys
+import types as _types
 import typing as _typing
 
 
-class _FakeModule:
+class _FakeModule(_types.ModuleType):
     def __init__(self, cascade_to):
+        super().__init__(name=cascade_to.__package__)
         self.__cascade_to = cascade_to
 
     def __getattr__(self, item):
@@ -40,31 +42,30 @@ class _FakeModule:
         self.__dict__[key] = value
 
 
-asyncio = _FakeModule(_asyncio)
-typing = _FakeModule(_typing)
-
 ################################################################################
 # asyncio.create_task                                                          #
 #     introduced in Python 3.7.0, but only allows a string as the name of the  #
 #     task from Python 3.8.0. Before 3.8.0, tasks were not able to have names. #
 ################################################################################
-if _sys.version_info >= (3, 8):
-    asyncio.create_task = _asyncio.create_task
-else:
-    asyncio.create_task = lambda coro, *, name=None: _asyncio.create_task(coro)
+#: Compatibility layer that behaves as a stand-in replacement for :mod:`asyncio`.
+#:
+#: Provides compatibility implementations for:
+#:     - :func:`asyncio.create_task` name support for Python 3.7
+asyncio = _FakeModule(_asyncio)
 
+if _sys.version_info < (3, 8):
+    asyncio.create_task = lambda coro, *, name=None: _asyncio.create_task(coro)
 
 ##################################
 # typing.Protocol                #
 #     introduced in Python 3.8.0 #
 ##################################
-if _sys.version_info >= (3, 8):
-    typing.Protocol = _typing.Protocol
-else:
+#: Compatibility layer that behaves as a stand-in replacement for :mod:`typing`.
+#:
+#: Provides compatibility implementations for:
+#:     - :class:`typing.Protocol` stub for Python 3.7
+typing = _FakeModule(_typing)
+
+if _sys.version_info < (3, 8):
     typing._ProtocolT = _typing.TypeVar("_ProtocolT")
-
-    class Protocol(_typing.Generic[typing._ProtocolT]):
-        pass
-
-    typing.Protocol = Protocol
-    del Protocol
+    typing.Protocol = _types.new_class("Protocol", (_typing.Generic[typing._ProtocolT],))

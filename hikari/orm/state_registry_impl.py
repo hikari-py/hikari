@@ -215,7 +215,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
     def get_channel_by_id(self, channel_id: int) -> typing.Optional[channels.Channel]:
         return self._guild_channels.get(channel_id) or self._dm_channels.get(channel_id)
 
-    def get_mandatory_channel_by_id(
+    def get_mandatory_channel_by_id(  # lgtm [py/similar-function]
         self,
         channel_id: int,
         callback_if_unresolved: typing.Optional[typing.Callable[[channels.Channel], typing.Any]] = None,
@@ -231,7 +231,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
     def get_guild_emoji_by_id(self, emoji_id: int) -> typing.Optional[emojis.GuildEmoji]:
         return self._emojis.get(emoji_id)
 
-    def get_mandatory_guild_emoji_by_id(
+    def get_mandatory_guild_emoji_by_id(  # lgtm [py/similar-function]
         self,
         emoji_id: int,
         guild_id: int,
@@ -248,7 +248,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
     def get_guild_by_id(self, guild_id: int) -> typing.Optional[guilds.Guild]:
         return self._guilds.get(guild_id)
 
-    def get_mandatory_guild_by_id(
+    def get_mandatory_guild_by_id(  # lgtm [py/similar-function]
         self, guild_id: int, callback_if_unresolved: typing.Optional[typing.Callable[[guilds.Guild], typing.Any]] = None
     ) -> typing.Union[guilds.Guild, interfaces.UnknownObject[guilds.Guild]]:
         obj = self.get_guild_by_id(guild_id)
@@ -289,7 +289,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
                 return role
         raise ValueError(f"No role could be found for ID {role_id} in guild {guild_id}")
 
-    def get_mandatory_role_by_id(
+    def get_mandatory_role_by_id(  # lgtm [py/similar-function]
         self,
         guild_id: int,
         role_id: int,
@@ -309,7 +309,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return self._users.get(user_id)
 
-    def get_mandatory_user_by_id(
+    def get_mandatory_user_by_id(  # lgtm [py/similar-function]
         self, user_id: int, callback_if_unresolved: typing.Optional[typing.Callable[[users.User], typing.Any]] = None
     ) -> typing.Union[users.User, interfaces.UnknownObject[users.User]]:
         obj = self.get_user_by_id(user_id)
@@ -325,7 +325,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             return None
         return self._guilds[guild_id].members.get(user_id)
 
-    def get_mandatory_member_by_id(
+    def get_mandatory_member_by_id(  # lgtm [py/similar-function]
         self,
         user_id: int,
         guild_id: int,
