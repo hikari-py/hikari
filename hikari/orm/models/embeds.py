@@ -55,7 +55,7 @@ class EmbedPart(interfaces.IModel, abc.ABC):
     def __delattr__(self, item):
         setattr(self, item, None)
 
-    def to_dict(self, *, dict_factory=dict):
+    def to_dict(self, *, dict_factory: data_structures.DictFactoryT = dict) -> data_structures.DictImplT:
         attrs = {a: getattr(self, a) for a in self.__slots__}
         # noinspection PyArgumentList,PyTypeChecker
         return dict_factory(**{k: v for k, v in attrs.items() if v is not None})
@@ -215,8 +215,6 @@ class EmbedField(EmbedPart):
 
 
 EmbedT = typing.TypeVar("EmbedT")
-DictImplT = typing.TypeVar("DictImplT", typing.Dict, dict)
-DictFactoryT = typing.Union[typing.Type[DictImplT], typing.Callable[[], DictImplT]]
 
 
 @dataclasses.dataclass()
@@ -466,7 +464,7 @@ class BaseEmbed(interfaces.IModel):
         """
         return list(map(weakref.proxy, self._fields))
 
-    def to_dict(self, *, dict_factory: DictFactoryT = dict) -> DictImplT:
+    def to_dict(self, *, dict_factory: data_structures.DictFactoryT = dict) -> data_structures.DictImplT:
         """
         Converts this embed into a raw payload that Discord's HTTP API will understand.
 
@@ -814,7 +812,7 @@ class Embed(BaseEmbed):
         del self._fields[index]
         return self
 
-    def to_dict(self, *, dict_factory: DictFactoryT = dict) -> DictImplT:
+    def to_dict(self, *, dict_factory: data_structures.DictFactoryT = dict) -> data_structures.DictImplT:
         self._perform_total_length_check()
         return super().to_dict(dict_factory=dict_factory)
 
