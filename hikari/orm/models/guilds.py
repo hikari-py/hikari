@@ -481,28 +481,41 @@ class Ban(interfaces.IModel):
         self.user = fabric_obj.state_registry.parse_user(payload.get("user"))
 
 
-class Embed(interfaces.IModel):
+class GuildEmbed(interfaces.IModel):
     """
     Implementation of the guild embed object.
     """
 
-    __slots__ = ("is_enabled", "channel_id")
+    __slots__ = ("enabled", "channel_id")
 
     #: Whether the embed is enabled.
     #:
     #: :type: :class:`bool`
-    is_enabled: bool
+    enabled: bool
 
     #: The ID of the embed's target channel if set.
     #:
     #: :type: :class:`int` or :class:`None`
     channel_id: typing.Optional[int]
 
-    __repr__ = auto_repr.repr_of("is_enabled", "channel_id")
+    __repr__ = auto_repr.repr_of("enabled", "channel_id")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
-        self.is_enabled = payload.get("enabled", False)
-        self.channel_id = transformations.nullable_cast(payload.get("channel_id"), int)
+    def __init__(self, *, enabled: bool, channel_id: int = None) -> None:
+        self.enabled = enabled
+        self.channel_id = channel_id
+
+    @classmethod
+    def from_dict(cls, payload: data_structures.DiscordObjectT) -> GuildEmbed:
+        """
+        Initialise this model from a Discord payload.
+
+        Returns:
+            :type: :class:`Embed`
+        """
+        return cls(
+            enabled=payload.get("enabled", False),
+            channel_id=transformations.nullable_cast(payload.get("channel_id"), int),
+        )
 
     def to_dict(self, *, dict_factory: data_structures.DictFactoryT = dict) -> data_structures.DictImplT:
         attrs = {a: getattr(self, a) for a in self.__slots__}
@@ -562,5 +575,5 @@ __all__ = [
     "Ban",
     "WidgetStyle",
     "GuildLikeT",
-    "Embed",
+    "GuildEmbed",
 ]
