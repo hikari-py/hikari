@@ -57,27 +57,45 @@ class DispatchingEventAdapter(event_handler.IEventHandler):
 
     async def consume_raw_event(self, shard, event_name: str, payload: typing.Any) -> None:
         try:
-            handler = getattr(self, f"handle_{event_name.lower()}")
-            await handler(shard, payload)
-        except AttributeError:
-            await self.drain_unrecognised_event(shard, event_name, payload)
+            try:
+                handler = getattr(self, f"handle_{event_name.lower()}")
+            except AttributeError:
+                await self.drain_unrecognised_event(shard, event_name, payload)
+            else:
+                await handler(shard, payload)
+        except Exception as ex:
+            self.logger.exception("An exception was discarded", exc_info=ex)
+
+    ###################
+    # Internal events #
+    ###################
 
     async def handle_disconnect(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
+        ...
+
+    async def handle_connect(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
+        ...
+
+    async def handle_manual_shutdown(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
+        ...
+
+    ##################
+    # Gateway events #
+    ##################
+
+    async def handle_hello(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
     async def handle_reconnect(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
-    async def handle_connect(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
+    async def handle_invalid_session(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
     async def handle_ready(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
         ...
 
     async def handle_resumed(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):
-        ...
-
-    async def handle_invalid_session(self, shard: gateway.GatewayClient, payload: bool):
         ...
 
     async def handle_channel_create(self, shard: gateway.GatewayClient, payload: data_structures.DiscordObjectT):

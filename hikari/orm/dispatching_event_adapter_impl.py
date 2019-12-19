@@ -59,8 +59,25 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
             self.logger.warning("Received unrecognised event %s, so will ignore it in the future.", event_name)
             self._ignored_events.add(event_name)
 
+    ###################
+    # Internal events #
+    ###################
+
     async def handle_connect(self, gateway, _):
         self.dispatch(events.CONNECT, gateway)
+
+    async def handle_disconnect(self, gateway, payload):
+        self.dispatch(events.DISCONNECT, gateway, payload.get("code"), payload.get("reason"))
+
+    ##################
+    # Gateway events #
+    ##################
+
+    async def handle_invalid_session(self, gateway, payload):
+        self.dispatch(events.INVALID_SESSION, gateway)
+
+    async def handle_reconnect(self, gateway, _):
+        self.dispatch(events.RECONNECT, gateway)
 
     async def handle_ready(self, gateway, payload):
         user_payload = payload["user"]
@@ -75,16 +92,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
 
         self.dispatch(events.READY, gateway)
 
-    async def handle_disconnect(self, gateway, payload):
-        self.dispatch(events.DISCONNECT, gateway, payload.get("code"), payload.get("reason"))
-
-    async def handle_invalid_session(self, gateway, payload: bool):
-        self.dispatch(events.INVALID_SESSION, gateway, payload)
-
-    async def handle_reconnect(self, gateway, _):
-        self.dispatch(events.RECONNECT, gateway)
-
-    async def handle_resume(self, gateway, _):
+    async def handle_resumed(self, gateway, _):
         self.dispatch(events.RESUME, gateway)
 
     async def handle_channel_create(self, _, payload):

@@ -46,52 +46,55 @@ class Color(int, typing.SupportsInt):
     - 3-digit RGB strings (e.g. #1A2 -- web safe)
     - 6-digit RGB hash strings (e.g. #1A2B3C)
 
-    Examples of conversions to given formats:
-        >>> c = Color(0xFF051A)
-        Color(r=0xff, g=0x5, b=0x1a)
-        >>> hex(c)
-        0xff051a
-        >>> c.hex_code
-        #FF051A
-        >>> str(c)
-        #FF051A
-        >>> int(c)
-        16712986
-        >>> c.rgb
-        (255, 5, 26)
-        >>> c.rgb_float
-        (1.0, 0.0196078431372549, 0.10196078431372549)
+    Examples of conversions to given formats include
+
+    >>> c = Color(0xFF051A)
+    Color(r=0xff, g=0x5, b=0x1a)
+    >>> hex(c)
+    0xff051a
+    >>> c.hex_code
+    #FF051A
+    >>> str(c)
+    #FF051A
+    >>> int(c)
+    16712986
+    >>> c.rgb
+    (255, 5, 26)
+    >>> c.rgb_float
+    (1.0, 0.0196078431372549, 0.10196078431372549)
     
     Alternatively, if you have an arbitrary input in one of the above formats that you wish to become a color, you can
-    use the get-attribute operator on the class itself to automatically attempt to resolve the color:
-        >>> Color[0xFF051A]
-        Color(r=0xff, g=0x5, b=0x1a)
-        >>> Color[16712986]
-        Color(r=0xff, g=0x5, b=0x1a)
-        >>> c = Color[(255, 5, 26)]
-        Color(r=0xff, g=0x5, b=1xa)
-        >>> c = Color[[0xFF, 0x5, 0x1a]]
-        Color(r=0xff, g=0x5, b=1xa)
-        >>> c = Color["#1a2b3c"]
-        Color(r=0x1a, g=0x2b, b=0x3c)
-        >>> c = Color["#1AB"]
-        Color(r=0x11, g=0xaa, b=0xbb)
-        >>> c = Color[(1.0, 0.0196078431372549, 0.10196078431372549)]
-        Color(r=0xff, g=0x5, b=0x1a)
-        >>> c = Color[[1.0, 0.0196078431372549, 0.10196078431372549]]
-        Color(r=0xff, g=0x5, b=0x1a)
+    use the get-attribute operator on the class itself to automatically attempt to resolve the color
 
-    Examples of initialization of Color objects from given formats:
-        >>> c = Color(16712986)
-        Color(r=0xff, g=0x5, b=0x1a)
-        >>> c = Color.from_rgb(255, 5, 26)
-        Color(r=0xff, g=0x5, b=1xa)
-        >>> c = Color.from_hex_code("#1a2b3c")
-        Color(r=0x1a, g=0x2b, b=0x3c)
-        >>> c = Color.from_hex_code("#1AB")
-        Color(r=0x11, g=0xaa, b=0xbb)
-        >>> c = Color.from_rgb_float(1.0, 0.0196078431372549, 0.10196078431372549)
-        Color(r=0xff, g=0x5, b=0x1a)
+    >>> Color[0xFF051A]
+    Color(r=0xff, g=0x5, b=0x1a)
+    >>> Color[16712986]
+    Color(r=0xff, g=0x5, b=0x1a)
+    >>> c = Color[(255, 5, 26)]
+    Color(r=0xff, g=0x5, b=1xa)
+    >>> c = Color[[0xFF, 0x5, 0x1a]]
+    Color(r=0xff, g=0x5, b=1xa)
+    >>> c = Color["#1a2b3c"]
+    Color(r=0x1a, g=0x2b, b=0x3c)
+    >>> c = Color["#1AB"]
+    Color(r=0x11, g=0xaa, b=0xbb)
+    >>> c = Color[(1.0, 0.0196078431372549, 0.10196078431372549)]
+    Color(r=0xff, g=0x5, b=0x1a)
+    >>> c = Color[[1.0, 0.0196078431372549, 0.10196078431372549]]
+    Color(r=0xff, g=0x5, b=0x1a)
+
+    Examples of initialization of Color objects from given formats include
+
+    >>> c = Color(16712986)
+    Color(r=0xff, g=0x5, b=0x1a)
+    >>> c = Color.from_rgb(255, 5, 26)
+    Color(r=0xff, g=0x5, b=1xa)
+    >>> c = Color.from_hex_code("#1a2b3c")
+    Color(r=0x1a, g=0x2b, b=0x3c)
+    >>> c = Color.from_hex_code("#1AB")
+    Color(r=0x11, g=0xaa, b=0xbb)
+    >>> c = Color.from_rgb_float(1.0, 0.0196078431372549, 0.10196078431372549)
+    Color(r=0xff, g=0x5, b=0x1a)
     """
 
     __slots__ = ()

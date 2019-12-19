@@ -27,6 +27,7 @@
 body {
     background-color: #272822;
     color: #f8f9fa;
+    padding-top: 0 !important;
 }
 
 /* whyyyyy */
@@ -50,13 +51,6 @@ dt:target, span.highlighted {
     background-color: transparent !important;
     text-decoration: underline;
     text-decoration-color: #F92672;
-}
-
-/* Offset anchors from the top a bit to compensate for the header. */
-dt[id^='hikari'], div.section[id^='hikari'] {
-  padding-top: 40px;
-  margin-top: -40px;
-  display: inline-block; /* required for webkit browsers */
 }
 
 /* syntax highlighting: https://tmtheme-editor.herokuapp.com/#!/editor/theme/Monokai */
@@ -167,9 +161,6 @@ html {
     min-height: 100vh !important;
 }
 
-.navbar {
-    top: 0;
-}
 
 @media screen and (min-width: 600px){
     div.navbar {
@@ -254,9 +245,9 @@ code {
 }
 
 @supports (font-variation-settings: normal) {
-  code { font-family: 'Fira Code VF', monospace; }
-  .highlight { font-family: 'Fira Code VF', monospace; }
-  pre { font-family: 'Fira Code VF', monospace; }
+    code { font-family: 'Fira Code VF', monospace; }
+    .highlight { font-family: 'Fira Code VF', monospace; }
+    pre { font-family: 'Fira Code VF', monospace; }
 }
 
 .navbar-brand, h1, h2, h3, h4, h5, h6 {

@@ -588,6 +588,7 @@ class IStateRegistry(abc.ABC):
                 The payload of the voice state.
             guild_obj:
                 The guild the voice state should be placed in.
+
         Returns:
             A :class:`hikari.orm.models.voices.VoiceState` object.
         """

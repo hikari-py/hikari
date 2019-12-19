@@ -372,7 +372,7 @@ class HTTPAPIBase(http_client.HTTPClient):
 
         async with super()._request(resource.method, resource.uri, **kwargs) as response:
             self.logger.debug(
-                "[%s] %s %s %s content_type=%s size=%s",
+                "[%s] RESPONSE %s %s %s content_type=%s size=%s",
                 self.in_count,
                 resource.uri,
                 response.status,

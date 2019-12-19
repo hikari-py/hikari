@@ -20,7 +20,6 @@ import contextlib
 import datetime
 import inspect
 import logging
-from unittest import mock
 
 import asyncmock as mock
 import pytest
@@ -178,9 +177,9 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_invalid_session_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
-        await adapter_impl.handle_invalid_session(gateway_impl, False)
+        await adapter_impl.handle_invalid_session(gateway_impl, {})
 
-        dispatch_impl.assert_called_with(events.INVALID_SESSION, gateway_impl, False)
+        dispatch_impl.assert_called_with(events.INVALID_SESSION, gateway_impl)
 
     @pytest.mark.asyncio
     async def test_handle_reconnect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
@@ -190,7 +189,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_resume_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
-        await adapter_impl.handle_resume(gateway_impl, ...)
+        await adapter_impl.handle_resumed(gateway_impl, ...)
 
         dispatch_impl.assert_called_with(events.RESUME, gateway_impl)
 

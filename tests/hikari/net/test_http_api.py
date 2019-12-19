@@ -26,7 +26,7 @@ import asyncmock as mock
 import pytest
 
 from hikari.internal_utilities import unspecified
-from hikari.net import http_api as _http_client
+from hikari.net import http_api as _http_api
 from tests.hikari import _helpers
 
 r"""
@@ -42,7 +42,7 @@ PyTest Fixtures
 """
 
 
-class ClientMock(_http_client.HTTPAPI):
+class ClientMock(_http_api.HTTPAPI):
     """
     Useful for HTTP client calls that need to mock the HTTP connection quickly in a fixture.
 
@@ -86,7 +86,7 @@ Constructor Unit Tests
 @pytest.mark.asyncio
 class TestConstructor:
     async def test_initialize_http_behaves_as_expected_and_does_not_fail(self, event_loop):
-        c = _http_client.HTTPAPI(loop=event_loop, token="1a2b3c4d.1a2b3c4d")
+        c = _http_api.HTTPAPI(loop=event_loop, token="1a2b3c4d.1a2b3c4d")
         assert c is not None
 
 
@@ -1791,3 +1791,9 @@ class TestWebhook:
         )
         args, kwargs = http_client.request.call_args
         assert kwargs["reason"] == "because i can"
+
+
+def test_can_apply_link_developer_portal_with_no_impl_uri():
+    @_http_api._link_developer_portal(_http_api._APIResource.CHANNEL)
+    def foo():
+        pass
