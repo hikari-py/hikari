@@ -52,7 +52,7 @@ aiohttp                  = "~3.6"
 
 [tool.poetry.dev-dependencies]
 # Utilities used during unit tests.
-asynctest                = "~0.13"
+asyncmock                = "~0.4"
 async-timeout            = "~3.0"
 
 # PyTest related packages.

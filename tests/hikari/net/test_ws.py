@@ -19,42 +19,12 @@
 #
 # Big text is from: http://patorjk.com/software/taag/#p=display&f=Big&t=Gateway
 # Adding new categories? Keep it consistent, bud.
-import asyncio
-import contextlib
-import functools
 
 import aiohttp
-import asynctest
+import asyncmock as mock
 import pytest
 
 from hikari.net import ws
-
-
-def mock_stuff_i_dont_care_about(func):
-    @functools.wraps(func)
-    @pytest.mark.asyncio
-    async def wrapper(*args, **kwargs):
-        # Suppresses errors later on and prevents aiohttp conduit running
-        stack = contextlib.ExitStack()
-        stack.enter_context(asynctest.patch("hikari.net.ws.WebSocketClientResponse.__init__", return_value=None))
-        for identifier in ("__init__", "__del__", "ws_connect"):
-            stack.enter_context(
-                asynctest.patch(
-                    f"aiohttp.ClientSession.{identifier}",
-                    return_value=None if identifier == "__init__" else asynctest.MagicMock(),
-                )
-            )
-        for identifier in ("close", "receive", "__init__"):
-            stack.enter_context(
-                asynctest.patch(
-                    f"aiohttp.ClientWebSocketResponse.{identifier}",
-                    return_value=None if identifier == "__init__" else asynctest.MagicMock(),
-                )
-            )
-        with stack:
-            return await func(*args, **kwargs) if asyncio.iscoroutinefunction(func) else func(*args, **kwargs)
-
-    return wrapper
 
 
 @pytest.mark.parametrize("input", ["hello", b"hello"])
@@ -72,29 +42,31 @@ def test_WebSocketClosure___init__():
 
 @pytest.mark.gateway
 class TestWebSocketClientSession:
-    @mock_stuff_i_dont_care_about
     def test___init___specifies_response_class(self):
-        ws.WebSocketClientSession()
-        aiohttp.ClientSession.__init__.assert_called_with(ws_response_class=ws.WebSocketClientResponse)
+        with mock.patch("aiohttp.ClientSession.__init__") as __init__:
+            ws.WebSocketClientSession()
+            __init__.assert_called_with(ws_response_class=ws.WebSocketClientResponse)
 
-    @mock_stuff_i_dont_care_about
     def test_ws_connect(self):
-        session = ws.WebSocketClientSession()
-        # noinspection PyAsyncCall
-        session.ws_connect("http://localhost")
-        aiohttp.ClientSession.ws_connect.assert_called_with(
-            "http://localhost", autoclose=False, max_msg_size=0, autoping=True
-        )
+        with mock.patch("aiohttp.ClientSession.__init__"), mock.patch("aiohttp.ClientSession.ws_connect") as ws_connect:
+            session = ws.WebSocketClientSession()
+            session.ws_connect("http://localhost")
+            aiohttp.ClientSession.ws_connect.assert_called_with(
+                "http://localhost", autoclose=False, max_msg_size=0, autoping=True
+            )
 
 
 @pytest.mark.gateway
 class TestWebSocketResponse:
-    @mock_stuff_i_dont_care_about
-    def test_close(self):
-        websocket = ws.WebSocketClientResponse()
-        websocket.close(code=420, reason="yeet")
-        aiohttp.ClientWebSocketResponse.close.assert_called_with(code=420, message=b"yeet")
+    @pytest.mark.asyncio
+    async def test_close(self):
+        with mock.patch("aiohttp.ClientWebSocketResponse.__init__", return_value=None) as __init__:
+            with mock.patch("aiohttp.ClientWebSocketResponse.close", new=mock.AsyncMock()) as close:
+                websocket = ws.WebSocketClientResponse()
+                await websocket.close(code=420, reason="yeet")
+                close.assert_called_with(code=420, message=b"yeet")
 
+    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         ["message_type", "expect_error"],
         [
@@ -108,61 +80,68 @@ class TestWebSocketResponse:
             (aiohttp.WSMsgType.CLOSING, True),
         ],
     )
-    @mock_stuff_i_dont_care_about
     async def test_receive_any_str(self, message_type, expect_error):
-        websocket = ws.WebSocketClientResponse()
-        response = asynctest.MagicMock(spec_set=aiohttp.WSMessage)
+        response = mock.MagicMock(spec_set=aiohttp.WSMessage)
         response.data = "blah"
         response.type = message_type
-        aiohttp.ClientWebSocketResponse.receive = asynctest.CoroutineMock(return_value=response)
-        if expect_error:
-            try:
-                await websocket.receive_any_str()
-                assert False, "no error"
-            except TypeError:
-                # traceback.print_exc()
-                assert True, "type error as expected"
-        else:
-            assert isinstance(await websocket.receive_any_str(), (str, bytes))
 
-    @mock_stuff_i_dont_care_about
+        with mock.patch("aiohttp.ClientWebSocketResponse.__init__", return_value=None) as __init__:
+            with mock.patch("aiohttp.ClientWebSocketResponse.receive", new=mock.AsyncMock(return_value=response)):
+                websocket = ws.WebSocketClientResponse()
+                if expect_error:
+                    try:
+                        await websocket.receive_any_str()
+                        assert False, "no error"
+                    except TypeError:
+                        # traceback.print_exc()
+                        assert True, "type error as expected"
+                else:
+                    assert isinstance(await websocket.receive_any_str(), (str, bytes))
+
+    @pytest.mark.asyncio
     async def test_receive_on_normal_message(self):
-        websocket = ws.WebSocketClientResponse()
-        response = asynctest.MagicMock(spec_set=aiohttp.WSMessage)
-        response.data = "blah"
-        response.type = aiohttp.WSMsgType.TEXT
-        aiohttp.ClientWebSocketResponse.receive = asynctest.CoroutineMock(return_value=response)
+        with mock.patch("aiohttp.ClientWebSocketResponse.__init__", return_value=None) as __init__:
+            websocket = ws.WebSocketClientResponse()
+            response = mock.MagicMock(spec_set=aiohttp.WSMessage)
+            response.data = "blah"
+            response.type = aiohttp.WSMsgType.TEXT
+            aiohttp.ClientWebSocketResponse.receive = mock.AsyncMock(return_value=response)
 
-        response = await websocket.receive()
-        assert response.data == "blah"
-        assert response.type == aiohttp.WSMsgType.TEXT
+            response = await websocket.receive()
+            assert response.data == "blah"
+            assert response.type == aiohttp.WSMsgType.TEXT
 
-    @mock_stuff_i_dont_care_about
+    @pytest.mark.asyncio
     async def test_receive_on_known_close_message(self):
-        websocket = ws.WebSocketClientResponse()
-        websocket._close_code = 1000
-        response = asynctest.MagicMock(spec_set=aiohttp.WSMessage)
+        response = mock.MagicMock(spec_set=aiohttp.WSMessage)
         response.type = aiohttp.WSMsgType.CLOSE
-        aiohttp.ClientWebSocketResponse.receive = asynctest.CoroutineMock(return_value=response)
+        with mock.patch("aiohttp.ClientWebSocketResponse.__init__", return_value=None) as __init__:
+            with mock.patch("aiohttp.ClientWebSocketResponse.close", new=mock.AsyncMock()):
+                with mock.patch("aiohttp.ClientWebSocketResponse.receive", new=mock.AsyncMock(return_value=response)):
 
-        try:
-            response = await websocket.receive()
-            assert False, f"expected exception, got {response!r}"
-        except ws.WebSocketClosure as ex:
-            assert ex.reason == "NORMAL_CLOSURE"
-            assert ex.code == 1000
+                    websocket = ws.WebSocketClientResponse()
+                    websocket._close_code = 1000
 
-    @mock_stuff_i_dont_care_about
+                    try:
+                        response = await websocket.receive()
+                        assert False, f"expected exception, got {response!r}"
+                    except ws.WebSocketClosure as ex:
+                        assert ex.reason == "NORMAL_CLOSURE"
+                        assert ex.code == 1000
+
+    @pytest.mark.asyncio
     async def test_receive_on_unknown_close_message(self):
-        websocket = ws.WebSocketClientResponse()
-        websocket._close_code = 69
-        response = asynctest.MagicMock(spec_set=aiohttp.WSMessage)
+        response = mock.MagicMock(spec_set=aiohttp.WSMessage)
         response.type = aiohttp.WSMsgType.CLOSE
-        aiohttp.ClientWebSocketResponse.receive = asynctest.CoroutineMock(return_value=response)
+        with mock.patch("aiohttp.ClientWebSocketResponse.__init__", return_value=None) as __init__:
+            with mock.patch("aiohttp.ClientWebSocketResponse.close", new=mock.AsyncMock()):
+                with mock.patch("aiohttp.ClientWebSocketResponse.receive", new=mock.AsyncMock(return_value=response)):
+                    websocket = ws.WebSocketClientResponse()
+                    websocket._close_code = 69
 
-        try:
-            response = await websocket.receive()
-            assert False, f"expected exception, got {response!r}"
-        except ws.WebSocketClosure as ex:
-            assert ex.reason == "no reason"
-            assert ex.code == 69
+                    try:
+                        response = await websocket.receive()
+                        assert False, f"expected exception, got {response!r}"
+                    except ws.WebSocketClosure as ex:
+                        assert ex.reason == "no reason"
+                        assert ex.code == 69

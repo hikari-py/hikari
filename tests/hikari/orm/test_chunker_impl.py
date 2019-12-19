@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import logging
 
-import asynctest
+import asyncmock as mock
 import pytest
 
 from hikari.net import gateway as _gateway
@@ -33,15 +33,15 @@ from tests.hikari import _helpers
 @pytest.fixture()
 def fabric_obj():
     fabric_obj = fabric.Fabric()
-    fabric_obj.state_registry = asynctest.MagicMock(spec_set=state_registry.IStateRegistry)
+    fabric_obj.state_registry = mock.MagicMock(spec_set=state_registry.IStateRegistry)
     fabric_obj.gateways = {
         # We'd never have None and shard ids together, but this doesn't matter for this test.
-        None: asynctest.MagicMock(spec_set=_gateway.GatewayClient),
-        0: asynctest.MagicMock(spec_set=_gateway.GatewayClient),
-        1: asynctest.MagicMock(spec_set=_gateway.GatewayClient),
-        2: asynctest.MagicMock(spec_set=_gateway.GatewayClient),
-        3: asynctest.MagicMock(spec_set=_gateway.GatewayClient),
-        4: asynctest.MagicMock(spec_set=_gateway.GatewayClient),
+        None: mock.MagicMock(spec_set=_gateway.GatewayClient),
+        0: mock.MagicMock(spec_set=_gateway.GatewayClient),
+        1: mock.MagicMock(spec_set=_gateway.GatewayClient),
+        2: mock.MagicMock(spec_set=_gateway.GatewayClient),
+        3: mock.MagicMock(spec_set=_gateway.GatewayClient),
+        4: mock.MagicMock(spec_set=_gateway.GatewayClient),
     }
     fabric_obj.chunker = chunker_impl.ChunkerImpl(fabric_obj)
     return fabric_obj
@@ -145,8 +145,8 @@ def test_load_members_for_with_shards(fabric_obj):
 
 @pytest.mark.asyncio
 async def test_handle_next_chunk_for_unknown_guild_does_nothing(fabric_obj, guild_chunk_payload_no_presences):
-    fabric_obj.chunker.logger = asynctest.MagicMock(spec_set=logging.Logger)
-    fabric_obj.state_registry.get_guild_by_id = asynctest.MagicMock(
+    fabric_obj.chunker.logger = mock.MagicMock(spec_set=logging.Logger)
+    fabric_obj.state_registry.get_guild_by_id = mock.MagicMock(
         spec_set=fabric_obj.state_registry.get_guild_by_id, return_value=None
     )
 
@@ -162,10 +162,10 @@ async def test_handle_next_chunk_for_members_without_presences(
 ):
     guild_obj = _helpers.mock_model(guilds.Guild, id=1, shard_id=1)
     member_obj = _helpers.mock_model(members.Member, id=1234)
-    fabric_obj.state_registry.parse_member = asynctest.MagicMock(
+    fabric_obj.state_registry.parse_member = mock.MagicMock(
         spec_set=fabric_obj.state_registry.parse_member, return_value=member_obj
     )
-    fabric_obj.state_registry.get_guild_by_id = asynctest.MagicMock(
+    fabric_obj.state_registry.get_guild_by_id = mock.MagicMock(
         spec_set=fabric_obj.state_registry.get_guild_by_id, return_value=guild_obj
     )
 
@@ -181,13 +181,13 @@ async def test_handle_next_chunk_for_members_with_presences(
 ):
     guild_obj = _helpers.mock_model(guilds.Guild, id=1, shard_id=1)
     member_obj = _helpers.mock_model(members.Member, id=1234)
-    fabric_obj.state_registry.parse_member = asynctest.MagicMock(
+    fabric_obj.state_registry.parse_member = mock.MagicMock(
         spec_set=fabric_obj.state_registry.parse_member, return_value=member_obj
     )
-    fabric_obj.state_registry.get_guild_by_id = asynctest.MagicMock(
+    fabric_obj.state_registry.get_guild_by_id = mock.MagicMock(
         spec_set=fabric_obj.state_registry.get_guild_by_id, return_value=guild_obj
     )
-    fabric_obj.chunker.logger = asynctest.MagicMock(spec_set=logging.Logger)
+    fabric_obj.chunker.logger = mock.MagicMock(spec_set=logging.Logger)
 
     await fabric_obj.chunker.handle_next_chunk(guild_chunk_payload_presences, 1)
 

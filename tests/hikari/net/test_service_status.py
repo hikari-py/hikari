@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 
-import asynctest
+import asyncmock as mock
 import pytest
 
 from hikari.net import service_status
@@ -543,8 +543,8 @@ def mock_client(event_loop):
 
     class ClientSession:
         def __init__(self, **kwargs):
-            self.request = asynctest.MagicMock(wraps=Response(self))
-            self.mock_response_body = asynctest.MagicMock()
+            self.request = mock.MagicMock(wraps=Response(self))
+            self.mock_response_body = mock.MagicMock()
 
         async def __aenter__(self):
             return self
@@ -555,7 +555,7 @@ def mock_client(event_loop):
         def close(self):
             pass
 
-    with asynctest.patch("aiohttp.ClientSession", new=ClientSession):
+    with mock.patch("aiohttp.ClientSession", new=ClientSession):
         yield _helpers.unslot_class(service_status.ServiceStatusClient)(loop=event_loop)
 
 
@@ -564,7 +564,7 @@ def stubbed_client(mock_client):
     def perform_request(_, cast, *__, **___):
         return _helpers.mock_model(cast)
 
-    mock_client._perform_request = asynctest.CoroutineMock(spec_set=mock_client._perform_request, wraps=perform_request)
+    mock_client._perform_request = mock.AsyncMock(wraps=perform_request)
     return mock_client
 
 
@@ -581,9 +581,9 @@ class TestServiceStatusClient:
             def from_dict(_):
                 ...
 
-        cast = asynctest.MagicMock(spec_set=FromDictable)
-        cast.from_dict = asynctest.MagicMock(spec_set=FromDictable.from_dict, return_value=FromDictable())
-        data = asynctest.MagicMock()
+        cast = mock.MagicMock(spec_set=FromDictable)
+        cast.from_dict = mock.MagicMock(spec_set=FromDictable.from_dict, return_value=FromDictable())
+        data = mock.MagicMock()
 
         resp = await mock_client._perform_request("/foo/bar", cast, data, method)
         cast.from_dict.assert_called_once_with(mock_client.client_session.mock_response_body)

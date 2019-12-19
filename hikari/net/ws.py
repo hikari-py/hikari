@@ -105,9 +105,7 @@ class WebSocketClientResponse(aiohttp.ClientWebSocketResponse):
 
     __slots__ = ()
 
-    def close(
-        self, *, code: int = opcodes.GatewayClosure.NORMAL_CLOSURE, reason: str = _NO_REASON
-    ) -> typing.Awaitable[bool]:
+    async def close(self, *, code: int = opcodes.GatewayClosure.NORMAL_CLOSURE, reason: str = _NO_REASON) -> bool:
         """
         Closes the connection.
 
@@ -120,7 +118,7 @@ class WebSocketClientResponse(aiohttp.ClientWebSocketResponse):
         Returns:
             True if the connection just closed, False if it was already closed.
         """
-        return super().close(code=code, message=_promote_to_bytes(reason))
+        return await super().close(code=code, message=_promote_to_bytes(reason))
 
     async def receive_any_str(self, timeout: typing.Optional[float] = None) -> typing.AnyStr:
         """
