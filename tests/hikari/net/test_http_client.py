@@ -16,6 +16,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import logging
+
+import asyncmock as mock
 import pytest
 
 from hikari.net import http_client
@@ -31,3 +34,18 @@ async def test_http_client___aenter___and___aexit__():
 
     async with inst as client:
         assert client is inst
+
+
+@pytest.mark.asyncio
+async def test_http_client_close_calls_client_session_close():
+    class HTTPClientImpl(http_client.HTTPClient):
+        def __init__(self, *args, **kwargs):
+            self.client_session = mock.MagicMock()
+            self.client_session.close = mock.AsyncMock()
+            self.logger = logging.getLogger(__name__)
+
+    inst = HTTPClientImpl()
+
+    await inst.close()
+
+    inst.client_session.close.assert_called_with()

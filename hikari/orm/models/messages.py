@@ -146,13 +146,18 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
     __copy_by_ref__ = ("author",)
 
     #: The channel ID of the channel the message was sent in.
+    #:
+    #: :type: :class:`int` or `None`
     channel_id: int
 
     #: The optional guild ID of the guild the message was sent in, where applicable.
+    #:
+    #: :type: :class:`int` or `None`
     guild_id: typing.Optional[int]
 
-    #: Either a :type:`user.User`, a :type:`member.Member` or a :type:`webhook.Webhook` depending on what created the
-    #: message and where.
+    #: The entity that generated this message.
+    #:
+    # :type: one of :class:`user.User`, :class:`member.Member` or :class:`webhook.Webhook`.
     author: AuthorT
 
     #: The ID of the message.

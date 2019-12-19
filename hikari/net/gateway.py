@@ -32,9 +32,11 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import dataclasses
 import datetime
-import enum
+import functools
 import json
+import operator
 import ssl
 import time
 import typing
@@ -49,16 +51,29 @@ from hikari.internal_utilities import logging_helpers
 from hikari.internal_utilities import user_agent
 from hikari.net import opcodes
 from hikari.net import rates
-from hikari.net import ws
 
 
-class _ResumeConnection(ws.WebSocketClosure):
+@dataclasses.dataclass(frozen=True)
+class _WebSocketClosure(RuntimeError):
+    """
+    Raised when the server shuts down the connection unexpectedly.
+    """
+
+    __slots__ = ("code", "reason")
+
+    #: The closure code provided.
+    code: int
+    #: The message provided.
+    reason: str
+
+
+class _ResumeConnection(_WebSocketClosure):
     """Request to restart the client connection using a resume. This is only used internally."""
 
     __slots__ = ()
 
 
-class _RestartConnection(ws.WebSocketClosure):
+class _RestartConnection(_WebSocketClosure):
     """Request by the gateway to completely reconnect using a fresh connection. This is only used internally."""
 
     __slots__ = ()
@@ -72,82 +87,6 @@ DispatchHandler = typing.Callable[["GatewayClient", str, typing.Any], typing.Awa
 
 async def _default_dispatch(_gateway, _event, _payload) -> None:
     ...
-
-
-class Event(str, enum.Enum):
-    """
-    Custom events hardcoded into the gateway implementation that may be fired.
-    """
-
-    #: Fired when the connection receives a HELLO payload from the gateway server.
-    #:
-    #: Args:
-    #:    gateway:
-    #:        the gateway object that is connected.
-    CONNECT = "connect"
-
-    #: Fired when the connection has completed the initial handshake. This is triggered before the gateway has finished
-    #: loading all guilds. The Discord API refers to this as a `READY` event.
-    #:
-    #: Note:
-    #:    This is fired when the initial handshake has completed, but guilds will not yet have become available.
-    #:    Implementations should track the guilds that become available as they become available to determine when
-    #:    the full initialization has completed.
-    #:
-    #: Args:
-    #:    gateway:
-    #:        the gateway object that is connected.
-    #:    payload:
-    #:        a ready event as described by
-    #:        https://discordapp.com/developers/docs/topics/gateway#ready-ready-event-fields
-    READY = "ready"
-
-    #: Fired when a gateway connection closes due to some connection error or if requested by Discord's servers.
-    #:
-    #: Args:
-    #:     gateway:
-    #:         the gateway instance that sent this signal.
-    #:     code:
-    #:         the integer closure code given by the gateway.
-    #:     reason:
-    #:         the optional string reason for the closure given by the gateway.
-    DISCONNECT = "disconnect"
-
-    #: Fired if an INVALID_SESSION payload is sent.
-    #:
-    #: |selfHealing|
-    #:
-    #: Args:
-    #:     gateway:
-    #:         the gateway instance that sent this signal.
-    #:     can_resume:
-    #:         `True` if we expect the connection to be resumed (that is, it disconnects and reconnects without the
-    #:         initial identification handshake and parsing of guild information). If `False`, the connection will be
-    #:         restarted as if a fresh connection from scratch, which will take longer.
-    INVALID_SESSION = "invalid_session"
-
-    #: Fired if the gateway requested we reconnect.
-    #:
-    #: |selfHealing|
-    #:
-    #: Args:
-    #:     gateway:
-    #:         the gateway instance that sent this signal.
-    RECONNECT = "reconnect"
-
-    #: Fired if a connection was successfully resumed.
-    #:
-    #: Args:
-    #:     gateway:
-    #:         the gateway instance that sent this signal.
-    RESUME = "resume"
-
-    #: Fired if the gateway is told to shutdown by your code. The gateway will not automatically restart in this case.
-    #:
-    #: Args:
-    #:     gateway:
-    #:         the gateway instance that sent this signal.
-    SHUTDOWN = "shutdown"
 
 
 class GatewayClient:
@@ -170,18 +109,55 @@ class GatewayClient:
         connector:
             the :class:`aiohttp.BaseConnector` to use for the client session, or `None` if you wish to use the
             default instead.
-        dispatch:
-            A coroutine function that consumes a string event name and a JSON dispatch event payload consumed
-            from the gateway to call each time a dispatch occurs. The payload will vary between events.
-            If unspecified, this will default to an empty callback that does nothing.
         enable_guild_subscription_events:
             Defaulting to `True`, this will make the gateway emit events for changes to presence in guilds, and
             for any user-typing events. If you set this to `False`, those events will be ignored and will not
             be sent by Discord, reducing overall load on the bot significantly in large numbers of guilds.
+        gateway_event_dispatcher:
+            Consumer of any DISPATCH payloads that are received.
+
+            A coroutine function that consumes this gateway client object, a string event name, and a JSON dispatch
+            event payload consumed from the gateway to call each time a dispatch occurs.  The payload will vary between
+            events. If unspecified, this will default to an empty callback that does nothing. This will only consume
+            events that originate from the Discord gateway.
+
+            See https://discordapp.com/developers/docs/topics/gateway#commands-and-events for the types of event that
+            can be fired to this dispatcher.
+
+            See :class:`hikari.net.opcodes.GatewayEvent` for the types of known event that can be fired to this
+            dispatcher. If the event is in this list, an instance of this enum will be passed as the event name.
+            If the event is unknown, a raw string will be passed instead.
         initial_presence:
             A JSON-serializable dict containing the initial presence to set, or `None` to just appear
             `online`. See https://discordapp.com/developers/docs/topics/gateway#update-status for a description
             of this `update-status` payload object.
+        intents:
+            A bitfield combination of every :class:`hikari.net.opcodes.GatewayIntent` you wish to receive events for.
+
+            Warning:
+                This feature is currently incubating and is not yet supported by the V7 gateway, so will not yet
+                have any effect.
+
+                See https://gist.github.com/msciotti/223272a6f976ce4fda22d271c23d72d9 for a discussion of the
+                proposed implementation. This functionality exists purely as a placeholder for the time being, and
+                will not filter anything out.
+
+            If unspecified, this defaults to requesting all events possible.
+        internal_event_dispatcher:
+            Consumer of internal notable events.
+
+            A coroutine function that consumes this gateway client object, a string event name and a JSON object
+            containing event information to call each time a dispatch occurs. The payload will vary between events.
+            If unspecified, this will default to an empty callback that does nothing. This will only consume events
+            that originate internally, such as when a connection is made, closed, or when an invalid session occurs,
+            etc.
+
+            This exists separately to allow you to filter out non-API compliant events if you desire. If you wish to
+            handle these in the same way as the gateway DISPATCH events, you can just pass the same dispatcher as
+            for `gateway_event_dispatcher`.
+
+            See :class:`hikari.net.opcodes.GatewayInternalEvent` for the types of event that can be fired to this
+            dispatcher, if you wish to use "constant" values in your implementation to represent events.
         json_marshaller:
             a callable that consumes a Python object and returns a JSON-encoded string.
             This defaults to :func:`json.dumps`.
@@ -233,8 +209,7 @@ class GatewayClient:
         This must be initialized within a coroutine while an event loop is active
         and registered to the current thread.
 
-    Events
-    ~~~~~~
+    **Events**
 
     All events are dispatched with at least two arguments. These are always the first two to be provided, and will
     always be in the same order.
@@ -256,13 +231,15 @@ class GatewayClient:
         "_in_buffer",
         "_closed_event",
         "_enable_guild_subscription_events",
-        "client_session",
-        "dispatch",
+        "_intents",
+        "_client_session_factory",
         "fingerprint",
+        "gateway_event_dispatcher",
         "heartbeat_interval",
         "heartbeat_latency",
         "in_count",
         "initial_presence",
+        "internal_event_dispatcher",
         "json_marshaller",
         "json_unmarshaller",
         "json_unmarshaller_object_hook",
@@ -286,7 +263,7 @@ class GatewayClient:
         "timeout",
         "token",
         "trace",
-        "uri",
+        "url",
         "verify_ssl",
         "ws",
         "zlib_decompressor",
@@ -302,28 +279,37 @@ class GatewayClient:
         self,
         *,
         # required args:
-        uri: str,
         token: str,
+        uri: str,
         # optional args:
+        connector: aiohttp.BaseConnector = None,
+        enable_guild_subscription_events=True,
+        gateway_event_dispatcher: DispatchHandler = None,
+        initial_presence: typing.Optional[data_structures.DiscordObjectT] = None,
+        intents: opcodes.GatewayIntent = functools.reduce(operator.or_, opcodes.GatewayIntent),
+        internal_event_dispatcher: DispatchHandler = None,
+        json_marshaller: typing.Callable = None,
         json_unmarshaller: typing.Callable = None,
         json_unmarshaller_object_hook: typing.Type[dict] = None,
-        json_marshaller: typing.Callable = None,
-        dispatch: DispatchHandler = None,
-        enable_guild_subscription_events=True,
-        initial_presence: typing.Optional[data_structures.DiscordObjectT] = None,
         large_threshold: int = 50,
         loop: asyncio.AbstractEventLoop = None,
         max_persistent_buffer_size: int = 3 * 1024 ** 2,
-        shard_id: typing.Optional[int] = None,
-        shard_count: typing.Optional[int] = None,
-        connector: aiohttp.BaseConnector = None,
-        proxy_headers: aiohttp.typedefs.LooseHeaders = None,
         proxy_auth: aiohttp.BasicAuth = None,
+        proxy_headers: aiohttp.typedefs.LooseHeaders = None,
         proxy_url: str = None,
+        shard_count: typing.Optional[int] = None,
+        shard_id: typing.Optional[int] = None,
         ssl_context: ssl.SSLContext = None,
-        verify_ssl: bool = True,
         timeout: float = None,
+        verify_ssl: bool = True,
     ) -> None:
+        loop = loop or asyncio.get_running_loop()
+
+        #: The event loop to use.
+        #:
+        #: :type: :class:`asyncio.AbstractEventLoop`
+        self.loop: asyncio.AbstractEventLoop = loop
+
         #: Raw buffer that gets filled by messages. You should not interfere with this field ever.
         #:
         #:
@@ -336,6 +322,20 @@ class GatewayClient:
         #: True if we want the guild to send events for presence changes and typing events. This is
         #: private as it cannot be adjusted once initially set without re-identifying.
         self._enable_guild_subscription_events = enable_guild_subscription_events
+
+        #: The gateway intent to use. This is a bitfield combination of each category of event you wish to
+        #: receive DISPATCH payloads for. See :class:`hikari.net.opcodes.GatewayIntent` for more information.
+        #: This is private as it only applies while we identify.
+        self._intents = intents
+
+        #: Partial that can be used to generate new client sessions when we need them...
+        self._client_session_factory = functools.partial(
+            aiohttp.ClientSession,
+            connector=connector,
+            loop=self.loop,
+            json_serialize=json_marshaller,
+            version=aiohttp.HttpVersion11,
+        )
 
         #: Callable used to marshal (serialize) payloads into JSON-encoded strings from native Python objects.
         #:
@@ -364,17 +364,15 @@ class GatewayClient:
         #: :type: :class:`logging.Logger`
         self.logger = logging_helpers.get_named_logger(*logger_args)
 
-        #: The coroutine function to dispatch any events to.
+        #: The coroutine function to dispatch any gateway DISPATCH events to.
         #:
         #: :type: :class:`hikari.net.gateway.DispatchHandler`
-        self.dispatch: DispatchHandler = dispatch or _default_dispatch
+        self.gateway_event_dispatcher: DispatchHandler = gateway_event_dispatcher or _default_dispatch
 
-        loop = loop or asyncio.get_running_loop()
-
-        #: The event loop to use.
+        #: The coroutine function to dispatch any connection-related events to.
         #:
-        #: :type: :class:`asyncio.AbstractEventLoop`
-        self.loop: asyncio.AbstractEventLoop = loop
+        #: :type: :class:`hikari.net.gateway.DispatchHandler`
+        self.internal_event_dispatcher: DispatchHandler = internal_event_dispatcher or _default_dispatch
 
         #: The fingerprint payload used to identify this connection to the gateway.
         #:
@@ -389,13 +387,6 @@ class GatewayClient:
         #:
         #: :type: :class:`zlib.decompressobj`
         self.zlib_decompressor: typing.Any = zlib.decompressobj()
-
-        #: Client session to make the websocket connection from.
-        #:
-        #: :type: :class:`hikari.net.ws.WebSocketClientSession`
-        self.client_session = ws.WebSocketClientSession(
-            connector=connector, loop=self.loop, json_serialize=json_marshaller, version=aiohttp.HttpVersion11
-        )
 
         #: Number of shards in use, or `None` if not sharded.
         #:
@@ -487,13 +478,13 @@ class GatewayClient:
         #: The URI being connected to.
         #:
         #: :type: :class:`str`
-        self.uri = f"{uri}?v={self.version}&encoding=json&compression=zlib-stream"
+        self.url = f"{uri}?v={self.version}&encoding=json&compression=zlib-stream"
 
         #: The active websocket connection handling the low-level connection logic. Populated only while
         #: connected.
         #:
         #: :type: :class:`aiohttp.ClientWebSocketResponse` or :class:`None`
-        self.ws: typing.Optional[ws.WebSocketClientResponse] = None
+        self.ws: typing.Optional[aiohttp.ClientWebSocketResponse] = None
 
         #: Optional SSL context to use.
         #:
@@ -545,19 +536,26 @@ class GatewayClient:
 
     async def _trigger_resume(self, code: int, reason: str) -> typing.NoReturn:
         """Trigger a `RESUME` operation. This will raise a :class:`ResumableConnectionClosed` exception."""
-        await self.ws.close(code=code, reason=reason)
+        await self.ws.close(code=code)
         raise _ResumeConnection(code=code, reason=reason)
 
     async def _trigger_identify(self, code: int, reason: str) -> typing.NoReturn:
         """Trigger a re-`IDENTIFY` operation. This will raise a :class:`GatewayRequestedReconnection` exception."""
-        await self.ws.close(code=code, reason=reason)
+        await self.ws.close(code=code)
         raise _RestartConnection(code=code, reason=reason)
 
-    async def _send_json(self, payload, skip_rate_limit) -> None:
-        self.logger.debug(
-            "sending payload %s and %s rate limit", payload, "skipping" if skip_rate_limit else "not skipping"
-        )
+    async def _receive(self):
+        response = await self.ws.receive()
+        self.logger.debug("< [%s] %s", response.type.name, response.data)
+        if response.type in (aiohttp.WSMsgType.TEXT, aiohttp.WSMsgType.BINARY):
+            return response.data
+        elif response.type == aiohttp.WSMsgType.CLOSE:
+            await self.ws.close()
+            raise _WebSocketClosure(self.ws.close_code, "gateway closed the connection")
+        else:
+            raise TypeError(f"Expected TEXT or BINARY message on websocket but received {response.type}")
 
+    async def _send_json(self, payload, skip_rate_limit) -> None:
         if not skip_rate_limit:
             await self.rate_limit.acquire(self._warn_about_internal_rate_limit)
 
@@ -567,19 +565,21 @@ class GatewayClient:
         else:
             self.out_count += 1
             await self.ws.send_str(raw)
+            self.logger.debug("> %s", raw)
 
     async def _receive_json(self) -> data_structures.DiscordObjectT:
-        msg = await self.ws.receive_any_str()
+        msg = await self._receive()
 
         if isinstance(msg, (bytes, bytearray)):
             self._in_buffer.extend(msg)
             while not self._in_buffer.endswith(b"\x00\x00\xff\xff"):
-                msg = await self.ws.receive_any_str()
+                msg = await self._receive()
                 self._in_buffer.extend(msg)
 
             msg = self.zlib_decompressor.decompress(self._in_buffer).decode("utf-8")
 
             # Prevent large packets persisting a massive buffer we never utilise.
+            # TODO: tune this size to get best performance?
             if len(self._in_buffer) > self.max_persistent_buffer_size:
                 self._in_buffer = bytearray()
             else:
@@ -590,7 +590,6 @@ class GatewayClient:
         if not isinstance(payload, dict):
             return await self._trigger_identify(code=opcodes.GatewayClosure.TYPE_ERROR, reason="Expected JSON object.")
 
-        self.logger.debug("received payload %s", payload)
         self.in_count += 1
 
         return payload
@@ -662,7 +661,8 @@ class GatewayClient:
         self.trace = d["_trace"]
         hb = d["heartbeat_interval"]
         self.heartbeat_interval = hb / 1000.0
-        self.dispatch_new_event(Event.CONNECT)
+        self._dispatch_new_event(opcodes.GatewayInternalEvent.CONNECT, None, True)
+        self._dispatch_new_event(opcodes.GatewayEvent.HELLO, d, False)
         self.logger.info("received HELLO. heartbeat interval is %sms", hb)
 
     async def _send_resume(self) -> None:
@@ -682,6 +682,10 @@ class GatewayClient:
                 "large_threshold": self.large_threshold,
                 "properties": self.fingerprint,
                 "guild_subscriptions": self._enable_guild_subscription_events,
+                # Do not uncomment this, it will trigger a 4012 shutdown, which is undocumented
+                # behaviour according to the closure codes list at the time of writing
+                # see https://github.com/discordapp/discord-api-docs/issues/1266
+                # "intents": int(self._intents),
             },
         }
 
@@ -699,13 +703,17 @@ class GatewayClient:
         await self._send_json(payload, False)
 
     async def _handle_dispatch(self, event: str, payload: data_structures.DiscordObjectT) -> None:
-        if event == "READY":
+        if event == opcodes.GatewayEvent.READY:
             await self._handle_ready(payload)
-        elif event == "RESUMED":
+        elif event == opcodes.GatewayEvent.RESUMED:
             await self._handle_resumed(payload)
         else:
             self.logger.debug("DISPATCH %s", event)
-            self.dispatch_new_event(event, payload)
+            try:
+                event = opcodes.GatewayEvent(event)
+            except ValueError:
+                pass
+            self._dispatch_new_event(event, payload, False)
 
     async def _handle_ready(self, ready_payload: data_structures.DiscordObjectT) -> None:
         self.trace = ready_payload["_trace"]
@@ -715,11 +723,7 @@ class GatewayClient:
         if shard is not None:
             self.shard_id, self.shard_count = shard
 
-        # NOTE:
-        #     This is a READY event, but is aliased to `CONNECT` for this API to prevent confusion
-        #     with the proper expected "READY" event that is generated by Hikari once the full
-        #     internal state has been loaded. This is not a bug.
-        self.dispatch_new_event(Event.READY, ready_payload)
+        self._dispatch_new_event(opcodes.GatewayEvent.READY, ready_payload, False)
 
         self.logger.info("session %s has completed handshake, initial connection is READY", self.session_id)
         self.logger.debug("trace for session %s is %s", self.session_id, self.trace)
@@ -729,7 +733,9 @@ class GatewayClient:
         self.session_id = resume_payload["session_id"]
         self.seq = resume_payload["seq"]
         self.logger.info("RESUMED successfully")
-        self.dispatch_new_event(Event.RESUME)
+        # This is a gateway event, we don't want to capture it with the internal events, so it is
+        # not enumerated.
+        self._dispatch_new_event(opcodes.GatewayEvent.RESUMED, resume_payload, False)
 
     async def _process_events(self) -> None:
         """Polls the gateway for new packets and handles dispatching the results."""
@@ -755,21 +761,20 @@ class GatewayClient:
         elif op == opcodes.GatewayOpcode.HEARTBEAT_ACK:
             await self._handle_ack()
         elif op == opcodes.GatewayOpcode.RECONNECT:
-            self.logger.warning("instructed to disconnect and RECONNECT with gateway")
-            self.dispatch_new_event(Event.RECONNECT)
+            self.logger.warning("received RECONNECT, will reconnect with a new session")
+            self._dispatch_new_event(opcodes.GatewayEvent.RECONNECT, d, False)
             await self._trigger_identify(
                 code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="you requested me to reconnect"
             )
         elif op == opcodes.GatewayOpcode.INVALID_SESSION:
+            self._dispatch_new_event(opcodes.GatewayEvent.INVALID_SESSION, d, False)
             if d is True:
-                self.logger.warning("will try to disconnect and RESUME")
-                self.dispatch_new_event(Event.INVALID_SESSION, True)
+                self.logger.warning("received INVALID_SESSION, will try to disconnect and RESUME")
                 await self._trigger_resume(
                     code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="invalid session id so will resume"
                 )
             else:
-                self.logger.warning("will try to re-IDENTIFY")
-                self.dispatch_new_event(Event.INVALID_SESSION, False)
+                self.logger.warning("received INVALID_SESSION, will try to re-IDENTIFY")
                 await self._trigger_identify(
                     code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="invalid session id so will close"
                 )
@@ -891,7 +896,7 @@ class GatewayClient:
             :class:`hikari.net.ws.WebSocketClosure`:
                 if the connection is unexpectedly closed before we can start processing.
         """
-        kwargs = dict(
+        websocket_kwargs = dict(
             proxy=self.proxy_url,
             proxy_auth=self.proxy_auth,
             proxy_headers=self.proxy_headers,
@@ -900,49 +905,63 @@ class GatewayClient:
             compress=0,
         )
 
+        self.started_at = time.perf_counter()
         try:
-            self.started_at = time.perf_counter()
-
-            async with self.client_session.ws_connect(self.uri, **kwargs) as self.ws:
+            try:
+                self.logger.debug("creating websocket connection to %s", self.url)
+                session = self._client_session_factory()
                 try:
-                    await self._receive_hello()
-                    is_resume = self.seq is not None and self.session_id is not None
-                    await (self._send_resume() if is_resume else self._send_identify())
-                    await self._send_heartbeat()
-                    await asyncio.gather(self._keep_alive(), self._process_events())
-                    self.dispatch_new_event(Event.SHUTDOWN)
-                except ws.WebSocketClosure as ex:
-                    code, reason = opcodes.GatewayClosure(ex.code), ex.reason or "no reason"
+                    self.ws = await session.ws_connect(self.url, **websocket_kwargs)
+                    await self._run_once()
+                finally:
+                    await session.close()
+            finally:
+                self.logger.info("gateway client shutting down")
+                await self.ws.close()
 
-                    self.dispatch_new_event(Event.DISCONNECT, {"code": code, "reason": reason})
+        except Exception as ex:
+            self.logger.exception("Caught exception. Backing off for a moment", exc_info=ex)
+            # If we have been open less than 10s, wait until 10s is up from started_at.
+            # This prevents tanking people's PCs if a connection issue arises.
+            ten_seconds_time = time.perf_counter() - (self.started_at + 10)
+            await asyncio.sleep(max(0.5, ten_seconds_time))
 
-                    if ex.code in self._NEVER_RECONNECT_CODES:
-                        self.logger.critical("disconnected after %s [%s]. Please rectify issue manually", reason, code)
-                        raise errors.GatewayError(code, reason) from ex
+    async def _run_once(self):
+        try:
+            await self._receive_hello()
+            is_resume = self.seq is not None and self.session_id is not None
+            await (self._send_resume() if is_resume else self._send_identify())
+            await self._send_heartbeat()
+            await asyncio.gather(self._keep_alive(), self._process_events())
+            self._dispatch_new_event(opcodes.GatewayInternalEvent.MANUAL_SHUTDOWN, None, True)
+        except _WebSocketClosure as ex:
+            code, reason = opcodes.GatewayClosure(ex.code), ex.reason or "no reason"
 
-                    self.logger.warning("reconnecting after %s [%s]", reason, code)
-                    if isinstance(ex, _RestartConnection):
-                        self.seq, self.session_id, self.trace = None, None, []
+            self._dispatch_new_event(opcodes.GatewayInternalEvent.DISCONNECT, {"code": code, "reason": reason}, True)
 
-        finally:
-            self.logger.info("gateway client shutting down")
+            if ex.code in self._NEVER_RECONNECT_CODES:
+                self.logger.critical("disconnected after %s [%s]. Please rectify", reason, code)
+                raise errors.GatewayError(code, reason) from ex
 
-    async def close(self, block=True) -> None:
+            self.logger.warning("reconnecting after %s [%s]", reason, code)
+            if isinstance(ex, _RestartConnection):
+                self.seq, self.session_id, self.trace = None, None, []
+
+    async def close(self) -> None:
         """
-        Request that the gateway gracefully shuts down. Once this has occurred, you should not reuse this object. Doing
-        so will result in undefined behaviour.
-
-        Args:
-            block: await the closure of the websocket connection. Defaults to `True`. If `False`, then nothing is
-                waited for.
+        Request that the gateway gracefully shuts down.
         """
-        self._closed_event.set()
-        if block:
-            await self.ws.wait_closed()
+        if not self.ws.closed:
+            self._closed_event.set()
+            await self.ws.close()
 
-    def dispatch_new_event(self, event_name: typing.Union[str, Event], payload=None) -> None:
+    def _dispatch_new_event(self, event_name: str, payload, is_internal_event) -> None:
         # This prevents us blocking any task such as the READY handler.
-        self.loop.create_task(self.dispatch(self, event_name, payload))
+        dispatcher = self.internal_event_dispatcher if is_internal_event else self.gateway_event_dispatcher
+        compat.asyncio.create_task(
+            dispatcher(self, event_name, payload),
+            name=f"dispatching {event_name} event (shard {self.shard_id}/{self.shard_count})",
+        )
 
 
 __all__ = ["GatewayClient"]

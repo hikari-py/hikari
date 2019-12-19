@@ -22,9 +22,11 @@ import copy
 import functools
 import inspect
 import logging
+import re
 import typing
 import weakref
-from typing import Iterator
+import warnings
+
 
 import asyncmock as mock
 import pytest
@@ -91,7 +93,7 @@ def mock_methods_on(obj, except_=(), also_mock=()):
     return copy_
 
 
-def assert_raises(test=None, *, type_):
+def assert_raises(test=None, *, type_, checks=()):
     def decorator(test):
         @pytest.mark.asyncio
         @functools.wraps(test)
@@ -101,8 +103,9 @@ def assert_raises(test=None, *, type_):
                 if asyncio.iscoroutine(result):
                     await result
                 assert False, f"{type_.__name__} was not raised."
-            except type_:
-                pass
+            except type_ as ex:
+                for i, check in enumerate(checks, start=1):
+                    assert check(ex), f"Check #{i} ({check}) failed"
             except BaseException as ex:
                 raise AssertionError(f"Expected {type_.__name__} to be raised but got {type(ex).__name__}") from ex
 
@@ -206,7 +209,7 @@ class StrongWeakValuedDict(typing.MutableMapping):
         assert len(self.strong) == len(self.weak)
         return len(self.strong)
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> typing.Iterator:
         return iter(self.strong)
 
 
@@ -272,3 +275,36 @@ def todo_implement(fn=...):
         return pytest.mark.xfail(reason="Code for test case not yet implemented.")(fn)
 
     return fn is ... and decorator or decorator(fn)
+
+
+class AssertWarns:
+    def __init__(self, *, pattern=r".*", category=Warning):
+        self.pattern = pattern
+        self.category = category
+
+    def __enter__(self):
+        self.old_warning = warnings.warn_explicit
+        self.mocked_warning = mock.MagicMock(spec_set=warnings.warn)
+        self.context = mock.patch("warnings.warn", new=self.mocked_warning)
+        self.context.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.context.__exit__(exc_type, exc_val, exc_tb)
+
+        calls = []
+        for call_args, call_kwargs in self.mocked_warning.call_args_list:
+            message, category = call_args[:2]
+            calls.append((message, category))
+            if re.search(self.pattern, message, re.I) and issubclass(category, self.category):
+                self.matched = (message, category)
+                return
+
+        assert False, (
+            f"No warning with message pattern /{self.pattern}/ig and category subclassing {self.category} "
+            f"was found. There were {len(calls)} other warnings invoked in this time:\n"
+            + "\n".join(f"Category: {c}, Message: {m}" for m, c in calls)
+        )
+
+    def matched_message_contains(self, pattern):
+        assert re.search(pattern, self.matched[0], re.I), f"/{pattern}/ig does not match message {self.matched[0]!r}"

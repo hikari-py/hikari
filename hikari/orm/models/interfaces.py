@@ -98,9 +98,6 @@ class IModel(metaclass=abc.ABCMeta):
     """
     Base type for any model in this API.
 
-    Provides several key functionalities such as the ability to control how internal references get
-    copied if :meth:`copy`ing this object.
-
     If you need some fields to be copied across by reference regardless of being requested to produce a new copy, you
     should specify their names in the `__copy_byref__` class var. This will prevent :func:`copy.copy` being
     invoked on them when duplicating the object to produce a before and after view when a change is made.
