@@ -309,13 +309,20 @@ class TestGuild:
 
 @pytest.mark.model
 def test_embed():
-    embed_obj = guilds.Embed({"enabled": True, "channel_id": "115590097100865541"})
-    assert embed_obj.is_enabled is True
+    embed_obj = guilds.GuildEmbed(enabled=True, channel_id=115590097100865541)
+    assert embed_obj.enabled is True
     assert embed_obj.channel_id == 115590097100865541
-    assert embed_obj.to_dict() == {"is_enabled": True, "channel_id": 115590097100865541}
+    assert embed_obj.to_dict() == {"enabled": True, "channel_id": 115590097100865541}
+
+
+@pytest.mark.model
+def test_embed_from_dict():
+    embed_obj = guilds.GuildEmbed.from_dict({"enabled": True, "channel_id": "115590097100865541"})
+    assert embed_obj.enabled is True
+    assert embed_obj.channel_id == 115590097100865541
 
 
 @pytest.mark.model
 def test_embed_to_dict_when_missing_channel_id():
-    embed_obj = guilds.Embed({"enabled": False})
-    assert embed_obj.to_dict() == {"is_enabled": False}
+    embed_obj = guilds.GuildEmbed(enabled=False)
+    assert embed_obj.to_dict() == {"enabled": False}
