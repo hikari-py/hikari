@@ -634,7 +634,8 @@ class TestGateway:
         with mock.patch("hikari.internal_utilities.compat.asyncio.create_task") as create_task:
             gw.request_guild_members(*guild_ids, limit=69, user_ids=user_ids, presences=True)
             gw._send_json.assert_called_with(
-                {"op": 8, "d": {"guild_id": guild_ids, "user_ids": list(user_ids), "limit": 69, "presences": True}},
+                # No query param, so no limit passed.
+                {"op": 8, "d": {"guild_id": guild_ids, "user_ids": list(user_ids), "presences": True}},
                 False,
             )
             create_task.assert_called_with(
@@ -706,7 +707,10 @@ class TestGateway:
         with mock.patch("hikari.internal_utilities.compat.asyncio.create_task") as create_task:
             gw.request_guild_members(*guild_ids, limit=69, user_ids=None, query=None, presences=True)
             gw._send_json.assert_called_with(
-                {"op": 8, "d": {"guild_id": guild_ids, "limit": 69, "presences": True}}, False
+                # We don't pass a query, but no user_ids is passed, so we expect query and thus limit to be sent.
+                # If we didn't sent query and limit in this case, we'd have the session revoked as being invalid.
+                {"op": 8, "d": {"guild_id": guild_ids, "presences": True, "query": "", "limit": 69}},
+                False,
             )
             create_task.assert_called_with(
                 coro, name=f"send REQUEST_GUILD_MEMBERS (shard 917/1234)",
@@ -1241,3 +1245,20 @@ class TestGateway:
             return_value=StubMessage("xxx", aiohttp.WSMsgType.CONTINUATION)
         )
         await low_level_gateway_mock._receive()
+
+    async def test_request_guild_sync(self, low_level_gateway_mock):
+        guilds = ["9", "18", "27", "36"]
+        send_json_coro = mock.MagicMock()
+        low_level_gateway_mock._send_json = mock.MagicMock(return_value=send_json_coro)
+
+        with mock.patch("hikari.internal_utilities.compat.asyncio.create_task") as create_task:
+            low_level_gateway_mock.request_guild_sync(*guilds)
+
+            low_level_gateway_mock._send_json.assert_called_once_with(
+                {"op": opcodes.GatewayOpcode.GUILD_SYNC, "d": guilds},
+                False
+            )
+            create_task.assert_called_once_with(
+                send_json_coro,
+                name=f"send GUILD_SYNC (shard {low_level_gateway_mock.shard_id}/{low_level_gateway_mock.shard_count})"
+            )
