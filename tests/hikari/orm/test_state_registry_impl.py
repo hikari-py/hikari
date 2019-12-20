@@ -34,6 +34,7 @@ from hikari.orm.models import emojis
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
 from hikari.orm.models import interfaces
+from hikari.orm.models import invites
 from hikari.orm.models import members
 from hikari.orm.models import messages
 from hikari.orm.models import presences
@@ -1066,6 +1067,18 @@ class TestStateRegistryImpl:
 
         with _helpers.mock_patch(guilds.Guild, return_value=guild_obj):
             assert registry.parse_guild(payload, 5432) is guild_obj
+
+    @pytest.mark.parametrize(
+        ["invite_payload", "expected_type"],
+        [
+            ({"code": "xacasa"}, invites.Invite),
+            ({"code": "xacasa", "created_at": "2019-04-19T04:02:07.038000+00:00"}, invites.InviteWithMetadata),
+        ],
+    )
+    def test_parse_invite(self, registry: state_registry_impl, invite_payload, expected_type):
+        mock_invite_obj = mock.MagicMock(expected_type)
+        with _helpers.mock_patch(expected_type, return_value=mock_invite_obj, __slots__=expected_type.__slots__):
+            assert registry.parse_invite(invite_payload) is mock_invite_obj
 
     def test_parse_voice_state(self, registry: state_registry_impl.StateRegistryImpl):
         registry._guilds[69] = guild_obj = _helpers.mock_model(guilds.Guild, id=69, voice_states={})

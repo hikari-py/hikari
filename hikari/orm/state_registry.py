@@ -34,6 +34,7 @@ from hikari.orm.models import emojis
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
 from hikari.orm.models import interfaces
+from hikari.orm.models import invites
 from hikari.orm.models import members
 from hikari.orm.models import messages
 from hikari.orm.models import presences
@@ -574,6 +575,19 @@ class IStateRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.guilds.Guild` object.
+        """
+
+    @abc.abstractmethod
+    def parse_invite(self, invite_payload: data_structures.DiscordObjectT) -> invites.Invite:
+        """
+        Parse an invite payload and any attached metadata.
+
+        Params:
+            invite_payload:
+                The payload of the invite.
+
+        Returns:
+            A :class:`hikari.orm.models.invites.Invite` or derivative.
         """
 
     @abc.abstractmethod

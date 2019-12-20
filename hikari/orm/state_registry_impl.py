@@ -40,6 +40,7 @@ from hikari.orm.models import emojis
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
 from hikari.orm.models import interfaces
+from hikari.orm.models import invites
 from hikari.orm.models import members
 from hikari.orm.models import messages
 from hikari.orm.models import presences
@@ -429,6 +430,9 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             self._guilds[guild_id] = guild_obj
 
         return guild_obj
+
+    def parse_invite(self, invite_payload: data_structures.DiscordObjectT) -> invites.Invite:
+        return invites.parse_invite(self.fabric, invite_payload)
 
     def parse_voice_state(
         self, voice_state_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild
