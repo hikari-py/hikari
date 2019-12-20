@@ -1,8 +1,144 @@
 _type: export
 __export_format: 4
-__export_date: 2019-12-20T14:13:56.100Z
+__export_date: 2019-12-20T14:35:06.021Z
 __export_source: insomnia.desktop.app:v7.0.5
 resources:
+  - _id: req_6ba6849bdad6462ea46ed8dc75b96514
+    authentication: {}
+    body: {}
+    created: 1576852151152
+    description: >-
+      # Parsing CGI info to get the name of the nearest datacenter
+
+
+      ```py
+
+      import aiohttp
+
+      import re
+
+
+      async def get_data_center_info():
+          async with aiohttp.request("get", "https://discordapp.com/cdn-cgi/trace") as resp:
+              resp.raise_for_status()
+              content = await resp.text()
+
+          pairs = {}
+          for line in content.splitlines(False):
+              line = line.strip()
+              if line:
+                  k, _, v = line.partition("=")
+                  pairs[k] = v
+
+          async with aiohttp.request(
+              "post",
+              "http://www.airlinecodes.co.uk/aptcoderes.asp",
+              data={"iatacode": pairs["colo"]},
+          ) as resp:
+              resp.raise_for_status()
+              content = await resp.text()
+
+          location_match = re.search(
+              r"<td.*?>Location:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
+          )
+          airport_match = re.search(
+              r"<td.*?>Airport:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
+          )
+          country_match = re.search(
+              r"<td.*?>Country:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
+          )
+
+          location = location_match and location_match.group(1).strip() or "Unknown"
+          airport = airport_match and airport_match.group(1).strip() or "Unknown"
+          country = country_match and country_match.group(1).strip() or "Unknown"
+      ```
+    headers: []
+    isPrivate: false
+    metaSortKey: -1576852151152
+    method: GET
+    modified: 1576852377969
+    name: CDN CGI Trace
+    parameters: []
+    parentId: fld_fd85c020b1744299b6016ba69c25966b
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{base_url}}/cdn-cgi/trace"
+    _type: request
+  - _id: fld_fd85c020b1744299b6016ba69c25966b
+    created: 1576849973884
+    description: ""
+    environment:
+      api_url: "{{base_url}}/api/v{{api_version}}"
+      api_version: "7"
+      base_domain: discordapp.com
+      base_url: "{{http_protocol}}://{{base_domain}}"
+      http_protocol: https
+    environmentPropertyOrder:
+      "&":
+        - http_protocol
+        - base_domain
+        - base_url
+        - api_version
+        - api_url
+    metaSortKey: -1576849752963
+    modified: 1576852464388
+    name: Discord API
+    parentId: wrk_ef4732eebfd640729709f9377913ae41
+    _type: request_group
+  - _id: wrk_ef4732eebfd640729709f9377913ae41
+    created: 1572465096208
+    description: ""
+    modified: 1576849984062
+    name: Discord
+    parentId: null
+    _type: workspace
+  - _id: req_812faf17a42349a1aee6ee3c16a94620
+    authentication: {}
+    body: {}
+    created: 1576851914398
+    description: ""
+    headers: []
+    isPrivate: false
+    metaSortKey: -1576851914398
+    method: GET
+    modified: 1576852385841
+    name: Bot invite
+    parameters:
+      - description: ""
+        id: pair_c33a55cdd15d446bad4ebb1eb26ef34e
+        name: scope
+        value: bot
+      - description: ""
+        id: pair_bb6dfe8648cd4997886880cc13fd9f01
+        name: client_id
+        value: "{{client_id}}"
+      - description: ""
+        id: pair_8de55d445d5b4aafb0834b698917a66b
+        name: permissions
+        value: "0"
+    parentId: fld_86100ce074544d8d810050ef04f111ee
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{base_url}}/oauth2/authorize"
+    _type: request
+  - _id: fld_86100ce074544d8d810050ef04f111ee
+    created: 1576850327829
+    description: ""
+    environment: {}
+    environmentPropertyOrder: null
+    metaSortKey: -1576850327829
+    modified: 1576850327829
+    name: OAuth2
+    parentId: fld_fd85c020b1744299b6016ba69c25966b
+    _type: request_group
   - _id: req_f372725ba1744abe90219f69dec9f3cf
     authentication: {}
     body: {}
@@ -11,25 +147,45 @@ resources:
       # Valid scopes
 
       | Name                       | Description                                                                                                                                           |
+
       | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+
       | bot                        | for oauth2 bots, this puts the bot in the user's selected guild by default                                                                            |
+
       | connections                | allows [/users/@me/connections](#DOCS_RESOURCES_USER/get-user-connections) to return linked third-party accounts                                      |
+
       | email                      | enables [/users/@me](#DOCS_RESOURCES_USER/get-current-user) to return an `email`                                                                      |
+
       | identify                   | allows [/users/@me](#DOCS_RESOURCES_USER/get-current-user) without `email`                                                                            |
+
       | guilds                     | allows [/users/@me/guilds](#DOCS_RESOURCES_USER/get-current-user-guilds) to return basic information about all of a user's guilds                     |
+
       | guilds.join                | allows [/guilds/{guild.id}/members/{user.id}](#DOCS_RESOURCES_GUILD/add-guild-member) to be used for joining users to a guild                         |
+
       | gdm.join                   | allows your app to [join users to a group dm](#DOCS_RESOURCES_CHANNEL/group-dm-add-recipient)                                                         |
+
       | messages.read              | for local rpc server api access, this allows you to read messages from all client channels (otherwise restricted to channels/guilds your app creates) |
+
       | rpc                        | for local rpc server access, this allows you to control a user's local Discord client - whitelist only                                                |
+
       | rpc.api                    | for local rpc server api access, this allows you to access the API as the local user - whitelist only                                                 |
+
       | rpc.notifications.read     | for local rpc server api access, this allows you to receive notifications pushed out to the user - whitelist only                                     |
+
       | webhook.incoming           | this generates a webhook that is returned in the oauth token response for authorization code grants                                                   |
+
       | applications.builds.upload | allows your app to upload/update builds for a user's applications - whitelist only                                                                    |
+
       | applications.builds.read   | allows your app to read build data for a user's applications                                                                                          |
+
       | applications.store.update  | allows your app to read and update store data (SKUs, store listings, achievements, etc.) for a user's applications                                    |
+
       | applications.entitlements  | allows your app to read entitlements for a user's applications                                                                                        |
+
       | relationships.read         | allows your app to know a user's friends and implicit relationships - whitelist only                                                                  |
+
       | activities.read            | allows your app to fetch data from a user's "Now Playing/Recently Played" list - whitelist only                                                       |
+
       | activities.write           | allows your app to update a user's activity - whitelist only (NOT REQUIRED FOR [GAMESDK ACTIVITIY MANAGER](#DOCS_GAME_SDK/activities)                 |
     headers:
       - description: ""
@@ -43,7 +199,7 @@ resources:
     isPrivate: false
     metaSortKey: -1576850537958
     method: GET
-    modified: 1576850802091
+    modified: 1576852395330
     name: Authorize new code grant
     parameters:
       - description: ""
@@ -69,38 +225,8 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{url}}/oauth2/authorize"
+    url: "{{base_url}}/oauth2/authorize"
     _type: request
-  - _id: fld_86100ce074544d8d810050ef04f111ee
-    created: 1576850327829
-    description: ""
-    environment: {}
-    environmentPropertyOrder: null
-    metaSortKey: -1576850327829
-    modified: 1576850327829
-    name: OAuth2
-    parentId: fld_fd85c020b1744299b6016ba69c25966b
-    _type: request_group
-  - _id: fld_fd85c020b1744299b6016ba69c25966b
-    created: 1576849973884
-    description: ""
-    environment:
-      url: https://discordapp.com/api/v7
-    environmentPropertyOrder:
-      "&":
-        - url
-    metaSortKey: -1576849752963
-    modified: 1576849973926
-    name: Discord API
-    parentId: wrk_ef4732eebfd640729709f9377913ae41
-    _type: request_group
-  - _id: wrk_ef4732eebfd640729709f9377913ae41
-    created: 1572465096208
-    description: ""
-    modified: 1576849984062
-    name: Discord
-    parentId: null
-    _type: workspace
   - _id: req_93911be5b69b4854a2bc947d1f051cdf
     authentication: {}
     body: {}
@@ -118,7 +244,7 @@ resources:
     isPrivate: false
     metaSortKey: -1576850317760.625
     method: GET
-    modified: 1576850404613
+    modified: 1576852400790
     name: Application Info
     parameters: []
     parentId: fld_86100ce074544d8d810050ef04f111ee
@@ -128,7 +254,7 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{url}}/oauth2/applications/@me"
+    url: "{{base_url}}/oauth2/applications/@me"
     _type: request
   - _id: req_b04831dcab13401aae787f4ca63a8d9d
     authentication: {}
@@ -147,7 +273,7 @@ resources:
     isPrivate: false
     metaSortKey: -1576849859813
     method: GET
-    modified: 1576849973902
+    modified: 1576852408543
     name: Gateway Bot
     parameters: []
     parentId: fld_cf4330beacd54f18b79efb9c54f2144d
@@ -157,7 +283,7 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{url}}/gateway/bot"
+    url: "{{api_url}}/gateway/bot"
     _type: request
   - _id: fld_cf4330beacd54f18b79efb9c54f2144d
     created: 1576849973891
@@ -186,7 +312,7 @@ resources:
     isPrivate: false
     metaSortKey: -1576849859763
     method: GET
-    modified: 1576849973896
+    modified: 1576852422846
     name: Gateway
     parameters: []
     parentId: fld_cf4330beacd54f18b79efb9c54f2144d
@@ -196,7 +322,7 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{url}}/gateway"
+    url: "{{api_url}}/gateway"
     _type: request
   - _id: env_29ed27f9c562933de7fccb4654fee3698ef432f8
     color: null
@@ -210,9 +336,21 @@ resources:
     parentId: wrk_ef4732eebfd640729709f9377913ae41
     _type: environment
   - _id: jar_29ed27f9c562933de7fccb4654fee3698ef432f8
-    cookies: []
+    cookies:
+      - creation: 2019-12-20T14:26:04.134Z
+        domain: discordapp.com
+        expires: 2020-01-19T14:26:03.000Z
+        extensions:
+          - SameSite=Lax
+        hostOnly: false
+        httpOnly: true
+        id: "32268282673271065"
+        key: __cfduid
+        lastAccessed: 2019-12-20T14:26:04.134Z
+        path: /
+        value: dac8aed44419bf68ae39210fe2b40116f1576851963
     created: 1572465096242
-    modified: 1576850836863
+    modified: 1576851964134
     name: Default Jar
     parentId: wrk_ef4732eebfd640729709f9377913ae41
     _type: cookie_jar
