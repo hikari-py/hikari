@@ -19,6 +19,7 @@
 """
 Provides an automated repr generator.
 """
+import reprlib
 import typing
 
 
@@ -51,6 +52,7 @@ def repr_of(*args: str) -> typing.Callable[[typing.Any], str]:
         A `__repr__` implementation that can be stored in a class variable called `__repr__` to use that implementation.
     """
 
+    @reprlib.recursive_repr()
     def __repr__(self) -> str:
         elements = ", ".join(_repr_arg(self, arg) for arg in args)
         return f"{type(self).__name__}({elements})"

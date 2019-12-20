@@ -26,6 +26,7 @@ from hikari.orm import state_registry
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
 from hikari.orm.models import messages
+from hikari.orm.models import users
 from tests.hikari import _helpers
 
 
@@ -199,7 +200,6 @@ class TestMessage:
         assert message_obj.is_mentioning_everyone is True
         assert message_obj.is_pinned is True
         assert message_obj.content == "some pointless text"
-        message_obj.__repr__()
 
         assert len(message_obj.attachments) == 1
         assert len(message_obj.embeds) == 2
@@ -281,6 +281,21 @@ class TestMessage:
         fabric_obj.state_registry.get_channel_by_id.assert_called_with(1234)
         assert c is channel
 
+    @pytest.mark.model
+    def test_Message___repr__(self):
+        assert repr(
+            _helpers.mock_model(
+                messages.Message,
+                id=42,
+                author=_helpers.mock_model(users.User, __repr__=users.User.__repr__),
+                type=messages.MessageType.DEFAULT,
+                is_tts=True,
+                created_at=datetime.datetime.fromtimestamp(69).replace(tzinfo=datetime.timezone.utc),
+                edited_at=datetime.datetime.fromtimestamp(101).replace(tzinfo=datetime.timezone.utc),
+                __repr__=messages.Message.__repr__,
+            )
+        )
+
 
 @pytest.mark.model
 def test_MessageActivity():
@@ -288,7 +303,18 @@ def test_MessageActivity():
 
     assert ma.type == messages.MessageActivityType.LISTEN
     assert ma.party_id == 999
-    ma.__repr__()
+
+
+@pytest.mark.model
+def test_MessageActivity___repr__():
+    assert repr(
+        _helpers.mock_model(
+            messages.MessageActivity,
+            type=messages.MessageActivityType.NONE,
+            party_id=42,
+            __repr__=messages.MessageActivity.__repr__,
+        )
+    )
 
 
 @pytest.mark.model
@@ -302,7 +328,15 @@ def test_MessageApplication():
     assert ma.cover_image_id == 112233
     assert ma.description == "potato"
     assert ma.name == "poof"
-    ma.__repr__()
+
+
+@pytest.mark.model
+def test_MessageApplication___repr__():
+    assert repr(
+        _helpers.mock_model(
+            messages.MessageApplication, id=42, name="foo", __repr__=messages.MessageApplication.__repr__
+        )
+    )
 
 
 @pytest.mark.model
@@ -314,4 +348,16 @@ def test_MessageCrosspost():
     assert mcp.channel_id == 278325129692446722
     assert mcp.message_id == 306588351130107906
     assert mcp.guild_id == 278325129692446720
-    mcp.__repr__()
+
+
+@pytest.mark.model
+def test_MessageCrosspost___repr__():
+    assert repr(
+        _helpers.mock_model(
+            messages.MessageCrosspost,
+            message_id=42,
+            guild_id=69,
+            channel_id=101,
+            __repr__=messages.MessageCrosspost.__repr__,
+        )
+    )

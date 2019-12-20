@@ -24,6 +24,7 @@ from __future__ import annotations
 import enum
 import typing
 
+from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
@@ -120,6 +121,8 @@ class AuditLogEntry(interfaces.ISnowflake):
     #: :type: :class:`str` or `None`
     reason: typing.Optional[str]
 
+    __repr__ = auto_repr.repr_of("id", "user_id", "action_type")
+
     def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.target_id = transformations.nullable_cast(payload.get("target_id"), int)
         self.changes = [AuditLogChange(change) for change in payload.get("changes", data_structures.EMPTY_SEQUENCE)]
@@ -198,6 +201,8 @@ class AuditLogEntryCountInfo(
     #: :type: :class:`int`
     count: int
 
+    __repr__ = auto_repr.repr_of("count")
+
     def __init__(self, payload) -> None:
         self.count = int(payload["count"])
 
@@ -218,6 +223,8 @@ class MemberMoveAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEvent
     #:
     #: :type: :class:`int`
     channel_id: int
+
+    __repr__ = auto_repr.repr_of("count", "channel_id")
 
     def __init__(self, payload) -> None:
         self.count = int(payload["count"])
@@ -241,6 +248,8 @@ class MemberPruneAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEven
     #: :type: :class:`int`
     members_removed: int
 
+    __repr__ = auto_repr.repr_of("delete_member_days", "members_removed")
+
     def __init__(self, payload) -> None:
         self.delete_member_days = int(payload["delete_member_days"])
         self.members_removed = int(payload["members_removed"])
@@ -262,6 +271,8 @@ class MessageDeleteAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEv
     #:
     #: :type: :class:`int`
     channel_id: int
+
+    __repr__ = auto_repr.repr_of("count", "channel_id")
 
     def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.count = int(payload["count"])
@@ -286,6 +297,8 @@ class MessagePinAuditLogEntryInfo(
     #:
     #: :type: :class:`int`
     message_id: int
+
+    __repr__ = auto_repr.repr_of("channel_id", "message_id")
 
     def __init__(self, payload) -> None:
         self.channel_id = int(payload["channel_id"])
@@ -315,6 +328,8 @@ class ChannelOverwriteAuditLogEntryInfo(
     #:
     #: :type: :class:`hikari.orm.models.overwrites.OverwriteEntityType`
     type: overwrites.OverwriteEntityType
+
+    __repr__ = auto_repr.repr_of("id", "type")
 
     def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.id = int(payload["id"])
@@ -477,6 +492,8 @@ class AuditLogChange(interfaces.IModel):
     #:
     #: :type: :class:`typing.Any` or `None`
     new_value: typing.Optional[typing.Any]
+
+    __repr__ = auto_repr.repr_of("key")
 
     def __init__(self, payload: data_structures.DiscordObjectT) -> None:
         self.key = AuditLogChangeKey.get_best_effort_from_value(payload["key"])

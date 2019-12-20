@@ -101,7 +101,6 @@ def test_GuildChannel_parent_when_specified(mock_fabric, mock_guild):
     )
 
     assert guild_text_channel_obj.parent is mock_guild.channels[1234]
-    guild_text_channel_obj.__repr__()
 
 
 @pytest.mark.model
@@ -126,7 +125,6 @@ def test_GuildChannel_parent_when_unspecified(mock_fabric, mock_guild):
     )
 
     assert guild_text_channel_obj.parent is None
-    guild_text_channel_obj.__repr__()
 
 
 @pytest.mark.model()
@@ -158,7 +156,20 @@ def test_GuildTextChannel(mock_fabric):
     assert guild_text_channel_obj.topic == "nsfw stuff"
     assert guild_text_channel_obj.name == "shh!"
     assert not guild_text_channel_obj.is_dm
-    guild_text_channel_obj.__repr__()
+
+
+@pytest.mark.model
+def test_GuildTextChannel___repr__():
+    assert repr(
+        _helpers.mock_model(
+            channels.GuildTextChannel,
+            id=69,
+            name="bazbork",
+            guild=_helpers.mock_model(guilds.Guild, id=42, name="foobar"),
+            is_nsfw=False,
+            __repr__=channels.GuildTextChannel.__repr__,
+        )
+    )
 
 
 @pytest.mark.model()
@@ -173,7 +184,11 @@ def test_DMChannel(mock_user, mock_fabric):
     assert len(dm_channel_obj.recipients) == 1
     assert dm_channel_obj.is_dm
     mock_fabric.state_registry.parse_user.assert_called_once_with(mock_user)
-    dm_channel_obj.__repr__()
+
+
+@pytest.mark.model
+def test_DMChannel___repr__():
+    assert repr(_helpers.mock_model(channels.DMChannel, id=69, __repr__=channels.DMChannel.__repr__))
 
 
 @pytest.mark.model()
@@ -203,7 +218,21 @@ def test_GuildVoiceChannel(mock_fabric):
     assert guild_voice_channel_obj.user_limit is None
     assert guild_voice_channel_obj.parent_id == 42
     assert not guild_voice_channel_obj.is_dm
-    guild_voice_channel_obj.__repr__()
+
+
+@pytest.mark.model
+def test_GuildVoiceChannel___repr__():
+    assert repr(
+        _helpers.mock_model(
+            channels.GuildVoiceChannel,
+            id=69,
+            name="bazbork",
+            guild=_helpers.mock_model(guilds.Guild, id=42, name="foobar"),
+            bitrate=101,
+            user_limit=666,
+            __repr__=channels.GuildVoiceChannel.__repr__,
+        )
+    )
 
 
 @pytest.mark.model()
@@ -232,7 +261,13 @@ def test_GroupDMChannel(mock_user, mock_fabric):
     assert group_dm_channel_obj.owner_id == 111111
     assert group_dm_channel_obj.is_dm
     mock_fabric.state_registry.parse_user.assert_called_once_with(mock_user)
-    group_dm_channel_obj.__repr__()
+
+
+@pytest.mark.model
+def test_GroupDMChannel___repr__():
+    assert repr(
+        _helpers.mock_model(channels.GroupDMChannel, id=69, name="foobar", __repr__=channels.GroupDMChannel.__repr__)
+    )
 
 
 @pytest.mark.model()
@@ -256,7 +291,19 @@ def test_GuildCategory(mock_fabric):
     assert guild_category_obj.id == 123456
     assert guild_category_obj.permission_overwrites == []
     assert not guild_category_obj.is_dm
-    guild_category_obj.__repr__()
+
+
+@pytest.mark.model
+def test_GuildCategory___repr__():
+    assert repr(
+        _helpers.mock_model(
+            channels.GuildCategory,
+            id=69,
+            name="bazbork",
+            guild=_helpers.mock_model(guilds.Guild, id=42, name="foobar"),
+            __repr__=channels.GuildCategory.__repr__,
+        )
+    )
 
 
 @pytest.mark.model()
@@ -288,7 +335,20 @@ def test_GuildAnnouncementChannel(mock_fabric):
     assert guild_announcement_channe_obj.topic == "crap and stuff"
     assert guild_announcement_channe_obj.last_message_id is None
     assert not guild_announcement_channe_obj.is_dm
-    guild_announcement_channe_obj.__repr__()
+
+
+@pytest.mark.model
+def test_GuildAnnouncementChannel___repr__():
+    assert repr(
+        _helpers.mock_model(
+            channels.GuildAnnouncementChannel,
+            id=69,
+            name="bazbork",
+            guild=_helpers.mock_model(guilds.Guild, id=42, name="foobar"),
+            is_nsfw=False,
+            __repr__=channels.GuildAnnouncementChannel.__repr__,
+        )
+    )
 
 
 @pytest.mark.model()
@@ -314,11 +374,23 @@ def test_GuildStoreChannel(mock_fabric):
     assert guild_store_channel_obj.name == "a"
     assert guild_store_channel_obj.parent_id == 32
     assert not guild_store_channel_obj.is_dm
-    guild_store_channel_obj.__repr__()
+
+
+@pytest.mark.model
+def test_GuildStoreChannel___repr__():
+    assert repr(
+        _helpers.mock_model(
+            channels.GuildStoreChannel,
+            id=69,
+            name="bazbork",
+            guild=_helpers.mock_model(guilds.Guild, id=42, name="foobar"),
+            __repr__=channels.GuildStoreChannel.__repr__,
+        )
+    )
 
 
 @pytest.mark.model()
-def test_partial_channel(mock_fabric):
+def test_PartialChannel(mock_fabric):
     partial_channel_obj = channels.PartialChannel(
         mock_fabric, {"id": "455344577423428035", "name": "Neko Zone", "type": 2}
     )
@@ -326,11 +398,10 @@ def test_partial_channel(mock_fabric):
     assert partial_channel_obj.name == "Neko Zone"
     assert partial_channel_obj.type is channels.ChannelType.GUILD_VOICE
     assert partial_channel_obj.is_dm is False
-    partial_channel_obj.__repr__()
 
 
 @pytest.mark.model()
-def test_partial_channel_with_unknown_type(mock_fabric):
+def test_PartialChannel_with_unknown_type(mock_fabric):
     partial_channel_obj = channels.PartialChannel(
         mock_fabric, {"id": "115590097100865541", "name": "Neko Chilla", "type": 6969}
     )
@@ -338,7 +409,19 @@ def test_partial_channel_with_unknown_type(mock_fabric):
     assert partial_channel_obj.name == "Neko Chilla"
     assert partial_channel_obj.type == 6969
     assert partial_channel_obj.is_dm is None
-    partial_channel_obj.__repr__()
+
+
+@pytest.mark.model
+def test_PartialChannel___repr__():
+    assert repr(
+        _helpers.mock_model(
+            channels.PartialChannel,
+            id=69,
+            name="bazbork",
+            type=channels.ChannelType.DM,
+            __repr__=channels.PartialChannel.__repr__,
+        )
+    )
 
 
 @pytest.mark.model

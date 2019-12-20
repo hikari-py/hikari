@@ -72,8 +72,6 @@ class IUser(interfaces.IStatefulModel, interfaces.ISnowflake, interface=True):
     #: :type: :class:`bool`
     is_system: bool
 
-    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "is_bot")
-
 
 class User(IUser):
     """
@@ -81,6 +79,8 @@ class User(IUser):
     """
 
     __slots__ = ("_fabric", "id", "username", "discriminator", "avatar_hash", "is_bot", "is_system", "__weakref__")
+
+    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "is_bot")
 
     # noinspection PyMissingConstructor
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT):

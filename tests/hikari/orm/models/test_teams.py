@@ -22,6 +22,8 @@ import pytest
 
 from hikari.orm import fabric
 from hikari.orm.models import teams
+from hikari.orm.models import users
+from tests.hikari import _helpers
 
 
 @pytest.fixture()
@@ -56,9 +58,28 @@ def test_Team(team_payload, fabric_obj, member_payload):
     assert obj.icon == "1a2b3c"
 
 
+@pytest.mark.model
+def test_Team___repr__():
+    assert repr(_helpers.mock_model(teams.Team, id=42, owner_user_id=69, __repr__=teams.Team.__repr__))
+
+
 def test_TeamMember(fabric_obj, member_payload):
     obj = teams.TeamMember(fabric_obj, member_payload)
     assert obj.membership_state == teams.MembershipState.ACCEPTED
     assert obj.permissions == {"*"}
     assert obj.team_id == 1234321
     fabric_obj.state_registry.parse_user.assert_called_once_with(member_payload["user"])
+
+
+@pytest.mark.model
+def test_TeamMember___repr__():
+    assert repr(
+        _helpers.mock_model(
+            teams.TeamMember,
+            team_id=42,
+            permissions=["*"],
+            membership_state=teams.MembershipState.INVITED,
+            user=_helpers.mock_model(users.User, id=42, username="foo"),
+            __repr__=teams.TeamMember.__repr__,
+        )
+    )
