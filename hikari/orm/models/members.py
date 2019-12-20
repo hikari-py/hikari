@@ -24,6 +24,7 @@ from __future__ import annotations
 import datetime
 import typing
 
+from hikari.internal_utilities import assertions
 from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
@@ -82,10 +83,10 @@ class Member(users.IUser, delegate_fabricated=True):
     #: :type: :class:`bool`
     is_mute: bool
 
-    #: The user's online presence.
+    #: The user's online presence. This will be `None` until populated by a gateway event.
     #:
-    #: :type: :class:`hikari.orm.models.presences.Presence`
-    presence: presences.Presence
+    #: :type: :class:`hikari.orm.models.presences.Presence` or :class:`None`
+    presence: typing.Optional[presences.Presence]
 
     __copy_by_ref__ = ("presence", "guild")
 
@@ -93,6 +94,7 @@ class Member(users.IUser, delegate_fabricated=True):
 
     # noinspection PyMissingConstructor
     def __init__(self, fabric_obj: fabric.Fabric, guild: guilds.Guild, payload: data_structures.DiscordObjectT) -> None:
+        self.presence = None
         self.user = fabric_obj.state_registry.parse_user(payload["user"])
         self.guild = guild
         self.joined_at = date_helpers.parse_iso_8601_ts(payload.get("joined_at"))
@@ -111,6 +113,13 @@ class Member(users.IUser, delegate_fabricated=True):
         self.nick = payload.get("nick")
         self.is_deaf = payload.get("deaf", False)
         self.is_mute = payload.get("mute", False)
+
+    def update_presence_state(self, presence_payload: data_structures.DiscordObjectT = None) -> None:
+        user_id = presence_payload["user"]["id"]
+        assertions.assert_that(
+            int(user_id) == self.id, f"Presence object from User `{user_id}` doesn't match Member `{self.id}`."
+        )
+        self.presence = self._fabric.state_registry.parse_presence(self, presence_payload)
 
 
 #: A :class:`Member`, or an :class:`int`/:class:`str` ID of one.
