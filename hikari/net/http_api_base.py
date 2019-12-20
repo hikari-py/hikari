@@ -433,7 +433,7 @@ class HTTPAPIBase(http_client.HTTPClient):
         # assume that is_global only ever occurs on TOO_MANY_REQUESTS response codes.
         if is_global and is_being_rate_limited:
             # Retry-after is always in milliseconds.
-            # This is only in the body if we get ratelimited, which is a pain, but who
+            # This is only in the body if we get rate limited, which is a pain, but who
             # could expect an API to have consistent behaviour.
             retry_after = body.get("retry_after", 0) * _GRAINULARITY_MULTIPLIER
             self.global_rate_limit.lock(retry_after)

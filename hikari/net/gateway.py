@@ -48,6 +48,7 @@ from hikari import errors
 from hikari.internal_utilities import compat
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import logging_helpers
+from hikari.internal_utilities import meta
 from hikari.internal_utilities import user_agent
 from hikari.net import opcodes
 from hikari.net import rates
@@ -801,7 +802,8 @@ class GatewayClient:
             query:
                 member names to search for, or empty string to remove the constraint.
             limit:
-                max number of members to retrieve, or zero to remove the constraint.
+                max number of members to retrieve, or zero to remove the constraint. This will be
+                ignored unless a non-empty `query` is specified.
             presences:
                 `True` to return presences, `False` otherwise.
             user_ids:
@@ -815,19 +817,32 @@ class GatewayClient:
         Warning:
             You may not specify both `query` and `user_ids` in this call.
         """
-        payload = {"guild_id": [guild_id, *guild_ids], "limit": limit, "presences": presences}
+        payload = {"guild_id": [guild_id, *guild_ids], "presences": presences}
 
         if user_ids is not None:
             if query is not None:
                 raise RuntimeError("Cannot specify both user_ids and query together")
             payload["user_ids"] = [*user_ids]
-        elif query is not None:
-            payload["query"] = query
+        else:
+            payload["query"] = query or ""
+            payload["limit"] = limit
 
         self.logger.debug("requesting members with constraints %s", payload)
         compat.asyncio.create_task(
             self._send_json({"op": opcodes.GatewayOpcode.REQUEST_GUILD_MEMBERS, "d": payload}, False,),
             name=f"send REQUEST_GUILD_MEMBERS (shard {self.shard_id}/{self.shard_count})",
+        )
+
+    @meta.incubating(message="This is not currently documented.")
+    def request_guild_sync(self, guild_id1: str, *guild_ids: str) -> None:
+        """
+        Request that the gateway resyncs the following guilds.
+        """
+        guilds = [guild_id1, *guild_ids]
+        self.logger.debug("requesting a guild sync for guilds %s", guilds)
+        compat.asyncio.create_task(
+            self._send_json({"op": opcodes.GatewayOpcode.GUILD_SYNC, "d": guilds}, False),
+            name=f"send GUILD_SYNC (shard {self.shard_id}/{self.shard_count})",
         )
 
     async def update_status(

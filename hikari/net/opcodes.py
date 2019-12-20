@@ -67,7 +67,7 @@ class GatewayOpcode(enum.IntEnum):
     #: Sent immediately following a client heartbeat that was received.
     HEARTBEAT_ACK = 11
 
-    #: Not yet documented, so do not use.
+    #: Resync guild information.
     GUILD_SYNC = 12
 
 

@@ -62,16 +62,22 @@ def gateway_impl():
 
 
 @pytest.fixture()
-def fabric_impl(state_registry_impl, gateway_impl):
-    return fabric.Fabric(state_registry=state_registry_impl, gateways={None: gateway_impl})
+def chunker_impl():
+    return mock.MagicMock(spec_set=_chunker.IChunker)
+
+
+@pytest.fixture()
+def fabric_impl(state_registry_impl, gateway_impl, chunker_impl):
+    return fabric.Fabric(state_registry=state_registry_impl, gateways={None: gateway_impl}, chunker=chunker_impl)
 
 
 @pytest.fixture()
 def adapter_impl(fabric_impl, dispatch_impl, logger_impl):
     instance = _helpers.unslot_class(dispatching_event_adapter_impl.DispatchingEventAdapterImpl)(
-        fabric_impl, dispatch_impl
+        fabric_impl, dispatch_impl,
     )
     instance.logger = logger_impl
+    instance._request_chunks_mode = dispatching_event_adapter_impl.AutoRequestChunksMode.NEVER
     return instance
 
 
@@ -154,6 +160,34 @@ class TestDispatchingEventAdapterImpl:
     ):
         await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
         dispatch_impl.assert_called_with(events.READY, gateway_impl)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "chunker_mode",
+        [
+            dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS,
+            dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES,
+        ],
+    )
+    async def test_handle_ready_handles_chunker(
+        self,
+        discord_ready_payload,
+        adapter_impl,
+        gateway_impl,
+        chunker_impl,
+        chunker_mode,
+        state_registry_impl,
+    ):
+        guild1 = _helpers.mock_model(guilds.Guild)
+        guild2 = _helpers.mock_model(guilds.Guild)
+        adapter_impl._request_chunks_mode = chunker_mode
+        state_registry_impl.parse_guild = mock.MagicMock(side_effect=[guild1, guild2])
+        await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
+        chunker_impl.load_members_for.assert_called_with(
+            guild1,
+            guild2,
+            presences=chunker_mode == dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES,
+        )
 
     @pytest.mark.asyncio
     async def test_handle_ready_adds_application_user(
