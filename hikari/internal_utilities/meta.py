@@ -17,49 +17,96 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Metadata tools that look at documentation and versioning of things.
-
-Contains interpreter introspection utilities, Hikari introspection utilities (e.g. version, author, etc) and
-documentation decorators used within this library. There is usually zero need for you to touch anything in this
-package.
+Decorators used to document, deprecate, or incubate other components in this API.
 """
-import enum
+import asyncio
+import functools
 import inspect
-import typing
+import textwrap
+import warnings
 
 
-T = typing.TypeVar("T")
+def _format_name(element):
+    if asyncio.iscoroutinefunction(element):
+        return f"`coroutine function {element.__module__}.{element.__qualname__}{inspect.signature(element)}`"
+    if inspect.isfunction(element):
+        return f"`function {element.__module__}.{element.__qualname__}{inspect.signature(element)}`"
+    if inspect.isclass(element):
+        if issubclass(element, type):
+            type_name = "metaclass"
+        else:
+            type_name = "class"
+        return f"`{type_name} {element.__module__}.{element.__qualname__}`"
+    if isinstance(element, str):
+        return f"`{element.replace('`', '')}`"
+    return f"{element!r}"
 
 
-class APIResource(enum.Enum):
-    """A documentation resource for the underlying API."""
-
-    AUDIT_LOG = "/resources/audit-log"
-    CHANNEL = "/resources/channel"
-    EMOJI = "/resources/emoji"
-    GUILD = "/resources/guild"
-    INVITE = "/resources/invite"
-    OAUTH2 = "/topics/oauth2"
-    USER = "/resources/user"
-    VOICE = "/resources/voice"
-    WEBHOOK = "/resources/webhook"
-    GATEWAY = "/topics/gateway"
+def _append_doc(element, text):
+    element.__doc__ = textwrap.dedent(element.__doc__ or "") + "\n\n" + text
 
 
-def link_developer_portal(scope: APIResource, specific_resource: str = None) -> typing.Callable[[T], T]:
-    """Injects some common documentation into the given member's docstring."""
+def _warning_rst(text):
+    return "Warning:\n" + textwrap.indent(text, " " * 4)
 
-    def decorator(obj):
-        base_url = "https://discordapp.com/developers/docs"
-        doc = inspect.cleandoc(inspect.getdoc(obj) or "")
-        base_resource = base_url + scope.value
-        frag = obj.__name__.lower().replace("_", "-") if specific_resource is None else specific_resource
-        uri = base_resource + "#" + frag
 
-        setattr(obj, "__doc__", f"Read the documentation on `Discord's developer portal <{uri}>`__.\n\n{doc}")
-        return obj
+def _warn_new(element, warning, category):
+    old_new = element.__new__
+
+    @functools.wraps(element.__new__)
+    def __new__(cls, *args, **kwargs):
+        warnings.warn(warning, category, stacklevel=2)
+        return old_new(cls, *args, **kwargs)
+
+    element.__new__ = __new__
+    _append_doc(element, _warning_rst(warning))
+    return element
+
+
+def _warn_func(element, warning, category):
+    @functools.wraps(element)
+    def func(*args, **kwargs):
+        warnings.warn(warning, category, stacklevel=2)
+        return element(*args, **kwargs)
+
+    _append_doc(func, _warning_rst(warning))
+    return func
+
+
+def deprecated(*alternatives, element_name=None):
+    """
+    Creates a decorator for a given element to mark it as deprecated with a warning when being invoked/used
+    for the first time.
+    """
+
+    def decorator(element):
+        wrap = _warn_new if inspect.isclass(element) else _warn_func
+        name = _format_name(element) if element_name is None else element_name
+        message = f"{name} is deprecated and will be removed in a future release without further warning."
+
+        if alternatives:
+            message += "\n\nAlternatives to consider:\n    - "
+            message += "\n    - ".join(map(_format_name, alternatives))
+
+        return wrap(element, message, DeprecationWarning)
 
     return decorator
 
 
-__all__ = ("APIResource", "link_developer_portal")
+def incubating(*, message=""):
+    """
+    Annotate the element as incubating (it is still experimental or being planned, and may not be
+    final).
+    """
+
+    def decorator(element):
+        _append_doc(
+            element,
+            _warning_rst(
+                "This feature is currently incubating. This means that it may have breaking changes or be "
+                f"removed/replaced without warning. Please treat it as an experimental feature. {message}"
+            ),
+        )
+        return element
+
+    return decorator

@@ -24,9 +24,9 @@ from __future__ import annotations
 import datetime
 import typing
 
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import dates
 from hikari.orm import fabric
 from hikari.orm.models import interfaces
 from hikari.orm.models import users
@@ -49,9 +49,9 @@ class IntegrationAccount(interfaces.ISnowflake):
     #: :type: :class:`str`
     name: str
 
-    __repr__ = auto_repr.repr_of("id", "name")
+    __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.name = payload.get("name")
 
@@ -83,9 +83,9 @@ class PartialIntegration(interfaces.ISnowflake):
     #: :type: :class:`hikari.orm.models.integrations.IntegrationAccount`
     account: IntegrationAccount
 
-    __repr__ = auto_repr.repr_of("id", "name")
+    __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
         self.type = payload["type"]
@@ -135,7 +135,9 @@ class Integration(PartialIntegration, interfaces.IStatefulModel):
     #: :type: :class:`datetime.datetime`
     synced_at: datetime.datetime
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    __repr__ = reprs.repr_of("id", "name", "is_enabled")
+
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self.is_enabled = payload["enabled"]
@@ -143,7 +145,7 @@ class Integration(PartialIntegration, interfaces.IStatefulModel):
         self.role_id = int(payload["role_id"])
         self.expire_grace_period = int(payload["expire_grace_period"])
         self.user = self._fabric.state_registry.parse_user(payload["user"])
-        self.synced_at = date_helpers.parse_iso_8601_ts(payload["synced_at"])
+        self.synced_at = dates.parse_iso_8601_ts(payload["synced_at"])
 
 
 #: Any type of :class:`PartialIntegration` (including :class:`Integration`),

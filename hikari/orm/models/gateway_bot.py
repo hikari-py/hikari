@@ -23,7 +23,8 @@ from __future__ import annotations
 
 import datetime
 
-from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
 from hikari.orm.models import interfaces
 
 
@@ -45,7 +46,9 @@ class GatewayBot(interfaces.IModel):
     #: The remaining limits for starting a gateway session.
     session_start_limit: SessionStartLimit
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    __repr__ = reprs.repr_of("url", "shards", "session_start_limit.remaining")
+
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.url = payload["url"]
         self.shards = int(payload["shards"])
         self.session_start_limit = SessionStartLimit(payload["session_start_limit"])
@@ -76,7 +79,9 @@ class SessionStartLimit(interfaces.IModel):
     #: :type: :class:`datetime.datetime`
     reset_at: datetime.datetime
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    __repr__ = reprs.repr_of("total", "remaining", "reset_at")
+
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.total = int(payload["total"])
         self.remaining = int(payload["remaining"])
         reset_after = float(payload["reset_after"])

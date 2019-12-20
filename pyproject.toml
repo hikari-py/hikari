@@ -52,7 +52,7 @@ aiohttp                  = "~3.6"
 
 [tool.poetry.dev-dependencies]
 # Utilities used during unit tests.
-asynctest                = "~0.13"
+asyncmock                = "~0.4"
 async-timeout            = "~3.0"
 
 # PyTest related packages.
@@ -62,7 +62,6 @@ pytest-asyncio           = "~0.10"
 pytest-cov               = "~2.8"
 pytest-html              = "~2.0"
 pytest-testdox           = "~1.2"
-pytest-xdist             = "~1.30"
 
 # Used in CI stages to manage firing webhooks and getting PyPi deployment information.
 requests                 = "~2.22"

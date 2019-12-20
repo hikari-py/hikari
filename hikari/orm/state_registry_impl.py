@@ -27,8 +27,8 @@ import functools
 import typing
 import weakref
 
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import logging_helpers
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import loggers
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm import state_registry
@@ -40,6 +40,7 @@ from hikari.orm.models import emojis
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
 from hikari.orm.models import interfaces
+from hikari.orm.models import invites
 from hikari.orm.models import members
 from hikari.orm.models import messages
 from hikari.orm.models import presences
@@ -87,20 +88,20 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         # Users may be cached while we can see them, or they may be cached as a member. Regardless, we only
         # retain them while they are referenced from elsewhere to keep things tidy.
         self.fabric = fabric_obj
-        self._dm_channels: typing.MutableMapping[int, channels.DMChannel] = data_structures.LRUDict(
+        self._dm_channels: typing.MutableMapping[int, channels.DMChannel] = containers.LRUDict(
             user_dm_channel_size
         )
         self._emojis: typing.MutableMapping[int, emojis.GuildEmoji] = weakref.WeakValueDictionary()
         self._guilds: typing.Dict[int, guilds.Guild] = {}
         self._guild_channels: typing.MutableMapping[int, channels.GuildChannel] = weakref.WeakValueDictionary()
         self._users: typing.MutableMapping[int, users.User] = weakref.WeakValueDictionary()
-        self._message_cache: typing.MutableMapping[int, messages.Message] = data_structures.LRUDict(message_cache_size)
+        self._message_cache: typing.MutableMapping[int, messages.Message] = containers.LRUDict(message_cache_size)
 
         #: The bot user.
         self._user: typing.Optional[users.OAuth2User] = None
 
         #: Our logger.
-        self.logger = logging_helpers.get_named_logger(self)
+        self.logger = loggers.get_named_logger(self)
 
     def _prepare_unknown_with_callback(self, id, resolver, callback, *resolver_args, **resolver_kwargs):
         obj = interfaces.UnknownObject(id, functools.partial(resolver, *resolver_args, **resolver_kwargs))
@@ -215,7 +216,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
     def get_channel_by_id(self, channel_id: int) -> typing.Optional[channels.Channel]:
         return self._guild_channels.get(channel_id) or self._dm_channels.get(channel_id)
 
-    def get_mandatory_channel_by_id(
+    def get_mandatory_channel_by_id(  # lgtm [py/similar-function]
         self,
         channel_id: int,
         callback_if_unresolved: typing.Optional[typing.Callable[[channels.Channel], typing.Any]] = None,
@@ -231,7 +232,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
     def get_guild_emoji_by_id(self, emoji_id: int) -> typing.Optional[emojis.GuildEmoji]:
         return self._emojis.get(emoji_id)
 
-    def get_mandatory_guild_emoji_by_id(
+    def get_mandatory_guild_emoji_by_id(  # lgtm [py/similar-function]
         self,
         emoji_id: int,
         guild_id: int,
@@ -248,7 +249,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
     def get_guild_by_id(self, guild_id: int) -> typing.Optional[guilds.Guild]:
         return self._guilds.get(guild_id)
 
-    def get_mandatory_guild_by_id(
+    def get_mandatory_guild_by_id(  # lgtm [py/similar-function]
         self, guild_id: int, callback_if_unresolved: typing.Optional[typing.Callable[[guilds.Guild], typing.Any]] = None
     ) -> typing.Union[guilds.Guild, interfaces.UnknownObject[guilds.Guild]]:
         obj = self.get_guild_by_id(guild_id)
@@ -289,7 +290,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
                 return role
         raise ValueError(f"No role could be found for ID {role_id} in guild {guild_id}")
 
-    def get_mandatory_role_by_id(
+    def get_mandatory_role_by_id(  # lgtm [py/similar-function]
         self,
         guild_id: int,
         role_id: int,
@@ -309,7 +310,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return self._users.get(user_id)
 
-    def get_mandatory_user_by_id(
+    def get_mandatory_user_by_id(  # lgtm [py/similar-function]
         self, user_id: int, callback_if_unresolved: typing.Optional[typing.Callable[[users.User], typing.Any]] = None
     ) -> typing.Union[users.User, interfaces.UnknownObject[users.User]]:
         obj = self.get_user_by_id(user_id)
@@ -325,7 +326,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             return None
         return self._guilds[guild_id].members.get(user_id)
 
-    def get_mandatory_member_by_id(
+    def get_mandatory_member_by_id(  # lgtm [py/similar-function]
         self,
         user_id: int,
         guild_id: int,
@@ -339,10 +340,10 @@ class StateRegistryImpl(state_registry.IStateRegistry):
                 user_id, self.fabric.http_adapter.fetch_member, callback_if_unresolved, user_id, guild_id
             )
 
-    def parse_application(self, application_payload: data_structures.DiscordObjectT) -> applications.Application:
+    def parse_application(self, application_payload: containers.DiscordObjectT) -> applications.Application:
         return applications.Application(self.fabric, application_payload)
 
-    def parse_application_user(self, application_user_payload: data_structures.DiscordObjectT) -> users.OAuth2User:
+    def parse_application_user(self, application_user_payload: containers.DiscordObjectT) -> users.OAuth2User:
         if self._user is not None:
             self._user.update_state(application_user_payload)
         else:
@@ -350,11 +351,11 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return self._user
 
-    def parse_audit_log(self, audit_log_payload: data_structures.DiscordObjectT) -> audit_logs.AuditLog:
+    def parse_audit_log(self, audit_log_payload: containers.DiscordObjectT) -> audit_logs.AuditLog:
         return audit_logs.AuditLog(self.fabric, audit_log_payload)
 
     def parse_channel(
-        self, channel_payload: data_structures.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild] = None
+        self, channel_payload: containers.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild] = None
     ) -> channels.Channel:
         channel_id = int(channel_payload["id"])
         channel_obj = self.get_channel_by_id(channel_id)
@@ -374,16 +375,16 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return channel_obj
 
-    def parse_connection(self, connection_payload: data_structures.DiscordObjectT) -> connections.Connection:
+    def parse_connection(self, connection_payload: containers.DiscordObjectT) -> connections.Connection:
         return connections.Connection(self.fabric, connection_payload)
 
     # These fix typing issues in the update_guild_emojis method.
     @typing.overload
-    def parse_emoji(self, emoji_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
+    def parse_emoji(self, emoji_payload: containers.DiscordObjectT, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
         ...
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: data_structures.DiscordObjectT, guild_obj: None) -> emojis.Emoji:
+    def parse_emoji(self, emoji_payload: containers.DiscordObjectT, guild_obj: None) -> emojis.Emoji:
         ...
 
     def parse_emoji(self, emoji_payload, guild_obj):
@@ -407,11 +408,11 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return new_emoji
 
-    def parse_gateway_bot(self, gateway_bot_payload: data_structures.DiscordObjectT) -> gateway_bot.GatewayBot:
+    def parse_gateway_bot(self, gateway_bot_payload: containers.DiscordObjectT) -> gateway_bot.GatewayBot:
         return gateway_bot.GatewayBot(gateway_bot_payload)
 
     def parse_guild(
-        self, guild_payload: data_structures.DiscordObjectT, shard_id: typing.Optional[int]
+        self, guild_payload: containers.DiscordObjectT, shard_id: typing.Optional[int]
     ) -> guilds.Guild:
         guild_id = int(guild_payload["id"])
         is_unavailable = guild_payload.get("unavailable", False)
@@ -430,8 +431,11 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return guild_obj
 
+    def parse_invite(self, invite_payload: containers.DiscordObjectT) -> invites.Invite:
+        return invites.parse_invite(self.fabric, invite_payload)
+
     def parse_voice_state(
-        self, voice_state_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild
+        self, voice_state_payload: containers.DiscordObjectT, guild_obj: guilds.Guild
     ) -> voices.VoiceState:
         user_id = int(voice_state_payload["user_id"])
 
@@ -446,15 +450,15 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
     def parse_partial_member(
         self,
-        partial_member_payload: data_structures.DiscordObjectT,
-        user_payload: data_structures.DiscordObjectT,
+        partial_member_payload: containers.DiscordObjectT,
+        user_payload: containers.DiscordObjectT,
         guild_obj: guilds.Guild,
     ) -> members.Member:
         # Cheap workaround for Discord's inconsistency here.
         partial_member_payload["user"] = user_payload
         return self.parse_member(partial_member_payload, guild_obj)
 
-    def parse_member(self, member_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> members.Member:
+    def parse_member(self, member_payload: containers.DiscordObjectT, guild_obj: guilds.Guild) -> members.Member:
         member_id = int(member_payload["user"]["id"])
 
         if member_id in guild_obj.members:
@@ -470,7 +474,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         guild_obj.members[member_id] = member_obj
         return member_obj
 
-    def parse_message(self, message_payload: data_structures.DiscordObjectT) -> messages.Message:
+    def parse_message(self, message_payload: containers.DiscordObjectT) -> messages.Message:
         # Always update the cache with the new message.
         message_id = int(message_payload["id"])
 
@@ -481,13 +485,13 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         return message_obj
 
     def parse_presence(
-        self, member_obj: members.Member, presence_payload: data_structures.DiscordObjectT
+        self, member_obj: members.Member, presence_payload: containers.DiscordObjectT
     ) -> presences.Presence:
         presence_obj = presences.Presence(presence_payload)
         member_obj.presence = presence_obj
         return presence_obj
 
-    def parse_reaction(self, reaction_payload: data_structures.DiscordObjectT) -> reactions.Reaction:
+    def parse_reaction(self, reaction_payload: containers.DiscordObjectT) -> reactions.Reaction:
         message_id = int(reaction_payload["message_id"])
         count = int(reaction_payload["count"])
         emoji_obj = self.parse_emoji(reaction_payload["emoji"], None)
@@ -507,7 +511,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             message_obj.reactions.append(new_reaction_obj)
         return new_reaction_obj
 
-    def parse_role(self, role_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> roles.Role:
+    def parse_role(self, role_payload: containers.DiscordObjectT, guild_obj: guilds.Guild) -> roles.Role:
         role_id = int(role_payload["id"])
         if role_id in guild_obj.roles:
             role = guild_obj.roles[role_id]
@@ -518,7 +522,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
             guild_obj.roles[role_payload.id] = role_payload
             return role_payload
 
-    def parse_user(self, user_payload: data_structures.DiscordObjectT) -> users.IUser:
+    def parse_user(self, user_payload: containers.DiscordObjectT) -> users.IUser:
         # If the user already exists, then just return their existing object. We expect discord to tell us if they
         # get updated if they are a member, and for anything else the object will just be disposed of once we are
         # finished with it anyway.
@@ -539,7 +543,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
 
         return existing_user
 
-    def parse_webhook(self, webhook_payload: data_structures.DiscordObjectT) -> webhooks.Webhook:
+    def parse_webhook(self, webhook_payload: containers.DiscordObjectT) -> webhooks.Webhook:
         # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
         # so that it isn't coupling dependent classes of this one to the model implementation as much.
         return webhooks.Webhook(self.fabric, webhook_payload)
@@ -562,7 +566,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         member_obj.roles = [role for role in role_objs]
 
     def update_channel(
-        self, channel_payload: data_structures.DiscordObjectT
+        self, channel_payload: containers.DiscordObjectT
     ) -> typing.Optional[typing.Tuple[channels.Channel, channels.Channel]]:
         channel_id = int(channel_payload["id"])
         existing_channel = self.get_channel_by_id(channel_id)
@@ -574,7 +578,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         return None
 
     def update_guild(
-        self, guild_payload: data_structures.DiscordObjectT
+        self, guild_payload: containers.DiscordObjectT
     ) -> typing.Optional[typing.Tuple[guilds.Guild, guilds.Guild]]:
         guild_id = int(guild_payload["id"])
         guild_obj = self.get_guild_by_id(guild_id)
@@ -586,7 +590,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         return None
 
     def update_guild_emojis(
-        self, emoji_list: typing.List[data_structures.DiscordObjectT], guild_obj: guilds.Guild
+        self, emoji_list: typing.List[containers.DiscordObjectT], guild_obj: guilds.Guild
     ) -> typing.Optional[typing.Tuple[typing.FrozenSet[emojis.GuildEmoji], typing.FrozenSet[emojis.GuildEmoji]]]:
         old_emojis = frozenset(guild_obj.emojis.values())
         new_emojis = frozenset(self.parse_emoji(emoji_obj, guild_obj) for emoji_obj in emoji_list)
@@ -597,7 +601,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         self,
         member_obj: members.Member,
         role_objs: typing.Sequence[roles.Role],
-        payload: data_structures.DiscordObjectT,
+        payload: containers.DiscordObjectT,
     ) -> typing.Optional[typing.Tuple[members.Member, members.Member]]:
         new_member = member_obj
         old_member = new_member.copy()
@@ -605,14 +609,14 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         return old_member, new_member
 
     def update_member_presence(
-        self, member_obj: members.Member, presence_payload: data_structures.DiscordObjectT
+        self, member_obj: members.Member, presence_payload: containers.DiscordObjectT
     ) -> typing.Optional[typing.Tuple[members.Member, presences.Presence, presences.Presence]]:
         old_presence = member_obj.presence
         new_presence = self.parse_presence(member_obj, presence_payload)
         return member_obj, old_presence, new_presence
 
     def update_message(
-        self, payload: data_structures.DiscordObjectT
+        self, payload: containers.DiscordObjectT
     ) -> typing.Optional[typing.Tuple[messages.Message, messages.Message]]:
         message_id = int(payload["message_id"])
         if message_id in self._message_cache:
@@ -623,7 +627,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         return None
 
     def update_role(
-        self, guild_obj: guilds.Guild, payload: data_structures.DiscordObjectT
+        self, guild_obj: guilds.Guild, payload: containers.DiscordObjectT
     ) -> typing.Optional[typing.Tuple[roles.Role, roles.Role]]:
         role_id = int(payload["id"])
         existing_role = guild_obj.roles.get(role_id)

@@ -22,6 +22,7 @@ from unittest import mock
 import pytest
 
 from hikari.orm.models import gateway_bot
+from tests.hikari import _helpers
 
 
 @pytest.fixture()
@@ -40,18 +41,37 @@ def test_GatewayBot(gateway_bot_payload):
     assert gateway_bot_obj.url == "wss://gateway.discord.gg/"
     assert gateway_bot_obj.shards == 9
     assert isinstance(gateway_bot_obj.session_start_limit, gateway_bot.SessionStartLimit)
-    gateway_bot_obj.__repr__()
+
+
+@pytest.mark.model
+def test_GatewayBot___repr__():
+    assert repr(
+        _helpers.mock_model(
+            gateway_bot.GatewayBot,
+            url="foo",
+            shards=666,
+            session_start_limit=_helpers.mock_model(
+                gateway_bot.SessionStartLimit,
+                total=42,
+                remaining=69,
+                reset_at=datetime.datetime.fromtimestamp(101).replace(tzinfo=datetime.timezone.utc),
+            ),
+            __repr__=gateway_bot.GatewayBot.__repr__,
+        )
+    )
 
 
 @pytest.mark.model
 def test_SessionStartLimit(session_start_payload):
     current_ts = 1573999956
-    expected_reset_date = datetime.datetime.utcfromtimestamp(current_ts + 14400)
+    expected_reset_date = datetime.datetime.fromtimestamp(current_ts + 14400).replace(tzinfo=datetime.timezone.utc)
 
     # We cant mock datetime directly as it is a C type by the looks... however... we can replace
     # the reference with a fake class instead.
     datetime_mock = mock.MagicMock()
-    datetime_mock.now = mock.MagicMock(return_value=datetime.datetime.utcfromtimestamp(current_ts))
+    datetime_mock.now = mock.MagicMock(
+        return_value=datetime.datetime.fromtimestamp(current_ts).replace(tzinfo=datetime.timezone.utc)
+    )
     with mock.patch("datetime.datetime", new=datetime_mock):
         session_start_limit_obj = gateway_bot.SessionStartLimit(session_start_payload)
 
@@ -59,4 +79,16 @@ def test_SessionStartLimit(session_start_payload):
     assert session_start_limit_obj.remaining == 999
     assert session_start_limit_obj.reset_at == expected_reset_date
     assert session_start_limit_obj.used == 1
-    session_start_limit_obj.__repr__()
+
+
+@pytest.mark.model
+def test_SessionStartLimit___repr__():
+    assert repr(
+        _helpers.mock_model(
+            gateway_bot.SessionStartLimit,
+            total=42,
+            remaining=69,
+            reset_at=datetime.datetime.fromtimestamp(101).replace(tzinfo=datetime.timezone.utc),
+            __repr__=gateway_bot.SessionStartLimit.__repr__,
+        )
+    )

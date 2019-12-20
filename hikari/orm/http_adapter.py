@@ -25,8 +25,8 @@ from __future__ import annotations
 import abc
 import typing
 
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import io_helpers
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import storage
 from hikari.internal_utilities import unspecified
 from hikari.orm.models import applications as _applications
 from hikari.orm.models import audit_logs as _audit_logs
@@ -266,9 +266,9 @@ class IHTTPAdapter(abc.ABC):
         self,
         guild: _guilds.GuildLikeT,
         name: str,
-        image_data: io_helpers.FileLikeT,
+        image_data: storage.FileLikeT,
         *,
-        roles: typing.Collection[_roles.RoleLikeT] = data_structures.EMPTY_COLLECTION,
+        roles: typing.Collection[_roles.RoleLikeT] = containers.EMPTY_COLLECTION,
         reason: str = unspecified.UNSPECIFIED,
     ) -> _emojis.GuildEmoji:
         ...
@@ -308,10 +308,10 @@ class IHTTPAdapter(abc.ABC):
         explicit_content_filter: _guilds.ExplicitContentFilterLevel = unspecified.UNSPECIFIED,
         afk_channel: _channels.GuildVoiceChannel = unspecified.UNSPECIFIED,
         afk_timeout: int = unspecified.UNSPECIFIED,
-        icon_data: io_helpers.FileLikeT = unspecified.UNSPECIFIED,
+        icon_data: storage.FileLikeT = unspecified.UNSPECIFIED,
         #: TODO: While this will always be a member of the guild for it to work, do I want to allow any user here too?
         owner: _members.MemberLikeT = unspecified.UNSPECIFIED,
-        splash: io_helpers.FileLikeT = unspecified.UNSPECIFIED,
+        splash: storage.FileLikeT = unspecified.UNSPECIFIED,
         #: TODO: Can this be an announcement (news) channel also?
         system_channel: _channels.GuildTextChannelLikeT = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
@@ -577,7 +577,7 @@ class IHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def update_me(
-        self, *, username: str = unspecified.UNSPECIFIED, avatar: io_helpers.FileLikeT = unspecified.UNSPECIFIED,
+        self, *, username: str = unspecified.UNSPECIFIED, avatar: storage.FileLikeT = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -613,7 +613,7 @@ class IHTTPAdapter(abc.ABC):
         channel: _channels.GuildTextChannelLikeT,
         name: str,
         *,
-        avatar: io_helpers.FileLikeT = unspecified.UNSPECIFIED,
+        avatar: storage.FileLikeT = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> _webhooks.Webhook:
         ...

@@ -23,8 +23,8 @@ from __future__ import annotations
 
 import typing
 
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
 from hikari.orm import fabric
 from hikari.orm.models import colors as _color
 from hikari.orm.models import interfaces
@@ -49,9 +49,9 @@ class PartialRole(interfaces.ISnowflake):
     #: :type: :class:`str`
     name: str
 
-    __repr__ = auto_repr.repr_of("id", "name")
+    __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
 
@@ -108,15 +108,15 @@ class Role(PartialRole, interfaces.IStatefulModel):
     #: :type: :class:`bool`
     is_mentionable: bool
 
-    __repr__ = auto_repr.repr_of("id", "name", "position", "is_managed", "is_mentionable", "is_hoisted")
+    __repr__ = reprs.repr_of("id", "name", "position", "is_managed", "is_mentionable", "is_hoisted")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_id: int) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT, guild_id: int) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self.guild_id = guild_id
         self.update_state(payload)
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.DiscordObjectT) -> None:
         self.name = payload["name"]
         self.color = _color.Color(payload["color"])
         self.is_hoisted = payload["hoist"]

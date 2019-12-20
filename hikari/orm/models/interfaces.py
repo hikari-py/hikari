@@ -29,8 +29,8 @@ import typing
 
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import compat
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import dates
 from hikari.orm import fabric
 
 T = typing.TypeVar("T")
@@ -98,9 +98,6 @@ class IModel(metaclass=abc.ABCMeta):
     """
     Base type for any model in this API.
 
-    Provides several key functionalities such as the ability to control how internal references get
-    copied if :meth:`copy`ing this object.
-
     If you need some fields to be copied across by reference regardless of being requested to produce a new copy, you
     should specify their names in the `__copy_byref__` class var. This will prevent :func:`copy.copy` being
     invoked on them when duplicating the object to produce a before and after view when a change is made.
@@ -143,8 +140,8 @@ class IModel(metaclass=abc.ABCMeta):
         slots = set()
 
         for base in cls.mro():
-            next_slots = getattr(base, "__slots__", data_structures.EMPTY_COLLECTION)
-            next_refs = getattr(base, "__copy_by_ref__", data_structures.EMPTY_COLLECTION)
+            next_slots = getattr(base, "__slots__", containers.EMPTY_COLLECTION)
+            next_refs = getattr(base, "__copy_by_ref__", containers.EMPTY_COLLECTION)
             for ref in next_refs:
                 copy_by_ref.add(ref)
             for slot in next_slots:
@@ -180,7 +177,7 @@ class IModel(metaclass=abc.ABCMeta):
 
         return instance
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.DiscordObjectT) -> None:
         """
         Updates the internal state of an existing instance of this object from a raw Discord payload.
         """
@@ -229,7 +226,7 @@ class ISnowflake(IModel):
     def created_at(self) -> datetime.datetime:
         """When the object was created."""
         epoch = self.id >> 22
-        return date_helpers.discord_epoch_to_datetime(epoch)
+        return dates.discord_epoch_to_datetime(epoch)
 
     @property
     def internal_worker_id(self) -> int:
@@ -303,7 +300,7 @@ class UnknownObject(typing.Generic[T], ISnowflake):
 
     _CALLBACK_MUX_ALREADY_CALLED = ...
 
-    def __init__(self, id: int, resolver_partial: data_structures.PartialCoroutineProtocolT[T] = None,) -> None:
+    def __init__(self, id: int, resolver_partial: containers.PartialCoroutineProtocolT[T] = None, ) -> None:
         self.id = id
         self._future = resolver_partial
         self._callbacks = []

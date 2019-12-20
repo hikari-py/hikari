@@ -29,8 +29,8 @@ import typing
 import aiohttp.typedefs
 
 from hikari import errors
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
 from hikari.internal_utilities import unspecified
 from hikari.net import http_client
@@ -250,7 +250,7 @@ class HTTPAPIBase(http_client.HTTPClient):
         #: this provides a benefit of allowing you to use dicts as if they were normal python objects. If you wish
         #: to use another implementation, or just default to :class:`dict` instead, it is worth changing this
         #: attribute.
-        self.json_unmarshaller_object_hook = json_unmarshaller_object_hook or data_structures.ObjectProxy
+        self.json_unmarshaller_object_hook = json_unmarshaller_object_hook or containers.ObjectProxy
 
         if token is None:
             #: The session `Authorization` header to use.
@@ -372,7 +372,7 @@ class HTTPAPIBase(http_client.HTTPClient):
 
         async with super()._request(resource.method, resource.uri, **kwargs) as response:
             self.logger.debug(
-                "[%s] %s %s %s content_type=%s size=%s",
+                "[%s] RESPONSE %s %s %s content_type=%s size=%s",
                 self.in_count,
                 resource.uri,
                 response.status,
@@ -433,7 +433,7 @@ class HTTPAPIBase(http_client.HTTPClient):
         # assume that is_global only ever occurs on TOO_MANY_REQUESTS response codes.
         if is_global and is_being_rate_limited:
             # Retry-after is always in milliseconds.
-            # This is only in the body if we get ratelimited, which is a pain, but who
+            # This is only in the body if we get rate limited, which is a pain, but who
             # could expect an API to have consistent behaviour.
             retry_after = body.get("retry_after", 0) * _GRAINULARITY_MULTIPLIER
             self.global_rate_limit.lock(retry_after)
@@ -441,7 +441,7 @@ class HTTPAPIBase(http_client.HTTPClient):
         if all(header in headers for header in _X_RATELIMIT_LOCALS):
             # If we don't get all the info we need, just forget about the rate limit as we can't act on missing
             # information.
-            now = date_helpers.parse_http_date(headers[_DATE_HEADER]).timestamp()
+            now = dates.parse_http_date(headers[_DATE_HEADER]).timestamp()
             total = transformations.nullable_cast(headers.get(_X_RATELIMIT_LIMIT_HEADER), int)
             # https://github.com/discordapp/discord-api-docs/pull/1064
             reset_after = transformations.nullable_cast(headers.get(_X_RATELIMIT_RESET_AFTER_HEADER), float) or 0

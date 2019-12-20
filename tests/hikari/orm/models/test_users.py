@@ -23,6 +23,7 @@ import pytest
 from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import users
+from tests.hikari import _helpers
 
 
 @pytest.fixture()
@@ -56,7 +57,6 @@ def test_User_when_not_a_bot_or_system(fabric_obj):
     assert user_obj.avatar_hash == "1a2b3c4d"
     assert user_obj.is_bot is False
     assert user_obj.is_system is False
-    user_obj.__repr__()
 
 
 @pytest.mark.model
@@ -79,7 +79,15 @@ def test_User_when_is_a_bot_and_system(fabric_obj):
     assert user_obj.avatar_hash is None
     assert user_obj.is_bot is True
     assert user_obj.is_system is True
-    user_obj.__repr__()
+
+
+@pytest.mark.model
+def test_User___repr__():
+    assert repr(
+        _helpers.mock_model(
+            users.User, id=42, username="foo", discriminator=1234, is_bot=True, __repr__=users.User.__repr__
+        )
+    )
 
 
 @pytest.mark.model
@@ -108,7 +116,22 @@ def test_OAuth2User(fabric_obj):
     assert user_obj.is_verified is True
     assert user_obj.is_mfa_enabled is True
     assert user_obj.locale == "en-GB"
-    user_obj.__repr__()
+
+
+@pytest.mark.model
+def test_OAuth2User___repr__():
+    assert repr(
+        _helpers.mock_model(
+            users.OAuth2User,
+            id=42,
+            username="foo",
+            discriminator=1234,
+            is_bot=True,
+            is_verified=True,
+            is_mfa_enabled=True,
+            __repr__=users.OAuth2User.__repr__,
+        )
+    )
 
 
 @pytest.mark.model

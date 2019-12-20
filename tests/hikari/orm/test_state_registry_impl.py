@@ -21,7 +21,7 @@ import copy
 import datetime
 from unittest import mock
 
-import asynctest
+import asyncmock as mock
 import pytest
 
 from hikari.orm import fabric
@@ -34,6 +34,7 @@ from hikari.orm.models import emojis
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
 from hikari.orm.models import interfaces
+from hikari.orm.models import invites
 from hikari.orm.models import members
 from hikari.orm.models import messages
 from hikari.orm.models import presences
@@ -59,7 +60,7 @@ def registry():
 @pytest.mark.orm
 class TestStateRegistryImpl:
     def test_prepare_unknown_with_callback(self, registry: state_registry_impl.StateRegistryImpl):
-        resolver = asynctest.CoroutineMock()
+        resolver = mock.AsyncMock()
         callback = mock.MagicMock()
 
         unknown = registry._prepare_unknown_with_callback(1234, resolver, callback, 1, 2, 3, a="a", b="b", c="c")
@@ -586,7 +587,7 @@ class TestStateRegistryImpl:
     async def test__role_fetcher_when_role_found(self, registry: state_registry_impl.StateRegistryImpl):
         target = _helpers.mock_model(roles.Role, id=125, guild_id=120)
         registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
-        registry.fabric.http_adapter.fetch_roles = asynctest.CoroutineMock(
+        registry.fabric.http_adapter.fetch_roles = mock.AsyncMock(
             return_value=[
                 _helpers.mock_model(roles.Role, id=123, guild_id=120),
                 _helpers.mock_model(roles.Role, id=124, guild_id=120),
@@ -597,7 +598,7 @@ class TestStateRegistryImpl:
 
         result = await registry._role_fetcher(120, 125)
 
-        registry.fabric.http_adapter.fetch_roles.assert_awaited_once_with(120)
+        registry.fabric.http_adapter.fetch_roles.assert_called_once_with(120)
         assert result is target
 
     @pytest.mark.asyncio
@@ -605,7 +606,7 @@ class TestStateRegistryImpl:
     async def test__role_fetcher_when_role_not_found(self, registry: state_registry_impl.StateRegistryImpl):
         target = _helpers.mock_model(roles.Role, id=125, guild_id=120)
         registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
-        registry.fabric.http_adapter.fetch_roles = asynctest.CoroutineMock(
+        registry.fabric.http_adapter.fetch_roles = mock.AsyncMock(
             return_value=[
                 _helpers.mock_model(roles.Role, id=123, guild_id=120),
                 _helpers.mock_model(roles.Role, id=124, guild_id=120),
@@ -632,7 +633,7 @@ class TestStateRegistryImpl:
         guild_obj.roles = _helpers.StrongWeakValuedDict()
         registry._guilds = {guild_obj.id: guild_obj}
         callback_obj = mock.MagicMock()
-        registry._role_fetcher = asynctest.CoroutineMock(spec_set=registry._role_fetcher)
+        registry._role_fetcher = mock.AsyncMock()
         unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=2)
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
 
@@ -647,7 +648,7 @@ class TestStateRegistryImpl:
     ):
         registry._guilds = _helpers.StrongWeakValuedDict()
         callback_obj = mock.MagicMock()
-        registry._role_fetcher = asynctest.CoroutineMock(spec_set=registry._role_fetcher)
+        registry._role_fetcher = mock.AsyncMock()
         unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=2)
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
 
@@ -1066,6 +1067,18 @@ class TestStateRegistryImpl:
 
         with _helpers.mock_patch(guilds.Guild, return_value=guild_obj):
             assert registry.parse_guild(payload, 5432) is guild_obj
+
+    @pytest.mark.parametrize(
+        ["invite_payload", "expected_type"],
+        [
+            ({"code": "xacasa"}, invites.Invite),
+            ({"code": "xacasa", "created_at": "2019-04-19T04:02:07.038000+00:00"}, invites.InviteWithMetadata),
+        ],
+    )
+    def test_parse_invite(self, registry: state_registry_impl, invite_payload, expected_type):
+        mock_invite_obj = mock.MagicMock(expected_type)
+        with _helpers.mock_patch(expected_type, return_value=mock_invite_obj, __slots__=expected_type.__slots__):
+            assert registry.parse_invite(invite_payload) is mock_invite_obj
 
     def test_parse_voice_state(self, registry: state_registry_impl.StateRegistryImpl):
         registry._guilds[69] = guild_obj = _helpers.mock_model(guilds.Guild, id=69, voice_states={})

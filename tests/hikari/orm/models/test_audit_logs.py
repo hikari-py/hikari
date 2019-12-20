@@ -24,7 +24,9 @@ from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import audit_logs
 from hikari.orm.models import channels
+from hikari.orm.models import overwrites
 from hikari.orm.models import roles
+from tests.hikari import _helpers
 
 
 @pytest.fixture()
@@ -97,9 +99,6 @@ def test_AuditLog(fabric_obj, mock_audit_log_payload, mock_user_payload, mock_we
 
     fabric_obj.state_registry.parse_user.assert_called_once_with(mock_user_payload)
     fabric_obj.state_registry.parse_webhook.assert_called_once_with(mock_webhook_payload)
-    audit_log_obj.audit_log_entries[0].changes.__repr__()
-    audit_log_obj.audit_log_entries[0].__repr__()
-    audit_log_obj.__repr__()
 
 
 @pytest.mark.model
@@ -122,8 +121,33 @@ def test_afk_channel_change():
     assert entry_obj.changes[0].key is audit_logs.AuditLogChangeKey.AFK_CHANNEL_ID
     assert entry_obj.changes[0].old_value == 561887595798462499
     assert entry_obj.changes[0].new_value == 561886693339168770
-    entry_obj.changes[0].__repr__()
-    entry_obj.__repr__()
+
+
+@pytest.mark.model
+def test_AuditLogEntry___repr__():
+    assert repr(
+        _helpers.mock_model(
+            audit_logs.AuditLogEntry,
+            id=42,
+            user_id=69,
+            action_type=audit_logs.AuditLogEvent.BOT_ADD,
+            reason="obama cares",
+            __repr__=audit_logs.AuditLogEntry.__repr__,
+        )
+    )
+
+
+@pytest.mark.model
+def test_AuditLogEntry___repr__():
+    assert repr(
+        _helpers.mock_model(
+            audit_logs.AuditLogEntry,
+            id=42,
+            user_id=69,
+            action_type=audit_logs.AuditLogEvent.BOT_ADD,
+            reason="obama cares",
+        )
+    )
 
 
 @pytest.mark.model
@@ -143,7 +167,15 @@ def test_AuditLogEntryCountInfo():
     info_obj = audit_logs.parse_audit_log_entry_info({"count": 64}, audit_logs.AuditLogEvent.MESSAGE_BULK_DELETE)
     assert isinstance(info_obj, audit_logs.AuditLogEntryCountInfo)
     assert info_obj.count == 64
-    info_obj.__repr__()
+
+
+@pytest.mark.model
+def test_AuditLogEntryCountInfo___repr__():
+    assert repr(
+        _helpers.mock_model(
+            audit_logs.AuditLogEntryCountInfo, count=42, __repr__=audit_logs.AuditLogEntryCountInfo.__repr__
+        )
+    )
 
 
 @pytest.mark.model
@@ -154,7 +186,18 @@ def test_MemberMoveAuditLogEntryInfo():
     assert isinstance(info_obj, audit_logs.MemberMoveAuditLogEntryInfo)
     assert info_obj.count == 44
     assert info_obj.channel_id == 234123312213321
-    info_obj.__repr__()
+
+
+@pytest.mark.model
+def test_MemberMoveAuditLogEntryInfo___repr__():
+    assert repr(
+        _helpers.mock_model(
+            audit_logs.MemberMoveAuditLogEntryInfo,
+            count=42,
+            channel_id=69,
+            __repr__=audit_logs.MemberMoveAuditLogEntryInfo.__repr__,
+        )
+    )
 
 
 @pytest.mark.model
@@ -165,7 +208,18 @@ def test_MemberPruneAuditLogEntryInfo():
     assert isinstance(info_obj, audit_logs.MemberPruneAuditLogEntryInfo)
     assert info_obj.delete_member_days == 7
     assert info_obj.members_removed == 49
-    info_obj.__repr__()
+
+
+@pytest.mark.model
+def test_MemberPruneAuditLogEntryInfo___repr__():
+    assert repr(
+        _helpers.mock_model(
+            audit_logs.MemberPruneAuditLogEntryInfo,
+            delete_member_days=42,
+            members_removed=69,
+            __repr__=audit_logs.MemberPruneAuditLogEntryInfo.__repr__,
+        )
+    )
 
 
 @pytest.mark.model
@@ -176,7 +230,18 @@ def test_MessageDeleteAuditLogEntryInfo():
     assert isinstance(info_obj, audit_logs.MessageDeleteAuditLogEntryInfo)
     assert info_obj.count == 7
     assert info_obj.channel_id == 4949494949494949
-    info_obj.__repr__()
+
+
+@pytest.mark.model
+def test_MessageDeleteAuditLogEntryInfo___repr__():
+    assert repr(
+        _helpers.mock_model(
+            audit_logs.MessageDeleteAuditLogEntryInfo,
+            count=42,
+            channel_id=69,
+            __repr__=audit_logs.MessageDeleteAuditLogEntryInfo.__repr__,
+        )
+    )
 
 
 @pytest.mark.model
@@ -187,7 +252,18 @@ def test_MessagePinAuditLogEntryInfo():
     assert isinstance(info_obj, audit_logs.MessagePinAuditLogEntryInfo)
     assert info_obj.channel_id == 3333333333333
     assert info_obj.message_id == 4949494949494949
-    info_obj.__repr__()
+
+
+@pytest.mark.model
+def test_MessagePinAuditLogEntryInfo___repr__():
+    assert repr(
+        _helpers.mock_model(
+            audit_logs.MessagePinAuditLogEntryInfo,
+            channel_id=42,
+            message_id=69,
+            __repr__=audit_logs.MessagePinAuditLogEntryInfo.__repr__,
+        )
+    )
 
 
 @pytest.mark.model
@@ -198,7 +274,18 @@ def test_ChannelOverwriteAuditLogEntryInfo():
     assert isinstance(info_obj, audit_logs.ChannelOverwriteAuditLogEntryInfo)
     assert info_obj.id == 115590097100865541
     assert info_obj.type.value is roles.Role
-    info_obj.__repr__()
+
+
+@pytest.mark.model
+def test_ChannelOverwriteAuditLogEntryInfo___repr__():
+    assert repr(
+        _helpers.mock_model(
+            audit_logs.ChannelOverwriteAuditLogEntryInfo,
+            id=42,
+            type=overwrites.OverwriteEntityType.ROLE,
+            __repr__=audit_logs.ChannelOverwriteAuditLogEntryInfo.__repr__,
+        )
+    )
 
 
 @pytest.mark.model
@@ -214,3 +301,16 @@ def test_AuditLogChange_without_converter():
     assert str(audit_log_change_obj.key) == "AVATAR_HASH"
     assert audit_log_change_obj.old_value == "0e2aad94b8c086865c4e62009b925e0f"
     assert audit_log_change_obj.new_value == "a_d3f77f408fb58925024e887ddc4a555d"
+
+
+@pytest.mark.model
+def test_AuditLogChange___repr__():
+    assert repr(
+        _helpers.mock_model(
+            audit_logs.AuditLogChange,
+            key=audit_logs.AuditLogChangeKey.NAME,
+            old_value="foo",
+            new_value="bar",
+            __repr__=audit_logs.AuditLogChange.__repr__,
+        )
+    )

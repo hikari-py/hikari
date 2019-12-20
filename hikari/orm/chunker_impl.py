@@ -24,8 +24,8 @@ from __future__ import annotations
 import itertools
 import typing
 
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import logging_helpers
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import loggers
 from hikari.orm import chunker
 from hikari.orm import fabric
 from hikari.orm.models import guilds
@@ -41,8 +41,11 @@ class ChunkerImpl(chunker.IChunker):
 
     def __init__(self, fabric_obj: fabric.Fabric):
         self.fabric = fabric_obj
-        self.logger = logging_helpers.get_named_logger(self)
+        self.logger = loggers.get_named_logger(self)
 
+    # TODO keep track of what is being waited for somehow
+    # use this to prevent multiple load requests on the same guild at the same time, and to detect when
+    # the guild has been loaded.
     def load_members_for(
         self,
         guild_obj: guilds.Guild,
@@ -59,11 +62,12 @@ class ChunkerImpl(chunker.IChunker):
 
         # We should request the guild info on the shard the guild is using, so aggregate the guilds by the shard id.
         for shard_id, guild_objs in itertools.groupby((guild_obj, *guild_objs), lambda g: g.shard_id):
+            #: TODO don't send thousands per request!
             self.fabric.gateways[shard_id].request_guild_members(
                 *map(lambda g: str(g.id), guild_objs), limit=limit, presences=presences, query=query, user_ids=user_ids,
             )
 
-    async def handle_next_chunk(self, chunk_payload: data_structures.DiscordObjectT, shard_id: int) -> None:
+    async def handle_next_chunk(self, chunk_payload: containers.DiscordObjectT, shard_id: int) -> None:
         guild_id = int(chunk_payload["guild_id"])
         guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 
@@ -72,7 +76,7 @@ class ChunkerImpl(chunker.IChunker):
             return
 
         members = chunk_payload["members"]
-        presences = chunk_payload.get("presences", data_structures.EMPTY_SEQUENCE)
+        presences = chunk_payload.get("presences", containers.EMPTY_SEQUENCE)
 
         # Dealloc presences sequence and make a lookup table instead.
         # noinspection PyTypeChecker

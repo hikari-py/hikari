@@ -24,6 +24,7 @@ from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import emojis
 from hikari.orm.models import guilds
+from tests.hikari import _helpers
 
 
 @pytest.fixture
@@ -97,11 +98,27 @@ def test_UnicodeEmoji___str__(unicode_emoji_payload):
 
 
 @pytest.mark.model
+def test_UnicodeEmoji___repr__():
+    assert repr(
+        _helpers.mock_model(emojis.UnicodeEmoji, value="\N{OK HAND SIGN}", __repr__=emojis.UnicodeEmoji.__repr__)
+    )
+
+
+@pytest.mark.model
+def test_UnicodeEmoji___repr__():
+    assert repr(_helpers.mock_model(emojis.UnicodeEmoji, value="\N{OK HAND SIGN}"))
+
+
+@pytest.mark.model
 def test_UnknownEmoji___init__(unknown_emoji_payload):
     e = emojis.UnknownEmoji(unknown_emoji_payload)
     assert e.id == 100000000001110010
     assert e.name == "asshat123"
-    e.__repr__()
+
+
+@pytest.mark.model
+def test_UnknownEmoji___repr__():
+    assert repr(_helpers.mock_model(emojis.UnknownEmoji, id=42, name="foo", __repr__=emojis.UnknownEmoji.__repr__))
 
 
 @pytest.mark.model
@@ -118,8 +135,19 @@ def test_GuildEmoji___init__(mock_state, fabric_obj, guild_emoji_payload, user_p
     assert e.is_managed is False
     assert e.is_animated is False
     assert e._guild_id == 98765
-    e.__repr__()
     mock_state.parse_user.assert_called_with(user_payload)
+
+
+@pytest.mark.model
+def test_GuildEmoji___repr__():
+    assert repr(
+        _helpers.mock_model(emojis.GuildEmoji, id=42, name="foo", is_animated=True, __repr__=emojis.GuildEmoji.__repr__)
+    )
+
+
+@pytest.mark.model
+def test_GuildEmoji___repr__():
+    assert repr(_helpers.mock_model(emojis.GuildEmoji, id=42, name="foo", is_animated=True))
 
 
 @pytest.mark.model

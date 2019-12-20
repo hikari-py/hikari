@@ -23,6 +23,7 @@ import pytest
 from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import connections
+from tests.hikari import _helpers
 
 
 @pytest.fixture()
@@ -58,4 +59,12 @@ def test_Connection(fabric_obj):
     assert connection_obj.is_friend_synced is False
     assert connection_obj.is_showing_activity is True
     assert connection_obj.is_verified is True
-    connection_obj.__repr__()
+
+
+@pytest.mark.model
+def test_Connection___repr__():
+    assert repr(
+        _helpers.mock_model(
+            connections.Connection, type="asdfmovies", id=42, name="ObamaCare", __repr__=connections.Connection.__repr__
+        )
+    )

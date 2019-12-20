@@ -28,7 +28,7 @@ from __future__ import annotations
 import abc
 import typing
 
-from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import containers
 from hikari.orm.models import guilds
 
 
@@ -76,7 +76,7 @@ class IChunker(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def handle_next_chunk(self, chunk_payload: data_structures.DiscordObjectT, shard_id: int) -> None:
+    async def handle_next_chunk(self, chunk_payload: containers.DiscordObjectT, shard_id: int) -> None:
         """
         Handle a new chunk from the gateway.
 
