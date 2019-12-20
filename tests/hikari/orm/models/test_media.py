@@ -143,6 +143,12 @@ class TestAttachment:
             aiohttp_resp_obj.read.assert_called_once()
             assert actual_result is expected_result
 
+    @pytest.mark.model
+    def test_Attachment___repr__(self):
+        assert repr(
+            _helpers.mock_model(media.Attachment, id=42, filename="foo", size=69, __repr__=media.Attachment.__repr__)
+        )
+
 
 @pytest.mark.model
 @pytest.mark.asyncio

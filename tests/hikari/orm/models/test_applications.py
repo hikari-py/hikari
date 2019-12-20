@@ -23,6 +23,7 @@ import pytest
 from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import applications
+from tests.hikari import _helpers
 
 
 @pytest.fixture
@@ -87,7 +88,19 @@ def test_applications(fabric_obj):
     assert application_obj.team.id == 229590097100863321
     assert application_obj.team.owner_user_id == 175590097100863321
     assert application_obj.verify_key == "39lds9204odsa092034ko2"
-    application_obj.__repr__()
     fabric_obj.state_registry.parse_user.assert_any_call(mock_user)
     fabric_obj.state_registry.parse_user.assert_any_call(mock_team_user)
     assert fabric_obj.state_registry.parse_user.call_count == 2
+
+
+@pytest.mark.model
+def test_Application___repr__():
+    assert repr(
+        _helpers.mock_model(
+            applications.Application,
+            id=42,
+            name="foobar",
+            description="asdf movies are great",
+            __repr__=applications.Application.__repr__,
+        )
+    )
