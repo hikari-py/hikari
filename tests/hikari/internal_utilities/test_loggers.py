@@ -19,7 +19,7 @@
 import inspect
 import re
 
-from hikari.internal_utilities import logging_helpers
+from hikari.internal_utilities import loggers
 from tests.hikari import _helpers
 
 package_name = __name__
@@ -31,43 +31,43 @@ class Dummy:
 
 
 def test_get_named_logger_with_no_arguments():
-    logger = logging_helpers.get_named_logger()
+    logger = loggers.get_named_logger()
 
     assert logger.name == package_name
 
 
 def test_get_named_logger_with_no_arguments_but_module_is_not_available():
     with _helpers.mock_patch(inspect.getmodule, return_value=None):
-        logger = logging_helpers.get_named_logger()
+        logger = loggers.get_named_logger()
 
     assert re.match(r"^[0-9a-z]{8}-(?:[0-9a-z]{4}-){3}[0-9a-z]{12}$", logger.name, re.I)
 
 
 def test_get_named_logger_with_global_class():
-    logger = logging_helpers.get_named_logger(Dummy)
+    logger = loggers.get_named_logger(Dummy)
     assert logger.name == package_name + ".Dummy"
 
 
 def test_get_named_logger_with_nested_class():
-    logger = logging_helpers.get_named_logger(Dummy.NestedDummy)
+    logger = loggers.get_named_logger(Dummy.NestedDummy)
     assert logger.name == package_name + ".Dummy.NestedDummy"
 
 
 def test_get_named_logger_with_global_class_instance():
-    logger = logging_helpers.get_named_logger(Dummy())
+    logger = loggers.get_named_logger(Dummy())
     assert logger.name == package_name + ".Dummy"
 
 
 def test_get_named_logger_with_nested_class_instance():
-    logger = logging_helpers.get_named_logger(Dummy.NestedDummy())
+    logger = loggers.get_named_logger(Dummy.NestedDummy())
     assert logger.name == package_name + ".Dummy.NestedDummy"
 
 
 def test_get_named_logger_with_string():
-    logger = logging_helpers.get_named_logger("potato")
+    logger = loggers.get_named_logger("potato")
     assert logger.name == "potato"
 
 
 def test_get_named_logger_with_extras():
-    logger = logging_helpers.get_named_logger("potato", "foo", "bar", "baz")
+    logger = loggers.get_named_logger("potato", "foo", "bar", "baz")
     assert logger.name == "potato[foo, bar, baz]"

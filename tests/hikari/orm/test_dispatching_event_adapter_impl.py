@@ -20,9 +20,8 @@ import contextlib
 import datetime
 import inspect
 import logging
-from unittest import mock
 
-import asynctest
+import asyncmock as mock
 import pytest
 
 from hikari.net import gateway as _gateway
@@ -49,7 +48,7 @@ def logger_impl():
 
 @pytest.fixture()
 def state_registry_impl():
-    return asynctest.MagicMock(spec_set=state_registry.IStateRegistry)
+    return mock.MagicMock(spec_set=state_registry.IStateRegistry)
 
 
 @pytest.fixture()
@@ -63,16 +62,22 @@ def gateway_impl():
 
 
 @pytest.fixture()
-def fabric_impl(state_registry_impl, gateway_impl):
-    return fabric.Fabric(state_registry=state_registry_impl, gateways={None: gateway_impl})
+def chunker_impl():
+    return mock.MagicMock(spec_set=_chunker.IChunker)
+
+
+@pytest.fixture()
+def fabric_impl(state_registry_impl, gateway_impl, chunker_impl):
+    return fabric.Fabric(state_registry=state_registry_impl, gateways={None: gateway_impl}, chunker=chunker_impl)
 
 
 @pytest.fixture()
 def adapter_impl(fabric_impl, dispatch_impl, logger_impl):
     instance = _helpers.unslot_class(dispatching_event_adapter_impl.DispatchingEventAdapterImpl)(
-        fabric_impl, dispatch_impl
+        fabric_impl, dispatch_impl,
     )
     instance.logger = logger_impl
+    instance._request_chunks_mode = dispatching_event_adapter_impl.AutoRequestChunksMode.NEVER
     return instance
 
 
@@ -157,6 +162,34 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(events.READY, gateway_impl)
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "chunker_mode",
+        [
+            dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS,
+            dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES,
+        ],
+    )
+    async def test_handle_ready_handles_chunker(
+        self,
+        discord_ready_payload,
+        adapter_impl,
+        gateway_impl,
+        chunker_impl,
+        chunker_mode,
+        state_registry_impl,
+    ):
+        guild1 = _helpers.mock_model(guilds.Guild)
+        guild2 = _helpers.mock_model(guilds.Guild)
+        adapter_impl._request_chunks_mode = chunker_mode
+        state_registry_impl.parse_guild = mock.MagicMock(side_effect=[guild1, guild2])
+        await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
+        chunker_impl.load_members_for.assert_called_with(
+            guild1,
+            guild2,
+            presences=chunker_mode == dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES,
+        )
+
+    @pytest.mark.asyncio
     async def test_handle_ready_adds_application_user(
         self, discord_ready_payload, fabric_impl, adapter_impl, gateway_impl
     ):
@@ -178,9 +211,9 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_invalid_session_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
-        await adapter_impl.handle_invalid_session(gateway_impl, False)
+        await adapter_impl.handle_invalid_session(gateway_impl, {})
 
-        dispatch_impl.assert_called_with(events.INVALID_SESSION, gateway_impl, False)
+        dispatch_impl.assert_called_with(events.INVALID_SESSION, gateway_impl)
 
     @pytest.mark.asyncio
     async def test_handle_reconnect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
@@ -190,7 +223,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_resume_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
-        await adapter_impl.handle_resume(gateway_impl, ...)
+        await adapter_impl.handle_resumed(gateway_impl, ...)
 
         dispatch_impl.assert_called_with(events.RESUME, gateway_impl)
 
@@ -547,21 +580,21 @@ class TestDispatchingEventAdapterImpl:
     async def test_handle_guild_delete_when_unavailable_invokes__handle_guild_unavailable(
         self, adapter_impl, gateway_impl
     ):
-        adapter_impl._handle_guild_unavailable = asynctest.CoroutineMock()
+        adapter_impl._handle_guild_unavailable = mock.AsyncMock()
         payload = {"id": "123", "unavailable": True}
 
         await adapter_impl.handle_guild_delete(gateway_impl, payload)
 
-        adapter_impl._handle_guild_unavailable.assert_awaited_with(gateway_impl, payload)
+        adapter_impl._handle_guild_unavailable.assert_called_with(gateway_impl, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_delete_when_available_invokes__handle_guild_leave(self, adapter_impl, gateway_impl):
-        adapter_impl._handle_guild_leave = asynctest.CoroutineMock()
+        adapter_impl._handle_guild_leave = mock.AsyncMock()
         payload = {"id": "123", "unavailable": False}
 
         await adapter_impl.handle_guild_delete(gateway_impl, payload)
 
-        adapter_impl._handle_guild_leave.assert_awaited_with(gateway_impl, payload)
+        adapter_impl._handle_guild_leave.assert_called_with(gateway_impl, payload)
 
     @pytest.mark.asyncio
     async def test__handle_guild_unavailable_when_not_cached_parses_guild(
@@ -959,14 +992,14 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_guild_members_chunk_calls_chunker(self, adapter_impl, fabric_impl, gateway_impl):
-        fabric_impl.chunker = asynctest.MagicMock(spec_set=_chunker.IChunker)
-        fabric_impl.chunker.handle_next_chunk = asynctest.CoroutineMock(spec_set=fabric_impl.chunker.handle_next_chunk)
+        fabric_impl.chunker = mock.MagicMock(spec_set=_chunker.IChunker)
+        fabric_impl.chunker.handle_next_chunk = mock.AsyncMock()
 
         payload = {...}
 
         await adapter_impl.handle_guild_members_chunk(gateway_impl, payload)
 
-        fabric_impl.chunker.handle_next_chunk.assert_awaited_once_with(payload, gateway_impl.shard_id)
+        fabric_impl.chunker.handle_next_chunk.assert_called_once_with(payload, gateway_impl.shard_id)
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_create_when_guild_is_not_cached_does_not_dispatch_anything(

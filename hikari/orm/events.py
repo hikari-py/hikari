@@ -150,4 +150,10 @@ DISCONNECT = "disconnect"
 INVALID_SESSION = "invalid_session"
 RECONNECT = "reconnect"
 RESUME = "resume"
-SHUTDOWN = "shutdown"
+
+#: Should be implemented in the future. For now, will never get fired.
+INVITE_CREATE = "invite_create"
+#: Should be implemented in the future. For now, will never get fired.
+INVITE_DELETE = "invite_delete"
+#: Should be implemented in the future. For now, will never get fired.
+MESSAGE_REACTION_REMOVE_EMOJI = "message_reaction_remove_emoji"

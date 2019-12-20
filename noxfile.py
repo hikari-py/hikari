@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import fnmatch
 import os
 import shutil
 import traceback
@@ -28,7 +29,6 @@ def pathify(arg, *args, root=False):
 
 
 # Configuration stuff we probably might move around eventually.
-TEST_NODES = os.cpu_count() or 1
 MAIN_PACKAGE = "hikari"
 OWNER = "nekokatt"
 TECHNICAL_DIR = "technical"
@@ -49,7 +49,6 @@ PYTEST_ARGS = [
     MAIN_PACKAGE,
     "--cov-config",
     COVERAGE_RC,
-    "--dist=load",
     "--cov-report",
     "term",
     "--cov-report",
@@ -59,8 +58,6 @@ PYTEST_ARGS = [
     "--showlocals",
     "--testdox",
     "--force-testdox",
-    "-n",
-    str(TEST_NODES),
 ]
 
 

@@ -24,8 +24,8 @@ from __future__ import annotations
 import typing
 
 from hikari.internal_utilities import cache
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import io_helpers
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import storage
 from hikari.internal_utilities import unspecified
 from hikari.orm import fabric as _fabric
 from hikari.orm import http_adapter
@@ -208,9 +208,9 @@ class HTTPAdapterImpl(http_adapter.IHTTPAdapter):
         self,
         guild: _guilds.GuildLikeT,
         name: str,
-        image_data: io_helpers.FileLikeT,
+        image_data: storage.FileLikeT,
         *,
-        roles: typing.Collection[_roles.RoleLikeT] = data_structures.EMPTY_COLLECTION,
+        roles: typing.Collection[_roles.RoleLikeT] = containers.EMPTY_COLLECTION,
         reason: str = unspecified.UNSPECIFIED,
     ) -> _emojis.GuildEmoji:
         raise NotImplementedError
@@ -246,9 +246,9 @@ class HTTPAdapterImpl(http_adapter.IHTTPAdapter):
         explicit_content_filter: _guilds.ExplicitContentFilterLevel = unspecified.UNSPECIFIED,
         afk_channel: _channels.GuildVoiceChannel = unspecified.UNSPECIFIED,
         afk_timeout: int = unspecified.UNSPECIFIED,
-        icon_data: io_helpers.FileLikeT = unspecified.UNSPECIFIED,
+        icon_data: storage.FileLikeT = unspecified.UNSPECIFIED,
         owner: _members.MemberLikeT = unspecified.UNSPECIFIED,
-        splash: io_helpers.FileLikeT = unspecified.UNSPECIFIED,
+        splash: storage.FileLikeT = unspecified.UNSPECIFIED,
         system_channel: _channels.GuildTextChannelLikeT = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
@@ -473,7 +473,7 @@ class HTTPAdapterImpl(http_adapter.IHTTPAdapter):
         raise NotImplementedError
 
     async def update_me(
-        self, *, username: str = unspecified.UNSPECIFIED, avatar: io_helpers.FileLikeT = unspecified.UNSPECIFIED
+        self, *, username: str = unspecified.UNSPECIFIED, avatar: storage.FileLikeT = unspecified.UNSPECIFIED
     ) -> None:
         raise NotImplementedError
 
@@ -502,7 +502,7 @@ class HTTPAdapterImpl(http_adapter.IHTTPAdapter):
         channel: _channels.GuildTextChannelLikeT,
         name: str,
         *,
-        avatar: io_helpers.FileLikeT = unspecified.UNSPECIFIED,
+        avatar: storage.FileLikeT = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> _webhooks.Webhook:
         raise NotImplementedError

@@ -24,6 +24,7 @@ from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import guilds
 from hikari.orm.models import voices
+from tests.hikari import _helpers
 
 
 @pytest.fixture
@@ -45,7 +46,13 @@ def test_VoiceServer(mock_fabric):
     assert voice_server_obj.token == "awoooooooo"
     assert voice_server_obj.guild_id == 41771983423143937
     assert voice_server_obj.endpoint == "smart.loyal.discord.gg"
-    voice_server_obj.__repr__()
+
+
+@pytest.mark.model
+def test_VoiceServer___repr__():
+    assert repr(
+        _helpers.mock_model(voices.VoiceServer, guild_id=42, endpoint="foo", __repr__=voices.VoiceServer.__repr__)
+    )
 
 
 @pytest.fixture
@@ -98,7 +105,6 @@ def test_VoiceState(mock_member, mock_fabric, mock_guild, has_member):
     else:
         assert voice_state_obj.member is None
         mock_fabric.state_registry.parse_member.assert_not_called()
-    voice_state_obj.__repr__()
 
 
 @pytest.mark.model
@@ -131,7 +137,20 @@ def test_VoiceState_update(mock_member, mock_guild, mock_fabric):
     assert voice_state_obj.is_self_mute is True
     assert voice_state_obj.is_self_stream is True
     assert voice_state_obj.is_suppressed is True
-    voice_state_obj.__repr__()
+
+
+@pytest.mark.model
+def test_VoiceState___repr__():
+    assert repr(
+        _helpers.mock_model(
+            voices.VoiceState,
+            user_id=42,
+            channel_id=69,
+            guild_id=101,
+            session_id=666,
+            __repr__=voices.VoiceState.__repr__,
+        )
+    )
 
 
 @pytest.mark.model
@@ -145,4 +164,12 @@ def test_VoiceRegion():
     assert voice_region_obj.is_optimal is False
     assert voice_region_obj.is_deprecated is False
     assert voice_region_obj.is_custom is False
-    voice_region_obj.__repr__()
+
+
+@pytest.mark.model
+def test_VoiceRegion___repr__():
+    assert repr(
+        _helpers.mock_model(
+            voices.VoiceRegion, name="foo", is_vip=True, is_deprecated=False, __repr__=voices.VoiceRegion.__repr__
+        )
+    )

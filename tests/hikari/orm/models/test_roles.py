@@ -62,7 +62,11 @@ def test_PartialRole(partial_role_payload):
     partial_role_obj = roles.PartialRole(partial_role_payload)
     assert partial_role_obj.name == "I am a role"
     assert partial_role_obj.id == 583692435939524624
-    partial_role_obj.__repr__()
+
+
+@pytest.mark.model
+def test_PartialRole___repr__():
+    assert repr(_helpers.mock_model(roles.PartialRole, id=42, name="foo", __repr__=roles.PartialRole.__repr__))
 
 
 @pytest.mark.model
@@ -100,4 +104,19 @@ def test_Role(fabric_obj, role_payload):
     )
     assert role_obj.is_managed is False
     assert role_obj.is_mentionable is False
-    role_obj.__repr__()
+
+
+@pytest.mark.model
+def test_Role___repr__():
+    assert repr(
+        _helpers.mock_model(
+            roles.Role,
+            id=42,
+            name="foo",
+            position=69,
+            is_managed=True,
+            is_mentionable=True,
+            is_hoisted=True,
+            __repr__=roles.Role.__repr__,
+        )
+    )

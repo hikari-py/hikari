@@ -25,9 +25,9 @@ import datetime
 import enum
 import typing
 
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import channels
@@ -146,13 +146,18 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
     __copy_by_ref__ = ("author",)
 
     #: The channel ID of the channel the message was sent in.
+    #:
+    #: :type: :class:`int` or `None`
     channel_id: int
 
     #: The optional guild ID of the guild the message was sent in, where applicable.
+    #:
+    #: :type: :class:`int` or `None`
     guild_id: typing.Optional[int]
 
-    #: Either a :type:`user.User`, a :type:`member.Member` or a :type:`webhook.Webhook` depending on what created the
-    #: message and where.
+    #: The entity that generated this message.
+    #:
+    # :type: one of :class:`user.User`, :class:`member.Member` or :class:`webhook.Webhook`.
     author: AuthorT
 
     #: The ID of the message.
@@ -225,9 +230,9 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
     #: :type: :class:`hikari.orm.models.messages.MessageCrossPost` or `None` if not a cross post.
     crosspost_of: typing.Optional[MessageCrosspost]
 
-    __repr__ = auto_repr.repr_of("id", "author", "type", "is_tts", "created_at", "edited_at")
+    __repr__ = reprs.repr_of("id", "author", "type", "is_tts", "created_at", "edited_at")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         self._fabric = fabric_obj
         self.id = int(payload["id"])
 
@@ -248,8 +253,8 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
         self.application = None
         self.edited_at = None
         self.is_mentioning_everyone = False
-        self.attachments = data_structures.EMPTY_SEQUENCE
-        self.embeds = data_structures.EMPTY_SEQUENCE
+        self.attachments = containers.EMPTY_SEQUENCE
+        self.embeds = containers.EMPTY_SEQUENCE
         self.is_pinned = False
         self.application = None
         self.activity = None
@@ -257,7 +262,7 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
 
         self.update_state(payload)
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.DiscordObjectT) -> None:
         if "member" in payload:
             # Messages always contain partial members, not full members.
             self.author = self._fabric.state_registry.parse_partial_member(
@@ -270,7 +275,7 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
 
         if "edited_timestamp" in payload:
             self.edited_at = transformations.nullable_cast(
-                payload.get("edited_timestamp"), date_helpers.parse_iso_8601_ts
+                payload.get("edited_timestamp"), dates.parse_iso_8601_ts
             )
 
         if "mention_everyone" in payload:
@@ -336,9 +341,9 @@ class MessageActivity:
     #: :type: :class:`int` or `None`
     party_id: typing.Optional[int]
 
-    __repr__ = auto_repr.repr_of("type", "party_id")
+    __repr__ = reprs.repr_of("type", "party_id")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.type = transformations.try_cast(payload.get("type"), MessageActivityType)
         self.party_id = transformations.nullable_cast(payload.get("party_id"), int)
 
@@ -375,9 +380,9 @@ class MessageApplication(interfaces.ISnowflake):
     #: :type: :class:`str`
     name: str
 
-    __repr__ = auto_repr.repr_of("id", "name")
+    __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.cover_image_id = transformations.nullable_cast(payload.get("cover_image"), int)
         self.description = payload["description"]
@@ -414,9 +419,9 @@ class MessageCrosspost:
     #: :type: :class:`int` or `None`.
     guild_id: typing.Optional[int]
 
-    __repr__ = auto_repr.repr_of("message_id", "guild_id", "channel_id")
+    __repr__ = reprs.repr_of("message_id", "guild_id", "channel_id")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         # This is never null for some reason but the other two are... thanks Discord!
         self.channel_id = int(payload["channel_id"])
 

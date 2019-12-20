@@ -24,7 +24,7 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm.models import interfaces
 from hikari.orm.models import users
@@ -86,7 +86,7 @@ class Webhook(interfaces.IStatefulModel, interfaces.ISnowflake):
     #: :type: :class:`str` or `None`
     token: typing.Optional[str]
 
-    __repr__ = auto_repr.repr_of("id", "name")
+    __repr__ = reprs.repr_of("id", "name")
 
     def __init__(self, fabric_obj, payload):
         self._fabric = fabric_obj

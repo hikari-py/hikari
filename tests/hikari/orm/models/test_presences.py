@@ -22,6 +22,7 @@ import math
 import pytest
 
 from hikari.orm.models import presences
+from tests.hikari import _helpers
 
 
 @pytest.fixture
@@ -148,7 +149,7 @@ def timestamps():
 def rich_activity(assets, party, timestamps):
     return {
         "type": 2,
-        "state": "Working on hikari.core",
+        "state": "Working on hikari",
         "timestamps": timestamps,
         "name": "JetBrains IDE",
         "id": "197cdcbec495eb3f",
@@ -177,7 +178,6 @@ class TestPresence:
         assert p.mobile_status == presences.Status.OFFLINE
 
         assert len(p.activities) == 0
-        p.__repr__()
 
     def test_parse_legacy_Presence(self, legacy_presence):
         p = presences.Presence(legacy_presence)
@@ -219,13 +219,29 @@ class TestPresence:
         assert p.mobile_status == presences.Status.OFFLINE
         assert len(p.activities) == 0
 
+    @pytest.mark.model
+    def test_Presence___repr__(self):
+        assert repr(
+            _helpers.mock_model(
+                presences.Presence, status=presences.Status.ONLINE, __repr__=presences.Presence.__repr__
+            )
+        )
+
 
 @pytest.mark.model
 def test_parse_Activity(legacy_activity):
     a = presences.Activity(legacy_activity)
     assert a.name == "with yo mama"
     assert a.type == presences.ActivityType.PLAYING
-    a.__repr__()
+
+
+@pytest.mark.model
+def test_Activity___repr__():
+    assert repr(
+        _helpers.mock_model(
+            presences.Activity, name="foo", type=presences.ActivityType.PLAYING, __repr__=presences.Activity.__repr__
+        )
+    )
 
 
 @pytest.mark.model
@@ -233,7 +249,7 @@ def test_parse_RichActivity(rich_activity):
     a = presences.RichActivity(rich_activity)
     assert a.type == presences.ActivityType.LISTENING
     assert a.timestamps is not None
-    assert a.state == "Working on hikari.core"
+    assert a.state == "Working on hikari"
     assert a.name == "JetBrains IDE"
     assert a.id == "197cdcbec495eb3f"
     assert a.details == "Editing [Scratch] scratch_2.py"
@@ -242,7 +258,19 @@ def test_parse_RichActivity(rich_activity):
     assert a.flags & presences.ActivityFlag.INSTANCE
     assert a.flags & presences.ActivityFlag.JOIN
     assert a.party is not None
-    a.__repr__()
+
+
+@pytest.mark.model
+def test_RichActivity___repr__():
+    assert repr(
+        _helpers.mock_model(
+            presences.RichActivity,
+            id=42,
+            name="foo",
+            type=presences.ActivityType.PLAYING,
+            __repr__=presences.RichActivity.__repr__,
+        )
+    )
 
 
 @pytest.mark.model
@@ -250,7 +278,6 @@ def test_parse_presence_activity_for_Activity(legacy_activity):
     a = presences.parse_presence_activity(legacy_activity)
     # It must be the class exactly, not a derivative.
     assert type(a) is presences.Activity
-    a.__repr__()
 
 
 @pytest.mark.model
@@ -258,7 +285,6 @@ def test_parse_presence_activity_for_RichActivity(rich_activity):
     a = presences.parse_presence_activity(rich_activity)
     # It must be the class exactly, not a derivative.
     assert type(a) is presences.RichActivity
-    a.__repr__()
 
 
 @pytest.mark.model
@@ -268,7 +294,11 @@ def test_parse_assets(assets):
     assert a.small_image == "387095349199896578"
     assert a.large_text == "Editing a Scratch file"
     assert a.large_image == "565945769958572037"
-    a.__repr__()
+
+
+@pytest.mark.model
+def test_ActivityAssets___repr__():
+    assert repr(_helpers.mock_model(presences.ActivityAssets, __repr__=presences.ActivityAssets.__repr__))
 
 
 @pytest.mark.model
@@ -277,7 +307,15 @@ def test_parse_party(party):
     assert p.id == "1a2b3c"
     assert p.current_size == 4
     assert p.max_size == 5
-    p.__repr__()
+
+
+@pytest.mark.model
+def test_ActivityParty___repr__():
+    assert repr(
+        _helpers.mock_model(
+            presences.ActivityParty, id=42, current_size=69, max_size=101, __repr__=presences.ActivityParty.__repr__
+        )
+    )
 
 
 @pytest.mark.model
@@ -286,7 +324,6 @@ class TestActivityTimestamps:
         t = presences.ActivityTimestamps(timestamps)
         assert t.start == datetime.datetime(2019, 8, 18, 8, 22, 32, 964000, datetime.timezone.utc)
         assert t.end == datetime.datetime(2019, 8, 18, 13, 44, 52, 633000, datetime.timezone.utc)
-        t.__repr__()
 
     def test_duration(self, timestamps):
         t = presences.ActivityTimestamps(timestamps)
@@ -303,3 +340,15 @@ class TestActivityTimestamps:
 
     def test_Activity_to_dict_when_empty(self, activity):
         assert activity.to_dict() == {}
+
+    @pytest.mark.model
+    def test_ActivityTimestamps___repr__(self):
+        assert repr(
+            _helpers.mock_model(
+                presences.ActivityTimestamps,
+                start=datetime.datetime.fromtimestamp(42).replace(tzinfo=datetime.timezone.utc),
+                end=datetime.datetime.fromtimestamp(69).replace(tzinfo=datetime.timezone.utc),
+                duration=datetime.timedelta(seconds=101),
+                __repr__=presences.ActivityTimestamps.__repr__,
+            )
+        )

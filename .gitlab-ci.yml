@@ -25,8 +25,8 @@ variables:
   DOCKER_DRIVER: "overlay2"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
-
 include:
-  - local: "/tasks/jobs/test.yml"
-  - local: "/tasks/jobs/pages.yml"
-  - local: "/tasks/jobs/deploy.yml"
+  - local: "/gitlab/unittest.yml"
+  - local: "/gitlab/analysis.yml"
+  - local: "/gitlab/pages.yml"
+  - local: "/gitlab/deploy.yml"

@@ -30,7 +30,9 @@
     - bash tasks/retry-aborts.sh poetry install -v
     - poetry show -v
 
-"Make prerelease":
+prerelease:
+  retry:
+    max: 2
   extends: .deploy
   only:
     - staging
@@ -50,7 +52,7 @@
     name:
       staging
 
-"Make release":
+release:
   extends: .deploy
   only:
     - master

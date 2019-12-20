@@ -27,7 +27,7 @@ import re
 import time
 
 import async_timeout
-import asynctest
+import asyncmock as mock
 import pytest
 
 from hikari import errors
@@ -48,7 +48,7 @@ class UnslottedMockedGlobalRateLimitFacade(rates.TimedLatchBucket):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Apparently an issue on CPython3.6 where it can't determine if this is a coroutine or not.
-        self.acquire = asynctest.CoroutineMock()
+        self.acquire = mock.AsyncMock()
 
 
 async def return_None(*_, **__):
@@ -66,13 +66,13 @@ async def return_dict(*_, **__):
 class MockAiohttpResponse:
     __aenter__ = return_arg
     __aexit__ = return_None
-    json = asynctest.CoroutineMock(wraps=return_dict)
-    close = asynctest.CoroutineMock()
+    json = mock.AsyncMock(wraps=return_dict)
+    close = mock.AsyncMock()
     status = 200
     reason = "OK"
     headers = {}
     content_length = 500
-    read = asynctest.CoroutineMock(return_value='{"foo": "bar"}')
+    read = mock.AsyncMock(return_value='{"foo": "bar"}')
 
     @property
     def content_type(self):
@@ -86,7 +86,7 @@ class MockAiohttpSession:
     def request(self, *a, **k):
         return self.mock_response
 
-    close = asynctest.CoroutineMock()
+    close = mock.AsyncMock()
 
 
 class MockBaseHTTPClient(http_api_base.HTTPAPIBase):
@@ -124,7 +124,7 @@ def res():
 
 @pytest.mark.asyncio
 async def test_request_forwards_known_arguments_to_request_once(mock_http_connection):
-    mock_http_connection.request_once = asynctest.CoroutineMock()
+    mock_http_connection.request_once = mock.AsyncMock()
     method = "get"
     path = "/foo/bar/{channel_id}"
     re_seekable_resources = ("foo", "bar", "baz")
@@ -155,7 +155,7 @@ async def test_request_forwards_known_arguments_to_request_once(mock_http_connec
         channel_id="912000",
     )
 
-    mock_http_connection.request_once.assert_awaited_once_with(
+    mock_http_connection.request_once.assert_called_once_with(
         resource=res, query=query, data=data, json=json, headers=headers, reason=None
     )
 
@@ -167,7 +167,7 @@ async def test_request_forwards_known_arguments_to_request_once(mock_http_connec
 
 @pytest.mark.asyncio
 async def test_default_json_parameters():
-    with asynctest.patch("aiohttp.ClientSession") as ClientSession:
+    with mock.patch("aiohttp.ClientSession") as ClientSession:
 
         class Deriv(http_api_base.HTTPAPIBase):
             @property
@@ -207,7 +207,7 @@ async def test_detecting_no_authentication_type(event_loop):
 async def test_request_retries_indefinitely(mock_http_connection):
     count = 0
 
-    async def _request_once(*args, **kwargs):
+    def _request_once(*args, **kwargs):
         nonlocal count
         count += 1
         if count >= 100:
@@ -215,7 +215,7 @@ async def test_request_retries_indefinitely(mock_http_connection):
         else:
             raise http_api_base._RateLimited()
 
-    mock_http_connection.request_once = asynctest.CoroutineMock(wraps=_request_once)
+    mock_http_connection.request_once = mock.AsyncMock(wraps=_request_once)
 
     # If we get stuck in a loop, don't hang the tests.
     async with async_timeout.timeout(1000):
@@ -226,22 +226,22 @@ async def test_request_retries_indefinitely(mock_http_connection):
 
 @pytest.mark.asyncio
 async def test_request_seeks_to_zero_on_each_error_for_each_reseekable_resource_given(mock_http_connection):
-    mock_http_connection.request_once = asynctest.CoroutineMock(
+    mock_http_connection.request_once = mock.AsyncMock(
         side_effect=[http_api_base._RateLimited, http_api_base._RateLimited, http_api_base._RateLimited, None,]
     )
 
-    re_seekable_resources = [asynctest.MagicMock(), asynctest.MagicMock(), asynctest.MagicMock()]
+    re_seekable_resources = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()]
 
     await mock_http_connection.request(method="get", path="/foo/bar", re_seekable_resources=re_seekable_resources)
 
     for re_seekable_resource in re_seekable_resources:
-        re_seekable_resource.assert_has_calls([asynctest.call.seek(0)] * 3)
+        re_seekable_resource.assert_has_calls([mock.call.seek(0)] * 3)
 
 
 @pytest.mark.asyncio
 async def test_request_does_not_retry_on_success(mock_http_connection):
     expected_result = object()
-    mock_http_connection.request_once = asynctest.CoroutineMock(
+    mock_http_connection.request_once = mock.AsyncMock(
         side_effect=[http_api_base._RateLimited(), http_api_base._RateLimited(), expected_result]
     )
     actual_result = await mock_http_connection.request(method="get", path="/foo/bar")
@@ -251,7 +251,7 @@ async def test_request_does_not_retry_on_success(mock_http_connection):
 
 @pytest.mark.asyncio
 async def test_reason_header_is_not_added_if_None_during_request(mock_http_connection):
-    mock_http_connection.client_session.request = asynctest.MagicMock(
+    mock_http_connection.client_session.request = mock.MagicMock(
         return_value=mock_http_connection.client_session.mock_response
     )
     await mock_http_connection.request("get", "/foo/bar", reason=None)
@@ -262,7 +262,7 @@ async def test_reason_header_is_not_added_if_None_during_request(mock_http_conne
 
 @pytest.mark.asyncio
 async def test_reason_header_is_not_added_if_unspecified_during_request(mock_http_connection):
-    mock_http_connection.client_session.request = asynctest.MagicMock(
+    mock_http_connection.client_session.request = mock.MagicMock(
         return_value=mock_http_connection.client_session.mock_response
     )
     await mock_http_connection.request("get", "/foo/bar", reason=unspecified.UNSPECIFIED)
@@ -273,7 +273,7 @@ async def test_reason_header_is_not_added_if_unspecified_during_request(mock_htt
 
 @pytest.mark.asyncio
 async def test_reason_header_is_added_if_provided_during_request(mock_http_connection):
-    mock_http_connection.client_session.request = asynctest.MagicMock(
+    mock_http_connection.client_session.request = mock.MagicMock(
         return_value=mock_http_connection.client_session.mock_response
     )
     await mock_http_connection.request("get", "/foo/bar", reason="because i can")
@@ -284,7 +284,7 @@ async def test_reason_header_is_added_if_provided_during_request(mock_http_conne
 
 @pytest.mark.asyncio
 async def test_request_once_calls_session_request_with_expected_arguments(mock_http_connection):
-    mock_http_connection.client_session.request = asynctest.MagicMock(
+    mock_http_connection.client_session.request = mock.MagicMock(
         return_value=mock_http_connection.client_session.mock_response
     )
     path = "/foo/bar/{channel_id}"
@@ -322,32 +322,32 @@ async def test_request_once_calls_session_request_with_expected_arguments(mock_h
 @pytest.mark.asyncio
 async def test_request_once_acquires_global_rate_limit_bucket(mock_http_connection, res):
     mock_http_connection = mock_methods_on(mock_http_connection, except_=["request_once"])
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b"{}")
     try:
         await mock_http_connection.request_once(resource=res, data={})
         assert False
     except http_api_base._RateLimited:
-        mock_http_connection.global_rate_limit.acquire.assert_awaited_once()
+        mock_http_connection.global_rate_limit.acquire.assert_called_once()
 
 
 @pytest.mark.asyncio
 async def test_request_once_acquires_local_rate_limit_bucket(mock_http_connection, res):
     mock_http_connection = mock_methods_on(mock_http_connection, except_=["request_once"])
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
-    bucket = asynctest.MagicMock()
-    bucket.acquire = asynctest.CoroutineMock()
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b"{}")
+    bucket = mock.MagicMock()
+    bucket.acquire = mock.AsyncMock()
     mock_http_connection.buckets[res] = bucket
     try:
         await mock_http_connection.request_once(resource=res, data={})
         assert False
     except http_api_base._RateLimited:
-        bucket.acquire.assert_awaited_once()
+        bucket.acquire.assert_called_once()
 
 
 @pytest.mark.asyncio
 async def test_request_once_calls_rate_limit_handler(mock_http_connection, res):
     mock_http_connection = mock_methods_on(mock_http_connection, except_=["request_once"])
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b"{}")
     try:
         await mock_http_connection.request_once(resource=res)
         assert False
@@ -358,8 +358,8 @@ async def test_request_once_calls_rate_limit_handler(mock_http_connection, res):
 @pytest.mark.asyncio
 async def test_request_once_raises_RateLimited_if_rate_limit_handler_returned_true(mock_http_connection, res):
     mock_http_connection = mock_methods_on(mock_http_connection, except_=["request_once"])
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
-    mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=True)
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b"{}")
+    mock_http_connection._is_rate_limited = mock.MagicMock(return_value=True)
     try:
         await mock_http_connection.request_once(resource=res)
         assert False
@@ -370,14 +370,14 @@ async def test_request_once_raises_RateLimited_if_rate_limit_handler_returned_tr
 @pytest.mark.asyncio
 async def test_request_once_does_not_raise_RateLimited_if_rate_limit_handler_returned_false(mock_http_connection, res):
     mock_http_connection = mock_methods_on(mock_http_connection, except_=["request_once"])
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b"{}")
-    mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b"{}")
+    mock_http_connection._is_rate_limited = mock.MagicMock(return_value=False)
     await mock_http_connection.request_once(resource=res)
 
 
 @pytest.mark.asyncio
 async def test_log_rate_limit_already_in_progress_logs_something(mock_http_connection, res):
-    mock_http_connection.logger = asynctest.MagicMock(wraps=mock_http_connection.logger)
+    mock_http_connection.logger = mock.MagicMock(wraps=mock_http_connection.logger)
     mock_http_connection._log_rate_limit_already_in_progress(res)
     mock_http_connection.logger.debug.assert_called_once()
 
@@ -549,10 +549,10 @@ async def test_is_rate_limited_returns_False_if_not_local_or_global_rate_limit(m
 async def test_HTTP_request_has_User_Agent_header_as_expected(mock_http_connection, res):
     # This is a requirement from Discord or they can ban accounts.
     mock_http_connection = mock_methods_on(mock_http_connection, except_=["request_once", "_is_rate_limited"])
-    mock_http_connection.client_session.request = asynctest.MagicMock(wraps=mock_http_connection.client_session.request)
+    mock_http_connection.client_session.request = mock.MagicMock(wraps=mock_http_connection.client_session.request)
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.OK)
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"foo": "bar"}')
     await mock_http_connection.request_once(resource=res)
     assert mock_http_connection.client_session.request.call_count == 1
     args, kwargs = mock_http_connection.client_session.request.call_args_list[0]
@@ -565,11 +565,11 @@ async def test_HTTP_request_has_User_Agent_header_as_expected(mock_http_connecti
 async def test_HTTP_request_has_XRateLimitPrecision_header_as_expected(mock_http_connection, res):
     # This is a requirement from Discord or they can ban accounts.
     mock_http_connection = mock_methods_on(mock_http_connection, except_=["request_once", "_is_rate_limited"])
-    mock_http_connection.client_session.request = asynctest.MagicMock(wraps=mock_http_connection.client_session.request)
+    mock_http_connection.client_session.request = mock.MagicMock(wraps=mock_http_connection.client_session.request)
 
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.OK)
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"foo": "bar"}')
 
     await mock_http_connection.request_once(resource=res)
     assert mock_http_connection.client_session.request.call_count == 1
@@ -583,10 +583,10 @@ async def test_HTTP_request_has_XRateLimitPrecision_header_as_expected(mock_http
 async def test_HTTP_request_has_Authorization_header_if_specified(mock_http_connection, res):
     # This is a requirement from Discord or they can ban accounts.
     mock_http_connection = mock_methods_on(mock_http_connection, except_=["request_once", "_is_rate_limited"])
-    mock_http_connection.client_session.request = asynctest.MagicMock(wraps=mock_http_connection.client_session.request)
+    mock_http_connection.client_session.request = mock.MagicMock(wraps=mock_http_connection.client_session.request)
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.OK)
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"foo": "bar"}')
     mock_http_connection.authorization = "Bot foobar"
     await mock_http_connection.request_once(resource=res)
     assert mock_http_connection.client_session.request.call_count == 1
@@ -600,10 +600,10 @@ async def test_HTTP_request_has_Authorization_header_if_specified(mock_http_conn
 async def test_HTTP_request_has_no_Authorization_header_if_unspecified(mock_http_connection, res):
     # This is a requirement from Discord or they can ban accounts.
     mock_http_connection = mock_methods_on(mock_http_connection, except_=["request_once", "_is_rate_limited"])
-    mock_http_connection.client_session.request = asynctest.MagicMock(wraps=mock_http_connection.client_session.request)
+    mock_http_connection.client_session.request = mock.MagicMock(wraps=mock_http_connection.client_session.request)
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.OK)
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"foo": "bar"}')
     mock_http_connection.authorization = None
     await mock_http_connection.request_once(resource=res)
     assert mock_http_connection.client_session.request.call_count == 1
@@ -616,10 +616,10 @@ async def test_HTTP_request_has_no_Authorization_header_if_unspecified(mock_http
 async def test_HTTP_request_has_Accept_header(mock_http_connection, res):
     # This is a requirement from Discord or they can ban accounts.
     mock_http_connection = mock_methods_on(mock_http_connection, except_=["request_once", "_is_rate_limited"])
-    mock_http_connection.client_session.request = asynctest.MagicMock(wraps=mock_http_connection.client_session.request)
+    mock_http_connection.client_session.request = mock.MagicMock(wraps=mock_http_connection.client_session.request)
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.OK)
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"foo": "bar"}')
     mock_http_connection.authorization = None
     await mock_http_connection.request_once(resource=res)
     assert mock_http_connection.client_session.request.call_count == 1
@@ -644,7 +644,7 @@ async def test_some_response_that_has_a_json_object_body_gets_decoded_as_expecte
 
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.OK)
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"foo": "bar"}')
     body = await mock_http_connection.request_once(resource=res)
     assert body == {"foo": "bar"}
 
@@ -664,7 +664,7 @@ async def test_plain_text_gets_decoded_as_unicode(mock_http_connection, res):
 
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "text/plain"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.OK)
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"foo": "bar"}')
     body = await mock_http_connection.request_once(resource=res)
     assert body == '{"foo": "bar"}'
 
@@ -684,7 +684,7 @@ async def test_html_gets_decoded_as_unicode(mock_http_connection, res):
 
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "text/html"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.OK)
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(
         return_value=b"<!doctype html><html></html>"
     )
     body = await mock_http_connection.request_once(resource=res)
@@ -703,7 +703,7 @@ async def test_NO_CONTENT_response_with_no_body_present(mock_http_connection, re
             "json_unmarshaller_object_hook",
         ],
     )
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=None)
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=None)
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = None
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.NO_CONTENT)
     res = http_api_base.Resource("http://test.lan", "get", "/foo/bar")
@@ -726,7 +726,7 @@ async def test_some_response_that_has_an_unrecognised_content_type_returns_bytes
 
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "mac-and/cheese"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.CREATED)
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"foo": "bar"}')
     body = await mock_http_connection.request_once(resource=res)
     assert isinstance(body, bytes)
 
@@ -746,7 +746,7 @@ async def test_4xx_hits_handle_client_error_response(mock_http_connection, res):
 
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.BAD_REQUEST)
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"foo": "bar"}')
     await mock_http_connection.request_once(resource=res)
     mock_http_connection._handle_client_error_response.assert_called_once_with(
         res, opcodes.HTTPStatus.BAD_REQUEST, {"foo": "bar"}
@@ -768,7 +768,7 @@ async def test_5xx_hits_handle_server_error_response(mock_http_connection, res):
 
     mock_http_connection.client_session.mock_response.headers["Content-Type"] = "application/json"
     mock_http_connection.client_session.mock_response.status = int(opcodes.HTTPStatus.GATEWAY_TIMEOUT)
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"foo": "bar"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"foo": "bar"}')
     await mock_http_connection.request_once(resource=res)
     mock_http_connection._handle_server_error_response.assert_called_once_with(
         res, opcodes.HTTPStatus.GATEWAY_TIMEOUT, {"foo": "bar"}
@@ -787,10 +787,10 @@ async def test_ValueError_on_unrecognised_HTTP_status(mock_http_connection, res)
             "json_unmarshaller_object_hook",
         ],
     )
-    mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
+    mock_http_connection._is_rate_limited = mock.MagicMock(return_value=False)
     mock_http_connection.client_session.mock_response.status = 669
     mock_http_connection.client_session.mock_response.headers = {"foo": "bar", "baz": "bork"}
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"lorem":"ipsum"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"lorem":"ipsum"}')
     try:
         await mock_http_connection.request_once(resource=res)
         assert False, "No exception raised"
@@ -810,10 +810,10 @@ async def test_2xx_returns_object(mock_http_connection, res):
             "json_unmarshaller_object_hook",
         ],
     )
-    mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
+    mock_http_connection._is_rate_limited = mock.MagicMock(return_value=False)
     mock_http_connection.client_session.mock_response.status = 201
     mock_http_connection.client_session.mock_response.headers = {"foo": "bar", "baz": "bork"}
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"lorem":"ipsum"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"lorem":"ipsum"}')
     result = await mock_http_connection.request_once(resource=res)
     # Assert we can unpack as tuple
     assert result == {"lorem": "ipsum"}
@@ -831,10 +831,10 @@ async def test_3xx_returns_tuple(mock_http_connection, res):
             "json_unmarshaller_object_hook",
         ],
     )
-    mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
+    mock_http_connection._is_rate_limited = mock.MagicMock(return_value=False)
     mock_http_connection.client_session.mock_response.status = 304
     mock_http_connection.client_session.mock_response.headers = {"foo": "bar", "baz": "bork"}
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"lorem":"ipsum"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"lorem":"ipsum"}')
     result = await mock_http_connection.request_once(resource=res)
     # Assert we can unpack as tuple
     assert result == {"lorem": "ipsum"}
@@ -852,10 +852,10 @@ async def test_4xx_is_handled_as_4xx_error_response(mock_http_connection, res):
             "json_unmarshaller_object_hook",
         ],
     )
-    mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
+    mock_http_connection._is_rate_limited = mock.MagicMock(return_value=False)
     mock_http_connection.client_session.mock_response.status = 401
     mock_http_connection.client_session.mock_response.headers = {"foo": "bar", "baz": "bork"}
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"lorem":"ipsum"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"lorem":"ipsum"}')
     await mock_http_connection.request_once(resource=res)
     mock_http_connection._handle_client_error_response.assert_called_once_with(
         res, opcodes.HTTPStatus(401), {"lorem": "ipsum"}
@@ -874,10 +874,10 @@ async def test_5xx_is_handled_as_5xx_error_response(mock_http_connection, res):
             "json_unmarshaller_object_hook",
         ],
     )
-    mock_http_connection._is_rate_limited = asynctest.MagicMock(return_value=False)
+    mock_http_connection._is_rate_limited = mock.MagicMock(return_value=False)
     mock_http_connection.client_session.mock_response.status = 501
     mock_http_connection.client_session.mock_response.headers = {"foo": "bar", "baz": "bork"}
-    mock_http_connection.client_session.mock_response.read = asynctest.CoroutineMock(return_value=b'{"lorem":"ipsum"}')
+    mock_http_connection.client_session.mock_response.read = mock.AsyncMock(return_value=b'{"lorem":"ipsum"}')
     await mock_http_connection.request_once(resource=res)
     mock_http_connection._handle_server_error_response.assert_called_once_with(
         res, opcodes.HTTPStatus(501), {"lorem": "ipsum"}

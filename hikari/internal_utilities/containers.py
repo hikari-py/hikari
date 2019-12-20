@@ -36,7 +36,7 @@ ScalarT = typing.Union[dict, list, int, float, str, bool, None]
 #: Type hint for a Discord-compatible object.
 #:
 #: This is a :class:`builtins.dict` of :class:`builtins.str` keys that map to any value. Since the
-#: :mod:`hikari.net`module does not enforce concrete models for values sent and received, mappings are passed
+#: :mod:`hikari.net` module does not enforce concrete models for values sent and received, mappings are passed
 #: around to represent request and response data. This allows an implementation to use this layer as desired.
 DiscordObjectT = typing.Dict[str, ScalarT]
 
@@ -124,15 +124,6 @@ class DefaultImmutableMapping(typing.Mapping[HashableT, ValueT]):
         return iter(self._data)
 
 
-ReturnT = typing.TypeVar("ReturnT")
-
-
-class PartialCoroutineProtocolT(compat.typing.Protocol[ReturnT]):
-    """Represents the type of a :class:`functools.partial` wrapping an :mod:`asyncio` coroutine."""
-
-    def __call__(self) -> typing.Coroutine[None, None, ReturnT]:
-        ...
-
 
 #: An immutable indexable container of elements with zero size.
 EMPTY_SEQUENCE: typing.Sequence = tuple()
@@ -143,14 +134,18 @@ EMPTY_COLLECTION: typing.Collection = tuple()
 #: An immutable ordered mapping of key elements to value elements with zero size.
 EMPTY_DICT: typing.Mapping = types.MappingProxyType({})
 
+DictImplT = typing.TypeVar("DictImplT", typing.Dict, dict)
+DictFactoryT = typing.Union[typing.Type[DictImplT], typing.Callable[[], DictImplT]]
+
 __all__ = (
     "ScalarT",
     "DiscordObjectT",
     "ObjectProxy",
     "LRUDict",
-    "PartialCoroutineProtocolT",
     "EMPTY_SEQUENCE",
     "EMPTY_SET",
     "EMPTY_COLLECTION",
     "EMPTY_DICT",
+    "DictImplT",
+    "DictFactoryT",
 )

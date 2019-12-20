@@ -32,4 +32,16 @@ def test_parse_Reaction():
     assert r.message is m
     assert r.emoji is e
     assert r.count == 9
-    r.__repr__()
+
+
+@pytest.mark.model
+def test_Reaction___repr__():
+    assert repr(
+        _helpers.mock_model(
+            reactions.Reaction,
+            count=42,
+            emoji=_helpers.mock_model(emojis.UnicodeEmoji),
+            message=_helpers.mock_model(messages.Message),
+            __repr__=reactions.Reaction.__repr__,
+        )
+    )

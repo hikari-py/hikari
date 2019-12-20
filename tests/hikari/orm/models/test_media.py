@@ -16,10 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import asynctest
+import asyncmock as mock
 import pytest
 
-from hikari.internal_utilities import io_helpers
+from hikari.internal_utilities import storage
 from hikari.orm.models import media
 from tests.hikari import _helpers
 
@@ -85,38 +85,13 @@ class TestAttachment:
 
     @pytest.mark.asyncio
     async def test_Attachment_save(self):
-        chunks = 1000
-        i = 0
-
-        async def _readany():
-            nonlocal i
-            i += 1
-            while i < chunks:
-                yield bytes(i)
-                i += 1
-            else:
-                yield None
-
-        iter = _readany()
-
-        async def readany():
-            return await iter.__anext__()
-
-        async def __aenter__(self):
-            return self
-
-        async def __aexit__(self, ex_t, ex, ex_tb):
-            ...
-
-        aiofiles_obj = asynctest.MagicMock()
-        aiofiles_obj.write = asynctest.CoroutineMock()
-        aiohttp_resp_obj = asynctest.MagicMock()
-        aiohttp_resp_obj.content = asynctest.MagicMock()
-        aiohttp_resp_obj.content.readany = asynctest.CoroutineMock(wraps=readany)
-        aiofiles_obj.__aenter__ = __aenter__
-        aiohttp_resp_obj.__aenter__ = __aenter__
-        aiofiles_obj.__aexit__ = __aexit__
-        aiohttp_resp_obj.__aexit__ = __aexit__
+        chunks = 100
+        aiofiles_obj = mock.AsyncMock()
+        aiofiles_obj.write = mock.AsyncMock()
+        aiohttp_resp_obj = mock.AsyncMock()
+        aiohttp_resp_obj.raise_for_status = mock.MagicMock()
+        aiohttp_resp_obj.content = mock.MagicMock()
+        aiohttp_resp_obj.content.readany = mock.AsyncMock(side_effect=[*(bytes(i) for i in range(chunks)), None])
 
         with _helpers.mock_patch("aiofiles.open", return_value=aiofiles_obj) as aiofiles_open:
             with _helpers.mock_patch("aiohttp.request", return_value=aiohttp_resp_obj) as aiohttp_request:
@@ -137,25 +112,16 @@ class TestAttachment:
 
                 aiohttp_request.assert_called_once_with("get", attachment.url)
                 aiofiles_open.assert_called_once_with(fake_file, "wb", executor=None, loop=None)
-                assert aiofiles_obj.write.await_count == chunks
-                assert aiohttp_resp_obj.content.readany.await_count == chunks
-                assert i == chunks
+                assert aiofiles_obj.write.call_count == chunks + 1
+                assert aiohttp_resp_obj.content.readany.call_count == chunks + 1
 
     @pytest.mark.asyncio
     async def test_Attachment_read(self):
-        async def __aenter__(self):
-            return self
-
-        async def __aexit__(self, ex_t, ex, ex_tb):
-            ...
-
         expected_result = object()
 
-        aiohttp_resp_obj = asynctest.MagicMock()
-        aiohttp_resp_obj.read = asynctest.CoroutineMock(return_value=expected_result)
-        aiohttp_resp_obj.raise_for_status = asynctest.MagicMock()
-        aiohttp_resp_obj.__aenter__ = __aenter__
-        aiohttp_resp_obj.__aexit__ = __aexit__
+        aiohttp_resp_obj = mock.AsyncMock()
+        aiohttp_resp_obj.read = mock.AsyncMock(return_value=expected_result)
+        aiohttp_resp_obj.raise_for_status = mock.MagicMock()
 
         with _helpers.mock_patch("aiohttp.request", return_value=aiohttp_resp_obj) as aiohttp_request:
             attachment = media.Attachment(
@@ -174,8 +140,14 @@ class TestAttachment:
 
             aiohttp_request.assert_called_once_with("get", attachment.url)
             aiohttp_resp_obj.raise_for_status.assert_called_once()
-            aiohttp_resp_obj.read.assert_awaited_once()
+            aiohttp_resp_obj.read.assert_called_once()
             assert actual_result is expected_result
+
+    @pytest.mark.model
+    def test_Attachment___repr__(self):
+        assert repr(
+            _helpers.mock_model(media.Attachment, id=42, filename="foo", size=69, __repr__=media.Attachment.__repr__)
+        )
 
 
 @pytest.mark.model
@@ -190,7 +162,7 @@ async def test_InMemoryFile_open():
         async def __aexit__(self, exc_type, exc_val, exc_tb):
             pass
 
-    with _helpers.mock_patch(io_helpers.make_resource_seekable, return_value=ContextManager()) as mrs:
+    with _helpers.mock_patch(storage.make_resource_seekable, return_value=ContextManager()) as mrs:
         async with file.open() as fp:
             assert isinstance(fp, ContextManager)
         mrs.assert_called_once_with("this is data")
