@@ -37,10 +37,11 @@
 .nox-pip-install-showtime: &noxpipinstallshowtime
   extends: .poetry-test-env
   script:
-    - poetry run nox -spip --showtime
+    - poetry run nox -spip -- --showtime
   stage: verify
   only:
     - master
+    - staging 
 
 .poetry-test-env:
   only:
