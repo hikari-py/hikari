@@ -40,6 +40,8 @@ class IUser(interfaces.IStatefulModel, interfaces.ISnowflake, interface=True):
 
     __slots__ = ()
 
+    _fabric: fabric.Fabric
+
     #: ID of the user.
     #:
     #: :type: :class:`int`
