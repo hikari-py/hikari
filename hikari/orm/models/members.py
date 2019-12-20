@@ -99,7 +99,7 @@ class Member(users.IUser, delegate_fabricated=True):
         self.presence = None
         self.user = fabric_obj.state_registry.parse_user(payload["user"])
         self.guild = guild
-        self.joined_at = date_helpers.parse_iso_8601_ts(payload.get("joined_at"))
+        self.joined_at = date_helpers.parse_iso_8601_ts(payload["joined_at"])
 
         role_objs = [
             fabric_obj.state_registry.get_role_by_id(self.guild.id, int(rid))

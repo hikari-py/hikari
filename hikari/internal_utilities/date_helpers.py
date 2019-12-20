@@ -20,7 +20,7 @@
 Date/Time utilities.
 """
 import datetime
-import email
+import email.utils
 import re
 
 
@@ -39,7 +39,9 @@ def parse_http_date(date_str: str) -> datetime.datetime:
 
 
 ISO_8601_DATE_PART = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
-ISO_8601_TIME_PART = re.compile(r"[Tt](\d{2}):(\d{2}):(\d{2})\.(\d{1,6})")
+# We don't always consistently get the subsecond part, it would seem. I have only
+# observed this in raw_guild_members_chunk, however...
+ISO_8601_TIME_PART = re.compile(r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I)
 ISO_8601_TZ_PART = re.compile(r"([+-])(\d{2}):(\d{2})$")
 
 
@@ -51,7 +53,10 @@ def parse_iso_8601_ts(date_string: str) -> datetime.datetime:
         https://en.wikipedia.org/wiki/ISO_8601
     """
     year, month, day = map(int, ISO_8601_DATE_PART.findall(date_string)[0])
-    hour, minute, second, partial = ISO_8601_TIME_PART.findall(date_string)[0]
+
+    time_part = ISO_8601_TIME_PART.findall(date_string)[0]
+    hour, minute, second, partial = time_part
+
     # Pad the millisecond part if it is not in microseconds, otherwise Python will complain.
     partial = partial + (6 - len(partial)) * "0"
     hour, minute, second, partial = int(hour), int(minute), int(second), int(partial)

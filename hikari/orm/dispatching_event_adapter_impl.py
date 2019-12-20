@@ -21,6 +21,7 @@ Handles consumption of gateway events and converting them to the correct data ty
 """
 from __future__ import annotations
 
+import enum
 import typing
 
 from hikari.internal_utilities import date_helpers
@@ -29,6 +30,19 @@ from hikari.orm import dispatching_event_adapter
 from hikari.orm import events
 from hikari.orm import fabric as _fabric
 from hikari.orm.models import channels
+
+
+class AutoRequestChunksMode(enum.IntEnum):
+    """
+    Options for automatically retrieving all guild members in a guild when a READY event is fired.
+    """
+
+    #: Never autochunk guilds.
+    NEVER = 0
+    #: Autochunk guild members only.
+    MEMBERS = 1
+    #: Autochunk guild members and their presences.
+    MEMBERS_AND_PRESENCES = 2
 
 
 class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdapter):
@@ -46,12 +60,22 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
         dispatch:
             The callable to dispatch every event to once adapted to an object in the object
             graph.
+        request_chunks_mode:
+            True (default) to automatically trigger the chunker for each guild we receive on a READY
+            event. False if you wish to do this manually as needed. This is required to handle
+            presence update events for offline users when the shard started.
     """
 
-    def __init__(self, fabric_obj: _fabric.Fabric, dispatch: typing.Callable[..., None]) -> None:
+    def __init__(
+        self,
+        fabric_obj: _fabric.Fabric,
+        dispatch: typing.Callable[..., None],
+        request_chunks_mode: AutoRequestChunksMode = AutoRequestChunksMode.MEMBERS_AND_PRESENCES,
+    ) -> None:
         super().__init__(fabric_obj)
         self.dispatch = dispatch
         self._ignored_events: typing.MutableSet[str] = set()
+        self._request_chunks_mode = request_chunks_mode
 
     async def drain_unrecognised_event(self, _, event_name, payload):
         self.dispatch("raw_" + event_name.lower(), payload)
@@ -86,11 +110,19 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
 
         guilds = payload["guilds"]
 
+        guild_objs = []
+
         for guild_payload in guilds:
             # Parse unavailable guild.
-            self.fabric.state_registry.parse_guild(guild_payload, gateway.shard_id)
+            guild_obj = self.fabric.state_registry.parse_guild(guild_payload, gateway.shard_id)
+            guild_objs.append(guild_obj)
 
         self.dispatch(events.READY, gateway)
+
+        if self._request_chunks_mode != AutoRequestChunksMode.NEVER:
+            self.fabric.chunker.load_members_for(
+                *guild_objs, presences=self._request_chunks_mode == AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+            )
 
     async def handle_resumed(self, gateway, _):
         self.dispatch(events.RESUME, gateway)
@@ -531,6 +563,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
             return
 
         user_id = int(payload["user"]["id"])
+        # We cannot parse this, as we only have the ID field guaranteed to be present, annoyingly.
         user_obj = self.fabric.state_registry.get_user_by_id(user_id)
         if user_obj is None:
             self.logger.warning("ignoring PRESENCE_UPDATE for unknown user %s in guild %s", user_id, guild_id)
