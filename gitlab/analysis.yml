@@ -14,19 +14,38 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+.tools-only: &toolsonly
+  only:
+    - branches
+    - merge_requests
+    - tags
+    - schedules
 
-stages:
-  - test
-  - deploy
-  - verify
-  - pages
+.tools-base:
+  <<: *toolsonly
+  image: python:3.8.0-alpine
+  stage: test
+  before_script:
+    - apk add gcc g++ make
+    - pip install nox
 
-variables:
-  DOCKER_DRIVER: "overlay2"
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+black:
+  extends: .tools-base
+  script:
+    - nox -s format -- --check --diff
 
-include:
-  - local: "/gitlab/unittest.yml"
-  - local: "/gitlab/analysis.yml"
-  - local: "/gitlab/pages.yml"
-  - local: "/gitlab/deploy.yml"
+bandit:
+  extends: .tools-base
+  script:
+    - nox -s sast
+
+safety:
+  <<: *toolsonly
+  image: python:3.8.0
+  stage: test
+  before_script:
+    - pip install poetry
+    - poetry update --no-dev
+    - pip install nox
+  script:
+    - poetry run nox -s safety
