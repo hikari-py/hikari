@@ -29,8 +29,8 @@ import typing
 
 import aiohttp.typedefs
 
-from hikari.internal_utilities import logging_helpers
-from hikari.internal_utilities import user_agent
+from hikari.internal_utilities import loggers
+from hikari.net import user_agent
 
 
 class HTTPClient(abc.ABC):
@@ -216,7 +216,7 @@ class HTTPClient(abc.ABC):
         #:
         #: :type: :class:`logging.Logger`
 
-        self.logger = logging_helpers.get_named_logger(self)
+        self.logger = loggers.get_named_logger(self)
         #: User agent to use.
         #:
         #: :type: :class:`str`

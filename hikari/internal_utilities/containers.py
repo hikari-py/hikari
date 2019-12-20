@@ -124,15 +124,6 @@ class DefaultImmutableMapping(typing.Mapping[HashableT, ValueT]):
         return iter(self._data)
 
 
-ReturnT = typing.TypeVar("ReturnT")
-
-
-class PartialCoroutineProtocolT(compat.typing.Protocol[ReturnT]):
-    """Represents the type of a :class:`functools.partial` wrapping an :mod:`asyncio` coroutine."""
-
-    def __call__(self) -> typing.Coroutine[None, None, ReturnT]:
-        ...
-
 
 #: An immutable indexable container of elements with zero size.
 EMPTY_SEQUENCE: typing.Sequence = tuple()
@@ -151,7 +142,6 @@ __all__ = (
     "DiscordObjectT",
     "ObjectProxy",
     "LRUDict",
-    "PartialCoroutineProtocolT",
     "EMPTY_SEQUENCE",
     "EMPTY_SET",
     "EMPTY_COLLECTION",

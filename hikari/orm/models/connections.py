@@ -24,8 +24,8 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
 from hikari.orm import fabric
 from hikari.orm.models import integrations
 from hikari.orm.models import interfaces
@@ -101,16 +101,16 @@ class Connection(interfaces.IStatefulModel, interfaces.ISnowflake):
     #: :type: :class:`hikari.orm.models.connections.ConnectionVisibility`
     visibility: ConnectionVisibility
 
-    __repr__ = auto_repr.repr_of("type", "id", "name")
+    __repr__ = reprs.repr_of("type", "id", "name")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         self._fabric = fabric_obj
         self.id = payload["id"]
         self.name = payload["name"]
         self.type = payload["type"]
         self.is_revoked = payload.get("revoked", False)
         self.integrations = [
-            integrations.PartialIntegration(i) for i in payload.get("integrations", data_structures.EMPTY_SEQUENCE)
+            integrations.PartialIntegration(i) for i in payload.get("integrations", containers.EMPTY_SEQUENCE)
         ]
         self.is_verified = payload["verified"]
         self.is_friend_synced = payload["friend_sync"]

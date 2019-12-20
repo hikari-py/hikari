@@ -23,8 +23,8 @@ from __future__ import annotations
 
 import typing
 
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import interfaces
@@ -130,14 +130,14 @@ class Application(interfaces.ISnowflake):
     #: :type: :class:`str` or :class:`None`
     cover_image_hash: typing.Optional[str]
 
-    __repr__ = auto_repr.repr_of("id", "name", "description")
+    __repr__ = reprs.repr_of("id", "name", "description")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
         self.icon_hash = payload.get("icon")
         self.description = payload["description"]
-        self.rpc_origins = [url for url in payload.get("rpc_origins", data_structures.EMPTY_SEQUENCE)]
+        self.rpc_origins = [url for url in payload.get("rpc_origins", containers.EMPTY_SEQUENCE)]
         self.is_bot_public = payload["bot_public"]
         self.is_bot_code_grant_required = payload["bot_require_code_grant"]
         self.owner = fabric_obj.state_registry.parse_user(payload["owner"])

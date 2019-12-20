@@ -20,28 +20,39 @@ import pytest
 import asyncmock as mock
 
 import asyncio
-from hikari.internal_utilities.optional_await import optional_await
+from hikari.internal_utilities.aio import optional_await
 
 
 class CoroutineStub:
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.awaited = False
+        self.args = args
+        self.kwargs = kwargs
+
+    def __eq__(self, other):
+        return isinstance(other, CoroutineStub) and self.args == other.args and self.kwargs == other.kwargs
 
     def __await__(self):
         self.awaited = True
         yield from asyncio.sleep(0.01).__await__()
 
+    def __repr__(self):
+        args = ", ".join(map(repr, self.args))
+        kwargs = ", ".join(map(lambda k, v: f"{k!s}={v!r}", self.kwargs.items()))
+        return f"({args}, {kwargs})"
+
 
 class CoroutineFunctionStub:
-    def __init__(self):
-        self.coroutine = CoroutineStub()
-        self.call_args = None
-        self.call_kwargs = None
-
     def __call__(self, *args, **kwargs):
-        self.call_args = None
-        self.call_kwargs = None
-        return self.coroutine
+        return CoroutineStub(*args, **kwargs)
+
+
+def test_coro_stub_eq():
+    assert CoroutineStub(9, 18, x=27) == CoroutineStub(9, 18, x=27)
+
+
+def test_coro_stub_neq():
+    assert CoroutineStub(9, 18, x=27) != CoroutineStub(9, 18, x=36)
 
 
 @pytest.mark.asyncio
@@ -87,4 +98,5 @@ async def test_optional_await_shielded():
     with mock.patch("asyncio.shield", new=mock.MagicMock(return_value=shielded_coro)) as shield:
         with mock.patch("hikari.internal_utilities.compat.asyncio.create_task", new=mock.AsyncMock()) as create_task:
             await wrapped_coro_fn(9, 18, 27)
+            shield.assert_called_with(coro_fn(9, 18, 27))
             create_task.assert_called_with(shielded_coro, name=None)

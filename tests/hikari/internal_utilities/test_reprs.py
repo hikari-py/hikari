@@ -22,7 +22,7 @@ import dataclasses
 import textwrap
 import typing
 
-from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import reprs
 
 
 def test_repr_with_no_args():
@@ -33,7 +33,7 @@ def test_repr_with_no_args():
         nick: typing.Optional[str]
         roles: typing.Sequence[int]
 
-        __repr__ = auto_repr.repr_of()
+        __repr__ = reprs.repr_of()
 
     u = User(123, "foo", None, [1, 2, 3])
     assert repr(u) == "User()"
@@ -47,7 +47,7 @@ def test_repr_with_args():
         nick: typing.Optional[str]
         roles: typing.Sequence[int]
 
-        __repr__ = auto_repr.repr_of("id", "name")
+        __repr__ = reprs.repr_of("id", "name")
 
     u = User(123, "foo", None, [1, 2, 3])
     assert repr(u) == "User(id=123, name='foo')"
@@ -67,7 +67,7 @@ def test_repr_with_nested_args():
         nick: typing.Optional[str]
         role: Role
 
-        __repr__ = auto_repr.repr_of("id", "role.name")
+        __repr__ = reprs.repr_of("id", "role.name")
 
     u = User(123, "foo", None, Role(1234, "bar", 0xFFFFFF))
     assert repr(u) == "User(id=123, role.name='bar')"
@@ -82,7 +82,7 @@ def test_repr_with_recursive_repr_calls():
             self.mother = None
             self.father = None
 
-        __repr__ = auto_repr.repr_of("name", "children", "spouse", "mother", "father")
+        __repr__ = reprs.repr_of("name", "children", "spouse", "mother", "father")
 
     mother = Person("mother")
     father = Person("father")

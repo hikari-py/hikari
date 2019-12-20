@@ -23,8 +23,8 @@ from __future__ import annotations
 
 import typing
 
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
 from hikari.orm import fabric
 from hikari.orm.models import guilds
 from hikari.orm.models import interfaces
@@ -53,15 +53,15 @@ class VoiceServer(interfaces.IStatefulModel):
     #: :type: :class:`str`
     endpoint: str
 
-    __repr__ = auto_repr.repr_of("guild_id", "endpoint")
+    __repr__ = reprs.repr_of("guild_id", "endpoint")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         self._fabric = fabric_obj
         self.token = payload["token"]
         self.guild_id = int(payload["guild_id"])
         self.update_state(payload)
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.DiscordObjectT) -> None:
         self.endpoint = payload["endpoint"]
 
 
@@ -140,10 +140,10 @@ class VoiceState(interfaces.IStatefulModel):
     #: :type: :class:`bool`
     is_suppressed: bool
 
-    __repr__ = auto_repr.repr_of("user_id", "channel_id", "guild_id", "session_id")
+    __repr__ = reprs.repr_of("user_id", "channel_id", "guild_id", "session_id")
 
     def __init__(
-        self, fabric_obj: fabric.Fabric, guild_obj: guilds.Guild, payload: data_structures.DiscordObjectT
+        self, fabric_obj: fabric.Fabric, guild_obj: guilds.Guild, payload: containers.DiscordObjectT
     ) -> None:
         self._fabric = fabric_obj
         self.user_id = int(payload["user_id"])
@@ -158,7 +158,7 @@ class VoiceState(interfaces.IStatefulModel):
 
         self.update_state(payload)
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.DiscordObjectT) -> None:
         self.channel_id = int(payload["channel_id"])
         self.is_deaf = payload.get("deaf", False)
         self.is_mute = payload.get("mute", False)
@@ -205,9 +205,9 @@ class VoiceRegion(interfaces.IModel):
     #: :type: :class:`bool`
     is_custom: bool
 
-    __repr__ = auto_repr.repr_of("name", "is_vip", "is_deprecated")
+    __repr__ = reprs.repr_of("name", "is_vip", "is_deprecated")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.id = payload["id"]
         self.name = payload["name"]
         self.is_vip = payload["vip"]

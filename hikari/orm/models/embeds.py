@@ -28,8 +28,8 @@ import typing
 import weakref
 
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
 from hikari.orm.models import colors
 from hikari.orm.models import interfaces
@@ -54,7 +54,7 @@ class EmbedPart(interfaces.IModel, abc.ABC):
     def __delattr__(self, item):
         setattr(self, item, None)
 
-    def to_dict(self, *, dict_factory: data_structures.DictFactoryT = dict) -> data_structures.DictImplT:
+    def to_dict(self, *, dict_factory: containers.DictFactoryT = dict) -> containers.DictImplT:
         attrs = {a: getattr(self, a) for a in self.__slots__}
         # noinspection PyArgumentList,PyTypeChecker
         return dict_factory(**{k: v for k, v in attrs.items() if v is not None})
@@ -461,7 +461,7 @@ class BaseEmbed(interfaces.IModel):
         """
         return list(map(weakref.proxy, self._fields))
 
-    def to_dict(self, *, dict_factory: data_structures.DictFactoryT = dict) -> data_structures.DictImplT:
+    def to_dict(self, *, dict_factory: containers.DictFactoryT = dict) -> containers.DictImplT:
         """
         Converts this embed into a raw payload that Discord's HTTP API will understand.
 
@@ -494,7 +494,7 @@ class BaseEmbed(interfaces.IModel):
         return d
 
     @classmethod
-    def from_dict(cls: typing.Type[EmbedT], payload: data_structures.DiscordObjectT) -> EmbedT:
+    def from_dict(cls: typing.Type[EmbedT], payload: containers.DiscordObjectT) -> EmbedT:
         """
         Parses an instance of this embed type from a raw Discord payload.
 
@@ -503,7 +503,7 @@ class BaseEmbed(interfaces.IModel):
         """
         timestamp = payload.get("timestamp")
         if timestamp is not None:
-            timestamp = date_helpers.parse_iso_8601_ts(timestamp)
+            timestamp = dates.parse_iso_8601_ts(timestamp)
 
         embed = cls(
             title=payload.get("title"),
@@ -809,7 +809,7 @@ class Embed(BaseEmbed):
         del self._fields[index]
         return self
 
-    def to_dict(self, *, dict_factory: data_structures.DictFactoryT = dict) -> data_structures.DictImplT:
+    def to_dict(self, *, dict_factory: containers.DictFactoryT = dict) -> containers.DictImplT:
         self._perform_total_length_check()
         return super().to_dict(dict_factory=dict_factory)
 
