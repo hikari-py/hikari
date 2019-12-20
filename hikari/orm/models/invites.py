@@ -157,7 +157,7 @@ class InviteMetadata(interfaces.IModel):
     #: :type: :class:`bool`
     is_revoked: bool
 
-    __repr__ = auto_repr.repr_of("inviter", "uses", "max_uses", "created_at")
+    __repr__ = auto_repr.repr_of("inviter.id", "uses", "max_uses", "created_at")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         self.inviter = fabric_obj.state_registry.parse_user(payload["inviter"])

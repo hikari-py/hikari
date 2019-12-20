@@ -24,7 +24,9 @@ import pytest
 from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import channels
+from hikari.orm.models import guilds
 from hikari.orm.models import invites
+from hikari.orm.models import users
 from tests.hikari import _helpers
 
 
@@ -74,14 +76,24 @@ class TestInvite:
         assert inv.guild.description is None
         assert inv.guild.verification_level is None
         assert inv.guild.banner_hash is None
-        inv.__repr__()
         fabric_obj.state_registry.parse_user.assert_called_with(user_dict)
 
+    @pytest.mark.model
+    def test_Invite___repr__(self):
+        assert repr(
+            _helpers.mock_model(
+                invites.Invite,
+                code="baz",
+                guild=_helpers.mock_model(guilds.PartialGuild, __repr__=guilds.PartialGuild.__repr__),
+                channel=_helpers.mock_model(channels.PartialChannel, __repr__=channels.PartialChannel.__repr__),
+                __repr__=invites.Invite.__repr__,
+            )
+        )
 
-@pytest.mark.model
-def test_invite___str__():
-    invite = _helpers.mock_model(invites.Invite, code="CAFEDEAD")
-    assert invites.Invite.__str__(invite) == "CAFEDEAD"
+    @pytest.mark.model
+    def test_Invite___str__(self):
+        invite = _helpers.mock_model(invites.Invite, code="CAFEDEAD", __str__=invites.Invite.__str__)
+        assert str(invite) == "CAFEDEAD"
 
 
 @pytest.mark.model
@@ -117,5 +129,17 @@ class TestInviteMetadata:
         assert invm.is_temporary is True
         assert invm.is_revoked is True
         assert invm.created_at == datetime.datetime(2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc)
-        invm.__repr__()
         fabric_obj.state_registry.parse_user.assert_called_with(user_dict)
+
+    @pytest.mark.model
+    def test_InviteMetadata___repr__(self):
+        assert repr(
+            _helpers.mock_model(
+                invites.InviteMetadata,
+                inviter=_helpers.mock_model(users.User, id=42),
+                uses=69,
+                max_uses=101,
+                created_at=datetime.datetime.fromtimestamp(666).replace(tzinfo=datetime.timezone.utc),
+                __repr__=invites.InviteMetadata.__repr__,
+            )
+        )

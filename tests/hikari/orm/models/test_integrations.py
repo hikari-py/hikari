@@ -24,6 +24,7 @@ import pytest
 from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import integrations
+from tests.hikari import _helpers
 
 
 @pytest.mark.model
@@ -36,7 +37,15 @@ def test_PartialIntegration():
     assert partial_integration_obj.type == "twitch"
     assert partial_integration_obj.account.name == "FStream"
     assert partial_integration_obj.account.id == 1234567
-    partial_integration_obj.__repr__()
+
+
+@pytest.mark.model
+def test_PartialIntegration___repr__():
+    assert repr(
+        _helpers.mock_model(
+            integrations.PartialIntegration, id=42, name="foo", __repr__=integrations.PartialIntegration.__repr__
+        )
+    )
 
 
 @pytest.mark.model
@@ -81,8 +90,15 @@ class TestIntegration:
         assert integration_obj.synced_at == datetime.datetime(
             2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc
         )
-        integration_obj.__repr__()
         test_state.parse_user.assert_called_with(user_dict)
+
+    @pytest.mark.model
+    def test_Integration___repr__(self):
+        assert repr(
+            _helpers.mock_model(
+                integrations.Integration, id=42, name="foo", is_enabled=True, __repr__=integrations.Integration.__repr__
+            )
+        )
 
 
 @pytest.mark.model
@@ -92,4 +108,11 @@ class TestIntegrationAccount:
 
         assert inteacc.id == 1234567
         assert inteacc.name == "memes"
-        inteacc.__repr__()
+
+    @pytest.mark.model
+    def test_IntegrationAccount___repr__(self):
+        assert repr(
+            _helpers.mock_model(
+                integrations.IntegrationAccount, id=42, name="foo", __repr__=integrations.IntegrationAccount.__repr__
+            )
+        )

@@ -25,6 +25,8 @@ from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import guilds
 from hikari.orm.models import permissions
+from hikari.orm.models import users
+from tests.hikari import _helpers
 
 
 @pytest.fixture
@@ -221,7 +223,11 @@ def test_PartialGuild():
     assert partial_guild_obj.features.pop() is guilds.Feature.VANITY_URL
     assert partial_guild_obj.verification_level is guilds.VerificationLevel.MEDIUM
     assert partial_guild_obj.vanity_url_code == "nekotime"
-    partial_guild_obj.__repr__()
+
+
+@pytest.mark.model
+def test_PartialGuild___repr__():
+    assert repr(_helpers.mock_model(guilds.PartialGuild, id=42, name="foo", __repr__=guilds.PartialGuild.__repr__))
 
 
 @pytest.mark.model
@@ -283,7 +289,6 @@ class TestGuild:
         assert guild_obj.system_channel_flags & guilds.SystemChannelFlag.PREMIUM_SUBSCRIPTION
         assert guild_obj.system_channel_flags & guilds.SystemChannelFlag.USER_JOIN
         assert guild_obj.preferred_locale == "en-GB"
-        guild_obj.__repr__()
 
         assert fabric_obj.state_registry.parse_role.call_count == 2
         fabric_obj.state_registry.parse_emoji.assert_called_once_with(test_emoji_payload, guild_obj)
@@ -297,14 +302,39 @@ class TestGuild:
         assert guild_obj.shard_id == 9876
         assert guild_obj.id == 12_345_678_910
         assert guild_obj.is_unavailable
-        guild_obj.__repr__()
+
+    @pytest.mark.model
+    def test_Guild___repr__(self):
+        assert repr(
+            _helpers.mock_model(
+                guilds.Guild,
+                id=42,
+                name="foo",
+                is_unavailable=True,
+                is_large=True,
+                member_count=69,
+                shard_id=101,
+                __repr__=guilds.Guild.__repr__,
+            )
+        )
 
     def test_Ban(self, fabric_obj):
         user = object()
         ban = guilds.Ban(fabric_obj, {"user": user, "reason": "being bad"})
         assert ban.reason == "being bad"
-        ban.__repr__()
         fabric_obj.state_registry.parse_user.assert_called_once_with(user)
+
+    def test_Ban___repr__(self):
+        assert repr(
+            _helpers.mock_model(
+                guilds.Ban,
+                user=_helpers.mock_model(
+                    users.User, id=42, username="foo", discriminator=1234, is_bot=False, __repr__=users.User.__repr__,
+                ),
+                reason="foo",
+                __repr__=guilds.Ban.__repr__,
+            )
+        )
 
 
 @pytest.mark.model
