@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import pytest
 
-from hikari.internal_utilities import media_transformations
+from hikari.internal_utilities import conversions
 
 
 @pytest.mark.parametrize(
@@ -33,16 +33,16 @@ from hikari.internal_utilities import media_transformations
     ],
 )
 def test_image_bytes_to_image_data_img_types(img_bytes, expect):
-    assert media_transformations.image_bytes_to_image_data(img_bytes) == expect
+    assert conversions.image_bytes_to_image_data(img_bytes) == expect
 
 
 def test_image_bytes_to_image_data_when_None_returns_None():
-    assert media_transformations.image_bytes_to_image_data(None) is None
+    assert conversions.image_bytes_to_image_data(None) is None
 
 
 def test_image_bytes_to_image_data_when_unsuported_image_type_raises_value_error():
     try:
-        media_transformations.image_bytes_to_image_data(b"")
+        conversions.image_bytes_to_image_data(b"")
         assert False
     except ValueError:
         assert True

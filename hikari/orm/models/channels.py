@@ -27,8 +27,8 @@ import enum
 import typing
 
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import guilds as _guild
@@ -102,7 +102,7 @@ class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStatefulModel):
     id: int
 
     @abc.abstractmethod
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         self._fabric = fabric_obj
         self.id = int(payload["id"])
         self.update_state(payload)
@@ -151,9 +151,9 @@ class PartialChannel(Channel):
     #: :type: :class:`ChannelType` or :class:`int`
     type: typing.Union[ChannelType, int]
 
-    __repr__ = auto_repr.repr_of("id", "name", "type")
+    __repr__ = reprs.repr_of("id", "name", "type")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         self.name = payload["name"]
         self.type = ChannelType.get_best_effort_from_value(payload["type"])
         super().__init__(fabric_obj, payload)
@@ -208,11 +208,11 @@ class GuildChannel(Channel):
     name: str
 
     @abc.abstractmethod
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         self.guild_id = int(payload["guild_id"])
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.DiscordObjectT) -> None:
         self.position = int(payload["position"])
 
         overwrite_objs = []
@@ -261,12 +261,12 @@ class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT):
     #: :type: :class:`bool`
     is_nsfw: bool
 
-    __repr__ = auto_repr.repr_of("id", "name", "guild.name", "is_nsfw")
+    __repr__ = reprs.repr_of("id", "name", "guild.name", "is_nsfw")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.DiscordObjectT) -> None:
         super().update_state(payload)
         self.is_nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
@@ -291,20 +291,20 @@ class DMChannel(TextChannel, type=ChannelType.DM):
     #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.users.User`
     recipients: typing.Sequence[DMRecipientT]
 
-    __repr__ = auto_repr.repr_of("id")
+    __repr__ = reprs.repr_of("id")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.DiscordObjectT) -> None:
         super().update_state(payload)
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
         self.recipients = typing.cast(
             typing.Sequence[DMRecipientT],
             [
                 self._fabric.state_registry.parse_user(u)
-                for u in payload.get("recipients", data_structures.EMPTY_SEQUENCE)
+                for u in payload.get("recipients", containers.EMPTY_SEQUENCE)
             ],
         )
 
@@ -326,12 +326,12 @@ class GuildVoiceChannel(GuildChannel, type=ChannelType.GUILD_VOICE):
     #: :type: :class:`int` or :class:`None`
     user_limit: typing.Optional[int]
 
-    __repr__ = auto_repr.repr_of("id", "name", "guild.name", "bitrate", "user_limit")
+    __repr__ = reprs.repr_of("id", "name", "guild.name", "bitrate", "user_limit")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.DiscordObjectT) -> None:
         super().update_state(payload)
         self.bitrate = payload.get("bitrate") or None
         self.user_limit = payload.get("user_limit") or None
@@ -365,13 +365,13 @@ class GroupDMChannel(DMChannel, type=ChannelType.GROUP_DM):
     #: :type: :class:`int` or :class:`None`
     owner_application_id: typing.Optional[int]
 
-    __repr__ = auto_repr.repr_of("id", "name")
+    __repr__ = reprs.repr_of("id", "name")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.DiscordObjectT) -> None:
         super().update_state(payload)
         self.icon_hash = payload.get("icon")
         self.name = payload.get("name")
@@ -386,9 +386,9 @@ class GuildCategory(GuildChannel, type=ChannelType.GUILD_CATEGORY):
 
     __slots__ = ()
 
-    __repr__ = auto_repr.repr_of("id", "name", "guild.name")
+    __repr__ = reprs.repr_of("id", "name", "guild.name")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         super().__init__(fabric_obj, payload)
 
 
@@ -419,13 +419,13 @@ class GuildAnnouncementChannel(GuildChannel, type=ChannelType.GUILD_ANNOUNCEMENT
     #: :type: :class:`bool`
     is_nsfw: bool
 
-    __repr__ = auto_repr.repr_of("id", "name", "guild.name", "is_nsfw")
+    __repr__ = reprs.repr_of("id", "name", "guild.name", "is_nsfw")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.DiscordObjectT) -> None:
         super().update_state(payload)
         self.is_nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
@@ -439,9 +439,9 @@ class GuildStoreChannel(GuildChannel, type=ChannelType.GUILD_STORE):
 
     __slots__ = ()
 
-    __repr__ = auto_repr.repr_of("id", "name", "guild.name")
+    __repr__ = reprs.repr_of("id", "name", "guild.name")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         super().__init__(fabric_obj, payload)
 
 
@@ -460,7 +460,7 @@ def is_channel_type_dm(channel_type: typing.Union[int, ChannelType]) -> bool:
 
 
 # noinspection PyProtectedMember
-def parse_channel(fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> Channel:
+def parse_channel(fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> Channel:
     """
     Parse a channel from a channel payload from an API call.
 

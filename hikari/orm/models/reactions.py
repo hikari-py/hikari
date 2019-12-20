@@ -21,7 +21,7 @@ Reactions to a message.
 """
 from __future__ import annotations
 
-from hikari.internal_utilities import auto_repr
+from hikari.internal_utilities import reprs
 from hikari.orm.models import emojis as _emoji
 from hikari.orm.models import interfaces
 from hikari.orm.models import messages as _message
@@ -58,7 +58,7 @@ class Reaction(interfaces.IModel):
         self.emoji = emoji
         self.message = message
 
-    __repr__ = auto_repr.repr_of("count", "emoji", "message.id")
+    __repr__ = reprs.repr_of("count", "emoji", "message.id")
 
 
 __all__ = ["Reaction"]

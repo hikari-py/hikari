@@ -25,9 +25,9 @@ import datetime
 import typing
 
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import dates
 from hikari.internal_utilities import delegate
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
@@ -90,33 +90,33 @@ class Member(users.IUser, delegate_fabricated=True):
 
     __copy_by_ref__ = ("presence", "guild")
 
-    __repr__ = auto_repr.repr_of(
+    __repr__ = reprs.repr_of(
         "id", "username", "discriminator", "is_bot", "guild.id", "guild.name", "nick", "joined_at"
     )
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, guild: guilds.Guild, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, guild: guilds.Guild, payload: containers.DiscordObjectT) -> None:
         self.presence = None
         self.user = fabric_obj.state_registry.parse_user(payload["user"])
         self.guild = guild
-        self.joined_at = date_helpers.parse_iso_8601_ts(payload["joined_at"])
+        self.joined_at = dates.parse_iso_8601_ts(payload["joined_at"])
 
         role_objs = [
             fabric_obj.state_registry.get_role_by_id(self.guild.id, int(rid))
-            for rid in payload.get("role_ids", data_structures.EMPTY_SEQUENCE)
+            for rid in payload.get("role_ids", containers.EMPTY_SEQUENCE)
         ]
 
         self.update_state(role_objs, payload)
 
     # noinspection PyMethodOverriding
-    def update_state(self, role_objs: typing.Sequence[_roles.Role], payload: data_structures.DiscordObjectT) -> None:
+    def update_state(self, role_objs: typing.Sequence[_roles.Role], payload: containers.DiscordObjectT) -> None:
         self.roles = list(role_objs)
-        self.premium_since = transformations.nullable_cast(payload.get("premium_since"), date_helpers.parse_iso_8601_ts)
+        self.premium_since = transformations.nullable_cast(payload.get("premium_since"), dates.parse_iso_8601_ts)
         self.nick = payload.get("nick")
         self.is_deaf = payload.get("deaf", False)
         self.is_mute = payload.get("mute", False)
 
-    def update_presence_state(self, presence_payload: data_structures.DiscordObjectT = None) -> None:
+    def update_presence_state(self, presence_payload: containers.DiscordObjectT = None) -> None:
         user_id = presence_payload["user"]["id"]
         assertions.assert_that(
             int(user_id) == self.id, f"Presence object from User `{user_id}` doesn't match Member `{self.id}`."

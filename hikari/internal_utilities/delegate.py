@@ -25,7 +25,7 @@ import inspect
 import typing
 
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import containers
 
 _DELEGATE_MEMBERS_FIELD = "___delegate_members___"
 _DELEGATE_TYPES_FIELD = "___delegate_type_mapping___"
@@ -79,7 +79,7 @@ def delegate_to(
         assertions.assert_subclasses(cls, delegate_type)
         delegated_members = set()
         # Tuple of tuples, each sub tuple is (magic_field, delegate_type)
-        delegated_types = getattr(cls, _DELEGATE_TYPES_FIELD, data_structures.EMPTY_SEQUENCE)
+        delegated_types = getattr(cls, _DELEGATE_TYPES_FIELD, containers.EMPTY_SEQUENCE)
 
         # We have three valid cases: either the attribute is a class member, in which case it is in `__dict__`, the
         # attribute is defined in the class `__slots__`, in which case it is in `__dict__`, or the field is given
@@ -87,7 +87,7 @@ def delegate_to(
         # (e.g. fields only defined once we are in the `__init__`, as it is basically monkey patching at this point if
         # we are not slotted).
         dict_fields = {k for k, v in delegate_type.__dict__.items() if not _is_func(v) and not k.startswith("_")}
-        annotation_fields = {*getattr(delegate_type, "__annotations__", data_structures.EMPTY_SEQUENCE)}
+        annotation_fields = {*getattr(delegate_type, "__annotations__", containers.EMPTY_SEQUENCE)}
         targets = dict_fields | annotation_fields
         for name in targets:
             delegate = DelegatedProperty(magic_field, name)

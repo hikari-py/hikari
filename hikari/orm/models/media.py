@@ -32,9 +32,9 @@ from concurrent import futures
 import aiofiles
 import aiohttp
 
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import io_helpers
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
 from hikari.orm.models import interfaces
 
@@ -83,9 +83,9 @@ class Attachment(interfaces.ISnowflake):
     #: :type: :class:`int` or `None`
     height: typing.Optional[int]
 
-    __repr__ = auto_repr.repr_of("id", "filename", "size")
+    __repr__ = reprs.repr_of("id", "filename", "size")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.filename = payload["filename"]
         self.size = int(payload["size"])
@@ -222,7 +222,7 @@ class InMemoryFile(AbstractFile):
     #: A bytes-like object containing the data to upload.
     #:
     #: :type: :class:`hikari.internal_utilities.io_helpers.BytesLikeT`
-    data: io_helpers.BytesLikeT
+    data: storage.BytesLikeT
 
     def open(self, *args, **kwargs) -> io.IOBase:
         """
@@ -235,7 +235,7 @@ class InMemoryFile(AbstractFile):
 
               This means that passing the `mode` will have no effect on the return type.
         """
-        return io_helpers.make_resource_seekable(self.data)
+        return storage.make_resource_seekable(self.data)
 
     def __hash__(self) -> int:
         return hash(self.name)

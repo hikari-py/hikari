@@ -24,8 +24,8 @@ from __future__ import annotations
 import abc
 import typing
 
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
 from hikari.orm import fabric
 from hikari.orm.models import guilds
 from hikari.orm.models import interfaces
@@ -57,13 +57,13 @@ class UnicodeEmoji(Emoji):
     #: :type: :class:`str`
     value: str
 
-    __repr__ = auto_repr.repr_of("value")
+    __repr__ = reprs.repr_of("value")
 
     @property
     def is_unicode(self) -> bool:
         return True
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.value = payload["name"]
 
     def __eq__(self, other):
@@ -97,9 +97,9 @@ class UnknownEmoji(Emoji, interfaces.ISnowflake):
     #: :type: :class:`str`
     name: str
 
-    __repr__ = auto_repr.repr_of("id", "name")
+    __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
 
@@ -147,9 +147,9 @@ class GuildEmoji(UnknownEmoji, interfaces.IStatefulModel):
     #: :type: :class:`bool`
     is_animated: bool
 
-    __repr__ = auto_repr.repr_of("id", "name", "is_animated")
+    __repr__ = reprs.repr_of("id", "name", "is_animated")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_id: int) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT, guild_id: int) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self._guild_id = guild_id
@@ -157,14 +157,14 @@ class GuildEmoji(UnknownEmoji, interfaces.IStatefulModel):
         self.is_requiring_colons = payload.get("require_colons", True)
         self.is_animated = payload.get("animated", False)
         self.is_managed = payload.get("managed", False)
-        self._role_ids = [int(r) for r in payload.get("roles", data_structures.EMPTY_SEQUENCE)]
+        self._role_ids = [int(r) for r in payload.get("roles", containers.EMPTY_SEQUENCE)]
 
     @property
     def guild(self) -> guilds.Guild:
         return self._fabric.state_registry.get_guild_by_id(self._guild_id)
 
 
-def is_payload_guild_emoji_candidate(payload: data_structures.DiscordObjectT) -> bool:
+def is_payload_guild_emoji_candidate(payload: containers.DiscordObjectT) -> bool:
     """
     Returns True if the given dict represents an emoji that is from a guild we actively reside in.
 
@@ -176,7 +176,7 @@ def is_payload_guild_emoji_candidate(payload: data_structures.DiscordObjectT) ->
 
 
 def parse_emoji(
-    fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, guild_id: typing.Optional[int] = None
+    fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT, guild_id: typing.Optional[int] = None
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:
     """
     Parse the given emoji payload into an appropriate implementation of Emoji.
