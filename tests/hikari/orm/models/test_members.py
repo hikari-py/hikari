@@ -75,7 +75,6 @@ def test_Member_with_filled_fields(fabric_obj):
     assert member_obj.is_mute is True
     assert member_obj.guild is guild_obj
     assert member_obj.presence is None
-    member_obj.__repr__()
     fabric_obj.state_registry.parse_user.assert_called_with(user_dict)
 
 
@@ -213,3 +212,20 @@ def test_Member_update_presence_state_with_mismatching_presence(fabric_obj):
         },
     )
     member_obj.update_presence_state(presence_payload)
+
+
+@pytest.mark.model
+def test_Member___repr__():
+    assert repr(
+        _helpers.mock_model(
+            members.Member,
+            id=69,
+            username="bar",
+            discriminator=1234,
+            is_bot=True,
+            guild=_helpers.mock_model(guilds.Guild, id=42, name="foo"),
+            nick="baz",
+            joined_at=datetime.datetime.fromtimestamp(101).replace(tzinfo=datetime.timezone.utc),
+            __repr__=members.Member.__repr__,
+        )
+    )

@@ -90,7 +90,9 @@ class Member(users.IUser, delegate_fabricated=True):
 
     __copy_by_ref__ = ("presence", "guild")
 
-    __repr__ = auto_repr.repr_of("id", "username", "discriminator", "is_bot", "guild", "nick", "joined_at")
+    __repr__ = auto_repr.repr_of(
+        "id", "username", "discriminator", "is_bot", "guild.id", "guild.name", "nick", "joined_at"
+    )
 
     # noinspection PyMissingConstructor
     def __init__(self, fabric_obj: fabric.Fabric, guild: guilds.Guild, payload: data_structures.DiscordObjectT) -> None:

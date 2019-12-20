@@ -21,6 +21,7 @@ import math
 import pytest
 
 from hikari.orm.models import colors
+from tests.hikari import _helpers
 
 
 @pytest.mark.model
@@ -181,5 +182,6 @@ class TestColor:
         except ValueError:
             pass
 
-    def test_Color_repr(self):
-        colors.Color["#1a2b3c"].__repr__()
+    @pytest.mark.model
+    def test_Color___repr__(self):
+        assert repr(colors.Color["#1a2b3c"]) == "Color(r=0x1a, g=0x2b, b=0x3c)"

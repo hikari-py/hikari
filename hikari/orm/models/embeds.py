@@ -28,7 +28,6 @@ import typing
 import weakref
 
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import auto_repr
 from hikari.internal_utilities import data_structures
 from hikari.internal_utilities import date_helpers
 from hikari.internal_utilities import transformations
@@ -259,8 +258,6 @@ class BaseEmbed(interfaces.IModel):
     _url: typing.Optional[str]
     _timestamp: typing.Optional[datetime.datetime]
     _color: typing.Optional[typing.Union[int, colors.Color]]
-
-    __repr__ = auto_repr.repr_of("title", "timestamp", "color")
 
     def __init__(
         self,

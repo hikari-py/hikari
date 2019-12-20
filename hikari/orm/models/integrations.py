@@ -135,6 +135,8 @@ class Integration(PartialIntegration, interfaces.IStatefulModel):
     #: :type: :class:`datetime.datetime`
     synced_at: datetime.datetime
 
+    __repr__ = auto_repr.repr_of("id", "name", "is_enabled")
+
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj

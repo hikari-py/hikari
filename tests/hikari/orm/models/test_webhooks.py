@@ -23,6 +23,7 @@ import pytest
 from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import webhooks
+from tests.hikari import _helpers
 
 
 @pytest.fixture()
@@ -69,4 +70,7 @@ class TestWebhook:
         assert wh.guild_id == 199737254929760256
         assert wh.type is webhooks.WebhookType.INCOMING
         fabric_obj.state_registry.parse_user.assert_called_with(user_dict)
-        wh.__repr__()
+
+    @pytest.mark.model
+    def test_Webhook___repr__(self):
+        assert repr(_helpers.mock_model(webhooks.Webhook, id=42, name="foo", __repr__=webhooks.Webhook.__repr__))

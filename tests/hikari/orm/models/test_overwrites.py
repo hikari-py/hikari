@@ -23,6 +23,7 @@ import pytest
 import hikari.orm.models.members
 from hikari.orm.models import overwrites
 from hikari.orm.models import permissions
+from tests.hikari import _helpers
 
 
 @pytest.mark.model
@@ -57,7 +58,19 @@ class TestOverwrite:
         expected_inverse ^= permissions.Permission.ADD_REACTIONS
 
         assert bin(o.default) == bin(expected_inverse)
-        o.__repr__()
+
+    @pytest.mark.model
+    def test_Overwrite___repr__(self):
+        assert repr(
+            _helpers.mock_model(
+                overwrites.Overwrite,
+                id=42,
+                type=overwrites.OverwriteEntityType.ROLE,
+                allow=permissions.NONE,
+                deny=permissions.CONNECT,
+                __repr__=overwrites.Overwrite.__repr__,
+            )
+        )
 
 
 @pytest.mark.model
