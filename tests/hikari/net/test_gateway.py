@@ -32,7 +32,7 @@ import asyncmock as mock
 import pytest
 
 from hikari import errors
-from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import containers
 from hikari.net import gateway
 from hikari.net import opcodes
 from hikari.net import rates
@@ -192,7 +192,7 @@ class TestGateway:
             receive_call_result = '{"foo":"bar","baz":"bork","qux":["q", "u", "x", "x"]}'
             gw._receive = mock.AsyncMock(return_value=receive_call_result)
             await gw._receive_json()
-            json_loads.assert_called_with(receive_call_result, object_hook=data_structures.ObjectProxy)
+            json_loads.assert_called_with(receive_call_result, object_hook=containers.ObjectProxy)
 
     async def test_receive_json_when_receiving_zlib_payloads_collects_before_decoding(self, event_loop):
         with mock.patch("json.loads", new=mock.MagicMock(return_value={})) as json_loads:
@@ -208,7 +208,7 @@ class TestGateway:
             gw._receive = mock.AsyncMock(side_effect=chunks)
             await gw._receive_json()
             # noinspection PyUnresolvedReferences
-            json_loads.assert_called_with(receive_call_result.decode("utf-8"), object_hook=data_structures.ObjectProxy)
+            json_loads.assert_called_with(receive_call_result.decode("utf-8"), object_hook=containers.ObjectProxy)
 
     async def test_small_zlib_payloads_leave_buffer_alone(self, event_loop):
         gw = StubLowLevelGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
@@ -354,12 +354,12 @@ class TestGateway:
     async def test_send_identify(self, event_loop, guild_subscriptions):
         with contextlib.ExitStack() as stack:
             stack.enter_context(
-                mock.patch("hikari.internal_utilities.user_agent.python_version", new=lambda: "python3")
+                mock.patch("hikari.net.user_agent.python_version", new=lambda: "python3")
             )
             stack.enter_context(
-                mock.patch("hikari.internal_utilities.user_agent.library_version", new=lambda: "vx.y.z")
+                mock.patch("hikari.net.user_agent.library_version", new=lambda: "vx.y.z")
             )
-            stack.enter_context(mock.patch("hikari.internal_utilities.user_agent.system_type", new=lambda: "leenuks"))
+            stack.enter_context(mock.patch("hikari.net.user_agent.system_type", new=lambda: "leenuks"))
 
             gw = StubLowLevelGateway(
                 uri="wss://gateway.discord.gg:4949/",

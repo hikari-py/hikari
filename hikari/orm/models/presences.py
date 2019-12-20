@@ -26,9 +26,9 @@ import datetime
 import enum
 import typing
 
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
 from hikari.orm.models import interfaces
 
@@ -80,18 +80,18 @@ class Presence(interfaces.IModel):
     #: :type: :class:`hikari.orm.models.presences.Status`
     mobile_status: Status
 
-    __repr__ = auto_repr.repr_of("status")
+    __repr__ = reprs.repr_of("status")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
-        self.activities = data_structures.EMPTY_SEQUENCE
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
+        self.activities = containers.EMPTY_SEQUENCE
         self.status = Status.OFFLINE
         self.web_status = Status.OFFLINE
         self.desktop_status = Status.OFFLINE
         self.mobile_status = Status.OFFLINE
         self.update_state(payload)
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
-        client_status = payload.get("client_status", data_structures.EMPTY_DICT)
+    def update_state(self, payload: containers.DiscordObjectT) -> None:
+        client_status = payload.get("client_status", containers.EMPTY_DICT)
 
         if "activities" in payload:
             self.activities = [parse_presence_activity(a) for a in payload["activities"]]
@@ -140,14 +140,14 @@ class Activity(interfaces.IModel):
     #: :type: :class:`str` or `None`
     url: typing.Optional[str]
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.name = payload.get("name")
         self.type = transformations.try_cast(payload.get("type"), ActivityType)
         self.url = payload.get("url")
 
     update_state = NotImplemented
 
-    def to_dict(self, *, dict_factory: data_structures.DictFactoryT = dict) -> data_structures.DictImplT:
+    def to_dict(self, *, dict_factory: containers.DictFactoryT = dict) -> containers.DictImplT:
         attrs = {a: getattr(self, a) for a in self.__slots__}
         # noinspection PyArgumentList,PyTypeChecker
         return dict_factory(**{k: v for k, v in attrs.items() if v is not None})
@@ -206,9 +206,9 @@ class RichActivity(Activity):
     #: :type: :class:`hikari.orm.models.presences.ActivityFlag`
     flags: ActivityFlag
 
-    __repr__ = auto_repr.repr_of("id", "name", "type")
+    __repr__ = reprs.repr_of("id", "name", "type")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         super().__init__(payload)
         self.id = payload.get("id")
         self.timestamps = transformations.nullable_cast(payload.get("timestamps"), ActivityTimestamps)
@@ -220,7 +220,7 @@ class RichActivity(Activity):
         self.flags = transformations.nullable_cast(payload.get("flags"), ActivityFlag) or 0
 
 
-def parse_presence_activity(payload: data_structures.DiscordObjectT,) -> typing.Union[Activity, RichActivity]:
+def parse_presence_activity(payload: containers.DiscordObjectT, ) -> typing.Union[Activity, RichActivity]:
     """
     Consumes a payload and decides the type of activity it represents. A corresponding object is then
     constructed and returned as appropriate.
@@ -297,9 +297,9 @@ class ActivityParty(interfaces.IModel):
     #: :type: :class:`int` or `None`
     max_size: typing.Optional[int]
 
-    __repr__ = auto_repr.repr_of("id", "current_size", "max_size")
+    __repr__ = reprs.repr_of("id", "current_size", "max_size")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.id = payload.get("id")
         self.current_size = transformations.nullable_cast(payload.get("current_size"), int)
         self.max_size = transformations.nullable_cast(payload.get("max_size"), int)
@@ -332,9 +332,9 @@ class ActivityAssets(interfaces.IModel):
     #: :type: :class:`str` or `None`
     small_text: typing.Optional[str]
 
-    __repr__ = auto_repr.repr_of()
+    __repr__ = reprs.repr_of()
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.large_image = payload.get("large_image")
         self.large_text = payload.get("large_text")
         self.small_image = payload.get("small_image")
@@ -359,11 +359,11 @@ class ActivityTimestamps(interfaces.IModel):
     #: :type: :class:`datetime.datetime` or `None`
     end: typing.Optional[datetime.datetime]
 
-    __repr__ = auto_repr.repr_of("start", "end", "duration")
+    __repr__ = reprs.repr_of("start", "end", "duration")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
-        self.start = transformations.nullable_cast(payload.get("start"), date_helpers.unix_epoch_to_ts)
-        self.end = transformations.nullable_cast(payload.get("end"), date_helpers.unix_epoch_to_ts)
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
+        self.start = transformations.nullable_cast(payload.get("start"), dates.unix_epoch_to_ts)
+        self.end = transformations.nullable_cast(payload.get("end"), dates.unix_epoch_to_ts)
 
     @property
     def duration(self) -> typing.Optional[datetime.timedelta]:

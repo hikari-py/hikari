@@ -25,9 +25,9 @@ import datetime
 import enum
 import typing
 
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm import state_registry
@@ -102,9 +102,9 @@ class Invite(interfaces.IModel):
     #: :type: :class:`int` or `None`
     approximate_member_count: typing.Optional[int]
 
-    __repr__ = auto_repr.repr_of("code", "inviter.id", "guild", "channel")
+    __repr__ = reprs.repr_of("code", "inviter.id", "guild", "channel")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         self.code = payload["code"]
         self.guild = transformations.nullable_cast(payload.get("guild"), guilds.PartialGuild)
         self.channel = channels.PartialChannel(fabric_obj, payload["channel"])
@@ -159,20 +159,20 @@ class InviteWithMetadata(Invite):
     #: :type: :class:`bool`
     is_revoked: bool
 
-    __repr__ = auto_repr.repr_of("code", "guild", "channel", "inviter.id", "uses", "max_uses", "created_at")
+    __repr__ = reprs.repr_of("code", "guild", "channel", "inviter.id", "uses", "max_uses", "created_at")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         super().__init__(fabric_obj, payload)
         self.uses = int(payload["uses"])
         self.max_uses = int(payload["max_uses"])
         self.max_age = int(payload["max_age"])
         self.is_temporary = payload.get("temporary", False)
-        self.created_at = date_helpers.parse_iso_8601_ts(payload["created_at"])
+        self.created_at = dates.parse_iso_8601_ts(payload["created_at"])
         self.is_revoked = payload.get("revoked", False)
 
 
 def parse_invite(
-    fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT
+    fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT
 ) -> typing.Union[Invite, InviteWithMetadata]:
     """
     Consume a fabric object and some type of invite payload and try to parse

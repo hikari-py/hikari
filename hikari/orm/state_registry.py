@@ -25,7 +25,7 @@ import abc
 import datetime
 import typing
 
-from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import containers
 from hikari.orm.models import applications
 from hikari.orm.models import audit_logs
 from hikari.orm.models import channels
@@ -444,7 +444,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_application(self, application_payload: data_structures.DiscordObjectT) -> applications.Application:
+    def parse_application(self, application_payload: containers.DiscordObjectT) -> applications.Application:
         """
         Parses an application payload into a workable object.
 
@@ -457,7 +457,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_application_user(self, application_user_payload: data_structures.DiscordObjectT) -> users.OAuth2User:
+    def parse_application_user(self, application_user_payload: containers.DiscordObjectT) -> users.OAuth2User:
         """
         Parses an application user payload into a workable object.
 
@@ -470,7 +470,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_audit_log(self, audit_log_payload: data_structures.DiscordObjectT) -> audit_logs.AuditLog:
+    def parse_audit_log(self, audit_log_payload: containers.DiscordObjectT) -> audit_logs.AuditLog:
         """
         Parses an audit log payload into a workable object.
 
@@ -483,18 +483,18 @@ class IStateRegistry(abc.ABC):
         """
 
     @typing.overload
-    def parse_channel(self, channel_payload: data_structures.DiscordObjectT, guild_obj: None) -> channels.Channel:
+    def parse_channel(self, channel_payload: containers.DiscordObjectT, guild_obj: None) -> channels.Channel:
         ...
 
     @typing.overload
     def parse_channel(
-        self, channel_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild
+        self, channel_payload: containers.DiscordObjectT, guild_obj: guilds.Guild
     ) -> channels.GuildChannel:
         ...
 
     @abc.abstractmethod
     def parse_channel(
-        self, channel_payload: data_structures.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild]
+        self, channel_payload: containers.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild]
     ) -> channels.Channel:
         """
         Parses a channel payload into a workable object.
@@ -510,7 +510,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_connection(self, connection_payload: data_structures.DiscordObjectT) -> connections.Connection:
+    def parse_connection(self, connection_payload: containers.DiscordObjectT) -> connections.Connection:
         """
         Parses a connection payload into a workable object.
 
@@ -523,16 +523,16 @@ class IStateRegistry(abc.ABC):
         """
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: data_structures.DiscordObjectT, guild_obj: None) -> emojis.Emoji:
+    def parse_emoji(self, emoji_payload: containers.DiscordObjectT, guild_obj: None) -> emojis.Emoji:
         ...
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
+    def parse_emoji(self, emoji_payload: containers.DiscordObjectT, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
         ...
 
     @abc.abstractmethod
     def parse_emoji(
-        self, emoji_payload: data_structures.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild]
+        self, emoji_payload: containers.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild]
     ) -> emojis.Emoji:
         """
         Parses a emoji payload into a workable object.
@@ -548,7 +548,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_gateway_bot(self, gateway_bot_payload: data_structures.DiscordObjectT) -> gateway_bot.GatewayBot:
+    def parse_gateway_bot(self, gateway_bot_payload: containers.DiscordObjectT) -> gateway_bot.GatewayBot:
         """
         Parses a gateway bot payload into a workable object.
 
@@ -562,7 +562,7 @@ class IStateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def parse_guild(
-        self, guild_payload: data_structures.DiscordObjectT, shard_id: typing.Optional[int]
+        self, guild_payload: containers.DiscordObjectT, shard_id: typing.Optional[int]
     ) -> guilds.Guild:
         """
         Parses a guild payload into a workable object.
@@ -578,7 +578,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_invite(self, invite_payload: data_structures.DiscordObjectT) -> invites.Invite:
+    def parse_invite(self, invite_payload: containers.DiscordObjectT) -> invites.Invite:
         """
         Parse an invite payload and any attached metadata.
 
@@ -592,7 +592,7 @@ class IStateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def parse_voice_state(
-        self, voice_state_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild
+        self, voice_state_payload: containers.DiscordObjectT, guild_obj: guilds.Guild
     ) -> voices.VoiceState:
         """
         Parse a voice state payload into a workable object.
@@ -610,8 +610,8 @@ class IStateRegistry(abc.ABC):
     @abc.abstractmethod
     def parse_partial_member(
         self,
-        partial_member_payload: data_structures.DiscordObjectT,
-        user_payload: data_structures.DiscordObjectT,
+        partial_member_payload: containers.DiscordObjectT,
+        user_payload: containers.DiscordObjectT,
         guild_obj: guilds.Guild,
     ) -> members.Member:
         """
@@ -633,7 +633,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_member(self, member_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> members.Member:
+    def parse_member(self, member_payload: containers.DiscordObjectT, guild_obj: guilds.Guild) -> members.Member:
         """
         Parses a member payload into a workable object.
 
@@ -648,7 +648,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_message(self, message_payload: data_structures.DiscordObjectT) -> messages.Message:
+    def parse_message(self, message_payload: containers.DiscordObjectT) -> messages.Message:
         """
         Parses a message payload into a workable object.
 
@@ -668,7 +668,7 @@ class IStateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def parse_presence(
-        self, member_obj: members.Member, presence_payload: data_structures.DiscordObjectT
+        self, member_obj: members.Member, presence_payload: containers.DiscordObjectT
     ) -> presences.Presence:
         """
         Parse a presence for a given guild and user, and attempt to update the member corresponding to the presence
@@ -685,7 +685,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_reaction(self, reaction_payload: data_structures.DiscordObjectT) -> reactions.Reaction:
+    def parse_reaction(self, reaction_payload: containers.DiscordObjectT) -> reactions.Reaction:
         """
         Attempt to parse a reaction object and store it on the corresponding message.
 
@@ -698,7 +698,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_role(self, role_payload: data_structures.DiscordObjectT, guild_obj: guilds.Guild) -> roles.Role:
+    def parse_role(self, role_payload: containers.DiscordObjectT, guild_obj: guilds.Guild) -> roles.Role:
         """
         Parses a role payload into a workable object.
 
@@ -713,7 +713,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_user(self, user_payload: data_structures.DiscordObjectT) -> typing.Union[users.User, users.OAuth2User]:
+    def parse_user(self, user_payload: containers.DiscordObjectT) -> typing.Union[users.User, users.OAuth2User]:
         """
         Parses a user payload into a workable object.
 
@@ -733,7 +733,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_webhook(self, webhook_payload: data_structures.DiscordObjectT) -> webhooks.Webhook:
+    def parse_webhook(self, webhook_payload: containers.DiscordObjectT) -> webhooks.Webhook:
         """
         Parses a webhook payload into a workable object.
 
@@ -795,7 +795,7 @@ class IStateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_channel(
-        self, channel_payload: data_structures.DiscordObjectT
+        self, channel_payload: containers.DiscordObjectT
     ) -> typing.Optional[typing.Tuple[channels.Channel, channels.Channel]]:
         """
         Update the given channel represented by the channel payload.
@@ -811,7 +811,7 @@ class IStateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_guild(
-        self, guild_payload: data_structures.DiscordObjectT
+        self, guild_payload: containers.DiscordObjectT
     ) -> typing.Optional[typing.Tuple[guilds.Guild, guilds.Guild]]:
         """
         Update the given guild represented by the guild payload.
@@ -827,7 +827,7 @@ class IStateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_guild_emojis(
-        self, emoji_list: typing.List[data_structures.DiscordObjectT], guild_obj: guilds.Guild
+        self, emoji_list: typing.List[containers.DiscordObjectT], guild_obj: guilds.Guild
     ) -> typing.Tuple[typing.FrozenSet[emojis.GuildEmoji], typing.FrozenSet[emojis.GuildEmoji]]:
         """
         Update the emojis in a given guild.
@@ -848,7 +848,7 @@ class IStateRegistry(abc.ABC):
         self,
         member_obj: members.Member,
         role_objs: typing.Sequence[roles.Role],
-        payload: data_structures.DiscordObjectT,
+        payload: containers.DiscordObjectT,
     ) -> typing.Tuple[members.Member, members.Member]:
         """
         Update a member in a given guild. If the member is not already registered, nothing is returned.
@@ -868,7 +868,7 @@ class IStateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_member_presence(
-        self, member_obj: members.Member, presence_payload: data_structures.DiscordObjectT
+        self, member_obj: members.Member, presence_payload: containers.DiscordObjectT
     ) -> typing.Tuple[members.Member, presences.Presence, presences.Presence]:
         """
         Update the presence for a given user in a given guild.
@@ -887,7 +887,7 @@ class IStateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_message(
-        self, payload: data_structures.DiscordObjectT
+        self, payload: containers.DiscordObjectT
     ) -> typing.Optional[typing.Tuple[messages.Message, messages.Message]]:
         """
         Update a message in the cache.
@@ -904,7 +904,7 @@ class IStateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_role(
-        self, guild_obj: guilds.Guild, role_payload: data_structures.DiscordObjectT
+        self, guild_obj: guilds.Guild, role_payload: containers.DiscordObjectT
     ) -> typing.Tuple[roles.Role, roles.Role]:
         """
         Update the given role in a given guild.

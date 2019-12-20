@@ -30,9 +30,9 @@ import typing
 import aiohttp
 
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import io_helpers
-from hikari.internal_utilities import media_transformations
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import storage
+from hikari.internal_utilities import conversions
 from hikari.internal_utilities import transformations
 from hikari.internal_utilities import unspecified
 from hikari.net import http_api_base
@@ -93,7 +93,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return result["url"]
 
     @_link_developer_portal(_APIResource.GATEWAY)
-    async def get_gateway_bot(self) -> data_structures.DiscordObjectT:
+    async def get_gateway_bot(self) -> containers.DiscordObjectT:
         """
         Returns:
             An object containing a `url` to connect to, an :class:`int` number of shards recommended to use
@@ -112,7 +112,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         user_id: str = unspecified.UNSPECIFIED,
         action_type: int = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Get an audit log object for the given guild.
 
@@ -142,7 +142,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/audit-logs", query=query, guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.CHANNEL)
-    async def get_channel(self, channel_id: str) -> data_structures.DiscordObjectT:
+    async def get_channel(self, channel_id: str) -> containers.DiscordObjectT:
         """
         Get a channel object from a given channel ID.
 
@@ -170,10 +170,10 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         rate_limit_per_user: int = unspecified.UNSPECIFIED,
         bitrate: int = unspecified.UNSPECIFIED,
         user_limit: int = unspecified.UNSPECIFIED,
-        permission_overwrites: typing.Sequence[data_structures.DiscordObjectT] = unspecified.UNSPECIFIED,
+        permission_overwrites: typing.Sequence[containers.DiscordObjectT] = unspecified.UNSPECIFIED,
         parent_id: str = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Update one or more aspects of a given channel ID.
 
@@ -263,7 +263,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         after: str = unspecified.UNSPECIFIED,
         before: str = unspecified.UNSPECIFIED,
         around: str = unspecified.UNSPECIFIED,
-    ) -> typing.Sequence[data_structures.DiscordObjectT]:
+    ) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Retrieve message history for a given channel. If a user is provided, retrieve the DM history.
 
@@ -310,7 +310,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/channels/{channel_id}/messages", channel_id=channel_id, query=query)
 
     @_link_developer_portal(_APIResource.CHANNEL)
-    async def get_channel_message(self, channel_id: str, message_id: str) -> data_structures.DiscordObjectT:
+    async def get_channel_message(self, channel_id: str, message_id: str) -> containers.DiscordObjectT:
         """
         Get the message with the given message ID from the channel with the given channel ID.
 
@@ -344,9 +344,9 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         content: str = unspecified.UNSPECIFIED,
         nonce: str = unspecified.UNSPECIFIED,
         tts: bool = False,
-        files: typing.Sequence[io_helpers.FileLikeT] = unspecified.UNSPECIFIED,
-        embed: data_structures.DiscordObjectT = unspecified.UNSPECIFIED,
-    ) -> data_structures.DiscordObjectT:
+        files: typing.Sequence[storage.FileLikeT] = unspecified.UNSPECIFIED,
+        embed: containers.DiscordObjectT = unspecified.UNSPECIFIED,
+    ) -> containers.DiscordObjectT:
         """
         Create a message in the given channel or DM.
 
@@ -391,7 +391,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         re_seekable_resources = []
         if files is not unspecified.UNSPECIFIED:
             for i, (file_name, file) in enumerate(files):
-                file = io_helpers.make_resource_seekable(file)
+                file = storage.make_resource_seekable(file)
                 re_seekable_resources.append(file)
                 form.add_field(f"file{i}", file, filename=file_name, content_type="application/octet-stream")
 
@@ -501,7 +501,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         before: str = unspecified.UNSPECIFIED,
         after: str = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
-    ) -> typing.Sequence[data_structures.DiscordObjectT]:
+    ) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Get a list of users who reacted with the given emoji on the given message in the given channel or user DM.
 
@@ -570,9 +570,9 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         message_id: str,
         *,
         content: str = unspecified.UNSPECIFIED,
-        embed: data_structures.DiscordObjectT = unspecified.UNSPECIFIED,
+        embed: containers.DiscordObjectT = unspecified.UNSPECIFIED,
         flags: int = unspecified.UNSPECIFIED,
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Update the given message.
 
@@ -707,7 +707,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @_link_developer_portal(_APIResource.CHANNEL)
-    async def get_channel_invites(self, channel_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
+    async def get_channel_invites(self, channel_id: str) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Get invites for a given channel.
 
@@ -736,7 +736,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         temporary: bool = unspecified.UNSPECIFIED,
         unique: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Create a new invite for the given channel.
 
@@ -818,7 +818,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         await self.request(self.POST, "/channels/{channel_id}/typing", channel_id=channel_id)
 
     @_link_developer_portal(_APIResource.CHANNEL)
-    async def get_pinned_messages(self, channel_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
+    async def get_pinned_messages(self, channel_id: str) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Get pinned messages for a given channel.
 
@@ -878,7 +878,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @_link_developer_portal(_APIResource.EMOJI)
-    async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
+    async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Gets emojis for a given guild ID.
 
@@ -898,7 +898,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/emojis", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.EMOJI)
-    async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> data_structures.DiscordObjectT:
+    async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> containers.DiscordObjectT:
         """
         Gets an emoji from a given guild and emoji IDs
 
@@ -928,9 +928,9 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         name: str,
         image: bytes,
         *,
-        roles: typing.Sequence[str] = data_structures.EMPTY_SEQUENCE,
+        roles: typing.Sequence[str] = containers.EMPTY_SEQUENCE,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Creates a new emoji for a given guild.
 
@@ -958,7 +958,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If you attempt to upload an image larger than 256kb, an empty image or an invalid image format.
         """
         assertions.assert_not_none(image, "image must be a valid image")
-        payload = {"name": name, "roles": roles, "image": media_transformations.image_bytes_to_image_data(image)}
+        payload = {"name": name, "roles": roles, "image": conversions.image_bytes_to_image_data(image)}
 
         return await self.request(
             self.POST, "/guilds/{guild_id}/emojis", guild_id=guild_id, json=payload, reason=reason
@@ -973,7 +973,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         name: str = unspecified.UNSPECIFIED,
         roles: typing.Sequence[str] = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Edits an emoji of a given guild
 
@@ -1039,9 +1039,9 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         verification_level: int,
         default_message_notifications: int,
         explicit_content_filter: int,
-        roles: typing.Sequence[data_structures.DiscordObjectT],
-        channels: typing.Sequence[data_structures.DiscordObjectT],
-    ) -> data_structures.DiscordObjectT:
+        roles: typing.Sequence[containers.DiscordObjectT],
+        channels: typing.Sequence[containers.DiscordObjectT],
+    ) -> containers.DiscordObjectT:
         """
         Creates a new guild. Can only be used by bots in less than 10 guilds.
 
@@ -1081,12 +1081,12 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             "explicit_content_filter": explicit_content_filter,
             "roles": roles,
             "channels": channels,
-            "icon": media_transformations.image_bytes_to_image_data(icon),
+            "icon": conversions.image_bytes_to_image_data(icon),
         }
         return await self.request(self.POST, "/guilds", json=payload)
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild(self, guild_id: str) -> data_structures.DiscordObjectT:
+    async def get_guild(self, guild_id: str) -> containers.DiscordObjectT:
         """
         Gets a given guild's object.
 
@@ -1121,7 +1121,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         splash: bytes = unspecified.UNSPECIFIED,
         system_channel_id: str = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Edits a given guild.
 
@@ -1171,9 +1171,9 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         transformations.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
         transformations.put_if_specified(payload, "afk_channel_id", afk_channel_id)
         transformations.put_if_specified(payload, "afk_timeout", afk_timeout)
-        transformations.put_if_specified(payload, "icon", icon, media_transformations.image_bytes_to_image_data)
+        transformations.put_if_specified(payload, "icon", icon, conversions.image_bytes_to_image_data)
         transformations.put_if_specified(payload, "owner_id", owner_id)
-        transformations.put_if_specified(payload, "splash", splash, media_transformations.image_bytes_to_image_data)
+        transformations.put_if_specified(payload, "splash", splash, conversions.image_bytes_to_image_data)
         transformations.put_if_specified(payload, "system_channel_id", system_channel_id)
         return await self.request(self.PATCH, "/guilds/{guild_id}", guild_id=guild_id, json=payload, reason=reason)
 
@@ -1197,7 +1197,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         await self.request(self.DELETE, "/guilds/{guild_id}", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_channels(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
+    async def get_guild_channels(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Gets all the channels for a given guild.
 
@@ -1228,11 +1228,11 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         user_limit: int = unspecified.UNSPECIFIED,
         rate_limit_per_user: int = unspecified.UNSPECIFIED,
         position: int = unspecified.UNSPECIFIED,
-        permission_overwrites: typing.Sequence[data_structures.DiscordObjectT] = unspecified.UNSPECIFIED,
+        permission_overwrites: typing.Sequence[containers.DiscordObjectT] = unspecified.UNSPECIFIED,
         parent_id: str = unspecified.UNSPECIFIED,
         nsfw: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Creates a channel in a given guild.
 
@@ -1317,7 +1317,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         await self.request(self.PATCH, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload)
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_member(self, guild_id: str, user_id: str) -> data_structures.DiscordObjectT:
+    async def get_guild_member(self, guild_id: str, user_id: str) -> containers.DiscordObjectT:
         """
         Gets a given guild member.
 
@@ -1339,7 +1339,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
     @_link_developer_portal(_APIResource.GUILD)
     async def list_guild_members(
         self, guild_id: str, *, limit: int = unspecified.UNSPECIFIED, after: str = unspecified.UNSPECIFIED
-    ) -> typing.Sequence[data_structures.DiscordObjectT]:
+    ) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Lists all members of a given guild.
 
@@ -1560,7 +1560,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_bans(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
+    async def get_guild_bans(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Gets the bans for a given guild.
 
@@ -1580,7 +1580,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/bans", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_ban(self, guild_id: str, user_id: str) -> data_structures.DiscordObjectT:
+    async def get_guild_ban(self, guild_id: str, user_id: str) -> containers.DiscordObjectT:
         """
         Gets a ban from a given guild.
 
@@ -1660,7 +1660,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_roles(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
+    async def get_guild_roles(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Gets the roles for a given guild.
 
@@ -1690,7 +1690,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         hoist: bool = unspecified.UNSPECIFIED,
         mentionable: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Creates a new role for a given guild.
 
@@ -1732,7 +1732,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
     @_link_developer_portal(_APIResource.GUILD)
     async def modify_guild_role_positions(
         self, guild_id: str, role: typing.Tuple[str, int], *roles: typing.Tuple[str, int]
-    ) -> typing.Sequence[data_structures.DiscordObjectT]:
+    ) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Edits the position of two or more roles in a given guild.
 
@@ -1770,7 +1770,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         hoist: bool = unspecified.UNSPECIFIED,
         mentionable: bool = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Edits a role in a given guild.
 
@@ -1902,7 +1902,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
             return None
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_voice_regions(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
+    async def get_guild_voice_regions(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Gets the voice regions for a given guild.
 
@@ -1922,7 +1922,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/regions", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_invites(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
+    async def get_guild_invites(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Gets the invites for a given guild.
 
@@ -1942,7 +1942,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/invites", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
+    async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Gets the integrations for a given guild.
 
@@ -1964,7 +1964,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
     @_link_developer_portal(_APIResource.GUILD)
     async def create_guild_integration(
         self, guild_id: str, type_: str, integration_id: str, *, reason: str = unspecified.UNSPECIFIED
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Creates an integrations for a given guild.
 
@@ -2095,7 +2095,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         )
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_embed(self, guild_id: str) -> data_structures.DiscordObjectT:
+    async def get_guild_embed(self, guild_id: str) -> containers.DiscordObjectT:
         """
         Gets the embed for a given guild.
 
@@ -2116,8 +2116,8 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
 
     @_link_developer_portal(_APIResource.GUILD)
     async def modify_guild_embed(
-        self, guild_id: str, embed: data_structures.DiscordObjectT, *, reason: str = unspecified.UNSPECIFIED
-    ) -> data_structures.DiscordObjectT:
+        self, guild_id: str, embed: containers.DiscordObjectT, *, reason: str = unspecified.UNSPECIFIED
+    ) -> containers.DiscordObjectT:
         """
         Edits the embed for a given guild.
 
@@ -2187,7 +2187,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
     @_link_developer_portal(_APIResource.INVITE)
     async def get_invite(
         self, invite_code: str, *, with_counts: bool = unspecified.UNSPECIFIED
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Gets the given invite.
 
@@ -2210,7 +2210,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/invites/{invite_code}", invite_code=invite_code, query=query)
 
     @_link_developer_portal(_APIResource.INVITE)
-    async def delete_invite(self, invite_code: str) -> data_structures.DiscordObjectT:
+    async def delete_invite(self, invite_code: str) -> containers.DiscordObjectT:
         """
         Deletes a given invite.
 
@@ -2235,7 +2235,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
     ##########
 
     @_link_developer_portal(_APIResource.OAUTH2)
-    async def get_current_application_info(self) -> data_structures.DiscordObjectT:
+    async def get_current_application_info(self) -> containers.DiscordObjectT:
         """
         Get the current application information.
 
@@ -2249,7 +2249,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
     ##########
 
     @_link_developer_portal(_APIResource.USER)
-    async def get_current_user(self) -> data_structures.DiscordObjectT:
+    async def get_current_user(self) -> containers.DiscordObjectT:
         """
         Gets the current user that is represented by token given to the client.
 
@@ -2259,7 +2259,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/users/@me")
 
     @_link_developer_portal(_APIResource.USER)
-    async def get_user(self, user_id: str) -> data_structures.DiscordObjectT:
+    async def get_user(self, user_id: str) -> containers.DiscordObjectT:
         """
         Gets a given user.
 
@@ -2279,7 +2279,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
     @_link_developer_portal(_APIResource.USER)
     async def modify_current_user(
         self, *, username: str = unspecified.UNSPECIFIED, avatar: bytes = unspecified.UNSPECIFIED
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Edits the current user. If any arguments are unspecified, then that subject is not changed on Discord.
 
@@ -2298,11 +2298,11 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         """
         payload = {}
         transformations.put_if_specified(payload, "username", username)
-        transformations.put_if_specified(payload, "avatar", avatar, media_transformations.image_bytes_to_image_data)
+        transformations.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
         return await self.request(self.PATCH, "/users/@me", json=payload)
 
     @_link_developer_portal(_APIResource.USER)
-    async def get_current_user_connections(self) -> typing.Sequence[data_structures.DiscordObjectT]:
+    async def get_current_user_connections(self) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Gets the current user's connections. This endpoint can be used with both Bearer and Bot tokens
         but will usually return an empty list for bots (with there being some exceptions to this
@@ -2320,7 +2320,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         before: str = unspecified.UNSPECIFIED,
         after: str = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
-    ) -> typing.Sequence[data_structures.DiscordObjectT]:
+    ) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Gets the guilds the current user is in.
 
@@ -2353,7 +2353,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         await self.request(self.DELETE, "/users/@me/guilds/{guild_id}", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.USER)
-    async def create_dm(self, recipient_id: str) -> data_structures.DiscordObjectT:
+    async def create_dm(self, recipient_id: str) -> containers.DiscordObjectT:
         """
         Creates a new DM channel with a given user.
 
@@ -2371,7 +2371,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.POST, "/users/@me/channels", json={"recipient_id": recipient_id})
 
     @_link_developer_portal(_APIResource.VOICE)
-    async def list_voice_regions(self) -> typing.Sequence[data_structures.DiscordObjectT]:
+    async def list_voice_regions(self) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Get the voice regions that are available.
 
@@ -2392,7 +2392,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         *,
         avatar: bytes = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Creates a webhook for a given channel.
 
@@ -2418,13 +2418,13 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
                 If the avatar image is too big or the format is invalid.
         """
         payload = {"name": name}
-        transformations.put_if_specified(payload, "avatar", avatar, media_transformations.image_bytes_to_image_data)
+        transformations.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
         return await self.request(
             self.POST, "/channels/{channel_id}/webhooks", channel_id=channel_id, json=payload, reason=reason
         )
 
     @_link_developer_portal(_APIResource.WEBHOOK)
-    async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
+    async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Gets all webhooks from a given channel.
 
@@ -2444,7 +2444,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/channels/{channel_id}/webhooks", channel_id=channel_id)
 
     @_link_developer_portal(_APIResource.WEBHOOK)
-    async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[data_structures.DiscordObjectT]:
+    async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
         """
         Gets all webhooks for a given guild.
 
@@ -2464,7 +2464,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/webhooks", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.WEBHOOK)
-    async def get_webhook(self, webhook_id: str) -> data_structures.DiscordObjectT:
+    async def get_webhook(self, webhook_id: str) -> containers.DiscordObjectT:
         """
         Gets a given webhook.
 
@@ -2490,7 +2490,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         avatar: bytes = unspecified.UNSPECIFIED,
         channel_id: str = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> data_structures.DiscordObjectT:
+    ) -> containers.DiscordObjectT:
         """
         Edits a given webhook.
 
@@ -2519,7 +2519,7 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         payload = {}
         transformations.put_if_specified(payload, "name", name)
         transformations.put_if_specified(payload, "channel_id", channel_id)
-        transformations.put_if_specified(payload, "avatar", avatar, media_transformations.image_bytes_to_image_data)
+        transformations.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
         return await self.request(
             self.PATCH, "/webhooks/{webhook_id}", webhook_id=webhook_id, json=payload, reason=reason
         )

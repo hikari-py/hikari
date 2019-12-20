@@ -46,10 +46,10 @@ import aiohttp.typedefs
 
 from hikari import errors
 from hikari.internal_utilities import compat
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import logging_helpers
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import loggers
 from hikari.internal_utilities import meta
-from hikari.internal_utilities import user_agent
+from hikari.net import user_agent
 from hikari.net import opcodes
 from hikari.net import rates
 
@@ -286,7 +286,7 @@ class GatewayClient:
         connector: aiohttp.BaseConnector = None,
         enable_guild_subscription_events=True,
         gateway_event_dispatcher: DispatchHandler = None,
-        initial_presence: typing.Optional[data_structures.DiscordObjectT] = None,
+        initial_presence: typing.Optional[containers.DiscordObjectT] = None,
         intents: opcodes.GatewayIntent = functools.reduce(operator.or_, opcodes.GatewayIntent),
         internal_event_dispatcher: DispatchHandler = None,
         json_marshaller: typing.Callable = None,
@@ -356,14 +356,14 @@ class GatewayClient:
         #: this provides a benefit of allowing you to use dicts as if they were normal python objects. If you wish
         #: to use another implementation, or just default to :class:`dict` instead, it is worth changing this
         #: attribute.
-        self.json_unmarshaller_object_hook = json_unmarshaller_object_hook or data_structures.ObjectProxy
+        self.json_unmarshaller_object_hook = json_unmarshaller_object_hook or containers.ObjectProxy
 
         logger_args = (self, shard_id, shard_count) if shard_id is not None and shard_count is not None else (self,)
 
         #: Logger used to dump information to the console.
         #:
         #: :type: :class:`logging.Logger`
-        self.logger = logging_helpers.get_named_logger(*logger_args)
+        self.logger = loggers.get_named_logger(*logger_args)
 
         #: The coroutine function to dispatch any gateway DISPATCH events to.
         #:
@@ -568,7 +568,7 @@ class GatewayClient:
             await self.ws.send_str(raw)
             self.logger.debug("> %s", raw)
 
-    async def _receive_json(self) -> data_structures.DiscordObjectT:
+    async def _receive_json(self) -> containers.DiscordObjectT:
         msg = await self._receive()
 
         if isinstance(msg, (bytes, bytearray)):
@@ -703,7 +703,7 @@ class GatewayClient:
         )
         await self._send_json(payload, False)
 
-    async def _handle_dispatch(self, event: str, payload: data_structures.DiscordObjectT) -> None:
+    async def _handle_dispatch(self, event: str, payload: containers.DiscordObjectT) -> None:
         if event == opcodes.GatewayEvent.READY:
             await self._handle_ready(payload)
         elif event == opcodes.GatewayEvent.RESUMED:
@@ -716,7 +716,7 @@ class GatewayClient:
                 pass
             self._dispatch_new_event(event, payload, False)
 
-    async def _handle_ready(self, ready_payload: data_structures.DiscordObjectT) -> None:
+    async def _handle_ready(self, ready_payload: containers.DiscordObjectT) -> None:
         self.trace = ready_payload["_trace"]
         self.session_id = ready_payload["session_id"]
         shard = ready_payload.get("shard")
@@ -729,7 +729,7 @@ class GatewayClient:
         self.logger.info("session %s has completed handshake, initial connection is READY", self.session_id)
         self.logger.debug("trace for session %s is %s", self.session_id, self.trace)
 
-    async def _handle_resumed(self, resume_payload: data_structures.DiscordObjectT) -> None:
+    async def _handle_resumed(self, resume_payload: containers.DiscordObjectT) -> None:
         self.trace = resume_payload["_trace"]
         self.session_id = resume_payload["session_id"]
         self.seq = resume_payload["seq"]
@@ -848,7 +848,7 @@ class GatewayClient:
     async def update_status(
         self,
         idle_since: typing.Optional[int],
-        game: typing.Optional[data_structures.DiscordObjectT],
+        game: typing.Optional[containers.DiscordObjectT],
         status: str,
         afk: bool,
     ) -> None:

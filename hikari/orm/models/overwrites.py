@@ -24,8 +24,8 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
 from hikari.internal_utilities import transformations
 from hikari.orm.models import interfaces
 from hikari.orm.models import members
@@ -86,7 +86,7 @@ class Overwrite(interfaces.ISnowflake):
     #: :type: :class:`hikari.orm.models.permissions.Permission`
     deny: permissions.Permission
 
-    __repr__ = auto_repr.repr_of("id", "type", "allow", "deny", "default")
+    __repr__ = reprs.repr_of("id", "type", "allow", "deny", "default")
 
     @property
     def default(self) -> permissions.Permission:
@@ -98,7 +98,7 @@ class Overwrite(interfaces.ISnowflake):
         all_perms = ~permissions.NONE
         return permissions.Permission(all_perms ^ (self.allow | self.deny))
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.id = int(payload["id"])
         self.type = OverwriteEntityType.from_discord_name(payload["type"])
         self.allow = transformations.try_cast(payload["allow"], permissions.Permission)

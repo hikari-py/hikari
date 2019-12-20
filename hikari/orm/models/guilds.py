@@ -25,9 +25,9 @@ import datetime
 import enum
 import typing
 
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import channels
@@ -102,20 +102,20 @@ class PartialGuild(interfaces.ISnowflake):
     #: :type: :class:`str` or :class:`None`
     vanity_url_code: typing.Optional[str]
 
-    __repr__ = auto_repr.repr_of("id", "name")
+    __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.id = transformations.nullable_cast(payload.get("id"), int)
         self.update_state(payload)
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.DiscordObjectT) -> None:
         self.name = payload.get("name")
         self.icon_hash = payload.get("icon")
         self.splash_hash = payload.get("splash")
         self.verification_level = transformations.try_cast(payload.get("verification_level"), VerificationLevel)
         self.features = {
             transformations.try_cast(f, Feature.from_discord_name)
-            for f in payload.get("features", data_structures.EMPTY_SEQUENCE)
+            for f in payload.get("features", containers.EMPTY_SEQUENCE)
         }
         self.vanity_url_code = payload.get("vanity_url_code")
         self.description = payload.get("description")
@@ -296,16 +296,16 @@ class Guild(PartialGuild, interfaces.IStatefulModel):
     #: :type: :class:`hikari.orm.models.guilds.SystemChannelFlag`
     system_channel_flags: typing.Optional[SystemChannelFlag]
 
-    __repr__ = auto_repr.repr_of("id", "name", "is_unavailable", "is_large", "member_count", "shard_id")
+    __repr__ = reprs.repr_of("id", "name", "is_unavailable", "is_large", "member_count", "shard_id")
 
     def __init__(
-        self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT, shard_id: typing.Optional[int]
+        self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT, shard_id: typing.Optional[int]
     ) -> None:
         self._fabric = fabric_obj
         self.shard_id = shard_id
         super().__init__(payload)
 
-    def update_state(self, payload: data_structures.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.DiscordObjectT) -> None:
         super().update_state(payload)
         self.afk_channel_id = transformations.nullable_cast(payload.get("afk_channel_id"), int)
         self.owner_id = transformations.nullable_cast(payload.get("owner_id"), int)
@@ -322,31 +322,31 @@ class Guild(PartialGuild, interfaces.IStatefulModel):
         )
         self.roles = transformations.id_map(
             self._fabric.state_registry.parse_role(r, self)
-            for r in payload.get("roles", data_structures.EMPTY_SEQUENCE)
+            for r in payload.get("roles", containers.EMPTY_SEQUENCE)
         )
         self.emojis = transformations.id_map(
             self._fabric.state_registry.parse_emoji(e, self)
-            for e in payload.get("emojis", data_structures.EMPTY_SEQUENCE)
+            for e in payload.get("emojis", containers.EMPTY_SEQUENCE)
         )
         self.member_count = transformations.nullable_cast(payload.get("member_count"), int)
 
         voice_state_objs = (
             self._fabric.state_registry.parse_voice_state(vs, self)
-            for vs in payload.get("voice_states", data_structures.EMPTY_SEQUENCE)
+            for vs in payload.get("voice_states", containers.EMPTY_SEQUENCE)
         )
         self.voice_states = {vs.user_id: vs for vs in voice_state_objs}
         self.mfa_level = transformations.try_cast(payload.get("mfa_level"), MFALevel)
         self.my_permissions = permissions.Permission(payload.get("permissions", 0))
-        self.joined_at = transformations.nullable_cast(payload.get("joined_at"), date_helpers.parse_iso_8601_ts)
+        self.joined_at = transformations.nullable_cast(payload.get("joined_at"), dates.parse_iso_8601_ts)
         self.is_large = payload.get("large", False)
         self.is_unavailable = payload.get("unavailable", False)
         self.members = transformations.id_map(
             self._fabric.state_registry.parse_member(m, self)
-            for m in payload.get("members", data_structures.EMPTY_SEQUENCE)
+            for m in payload.get("members", containers.EMPTY_SEQUENCE)
         )
         self.channels = transformations.id_map(
             self._fabric.state_registry.parse_channel(c, self)
-            for c in payload.get("channels", data_structures.EMPTY_SEQUENCE)
+            for c in payload.get("channels", containers.EMPTY_SEQUENCE)
         )
         self.max_members = payload.get("max_members", 0)
         self.premium_tier = transformations.try_cast(payload.get("premium_tier"), PremiumTier)
@@ -477,9 +477,9 @@ class Ban(interfaces.IModel):
     #: :type: :class:`hikari.orm.models.users.User`
     user: users.IUser
 
-    __repr__ = auto_repr.repr_of("user", "reason")
+    __repr__ = reprs.repr_of("user", "reason")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         self.reason = payload.get("reason")
         self.user = fabric_obj.state_registry.parse_user(payload.get("user"))
 
@@ -501,14 +501,14 @@ class GuildEmbed(interfaces.IModel):
     #: :type: :class:`int` or :class:`None`
     channel_id: typing.Optional[int]
 
-    __repr__ = auto_repr.repr_of("enabled", "channel_id")
+    __repr__ = reprs.repr_of("enabled", "channel_id")
 
     def __init__(self, *, enabled: bool, channel_id: int = None) -> None:
         self.enabled = enabled
         self.channel_id = channel_id
 
     @classmethod
-    def from_dict(cls, payload: data_structures.DiscordObjectT) -> GuildEmbed:
+    def from_dict(cls, payload: containers.DiscordObjectT) -> GuildEmbed:
         """
         Initialise this model from a Discord payload.
 
@@ -520,7 +520,7 @@ class GuildEmbed(interfaces.IModel):
             channel_id=transformations.nullable_cast(payload.get("channel_id"), int),
         )
 
-    def to_dict(self, *, dict_factory: data_structures.DictFactoryT = dict) -> data_structures.DictImplT:
+    def to_dict(self, *, dict_factory: containers.DictFactoryT = dict) -> containers.DictImplT:
         attrs = {a: getattr(self, a) for a in self.__slots__}
         # noinspection PyArgumentList,PyTypeChecker
         return dict_factory(**{k: v for k, v in attrs.items() if v is not None})

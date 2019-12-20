@@ -16,21 +16,19 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import io
-
-import pytest
-
-from hikari.internal_utilities import io_helpers
+import hikari.net.user_agent
 
 
-@pytest.mark.parametrize(
-    ["input", "expected_result_type"],
-    [
-        ("hello", io.StringIO),
-        (b"hello", io.BytesIO),
-        (bytearray("hello", "utf-8"), io.BytesIO),
-        (memoryview(b"hello"), io.BytesIO),
-    ],
-)
-def test_make_resource_seekable(input, expected_result_type):
-    assert isinstance(io_helpers.make_resource_seekable(input), expected_result_type)
+def test_library_version_is_callable_and_produces_string():
+    result = hikari.net.user_agent.library_version()
+    assert result.startswith("hikari ")
+
+
+def test_python_version_is_callable_and_produces_string():
+    result = hikari.net.user_agent.python_version()
+    assert isinstance(result, str) and len(result.strip()) > 0
+
+
+def test_system_type_produces_string():
+    result = hikari.net.user_agent.system_type()
+    assert isinstance(result, str) and len(result.strip()) > 0

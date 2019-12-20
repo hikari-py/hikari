@@ -24,7 +24,7 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
 from hikari.orm import dispatching_event_adapter
 from hikari.orm import events
@@ -186,7 +186,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdap
             channel_obj: channels.TextChannel
 
             last_pin_timestamp = transformations.nullable_cast(
-                payload.get("last_pin_timestamp"), date_helpers.parse_iso_8601_ts
+                payload.get("last_pin_timestamp"), dates.parse_iso_8601_ts
             )
 
             self.fabric.state_registry.set_last_pinned_timestamp(channel_obj, last_pin_timestamp)
