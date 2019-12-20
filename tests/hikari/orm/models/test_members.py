@@ -25,6 +25,7 @@ from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import guilds
 from hikari.orm.models import members
+from hikari.orm.models import presences
 from hikari.orm.models import roles
 from hikari.orm.models import users
 from tests.hikari import _helpers
@@ -73,6 +74,7 @@ def test_Member_with_filled_fields(fabric_obj):
     assert member_obj.is_deaf is False
     assert member_obj.is_mute is True
     assert member_obj.guild is guild_obj
+    assert member_obj.presence is None
     member_obj.__repr__()
     fabric_obj.state_registry.parse_user.assert_called_with(user_dict)
 
@@ -97,6 +99,7 @@ def test_Member_with_no_optional_fields(fabric_obj):
     assert member_obj.is_deaf is False
     assert member_obj.is_mute is False
     assert member_obj.guild is guild_obj
+    assert member_obj.presence is None
     fabric_obj.state_registry.parse_user.assert_called_with(user_dict)
 
 
@@ -154,3 +157,59 @@ def test_Member_guild_accessor(fabric_obj):
         fabric_obj, guild_obj, {"joined_at": "2019-05-17T06:26:56.936000+00:00", "user": user_obj, "guild_id": 1234}
     )
     assert m.guild is guild_obj
+
+
+def test_Member_update_presence_state(fabric_obj):
+    guild_obj = mock.MagicMock(guilds.Guild)
+    mock_presence = mock.MagicMock(presences.Presence)
+    fabric_obj.state_registry.parse_user.return_value = mock.MagicMock(users.User, _fabric=fabric_obj, id=123456)
+    fabric_obj.state_registry.parse_presence.return_value = mock_presence
+    presence_payload = {
+        "user": {"id": "123456"},
+        "status": "online",
+        "game": None,
+        "client_status": {"desktop": "online"},
+        "activities": [],
+        "roles": [],
+        "guild_id": "2331123",
+    }
+    member_obj = members.Member(
+        fabric_obj,
+        guild_obj,
+        {
+            "roles": [],
+            "joined_at": "2015-04-26T06:26:56.936000+00:00",
+            "premium_since": "2019-05-17T06:26:56.936000+00:00",
+            "user": {},
+        },
+    )
+    assert member_obj.presence is None
+    member_obj.update_presence_state(presence_payload)
+    fabric_obj.state_registry.parse_presence.assert_called_once_with(member_obj, presence_payload)
+    assert member_obj.presence is mock_presence
+
+
+@_helpers.assert_raises(type_=ValueError)
+def test_Member_update_presence_state_with_mismatching_presence(fabric_obj):
+    guild_obj = mock.MagicMock(guilds.Guild)
+    presence_payload = {
+        "user": {"id": "123456"},
+        "status": "online",
+        "game": None,
+        "client_status": {"desktop": "online"},
+        "activities": [],
+        "roles": [],
+        "guild_id": "5321321",
+    }
+    fabric_obj.state_registry.parse_user.return_value = mock.MagicMock(users.User, id=4123)
+    member_obj = members.Member(
+        fabric_obj,
+        guild_obj,
+        {
+            "roles": [],
+            "joined_at": "2015-04-26T06:26:56.936000+00:00",
+            "premium_since": "2019-05-17T06:26:56.936000+00:00",
+            "user": {},
+        },
+    )
+    member_obj.update_presence_state(presence_payload)
