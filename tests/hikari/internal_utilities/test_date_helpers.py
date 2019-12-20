@@ -75,6 +75,19 @@ def test_parse_iso_8601_date_with_milliseconds_instead_of_microseconds():
     assert date.microsecond == 23000
 
 
+def test_parse_iso_8601_date_with_no_fraction():
+    string = "2019-10-10T05:22:33Z"
+    date = date_helpers.parse_iso_8601_ts(string)
+    assert date.year == 2019
+    assert date.month == 10
+    assert date.day == 10
+    assert date.hour == 5
+    assert date.minute == 22
+    assert date.second == 33
+    assert date.microsecond == 0
+
+
+
 def test_parse_http_date():
     rfc_timestamp = "Mon, 03 Jun 2019 17:54:26 GMT"
     expected_timestamp = datetime.datetime(2019, 6, 3, 17, 54, 26, tzinfo=datetime.timezone.utc)
