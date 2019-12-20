@@ -55,6 +55,7 @@ class Invite(interfaces.IModel):
         "code",
         "guild",
         "channel",
+        "inviter",
         "target_user",
         "target_user_type",
         "approximate_presence_count",
@@ -76,6 +77,11 @@ class Invite(interfaces.IModel):
     #: :type: :class:`hikari.orm.models.channels.PartialChannel`
     channel: channels.PartialChannel
 
+    #: The user who created the invite.
+    #:
+    #: :type: :class:`hikari.orm.models.users.IUser` or :class:`None`
+    inviter: typing.Optional[users.IUser]
+
     #: The user this invite is targeting.
     #:
     #: :type: :class:`hikari.orm.models.users.IUser` or `None`
@@ -96,12 +102,13 @@ class Invite(interfaces.IModel):
     #: :type: :class:`int` or `None`
     approximate_member_count: typing.Optional[int]
 
-    __repr__ = auto_repr.repr_of("code", "guild", "channel")
+    __repr__ = auto_repr.repr_of("code", "inviter.id", "guild", "channel")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
         self.code = payload["code"]
         self.guild = transformations.nullable_cast(payload.get("guild"), guilds.PartialGuild)
         self.channel = channels.PartialChannel(fabric_obj, payload["channel"])
+        self.inviter = transformations.nullable_cast(payload.get("inviter"), fabric_obj.state_registry.parse_user)
         self.target_user = transformations.nullable_cast(
             payload.get("target_user"), fabric_obj.state_registry.parse_user
         )
@@ -113,19 +120,14 @@ class Invite(interfaces.IModel):
         return self.code
 
 
-class InviteMetadata(interfaces.IModel):
+class InviteWithMetadata(Invite):
     """
-    Metadata relating to a specific invite object.
+    An invite with it's metadata mixed in.
     """
 
-    __slots__ = ("inviter", "uses", "max_uses", "max_age", "is_temporary", "created_at", "is_revoked")
+    __slots__ = ("uses", "max_uses", "max_age", "is_temporary", "created_at", "is_revoked")
 
     _state: state_registry.IStateRegistry
-
-    #: The user who created the invite.
-    #:
-    #: :type: :class:`hikari.orm.models.users.User`
-    inviter: users.User
 
     #: The number of times the invite has been used.
     #:
@@ -157,10 +159,10 @@ class InviteMetadata(interfaces.IModel):
     #: :type: :class:`bool`
     is_revoked: bool
 
-    __repr__ = auto_repr.repr_of("inviter.id", "uses", "max_uses", "created_at")
+    __repr__ = auto_repr.repr_of("code", "guild", "channel", "inviter.id", "uses", "max_uses", "created_at")
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
-        self.inviter = fabric_obj.state_registry.parse_user(payload["inviter"])
+        super().__init__(fabric_obj, payload)
         self.uses = int(payload["uses"])
         self.max_uses = int(payload["max_uses"])
         self.max_age = int(payload["max_age"])
@@ -169,8 +171,20 @@ class InviteMetadata(interfaces.IModel):
         self.is_revoked = payload.get("revoked", False)
 
 
-#: An :class:`Invite` or the :class:`str` code of an invite object.
-InviteLikeT = typing.Union[str, Invite]
+def parse_invite(
+    fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT
+) -> typing.Union[Invite, InviteWithMetadata]:
+    """
+    Consume a fabric object and some type of invite payload and try to parse
+    whether this invite includes metadata or not for the given payload.
+
+    The result is then returned.
+    """
+    return InviteWithMetadata(fabric_obj, payload) if "created_at" in payload else Invite(fabric_obj, payload)
 
 
-__all__ = ["Invite", "InviteMetadata", "InviteTargetUserType", "InviteLikeT"]
+#: An :class:`Invite` or :class:`InviteWithMetadata` or the :class:`str` code of an invite object.
+InviteLikeT = typing.Union[str, Invite, InviteWithMetadata]
+
+
+__all__ = ["Invite", "InviteWithMetadata", "InviteTargetUserType", "InviteLikeT"]
