@@ -56,7 +56,6 @@ pages:
   image: busybox:1.31.1-musl
   before_script:
     - 'mkdir public || true'
-    - pip install poetry
   dependencies:
     - staging-pages
     - master-pages
