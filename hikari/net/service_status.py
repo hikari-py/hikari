@@ -38,8 +38,8 @@ import typing
 
 import aiohttp.typedefs
 
-from hikari.internal_utilities import data_structures
-from hikari.internal_utilities import date_helpers
+from hikari.internal_utilities import containers
+from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
 from hikari.net import http_client
 
@@ -107,18 +107,18 @@ class Subscriber:
     purge_at: typing.Optional[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload: data_structures.DiscordObjectT) -> Subscriber:
+    def from_dict(payload: containers.DiscordObjectT) -> Subscriber:
         return Subscriber(
             id=payload["id"],
             email=payload["email"],
             mode=payload["mode"],
-            created_at=date_helpers.parse_iso_8601_ts(payload["created_at"]),
-            quarantined_at=transformations.nullable_cast(payload.get("quarantined_at"), date_helpers.parse_iso_8601_ts),
+            created_at=dates.parse_iso_8601_ts(payload["created_at"]),
+            quarantined_at=transformations.nullable_cast(payload.get("quarantined_at"), dates.parse_iso_8601_ts),
             incident=transformations.nullable_cast(payload.get("incident"), Incident.from_dict),
             is_skipped_confirmation_notification=transformations.nullable_cast(
                 payload.get("skip_confirmation_notification"), bool
             ),
-            purge_at=transformations.nullable_cast(payload.get("purge_at"), date_helpers.parse_iso_8601_ts),
+            purge_at=transformations.nullable_cast(payload.get("purge_at"), dates.parse_iso_8601_ts),
         )
 
 
@@ -136,7 +136,7 @@ class Subscription:
     subscriber: Subscriber
 
     @staticmethod
-    def from_dict(payload: data_structures.DiscordObjectT) -> Subscription:
+    def from_dict(payload: containers.DiscordObjectT) -> Subscription:
         return Subscription(subscriber=Subscriber.from_dict(payload["subscriber"]))
 
 
@@ -172,12 +172,12 @@ class Page:
     updated_at: datetime.datetime
 
     @staticmethod
-    def from_dict(payload: data_structures.DiscordObjectT) -> Page:
+    def from_dict(payload: containers.DiscordObjectT) -> Page:
         return Page(
             id=payload["id"],
             name=payload["name"],
             url=payload["url"],
-            updated_at=transformations.nullable_cast(payload.get("updated_at"), date_helpers.parse_iso_8601_ts),
+            updated_at=transformations.nullable_cast(payload.get("updated_at"), dates.parse_iso_8601_ts),
         )
 
 
@@ -200,7 +200,7 @@ class Status:
     description: typing.Optional[str]
 
     @staticmethod
-    def from_dict(payload: data_structures.DiscordObjectT) -> Status:
+    def from_dict(payload: containers.DiscordObjectT) -> Status:
         return Status(indicator=payload.get("indicator"), description=payload.get("description"))
 
 
@@ -259,14 +259,14 @@ class Component:
     status: typing.Optional[str]
 
     @staticmethod
-    def from_dict(payload: data_structures.DiscordObjectT) -> Component:
+    def from_dict(payload: containers.DiscordObjectT) -> Component:
         return Component(
             id=payload["id"],
             name=payload["name"],
-            created_at=transformations.nullable_cast(payload.get("created_at"), date_helpers.parse_iso_8601_ts),
+            created_at=transformations.nullable_cast(payload.get("created_at"), dates.parse_iso_8601_ts),
             page_id=payload["page_id"],
             position=transformations.nullable_cast(payload.get("position"), int),
-            updated_at=transformations.nullable_cast(payload.get("updated_at"), date_helpers.parse_iso_8601_ts),
+            updated_at=transformations.nullable_cast(payload.get("updated_at"), dates.parse_iso_8601_ts),
             description=payload.get("description"),
             status=payload.get("status"),
         )
@@ -291,7 +291,7 @@ class Components:
     components: typing.Sequence[Component]
 
     @staticmethod
-    def from_dict(payload: data_structures.DiscordObjectT) -> Components:
+    def from_dict(payload: containers.DiscordObjectT) -> Components:
         return Components(
             page=Page.from_dict(payload["page"]),
             components=[Component.from_dict(c) for c in payload.get("components", [])],
@@ -348,15 +348,15 @@ class IncidentUpdate:
     updated_at: typing.Optional[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload: data_structures.DiscordObjectT) -> IncidentUpdate:
+    def from_dict(payload: containers.DiscordObjectT) -> IncidentUpdate:
         return IncidentUpdate(
             id=payload["id"],
             body=payload["body"],
-            created_at=transformations.nullable_cast(payload.get("created_at"), date_helpers.parse_iso_8601_ts),
-            display_at=transformations.nullable_cast(payload.get("display_at"), date_helpers.parse_iso_8601_ts),
+            created_at=transformations.nullable_cast(payload.get("created_at"), dates.parse_iso_8601_ts),
+            display_at=transformations.nullable_cast(payload.get("display_at"), dates.parse_iso_8601_ts),
             incident_id=payload["incident_id"],
             status=payload["status"],
-            updated_at=transformations.nullable_cast(payload.get("updated_at"), date_helpers.parse_iso_8601_ts),
+            updated_at=transformations.nullable_cast(payload.get("updated_at"), dates.parse_iso_8601_ts),
         )
 
 
@@ -448,22 +448,22 @@ class Incident:
     started_at: typing.Optional[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload: data_structures.DiscordObjectT) -> Incident:
+    def from_dict(payload: containers.DiscordObjectT) -> Incident:
         return Incident(
             id=payload["id"],
             name=payload["name"],
             status=payload["status"],
-            created_at=transformations.try_cast(payload["created_at"], date_helpers.parse_iso_8601_ts),
-            updated_at=transformations.try_cast(payload.get("updated_at"), date_helpers.parse_iso_8601_ts),
+            created_at=transformations.try_cast(payload["created_at"], dates.parse_iso_8601_ts),
+            updated_at=transformations.try_cast(payload.get("updated_at"), dates.parse_iso_8601_ts),
             incident_updates=[
-                IncidentUpdate.from_dict(i) for i in payload.get("incident_updates", data_structures.EMPTY_SEQUENCE)
+                IncidentUpdate.from_dict(i) for i in payload.get("incident_updates", containers.EMPTY_SEQUENCE)
             ],
-            monitoring_at=transformations.try_cast(payload.get("monitoring_at"), date_helpers.parse_iso_8601_ts),
-            resolved_at=transformations.try_cast(payload.get("resolved_at"), date_helpers.parse_iso_8601_ts),
+            monitoring_at=transformations.try_cast(payload.get("monitoring_at"), dates.parse_iso_8601_ts),
+            resolved_at=transformations.try_cast(payload.get("resolved_at"), dates.parse_iso_8601_ts),
             shortlink=payload["shortlink"],
             page_id=payload["page_id"],
             impact=payload["impact"],
-            started_at=transformations.try_cast(payload.get("started_at"), date_helpers.parse_iso_8601_ts),
+            started_at=transformations.try_cast(payload.get("started_at"), dates.parse_iso_8601_ts),
         )
 
 
@@ -486,7 +486,7 @@ class Incidents:
     incidents: typing.Sequence[Incident]
 
     @staticmethod
-    def from_dict(payload: data_structures.DiscordObjectT) -> Incidents:
+    def from_dict(payload: containers.DiscordObjectT) -> Incidents:
         return Incidents(Page.from_dict(payload["page"]), [Incident.from_dict(i) for i in payload["incidents"]])
 
 
@@ -590,24 +590,24 @@ class ScheduledMaintenance:
     started_at: typing.Optional[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload: data_structures.DiscordObjectT) -> ScheduledMaintenance:
+    def from_dict(payload: containers.DiscordObjectT) -> ScheduledMaintenance:
         return ScheduledMaintenance(
             id=payload["id"],
             name=payload["name"],
             impact=payload["impact"],
             incident_updates=[
-                IncidentUpdate.from_dict(iu) for iu in payload.get("incident_updates", data_structures.EMPTY_SEQUENCE)
+                IncidentUpdate.from_dict(iu) for iu in payload.get("incident_updates", containers.EMPTY_SEQUENCE)
             ],
-            monitoring_at=transformations.try_cast(payload.get("monitoring_at"), date_helpers.parse_iso_8601_ts),
+            monitoring_at=transformations.try_cast(payload.get("monitoring_at"), dates.parse_iso_8601_ts),
             page_id=payload["page_id"],
-            resolved_at=transformations.try_cast(payload.get("resolved_at"), date_helpers.parse_iso_8601_ts),
-            scheduled_for=transformations.try_cast(payload.get("scheduled_for"), date_helpers.parse_iso_8601_ts),
-            scheduled_until=transformations.try_cast(payload.get("scheduled_until"), date_helpers.parse_iso_8601_ts),
+            resolved_at=transformations.try_cast(payload.get("resolved_at"), dates.parse_iso_8601_ts),
+            scheduled_for=transformations.try_cast(payload.get("scheduled_for"), dates.parse_iso_8601_ts),
+            scheduled_until=transformations.try_cast(payload.get("scheduled_until"), dates.parse_iso_8601_ts),
             status=payload["status"],
-            updated_at=transformations.try_cast(payload.get("updated_at"), date_helpers.parse_iso_8601_ts),
-            created_at=transformations.try_cast(payload["created_at"], date_helpers.parse_iso_8601_ts),
+            updated_at=transformations.try_cast(payload.get("updated_at"), dates.parse_iso_8601_ts),
+            created_at=transformations.try_cast(payload["created_at"], dates.parse_iso_8601_ts),
             shortlink=payload["shortlink"],
-            started_at=transformations.try_cast(payload["started_at"], date_helpers.parse_iso_8601_ts),
+            started_at=transformations.try_cast(payload["started_at"], dates.parse_iso_8601_ts),
         )
 
 
@@ -631,7 +631,7 @@ class ScheduledMaintenances:
     scheduled_maintenances: typing.Sequence[ScheduledMaintenance]
 
     @staticmethod
-    def from_dict(payload: data_structures.DiscordObjectT) -> ScheduledMaintenances:
+    def from_dict(payload: containers.DiscordObjectT) -> ScheduledMaintenances:
         return ScheduledMaintenances(
             page=Page.from_dict(payload["page"]),
             scheduled_maintenances=[ScheduledMaintenance.from_dict(sm) for sm in payload["scheduled_maintenances"]],
@@ -657,7 +657,7 @@ class OverallStatus:
     status: Status
 
     @staticmethod
-    def from_dict(payload: data_structures.DiscordObjectT) -> OverallStatus:
+    def from_dict(payload: containers.DiscordObjectT) -> OverallStatus:
         return OverallStatus(page=Page.from_dict(payload["page"]), status=Status.from_dict(payload["status"]),)
 
 
@@ -686,15 +686,15 @@ class Summary:
     scheduled_maintenances: typing.Sequence[ScheduledMaintenance]
 
     @staticmethod
-    def from_dict(payload: data_structures.DiscordObjectT) -> Summary:
+    def from_dict(payload: containers.DiscordObjectT) -> Summary:
         return Summary(
             page=Page.from_dict(payload["page"]),
             scheduled_maintenances=[
                 ScheduledMaintenance.from_dict(sm)
-                for sm in payload.get("scheduled_maintenances", data_structures.EMPTY_SEQUENCE)
+                for sm in payload.get("scheduled_maintenances", containers.EMPTY_SEQUENCE)
             ],
-            incidents=[Incident.from_dict(i) for i in payload.get("incidents", data_structures.EMPTY_SEQUENCE)],
-            components=[Component.from_dict(c) for c in payload.get("components", data_structures.EMPTY_SEQUENCE)],
+            incidents=[Incident.from_dict(i) for i in payload.get("incidents", containers.EMPTY_SEQUENCE)],
+            components=[Component.from_dict(c) for c in payload.get("components", containers.EMPTY_SEQUENCE)],
         )
 
 

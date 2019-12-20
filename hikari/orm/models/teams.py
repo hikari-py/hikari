@@ -24,8 +24,8 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import auto_repr
-from hikari.internal_utilities import data_structures
+from hikari.internal_utilities import reprs
+from hikari.internal_utilities import containers
 from hikari.internal_utilities import delegate
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
@@ -60,9 +60,9 @@ class Team(interfaces.IStatefulModel, interfaces.ISnowflake):
     #: :type: :class:`int`
     owner_user_id: int
 
-    __repr__ = auto_repr.repr_of("id", "owner_user_id")
+    __repr__ = reprs.repr_of("id", "owner_user_id")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         self._fabric = fabric_obj
         self.id = int(payload["id"])
         self.icon = payload.get("icon")
@@ -100,9 +100,9 @@ class TeamMember(users.IUser, delegate_fabricated=True):
     #: :type: :class:`IUser`
     user: users.IUser
 
-    __repr__ = auto_repr.repr_of("team_id", "permissions", "membership_state", "user.id", "user.username")
+    __repr__ = reprs.repr_of("team_id", "permissions", "membership_state", "user.id", "user.username")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: data_structures.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         self.team_id = int(payload["team_id"])
         self.permissions = set(payload["permissions"])
         self.membership_state = MembershipState(payload["membership_state"])

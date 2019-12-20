@@ -19,7 +19,7 @@
 import asyncmock as mock
 import pytest
 
-from hikari.internal_utilities import io_helpers
+from hikari.internal_utilities import storage
 from hikari.orm.models import media
 from tests.hikari import _helpers
 
@@ -162,7 +162,7 @@ async def test_InMemoryFile_open():
         async def __aexit__(self, exc_type, exc_val, exc_tb):
             pass
 
-    with _helpers.mock_patch(io_helpers.make_resource_seekable, return_value=ContextManager()) as mrs:
+    with _helpers.mock_patch(storage.make_resource_seekable, return_value=ContextManager()) as mrs:
         async with file.open() as fp:
             assert isinstance(fp, ContextManager)
         mrs.assert_called_once_with("this is data")
