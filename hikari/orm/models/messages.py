@@ -41,7 +41,7 @@ from hikari.orm.models import users
 from hikari.orm.models import webhooks
 
 
-class MessageType(enum.IntEnum):
+class MessageType(interfaces.BestEffortEnumMixin, enum.IntEnum):
     """
     The type of a message.
     """
@@ -74,7 +74,7 @@ class MessageType(enum.IntEnum):
     CHANNEL_FOLLOW_ADD = 12
 
 
-class MessageActivityType(enum.IntEnum):
+class MessageActivityType(interfaces.BestEffortEnumMixin, enum.IntEnum):
     """
     The type of a rich presence message activity.
     """
@@ -90,7 +90,7 @@ class MessageActivityType(enum.IntEnum):
     JOIN_REQUEST = 5
 
 
-class MessageFlag(enum.IntFlag):
+class MessageFlag(interfaces.BestEffortEnumMixin, enum.IntFlag):
     """
     Additional flags for message options.
     """

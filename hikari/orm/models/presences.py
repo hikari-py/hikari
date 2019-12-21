@@ -233,7 +233,7 @@ def parse_presence_activity(payload: containers.DiscordObjectT,) -> typing.Union
     return impl(payload)
 
 
-class ActivityType(enum.IntEnum):
+class ActivityType(interfaces.BestEffortEnumMixin, enum.IntEnum):
     """
     The activity state. Can be more than one using bitwise-combinations.
     """

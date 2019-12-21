@@ -349,7 +349,7 @@ def parse_audit_log_entry_info(
         return None
 
 
-class AuditLogChangeKey(str, interfaces.BestEffortEnumMixin, enum.Enum):
+class AuditLogChangeKey(str, interfaces.NamedEnumMixin, enum.Enum):
     """
     Commonly known and documented keys for audit log change objects.
 

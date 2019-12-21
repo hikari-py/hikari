@@ -109,7 +109,7 @@ class TeamMember(users.IUser, delegate_fabricated=True):
         self.user = fabric_obj.state_registry.parse_user(payload["user"])
 
 
-class MembershipState(enum.IntEnum):
+class MembershipState(interfaces.BestEffortEnumMixin, enum.IntEnum):
     """
     The state of membership for a team member.
     """

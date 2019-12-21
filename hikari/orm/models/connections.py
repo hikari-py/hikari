@@ -31,7 +31,7 @@ from hikari.orm.models import integrations
 from hikari.orm.models import interfaces
 
 
-class ConnectionVisibility(enum.IntEnum):
+class ConnectionVisibility(interfaces.BestEffortEnumMixin, enum.IntEnum):
     """The visibility options for a user connection."""
 
     NONE = 0

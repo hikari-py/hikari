@@ -37,7 +37,7 @@ from hikari.orm.models import interfaces
 from hikari.orm.models import users
 
 
-class InviteTargetUserType(enum.IntEnum):
+class InviteTargetUserType(interfaces.BestEffortEnumMixin, enum.IntEnum):
     """
     Why an invite targets a user.
     """

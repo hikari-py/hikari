@@ -66,7 +66,7 @@ class BestEffortEnumMixin:
     __repr__ = __str__
 
 
-class NamedEnumMixin:
+class NamedEnumMixin(BestEffortEnumMixin):
     """
     A mixin for an enum that is produced from a string by Discord. This ensures that the key can be looked up from a
     lowercase value that discord provides and use a Pythonic key name that is in upper case.
