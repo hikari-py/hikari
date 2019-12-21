@@ -276,6 +276,10 @@ class GatewayClient:
         opcodes.GatewayClosure.SHARDING_REQUIRED,
     )
 
+    _DO_NOT_RESUME_CLOSURE_CODES = (
+        opcodes.GatewayClosure.UNKNOWN_OPCODE,
+    )
+
     def __init__(
         self,
         *,
@@ -287,7 +291,7 @@ class GatewayClient:
         enable_guild_subscription_events=True,
         gateway_event_dispatcher: DispatchHandler = None,
         initial_presence: typing.Optional[containers.DiscordObjectT] = None,
-        intents: opcodes.GatewayIntent = functools.reduce(operator.or_, opcodes.GatewayIntent),
+        intents: opcodes.GatewayIntent = functools.reduce(operator.or_, opcodes.GatewayIntent.__iter__()),
         internal_event_dispatcher: DispatchHandler = None,
         json_marshaller: typing.Callable = None,
         json_unmarshaller: typing.Callable = None,
@@ -824,7 +828,7 @@ class GatewayClient:
                 raise RuntimeError("Cannot specify both user_ids and query together")
             payload["user_ids"] = [*user_ids]
         else:
-            payload["query"] = query or ""
+            payload["query"] = query if query is not None else ""
             payload["limit"] = limit
 
         self.logger.debug("requesting members with constraints %s", payload)
@@ -836,7 +840,13 @@ class GatewayClient:
     @meta.incubating(message="This is not currently documented.")
     def request_guild_sync(self, guild_id1: str, *guild_ids: str) -> None:
         """
-        Request that the gateway resyncs the following guilds.
+        Request that the gateway re-syncs any guilds provided.
+
+        Args:
+            guild_id1:
+                the first guild ID to consider.
+            guild_ids:
+                any additional guild IDs to consider.
         """
         guilds = [guild_id1, *guild_ids]
         self.logger.debug("requesting a guild sync for guilds %s", guilds)
@@ -959,16 +969,8 @@ class GatewayClient:
                 raise errors.GatewayError(code, reason) from ex
 
             self.logger.warning("reconnecting after %s [%s]", reason, code)
-            if isinstance(ex, _RestartConnection):
+            if isinstance(ex, _RestartConnection) or code in self._DO_NOT_RESUME_CLOSURE_CODES:
                 self.seq, self.session_id, self.trace = None, None, []
-
-    async def close(self) -> None:
-        """
-        Request that the gateway gracefully shuts down.
-        """
-        if not self.ws.closed:
-            self._closed_event.set()
-            await self.ws.close()
 
     def _dispatch_new_event(self, event_name: str, payload, is_internal_event) -> None:
         # This prevents us blocking any task such as the READY handler.
@@ -977,6 +979,14 @@ class GatewayClient:
             dispatcher(self, event_name, payload),
             name=f"dispatching {event_name} event (shard {self.shard_id}/{self.shard_count})",
         )
+
+    async def close(self) -> None:
+        """
+        Request that the gateway gracefully shuts down.
+        """
+        if not self.ws.closed:
+            self._closed_event.set()
+            await self.ws.close()
 
 
 __all__ = ["GatewayClient"]
