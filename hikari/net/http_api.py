@@ -2141,7 +2141,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.PATCH, "/guilds/{guild_id}/embed", guild_id=guild_id, json=embed, reason=reason)
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_vanity_url(self, guild_id: str) -> str:
+    async def get_guild_vanity_url(self, guild_id: str) -> containers.DiscordObjectT:
         """
         Gets the vanity URL for a given guild.
 

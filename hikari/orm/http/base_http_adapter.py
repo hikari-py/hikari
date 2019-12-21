@@ -109,7 +109,7 @@ class BaseHTTPAdapter(abc.ABC):
                 number allowed.
                 
         Returns:
-            An audit log object.
+            An :class:`hikari.orm.models.audit_logs.AuditLog` object.
         """
 
     @abc.abstractmethod
@@ -526,24 +526,86 @@ class BaseHTTPAdapter(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def delete_integration(self, guild: _guilds.GuildLikeT, integration: _integrations.IntegrationLikeT) -> None:
-        ...
+    async def delete_integration(self, guild: _guilds.GuildLikeT, integration: _integrations.IntegrationLikeT,) -> None:
+        """
+        Deletes an integration for the given guild.
+
+        Args:
+            guild:
+                The ID or object of the guild from which to delete an integration.
+            integration:
+                The ID or object of the integration to delete.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or the integration aren't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_GUILD` permission or are not in the guild.
+        """
 
     @abc.abstractmethod
     async def sync_guild_integration(
         self, guild: _guilds.GuildLikeT, integration: _integrations.IntegrationLikeT
     ) -> None:
-        ...
+        """
+        Syncs the given integration.
+
+        Args:
+            guild:
+                The ID or object of the guild to which the integration belongs to.
+            integration:
+                The ID or object of the integration to sync.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the guild or the integration aren't found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_GUILD` permission or are not in the guild.
+        """
 
     @abc.abstractmethod
-    async def fetch_guild_embed(self, guild: _guilds.GuildLikeT) -> _embeds.ReceivedEmbed:
-        ...
+    async def fetch_guild_embed(self, guild: _guilds.GuildLikeT) -> _guilds.GuildEmbed:
+        """
+          Gets the embed for a given guild.
+
+          Args:
+              guild:
+                  The ID or object of the guild to get the embed for.
+
+          Returns:
+              A :class:`hikari.orm.models.guilds.GuildEmbed` object.
+
+          Raises:
+              hikari.errors.NotFound:
+                  If the guild is not found.
+              hikari.errors.Forbidden:
+                  If you either lack the `MANAGE_GUILD` permission or are not in the guild.
+        """
 
     @abc.abstractmethod
     async def modify_guild_embed(
-        self, guild: _guilds.GuildLikeT, embed: _embeds.Embed, *, reason: str = unspecified.UNSPECIFIED,
+        self, guild: _guilds.GuildLikeT, embed: _guilds.GuildEmbed, *, reason: str = unspecified.UNSPECIFIED,
     ) -> None:
-        ...
+        """
+        Edits the embed for a given guild.
+
+        Args:
+            guild:
+                The ID or object of the guild to edit the embed for.
+            embed:
+                The new embed object to be set.
+            reason:
+                Optional reason to add to audit logs for the guild explaining why the operation was performed.
+
+        Returns:
+            The updated :class:`hikari.orm.models.guilds.GuildEmbed` object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild is not found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_GUILD` permission or are not in the guild.
+        """
 
     @abc.abstractmethod
     async def fetch_guild_vanity_url(self, guild: _guilds.GuildLikeT) -> str:
@@ -553,37 +615,128 @@ class BaseHTTPAdapter(abc.ABC):
     def fetch_guild_widget_image(
         self, guild: _guilds.GuildLikeT, *, style: _guilds.WidgetStyle = unspecified.UNSPECIFIED
     ) -> str:
-        ...
+        """
+         Get the URL for a guild widget.
+
+         Args:
+             guild:
+                 The guild ID or object to use for the widget.
+             style:
+                 Optional and one of "shield", "banner1", "banner2", "banner3" or "banner4".
+
+         Returns:
+             A URL to retrieve a PNG widget for your guild.
+
+         Note:
+             This does not actually make any form of request, and shouldn't be awaited. Thus, it doesn't have rate limits
+             either.
+
+         Warning:
+             The guild must have the widget enabled in the guild settings for this to be valid.
+         """
 
     @abc.abstractmethod
-    async def fetch_invite(self, invite_code: _invites.InviteLikeT) -> _invites.Invite:
-        ...
+    async def fetch_invite(
+        self, invite: _invites.InviteLikeT, with_counts: bool = unspecified.UNSPECIFIED
+    ) -> _invites.Invite:
+        """
+        Gets the given invite.
+
+        Args:
+            invite:
+                The ID or object for wanted invite.
+            with_counts:
+                If `True`, attempt to count the number of times the invite has been used, otherwise (and as the
+                default), do not try to track this information.
+
+        Returns:
+            The requested :class:`hikari.orm.models.invites.Invite` object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the invite is not found.
+        """
 
     @abc.abstractmethod
-    async def delete_invite(self, invite_code: _invites.InviteLikeT) -> None:
-        ...
+    async def delete_invite(self, invite: _invites.InviteLikeT) -> None:
+        """
+        Deletes a given invite.
+
+        Args:
+            invite:
+                The ID or object for the invite to be deleted.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the invite is not found.
+            hikari.errors.Forbidden
+                If you lack either `MANAGE_CHANNELS` on the channel the invite belongs to or `MANAGE_GUILD` for
+                guild-global delete.
+        """
 
     @abc.abstractmethod
     async def fetch_user(self, user: _users.BaseUserLikeT) -> typing.Union[_users.User, _users.OAuth2User]:
-        ...
+        """
+        Gets a given user.
+
+        Args:
+            user:
+                The ID or object of the user to get.
+
+        Returns:
+            The requested :class:`hikari.orm.models.users.IUser` derivative object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the user is not found.
+        """
 
     @abc.abstractmethod
     async def fetch_application_info(self) -> _applications.Application:
-        ...
+        """
+        Get the current application information.
+
+        Returns:
+            An :class:`hikari.orm.models.applications.Application` object.
+        """
 
     @abc.abstractmethod
     async def fetch_me(self) -> _users.OAuth2User:
-        ...
+        """
+        Gets the current user that is represented by token given to the client.
+
+        Returns:
+            The current :class:`hikari.orm.models.users.OAuth2User` object.
+        """
 
     @abc.abstractmethod
     async def update_me(
         self, *, username: str = unspecified.UNSPECIFIED, avatar: storage.FileLikeT = unspecified.UNSPECIFIED,
     ) -> None:
-        ...
+        """
+        Edits the current user. If any arguments are unspecified, then that subject is not changed on Discord.
+
+        Args:
+            username:
+                The new username string.
+            avatar:
+                The new avatar image in bytes form.
+
+        Raises:
+            hikari.errors.BadRequest:
+                If you pass username longer than the limit (2-32) or an invalid image.
+        """
 
     @abc.abstractmethod
     async def fetch_my_connections(self) -> typing.Sequence[_connections.Connection]:
-        ...
+        """
+        Gets the current user's connections. This endpoint can be used with both Bearer and Bot tokens
+        but will usually return an empty list for bots (with there being some exceptions to this
+        like user accounts that have been converted to bots).
+
+        Returns:
+            A list of :class:`hikari.orm.models.connections.Connection` objects.
+        """
 
     @abc.abstractmethod
     async def fetch_my_guilds(
@@ -596,15 +749,46 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def leave_guild(self, guild: _guilds.GuildLikeT) -> None:
-        ...
+        """
+        Makes the current user leave a given guild.
+
+        Args:
+            guild:
+                The ID or object of the guild to leave.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild is not found.
+        """
 
     @abc.abstractmethod
     async def create_dm_channel(self, recipient: _users.BaseUserLikeT) -> _channels.DMChannel:
-        ...
+        """
+         Creates a new DM channel with a given user.
+
+         Args:
+             recipient:
+                 The ID or object of the user to create the new DM channel with.
+
+         Returns:
+             The newly created :class:`hikari.orm.models.channels.DMChannel` object.
+
+         Raises:
+             hikari.errors.NotFound:
+                 If the recipient is not found.
+         """
 
     @abc.abstractmethod
     async def fetch_voice_regions(self) -> typing.Collection[_voices.VoiceRegion]:
-        ...
+        """
+        Get the voice regions that are available.
+
+        Returns:
+            A list of available :class:`hikari.orm.models.voices.VoiceRegion` objects.
+
+        Note:
+            This does not include VIP servers.
+        """
 
     @abc.abstractmethod
     async def create_webhook(
@@ -616,7 +800,30 @@ class BaseHTTPAdapter(abc.ABC):
         avatar: storage.FileLikeT = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> _webhooks.Webhook:
-        ...
+        """
+        Creates a webhook for a given channel.
+
+        Args:
+            channel:
+                The ID or object of the channel for webhook to be created in.
+            name:
+                The webhook's name string.
+            avatar:
+                The avatar image in bytes form.
+            reason:
+                An optional audit log reason explaining why the change was made.
+
+        Returns:
+            The newly created :class:`hikari.orm.models.webhooks.Webhook` object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the channel is not found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_WEBHOOKS` permission or can not see the given channel.
+            hikari.errors.BadRequest:
+                If the avatar image is too big or the format is invalid.
+        """
 
     @abc.abstractmethod
     async def fetch_channel_webhooks(
@@ -624,15 +831,58 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         channel: _channels.GuildTextChannelLikeT,
     ) -> typing.Collection[_webhooks.Webhook]:
-        ...
+        """
+        Gets all webhooks from a given channel.
+
+        Args:
+            channel:
+                The ID or object of the channel tp get the webhooks from.
+
+        Returns:
+            A list of :class:`hikari.orm.models.webhooks.Webhook` objects for the give channel.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the channel is not found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_WEBHOOKS` permission or can not see the given channel.
+        """
 
     @abc.abstractmethod
     async def fetch_guild_webhooks(self, guild: _guilds.GuildLikeT) -> typing.Collection[_webhooks.Webhook]:
-        ...
+        """
+        Gets all webhooks for a given guild.
+
+        Args:
+            guild:
+                The ID or object of the guild to get the webhooks from.
+
+        Returns:
+            A list of :class:`hikari.orm.models.webhooks.Webhook` objects for the given guild.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the guild is not found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the given guild.
+        """
 
     @abc.abstractmethod
     async def fetch_webhook(self, webhook: _webhooks.WebhookLikeT) -> _webhooks.Webhook:
-        ...
+        """
+        Gets a given webhook.
+
+        Args:
+            webhook:
+                The ID of the webhook to get.
+
+        Returns:
+            The requested :class:`hikari.orm.models.webhooks.Webhook` object.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the webhook is not found.
+        """
 
     @abc.abstractmethod
     async def update_webhook(
@@ -645,8 +895,41 @@ class BaseHTTPAdapter(abc.ABC):
         channel: _channels.GuildTextChannelLikeT = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> None:
-        ...
+        """
+        Edits a given webhook.
+
+        Args:
+            webhook:
+                The ID or object of the webhook to edit.
+            name:
+                The new name string.
+            avatar:
+                The new avatar image in bytes form.
+            channel:
+                The ID or object of the new channel the given webhook should be moved to.
+            reason:
+                An optional audit log reason explaining why the change was made.
+
+        Raises:
+            hikari.errors.NotFound:
+                If either the webhook or the channel aren't found.
+            hikari.errors.Forbidden:
+                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook belongs
+                to.
+        """
 
     @abc.abstractmethod
     async def delete_webhook(self, webhook: _webhooks.WebhookLikeT) -> None:
-        ...
+        """
+        Deletes a given webhook.
+
+        Args:
+            webhook:
+                The ID or object of the webhook to delete
+
+        Raises:
+            hikari.errors.NotFound:
+                If the webhook is not found.
+            hikari.errors.Forbidden:
+                If you're not the webhook owner.
+        """

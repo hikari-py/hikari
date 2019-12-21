@@ -434,51 +434,64 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         raise NotImplementedError
 
     async def delete_integration(self, guild: _guilds.GuildLikeT, integration: _integrations.IntegrationLikeT) -> None:
-        raise NotImplementedError
+        await self.fabric.http_api.delete_guild_integration(
+            guild_id=str(int(guild)), integration_id=str(int(integration))
+        )
 
     async def sync_guild_integration(
         self, guild: _guilds.GuildLikeT, integration: _integrations.IntegrationLikeT
     ) -> None:
-        raise NotImplementedError
+        await self.fabric.http_api.sync_guild_integration(
+            guild_id=str(int(guild)), integration_id=str(int(integration))
+        )
 
-    async def fetch_guild_embed(self, guild: _guilds.GuildLikeT) -> _embeds.ReceivedEmbed:
-        raise NotImplementedError
+    async def fetch_guild_embed(self, guild: _guilds.GuildEmbed) -> _guilds.GuildEmbed:
+        embed_payload = await self.fabric.http_api.get_guild_embed(guild_id=str(int(guild)))
+        return _guilds.GuildEmbed.from_dict(embed_payload)
 
     async def modify_guild_embed(
-        self, guild: _guilds.GuildLikeT, embed: _embeds.Embed, *, reason: str = unspecified.UNSPECIFIED
+        self, guild: _guilds.GuildLikeT, embed: _guilds.GuildEmbed, *, reason: str = unspecified.UNSPECIFIED
     ) -> None:
-        raise NotImplementedError
+        await self.fabric.http_api.modify_guild_embed(guild_id=str(int(guild)), embed=embed.to_dict(), reason=reason)
 
     async def fetch_guild_vanity_url(self, guild: _guilds.GuildLikeT) -> str:
-        raise NotImplementedError
+        raise NotImplementedError  # TODO: implement partial or vanity invite object.
 
     def fetch_guild_widget_image(
         self, guild: _guilds.GuildLikeT, *, style: _guilds.WidgetStyle = unspecified.UNSPECIFIED
     ) -> str:
-        raise NotImplementedError
+        return self.fabric.http_api.get_guild_widget_image(guild_id=str(int(guild)), style=style)
 
-    async def fetch_invite(self, invite_code: _invites.InviteLikeT) -> _invites.Invite:
-        raise NotImplementedError
+    async def fetch_invite(
+        self, invite: _invites.InviteLikeT, *, with_counts: bool = unspecified.UNSPECIFIED
+    ) -> _invites.Invite:
+        invite_payload = await self.fabric.http_api.get_invite(invite_code=str(invite), with_counts=with_counts)
+        return self.fabric.state_registry.parse_invite(invite_payload)
 
-    async def delete_invite(self, invite_code: _invites.InviteLikeT) -> None:
-        raise NotImplementedError
+    async def delete_invite(self, invite: _invites.InviteLikeT) -> None:
+        await self.fabric.http_api.delete_invite(invite_code=str(invite))
 
     async def fetch_user(self, user: _users.BaseUserLikeT) -> typing.Union[_users.User, _users.OAuth2User]:
-        raise NotImplementedError
+        user_payload = await self.fabric.http_api.get_user(user_id=str(int(user)))
+        return self.fabric.state_registry.parse_user(user_payload)
 
     async def fetch_application_info(self) -> _applications.Application:
-        raise NotImplementedError
+        application_info_payload = await self.fabric.http_api.get_current_application_info()
+        return self.fabric.state_registry.parse_application(application_info_payload)
 
     async def fetch_me(self) -> _users.OAuth2User:
-        raise NotImplementedError
+        user_payload = await self.fabric.http_api.get_current_user()
+        return self.fabric.state_registry.parse_application_user(user_payload)
 
     async def update_me(
         self, *, username: str = unspecified.UNSPECIFIED, avatar: storage.FileLikeT = unspecified.UNSPECIFIED
     ) -> None:
-        raise NotImplementedError
+        user_payload = await self.fabric.http_api.modify_current_user(username=username, avatar=avatar)
+        self.fabric.state_registry.parse_user(user_payload)
 
     async def fetch_my_connections(self) -> typing.Sequence[_connections.Connection]:
-        raise NotImplementedError
+        connections_payload = await self.fabric.http_api.get_current_user_connections()
+        return [self.fabric.state_registry.parse_connection(connection) for connection in connections_payload]
 
     async def fetch_my_guilds(
         self,
@@ -489,13 +502,15 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         raise NotImplementedError
 
     async def leave_guild(self, guild: _guilds.GuildLikeT) -> None:
-        raise NotImplementedError
+        await self.fabric.http_api.leave_guild(guild_id=str(int(guild)))
 
     async def create_dm_channel(self, recipient: _users.BaseUserLikeT) -> _channels.DMChannel:
-        raise NotImplementedError
+        dm_channel_payload = await self.fabric.http_api.create_dm(recipient_id=str(int(recipient)))
+        return self.fabric.state_registry.parse_channel(dm_channel_payload)
 
     async def fetch_voice_regions(self) -> typing.Collection[_voices.VoiceRegion]:
-        raise NotImplementedError
+        voice_regions_payload = await self.fabric.http_api.list_voice_regions()
+        return tuple(_voices.VoiceRegion(voice_region) for voice_region in voice_regions_payload)
 
     async def create_webhook(
         self,
@@ -505,18 +520,24 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         avatar: storage.FileLikeT = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
     ) -> _webhooks.Webhook:
-        raise NotImplementedError
+        webhook_payload = await self.fabric.http_api.create_webhook(
+            channel_id=str(int(channel)), name=name, avatar=avatar, reason=reason,
+        )
+        return self.fabric.state_registry.parse_webhook(webhook_payload)
 
     async def fetch_channel_webhooks(
         self, channel: _channels.GuildTextChannelLikeT
     ) -> typing.Collection[_webhooks.Webhook]:
-        raise NotImplementedError
+        webhooks_payload = await self.fabric.http_api.get_channel_webhooks(channel_id=str(int(channel)))
+        return tuple(self.fabric.state_registry.parse_webhook(webhook) for webhook in webhooks_payload)
 
     async def fetch_guild_webhooks(self, guild: _guilds.GuildLikeT) -> typing.Collection[_webhooks.Webhook]:
-        raise NotImplementedError
+        webhooks_payload = await self.fabric.http_api.get_guild_webhooks(guild_id=str(int(guild)))
+        return tuple(self.fabric.state_registry.parse_webhook(webhook) for webhook in webhooks_payload)
 
     async def fetch_webhook(self, webhook: _webhooks.WebhookLikeT) -> _webhooks.Webhook:
-        raise NotImplementedError
+        webhook_payload = await self.fabric.http_api.get_webhook(webhook_id=str(int(webhook)))
+        return self.fabric.state_registry.parse_webhook(webhook_payload)
 
     async def update_webhook(
         self,
@@ -526,8 +547,15 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         avatar: bytes = unspecified.UNSPECIFIED,
         channel: _channels.GuildTextChannelLikeT = unspecified.UNSPECIFIED,
         reason: str = unspecified.UNSPECIFIED,
-    ) -> None:
-        raise NotImplementedError
+    ) -> _webhooks.Webhook:
+        webhook_payload = await self.fabric.http_api.modify_webhook(
+            webhook_id=str(int(webhook)),
+            name=name,
+            avatar=avatar,
+            channel_id=str(int(channel)) if channel is not unspecified.UNSPECIFIED else channel,
+            reason=reason,
+        )
+        return self.fabric.state_registry.parse_webhook(webhook_payload)
 
     async def delete_webhook(self, webhook: _webhooks.WebhookLikeT) -> None:
-        raise NotImplementedError
+        await self.fabric.http_api.delete_webhook(webhook_id=str(int(webhook)))
