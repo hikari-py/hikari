@@ -30,7 +30,7 @@ from hikari.orm.models import interfaces
 from hikari.orm.models import users
 
 
-class WebhookType(enum.IntEnum):
+class WebhookType(interfaces.BestEffortEnumMixin, enum.IntEnum):
     """
     The type of a webhook.
     """

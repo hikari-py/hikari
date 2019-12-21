@@ -389,7 +389,7 @@ class Feature(interfaces.NamedEnumMixin, enum.Enum):
     VIP_REGIONS = enum.auto()
 
 
-class DefaultMessageNotificationsLevel(enum.IntEnum):
+class DefaultMessageNotificationsLevel(interfaces.BestEffortEnumMixin, enum.IntEnum):
     """Setting for message notifications."""
 
     #: Notify users when any message is sent.
@@ -399,7 +399,7 @@ class DefaultMessageNotificationsLevel(enum.IntEnum):
     ONLY_MENTIONS = 1
 
 
-class ExplicitContentFilterLevel(enum.IntEnum):
+class ExplicitContentFilterLevel(interfaces.BestEffortEnumMixin, enum.IntEnum):
     """Setting for the explicit content filter."""
 
     #: No explicit content filter.
@@ -412,7 +412,7 @@ class ExplicitContentFilterLevel(enum.IntEnum):
     ALL_MEMBERS = 2
 
 
-class MFALevel(enum.IntEnum):
+class MFALevel(interfaces.BestEffortEnumMixin, enum.IntEnum):
     """Setting multi-factor authorization level."""
 
     #: No MFA requirement.
@@ -422,7 +422,7 @@ class MFALevel(enum.IntEnum):
     ELEVATED = 1
 
 
-class VerificationLevel(enum.IntEnum):
+class VerificationLevel(interfaces.BestEffortEnumMixin, enum.IntEnum):
     """Setting for user verification."""
 
     #: Unrestricted
@@ -441,7 +441,7 @@ class VerificationLevel(enum.IntEnum):
     VERY_HIGH = 4
 
 
-class PremiumTier(enum.IntEnum):
+class PremiumTier(interfaces.BestEffortEnumMixin, enum.IntEnum):
     """Tier for Discord Nitro boosting in a guild."""
 
     #: No Nitro boosts.
@@ -523,7 +523,7 @@ class GuildEmbed(interfaces.IModel):
         return dict_factory(**{k: v for k, v in attrs.items() if v is not None})
 
 
-class WidgetStyle(str, enum.Enum):
+class WidgetStyle(str, interfaces.NamedEnumMixin, enum.Enum):
     """
     Valid styles of widget for a guild.
     """

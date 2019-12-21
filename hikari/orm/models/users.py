@@ -114,7 +114,7 @@ class UserFlag(enum.IntFlag):
     System = 1 << 12
 
 
-class PremiumType(enum.IntEnum):
+class PremiumType(interfaces.BestEffortEnumMixin, enum.IntEnum):
     #: No premium account.
     NONE = 0
     #: Includes app perks like animated emojis and avatars, but not games or server boosting.
