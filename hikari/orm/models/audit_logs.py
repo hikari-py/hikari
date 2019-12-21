@@ -24,8 +24,8 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import channels
@@ -69,12 +69,9 @@ class AuditLog(interfaces.IModel):
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         self.webhooks = {
-            fabric_obj.state_registry.parse_webhook(wh)
-            for wh in payload.get("webhooks", containers.EMPTY_SEQUENCE)
+            fabric_obj.state_registry.parse_webhook(wh) for wh in payload.get("webhooks", containers.EMPTY_SEQUENCE)
         }
-        self.users = {
-            fabric_obj.state_registry.parse_user(u) for u in payload.get("users", containers.EMPTY_SEQUENCE)
-        }
+        self.users = {fabric_obj.state_registry.parse_user(u) for u in payload.get("users", containers.EMPTY_SEQUENCE)}
         self.integrations = {
             integrations.PartialIntegration(i) for i in payload.get("integrations", containers.EMPTY_SEQUENCE)
         }

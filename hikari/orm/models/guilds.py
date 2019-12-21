@@ -25,9 +25,9 @@ import datetime
 import enum
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import channels
@@ -122,7 +122,7 @@ class PartialGuild(interfaces.ISnowflake):
         self.banner_hash = payload.get("banner")
 
 
-class Guild(PartialGuild, interfaces.IStatefulModel):
+class Guild(PartialGuild, interfaces.IModelWithFabric):
     """
     Implementation of a Guild.
     """
@@ -321,12 +321,10 @@ class Guild(PartialGuild, interfaces.IStatefulModel):
             payload.get("explicit_content_filter"), ExplicitContentFilterLevel
         )
         self.roles = transformations.id_map(
-            self._fabric.state_registry.parse_role(r, self)
-            for r in payload.get("roles", containers.EMPTY_SEQUENCE)
+            self._fabric.state_registry.parse_role(r, self) for r in payload.get("roles", containers.EMPTY_SEQUENCE)
         )
         self.emojis = transformations.id_map(
-            self._fabric.state_registry.parse_emoji(e, self)
-            for e in payload.get("emojis", containers.EMPTY_SEQUENCE)
+            self._fabric.state_registry.parse_emoji(e, self) for e in payload.get("emojis", containers.EMPTY_SEQUENCE)
         )
         self.member_count = transformations.nullable_cast(payload.get("member_count"), int)
 
@@ -341,8 +339,7 @@ class Guild(PartialGuild, interfaces.IStatefulModel):
         self.is_large = payload.get("large", False)
         self.is_unavailable = payload.get("unavailable", False)
         self.members = transformations.id_map(
-            self._fabric.state_registry.parse_member(m, self)
-            for m in payload.get("members", containers.EMPTY_SEQUENCE)
+            self._fabric.state_registry.parse_member(m, self) for m in payload.get("members", containers.EMPTY_SEQUENCE)
         )
         self.channels = transformations.id_map(
             self._fabric.state_registry.parse_channel(c, self)
@@ -368,7 +365,7 @@ class SystemChannelFlag(enum.IntFlag):
     PREMIUM_SUBSCRIPTION = 2
 
 
-class Feature(interfaces.INamedEnum, enum.Enum):
+class Feature(interfaces.NamedEnumMixin, enum.Enum):
     """
     Features that a guild can provide.
     """

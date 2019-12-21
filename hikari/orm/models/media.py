@@ -32,8 +32,8 @@ from concurrent import futures
 import aiofiles
 import aiohttp
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
 from hikari.orm.models import interfaces

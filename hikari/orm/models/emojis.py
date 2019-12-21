@@ -24,8 +24,8 @@ from __future__ import annotations
 import abc
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.orm import fabric
 from hikari.orm.models import guilds
 from hikari.orm.models import interfaces
@@ -108,7 +108,7 @@ class UnknownEmoji(Emoji, interfaces.ISnowflake):
         return False
 
 
-class GuildEmoji(UnknownEmoji, interfaces.IStatefulModel):
+class GuildEmoji(UnknownEmoji, interfaces.IModelWithFabric):
     """
     Represents an emoji in a guild that the user is a member of.
     """

@@ -25,9 +25,9 @@ import datetime
 import enum
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import channels
@@ -117,7 +117,7 @@ class MessageFlag(enum.IntFlag):
 AuthorT = typing.Union[users.User, users.OAuth2User, members.Member, webhooks.Webhook]
 
 
-class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
+class Message(interfaces.ISnowflake, interfaces.IModelWithFabric):
     """
     A message that was sent on Discord.
     """
@@ -274,9 +274,7 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
             self.author = typing.cast(AuthorT, self._fabric.state_registry.parse_user(payload["author"]))
 
         if "edited_timestamp" in payload:
-            self.edited_at = transformations.nullable_cast(
-                payload.get("edited_timestamp"), dates.parse_iso_8601_ts
-            )
+            self.edited_at = transformations.nullable_cast(payload.get("edited_timestamp"), dates.parse_iso_8601_ts)
 
         if "mention_everyone" in payload:
             self.is_mentioning_everyone = payload["mention_everyone"]

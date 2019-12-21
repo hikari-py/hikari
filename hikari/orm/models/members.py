@@ -25,10 +25,10 @@ import datetime
 import typing
 
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import delegate
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import guilds
@@ -38,8 +38,8 @@ from hikari.orm.models import roles as _roles
 from hikari.orm.models import users
 
 
-@delegate.delegate_to(users.IUser, "user")
-class Member(users.IUser, delegate_fabricated=True):
+@delegate.delegate_to(users.User, "user")
+class Member(users.User, delegate_fabricated=True):
     """
     A specialization of a user which provides implementation details for a specific guild.
 
@@ -50,7 +50,7 @@ class Member(users.IUser, delegate_fabricated=True):
     __slots__ = ("user", "guild", "roles", "joined_at", "nick", "premium_since", "presence", "is_deaf", "is_mute")
 
     #: The underlying user object.
-    user: users.IUser
+    user: users.User
 
     #: The guild that the member is in.
     guild: guilds.Guild
@@ -90,9 +90,7 @@ class Member(users.IUser, delegate_fabricated=True):
 
     __copy_by_ref__ = ("presence", "guild")
 
-    __repr__ = reprs.repr_of(
-        "id", "username", "discriminator", "is_bot", "guild.id", "guild.name", "nick", "joined_at"
-    )
+    __repr__ = reprs.repr_of("id", "username", "discriminator", "is_bot", "guild.id", "guild.name", "nick", "joined_at")
 
     # noinspection PyMissingConstructor
     def __init__(self, fabric_obj: fabric.Fabric, guild: guilds.Guild, payload: containers.DiscordObjectT) -> None:

@@ -24,9 +24,9 @@ from __future__ import annotations
 import datetime
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
+from hikari.internal_utilities import reprs
 from hikari.orm import fabric
 from hikari.orm.models import interfaces
 from hikari.orm.models import users
@@ -92,7 +92,7 @@ class PartialIntegration(interfaces.ISnowflake):
         self.account = IntegrationAccount(payload["account"])
 
 
-class Integration(PartialIntegration, interfaces.IStatefulModel):
+class Integration(PartialIntegration, interfaces.IModelWithFabric):
     """
     A guild integration.
     """

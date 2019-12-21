@@ -23,7 +23,6 @@ import types
 import typing
 
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import compat
 
 # If more than one empty-definition is used in the same context, the type checker will probably whinge, so we have
 # to keep separate types...
@@ -122,7 +121,6 @@ class DefaultImmutableMapping(typing.Mapping[HashableT, ValueT]):
 
     def __iter__(self) -> typing.Iterator[HashableT]:
         return iter(self._data)
-
 
 
 #: An immutable indexable container of elements with zero size.

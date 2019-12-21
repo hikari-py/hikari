@@ -26,14 +26,14 @@ import datetime
 import enum
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm.models import interfaces
 
 
-class Status(interfaces.INamedEnum, enum.Enum):
+class Status(interfaces.NamedEnumMixin, enum.Enum):
     """
     The status of a member.
     """
@@ -220,7 +220,7 @@ class RichActivity(Activity):
         self.flags = transformations.nullable_cast(payload.get("flags"), ActivityFlag) or 0
 
 
-def parse_presence_activity(payload: containers.DiscordObjectT, ) -> typing.Union[Activity, RichActivity]:
+def parse_presence_activity(payload: containers.DiscordObjectT,) -> typing.Union[Activity, RichActivity]:
     """
     Consumes a payload and decides the type of activity it represents. A corresponding object is then
     constructed and returned as appropriate.

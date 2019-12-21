@@ -27,8 +27,8 @@ import enum
 import typing
 
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import guilds as _guild
@@ -76,7 +76,7 @@ class ChannelType(interfaces.BestEffortEnumMixin, enum.IntEnum):
         return not self.name.startswith("GUILD_")
 
 
-class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStatefulModel):
+class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IModelWithFabric):
     """
     A generic type of channel.
 
@@ -302,10 +302,7 @@ class DMChannel(TextChannel, type=ChannelType.DM):
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
         self.recipients = typing.cast(
             typing.Sequence[DMRecipientT],
-            [
-                self._fabric.state_registry.parse_user(u)
-                for u in payload.get("recipients", containers.EMPTY_SEQUENCE)
-            ],
+            [self._fabric.state_registry.parse_user(u) for u in payload.get("recipients", containers.EMPTY_SEQUENCE)],
         )
 
 

@@ -37,8 +37,6 @@ T = typing.TypeVar("T")
 U = typing.TypeVar("U")
 
 
-@assertions.assert_is_mixin
-@assertions.assert_is_slotted
 class BestEffortEnumMixin:
     """
     An enum interface extension that allows for trying to get a parsed value or falling back to the original input.
@@ -68,9 +66,7 @@ class BestEffortEnumMixin:
     __repr__ = __str__
 
 
-@assertions.assert_is_mixin
-@assertions.assert_is_slotted
-class INamedEnum:
+class NamedEnumMixin:
     """
     A mixin for an enum that is produced from a string by Discord. This ensures that the key can be looked up from a
     lowercase value that discord provides and use a Pythonic key name that is in upper case.
@@ -92,8 +88,6 @@ class INamedEnum:
     __repr__ = __str__
 
 
-@assertions.assert_is_mixin
-@assertions.assert_is_slotted
 class IModel(metaclass=abc.ABCMeta):
     """
     Base type for any model in this API.
@@ -184,8 +178,6 @@ class IModel(metaclass=abc.ABCMeta):
         return NotImplemented
 
 
-@assertions.assert_is_mixin
-@assertions.assert_is_slotted
 class ISnowflake(IModel):
     """
     Mixin type for any type that specifies an ID. The implementation is expected to implement that
@@ -276,6 +268,38 @@ class ISnowflake(IModel):
         return self.id
 
 
+class IModelWithFabric(IModel):
+    """
+    Base information and utilities for any model that is expected to have a reference to a `_fabric`.
+
+    Each implementation is expected to provide a `_fabric` slot and implement a constructor that
+    sets that slot where appropriate.
+    """
+
+    #: Since this is a mixin, all slots must be empty. This prevents issues from subclassing other slotted classes
+    #: and then mixing in this one later.
+    __slots__ = ()
+
+    #: The base fabric for the ORM instance.
+    _fabric: fabric.Fabric
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        is_interface_or_mixin = kwargs.get("interface", False)
+        delegate_fabricated = kwargs.get("delegate_fabricated", False)
+        has_fabric_slot = len(cls.__all_slots__) > 0 and "_fabric" in cls.__all_slots__
+
+        if not (is_interface_or_mixin or delegate_fabricated or has_fabric_slot):
+            raise TypeError(
+                f"{cls.__module__}.{cls.__qualname__} derives from {IModelWithFabric.__name__}, "
+                f"but does not provide '_fabric' as a slotted member in this or any base classes. "
+                f"If this is meant to be an interface, pass the 'interface' or 'delegate_fabricated' "
+                f"kwarg to the class constructor (e.g. `class Foo(Fabricated, interface=True)`) to "
+                f"suppress this error."
+            )
+
+
 class UnknownObject(typing.Generic[T], ISnowflake):
     """
     Represents an unresolved object with an ID that we cannot currently make sense of, or that
@@ -300,7 +324,7 @@ class UnknownObject(typing.Generic[T], ISnowflake):
 
     _CALLBACK_MUX_ALREADY_CALLED = ...
 
-    def __init__(self, id: int, resolver_partial: containers.PartialCoroutineProtocolT[T] = None, ) -> None:
+    def __init__(self, id: int, resolver_partial: containers.PartialCoroutineProtocolT[T] = None,) -> None:
         self.id = id
         self._future = resolver_partial
         self._callbacks = []
@@ -360,40 +384,6 @@ class UnknownObject(typing.Generic[T], ISnowflake):
         return False
 
 
-@assertions.assert_is_mixin
-@assertions.assert_is_slotted
-class IStatefulModel(IModel):
-    """
-    Base information and utilities for any model that is expected to have a reference to a `_fabric`.
-
-    Each implementation is expected to provide a `_fabric` slot and implement a constructor that
-    sets that slot where appropriate.
-    """
-
-    #: Since this is a mixin, all slots must be empty. This prevents issues from subclassing other slotted classes
-    #: and then mixing in this one later.
-    __slots__ = ()
-
-    #: The base fabric for the ORM instance.
-    _fabric: fabric.Fabric
-
-    @classmethod
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        is_interface_or_mixin = kwargs.get("interface", False)
-        delegate_fabricated = kwargs.get("delegate_fabricated", False)
-        has_fabric_slot = len(cls.__all_slots__) > 0 and "_fabric" in cls.__all_slots__
-
-        if not (is_interface_or_mixin or delegate_fabricated or has_fabric_slot):
-            raise TypeError(
-                f"{cls.__module__}.{cls.__qualname__} derives from {IStatefulModel.__name__}, "
-                f"but does not provide '_fabric' as a slotted member in this or any base classes. "
-                f"If this is meant to be an interface, pass the 'interface' or 'delegate_fabricated' "
-                f"kwarg to the class constructor (e.g. `class Foo(Fabricated, interface=True)`) to "
-                f"suppress this error."
-            )
-
-
 #: The valid types of a raw unformatted snowflake.
 RawSnowflakeT = typing.Union[int, str]
 
@@ -403,8 +393,8 @@ SnowflakeLikeT = typing.Union[RawSnowflakeT, ISnowflake, UnknownObject]
 __all__ = [
     "ISnowflake",
     "BestEffortEnumMixin",
-    "INamedEnum",
-    "IStatefulModel",
+    "NamedEnumMixin",
+    "IModelWithFabric",
     "IModel",
     "RawSnowflakeT",
     "SnowflakeLikeT",

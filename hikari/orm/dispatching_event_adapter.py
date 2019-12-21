@@ -128,9 +128,7 @@ class DispatchingEventAdapter(event_handler.IEventHandler):
     async def handle_guild_emojis_update(self, shard: gateway.GatewayClient, payload: containers.DiscordObjectT):
         ...
 
-    async def handle_guild_integrations_update(
-        self, shard: gateway.GatewayClient, payload: containers.DiscordObjectT
-    ):
+    async def handle_guild_integrations_update(self, shard: gateway.GatewayClient, payload: containers.DiscordObjectT):
         ...
 
     async def handle_guild_member_add(self, shard: gateway.GatewayClient, payload: containers.DiscordObjectT):
@@ -169,9 +167,7 @@ class DispatchingEventAdapter(event_handler.IEventHandler):
     async def handle_message_reaction_add(self, shard: gateway.GatewayClient, payload: containers.DiscordObjectT):
         ...
 
-    async def handle_message_reaction_remove(
-        self, shard: gateway.GatewayClient, payload: containers.DiscordObjectT
-    ):
+    async def handle_message_reaction_remove(self, shard: gateway.GatewayClient, payload: containers.DiscordObjectT):
         ...
 
     async def handle_message_reaction_remove_all(

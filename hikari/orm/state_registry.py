@@ -561,9 +561,7 @@ class IStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_guild(
-        self, guild_payload: containers.DiscordObjectT, shard_id: typing.Optional[int]
-    ) -> guilds.Guild:
+    def parse_guild(self, guild_payload: containers.DiscordObjectT, shard_id: typing.Optional[int]) -> guilds.Guild:
         """
         Parses a guild payload into a workable object.
 
@@ -845,10 +843,7 @@ class IStateRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_member(
-        self,
-        member_obj: members.Member,
-        role_objs: typing.Sequence[roles.Role],
-        payload: containers.DiscordObjectT,
+        self, member_obj: members.Member, role_objs: typing.Sequence[roles.Role], payload: containers.DiscordObjectT,
     ) -> typing.Tuple[members.Member, members.Member]:
         """
         Update a member in a given guild. If the member is not already registered, nothing is returned.

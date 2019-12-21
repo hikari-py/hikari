@@ -23,8 +23,8 @@ from __future__ import annotations
 
 import datetime
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.orm.models import interfaces
 
 

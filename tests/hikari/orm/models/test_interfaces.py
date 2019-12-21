@@ -40,7 +40,7 @@ def neko_snowflake():
     return DummySnowflake(537_340_989_808_050_216)
 
 
-class DummyNamedEnum(interfaces.INamedEnum, enum.IntEnum):
+class DummyNamedEnum(interfaces.NamedEnumMixin, enum.IntEnum):
     FOO = 9
     BAR = 18
     BAZ = 27
@@ -311,17 +311,17 @@ class TestIModel:
 @pytest.mark.model
 class TestFabricatedMixin:
     def test_interface_FabricatedMixin_does_not_need_fabric(self):
-        class Interface(interfaces.IStatefulModel, interface=True):
+        class Interface(interfaces.IModelWithFabric, interface=True):
             __slots__ = ()
 
     def test_delegate_fabricated_FabricatedMixin_does_not_need_fabric(self):
-        class Delegated(interfaces.IStatefulModel, delegate_fabricated=True):
+        class Delegated(interfaces.IModelWithFabric, delegate_fabricated=True):
             __slots__ = ()
 
     def test_regular_FabricatedMixin_fails_to_initialize_without_fabric_slot(self):
         try:
 
-            class Regular(interfaces.IStatefulModel):
+            class Regular(interfaces.IModelWithFabric):
                 __slots__ = ()
 
             assert False, "No TypeError was raised."
@@ -329,7 +329,7 @@ class TestFabricatedMixin:
             assert True, "passed"
 
     def test_regular_FabricatedMixin_can_initialize_with_fabric_slot(self):
-        class Regular(interfaces.IStatefulModel):
+        class Regular(interfaces.IModelWithFabric):
             __slots__ = ("_fabric",)
 
 

@@ -170,13 +170,7 @@ class TestDispatchingEventAdapterImpl:
         ],
     )
     async def test_handle_ready_handles_chunker(
-        self,
-        discord_ready_payload,
-        adapter_impl,
-        gateway_impl,
-        chunker_impl,
-        chunker_mode,
-        state_registry_impl,
+        self, discord_ready_payload, adapter_impl, gateway_impl, chunker_impl, chunker_mode, state_registry_impl,
     ):
         guild1 = _helpers.mock_model(guilds.Guild)
         guild2 = _helpers.mock_model(guilds.Guild)
