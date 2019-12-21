@@ -146,7 +146,7 @@ class TestGateway:
         gw._warn_about_internal_rate_limit = mock.MagicMock(wraps=gw._warn_about_internal_rate_limit)
 
         gw.rate_limit = rates.TimedTokenBucket(10, 0.1, event_loop)
-        gw.rate_limit.reset_at = time.perf_counter() + gw.rate_limit._per
+        gw.rate_limit.reset_at = time.perf_counter() + gw.rate_limit.per
 
         for i in range(20):
             await gw._send_json({}, False)
