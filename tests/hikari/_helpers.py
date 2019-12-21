@@ -24,9 +24,8 @@ import inspect
 import logging
 import re
 import typing
-import weakref
 import warnings
-
+import weakref
 
 import asyncmock as mock
 import pytest

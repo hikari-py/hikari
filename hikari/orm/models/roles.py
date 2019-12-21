@@ -23,8 +23,8 @@ from __future__ import annotations
 
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.orm import fabric
 from hikari.orm.models import colors as _color
 from hikari.orm.models import interfaces
@@ -56,7 +56,7 @@ class PartialRole(interfaces.ISnowflake):
         self.name = payload["name"]
 
 
-class Role(PartialRole, interfaces.IStatefulModel):
+class Role(PartialRole, interfaces.IModelWithFabric):
     """
     Representation of a role within a guild.
     """

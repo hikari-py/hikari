@@ -49,9 +49,9 @@ from hikari.internal_utilities import compat
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import meta
-from hikari.net import user_agent
 from hikari.net import opcodes
 from hikari.net import rates
+from hikari.net import user_agent
 
 
 @dataclasses.dataclass(frozen=True)
@@ -276,9 +276,7 @@ class GatewayClient:
         opcodes.GatewayClosure.SHARDING_REQUIRED,
     )
 
-    _DO_NOT_RESUME_CLOSURE_CODES = (
-        opcodes.GatewayClosure.UNKNOWN_OPCODE,
-    )
+    _DO_NOT_RESUME_CLOSURE_CODES = (opcodes.GatewayClosure.UNKNOWN_OPCODE,)
 
     def __init__(
         self,

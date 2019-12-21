@@ -24,16 +24,16 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import delegate
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import interfaces
 from hikari.orm.models import users
 
 
-class Team(interfaces.IStatefulModel, interfaces.ISnowflake):
+class Team(interfaces.IModelWithFabric, interfaces.ISnowflake):
     """
     A representation of a team that can contain one or more members in a managed application.
     """

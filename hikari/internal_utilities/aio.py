@@ -16,23 +16,23 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import functools
+"""
+Asyncio extensions and utilities.
+"""
 import asyncio
-
+import functools
 import typing
 
 from hikari.internal_utilities import compat
-
 
 ReturnT = typing.TypeVar("ReturnT")
 
 
 def optional_await(
-    description: str = None,
-    shield: bool = False
+    description: str = None, shield: bool = False
 ) -> typing.Callable[
-     [typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, ReturnT]]],
-     typing.Callable[..., typing.Awaitable[ReturnT]]
+    [typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, ReturnT]]],
+    typing.Callable[..., typing.Awaitable[ReturnT]],
 ]:
     """
     Optional await decorator factory for async functions so that they can be called without await and
@@ -48,6 +48,7 @@ def optional_await(
     Returns:
         A decorator for a coroutine function.
     """
+
     def decorator(
         coro_fn: typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, ReturnT]]
     ) -> typing.Callable[..., typing.Awaitable[ReturnT]]:

@@ -24,14 +24,14 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import interfaces
 
 
-class IUser(interfaces.IStatefulModel, interfaces.ISnowflake, interface=True):
+class IUser(interfaces.IModelWithFabric, interfaces.ISnowflake, interface=True):
     """
     Interface that any type of user account should provide. This is used by
     implementations of object such as those provided by delegates
@@ -39,8 +39,6 @@ class IUser(interfaces.IStatefulModel, interfaces.ISnowflake, interface=True):
     """
 
     __slots__ = ()
-
-    _fabric: fabric.Fabric
 
     #: ID of the user.
     #:

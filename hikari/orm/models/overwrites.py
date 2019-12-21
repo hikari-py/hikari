@@ -24,8 +24,8 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm.models import interfaces
 from hikari.orm.models import members
@@ -33,7 +33,7 @@ from hikari.orm.models import permissions
 from hikari.orm.models import roles
 
 
-class OverwriteEntityType(interfaces.INamedEnum, enum.Enum):
+class OverwriteEntityType(interfaces.NamedEnumMixin, enum.Enum):
     """
     The type of "thing" that a permission overwrite sets the permissions for.
 

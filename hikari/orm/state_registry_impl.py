@@ -88,9 +88,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         # Users may be cached while we can see them, or they may be cached as a member. Regardless, we only
         # retain them while they are referenced from elsewhere to keep things tidy.
         self.fabric = fabric_obj
-        self._dm_channels: typing.MutableMapping[int, channels.DMChannel] = containers.LRUDict(
-            user_dm_channel_size
-        )
+        self._dm_channels: typing.MutableMapping[int, channels.DMChannel] = containers.LRUDict(user_dm_channel_size)
         self._emojis: typing.MutableMapping[int, emojis.GuildEmoji] = weakref.WeakValueDictionary()
         self._guilds: typing.Dict[int, guilds.Guild] = {}
         self._guild_channels: typing.MutableMapping[int, channels.GuildChannel] = weakref.WeakValueDictionary()
@@ -411,9 +409,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
     def parse_gateway_bot(self, gateway_bot_payload: containers.DiscordObjectT) -> gateway_bot.GatewayBot:
         return gateway_bot.GatewayBot(gateway_bot_payload)
 
-    def parse_guild(
-        self, guild_payload: containers.DiscordObjectT, shard_id: typing.Optional[int]
-    ) -> guilds.Guild:
+    def parse_guild(self, guild_payload: containers.DiscordObjectT, shard_id: typing.Optional[int]) -> guilds.Guild:
         guild_id = int(guild_payload["id"])
         is_unavailable = guild_payload.get("unavailable", False)
 
@@ -598,10 +594,7 @@ class StateRegistryImpl(state_registry.IStateRegistry):
         return old_emojis, new_emojis
 
     def update_member(
-        self,
-        member_obj: members.Member,
-        role_objs: typing.Sequence[roles.Role],
-        payload: containers.DiscordObjectT,
+        self, member_obj: members.Member, role_objs: typing.Sequence[roles.Role], payload: containers.DiscordObjectT,
     ) -> typing.Optional[typing.Tuple[members.Member, members.Member]]:
         new_member = member_obj
         old_member = new_member.copy()

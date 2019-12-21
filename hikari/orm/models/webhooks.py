@@ -41,7 +41,7 @@ class WebhookType(enum.IntEnum):
     CHANNEL_FOLLOWER = 2
 
 
-class Webhook(interfaces.IStatefulModel, interfaces.ISnowflake):
+class Webhook(interfaces.IModelWithFabric, interfaces.ISnowflake):
     """
     Describes a webhook. This is an HTTP endpoint that can be used to send messages to certain
     channels without spinning up a complete bot implementation elsewhere (such as for CI pipelines).
