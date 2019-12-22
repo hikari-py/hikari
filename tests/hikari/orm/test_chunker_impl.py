@@ -33,7 +33,7 @@ from tests.hikari import _helpers
 @pytest.fixture()
 def fabric_obj():
     fabric_obj = fabric.Fabric()
-    fabric_obj.state_registry = mock.MagicMock(spec_set=state_registry.IStateRegistry)
+    fabric_obj.state_registry = mock.MagicMock(spec_set=state_registry.BaseStateRegistry)
     fabric_obj.gateways = {
         # We'd never have None and shard ids together, but this doesn't matter for this test.
         None: mock.MagicMock(spec_set=_gateway.GatewayClient),

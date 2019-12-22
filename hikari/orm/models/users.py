@@ -28,10 +28,10 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 
 
-class IUser(interfaces.IModelWithFabric, interfaces.ISnowflake, interface=True):
+class BaseUser(bases.BaseModelWithFabric, bases.SnowflakeMixin, interface=True):
     """
     Interface that any type of user account should provide. This is used by
     implementations of object such as those provided by delegates
@@ -71,7 +71,7 @@ class IUser(interfaces.IModelWithFabric, interfaces.ISnowflake, interface=True):
     is_system: bool
 
 
-class User(IUser):
+class User(BaseUser):
     """
     Implementation of the user data type.
     """
@@ -87,7 +87,7 @@ class User(IUser):
         # We don't expect these to ever change...
         self.is_bot = payload.get("bot", False)
         self.is_system = payload.get("system", False)
-        self.update_state(payload)
+        self.update_state(payload)  # lgtm [py/init-calls-subclass]
 
     def update_state(self, payload: containers.DiscordObjectT) -> None:
         self.username = payload.get("username")
@@ -114,7 +114,7 @@ class UserFlag(enum.IntFlag):
     System = 1 << 12
 
 
-class PremiumType(interfaces.BestEffortEnumMixin, enum.IntEnum):
+class PremiumType(bases.BestEffortEnumMixin, enum.IntEnum):
     #: No premium account.
     NONE = 0
     #: Includes app perks like animated emojis and avatars, but not games or server boosting.
@@ -217,7 +217,7 @@ class OAuth2User(User):
         self.premium_type = transformations.nullable_cast(payload.get("premium_type"), PremiumType)
 
 
-def parse_user(fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> IUser:
+def parse_user(fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> BaseUser:
     """
     Consume a fabric object and some type of user payload and try to parse the appropriate type of :class:`IUser`
     for the given payload.
@@ -232,7 +232,7 @@ def parse_user(fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) ->
 
 
 #: Any type of :class:`IUser`, or an :class:`int`/:class:`str` ID of one.
-IUserLikeT = typing.Union[interfaces.RawSnowflakeT, IUser]
+IUserLikeT = typing.Union[bases.RawSnowflakeT, BaseUser]
 
 
-__all__ = ["IUser", "User", "UserFlag", "PremiumType", "OAuth2User", "IUserLikeT"]
+__all__ = ["BaseUser", "User", "UserFlag", "PremiumType", "OAuth2User", "IUserLikeT"]

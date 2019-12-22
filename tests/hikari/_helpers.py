@@ -257,9 +257,9 @@ def parameterize_valid_id_formats_for_models(param_name, id, model_type1, *model
     def decorator(func):
         mock_models = []
         for model_type in model_types:
-            assert "ISnowflake" in map(
+            assert "SnowflakeMixin" in map(
                 lambda mro: mro.__name__, model_type.mro()
-            ), "model must be an ISnowflake derivative"
+            ), "model must be an SnowflakeMixin derivative"
             mock_models.append(mock_model(model_type, id=int(id), **kwargs))
 
         return pytest.mark.parametrize(

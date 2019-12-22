@@ -177,7 +177,7 @@ class BadRequest(ClientError):
         super().__init__(resource, opcodes.HTTPStatus.BAD_REQUEST, json_error_code, message)
 
 
-class Unauthorized(ClientError):
+class UnauthorizedError(ClientError):
     """
     Occurs when the request is unauthorized. This means the Authorization header or token is invalid/missing, or some
     other credential is incorrect.
@@ -203,7 +203,7 @@ class Unauthorized(ClientError):
         super().__init__(resource, opcodes.HTTPStatus.UNAUTHORIZED, json_error_code, message)
 
 
-class Forbidden(ClientError):
+class ForbiddenError(ClientError):
     """
     Occurs when authorization is correct, but you do not have permission to access the resource.
 
@@ -224,7 +224,7 @@ class Forbidden(ClientError):
         super().__init__(resource, opcodes.HTTPStatus.FORBIDDEN, json_error_code, message)
 
 
-class NotFound(ClientError):
+class NotFoundError(ClientError):
     """
     Occurs when an accessed resource does not exist, or is hidden from the user.
 
@@ -251,11 +251,11 @@ __all__ = (
     "BadRequest",
     "ClientError",
     "DiscordError",
-    "Forbidden",
+    "ForbiddenError",
     "GatewayError",
     "HikariError",
     "HTTPError",
-    "NotFound",
+    "NotFoundError",
     "ServerError",
-    "Unauthorized",
+    "UnauthorizedError",
 )

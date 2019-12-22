@@ -88,7 +88,7 @@ class NamedEnumMixin(BestEffortEnumMixin):
     __repr__ = __str__
 
 
-class IModel(metaclass=abc.ABCMeta):
+class BaseModel(metaclass=abc.ABCMeta):
     """
     Base type for any model in this API.
 
@@ -114,7 +114,7 @@ class IModel(metaclass=abc.ABCMeta):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__()
         if "__slots__" not in cls.__dict__:
-            raise TypeError(f"{cls.__module__}.{cls.__qualname__} must be slotted to derive from {IModel.__name__}.")
+            raise TypeError(f"{cls.__module__}.{cls.__qualname__} must be slotted to derive from {BaseModel.__name__}.")
 
         is_interface = kwargs.get("interface", False)
 
@@ -160,7 +160,7 @@ class IModel(metaclass=abc.ABCMeta):
         # This also ensures all methods are referenced, but no instance variables get bound, which is just what we need.
 
         # noinspection PySuperArguments
-        instance = super(IModel, cls).__new__(cls)
+        instance = super(BaseModel, cls).__new__(cls)
 
         for attr in cls.__all_slots__:
             attr_val = getattr(self, attr)
@@ -178,7 +178,7 @@ class IModel(metaclass=abc.ABCMeta):
         return NotImplemented
 
 
-class ISnowflake(IModel):
+class SnowflakeMixin:
     """
     Mixin type for any type that specifies an ID. The implementation is expected to implement that
     field.
@@ -236,7 +236,7 @@ class ISnowflake(IModel):
         return self.id & 0xFFF
 
     def __lt__(self, other) -> bool:
-        if not isinstance(other, ISnowflake):
+        if not isinstance(other, SnowflakeMixin):
             raise TypeError(
                 f"Cannot compare a Snowflake type {type(self).__name__} to a non-snowflake type {type(other).__name__}"
             )
@@ -246,7 +246,7 @@ class ISnowflake(IModel):
         return self < other or self == other
 
     def __gt__(self, other) -> bool:
-        if not isinstance(other, ISnowflake):
+        if not isinstance(other, SnowflakeMixin):
             raise TypeError(
                 f"Cannot compare a Snowflake type {type(self).__name__} to a non-snowflake type {type(other).__name__}"
             )
@@ -268,7 +268,7 @@ class ISnowflake(IModel):
         return self.id
 
 
-class IModelWithFabric(IModel):
+class BaseModelWithFabric(BaseModel):
     """
     Base information and utilities for any model that is expected to have a reference to a `_fabric`.
 
@@ -292,7 +292,7 @@ class IModelWithFabric(IModel):
 
         if not (is_interface_or_mixin or delegate_fabricated or has_fabric_slot):
             raise TypeError(
-                f"{cls.__module__}.{cls.__qualname__} derives from {IModelWithFabric.__name__}, "
+                f"{cls.__module__}.{cls.__qualname__} derives from {BaseModelWithFabric.__name__}, "
                 f"but does not provide '_fabric' as a slotted member in this or any base classes. "
                 f"If this is meant to be an interface, pass the 'interface' or 'delegate_fabricated' "
                 f"kwarg to the class constructor (e.g. `class Foo(Fabricated, interface=True)`) to "
@@ -300,7 +300,7 @@ class IModelWithFabric(IModel):
             )
 
 
-class UnknownObject(typing.Generic[T], ISnowflake):
+class UnknownObject(typing.Generic[T], SnowflakeMixin):
     """
     Represents an unresolved object with an ID that we cannot currently make sense of, or that
     may be only partially complete.
@@ -388,14 +388,14 @@ class UnknownObject(typing.Generic[T], ISnowflake):
 RawSnowflakeT = typing.Union[int, str]
 
 #: A raw snowflake type or an :class:`ISnowflake` instance.
-SnowflakeLikeT = typing.Union[RawSnowflakeT, ISnowflake, UnknownObject]
+SnowflakeLikeT = typing.Union[RawSnowflakeT, SnowflakeMixin, UnknownObject]
 
 __all__ = [
-    "ISnowflake",
+    "SnowflakeMixin",
     "BestEffortEnumMixin",
     "NamedEnumMixin",
-    "IModelWithFabric",
-    "IModel",
+    "BaseModelWithFabric",
+    "BaseModel",
     "RawSnowflakeT",
     "SnowflakeLikeT",
 ]

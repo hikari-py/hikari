@@ -45,7 +45,7 @@ class AutoRequestChunksMode(enum.IntEnum):
     MEMBERS_AND_PRESENCES = 2
 
 
-class DispatchingEventAdapterImpl(dispatching_event_adapter.DispatchingEventAdapter):
+class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEventAdapter):
     """
     Basic implementation of event management logic for single-application bots.
 

@@ -38,7 +38,7 @@ from hikari.orm.models import emojis as _emojis
 from hikari.orm.models import gateway_bot as _gateway_bot
 from hikari.orm.models import guilds as _guilds
 from hikari.orm.models import integrations as _integrations
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import invites as _invites
 from hikari.orm.models import media as _media
 from hikari.orm.models import members as _members
@@ -52,7 +52,7 @@ from hikari.orm.models import voices as _voices
 from hikari.orm.models import webhooks as _webhooks
 
 
-class IHTTPAdapter(abc.ABC):
+class BaseHTTPAdapter(abc.ABC):
     """
     Component that bridges the basic HTTP API exposed by :mod:`hikari.net.http_client` and
     wraps it in a unit of processing that can handle parsing API objects into Hikari ORM objects,
@@ -506,7 +506,7 @@ class IHTTPAdapter(abc.ABC):
         self,
         guild: _guilds.GuildLikeT,
         type_: str,
-        integration_id: interfaces.RawSnowflakeT,
+        integration_id: bases.RawSnowflakeT,
         *,
         reason: str = unspecified.UNSPECIFIED,
     ) -> _integrations.Integration:

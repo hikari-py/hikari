@@ -33,11 +33,11 @@ from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import users
 
 
-class InviteTargetUserType(interfaces.BestEffortEnumMixin, enum.IntEnum):
+class InviteTargetUserType(bases.BestEffortEnumMixin, enum.IntEnum):
     """
     Why an invite targets a user.
     """
@@ -46,7 +46,7 @@ class InviteTargetUserType(interfaces.BestEffortEnumMixin, enum.IntEnum):
     STREAM = 1
 
 
-class Invite(interfaces.IModel):
+class Invite(bases.BaseModel):
     """
     Represents a code that when used, adds a user to a guild or group DM channel.
     """
@@ -80,12 +80,12 @@ class Invite(interfaces.IModel):
     #: The user who created the invite.
     #:
     #: :type: :class:`hikari.orm.models.users.IUser` or :class:`None`
-    inviter: typing.Optional[users.IUser]
+    inviter: typing.Optional[users.BaseUser]
 
     #: The user this invite is targeting.
     #:
     #: :type: :class:`hikari.orm.models.users.IUser` or `None`
-    target_user: typing.Optional[users.IUser]
+    target_user: typing.Optional[users.BaseUser]
 
     #: The reason this invite targets a user
     #:
@@ -127,7 +127,7 @@ class InviteWithMetadata(Invite):
 
     __slots__ = ("uses", "max_uses", "max_age", "is_temporary", "created_at", "is_revoked")
 
-    _state: state_registry.IStateRegistry
+    _state: state_registry.BaseStateRegistry
 
     #: The number of times the invite has been used.
     #:

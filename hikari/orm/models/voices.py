@@ -27,11 +27,11 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.orm import fabric
 from hikari.orm.models import guilds
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import members
 
 
-class VoiceServer(interfaces.IModelWithFabric):
+class VoiceServer(bases.BaseModelWithFabric):
     """
     The voice server information used for establishing a voice connection.
     """
@@ -65,7 +65,7 @@ class VoiceServer(interfaces.IModelWithFabric):
         self.endpoint = payload["endpoint"]
 
 
-class VoiceState(interfaces.IModelWithFabric):
+class VoiceState(bases.BaseModelWithFabric):
     """
     A user's voice connection status.
     """
@@ -166,7 +166,7 @@ class VoiceState(interfaces.IModelWithFabric):
         self.is_suppressed = payload.get("suppress", False)
 
 
-class VoiceRegion(interfaces.IModel):
+class VoiceRegion(bases.BaseModel):
     """
     Voice region model.
     """
