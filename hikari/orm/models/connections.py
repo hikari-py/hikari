@@ -24,21 +24,21 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.orm import fabric
 from hikari.orm.models import integrations
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 
 
-class ConnectionVisibility(enum.IntEnum):
+class ConnectionVisibility(bases.BestEffortEnumMixin, enum.IntEnum):
     """The visibility options for a user connection."""
 
     NONE = 0
     EVERYONE = 1
 
 
-class Connection(interfaces.IStatefulModel, interfaces.ISnowflake):
+class Connection(bases.BaseModelWithFabric, bases.SnowflakeMixin):
     """
     Implementation of the Connection object, found in the oauth2 flow.
     """

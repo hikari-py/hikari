@@ -889,9 +889,9 @@ async def test_5xx_is_handled_as_5xx_error_response(mock_http_connection, res):
     ["status", "exception_type"],
     [
         (opcodes.HTTPStatus.BAD_REQUEST, errors.BadRequest),
-        (opcodes.HTTPStatus.UNAUTHORIZED, errors.Unauthorized),
-        (opcodes.HTTPStatus.FORBIDDEN, errors.Forbidden),
-        (opcodes.HTTPStatus.NOT_FOUND, errors.NotFound),
+        (opcodes.HTTPStatus.UNAUTHORIZED, errors.UnauthorizedError),
+        (opcodes.HTTPStatus.FORBIDDEN, errors.ForbiddenError),
+        (opcodes.HTTPStatus.NOT_FOUND, errors.NotFoundError),
         (opcodes.HTTPStatus.TOO_MANY_REQUESTS, errors.ClientError),
         (opcodes.HTTPStatus.NO_CONTENT, errors.ClientError),  # I know this isn't a 4xx.
     ],
@@ -912,9 +912,9 @@ async def test_handle_client_error_response_when_no_error_in_json(status, except
     ["status", "exception_type"],
     [
         (opcodes.HTTPStatus.BAD_REQUEST, errors.BadRequest),
-        (opcodes.HTTPStatus.UNAUTHORIZED, errors.Unauthorized),
-        (opcodes.HTTPStatus.FORBIDDEN, errors.Forbidden),
-        (opcodes.HTTPStatus.NOT_FOUND, errors.NotFound),
+        (opcodes.HTTPStatus.UNAUTHORIZED, errors.UnauthorizedError),
+        (opcodes.HTTPStatus.FORBIDDEN, errors.ForbiddenError),
+        (opcodes.HTTPStatus.NOT_FOUND, errors.NotFoundError),
         (opcodes.HTTPStatus.TOO_MANY_REQUESTS, errors.ClientError),
         (opcodes.HTTPStatus.NO_CONTENT, errors.ClientError),  # I know this isn't a 4xx.
     ],
@@ -936,9 +936,9 @@ async def test_handle_client_error_response_when_only_message_in_json_body(
     ["status", "exception_type"],
     [
         (opcodes.HTTPStatus.BAD_REQUEST, errors.BadRequest),
-        (opcodes.HTTPStatus.UNAUTHORIZED, errors.Unauthorized),
-        (opcodes.HTTPStatus.FORBIDDEN, errors.Forbidden),
-        (opcodes.HTTPStatus.NOT_FOUND, errors.NotFound),
+        (opcodes.HTTPStatus.UNAUTHORIZED, errors.UnauthorizedError),
+        (opcodes.HTTPStatus.FORBIDDEN, errors.ForbiddenError),
+        (opcodes.HTTPStatus.NOT_FOUND, errors.NotFoundError),
         (opcodes.HTTPStatus.TOO_MANY_REQUESTS, errors.ClientError),
         (opcodes.HTTPStatus.NO_CONTENT, errors.ClientError),  # I know this isn't a 4xx.
     ],
@@ -961,9 +961,9 @@ async def test_handle_client_error_response_when_only_error_code_in_json_body(
     ["status", "exception_type"],
     [
         (opcodes.HTTPStatus.BAD_REQUEST, errors.BadRequest),
-        (opcodes.HTTPStatus.UNAUTHORIZED, errors.Unauthorized),
-        (opcodes.HTTPStatus.FORBIDDEN, errors.Forbidden),
-        (opcodes.HTTPStatus.NOT_FOUND, errors.NotFound),
+        (opcodes.HTTPStatus.UNAUTHORIZED, errors.UnauthorizedError),
+        (opcodes.HTTPStatus.FORBIDDEN, errors.ForbiddenError),
+        (opcodes.HTTPStatus.NOT_FOUND, errors.NotFoundError),
         (opcodes.HTTPStatus.TOO_MANY_REQUESTS, errors.ClientError),
         (opcodes.HTTPStatus.NO_CONTENT, errors.ClientError),  # I know this isn't a 4xx.
     ],

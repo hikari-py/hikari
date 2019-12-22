@@ -24,16 +24,16 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import members
 from hikari.orm.models import permissions
 from hikari.orm.models import roles
 
 
-class OverwriteEntityType(interfaces.INamedEnum, enum.Enum):
+class OverwriteEntityType(bases.NamedEnumMixin, enum.Enum):
     """
     The type of "thing" that a permission overwrite sets the permissions for.
 
@@ -59,7 +59,7 @@ class OverwriteEntityType(interfaces.INamedEnum, enum.Enum):
         return issubclass(subclass, self.value)
 
 
-class Overwrite(interfaces.ISnowflake):
+class Overwrite(bases.BaseModel, bases.SnowflakeMixin):
     """
     Representation of some permissions that have been explicitly allowed or denied as an override from the defaults.
     """
@@ -106,7 +106,7 @@ class Overwrite(interfaces.ISnowflake):
 
 
 #: A :class:`Overwrite`, or an :class:`int`/:class:`str` ID of one.
-OverwriteLikeT = typing.Union[interfaces.RawSnowflakeT, Overwrite]
+OverwriteLikeT = typing.Union[bases.RawSnowflakeT, Overwrite]
 
 
 __all__ = ["Overwrite", "OverwriteEntityType"]

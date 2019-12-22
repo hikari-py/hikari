@@ -44,22 +44,22 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
             Event loop to run on.
     """
 
-    __slots__ = ["_total", "_per", "_remaining", "reset_at", "_queue", "loop"]
+    __slots__ = ("total", "per", "remaining", "reset_at", "queue", "loop")
 
     def __init__(self, total: int, per: float, loop: asyncio.AbstractEventLoop) -> None:
-        self._total = total
-        self._per = per
-        self._remaining = total
+        self.total = total
+        self.per = per
+        self.remaining = total
         self.reset_at = time.perf_counter() + per
         # We repeatedly push to the rear and pop from the front, and iterate. We don't need random access, and O(k)
         # pushes and shifts are more desirable given this is a doubly linked list underneath.
-        self._queue: typing.Deque[asyncio.Future] = collections.deque()
+        self.queue: typing.Deque[asyncio.Future] = collections.deque()
         self.loop = assertions.assert_not_none(loop)
 
     @property
     def is_limiting(self) -> bool:
         """True if the rate limit is preventing any requests for now, or False if it is yet to lock down."""
-        return not self._remaining
+        return not self.remaining
 
     async def acquire(self, on_rate_limit: typing.Callable[[], None] = None, **kwargs) -> None:
         """
@@ -72,42 +72,42 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
             **kwargs:
                 kwargs to call the callback with.
         """
-        future = self._enqueue()
+        future = self.enqueue()
         try:
-            if not self._maybe_awaken_and_reset(future) and on_rate_limit is not None:
+            if not self.maybe_awaken_and_reset(future) and on_rate_limit is not None:
                 on_rate_limit(**kwargs)
             await future
         finally:
             future.cancel()
 
-    def _enqueue(self) -> asyncio.Future:
+    def enqueue(self) -> asyncio.Future:
         future = self.loop.create_future()
-        self._queue.append(future)
+        self.queue.append(future)
         return future
 
-    def _reassess(self) -> None:
+    def reassess(self) -> None:
         """Potentially reset the rate limit if we are able to, and possibly reawaken some futures in the process."""
         now = time.perf_counter()
 
         if self.reset_at < now:
             # Reset the time-slice.
-            self._remaining = self._total
-            self.reset_at = now + self._per
+            self.remaining = self.total
+            self.reset_at = now + self.per
 
-        while self._remaining > 0 and self._queue:
+        while self.remaining > 0 and self.queue:
             # Wake up some older tasks while/if we can.
-            next_future = self._queue.popleft()
-            self._remaining -= 1
+            next_future = self.queue.popleft()
+            self.remaining -= 1
             next_future.set_result(None)
 
-    def _maybe_awaken_and_reset(self, this_future: asyncio.Future) -> bool:
+    def maybe_awaken_and_reset(self, this_future: asyncio.Future) -> bool:
         """
         Potentially reset the rate-limits and awaken waiting futures, and reschedule this call if needed later.
 
         Returns:
             True if this future can run immediately, or False if it is rate limited.
         """
-        self._reassess()
+        self.reassess()
 
         # We can't really use call_at here, since that assumes perf_counter and loop.time produce the same
         # timestamps. We can, however, sleep for an approximate period of time instead.
@@ -115,7 +115,7 @@ class TimedTokenBucket(contextlib.AbstractAsyncContextManager):
         if not this_future.done():
             now = time.perf_counter()
             delay = max(0.0, self.reset_at - now)
-            self.loop.call_later(delay, self._maybe_awaken_and_reset, this_future)
+            self.loop.call_later(delay, self.maybe_awaken_and_reset, this_future)
             return False
         return True
 
@@ -144,26 +144,26 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
             Event loop to run on.
     """
 
-    __slots__ = ["_total", "_remaining", "_last_reset_at", "_reset_at", "_per", "_queue", "loop"]
+    __slots__ = ("total", "remaining", "last_reset_at", "reset_at", "per", "queue", "loop")
 
     def __init__(
         self, total: int, remaining: int, now: float, reset_at: float, loop: asyncio.AbstractEventLoop
     ) -> None:
-        self._total = total
-        self._remaining = remaining
+        self.total = total
+        self.remaining = remaining
         real_now = time.perf_counter()
-        self._last_reset_at = real_now
-        self._reset_at = (reset_at - now) + real_now
-        self._per = reset_at - now
+        self.last_reset_at = real_now
+        self.reset_at = (reset_at - now) + real_now
+        self.per = reset_at - now
         # We repeatedly push to the rear and pop from the front, and iterate. We don't need random access, and O(k)
         # pushes and shifts are more desirable given this is a doubly linked list underneath.
-        self._queue: typing.Deque[asyncio.Future] = collections.deque()
+        self.queue: typing.Deque[asyncio.Future] = collections.deque()
         self.loop = assertions.assert_not_none(loop)
 
     @property
     def is_limiting(self) -> bool:
         """True if the rate limit is preventing any requests for now, or False if it is yet to lock down."""
-        return not self._remaining
+        return not self.remaining
 
     async def acquire(self, on_rate_limit: typing.Callable[[], None] = None, **kwargs) -> None:
         """
@@ -176,50 +176,50 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
             **kwargs:
                 kwargs to call the callback with.
         """
-        future = self._enqueue()
+        future = self.enqueue()
         try:
-            if not self._maybe_awaken_and_reset(future) and on_rate_limit is not None:
+            if not self.maybe_awaken_and_reset(future) and on_rate_limit is not None:
                 on_rate_limit(**kwargs)
             await future
         finally:
             future.cancel()
 
-    def _enqueue(self) -> asyncio.Future:
+    def enqueue(self) -> asyncio.Future:
         future = self.loop.create_future()
-        self._queue.append(future)
+        self.queue.append(future)
         return future
 
-    def _reassess(self) -> None:
+    def reassess(self) -> None:
         """Potentially reset the rate limit if we are able to, and possibly reawaken some futures in the process."""
         now = time.perf_counter()
 
-        if self._reset_at < now:
+        if self.reset_at < now:
             # Reset the time-slice.
             now = time.perf_counter()
-            self.update(self._total, self._total, now, now + self._per, is_nested_call=True)
+            self.update(self.total, self.total, now, now + self.per, is_nested_call=True)
 
-        while self._remaining > 0 and self._queue:
+        while self.remaining > 0 and self.queue:
             # Wake up some older tasks while/if we can.
-            self._remaining -= 1
-            next_future = self._queue.popleft()
+            self.remaining -= 1
+            next_future = self.queue.popleft()
             next_future.set_result(None)
 
-    def _maybe_awaken_and_reset(self, this_future: asyncio.Future) -> bool:
+    def maybe_awaken_and_reset(self, this_future: asyncio.Future) -> bool:
         """
         Potentially reset the rate-limits and awaken waiting futures, and reschedule this call if needed later.
 
         Returns:
             True if this future can run immediately, or False if it is rate limited.
         """
-        self._reassess()
+        self.reassess()
 
         # We can't really use call_at here, since that assumes perf_counter and loop.time produce the same
         # timestamps. We can, however, sleep for an approximate period of time instead.
         # We "recursively" recall later to prevent busy-waiting.
         if not this_future.done():
             now = time.perf_counter()
-            delay = max(0.0, self._reset_at - now)
-            self.loop.call_later(delay, self._maybe_awaken_and_reset, this_future)
+            delay = max(0.0, self.reset_at - now)
+            self.loop.call_later(delay, self.maybe_awaken_and_reset, this_future)
             return False
         return True
 
@@ -239,17 +239,17 @@ class VariableTokenBucket(contextlib.AbstractAsyncContextManager):
             is_nested_call:
                 Should always be false, this is only set to `True` internally.
         """
-        should_reassess = remaining > self._remaining
+        should_reassess = remaining > self.remaining
 
         real_now = time.perf_counter()
-        self._total = total
-        self._remaining = remaining
-        self._per = reset_at - now
-        self._reset_at = real_now + self._per
-        self._last_reset_at = real_now
+        self.total = total
+        self.remaining = remaining
+        self.per = reset_at - now
+        self.reset_at = real_now + self.per
+        self.last_reset_at = real_now
 
         if should_reassess and not is_nested_call:
-            self._reassess()
+            self.reassess()
 
     async def __aenter__(self) -> "VariableTokenBucket":
         await self.acquire()
@@ -270,17 +270,17 @@ class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
             The loop to run on.
     """
 
-    __slots__ = ["_locked", "_unlock_event", "loop"]
+    __slots__ = ("locked", "unlock_event", "loop")
 
     def __init__(self, loop: asyncio.AbstractEventLoop) -> None:
-        self._locked = False
-        self._unlock_event = asyncio.Event()
+        self.locked = False
+        self.unlock_event = asyncio.Event()
         self.loop = assertions.assert_not_none(loop)
 
     @property
     def is_limiting(self) -> bool:
         """True if the latch is preventing any requests for now, or False if it is yet to lock down."""
-        return self._locked
+        return self.locked
 
     async def acquire(self, if_locked: typing.Callable[..., None] = None, **kwargs):
         """
@@ -293,10 +293,10 @@ class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
                 kwargs to call the callback with.
 
         """
-        if self._locked:
+        if self.locked:
             if if_locked is not None:
                 if_locked(**kwargs)
-            await self._unlock_event.wait()
+            await self.unlock_event.wait()
 
     def lock(self, unlock_after: float) -> None:
         """
@@ -306,8 +306,8 @@ class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
             unlock_after:
                 The time in seconds to remove the lock after.
         """
-        self._locked = True
-        self._unlock_event.clear()
+        self.locked = True
+        self.unlock_event.clear()
         task = asyncio.shield(asyncio.sleep(unlock_after))
         task.add_done_callback(lambda *_: self.unlock())
 
@@ -315,8 +315,8 @@ class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
         """
         Manually unlock the TimedLatchBucket.
         """
-        self._locked = False
-        self._unlock_event.set()
+        self.locked = False
+        self.unlock_event.set()
 
     async def __aenter__(self) -> "TimedLatchBucket":
         await self.acquire()
@@ -326,4 +326,4 @@ class TimedLatchBucket(contextlib.AbstractAsyncContextManager):
         pass
 
 
-__all__ = ("TimedLatchBucket", "TimedTokenBucket", "VariableTokenBucket")
+__all__ = ["TimedLatchBucket", "TimedTokenBucket", "VariableTokenBucket"]

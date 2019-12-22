@@ -32,16 +32,16 @@ from concurrent import futures
 import aiofiles
 import aiohttp
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
 
-class Attachment(interfaces.ISnowflake):
+class Attachment(bases.BaseModel, bases.SnowflakeMixin):
     """
     An attachment that is received from Discord in a message.
     """
@@ -123,7 +123,7 @@ class Attachment(interfaces.ISnowflake):
 
 
 @dataclasses.dataclass()
-class AbstractFile(interfaces.IModel, abc.ABC):
+class AbstractFile(bases.BaseModel, abc.ABC):
     """
     Provides base functionality for a file-like object of some sort to enable reading it
     efficiently with :mod:`asyncio`.

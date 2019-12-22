@@ -23,15 +23,15 @@ from __future__ import annotations
 
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.orm import fabric
 from hikari.orm.models import colors as _color
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import permissions as _permission
 
 
-class PartialRole(interfaces.ISnowflake):
+class PartialRole(bases.BaseModel, bases.SnowflakeMixin):
     """
     A partial role object where we only know the ID and name. These are usually
     only seen attached to the changes of an audit log entry.
@@ -56,7 +56,7 @@ class PartialRole(interfaces.ISnowflake):
         self.name = payload["name"]
 
 
-class Role(PartialRole, interfaces.IStatefulModel):
+class Role(PartialRole, bases.BaseModelWithFabric):
     """
     Representation of a role within a guild.
     """
@@ -127,11 +127,11 @@ class Role(PartialRole, interfaces.IStatefulModel):
 
 
 #: Any type of :class:`PartialRole` (including :class:`Role`), or the :class:`int`/:class:`str` ID of one.
-PartialRoleLikeT = typing.Union[interfaces.RawSnowflakeT, PartialRole]
+PartialRoleLikeT = typing.Union[bases.RawSnowflakeT, PartialRole]
 
 
 #: An instance of :class:`Role`, or the :class:`int`/:class:`str` ID of one.
-RoleLikeT = typing.Union[interfaces.RawSnowflakeT, PartialRole]
+RoleLikeT = typing.Union[bases.RawSnowflakeT, PartialRole]
 
 
 __all__ = ["PartialRole", "Role", "PartialRoleLikeT", "RoleLikeT"]

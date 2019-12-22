@@ -25,15 +25,15 @@ import datetime
 import enum
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import channels
 from hikari.orm.models import embeds
 from hikari.orm.models import guilds
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import media
 from hikari.orm.models import members
 from hikari.orm.models import reactions
@@ -41,7 +41,7 @@ from hikari.orm.models import users
 from hikari.orm.models import webhooks
 
 
-class MessageType(enum.IntEnum):
+class MessageType(bases.BestEffortEnumMixin, enum.IntEnum):
     """
     The type of a message.
     """
@@ -74,7 +74,7 @@ class MessageType(enum.IntEnum):
     CHANNEL_FOLLOW_ADD = 12
 
 
-class MessageActivityType(enum.IntEnum):
+class MessageActivityType(bases.BestEffortEnumMixin, enum.IntEnum):
     """
     The type of a rich presence message activity.
     """
@@ -90,7 +90,7 @@ class MessageActivityType(enum.IntEnum):
     JOIN_REQUEST = 5
 
 
-class MessageFlag(enum.IntFlag):
+class MessageFlag(bases.BestEffortEnumMixin, enum.IntFlag):
     """
     Additional flags for message options.
     """
@@ -117,7 +117,7 @@ class MessageFlag(enum.IntFlag):
 AuthorT = typing.Union[users.User, users.OAuth2User, members.Member, webhooks.Webhook]
 
 
-class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
+class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     """
     A message that was sent on Discord.
     """
@@ -274,9 +274,7 @@ class Message(interfaces.ISnowflake, interfaces.IStatefulModel):
             self.author = typing.cast(AuthorT, self._fabric.state_registry.parse_user(payload["author"]))
 
         if "edited_timestamp" in payload:
-            self.edited_at = transformations.nullable_cast(
-                payload.get("edited_timestamp"), dates.parse_iso_8601_ts
-            )
+            self.edited_at = transformations.nullable_cast(payload.get("edited_timestamp"), dates.parse_iso_8601_ts)
 
         if "mention_everyone" in payload:
             self.is_mentioning_everyone = payload["mention_everyone"]
@@ -348,7 +346,7 @@ class MessageActivity:
         self.party_id = transformations.nullable_cast(payload.get("party_id"), int)
 
 
-class MessageApplication(interfaces.ISnowflake):
+class MessageApplication(bases.BaseModel, bases.SnowflakeMixin):
     """
     Description of a rich presence application that created a rich presence message in a channel.
     """
@@ -430,7 +428,7 @@ class MessageCrosspost:
 
 
 #: A :class:`Message`, or an :class:`int`/:class:`str` ID of one.
-MessageLikeT = typing.Union[interfaces.RawSnowflakeT, Message]
+MessageLikeT = typing.Union[bases.RawSnowflakeT, Message]
 
 
 __all__ = [

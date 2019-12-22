@@ -24,16 +24,16 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import delegate
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import users
 
 
-class Team(interfaces.IStatefulModel, interfaces.ISnowflake):
+class Team(bases.BaseModelWithFabric, bases.SnowflakeMixin):
     """
     A representation of a team that can contain one or more members in a managed application.
     """
@@ -70,8 +70,8 @@ class Team(interfaces.IStatefulModel, interfaces.ISnowflake):
         self.owner_user_id = int(payload["owner_user_id"])
 
 
-@delegate.delegate_to(users.IUser, "user")
-class TeamMember(users.IUser, delegate_fabricated=True):
+@delegate.delegate_to(users.BaseUser, "user")
+class TeamMember(users.BaseUser, delegate_fabricated=True):
     """
     A representation of a team member.
     """
@@ -98,7 +98,7 @@ class TeamMember(users.IUser, delegate_fabricated=True):
     #: The underlying user.
     #:
     #: :type: :class:`IUser`
-    user: users.IUser
+    user: users.BaseUser
 
     __repr__ = reprs.repr_of("team_id", "permissions", "membership_state", "user.id", "user.username")
 
@@ -109,7 +109,7 @@ class TeamMember(users.IUser, delegate_fabricated=True):
         self.user = fabric_obj.state_registry.parse_user(payload["user"])
 
 
-class MembershipState(enum.IntEnum):
+class MembershipState(bases.BestEffortEnumMixin, enum.IntEnum):
     """
     The state of membership for a team member.
     """

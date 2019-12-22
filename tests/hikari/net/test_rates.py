@@ -28,32 +28,19 @@ from hikari.net import rates
 from tests.hikari import _helpers
 
 
-class UnslottedBase:
-    pass
-
-
 @pytest.fixture
 def timed_token_bucket():
-    class TimedTokenBucket(rates.TimedTokenBucket, UnslottedBase):
-        pass
-
-    return TimedTokenBucket
+    return _helpers.unslot_class(rates.TimedTokenBucket)
 
 
 @pytest.fixture
 def timed_latch_bucket():
-    class TimedLatchBucket(rates.TimedLatchBucket, UnslottedBase):
-        pass
-
-    return TimedLatchBucket
+    return _helpers.unslot_class(rates.TimedLatchBucket)
 
 
 @pytest.fixture
 def variable_token_bucket():
-    class VariableTokenBucket(rates.VariableTokenBucket, UnslottedBase):
-        pass
-
-    return VariableTokenBucket
+    return _helpers.unslot_class(rates.VariableTokenBucket)
 
 
 @pytest.mark.asyncio
@@ -65,14 +52,14 @@ class TestRates:
     async def test_TimedTokenBucket_acquire_should_decrease_remaining_count_by_1(self, event_loop, timed_token_bucket):
         b = timed_token_bucket(10, 0.25, event_loop)
         await b.acquire()
-        assert b._remaining == 9
+        assert b.remaining == 9
 
     async def test_VariableTokenBucket_acquire_should_decrease_remaining_count_by_1(
         self, event_loop, variable_token_bucket
     ):
         b = variable_token_bucket(10, 10, 35, 36, event_loop)
         await b.acquire()
-        assert b._remaining == 9
+        assert b.remaining == 9
 
     async def test_TimedTokenBucket_acquire_when_not_rate_limited_with_callback_does_not_call_it(
         self, event_loop, timed_token_bucket
@@ -80,7 +67,7 @@ class TestRates:
         b = timed_token_bucket(10, 0.25, event_loop)
         callback = mock.MagicMock()
         await b.acquire(callback)
-        assert b._remaining == 9
+        assert b.remaining == 9
         callback.assert_not_called()
 
     async def test_VariableTokenBucket_acquire_when_not_rate_limited_with_callback_does_not_call_it(
@@ -90,7 +77,7 @@ class TestRates:
         b = variable_token_bucket(10, 10, now, now + 1, event_loop)
         callback = mock.MagicMock()
         await b.acquire(callback)
-        assert b._remaining == 9
+        assert b.remaining == 9
         callback.assert_not_called()
 
     async def test_TimedTokenBucket_acquire_when_rate_limiting_without_callback_functions_correctly(
@@ -101,7 +88,7 @@ class TestRates:
         start = time.perf_counter()
         await b.acquire()
         time_taken = time.perf_counter() - start
-        assert b._remaining == 0
+        assert b.remaining == 0
         assert math.isclose(time_taken, 1, abs_tol=0.25)
 
     async def test_VariableTokenBucket_acquire_when_rate_limiting_without_callback_functions_correctly(
@@ -113,7 +100,7 @@ class TestRates:
         start = time.perf_counter()
         await b.acquire()
         time_taken = time.perf_counter() - start
-        assert b._remaining == 0
+        assert b.remaining == 0
         assert math.isclose(time_taken, 1, abs_tol=0.25)
 
     # If this begins to fail, change the time to 2s, with abs_tol=1, or something
@@ -126,7 +113,7 @@ class TestRates:
         callback = mock.MagicMock()
         await b.acquire(callback)
         time_taken = time.perf_counter() - start
-        assert b._remaining == 0
+        assert b.remaining == 0
 
         assert math.isclose(time_taken, 1, abs_tol=0.25)
         callback.assert_called_once()
@@ -141,24 +128,24 @@ class TestRates:
         callback = mock.MagicMock()
         await b.acquire(callback)
         time_taken = time.perf_counter() - start
-        assert b._remaining == 0
+        assert b.remaining == 0
         # We should have been rate limited by 1 second.
         assert math.isclose(time_taken, 1, abs_tol=0.25)
         callback.assert_called_once()
 
     async def test_TimedTokenBucket_queue_should_make_an_incomplete_future(self, event_loop, timed_token_bucket):
         b = timed_token_bucket(10, 1, event_loop)
-        assert not b._queue
-        b._enqueue()
-        assert len(b._queue) == 1
-        assert isinstance(b._queue.pop(), asyncio.Future)
+        assert not b.queue
+        b.enqueue()
+        assert len(b.queue) == 1
+        assert isinstance(b.queue.pop(), asyncio.Future)
 
     async def test_VariableTokenBucket_queue_should_make_an_incomplete_future(self, event_loop, variable_token_bucket):
         b = variable_token_bucket(10, 1, 7, 12, event_loop)
-        assert not b._queue
-        b._enqueue()
-        assert len(b._queue) == 1
-        assert isinstance(b._queue.pop(), asyncio.Future)
+        assert not b.queue
+        b.enqueue()
+        assert len(b.queue) == 1
+        assert isinstance(b.queue.pop(), asyncio.Future)
 
     async def test_TimedTokenBucket_async_with_context_manager(self, event_loop, timed_token_bucket):
         b = timed_token_bucket(10, 1, event_loop)
@@ -181,69 +168,69 @@ class TestRates:
     ):
         now = time.perf_counter()
         b = variable_token_bucket(10, 1, now - 5, now + 5, event_loop)
-        b._reassess = mock.MagicMock()
+        b.reassess = mock.MagicMock()
         b.update(15, 1, now, now + 10, False)
-        assert b._total == 15
-        assert b._remaining == 1
-        assert math.isclose(b._per, 10, rel_tol=0.1)
-        assert math.isclose(b._reset_at, now + 10, abs_tol=0.25)
-        assert math.isclose(b._last_reset_at, now, abs_tol=0.25)
-        b._reassess.assert_not_called()
+        assert b.total == 15
+        assert b.remaining == 1
+        assert math.isclose(b.per, 10, rel_tol=0.1)
+        assert math.isclose(b.reset_at, now + 10, abs_tol=0.25)
+        assert math.isclose(b.last_reset_at, now, abs_tol=0.25)
+        b.reassess.assert_not_called()
 
     async def test_VariableTokenBucket_update_when_still_under_limit_but_remaining_did_change_should_reassess(
         self, event_loop, variable_token_bucket
     ):
         now = time.perf_counter()
         b = variable_token_bucket(10, 1, now - 5, now + 5, event_loop)
-        b._reassess = mock.MagicMock()
+        b.reassess = mock.MagicMock()
         b.update(15, 15, now, now + 10, False)
-        assert b._total == 15
-        assert b._remaining == 15
-        assert math.isclose(b._per, 10, rel_tol=0.1)
-        assert math.isclose(b._reset_at, now + 10, abs_tol=0.25)
-        assert math.isclose(b._last_reset_at, now, abs_tol=0.25)
-        b._reassess.assert_called_once()
+        assert b.total == 15
+        assert b.remaining == 15
+        assert math.isclose(b.per, 10, rel_tol=0.1)
+        assert math.isclose(b.reset_at, now + 10, abs_tol=0.25)
+        assert math.isclose(b.last_reset_at, now, abs_tol=0.25)
+        b.reassess.assert_called_once()
 
     async def test_VariableTokenBucket_update_when_not_under_limit_but_remaining_did_not_change_should_not_reassess(
         self, event_loop, variable_token_bucket
     ):
         now = time.perf_counter()
         b = variable_token_bucket(10, 1, now - 5, now - 1, event_loop)
-        b._reassess = mock.MagicMock()
+        b.reassess = mock.MagicMock()
         b.update(15, 1, now, now + 10, False)
-        assert b._total == 15
-        assert b._remaining == 1
-        assert math.isclose(b._per, 10, rel_tol=0.1)
-        assert math.isclose(b._reset_at, now + 10, abs_tol=0.25)
-        assert math.isclose(b._last_reset_at, now, abs_tol=0.25)
-        b._reassess.assert_not_called()
+        assert b.total == 15
+        assert b.remaining == 1
+        assert math.isclose(b.per, 10, rel_tol=0.1)
+        assert math.isclose(b.reset_at, now + 10, abs_tol=0.25)
+        assert math.isclose(b.last_reset_at, now, abs_tol=0.25)
+        b.reassess.assert_not_called()
 
     async def test_VariableTokenBucket_update_when_not_under_limit_but_remaining_did_change_should_reassess(
         self, event_loop, variable_token_bucket
     ):
         now = time.perf_counter()
         b = variable_token_bucket(10, 1, now - 5, now - 1, event_loop)
-        b._reassess = mock.MagicMock()
+        b.reassess = mock.MagicMock()
         b.update(15, 15, now, now + 10, False)
-        assert b._total == 15
-        assert b._remaining == 15
-        assert math.isclose(b._per, 10, rel_tol=0.1)
-        assert math.isclose(b._reset_at, now + 10, abs_tol=0.25)
-        assert math.isclose(b._last_reset_at, now, abs_tol=0.25)
-        b._reassess.assert_called_once()
+        assert b.total == 15
+        assert b.remaining == 15
+        assert math.isclose(b.per, 10, rel_tol=0.1)
+        assert math.isclose(b.reset_at, now + 10, abs_tol=0.25)
+        assert math.isclose(b.last_reset_at, now, abs_tol=0.25)
+        b.reassess.assert_called_once()
 
     async def test_TimedTokenBucket_reassess_when_reset_at_attribute_is_in_the_past_should_update_internal_state(
         self, event_loop, timed_token_bucket
     ):
         with _helpers.mock_patch(time.perf_counter, new=lambda: 10):
             b = timed_token_bucket(10, 1, event_loop)
-            b._total = 100
-            b._per = 100
-            b._remaining = 10
+            b.total = 100
+            b.per = 100
+            b.remaining = 10
             b.reset_at = -1
 
-            b._reassess()
-            assert b._remaining == b._total
+            b.reassess()
+            assert b.remaining == b.total
             assert b.reset_at == 110
 
     async def test_VariableTokenBucket_reassess_when_reset_at_attribute_is_in_the_past_should_update_internal_state(
@@ -252,12 +239,12 @@ class TestRates:
         now = time.perf_counter()
         b = variable_token_bucket(10, 1, now, now + 1, event_loop)
 
-        b._remaining = 0
-        b._reset_at = -1
+        b.remaining = 0
+        b.reset_at = -1
 
-        b._reassess()
-        assert b._remaining == b._total
-        assert math.isclose(b._reset_at, now + 1, abs_tol=0.25)
+        b.reassess()
+        assert b.remaining == b.total
+        assert math.isclose(b.reset_at, now + 1, abs_tol=0.25)
 
     async def test_TimedTokenBucket_reassess_must_run_as_many_tasks_as_possible_in_expected_time(
         self, event_loop, timed_token_bucket

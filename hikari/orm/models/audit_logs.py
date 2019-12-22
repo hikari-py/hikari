@@ -24,15 +24,15 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import channels
 from hikari.orm.models import colors
 from hikari.orm.models import guilds
 from hikari.orm.models import integrations
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import overwrites
 from hikari.orm.models import permissions
 from hikari.orm.models import roles
@@ -40,7 +40,7 @@ from hikari.orm.models import users
 from hikari.orm.models import webhooks
 
 
-class AuditLog(interfaces.IModel):
+class AuditLog(bases.BaseModel):
     """
     Implementation of an Audit Log.
     """
@@ -55,7 +55,7 @@ class AuditLog(interfaces.IModel):
     #: Set of the users found in the audit log.
     #:
     #: :type: :class:`set` of :class:`hikari.orm.models.users.IUser`
-    users: typing.Set[users.IUser]
+    users: typing.Set[users.BaseUser]
 
     #: Set of the integrations found in the audit log.
     #:
@@ -69,12 +69,9 @@ class AuditLog(interfaces.IModel):
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
         self.webhooks = {
-            fabric_obj.state_registry.parse_webhook(wh)
-            for wh in payload.get("webhooks", containers.EMPTY_SEQUENCE)
+            fabric_obj.state_registry.parse_webhook(wh) for wh in payload.get("webhooks", containers.EMPTY_SEQUENCE)
         }
-        self.users = {
-            fabric_obj.state_registry.parse_user(u) for u in payload.get("users", containers.EMPTY_SEQUENCE)
-        }
+        self.users = {fabric_obj.state_registry.parse_user(u) for u in payload.get("users", containers.EMPTY_SEQUENCE)}
         self.integrations = {
             integrations.PartialIntegration(i) for i in payload.get("integrations", containers.EMPTY_SEQUENCE)
         }
@@ -84,7 +81,7 @@ class AuditLog(interfaces.IModel):
         ]
 
 
-class AuditLogEntry(interfaces.ISnowflake):
+class AuditLogEntry(bases.BaseModel, bases.SnowflakeMixin):
     """
     Implementation of an Audit Log Entry.
     """
@@ -114,7 +111,7 @@ class AuditLogEntry(interfaces.ISnowflake):
     #: Extra information provided for certain audit log events.
     #:
     #: :type: implementation of :class:`hikari.orm.models.audit_logs.IAuditLogEntryInfo` or `None`
-    options: typing.Optional[IAuditLogEntryInfo]
+    options: typing.Optional[BaseAuditLogEntryInfo]
 
     #: The reason for these changes.
     #:
@@ -133,7 +130,7 @@ class AuditLogEntry(interfaces.ISnowflake):
         self.reason = payload.get("reason")
 
 
-class AuditLogEvent(interfaces.BestEffortEnumMixin, enum.IntEnum):
+class AuditLogEvent(bases.BestEffortEnumMixin, enum.IntEnum):
     """The type of event that occurred."""
 
     GUILD_UPDATE = 1
@@ -173,10 +170,10 @@ class AuditLogEvent(interfaces.BestEffortEnumMixin, enum.IntEnum):
     INTEGRATION_DELETE = 82
 
 
-class IAuditLogEntryInfo(interfaces.IModel, interface=True):
+class BaseAuditLogEntryInfo(bases.BaseModel, interface=True):
     """An interface that all audit log entry option models inherit from."""
 
-    _implementations: typing.ClassVar[typing.Dict[int, IAuditLogEntryInfo]] = {}
+    _implementations: typing.ClassVar[typing.Dict[int, BaseAuditLogEntryInfo]] = {}
 
     __slots__ = ()
 
@@ -188,7 +185,7 @@ class IAuditLogEntryInfo(interfaces.IModel, interface=True):
 
 
 class AuditLogEntryCountInfo(
-    IAuditLogEntryInfo, event_types=[AuditLogEvent.MESSAGE_BULK_DELETE, AuditLogEvent.MEMBER_DISCONNECT]
+    BaseAuditLogEntryInfo, event_types=[AuditLogEvent.MESSAGE_BULK_DELETE, AuditLogEvent.MEMBER_DISCONNECT]
 ):
     """
     Extra information for MESSAGE_BULK_DELETE and MEMBER_DISCONNECT entries.
@@ -207,7 +204,7 @@ class AuditLogEntryCountInfo(
         self.count = int(payload["count"])
 
 
-class MemberMoveAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEvent.MEMBER_MOVE]):
+class MemberMoveAuditLogEntryInfo(BaseAuditLogEntryInfo, event_types=[AuditLogEvent.MEMBER_MOVE]):
     """
     Extra information for MEMBER_MOVE entries.
     """
@@ -231,7 +228,7 @@ class MemberMoveAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEvent
         self.channel_id = int(payload["channel_id"])
 
 
-class MemberPruneAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEvent.MEMBER_PRUNE]):
+class MemberPruneAuditLogEntryInfo(BaseAuditLogEntryInfo, event_types=[AuditLogEvent.MEMBER_PRUNE]):
     """
     Extra information for MEMBER_PRUNE entries.
     """
@@ -255,7 +252,7 @@ class MemberPruneAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEven
         self.members_removed = int(payload["members_removed"])
 
 
-class MessageDeleteAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEvent.MESSAGE_DELETE]):
+class MessageDeleteAuditLogEntryInfo(BaseAuditLogEntryInfo, event_types=[AuditLogEvent.MESSAGE_DELETE]):
     """
     Extra information for MESSAGE_DELETE entries
     """
@@ -280,7 +277,7 @@ class MessageDeleteAuditLogEntryInfo(IAuditLogEntryInfo, event_types=[AuditLogEv
 
 
 class MessagePinAuditLogEntryInfo(
-    IAuditLogEntryInfo, event_types=[AuditLogEvent.MESSAGE_PIN, AuditLogEvent.MESSAGE_UNPIN]
+    BaseAuditLogEntryInfo, event_types=[AuditLogEvent.MESSAGE_PIN, AuditLogEvent.MESSAGE_UNPIN]
 ):
     """
     Extra information for Message Pin related entries.
@@ -306,7 +303,7 @@ class MessagePinAuditLogEntryInfo(
 
 
 class ChannelOverwriteAuditLogEntryInfo(
-    IAuditLogEntryInfo,
+    BaseAuditLogEntryInfo,
     event_types=[
         AuditLogEvent.CHANNEL_OVERWRITE_CREATE,
         AuditLogEvent.CHANNEL_OVERWRITE_UPDATE,
@@ -338,7 +335,7 @@ class ChannelOverwriteAuditLogEntryInfo(
 
 def parse_audit_log_entry_info(
     audit_log_entry_info_payload: containers.DiscordObjectT, event_type: int
-) -> typing.Optional[IAuditLogEntryInfo]:
+) -> typing.Optional[BaseAuditLogEntryInfo]:
     """
     Parses a specific type of audit log entry info based on the given event type. If nothing corresponds
     to the additional info passed or the event_type given, then `None` is returned instead.
@@ -346,13 +343,13 @@ def parse_audit_log_entry_info(
     try:
         # noinspection PyProtectedMember
         return transformations.nullable_cast(
-            audit_log_entry_info_payload, IAuditLogEntryInfo._implementations[event_type]
+            audit_log_entry_info_payload, BaseAuditLogEntryInfo._implementations[event_type]
         )
     except KeyError:
         return None
 
 
-class AuditLogChangeKey(str, interfaces.BestEffortEnumMixin, enum.Enum):
+class AuditLogChangeKey(str, bases.NamedEnumMixin, enum.Enum):
     """
     Commonly known and documented keys for audit log change objects.
 
@@ -471,7 +468,7 @@ AUDIT_LOG_ENTRY_CONVERTERS = {
 }
 
 
-class AuditLogChange(interfaces.IModel):
+class AuditLogChange(bases.BaseModel):
     """
     Implementation of the Audit Log Change Object.
     """

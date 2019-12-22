@@ -26,14 +26,14 @@ import datetime
 import enum
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 
 
-class Status(interfaces.INamedEnum, enum.Enum):
+class Status(bases.NamedEnumMixin, enum.Enum):
     """
     The status of a member.
     """
@@ -48,7 +48,7 @@ class Status(interfaces.INamedEnum, enum.Enum):
     OFFLINE = enum.auto()
 
 
-class Presence(interfaces.IModel):
+class Presence(bases.BaseModel):
     """
     The presence of a member. This includes their status and info on what they are doing currently.
     """
@@ -115,7 +115,7 @@ class Presence(interfaces.IModel):
             )
 
 
-class Activity(interfaces.IModel):
+class Activity(bases.BaseModel):
     """
     A non-rich presence-style activity.
 
@@ -220,7 +220,7 @@ class RichActivity(Activity):
         self.flags = transformations.nullable_cast(payload.get("flags"), ActivityFlag) or 0
 
 
-def parse_presence_activity(payload: containers.DiscordObjectT, ) -> typing.Union[Activity, RichActivity]:
+def parse_presence_activity(payload: containers.DiscordObjectT,) -> typing.Union[Activity, RichActivity]:
     """
     Consumes a payload and decides the type of activity it represents. A corresponding object is then
     constructed and returned as appropriate.
@@ -233,7 +233,7 @@ def parse_presence_activity(payload: containers.DiscordObjectT, ) -> typing.Unio
     return impl(payload)
 
 
-class ActivityType(enum.IntEnum):
+class ActivityType(bases.BestEffortEnumMixin, enum.IntEnum):
     """
     The activity state. Can be more than one using bitwise-combinations.
     """
@@ -270,7 +270,7 @@ class ActivityFlag(enum.IntFlag):
     PLAY = 0x20
 
 
-class ActivityParty(interfaces.IModel):
+class ActivityParty(bases.BaseModel):
     """
     A description of a party of players in the same rich-presence activity. This
     is used to describe multiplayer sessions, and the likes.
@@ -305,7 +305,7 @@ class ActivityParty(interfaces.IModel):
         self.max_size = transformations.nullable_cast(payload.get("max_size"), int)
 
 
-class ActivityAssets(interfaces.IModel):
+class ActivityAssets(bases.BaseModel):
     """
     Any rich assets such as tooltip data and image/icon data for a rich presence activity.
     """
@@ -341,7 +341,7 @@ class ActivityAssets(interfaces.IModel):
         self.small_text = payload.get("small_text")
 
 
-class ActivityTimestamps(interfaces.IModel):
+class ActivityTimestamps(bases.BaseModel):
     """
     Timestamps for a rich presence activity object that define when and for how long the
     user has been undergoing an activity.

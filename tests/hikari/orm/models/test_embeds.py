@@ -23,7 +23,6 @@ import pytest
 from hikari.orm.models import colors as _color
 from hikari.orm.models import embeds as _embed
 from hikari.orm.models import media
-from tests.hikari import _helpers
 
 
 @pytest.fixture

@@ -42,9 +42,9 @@ res = http_api_base.Resource("http://you.local", "get", "/it/now")
         errors.ServerError(res, HTTP.SERVICE_UNAVAILABLE, "Service Unavailable!"),
         errors.ClientError(res, HTTP.TOO_MANY_REQUESTS, None, "You are being rate limited"),
         errors.BadRequest(res, JSON.INVALID_FORM_BODY, "Bad body"),
-        errors.Unauthorized(res, JSON.UNAUTHORIZED, "Who are you"),
-        errors.Forbidden(res, JSON.MISSING_PERMISSIONS, "You cant do this"),
-        errors.NotFound(res, JSON.UNKNOWN_CHANNEL, "Channel was not found"),
+        errors.UnauthorizedError(res, JSON.UNAUTHORIZED, "Who are you"),
+        errors.ForbiddenError(res, JSON.MISSING_PERMISSIONS, "You cant do this"),
+        errors.NotFoundError(res, JSON.UNKNOWN_CHANNEL, "Channel was not found"),
     ],
     ids=type,
 )

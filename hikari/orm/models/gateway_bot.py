@@ -23,12 +23,12 @@ from __future__ import annotations
 
 import datetime
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
-from hikari.orm.models import interfaces
+from hikari.internal_utilities import reprs
+from hikari.orm.models import bases
 
 
-class GatewayBot(interfaces.IModel):
+class GatewayBot(bases.BaseModel):
     """
     Gateway Bot connection recommendations by Discord.
 
@@ -54,7 +54,7 @@ class GatewayBot(interfaces.IModel):
         self.session_start_limit = SessionStartLimit(payload["session_start_limit"])
 
 
-class SessionStartLimit(interfaces.IModel):
+class SessionStartLimit(bases.BaseModel):
     """
     Describes how many more times you can identify with the gateway within a given time window.
 
