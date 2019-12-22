@@ -26,11 +26,11 @@ import typing
 
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import users
 
 
-class WebhookType(interfaces.BestEffortEnumMixin, enum.IntEnum):
+class WebhookType(bases.BestEffortEnumMixin, enum.IntEnum):
     """
     The type of a webhook.
     """
@@ -41,7 +41,7 @@ class WebhookType(interfaces.BestEffortEnumMixin, enum.IntEnum):
     CHANNEL_FOLLOWER = 2
 
 
-class Webhook(interfaces.IModelWithFabric, interfaces.ISnowflake):
+class Webhook(bases.BaseModelWithFabric, bases.SnowflakeMixin):
     """
     Describes a webhook. This is an HTTP endpoint that can be used to send messages to certain
     channels without spinning up a complete bot implementation elsewhere (such as for CI pipelines).
@@ -101,7 +101,7 @@ class Webhook(interfaces.IModelWithFabric, interfaces.ISnowflake):
 
 
 #: A :class:`Webhook` instance, or the :class:`int`/:class:`str` ID of one.
-WebhookLikeT = typing.Union[interfaces.RawSnowflakeT, Webhook]
+WebhookLikeT = typing.Union[bases.RawSnowflakeT, Webhook]
 
 
 __all__ = ["Webhook", "WebhookLikeT"]

@@ -32,7 +32,7 @@ from hikari.internal_utilities import containers
 from hikari.orm.models import guilds
 
 
-class IChunker(abc.ABC):
+class BaseChunker(abc.ABC):
     """
     Abstract interface for a chunker that handles member chunks.
     """

@@ -32,7 +32,7 @@ from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import guilds
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import presences
 from hikari.orm.models import roles as _roles
 from hikari.orm.models import users
@@ -123,7 +123,7 @@ class Member(users.User, delegate_fabricated=True):
 
 
 #: A :class:`Member`, or an :class:`int`/:class:`str` ID of one.
-MemberLikeT = typing.Union[interfaces.RawSnowflakeT, Member]
+MemberLikeT = typing.Union[bases.RawSnowflakeT, Member]
 
 
 __all__ = ["Member"]

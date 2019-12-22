@@ -33,7 +33,7 @@ from hikari.orm import fabric
 from hikari.orm.models import channels
 from hikari.orm.models import embeds
 from hikari.orm.models import guilds
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import media
 from hikari.orm.models import members
 from hikari.orm.models import reactions
@@ -41,7 +41,7 @@ from hikari.orm.models import users
 from hikari.orm.models import webhooks
 
 
-class MessageType(interfaces.BestEffortEnumMixin, enum.IntEnum):
+class MessageType(bases.BestEffortEnumMixin, enum.IntEnum):
     """
     The type of a message.
     """
@@ -74,7 +74,7 @@ class MessageType(interfaces.BestEffortEnumMixin, enum.IntEnum):
     CHANNEL_FOLLOW_ADD = 12
 
 
-class MessageActivityType(interfaces.BestEffortEnumMixin, enum.IntEnum):
+class MessageActivityType(bases.BestEffortEnumMixin, enum.IntEnum):
     """
     The type of a rich presence message activity.
     """
@@ -90,7 +90,7 @@ class MessageActivityType(interfaces.BestEffortEnumMixin, enum.IntEnum):
     JOIN_REQUEST = 5
 
 
-class MessageFlag(interfaces.BestEffortEnumMixin, enum.IntFlag):
+class MessageFlag(bases.BestEffortEnumMixin, enum.IntFlag):
     """
     Additional flags for message options.
     """
@@ -117,7 +117,7 @@ class MessageFlag(interfaces.BestEffortEnumMixin, enum.IntFlag):
 AuthorT = typing.Union[users.User, users.OAuth2User, members.Member, webhooks.Webhook]
 
 
-class Message(interfaces.ISnowflake, interfaces.IModelWithFabric):
+class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     """
     A message that was sent on Discord.
     """
@@ -346,7 +346,7 @@ class MessageActivity:
         self.party_id = transformations.nullable_cast(payload.get("party_id"), int)
 
 
-class MessageApplication(interfaces.ISnowflake):
+class MessageApplication(bases.BaseModel, bases.SnowflakeMixin):
     """
     Description of a rich presence application that created a rich presence message in a channel.
     """
@@ -428,7 +428,7 @@ class MessageCrosspost:
 
 
 #: A :class:`Message`, or an :class:`int`/:class:`str` ID of one.
-MessageLikeT = typing.Union[interfaces.RawSnowflakeT, Message]
+MessageLikeT = typing.Union[bases.RawSnowflakeT, Message]
 
 
 __all__ = [

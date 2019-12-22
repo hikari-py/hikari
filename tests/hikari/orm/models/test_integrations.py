@@ -51,7 +51,7 @@ def test_PartialIntegration___repr__():
 @pytest.mark.model
 class TestIntegration:
     def test_Integration(self):
-        test_state = mock.MagicMock(state_set=state_registry.IStateRegistry)
+        test_state = mock.MagicMock(state_set=state_registry.BaseStateRegistry)
         test_fabric = fabric.Fabric(None, test_state)
 
         user_dict = {

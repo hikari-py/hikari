@@ -25,12 +25,12 @@ import typing
 
 import pytest
 
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from tests.hikari import _helpers
 
 
 @dataclasses.dataclass()
-class DummySnowflake(interfaces.ISnowflake):
+class DummySnowflake(bases.BaseModel, bases.SnowflakeMixin):
     __slots__ = ("id",)
     id: int
 
@@ -40,13 +40,13 @@ def neko_snowflake():
     return DummySnowflake(537_340_989_808_050_216)
 
 
-class DummyNamedEnum(interfaces.NamedEnumMixin, enum.IntEnum):
+class DummyNamedEnum(bases.NamedEnumMixin, enum.IntEnum):
     FOO = 9
     BAR = 18
     BAZ = 27
 
 
-class DummyBestEffortEnum(interfaces.BestEffortEnumMixin, enum.IntEnum):
+class DummyBestEffortEnum(bases.BestEffortEnumMixin, enum.IntEnum):
     FOO = 9
     BAR = 18
     BAZ = 27
@@ -57,7 +57,7 @@ class TestSnowflake:
     def test_Snowflake_init_subclass(self):
         instance = DummySnowflake(12345)
         assert instance is not None
-        assert isinstance(instance, interfaces.ISnowflake)
+        assert isinstance(instance, bases.SnowflakeMixin)
 
     def test_Snowflake_is_resolved(self):
         assert DummySnowflake(12345).is_resolved is True
@@ -103,7 +103,7 @@ class TestSnowflake:
         assert neko_snowflake.internal_worker_id == 2
 
     def test___eq___when_matching_type_and_matching_id(self):
-        class SnowflakeImpl(interfaces.ISnowflake):
+        class SnowflakeImpl(bases.BaseModel, bases.SnowflakeMixin):
             __slots__ = ("id",)
 
             def __init__(self):
@@ -112,7 +112,7 @@ class TestSnowflake:
         assert SnowflakeImpl() == SnowflakeImpl()
 
     def test___eq___when_matching_type_but_no_matching_id(self):
-        class SnowflakeImpl(interfaces.ISnowflake):
+        class SnowflakeImpl(bases.BaseModel, bases.SnowflakeMixin):
             __slots__ = ("id",)
 
             def __init__(self, id_):
@@ -121,13 +121,13 @@ class TestSnowflake:
         assert SnowflakeImpl(1) != SnowflakeImpl(2)
 
     def test___eq___when_no_matching_type_but_matching_id(self):
-        class SnowflakeImpl1(interfaces.ISnowflake):
+        class SnowflakeImpl1(bases.BaseModel, bases.SnowflakeMixin):
             __slots__ = ("id",)
 
             def __init__(self, id_):
                 self.id = id_
 
-        class SnowflakeImpl2(interfaces.ISnowflake):
+        class SnowflakeImpl2(bases.BaseModel, bases.SnowflakeMixin):
             __slots__ = ("id",)
 
             def __init__(self, id_):
@@ -136,13 +136,13 @@ class TestSnowflake:
         assert SnowflakeImpl1(1) != SnowflakeImpl2(1)
 
     def test___eq___when_no_matching_type_and_no_matching_id(self):
-        class SnowflakeImpl1(interfaces.ISnowflake):
+        class SnowflakeImpl1(bases.BaseModel, bases.SnowflakeMixin):
             __slots__ = ("id",)
 
             def __init__(self, id_):
                 self.id = id_
 
-        class SnowflakeImpl2(interfaces.ISnowflake):
+        class SnowflakeImpl2(bases.BaseModel, bases.SnowflakeMixin):
             __slots__ = ("id",)
 
             def __init__(self, id_):
@@ -151,7 +151,7 @@ class TestSnowflake:
         assert SnowflakeImpl1(1) != SnowflakeImpl2(2)
 
     def test_cast_snowflake_to_int(self):
-        class SnowflakeImpl(interfaces.ISnowflake):
+        class SnowflakeImpl(bases.BaseModel, bases.SnowflakeMixin):
             __slots__ = ("id",)
 
             def __init__(self, id_):
@@ -192,7 +192,7 @@ class TestBestEffortEnumMixin:
 @pytest.mark.model
 class TestIModel:
     def test_injects_dummy_init_if_interface(self):
-        class Test(interfaces.IModel, interface=True):
+        class Test(bases.BaseModel, interface=True):
             __slots__ = ()
 
         try:
@@ -202,14 +202,14 @@ class TestIModel:
             assert True
 
     def test_does_not_inject_dummy_init_if_not_interface(self):
-        class Test(interfaces.IModel, interface=False):
+        class Test(bases.BaseModel, interface=False):
             __slots__ = ()
 
         assert Test()  # *shrug emoji*
 
     def test_copy(self):
         @dataclasses.dataclass()
-        class Test(interfaces.IModel):
+        class Test(bases.BaseModel):
             __slots__ = ("data", "whatever")
             data: typing.List[int]
             whatever: object
@@ -230,7 +230,7 @@ class TestIModel:
 
     def test_does_not_clone_fields_in___copy_by_ref___(self):
         @dataclasses.dataclass()
-        class Test(interfaces.IModel):
+        class Test(bases.BaseModel):
             __copy_by_ref__ = ("data",)
             __slots__ = ("data",)
             data: typing.List[int]
@@ -243,7 +243,7 @@ class TestIModel:
 
     def test_does_not_clone_state_by_default_fields(self):
         @dataclasses.dataclass()
-        class Test(interfaces.IModel):
+        class Test(bases.BaseModel):
             __copy_by_ref__ = ("foo",)
             __slots__ = ("foo", "_fabric")
             _fabric: typing.List[int]
@@ -257,7 +257,7 @@ class TestIModel:
         assert test.copy()._fabric is fabric
 
     def test___copy_by_ref___is_inherited(self):
-        class Base1(interfaces.IModel):
+        class Base1(bases.BaseModel):
             __copy_by_ref__ = ["a", "b", "c"]
             __slots__ = ("a", "b", "c")
 
@@ -273,7 +273,7 @@ class TestIModel:
             assert letter in Base3.__copy_by_ref__, f"{letter!r} was not inherited into __copy_by_ref__"
 
     def test___all_slots___is_inherited(self):
-        class Base1(interfaces.IModel):
+        class Base1(bases.BaseModel):
             __copy_by_ref__ = ["a", "b", "c"]
             __slots__ = ("a", "b", "c")
 
@@ -291,7 +291,7 @@ class TestIModel:
     def test_non_slotted_IModel_refuses_to_initialize(self):
         try:
 
-            class BadClass(interfaces.IModel):
+            class BadClass(bases.BaseModel):
                 # look ma, no slots.
                 pass
 
@@ -301,7 +301,7 @@ class TestIModel:
     def test_slotted_IModel_can_initialize(self):
         try:
 
-            class GoodClass(interfaces.IModel):
+            class GoodClass(bases.BaseModel):
                 __slots__ = ()
 
         except TypeError as ex:
@@ -311,17 +311,17 @@ class TestIModel:
 @pytest.mark.model
 class TestFabricatedMixin:
     def test_interface_FabricatedMixin_does_not_need_fabric(self):
-        class Interface(interfaces.IModelWithFabric, interface=True):
+        class Interface(bases.BaseModelWithFabric, interface=True):
             __slots__ = ()
 
     def test_delegate_fabricated_FabricatedMixin_does_not_need_fabric(self):
-        class Delegated(interfaces.IModelWithFabric, delegate_fabricated=True):
+        class Delegated(bases.BaseModelWithFabric, delegate_fabricated=True):
             __slots__ = ()
 
     def test_regular_FabricatedMixin_fails_to_initialize_without_fabric_slot(self):
         try:
 
-            class Regular(interfaces.IModelWithFabric):
+            class Regular(bases.BaseModelWithFabric):
                 __slots__ = ()
 
             assert False, "No TypeError was raised."
@@ -329,21 +329,21 @@ class TestFabricatedMixin:
             assert True, "passed"
 
     def test_regular_FabricatedMixin_can_initialize_with_fabric_slot(self):
-        class Regular(interfaces.IModelWithFabric):
+        class Regular(bases.BaseModelWithFabric):
             __slots__ = ("_fabric",)
 
 
 @pytest.mark.model
 class TestUnknownObject:
     def test_is_resolved_is_False(self):
-        assert interfaces.UnknownObject(1234, ...).is_resolved is False
+        assert bases.UnknownObject(1234, ...).is_resolved is False
 
     @pytest.mark.asyncio
     async def test_await_creates_future(self):
         async def coro(a, b, c):
             return a + b + c
 
-        obj = interfaces.UnknownObject(1234, functools.partial(coro, 1, 2, 3))
+        obj = bases.UnknownObject(1234, functools.partial(coro, 1, 2, 3))
 
         await obj
 
@@ -352,7 +352,7 @@ class TestUnknownObject:
     @pytest.mark.asyncio
     @_helpers.assert_raises(type_=NotImplementedError)
     async def test_await_on_unawaitable_UnknownObject_errors(self):
-        obj = interfaces.UnknownObject(1234)
+        obj = bases.UnknownObject(1234)
         await obj
 
     @pytest.mark.asyncio
@@ -364,7 +364,7 @@ class TestUnknownObject:
             call_count += 1
             return a + b + c
 
-        obj = interfaces.UnknownObject(1234, functools.partial(coro, 1, 2, 3))
+        obj = bases.UnknownObject(1234, functools.partial(coro, 1, 2, 3))
 
         for i in range(3):
             assert await obj == 6
@@ -384,7 +384,7 @@ class TestUnknownObject:
             call_count += 1
             received_result = result
 
-        obj = interfaces.UnknownObject(1234, functools.partial(coro, 1, 2, 3))
+        obj = bases.UnknownObject(1234, functools.partial(coro, 1, 2, 3))
         obj.add_done_callback(callback)
 
         for i in range(3):
@@ -406,7 +406,7 @@ class TestUnknownObject:
             call_count += 1
             received_result = result
 
-        obj = interfaces.UnknownObject(1234, functools.partial(coro, 1, 2, 3))
+        obj = bases.UnknownObject(1234, functools.partial(coro, 1, 2, 3))
 
         for i in range(3):
             await obj
