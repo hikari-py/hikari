@@ -33,7 +33,7 @@ from hikari.orm.models import connections
 from hikari.orm.models import emojis
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import invites
 from hikari.orm.models import members
 from hikari.orm.models import messages
@@ -447,7 +447,7 @@ class TestStateRegistryImpl:
     ):
         guild_channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=1234)
         dm_channel_obj = _helpers.mock_model(channels.GroupDMChannel, id=1235)
-        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=1236)
+        unknown_obj = _helpers.mock_model(bases.UnknownObject, id=1236)
         callback_obj = mock.MagicMock()
         registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
         registry._guild_channels = {guild_channel_obj.id: guild_channel_obj}
@@ -482,7 +482,7 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=69)
-        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=70)
+        unknown_obj = _helpers.mock_model(bases.UnknownObject, id=70)
         callback_obj = mock.MagicMock()
         registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
@@ -513,7 +513,7 @@ class TestStateRegistryImpl:
         assert registry.get_mandatory_guild_by_id(69) is guild_obj
 
     def test_get_mandatory_guild_by_id_uncached_returns_unknown(self, registry: state_registry_impl.StateRegistryImpl):
-        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=70)
+        unknown_obj = _helpers.mock_model(bases.UnknownObject, id=70)
         callback_obj = mock.MagicMock()
         registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
@@ -550,7 +550,7 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         registry._message_cache = {}
-        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=70)
+        unknown_obj = _helpers.mock_model(bases.UnknownObject, id=70)
         callback_obj = mock.MagicMock()
         registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
@@ -634,7 +634,7 @@ class TestStateRegistryImpl:
         registry._guilds = {guild_obj.id: guild_obj}
         callback_obj = mock.MagicMock()
         registry._role_fetcher = mock.AsyncMock()
-        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=2)
+        unknown_obj = _helpers.mock_model(bases.UnknownObject, id=2)
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
 
         result = registry.get_mandatory_role_by_id(guild_obj.id, 2, callback_obj)
@@ -649,7 +649,7 @@ class TestStateRegistryImpl:
         registry._guilds = _helpers.StrongWeakValuedDict()
         callback_obj = mock.MagicMock()
         registry._role_fetcher = mock.AsyncMock()
-        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=2)
+        unknown_obj = _helpers.mock_model(bases.UnknownObject, id=2)
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
 
         result = registry.get_mandatory_role_by_id(1, 2, callback_obj)
@@ -694,7 +694,7 @@ class TestStateRegistryImpl:
         registry._user = None
         registry._users = _helpers.StrongWeakValuedDict()
         registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
-        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=1)
+        unknown_obj = _helpers.mock_model(bases.UnknownObject, id=1)
         callback_obj = mock.MagicMock()
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
 
@@ -744,7 +744,7 @@ class TestStateRegistryImpl:
         guild_obj.members = _helpers.StrongWeakValuedDict()
         registry._guilds = {guild_obj.id: guild_obj}
         registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
-        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=1)
+        unknown_obj = _helpers.mock_model(bases.UnknownObject, id=1)
         callback_obj = mock.MagicMock()
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
 
@@ -764,7 +764,7 @@ class TestStateRegistryImpl:
         guild_obj.members = {member_obj.id: member_obj}
         registry._guilds = {guild_obj.id: guild_obj}
         registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
-        unknown_obj = _helpers.mock_model(interfaces.UnknownObject, id=1)
+        unknown_obj = _helpers.mock_model(bases.UnknownObject, id=1)
         callback_obj = mock.MagicMock()
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
 
@@ -1291,7 +1291,7 @@ class TestStateRegistryImpl:
 
         reaction = registry.parse_reaction(payload)
         assert reaction is not None
-        assert isinstance(reaction.message, interfaces.UnknownObject)
+        assert isinstance(reaction.message, bases.UnknownObject)
 
     def test_parse_role_when_role_exists_does_not_update_role_mapping(
         self, registry: state_registry_impl.StateRegistryImpl

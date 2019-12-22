@@ -48,7 +48,7 @@ def logger_impl():
 
 @pytest.fixture()
 def state_registry_impl():
-    return mock.MagicMock(spec_set=state_registry.IStateRegistry)
+    return mock.MagicMock(spec_set=state_registry.BaseStateRegistry)
 
 
 @pytest.fixture()
@@ -63,7 +63,7 @@ def gateway_impl():
 
 @pytest.fixture()
 def chunker_impl():
-    return mock.MagicMock(spec_set=_chunker.IChunker)
+    return mock.MagicMock(spec_set=_chunker.BaseChunker)
 
 
 @pytest.fixture()
@@ -170,13 +170,7 @@ class TestDispatchingEventAdapterImpl:
         ],
     )
     async def test_handle_ready_handles_chunker(
-        self,
-        discord_ready_payload,
-        adapter_impl,
-        gateway_impl,
-        chunker_impl,
-        chunker_mode,
-        state_registry_impl,
+        self, discord_ready_payload, adapter_impl, gateway_impl, chunker_impl, chunker_mode, state_registry_impl,
     ):
         guild1 = _helpers.mock_model(guilds.Guild)
         guild2 = _helpers.mock_model(guilds.Guild)
@@ -992,7 +986,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_guild_members_chunk_calls_chunker(self, adapter_impl, fabric_impl, gateway_impl):
-        fabric_impl.chunker = mock.MagicMock(spec_set=_chunker.IChunker)
+        fabric_impl.chunker = mock.MagicMock(spec_set=_chunker.BaseChunker)
         fabric_impl.chunker.handle_next_chunk = mock.AsyncMock()
 
         payload = {...}

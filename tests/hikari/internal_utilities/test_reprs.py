@@ -19,7 +19,6 @@
 from __future__ import annotations
 
 import dataclasses
-import textwrap
 import typing
 
 from hikari.internal_utilities import reprs

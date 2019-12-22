@@ -24,15 +24,15 @@ from __future__ import annotations
 import datetime
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
+from hikari.internal_utilities import reprs
 from hikari.orm import fabric
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import users
 
 
-class IntegrationAccount(interfaces.ISnowflake):
+class IntegrationAccount(bases.BaseModel, bases.SnowflakeMixin):
     """
     An account used for an integration.
     """
@@ -56,7 +56,7 @@ class IntegrationAccount(interfaces.ISnowflake):
         self.name = payload.get("name")
 
 
-class PartialIntegration(interfaces.ISnowflake):
+class PartialIntegration(bases.BaseModel, bases.SnowflakeMixin):
     """
     A partial guild integration, seen in AuditLogs.
     """
@@ -92,7 +92,7 @@ class PartialIntegration(interfaces.ISnowflake):
         self.account = IntegrationAccount(payload["account"])
 
 
-class Integration(PartialIntegration, interfaces.IStatefulModel):
+class Integration(PartialIntegration, bases.BaseModelWithFabric):
     """
     A guild integration.
     """
@@ -150,10 +150,10 @@ class Integration(PartialIntegration, interfaces.IStatefulModel):
 
 #: Any type of :class:`PartialIntegration` (including :class:`Integration`),
 #: or the :class:`int`/:class:`str` ID of one.
-PartialIntegrationLikeT = typing.Union[interfaces.RawSnowflakeT, PartialIntegration]
+PartialIntegrationLikeT = typing.Union[bases.RawSnowflakeT, PartialIntegration]
 
 
 #: An instance of :class:`Integration`, or the :class:`int`/:class:`str` ID of one.
-IntegrationLikeT = typing.Union[interfaces.RawSnowflakeT, Integration]
+IntegrationLikeT = typing.Union[bases.RawSnowflakeT, Integration]
 
 __all__ = ["Integration", "IntegrationAccount", "PartialIntegration", "PartialIntegrationLikeT", "IntegrationLikeT"]

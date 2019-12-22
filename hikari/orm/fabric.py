@@ -43,11 +43,11 @@ class Fabric:
 
     #: The handler for incoming events. This is expected to parse the raw event payloads that
     #: Discord provides.
-    event_handler: _event_handler.IEventHandler = dataclasses.field(default=NotImplemented)
+    event_handler: _event_handler.BaseEventHandler = dataclasses.field(default=NotImplemented)
 
     #: Application state information. This stores information about any users the application
     #: can see, any guilds it is in, any channels that are available, and the likes.
-    state_registry: _state_registry.IStateRegistry = dataclasses.field(default=NotImplemented)
+    state_registry: _state_registry.BaseStateRegistry = dataclasses.field(default=NotImplemented)
 
     #: A mapping of shard ID's to gateways that are running.
     #:
@@ -59,7 +59,7 @@ class Fabric:
 
     #: HTTP adapter bridge component to convert raw HTTP call responses to their ORM
     #: representation.
-    http_adapter: _http_adapter.IHTTPAdapter = dataclasses.field(default=NotImplemented)
+    http_adapter: _http_adapter.BaseHTTPAdapter = dataclasses.field(default=NotImplemented)
 
     #: Provides a mechanism to handle the guild chunking events.
-    chunker: _chunker.IChunker = dataclasses.field(default=NotImplemented)
+    chunker: _chunker.BaseChunker = dataclasses.field(default=NotImplemented)

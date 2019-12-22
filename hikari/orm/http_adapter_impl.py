@@ -39,7 +39,7 @@ from hikari.orm.models import emojis as _emojis
 from hikari.orm.models import gateway_bot as _gateway_bot
 from hikari.orm.models import guilds as _guilds
 from hikari.orm.models import integrations as _integrations
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import invites as _invites
 from hikari.orm.models import media as _media
 from hikari.orm.models import members as _members
@@ -53,7 +53,7 @@ from hikari.orm.models import voices as _voices
 from hikari.orm.models import webhooks as _webhooks
 
 
-class HTTPAdapterImpl(http_adapter.IHTTPAdapter):
+class HTTPAdapterImpl(http_adapter.BaseHTTPAdapter):
     """Implementation of a basic HTTP adapter."""
 
     __slots__ = ("fabric", "_cp_gateway_url")
@@ -415,7 +415,7 @@ class HTTPAdapterImpl(http_adapter.IHTTPAdapter):
         self,
         guild: _guilds.GuildLikeT,
         type_: str,
-        integration_id: interfaces.RawSnowflakeT,
+        integration_id: bases.RawSnowflakeT,
         *,
         reason: str = unspecified.UNSPECIFIED,
     ) -> _integrations.Integration:

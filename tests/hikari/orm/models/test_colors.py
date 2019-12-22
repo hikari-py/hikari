@@ -21,7 +21,6 @@ import math
 import pytest
 
 from hikari.orm.models import colors
-from tests.hikari import _helpers
 
 
 @pytest.mark.model

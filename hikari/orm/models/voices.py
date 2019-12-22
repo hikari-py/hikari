@@ -23,15 +23,15 @@ from __future__ import annotations
 
 import typing
 
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.orm import fabric
 from hikari.orm.models import guilds
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import members
 
 
-class VoiceServer(interfaces.IStatefulModel):
+class VoiceServer(bases.BaseModelWithFabric):
     """
     The voice server information used for establishing a voice connection.
     """
@@ -65,7 +65,7 @@ class VoiceServer(interfaces.IStatefulModel):
         self.endpoint = payload["endpoint"]
 
 
-class VoiceState(interfaces.IStatefulModel):
+class VoiceState(bases.BaseModelWithFabric):
     """
     A user's voice connection status.
     """
@@ -142,9 +142,7 @@ class VoiceState(interfaces.IStatefulModel):
 
     __repr__ = reprs.repr_of("user_id", "channel_id", "guild_id", "session_id")
 
-    def __init__(
-        self, fabric_obj: fabric.Fabric, guild_obj: guilds.Guild, payload: containers.DiscordObjectT
-    ) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, guild_obj: guilds.Guild, payload: containers.DiscordObjectT) -> None:
         self._fabric = fabric_obj
         self.user_id = int(payload["user_id"])
         self.guild_id = guild_obj.id
@@ -168,7 +166,7 @@ class VoiceState(interfaces.IStatefulModel):
         self.is_suppressed = payload.get("suppress", False)
 
 
-class VoiceRegion(interfaces.IModel):
+class VoiceRegion(bases.BaseModel):
     """
     Voice region model.
     """

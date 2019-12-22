@@ -86,7 +86,7 @@ def delegate_to(
         # a type hint, in which case it is in `__annotations__`. Anything else we lack the ability to detect
         # (e.g. fields only defined once we are in the `__init__`, as it is basically monkey patching at this point if
         # we are not slotted).
-        dict_fields = {k for k, v in delegate_type.__dict__.items() if not _is_func(v) and not k.startswith("_")}
+        dict_fields = {k for k, v in delegate_type.__dict__.items() if not _should_ignore_attribute_for_field(k, v)}
         annotation_fields = {*getattr(delegate_type, "__annotations__", containers.EMPTY_SEQUENCE)}
         targets = dict_fields | annotation_fields
         for name in targets:
@@ -105,8 +105,16 @@ def delegate_to(
     return decorator
 
 
-def _is_func(func):
-    return inspect.isfunction(func) or inspect.ismethod(func)
+_SPECIAL_ATTRS_TO_IGNORE = {"_abc_impl"}
+
+
+def _should_ignore_attribute_for_field(name, value):
+    return (
+        inspect.isfunction(value)
+        or inspect.ismethod(value)
+        or name.startswith("__")
+        or name in _SPECIAL_ATTRS_TO_IGNORE
+    )
 
 
 __all__ = ("delegate_to", "DelegatedProperty")

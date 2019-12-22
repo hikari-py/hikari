@@ -146,7 +146,7 @@ class TestGateway:
         gw._warn_about_internal_rate_limit = mock.MagicMock(wraps=gw._warn_about_internal_rate_limit)
 
         gw.rate_limit = rates.TimedTokenBucket(10, 0.1, event_loop)
-        gw.rate_limit.reset_at = time.perf_counter() + gw.rate_limit._per
+        gw.rate_limit.reset_at = time.perf_counter() + gw.rate_limit.per
 
         for i in range(20):
             await gw._send_json({}, False)
@@ -353,12 +353,8 @@ class TestGateway:
     @pytest.mark.parametrize("guild_subscriptions", [True, False])
     async def test_send_identify(self, event_loop, guild_subscriptions):
         with contextlib.ExitStack() as stack:
-            stack.enter_context(
-                mock.patch("hikari.net.user_agent.python_version", new=lambda: "python3")
-            )
-            stack.enter_context(
-                mock.patch("hikari.net.user_agent.library_version", new=lambda: "vx.y.z")
-            )
+            stack.enter_context(mock.patch("hikari.net.user_agent.python_version", new=lambda: "python3"))
+            stack.enter_context(mock.patch("hikari.net.user_agent.library_version", new=lambda: "vx.y.z"))
             stack.enter_context(mock.patch("hikari.net.user_agent.system_type", new=lambda: "leenuks"))
 
             gw = StubLowLevelGateway(
@@ -1255,10 +1251,9 @@ class TestGateway:
             low_level_gateway_mock.request_guild_sync(*guilds)
 
             low_level_gateway_mock._send_json.assert_called_once_with(
-                {"op": opcodes.GatewayOpcode.GUILD_SYNC, "d": guilds},
-                False
+                {"op": opcodes.GatewayOpcode.GUILD_SYNC, "d": guilds}, False
             )
             create_task.assert_called_once_with(
                 send_json_coro,
-                name=f"send GUILD_SYNC (shard {low_level_gateway_mock.shard_id}/{low_level_gateway_mock.shard_count})"
+                name=f"send GUILD_SYNC (shard {low_level_gateway_mock.shard_id}/{low_level_gateway_mock.shard_count})",
             )

@@ -27,12 +27,12 @@ import enum
 import typing
 
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import guilds as _guild
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import members
 from hikari.orm.models import overwrites
 from hikari.orm.models import users
@@ -45,7 +45,7 @@ DMRecipientT = typing.Union[users.User, users.OAuth2User]
 GuildRecipientT = typing.Union[DMRecipientT, members.Member, webhooks.Webhook]
 
 
-class ChannelType(interfaces.BestEffortEnumMixin, enum.IntEnum):
+class ChannelType(bases.BestEffortEnumMixin, enum.IntEnum):
     """
     The types of channels returned by the api.
     """
@@ -76,7 +76,7 @@ class ChannelType(interfaces.BestEffortEnumMixin, enum.IntEnum):
         return not self.name.startswith("GUILD_")
 
 
-class Channel(abc.ABC, interfaces.ISnowflake, interfaces.IStatefulModel):
+class Channel(abc.ABC, bases.BaseModelWithFabric, bases.SnowflakeMixin):
     """
     A generic type of channel.
 
@@ -302,10 +302,7 @@ class DMChannel(TextChannel, type=ChannelType.DM):
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
         self.recipients = typing.cast(
             typing.Sequence[DMRecipientT],
-            [
-                self._fabric.state_registry.parse_user(u)
-                for u in payload.get("recipients", containers.EMPTY_SEQUENCE)
-            ],
+            [self._fabric.state_registry.parse_user(u) for u in payload.get("recipients", containers.EMPTY_SEQUENCE)],
         )
 
 
@@ -488,17 +485,17 @@ class TypingIndicator(contextlib.AbstractAsyncContextManager):
 
 
 #: Any type of channel, or an :class:`int`/:class:`str` ID of one.
-ChannelLikeT = typing.Union[interfaces.RawSnowflakeT, Channel]
+ChannelLikeT = typing.Union[bases.RawSnowflakeT, Channel]
 #: Any type of :class:`TextChannel`, or an :class:`int`/:class:`str` ID of one.
-TextChannelLikeT = typing.Union[interfaces.RawSnowflakeT, Channel]
+TextChannelLikeT = typing.Union[bases.RawSnowflakeT, Channel]
 #: Any type of :class:`GuildChannel`, or an :class:`int`/:class:`str` ID of one.
-GuildChannelLikeT = typing.Union[interfaces.RawSnowflakeT, GuildChannel]
+GuildChannelLikeT = typing.Union[bases.RawSnowflakeT, GuildChannel]
 #: A :class:`GuildCategory`, or an :class:`int`/:class:`str` ID of one.
-GuildCategoryLikeT = typing.Union[interfaces.RawSnowflakeT, GuildCategory]
+GuildCategoryLikeT = typing.Union[bases.RawSnowflakeT, GuildCategory]
 #: A :class:`GuildTextChannel`, or an :class:`int`/:class:`str` ID of one.
-GuildTextChannelLikeT = typing.Union[interfaces.RawSnowflakeT, GuildTextChannel]
+GuildTextChannelLikeT = typing.Union[bases.RawSnowflakeT, GuildTextChannel]
 #: A :class:`GuildVoiceChannel`, or an :class:`int`/:class:`str` ID of one.
-GuildVoiceChannelLikeT = typing.Union[interfaces.RawSnowflakeT, GuildVoiceChannel]
+GuildVoiceChannelLikeT = typing.Union[bases.RawSnowflakeT, GuildVoiceChannel]
 
 
 __all__ = (
