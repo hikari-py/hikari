@@ -28,10 +28,10 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.orm import fabric
 from hikari.orm.models import guilds
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 
 
-class Emoji(interfaces.IModel, abc.ABC):
+class Emoji(bases.BaseModel, abc.ABC):
     """Base for any emoji type."""
 
     __slots__ = ()
@@ -78,7 +78,7 @@ class UnicodeEmoji(Emoji):
         return self.value
 
 
-class UnknownEmoji(Emoji, interfaces.ISnowflake):
+class UnknownEmoji(Emoji, bases.SnowflakeMixin):
     """
     A custom emoji that we do not know anything about other than the ID and name. These usually occur as a result
     of messages being sent by Nitro users, emojis from public emoji servers, and as reactions to a message by nitro
@@ -108,7 +108,7 @@ class UnknownEmoji(Emoji, interfaces.ISnowflake):
         return False
 
 
-class GuildEmoji(UnknownEmoji, interfaces.IModelWithFabric):
+class GuildEmoji(UnknownEmoji, bases.BaseModelWithFabric):
     """
     Represents an emoji in a guild that the user is a member of.
     """
@@ -204,7 +204,7 @@ def parse_emoji(
 KnownEmojiT = typing.Union[UnicodeEmoji, GuildEmoji]
 
 #: A :class:`GuildEmoji`, or an :class:`int`/:class:`str` ID of one.
-GuildEmojiLikeT = typing.Union[interfaces.RawSnowflakeT, GuildEmoji]
+GuildEmojiLikeT = typing.Union[bases.RawSnowflakeT, GuildEmoji]
 
 #: A :class:`GuildEmoji`, an :class:`int` ID of one, a :class:`UnicodeEmoji`, or a :class:`str` representation of one.
 KnownEmojiLikeT = typing.Union[int, str, KnownEmojiT]

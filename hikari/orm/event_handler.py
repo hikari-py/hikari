@@ -25,7 +25,7 @@ import typing
 from hikari.net import gateway
 
 
-class IEventHandler(abc.ABC):
+class BaseEventHandler(abc.ABC):
     """
     An abstract interface for an event handler.
 

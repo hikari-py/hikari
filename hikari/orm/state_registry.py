@@ -33,7 +33,7 @@ from hikari.orm.models import connections
 from hikari.orm.models import emojis
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import invites
 from hikari.orm.models import members
 from hikari.orm.models import messages
@@ -45,7 +45,7 @@ from hikari.orm.models import voices
 from hikari.orm.models import webhooks
 
 
-class IStateRegistry(abc.ABC):
+class BaseStateRegistry(abc.ABC):
     """
     Provides the relational interface between different types of objects and the overall cache.
 
@@ -201,7 +201,7 @@ class IStateRegistry(abc.ABC):
         self,
         channel_id: int,
         callback_if_unresolved: typing.Optional[typing.Callable[[channels.Channel], typing.Any]] = None,
-    ) -> typing.Union[channels.Channel, interfaces.UnknownObject[channels.Channel]]:
+    ) -> typing.Union[channels.Channel, bases.UnknownObject[channels.Channel]]:
         """
         Find a channel by a given ID. Guilds are searched first. If no match is found in a guild, then any open DM
         channels are also checked. If nothing is found still, we return a
@@ -238,7 +238,7 @@ class IStateRegistry(abc.ABC):
         emoji_id: int,
         guild_id: int,
         callback_if_unresolved: typing.Optional[typing.Callable[[emojis.GuildEmoji], typing.Any]] = None,
-    ) -> typing.Union[emojis.GuildEmoji, interfaces.UnknownObject[emojis.GuildEmoji]]:
+    ) -> typing.Union[emojis.GuildEmoji, bases.UnknownObject[emojis.GuildEmoji]]:
         """
         Find a guild emoji by a given ID. If nothing is found, we return a
         :class:`hikari.orm.models.interfaces.UnknownObject`.
@@ -273,7 +273,7 @@ class IStateRegistry(abc.ABC):
     @abc.abstractmethod
     def get_mandatory_guild_by_id(
         self, guild_id: int, callback_if_unresolved: typing.Optional[typing.Callable[[guilds.Guild], typing.Any]] = None
-    ) -> typing.Union[guilds.Guild, interfaces.UnknownObject[guilds.Guild]]:
+    ) -> typing.Union[guilds.Guild, bases.UnknownObject[guilds.Guild]]:
         """
         Find a guild by a given ID. If nothing is found, we return a
         :class:`hikari.orm.models.interfaces.UnknownObject`.
@@ -309,7 +309,7 @@ class IStateRegistry(abc.ABC):
         message_id: int,
         channel_id: int,
         callback_if_unresolved: typing.Optional[typing.Callable[[messages.Message], typing.Any]] = None,
-    ) -> typing.Union[messages.Message, interfaces.UnknownObject[messages.Message]]:
+    ) -> typing.Union[messages.Message, bases.UnknownObject[messages.Message]]:
         """
         Find a message by a given ID. If nothing is found, we return a
         :class:`hikari.orm.models.interfaces.UnknownObject`.
@@ -351,7 +351,7 @@ class IStateRegistry(abc.ABC):
         guild_id: int,
         role_id: int,
         callback_if_unresolved: typing.Optional[typing.Callable[[roles.Role], typing.Any]] = None,
-    ) -> typing.Union[roles.Role, interfaces.UnknownObject[roles.Role]]:
+    ) -> typing.Union[roles.Role, bases.UnknownObject[roles.Role]]:
         """
         Find a role by a given guild ID and role ID. If nothing is found, we return a
         :class:`hikari.orm.models.interfaces.UnknownObject`.
@@ -386,7 +386,7 @@ class IStateRegistry(abc.ABC):
     @abc.abstractmethod
     def get_mandatory_user_by_id(
         self, user_id: int, callback_if_unresolved: typing.Optional[typing.Callable[[users.User], typing.Any]] = None
-    ) -> typing.Union[users.User, interfaces.UnknownObject[users.User]]:
+    ) -> typing.Union[users.User, bases.UnknownObject[users.User]]:
         """
         Find a user by a given ID. If nothing is found, we return a
         :class:`hikari.orm.models.interfaces.UnknownObject`.
@@ -424,7 +424,7 @@ class IStateRegistry(abc.ABC):
         user_id: int,
         guild_id: int,
         callback_if_unresolved: typing.Optional[typing.Callable[[members.Member], typing.Any]] = None,
-    ) -> typing.Union[members.MemberLikeT, interfaces.UnknownObject[members.Member]]:
+    ) -> typing.Union[members.MemberLikeT, bases.UnknownObject[members.Member]]:
         """
         Find a member by a given user ID and guild ID. If nothing is found, we return a
         :class:`hikari.orm.models.interfaces.UnknownObject`.
@@ -917,4 +917,4 @@ class IStateRegistry(abc.ABC):
         """
 
 
-__all__ = ["IStateRegistry"]
+__all__ = ["BaseStateRegistry"]

@@ -27,12 +27,12 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import teams
 from hikari.orm.models import users
 
 
-class Application(interfaces.ISnowflake):
+class Application(bases.BaseModel, bases.SnowflakeMixin):
     """
     An Oauth2 application's information.
     """
@@ -93,7 +93,7 @@ class Application(interfaces.ISnowflake):
     #: The application's owner.
     #:
     #: :type: :class:`hikari.orm.models.users.IUser`
-    owner: users.IUser
+    owner: users.BaseUser
 
     #: The summary field for this application's primary SKU's store page if this is a game sold on Discord.
     #:

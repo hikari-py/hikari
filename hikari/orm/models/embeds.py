@@ -31,14 +31,14 @@ from hikari.internal_utilities import assertions
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
+from hikari.orm.models import bases
 from hikari.orm.models import colors
-from hikari.orm.models import interfaces
 from hikari.orm.models import media
 
 _MAX_EMBED_SIZE = 6000
 
 
-class EmbedPart(interfaces.IModel, abc.ABC):
+class EmbedPart(abc.ABC):
     """
     Abstract base for any internal component for an embed.
 
@@ -217,7 +217,7 @@ EmbedT = typing.TypeVar("EmbedT")
 
 
 @dataclasses.dataclass()
-class BaseEmbed(interfaces.IModel):
+class BaseEmbed(bases.BaseModel):
     """
     Abstract definition of what makes up any type of embed.
 
