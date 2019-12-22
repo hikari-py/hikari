@@ -1,9 +1,20 @@
 CHANGELOG
 =========
 
-Automatically generated from git history up to master at Fri Dec 20 22:23:30 UTC 2019 by CI.
+Automatically generated from git history up to master at Sun Dec 22 22:31:06 UTC 2019 by CI.
 
-* Fri Dec 20 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+* Sun Dec 22 2019 Nekokatt <3903853-nekokatt@users.noreply.gitlab.com> - current
+- Merge branch 'staging' into 'master' (rev.1339281a)
+- Merge branch '139-lgtm' into 'staging' (rev.9a216d43)
+- Fixes #139, sorts out naming inconsistencies (mostly) and suppresses LGTM errors (rev.66cf7166)
+- Made attributes on ratelimit objects public, added debug info to CI instances of nox only. (rev.98fc7abf)
+- Fixes #127, ensures consistency in enum declaration (rev.a8566357)
+- Amended imports, fixed inheritance delegation issue on member, tweaked delegation (rev.65a86e64)
+- Fixes #136, forces invalid opcode to start new session. (rev.f4499704)
+- Merged master 0.0.64 into staging [skip ci] (rev.8ee86435)
+
+* Fri Dec 20 2019 hikari CI <hikari-ci@gitlab.com> - 0.0.64
+- Deployed 0.0.64 [skip ci] (rev.5fd97056)
 - Merge branch 'staging' into 'master' (rev.2dee12bd)
 - Merge branch 'task/optional-async' into 'staging' (rev.e447c609)
 - Fixed merge conflicts after rebasing onto staging that I created (rev.36030504)
@@ -1038,8 +1049,6 @@ Automatically generated from git history up to master at Fri Dec 20 22:23:30 UTC
 - Added magic future imports and finished status migration (rev.b1c99a35)
 - Slotted status (rev.39e3a22b)
 - Tidied up status tests a little (rev.fdd66382)
-- Renamed directory (rev.a2777399)
-- Fixed type erroring and mistake not casting dict to object correctly. (rev.3a336e2e)
 - Amended issue with coroutine call (rev.edc5d426)
 - Removed unneeded imports (rev.2943148d)
 - Fixed python3.8 deprecation warnings caused by my code due to use of asyncio.coroutine. Added a pull request at https://github.com/Martiusweb/asynctest/pull/134 to address issues with asynctest also triggering warnings. (rev.5fa8efd8)
@@ -1142,25 +1151,13 @@ Automatically generated from git history up to master at Fri Dec 20 22:23:30 UTC
 - Fixed black-fix tox job (rev.211384b3)
 - Implemented query string support in _request_once and tested arg parsing (rev.e52a0d6c)
 - Merge branch 'feature/http-channel-endpoints' into 'staging' (rev.04847f7f)
-- Implemented get_channel, modify_channel, delete/close_channel, get_channel_messages, get_channel_message, create_message, create_reaction, delete_own_reaction, delete_user_reaction, get_reactions (rev.405a32d5)
-- Renamed incorrectly named param for audit log accessor, removed spam of conditions (rev.7d0bb7f7)
 - Merge branch 'staging' into 'master' (rev.a51b85d1)
 - Merge branch 'task/change-client-base-request-signature' into 'staging' (rev.81b33f05)
 - Changed base signature of client request to just return the body (rev.e633101d)
 - Merge branch 'task/adding-magic-all' into 'staging' (rev.a10ff001)
-- Added `__all__` to all files on the `hikari` module (rev.842b1cd5)
-- Merge branch 'task/remove-params-kwarg' into 'staging' (rev.c1d625b1)
-- Implemented get_channel (rev.9e8cf5d3)
-- Removed params kwarg and added to the kwargs list instead (rev.00d1cd02)
 - Merge branch 'staging' into 'master' (rev.17a22eff)
 - Fixed issue with job config (rev.6df38a53)
 - Merge branch 'staging' into 'master' (rev.a3469db3)
-- Added webhook (rev.df02e060)
-- Added webhook (rev.cb5f9d85)
-- Added webhook (rev.5328a5b2)
-- Merge branch 'http/create-message' into 'master' (rev.0414d145)
-- Http/create message (rev.bee8076a)
-- Merge branch 'bugfix/documentation-typo' into 'master' (rev.b99c8554)
 
 
 
