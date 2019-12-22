@@ -6,4 +6,9 @@ path_classifiers:
     - docs/
     - tasks/
 queries:
+  # Breaks with `from __future__ import annotations'
   - exclude: py/unsafe-cyclic-import
+  # Our models violate this, but it is intended behaviour so I don't care for this message everywhere...
+  - exclude: py/missing-equals
+  # Again, do this too regularly to care.
+  - exclude: py/inheritance/incorrect-overridden-signature

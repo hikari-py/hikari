@@ -33,7 +33,7 @@ from hikari.orm import event_handler
 from hikari.orm import fabric as _fabric
 
 
-class DispatchingEventAdapter(event_handler.IEventHandler):
+class BaseDispatchingEventAdapter(event_handler.BaseEventHandler):
     """
     Stubbed definition of an event handler. This automatically implements an underlying handler for every documented
     event that Discord can dispatch to us that performs no operation, so unimplemented events in subclasses go ignored

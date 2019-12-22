@@ -32,7 +32,7 @@ from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm.models import channels
 from hikari.orm.models import emojis
-from hikari.orm.models import interfaces
+from hikari.orm.models import bases
 from hikari.orm.models import members
 from hikari.orm.models import permissions
 from hikari.orm.models import roles
@@ -40,7 +40,7 @@ from hikari.orm.models import users
 from hikari.orm.models import voices
 
 
-class PartialGuild(interfaces.ISnowflake):
+class PartialGuild(bases.BaseModel, bases.SnowflakeMixin):
     """
     Implementation of a partial guild object, found in places like invites.
     """
@@ -106,7 +106,7 @@ class PartialGuild(interfaces.ISnowflake):
 
     def __init__(self, payload: containers.DiscordObjectT) -> None:
         self.id = transformations.nullable_cast(payload.get("id"), int)
-        self.update_state(payload)
+        self.update_state(payload)  # lgtm [py/init-calls-subclass]
 
     def update_state(self, payload: containers.DiscordObjectT) -> None:
         self.name = payload.get("name")
@@ -122,7 +122,7 @@ class PartialGuild(interfaces.ISnowflake):
         self.banner_hash = payload.get("banner")
 
 
-class Guild(PartialGuild, interfaces.IModelWithFabric):
+class Guild(PartialGuild, bases.BaseModelWithFabric):
     """
     Implementation of a Guild.
     """
@@ -365,7 +365,7 @@ class SystemChannelFlag(enum.IntFlag):
     PREMIUM_SUBSCRIPTION = 2
 
 
-class Feature(interfaces.NamedEnumMixin, enum.Enum):
+class Feature(bases.NamedEnumMixin, enum.Enum):
     """
     Features that a guild can provide.
     """
@@ -389,7 +389,7 @@ class Feature(interfaces.NamedEnumMixin, enum.Enum):
     VIP_REGIONS = enum.auto()
 
 
-class DefaultMessageNotificationsLevel(interfaces.BestEffortEnumMixin, enum.IntEnum):
+class DefaultMessageNotificationsLevel(bases.BestEffortEnumMixin, enum.IntEnum):
     """Setting for message notifications."""
 
     #: Notify users when any message is sent.
@@ -399,7 +399,7 @@ class DefaultMessageNotificationsLevel(interfaces.BestEffortEnumMixin, enum.IntE
     ONLY_MENTIONS = 1
 
 
-class ExplicitContentFilterLevel(interfaces.BestEffortEnumMixin, enum.IntEnum):
+class ExplicitContentFilterLevel(bases.BestEffortEnumMixin, enum.IntEnum):
     """Setting for the explicit content filter."""
 
     #: No explicit content filter.
@@ -412,7 +412,7 @@ class ExplicitContentFilterLevel(interfaces.BestEffortEnumMixin, enum.IntEnum):
     ALL_MEMBERS = 2
 
 
-class MFALevel(interfaces.BestEffortEnumMixin, enum.IntEnum):
+class MFALevel(bases.BestEffortEnumMixin, enum.IntEnum):
     """Setting multi-factor authorization level."""
 
     #: No MFA requirement.
@@ -422,7 +422,7 @@ class MFALevel(interfaces.BestEffortEnumMixin, enum.IntEnum):
     ELEVATED = 1
 
 
-class VerificationLevel(interfaces.BestEffortEnumMixin, enum.IntEnum):
+class VerificationLevel(bases.BestEffortEnumMixin, enum.IntEnum):
     """Setting for user verification."""
 
     #: Unrestricted
@@ -441,7 +441,7 @@ class VerificationLevel(interfaces.BestEffortEnumMixin, enum.IntEnum):
     VERY_HIGH = 4
 
 
-class PremiumTier(interfaces.BestEffortEnumMixin, enum.IntEnum):
+class PremiumTier(bases.BestEffortEnumMixin, enum.IntEnum):
     """Tier for Discord Nitro boosting in a guild."""
 
     #: No Nitro boosts.
@@ -457,7 +457,7 @@ class PremiumTier(interfaces.BestEffortEnumMixin, enum.IntEnum):
     TIER_3 = 3
 
 
-class Ban(interfaces.IModel):
+class Ban(bases.BaseModel):
     """
     A user that was banned, along with the reason for the ban.
     """
@@ -472,7 +472,7 @@ class Ban(interfaces.IModel):
     #: The user who is banned.
     #:
     #: :type: :class:`hikari.orm.models.users.User`
-    user: users.IUser
+    user: users.BaseUser
 
     __repr__ = reprs.repr_of("user", "reason")
 
@@ -481,7 +481,7 @@ class Ban(interfaces.IModel):
         self.user = fabric_obj.state_registry.parse_user(payload.get("user"))
 
 
-class GuildEmbed(interfaces.IModel):
+class GuildEmbed(bases.BaseModel):
     """
     Implementation of the guild embed object.
     """
@@ -523,7 +523,7 @@ class GuildEmbed(interfaces.IModel):
         return dict_factory(**{k: v for k, v in attrs.items() if v is not None})
 
 
-class WidgetStyle(str, interfaces.NamedEnumMixin, enum.Enum):
+class WidgetStyle(str, bases.NamedEnumMixin, enum.Enum):
     """
     Valid styles of widget for a guild.
     """
@@ -559,7 +559,7 @@ class WidgetStyle(str, interfaces.NamedEnumMixin, enum.Enum):
     BANNER_4 = "banner4"
 
 
-GuildLikeT = typing.Union[interfaces.RawSnowflakeT, Guild]
+GuildLikeT = typing.Union[bases.RawSnowflakeT, Guild]
 
 
 __all__ = [

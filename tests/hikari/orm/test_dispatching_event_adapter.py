@@ -24,7 +24,7 @@ from hikari.orm import dispatching_event_adapter
 from hikari.orm import fabric
 
 
-class Impl(dispatching_event_adapter.DispatchingEventAdapter):
+class Impl(dispatching_event_adapter.BaseDispatchingEventAdapter):
     # noinspection PyMissingConstructor
     def __init__(self):
         super().__init__(mock.MagicMock(spec_set=fabric.Fabric))

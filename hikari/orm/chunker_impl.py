@@ -31,7 +31,7 @@ from hikari.orm import fabric
 from hikari.orm.models import guilds
 
 
-class ChunkerImpl(chunker.IChunker):
+class ChunkerImpl(chunker.BaseChunker):
     """
     A simple chunker that does not allow waiting for chunks to be received, but will process members
     and presences received with the given fabric's state registry.

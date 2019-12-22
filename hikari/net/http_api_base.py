@@ -492,11 +492,11 @@ class HTTPAPIBase(http_client.HTTPClient):
         if status == opcodes.HTTPStatus.BAD_REQUEST:
             raise errors.BadRequest(resource, error_code, error_message)
         if status == opcodes.HTTPStatus.UNAUTHORIZED:
-            raise errors.Unauthorized(resource, error_code, error_message)
+            raise errors.UnauthorizedError(resource, error_code, error_message)
         if status == opcodes.HTTPStatus.FORBIDDEN:
-            raise errors.Forbidden(resource, error_code, error_message)
+            raise errors.ForbiddenError(resource, error_code, error_message)
         if status == opcodes.HTTPStatus.NOT_FOUND:
-            raise errors.NotFound(resource, error_code, error_message)
+            raise errors.NotFoundError(resource, error_code, error_message)
         raise errors.ClientError(resource, status, error_code, error_message)
 
     @staticmethod
