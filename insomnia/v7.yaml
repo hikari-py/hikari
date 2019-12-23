@@ -1,73 +1,41 @@
 _type: export
 __export_format: 4
-__export_date: 2019-12-20T14:35:06.021Z
+__export_date: 2019-12-23T13:49:09.824Z
 __export_source: insomnia.desktop.app:v7.0.5
 resources:
-  - _id: req_6ba6849bdad6462ea46ed8dc75b96514
+  - _id: req_b7d357e7d7884ab7ad6d775410a9bde0
     authentication: {}
     body: {}
-    created: 1576852151152
-    description: >-
-      # Parsing CGI info to get the name of the nearest datacenter
-
-
-      ```py
-
-      import aiohttp
-
-      import re
-
-
-      async def get_data_center_info():
-          async with aiohttp.request("get", "https://discordapp.com/cdn-cgi/trace") as resp:
-              resp.raise_for_status()
-              content = await resp.text()
-
-          pairs = {}
-          for line in content.splitlines(False):
-              line = line.strip()
-              if line:
-                  k, _, v = line.partition("=")
-                  pairs[k] = v
-
-          async with aiohttp.request(
-              "post",
-              "http://www.airlinecodes.co.uk/aptcoderes.asp",
-              data={"iatacode": pairs["colo"]},
-          ) as resp:
-              resp.raise_for_status()
-              content = await resp.text()
-
-          location_match = re.search(
-              r"<td.*?>Location:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
-          )
-          airport_match = re.search(
-              r"<td.*?>Airport:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
-          )
-          country_match = re.search(
-              r"<td.*?>Country:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
-          )
-
-          location = location_match and location_match.group(1).strip() or "Unknown"
-          airport = airport_match and airport_match.group(1).strip() or "Unknown"
-          country = country_match and country_match.group(1).strip() or "Unknown"
-      ```
-    headers: []
+    created: 1577108809820
+    description: ""
+    headers:
+      - name: Authorization
+        value: "{{authorization}}"
     isPrivate: false
-    metaSortKey: -1576852151152
-    method: GET
-    modified: 1576852377969
-    name: CDN CGI Trace
+    metaSortKey: -1577108079300
+    method: POST
+    modified: 1577108856675
+    name: Trigger Typing
     parameters: []
-    parentId: fld_fd85c020b1744299b6016ba69c25966b
+    parentId: fld_02ddb24b4e5148469979a2364fcc01dc
     settingDisableRenderRequestBody: false
     settingEncodeUrl: true
     settingFollowRedirects: global
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{base_url}}/cdn-cgi/trace"
+    url: "{{ api_url  }}/channels/574921092926537729/typing"
     _type: request
+  - _id: fld_02ddb24b4e5148469979a2364fcc01dc
+    created: 1577108071067
+    description: ""
+    environment: {}
+    environmentPropertyOrder: null
+    metaSortKey: -1577108071067
+    modified: 1577108071067
+    name: Channels
+    parentId: fld_fd85c020b1744299b6016ba69c25966b
+    _type: request_group
   - _id: fld_fd85c020b1744299b6016ba69c25966b
     created: 1576849973884
     description: ""
@@ -96,6 +64,115 @@ resources:
     name: Discord
     parentId: null
     _type: workspace
+  - _id: req_3f79be849f9d4a76ad7fc0572894acb4
+    authentication: {}
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"max_age": 86400,
+        	"max_uses": 1,
+        	"temporary": false,
+        	"unique": true
+        }
+    created: 1577108079250
+    description: ""
+    headers:
+      - description: ""
+        id: pair_314d74af59264ca4863e4f61e54e9484
+        name: Authorization
+        value: "{{authorization}}"
+      - description: ""
+        id: pair_c1e909e6c80b48318872dab2e8d5b4ba
+        name: Content-Type
+        value: application/json
+      - description: ""
+        id: pair_f4fa3371ec2e4a50a1f6931515cc1b1c
+        name: Accept
+        value: application/json
+    isPrivate: false
+    metaSortKey: -1577108079250
+    method: POST
+    modified: 1577108348854
+    name: Create Channel Invite
+    parameters: []
+    parentId: fld_02ddb24b4e5148469979a2364fcc01dc
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{ api_url  }}/channels/574921092926537729/invites"
+    _type: request
+  - _id: req_b04831dcab13401aae787f4ca63a8d9d
+    authentication: {}
+    body: {}
+    created: 1576849973902
+    description: ""
+    headers:
+      - description: ""
+        id: pair_defc74bbc57b4690bb4040111c0f9a91
+        name: Accept
+        value: application/json
+      - description: ""
+        id: pair_c15aaec4ae344fe3a509aaec05a1fae2
+        name: Authorization
+        value: "{{authorization}}"
+    isPrivate: false
+    metaSortKey: -1576849859813
+    method: GET
+    modified: 1576852408543
+    name: Gateway Bot
+    parameters: []
+    parentId: fld_cf4330beacd54f18b79efb9c54f2144d
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{api_url}}/gateway/bot"
+    _type: request
+  - _id: fld_cf4330beacd54f18b79efb9c54f2144d
+    created: 1576849973891
+    description: ""
+    environment: {}
+    environmentPropertyOrder: null
+    metaSortKey: -1576979199448
+    modified: 1577108902482
+    name: Gateway
+    parentId: fld_fd85c020b1744299b6016ba69c25966b
+    _type: request_group
+  - _id: req_cec8e07486b345eb976d2f7a3dc7c80c
+    authentication: {}
+    body: {}
+    created: 1576849973896
+    description: ""
+    headers:
+      - description: ""
+        id: pair_cba63055d20a428d8f868dd212db687e
+        name: Accept
+        value: application/json
+      - description: ""
+        id: pair_3bc1b69e257c48f3a1c5f12ee3e1d8d3
+        name: ""
+        value: ""
+    isPrivate: false
+    metaSortKey: -1576849859763
+    method: GET
+    modified: 1576852422846
+    name: Gateway
+    parameters: []
+    parentId: fld_cf4330beacd54f18b79efb9c54f2144d
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{api_url}}/gateway"
+    _type: request
   - _id: req_812faf17a42349a1aee6ee3c16a94620
     authentication: {}
     body: {}
@@ -199,7 +276,7 @@ resources:
     isPrivate: false
     metaSortKey: -1576850537958
     method: GET
-    modified: 1576852395330
+    modified: 1577108913677
     name: Authorize new code grant
     parameters:
       - description: ""
@@ -256,74 +333,81 @@ resources:
     settingStoreCookies: true
     url: "{{base_url}}/oauth2/applications/@me"
     _type: request
-  - _id: req_b04831dcab13401aae787f4ca63a8d9d
+  - _id: req_6ba6849bdad6462ea46ed8dc75b96514
     authentication: {}
     body: {}
-    created: 1576849973902
-    description: ""
-    headers:
-      - description: ""
-        id: pair_defc74bbc57b4690bb4040111c0f9a91
-        name: Accept
-        value: application/json
-      - description: ""
-        id: pair_c15aaec4ae344fe3a509aaec05a1fae2
-        name: Authorization
-        value: "{{authorization}}"
+    created: 1576852151152
+    description: >-
+      # Parsing CGI info to get the name of the nearest datacenter
+
+
+      ```py
+
+      import aiohttp
+
+      import re
+
+
+      async def get_data_center_info():
+          async with aiohttp.request("get", "https://discordapp.com/cdn-cgi/trace") as resp:
+              resp.raise_for_status()
+              content = await resp.text()
+
+          pairs = {}
+          for line in content.splitlines(False):
+              line = line.strip()
+              if line:
+                  k, _, v = line.partition("=")
+                  pairs[k] = v
+
+          async with aiohttp.request(
+              "post",
+              "http://www.airlinecodes.co.uk/aptcoderes.asp",
+              data={"iatacode": pairs["colo"]},
+          ) as resp:
+              resp.raise_for_status()
+              content = await resp.text()
+
+          location_match = re.search(
+              r"<td.*?>Location:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
+          )
+          airport_match = re.search(
+              r"<td.*?>Airport:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
+          )
+          country_match = re.search(
+              r"<td.*?>Country:</td>\s*?<td>(.*?)</td>", content, re.I | re.M
+          )
+
+          location = location_match and location_match.group(1).strip() or "Unknown"
+          airport = airport_match and airport_match.group(1).strip() or "Unknown"
+          country = country_match and country_match.group(1).strip() or "Unknown"
+      ```
+    headers: []
     isPrivate: false
-    metaSortKey: -1576849859813
+    metaSortKey: -1576852151152
     method: GET
-    modified: 1576852408543
-    name: Gateway Bot
+    modified: 1577108888797
+    name: CDN CGI Trace
     parameters: []
-    parentId: fld_cf4330beacd54f18b79efb9c54f2144d
+    parentId: fld_c375a668904e4e6a9277055481c17ab1
     settingDisableRenderRequestBody: false
     settingEncodeUrl: true
     settingFollowRedirects: global
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/gateway/bot"
+    url: "{{base_url}}/cdn-cgi/trace"
     _type: request
-  - _id: fld_cf4330beacd54f18b79efb9c54f2144d
-    created: 1576849973891
+  - _id: fld_c375a668904e4e6a9277055481c17ab1
+    created: 1577108885767
     description: ""
     environment: {}
     environmentPropertyOrder: null
-    metaSortKey: -1576849903517
-    modified: 1576849973891
-    name: Gateway
+    metaSortKey: -1576850327779
+    modified: 1577108904373
+    name: Uncategorised calls
     parentId: fld_fd85c020b1744299b6016ba69c25966b
     _type: request_group
-  - _id: req_cec8e07486b345eb976d2f7a3dc7c80c
-    authentication: {}
-    body: {}
-    created: 1576849973896
-    description: ""
-    headers:
-      - description: ""
-        id: pair_cba63055d20a428d8f868dd212db687e
-        name: Accept
-        value: application/json
-      - description: ""
-        id: pair_3bc1b69e257c48f3a1c5f12ee3e1d8d3
-        name: ""
-        value: ""
-    isPrivate: false
-    metaSortKey: -1576849859763
-    method: GET
-    modified: 1576852422846
-    name: Gateway
-    parameters: []
-    parentId: fld_cf4330beacd54f18b79efb9c54f2144d
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingFollowRedirects: global
-    settingRebuildPath: true
-    settingSendCookies: true
-    settingStoreCookies: true
-    url: "{{api_url}}/gateway"
-    _type: request
   - _id: env_29ed27f9c562933de7fccb4654fee3698ef432f8
     color: null
     created: 1572465096240

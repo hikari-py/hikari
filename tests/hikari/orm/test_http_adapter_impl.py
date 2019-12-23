@@ -41,7 +41,7 @@ class TestHTTPAdapterImpl:
     def fabric_impl(self):
         fabric_impl = fabric.Fabric()
 
-        http_client_impl = mock.MagicMock(spec_set=http_api.HTTPAPI)
+        http_client_impl = mock.MagicMock(spec_set=http_api.HTTPAPIImpl)
         state_registry_impl = mock.MagicMock(spec_set=state_registry.BaseStateRegistry)
         http_adapter_impl = _http_adapter_impl.HTTPAdapterImpl(fabric_impl)
 

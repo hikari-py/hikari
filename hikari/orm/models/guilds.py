@@ -30,9 +30,9 @@ from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
+from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import emojis
-from hikari.orm.models import bases
 from hikari.orm.models import members
 from hikari.orm.models import permissions
 from hikari.orm.models import roles

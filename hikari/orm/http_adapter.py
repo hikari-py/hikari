@@ -30,6 +30,7 @@ from hikari.internal_utilities import storage
 from hikari.internal_utilities import unspecified
 from hikari.orm.models import applications as _applications
 from hikari.orm.models import audit_logs as _audit_logs
+from hikari.orm.models import bases
 from hikari.orm.models import channels as _channels
 from hikari.orm.models import colors as _colors
 from hikari.orm.models import connections as _connections
@@ -38,7 +39,6 @@ from hikari.orm.models import emojis as _emojis
 from hikari.orm.models import gateway_bot as _gateway_bot
 from hikari.orm.models import guilds as _guilds
 from hikari.orm.models import integrations as _integrations
-from hikari.orm.models import bases
 from hikari.orm.models import invites as _invites
 from hikari.orm.models import media as _media
 from hikari.orm.models import members as _members
