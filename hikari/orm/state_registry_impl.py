@@ -612,7 +612,7 @@ class StateRegistryImpl(state_registry.BaseStateRegistry):
     def update_message(
         self, payload: containers.DiscordObjectT
     ) -> typing.Optional[typing.Tuple[messages.Message, messages.Message]]:
-        message_id = int(payload["message_id"])
+        message_id = int(payload["id"])
         if message_id in self._message_cache:
             new_message = self._message_cache.get(message_id)
             old_message = new_message.copy()

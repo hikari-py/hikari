@@ -1562,7 +1562,7 @@ class TestStateRegistryImpl:
         self, registry: state_registry_impl.StateRegistryImpl
     ):
         registry._message_cache = _helpers.StrongWeakValuedDict()
-        payload = {"message_id": "1234"}
+        payload = {"id": "1234"}
 
         diff = registry.update_message(payload)
 
@@ -1575,7 +1575,7 @@ class TestStateRegistryImpl:
         cloned_message_obj = _helpers.mock_model(messages.Message, id=123)
         original_message_obj.copy = mock.MagicMock(spec_set=original_message_obj.copy, return_value=cloned_message_obj)
         registry._message_cache = {original_message_obj.id: original_message_obj}
-        payload = {"message_id": "123"}
+        payload = {"id": "123"}
 
         old, new = registry.update_message(payload)
 
