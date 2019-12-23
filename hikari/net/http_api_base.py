@@ -296,9 +296,9 @@ class HTTPAPIBase(http_client.HTTPClient):
                 The format-string path to hit. Any `kwargs` will be interpolated into this when making the URL.
             re_seekable_resources:
                 Any :class:`io.IOBase`-derived resources that will need their `seek` setting to `0` again before
-                retrying in the case of an error we can retry the request for occurring. This is necessary for uploading
-                files, etc so that we can read the file more than once without loading several megabytes into memory
-                directly.
+                retrying in the case of an error.
+                This is necessary for uploading files, etc so that we can read the file more than once without loading
+                several megabytes into memory directly.
             headers:
                 Any additional headers to send.
             data:

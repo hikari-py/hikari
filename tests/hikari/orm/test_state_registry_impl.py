@@ -1413,6 +1413,11 @@ class TestStateRegistryImpl:
         with _helpers.mock_patch(webhooks.Webhook, return_value=webhook_obj):
             assert registry.parse_webhook({}) is webhook_obj
 
+    def test_parse_webhook_user_returns_webhook_user(self, registry: state_registry_impl.StateRegistryImpl):
+        webhook_user_obj = _helpers.mock_model(webhooks.WebhookUser)
+        with _helpers.mock_patch(webhooks.WebhookUser, return_value=webhook_user_obj):
+            assert registry.parse_webhook_user({}) is webhook_user_obj
+
     @pytest.mark.parametrize("initial_unavailability", [True, False])
     @pytest.mark.parametrize("new_unavailability", [True, False])
     def test_set_guild_unavailability(

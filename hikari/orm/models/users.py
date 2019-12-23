@@ -31,7 +31,7 @@ from hikari.orm import fabric
 from hikari.orm.models import bases
 
 
-class BaseUser(bases.BaseModelWithFabric, bases.SnowflakeMixin, interface=True):
+class BaseUser(bases.BaseModel, bases.SnowflakeMixin, interface=True):
     """
     Interface that any type of user account should provide. This is used by
     implementations of object such as those provided by delegates
@@ -65,18 +65,18 @@ class BaseUser(bases.BaseModelWithFabric, bases.SnowflakeMixin, interface=True):
     #: :type: :class:`bool`
     is_bot: bool
 
-    #: If this is an Official Discord System user (urgent message system).
-    #:
-    #: :type: :class:`bool`
-    is_system: bool
 
-
-class User(BaseUser):
+class User(BaseUser, bases.BaseModelWithFabric):
     """
     Implementation of the user data type.
     """
 
     __slots__ = ("_fabric", "id", "username", "discriminator", "avatar_hash", "is_bot", "is_system", "__weakref__")
+
+    #: If this is an Official Discord System user (urgent message system).
+    #:
+    #: :type: :class:`bool`
+    is_system: bool
 
     __repr__ = reprs.repr_of("id", "username", "discriminator", "is_bot")
 
@@ -111,7 +111,7 @@ class UserFlag(enum.IntFlag):
     HYPESQUAD_HOUSE_BALANCE = 1 << 8
     EARLY_SUPPORTER = 1 << 9
     TEAM_USER = 1 << 10
-    System = 1 << 12
+    SYSTEM = 1 << 12
 
 
 class PremiumType(bases.BestEffortEnumMixin, enum.IntEnum):
@@ -232,7 +232,7 @@ def parse_user(fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) ->
 
 
 #: Any type of :class:`IUser`, or an :class:`int`/:class:`str` ID of one.
-IUserLikeT = typing.Union[bases.RawSnowflakeT, BaseUser]
+BaseUserLikeT = typing.Union[bases.RawSnowflakeT, BaseUser]
 
 
-__all__ = ["BaseUser", "User", "UserFlag", "PremiumType", "OAuth2User", "IUserLikeT"]
+__all__ = ["BaseUser", "User", "UserFlag", "PremiumType", "OAuth2User", "BaseUserLikeT"]

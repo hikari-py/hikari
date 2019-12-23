@@ -74,7 +74,7 @@ class HTTPAdapterImpl(http_adapter.BaseHTTPAdapter):
         self,
         guild: _guilds.GuildLikeT,
         *,
-        user: _users.IUserLikeT = unspecified.UNSPECIFIED,
+        user: _users.BaseUserLikeT = unspecified.UNSPECIFIED,
         action_type: _audit_logs.AuditLogEvent = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
     ) -> _audit_logs.AuditLog:
@@ -142,7 +142,7 @@ class HTTPAdapterImpl(http_adapter.BaseHTTPAdapter):
     ) -> _reactions.Reaction:
         raise NotImplementedError
 
-    async def delete_reaction(self, reaction: _reactions.Reaction, user: _users.IUserLikeT) -> None:
+    async def delete_reaction(self, reaction: _reactions.Reaction, user: _users.BaseUserLikeT) -> None:
         raise NotImplementedError
 
     async def delete_all_reactions(self, message: _messages.MessageLikeT) -> None:
@@ -288,7 +288,7 @@ class HTTPAdapterImpl(http_adapter.BaseHTTPAdapter):
 
     async def fetch_member(
         self,
-        user: typing.Union[_users.IUserLikeT, _members.MemberLikeT],
+        user: typing.Union[_users.BaseUserLikeT, _members.MemberLikeT],
         guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
     ) -> _members.Member:
         raise NotImplementedError
@@ -327,7 +327,7 @@ class HTTPAdapterImpl(http_adapter.BaseHTTPAdapter):
     async def kick_member(self, member: _members.MemberLikeT, *, reason: str = unspecified.UNSPECIFIED) -> None:
         raise NotImplementedError
 
-    async def fetch_ban(self, guild: _guilds.GuildLikeT, user: _users.IUserLikeT) -> _guilds.Ban:
+    async def fetch_ban(self, guild: _guilds.GuildLikeT, user: _users.BaseUserLikeT) -> _guilds.Ban:
         raise NotImplementedError
 
     async def fetch_bans(self, guild: _guilds.GuildLikeT) -> typing.Collection[_guilds.Ban]:
@@ -336,7 +336,7 @@ class HTTPAdapterImpl(http_adapter.BaseHTTPAdapter):
     async def ban_member(
         self,
         guild: _guilds.GuildLikeT,
-        user: _users.IUserLikeT,
+        user: _users.BaseUserLikeT,
         *,
         delete_message_days: typing.Optional[int] = None,
         reason: str = unspecified.UNSPECIFIED,
@@ -344,7 +344,7 @@ class HTTPAdapterImpl(http_adapter.BaseHTTPAdapter):
         raise NotImplementedError
 
     async def unban_member(
-        self, guild: _guilds.GuildLikeT, user: _users.IUserLikeT, *, reason: str = unspecified.UNSPECIFIED
+        self, guild: _guilds.GuildLikeT, user: _users.BaseUserLikeT, *, reason: str = unspecified.UNSPECIFIED
     ) -> None:
         raise NotImplementedError
 
@@ -463,7 +463,7 @@ class HTTPAdapterImpl(http_adapter.BaseHTTPAdapter):
     async def delete_invite(self, invite_code: _invites.InviteLikeT) -> None:
         raise NotImplementedError
 
-    async def fetch_user(self, user: _users.IUserLikeT) -> typing.Union[_users.User, _users.OAuth2User]:
+    async def fetch_user(self, user: _users.BaseUserLikeT) -> typing.Union[_users.User, _users.OAuth2User]:
         raise NotImplementedError
 
     async def fetch_application_info(self) -> _applications.Application:
@@ -491,7 +491,7 @@ class HTTPAdapterImpl(http_adapter.BaseHTTPAdapter):
     async def leave_guild(self, guild: _guilds.GuildLikeT) -> None:
         raise NotImplementedError
 
-    async def create_dm_channel(self, recipient: _users.IUserLikeT) -> _channels.DMChannel:
+    async def create_dm_channel(self, recipient: _users.BaseUserLikeT) -> _channels.DMChannel:
         raise NotImplementedError
 
     async def fetch_voice_regions(self) -> typing.Collection[_voices.VoiceRegion]:
