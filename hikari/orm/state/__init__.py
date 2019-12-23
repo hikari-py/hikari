@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019-2020
+# Copyright © Nekokatt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,3 +16,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""
+State management components. These enable you to manage storing and organising
+the in-memory cache when running a bot.
+"""
+from hikari.orm.state import base_registry
+from hikari.orm.state import bot_registry_impl

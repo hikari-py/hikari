@@ -22,9 +22,9 @@ import asyncmock as mock
 import pytest
 
 from hikari.net import gateway as _gateway
-from hikari.orm import chunker_impl
+from hikari.orm.gateway import basic_chunker_impl
 from hikari.orm import fabric
-from hikari.orm import state_registry
+from hikari.orm.state import base_registry
 from hikari.orm.models import guilds
 from hikari.orm.models import members
 from tests.hikari import _helpers
@@ -33,7 +33,7 @@ from tests.hikari import _helpers
 @pytest.fixture()
 def fabric_obj():
     fabric_obj = fabric.Fabric()
-    fabric_obj.state_registry = mock.MagicMock(spec_set=state_registry.BaseStateRegistry)
+    fabric_obj.state_registry = mock.MagicMock(spec_set=base_registry.BaseRegistry)
     fabric_obj.gateways = {
         # We'd never have None and shard ids together, but this doesn't matter for this test.
         None: mock.MagicMock(spec_set=_gateway.GatewayClient),
@@ -43,7 +43,7 @@ def fabric_obj():
         3: mock.MagicMock(spec_set=_gateway.GatewayClient),
         4: mock.MagicMock(spec_set=_gateway.GatewayClient),
     }
-    fabric_obj.chunker = chunker_impl.ChunkerImpl(fabric_obj)
+    fabric_obj.chunker = basic_chunker_impl.BasicChunkerImpl(fabric_obj)
     return fabric_obj
 
 

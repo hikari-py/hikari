@@ -29,11 +29,11 @@ import typing
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.net import gateway
-from hikari.orm import event_handler
 from hikari.orm import fabric as _fabric
+from hikari.orm.gateway import base_event_handler
 
 
-class BaseDispatchingEventAdapter(event_handler.BaseEventHandler):
+class BaseDispatchingEventAdapter(base_event_handler.BaseEventHandler):
     """
     Stubbed definition of an event handler. This automatically implements an underlying handler for every documented
     event that Discord can dispatch to us that performs no operation, so unimplemented events in subclasses go ignored

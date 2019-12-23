@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019-2020
+# Copyright © Nekokatt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,3 +16,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""
+Contains all components required to interact with the gateway implementation
+provided in :mod:`hikari.net.gateway`. This includes parsers of incoming events
+from dicts and lists to objects, as well as chunker handlers.
+"""
+from hikari.orm.gateway import base_chunker
+from hikari.orm.gateway import base_event_handler
+from hikari.orm.gateway import basic_chunker_impl
+from hikari.orm.gateway import dispatching_event_adapter
+from hikari.orm.gateway import dispatching_event_adapter_impl

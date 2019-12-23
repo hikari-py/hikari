@@ -22,7 +22,7 @@ from unittest import mock
 import pytest
 
 from hikari.orm import fabric
-from hikari.orm import state_registry
+from hikari.orm.state import base_registry
 from hikari.orm.models import integrations
 from tests.hikari import _helpers
 
@@ -51,7 +51,7 @@ def test_PartialIntegration___repr__():
 @pytest.mark.model
 class TestIntegration:
     def test_Integration(self):
-        test_state = mock.MagicMock(state_set=state_registry.BaseStateRegistry)
+        test_state = mock.MagicMock(state_set=base_registry.BaseRegistry)
         test_fabric = fabric.Fabric(None, test_state)
 
         user_dict = {
