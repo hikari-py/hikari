@@ -22,7 +22,7 @@ from unittest import mock
 import pytest
 
 from hikari.orm import fabric
-from hikari.orm import state_registry
+from hikari.orm.state import base_registry
 from hikari.orm.models import guilds
 from hikari.orm.models import permissions
 from hikari.orm.models import users
@@ -191,7 +191,7 @@ def test_guild_payload(
 
 @pytest.fixture()
 def mock_state_registry():
-    return mock.MagicMock(spec_set=state_registry.BaseStateRegistry)
+    return mock.MagicMock(spec_set=base_registry.BaseRegistry)
 
 
 @pytest.fixture()

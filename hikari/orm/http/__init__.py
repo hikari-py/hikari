@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019-2020
+# Copyright © Nekokatt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,3 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""
+Components for interacting with the HTTP API from :mod:`hikari.net`.
+"""
+from hikari.orm.http import base_http_adapter
+from hikari.orm.http import http_adapter_impl

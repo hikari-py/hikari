@@ -22,7 +22,7 @@ import asyncmock as mock
 import pytest
 
 from hikari.orm import fabric
-from hikari.orm import state_registry
+from hikari.orm.state import base_registry
 from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
@@ -32,7 +32,7 @@ from tests.hikari import _helpers
 
 @pytest.fixture
 def mock_fabric():
-    mock_state = mock.MagicMock(spec_set=state_registry.BaseStateRegistry)
+    mock_state = mock.MagicMock(spec_set=base_registry.BaseRegistry)
     return fabric.Fabric(NotImplemented, mock_state)
 
 

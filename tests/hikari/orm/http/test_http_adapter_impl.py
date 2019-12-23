@@ -24,8 +24,8 @@ import pytest
 from hikari.internal_utilities import unspecified
 from hikari.net import http_api
 from hikari.orm import fabric
-from hikari.orm import http_adapter_impl as _http_adapter_impl
-from hikari.orm import state_registry
+from hikari.orm.http import http_adapter_impl as _http_adapter_impl
+from hikari.orm.state import base_registry
 from hikari.orm.models import audit_logs
 from hikari.orm.models import channels
 from hikari.orm.models import gateway_bot
@@ -42,7 +42,7 @@ class TestHTTPAdapterImpl:
         fabric_impl = fabric.Fabric()
 
         http_client_impl = mock.MagicMock(spec_set=http_api.HTTPAPIImpl)
-        state_registry_impl = mock.MagicMock(spec_set=state_registry.BaseStateRegistry)
+        state_registry_impl = mock.MagicMock(spec_set=base_registry.BaseRegistry)
         http_adapter_impl = _http_adapter_impl.HTTPAdapterImpl(fabric_impl)
 
         fabric_impl.state_registry = state_registry_impl

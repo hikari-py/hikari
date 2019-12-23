@@ -26,12 +26,12 @@ import typing
 
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
-from hikari.orm import chunker
 from hikari.orm import fabric
+from hikari.orm.gateway import base_chunker
 from hikari.orm.models import guilds
 
 
-class ChunkerImpl(chunker.BaseChunker):
+class BasicChunkerImpl(base_chunker.BaseChunker):
     """
     A simple chunker that does not allow waiting for chunks to be received, but will process members
     and presences received with the given fabric's state registry.

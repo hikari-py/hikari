@@ -31,7 +31,6 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
-from hikari.orm import state_registry
 from hikari.orm.models import applications
 from hikari.orm.models import audit_logs
 from hikari.orm.models import bases
@@ -49,9 +48,10 @@ from hikari.orm.models import roles
 from hikari.orm.models import users
 from hikari.orm.models import voices
 from hikari.orm.models import webhooks
+from hikari.orm.state import base_registry
 
 
-class StateRegistryImpl(state_registry.BaseStateRegistry):
+class StateRegistryImpl(base_registry.BaseRegistry):
     """
     Registry for global state parsing, querying, and management.
 
@@ -101,7 +101,8 @@ class StateRegistryImpl(state_registry.BaseStateRegistry):
         #: Our logger.
         self.logger = loggers.get_named_logger(self)
 
-    def _prepare_unknown_with_callback(self, id, resolver, callback, *resolver_args, **resolver_kwargs):
+    @staticmethod
+    def _prepare_unknown_with_callback(id, resolver, callback, *resolver_args, **resolver_kwargs):
         obj = bases.UnknownObject(id, functools.partial(resolver, *resolver_args, **resolver_kwargs))
         callback is not None and obj.add_done_callback(callback)
         return obj
