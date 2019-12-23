@@ -550,6 +550,7 @@ __all__ = (
     "GuildRecipientT",
     "ChannelType",
     "Channel",
+    "TextChannel",
     "PartialChannel",
     "GuildChannel",
     "GuildTextChannel",
