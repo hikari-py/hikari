@@ -694,7 +694,7 @@ class BaseRegistry(abc.ABC):
     @abc.abstractmethod
     def parse_presence(
         self, member_obj: members.Member, presence_payload: containers.DiscordObjectT
-    ) -> presences.Presence:
+    ) -> presences.MemberPresence:
         """
         Parse a presence for a given guild and user, and attempt to update the member corresponding to the presence
         if it can be found.
@@ -904,7 +904,7 @@ class BaseRegistry(abc.ABC):
     @abc.abstractmethod
     def update_member_presence(
         self, member_obj: members.Member, presence_payload: containers.DiscordObjectT
-    ) -> typing.Tuple[members.Member, presences.Presence, presences.Presence]:
+    ) -> typing.Tuple[members.Member, presences.MemberPresence, presences.MemberPresence]:
         """
         Update the presence for a given user in a given guild.
 

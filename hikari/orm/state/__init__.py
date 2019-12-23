@@ -21,4 +21,4 @@ State management components. These enable you to manage storing and organising
 the in-memory cache when running a bot.
 """
 from hikari.orm.state import base_registry
-from hikari.orm.state import bot_registry_impl
+from hikari.orm.state import state_registry_impl
