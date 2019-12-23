@@ -25,12 +25,14 @@ import abc
 import asyncio
 import contextlib
 import enum
+import logging
 import typing
 
 from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import compat
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import loggers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
@@ -518,7 +520,16 @@ def parse_channel(fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT)
         channel = channel_type(fabric_obj, payload)
         return channel
     else:
-        raise TypeError(f"Invalid channel type {channel_type}") from None
+        # I am more comfortable letting this return an unknown for now rather than raising an
+        # error, as apparently other undocumented channel types exist as per
+        # https://github.com/discordapp/discord-api-docs/issues/1238 and this makes me
+        # somewhat uncomfortable.
+        # TODO: amend this file if/when they get documented properly, I guess.
+        loggers.get_named_logger(__name__).warning(
+            "no channel type of value %s is implemented, so it cannot be parsed correctly.", channel_type
+        )
+        unknown = bases.UnknownObject(int(payload.get("id", "-1")))
+        return typing.cast(Channel, unknown)
 
 
 #: Any type of channel, or an :class:`int`/:class:`str` ID of one.

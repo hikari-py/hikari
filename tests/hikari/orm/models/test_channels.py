@@ -23,6 +23,7 @@ import pytest
 
 from hikari.orm import fabric
 from hikari.orm import state_registry
+from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
 from hikari.orm.models import permissions
@@ -477,11 +478,7 @@ def test_channel_from_dict_success_case(type_field, expected_class):
 
 @pytest.mark.model
 def test_channel_failure_case():
-    try:
-        channels.parse_channel(mock.MagicMock(), {"type": -999})
-        assert False
-    except TypeError:
-        pass
+    assert isinstance(channels.parse_channel(mock.MagicMock(), {"type": -999, "id": "123"}), bases.UnknownObject)
 
 
 @pytest.mark.model()
