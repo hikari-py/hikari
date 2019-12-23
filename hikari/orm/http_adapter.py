@@ -88,7 +88,7 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         guild: _guilds.GuildLikeT,
         *,
-        user: _users.IUserLikeT = unspecified.UNSPECIFIED,
+        user: _users.BaseUserLikeT = unspecified.UNSPECIFIED,
         action_type: _audit_logs.AuditLogEvent = unspecified.UNSPECIFIED,
         limit: int = unspecified.UNSPECIFIED,
     ) -> _audit_logs.AuditLog:
@@ -175,7 +175,7 @@ class BaseHTTPAdapter(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def delete_reaction(self, reaction: _reactions.Reaction, user: _users.IUserLikeT) -> None:
+    async def delete_reaction(self, reaction: _reactions.Reaction, user: _users.BaseUserLikeT) -> None:
         ...
 
     @abc.abstractmethod
@@ -358,7 +358,7 @@ class BaseHTTPAdapter(abc.ABC):
     @abc.abstractmethod
     async def fetch_member(
         self,
-        user: typing.Union[_users.IUserLikeT, _members.MemberLikeT],
+        user: typing.Union[_users.BaseUserLikeT, _members.MemberLikeT],
         guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
     ) -> _members.Member:
         ...
@@ -404,7 +404,7 @@ class BaseHTTPAdapter(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_ban(self, guild: _guilds.GuildLikeT, user: _users.IUserLikeT) -> _guilds.Ban:
+    async def fetch_ban(self, guild: _guilds.GuildLikeT, user: _users.BaseUserLikeT) -> _guilds.Ban:
         ...
 
     @abc.abstractmethod
@@ -415,7 +415,7 @@ class BaseHTTPAdapter(abc.ABC):
     async def ban_member(
         self,
         guild: _guilds.GuildLikeT,
-        user: _users.IUserLikeT,
+        user: _users.BaseUserLikeT,
         *,
         delete_message_days: typing.Optional[int] = None,
         reason: str = unspecified.UNSPECIFIED,
@@ -424,7 +424,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def unban_member(
-        self, guild: _guilds.GuildLikeT, user: _users.IUserLikeT, *, reason: str = unspecified.UNSPECIFIED,
+        self, guild: _guilds.GuildLikeT, user: _users.BaseUserLikeT, *, reason: str = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -564,7 +564,7 @@ class BaseHTTPAdapter(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_user(self, user: _users.IUserLikeT) -> typing.Union[_users.User, _users.OAuth2User]:
+    async def fetch_user(self, user: _users.BaseUserLikeT) -> typing.Union[_users.User, _users.OAuth2User]:
         ...
 
     @abc.abstractmethod
@@ -599,7 +599,7 @@ class BaseHTTPAdapter(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def create_dm_channel(self, recipient: _users.IUserLikeT) -> _channels.DMChannel:
+    async def create_dm_channel(self, recipient: _users.BaseUserLikeT) -> _channels.DMChannel:
         ...
 
     @abc.abstractmethod

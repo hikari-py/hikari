@@ -540,9 +540,10 @@ class StateRegistryImpl(state_registry.BaseStateRegistry):
         return existing_user
 
     def parse_webhook(self, webhook_payload: containers.DiscordObjectT) -> webhooks.Webhook:
-        # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
-        # so that it isn't coupling dependent classes of this one to the model implementation as much.
         return webhooks.Webhook(self.fabric, webhook_payload)
+
+    def parse_webhook_user(self, webhook_user_payload: containers.DiscordObjectT) -> webhooks.WebhookUser:
+        return webhooks.WebhookUser(webhook_user_payload)
 
     def set_guild_unavailability(self, guild_obj: guilds.Guild, is_unavailable: bool) -> None:
         # Doesn't even need to be a method but I am trying to keep attribute changing code in this class

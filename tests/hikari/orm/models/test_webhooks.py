@@ -27,6 +27,16 @@ from tests.hikari import _helpers
 
 
 @pytest.fixture()
+def webhook_user():
+    return {
+        "username": "Luigi",
+        "discriminator": "0002",
+        "id": "96008815106887111",
+        "avatar": "5500909a3274e1812beb4e8de6631111",
+    }
+
+
+@pytest.fixture()
 def mock_state_registry():
     return mock.MagicMock(spec_set=state_registry.BaseStateRegistry)
 
@@ -37,15 +47,22 @@ def fabric_obj(mock_state_registry):
 
 
 @pytest.mark.model
-class TestWebhook:
-    def test_parse_webhook(self, fabric_obj):
-        user_dict = {
-            "username": "Luigi",
-            "discriminator": "0002",
-            "id": "96008815106887111",
-            "avatar": "5500909a3274e1812beb4e8de6631111",
-        }
+class TestWebhookUser:
+    def test_parse(self, webhook_user):
+        obj = webhooks.WebhookUser(webhook_user)
+        assert obj.id == 96008815106887111
+        assert obj.avatar_hash == "5500909a3274e1812beb4e8de6631111"
+        assert obj.discriminator == 2
+        assert obj.username == "Luigi"
 
+    def test_is_bot(self, webhook_user):
+        obj = webhooks.WebhookUser(webhook_user)
+        assert obj.is_bot
+
+
+@pytest.mark.model
+class TestWebhook:
+    def test_parse_webhook(self, fabric_obj, webhook_user):
         wh = webhooks.Webhook(
             fabric_obj,
             {
@@ -56,7 +73,7 @@ class TestWebhook:
                 "guild_id": "199737254929760256",
                 "id": "223704706495545344",
                 "type": 1,
-                "user": user_dict,
+                "user": webhook_user,
             },
         )
 
@@ -69,7 +86,7 @@ class TestWebhook:
         assert wh.avatar_hash is None
         assert wh.guild_id == 199737254929760256
         assert wh.type is webhooks.WebhookType.INCOMING
-        fabric_obj.state_registry.parse_user.assert_called_with(user_dict)
+        fabric_obj.state_registry.parse_webhook_user.assert_called_with(webhook_user)
 
     @pytest.mark.model
     def test_Webhook___repr__(self):

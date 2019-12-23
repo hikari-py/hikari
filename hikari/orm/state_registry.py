@@ -744,6 +744,19 @@ class BaseStateRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
+    def parse_webhook_user(self, webhook_user_payload: containers.DiscordObjectT) -> webhooks.WebhookUser:
+        """
+        Parses a webhook user payload into a workable object.
+
+        Args:
+            webhook_user_payload:
+                the payload of the webhook.
+
+        Returns:
+            a :class:`hikari.orm.models.webhooks.WebhookUser` object.
+        """
+
+    @abc.abstractmethod
     def delete_all_reactions(self, message_obj: messages.Message) -> None:
         """
         Removes all reactions from a message.
