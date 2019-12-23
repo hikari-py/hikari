@@ -45,7 +45,7 @@ from hikari.orm.models import voices
 from hikari.orm.models import webhooks
 
 
-class BaseStateRegistry(abc.ABC):
+class BaseRegistry(abc.ABC):
     """
     Provides the relational interface between different types of objects and the overall cache.
 
@@ -930,4 +930,4 @@ class BaseStateRegistry(abc.ABC):
         """
 
 
-__all__ = ["BaseStateRegistry"]
+__all__ = ["BaseRegistry"]

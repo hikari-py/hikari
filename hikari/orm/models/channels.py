@@ -25,7 +25,6 @@ import abc
 import asyncio
 import contextlib
 import enum
-import logging
 import typing
 
 from hikari.internal_utilities import aio
