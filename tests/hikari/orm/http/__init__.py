@@ -16,10 +16,3 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-
-
-def test_events():
-    """Ensure we still get some coverage if we don't get to import this."""
-    from hikari.orm import events
-
-    assert events  # ¯\_(ツ)_/¯

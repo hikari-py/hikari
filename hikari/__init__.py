@@ -26,8 +26,8 @@ from hikari import errors
 from hikari import internal_utilities
 from hikari import net
 from hikari import orm
-from hikari.orm import events
-from hikari.orm import state_registry
+from hikari.orm import gateway
+from hikari.orm.state import base_registry
 
 __author__ = "Nekokatt"
 __contributors__ = {"FasterSpeeding", "LunarCoffee", "raatty", "Tmpod", "Zach", "thomm.o", "rock500", "davfsa"}
