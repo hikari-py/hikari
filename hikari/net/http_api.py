@@ -69,7 +69,7 @@ def _link_developer_portal(scope: _APIResource, specific_resource: str = None):
     return decorator
 
 
-class HTTPAPI(http_api_base.HTTPAPIBase):
+class HTTPAPIImpl(http_api_base.HTTPAPIBase):
     """
     Combination of all components for API handling logic for the V7 Discord HTTP API.
 
@@ -2542,4 +2542,4 @@ class HTTPAPI(http_api_base.HTTPAPIBase):
         await self.request(self.DELETE, "/webhooks/{webhook_id}", webhook_id=webhook_id)
 
 
-__all__ = ["HTTPAPI"]
+__all__ = ["HTTPAPIImpl"]

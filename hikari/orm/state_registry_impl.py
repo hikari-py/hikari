@@ -34,12 +34,12 @@ from hikari.orm import fabric
 from hikari.orm import state_registry
 from hikari.orm.models import applications
 from hikari.orm.models import audit_logs
+from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import connections
 from hikari.orm.models import emojis
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
-from hikari.orm.models import bases
 from hikari.orm.models import invites
 from hikari.orm.models import members
 from hikari.orm.models import messages

@@ -31,9 +31,9 @@ from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
 from hikari.orm import state_registry
+from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
-from hikari.orm.models import bases
 from hikari.orm.models import users
 
 

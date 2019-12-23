@@ -22,17 +22,20 @@ Channel models.
 from __future__ import annotations
 
 import abc
+import asyncio
 import contextlib
 import enum
 import typing
 
+from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
+from hikari.internal_utilities import compat
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
-from hikari.orm.models import guilds as _guild
 from hikari.orm.models import bases
+from hikari.orm.models import guilds as _guild
 from hikari.orm.models import members
 from hikari.orm.models import overwrites
 from hikari.orm.models import users
@@ -168,11 +171,49 @@ class TextChannel(Channel, abc.ABC):
     """
 
     __slots__ = ()
+    _TYPING_TIMEOUT = 9
 
     #: The optional ID of the last message to be sent.
     #:
     #: :type: :class:`int` or :class:`None`
     last_message_id: typing.Optional[int]
+
+    @aio.optional_await("trigger typing for 10s")
+    async def trigger_typing(self) -> None:
+        """Trigger typing in the given channel for 10 seconds or until a message is sent."""
+        await self._fabric.http_adapter.trigger_typing(self.id)
+
+    @contextlib.asynccontextmanager
+    async def start_typing(self) -> None:
+        """
+        Create a context manager that will continue typing until you leave the context.
+
+            >>> async with channel.start_typing():
+            ...     await asyncio.sleep(15)
+            >>> await channel.send("Done")
+
+        Note:
+            This will run on the current event loop on the same thread. This means if you
+            do any blocking work on the event loop, this will fail to trigger. To do computation
+            or blocking work, consider using a :class:`concurrent.futures.ProcessPoolExecutor` or
+            :class:`concurrent.futures.ThreadPoolExecutor` with :meth:`asyncio.AbstractEventLoop.run_in_executor`.
+
+        Returns:
+            A typing indicator context manager.
+        """
+        task = compat.asyncio.create_task(self._typing_loop(), name=f"typing indicator in {self}")
+        # Trigger the first typing event before we continue in case something does block
+        await self.trigger_typing()
+        yield
+        task.cancel()
+
+    async def _typing_loop(self):
+        try:
+            while True:
+                await asyncio.sleep(self._TYPING_TIMEOUT)
+                await self.trigger_typing()
+        except asyncio.CancelledError:
+            pass
 
 
 class GuildChannel(Channel):
@@ -480,14 +521,10 @@ def parse_channel(fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT)
         raise TypeError(f"Invalid channel type {channel_type}") from None
 
 
-class TypingIndicator(contextlib.AbstractAsyncContextManager):
-    """TODO: implement this."""
-
-
 #: Any type of channel, or an :class:`int`/:class:`str` ID of one.
 ChannelLikeT = typing.Union[bases.RawSnowflakeT, Channel]
 #: Any type of :class:`TextChannel`, or an :class:`int`/:class:`str` ID of one.
-TextChannelLikeT = typing.Union[bases.RawSnowflakeT, Channel]
+TextChannelLikeT = typing.Union[bases.RawSnowflakeT, TextChannel]
 #: Any type of :class:`GuildChannel`, or an :class:`int`/:class:`str` ID of one.
 GuildChannelLikeT = typing.Union[bases.RawSnowflakeT, GuildChannel]
 #: A :class:`GuildCategory`, or an :class:`int`/:class:`str` ID of one.
@@ -496,7 +533,6 @@ GuildCategoryLikeT = typing.Union[bases.RawSnowflakeT, GuildCategory]
 GuildTextChannelLikeT = typing.Union[bases.RawSnowflakeT, GuildTextChannel]
 #: A :class:`GuildVoiceChannel`, or an :class:`int`/:class:`str` ID of one.
 GuildVoiceChannelLikeT = typing.Union[bases.RawSnowflakeT, GuildVoiceChannel]
-
 
 __all__ = (
     "DMRecipientT",
@@ -512,7 +548,6 @@ __all__ = (
     "GuildCategory",
     "GuildAnnouncementChannel",
     "GuildStoreChannel",
-    "TypingIndicator",
     "ChannelLikeT",
     "TextChannelLikeT",
     "GuildChannelLikeT",
