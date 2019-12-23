@@ -22,6 +22,7 @@ Presences for members.
 
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import enum
 import typing
@@ -48,7 +49,23 @@ class Status(bases.NamedEnumMixin, enum.Enum):
     OFFLINE = enum.auto()
 
 
-class Presence(bases.BaseModel):
+@dataclasses.dataclass()
+class Presence:
+    since: typing.Optional[typing.Union[float, datetime.datetime]] = None
+    is_afk: bool = False
+    status: Status = Status.ONLINE
+    activity: typing.Optional[Activity] = None
+
+    def to_dict(self):
+        return {
+            "since": int(1_000 * self.since.timestamp()) if isinstance(self.since, datetime.datetime) else self.since,
+            "afk": self.is_afk,
+            "status": self.status.name.lower(),
+            "activity": self.activity.to_dict() if self.activity is not None else None
+        }
+
+
+class MemberPresence(bases.BaseModel):
     """
     The presence of a member. This includes their status and info on what they are doing currently.
     """
@@ -115,12 +132,33 @@ class Presence(bases.BaseModel):
             )
 
 
+class ActivityType(bases.BestEffortEnumMixin, enum.IntEnum):
+    """
+    The activity state. Can be more than one using bitwise-combinations.
+    """
+
+    #: Shows up as `Playing <name>`
+    PLAYING = 0
+    #: Shows up as `Streaming <name>`.
+    #:
+    #: Warning:
+    #:     Corresponding presences must be associated with VALID Twitch or YouTube stream URLS!
+    STREAMING = 1
+    #: Shows up as `Listening to <name>`.
+    LISTENING = 2
+    #: Shows up as `Watching <name>`. Note that this is not officially documented, so will be likely removed
+    #: in the near future.
+    WATCHING = 3
+    #: A custom status.
+    #:
+    #: To set an emoji with the status, place a unicode emoji or Discord emoji (`:smiley:`) as the first
+    #: part of the status activity name.
+    CUSTOM = 4
+
+
 class Activity(bases.BaseModel):
     """
     A non-rich presence-style activity.
-
-    Note:
-        This can only be received from the gateway, not sent to it.
     """
 
     __slots__ = ("name", "type", "url")
@@ -133,17 +171,23 @@ class Activity(bases.BaseModel):
     #: The type of the activity.
     #:
     #: :type: :class:`str`
-    type: str
+    type: ActivityType
 
     #: The URL of the activity, if applicable
     #:
     #: :type: :class:`str` or `None`
     url: typing.Optional[str]
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
-        self.name = payload.get("name")
-        self.type = transformations.try_cast(payload.get("type"), ActivityType)
-        self.url = payload.get("url")
+    def __init__(
+        self,
+        *,
+        name: str,
+        type: ActivityType = ActivityType.CUSTOM,
+        url: typing.Optional[str] = None
+    ) -> None:
+        self.name = name
+        self.type = type
+        self.url = url
 
     update_state = NotImplemented
 
@@ -209,7 +253,11 @@ class RichActivity(Activity):
     __repr__ = reprs.repr_of("id", "name", "type")
 
     def __init__(self, payload: containers.DiscordObjectT) -> None:
-        super().__init__(payload)
+        super().__init__(
+            name=payload.get("name"),
+            type=ActivityType.get_best_effort_from_value(payload.get("type", 0)),
+            url=payload.get("url"),
+        )
         self.id = payload.get("id")
         self.timestamps = transformations.nullable_cast(payload.get("timestamps"), ActivityTimestamps)
         self.application_id = transformations.nullable_cast(payload.get("application_id"), int)
@@ -229,32 +277,7 @@ def parse_presence_activity(payload: containers.DiscordObjectT,) -> typing.Union
         either a :class:`PresenceActivity` or a :class:`RichPresenceActivity` depending on the
         implementation details provided.
     """
-    impl = RichActivity if any(slot in payload for slot in RichActivity.__slots__) else Activity
-    return impl(payload)
-
-
-class ActivityType(bases.BestEffortEnumMixin, enum.IntEnum):
-    """
-    The activity state. Can be more than one using bitwise-combinations.
-    """
-
-    #: Shows up as `Playing <name>`
-    PLAYING = 0
-    #: Shows up as `Streaming <name>`.
-    #:
-    #: Warning:
-    #:     Corresponding presences must be associated with VALID Twitch or YouTube stream URLS!
-    STREAMING = 1
-    #: Shows up as `Listening to <name>`.
-    LISTENING = 2
-    #: Shows up as `Watching <name>`. Note that this is not officially documented, so will be likely removed
-    #: in the near future.
-    WATCHING = 3
-    #: A custom status.
-    #:
-    #: To set an emoji with the status, place a unicode emoji or Discord emoji (`:smiley:`) as the first
-    #: part of the status activity name.
-    CUSTOM = 4
+    return RichActivity(payload)
 
 
 class ActivityFlag(enum.IntFlag):
@@ -377,6 +400,7 @@ class ActivityTimestamps(bases.BaseModel):
 __all__ = [
     "Status",
     "Presence",
+    "MemberPresence",
     "Activity",
     "RichActivity",
     "parse_presence_activity",
