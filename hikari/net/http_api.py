@@ -1111,8 +1111,8 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         *,
         name: str = unspecified.UNSPECIFIED,
         region: str = unspecified.UNSPECIFIED,
-        verification_level: str = unspecified.UNSPECIFIED,
-        default_message_notifications: str = unspecified.UNSPECIFIED,
+        verification_level: int = unspecified.UNSPECIFIED,
+        default_message_notifications: int = unspecified.UNSPECIFIED,
         explicit_content_filter: int = unspecified.UNSPECIFIED,
         afk_channel_id: str = unspecified.UNSPECIFIED,
         afk_timeout: int = unspecified.UNSPECIFIED,
@@ -1257,7 +1257,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
             permission_overwrites:
                 A list of overwrite objects to apply to the channel.
             parent_id:
-                The ID of the parent category/
+                The ID of the parent category.
             nsfw:
                 Marks the channel as NSFW if `True`.
             reason:

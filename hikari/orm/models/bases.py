@@ -24,7 +24,9 @@ from __future__ import annotations
 import abc
 import asyncio
 import copy
+import dataclasses
 import datetime
+import enum
 import typing
 
 from hikari.internal_utilities import assertions
@@ -384,6 +386,57 @@ class UnknownObject(typing.Generic[T], SnowflakeMixin):
         return False
 
 
+DictImplT = typing.TypeVar("DictImplT", typing.Dict, dict)
+DictFactoryT = typing.Union[typing.Type[DictImplT], typing.Callable[[], DictImplT]]
+
+
+class DictFactory(dict):
+    """
+    A dictionary factory used for ensuring that values like enums and models are returned in a serializable format.
+    """
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**{key: self.default(value) for key, value in kwargs.items() if value is not None})
+
+    def __setitem__(self, key, item) -> None:
+        super().__setitem__(key, self.default(item))
+
+    @staticmethod
+    def default(value: typing.Any) -> typing.Any:
+        """Try to convert a value, and return the result or original value."""
+        if isinstance(value, MarshalMixin):
+            value = value.to_dict()
+        elif isinstance(value, enum.Enum):
+            value = value.value
+
+        return value
+
+
+class MarshalMixin:
+    """
+    A mixin used for making models serializable.
+
+    Note:
+        Will need to be decorated with :func:`dataclasses.dataclass`.
+        And will require that __init__ is implemented where the args are the object's fields.
+    """
+
+    __slots__ = ()
+
+    def to_dict(self, *, dict_factory: DictFactoryT = DictFactory) -> DictImplT:
+        """Get a dictionary of the the values held by the current object."""
+        attrs = {a: getattr(self, a) for a in self.__slots__}
+        # noinspection PyArgumentList,PyTypeChecker
+        return dict_factory(**attrs)
+
+    # noinspection PyArgumentList,PyDataclass
+    @classmethod
+    def from_dict(cls, payload: containers.DiscordObjectT):
+        """Initialise the current model from a Discord payload."""
+        params = {field.name: payload.get(field.name) for field in dataclasses.fields(cls)}
+        return cls(**params)
+
+
 #: The valid types of a raw unformatted snowflake.
 RawSnowflakeT = typing.Union[int, str]
 
@@ -398,4 +451,8 @@ __all__ = [
     "BaseModel",
     "RawSnowflakeT",
     "SnowflakeLikeT",
+    "DictFactory",
+    "MarshalMixin",
+    "DictImplT",
+    "DictFactoryT",
 ]
