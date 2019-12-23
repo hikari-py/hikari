@@ -21,45 +21,29 @@ Permission overwrites.
 """
 from __future__ import annotations
 
+import dataclasses
 import enum
 import typing
 
-from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm.models import bases
-from hikari.orm.models import members
 from hikari.orm.models import permissions
-from hikari.orm.models import roles
 
 
 class OverwriteEntityType(bases.NamedEnumMixin, enum.Enum):
     """
     The type of "thing" that a permission overwrite sets the permissions for.
-
-    These values act as types, so you can write expressions such as:
-
-    .. code-block:: python
-
-        if isinstance(user_or_role, overwrite.type):
-            ...
-
-    ...should you desire to do so.
     """
 
     #: A member.
-    MEMBER = members.Member
+    MEMBER = "member"
     #: A role.
-    ROLE = roles.Role
-
-    def __instancecheck__(self, instance: typing.Any) -> bool:
-        return isinstance(instance, self.value)
-
-    def __subclasscheck__(self, subclass: typing.Type) -> bool:
-        return issubclass(subclass, self.value)
+    ROLE = "role"
 
 
-class Overwrite(bases.BaseModel, bases.SnowflakeMixin):
+@dataclasses.dataclass()
+class Overwrite(bases.BaseModel, bases.SnowflakeMixin, bases.MarshalMixin):
     """
     Representation of some permissions that have been explicitly allowed or denied as an override from the defaults.
     """
@@ -68,13 +52,13 @@ class Overwrite(bases.BaseModel, bases.SnowflakeMixin):
 
     #: The ID of this overwrite.
     #:
-    #: :type: :class:`int`
-    id: int
+    #: :type: :class:`int` or :class:`None` when initialised locally for api calls.
+    id: typing.Optional[int]
 
     #: The type of entity that was changed.
     #:
-    #: :type: :class:`hikari.orm.models.overwrites.OverwriteEntityType`
-    type: OverwriteEntityType
+    #: :type: :class:`hikari.orm.models.overwrites.OverwriteEntityType` or :class:`None` (locally initialised only).
+    type: typing.Optional[OverwriteEntityType]
 
     #: The bitfield of permissions explicitly allowed.
     #:
@@ -98,11 +82,18 @@ class Overwrite(bases.BaseModel, bases.SnowflakeMixin):
         all_perms = ~permissions.NONE
         return permissions.Permission(all_perms ^ (self.allow | self.deny))
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
-        self.id = int(payload["id"])
-        self.type = OverwriteEntityType.from_discord_name(payload["type"])
-        self.allow = transformations.try_cast(payload["allow"], permissions.Permission)
-        self.deny = transformations.try_cast(payload["deny"], permissions.Permission)
+    def __init__(
+        self,
+        *,
+        allow: typing.Union[permissions.Permission, int] = 0,
+        deny: typing.Union[permissions.Permission, int] = 0,
+        id: int = None,
+        type: int = None,
+    ) -> None:
+        self.id = transformations.try_cast(id, int)
+        self.type = OverwriteEntityType.from_discord_name(str(type)) if type is not None else type
+        self.allow = transformations.try_cast(allow, permissions.Permission)
+        self.deny = transformations.try_cast(deny, permissions.Permission)
 
 
 #: A :class:`Overwrite`, or an :class:`int`/:class:`str` ID of one.
