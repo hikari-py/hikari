@@ -43,3 +43,6 @@ pip-wheel-metadata/
 
 # Poetry lockfile
 poetry.lock
+
+# Container logs
+**.container.log
