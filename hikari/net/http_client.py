@@ -63,7 +63,7 @@ class HTTPClient(abc.ABC):
     POST = "post"
     PUT = "put"
 
-    __slots__ = [
+    __slots__ = (
         "allow_redirects",
         "client_session",
         "in_count",
@@ -77,7 +77,7 @@ class HTTPClient(abc.ABC):
         "timeout",
         "user_agent",
         "verify_ssl",
-    ]
+    )
 
     #: Whether to allow following of redirects or not. Generally you do not want this.
     #: as it poses a security risk.
