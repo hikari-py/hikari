@@ -92,10 +92,5 @@ class SessionStartLimit(bases.BaseModel):
         """The number of times you have IDENTIFIED in this time window."""
         return self.total - self.remaining
 
-    @property
-    def reset_after(self) -> datetime.timedelta:
-        """How long until the IDENTIFY limit is reset."""
-        return self.reset_at - datetime.datetime.now(tz=datetime.timezone.utc)
-
 
 __all__ = ["GatewayBot", "SessionStartLimit"]

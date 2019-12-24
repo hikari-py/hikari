@@ -27,7 +27,7 @@ from tests.hikari import _helpers
 
 @pytest.fixture
 def activity():
-    return presences.Activity({})
+    return presences.Activity(name="")
 
 
 @pytest.fixture()
@@ -230,9 +230,11 @@ class TestPresence:
 
 @pytest.mark.model
 def test_parse_Activity(legacy_activity):
-    a = presences.Activity(legacy_activity)
+    a = presences.Activity(**legacy_activity)
     assert a.name == "with yo mama"
+    assert a.type == 0
     assert a.type == presences.ActivityType.PLAYING
+    assert a.url is None
 
 
 @pytest.mark.model
@@ -271,13 +273,6 @@ def test_RichActivity___repr__():
             __repr__=presences.RichActivity.__repr__,
         )
     )
-
-
-@pytest.mark.model
-def test_parse_presence_activity_for_Activity(legacy_activity):
-    a = presences.parse_presence_activity(legacy_activity)
-    # It must be the class exactly, not a derivative.
-    assert type(a) is presences.Activity
 
 
 @pytest.mark.model
@@ -331,15 +326,15 @@ class TestActivityTimestamps:
 
     def test_Activity_to_dict_when_filled(self, activity):
         activity.name = "Tests :)"
-        activity.type = "1"
+        activity.type = 1
         activity.url = "https://www.witch.tv/"
 
         d = activity.to_dict()
 
-        assert d == dict(name="Tests :)", type="1", url="https://www.witch.tv/",)
+        assert d == dict(name="Tests :)", type=1, url="https://www.witch.tv/",)
 
     def test_Activity_to_dict_when_empty(self, activity):
-        assert activity.to_dict() == {}
+        assert activity.to_dict() == dict(name="", type=presences.ActivityType.CUSTOM)
 
     @pytest.mark.model
     def test_ActivityTimestamps___repr__(self):

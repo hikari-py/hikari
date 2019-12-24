@@ -61,7 +61,7 @@ class Presence:
             "since": int(1_000 * self.since.timestamp()) if isinstance(self.since, datetime.datetime) else self.since,
             "afk": self.is_afk,
             "status": self.status.name.lower(),
-            "activity": self.activity.to_dict() if self.activity is not None else None
+            "activity": self.activity.to_dict() if self.activity is not None else None,
         }
 
 
@@ -179,22 +179,18 @@ class Activity(bases.BaseModel):
     url: typing.Optional[str]
 
     def __init__(
-        self,
-        *,
-        name: str,
-        type: ActivityType = ActivityType.CUSTOM,
-        url: typing.Optional[str] = None
+        self, *, name: str, type: ActivityType = ActivityType.CUSTOM, url: typing.Optional[str] = None
     ) -> None:
         self.name = name
-        self.type = type
+        self.type = ActivityType.get_best_effort_from_value(type)
         self.url = url
 
     update_state = NotImplemented
 
-    def to_dict(self, *, dict_factory: containers.DictFactoryT = dict) -> containers.DictImplT:
+    def to_dict(self) -> containers.DiscordObjectT:
         attrs = {a: getattr(self, a) for a in self.__slots__}
         # noinspection PyArgumentList,PyTypeChecker
-        return dict_factory(**{k: v for k, v in attrs.items() if v is not None})
+        return dict(**{k: v for k, v in attrs.items() if v is not None})
 
 
 class RichActivity(Activity):
@@ -274,8 +270,7 @@ def parse_presence_activity(payload: containers.DiscordObjectT,) -> typing.Union
     constructed and returned as appropriate.
 
     Returns:
-        either a :class:`PresenceActivity` or a :class:`RichPresenceActivity` depending on the
-        implementation details provided.
+        Returns a :class:`RichActivity`
     """
     return RichActivity(payload)
 

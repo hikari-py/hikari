@@ -89,7 +89,9 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         # Users may be cached while we can see them, or they may be cached as a member. Regardless, we only
         # retain them while they are referenced from elsewhere to keep things tidy.
         self.fabric = fabric_obj
-        self._dm_channels: typing.MutableMapping[int, channels.DMChannel] = containers.LRUDict(max_user_dm_channel_count)
+        self._dm_channels: typing.MutableMapping[int, channels.DMChannel] = containers.LRUDict(
+            max_user_dm_channel_count
+        )
         self._emojis: typing.MutableMapping[int, emojis.GuildEmoji] = weakref.WeakValueDictionary()
         self._guilds: typing.Dict[int, guilds.Guild] = {}
         self._guild_channels: typing.MutableMapping[int, channels.GuildChannel] = weakref.WeakValueDictionary()
