@@ -39,6 +39,7 @@ from hikari.orm.models import connections
 from hikari.orm.models import emojis
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
+from hikari.orm.models import integrations
 from hikari.orm.models import invites
 from hikari.orm.models import members
 from hikari.orm.models import messages
@@ -353,6 +354,9 @@ class StateRegistryImpl(base_registry.BaseRegistry):
     def parse_audit_log(self, audit_log_payload: containers.DiscordObjectT) -> audit_logs.AuditLog:
         return audit_logs.AuditLog(self.fabric, audit_log_payload)
 
+    def parse_ban(self, ban_payload: containers.DiscordObjectT) -> guilds.Ban:
+        return guilds.Ban(self.fabric, ban_payload)
+
     def parse_channel(
         self, channel_payload: containers.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild] = None
     ) -> channels.Channel:
@@ -427,6 +431,9 @@ class StateRegistryImpl(base_registry.BaseRegistry):
             self._guilds[guild_id] = guild_obj
 
         return guild_obj
+
+    def parse_integration(self, integration_payload: containers.DiscordObjectT) -> integrations.Integration:
+        return integrations.Integration(self.fabric, integration_payload)
 
     def parse_invite(self, invite_payload: containers.DiscordObjectT) -> invites.Invite:
         return invites.parse_invite(self.fabric, invite_payload)

@@ -38,7 +38,7 @@ from hikari.orm.models import media
 _MAX_EMBED_SIZE = 6000
 
 
-class EmbedPart(abc.ABC):
+class EmbedPart(abc.ABC, bases.MarshalMixin):
     """
     Abstract base for any internal component for an embed.
 
@@ -53,17 +53,6 @@ class EmbedPart(abc.ABC):
 
     def __delattr__(self, item):
         setattr(self, item, None)
-
-    def to_dict(self, *, dict_factory: containers.DictFactoryT = dict) -> containers.DictImplT:
-        attrs = {a: getattr(self, a) for a in self.__slots__}
-        # noinspection PyArgumentList,PyTypeChecker
-        return dict_factory(**{k: v for k, v in attrs.items() if v is not None})
-
-    # noinspection PyArgumentList,PyDataclass
-    @classmethod
-    def from_dict(cls, **kwargs):
-        params = {field.name: kwargs.get(field.name) for field in dataclasses.fields(cls)}
-        return cls(**params)
 
 
 @dataclasses.dataclass()
@@ -461,7 +450,7 @@ class BaseEmbed(bases.BaseModel):
         """
         return list(map(weakref.proxy, self._fields))
 
-    def to_dict(self, *, dict_factory: containers.DictFactoryT = dict) -> containers.DictImplT:
+    def to_dict(self, *, dict_factory: bases.DictFactoryT = bases.DictFactory) -> bases.DictImplT:
         """
         Converts this embed into a raw payload that Discord's HTTP API will understand.
 
@@ -516,19 +505,19 @@ class BaseEmbed(bases.BaseModel):
         embed._type = payload["type"]
 
         if "author" in payload:
-            embed._author = EmbedAuthor.from_dict(**payload["author"])
+            embed._author = EmbedAuthor.from_dict(payload["author"])
         if "footer" in payload:
-            embed._footer = EmbedFooter.from_dict(**payload["footer"])
+            embed._footer = EmbedFooter.from_dict(payload["footer"])
         if "image" in payload:
-            embed._image = EmbedImage.from_dict(**payload["image"])
+            embed._image = EmbedImage.from_dict(payload["image"])
         if "thumbnail" in payload:
-            embed._thumbnail = EmbedImage.from_dict(**payload["thumbnail"])
+            embed._thumbnail = EmbedImage.from_dict(payload["thumbnail"])
         if "fields" in payload:
-            embed._fields = [EmbedField.from_dict(**f) for f in payload["fields"]]
+            embed._fields = [EmbedField.from_dict(f) for f in payload["fields"]]
         if "provider" in payload:
-            embed._provider = EmbedProvider.from_dict(**payload["provider"])
+            embed._provider = EmbedProvider.from_dict(payload["provider"])
         if "video" in payload:
-            embed._video = EmbedVideo.from_dict(**payload["video"])
+            embed._video = EmbedVideo.from_dict(payload["video"])
 
         return embed
 
@@ -809,7 +798,7 @@ class Embed(BaseEmbed):
         del self._fields[index]
         return self
 
-    def to_dict(self, *, dict_factory: containers.DictFactoryT = dict) -> containers.DictImplT:
+    def to_dict(self, *, dict_factory: bases.DictFactoryT = bases.DictFactory) -> bases.DictImplT:
         self._perform_total_length_check()
         return super().to_dict(dict_factory=dict_factory)
 

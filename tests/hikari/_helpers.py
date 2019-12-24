@@ -229,18 +229,18 @@ def _parameterize_ids_id(param_name):
     return ids
 
 
-def parameterize_valid_id_formats_for_models(param_name, id, model_type1, *model_types, **kwargs):
+def parametrize_valid_id_formats_for_models(param_name, id, model_type1, *model_types, **kwargs):
     """
     @pytest.mark.parameterize for a param that is an id-able object, but could be the ID in a string, the ID in an int,
     or the ID in a given model type...
 
     For example
 
-    >>> @parameterize_valid_id_formats_for_models("guild", 1234, guilds.Guild, unavailable=False)
+    >>> @parametrize_valid_id_formats_for_models("guild", 1234, guilds.Guild, unavailable=False)
 
     ...would be the same as...
 
-    >>> @pytest.mark.parameterize(
+    >>> @pytest.mark.parametrize(
     ...     "guild",
     ...     [
     ...         1234,
