@@ -260,7 +260,7 @@ class GuildChannel(Channel):
         overwrite_objs = []
 
         for raw_overwrite in payload["permission_overwrites"]:
-            overwrite_obj = overwrites.Overwrite(raw_overwrite)
+            overwrite_obj = overwrites.Overwrite.from_dict(raw_overwrite)
             overwrite_objs.append(overwrite_obj)
 
         self.permission_overwrites = overwrite_objs

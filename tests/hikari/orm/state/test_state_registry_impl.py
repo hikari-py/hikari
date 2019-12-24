@@ -34,6 +34,7 @@ from hikari.orm.models import connections
 from hikari.orm.models import emojis
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
+from hikari.orm.models import integrations
 from hikari.orm.models import invites
 from hikari.orm.models import members
 from hikari.orm.models import messages
@@ -802,6 +803,12 @@ class TestStateRegistryImpl:
             assert parsed_obj is audit_log_obj
             AuditLog.assert_called_once_with(registry.fabric, {})
 
+    def test_parse_ban(self, registry: bot_registry_impl.StateRegistryImpl):
+        ban_obj = _helpers.mock_model(guilds.Ban)
+        with _helpers.mock_patch(guilds.Ban, return_value=ban_obj) as GuildBan:
+            assert registry.parse_ban({}) is ban_obj
+            GuildBan.assert_called_once_with(registry.fabric, {})
+
     @pytest.mark.parametrize(
         "impl_t",
         [
@@ -1055,6 +1062,12 @@ class TestStateRegistryImpl:
 
         with _helpers.mock_patch(guilds.Guild, return_value=guild_obj):
             assert registry.parse_guild(payload, 5432) is guild_obj
+
+    def test_parse_integration(self, registry: bot_registry_impl.StateRegistryImpl):
+        integration_obj = _helpers.mock_model(integrations.Integration)
+        with _helpers.mock_patch(integrations.Integration, return_value=integration_obj) as Integration:
+            assert registry.parse_integration({}) is integration_obj
+            Integration.assert_called_once_with(registry.fabric, {})
 
     @pytest.mark.parametrize(
         ["invite_payload", "expected_type"],

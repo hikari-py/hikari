@@ -25,7 +25,6 @@ from hikari.orm.state import base_registry
 from hikari.orm.models import audit_logs
 from hikari.orm.models import channels
 from hikari.orm.models import overwrites
-from hikari.orm.models import roles
 from tests.hikari import _helpers
 
 
@@ -273,7 +272,7 @@ def test_ChannelOverwriteAuditLogEntryInfo():
     )
     assert isinstance(info_obj, audit_logs.ChannelOverwriteAuditLogEntryInfo)
     assert info_obj.id == 115590097100865541
-    assert info_obj.type.value is roles.Role
+    assert info_obj.type is overwrites.OverwriteEntityType.ROLE
 
 
 @pytest.mark.model

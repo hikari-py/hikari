@@ -34,6 +34,7 @@ from hikari.orm.models import connections
 from hikari.orm.models import emojis
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
+from hikari.orm.models import integrations
 from hikari.orm.models import invites
 from hikari.orm.models import members
 from hikari.orm.models import messages
@@ -482,6 +483,19 @@ class BaseRegistry(abc.ABC):
             a :class:`hikari.orm.models.audit_logs.AuditLog` object.
         """
 
+    @abc.abstractmethod
+    def parse_ban(self, ban_payload: containers.DiscordObjectT) -> guilds.Ban:
+        """
+        Parse a guild ban payload into an object.
+
+        Args:
+            ban_payload:
+                The ban payload to parse.
+
+        Returns:
+            A :class:`hikari.orm.models.guilds.Ban` object.
+        """
+
     @typing.overload
     def parse_channel(self, channel_payload: containers.DiscordObjectT, guild_obj: None) -> channels.Channel:
         ...
@@ -573,6 +587,19 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.guilds.Guild` object.
+        """
+
+    @abc.abstractmethod
+    def parse_integration(self, integration_payload: containers.DiscordObjectT) -> integrations.Integration:
+        """
+        Parse a full integration payload.
+
+        Params:
+            integration_payload:
+                The payload of the integration.
+
+        Returns:
+            A :class:`hikari.orm.models.integrations.Integration` object.
         """
 
     @abc.abstractmethod

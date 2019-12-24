@@ -21,6 +21,7 @@ Guild models.
 """
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import enum
 import typing
@@ -481,7 +482,8 @@ class Ban(bases.BaseModel):
         self.user = fabric_obj.state_registry.parse_user(payload.get("user"))
 
 
-class GuildEmbed(bases.BaseModel):
+@dataclasses.dataclass()
+class GuildEmbed(bases.BaseModel, bases.MarshalMixin):
     """
     Implementation of the guild embed object.
     """
@@ -500,27 +502,9 @@ class GuildEmbed(bases.BaseModel):
 
     __repr__ = reprs.repr_of("enabled", "channel_id")
 
-    def __init__(self, *, enabled: bool, channel_id: int = None) -> None:
+    def __init__(self, *, enabled: bool = False, channel_id: int = None) -> None:
         self.enabled = enabled
-        self.channel_id = channel_id
-
-    @classmethod
-    def from_dict(cls, payload: containers.DiscordObjectT) -> GuildEmbed:
-        """
-        Initialise this model from a Discord payload.
-
-        Returns:
-            :type: :class:`Embed`
-        """
-        return cls(
-            enabled=payload.get("enabled", False),
-            channel_id=transformations.nullable_cast(payload.get("channel_id"), int),
-        )
-
-    def to_dict(self, *, dict_factory: containers.DictFactoryT = dict) -> containers.DictImplT:
-        attrs = {a: getattr(self, a) for a in self.__slots__}
-        # noinspection PyArgumentList,PyTypeChecker
-        return dict_factory(**{k: v for k, v in attrs.items() if v is not None})
+        self.channel_id = transformations.nullable_cast(channel_id, int)
 
 
 class WidgetStyle(str, bases.NamedEnumMixin, enum.Enum):
