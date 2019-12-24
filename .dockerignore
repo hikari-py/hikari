@@ -1,0 +1,9 @@
+.venv/
+.coverage
+.pytest_cache/
+gitlab/
+insomnia/
+public/
+.gitlab-ci.yml
+lgtm.yml
+poetry.lock
