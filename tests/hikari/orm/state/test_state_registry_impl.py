@@ -443,7 +443,9 @@ class TestStateRegistryImpl:
 
         assert registry.get_mandatory_channel_by_id(dm_channel_obj.id) is dm_channel_obj
 
-    def test_get_mandatory_channel_by_id_uncached_returns_unknown(self, registry: state_registry_impl.StateRegistryImpl):
+    def test_get_mandatory_channel_by_id_uncached_returns_unknown(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
         guild_channel_obj = _helpers.mock_model(channels.GuildTextChannel, id=1234)
         dm_channel_obj = _helpers.mock_model(channels.GroupDMChannel, id=1235)
         unknown_obj = _helpers.mock_model(bases.UnknownObject, id=1236)
@@ -545,7 +547,9 @@ class TestStateRegistryImpl:
 
         assert registry.get_mandatory_message_by_id(message_obj.id, message_obj.channel_id) is message_obj
 
-    def test_get_mandatory_message_by_id_uncached_returns_unknown(self, registry: state_registry_impl.StateRegistryImpl):
+    def test_get_mandatory_message_by_id_uncached_returns_unknown(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
         registry._message_cache = {}
         unknown_obj = _helpers.mock_model(bases.UnknownObject, id=70)
         callback_obj = mock.MagicMock()
@@ -734,7 +738,9 @@ class TestStateRegistryImpl:
 
         assert registry.get_mandatory_member_by_id(member_obj.id, guild_obj.id) is member_obj
 
-    def test_get_mandatory_member_by_id_cached_guild_uncached_user(self, registry: state_registry_impl.StateRegistryImpl):
+    def test_get_mandatory_member_by_id_cached_guild_uncached_user(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
         guild_obj = _helpers.mock_model(guilds.Guild, id=2)
         guild_obj.members = _helpers.StrongWeakValuedDict()
         registry._guilds = {guild_obj.id: guild_obj}
@@ -788,7 +794,9 @@ class TestStateRegistryImpl:
             OAuth2User.assert_not_called()
             oa2_user.update_state.assert_called_once_with({})
 
-    def test_parse_application_user_given_no_previous_user_cached(self, registry: state_registry_impl.StateRegistryImpl):
+    def test_parse_application_user_given_no_previous_user_cached(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
         oa2_user = mock.MagicMock(spec_set=users.OAuth2User)
         with _helpers.mock_patch(users.OAuth2User, return_value=oa2_user) as OAuth2User:
             parsed_obj = registry.parse_application_user({})
@@ -803,7 +811,7 @@ class TestStateRegistryImpl:
             assert parsed_obj is audit_log_obj
             AuditLog.assert_called_once_with(registry.fabric, {})
 
-    def test_parse_ban(self, registry: bot_registry_impl.StateRegistryImpl):
+    def test_parse_ban(self, registry: state_registry_impl.StateRegistryImpl):
         ban_obj = _helpers.mock_model(guilds.Ban)
         with _helpers.mock_patch(guilds.Ban, return_value=ban_obj) as GuildBan:
             assert registry.parse_ban({}) is ban_obj
@@ -844,7 +852,9 @@ class TestStateRegistryImpl:
             channels.GroupDMChannel,
         ],
     )
-    def test_parse_channel_updates_state_if_already_cached(self, registry: state_registry_impl.StateRegistryImpl, impl_t):
+    def test_parse_channel_updates_state_if_already_cached(
+        self, registry: state_registry_impl.StateRegistryImpl, impl_t
+    ):
         payload = {"id": "1234"}
         channel_obj = _helpers.mock_model(impl_t, id=1234)
         registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
@@ -924,7 +934,9 @@ class TestStateRegistryImpl:
             channels.GroupDMChannel,
         ],
     )
-    def test_parse_channel_returns_new_channel_if_uncached(self, registry: state_registry_impl.StateRegistryImpl, impl_t):
+    def test_parse_channel_returns_new_channel_if_uncached(
+        self, registry: state_registry_impl.StateRegistryImpl, impl_t
+    ):
         payload = {"id": "1234", "type": -1}
         channel_obj = _helpers.mock_model(impl_t, id=1234)
         registry.get_channel_by_id = mock.MagicMock(return_value=None)
@@ -1063,7 +1075,7 @@ class TestStateRegistryImpl:
         with _helpers.mock_patch(guilds.Guild, return_value=guild_obj):
             assert registry.parse_guild(payload, 5432) is guild_obj
 
-    def test_parse_integration(self, registry: bot_registry_impl.StateRegistryImpl):
+    def test_parse_integration(self, registry: state_registry_impl.StateRegistryImpl):
         integration_obj = _helpers.mock_model(integrations.Integration)
         with _helpers.mock_patch(integrations.Integration, return_value=integration_obj) as Integration:
             assert registry.parse_integration({}) is integration_obj
@@ -1334,7 +1346,9 @@ class TestStateRegistryImpl:
 
         assert registry.parse_role(payload, guild_obj) is role_obj
 
-    def test_parse_role_when_role_does_not_exist_returns_new_role(self, registry: state_registry_impl.StateRegistryImpl):
+    def test_parse_role_when_role_does_not_exist_returns_new_role(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
         payload = {"id": "1234"}
         role_obj = _helpers.mock_model(roles.Role, id=1234)
         guild_obj = _helpers.mock_model(guilds.Guild, roles={})
@@ -1342,7 +1356,9 @@ class TestStateRegistryImpl:
         with _helpers.mock_patch(roles.Role, return_value=role_obj):
             assert registry.parse_role(payload, guild_obj) is role_obj
 
-    def test_parse_user_when_bot_user_calls_parse_application_user(self, registry: state_registry_impl.StateRegistryImpl):
+    def test_parse_user_when_bot_user_calls_parse_application_user(
+        self, registry: state_registry_impl.StateRegistryImpl
+    ):
         payload = {"id": "1234", "mfa_enabled": False, "verified": True}
         application_user_obj = _helpers.mock_model(users.OAuth2User)
         registry.parse_application_user = mock.MagicMock(return_value=application_user_obj)

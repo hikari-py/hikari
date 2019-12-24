@@ -21,6 +21,7 @@ The primary client for writing a bot with Hikari.
 """
 import asyncio
 import dataclasses
+import datetime
 import functools
 import operator
 import ssl
@@ -62,15 +63,11 @@ class ClientOptions:
     proxy_url: str = None
     shards: typing.Union[None, object, typing.Iterable[int], range, slice] = AUTO_SHARD
     ssl_context: ssl.SSLContext = None
-    verify_ssl: bool = True,
+    verify_ssl: bool = True
 
 
 class Client:
-    def __init__(
-        self,
-        token: str,
-        client_options: typing.Optional[ClientOptions] = None,
-    ) -> None:
+    def __init__(self, token: str, client_options: typing.Optional[ClientOptions] = None) -> None:
         self._client_options = client_options or ClientOptions()
         self._fabric: typing.Optional[fabric.Fabric] = None
         self.logger = loggers.get_named_logger(self)
@@ -81,15 +78,11 @@ class Client:
         self._fabric = fabric.Fabric()
 
         self._fabric.state_registry = state_registry_impl.StateRegistryImpl(
-            self._fabric,
-            self._client_options.max_message_cache_size,
-            self._client_options.max_user_dm_channel_count,
+            self._fabric, self._client_options.max_message_cache_size, self._client_options.max_user_dm_channel_count,
         )
 
         self._fabric.event_handler = dispatching_event_adapter_impl.DispatchingEventAdapterImpl(
-            self._fabric,
-            self.dispatch,
-            request_chunks_mode=self._client_options.chunk_mode,
+            self._fabric, self.dispatch, request_chunks_mode=self._client_options.chunk_mode,
         )
 
         self._fabric.http_api = http_api.HTTPAPIImpl(
@@ -124,7 +117,7 @@ class Client:
                 gateway_bot.session_start_limit.used,
                 gateway_bot.session_start_limit.remaining,
                 gateway_bot.session_start_limit.reset_at,
-                gateway_bot.session_start_limit.reset_after,
+                gateway_bot.session_start_limit.reset_at - datetime.datetime.now(tz=datetime.timezone.utc),
             )
 
             url = gateway_bot.url
@@ -177,10 +170,7 @@ class Client:
 
     async def _launch_shard(self, shard):
         self.logger.info("launching shard %s", shard.shard_id)
-        task = compat.asyncio.create_task(
-            self._run_shard(shard),
-            name=f"poll shard {shard.shard_id} for events",
-        )
+        task = compat.asyncio.create_task(self._run_shard(shard), name=f"poll shard {shard.shard_id} for events",)
         return shard.shard_id, task
 
     async def start(self):
@@ -205,9 +195,6 @@ class Client:
         gateway_tasks = []
         for shard_id, shard in self._fabric.gateways.items():
             self.logger.info("shutting down shard %s", shard_id)
-            shutdown_task = compat.asyncio.create_task(
-                shard.close(),
-                name=f"waiting for shard {shard_id} to close"
-            )
+            shutdown_task = compat.asyncio.create_task(shard.close(), name=f"waiting for shard {shard_id} to close")
             gateway_tasks.append(shutdown_task)
         await asyncio.wait(gateway_tasks, return_when=asyncio.ALL_COMPLETED)
