@@ -7,8 +7,8 @@ function do_export() {
     export "$*"
 }
 
-do_export CURRENT_VERSION_FILE="pyproject.toml"
-do_export CURRENT_VERSION_PATTERN="^version\s*=\s*\"\K[^\"]*"
+do_export CURRENT_VERSION_FILE="setup.py"
+do_export CURRENT_VERSION_PATTERN="^__version__\s*=\s*\"\K[^\"]*"
 
 do_export API_NAME="hikari"
 do_export GIT_SVC_HOST="gitlab.com"

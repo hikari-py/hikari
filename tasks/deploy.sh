@@ -10,7 +10,7 @@ function set-versions() {
 function deploy-to-pypi() {
     python setup.py sdist bdist_wheel
     set +x
-    twine upload --username="${PYPI_USER}" --password="${PYPI_PASS}" --repository-url=https://upload.pypi.org/legacy
+    twine upload --username="${PYPI_USER}" --password="${PYPI_PASS}" --repository-url=https://upload.pypi.org/legacy/ dist/*
     set -x
 }
 
@@ -64,7 +64,7 @@ function do-deployment() {
     old_version=$(grep -oP "${CURRENT_VERSION_PATTERN}" "${CURRENT_VERSION_FILE}")
     current_version=$(python tasks/make-version-string.py "${COMMIT_REF}")
 
-    pip install -e . [deployment_dependencies]
+    pip install -e .
 
     case "${COMMIT_REF}" in
         ${PROD_BRANCH})
