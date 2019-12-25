@@ -79,15 +79,17 @@ def failsafe_install(session, *args):
         raise ex
 
 
-@nox.session(python=False)
+@nox.session()
 def test(session) -> None:
     """Run unit tests in Pytest."""
+    failsafe_install(session, "-e", ".[test]")
     session.run("python", "-m", "pytest", *PYTEST_ARGS, *session.posargs, TEST_PATH)
 
 
-@nox.session(python=False)
+@nox.session()
 def documentation(session) -> None:
     """Generate documentation using Sphinx for the current branch."""
+    failsafe_install(session, "-e", ".[documentation]")
     session.env["SPHINXOPTS"] = SPHINX_OPTS
     tech_dir = pathify(DOCUMENTATION_DIR, TECHNICAL_DIR)
     shutil.rmtree(tech_dir, ignore_errors=True, onerror=lambda *_: None)
@@ -115,7 +117,7 @@ def sast(session) -> None:
 @nox.session()
 def safety(session) -> None:
     """Run safety checks against a vulnerability database using Safety."""
-    session.run("poetry", "update", "--no-dev", external=True)
+    failsafe_install(session, "-e", ".")
     failsafe_install(session, "safety")
     session.run("safety", "check")
 

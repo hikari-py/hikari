@@ -18,9 +18,9 @@
 .pages-activation:
   retry:
     max: 2
+  allow_failure: true
   variables:
     GIT_STRATEGY: none
-  allow_failure: false
   artifacts:
     paths:
       - public/
@@ -32,11 +32,9 @@
   image: python:3.8.0
   stage: test
   script:
-    - pip install poetry
-    - git clone ${CI_REPOSITORY_URL} -b ${TARGET_BRANCH} hikari --depth=1
-    - cd hikari
-    - poetry update
-    - poetry run nox -sdocumentation
+    - git clone ${CI_REPOSITORY_URL} -b ${TARGET_BRANCH} hikari_docs_${TARGET_BRANCH} --depth=1
+    - cd hikari_docs_${TARGET_BRANCH}
+    - nox -s documentation
     - rm ../public -rf && mkdir ../public
     - mv public "../public/${TARGET_BRANCH}"
 
