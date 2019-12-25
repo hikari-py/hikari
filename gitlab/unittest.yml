@@ -28,6 +28,11 @@
   extends: .test-env
   script:
     - nox -stest
+  artifacts:
+    paths:
+      - public/coverage
+    reports:
+      junit: public/tests.xml
 
 .nox-pip-install: &noxpipinstall
   extends: .test-env
@@ -56,9 +61,6 @@
     - bash tasks/retry-aborts.sh pip install nox
     - source tasks/config.sh
     - mkdir public || true
-  artifacts:
-    paths:
-      - public/coverage
   coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
 
 pytest-c3.7:

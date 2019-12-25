@@ -52,6 +52,7 @@ PYTEST_ARGS = [
     "--cov-report",
     "term",
     "--cov-report",
+    f"--junitxml:{ARTIFACT_DIR}/tests.xml",
     f"html:{ARTIFACT_DIR}/coverage/html",
     "--cov-branch",
     "--showlocals",
