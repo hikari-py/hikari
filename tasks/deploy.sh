@@ -8,29 +8,15 @@ function set-versions() {
 }
 
 function deploy-to-pypi() {
-    poetry build
+    python setup.py sdist bdist_wheel
     set +x
-    poetry publish --username="${PYPI_USER}" --password="${PYPI_PASS}" --repository=${POETRY_REPOSITORY_PROPERTY_NAME}
+    twine upload --username="${PYPI_USER}" --password="${PYPI_PASS}" --repository-url=https://upload.pypi.org/legacy
     set -x
 }
 
 function notify() {
     local version=${1}
     python tasks/notify.py "${version}" "${API_NAME}" "${PYPI_REPO}"
-}
-
-function create-changelog() {
-    pip install gcg # Git Changelog Generator
-    local changelog="./CHANGELOG"
-    echo "Generating ${changelog}."
-    echo "CHANGELOG" > ${changelog}
-    echo "=========" >> ${changelog}
-    echo >> ${changelog}
-    echo "Automatically generated from git history up to ${COMMIT_REF} at $(date) by CI." >> ${changelog}
-    echo >> ${changelog}
-    gcg -O rpm >> ${changelog}
-    echo >> ${changelog}
-    git add ${changelog}
 }
 
 function deploy-to-svc() {
@@ -52,9 +38,6 @@ function deploy-to-svc() {
     git remote set-url ${REMOTE_NAME} "${REPOSITORY_URL}"
     git config user.name "${CI_ROBOT_NAME}"
     git config user.email "${CI_ROBOT_EMAIL}"
-    git status
-    create-changelog
-    git diff
     git commit -am "Deployed ${current_version} ${SKIP_CI_COMMIT_PHRASE}" --allow-empty
     git push ${REMOTE_NAME} ${PROD_BRANCH}
     git tag "${current_version}" && git push ${REMOTE_NAME} "${current_version}"
@@ -81,7 +64,7 @@ function do-deployment() {
     old_version=$(grep -oP "${CURRENT_VERSION_PATTERN}" "${CURRENT_VERSION_FILE}")
     current_version=$(python tasks/make-version-string.py "${COMMIT_REF}")
 
-    poetry config repositories.${POETRY_REPOSITORY_PROPERTY_NAME} "${PYPI_REPO}"
+    pip install -e . [deployment_dependencies]
 
     case "${COMMIT_REF}" in
         ${PROD_BRANCH})

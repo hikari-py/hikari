@@ -32,8 +32,6 @@ do_export REMOTE_NAME="origin"
 
 do_export COMMIT_REF="${CI_COMMIT_REF_NAME}"
 
-do_export POETRY_REPOSITORY_PROPERTY_NAME="chosen_repo"
-
 cat > /dev/null << EOF
   SECURE VARIABLES TO DEFINE IN CI
   ================================

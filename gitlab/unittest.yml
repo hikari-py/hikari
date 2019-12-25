@@ -25,25 +25,25 @@
   image: python:3.9-rc
 
 .nox-test: &noxtest
-  extends: .poetry-test-env
+  extends: .test-env
   script:
-    - poetry run nox -stest
+    - nox -stest
 
 .nox-pip-install: &noxpipinstall
-  extends: .poetry-test-env
+  extends: .test-env
   script:
-    - poetry run nox -spip
+    - nox -spip
 
 .nox-pip-install-showtime: &noxpipinstallshowtime
-  extends: .poetry-test-env
+  extends: .test-env
   script:
-    - poetry run nox -spip -- --showtime
+    - nox -s pip -- --showtime
   stage: verify
   only:
     - master
     - staging 
 
-.poetry-test-env:
+.test-env:
   only:
     - branches
     - merge_requests
@@ -53,28 +53,13 @@
   stage: test
   before_script:
     - apt-get install -qy git gcc g++ make
-    - rm poetry.lock .cache/pip .venv/ .nox/ .pytest_cache/ -Rf || true
-    # Install html5lib explicitly from GitHub until https://github.com/python-poetry/poetry/issues/1733
-    # and/or https://github.com/html5lib/html5lib-python/issues/419 is resolved
-    - bash tasks/retry-aborts.sh python -m pip install poetry https://github.com/html5lib/html5lib-python/zipball/af19281fa28788830684b4c8fc6d0c588b092616
-    - bash tasks/retry-aborts.sh poetry update
+    - bash tasks/retry-aborts.sh pip install nox
     - source tasks/config.sh
     - mkdir public || true
   artifacts:
     paths:
       - public/coverage
   coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
-
-.nox-standalone-test-env:
-  only:
-    - branches
-    - merge_requests
-    - tags
-    - schedules
-  allow_failure: false
-  stage: test
-  before_script:
-    - bash tasks/retry-aborts.sh pip install nox
 
 pytest-c3.7:
   <<: *cpython37
@@ -96,10 +81,18 @@ setup-c3.8-dryrun:
   <<: *cpython38
   <<: *noxpipinstall
 
+setup-c3.9-dryrun:
+  <<: *cpython39
+  <<: *noxpipinstall
+
 verify-c3.7-pypi:
   <<: *cpython37
   <<: *noxpipinstallshowtime
 
 verify-c3.8-pypi:
   <<: *cpython38
+  <<: *noxpipinstallshowtime
+
+verify-c3.9-pypi:
+  <<: *cpython39
   <<: *noxpipinstallshowtime
