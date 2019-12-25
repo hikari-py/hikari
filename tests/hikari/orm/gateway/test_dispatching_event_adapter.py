@@ -20,7 +20,7 @@
 import asyncmock as mock
 import pytest
 
-from hikari.orm import dispatching_event_adapter
+from hikari.orm.gateway import dispatching_event_adapter
 from hikari.orm import fabric
 
 

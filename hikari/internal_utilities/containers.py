@@ -132,8 +132,6 @@ EMPTY_COLLECTION: typing.Collection = tuple()
 #: An immutable ordered mapping of key elements to value elements with zero size.
 EMPTY_DICT: typing.Mapping = types.MappingProxyType({})
 
-DictImplT = typing.TypeVar("DictImplT", typing.Dict, dict)
-DictFactoryT = typing.Union[typing.Type[DictImplT], typing.Callable[[], DictImplT]]
 
 __all__ = (
     "ScalarT",
@@ -144,6 +142,4 @@ __all__ = (
     "EMPTY_SET",
     "EMPTY_COLLECTION",
     "EMPTY_DICT",
-    "DictImplT",
-    "DictFactoryT",
 )

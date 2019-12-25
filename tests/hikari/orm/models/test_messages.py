@@ -22,11 +22,13 @@ from unittest import mock
 import pytest
 
 from hikari.orm import fabric
-from hikari.orm import state_registry
+from hikari.orm.state import base_registry
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
+from hikari.orm.models import members
 from hikari.orm.models import messages
 from hikari.orm.models import users
+from hikari.orm.models import webhooks
 from tests.hikari import _helpers
 
 
@@ -58,7 +60,7 @@ def mock_message(mock_user):
 
 @pytest.fixture()
 def mock_state_registry():
-    return mock.MagicMock(spec_set=state_registry.BaseStateRegistry)
+    return mock.MagicMock(spec_set=base_registry.BaseRegistry)
 
 
 @pytest.fixture()
@@ -91,7 +93,7 @@ class TestMessage:
         mock_message["guild_id"] = "909090"
         mock_message["webhook_id"] = object()  # we don't care what this really is
         messages.Message(fabric_obj, mock_message)
-        fabric_obj.state_registry.parse_webhook.assert_called_with(mock_user)
+        fabric_obj.state_registry.parse_webhook_user.assert_called_with(mock_user)
         fabric_obj.state_registry.parse_user.assert_not_called()
         fabric_obj.state_registry.parse_member.assert_not_called()
 
@@ -136,6 +138,15 @@ class TestMessage:
         # noinspection PyTypeChecker
         message_obj.update_state({"reactions": [{"id": None, "value": "\N{OK HAND SIGN}"}]})
         fabric_obj.state_registry.parse_reaction.assert_called_once_with({"id": None, "value": "\N{OK HAND SIGN}"})
+
+    @pytest.mark.parametrize(
+        ("is_webhook", "user_type"),
+        [(True, webhooks.WebhookUser), (False, users.User), (False, users.OAuth2User), (False, members.Member),],
+    )
+    def test_is_webhook(self, mock_message, fabric_obj, is_webhook, user_type):
+        message_obj = messages.Message(fabric_obj, mock_message)
+        message_obj.author = _helpers.mock_model(user_type)
+        assert message_obj.is_webhook is is_webhook
 
     def test_Message_complex_test_data(self, mock_user, fabric_obj):
         message_obj = messages.Message(

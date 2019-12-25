@@ -31,15 +31,15 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
-from hikari.orm import state_registry
 from hikari.orm.models import applications
 from hikari.orm.models import audit_logs
+from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import connections
 from hikari.orm.models import emojis
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
-from hikari.orm.models import bases
+from hikari.orm.models import integrations
 from hikari.orm.models import invites
 from hikari.orm.models import members
 from hikari.orm.models import messages
@@ -49,9 +49,10 @@ from hikari.orm.models import roles
 from hikari.orm.models import users
 from hikari.orm.models import voices
 from hikari.orm.models import webhooks
+from hikari.orm.state import base_registry
 
 
-class StateRegistryImpl(state_registry.BaseStateRegistry):
+class StateRegistryImpl(base_registry.BaseRegistry):
     """
     Registry for global state parsing, querying, and management.
 
@@ -101,7 +102,8 @@ class StateRegistryImpl(state_registry.BaseStateRegistry):
         #: Our logger.
         self.logger = loggers.get_named_logger(self)
 
-    def _prepare_unknown_with_callback(self, id, resolver, callback, *resolver_args, **resolver_kwargs):
+    @staticmethod
+    def _prepare_unknown_with_callback(id, resolver, callback, *resolver_args, **resolver_kwargs):
         obj = bases.UnknownObject(id, functools.partial(resolver, *resolver_args, **resolver_kwargs))
         callback is not None and obj.add_done_callback(callback)
         return obj
@@ -352,6 +354,9 @@ class StateRegistryImpl(state_registry.BaseStateRegistry):
     def parse_audit_log(self, audit_log_payload: containers.DiscordObjectT) -> audit_logs.AuditLog:
         return audit_logs.AuditLog(self.fabric, audit_log_payload)
 
+    def parse_ban(self, ban_payload: containers.DiscordObjectT) -> guilds.Ban:
+        return guilds.Ban(self.fabric, ban_payload)
+
     def parse_channel(
         self, channel_payload: containers.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild] = None
     ) -> channels.Channel:
@@ -426,6 +431,9 @@ class StateRegistryImpl(state_registry.BaseStateRegistry):
             self._guilds[guild_id] = guild_obj
 
         return guild_obj
+
+    def parse_integration(self, integration_payload: containers.DiscordObjectT) -> integrations.Integration:
+        return integrations.Integration(self.fabric, integration_payload)
 
     def parse_invite(self, invite_payload: containers.DiscordObjectT) -> invites.Invite:
         return invites.parse_invite(self.fabric, invite_payload)
@@ -540,9 +548,10 @@ class StateRegistryImpl(state_registry.BaseStateRegistry):
         return existing_user
 
     def parse_webhook(self, webhook_payload: containers.DiscordObjectT) -> webhooks.Webhook:
-        # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
-        # so that it isn't coupling dependent classes of this one to the model implementation as much.
         return webhooks.Webhook(self.fabric, webhook_payload)
+
+    def parse_webhook_user(self, webhook_user_payload: containers.DiscordObjectT) -> webhooks.WebhookUser:
+        return webhooks.WebhookUser(webhook_user_payload)
 
     def set_guild_unavailability(self, guild_obj: guilds.Guild, is_unavailable: bool) -> None:
         # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
@@ -611,7 +620,7 @@ class StateRegistryImpl(state_registry.BaseStateRegistry):
     def update_message(
         self, payload: containers.DiscordObjectT
     ) -> typing.Optional[typing.Tuple[messages.Message, messages.Message]]:
-        message_id = int(payload["message_id"])
+        message_id = int(payload["id"])
         if message_id in self._message_cache:
             new_message = self._message_cache.get(message_id)
             old_message = new_message.copy()

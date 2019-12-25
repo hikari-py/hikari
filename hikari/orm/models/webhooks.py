@@ -24,8 +24,10 @@ from __future__ import annotations
 import enum
 import typing
 
+from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
+from hikari.orm import fabric
 from hikari.orm.models import bases
 from hikari.orm.models import users
 
@@ -35,10 +37,49 @@ class WebhookType(bases.BestEffortEnumMixin, enum.IntEnum):
     The type of a webhook.
     """
 
-    # Incoming webhooks that can be posted using Discord's token endpoint.
+    #: Incoming webhooks that can be posted using Discord's token endpoint.
     INCOMING = 1
-    # Channel follows webhooks that are posted to by discord announcement channels.
+    #: Channel follows webhooks that are posted to by discord announcement channels.
     CHANNEL_FOLLOWER = 2
+
+
+class WebhookUser(users.BaseUser):
+    """
+    The user representation of a webhook.
+    """
+
+    __slots__ = ("id", "username", "discriminator", "avatar_hash")
+
+    #: The ID of the webhook user.
+    #:
+    #: :type: :class:`int`
+    id: int
+
+    #: The username of the webhook.
+    #:
+    #: :type: :class:`str`
+    username: str
+
+    #: The discriminator of the webhook user.
+    #:
+    #: :type: :class:`int`
+    discriminator: int
+
+    #: The avatar hash of the webhook.
+    #:
+    #: :type: :class:`str`
+    avatar_hash: str
+
+    def __init__(self, payload: containers.DiscordObjectT) -> None:
+        self.id = int(payload["id"])
+        self.username = payload["username"]
+        self.discriminator = int(payload["discriminator"])
+        self.avatar_hash = payload["avatar"]
+
+    @property
+    def is_bot(self) -> bool:
+        """Webhooks are always bots."""
+        return True
 
 
 class Webhook(bases.BaseModelWithFabric, bases.SnowflakeMixin):
@@ -51,9 +92,13 @@ class Webhook(bases.BaseModelWithFabric, bases.SnowflakeMixin):
     __copy_by_ref__ = ("user",)
 
     #: The ID of the guild that the webhook is in.
+    #:
+    #: :type: :class:`int`
     guild_id: int
 
     #: The ID of the channel that the webhook is in.
+    #:
+    #: :type: :class:`int`
     channel_id: int
 
     #: The ID of the webhook.
@@ -68,8 +113,8 @@ class Webhook(bases.BaseModelWithFabric, bases.SnowflakeMixin):
 
     #: The optional user for the webhook.
     #:
-    #: :type: :class:`hikari.core.models.users.User` or `None`
-    user: typing.Optional[users.User]
+    #: :type: :class:`WebhookUser` or `None`
+    user: typing.Optional[WebhookUser]
 
     #: The name of the webhook.
     #:
@@ -88,13 +133,15 @@ class Webhook(bases.BaseModelWithFabric, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, fabric_obj, payload):
+    def __init__(
+        self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT, guild_id: typing.Optional[int] = None
+    ) -> None:
         self._fabric = fabric_obj
         self.id = int(payload["id"])
         self.type = transformations.try_cast(payload.get("type"), WebhookType)
-        self.guild_id = int(payload["guild_id"])
+        self.guild_id = int(payload.get("guild_id", guild_id))
         self.channel_id = int(payload["channel_id"])
-        self.user = transformations.nullable_cast(payload.get("user"), fabric_obj.state_registry.parse_user)
+        self.user = transformations.nullable_cast(payload.get("user"), fabric_obj.state_registry.parse_webhook_user)
         self.name = payload.get("name")
         self.avatar_hash = payload.get("avatar_hash")
         self.token = payload.get("token")
@@ -103,5 +150,4 @@ class Webhook(bases.BaseModelWithFabric, bases.SnowflakeMixin):
 #: A :class:`Webhook` instance, or the :class:`int`/:class:`str` ID of one.
 WebhookLikeT = typing.Union[bases.RawSnowflakeT, Webhook]
 
-
-__all__ = ["Webhook", "WebhookLikeT"]
+__all__ = ["WebhookUser", "Webhook", "WebhookLikeT"]

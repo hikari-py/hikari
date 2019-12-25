@@ -28,10 +28,10 @@ import typing
 
 from hikari.net import gateway as _gateway
 from hikari.net import http_api as _http_client
-from hikari.orm import chunker as _chunker
-from hikari.orm import event_handler as _event_handler
-from hikari.orm import http_adapter as _http_adapter
-from hikari.orm import state_registry as _state_registry
+from hikari.orm.gateway import base_chunker as _chunker
+from hikari.orm.gateway import base_event_handler as _event_handler
+from hikari.orm.http import base_http_adapter as _http_adapter
+from hikari.orm.state import base_registry as _state_registry
 
 
 @dataclasses.dataclass()
@@ -47,7 +47,7 @@ class Fabric:
 
     #: Application state information. This stores information about any users the application
     #: can see, any guilds it is in, any channels that are available, and the likes.
-    state_registry: _state_registry.BaseStateRegistry = dataclasses.field(default=NotImplemented)
+    state_registry: _state_registry.BaseRegistry = dataclasses.field(default=NotImplemented)
 
     #: A mapping of shard ID's to gateways that are running.
     #:
@@ -55,7 +55,7 @@ class Fabric:
     gateways: typing.Dict[typing.Optional[int], _gateway.GatewayClient] = dataclasses.field(default_factory=dict)
 
     #: The base HTTP client for making HTTP requests.
-    http_api: _http_client.HTTPAPI = dataclasses.field(default=NotImplemented)
+    http_api: _http_client.HTTPAPIImpl = dataclasses.field(default=NotImplemented)
 
     #: HTTP adapter bridge component to convert raw HTTP call responses to their ORM
     #: representation.

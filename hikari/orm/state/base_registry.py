@@ -28,12 +28,13 @@ import typing
 from hikari.internal_utilities import containers
 from hikari.orm.models import applications
 from hikari.orm.models import audit_logs
+from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import connections
 from hikari.orm.models import emojis
 from hikari.orm.models import gateway_bot
 from hikari.orm.models import guilds
-from hikari.orm.models import bases
+from hikari.orm.models import integrations
 from hikari.orm.models import invites
 from hikari.orm.models import members
 from hikari.orm.models import messages
@@ -45,7 +46,7 @@ from hikari.orm.models import voices
 from hikari.orm.models import webhooks
 
 
-class BaseStateRegistry(abc.ABC):
+class BaseRegistry(abc.ABC):
     """
     Provides the relational interface between different types of objects and the overall cache.
 
@@ -482,6 +483,19 @@ class BaseStateRegistry(abc.ABC):
             a :class:`hikari.orm.models.audit_logs.AuditLog` object.
         """
 
+    @abc.abstractmethod
+    def parse_ban(self, ban_payload: containers.DiscordObjectT) -> guilds.Ban:
+        """
+        Parse a guild ban payload into an object.
+
+        Args:
+            ban_payload:
+                The ban payload to parse.
+
+        Returns:
+            A :class:`hikari.orm.models.guilds.Ban` object.
+        """
+
     @typing.overload
     def parse_channel(self, channel_payload: containers.DiscordObjectT, guild_obj: None) -> channels.Channel:
         ...
@@ -573,6 +587,19 @@ class BaseStateRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.guilds.Guild` object.
+        """
+
+    @abc.abstractmethod
+    def parse_integration(self, integration_payload: containers.DiscordObjectT) -> integrations.Integration:
+        """
+        Parse a full integration payload.
+
+        Params:
+            integration_payload:
+                The payload of the integration.
+
+        Returns:
+            A :class:`hikari.orm.models.integrations.Integration` object.
         """
 
     @abc.abstractmethod
@@ -741,6 +768,19 @@ class BaseStateRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.webhooks.Webhook` object.
+        """
+
+    @abc.abstractmethod
+    def parse_webhook_user(self, webhook_user_payload: containers.DiscordObjectT) -> webhooks.WebhookUser:
+        """
+        Parses a webhook user payload into a workable object.
+
+        Args:
+            webhook_user_payload:
+                the payload of the webhook.
+
+        Returns:
+            a :class:`hikari.orm.models.webhooks.WebhookUser` object.
         """
 
     @abc.abstractmethod
@@ -917,4 +957,4 @@ class BaseStateRegistry(abc.ABC):
         """
 
 
-__all__ = ["BaseStateRegistry"]
+__all__ = ["BaseRegistry"]

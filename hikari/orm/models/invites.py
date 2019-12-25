@@ -30,11 +30,11 @@ from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
-from hikari.orm import state_registry
+from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
-from hikari.orm.models import bases
 from hikari.orm.models import users
+from hikari.orm.state import base_registry
 
 
 class InviteTargetUserType(bases.BestEffortEnumMixin, enum.IntEnum):
@@ -127,7 +127,7 @@ class InviteWithMetadata(Invite):
 
     __slots__ = ("uses", "max_uses", "max_age", "is_temporary", "created_at", "is_revoked")
 
-    _state: state_registry.BaseStateRegistry
+    _state: base_registry.BaseRegistry
 
     #: The number of times the invite has been used.
     #:

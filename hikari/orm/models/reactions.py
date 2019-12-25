@@ -22,8 +22,8 @@ Reactions to a message.
 from __future__ import annotations
 
 from hikari.internal_utilities import reprs
-from hikari.orm.models import emojis as _emoji
 from hikari.orm.models import bases
+from hikari.orm.models import emojis as _emoji
 from hikari.orm.models import messages as _message
 
 

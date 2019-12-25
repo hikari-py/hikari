@@ -16,16 +16,9 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 [build-system]
-requires        = ["poetry>=0.12"]
-build-backend   = "poetry.masonry.api"
+requires = ["wheel", "setuptools"]
+build-backend = "setuptools.build_meta"
 
-[tool.poetry]
-name            = "hikari"
-version         = "0.0.65"
-description     = "A sane Discord API for Python 3 built on asyncio and good intentions"
-authors         = ["Nekokatt <nekoka.tt@outlook.com>"]
-license         = "LGPL-3.0-ONLY"
-readme          = "README.md"
 classifiers     = [
     "Development Status :: 2 - Pre-Alpha",
     "Framework :: AsyncIO",
@@ -44,36 +37,6 @@ classifiers     = [
 packages        = [
     {include = "hikari"}
 ]
-
-[tool.poetry.dependencies]
-python                   = ">=3.7.4,<=3.9"
-aiofiles                 = "~0.4"
-aiohttp                  = "~3.6"
-
-[tool.poetry.dev-dependencies]
-# Utilities used during unit tests.
-asyncmock                = "~0.4"
-async-timeout            = "~3.0"
-
-# PyTest related packages.
-coverage                 = "~5.0"
-pytest                   = "~5.3"
-pytest-asyncio           = "~0.10"
-pytest-cov               = "~2.8"
-pytest-html              = "~2.0"
-pytest-testdox           = "~1.2"
-
-# Used in CI stages to manage firing webhooks and getting PyPi deployment information.
-requests                 = "~2.22"
-
-# Sphinx requirements for documentation generation.
-Jinja2                   = "~2.10"
-sphinx                   = "~2.3"
-sphinx-bootstrap-theme   = "~0.7"
-sphinx-autodoc-typehints = "~1.10"
-
-# Projects on continual release that can be expected to remain working.
-nox                      = "*"
 
 [tool.black]
 line-length     = 120

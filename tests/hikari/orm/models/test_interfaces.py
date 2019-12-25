@@ -25,6 +25,7 @@ import typing
 
 import pytest
 
+from hikari.internal_utilities import containers
 from hikari.orm.models import bases
 from tests.hikari import _helpers
 
@@ -417,3 +418,66 @@ class TestUnknownObject:
 
         assert call_count == 1
         assert received_result == 6
+
+
+@dataclasses.dataclass()
+class DummyModel(bases.MarshalMixin):
+    __slots__ = ("is_a_dummy",)
+
+    is_a_dummy: bool
+
+    def __init__(self, is_a_dummy: bool):
+        self.is_a_dummy = is_a_dummy
+
+
+@pytest.fixture()
+def mock_dict():
+    return bases.DictFactory(name=DummyNamedEnum(9), model=DummyModel(is_a_dummy=True), ok="Test", neko=18)
+
+
+@pytest.mark.model
+def test_DictFactory_setitem(mock_dict):
+    mock_dict["test"] = DummyNamedEnum(27)
+    mock_dict["test_model"] = DummyModel(False)
+    assert mock_dict["test"] == 27
+    assert mock_dict["test_model"] == {"is_a_dummy": False}
+
+
+@pytest.mark.model
+def test_DictFactory_init(mock_dict):
+    assert mock_dict == {"name": 9, "model": {"is_a_dummy": True}, "ok": "Test", "neko": 18}
+
+
+@dataclasses.dataclass()
+class DummyModel2(bases.MarshalMixin):
+    __slots__ = ("id", "name", "nekos", "model", "optional")
+    id: int
+    name: str
+    nekos: typing.List[int]
+    model: DummyModel
+    optional: typing.Optional[str]
+
+    def __init__(self, id: int, name: str, nekos: typing.List[int], model: containers.DiscordObjectT, optional=None):
+        self.id = id
+        self.name = name
+        self.nekos = nekos
+        self.model = DummyModel.from_dict(model)
+        self.optional = optional
+
+
+@pytest.mark.model
+def test_MarshalMixin_from_dict():
+    mock_object = DummyModel2.from_dict(
+        {"id": 23123, "name": "Nyaa!", "nekos": [2, 6, 3], "model": {"is_a_dummy": True}}
+    )
+    assert mock_object.id == 23123
+    assert mock_object.name == "Nyaa!"
+    assert mock_object.nekos == [2, 6, 3]
+    assert mock_object.optional is None
+    assert isinstance(mock_object, DummyModel2)
+
+
+@pytest.mark.model
+def test_MarshalMixin_to_dict():
+    mock_object = DummyModel2(1231, "boo", [2, 6, 3], {"is_a_dummy": True})
+    assert mock_object.to_dict() == {"id": 1231, "name": "boo", "nekos": [2, 6, 3], "model": {"is_a_dummy": True}}
