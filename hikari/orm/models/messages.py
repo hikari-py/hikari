@@ -30,10 +30,10 @@ from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm import fabric
+from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import embeds
 from hikari.orm.models import guilds
-from hikari.orm.models import bases
 from hikari.orm.models import media
 from hikari.orm.models import members
 from hikari.orm.models import reactions
@@ -108,13 +108,9 @@ class MessageFlag(bases.BestEffortEnumMixin, enum.IntFlag):
     URGENT = 0x10
 
 
-# Note: a lot of fields exist in the Message implementation that are not included here. Much of this information is
-# able to be inferred from the information we are provided with, or is just unnecessary. For example, Nonce is omitted
-# as there is no general use for it. Mentions can be found by scanning the message with a regular expression. Call
-# information is not documented. Timestamp is pointless as it is able to be found from the ID anyway.
-
 #: A valid message author.
-AuthorT = typing.Union[users.User, users.OAuth2User, members.Member, webhooks.Webhook]
+
+AuthorT = typing.Union[users.User, users.OAuth2User, members.Member, webhooks.WebhookUser]
 
 
 class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
@@ -269,7 +265,7 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
                 payload["member"], payload["author"], self.guild
             )
         elif "webhook_id" in payload:
-            self.author = self._fabric.state_registry.parse_webhook(payload["author"])
+            self.author = self._fabric.state_registry.parse_webhook_user(payload["author"])
         elif "author" in payload:
             self.author = typing.cast(AuthorT, self._fabric.state_registry.parse_user(payload["author"]))
 
@@ -320,6 +316,11 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         # needed for code that is essentially the same.
         # noinspection PyTypeChecker
         return self._fabric.state_registry.get_channel_by_id(self.channel_id)
+
+    @property
+    def is_webhook(self) -> bool:
+        """True if the message was from a webhook."""
+        return isinstance(self.author, webhooks.WebhookUser)
 
 
 class MessageActivity:

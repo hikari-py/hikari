@@ -21,17 +21,16 @@ from unittest import mock
 import pytest
 
 from hikari.orm import fabric
-from hikari.orm import state_registry
+from hikari.orm.state import base_registry
 from hikari.orm.models import audit_logs
 from hikari.orm.models import channels
 from hikari.orm.models import overwrites
-from hikari.orm.models import roles
 from tests.hikari import _helpers
 
 
 @pytest.fixture()
 def mock_state_registry():
-    return mock.MagicMock(spec_set=state_registry.BaseStateRegistry)
+    return mock.MagicMock(spec_set=base_registry.BaseRegistry)
 
 
 @pytest.fixture()
@@ -273,7 +272,7 @@ def test_ChannelOverwriteAuditLogEntryInfo():
     )
     assert isinstance(info_obj, audit_logs.ChannelOverwriteAuditLogEntryInfo)
     assert info_obj.id == 115590097100865541
-    assert info_obj.type.value is roles.Role
+    assert info_obj.type is overwrites.OverwriteEntityType.ROLE
 
 
 @pytest.mark.model

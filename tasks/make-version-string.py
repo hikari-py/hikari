@@ -44,18 +44,17 @@ with requests.get(pypi_json_url) as resp:
 
     if resp.status_code == 404:
         print("Package not yet been deployed?", file=sys.stderr)
-        data = []
+        releases = []
     else:
         resp.raise_for_status()
         root = resp.json()
         releases = root["releases"]
-        print("Releases", releases, file=sys.stderr)
         current_version = root["info"]["version"]
 
 
 # Inspect the version in pyproject.toml
-with open("pyproject.toml") as fp:
-    previous_version = re.findall(r"^version\s*=\s*\"(.*?)\"", fp.read(), re.M)[0]
+with open("setup.py") as fp:
+    previous_version = re.findall(r"^__version__\s*=\s*\"(.*?)\"", fp.read(), re.M)[0]
     previous_version_parts = re.match(r"(\d+)\.(\d+)\.(\d+)", previous_version)
     previous_major = int(previous_version_parts.group(1)) if previous_version_parts else 0
     previous_minor = int(previous_version_parts.group(2)) if previous_version_parts else 0

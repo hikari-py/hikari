@@ -21,14 +21,14 @@ from unittest import mock
 import pytest
 
 from hikari.orm import fabric
-from hikari.orm import state_registry
+from hikari.orm.state import base_registry
 from hikari.orm.models import applications
 from tests.hikari import _helpers
 
 
 @pytest.fixture
 def fabric_obj():
-    mock_state_registry = mock.MagicMock(spec_set=state_registry.BaseStateRegistry)
+    mock_state_registry = mock.MagicMock(spec_set=base_registry.BaseRegistry)
     return fabric.Fabric(state_registry=mock_state_registry)
 
 

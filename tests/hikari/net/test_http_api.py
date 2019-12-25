@@ -42,7 +42,7 @@ PyTest Fixtures
 """
 
 
-class ClientMock(_http_api.HTTPAPI):
+class ClientMock(_http_api.HTTPAPIImpl):
     """
     Useful for HTTP client calls that need to mock the HTTP connection quickly in a fixture.
 
@@ -86,7 +86,7 @@ Constructor Unit Tests
 @pytest.mark.asyncio
 class TestConstructor:
     async def test_initialize_http_behaves_as_expected_and_does_not_fail(self, event_loop):
-        c = _http_api.HTTPAPI(loop=event_loop, token="1a2b3c4d.1a2b3c4d")
+        c = _http_api.HTTPAPIImpl(loop=event_loop, token="1a2b3c4d.1a2b3c4d")
         assert c is not None
 
 

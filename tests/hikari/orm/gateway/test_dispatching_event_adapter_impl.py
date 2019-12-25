@@ -25,11 +25,12 @@ import asyncmock as mock
 import pytest
 
 from hikari.net import gateway as _gateway
-from hikari.orm import chunker as _chunker
-from hikari.orm import dispatching_event_adapter_impl
-from hikari.orm import events
+from hikari.orm.gateway import base_chunker as _chunker
+from hikari.orm.gateway import dispatching_event_adapter_impl
+from hikari.orm import gateway
 from hikari.orm import fabric
-from hikari.orm import state_registry
+from hikari.orm.gateway import event_types
+from hikari.orm.state import base_registry
 from hikari.orm.models import channels
 from hikari.orm.models import emojis
 from hikari.orm.models import guilds
@@ -48,7 +49,7 @@ def logger_impl():
 
 @pytest.fixture()
 def state_registry_impl():
-    return mock.MagicMock(spec_set=state_registry.BaseStateRegistry)
+    return mock.MagicMock(spec_set=base_registry.BaseRegistry)
 
 
 @pytest.fixture()
@@ -147,19 +148,21 @@ class TestDispatchingEventAdapterImpl:
         payload = {"code": 123, "reason": "test"}
         await adapter_impl.handle_disconnect(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.DISCONNECT, gateway_impl, payload.get("code"), payload.get("reason"))
+        dispatch_impl.assert_called_with(
+            event_types.EventType.DISCONNECT, gateway_impl, payload.get("code"), payload.get("reason")
+        )
 
     @pytest.mark.asyncio
     async def test_handle_connect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
         await adapter_impl.handle_connect(gateway_impl, {})
-        dispatch_impl.assert_called_with(events.CONNECT, gateway_impl)
+        dispatch_impl.assert_called_with(event_types.EventType.CONNECT, gateway_impl)
 
     @pytest.mark.asyncio
     async def test_handle_ready_dispatches_event(
         self, discord_ready_payload, adapter_impl, gateway_impl, dispatch_impl
     ):
         await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
-        dispatch_impl.assert_called_with(events.READY, gateway_impl)
+        dispatch_impl.assert_called_with(event_types.EventType.READY, gateway_impl)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -207,56 +210,56 @@ class TestDispatchingEventAdapterImpl:
     async def test_handle_invalid_session_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
         await adapter_impl.handle_invalid_session(gateway_impl, {})
 
-        dispatch_impl.assert_called_with(events.INVALID_SESSION, gateway_impl)
+        dispatch_impl.assert_called_with(event_types.EventType.INVALID_SESSION, gateway_impl)
 
     @pytest.mark.asyncio
     async def test_handle_reconnect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
         await adapter_impl.handle_reconnect(gateway_impl, ...)
 
-        dispatch_impl.assert_called_with(events.RECONNECT, gateway_impl)
+        dispatch_impl.assert_called_with(event_types.EventType.RECONNECT, gateway_impl)
 
     @pytest.mark.asyncio
     async def test_handle_resume_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
         await adapter_impl.handle_resumed(gateway_impl, ...)
 
-        dispatch_impl.assert_called_with(events.RESUME, gateway_impl)
+        dispatch_impl.assert_called_with(event_types.EventType.RESUME, gateway_impl)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         ["handler_name", "raw_event_expected"],
         [
-            ("handle_channel_create", events.RAW_CHANNEL_CREATE),
-            ("handle_channel_update", events.RAW_CHANNEL_UPDATE),
-            ("handle_channel_delete", events.RAW_CHANNEL_DELETE),
-            ("handle_channel_pins_update", events.RAW_CHANNEL_PINS_UPDATE),
-            ("handle_guild_create", events.RAW_GUILD_CREATE),
-            ("handle_guild_update", events.RAW_GUILD_UPDATE),
-            ("handle_guild_delete", events.RAW_GUILD_DELETE),
-            ("handle_guild_ban_add", events.RAW_GUILD_BAN_ADD),
-            ("handle_guild_ban_remove", events.RAW_GUILD_BAN_REMOVE),
-            ("handle_guild_emojis_update", events.RAW_GUILD_EMOJIS_UPDATE),
-            ("handle_guild_integrations_update", events.RAW_GUILD_INTEGRATIONS_UPDATE),
-            ("handle_guild_member_add", events.RAW_GUILD_MEMBER_ADD),
-            ("handle_guild_member_update", events.RAW_GUILD_MEMBER_UPDATE),
-            ("handle_guild_member_remove", events.RAW_GUILD_MEMBER_REMOVE),
-            ("handle_guild_members_chunk", events.RAW_GUILD_MEMBERS_CHUNK),
-            ("handle_guild_role_create", events.RAW_GUILD_ROLE_CREATE),
-            ("handle_guild_role_update", events.RAW_GUILD_ROLE_UPDATE),
-            ("handle_guild_role_delete", events.RAW_GUILD_ROLE_DELETE),
-            ("handle_message_create", events.RAW_MESSAGE_CREATE),
-            ("handle_message_update", events.RAW_MESSAGE_UPDATE),
-            ("handle_message_delete", events.RAW_MESSAGE_DELETE),
-            ("handle_message_delete_bulk", events.RAW_MESSAGE_DELETE_BULK),
-            ("handle_message_reaction_add", events.RAW_MESSAGE_REACTION_ADD),
-            ("handle_message_reaction_remove", events.RAW_MESSAGE_REACTION_REMOVE),
-            ("handle_message_reaction_remove_all", events.RAW_MESSAGE_REACTION_REMOVE_ALL),
-            ("handle_presence_update", events.RAW_PRESENCE_UPDATE),
-            ("handle_typing_start", events.RAW_TYPING_START),
-            ("handle_user_update", events.RAW_USER_UPDATE),
-            ("handle_message_reaction_remove", events.RAW_MESSAGE_REACTION_REMOVE),
-            ("handle_voice_state_update", events.RAW_VOICE_STATE_UPDATE),
-            ("handle_voice_server_update", events.RAW_VOICE_SERVER_UPDATE),
-            ("handle_webhooks_update", events.RAW_WEBHOOKS_UPDATE),
+            ("handle_channel_create", event_types.EventType.RAW_CHANNEL_CREATE),
+            ("handle_channel_update", event_types.EventType.RAW_CHANNEL_UPDATE),
+            ("handle_channel_delete", event_types.EventType.RAW_CHANNEL_DELETE),
+            ("handle_channel_pins_update", event_types.EventType.RAW_CHANNEL_PINS_UPDATE),
+            ("handle_guild_create", event_types.EventType.RAW_GUILD_CREATE),
+            ("handle_guild_update", event_types.EventType.RAW_GUILD_UPDATE),
+            ("handle_guild_delete", event_types.EventType.RAW_GUILD_DELETE),
+            ("handle_guild_ban_add", event_types.EventType.RAW_GUILD_BAN_ADD),
+            ("handle_guild_ban_remove", event_types.EventType.RAW_GUILD_BAN_REMOVE),
+            ("handle_guild_emojis_update", event_types.EventType.RAW_GUILD_EMOJIS_UPDATE),
+            ("handle_guild_integrations_update", event_types.EventType.RAW_GUILD_INTEGRATIONS_UPDATE),
+            ("handle_guild_member_add", event_types.EventType.RAW_GUILD_MEMBER_ADD),
+            ("handle_guild_member_update", event_types.EventType.RAW_GUILD_MEMBER_UPDATE),
+            ("handle_guild_member_remove", event_types.EventType.RAW_GUILD_MEMBER_REMOVE),
+            ("handle_guild_members_chunk", event_types.EventType.RAW_GUILD_MEMBERS_CHUNK),
+            ("handle_guild_role_create", event_types.EventType.RAW_GUILD_ROLE_CREATE),
+            ("handle_guild_role_update", event_types.EventType.RAW_GUILD_ROLE_UPDATE),
+            ("handle_guild_role_delete", event_types.EventType.RAW_GUILD_ROLE_DELETE),
+            ("handle_message_create", event_types.EventType.RAW_MESSAGE_CREATE),
+            ("handle_message_update", event_types.EventType.RAW_MESSAGE_UPDATE),
+            ("handle_message_delete", event_types.EventType.RAW_MESSAGE_DELETE),
+            ("handle_message_delete_bulk", event_types.EventType.RAW_MESSAGE_DELETE_BULK),
+            ("handle_message_reaction_add", event_types.EventType.RAW_MESSAGE_REACTION_ADD),
+            ("handle_message_reaction_remove", event_types.EventType.RAW_MESSAGE_REACTION_REMOVE),
+            ("handle_message_reaction_remove_all", event_types.EventType.RAW_MESSAGE_REACTION_REMOVE_ALL),
+            ("handle_presence_update", event_types.EventType.RAW_PRESENCE_UPDATE),
+            ("handle_typing_start", event_types.EventType.RAW_TYPING_START),
+            ("handle_user_update", event_types.EventType.RAW_USER_UPDATE),
+            ("handle_message_reaction_remove", event_types.EventType.RAW_MESSAGE_REACTION_REMOVE),
+            ("handle_voice_state_update", event_types.EventType.RAW_VOICE_STATE_UPDATE),
+            ("handle_voice_server_update", event_types.EventType.RAW_VOICE_SERVER_UPDATE),
+            ("handle_webhooks_update", event_types.EventType.RAW_WEBHOOKS_UPDATE),
         ],
     )
     async def test_raw_event_handler(self, gateway_impl, dispatch_impl, adapter_impl, handler_name, raw_event_expected):
@@ -289,7 +292,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_channel_create(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_CHANNEL_CREATE, channel_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_CHANNEL_CREATE, channel_obj)
 
     @pytest.mark.asyncio
     async def test_handle_channel_create_for_guild_channel_in_unknown_guild_does_not_dispatch(
@@ -302,7 +305,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_CHANNEL_CREATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_CHANNEL_CREATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_channel_create_for_dm_channel_dispatches_DM_CHANNEL_CREATE(
@@ -315,7 +318,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_channel_create(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.DM_CHANNEL_CREATE, channel_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.DM_CHANNEL_CREATE, channel_obj)
 
     @pytest.mark.asyncio
     async def test_handle_channel_create_parses_channel(self, adapter_impl, gateway_impl, fabric_impl):
@@ -339,7 +342,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_CHANNEL_UPDATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_CHANNEL_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_channel_update_for_valid_dm_channel_update_dispatches_DM_CHANNEL_UPDATE(
@@ -351,7 +354,7 @@ class TestDispatchingEventAdapterImpl:
         payload = {"id": str(channel_obj_after.id), "type": channel_obj_after.is_dm}
         await adapter_impl.handle_channel_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.DM_CHANNEL_UPDATE, channel_obj_before, channel_obj_after)
+        dispatch_impl.assert_called_with(event_types.EventType.DM_CHANNEL_UPDATE, channel_obj_before, channel_obj_after)
 
     @pytest.mark.asyncio
     async def test_handle_channel_update_for_valid_guild_channel_update_dispatches_GUILD_CHANNEL_UPDATE(
@@ -364,7 +367,9 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_channel_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_CHANNEL_UPDATE, channel_obj_before, channel_obj_after)
+        dispatch_impl.assert_called_with(
+            event_types.EventType.GUILD_CHANNEL_UPDATE, channel_obj_before, channel_obj_after
+        )
 
     @pytest.mark.asyncio
     async def test_handle_channel_update_invokes_update_channel(self, adapter_impl, gateway_impl, fabric_impl):
@@ -385,7 +390,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_CHANNEL_DELETE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_CHANNEL_DELETE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_channel_delete_parses_channel(self, adapter_impl, gateway_impl, fabric_impl):
@@ -410,7 +415,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_channel_delete(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.DM_CHANNEL_DELETE, channel_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.DM_CHANNEL_DELETE, channel_obj)
 
     @pytest.mark.asyncio
     async def test_handle_channel_delete_for_guild_channel_dispatches_GUILD_CHANNEL_DELETE(
@@ -424,7 +429,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_channel_delete(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_CHANNEL_DELETE, channel_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_CHANNEL_DELETE, channel_obj)
 
     @pytest.mark.asyncio
     async def test_handle_channel_pins_update_for_unknown_channel_dispatches_nothing(
@@ -437,7 +442,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_CHANNEL_PINS_UPDATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_CHANNEL_PINS_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_channel_pins_update_for_known_channel_invokes_set_last_pinned_timestamp_on_state(
@@ -467,7 +472,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_channel_pins_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_CHANNEL_PIN_ADDED, timestamp)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_CHANNEL_PIN_ADDED, timestamp)
 
     @pytest.mark.asyncio
     async def test_handle_channel_pins_update_for_adding_pin_to_dm_channel_invokes_DM_CHANNEL_PIN_ADDED(
@@ -484,7 +489,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_channel_pins_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.DM_CHANNEL_PIN_ADDED, timestamp)
+        dispatch_impl.assert_called_with(event_types.EventType.DM_CHANNEL_PIN_ADDED, timestamp)
 
     @pytest.mark.asyncio
     async def test_handle_channel_pins_update_for_removing_pin_from_guild_channel_invokes_GUILD_CHANNEL_PIN_REMOVED(
@@ -496,7 +501,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_channel_pins_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_CHANNEL_PIN_REMOVED)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_CHANNEL_PIN_REMOVED)
 
     @pytest.mark.asyncio
     async def test_handle_channel_pins_update_for_removing_pin_from_dm_channel_invokes_DM_CHANNEL_PIN_REMOVED(
@@ -508,7 +513,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_channel_pins_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.DM_CHANNEL_PIN_REMOVED)
+        dispatch_impl.assert_called_with(event_types.EventType.DM_CHANNEL_PIN_REMOVED)
 
     @pytest.mark.asyncio
     async def test_handle_guild_create_parses_guild(self, adapter_impl, gateway_impl, fabric_impl):
@@ -529,7 +534,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_create(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_AVAILABLE, guild_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_AVAILABLE, guild_obj)
 
     @pytest.mark.asyncio
     async def test_handle_guild_create_when_not_already_known_dispatches_GUILD_CREATE(
@@ -542,7 +547,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_create(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_CREATE, guild_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_CREATE, guild_obj)
 
     @pytest.mark.asyncio
     async def test_handle_guild_update_when_valid_dispatches_GUILD_UPDATE(
@@ -555,7 +560,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_UPDATE, guild_obj_before, guild_obj_after)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_UPDATE, guild_obj_before, guild_obj_after)
 
     @pytest.mark.asyncio
     async def test_handle_guild_update_when_invalid_dispatches_nothing(
@@ -568,7 +573,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_GUILD_UPDATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_GUILD_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_delete_when_unavailable_invokes__handle_guild_unavailable(
@@ -622,7 +627,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl._handle_guild_unavailable(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_UNAVAILABLE, guild_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_UNAVAILABLE, guild_obj)
 
     @pytest.mark.asyncio
     async def test__handle_guild_unavailable_when_cached_sets_guild_unavailablility(
@@ -664,7 +669,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl._handle_guild_leave(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_LEAVE, guild_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_LEAVE, guild_obj)
 
     @pytest.mark.asyncio
     async def test_handle_guild_ban_add_parses_user(self, adapter_impl, gateway_impl, fabric_impl):
@@ -688,7 +693,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_ban_add(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_BAN_ADD, guild_obj, member_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_BAN_ADD, guild_obj, member_obj)
 
     @pytest.mark.asyncio
     async def test_handle_guild_ban_add_uses_user_if_member_is_not_cached_but_guild_is_cached(
@@ -702,7 +707,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_ban_add(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_BAN_ADD, guild_obj, user_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_BAN_ADD, guild_obj, user_obj)
 
     @pytest.mark.asyncio
     async def test_handle_guild_ban_add_when_guild_is_cached_dispatches_GUILD_BAN_ADD(
@@ -716,7 +721,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_ban_add(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_BAN_ADD, guild_obj, user_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_BAN_ADD, guild_obj, user_obj)
 
     @pytest.mark.asyncio
     async def test_handle_guild_ban_add_when_guild_not_cached_does_not_dispatch_anything(
@@ -729,7 +734,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_GUILD_BAN_ADD, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_GUILD_BAN_ADD, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_ban_remove_parses_user(self, adapter_impl, gateway_impl, fabric_impl):
@@ -751,7 +756,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_ban_remove(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_BAN_REMOVE, guild_obj, user_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_BAN_REMOVE, guild_obj, user_obj)
 
     @pytest.mark.asyncio
     async def test_handle_guild_ban_remove_when_guild_not_cached_does_not_dispatch_anything(
@@ -764,7 +769,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_GUILD_BAN_REMOVE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_GUILD_BAN_REMOVE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_emojis_update_when_guild_is_not_cached_does_not_dispatch_anything(
@@ -780,7 +785,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_GUILD_EMOJIS_UPDATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_GUILD_EMOJIS_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_emojis_update_when_guild_is_cached_dispatches_GUILD_EMOJIS_UPDATE(
@@ -808,7 +813,7 @@ class TestDispatchingEventAdapterImpl:
         await adapter_impl.handle_guild_emojis_update(gateway_impl, payload)
 
         dispatch_impl.assert_called_with(
-            events.GUILD_EMOJIS_UPDATE, guild_obj, set(initial_emoji_map.values()), {existing_emoji_1}
+            event_types.EventType.GUILD_EMOJIS_UPDATE, guild_obj, set(initial_emoji_map.values()), {existing_emoji_1}
         )
 
     @pytest.mark.asyncio
@@ -822,7 +827,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_GUILD_INTEGRATIONS_UPDATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_GUILD_INTEGRATIONS_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_integrations_update_when_guild_is_cached_dispatches_GUILD_INTEGRATIONS_UPDATE(
@@ -834,7 +839,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_integrations_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_INTEGRATIONS_UPDATE, guild_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_INTEGRATIONS_UPDATE, guild_obj)
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_add_when_guild_is_not_cached_does_not_dispatch_anything(
@@ -847,7 +852,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_GUILD_MEMBER_ADD, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_GUILD_MEMBER_ADD, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_add_when_guild_is_cached_dispatches_GUILD_MEMBER_ADD(
@@ -861,7 +866,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_member_add(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_MEMBER_ADD, member_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_MEMBER_ADD, member_obj)
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_update_when_guild_is_not_cached_does_not_dispatch_anything(
@@ -874,7 +879,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_GUILD_MEMBER_UPDATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_GUILD_MEMBER_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_update_when_member_is_not_cached_does_not_dispatch_anything(
@@ -888,7 +893,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_GUILD_MEMBER_UPDATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_GUILD_MEMBER_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_update_when_role_is_not_cached_does_not_pass_update_member_that_role(
@@ -945,7 +950,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_member_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_MEMBER_UPDATE)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_MEMBER_UPDATE)
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_remove_when_member_not_cached_does_not_dispatch_anything(
@@ -958,7 +963,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_GUILD_MEMBER_REMOVE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_GUILD_MEMBER_REMOVE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_remove_when_member_is_cached_deletes_member(
@@ -982,7 +987,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_member_remove(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_MEMBER_REMOVE, member_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_MEMBER_REMOVE, member_obj)
 
     @pytest.mark.asyncio
     async def test_handle_guild_members_chunk_calls_chunker(self, adapter_impl, fabric_impl, gateway_impl):
@@ -1006,7 +1011,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_GUILD_ROLE_CREATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_GUILD_ROLE_CREATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_create_when_guild_is_cached_dispatches_GUILD_ROLE_CREATE(
@@ -1020,7 +1025,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_role_create(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_ROLE_CREATE, role_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_ROLE_CREATE, role_obj)
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_update_when_guild_is_not_cached_does_not_dispatch_anything(
@@ -1032,7 +1037,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_GUILD_ROLE_UPDATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_GUILD_ROLE_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_update_when_guild_is_cached_but_role_is_not_cached_does_not_dispatch_anything(
@@ -1047,7 +1052,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_GUILD_ROLE_UPDATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_GUILD_ROLE_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_update_when_diff_is_valid_dispatches_GUILD_ROLE_UPDATE(
@@ -1062,7 +1067,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_role_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_ROLE_UPDATE, role_obj_before, role_obj_after)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_ROLE_UPDATE, role_obj_before, role_obj_after)
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_delete_when_guild_is_not_cached_does_not_dispatch_anything(
@@ -1074,7 +1079,7 @@ class TestDispatchingEventAdapterImpl:
         await adapter_impl.handle_guild_role_delete(gateway_impl, payload)
 
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_GUILD_ROLE_DELETE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_GUILD_ROLE_DELETE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_delete_when_role_is_not_cached_does_not_dispatch_anything(
@@ -1088,7 +1093,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_GUILD_ROLE_DELETE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_GUILD_ROLE_DELETE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_delete_when_role_is_cached_deletes_the_role(
@@ -1114,7 +1119,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_role_delete(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.GUILD_ROLE_DELETE, role_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.GUILD_ROLE_DELETE, role_obj)
 
     @pytest.mark.asyncio
     async def test_handle_message_create_when_channel_does_not_exist_does_not_dispatch_anything(
@@ -1127,7 +1132,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_MESSAGE_CREATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_MESSAGE_CREATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_message_create_when_channel_exists_dispatches_MESSAGE_CREATE(
@@ -1140,7 +1145,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_create(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.MESSAGE_CREATE, message_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.MESSAGE_CREATE, message_obj)
 
     @pytest.mark.asyncio
     async def test_handle_message_update_when_message_is_not_cached_does_not_dispatch_anything(
@@ -1153,7 +1158,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_MESSAGE_UPDATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_MESSAGE_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_message_update_when_message_is_cached_dispatches_MESSAGE_UPDATE(
@@ -1166,7 +1171,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.MESSAGE_UPDATE, message_obj_before, message_obj_after)
+        dispatch_impl.assert_called_with(event_types.EventType.MESSAGE_UPDATE, message_obj_before, message_obj_after)
 
     @pytest.mark.asyncio
     async def test_handle_message_delete_when_message_is_not_cached_does_not_dispatch_anything(
@@ -1179,7 +1184,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_MESSAGE_DELETE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_MESSAGE_DELETE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_message_delete_when_message_is_cached_deletes_message(
@@ -1203,7 +1208,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_delete(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.MESSAGE_DELETE, message_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.MESSAGE_DELETE, message_obj)
 
     @pytest.mark.asyncio
     async def test_handle_message_delete_bulk_dispatches_correctly_for_cached_messages(
@@ -1222,7 +1227,9 @@ class TestDispatchingEventAdapterImpl:
         await adapter_impl.handle_message_delete_bulk(gateway_impl, payload)
 
         dispatch_impl.assert_called_with(
-            events.MESSAGE_DELETE_BULK, channel_obj, {message_obj1.id: message_obj1, message_obj2.id: message_obj2}
+            event_types.EventType.MESSAGE_DELETE_BULK,
+            channel_obj,
+            {message_obj1.id: message_obj1, message_obj2.id: message_obj2},
         )
 
     @pytest.mark.asyncio
@@ -1246,7 +1253,7 @@ class TestDispatchingEventAdapterImpl:
         await adapter_impl.handle_message_delete_bulk(gateway_impl, payload)
 
         dispatch_impl.assert_called_with(
-            events.MESSAGE_DELETE_BULK,
+            event_types.EventType.MESSAGE_DELETE_BULK,
             channel_obj,
             {message_obj1.id: None, message_obj2.id: None, message_obj3.id: None},
         )
@@ -1268,7 +1275,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_MESSAGE_DELETE_BULK, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_MESSAGE_DELETE_BULK, payload)
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_add_when_message_not_cached_does_not_dispatch_anything(
@@ -1286,7 +1293,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_MESSAGE_REACTION_ADD, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_MESSAGE_REACTION_ADD, payload)
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_add_parses_emoji(
@@ -1387,7 +1394,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_MESSAGE_REACTION_ADD, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_MESSAGE_REACTION_ADD, payload)
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_add_when_cannot_resolve_member_does_not_dispatch_anything(
@@ -1412,7 +1419,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_MESSAGE_REACTION_ADD, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_MESSAGE_REACTION_ADD, payload)
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_add_when_resolved_member_dispatches_MESSAGE_REACTION_ADD(
@@ -1438,7 +1445,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.MESSAGE_REACTION_ADD, reaction_obj, member_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.MESSAGE_REACTION_ADD, reaction_obj, member_obj)
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_add_when_resolved_user_dispatches_MESSAGE_REACTION_ADD(
@@ -1462,7 +1469,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.MESSAGE_REACTION_ADD, reaction_obj, user_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.MESSAGE_REACTION_ADD, reaction_obj, user_obj)
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_remove_when_message_not_cached_does_not_dispatch_anything(
@@ -1480,7 +1487,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_MESSAGE_REACTION_REMOVE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_MESSAGE_REACTION_REMOVE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_remove_when_in_guild_attempts_to_resolve_member_who_added_reaction(
@@ -1545,7 +1552,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_MESSAGE_REACTION_REMOVE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_MESSAGE_REACTION_REMOVE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_remove_when_reaction_by_that_user_not_cached_does_not_dispatch_anything(
@@ -1570,7 +1577,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_MESSAGE_REACTION_REMOVE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_MESSAGE_REACTION_REMOVE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_remove_dispatches_MESSAGE_REACTION_REMOVE(
@@ -1594,7 +1601,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_reaction_remove(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.MESSAGE_REACTION_REMOVE, reaction_obj, user_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.MESSAGE_REACTION_REMOVE, reaction_obj, user_obj)
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_remove_all_when_uncached_message_does_not_dispatch_anything(
@@ -1607,7 +1614,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_MESSAGE_REACTION_REMOVE_ALL, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_MESSAGE_REACTION_REMOVE_ALL, payload)
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_remove_all_deletes_all_reactions(
@@ -1631,7 +1638,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_reaction_remove_all(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.MESSAGE_REACTION_REMOVE_ALL, message_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.MESSAGE_REACTION_REMOVE_ALL, message_obj)
 
     @pytest.mark.asyncio
     async def test_handle_presence_update_when_guild_not_cached_does_not_dispatch_anything(
@@ -1652,7 +1659,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_PRESENCE_UPDATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_PRESENCE_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_presence_update_when_user_not_cached_does_not_dispatch_anything(
@@ -1674,7 +1681,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_PRESENCE_UPDATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_PRESENCE_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_presence_update_when_member_not_cached_does_not_dispatch_anything(
@@ -1698,7 +1705,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_PRESENCE_UPDATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_PRESENCE_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_presence_update_when_cached_member_invokes_update_member_presence(
@@ -1799,7 +1806,7 @@ class TestDispatchingEventAdapterImpl:
         }
         await adapter_impl.handle_presence_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.PRESENCE_UPDATE)
+        dispatch_impl.assert_called_with(event_types.EventType.PRESENCE_UPDATE)
 
     @pytest.mark.asyncio
     async def test_handle_typing_start_in_uncached_channel_does_not_dispatch_anything(
@@ -1813,7 +1820,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_TYPING_START, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_TYPING_START, payload)
 
     @pytest.mark.asyncio
     async def test_handle_typing_start_by_unknown_user_does_not_dispatch_anything(
@@ -1829,7 +1836,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_TYPING_START, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_TYPING_START, payload)
 
     @pytest.mark.asyncio
     async def test_handle_typing_start_in_guild_resolves_member(
@@ -1871,7 +1878,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_typing_start(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.TYPING_START, user_obj, channel_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.TYPING_START, user_obj, channel_obj)
 
     @pytest.mark.asyncio
     async def test_handle_user_update_dispatches_USER_UPDATE(
@@ -1883,7 +1890,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_user_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.USER_UPDATE, user_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.USER_UPDATE, user_obj)
 
     @pytest.mark.asyncio
     async def test_handle_webhooks_update_when_channel_not_cached_does_not_dispatch_anything(
@@ -1896,7 +1903,7 @@ class TestDispatchingEventAdapterImpl:
 
         # Not called other than the raw from earlier.
         dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(events.RAW_WEBHOOKS_UPDATE, payload)
+        dispatch_impl.assert_called_with(event_types.EventType.RAW_WEBHOOKS_UPDATE, payload)
 
     @pytest.mark.asyncio
     async def test_handle_webhooks_update_when_channel_cached_dispatches_WEBHOOKS_UPDATE(
@@ -1908,4 +1915,4 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_webhooks_update(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(events.WEBHOOKS_UPDATE, channel_obj)
+        dispatch_impl.assert_called_with(event_types.EventType.WEBHOOKS_UPDATE, channel_obj)

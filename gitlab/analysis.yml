@@ -14,20 +14,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-.tools-only: &toolsonly
+.tools-base:
+  image: python:3.8.0
+  stage: test
+  before_script:
+    - pip install nox
   only:
     - branches
     - merge_requests
     - tags
     - schedules
-
-.tools-base:
-  <<: *toolsonly
-  image: python:3.8.0-alpine
-  stage: test
-  before_script:
-    - apk add gcc g++ make
-    - pip install nox
 
 black:
   extends: .tools-base
@@ -40,12 +36,6 @@ bandit:
     - nox -s sast
 
 safety:
-  <<: *toolsonly
-  image: python:3.8.0
-  stage: test
-  before_script:
-    - pip install poetry
-    - poetry update --no-dev
-    - pip install nox
+  extends: .tools-base
   script:
-    - poetry run nox -s safety
+    - nox -s safety
