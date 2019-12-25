@@ -18,7 +18,6 @@
 FROM        python:3.7.4
 COPY        . /hikari
 WORKDIR     /hikari
-RUN         pip install poetry -q
-RUN         poetry update
-ENTRYPOINT  ["poetry", "run", "nox"]
+RUN         pip install nox
+ENTRYPOINT  ["nox"]
 CMD         []

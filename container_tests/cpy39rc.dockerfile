@@ -18,7 +18,6 @@
 FROM        python:3.9-rc
 COPY        . /hikari
 WORKDIR     /hikari
-RUN         pip install poetry https://github.com/html5lib/html5lib-python/zipball/af19281fa28788830684b4c8fc6d0c588b092616 -q
-RUN         poetry update
-ENTRYPOINT  ["poetry", "run", "nox"]
+RUN         pip install nox
+ENTRYPOINT  ["nox"]
 CMD         []
