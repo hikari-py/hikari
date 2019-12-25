@@ -59,9 +59,6 @@ PYTEST_ARGS = [
     "--force-testdox",
 ]
 
-if os.getenv("CI"):
-    PYTEST_ARGS.append("-rA")
-
 
 # Guard against connection resets by retring installs several times before actually giving up.
 def failsafe_install(session, *args):
