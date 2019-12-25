@@ -32,6 +32,7 @@
   image: python:3.8.0
   stage: test
   script:
+    - pip install nox
     - git clone ${CI_REPOSITORY_URL} -b ${TARGET_BRANCH} hikari_docs_${TARGET_BRANCH} --depth=1
     - cd hikari_docs_${TARGET_BRANCH}
     - nox -s documentation
