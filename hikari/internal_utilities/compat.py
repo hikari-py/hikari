@@ -30,18 +30,6 @@ import types as _types
 import typing as _typing
 
 
-class _FakeModule(_types.ModuleType):
-    def __init__(self, cascade_to):
-        super().__init__(name=cascade_to.__package__)
-        self.__cascade_to = cascade_to
-
-    def __getattr__(self, item):
-        return getattr(self.__cascade_to, item)
-
-    def __setattr__(self, key, value):
-        self.__dict__[key] = value
-
-
 ################################################################################
 # asyncio.create_task                                                          #
 #     introduced in Python 3.7.0, but only allows a string as the name of the  #
@@ -51,10 +39,16 @@ class _FakeModule(_types.ModuleType):
 #:
 #: Provides compatibility implementations for:
 #:     - :func:`asyncio.create_task` name support for Python 3.7
-asyncio = _FakeModule(_asyncio)
+class asyncio:
+    if _sys.version_info < (3, 8):
+        @staticmethod
+        def create_task(coro, *, name=None):
+            return _asyncio.create_task(coro)
+    else:
+        @staticmethod
+        def create_task(coro, *, name=None):
+            return _asyncio.create_task(coro, name=name)
 
-if _sys.version_info < (3, 8):
-    asyncio.create_task = lambda coro, *, name=None: _asyncio.create_task(coro)
 
 ##################################
 # typing.Protocol                #
@@ -64,8 +58,10 @@ if _sys.version_info < (3, 8):
 #:
 #: Provides compatibility implementations for:
 #:     - :class:`typing.Protocol` stub for Python 3.7
-typing = _FakeModule(_typing)
+class typing:
+    if _sys.version_info < (3, 8):
+        _ProtocolT = _typing.TypeVar("_ProtocolT")
+        Protocol = _types.new_class("Protocol", (_typing.Generic[_ProtocolT],))
+    else:
+        Protocol = _typing.Protocol
 
-if _sys.version_info < (3, 8):
-    typing._ProtocolT = _typing.TypeVar("_ProtocolT")
-    typing.Protocol = _types.new_class("Protocol", (_typing.Generic[typing._ProtocolT],))
