@@ -103,7 +103,7 @@ class Connection(bases.BaseModelWithFabric, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("type", "id", "name")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         self._fabric = fabric_obj
         self.id = payload["id"]
         self.name = payload["name"]

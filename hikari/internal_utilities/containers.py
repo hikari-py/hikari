@@ -37,7 +37,7 @@ ScalarT = typing.Union[dict, list, int, float, str, bool, None]
 #: This is a :class:`builtins.dict` of :class:`builtins.str` keys that map to any value. Since the
 #: :mod:`hikari.net` module does not enforce concrete models for values sent and received, mappings are passed
 #: around to represent request and response data. This allows an implementation to use this layer as desired.
-DiscordObjectT = typing.Dict[str, ScalarT]
+JSONObject = typing.Dict[str, ScalarT]
 
 
 class ObjectProxy(typing.Generic[ValueT], typing.Dict[str, ValueT]):
@@ -135,7 +135,7 @@ EMPTY_DICT: typing.Mapping = types.MappingProxyType({})
 
 __all__ = (
     "ScalarT",
-    "DiscordObjectT",
+    "JSONObject",
     "ObjectProxy",
     "LRUDict",
     "EMPTY_SEQUENCE",

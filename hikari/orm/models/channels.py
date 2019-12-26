@@ -106,7 +106,7 @@ class Channel(abc.ABC, bases.BaseModelWithFabric, bases.SnowflakeMixin):
     id: int
 
     @abc.abstractmethod
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         self._fabric = fabric_obj
         self.id = int(payload["id"])
         self.update_state(payload)
@@ -157,7 +157,7 @@ class PartialChannel(Channel):
 
     __repr__ = reprs.repr_of("id", "name", "type")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         self.name = payload["name"]
         self.type = ChannelType.get_best_effort_from_value(payload["type"])
         super().__init__(fabric_obj, payload)
@@ -250,11 +250,11 @@ class GuildChannel(Channel):
     name: str
 
     @abc.abstractmethod
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         self.guild_id = int(payload["guild_id"])
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         self.position = int(payload["position"])
 
         overwrite_objs = []
@@ -305,10 +305,10 @@ class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT):
 
     __repr__ = reprs.repr_of("id", "name", "guild.name", "is_nsfw")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         super().update_state(payload)
         self.is_nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
@@ -336,10 +336,10 @@ class DMChannel(TextChannel, type=ChannelType.DM):
     __repr__ = reprs.repr_of("id")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         super().update_state(payload)
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
         self.recipients = typing.cast(
@@ -367,10 +367,10 @@ class GuildVoiceChannel(GuildChannel, type=ChannelType.GUILD_VOICE):
 
     __repr__ = reprs.repr_of("id", "name", "guild.name", "bitrate", "user_limit")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         super().update_state(payload)
         self.bitrate = payload.get("bitrate") or None
         self.user_limit = payload.get("user_limit") or None
@@ -407,10 +407,10 @@ class GroupDMChannel(DMChannel, type=ChannelType.GROUP_DM):
     __repr__ = reprs.repr_of("id", "name")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         super().update_state(payload)
         self.icon_hash = payload.get("icon")
         self.name = payload.get("name")
@@ -427,7 +427,7 @@ class GuildCategory(GuildChannel, type=ChannelType.GUILD_CATEGORY):
 
     __repr__ = reprs.repr_of("id", "name", "guild.name")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
 
 
@@ -461,10 +461,10 @@ class GuildAnnouncementChannel(GuildChannel, type=ChannelType.GUILD_ANNOUNCEMENT
     __repr__ = reprs.repr_of("id", "name", "guild.name", "is_nsfw")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         super().update_state(payload)
         self.is_nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
@@ -480,7 +480,7 @@ class GuildStoreChannel(GuildChannel, type=ChannelType.GUILD_STORE):
 
     __repr__ = reprs.repr_of("id", "name", "guild.name")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
 
 
@@ -499,7 +499,7 @@ def is_channel_type_dm(channel_type: typing.Union[int, ChannelType]) -> bool:
 
 
 # noinspection PyProtectedMember
-def parse_channel(fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> Channel:
+def parse_channel(fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> Channel:
     """
     Parse a channel from a channel payload from an API call.
 

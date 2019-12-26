@@ -67,7 +67,7 @@ class AuditLog(bases.BaseModel):
     #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.audit_logs.AuditLogEntry`
     audit_log_entries: typing.Sequence[AuditLogEntry]
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         self.webhooks = {
             fabric_obj.state_registry.parse_webhook(wh) for wh in payload.get("webhooks", containers.EMPTY_SEQUENCE)
         }
@@ -120,7 +120,7 @@ class AuditLogEntry(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "user_id", "action_type")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.target_id = transformations.nullable_cast(payload.get("target_id"), int)
         self.changes = [AuditLogChange(change) for change in payload.get("changes", containers.EMPTY_SEQUENCE)]
         self.user_id = int(payload["user_id"])
@@ -271,7 +271,7 @@ class MessageDeleteAuditLogEntryInfo(BaseAuditLogEntryInfo, event_types=[AuditLo
 
     __repr__ = reprs.repr_of("count", "channel_id")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.count = int(payload["count"])
         self.channel_id = int(payload["channel_id"])
 
@@ -328,13 +328,13 @@ class ChannelOverwriteAuditLogEntryInfo(
 
     __repr__ = reprs.repr_of("id", "type")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.id = int(payload["id"])
         self.type = overwrites.OverwriteEntityType.from_discord_name(payload["type"])
 
 
 def parse_audit_log_entry_info(
-    audit_log_entry_info_payload: containers.DiscordObjectT, event_type: int
+    audit_log_entry_info_payload: containers.JSONObject, event_type: int
 ) -> typing.Optional[BaseAuditLogEntryInfo]:
     """
     Parses a specific type of audit log entry info based on the given event type. If nothing corresponds
@@ -492,7 +492,7 @@ class AuditLogChange(bases.BaseModel):
 
     __repr__ = reprs.repr_of("key")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.key = AuditLogChangeKey.get_best_effort_from_value(payload["key"])
         converter = AUDIT_LOG_ENTRY_CONVERTERS.get(self.key, lambda x: x)
         self.old_value = transformations.nullable_cast(payload.get("old_value"), converter)

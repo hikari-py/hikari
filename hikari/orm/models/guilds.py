@@ -105,11 +105,11 @@ class PartialGuild(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.id = transformations.nullable_cast(payload.get("id"), int)
         self.update_state(payload)  # lgtm [py/init-calls-subclass]
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         self.name = payload.get("name")
         self.icon_hash = payload.get("icon")
         self.splash_hash = payload.get("splash")
@@ -300,13 +300,13 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     __repr__ = reprs.repr_of("id", "name", "is_unavailable", "is_large", "member_count", "shard_id")
 
     def __init__(
-        self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT, shard_id: typing.Optional[int]
+        self, fabric_obj: fabric.Fabric, payload: containers.JSONObject, shard_id: typing.Optional[int]
     ) -> None:
         self._fabric = fabric_obj
         self.shard_id = shard_id
         super().__init__(payload)
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         super().update_state(payload)
         self.afk_channel_id = transformations.nullable_cast(payload.get("afk_channel_id"), int)
         self.owner_id = transformations.nullable_cast(payload.get("owner_id"), int)
@@ -477,7 +477,7 @@ class Ban(bases.BaseModel):
 
     __repr__ = reprs.repr_of("user", "reason")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         self.reason = payload.get("reason")
         self.user = fabric_obj.state_registry.parse_user(payload.get("user"))
 

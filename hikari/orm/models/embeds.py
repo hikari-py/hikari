@@ -483,7 +483,7 @@ class BaseEmbed(bases.BaseModel):
         return d
 
     @classmethod
-    def from_dict(cls: typing.Type[EmbedT], payload: containers.DiscordObjectT) -> EmbedT:
+    def from_dict(cls: typing.Type[EmbedT], payload: containers.JSONObject) -> EmbedT:
         """
         Parses an instance of this embed type from a raw Discord payload.
 

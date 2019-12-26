@@ -76,7 +76,7 @@ class BaseChunker(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def handle_next_chunk(self, chunk_payload: containers.DiscordObjectT, shard_id: int) -> None:
+    async def handle_next_chunk(self, chunk_payload: containers.JSONObject, shard_id: int) -> None:
         """
         Handle a new chunk from the gateway.
 
