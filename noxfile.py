@@ -54,7 +54,7 @@ PYTEST_ARGS = [
     "--cov-report",
     f"html:{ARTIFACT_DIR}/coverage/html",
     "--cov-branch",
-    f"--junitxml:{ARTIFACT_DIR}/tests.xml",
+    f"--junitxml={ARTIFACT_DIR}/tests.xml",
     "--showlocals",
     "--testdox",
     "--force-testdox",
