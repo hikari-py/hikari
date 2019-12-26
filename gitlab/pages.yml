@@ -55,7 +55,7 @@ staging-pages:
 
 pages:  # deploys the generated artifacts as pages
   extends: .deploy-pages-activation
-  stage: pages
+  stage: post-deploy
   image: busybox:1.31.1-musl
   before_script:
     - 'mkdir public || true'
