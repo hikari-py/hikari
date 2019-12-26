@@ -173,7 +173,7 @@ class BaseModel(metaclass=abc.ABCMeta):
 
         return instance
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         """
         Updates the internal state of an existing instance of this object from a raw Discord payload.
         """
@@ -431,7 +431,7 @@ class MarshalMixin:
 
     # noinspection PyArgumentList,PyDataclass
     @classmethod
-    def from_dict(cls, payload: containers.DiscordObjectT):
+    def from_dict(cls, payload: containers.JSONObject):
         """Initialise the current model from a Discord payload."""
         params = {field.name: payload.get(field.name) for field in dataclasses.fields(cls)}
         return cls(**params)

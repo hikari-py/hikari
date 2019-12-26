@@ -41,10 +41,13 @@ import typing as _typing
 #:     - :func:`asyncio.create_task` name support for Python 3.7
 class asyncio:
     if _sys.version_info < (3, 8):
+
         @staticmethod
         def create_task(coro, *, name=None):
             return _asyncio.create_task(coro)
+
     else:
+
         @staticmethod
         def create_task(coro, *, name=None):
             return _asyncio.create_task(coro, name=name)
@@ -64,4 +67,3 @@ class typing:
         Protocol = _types.new_class("Protocol", (_typing.Generic[_ProtocolT],))
     else:
         Protocol = _typing.Protocol
-

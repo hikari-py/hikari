@@ -107,7 +107,7 @@ class Subscriber:
     purge_at: typing.Optional[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload: containers.DiscordObjectT) -> Subscriber:
+    def from_dict(payload: containers.JSONObject) -> Subscriber:
         return Subscriber(
             id=payload["id"],
             email=payload["email"],
@@ -136,7 +136,7 @@ class Subscription:
     subscriber: Subscriber
 
     @staticmethod
-    def from_dict(payload: containers.DiscordObjectT) -> Subscription:
+    def from_dict(payload: containers.JSONObject) -> Subscription:
         return Subscription(subscriber=Subscriber.from_dict(payload["subscriber"]))
 
 
@@ -172,7 +172,7 @@ class Page:
     updated_at: datetime.datetime
 
     @staticmethod
-    def from_dict(payload: containers.DiscordObjectT) -> Page:
+    def from_dict(payload: containers.JSONObject) -> Page:
         return Page(
             id=payload["id"],
             name=payload["name"],
@@ -200,7 +200,7 @@ class Status:
     description: typing.Optional[str]
 
     @staticmethod
-    def from_dict(payload: containers.DiscordObjectT) -> Status:
+    def from_dict(payload: containers.JSONObject) -> Status:
         return Status(indicator=payload.get("indicator"), description=payload.get("description"))
 
 
@@ -259,7 +259,7 @@ class Component:
     status: typing.Optional[str]
 
     @staticmethod
-    def from_dict(payload: containers.DiscordObjectT) -> Component:
+    def from_dict(payload: containers.JSONObject) -> Component:
         return Component(
             id=payload["id"],
             name=payload["name"],
@@ -291,7 +291,7 @@ class Components:
     components: typing.Sequence[Component]
 
     @staticmethod
-    def from_dict(payload: containers.DiscordObjectT) -> Components:
+    def from_dict(payload: containers.JSONObject) -> Components:
         return Components(
             page=Page.from_dict(payload["page"]),
             components=[Component.from_dict(c) for c in payload.get("components", [])],
@@ -348,7 +348,7 @@ class IncidentUpdate:
     updated_at: typing.Optional[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload: containers.DiscordObjectT) -> IncidentUpdate:
+    def from_dict(payload: containers.JSONObject) -> IncidentUpdate:
         return IncidentUpdate(
             id=payload["id"],
             body=payload["body"],
@@ -448,7 +448,7 @@ class Incident:
     started_at: typing.Optional[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload: containers.DiscordObjectT) -> Incident:
+    def from_dict(payload: containers.JSONObject) -> Incident:
         return Incident(
             id=payload["id"],
             name=payload["name"],
@@ -486,7 +486,7 @@ class Incidents:
     incidents: typing.Sequence[Incident]
 
     @staticmethod
-    def from_dict(payload: containers.DiscordObjectT) -> Incidents:
+    def from_dict(payload: containers.JSONObject) -> Incidents:
         return Incidents(Page.from_dict(payload["page"]), [Incident.from_dict(i) for i in payload["incidents"]])
 
 
@@ -590,7 +590,7 @@ class ScheduledMaintenance:
     started_at: typing.Optional[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload: containers.DiscordObjectT) -> ScheduledMaintenance:
+    def from_dict(payload: containers.JSONObject) -> ScheduledMaintenance:
         return ScheduledMaintenance(
             id=payload["id"],
             name=payload["name"],
@@ -631,7 +631,7 @@ class ScheduledMaintenances:
     scheduled_maintenances: typing.Sequence[ScheduledMaintenance]
 
     @staticmethod
-    def from_dict(payload: containers.DiscordObjectT) -> ScheduledMaintenances:
+    def from_dict(payload: containers.JSONObject) -> ScheduledMaintenances:
         return ScheduledMaintenances(
             page=Page.from_dict(payload["page"]),
             scheduled_maintenances=[ScheduledMaintenance.from_dict(sm) for sm in payload["scheduled_maintenances"]],
@@ -657,7 +657,7 @@ class OverallStatus:
     status: Status
 
     @staticmethod
-    def from_dict(payload: containers.DiscordObjectT) -> OverallStatus:
+    def from_dict(payload: containers.JSONObject) -> OverallStatus:
         return OverallStatus(page=Page.from_dict(payload["page"]), status=Status.from_dict(payload["status"]),)
 
 
@@ -686,7 +686,7 @@ class Summary:
     scheduled_maintenances: typing.Sequence[ScheduledMaintenance]
 
     @staticmethod
-    def from_dict(payload: containers.DiscordObjectT) -> Summary:
+    def from_dict(payload: containers.JSONObject) -> Summary:
         return Summary(
             page=Page.from_dict(payload["page"]),
             scheduled_maintenances=[

@@ -104,7 +104,7 @@ class Invite(bases.BaseModel):
 
     __repr__ = reprs.repr_of("code", "inviter.id", "guild", "channel")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         self.code = payload["code"]
         self.guild = transformations.nullable_cast(payload.get("guild"), guilds.PartialGuild)
         self.channel = channels.PartialChannel(fabric_obj, payload["channel"])
@@ -161,7 +161,7 @@ class InviteWithMetadata(Invite):
 
     __repr__ = reprs.repr_of("code", "guild", "channel", "inviter.id", "uses", "max_uses", "created_at")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
         self.uses = int(payload["uses"])
         self.max_uses = int(payload["max_uses"])
@@ -171,9 +171,7 @@ class InviteWithMetadata(Invite):
         self.is_revoked = payload.get("revoked", False)
 
 
-def parse_invite(
-    fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT
-) -> typing.Union[Invite, InviteWithMetadata]:
+def parse_invite(fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> typing.Union[Invite, InviteWithMetadata]:
     """
     Consume a fabric object and some type of invite payload and try to parse
     whether this invite includes metadata or not for the given payload.

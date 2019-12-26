@@ -48,7 +48,7 @@ class GatewayBot(bases.BaseModel):
 
     __repr__ = reprs.repr_of("url", "shards", "session_start_limit.remaining")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.url = payload["url"]
         self.shards = int(payload["shards"])
         self.session_start_limit = SessionStartLimit(payload["session_start_limit"])
@@ -81,7 +81,7 @@ class SessionStartLimit(bases.BaseModel):
 
     __repr__ = reprs.repr_of("total", "remaining", "reset_at")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.total = int(payload["total"])
         self.remaining = int(payload["remaining"])
         reset_after = float(payload["reset_after"])

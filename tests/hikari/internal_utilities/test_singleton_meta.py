@@ -16,32 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Sentinel value used internally to represent an entity that was omitted from explicit specification. This
-can be used to mark fields that may be able to be `None` as being optional.
-"""
-import typing
-
 from hikari.internal_utilities import singleton_meta
 
 
-class Unspecified(metaclass=singleton_meta.SingletonMeta):
-    """
-    Type of an unspecified value.
-    """
+def test_SingletonMeta():
+    class Test(metaclass=singleton_meta.SingletonMeta):
+        pass
 
-    __slots__ = ("__weakref__",)
-
-    def __str__(self):
-        return "unspecified"
-
-    def __bool__(self):
-        return False
-
-    __repr__ = __str__
-
-
-#: An attribute that is unspecified by default.
-UNSPECIFIED = Unspecified()
-
-__all__ = ("UNSPECIFIED",)
+    assert Test() is Test()

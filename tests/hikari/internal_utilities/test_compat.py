@@ -29,6 +29,7 @@ def if_version(expr):
     def decorator(test):
         if eval("__import__('sys').version_info " + expr):
             return test
+
     return decorator
 
 
@@ -54,6 +55,7 @@ async def test_asyncio_create_task_gte_38(name):
 
 def test_Protocol():
     T = typing.TypeVar("T")
+
     class Protocol(compat.typing.Protocol[T]):
         def foo(self) -> T:
             ...
@@ -63,5 +65,3 @@ def test_Protocol():
             return 123
 
     assert Impl().foo() == 123
-
-
