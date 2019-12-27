@@ -16,10 +16,6 @@ exclude_lines =
     ^\s*raise$
     ^\s*pass$
     ^if __name__ == ['"]__main__['"]:$
-    ^if sys.version_info.*:$
     ^\s*...$
     ^\s*@abc.abstractmethod$
 sort = Cover
-omit =
-    hikari/internal_utilities/compat.py
-    hikari/internal_utilities/meta.py

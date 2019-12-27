@@ -85,7 +85,7 @@ class Attachment(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "filename", "size")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.id = int(payload["id"])
         self.filename = payload["filename"]
         self.size = int(payload["size"])
