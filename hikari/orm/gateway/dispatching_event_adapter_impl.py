@@ -119,7 +119,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
 
         self.dispatch(event_types.EventType.READY, gateway)
 
-        if self._request_chunks_mode != AutoRequestChunksMode.NEVER:
+        if self._request_chunks_mode != AutoRequestChunksMode.NEVER and guild_objs:
             self.fabric.chunker.load_members_for(
                 *guild_objs, presences=self._request_chunks_mode == AutoRequestChunksMode.MEMBERS_AND_PRESENCES
             )

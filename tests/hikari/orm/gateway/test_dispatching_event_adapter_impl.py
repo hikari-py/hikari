@@ -187,6 +187,15 @@ class TestDispatchingEventAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    async def test_handle_ready_doesnt_chunk_when_no_guilds_in_payload(
+        self, discord_ready_payload, adapter_impl, gateway_impl, chunker_impl, state_registry_impl,
+    ):
+        discord_ready_payload["guilds"] = []
+        adapter_impl._request_chunks_mode = dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+        await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
+        chunker_impl.load_members_for.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_handle_ready_adds_application_user(
         self, discord_ready_payload, fabric_impl, adapter_impl, gateway_impl
     ):
