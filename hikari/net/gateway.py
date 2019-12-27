@@ -289,7 +289,7 @@ class GatewayClient:
         connector: aiohttp.BaseConnector = None,
         enable_guild_subscription_events=True,
         gateway_event_dispatcher: DispatchHandler = None,
-        initial_presence: typing.Optional[containers.DiscordObjectT] = None,
+        initial_presence: typing.Optional[containers.JSONObject] = None,
         intents: opcodes.GatewayIntent = functools.reduce(operator.or_, opcodes.GatewayIntent.__iter__()),
         internal_event_dispatcher: DispatchHandler = None,
         json_marshaller: typing.Callable = None,
@@ -575,7 +575,7 @@ class GatewayClient:
             await self.ws.send_str(raw)
             self.logger.debug("> %s", raw)
 
-    async def _receive_json(self) -> containers.DiscordObjectT:
+    async def _receive_json(self) -> containers.JSONObject:
         msg = await self._receive()
 
         if isinstance(msg, (bytes, bytearray)):
@@ -710,7 +710,7 @@ class GatewayClient:
         )
         await self._send_json(payload, False)
 
-    async def _handle_dispatch(self, event: str, payload: containers.DiscordObjectT) -> None:
+    async def _handle_dispatch(self, event: str, payload: containers.JSONObject) -> None:
         if event == opcodes.GatewayEvent.READY:
             await self._handle_ready(payload)
         elif event == opcodes.GatewayEvent.RESUMED:
@@ -723,7 +723,7 @@ class GatewayClient:
                 pass
             self._dispatch_new_event(event, payload, False)
 
-    async def _handle_ready(self, ready_payload: containers.DiscordObjectT) -> None:
+    async def _handle_ready(self, ready_payload: containers.JSONObject) -> None:
         self.trace = ready_payload["_trace"]
         self.session_id = ready_payload["session_id"]
         shard = ready_payload.get("shard")
@@ -737,7 +737,7 @@ class GatewayClient:
         self.logger.info("session %s has completed handshake, initial connection is READY", self.session_id)
         self.logger.debug("trace for session %s is %s", self.session_id, self.trace)
 
-    async def _handle_resumed(self, resume_payload: containers.DiscordObjectT) -> None:
+    async def _handle_resumed(self, resume_payload: containers.JSONObject) -> None:
         self.trace = resume_payload["_trace"]
         self.session_id = resume_payload["session_id"]
         self.seq = resume_payload["seq"]
@@ -860,11 +860,7 @@ class GatewayClient:
         )
 
     async def update_status(
-        self,
-        idle_since: typing.Optional[int],
-        game: typing.Optional[containers.DiscordObjectT],
-        status: str,
-        afk: bool,
+        self, idle_since: typing.Optional[int], game: typing.Optional[containers.JSONObject], status: str, afk: bool,
     ) -> None:
         """
         Updates the bot user's status in this shard.

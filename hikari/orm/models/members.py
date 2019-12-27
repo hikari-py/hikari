@@ -93,7 +93,7 @@ class Member(users.User, delegate_fabricated=True):
     __repr__ = reprs.repr_of("id", "username", "discriminator", "is_bot", "guild.id", "guild.name", "nick", "joined_at")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, guild: guilds.Guild, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, guild: guilds.Guild, payload: containers.JSONObject) -> None:
         self.presence = None
         self.user = fabric_obj.state_registry.parse_user(payload["user"])
         self.guild = guild
@@ -107,14 +107,14 @@ class Member(users.User, delegate_fabricated=True):
         self.update_state(role_objs, payload)
 
     # noinspection PyMethodOverriding
-    def update_state(self, role_objs: typing.Sequence[_roles.Role], payload: containers.DiscordObjectT) -> None:
+    def update_state(self, role_objs: typing.Sequence[_roles.Role], payload: containers.JSONObject) -> None:
         self.roles = list(role_objs)
         self.premium_since = transformations.nullable_cast(payload.get("premium_since"), dates.parse_iso_8601_ts)
         self.nick = payload.get("nick")
         self.is_deaf = payload.get("deaf", False)
         self.is_mute = payload.get("mute", False)
 
-    def update_presence_state(self, presence_payload: containers.DiscordObjectT = None) -> None:
+    def update_presence_state(self, presence_payload: containers.JSONObject = None) -> None:
         user_id = presence_payload["user"]["id"]
         assertions.assert_that(
             int(user_id) == self.id, f"Presence object from User `{user_id}` doesn't match Member `{self.id}`."

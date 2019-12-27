@@ -228,7 +228,7 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("id", "author", "type", "is_tts", "created_at", "edited_at")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         self._fabric = fabric_obj
         self.id = int(payload["id"])
 
@@ -258,7 +258,7 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
 
         self.update_state(payload)
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         if "member" in payload:
             # Messages always contain partial members, not full members.
             self.author = self._fabric.state_registry.parse_partial_member(
@@ -342,7 +342,7 @@ class MessageActivity:
 
     __repr__ = reprs.repr_of("type", "party_id")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.type = transformations.try_cast(payload.get("type"), MessageActivityType)
         self.party_id = transformations.nullable_cast(payload.get("party_id"), int)
 
@@ -381,7 +381,7 @@ class MessageApplication(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.id = int(payload["id"])
         self.cover_image_id = transformations.nullable_cast(payload.get("cover_image"), int)
         self.description = payload["description"]
@@ -420,7 +420,7 @@ class MessageCrosspost:
 
     __repr__ = reprs.repr_of("message_id", "guild_id", "channel_id")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         # This is never null for some reason but the other two are... thanks Discord!
         self.channel_id = int(payload["channel_id"])
 

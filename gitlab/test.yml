@@ -28,14 +28,17 @@
   extends: .test-env
   script:
     - nox -stest
+    - mv .coverage public/${CI_JOB_NAME}.coverage
   artifacts:
     paths:
       - public/coverage
+      - public/*.coverage
     reports:
       junit: public/tests.xml
 
 .nox-pip-install: &noxpipinstall
   extends: .test-env
+  stage: verify
   script:
     - nox -spip
 
@@ -43,7 +46,7 @@
   extends: .test-env
   script:
     - nox -s pip -- --showtime
-  stage: verify
+  stage: post-deploy
   only:
     - master
     - staging 
@@ -61,7 +64,6 @@
     - bash tasks/retry-aborts.sh pip install nox
     - source tasks/config.sh
     - mkdir public || true
-  coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
 
 pytest-c3.7:
   <<: *cpython37
@@ -98,3 +100,13 @@ verify-c3.8-pypi:
 verify-c3.9-pypi:
   <<: *cpython39
   <<: *noxpipinstallshowtime
+
+coverage-coalesce:
+  image: python:3.8.0-alpine
+  stage: verify
+  script:
+    - pip install coverage
+    - ls public
+    - coverage combine public/*.coverage
+    - coverage report
+  coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/

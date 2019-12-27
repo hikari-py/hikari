@@ -457,7 +457,7 @@ class DummyModel2(bases.MarshalMixin):
     model: DummyModel
     optional: typing.Optional[str]
 
-    def __init__(self, id: int, name: str, nekos: typing.List[int], model: containers.DiscordObjectT, optional=None):
+    def __init__(self, id: int, name: str, nekos: typing.List[int], model: containers.JSONObject, optional=None):
         self.id = id
         self.name = name
         self.nekos = nekos
