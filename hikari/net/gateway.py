@@ -255,6 +255,7 @@ class GatewayClient:
         "max_persistent_buffer_size",
         "out_count",
         "rate_limit",
+        "ready_event",
         "seq",
         "session_id",
         "shard_count",
@@ -520,6 +521,10 @@ class GatewayClient:
         #: :type: :class:`float`
         self.timeout = timeout
 
+        #: An event you can wait for to determine when the bot receives the
+        #: READY payload. We use this to indicate we are connected correctly.
+        self.ready_event = asyncio.Event()
+
     @property
     def version(self) -> int:
         """The version of the gateway being used."""
@@ -726,6 +731,7 @@ class GatewayClient:
         if shard is not None:
             self.shard_id, self.shard_count = shard
 
+        self.ready_event.set()
         self._dispatch_new_event(opcodes.GatewayEvent.READY, ready_payload, False)
 
         self.logger.info("session %s has completed handshake, initial connection is READY", self.session_id)
@@ -965,6 +971,8 @@ class GatewayClient:
             self.logger.warning("reconnecting after %s [%s]", reason, code)
             if isinstance(ex, _RestartConnection) or code in self._DO_NOT_RESUME_CLOSURE_CODES:
                 self.seq, self.session_id, self.trace = None, None, []
+        finally:
+            self.ready_event.clear()
 
     def _dispatch_new_event(self, event_name: str, payload, is_internal_event) -> None:
         # This prevents us blocking any task such as the READY handler.

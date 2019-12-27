@@ -85,11 +85,13 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         "logger",
     )
 
-    def __init__(self, fabric_obj: fabric.Fabric, message_cache_size: int, user_dm_channel_size: int) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, message_cache_size: int, max_user_dm_channel_count: int) -> None:
         # Users may be cached while we can see them, or they may be cached as a member. Regardless, we only
         # retain them while they are referenced from elsewhere to keep things tidy.
         self.fabric = fabric_obj
-        self._dm_channels: typing.MutableMapping[int, channels.DMChannel] = containers.LRUDict(user_dm_channel_size)
+        self._dm_channels: typing.MutableMapping[int, channels.DMChannel] = containers.LRUDict(
+            max_user_dm_channel_count
+        )
         self._emojis: typing.MutableMapping[int, emojis.GuildEmoji] = weakref.WeakValueDictionary()
         self._guilds: typing.Dict[int, guilds.Guild] = {}
         self._guild_channels: typing.MutableMapping[int, channels.GuildChannel] = weakref.WeakValueDictionary()
@@ -488,8 +490,10 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         self._message_cache[message_id] = message_obj
         return message_obj
 
-    def parse_presence(self, member_obj: members.Member, presence_payload: containers.JSONObject) -> presences.Presence:
-        presence_obj = presences.Presence(presence_payload)
+    def parse_presence(
+        self, member_obj: members.Member, presence_payload: containers.DiscordObjectT
+    ) -> presences.MemberPresence:
+        presence_obj = presences.MemberPresence(presence_payload)
         member_obj.presence = presence_obj
         return presence_obj
 
@@ -609,8 +613,8 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return old_member, new_member
 
     def update_member_presence(
-        self, member_obj: members.Member, presence_payload: containers.JSONObject
-    ) -> typing.Optional[typing.Tuple[members.Member, presences.Presence, presences.Presence]]:
+        self, member_obj: members.Member, presence_payload: containers.DiscordObjectT
+    ) -> typing.Optional[typing.Tuple[members.Member, presences.MemberPresence, presences.MemberPresence]]:
         old_presence = member_obj.presence
         new_presence = self.parse_presence(member_obj, presence_payload)
         return member_obj, old_presence, new_presence
