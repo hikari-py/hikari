@@ -37,7 +37,7 @@ setuptools.setup(
     author_email="nekoka.tt@outlook.com",
     license="LGPL-3.0-ONLY",
     url="https://gitlab.com/nekokatt/hikari",
-    packages=setuptools.find_namespace_packages(include=["hikari.*"]),
+    packages=setuptools.find_namespace_packages(include=["hikari*"]),
     python_requires=">=3.7.4,<3.10",
     install_requires=[
         "aiofiles~=0.4",
