@@ -22,6 +22,7 @@ The primary client for writing a bot with Hikari.
 import asyncio
 import datetime
 import inspect
+import types
 import typing
 
 from hikari import client_options
@@ -39,6 +40,22 @@ from hikari.internal_utilities import assertions
 
 
 class Client:
+    """
+    A basic implementation of a client for running a Discord bot.
+    
+    Args:
+        token:
+            The bot token to sign in with.
+        options:
+            Other :class:`hikari.client_options.ClientOptions` to set. If not provided, sensible
+            defaults are used instead.
+    
+    >>> client = Client("token_here")
+    >>> @client.event()
+    ... async def on_ready(shard):
+    ...     print("Shard", shard.shard_id, "is ready!")
+    >>> asyncio.run(client.run())
+    """
     def __init__(self, token: str, options: typing.Optional[client_options.ClientOptions] = None) -> None:
         self._client_options = options or client_options.ClientOptions()
         self._event_dispatcher = aio.MuxMap()
@@ -46,6 +63,7 @@ class Client:
         self._quieting_down = False
         self.logger = loggers.get_named_logger(self)
         self.token = token
+        self._shard_tasks = None
 
     async def _new_application_fabric(self):
         self._fabric = fabric.Fabric()
@@ -141,9 +159,28 @@ class Client:
         task = compat.asyncio.create_task(self._run_shard(shard), name=f"poll shard {shard.shard_id} for events",)
         return shard.shard_id, task
 
-    async def run(self):
-        shard_tasks = await self.start()
-        failures, _ = await asyncio.wait(shard_tasks.values(), return_when=asyncio.FIRST_EXCEPTION)
+    async def start(self) -> typing.Mapping[typing.Optional[int], asyncio.Task]:
+        """
+        Starts the client. This will initialize any shards, and wait for them to become READY. Once
+        that has occurred, this coroutine will return, allowing you to run other coroutines in the
+        background.
+        
+        Returns:
+            An immutable mapping of shard IDs to their respective tasks that they are running within.
+        """
+        assertions.assert_that(self._shard_tasks is None, "client is already started")
+        await self._new_application_fabric()
+        shard_tasks = await asyncio.gather(*(self._launch_shard(shard) for shard in self._fabric.gateways.values()))
+        self._shard_tasks = {shard_id: task for shard_id, task in shard_tasks}
+        return types.MappingProxyType(self._shard_tasks)
+    
+    async def join(self):
+        """
+        Waits for the client to shut down. This can be used to keep the event loop running after calling
+        :func:`start` and initializing any other resources you need.
+        """
+        assertions.assert_that(self._shard_tasks is not None, "client is not started")
+        failures, _ = await asyncio.wait(self._shard_tasks.values(), return_when=asyncio.FIRST_EXCEPTION)
         for failure in failures:
             shard_id, reason = failure.result()
             self.logger.exception("shard %s has shut down", shard_id, exc_info=reason)
@@ -151,13 +188,20 @@ class Client:
             reason = reason if isinstance(reason, BaseException) else None
             if not self._quieting_down:
                 raise RuntimeError(f"shard {shard_id} has shut down") from reason
-
-    async def start(self):
-        await self._new_application_fabric()
-        shard_tasks = await asyncio.gather(*(self._launch_shard(shard) for shard in self._fabric.gateways.values()))
-        return {shard_id: task for shard_id, task in shard_tasks}
+            
+    async def run(self):
+        """
+        An alias for :func:`start` and then :func:`join`. Runs the client and waits for it to finish. 
+        """
+        await self.start()
+        await self.join()
 
     async def close(self):
+        """
+        Shuts the client down. This closes the HTTP client session and kills every running shard
+        before returning.        
+        """
+        assertions.assert_that(self._shard_tasks is not None, "client is not started")
         self._quieting_down = True
         await self._fabric.http_api.close()
         gateway_tasks = []
@@ -168,9 +212,30 @@ class Client:
         await asyncio.wait(gateway_tasks, return_when=asyncio.ALL_COMPLETED)
 
     def dispatch(self, event: str, *args) -> None:
+        """
+        Dispatches an event to any listeners.
+
+        Args:
+            event:
+                The event name to dispatch.
+            *args:
+                Any arguments to pass to the event.
+
+        Note:
+            any event is dispatched as a future asynchronously. This will not wait for that to occur.
+        """
         self._event_dispatcher.dispatch(event, *args)
 
     def add_event(self, event_name: str, coroutine_function: aio.CoroutineFunctionT) -> None:
+        """
+        Subscribes the given event coroutine function to the given event name.
+
+        Args:
+            event_name:
+                The event to add to.
+            coroutine_function:
+                The coroutine function callback to add.
+        """
         self.logger.debug(
             "subscribing %s%s to %s event",
             coroutine_function.__name__,
@@ -180,6 +245,15 @@ class Client:
         self._event_dispatcher.add(event_name, coroutine_function)
 
     def remove_event(self, event_name: str, coroutine_function: aio.CoroutineFunctionT) -> None:
+        """
+        Unsubscribes the given event coroutine function from the given event name, if it is there.
+
+        Args:
+            event_name:
+                The event to remove from.
+            coroutine_function:
+                The coroutine function callback to remove.
+        """
         self.logger.debug(
             "unsubscribing %s%s from %s event",
             coroutine_function.__name__,
@@ -201,17 +275,32 @@ class Client:
 
         Returns:
             A decorator that decorates a coroutine function and returns the coroutine function passed to it.
+
+        >>> @client.event()
+        ... async def on_message_create(message):
+        ...     if not message.author.is_bot and message.content == "!ping":
+        ...         await message.channel.send("pong!")
+
+        >>> @client.event("message_create")
+        ... async def ping_pong(message):
+        ...     if not message.author.is_bot and message.content == "!ping":
+        ...         await message.channel.send("pong!")
         """
         assertions.assert_that(
             isinstance(name, str) or name is None,
-            "Invalid use of @client.event() decorator.\nValid usage of this decorator is as follows:\n"
-            "@client.event()\n"
-            "async def on_message_create(message):\n"
-            "    ...\n"
-            "# or\n"
-            "@client.event('message_create')\n"
-            "async def some_name_here(message):\n"
-            "    ...\n",
+            "Invalid use of @client.event() decorator.\n"
+            "\n"
+            "  Valid usage of this decorator is as follows:\n"
+            "\n"
+            "    @client.event()\n"
+            "    async def on_message_create(message):\n"
+            "        ...\n"
+            "\n"
+            "  ...or...\n"
+            "\n"
+            "    @client.event('message_create')\n"
+            "    async def some_name_here(message):\n"
+            "        ...\n",
         )
 
         def decorator(coroutine_function: aio.CoroutineFunctionT) -> aio.CoroutineFunctionT:
@@ -229,6 +318,10 @@ class Client:
 
     @property
     def heartbeat_latency(self) -> float:
+        """
+        The average heartbeat latency across all gateway shard connections. If any are not running, you will receive
+        a :class:`float` with the value of `NaN` instead.
+        """
         if len(self._fabric.gateways) == 0:
             # Bot has not yet started.
             return float("nan")
@@ -236,4 +329,7 @@ class Client:
 
     @property
     def heartbeat_latencies(self) -> typing.Mapping[typing.Optional[int], float]:
+        """
+        Creates a mapping of each shard ID to the latest heartbeat latency for that shard.
+        """
         return {shard.shard_id: shard.heartbeat_latency for shard in self._fabric.gateways.values()}
