@@ -27,7 +27,7 @@ from tests.hikari import _helpers
 
 @pytest.fixture
 def activity():
-    return presences.Activity({})
+    return presences.Activity(name="")
 
 
 @pytest.fixture()
@@ -170,7 +170,7 @@ def legacy_activity():
 @pytest.mark.model
 class TestPresence:
     def test_parse_no_Presence(self, no_presence):
-        p = presences.Presence(no_presence)
+        p = presences.MemberPresence(no_presence)
 
         assert p.status == presences.Status.ONLINE
         assert p.desktop_status == presences.Status.ONLINE
@@ -180,7 +180,7 @@ class TestPresence:
         assert len(p.activities) == 0
 
     def test_parse_legacy_Presence(self, legacy_presence):
-        p = presences.Presence(legacy_presence)
+        p = presences.MemberPresence(legacy_presence)
 
         assert p.status == presences.Status.ONLINE
         assert p.desktop_status == presences.Status.OFFLINE
@@ -192,7 +192,7 @@ class TestPresence:
         assert a is not None
 
     def test_rich_Presence(self, rich_presence):
-        p = presences.Presence(rich_presence)
+        p = presences.MemberPresence(rich_presence)
 
         assert p.status == presences.Status.ONLINE
         assert p.desktop_status == presences.Status.ONLINE
@@ -204,7 +204,7 @@ class TestPresence:
         assert a is not None
 
     def test_Presence_update(self, presence_update):
-        p = presences.Presence(presence_update)
+        p = presences.MemberPresence(presence_update)
         assert p.status == presences.Status.ONLINE
         assert p.desktop_status == presences.Status.ONLINE
         assert p.web_status == presences.Status.OFFLINE
@@ -212,7 +212,7 @@ class TestPresence:
         assert len(p.activities) == 0
 
     def test_Presence_delta_when_empty(self, presence_delta_empty):
-        p = presences.Presence(presence_delta_empty)
+        p = presences.MemberPresence(presence_delta_empty)
         assert p.status == presences.Status.OFFLINE
         assert p.desktop_status == presences.Status.OFFLINE
         assert p.web_status == presences.Status.OFFLINE
@@ -223,16 +223,18 @@ class TestPresence:
     def test_Presence___repr__(self):
         assert repr(
             _helpers.mock_model(
-                presences.Presence, status=presences.Status.ONLINE, __repr__=presences.Presence.__repr__
+                presences.MemberPresence, status=presences.Status.ONLINE, __repr__=presences.MemberPresence.__repr__
             )
         )
 
 
 @pytest.mark.model
 def test_parse_Activity(legacy_activity):
-    a = presences.Activity(legacy_activity)
+    a = presences.Activity(**legacy_activity)
     assert a.name == "with yo mama"
+    assert a.type == 0
     assert a.type == presences.ActivityType.PLAYING
+    assert a.url is None
 
 
 @pytest.mark.model
@@ -271,13 +273,6 @@ def test_RichActivity___repr__():
             __repr__=presences.RichActivity.__repr__,
         )
     )
-
-
-@pytest.mark.model
-def test_parse_presence_activity_for_Activity(legacy_activity):
-    a = presences.parse_presence_activity(legacy_activity)
-    # It must be the class exactly, not a derivative.
-    assert type(a) is presences.Activity
 
 
 @pytest.mark.model
@@ -331,15 +326,15 @@ class TestActivityTimestamps:
 
     def test_Activity_to_dict_when_filled(self, activity):
         activity.name = "Tests :)"
-        activity.type = "1"
+        activity.type = 1
         activity.url = "https://www.witch.tv/"
 
         d = activity.to_dict()
 
-        assert d == dict(name="Tests :)", type="1", url="https://www.witch.tv/",)
+        assert d == dict(name="Tests :)", type=1, url="https://www.witch.tv/",)
 
     def test_Activity_to_dict_when_empty(self, activity):
-        assert activity.to_dict() == {}
+        assert activity.to_dict() == dict(name="", type=presences.ActivityType.CUSTOM)
 
     @pytest.mark.model
     def test_ActivityTimestamps___repr__(self):

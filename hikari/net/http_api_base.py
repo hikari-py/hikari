@@ -33,7 +33,6 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
 from hikari.internal_utilities import unspecified
-from hikari.internal_utilities import type_hints
 from hikari.net import http_client
 from hikari.net import opcodes
 from hikari.net import rates
