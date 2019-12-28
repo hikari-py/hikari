@@ -52,6 +52,9 @@ staging-pages:
   extends: .generate-pages
   variables:
     TARGET_BRANCH: staging
+  before_script:
+    - source tasks/deploy.sh
+    - set-versions "$(python tasks/make-version-string.py staging)" || true
 
 pages:  # deploys the generated artifacts as pages
   extends: .deploy-pages-activation
