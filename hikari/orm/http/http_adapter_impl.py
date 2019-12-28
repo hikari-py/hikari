@@ -27,8 +27,8 @@ from hikari.internal_utilities import cache
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import unspecified
-from hikari.orm.http import base_http_adapter
 from hikari.orm import fabric as _fabric
+from hikari.orm.http import base_http_adapter
 from hikari.orm.models import applications as _applications
 from hikari.orm.models import audit_logs as _audit_logs
 from hikari.orm.models import bases

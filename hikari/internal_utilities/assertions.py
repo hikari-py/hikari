@@ -27,10 +27,10 @@ ValueT = typing.TypeVar("ValueT")
 BaseTypeInstanceT = typing.TypeVar("BaseTypeInstanceT")
 
 
-def assert_that(condition: bool, message: str = None) -> None:
+def assert_that(condition: bool, message: str = None, error_type: type = ValueError) -> None:
     """Raises a ValueError with the optional description if the given condition is falsified."""
     if not condition:
-        raise ValueError(message or "condition must not be False")
+        raise error_type(message or "condition must not be False")
 
 
 def assert_not_none(value: ValueT, message: typing.Optional[str] = None) -> ValueT:
