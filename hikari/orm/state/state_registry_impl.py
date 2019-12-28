@@ -491,7 +491,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return message_obj
 
     def parse_presence(
-        self, member_obj: members.Member, presence_payload: containers.DiscordObjectT
+        self, member_obj: members.Member, presence_payload: containers.JSONObject
     ) -> presences.MemberPresence:
         presence_obj = presences.MemberPresence(presence_payload)
         member_obj.presence = presence_obj
@@ -613,7 +613,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return old_member, new_member
 
     def update_member_presence(
-        self, member_obj: members.Member, presence_payload: containers.DiscordObjectT
+        self, member_obj: members.Member, presence_payload: containers.JSONObject
     ) -> typing.Optional[typing.Tuple[members.Member, presences.MemberPresence, presences.MemberPresence]]:
         old_presence = member_obj.presence
         new_presence = self.parse_presence(member_obj, presence_payload)

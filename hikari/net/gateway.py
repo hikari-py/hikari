@@ -931,25 +931,22 @@ class GatewayClient:
         )
 
         self.started_at = time.perf_counter()
+        session = self._client_session_factory()
+
         try:
+            self.logger.debug("creating websocket connection to %s", self.url)
+            self.ws = await session.ws_connect(self.url, **websocket_kwargs)
             try:
-                self.logger.debug("creating websocket connection to %s", self.url)
-                session = self._client_session_factory()
-                try:
-                    self.ws = await session.ws_connect(self.url, **websocket_kwargs)
-                    await self._run_once()
-                finally:
-                    await session.close()
+                await self._run_once()
             finally:
                 self.logger.info("gateway client shutting down")
                 await self.ws.close()
-
         except Exception as ex:
+            await session.close()
+
             self.logger.exception("Caught exception. Backing off for a moment", exc_info=ex)
-            # If we have been open less than 10s, wait until 10s is up from started_at.
-            # This prevents tanking people's PCs if a connection issue arises.
-            ten_seconds_time = time.perf_counter() - (self.started_at + 10)
-            await asyncio.sleep(max(0.5, ten_seconds_time))
+            # Wait for 5 seconds to prevent spam
+            await asyncio.sleep(5)
 
     async def _run_once(self):
         try:

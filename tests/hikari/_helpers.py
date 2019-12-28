@@ -103,6 +103,7 @@ def assert_raises(test=None, *, type_, checks=()):
                     await result
                 assert False, f"{type_.__name__} was not raised."
             except type_ as ex:
+                logging.exception("Caught exception within test type raising bounds", exc_info=ex)
                 for i, check in enumerate(checks, start=1):
                     assert check(ex), f"Check #{i} ({check}) failed"
             except BaseException as ex:

@@ -20,12 +20,13 @@
 Asyncio extensions and utilities.
 """
 from __future__ import annotations
+
 import asyncio
 import functools
 import typing
 
-from hikari.internal_utilities import compat
 from hikari.internal_utilities import assertions
+from hikari.internal_utilities import compat
 
 CoroutineFunctionT = typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, typing.Any]]
 ReturnT = typing.TypeVar("ReturnT")
@@ -78,22 +79,22 @@ class MuxMap:
 
     def add(self, name: str, coroutine_function: CoroutineFunctionT) -> None:
         assertions.assert_that(
-            asyncio.iscoroutinefunction(coroutine_function), "You must subscribe a coroutine function only"
+            asyncio.iscoroutinefunction(coroutine_function), "You must subscribe a coroutine function only", TypeError
         )
         if name not in self._muxes:
             self._muxes[name] = []
         self._muxes[name].append(coroutine_function)
 
     def remove(self, name: str, coroutine_function: CoroutineFunctionT) -> None:
-        if name in self._muxes and coroutine_function in self._muxes:
+        if name in self._muxes and coroutine_function in self._muxes[name]:
             if len(self._muxes[name]) - 1 == 0:
                 del self._muxes[name]
             else:
                 self._muxes[name].remove(coroutine_function)
 
-    def dispatch(self, name: str, *args, **kwargs) -> asyncio.Future:
+    def dispatch(self, name: str, *args) -> asyncio.Future:
         if name in self._muxes:
-            return asyncio.gather(*(callback(*args, **kwargs) for callback in self._muxes[name]))
+            return asyncio.gather(*(callback(*args) for callback in self._muxes[name]))
 
 
 __all__ = ["optional_await", "CoroutineFunctionT", "PartialCoroutineProtocolT", "MuxMap"]

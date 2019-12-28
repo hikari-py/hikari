@@ -22,6 +22,8 @@ Core event adapter implementation for dispatching events.
 The purpose of this is to provide a base for an implementation to define how
 to handle events.
 """
+from __future__ import annotations
+
 import abc
 import logging
 import typing
