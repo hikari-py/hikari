@@ -224,7 +224,8 @@ class Client:
         ready_task = compat.asyncio.create_task(
             shard.ready_event.wait(), name=f"wait for shard {shard.shard_id} to be READY"
         )
-        await asyncio.wait([run_task, ready_task], return_when=asyncio.FIRST_COMPLETED)
+
+        _, pending_tasks = await asyncio.wait([run_task, ready_task], return_when=asyncio.FIRST_COMPLETED)
 
         if run_task.done() and not ready_task.done():
             ready_task.cancel()
@@ -258,9 +259,9 @@ class Client:
         Waits for the client to shut down. This can be used to keep the event loop running after calling
         :func:`start` and initializing any other resources you need.
         """
-        assertions.assert_that(self._shard_tasks is not None, "client is not started")
-        failures, _ = await asyncio.wait(self._shard_tasks.values(), return_when=asyncio.FIRST_EXCEPTION)
-        for failure in failures:
+        assertions.assert_that(self._shard_tasks is not None, "client is not started", RuntimeError)
+        dead_tasks, pending_tasks = await asyncio.wait(self._shard_tasks.values(), return_when=asyncio.FIRST_EXCEPTION)
+        for failure in dead_tasks:
             shard_id, reason = failure.result()
             self.logger.exception("shard %s has shut down", shard_id, exc_info=reason)
 

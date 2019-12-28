@@ -375,7 +375,7 @@ class TestClient:
         assert result == ex
 
     @pytest.mark.asyncio
-    async def test_start_shard_and_wait_ready_when_ready_satisfied(self):
+    async def test_start_shard_and_wait_ready_when_ready_satisfied(self, event_loop):
         client = _client.Client("token")
 
         class Shard:
@@ -531,3 +531,10 @@ class TestClient:
         result = await client.start()
         assert result == {0: f0, 1: f1}
         assert result is not client._shard_tasks
+
+    @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=RuntimeError)
+    async def test_join_when_not_running_raises(self):
+        client = _client.Client("token")
+        client._shard_tasks = None
+        await client.join()
