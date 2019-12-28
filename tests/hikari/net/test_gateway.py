@@ -1055,12 +1055,16 @@ class TestGateway:
             verify_ssl=True,
         )
 
-    async def test_run_once_catches_exception(self, low_level_gateway_mock):
+    async def test_run_once_handles_exception(self, low_level_gateway_mock):
         # Mock to prevent 10s sleep during test and to spy
         with mock.patch("asyncio.sleep", new=mock.AsyncMock()) as sleep:
-            low_level_gateway_mock._client_session_factory = mock.MagicMock(side_effect=ConnectionRefusedError)
+            cs = mock.MagicMock()
+            low_level_gateway_mock._client_session_factory = mock.MagicMock(return_value=cs)
+            cs.close = mock.AsyncMock()
+            cs.ws_connect = mock.AsyncMock(side_effect=ConnectionRefusedError)
             await low_level_gateway_mock.run_once()
             sleep.assert_called_once()
+            cs.close.assert_called_once()
 
     async def test__run_once_waits_for_hello(self, stub_for__run_once):
         # Stop the WS going further than the hello part.

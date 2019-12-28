@@ -110,3 +110,8 @@ coverage-coalesce:
     - coverage combine public/*.coverage
     - coverage report
   coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
+  only:
+    - branches
+    - merge_requests
+    - tags
+    - schedules
