@@ -34,6 +34,8 @@
   image: python:3.8.0
   stage: deploy
   script:
+    - source tasks/deploy.sh
+    - set-versions "$(python tasks/make-version-string.py ${TARGET_BRANCH})" || true
     - pip install nox
     - git clone ${CI_REPOSITORY_URL} -b ${TARGET_BRANCH} hikari_docs_${TARGET_BRANCH} --depth=1
     - cd hikari_docs_${TARGET_BRANCH}
@@ -50,9 +52,6 @@ staging-pages:
   extends: .generate-pages
   variables:
     TARGET_BRANCH: staging
-  before_script:
-    - source tasks/deploy.sh
-    - set-versions "$(python tasks/make-version-string.py staging)" || true
 
 pages:  # deploys the generated artifacts as pages
   extends: .deploy-pages-activation
