@@ -19,8 +19,6 @@
   retry:
     max: 2
   allow_failure: true
-  variables:
-    GIT_STRATEGY: none
   artifacts:
     paths:
       - public/
