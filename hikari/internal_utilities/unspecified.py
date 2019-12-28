@@ -20,7 +20,6 @@
 Sentinel value used internally to represent an entity that was omitted from explicit specification. This
 can be used to mark fields that may be able to be `None` as being optional.
 """
-import typing
 
 from hikari.internal_utilities import singleton_meta
 

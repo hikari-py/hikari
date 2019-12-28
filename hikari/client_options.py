@@ -19,6 +19,8 @@
 """
 Client options that can be set.
 """
+from __future__ import annotations
+
 import dataclasses
 import functools
 import operator
@@ -32,7 +34,29 @@ from hikari.orm.gateway import dispatching_event_adapter_impl
 from hikari.orm.models import presences
 
 
-AUTO_SHARD = object()
+@dataclasses.dataclass()
+class ShardOptions:
+    """
+    Represents allowable shards
+    """
+
+    #: The shards to start. This can be a :class:`range`, a :class:`slice`, or an iterable object
+    #: of integer IDs.
+    #:
+    #: For example, to set all 10 shards up in a 10-shard bot, use:
+    #: >>> ShardOptions(range(10), 10)
+    #: ...or if you wish to instead use 50 shards and only start shard 20-30, use this:
+    #: >>> ShardOptions(slice(20, 30), 10)
+    #: ...if you need finer control, you can just specify them directly as well:
+    #: >>> ShardOptions([3, 6, 7, 9, 11], 20)
+    shards: typing.Union[range, slice, typing.Iterable[int]]
+    #: The total number of shards that the bot will have up, distributed. This is required to be
+    #: consistent across multi-sharded applications that are distributed to ensure that the bot
+    #: has the guilds correctly distributed across shards.
+    shard_count: int
+
+
+AUTO_SHARD = ShardOptions(..., ...)
 
 
 @dataclasses.dataclass()
@@ -56,6 +80,6 @@ class ClientOptions:
     proxy_auth: aiohttp.BasicAuth = None
     proxy_headers: aiohttp.typedefs.LooseHeaders = None
     proxy_url: str = None
-    shards: typing.Union[None, object, typing.Iterable[int], range, slice] = AUTO_SHARD
+    shards: typing.Optional[ShardOptions] = AUTO_SHARD
     ssl_context: ssl.SSLContext = None
     verify_ssl: bool = True
