@@ -430,7 +430,7 @@ class MessageCrosspost:
 
 #: A :class:`Message`, or an :class:`int`/:class:`str` ID of one.
 MessageLikeT = typing.Union[bases.RawSnowflakeT, Message]
-
+MessageFlagLikeT = typing.Union[int, MessageFlag]
 
 __all__ = [
     "AuthorT",
@@ -442,4 +442,5 @@ __all__ = [
     "MessageCrosspost",
     "MessageFlag",
     "MessageLikeT",
+    "MessageFlagLikeT",
 ]

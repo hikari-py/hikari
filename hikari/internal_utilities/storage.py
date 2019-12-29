@@ -47,7 +47,7 @@ def make_resource_seekable(resource) -> typing.Union[io.BytesIO, io.StringIO]:
 def get_bytes_from_resource(resource) -> bytes:
     """
     Take in any object that can be considered file-like and return the raw bytes data from it.
-    Supports any :class:`FileLikeT` type that isn't string based.
+    Supports any :class:`FileLikeT` type that isn't string based. Anything else is just returned.
 
     Args:
         resource:
@@ -73,4 +73,4 @@ BytesLikeT = typing.Union[bytes, bytearray, memoryview, str, io.StringIO, io.Byt
 #: Type description for any object that can be considered to be file-like.
 FileLikeT = typing.Union[BytesLikeT, io.BufferedRandom, io.BufferedReader, io.BufferedRWPair]
 
-__all__ = ("make_resource_seekable", "FileLikeT", "BytesLikeT")
+__all__ = ("make_resource_seekable", "get_bytes_from_resource", "FileLikeT", "BytesLikeT")

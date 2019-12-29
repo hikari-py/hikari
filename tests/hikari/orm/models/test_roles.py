@@ -73,6 +73,7 @@ def test_PartialRole___repr__():
 def test_Role(fabric_obj, role_payload):
     guild_obj = _helpers.mock_model(guilds.Guild, id=6969)
     role_obj = roles.Role(fabric_obj, role_payload, guild_obj.id)
+    fabric_obj.state_registry.get_guild_by_id.return_value = guild_obj
 
     assert role_obj.id == 41771983423143936
     assert role_obj.name == "WE DEM BOYZZ!!!!!!"
@@ -104,6 +105,8 @@ def test_Role(fabric_obj, role_payload):
     )
     assert role_obj.is_managed is False
     assert role_obj.is_mentionable is False
+    assert role_obj.guild is guild_obj
+    fabric_obj.state_registry.get_guild_by_id.assert_called_once_with(6969)
 
 
 @pytest.mark.model

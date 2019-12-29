@@ -63,9 +63,11 @@ class BestEffortEnumMixin:
             return value
 
     def __str__(self):
-        return self.name
+        #  We only want this to default to the value for non-int based enums.
+        return self.name.lower() if isinstance(self, int) else self.value
 
-    __repr__ = __str__
+    def __repr__(self):
+        return self.name
 
 
 class NamedEnumMixin(BestEffortEnumMixin):
@@ -85,9 +87,7 @@ class NamedEnumMixin(BestEffortEnumMixin):
         return cls[name.upper()]
 
     def __str__(self):
-        return self.name
-
-    __repr__ = __str__
+        return self.name.lower()
 
 
 class BaseModel(metaclass=abc.ABCMeta):
@@ -395,17 +395,24 @@ class DictFactory(dict):
     A dictionary factory used for ensuring that values like enums and models are returned in a serializable format.
     """
 
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**{key: self.default(value) for key, value in kwargs.items() if value is not None})
+    def __init__(self, seq=None, **kwargs) -> None:
+        super().__init__(
+            (key, self.default(value)) for key, value in (*kwargs.items(), *(seq or ())) if value is not None
+        )
 
     def __setitem__(self, key, item) -> None:
         super().__setitem__(key, self.default(item))
 
-    @staticmethod
-    def default(value: typing.Any) -> typing.Any:
+    @classmethod
+    def default(cls, value: typing.Any) -> typing.Any:
         """Try to convert a value, and return the result or original value."""
         if isinstance(value, MarshalMixin):
-            value = value.to_dict()
+            value = value.to_dict(dict_factory=cls)
+        #  This covers any int based enums.
+        elif isinstance(value, int):
+            value = int(value)
+        elif isinstance(value, NamedEnumMixin):
+            value = str(value)
         elif isinstance(value, enum.Enum):
             value = value.value
 
@@ -414,27 +421,24 @@ class DictFactory(dict):
 
 class MarshalMixin:
     """
-    A mixin used for making models serializable.
+    A mixin used for making serializable models.
 
     Note:
-        Will need to be decorated with :func:`dataclasses.dataclass`.
-        And will require that __init__ is implemented where the args are the object's fields.
+        Any model inheriting from this will need to be decorated with :func:`dataclasses.dataclass`,
+        and will also need to have an `__init__` implemented where the arguments match up with the model's fields.
     """
 
     __slots__ = ()
 
     def to_dict(self, *, dict_factory: DictFactoryT = DictFactory) -> DictImplT:
         """Get a dictionary of the the values held by the current object."""
-        attrs = {a: getattr(self, a) for a in self.__slots__}
-        # noinspection PyArgumentList,PyTypeChecker
-        return dict_factory(**attrs)
+        return dict_factory((a, getattr(self, a)) for a in self.__slots__)
 
     # noinspection PyArgumentList,PyDataclass
     @classmethod
     def from_dict(cls, payload: containers.JSONObject):
         """Initialise the current model from a Discord payload."""
-        params = {field.name: payload.get(field.name) for field in dataclasses.fields(cls)}
-        return cls(**params)
+        return cls(**{field.name: payload.get(field.name) for field in dataclasses.fields(cls)})
 
 
 #: The valid types of a raw unformatted snowflake.

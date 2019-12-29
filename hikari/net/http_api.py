@@ -235,7 +235,6 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
     async def delete_close_channel(self, channel_id: str) -> None:
         """
         Delete the given channel ID, or if it is a DM, close it.
-
         Args:
             channel_id:
                 The channel ID to delete, or the user ID of the direct message to close.
@@ -860,7 +859,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
     @_link_developer_portal(_APIResource.CHANNEL)
     async def delete_pinned_channel_message(self, channel_id: str, message_id: str) -> None:
         """
-        Remove a pinned message to the channel. This will only unpin the message. It will not delete it.
+        Remove a pinned message from the channel. This will only unpin the message. It will not delete it.
 
         Args:
             channel_id:
