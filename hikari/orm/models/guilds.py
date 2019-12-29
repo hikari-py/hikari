@@ -507,7 +507,7 @@ class GuildEmbed(bases.BaseModel, bases.MarshalMixin):
         self.channel_id = transformations.nullable_cast(channel_id, int)
 
 
-class WidgetStyle(bases.BestEffortEnumMixin, enum.Enum):
+class WidgetStyle(bases.BestEffortEnumMixin, str, enum.Enum):
     """
     Valid styles of widget for a guild.
     """
