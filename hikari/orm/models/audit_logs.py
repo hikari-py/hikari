@@ -349,7 +349,7 @@ def parse_audit_log_entry_info(
         return None
 
 
-class AuditLogChangeKey(str, bases.NamedEnumMixin, enum.Enum):
+class AuditLogChangeKey(str, bases.BestEffortEnumMixin, enum.Enum):
     """
     Commonly known and documented keys for audit log change objects.
 
@@ -497,3 +497,25 @@ class AuditLogChange(bases.BaseModel):
         converter = AUDIT_LOG_ENTRY_CONVERTERS.get(self.key, lambda x: x)
         self.old_value = transformations.nullable_cast(payload.get("old_value"), converter)
         self.new_value = transformations.nullable_cast(payload.get("new_value"), converter)
+
+
+AuditLogEventLikeT = typing.Union[int, AuditLogEvent]
+
+
+__all__ = [
+    "AuditLog",
+    "AuditLogEntry",
+    "AuditLogEvent",
+    "BaseAuditLogEntryInfo",
+    "AuditLogEntryCountInfo",
+    "MemberMoveAuditLogEntryInfo",
+    "MemberPruneAuditLogEntryInfo",
+    "MessageDeleteAuditLogEntryInfo",
+    "MessagePinAuditLogEntryInfo",
+    "ChannelOverwriteAuditLogEntryInfo",
+    "parse_audit_log_entry_info",
+    "AuditLogChangeKey",
+    "AUDIT_LOG_ENTRY_CONVERTERS",
+    "AuditLogChange",
+    "AuditLogEventLikeT",
+]

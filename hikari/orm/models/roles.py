@@ -28,6 +28,7 @@ from hikari.internal_utilities import reprs
 from hikari.orm import fabric
 from hikari.orm.models import bases
 from hikari.orm.models import colors as _color
+from hikari.orm.models import guilds as _guilds
 from hikari.orm.models import permissions as _permission
 
 
@@ -125,13 +126,17 @@ class Role(PartialRole, bases.BaseModelWithFabric):
         self.is_managed = payload["managed"]
         self.is_mentionable = payload["mentionable"]
 
+    @property
+    def guild(self) -> _guilds.Guild:
+        return self._fabric.state_registry.get_guild_by_id(self.guild_id)
+
 
 #: Any type of :class:`PartialRole` (including :class:`Role`), or the :class:`int`/:class:`str` ID of one.
 PartialRoleLikeT = typing.Union[bases.RawSnowflakeT, PartialRole]
 
 
 #: An instance of :class:`Role`, or the :class:`int`/:class:`str` ID of one.
-RoleLikeT = typing.Union[bases.RawSnowflakeT, PartialRole]
+RoleLikeT = typing.Union[bases.RawSnowflakeT, Role]
 
 
 __all__ = ["PartialRole", "Role", "PartialRoleLikeT", "RoleLikeT"]

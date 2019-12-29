@@ -98,6 +98,16 @@ def test_UnicodeEmoji___str__(unicode_emoji_payload):
 
 
 @pytest.mark.model
+def test_UnicodeEmoji_url_name(unicode_emoji_payload):
+    assert emojis.UnicodeEmoji(unicode_emoji_payload).url_name == "\N{OK HAND SIGN}"
+
+
+@pytest.mark.model
+def test_UnicodeEmoji_mention(unicode_emoji_payload):
+    assert emojis.UnicodeEmoji(unicode_emoji_payload).mention == "\N{OK HAND SIGN}"
+
+
+@pytest.mark.model
 def test_UnicodeEmoji___repr__():
     assert repr(
         _helpers.mock_model(emojis.UnicodeEmoji, value="\N{OK HAND SIGN}", __repr__=emojis.UnicodeEmoji.__repr__)
@@ -114,6 +124,12 @@ def test_UnknownEmoji___init__(unknown_emoji_payload):
     e = emojis.UnknownEmoji(unknown_emoji_payload)
     assert e.id == 100000000001110010
     assert e.name == "asshat123"
+    assert e.url_name == "asshat123:100000000001110010"
+    try:
+        e.mention
+        assert False, "Expected AttributeError."
+    except AttributeError:
+        pass
 
 
 @pytest.mark.model
@@ -135,7 +151,22 @@ def test_GuildEmoji___init__(mock_state, fabric_obj, guild_emoji_payload, user_p
     assert e.is_managed is False
     assert e.is_animated is False
     assert e._guild_id == 98765
+    assert e.url_name == "LUL:41771983429993937"
+    assert e.mention == "<:LUL:41771983429993937>"
     mock_state.parse_user.assert_called_with(user_payload)
+
+
+@pytest.mark.model
+def test_GuildEmomji___str__(unicode_emoji_payload, fabric_obj):
+    assert str(emojis.GuildEmoji(fabric_obj, {"id": "1231", "name": "An_emoji"}, 123)) == "<:An_emoji:1231>"
+
+
+@pytest.mark.model
+def test_GuildEmoji_mention_when_not_animated(mock_state, fabric_obj, guild_emoji_payload):
+    mock_state.parse_user = mock.MagicMock()
+    guild_emoji_payload["animated"] = True
+    e = emojis.GuildEmoji(fabric_obj, guild_emoji_payload, 98765)
+    assert e.mention == "<a:LUL:41771983429993937>"
 
 
 @pytest.mark.model

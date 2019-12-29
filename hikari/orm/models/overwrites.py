@@ -28,18 +28,35 @@ import typing
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm.models import bases
+from hikari.orm.models import members
 from hikari.orm.models import permissions
+from hikari.orm.models import roles
 
 
 class OverwriteEntityType(bases.NamedEnumMixin, enum.Enum):
     """
     The type of "thing" that a permission overwrite sets the permissions for.
+
+    These values act as types, so you can write expressions such as:
+
+    .. code-block:: python
+
+        if isinstance(user_or_role, overwrite.type):
+            ...
+
+    ...should you desire to do so.
     """
 
     #: A member.
-    MEMBER = "member"
+    MEMBER = members.Member
     #: A role.
-    ROLE = "role"
+    ROLE = roles.Role
+
+    def __instancecheck__(self, instance: typing.Any) -> bool:
+        return isinstance(instance, self.value)
+
+    def __subclasscheck__(self, subclass: typing.Type) -> bool:
+        return issubclass(subclass, self.value)
 
 
 @dataclasses.dataclass()
@@ -50,15 +67,15 @@ class Overwrite(bases.BaseModel, bases.SnowflakeMixin, bases.MarshalMixin):
 
     __slots__ = ("id", "type", "allow", "deny")
 
-    #: The ID of this overwrite.
+    #: The ID of the user or role this overwrite targets.
     #:
     #: :type: :class:`int` or :class:`None` when initialised locally for api calls.
     id: typing.Optional[int]
 
     #: The type of entity that was changed.
     #:
-    #: :type: :class:`hikari.orm.models.overwrites.OverwriteEntityType` or :class:`None` (locally initialised only).
-    type: typing.Optional[OverwriteEntityType]
+    #: :type: :class:`hikari.orm.models.overwrites.OverwriteEntityType`.
+    type: OverwriteEntityType
 
     #: The bitfield of permissions explicitly allowed.
     #:
@@ -84,20 +101,21 @@ class Overwrite(bases.BaseModel, bases.SnowflakeMixin, bases.MarshalMixin):
 
     def __init__(
         self,
+        type: typing.Union[str, OverwriteEntityType],
+        id: int,
         *,
         allow: typing.Union[permissions.Permission, int] = 0,
         deny: typing.Union[permissions.Permission, int] = 0,
-        id: int = None,
-        type: int = None,
     ) -> None:
-        self.id = transformations.try_cast(id, int)
-        self.type = OverwriteEntityType.from_discord_name(str(type)) if type is not None else type
+        self.id = int(id)
+        self.type = OverwriteEntityType.from_discord_name(str(type))
         self.allow = transformations.try_cast(allow, permissions.Permission)
         self.deny = transformations.try_cast(deny, permissions.Permission)
 
 
+OverwriteEntityTypeLikeT = typing.Union[bases.RawSnowflakeT, OverwriteEntityType]
 #: A :class:`Overwrite`, or an :class:`int`/:class:`str` ID of one.
 OverwriteLikeT = typing.Union[bases.RawSnowflakeT, Overwrite]
 
 
-__all__ = ["Overwrite", "OverwriteEntityType"]
+__all__ = ["Overwrite", "OverwriteEntityType", "OverwriteEntityTypeLikeT"]

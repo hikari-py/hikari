@@ -43,6 +43,16 @@ class Emoji(bases.BaseModel, abc.ABC):
     def is_unicode(self) -> bool:
         """True if the emoji is a unicode emoji, false otherwise."""
 
+    @property
+    @abc.abstractmethod
+    def url_name(self) -> str:
+        """The format used for including this emoji in url calls."""
+
+    @property
+    @abc.abstractmethod
+    def mention(self) -> str:
+        """The format used for sending this emoji in chat."""
+
 
 class UnicodeEmoji(Emoji):
     """
@@ -77,6 +87,12 @@ class UnicodeEmoji(Emoji):
     def __str__(self):
         return self.value
 
+    @property
+    def url_name(self) -> str:
+        return str(self)
+
+    mention = url_name
+
 
 class UnknownEmoji(Emoji, bases.SnowflakeMixin):
     """
@@ -106,6 +122,14 @@ class UnknownEmoji(Emoji, bases.SnowflakeMixin):
     @property
     def is_unicode(self) -> bool:
         return False
+
+    @property
+    def mention(self) -> None:
+        raise AttributeError("Cannot get mention format from an Unknown Emoji.")
+
+    @property
+    def url_name(self) -> str:
+        return f"{self.name}:{self.id}"
 
 
 class GuildEmoji(UnknownEmoji, bases.BaseModelWithFabric):
@@ -162,6 +186,13 @@ class GuildEmoji(UnknownEmoji, bases.BaseModelWithFabric):
     @property
     def guild(self) -> guilds.Guild:
         return self._fabric.state_registry.get_guild_by_id(self._guild_id)
+
+    @property
+    def mention(self) -> str:
+        return f"<{'a' if self.is_animated else ''}:{self.url_name}>"
+
+    def __str__(self):
+        return self.mention
 
 
 def is_payload_guild_emoji_candidate(payload: containers.JSONObject) -> bool:
