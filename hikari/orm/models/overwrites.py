@@ -69,8 +69,8 @@ class Overwrite(bases.BaseModel, bases.SnowflakeMixin, bases.MarshalMixin):
 
     #: The ID of the user or role this overwrite targets.
     #:
-    #: :type: :class:`int` or :class:`None` when initialised locally for api calls.
-    id: typing.Optional[int]
+    #: :type: :class:`int`.
+    id: int
 
     #: The type of entity that was changed.
     #:

@@ -408,8 +408,7 @@ class DictFactory(dict):
         """Try to convert a value, and return the result or original value."""
         if isinstance(value, MarshalMixin):
             value = value.to_dict(dict_factory=cls)
-        #  This covers any int based enums.
-        elif isinstance(value, int):
+        elif isinstance(value, enum.IntEnum):
             value = int(value)
         elif isinstance(value, NamedEnumMixin):
             value = str(value)
