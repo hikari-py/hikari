@@ -568,12 +568,16 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         # We cannot parse this, as we only have the ID field guaranteed to be present, annoyingly.
         user_obj = self.fabric.state_registry.get_user_by_id(user_id)
         if user_obj is None:
-            self.logger.warning("ignoring PRESENCE_UPDATE for unknown user %s in guild %s", user_id, guild_id)
+            # Mediates spam caused by https://gitlab.com/nekokatt/hikari/issues/150
+            # TODO: re-enable this message once #150 is resolved.
+            #self.logger.warning("ignoring PRESENCE_UPDATE for unknown user %s in guild %s", user_id, guild_id)
             return
 
         member_obj = self.fabric.state_registry.get_member_by_id(user_id, guild_id)
         if member_obj is None:
-            self.logger.warning("ignoring PRESENCE_UPDATE for unknown member %s in guild %s", user_id, guild_id)
+            # Mediates spam caused by https://gitlab.com/nekokatt/hikari/issues/150
+            # TODO: re-enable this message once #150 is resolved.
+            #self.logger.warning("ignoring PRESENCE_UPDATE for unknown member %s in guild %s", user_id, guild_id)
             return
 
         presence_diff = self.fabric.state_registry.update_member_presence(member_obj, payload)

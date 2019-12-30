@@ -22,6 +22,7 @@ The primary client for writing a bot with Hikari.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import datetime
 import inspect
 import signal
@@ -80,7 +81,7 @@ class Client:
             self._fabric.gateways = await self._new_shard_map()
             self._fabric.chunker = await self._new_chunker()
         except Exception as ex:
-            self.logger.exception("failed to start a new client successfully", exc_info=ex)
+            self.logger.exception("failed to start a new client", exc_info=ex)
             await self.close()
             self._fabric = None
             raise RuntimeError("failed to initialize application fabric fully")
@@ -269,10 +270,17 @@ class Client:
         """
         asyncio.get_event_loop().run_until_complete(self.run_async())
 
+    def _signal_handler(self, triggered_signal_id, loop):
+        self.logger.critical(
+            "%s signal received. Will shut client down now.",
+            compat.signal.strsignal(triggered_signal_id)
+        )
+        asyncio.run_coroutine_threadsafe(self.close(), loop)
+
     async def run_async(self) -> None:
         """
         Equivalent to running :meth:`start` and :meth:`join`, but also manages registering
-        signal handlers to detect interrupts.
+        signal handlers to detect interrupts if invoked on the main thread.
 
         For example, an `asyncpg` connection pool could be managed like so:
 
@@ -288,28 +296,35 @@ class Client:
 
         ...this example would ensure the database is shut down cleanly on any interrupt occurring, or any
         persistent connection issue occurring.
+
+        Warning:
+            As per the implementation of :meth:`asyncio.AbstractEventLoop.add_signal_handler`, the signal
+            handlers may only be registered if the loop is bound and running to the main thread. If this
+            is not true, then the signal is just not registered.
+
+            If you are running this client on a child thread for this application, you must manage
+            consuming interrupts and safely closing this client manually.
         """
         loop = asyncio.get_event_loop()
 
-        def signal_handler(triggered_signal_id, _=None):
-            self.logger.critical(
-                "%s signal received. Will shut client down now.",
-                compat.signal.strsignal(triggered_signal_id)
-            )
-            asyncio.run_coroutine_threadsafe(self.close(), loop)
-
+        registered_signals = set()
         for signal_id in self._SHUTDOWN_SIGNALS:
-            signal.signal(signal_id, signal_handler)
+            # This may occur in several situations! We might not have the signal on our system, or we might not
+            # be on the main thread, in which case, we can't do much more about this.
+            with contextlib.suppress(Exception):
+                loop.add_signal_handler(signal_id, self._signal_handler, signal_id, loop)
+                registered_signals.add(signal_id)
 
         try:
             await self.start()
             await self.join()
         except KeyboardInterrupt:
-            signal_handler(signal.SIGINT)
+            self._signal_handler(signal.SIGINT, loop)
         finally:
-            # Clear signal handlers.
-            for signal_id in self._SHUTDOWN_SIGNALS:
-                signal.signal(signal_id, signal.SIG_DFL)
+            # Clear signal handlers if we can...
+            for signal_id in registered_signals:
+                with contextlib.suppress(Exception):
+                    loop.remove_signal_handler(signal_id)
 
     async def start(self) -> typing.Mapping[typing.Optional[int], asyncio.Task]:
         """
@@ -342,14 +357,14 @@ class Client:
         All other shards will be disconnected.
         """
         assertions.assert_that(self._shard_tasks is not None, "client is not started", RuntimeError)
-        dead_tasks, pending_tasks = await asyncio.wait(self._shard_tasks.values(), return_when=asyncio.FIRST_EXCEPTION)
+        dead_tasks, pending_tasks = await asyncio.wait(self._shard_tasks.values(), return_when=asyncio.FIRST_COMPLETED)
 
         first_ex = None
         for dead_task in dead_tasks:
             shard, result = dead_task.result()
             if isinstance(result, Exception):
                 self.logger.exception("shard %s raised a fatal exception", shard.shard_id, exc_info=result)
-                if first_ex is None:
+                if first_ex is None and isinstance(result, Exception):
                     first_ex = result
             else:
                 self.logger.warning("shard %s shut down permanently with result %s", shard.shard_id, result)
