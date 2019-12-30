@@ -1053,6 +1053,7 @@ class TestGateway:
             proxy_headers=None,
             ssl_context=None,
             verify_ssl=True,
+            max_msg_size=0,
         )
 
     async def test_run_once_handles_exception(self, low_level_gateway_mock):
