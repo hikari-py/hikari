@@ -20,6 +20,7 @@ import asyncio
 import contextlib
 import datetime
 import math
+import signal
 
 import pytest
 
@@ -467,6 +468,65 @@ class TestClient:
         except RuntimeError as thrown_ex:
             assert thrown_ex.__cause__ is None
 
+    @_helpers.run_in_own_thread
+    def test_run_invokes_run_async_in_event_loop(self):
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        client = _client.Client("token")
+        client.run_async = mock.AsyncMock()
+        client.run()
+        client.run_async.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_run_await_registers_signals(self, event_loop):
+        client = _client.Client("token")
+        client.start = mock.AsyncMock()
+        client.join = mock.AsyncMock()
+        event_loop.add_signal_handler = mock.MagicMock(wraps=event_loop.add_signal_handler)
+        await client.run_async()
+        for signal_id in client._SHUTDOWN_SIGNALS:
+            for (actual_signal_id, _cb, signal_id_to_pass, event_loop_to_pass), _ in event_loop.add_signal_handler.call_args_list:
+                if signal_id == actual_signal_id:
+                    assert signal_id_to_pass == actual_signal_id and signal_id_to_pass == signal_id
+                    assert event_loop_to_pass is event_loop
+                    break
+            else:
+                assert False, f"Signal {signal_id} was not registered"
+
+    @pytest.mark.asyncio
+    async def test_run_await_unregisters_signals(self, event_loop):
+        client = _client.Client("token")
+        client.start = mock.AsyncMock()
+        client.join = mock.AsyncMock()
+        event_loop.remove_signal_handler = mock.MagicMock()
+
+        await client.run_async()
+        for signal_id in client._SHUTDOWN_SIGNALS:
+            event_loop.remove_signal_handler.assert_any_call(signal_id)
+
+    @pytest.mark.asyncio
+    async def test_run_await_KeyboardInterrupt_delegates_to_SIGINT_handler(self, event_loop):
+        client = _client.Client("token")
+        assert signal.SIGINT in client._SHUTDOWN_SIGNALS, "we cant delegate to SIGINT if SIGINT isn't a tracked signal!"
+
+        client._signal_handler = mock.MagicMock()
+
+        client.start = mock.AsyncMock()
+        client.join = mock.AsyncMock(side_effect=KeyboardInterrupt)
+
+        await client.run_async()
+
+        client._signal_handler.assert_any_call(signal.SIGINT, event_loop)
+
+    @pytest.mark.asyncio
+    async def test_signal_handler_closes_threadsafe(self):
+        client = _client.Client("token")
+        loop = mock.MagicMock()
+        client.close = mock.MagicMock()
+        with mock.patch("asyncio.run_coroutine_threadsafe") as run_coroutine_threadsafe:
+            with mock.patch("hikari.internal_utilities.compat.signal.strsignal"):
+                client._signal_handler(mock.MagicMock(spec_set=signal.Signals), loop)
+        run_coroutine_threadsafe.assert_called_once_with(client.close(), loop)
+
     @pytest.mark.asyncio
     @_helpers.assert_raises(type_=RuntimeError)
     async def test_start_refuses_to_run_if_already_running(self):
@@ -574,12 +634,32 @@ class TestClient:
         await client.join()
 
     @pytest.mark.asyncio
+    async def test_join_iterates_across_failures_to_manage_non_exception(self):
+        client = _client.Client("token")
+        client.close = mock.AsyncMock()
+        client._fabric = mock.MagicMock()
+
+        async def dump_after(what, after):
+            await asyncio.sleep(after)
+            return mock.MagicMock(), what
+
+        client._shard_tasks = {
+            0: asyncio.create_task(dump_after(123, 0.75)),
+            1: asyncio.create_task(dump_after(345, 0.25)),
+            2: asyncio.create_task(dump_after(456, 0.5)),
+        }
+
+        await client.join()
+
+    @pytest.mark.asyncio
     async def test_join_iterates_across_failures_to_raise_first_exception(self):
         client = _client.Client("token")
+        client.close = mock.AsyncMock()
+        client._fabric = mock.MagicMock(spec_set=_fabric.Fabric)
 
-        async def throw_after(what, after):
+        async def dump_after(what, after):
             await asyncio.sleep(after)
-            raise what()
+            return mock.MagicMock(), what()
 
         class Ex1(Exception):
             pass
@@ -591,9 +671,9 @@ class TestClient:
             pass
 
         client._shard_tasks = {
-            0: asyncio.create_task(throw_after(Ex1, 0.75)),
-            1: asyncio.create_task(throw_after(Ex2, 0.25)),
-            2: asyncio.create_task(throw_after(Ex3, 0.5)),
+            0: asyncio.create_task(dump_after(Ex1, 0.75)),
+            1: asyncio.create_task(dump_after(Ex2, 0.1)),
+            2: asyncio.create_task(dump_after(Ex3, 0.5)),
         }
 
         try:

@@ -71,6 +71,9 @@ AUTO_SHARD = ShardOptions((), 0)
 #: Use no shards.
 NO_SHARDS = ShardOptions([None], 1)
 
+# This is rather long and obnoxious.
+_DEFAULT_CHUNK_MODE = dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+
 
 @dataclasses.dataclass()
 class ClientOptions:
@@ -79,7 +82,7 @@ class ClientOptions:
     """
 
     allow_redirects: bool = False
-    chunk_mode: dispatching_event_adapter_impl.AutoRequestChunksMode = dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+    chunk_mode: dispatching_event_adapter_impl.AutoRequestChunksMode = _DEFAULT_CHUNK_MODE
     connector: aiohttp.BaseConnector = None
     enable_guild_subscription_events = True
     http_max_retries: int = 5
