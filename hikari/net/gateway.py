@@ -928,6 +928,7 @@ class GatewayClient:
             verify_ssl=self.verify_ssl,
             ssl_context=self.ssl_context,
             compress=0,
+            max_msg_size=0,  # fixes #149, due to Discord's iffy message sizes.
         )
 
         self.started_at = time.perf_counter()
