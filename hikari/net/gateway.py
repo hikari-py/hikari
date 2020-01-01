@@ -482,7 +482,7 @@ class GatewayClient:
         #: The URI being connected to.
         #:
         #: :type: :class:`str`
-        self.url = f"{uri}?v={self.version}&encoding=json&compression=zlib-stream"
+        self.url = f"{uri}?v={self.version}&encoding=json&compress=zlib-stream"
 
         #: The active websocket connection handling the low-level connection logic. Populated only while
         #: connected.
