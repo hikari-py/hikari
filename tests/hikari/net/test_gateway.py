@@ -107,7 +107,7 @@ class TestGateway:
         assert bits.scheme == "wss"
         assert bits.hostname == "gateway.discord.gg"
         assert bits.port == 4949
-        assert bits.query == "v=7&encoding=json&compression=zlib-stream"
+        assert bits.query == "v=7&encoding=json&compress=zlib-stream"
         assert not bits.fragment
 
     async def test_do_resume_triggers_correct_signals(self, event_loop):
@@ -1046,7 +1046,7 @@ class TestGateway:
         low_level_gateway_mock._receive_hello = mock.AsyncMock(side_effect=gateway._WebSocketClosure(1000, "idk"))
         await low_level_gateway_mock.run_once()
         low_level_gateway_mock._mock_session.ws_connect.assert_called_once_with(
-            "wss://localhost:4949?v=7&encoding=json&compression=zlib-stream",
+            "wss://localhost:4949?v=7&encoding=json&compress=zlib-stream",
             compress=0,
             proxy=None,
             proxy_auth=None,
