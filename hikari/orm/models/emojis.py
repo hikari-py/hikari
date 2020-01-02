@@ -43,16 +43,6 @@ class Emoji(bases.BaseModel, abc.ABC):
     def is_unicode(self) -> bool:
         """True if the emoji is a unicode emoji, false otherwise."""
 
-    @property
-    @abc.abstractmethod
-    def url_name(self) -> str:
-        """The format used for including this emoji in url calls."""
-
-    @property
-    @abc.abstractmethod
-    def mention(self) -> str:
-        """The format used for sending this emoji in chat."""
-
 
 class UnicodeEmoji(Emoji):
     """
@@ -122,10 +112,6 @@ class UnknownEmoji(Emoji, bases.SnowflakeMixin):
     @property
     def is_unicode(self) -> bool:
         return False
-
-    @property
-    def mention(self) -> None:
-        raise AttributeError("Cannot get mention format from an Unknown Emoji.")
 
     @property
     def url_name(self) -> str:
@@ -231,6 +217,9 @@ def parse_emoji(
         return UnicodeEmoji(payload)
 
 
+#: Any type of emoji or a :class:`str` representation of an unicode emoji.
+EmojiLikeT = typing.Union[Emoji, str]
+
 #: The type of a known emoji.
 KnownEmojiT = typing.Union[UnicodeEmoji, GuildEmoji]
 
@@ -241,4 +230,13 @@ GuildEmojiLikeT = typing.Union[bases.RawSnowflakeT, GuildEmoji]
 KnownEmojiLikeT = typing.Union[int, str, KnownEmojiT]
 
 
-__all__ = ["Emoji", "UnicodeEmoji", "UnknownEmoji", "GuildEmoji", "KnownEmojiT", "GuildEmojiLikeT", "KnownEmojiLikeT"]
+__all__ = [
+    "Emoji",
+    "UnicodeEmoji",
+    "UnknownEmoji",
+    "GuildEmoji",
+    "KnownEmojiT",
+    "EmojiLikeT",
+    "GuildEmojiLikeT",
+    "KnownEmojiLikeT",
+]

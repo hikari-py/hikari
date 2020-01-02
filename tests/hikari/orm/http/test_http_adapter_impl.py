@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import asyncio
 import asyncmock as mock
 import pytest
 
@@ -151,34 +152,34 @@ class TestHTTPAdapterImpl:
         assert result is mock_channel
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 532323423432343234, channels.TextChannel)
-    @pytest.mark.parametrize("is_dm", [True, False])
-    async def test_fetch_channel(self, fabric_impl, channel, is_dm):
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 532323423432343234, channels.DMChannel)
+    async def test_fetch_dm_channel(self, fabric_impl, channel):
         mock_channel_payload = {"id": "532323423432343234", "name": "nyakuza"}
-        mock_guild = None
-        if not is_dm:
-            mock_channel_payload["guild_id"] = "22222222"
-            mock_guild = mock.MagicMock(guilds.Guild)
-            fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = mock_guild
         mock_channel = mock.MagicMock(channels.Channel)
         fabric_impl.state_registry.parse_channel.return_value = mock_channel
         fabric_impl.http_api.get_channel = mock.AsyncMock(return_value=mock_channel_payload)
         assert await fabric_impl.http_adapter.fetch_channel(channel) is mock_channel
         fabric_impl.http_api.get_channel.assert_called_once_with("532323423432343234")
-        if not is_dm:
-            fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(22222222)
+        fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_channel_payload, None)
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 532323423432343234, channels.GuildChannel)
+    async def test_fetch_guild_channel_when_is_guild_channel(self, fabric_impl, channel):
+        mock_channel_payload = {"id": "532323423432343234", "name": "nyakuza", "guild_id": "22222222"}
+        mock_guild = mock.MagicMock(guilds.Guild)
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = mock_guild
+        mock_channel = mock.MagicMock(channels.Channel)
+        fabric_impl.state_registry.parse_channel.return_value = mock_channel
+        fabric_impl.http_api.get_channel = mock.AsyncMock(return_value=mock_channel_payload)
+        assert await fabric_impl.http_adapter.fetch_channel(channel) is mock_channel
+        fabric_impl.http_api.get_channel.assert_called_once_with("532323423432343234")
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(22222222)
         fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_channel_payload, mock_guild)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 532323423432343234, channels.TextChannel)
-    @pytest.mark.parametrize("is_dm", [True, False])
-    async def test_update_channel_without_optionals(self, fabric_impl, channel, is_dm):
+    async def test_update_dm_channel_without_optionals(self, fabric_impl, channel):
         mock_channel_payload = {"id": "20409595959", "name": "mechanical-hands"}
-        mock_guild = None
-        if is_dm:
-            mock_channel_payload["guild_id"] = "4959595959"
-            mock_guild = mock.MagicMock(guilds.Guild)
-            fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = mock_guild
         mock_channel = mock.MagicMock(channels.Channel)
         fabric_impl.http_api.modify_channel = mock.AsyncMock(return_value=mock_channel_payload)
         fabric_impl.state_registry.parse_channel.return_value = mock_channel
@@ -195,21 +196,38 @@ class TestHTTPAdapterImpl:
             parent_id=unspecified.UNSPECIFIED,
             reason=unspecified.UNSPECIFIED,
         )
-        if is_dm:
-            fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(4959595959)
+        fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_channel_payload, None)
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 532323423432343234, channels.TextChannel)
+    async def test_update_guild_channel_without_optionals(self, fabric_impl, channel):
+        mock_channel_payload = {"id": "20409595959", "name": "mechanical-hands", "guild_id": "4959595959"}
+        mock_guild = mock.MagicMock(guilds.Guild)
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = mock_guild
+        mock_channel = mock.MagicMock(channels.Channel)
+        fabric_impl.http_api.modify_channel = mock.AsyncMock(return_value=mock_channel_payload)
+        fabric_impl.state_registry.parse_channel.return_value = mock_channel
+        assert await fabric_impl.http_adapter.update_channel(channel) is mock_channel
+        fabric_impl.http_api.modify_channel.assert_called_once_with(
+            channel_id="532323423432343234",
+            position=unspecified.UNSPECIFIED,
+            topic=unspecified.UNSPECIFIED,
+            nsfw=unspecified.UNSPECIFIED,
+            rate_limit_per_user=unspecified.UNSPECIFIED,
+            bitrate=unspecified.UNSPECIFIED,
+            user_limit=unspecified.UNSPECIFIED,
+            permission_overwrites=unspecified.UNSPECIFIED,
+            parent_id=unspecified.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
+        )
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(4959595959)
         fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_channel_payload, mock_guild)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 532323423432343234, channels.TextChannel)
     @_helpers.parametrize_valid_id_formats_for_models("parent_category", 324123123123123, channels.GuildCategory)
-    @pytest.mark.parametrize("is_dm", [True, False])
-    async def test_update_channel_with_all_optionals(self, fabric_impl, channel, parent_category, is_dm):
+    async def test_update_dm_channel_with_all_optionals(self, fabric_impl, channel, parent_category):
         mock_channel_payload = {"id": "3949583839939", "name": "nothing-gets-me-down"}
-        mock_guild = None
-        if is_dm:
-            mock_channel_payload["guild_id"] = "4945939393"
-            mock_guild = mock.MagicMock(guilds.Guild)
-            fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = mock_guild
         mock_channel = mock.MagicMock(channels.Channel)
         fabric_impl.http_api.modify_channel = mock.AsyncMock(return_value=mock_channel_payload)
         fabric_impl.state_registry.parse_channel.return_value = mock_channel
@@ -217,7 +235,7 @@ class TestHTTPAdapterImpl:
             await fabric_impl.http_adapter.update_channel(
                 channel,
                 position=4,
-                topic="I can't believe it's not a topic.",
+                topic="I can't believe it's a topic.",
                 nsfw=True,
                 rate_limit_per_user=4040404,
                 bitrate=320,
@@ -233,7 +251,7 @@ class TestHTTPAdapterImpl:
         fabric_impl.http_api.modify_channel.assert_called_once_with(
             channel_id="532323423432343234",
             position=4,
-            topic="I can't believe it's not a topic.",
+            topic="I can't believe it's a topic.",
             nsfw=True,
             rate_limit_per_user=4040404,
             bitrate=320,
@@ -242,8 +260,48 @@ class TestHTTPAdapterImpl:
             parent_id="324123123123123",
             reason="You just got vectored.",
         )
-        if is_dm:
-            fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(4945939393)
+        fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_channel_payload, None)
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 532323423432343234, channels.TextChannel)
+    @_helpers.parametrize_valid_id_formats_for_models("parent_category", 324123123123123, channels.GuildCategory)
+    async def test_update_guild_channel_with_all_optionals(self, fabric_impl, channel, parent_category):
+        mock_channel_payload = {"id": "3949583839939", "name": "nothing-gets-me-down", "guild_id": "4945939393"}
+        mock_guild = mock.MagicMock(guilds.Guild)
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = mock_guild
+        mock_channel = mock.MagicMock(channels.Channel)
+        fabric_impl.http_api.modify_channel = mock.AsyncMock(return_value=mock_channel_payload)
+        fabric_impl.state_registry.parse_channel.return_value = mock_channel
+        assert (
+            await fabric_impl.http_adapter.update_channel(
+                channel,
+                position=4,
+                topic="I can't believe it's a topic.",
+                nsfw=True,
+                rate_limit_per_user=4040404,
+                bitrate=320,
+                user_limit=2,
+                permission_overwrites=[
+                    overwrites.Overwrite(id=22, deny=69, allow=42, type=overwrites.OverwriteEntityType.MEMBER)
+                ],
+                parent_category=parent_category,
+                reason="You just got vectored.",
+            )
+            is mock_channel
+        )
+        fabric_impl.http_api.modify_channel.assert_called_once_with(
+            channel_id="532323423432343234",
+            position=4,
+            topic="I can't believe it's a topic.",
+            nsfw=True,
+            rate_limit_per_user=4040404,
+            bitrate=320,
+            user_limit=2,
+            permission_overwrites=[{"id": 22, "allow": 42, "deny": 69, "type": "member"}],
+            parent_id="324123123123123",
+            reason="You just got vectored.",
+        )
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(4945939393)
         fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_channel_payload, mock_guild)
 
     @pytest.mark.asyncio
@@ -298,13 +356,10 @@ class TestHTTPAdapterImpl:
         fabric_impl.state_registry.parse_message.assert_called_once_with(mock_message_payload)
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_fetch_raises_type_error_without_channel(self, fabric_impl):
         fabric_impl.http_api.get_channel_message = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.fetch_message("2132132")
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.fetch_message("2132132")
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 2121231312, channels.Channel)
@@ -328,23 +383,38 @@ class TestHTTPAdapterImpl:
     async def test_create_message_with_all_optionals(self, fabric_impl, channel):
         mock_message_payload = {"id": "32123123", "content": "whoop"}
         mock_message = mock.MagicMock(messages.Message)
-        mock_file = mock.MagicMock(media.File)
-        mock_file.open.return_value = b"4ascbdas32"
+        mock_file = mock.MagicMock(
+            spec=media.File,
+            open=mock.MagicMock(return_value=mock.AsyncMock(read=mock.AsyncMock(return_value=b"53234234"))),
+        )
+        mock_file.name = "Nekos"
+        mock_in_memory_file = mock.MagicMock(
+            spec=media.InMemoryFile,
+            open=mock.MagicMock(return_value=mock.MagicMock(read=mock.MagicMock(return_value=b"4ascbdas32"))),
+        )
+        mock_in_memory_file.name = "cafe"
         fabric_impl.state_registry.parse_message.return_value = mock_message
         fabric_impl.http_api.create_message = mock.AsyncMock(return_value=mock_message_payload)
         assert (
             await fabric_impl.http_adapter.create_message(
-                channel, content="hey, hey", tts=True, files=[mock_file], embed=embeds.Embed(description="fi"),
+                channel,
+                content="hey, hey",
+                tts=True,
+                files=[mock_file],
+                embed=mock.MagicMock(
+                    spec=embeds.Embed,
+                    to_dict=mock.MagicMock(return_value={"description": "fi", "type": "rich"}),
+                    assets_to_upload=[mock_in_memory_file],
+                ),
             )
             is mock_message
         )
         fabric_impl.state_registry.parse_message.assert_called_once_with(mock_message_payload)
-        mock_file.open.assert_called_once()
         fabric_impl.http_api.create_message.assert_called_once_with(
             channel_id="2121231312",
             content="hey, hey",
             tts=True,
-            files=[b"4ascbdas32"],
+            files=[("Nekos", b"53234234"), ("cafe", b"4ascbdas32")],
             embed={"description": "fi", "type": "rich"},
         )
 
@@ -363,7 +433,9 @@ class TestHTTPAdapterImpl:
             ["322222212121", "532432123"],
         ),
     )
-    @pytest.mark.parametrize("emoji", ["emoji:20202020", emojis.UnknownEmoji({"name": "emoji", "id": "20202020"})])
+    @pytest.mark.parametrize(
+        "emoji", ["emoji:20202020", mock.MagicMock(emojis.UnknownEmoji, url_name="emoji:20202020")]
+    )
     async def test_create_reaction(self, fabric_impl, message, emoji, channel):
         fabric_impl.http_api.create_reaction = mock.AsyncMock()
         assert await fabric_impl.http_adapter.create_reaction(message, emoji, channel=channel) is None
@@ -372,13 +444,10 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_create_reaction_raises_type_error_without_channel(self, fabric_impl):
         fabric_impl.http_api.create_reaction = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.create_reaction("321123", "2123123")
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.create_reaction("321123", "2123123")
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -398,11 +467,11 @@ class TestHTTPAdapterImpl:
                 unspecified.UNSPECIFIED,
             ],
             [
-                emojis.UnknownEmoji({"id": 21212121212, "name": "nya"}),
+                mock.MagicMock(emojis.UnknownEmoji, url_name="nya:21212121212"),
                 _helpers.mock_model(channels.Channel, id=434343),
                 _helpers.mock_model(messages.Message, id=532432123),
             ],
-            [emojis.UnknownEmoji({"id": 21212121212, "name": "nya"}), 434343, 532432123],
+            [mock.MagicMock(emojis.UnknownEmoji, url_name="nya:21212121212"), 434343, 532432123],
             ["nya:21212121212", 434343, 532432123],
             ["nya:21212121212", "434343", "532432123"],
         ),
@@ -421,16 +490,13 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     @pytest.mark.parametrize(
         ["message", "channel"], (["123", unspecified.UNSPECIFIED], [unspecified.UNSPECIFIED, "423"])
     )
     async def test_delete_reaction_raises_type_error_without_chanel(self, fabric_impl, channel, message):
         fabric_impl.http_api.delete_user_reaction = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.delete_reaction("OwO:123", "123", channel=channel, message=message)
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.delete_reaction("OwO:123", "123", channel=channel, message=message)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -520,13 +586,10 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_update_message_raises_type_error_without_channel(self, fabric_impl):
         fabric_impl.http_api.edit_message = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.update_message(123123)
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.update_message(123123)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -572,22 +635,16 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_delete_messages_raises_type_error_without_channel(self, fabric_impl):
         fabric_impl.http_api.delete_message = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.delete_messages("12312")
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.delete_messages("12312")
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=ValueError)
     async def test_delete_messages_raises_value_error_when_too_many_messages_passed(self, fabric_impl):
         fabric_impl.http_api.bulk_delete_messages = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.delete_messages(*range(0, 101), channel=212)
-            assert False, "Expected TypeError."
-        except ValueError:
-            pass
+        await fabric_impl.http_adapter.delete_messages(*range(0, 101), channel=212)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 245321970760024064, channels.Channel)
@@ -720,13 +777,10 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_test_pin_message_raises_type_error_without_channel(self, fabric_impl):
         fabric_impl.http_api.add_pinned_channel_message = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.pin_message("41231")
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.pin_message("41231")
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -751,13 +805,10 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_test_unpin_message_raises_type_error_without_channel(self, fabric_impl):
         fabric_impl.http_api.delete_pinned_channel_message = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.unpin_message("3123")
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.unpin_message("3123")
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -787,13 +838,10 @@ class TestHTTPAdapterImpl:
         fabric_impl.state_registry.parse_emoji.assert_called_once_with(mock_emoji_payload, mock_guild)
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_fetch_guild_emoji_raises_type_error_without_guild(self, fabric_impl):
         fabric_impl.http_api.get_guild_emoji = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.fetch_guild_emoji(emoji="123123")
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.fetch_guild_emoji(emoji="123123")
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 777, guilds.Guild)
@@ -907,13 +955,10 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_update_guild_emoji_raises_type_error_without_guild(self, fabric_impl):
         fabric_impl.http_api.modify_guild_emoji = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.update_guild_emoji("22222")
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.update_guild_emoji("22222")
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -938,13 +983,10 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_delete_guild_emoji_raises_type_error_without_guild(self, fabric_impl):
         fabric_impl.http_api.delete_guild_emoji = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.delete_guild_emoji("4123")
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.delete_guild_emoji("4123")
 
     @pytest.mark.asyncio
     @_helpers.todo_implement
@@ -1170,13 +1212,10 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_reposition_guild_channels_raises_type_error_without_guild(self, fabric_impl):
         fabric_impl.http_api.modify_guild_channel_positions = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.reposition_guild_channels((0, 123), (1, 4321))
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.reposition_guild_channels((0, 123), (1, 4321))
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -1213,13 +1252,10 @@ class TestHTTPAdapterImpl:
         fabric_impl.state_registry.parse_member.assert_called_once_with(mock_member_payload, mock_guild)
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_fetch_member_raises_type_error_without_guild(self, fabric_impl):
         fabric_impl.http_api.get_guild_member = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.fetch_member("777")
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.fetch_member("777")
 
     @pytest.mark.asyncio
     @_helpers.todo_implement
@@ -1309,13 +1345,10 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_update_member_raises_type_error_without_guild(self, fabric_impl):
         fabric_impl.http_api.modify_guild_member = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.update_member("64323")
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.update_member("64323")
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 55555555, guilds.Guild)
@@ -1363,13 +1396,10 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_add_role_to_member_raises_type_error_without_guild(self, fabric_impl):
         fabric_impl.http_api.add_guild_member_role = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.add_role_to_member("212", "333")
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.add_role_to_member("212", "333")
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -1408,13 +1438,10 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_remove_role_from_member_raises_type_error_without_guild(self, fabric_impl):
         fabric_impl.http_api.remove_guild_member_role = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.remove_role_from_member("222", "444")
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.remove_role_from_member("222", "444")
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -1444,13 +1471,10 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_kick_member_raises_type_error_without_guild(self, fabric_impl):
         fabric_impl.http_api.remove_guild_member = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.kick_member("22222")
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.kick_member("22222")
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
@@ -1508,13 +1532,10 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_ban_member_raises_type_error_without_guild(self, fabric_impl):
         fabric_impl.http_api.create_guild_ban = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.ban_member("222")
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.ban_member("222")
 
     @_helpers.todo_implement
     @pytest.mark.asyncio
@@ -1617,13 +1638,10 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_reposition_roles_raises_type_error_without_guild(self, fabric_impl):
         fabric_impl.http_api.modify_guild_role_positions = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.reposition_roles((1, 321), (2, 5432))
-            assert False, "Expected TypeError."
-        except TypeError:
-            ...
+        await fabric_impl.http_adapter.reposition_roles((1, 321), (2, 5432))
 
     @pytest.mark.asyncio
     @pytest.mark.asyncio
@@ -1700,12 +1718,9 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_update_role_raises_type_error_without_guild(self, fabric_impl):
-        try:
-            await fabric_impl.http_adapter.update_role(213212312)
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.update_role(213212312)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -1730,13 +1745,10 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
     async def test_delete_role_raises_type_error_without_guild(self, fabric_impl):
         fabric_impl.http_api.delete_guild_role = mock.AsyncMock()
-        try:
-            await fabric_impl.http_adapter.delete_role(1231231231)
-            assert False, "Expected TypeError."
-        except TypeError:
-            pass
+        await fabric_impl.http_adapter.delete_role(1231231231)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)

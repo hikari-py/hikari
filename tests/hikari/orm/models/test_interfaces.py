@@ -172,11 +172,8 @@ class TestNamedEnumMixin:
     def test_from_discord_name(self):
         assert DummyNamedEnum.from_discord_name("bar") is DummyNamedEnum.BAR
 
-    @pytest.mark.parametrize(
-        ("cast", "expected_result"), [(str, "baz"), (repr, "BAZ")], ids=lambda it: getattr(it, "__qualname__", it)
-    )
-    def test_str_and_repr(self, cast, expected_result):
-        assert cast(DummyNamedEnum.BAZ) == expected_result
+    def test_str(self):
+        assert str(DummyNamedEnum.BAZ) == "baz"
 
 
 @pytest.mark.model
@@ -193,11 +190,8 @@ class TestBestEffortEnumMixin:
     def test_get_best_effort_from_value_sad_path(self):
         assert DummyBestEffortEnum.get_best_effort_from_value("BARr") == "BARr"
 
-    @pytest.mark.parametrize(
-        ("cast", "expected_result"), [(str, "baz"), (repr, "BAZ")], ids=lambda it: getattr(it, "__qualname__", it)
-    )
-    def test_str_and_repr(self, cast, expected_result):
-        assert cast(DummyBestEffortEnum.BAZ) == expected_result
+    def test_str_and_repr(self):
+        assert str(DummyBestEffortEnum.BAZ) == "baz"
 
     def test_str_with_non_int_based_enum(self):
         assert str(DummyBestEffortEnumStringBased.BAZ) == "foo"

@@ -22,6 +22,7 @@ Basic transformation utilities.
 import contextlib
 import typing
 
+from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import unspecified
 
 ValueT = typing.TypeVar("ValueT")
@@ -54,7 +55,7 @@ def put_if_specified(
     mapping: typing.Dict[typing.Hashable, typing.Any],
     key: typing.Hashable,
     value: typing.Any,
-    type_after: CastT = unspecified.UNSPECIFIED,
+    type_after: type_hints.NotRequired[CastT] = unspecified.UNSPECIFIED,
 ) -> None:
     """
     Add a value to the mapping under the given key as long as the value is not :attr:`UNSPECIFIED`
@@ -91,7 +92,7 @@ def get_id(value: typing.Any) -> str:
 
 
 def cast_if_specified(
-    data: typing.Union[ValueT, typing.Iterable[ValueT], None],
+    data: typing.Union[ValueT, typing.Iterable[ValueT], unspecified.Unspecified, None],
     cast: CastT,
     iterable: bool = False,
     nullable: bool = False,
@@ -129,7 +130,7 @@ def put_if_not_none(
     mapping: typing.Dict[typing.Hashable, typing.Any],
     key: typing.Hashable,
     value: typing.Any,
-    type_after: CastT = unspecified.UNSPECIFIED,
+    type_after: type_hints.NotRequired[CastT] = unspecified.UNSPECIFIED,
 ) -> None:
     """
     Add a value to the mapping under the given key as long as the value is not :attr:`None`

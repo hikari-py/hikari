@@ -28,6 +28,7 @@ from hikari.internal_utilities import cache
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import unspecified
 from hikari.orm import fabric as _fabric
 from hikari.orm.http import base_http_adapter
@@ -76,9 +77,9 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         self,
         guild: _guilds.GuildLikeT,
         *,
-        user: _users.BaseUserLikeT = unspecified.UNSPECIFIED,
-        action_type: _audit_logs.AuditLogEventLikeT = unspecified.UNSPECIFIED,
-        limit: int = unspecified.UNSPECIFIED,
+        user: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        action_type: type_hints.NotRequired[_audit_logs.AuditLogEventLikeT] = unspecified.UNSPECIFIED,
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
     ) -> _audit_logs.AuditLog:
         audit_log_payload = await self.fabric.http_api.get_guild_audit_log(
             guild_id=transformations.get_id(guild),
@@ -100,15 +101,17 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         self,
         channel: _channels.ChannelLikeT,
         *,
-        position: int = unspecified.UNSPECIFIED,
-        topic: str = unspecified.UNSPECIFIED,
-        nsfw: bool = unspecified.UNSPECIFIED,
-        rate_limit_per_user: int = unspecified.UNSPECIFIED,
-        bitrate: int = unspecified.UNSPECIFIED,
-        user_limit: int = unspecified.UNSPECIFIED,
-        permission_overwrites: typing.Collection[_overwrites.Overwrite] = unspecified.UNSPECIFIED,
-        parent_category: typing.Optional[_channels.GuildCategoryLikeT] = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        position: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        topic: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        nsfw: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        rate_limit_per_user: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        bitrate: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        user_limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        permission_overwrites: type_hints.NotRequired[
+            typing.Collection[_overwrites.Overwrite]
+        ] = unspecified.UNSPECIFIED,
+        parent_category: type_hints.NullableNotRequired[_channels.GuildCategoryLikeT] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> _channels.Channel:
         channel_obj = await self.fabric.http_api.modify_channel(
             channel_id=transformations.get_id(channel),
@@ -137,16 +140,19 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         self,
         channel: _channels.TextChannelLikeT,
         *,
-        limit: int = unspecified.UNSPECIFIED,
-        after: _messages.MessageLikeT = unspecified.UNSPECIFIED,
-        before: _messages.MessageLikeT = unspecified.UNSPECIFIED,
-        around: _messages.MessageLikeT = unspecified.UNSPECIFIED,
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        after: type_hints.NotRequired[_messages.MessageLikeT] = unspecified.UNSPECIFIED,
+        before: type_hints.NotRequired[_messages.MessageLikeT] = unspecified.UNSPECIFIED,
+        around: type_hints.NotRequired[_messages.MessageLikeT] = unspecified.UNSPECIFIED,
         in_order: bool = False,
     ) -> typing.AsyncIterator[_messages.Message]:
         raise NotImplementedError
 
     async def fetch_message(
-        self, message: _messages.MessageLikeT, *, channel: _channels.TextChannelLikeT = unspecified.UNSPECIFIED
+        self,
+        message: _messages.MessageLikeT,
+        *,
+        channel: type_hints.NotRequired[_channels.TextChannelLikeT] = unspecified.UNSPECIFIED,
     ) -> _messages.Message:
         message_payload = await self.fabric.http_api.get_channel_message(
             message_id=transformations.get_id(message),
@@ -158,16 +164,25 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         self,
         channel: _channels.TextChannelLikeT,
         *,
-        content: str = unspecified.UNSPECIFIED,
+        content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         tts: bool = False,
-        files: typing.Collection[_media.AbstractFile] = unspecified.UNSPECIFIED,
-        embed: _embeds.Embed = unspecified.UNSPECIFIED,
+        files: type_hints.NotRequired[typing.Collection[_media.AbstractFile]] = unspecified.UNSPECIFIED,
+        embed: type_hints.NotRequired[_embeds.Embed] = unspecified.UNSPECIFIED,
     ) -> _messages.Message:
         message_payload = await self.fabric.http_api.create_message(
             channel_id=transformations.get_id(channel),
             content=content,
             tts=tts,
-            files=transformations.cast_if_specified(files, lambda file: file.open(), iterable=True),
+            files=(
+                [
+                    await _media.safe_read_file(file_obj)
+                    for file_obj in (
+                        *(files or containers.EMPTY_COLLECTION),
+                        *(getattr(embed, "assets_to_upload", containers.EMPTY_COLLECTION)),
+                    )
+                ]
+                or unspecified.UNSPECIFIED
+            ),
             embed=transformations.cast_if_specified(embed, lambda obj: obj.to_dict()),
         )
         return self.fabric.state_registry.parse_message(message_payload)
@@ -177,7 +192,7 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         message: _messages.MessageLikeT,
         emoji: _emojis.KnownEmojiLikeT,
         *,
-        channel: _channels.GuildChannelLikeT = unspecified.UNSPECIFIED,
+        channel: type_hints.NotRequired[_channels.ChannelLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.create_reaction(
             channel_id=transformations.get_parent_id_from_model(message, channel, "channel"),
@@ -187,11 +202,11 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
 
     async def delete_reaction(
         self,
-        reaction: typing.Union[_reactions.Reaction, _emojis.KnownEmojiLikeT],
+        reaction: typing.Union[_reactions.Reaction, _emojis.EmojiLikeT],
         user: _users.BaseUserLikeT,
         *,
-        channel: _channels.GuildChannelLikeT = unspecified.UNSPECIFIED,
-        message: _messages.MessageLikeT = unspecified.UNSPECIFIED,
+        channel: type_hints.NotRequired[_channels.ChannelLikeT] = unspecified.UNSPECIFIED,
+        message: type_hints.NotRequired[_messages.MessageLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         emoji = getattr(reaction, "emoji", reaction)
         message = message or getattr(reaction, "message", message)
@@ -203,7 +218,10 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         )
 
     async def delete_all_reactions(
-        self, message: _messages.MessageLikeT, *, channel: _channels.GuildChannelLikeT = unspecified.UNSPECIFIED,
+        self,
+        message: _messages.MessageLikeT,
+        *,
+        channel: type_hints.NotRequired[_channels.GuildChannelLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.delete_all_reactions(
             message_id=transformations.get_id(message),
@@ -214,10 +232,10 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         self,
         message: _messages.MessageLikeT,
         *,
-        channel: _channels.ChannelLikeT = unspecified.UNSPECIFIED,
-        content: typing.Optional[str] = unspecified.UNSPECIFIED,
-        embed: typing.Optional[_embeds.Embed] = unspecified.UNSPECIFIED,
-        flags: _messages.MessageFlagLikeT = unspecified.UNSPECIFIED,
+        channel: type_hints.NotRequired[_channels.ChannelLikeT] = unspecified.UNSPECIFIED,
+        content: type_hints.NullableNotRequired[str] = unspecified.UNSPECIFIED,
+        embed: type_hints.NullableNotRequired[_embeds.Embed] = unspecified.UNSPECIFIED,
+        flags: type_hints.NotRequired[_messages.MessageFlagLikeT] = unspecified.UNSPECIFIED,
     ) -> _messages.Message:
         message_payload = await self.fabric.http_api.edit_message(
             message_id=transformations.get_id(message),
@@ -232,13 +250,13 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         self,
         first_message: _messages.MessageLikeT,
         *additional_messages: _messages.MessageLikeT,
-        channel: _channels.ChannelLikeT = unspecified.UNSPECIFIED,
+        channel: type_hints.NotRequired[_channels.ChannelLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         channel_id = transformations.get_parent_id_from_model(first_message, channel, "channel")
         if additional_messages:
             message_ids = [transformations.get_id(message) for message in (first_message, *additional_messages)]
             assertions.assert_that(
-                len(message_ids) <= 100, "Only 100 messages can be bulk deleted in a single request."
+                len(message_ids) <= 100, "Only up to 100 messages can be bulk deleted in a single request."
             )
             await self.fabric.http_api.bulk_delete_messages(channel_id=channel_id, messages=message_ids)
         else:
@@ -251,10 +269,10 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         channel: _channels.GuildChannelLikeT,
         overwrite: _overwrites.OverwriteLikeT,
         *,
-        allow: int = unspecified.UNSPECIFIED,
-        deny: int = unspecified.UNSPECIFIED,
-        overwrite_type: _overwrites.OverwriteEntityTypeLikeT = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        allow: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        deny: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        overwrite_type: type_hints.NotRequired[_overwrites.OverwriteEntityTypeLikeT] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.edit_channel_permissions(
             channel_id=transformations.get_id(channel),
@@ -273,11 +291,11 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         self,
         channel: _channels.GuildChannelLikeT,
         *,
-        max_age: int = unspecified.UNSPECIFIED,
-        max_uses: int = unspecified.UNSPECIFIED,
-        temporary: bool = unspecified.UNSPECIFIED,
-        unique: bool = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        max_age: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        max_uses: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        temporary: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        unique: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> _invites.Invite:
         invite_payload = await self.fabric.http_api.create_channel_invite(
             channel_id=transformations.get_id(channel),
@@ -305,7 +323,10 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         raise NotImplementedError
 
     async def pin_message(
-        self, message: _messages.MessageLikeT, *, channel: _channels.TextChannelLikeT = unspecified.UNSPECIFIED
+        self,
+        message: _messages.MessageLikeT,
+        *,
+        channel: type_hints.NotRequired[_channels.TextChannelLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.add_pinned_channel_message(
             message_id=transformations.get_id(message),
@@ -313,7 +334,10 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         )
 
     async def unpin_message(
-        self, message: _messages.MessageLikeT, *, channel: _channels.TextChannelLikeT = unspecified.UNSPECIFIED
+        self,
+        message: _messages.MessageLikeT,
+        *,
+        channel: type_hints.NotRequired[_channels.TextChannelLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.delete_pinned_channel_message(
             message_id=transformations.get_id(message),
@@ -321,7 +345,10 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         )
 
     async def fetch_guild_emoji(
-        self, emoji: _emojis.GuildEmojiLikeT, *, guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED
+        self,
+        emoji: _emojis.GuildEmojiLikeT,
+        *,
+        guild: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
     ) -> _emojis.GuildEmoji:
         guild_id = transformations.get_parent_id_from_model(emoji, guild, "guild")
         emoji_payload = await self.fabric.http_api.get_guild_emoji(
@@ -331,9 +358,9 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         return self.fabric.state_registry.parse_emoji(emoji_payload, guild_obj)
 
     async def fetch_guild_emojis(self, guild: _guilds.GuildLikeT) -> typing.Collection[_emojis.GuildEmoji]:
-        guild_id = transformations.get_id(guild)
-        emojis_payload = await self.fabric.http_api.list_guild_emojis(guild_id=guild_id)
-        guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(int(guild_id))
+        guild_id = int(guild)
+        emojis_payload = await self.fabric.http_api.list_guild_emojis(guild_id=str(guild_id))
+        guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(guild_id)
         return [self.fabric.state_registry.parse_emoji(emoji, guild_obj) for emoji in emojis_payload]
 
     async def create_guild_emoji(
@@ -343,27 +370,27 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         image_data: storage.FileLikeT,
         *,
         roles: typing.Collection[_roles.RoleLikeT] = containers.EMPTY_COLLECTION,
-        reason: str = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> _emojis.GuildEmoji:
-        guild_id = transformations.get_id(guild)
+        guild_id = int(guild)
         emoji_payload = await self.fabric.http_api.create_guild_emoji(
-            guild_id=guild_id,
+            guild_id=str(guild_id),
             name=name,
             image=storage.get_bytes_from_resource(image_data),
             roles=[transformations.get_id(role) for role in roles],
             reason=reason,
         )
-        guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(int(guild_id))
+        guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(guild_id)
         return self.fabric.state_registry.parse_emoji(emoji_payload, guild_obj)
 
     async def update_guild_emoji(
         self,
         emoji: _emojis.GuildEmojiLikeT,
         *,
-        guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
-        name: str = unspecified.UNSPECIFIED,
-        roles: typing.Collection[_roles.RoleLikeT] = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        guild: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
+        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        roles: type_hints.NotRequired[typing.Collection[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.modify_guild_emoji(
             emoji_id=transformations.get_id(emoji),
@@ -374,7 +401,10 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         )
 
     async def delete_guild_emoji(
-        self, emoji: _emojis.GuildEmojiLikeT, *, guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED
+        self,
+        emoji: _emojis.GuildEmojiLikeT,
+        *,
+        guild: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.delete_guild_emoji(
             emoji_id=transformations.get_id(emoji),
@@ -393,18 +423,22 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         self,
         guild: _guilds.GuildLikeT,
         *,
-        name: str = unspecified.UNSPECIFIED,
-        region: str = unspecified.UNSPECIFIED,
-        verification_level: _guilds.VerificationLevelLikeT = unspecified.UNSPECIFIED,
-        default_message_notifications: _guilds.DefaultMessageNotificationsLevelLikeT = unspecified.UNSPECIFIED,
-        explicit_content_filter: _guilds.ExplicitContentFilterLevelLikeT = unspecified.UNSPECIFIED,
-        afk_channel: _channels.GuildVoiceChannelLikeT = unspecified.UNSPECIFIED,
-        afk_timeout: int = unspecified.UNSPECIFIED,
-        icon_data: storage.FileLikeT = unspecified.UNSPECIFIED,
-        owner: _members.MemberLikeT = unspecified.UNSPECIFIED,
-        splash_data: storage.FileLikeT = unspecified.UNSPECIFIED,
-        system_channel: _channels.GuildTextChannelLikeT = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        region: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        verification_level: type_hints.NotRequired[_guilds.VerificationLevelLikeT] = unspecified.UNSPECIFIED,
+        default_message_notifications: type_hints.NotRequired[
+            _guilds.DefaultMessageNotificationsLevelLikeT
+        ] = unspecified.UNSPECIFIED,
+        explicit_content_filter: type_hints.NotRequired[
+            _guilds.ExplicitContentFilterLevelLikeT
+        ] = unspecified.UNSPECIFIED,
+        afk_channel: type_hints.NotRequired[_channels.GuildVoiceChannelLikeT] = unspecified.UNSPECIFIED,
+        afk_timeout: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        icon_data: type_hints.NotRequired[storage.FileLikeT] = unspecified.UNSPECIFIED,
+        owner: type_hints.NotRequired[_members.MemberLikeT] = unspecified.UNSPECIFIED,
+        splash_data: type_hints.NotRequired[storage.FileLikeT] = unspecified.UNSPECIFIED,
+        system_channel: type_hints.NotRequired[_channels.GuildTextChannelLikeT] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.modify_guild(
             guild_id=transformations.get_id(guild),
@@ -426,9 +460,9 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         await self.fabric.http_api.delete_guild(guild_id=transformations.get_id(guild))
 
     async def fetch_guild_channels(self, guild: _guilds.GuildLikeT) -> typing.Sequence[_channels.GuildChannel]:
-        guild_id = transformations.get_id(guild)
-        guild_channels_payload = await self.fabric.http_api.get_guild_channels(guild_id=guild_id)
-        guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(int(guild_id))
+        guild_id = int(guild)
+        guild_channels_payload = await self.fabric.http_api.get_guild_channels(guild_id=str(guild_id))
+        guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(guild_id)
         return [self.fabric.state_registry.parse_channel(channel, guild_obj) for channel in guild_channels_payload]
 
     async def create_guild_channel(  # lgtm [py/similar-function]
@@ -437,19 +471,21 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         name: str,
         channel_type: _channels.ChannelTypeLikeT,
         *,
-        topic: str = unspecified.UNSPECIFIED,
-        bitrate: int = unspecified.UNSPECIFIED,
-        user_limit: int = unspecified.UNSPECIFIED,
-        rate_limit_per_user: int = unspecified.UNSPECIFIED,
-        position: int = unspecified.UNSPECIFIED,
-        permission_overwrites: typing.Collection[_overwrites.Overwrite] = unspecified.UNSPECIFIED,
-        parent_category: _channels.GuildCategoryLikeT = unspecified.UNSPECIFIED,
-        nsfw: bool = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        topic: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        bitrate: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        user_limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        rate_limit_per_user: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        position: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        permission_overwrites: type_hints.NotRequired[
+            typing.Collection[_overwrites.Overwrite]
+        ] = unspecified.UNSPECIFIED,
+        parent_category: type_hints.NotRequired[_channels.GuildCategoryLikeT] = unspecified.UNSPECIFIED,
+        nsfw: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> _channels.GuildChannel:
-        guild_id = transformations.get_id(guild)
+        guild_id = int(guild)
         channel_payload = await self.fabric.http_api.create_guild_channel(
-            guild_id=guild_id,
+            guild_id=str(guild_id),
             name=name,
             type_=transformations.cast_if_specified(channel_type, int),
             topic=topic,
@@ -464,25 +500,28 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             nsfw=nsfw,
             reason=reason,
         )
-        guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(int(guild_id))
+        guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(guild_id)
         return self.fabric.state_registry.parse_channel(channel_payload, guild_obj)
 
     async def reposition_guild_channels(
         self,
         first_channel: typing.Tuple[int, _channels.GuildChannelLikeT],
         *additional_channels: typing.Tuple[int, _channels.GuildChannelLikeT],
-        guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
+        guild: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.modify_guild_channel_positions(
             transformations.get_parent_id_from_model(first_channel[1], guild, "guild"),
-            *((transformations.get_id(channel[1]), channel[0]) for channel in (first_channel, *additional_channels)),
+            *(
+                (transformations.get_id(channel), position)
+                for position, channel in (first_channel, *additional_channels)
+            ),
         )
 
     async def fetch_member(
         self,
         user: typing.Union[_users.BaseUserLikeT, _members.MemberLikeT],
         *,
-        guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
+        guild: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
     ) -> _members.Member:
         guild_id = transformations.get_parent_id_from_model(user, guild, "guild")
         member_payload = await self.fabric.http_api.get_guild_member(
@@ -492,7 +531,7 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         return self.fabric.state_registry.parse_member(member_payload, guild_obj)
 
     async def fetch_members(
-        self, guild: _guilds.GuildLikeT, *, limit: int = unspecified.UNSPECIFIED
+        self, guild: _guilds.GuildLikeT, *, limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED
     ) -> typing.AsyncIterator[_members.Member]:
         raise NotImplementedError
 
@@ -500,13 +539,15 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         self,
         member: _members.MemberLikeT,
         *,
-        guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
-        nick: typing.Optional[str] = unspecified.UNSPECIFIED,
-        roles: typing.Collection[_roles.RoleLikeT] = unspecified.UNSPECIFIED,
-        mute: bool = unspecified.UNSPECIFIED,
-        deaf: bool = unspecified.UNSPECIFIED,
-        current_voice_channel: typing.Optional[_channels.GuildVoiceChannelLikeT] = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        guild: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
+        nick: type_hints.NullableNotRequired[str] = unspecified.UNSPECIFIED,
+        roles: type_hints.NotRequired[typing.Collection[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
+        mute: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        deaf: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        current_voice_channel: type_hints.NullableNotRequired[
+            _channels.GuildVoiceChannelLikeT
+        ] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.modify_guild_member(
             user_id=transformations.get_id(member),
@@ -531,8 +572,8 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         role: _roles.RoleLikeT,
         member: _members.MemberLikeT,
         *,
-        guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        guild: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.add_guild_member_role(
             user_id=transformations.get_id(member),
@@ -546,8 +587,8 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         role: _roles.RoleLikeT,
         member: _members.MemberLikeT,
         *,
-        guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        guild: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.remove_guild_member_role(
             user_id=transformations.get_id(member),
@@ -560,8 +601,8 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         self,
         member: _members.MemberLikeT,
         *,
-        guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        guild: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.remove_guild_member(
             user_id=transformations.get_id(member),
@@ -583,9 +624,9 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         self,
         member: _members.MemberLikeT,
         *,
-        guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
-        delete_message_days: int = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        guild: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
+        delete_message_days: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.create_guild_ban(
             user_id=transformations.get_id(member),
@@ -595,77 +636,83 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         )
 
     async def unban_member(
-        self, user: _users.BaseUserLikeT, guild: _guilds.GuildLikeT, *, reason: str = unspecified.UNSPECIFIED,
+        self,
+        user: _users.BaseUserLikeT,
+        guild: _guilds.GuildLikeT,
+        *,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.remove_guild_ban(
             user_id=transformations.get_id(user), guild_id=transformations.get_id(guild), reason=reason,
         )
 
     async def fetch_roles(self, guild: _guilds.GuildLikeT) -> typing.Sequence[_roles.Role]:
-        guild_id = transformations.get_id(guild)
-        roles_payload = await self.fabric.http_api.get_guild_roles(guild_id=guild_id)
-        guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(int(guild_id))
+        guild_id = int(guild)
+        roles_payload = await self.fabric.http_api.get_guild_roles(guild_id=str(guild_id))
+        guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(guild_id)
         return [self.fabric.state_registry.parse_role(role, guild_obj) for role in roles_payload]
 
     async def create_role(  # lgtm [py/similar-function]
         self,
         guild: _guilds.GuildLikeT,
         *,
-        name: str = unspecified.UNSPECIFIED,
-        permissions: _permissions.PermissionLikeT = unspecified.UNSPECIFIED,
-        color: _colors.ColorCompatibleT = unspecified.UNSPECIFIED,
-        hoist: bool = unspecified.UNSPECIFIED,
-        mentionable: bool = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        permissions: type_hints.NotRequired[_permissions.PermissionLikeT] = unspecified.UNSPECIFIED,
+        color: type_hints.NotRequired[_colors.ColorCompatibleT] = unspecified.UNSPECIFIED,
+        hoist: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        mentionable: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> _roles.Role:
-        guild_id = transformations.get_id(guild)
+        guild_id = int(guild)
         role_payload = await self.fabric.http_api.create_guild_role(
-            guild_id=guild_id,
+            guild_id=str(guild_id),
             name=name,
-            permissions=transformations.cast_if_specified(permissions, int),
-            color=transformations.cast_if_specified(color, int),
+            permissions=permissions,
+            color=color,
             hoist=hoist,
             mentionable=mentionable,
             reason=reason,
         )
-        guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(int(guild_id))
+        guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(guild_id)
         return self.fabric.state_registry.parse_role(role_payload, guild_obj)
 
     async def reposition_roles(
         self,
         first_role: typing.Tuple[int, _roles.RoleLikeT],
         *additional_roles: typing.Tuple[int, _roles.RoleLikeT],
-        guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
+        guild: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.modify_guild_role_positions(
             transformations.get_parent_id_from_model(first_role[1], guild, "guild"),
-            *((transformations.get_id(role[1]), role[0]) for role in (first_role, *additional_roles)),
+            *((transformations.get_id(role), position) for position, role in (first_role, *additional_roles)),
         )
 
     async def update_role(
         self,
         role: _roles.PartialRoleLikeT,
         *,
-        guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
-        name: str = unspecified.UNSPECIFIED,
-        permissions: _permissions.PermissionLikeT = unspecified.UNSPECIFIED,
-        color: _colors.ColorCompatibleT = unspecified.UNSPECIFIED,
-        hoist: bool = unspecified.UNSPECIFIED,
-        mentionable: bool = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        guild: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
+        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        permissions: type_hints.NotRequired[_permissions.PermissionLikeT] = unspecified.UNSPECIFIED,
+        color: type_hints.NotRequired[_colors.ColorCompatibleT] = unspecified.UNSPECIFIED,
+        hoist: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        mentionable: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.modify_guild_role(
             guild_id=transformations.get_parent_id_from_model(role, guild, "guild"),
             role_id=transformations.get_id(role),
             name=name,
-            permissions=transformations.cast_if_specified(permissions, int),
-            color=transformations.cast_if_specified(color, int),
+            permissions=permissions,
+            color=color,
             hoist=hoist,
             mentionable=mentionable,
             reason=reason,
         )
 
-    async def delete_role(self, role: _roles.RoleLikeT, *, guild: _guilds.GuildLikeT = unspecified.UNSPECIFIED) -> None:
+    async def delete_role(
+        self, role: _roles.RoleLikeT, *, guild: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED
+    ) -> None:
         await self.fabric.http_api.delete_guild_role(
             guild_id=transformations.get_parent_id_from_model(role, guild, "guild"),
             role_id=transformations.get_id(role),
@@ -680,7 +727,7 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         days: int,
         *,
         compute_prune_count: bool = False,
-        reason: str = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> typing.Optional[int]:
         return await self.fabric.http_api.begin_guild_prune(
             guild_id=transformations.get_id(guild), days=days, compute_prune_count=compute_prune_count, reason=reason,
@@ -706,7 +753,7 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         integration_type: str,
         integration_id: bases.RawSnowflakeT,
         *,
-        reason: str = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> _integrations.Integration:
         integration_payload = await self.fabric.http_api.create_guild_integration(
             guild_id=transformations.get_id(guild),
@@ -721,10 +768,10 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         guild: _guilds.GuildLikeT,
         integration: _integrations.IntegrationLikeT,
         *,
-        expire_behaviour: int = unspecified.UNSPECIFIED,
-        expire_grace_period: int = unspecified.UNSPECIFIED,
-        enable_emojis: bool = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        expire_behaviour: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        expire_grace_period: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        enable_emojis: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.modify_guild_integration(
             guild_id=transformations.get_id(guild),
@@ -752,7 +799,11 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         return _guilds.GuildEmbed.from_dict(embed_payload)
 
     async def modify_guild_embed(
-        self, guild: _guilds.GuildLikeT, embed: _guilds.GuildEmbed, *, reason: str = unspecified.UNSPECIFIED
+        self,
+        guild: _guilds.GuildLikeT,
+        embed: _guilds.GuildEmbed,
+        *,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_api.modify_guild_embed(
             guild_id=transformations.get_id(guild), embed=embed.to_dict(), reason=reason
@@ -762,14 +813,17 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         raise NotImplementedError  # TODO: implement partial or vanity invite object.
 
     def fetch_guild_widget_image(
-        self, guild: _guilds.GuildLikeT, *, style: _guilds.WidgetStyleLikeT = unspecified.UNSPECIFIED
+        self,
+        guild: _guilds.GuildLikeT,
+        *,
+        style: type_hints.NotRequired[_guilds.WidgetStyleLikeT] = unspecified.UNSPECIFIED,
     ) -> str:
         return self.fabric.http_api.get_guild_widget_image(
             guild_id=transformations.get_id(guild), style=transformations.cast_if_specified(style, str)
         )
 
     async def fetch_invite(
-        self, invite: _invites.InviteLikeT, *, with_counts: bool = unspecified.UNSPECIFIED
+        self, invite: _invites.InviteLikeT, *, with_counts: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED
     ) -> _invites.Invite:
         invite_payload = await self.fabric.http_api.get_invite(invite_code=str(invite), with_counts=with_counts)
         return self.fabric.state_registry.parse_invite(invite_payload)
@@ -790,7 +844,10 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         return self.fabric.state_registry.parse_application_user(user_payload)
 
     async def update_me(
-        self, *, username: str = unspecified.UNSPECIFIED, avatar_data: storage.FileLikeT = unspecified.UNSPECIFIED
+        self,
+        *,
+        username: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        avatar_data: type_hints.NotRequired[storage.FileLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         user_payload = await self.fabric.http_api.modify_current_user(
             username=username, avatar=transformations.cast_if_specified(avatar_data, storage.get_bytes_from_resource)
@@ -803,9 +860,9 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
 
     async def fetch_my_guilds(
         self,
-        before: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
-        after: _guilds.GuildLikeT = unspecified.UNSPECIFIED,
-        limit: int = unspecified.UNSPECIFIED,
+        before: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
+        after: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_guilds.Guild]:
         raise NotImplementedError
 
@@ -825,8 +882,8 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         channel: _channels.GuildTextChannelLikeT,
         name: str,
         *,
-        avatar_data: storage.FileLikeT = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        avatar_data: type_hints.NotRequired[storage.FileLikeT] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> _webhooks.Webhook:
         webhook_payload = await self.fabric.http_api.create_webhook(
             channel_id=transformations.get_id(channel),
@@ -854,10 +911,10 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         self,
         webhook: _webhooks.WebhookLikeT,
         *,
-        name: str = unspecified.UNSPECIFIED,
-        avatar_data: storage.FileLikeT = unspecified.UNSPECIFIED,
-        channel: _channels.GuildTextChannelLikeT = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        avatar_data: type_hints.NotRequired[storage.FileLikeT] = unspecified.UNSPECIFIED,
+        channel: type_hints.NotRequired[_channels.GuildTextChannelLikeT] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> _webhooks.Webhook:
         webhook_payload = await self.fabric.http_api.modify_webhook(
             webhook_id=transformations.get_id(webhook),
