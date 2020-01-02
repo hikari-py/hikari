@@ -128,7 +128,7 @@ class Role(PartialRole, bases.BaseModelWithFabric):
 
     @property
     def guild(self) -> _guilds.Guild:
-        return self._fabric.state_registry.get_guild_by_id(self.guild_id)
+        return self._fabric.state_registry.get_mandatory_guild_by_id(self.guild_id)
 
 
 #: Any type of :class:`PartialRole` (including :class:`Role`), or the :class:`int`/:class:`str` ID of one.

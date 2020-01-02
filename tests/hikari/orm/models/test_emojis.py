@@ -125,11 +125,6 @@ def test_UnknownEmoji___init__(unknown_emoji_payload):
     assert e.id == 100000000001110010
     assert e.name == "asshat123"
     assert e.url_name == "asshat123:100000000001110010"
-    try:
-        e.mention
-        assert False, "Expected AttributeError."
-    except AttributeError:
-        pass
 
 
 @pytest.mark.model

@@ -66,9 +66,6 @@ class BestEffortEnumMixin:
         #  We only want this to default to the value for non-int based enums.
         return self.name.lower() if isinstance(self, int) else self.value
 
-    def __repr__(self):
-        return self.name
-
 
 class NamedEnumMixin(BestEffortEnumMixin):
     """
@@ -396,19 +393,19 @@ class DictFactory(dict):
     """
 
     def __init__(self, seq=None, **kwargs) -> None:
-        super().__init__(
-            (key, self.default(value)) for key, value in (*kwargs.items(), *(seq or ())) if value is not None
-        )
+        kwargs.update(seq or containers.EMPTY_SEQUENCE)
+        super().__init__((key, self._convert(value)) for key, value in kwargs.items() if value is not None)
 
     def __setitem__(self, key, item) -> None:
-        super().__setitem__(key, self.default(item))
+        super().__setitem__(key, self._convert(item))
 
     @classmethod
-    def default(cls, value: typing.Any) -> typing.Any:
+    def _convert(cls, value: typing.Any) -> typing.Any:
         """Try to convert a value, and return the result or original value."""
         if isinstance(value, MarshalMixin):
             value = value.to_dict(dict_factory=cls)
-        elif isinstance(value, enum.IntEnum):
+        #  This should cover all int based enums.
+        elif isinstance(value, int):
             value = int(value)
         elif isinstance(value, NamedEnumMixin):
             value = str(value)
@@ -423,8 +420,8 @@ class MarshalMixin:
     A mixin used for making serializable models.
 
     Note:
-        Any model inheriting from this will need to be decorated with :func:`dataclasses.dataclass`,
-        and will also need to have an `__init__` implemented where the arguments match up with the model's fields.
+        Any model inheriting from this will need to be decorated with :func:`dataclasses.dataclass` with a dataclass
+         styled `__init__`.
     """
 
     __slots__ = ()

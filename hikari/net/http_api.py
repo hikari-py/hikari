@@ -344,7 +344,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         nonce: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         tts: type_hints.NotRequired[bool] = False,
-        files: type_hints.NotRequired[typing.Sequence[storage.FileLikeT]] = unspecified.UNSPECIFIED,
+        files: type_hints.NotRequired[typing.Sequence[typing.Tuple[str, storage.FileLikeT]]] = unspecified.UNSPECIFIED,
         embed: type_hints.NotRequired[containers.JSONObject] = unspecified.UNSPECIFIED,
     ) -> containers.JSONObject:
         """
