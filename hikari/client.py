@@ -22,8 +22,10 @@ The primary client for writing a bot with Hikari.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import datetime
 import inspect
+import signal
 import types
 import typing
 
@@ -44,38 +46,45 @@ from hikari.orm.state import state_registry_impl
 class Client:
     """
     A basic implementation of a client for running a Discord bot.
-    
+
     Args:
         token:
             The bot token to sign in with.
         options:
             Other :class:`hikari.client_options.ClientOptions` to set. If not provided, sensible
             defaults are used instead.
-    
+
     >>> client = Client("token_here")
     >>> @client.event()
     ... async def on_ready(shard):
     ...     print("Shard", shard.shard_id, "is ready!")
     >>> asyncio.run(client.run())
     """
+    _SHUTDOWN_SIGNALS = (signal.SIGINT, signal.SIGTERM)
 
     def __init__(self, token: str, options: typing.Optional[client_options.ClientOptions] = None) -> None:
         self._client_options = options or client_options.ClientOptions()
         self._event_dispatcher = aio.MuxMap()
         self._fabric: typing.Optional[fabric.Fabric] = None
-        self._quieting_down = False
         self.logger = loggers.get_named_logger(self)
         self.token = token
         self._shard_tasks = None
 
     async def _init_new_application_fabric(self):
         self._fabric = fabric.Fabric()
-        self._fabric.state_registry = await self._new_state_registry()
-        self._fabric.event_handler = await self._new_event_handler()
-        self._fabric.http_api = await self._new_http_api()
-        self._fabric.http_adapter = await self._new_http_adapter()
-        self._fabric.gateways = await self._new_shard_map()
-        self._fabric.chunker = await self._new_chunker()
+
+        try:
+            self._fabric.state_registry = await self._new_state_registry()
+            self._fabric.event_handler = await self._new_event_handler()
+            self._fabric.http_api = await self._new_http_api()
+            self._fabric.http_adapter = await self._new_http_adapter()
+            self._fabric.gateways = await self._new_shard_map()
+            self._fabric.chunker = await self._new_chunker()
+        except Exception as ex:
+            self.logger.exception("failed to start a new client", exc_info=ex)
+            await self.close()
+            self._fabric = None
+            raise RuntimeError("failed to initialize application fabric fully")
 
     async def _new_state_registry(self):
         return state_registry_impl.StateRegistryImpl(
@@ -124,9 +133,18 @@ class Client:
                 "Setting any other type of value is invalid.",
             )
 
-        if shard_ids is client_options.AUTO_SHARD:
+        # Use comparison rather than identify, this lets the user unmarshal a JSON file using lib X if they wish
+        # to load config from file directly into the bot.
+        if self._client_options.shards == client_options.AUTO_SHARD:
             gateway_bot = await self._fabric.http_adapter.fetch_gateway_bot()
             self.logger.info("The gateway has recommended %s shards for this bot", gateway_bot.shards)
+
+            # Hope this cannot go below zero, but who knows with Discord.
+            if gateway_bot.session_start_limit.remaining <= 0:
+                raise RuntimeError(
+                    "You have hit your IDENTIFY limit. I won't proceed to log in as your token will "
+                    "be reset if I do this. Please rectify the issue manually and try again."
+                )
 
             self.logger.info(
                 "You have performed an IDENTIFY %s times recently. You may IDENTIFY %s more times before your "
@@ -167,7 +185,7 @@ class Client:
                 proxy_url=self._client_options.proxy_url,
                 ssl_context=self._client_options.ssl_context,
                 verify_ssl=self._client_options.verify_ssl,
-                timeout=self._client_options.http_timeout,
+                http_timeout=self._client_options.http_timeout,
                 max_persistent_buffer_size=self._client_options.max_persistent_gateway_buffer_size,
                 large_threshold=self._client_options.large_guild_threshold,
                 enable_guild_subscription_events=self._client_options.enable_guild_subscription_events,
@@ -235,6 +253,79 @@ class Client:
 
         return shard, run_task
 
+    def run(self) -> None:
+        """
+        Executes the bot on the current event loop and blocks until it is complete.
+        Also registers several operating system signal handlers internally to handle shutting the bot
+        down cleanly on interrupts.
+
+        Warning:
+            This will not close the event loop being run on, and will take over consuming various
+            low-level system interrupt signals until the client shuts down.
+
+        Note:
+            If you instead wish to start the bot from within a coroutine, you
+            should await :meth:`run_async` instead. This is more useful if you have other resources
+            you wish to handle the shutdown of, such as database connection pools.
+        """
+        asyncio.get_event_loop().run_until_complete(self.run_async())
+
+    def _signal_handler(self, triggered_signal_id, loop):
+        self.logger.critical(
+            "%s signal received. Will shut client down now.",
+            compat.signal.strsignal(triggered_signal_id)
+        )
+        asyncio.run_coroutine_threadsafe(self.close(), loop)
+
+    async def run_async(self) -> None:
+        """
+        Equivalent to running :meth:`start` and :meth:`join`, but also manages registering
+        signal handlers to detect interrupts if invoked on the main thread.
+
+        For example, an `asyncpg` connection pool could be managed like so:
+
+        .. code-block:: python
+
+            bot = client.Client(...)
+
+            async def main():
+                async with asyncpg.create_pool(...) as bot.db:
+                    await bot.run_async()
+
+            asyncio.run(main())
+
+        ...this example would ensure the database is shut down cleanly on any interrupt occurring, or any
+        persistent connection issue occurring.
+
+        Warning:
+            As per the implementation of :meth:`asyncio.AbstractEventLoop.add_signal_handler`, the signal
+            handlers may only be registered if the loop is bound and running to the main thread. If this
+            is not true, then the signal is just not registered.
+
+            If you are running this client on a child thread for this application, you must manage
+            consuming interrupts and safely closing this client manually.
+        """
+        loop = asyncio.get_event_loop()
+
+        registered_signals = set()
+        for signal_id in self._SHUTDOWN_SIGNALS:
+            # This may occur in several situations! We might not have the signal on our system, or we might not
+            # be on the main thread, in which case, we can't do much more about this.
+            with contextlib.suppress(Exception):
+                loop.add_signal_handler(signal_id, self._signal_handler, signal_id, loop)
+                registered_signals.add(signal_id)
+
+        try:
+            await self.start()
+            await self.join()
+        except KeyboardInterrupt:
+            self._signal_handler(signal.SIGINT, loop)
+        finally:
+            # Clear signal handlers if we can...
+            for signal_id in registered_signals:
+                with contextlib.suppress(Exception):
+                    loop.remove_signal_handler(signal_id)
+
     async def start(self) -> typing.Mapping[typing.Optional[int], asyncio.Task]:
         """
         Starts the client. This will initialize any shards, and wait for them to become READY. Once
@@ -254,42 +345,64 @@ class Client:
         self._shard_tasks = {shard.shard_id: task for shard, task in shard_tasks}
         return types.MappingProxyType(self._shard_tasks)
 
-    async def join(self):
+    async def join(self) -> None:
         """
         Waits for the client to shut down. This can be used to keep the event loop running after calling
         :func:`start` and initializing any other resources you need.
+
+        Raises:
+            The exception that the first shard to shut down provided us. If no exceptions were provided, then
+            this is ignored.
+
+        All other shards will be disconnected.
         """
         assertions.assert_that(self._shard_tasks is not None, "client is not started", RuntimeError)
-        dead_tasks, pending_tasks = await asyncio.wait(self._shard_tasks.values(), return_when=asyncio.FIRST_EXCEPTION)
-        for failure in dead_tasks:
-            shard_id, reason = failure.result()
-            self.logger.exception("shard %s has shut down", shard_id, exc_info=reason)
+        dead_tasks, pending_tasks = await asyncio.wait(self._shard_tasks.values(), return_when=asyncio.FIRST_COMPLETED)
 
-            reason = reason if isinstance(reason, BaseException) else None
-            if not self._quieting_down:
-                raise RuntimeError(f"shard {shard_id} has shut down") from reason
+        first_ex = None
+        for dead_task in dead_tasks:
+            shard, result = dead_task.result()
+            if isinstance(result, Exception):
+                self.logger.exception("shard %s raised a fatal exception", shard.shard_id, exc_info=result)
+                if first_ex is None and isinstance(result, Exception):
+                    first_ex = result
+            else:
+                self.logger.warning("shard %s shut down permanently with result %s", shard.shard_id, result)
 
-    async def run(self):
-        """
-        An alias for :func:`start` and then :func:`join`. Runs the client and waits for it to finish.
-        """
-        await self.start()
-        await self.join()
+        await self.close()
+
+        # Ignore any further errors.
+        await asyncio.gather(*pending_tasks, return_exceptions=True)
+
+        if first_ex is not None:
+            raise first_ex
 
     async def close(self):
         """
         Shuts the client down. This closes the HTTP client session and kills every running shard
-        before returning.
+        before returning once everything has shut down.
         """
-        assertions.assert_that(self._shard_tasks is not None, "client is not started")
-        self._quieting_down = True
         await self._fabric.http_api.close()
         gateway_tasks = []
         for shard_id, shard in self._fabric.gateways.items():
-            self.logger.info("shutting down shard %s", shard_id)
-            shutdown_task = compat.asyncio.create_task(shard.close(), name=f"waiting for shard {shard_id} to close")
-            gateway_tasks.append(shutdown_task)
-        await asyncio.wait(gateway_tasks, return_when=asyncio.ALL_COMPLETED)
+            if shard.is_running:
+                self.logger.info("shutting down shard %s", shard_id)
+                shutdown_task = compat.asyncio.create_task(shard.close(), name=f"waiting for shard {shard_id} to close")
+                gateway_tasks.append(shutdown_task)
+
+        if gateway_tasks:
+            await asyncio.wait(gateway_tasks, return_when=asyncio.ALL_COMPLETED)
+
+        # Make all remaining tasks cancel if they hung or refused to shut down...
+        # Check the shard tasks map is populated first to make sure we don't just try closing it when it isn't
+        # yet populated (e.g. if we fail to make a fabric because of a connection error during
+        # _init_new_application_fabric, as we still rely on this call to ensure the HTTP API is closed.
+        #
+        # This also prevents strange errors hitting the user if they misuse close, as managing multiple shards
+        # safely is pretty unforgiving...
+        if self._shard_tasks is not None:
+            for task in self._shard_tasks.values():
+                task.cancel()
 
     def dispatch(self, event: str, *args) -> None:
         """
@@ -381,6 +494,7 @@ class Client:
             "    @client.event('message_create')\n"
             "    async def some_name_here(message):\n"
             "        ...\n",
+            RuntimeError,
         )
 
         def decorator(coroutine_function: aio.CoroutineFunctionT) -> aio.CoroutineFunctionT:
@@ -402,7 +516,7 @@ class Client:
         The average heartbeat latency across all gateway shard connections. If any are not running, you will receive
         a :class:`float` with the value of `NaN` instead.
         """
-        if len(self._fabric.gateways) == 0:
+        if self._fabric and len(self._fabric.gateways) == 0:
             # Bot has not yet started.
             return float("nan")
         return sum(shard.heartbeat_latency for shard in self._fabric.gateways.values()) / len(self._fabric.gateways)
@@ -412,4 +526,6 @@ class Client:
         """
         Creates a mapping of each shard ID to the latest heartbeat latency for that shard.
         """
-        return {shard.shard_id: shard.heartbeat_latency for shard in self._fabric.gateways.values()}
+        if self._fabric:
+            return {shard.shard_id: shard.heartbeat_latency for shard in self._fabric.gateways.values()}
+        return {}

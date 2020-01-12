@@ -34,10 +34,17 @@ from hikari.orm.gateway import dispatching_event_adapter_impl
 from hikari.orm.models import presences
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(frozen=True)
 class ShardOptions:
     """
-    Represents allowable shards
+    Represents allowable shards.
+
+    Special cases:
+        No sharding desired:
+            >>> None  # set this to None explicitly, or...
+            >>> ShardOptions([None], 1)    # tell it to use no shards
+        Automatically determine how to shard:
+            >>> ShardOptions([], 0)
     """
 
     #: The shards to start. This can be a :class:`range`, a :class:`slice`, or an iterable object
@@ -49,14 +56,23 @@ class ShardOptions:
     #: >>> ShardOptions(slice(20, 30), 10)
     #: ...if you need finer control, you can just specify them directly as well:
     #: >>> ShardOptions([3, 6, 7, 9, 11], 20)
-    shards: typing.Union[range, slice, typing.Iterable[int]]
+    #:
+    #: No sharding is denoted by a one-wide iterable with the value:
+    #: >>> ShardOptions([None], 1)
+    shards: typing.Union[range, slice, typing.Iterable[typing.Optional[int]]]
     #: The total number of shards that the bot will have up, distributed. This is required to be
     #: consistent across multi-sharded applications that are distributed to ensure that the bot
     #: has the guilds correctly distributed across shards.
     shard_count: int
 
 
-AUTO_SHARD = ShardOptions(..., ...)
+#: Use an appropriate number of shards for the size of the bot being run.
+AUTO_SHARD = ShardOptions((), 0)
+#: Use no shards.
+NO_SHARDS = ShardOptions([None], 1)
+
+# This is rather long and obnoxious.
+_DEFAULT_CHUNK_MODE = dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES
 
 
 @dataclasses.dataclass()
@@ -66,7 +82,7 @@ class ClientOptions:
     """
 
     allow_redirects: bool = False
-    chunk_mode: dispatching_event_adapter_impl.AutoRequestChunksMode = dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+    chunk_mode: dispatching_event_adapter_impl.AutoRequestChunksMode = _DEFAULT_CHUNK_MODE
     connector: aiohttp.BaseConnector = None
     enable_guild_subscription_events = True
     http_max_retries: int = 5

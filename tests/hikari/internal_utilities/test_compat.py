@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import sys
+import signal
 import typing
 
 import asyncmock
@@ -65,3 +65,15 @@ def test_Protocol():
             return 123
 
     assert Impl().foo() == 123
+
+
+@if_version(">= (3, 8)")
+@pytest.mark.parametrize(["input", "expect"], [(signal.SIGINT, "Interrupt"), (123345, None)])
+def test_sigstr_gte_38(input, expect):
+    assert compat.signal.strsignal(input) == expect
+
+
+@if_version("< (3, 8)")
+@pytest.mark.parametrize(["input", "expect"], [(signal.SIGINT, "SIGINT"), (123345, None)])
+def test_sigstr_gte_38(input, expect):
+    assert compat.signal.strsignal(input) == expect
