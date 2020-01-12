@@ -117,7 +117,7 @@ class TestGateway:
             await gw._trigger_resume(69, "boom")
             assert False, "No exception raised"
         except gateway._ResumeConnection:
-            gw.ws.close.assert_called_once_with(code=69)
+            pass
 
     async def test_do_reidentify_triggers_correct_signals(self, event_loop):
         gw = StubLowLevelGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234")
@@ -126,7 +126,7 @@ class TestGateway:
             await gw._trigger_identify(69, "boom")
             assert False, "No exception raised"
         except gateway._RestartConnection:
-            gw.ws.close.assert_called_once_with(code=69)
+            pass
 
     async def test_send_json_calls_websocket(self, event_loop):
         gw = StubLowLevelGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
@@ -250,7 +250,7 @@ class TestGateway:
         gw = StubLowLevelGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw.heartbeat_interval = 0.01
 
-        task = asyncio.create_task(gw._keep_alive())
+        task = asyncio.create_task(gw._heartbeat_runner())
         try:
             await asyncio.sleep(0.1)
         finally:
@@ -261,37 +261,27 @@ class TestGateway:
         gw = StubLowLevelGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
         gw.heartbeat_interval = 10
 
-        task = asyncio.create_task(gw._keep_alive())
+        task = asyncio.create_task(gw._heartbeat_runner())
         try:
             await asyncio.sleep(0.1)
         finally:
             await gw.close()
             await task
 
-    async def test_heartbeat_if_not_acknowledged_in_time_closes_connection_with_resume(self, event_loop):
-        gw = StubLowLevelGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-        gw.last_heartbeat_sent = -float("inf")
-        gw.heartbeat_interval = 0
-
-        task = asyncio.create_task(gw._keep_alive())
-
-        await asyncio.sleep(0.1)
-
-        task.cancel()
-        gw.ws.close.assert_called_once()
-
     async def test_slow_loop_produces_warning(self, event_loop):
         gw = StubLowLevelGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
-        gw.heartbeat_interval = 0
+        gw._send_heartbeat = mock.AsyncMock()
+        # We need to give the heartbeat some time to run, even if it is stubbed.
+        gw.heartbeat_interval = 0.25
         # will always make the latency appear slow.
         gw.heartbeat_latency = 0
         gw._handle_slow_client = mock.MagicMock(wraps=gw._handle_slow_client)
-        task = asyncio.create_task(gw._keep_alive())
+        task = asyncio.create_task(gw._heartbeat_runner())
 
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.5)
 
         task.cancel()
-        gw._handle_slow_client.assert_called_once()
+        gw._handle_slow_client.assert_called()
 
     async def test_send_heartbeat(self, event_loop):
         gw = StubLowLevelGateway(uri="wss://gateway.discord.gg:4949/", loop=event_loop, token="1234", shard_id=None)
@@ -1024,7 +1014,7 @@ class TestGateway:
         await gw._process_events()
         gw._process_one_event.assert_any_call()
 
-    async def test_run_calls_run_once(self, event_loop):
+    async def test_run_calls__run_once(self, event_loop):
         gw = StubLowLevelGateway(
             uri="wss://gateway.discord.gg:4949/",
             loop=event_loop,
@@ -1037,16 +1027,17 @@ class TestGateway:
         def side_effect(*_, **__):
             gw._closed_event.set()
 
-        gw.run_once = mock.AsyncMock(wraps=side_effect)
+        gw._run_once = mock.AsyncMock(wraps=side_effect)
         await gw.run()
-        gw.run_once.assert_called_once()
+        gw._run_once.assert_called_once()
 
-    async def test_run_once_opens_connection(self, low_level_gateway_mock):
+    async def test_run_opens_connection(self, low_level_gateway_mock):
         # Stop the ws going further than the hello part.
-        low_level_gateway_mock._receive_hello = mock.AsyncMock(side_effect=gateway._WebSocketClosure(1000, "idk"))
-        await low_level_gateway_mock.run_once()
+        low_level_gateway_mock._run_once = mock.AsyncMock(wraps=lambda: low_level_gateway_mock._closed_event.set())
+        await low_level_gateway_mock.run()
         low_level_gateway_mock._mock_session.ws_connect.assert_called_once_with(
             "wss://localhost:4949?v=7&encoding=json&compress=zlib-stream",
+            autoping=False,
             compress=0,
             proxy=None,
             proxy_auth=None,
@@ -1054,22 +1045,23 @@ class TestGateway:
             ssl_context=None,
             verify_ssl=True,
             max_msg_size=0,
+            receive_timeout=20,
         )
 
-    async def test_run_once_handles_exception(self, low_level_gateway_mock):
-        # Mock to prevent 10s sleep during test and to spy
-        with mock.patch("asyncio.sleep", new=mock.AsyncMock()) as sleep:
-            cs = mock.MagicMock()
-            low_level_gateway_mock._client_session_factory = mock.MagicMock(return_value=cs)
-            cs.close = mock.AsyncMock()
-            cs.ws_connect = mock.AsyncMock(side_effect=ConnectionRefusedError)
-            await low_level_gateway_mock.run_once()
-            sleep.assert_called_once()
-            cs.close.assert_called_once()
+    async def test__run_once_handles_RestartableClosure_exception(self, low_level_gateway_mock):
+        client_session = mock.MagicMock()
+        low_level_gateway_mock._client_session_factory = mock.MagicMock(return_value=client_session)
+        low_level_gateway_mock._receive_hello = mock.AsyncMock(side_effect=gateway._RestartableClosure(1000, "bang"))
+        client_session.close = mock.AsyncMock()
+        try:
+            await low_level_gateway_mock._run_once()
+            assert False, "no exception raised..."
+        except gateway._RestartableClosure:
+            pass
 
     async def test__run_once_waits_for_hello(self, stub_for__run_once):
         # Stop the WS going further than the hello part.
-        stub_for__run_once._receive_hello = mock.AsyncMock(side_effect=gateway._WebSocketClosure(1000, "idk"))
+        stub_for__run_once._receive_hello = mock.AsyncMock()
         stub_for__run_once.uri = "ws://uri"
         await stub_for__run_once._run_once()
         stub_for__run_once._receive_hello.assert_called_once()
@@ -1078,7 +1070,7 @@ class TestGateway:
     def stub_for__run_once(self, low_level_gateway_mock):
         return _helpers.mock_methods_on(low_level_gateway_mock, except_=("_run_once",))
 
-    async def test__run_once_heart_beats_before_keep_alive_but_after_send_identify(self, stub_for__run_once):
+    async def test__run_once_heart_beats_before_heartbeat_runner_but_after_send_identify(self, stub_for__run_once):
         send_identify_time = -float("inf")
         heartbeat_time = -float("inf")
         keep_alive_time = -float("inf")
@@ -1091,13 +1083,13 @@ class TestGateway:
             nonlocal heartbeat_time
             heartbeat_time = time.perf_counter()
 
-        async def _keep_alive():
+        async def _heartbeat_runner():
             nonlocal keep_alive_time
             keep_alive_time = time.perf_counter()
 
         stub_for__run_once._send_identify = _send_identify
         stub_for__run_once._send_heartbeat = _send_heartbeat
-        stub_for__run_once._keep_alive = _keep_alive
+        stub_for__run_once._heartbeat_runner = _heartbeat_runner
 
         await stub_for__run_once._run_once()
 
@@ -1121,9 +1113,9 @@ class TestGateway:
         stub_for__run_once._send_resume.assert_called_once()
         stub_for__run_once._send_identify.assert_not_called()
 
-    async def test__run_once_spins_up_heartbeat_keep_alive_task(self, stub_for__run_once):
+    async def test__run_once_spins_up_heartbeat_heartbeat_runner_task(self, stub_for__run_once):
         await stub_for__run_once._run_once()
-        stub_for__run_once._keep_alive.assert_called()
+        stub_for__run_once._heartbeat_runner.assert_called()
 
     async def test__run_once_spins_up_event_processing_task(self, stub_for__run_once):
         await stub_for__run_once._run_once()
@@ -1155,7 +1147,12 @@ class TestGateway:
         )
         start = 1, 2, ["foo"]
         stub_for__run_once.seq, stub_for__run_once.session_id, stub_for__run_once.trace = start
-        await stub_for__run_once._run_once()
+
+        try:
+            await stub_for__run_once._run_once()
+            assert False, "no exception raised"
+        except gateway._RestartConnection:
+            pass
 
         assert stub_for__run_once.seq is None, "seq was not reset"
         assert stub_for__run_once.session_id is None, "session_id was not reset"
@@ -1167,7 +1164,11 @@ class TestGateway:
         )
         start = 1, 2, ["foo"]
         stub_for__run_once._seq, stub_for__run_once._session_id, stub_for__run_once.trace = start
-        await stub_for__run_once._run_once()
+        try:
+            await stub_for__run_once._run_once()
+            assert False, "no exception raised"
+        except gateway._ResumeConnection:
+            pass
         assert stub_for__run_once._seq == 1, "seq was reset"
         assert stub_for__run_once._session_id == 2, "session_id was reset"
         assert stub_for__run_once.trace == ["foo"], "trace was cleared"
@@ -1232,7 +1233,7 @@ class TestGateway:
         assert result == "hello"
 
     @_helpers.assert_raises(
-        type_=gateway._WebSocketClosure,
+        type_=gateway._RestartableClosure,
         checks=[lambda ex: ex.code == 1234, lambda ex: ex.reason == "gateway closed the connection"],
     )
     async def test__receive_when_close(self, low_level_gateway_mock):

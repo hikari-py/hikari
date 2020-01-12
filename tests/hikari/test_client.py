@@ -17,7 +17,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
+import contextlib
 import datetime
+import math
+import signal
 
 import pytest
 
@@ -55,6 +58,34 @@ class TestClient:
         assert client._fabric.http_adapter == await client._new_http_adapter()
         assert client._fabric.gateways == await client._new_shard_map()
         assert client._fabric.chunker == await client._new_chunker()
+
+    @pytest.mark.asyncio
+    async def test_failing_to_initialize_application_fabric_closes_self(self):
+        client = _helpers.mock_methods_on(_client.Client("token"), except_=("_init_new_application_fabric",))
+        client._new_state_registry = mock.MagicMock(side_effect=ConnectionRefusedError)
+
+        with contextlib.suppress(RuntimeError):
+            await client._init_new_application_fabric()
+
+        client.close.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_failing_to_initialize_application_fabric_destroys_fabric(self):
+        client = _helpers.mock_methods_on(_client.Client("token"), except_=("_init_new_application_fabric",))
+        client._new_state_registry = mock.MagicMock(side_effect=ConnectionRefusedError)
+
+        with contextlib.suppress(RuntimeError):
+            await client._init_new_application_fabric()
+
+        assert client._fabric is None
+
+    @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=RuntimeError)
+    async def test_failing_to_initialize_application_fabric_raises_RuntimeError(self):
+        client = _helpers.mock_methods_on(_client.Client("token"), except_=("_init_new_application_fabric",))
+        client._new_state_registry = mock.MagicMock(side_effect=ConnectionRefusedError)
+
+        await client._init_new_application_fabric()
 
     @pytest.mark.asyncio
     async def test_new_state_registry_delegates_correctly(self):
@@ -166,7 +197,7 @@ class TestClient:
             proxy_url=client_opts.proxy_url,
             ssl_context=client_opts.ssl_context,
             verify_ssl=client_opts.verify_ssl,
-            timeout=client_opts.http_timeout,
+            http_timeout=client_opts.http_timeout,
             max_persistent_buffer_size=client_opts.max_persistent_gateway_buffer_size,
             large_threshold=client_opts.large_guild_threshold,
             enable_guild_subscription_events=client_opts.enable_guild_subscription_events,
@@ -214,7 +245,7 @@ class TestClient:
                 proxy_url=client_opts.proxy_url,
                 ssl_context=client_opts.ssl_context,
                 verify_ssl=client_opts.verify_ssl,
-                timeout=client_opts.http_timeout,
+                http_timeout=client_opts.http_timeout,
                 max_persistent_buffer_size=client_opts.max_persistent_gateway_buffer_size,
                 large_threshold=client_opts.large_guild_threshold,
                 enable_guild_subscription_events=client_opts.enable_guild_subscription_events,
@@ -252,7 +283,7 @@ class TestClient:
             proxy_url=client_opts.proxy_url,
             ssl_context=client_opts.ssl_context,
             verify_ssl=client_opts.verify_ssl,
-            timeout=client_opts.http_timeout,
+            http_timeout=client_opts.http_timeout,
             max_persistent_buffer_size=client_opts.max_persistent_gateway_buffer_size,
             large_threshold=client_opts.large_guild_threshold,
             enable_guild_subscription_events=client_opts.enable_guild_subscription_events,
@@ -300,7 +331,7 @@ class TestClient:
                 proxy_url=client_opts.proxy_url,
                 ssl_context=client_opts.ssl_context,
                 verify_ssl=client_opts.verify_ssl,
-                timeout=client_opts.http_timeout,
+                http_timeout=client_opts.http_timeout,
                 max_persistent_buffer_size=client_opts.max_persistent_gateway_buffer_size,
                 large_threshold=client_opts.large_guild_threshold,
                 enable_guild_subscription_events=client_opts.enable_guild_subscription_events,
@@ -376,6 +407,7 @@ class TestClient:
 
     @pytest.mark.asyncio
     async def test_start_shard_and_wait_ready_when_ready_satisfied(self, event_loop):
+        assert event_loop, "this isn't used but it ensures pytest doesn't close it early and fail the test"
         client = _client.Client("token")
 
         class Shard:
@@ -436,6 +468,65 @@ class TestClient:
         except RuntimeError as thrown_ex:
             assert thrown_ex.__cause__ is None
 
+    @_helpers.run_in_own_thread
+    def test_run_invokes_run_async_in_event_loop(self):
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        client = _client.Client("token")
+        client.run_async = mock.AsyncMock()
+        client.run()
+        client.run_async.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_run_await_registers_signals(self, event_loop):
+        client = _client.Client("token")
+        client.start = mock.AsyncMock()
+        client.join = mock.AsyncMock()
+        event_loop.add_signal_handler = mock.MagicMock(wraps=event_loop.add_signal_handler)
+        await client.run_async()
+        for signal_id in client._SHUTDOWN_SIGNALS:
+            for (actual_signal_id, _cb, signal_id_to_pass, event_loop_to_pass), _ in event_loop.add_signal_handler.call_args_list:
+                if signal_id == actual_signal_id:
+                    assert signal_id_to_pass == actual_signal_id and signal_id_to_pass == signal_id
+                    assert event_loop_to_pass is event_loop
+                    break
+            else:
+                assert False, f"Signal {signal_id} was not registered"
+
+    @pytest.mark.asyncio
+    async def test_run_await_unregisters_signals(self, event_loop):
+        client = _client.Client("token")
+        client.start = mock.AsyncMock()
+        client.join = mock.AsyncMock()
+        event_loop.remove_signal_handler = mock.MagicMock()
+
+        await client.run_async()
+        for signal_id in client._SHUTDOWN_SIGNALS:
+            event_loop.remove_signal_handler.assert_any_call(signal_id)
+
+    @pytest.mark.asyncio
+    async def test_run_await_KeyboardInterrupt_delegates_to_SIGINT_handler(self, event_loop):
+        client = _client.Client("token")
+        assert signal.SIGINT in client._SHUTDOWN_SIGNALS, "we cant delegate to SIGINT if SIGINT isn't a tracked signal!"
+
+        client._signal_handler = mock.MagicMock()
+
+        client.start = mock.AsyncMock()
+        client.join = mock.AsyncMock(side_effect=KeyboardInterrupt)
+
+        await client.run_async()
+
+        client._signal_handler.assert_any_call(signal.SIGINT, event_loop)
+
+    @pytest.mark.asyncio
+    async def test_signal_handler_closes_threadsafe(self):
+        client = _client.Client("token")
+        loop = mock.MagicMock()
+        client.close = mock.MagicMock()
+        with mock.patch("asyncio.run_coroutine_threadsafe") as run_coroutine_threadsafe:
+            with mock.patch("hikari.internal_utilities.compat.signal.strsignal"):
+                client._signal_handler(mock.MagicMock(spec_set=signal.Signals), loop)
+        run_coroutine_threadsafe.assert_called_once_with(client.close(), loop)
+
     @pytest.mark.asyncio
     @_helpers.assert_raises(type_=RuntimeError)
     async def test_start_refuses_to_run_if_already_running(self):
@@ -486,6 +577,9 @@ class TestClient:
 
         client._start_shard_and_wait_ready.assert_any_call(client._fabric.gateways[0])
         client._start_shard_and_wait_ready.assert_any_call(client._fabric.gateways[1])
+
+    def test_run_invokes_run_async(self):
+        pass
 
     @pytest.mark.asyncio
     async def test_start_sets_task_map_on_client(self):
@@ -538,3 +632,247 @@ class TestClient:
         client = _client.Client("token")
         client._shard_tasks = None
         await client.join()
+
+    @pytest.mark.asyncio
+    async def test_join_iterates_across_failures_to_manage_non_exception(self):
+        client = _client.Client("token")
+        client.close = mock.AsyncMock()
+        client._fabric = mock.MagicMock()
+
+        async def dump_after(what, after):
+            await asyncio.sleep(after)
+            return mock.MagicMock(), what
+
+        client._shard_tasks = {
+            0: asyncio.create_task(dump_after(123, 0.75)),
+            1: asyncio.create_task(dump_after(345, 0.25)),
+            2: asyncio.create_task(dump_after(456, 0.5)),
+        }
+
+        await client.join()
+
+    @pytest.mark.asyncio
+    async def test_join_iterates_across_failures_to_raise_first_exception(self):
+        client = _client.Client("token")
+        client.close = mock.AsyncMock()
+        client._fabric = mock.MagicMock(spec_set=_fabric.Fabric)
+
+        async def dump_after(what, after):
+            await asyncio.sleep(after)
+            return mock.MagicMock(), what()
+
+        class Ex1(Exception):
+            pass
+
+        class Ex2(Exception):
+            pass
+
+        class Ex3(Exception):
+            pass
+
+        client._shard_tasks = {
+            0: asyncio.create_task(dump_after(Ex1, 0.75)),
+            1: asyncio.create_task(dump_after(Ex2, 0.1)),
+            2: asyncio.create_task(dump_after(Ex3, 0.5)),
+        }
+
+        try:
+            await client.join()
+            assert False, "Nothing was attempted to be joined!"
+        except Ex2:
+            pass
+
+    @pytest.mark.asyncio
+    async def test_close_when_not_running_ignores(self):
+        class Shard:
+            def __init__(self, id):
+                self.shard_id = id
+                self.is_running = False
+                self.close = mock.AsyncMock()
+
+        shard0 = Shard(0)
+        shard1 = Shard(1)
+
+        client = _client.Client("token")
+        client._fabric = _fabric.Fabric()
+        client._fabric.gateways = {shard0.shard_id: shard0, shard1.shard_id: shard1}
+        client._fabric.http_api = mock.AsyncMock()
+        client._shard_tasks = {}
+
+        await client.close()
+
+        shard0.close.assert_not_called()
+        shard1.close.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_close_closes_http_api(self):
+        class Shard:
+            def __init__(self, id):
+                self.shard_id = id
+                self.is_running = True
+
+            async def close(self):
+                return
+
+        shard0 = Shard(0)
+        shard1 = Shard(1)
+
+        client = _client.Client("token")
+        client._fabric = _fabric.Fabric()
+        client._fabric.gateways = {shard0.shard_id: shard0, shard1.shard_id: shard1}
+        client._fabric.http_api = mock.AsyncMock()
+        client._shard_tasks = {}
+
+        await client.close()
+
+        client._fabric.http_api.close.assert_called_with()
+
+    @pytest.mark.asyncio
+    async def test_close_shuts_down_shards(self):
+        class Shard:
+            def __init__(self, id):
+                self.shard_id = id
+                self.is_running = True
+
+            async def close(self):
+                return
+
+        shard0 = Shard(0)
+        shard1 = Shard(1)
+        shard0.close = mock.MagicMock()
+        shard1.close = mock.MagicMock()
+
+        client = _client.Client("token")
+        client._fabric = _fabric.Fabric()
+        client._fabric.gateways = {shard0.shard_id: shard0, shard1.shard_id: shard1}
+        client._fabric.http_api = mock.AsyncMock()
+        client._shard_tasks = {}
+
+        with mock.patch("hikari.internal_utilities.compat.asyncio.create_task", new=mock.AsyncMock()) as create_task:
+            await client.close()
+
+            for shard_id, shard in client._fabric.gateways.items():
+                create_task.assert_any_call(shard.close(), name=f"waiting for shard {shard_id} to close")
+
+
+
+    @pytest.mark.asyncio
+    async def test_dispatch(self):
+        client = _client.Client("token")
+        client._event_dispatcher.dispatch = mock.MagicMock()
+
+        client.dispatch("message_create", "foo", 1, True)
+
+        client._event_dispatcher.dispatch.assert_called_with("message_create", "foo", 1, True)
+
+    @pytest.mark.asyncio
+    async def test_add_event(self):
+        async def foo():
+            ...
+
+        client = _client.Client("token")
+        client._event_dispatcher.add = mock.MagicMock()
+
+        client.add_event("message_create", foo)
+
+        client._event_dispatcher.add.assert_called_with("message_create", foo)
+
+    @pytest.mark.asyncio
+    async def test_remove_event(self):
+        async def foo():
+            ...
+
+        client = _client.Client("token")
+        client._event_dispatcher.remove = mock.MagicMock()
+
+        client.remove_event("message_create", foo)
+
+        client._event_dispatcher.remove.assert_called_with("message_create", foo)
+
+    @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=RuntimeError)
+    async def test_event_when_name_is_not_str_nor_None_raises(self):
+        client = _client.Client("token")
+
+        @client.event(True)
+        async def on_message_create():
+            ...
+
+    @pytest.mark.asyncio
+    async def test_event_without_name_and_starts_with_on(self):
+        client = _client.Client("token")
+
+        with mock.patch("hikari.client.Client.add_event") as add_event:
+
+            @client.event()
+            async def on_message_create():
+                ...
+
+            add_event.assert_called_with("message_create", on_message_create)
+
+    @pytest.mark.asyncio
+    async def test_event_without_name_and_doesnt_start_with_on(self):
+        client = _client.Client("token")
+
+        with mock.patch("hikari.client.Client.add_event") as add_event:
+
+            @client.event()
+            async def message_create():
+                ...
+
+            add_event.assert_called_with("message_create", message_create)
+
+    @pytest.mark.asyncio
+    async def test_event_with_name(self):
+        client = _client.Client("token")
+
+        with mock.patch("hikari.client.Client.add_event") as add_event:
+
+            @client.event("message_create")
+            async def foo():
+                ...
+
+            add_event.assert_called_with("message_create", foo)
+
+    @pytest.mark.asyncio
+    async def test_heartbeat_latency_when_bot_not_started_is_nan(self):
+        client = _client.Client("token")
+        client._fabric = _fabric.Fabric()
+        client._fabric.gateways = {}
+
+        assert math.isnan(client.heartbeat_latency)
+
+    @pytest.mark.asyncio
+    async def test_heartbeat_latency_when_bot_started(self):
+        def gw(id, latency):
+            gw = mock.MagicMock()
+            gw.shard_id = id
+            gw.heartbeat_latency = latency
+            return gw
+
+        client = _client.Client("token")
+        client._fabric = _fabric.Fabric()
+        client._fabric.gateways = {0: gw(0, 1), 1: gw(1, 2)}
+
+        assert client.heartbeat_latency == 1.5
+
+    @pytest.mark.asyncio
+    async def test_hearbeat_latencies_when_bot_not_started(self):
+        client = _client.Client("token")
+        client._fabric = None
+
+        assert client.heartbeat_latencies == {}
+
+    @pytest.mark.asyncio
+    async def test_hearbeat_latencies(self):
+        def gw(id, latency):
+            gw = mock.MagicMock()
+            gw.shard_id = id
+            gw.heartbeat_latency = latency
+            return gw
+
+        client = _client.Client("token")
+        client._fabric = _fabric.Fabric()
+        client._fabric.gateways = {0: gw(0, 0.1), 1: gw(1, 0.2)}
+
+        assert client.heartbeat_latencies == {0: 0.1, 1: 0.2}

@@ -22,7 +22,9 @@ import copy
 import functools
 import inspect
 import logging
+import queue
 import re
+import threading
 import typing
 import warnings
 import weakref
@@ -308,3 +310,33 @@ class AssertWarns:
 
     def matched_message_contains(self, pattern):
         assert re.search(pattern, self.matched[0], re.I), f"/{pattern}/ig does not match message {self.matched[0]!r}"
+
+
+def run_in_own_thread(func):
+    assert not asyncio.iscoroutinefunction(func), "Cannot run coroutine in thread directly"
+
+    @functools.wraps(func)
+    def delegator(*args, **kwargs):
+        q = queue.SimpleQueue()
+
+        class Raiser:
+            def __init__(self, ex):
+                self.ex = ex
+
+            def raise_again(self):
+                raise self.ex
+
+        def consumer():
+            try:
+                q.put(func(*args, **kwargs))
+            except BaseException as ex:
+                q.put(Raiser(ex))
+
+        t = threading.Thread(target=consumer, daemon=True)
+        t.start()
+        t.join()
+        result = q.get()
+        if isinstance(result, Raiser):
+            result.raise_again()
+
+    return delegator

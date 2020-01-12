@@ -25,21 +25,20 @@ and interpreter agnostic (for the most part).
 These members are subject to change at any time without prior warning.
 """
 import asyncio as _asyncio
+import signal as _signal
 import sys as _sys
 import types as _types
 import typing as _typing
 
 
-################################################################################
-# asyncio.create_task                                                          #
-#     introduced in Python 3.7.0, but only allows a string as the name of the  #
-#     task from Python 3.8.0. Before 3.8.0, tasks were not able to have names. #
-################################################################################
-#: Compatibility layer that behaves as a stand-in replacement for :mod:`asyncio`.
-#:
-#: Provides compatibility implementations for:
-#:     - :func:`asyncio.create_task` name support for Python 3.7
 class asyncio:
+    ################################################################################
+    # asyncio.create_task                                                          #
+    #     introduced in Python 3.7.0, but only allows a string as the name of the  #
+    #     task from Python 3.8.0. Before 3.8.0, tasks were not able to have names. #
+    ################################################################################
+    #: Prevents erroring on Python 3.7 if we specify a task name. This is just ignored if
+    #: unsupported.
     if _sys.version_info < (3, 8):
 
         @staticmethod
@@ -53,15 +52,36 @@ class asyncio:
             return _asyncio.create_task(coro, name=name)
 
 
-##################################
-# typing.Protocol                #
-#     introduced in Python 3.8.0 #
-##################################
-#: Compatibility layer that behaves as a stand-in replacement for :mod:`typing`.
-#:
-#: Provides compatibility implementations for:
-#:     - :class:`typing.Protocol` stub for Python 3.7
+class signal:
+    ##################################
+    # signal.strsignal               #
+    #     introduced in Python 3.8.0 #
+    ##################################
+    #: Python3.8 introduced strsignal to get a signal name. This just works around Python3.7 lacking
+    #: this feature.
+    if _sys.version_info < (3, 8):
+
+        @staticmethod
+        def strsignal(signalnum):
+            try:
+                return _signal.Signals(signalnum).name
+            except ValueError:
+                return None
+    else:
+
+        @staticmethod
+        def strsignal(signalnum):
+            return _signal.strsignal(signalnum)
+
+
 class typing:
+    ##################################
+    # typing.Protocol                #
+    #     introduced in Python 3.8.0 #
+    ##################################
+    #: typing.Protocol is new to Python 3.8. On Python3.7, a cheap generic with a typevar
+    #: is made to copy the syntax. This may or may not screw up static type checkers, so
+    #: be wary!
     if _sys.version_info < (3, 8):
         _ProtocolT = _typing.TypeVar("_ProtocolT")
         Protocol = _types.new_class("Protocol", (_typing.Generic[_ProtocolT],))
