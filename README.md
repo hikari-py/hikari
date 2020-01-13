@@ -14,7 +14,8 @@
 [![](https://img.shields.io/pypi/status/hikari)](?)
 [![](https://img.shields.io/pypi/pyversions/hikari)](?)
 [![](https://img.shields.io/badge/code%20style-black-000000.svg)](?)
-[![](https://img.shields.io/sourcegraph/rrc/gitlab.com/nekokatt/hikari/)](https://sourcegraph.com/gitlab.com/nekokatt/hikari@master)
+[![](https://img.shields.io/sourcegraph/rrc/gitlab.com/nekokatt/hikari)](https://sourcegraph.com/gitlab.com/nekokatt/hikari)
+[![](https://img.shields.io/static/v1?label=sourcegraph&message=view%20now!&color=blueviolet&logo=sourcegraph)](https://sourcegraph.com/gitlab.com/nekokatt/hikari)
 
 # hikari
 
