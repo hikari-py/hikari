@@ -18,6 +18,10 @@
     :target: https://nekokatt.gitlab.io/hikari/staging
 .. image:: https://badgen.net/pypi/v/hikari
     :target: https://pypi.org/project/hikari
+.. image:: https://img.shields.io/sourcegraph/rrc/gitlab.com/nekokatt/hikari
+    :target: https://sourcegraph.com/gitlab.com/nekokatt/hikari
+.. image:: https://img.shields.io/static/v1?label=sourcegraph&message=view%20now!&color=blueviolet&logo=sourcegraph
+    :target: https://sourcegraph.com/gitlab.com/nekokatt/hikari
 
 .. image:: https://badgen.net/pypi/license/hikari
 .. image:: https://img.shields.io/pypi/implementation/hikari.svg
