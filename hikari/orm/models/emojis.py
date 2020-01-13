@@ -226,8 +226,8 @@ KnownEmojiT = typing.Union[UnicodeEmoji, GuildEmoji]
 #: A :class:`GuildEmoji`, or an :class:`int`/:class:`str` ID of one.
 GuildEmojiLikeT = typing.Union[bases.RawSnowflakeT, GuildEmoji]
 
-#: A :class:`GuildEmoji`, an :class:`int` ID of one, a :class:`UnicodeEmoji`, or a :class:`str` representation of one.
-KnownEmojiLikeT = typing.Union[int, str, KnownEmojiT]
+#: A :class:`GuildEmoji`, a :class:`UnicodeEmoji`, or a :class:`str` representation of either.
+KnownEmojiLikeT = typing.Union[str, KnownEmojiT]
 
 
 __all__ = [

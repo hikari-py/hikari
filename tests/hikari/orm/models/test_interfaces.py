@@ -442,9 +442,9 @@ class DummyEnum(enum.Enum):
     NEKOS = "neko"
 
 
-@pytest.fixture()
-def mock_dict():
-    return bases.DictFactory(
+@pytest.mark.model
+def test_dict_factory_impl():
+    mock_dict = bases.dict_factory_impl(
         (("name", DummyNamedEnum(9)), ("model", DummyModel(is_a_dummy=True))),
         ok="Test",
         neko=18,
@@ -452,17 +452,6 @@ def mock_dict():
         named_enumerated=DummyNamedEnum.from_discord_name("bar"),
     )
 
-
-@pytest.mark.model
-def test_DictFactory_setitem(mock_dict):
-    mock_dict["test"] = DummyNamedEnum(27)
-    mock_dict["test_model"] = DummyModel(False)
-    assert mock_dict["test"] == 27
-    assert mock_dict["test_model"] == {"is_a_dummy": False}
-
-
-@pytest.mark.model
-def test_DictFactory_init(mock_dict):
     assert mock_dict == {
         "name": 9,
         "model": {"is_a_dummy": True},
