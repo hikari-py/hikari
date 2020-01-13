@@ -135,22 +135,6 @@ class TestHTTPAdapterImpl:
 
         assert result is mock_audit_log
 
-    @_helpers.todo_implement
-    @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 112233, channels.Channel)
-    async def test_fetch_channel(self, fabric_impl, channel):
-        mock_channel = _helpers.mock_model(channels.Channel)
-        mock_payload = mock.MagicMock(spec_set=dict)
-
-        fabric_impl.http_api.get_channel = mock.AsyncMock(return_value=mock_payload)
-        fabric_impl.state_registry.parse_channel.return_value = mock_channel
-
-        result = await fabric_impl.http_adapter.fetch_channel(channel)
-
-        fabric_impl.http_api.get_guild_audit_log.assert_called_once_with(channel_id="112233")
-        fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_payload)
-        assert result is mock_channel
-
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 532323423432343234, channels.DMChannel)
     async def test_fetch_dm_channel(self, fabric_impl, channel):
@@ -626,13 +610,50 @@ class TestHTTPAdapterImpl:
             ["55544322", "543234"],
         ),
     )
+    @_helpers.parametrize_valid_id_formats_for_models("additional_message", 55544322, messages.Message)
+    async def test_delete_messages_single_duplicated(self, fabric_impl, message, additional_message, channel):
+        fabric_impl.http_api.delete_message = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.delete_messages(
+                message, additional_message, 55544322, 55544322, 55544322, channel=channel
+            )
+            is None
+        )
+        fabric_impl.http_api.delete_message.assert_called_once_with(
+            channel_id="543234", message_id="55544322",
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["message", "channel"],
+        (
+            [
+                _helpers.mock_model(
+                    messages.Message, id=55544322, channel=_helpers.mock_model(channels.Channel, id=543234),
+                ),
+                unspecified.UNSPECIFIED,
+            ],
+            [55544322, _helpers.mock_model(channels.Channel, id=543234)],
+            [55544322, 543234],
+            ["55544322", "543234"],
+        ),
+    )
     @_helpers.parametrize_valid_id_formats_for_models("additional_message", 213123123, messages.Message)
     async def test_delete_messages_multiple(self, fabric_impl, message, additional_message, channel):
         fabric_impl.http_api.bulk_delete_messages = mock.AsyncMock()
-        assert await fabric_impl.http_adapter.delete_messages(message, additional_message, channel=channel) is None
+        assert (
+            await fabric_impl.http_adapter.delete_messages(message, additional_message, 213123123, channel=channel)
+            is None
+        )
         fabric_impl.http_api.bulk_delete_messages.assert_called_once_with(
             channel_id="543234", messages=["55544322", "213123123"]
         )
+
+    @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=ValueError)
+    async def test_delete_messages_raises_value_error_when_too_many_messages_passed(self, fabric_impl):
+        fabric_impl.http_api.bulk_delete_messages = mock.AsyncMock()
+        await fabric_impl.http_adapter.delete_messages(*range(101), channel=321231)
 
     @pytest.mark.asyncio
     @_helpers.assert_raises(type_=TypeError)
@@ -745,14 +766,22 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
-    @_helpers.todo_implement
-    async def test_trigger_typing(self, fabric_impl):
-        raise NotImplementedError
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 115590097100865541, channels.GuildTextChannel)
+    async def test_trigger_typing(self, fabric_impl, channel):
+        fabric_impl.http_api.trigger_typing_indicator = mock.AsyncMock()
+        assert await fabric_impl.http_adapter.trigger_typing(channel) is None
+        fabric_impl.http_api.trigger_typing_indicator.assert_called_once_with("115590097100865541")
 
     @pytest.mark.asyncio
-    @_helpers.todo_implement
-    async def test_fetch_pins(self, fabric_impl):
-        raise NotImplementedError
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 23123123, channels.GuildTextChannel)
+    async def test_fetch_pins(self, fabric_impl, channel):
+        mock_message_payload = {"content": "42", "id": "44232424"}
+        mock_message = mock.MagicMock(messages.Message)
+        fabric_impl.http_api.get_pinned_messages = mock.AsyncMock(return_value=[mock_message_payload])
+        fabric_impl.state_registry.parse_message.return_value = mock_message
+        assert await fabric_impl.http_adapter.fetch_pins(channel) == [mock_message]
+        fabric_impl.http_api.get_pinned_messages.assert_called_once_with("23123123")
+        fabric_impl.state_registry.parse_message.assert_called_once_with(mock_message_payload)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -988,10 +1017,82 @@ class TestHTTPAdapterImpl:
         fabric_impl.http_api.delete_guild_emoji = mock.AsyncMock()
         await fabric_impl.http_adapter.delete_guild_emoji("4123")
 
-    @pytest.mark.asyncio
     @_helpers.todo_implement
-    async def test_create_guild(self, fabric_impl):
-        raise NotImplementedError
+    @pytest.mark.asyncio
+    async def test_create_guild_without_optionals(self, fabric_impl):
+        mock_guild_payload = {"id": 231232, "owner_id": 115590097100865541}
+        mock_guild = mock.MagicMock(guilds.Guild)
+        fabric_impl.http_api.create_guild = mock.AsyncMock(return_value=mock_guild_payload)
+        fabric_impl.state_registry.parse_guild.return_value = mock_guild
+        assert await fabric_impl.http_adapter.create_guild("I am a guild") is mock_guild
+        fabric_impl.http_api.create_guild.assert_called_once_with(
+            name="I am a guild",
+            region=unspecified.UNSPECIFIED,
+            icon=unspecified.UNSPECIFIED,
+            verification_level=unspecified.UNSPECIFIED,
+            default_message_notifications=unspecified.UNSPECIFIED,
+            explicit_content_filter=unspecified.UNSPECIFIED,
+            roles=unspecified.UNSPECIFIED,
+            channels=unspecified.UNSPECIFIED,
+        )
+        fabric_impl.state_registry.parse_guild.assert_called_once_with(mock_guild_payload, None)
+
+    @_helpers.todo_implement
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models(
+        "role",
+        341232132132123,
+        roles.Role,
+        #  to_dict=mock.MagicMock(return_value={"id": 2132123}))
+    )
+    @_helpers.parametrize_valid_id_formats_for_models(
+        "channel",
+        7655462341233211,
+        channels.GuildTextChannel,
+        #  to_dict=mock.MagicMock(return_value={"id": 444444}))
+    )
+    @pytest.mark.parametrize(
+        ["verification_level", "default_message_notifications", "explicit_content_filter"],
+        [
+            (
+                guilds.VerificationLevel(2),
+                guilds.DefaultMessageNotificationsLevel(1),
+                guilds.ExplicitContentFilterLevel(0),
+            ),
+            (2, 1, 0),
+        ],
+    )
+    async def test_create_guild_with_all_optionals(
+        self, fabric_impl, role, channel, verification_level, default_message_notifications, explicit_content_filter
+    ):
+        mock_guild_payload = {"id": 231232, "owner_id": 115590097100865541}
+        mock_guild = mock.MagicMock(guilds.Guild)
+        fabric_impl.http_api.create_guild = mock.AsyncMock(return_value=mock_guild_payload)
+        fabric_impl.state_registry.parse_guild.return_value = mock_guild
+        assert (
+            await fabric_impl.http_adapter.create_guild(
+                "I am a guild",
+                region="LONDON",
+                icon_data=b"5324324",
+                verification_level=verification_level,
+                default_message_notifications=default_message_notifications,
+                explicit_content_filter=explicit_content_filter,
+                roles=[role],
+                channels=[channel],
+            )
+            is mock_guild
+        )
+        fabric_impl.http_api.create_guild.assert_called_once_with(
+            name="I am a guild",
+            region="LONDON",
+            icon=b"5324324",
+            verification_level=2,
+            default_message_notifications=1,
+            explicit_content_filter=0,
+            roles=[{"id": 2132123}],
+            channels=[{"id": 444444}],
+        )
+        fabric_impl.state_registry.parse_guild.assert_called_once_with(mock_guild_payload, None)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 1231236545645, guilds.Guild)
@@ -1537,15 +1638,14 @@ class TestHTTPAdapterImpl:
         fabric_impl.http_api.create_guild_ban = mock.AsyncMock()
         await fabric_impl.http_adapter.ban_member("222")
 
-    @_helpers.todo_implement
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
-    @_helpers.parametrize_valid_id_formats_for_models("user", 537340989808050216, users.User)
+    @_helpers.parametrize_valid_id_formats_for_models("user", 379953393319542784, users.User)
     async def test_unban_member(self, fabric_impl, guild, user):
         fabric_impl.http_api.remove_guild_ban = mock.AsyncMock()
         assert await fabric_impl.http_adapter.unban_member(guild, user, reason="OK") is None
         fabric_impl.http_api.remove_guild_ban.assert_called_once_with(
-            guild_id="379953393319542784", user_id="537340989808050216", reason="OK"
+            guild_id="379953393319542784", user_id="379953393319542784", reason="OK"
         )
 
     @pytest.mark.asyncio
@@ -1898,14 +1998,16 @@ class TestHTTPAdapterImpl:
             guild_id="379953393319542784", embed=mock_guild_embed.to_dict(), reason="OK"
         )
 
-    @_helpers.todo_implement
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 112233, guilds.Guild)
     async def test_fetch_guild_vanity_url(self, fabric_impl, guild):
-        mock_vanity_url = "this-is-not-a-vanity-url"
-        fabric_impl.http_api.get_guild_vanity_url = mock.AsyncMock(return_value=mock_vanity_url)
-        assert await fabric_impl.http_adapter.fetch_guild_vanity_url(guild) is mock_vanity_url
-        fabric_impl.http_api.get_guild_vanity_url.assert_called_once_with(guild_id="112233")
+        mock_vanity_url_payload = {"code": "this-is-not-a-vanity-url", "uses": 42}
+        mock_vanity_url = mock.MagicMock(invites.VanityURL)
+        fabric_impl.http_api.get_guild_vanity_url = mock.AsyncMock(return_value=mock_vanity_url_payload)
+        with _helpers.mock_patch(invites.VanityURL, return_value=mock_vanity_url) as VanityURL:
+            assert await fabric_impl.http_adapter.fetch_guild_vanity_url(guild) is mock_vanity_url
+            VanityURL.assert_called_once_with(mock_vanity_url_payload)
+        fabric_impl.http_api.get_guild_vanity_url.assert_called_once_with("112233")
 
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
     @pytest.mark.parametrize("style", ["banner2", guilds.WidgetStyle("banner2")])

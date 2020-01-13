@@ -21,6 +21,7 @@ Implementation of a basic HTTP adapter.
 """
 from __future__ import annotations
 
+import asyncio
 import typing
 
 from hikari.internal_utilities import assertions
@@ -173,16 +174,14 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             channel_id=transformations.get_id(channel),
             content=content,
             tts=tts,
-            files=(
-                [
-                    await _media.safe_read_file(file_obj)
+            files=await asyncio.gather(*(
+                    _media.safe_read_file(file_obj)
                     for file_obj in (
                         *(files or containers.EMPTY_COLLECTION),
                         *(getattr(embed, "assets_to_upload", containers.EMPTY_COLLECTION)),
                     )
-                ]
-                or unspecified.UNSPECIFIED
-            ),
+
+            )) or unspecified.UNSPECIFIED,
             embed=transformations.cast_if_specified(embed, lambda obj: obj.to_dict()),
         )
         return self.fabric.state_registry.parse_message(message_payload)
@@ -254,10 +253,15 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
     ) -> None:
         channel_id = transformations.get_parent_id_from_model(first_message, channel, "channel")
         if additional_messages:
-            message_ids = [transformations.get_id(message) for message in (first_message, *additional_messages)]
+            message_ids = list(
+                # dict.formkeys is used to remove duplicate entries that would cause discord to return an error.
+                dict.fromkeys(transformations.get_id(message) for message in (first_message, *additional_messages))
+            )
             assertions.assert_that(
                 len(message_ids) <= 100, "Only up to 100 messages can be bulk deleted in a single request."
             )
+
+        if additional_messages and len(message_ids) > 1:
             await self.fabric.http_api.bulk_delete_messages(channel_id=channel_id, messages=message_ids)
         else:
             await self.fabric.http_api.delete_message(
@@ -314,13 +318,12 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             channel_id=transformations.get_id(channel), overwrite_id=transformations.get_id(overwrite)
         )
 
-    async def trigger_typing(self, channel: _channels.TextChannelLikeT) -> _channels.TypingIndicator:
-        raise NotImplementedError
+    async def trigger_typing(self, channel: _channels.TextChannelLikeT) -> None:
+        await self.fabric.http_api.trigger_typing_indicator(transformations.get_id(channel))
 
-    async def fetch_pins(
-        self, channel: _channels.TextChannelLikeT, *, in_order: bool = False
-    ) -> typing.AsyncIterator[_messages.Message]:
-        raise NotImplementedError
+    async def fetch_pins(self, channel: _channels.TextChannelLikeT) -> typing.Sequence[_messages.Message]:
+        messages_payload = await self.fabric.http_api.get_pinned_messages(transformations.get_id(channel))
+        return [self.fabric.state_registry.parse_message(message) for message in messages_payload]
 
     async def pin_message(
         self,
@@ -411,8 +414,22 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             guild_id=transformations.get_parent_id_from_model(emoji, guild, "guild"),
         )
 
-    async def create_guild(self) -> None:
-        #: TODO: refine what this needs to have in it.
+    async def create_guild(
+        self,
+        name: str,
+        *,
+        region: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        icon_data: type_hints.NotRequired[storage.FileLikeT] = unspecified.UNSPECIFIED,
+        verification_level: type_hints.NotRequired[_guilds.VerificationLevelLikeT] = unspecified.UNSPECIFIED,
+        default_message_notifications: type_hints.NotRequired[
+            _guilds.DefaultMessageNotificationsLevelLikeT
+        ] = unspecified.UNSPECIFIED,
+        explicit_content_filter: type_hints.NotRequired[
+            _guilds.ExplicitContentFilterLevelLikeT
+        ] = unspecified.UNSPECIFIED,
+        roles: type_hints.NotRequired[typing.Collection[_roles.Role]] = unspecified.UNSPECIFIED,
+        channels: type_hints.NotRequired[typing.Collection[_channels.GuildChannel]] = unspecified.UNSPECIFIED,
+    ) -> _guilds.Guild:
         raise NotImplementedError
 
     async def fetch_guild(self, guild: _guilds.GuildLikeT) -> _guilds.Guild:
@@ -809,8 +826,9 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             guild_id=transformations.get_id(guild), embed=embed.to_dict(), reason=reason
         )
 
-    async def fetch_guild_vanity_url(self, guild: _guilds.GuildLikeT) -> str:
-        raise NotImplementedError  # TODO: implement partial or vanity invite object.
+    async def fetch_guild_vanity_url(self, guild: _guilds.GuildLikeT) -> _invites.VanityURL:
+        vanity_url_payload = await self.fabric.http_api.get_guild_vanity_url(transformations.get_id(guild))
+        return _invites.VanityURL(vanity_url_payload)
 
     def fetch_guild_widget_image(
         self,
