@@ -174,14 +174,16 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             channel_id=transformations.get_id(channel),
             content=content,
             tts=tts,
-            files=await asyncio.gather(*(
+            files=await asyncio.gather(
+                *(
                     _media.safe_read_file(file_obj)
                     for file_obj in (
                         *(files or containers.EMPTY_COLLECTION),
                         *(getattr(embed, "assets_to_upload", containers.EMPTY_COLLECTION)),
                     )
-
-            )) or unspecified.UNSPECIFIED,
+                )
+            )
+            or unspecified.UNSPECIFIED,
             embed=transformations.cast_if_specified(embed, lambda obj: obj.to_dict()),
         )
         return self.fabric.state_registry.parse_message(message_payload)

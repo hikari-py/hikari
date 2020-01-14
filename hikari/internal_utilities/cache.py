@@ -42,7 +42,13 @@ class CachedFunction:
     """
 
     _sentinel = object()
-    __slots__ = ("_call", "_value", "__qualname__", "__dict__", "__name__")
+    __slots__ = (
+        "_call",
+        "_value",
+        "__qualname__",  # pylint: disable=class-variable-slots-conflict
+        "__dict__",
+        "__name__",
+    )
 
     def __init__(self, call, args, kwargs):
         self._value = self._sentinel
@@ -83,7 +89,13 @@ class CachedProperty:
     instead.
     """
 
-    __slots__ = ("func", "_cache_attr", "__dict__", "__name__", "__qualname__")
+    __slots__ = (
+        "func",
+        "_cache_attr",
+        "__dict__",
+        "__name__",
+        "__qualname__",  # pylint: disable=class-variable-slots-conflict
+    )
 
     def __init__(self, func: CachedPropertyFunctionT, cache_attr: typing.Optional[str]) -> None:
         self.func = func

@@ -484,7 +484,10 @@ class TestClient:
         event_loop.add_signal_handler = mock.MagicMock(wraps=event_loop.add_signal_handler)
         await client.run_async()
         for signal_id in client._SHUTDOWN_SIGNALS:
-            for (actual_signal_id, _cb, signal_id_to_pass, event_loop_to_pass), _ in event_loop.add_signal_handler.call_args_list:
+            for (
+                (actual_signal_id, _cb, signal_id_to_pass, event_loop_to_pass),
+                _,
+            ) in event_loop.add_signal_handler.call_args_list:
                 if signal_id == actual_signal_id:
                     assert signal_id_to_pass == actual_signal_id and signal_id_to_pass == signal_id
                     assert event_loop_to_pass is event_loop
@@ -753,8 +756,6 @@ class TestClient:
 
             for shard_id, shard in client._fabric.gateways.items():
                 create_task.assert_any_call(shard.close(), name=f"waiting for shard {shard_id} to close")
-
-
 
     @pytest.mark.asyncio
     async def test_dispatch(self):
