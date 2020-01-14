@@ -64,9 +64,12 @@ class signal:
         @staticmethod
         def strsignal(signalnum):
             try:
-                return _signal.Signals(signalnum).name
+                return _signal.Signals(  # ("signals.Signals" is only in Python3.7) pylint: disable=no-member
+                    signalnum
+                ).name
             except ValueError:
                 return None
+
     else:
 
         @staticmethod

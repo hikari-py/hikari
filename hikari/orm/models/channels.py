@@ -77,7 +77,7 @@ class ChannelType(bases.BestEffortEnumMixin, enum.IntEnum):
 
     @property
     def is_dm(self) -> bool:
-        return not self.name.startswith("GUILD_")
+        return not self.name.startswith("GUILD_")  # (This is a enum, so doing this is ok) pylint: disable=no-member
 
 
 class Channel(abc.ABC, bases.BaseModelWithFabric, bases.SnowflakeMixin):

@@ -216,7 +216,9 @@ class StateRegistryImpl(base_registry.BaseRegistry):
                     member.roles.remove(role_obj)
 
     def get_channel_by_id(self, channel_id: int) -> typing.Optional[channels.Channel]:
+        # (Doesnt detect "__getitem__" as "get") pylint: disable=no-member
         return self._guild_channels.get(channel_id) or self._dm_channels.get(channel_id)
+        # pylint: enable=no-member
 
     def get_mandatory_channel_by_id(  # lgtm [py/similar-function]
         self,
@@ -263,7 +265,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
             )
 
     def get_message_by_id(self, message_id: int) -> typing.Optional[messages.Message]:
-        return self._message_cache.get(message_id)
+        return self._message_cache.get(message_id)  # (Doesnt detect "__getitem__" as "get") pylint: disable=no-member
 
     def get_mandatory_message_by_id(  # lgtm [py/similar-function]
         self,
@@ -624,7 +626,9 @@ class StateRegistryImpl(base_registry.BaseRegistry):
     ) -> typing.Optional[typing.Tuple[messages.Message, messages.Message]]:
         message_id = int(payload["id"])
         if message_id in self._message_cache:
+            # (Doesnt detect "__getitem__" as "get") pylint: disable=no-member
             new_message = self._message_cache.get(message_id)
+            # pylint: enable=no-member
             old_message = new_message.copy()
             new_message.update_state(payload)
             return old_message, new_message
