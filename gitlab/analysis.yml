@@ -39,3 +39,8 @@ safety:
   extends: .tools-base
   script:
     - nox -s safety
+
+pylint:
+  extends: .tools-base
+  script:
+    - nox -s lint

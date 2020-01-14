@@ -29,6 +29,7 @@ import datetime
 import enum
 import typing
 
+from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import compat
 from hikari.internal_utilities import containers
@@ -323,7 +324,7 @@ class UnknownObject(typing.Generic[T], SnowflakeMixin):
 
     _CALLBACK_MUX_ALREADY_CALLED = ...
 
-    def __init__(self, id: int, resolver_partial: containers.PartialCoroutineProtocolT[T] = None,) -> None:
+    def __init__(self, id: int, resolver_partial: aio.PartialCoroutineProtocolT[T] = None,) -> None:
         self.id = id
         self._future = resolver_partial
         self._callbacks = []
@@ -429,9 +430,7 @@ class MarshalMixin:
     @classmethod
     def from_dict(cls, payload: containers.JSONObject):
         """Initialise the current model from a Discord payload."""
-        return cls(
-            **{field.name: payload[field.name] for field in dataclasses.fields(cls) if field.name in payload}
-        )
+        return cls(**{field.name: payload[field.name] for field in dataclasses.fields(cls) if field.name in payload})
 
 
 #: The valid types of a raw unformatted snowflake.

@@ -33,6 +33,7 @@ MAIN_PACKAGE = "hikari"
 OWNER = "nekokatt"
 TECHNICAL_DIR = "technical"
 TEST_PATH = "tests/hikari"
+PYLINT_VERSION = "2.4.4"
 COVERAGE_RC = ".coveragerc"
 ARTIFACT_DIR = "public"
 DOCUMENTATION_DIR = "docs"
@@ -125,6 +126,15 @@ def format(session) -> None:
     """Reformat code with Black. Pass the '--check' flag to check formatting only."""
     failsafe_install(session, "black")
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *session.posargs)
+
+
+@nox.session()
+def lint(session) -> None:
+    """Check formating with pylint. Pass the '--exit-zero' flag to check linting only."""
+    failsafe_install(session, "-e", ".[test,documentation]")
+    failsafe_install(session, f"pylint=={PYLINT_VERSION}" if PYLINT_VERSION else "pylint")
+    pkg = MAIN_PACKAGE.split(".")[0]
+    session.run("pylint", pkg, "-E", *session.posargs)
 
 
 @nox.session()
