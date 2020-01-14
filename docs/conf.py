@@ -24,10 +24,8 @@ Sphinx documentation configuration.
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
-import contextlib
 import datetime
 import os
-import traceback
 
 import requests
 import sys
@@ -148,7 +146,6 @@ intersphinx_mapping = {
     "websockets": ("https://websockets.readthedocs.io/en/stable/", None),
 }
 
-
 # -- Epilog to inject into each page... ---------------------------------------------
 
 
@@ -180,6 +177,7 @@ else:
 
 def setup(app):
     app.add_stylesheet("style.css")
+
     # Little easteregg.
     try:
         if datetime.datetime.now().month == 12:

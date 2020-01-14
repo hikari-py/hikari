@@ -60,6 +60,7 @@ class Client:
     ...     print("Shard", shard.shard_id, "is ready!")
     >>> asyncio.run(client.run())
     """
+
     _SHUTDOWN_SIGNALS = (signal.SIGINT, signal.SIGTERM)
 
     def __init__(self, token: str, options: typing.Optional[client_options.ClientOptions] = None) -> None:
@@ -272,8 +273,7 @@ class Client:
 
     def _signal_handler(self, triggered_signal_id, loop):
         self.logger.critical(
-            "%s signal received. Will shut client down now.",
-            compat.signal.strsignal(triggered_signal_id)
+            "%s signal received. Will shut client down now.", compat.signal.strsignal(triggered_signal_id)
         )
         asyncio.run_coroutine_threadsafe(self.close(), loop)
 
@@ -415,7 +415,7 @@ class Client:
                 Any arguments to pass to the event.
 
         Note:
-            any event is dispatched as a future asynchronously. This will not wait for that to occur.
+            Any event is dispatched as a future asynchronously. This will not wait for that to occur.
         """
         self._event_dispatcher.dispatch(event, *args)
 
@@ -464,7 +464,7 @@ class Client:
         Args:
             name:
                 The name of the event to subscribe to. If you do not supply this, then the name of the coroutine
-                function itself is used, minus the word "on_" if present at the start.
+                function itself is used, minus the word **on_** if present at the start.
 
         Returns:
             A decorator that decorates a coroutine function and returns the coroutine function passed to it.
