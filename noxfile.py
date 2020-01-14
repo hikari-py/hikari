@@ -54,13 +54,11 @@ PYTEST_ARGS = [
     "--cov-report",
     f"html:{ARTIFACT_DIR}/coverage/html",
     "--cov-branch",
+    f"--junitxml={ARTIFACT_DIR}/tests.xml",
     "--showlocals",
     "--testdox",
     "--force-testdox",
 ]
-
-if os.getenv("CI"):
-    PYTEST_ARGS.append("-rA")
 
 
 # Guard against connection resets by retring installs several times before actually giving up.

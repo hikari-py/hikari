@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Open+Sans&display=swap');
-@import url('https://fonts.googleapis.com/css?family=Indie+Flower|Open+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Bangers|Montserrat:300|Lato&display=swap');
 @import url('https://cdn.jsdelivr.net/gh/tonsky/FiraCode@1.207/distr/fira_code.css');
 
 /*
@@ -25,9 +24,10 @@
 /**************************** dark theme ****************************/
 
 body {
-    background-color: #272822;
+    background-color: #222;
     color: #f8f9fa;
     padding-top: 0 !important;
+    font-family: 'Montserrat', sans-serif !important;
 }
 
 /* whyyyyy */
@@ -113,14 +113,35 @@ nav, .alert, .admonition {
 
 .navbar {
     background-image: none !important;
-    background-color: #404238 !important;
+    background-color: #303030 !important;
     border-color: transparent !important;
 }
 
 /*************************** layout fixes ***************************/
 
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h4, h5, h6, p{
     word-wrap: break-word;
+    font-family: 'Lato', sans-serif !important;
+}
+
+h1 {
+    font-size: 2.5em;
+}
+
+h2 {
+    font-size: 2em;
+}
+
+h3 {
+    font-size: 1.5em;
+}
+
+h4 {
+    font-size: 1.3em;
+}
+
+p {
+    font-size: 1.3em;
 }
 
 /*
@@ -208,10 +229,6 @@ html {
 
 .dropdown-menu .caption {
     padding-left: 1em;
-}
-
-.nav {
-    font-family: 'Open Sans', sans-serif !important;
 }
 
 footer:before {

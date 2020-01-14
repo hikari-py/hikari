@@ -45,7 +45,7 @@ class Reaction(bases.BaseModel):
 
     #: The emoji used for the reaction.
     #:
-    #: :type: :class:`hikari.orm.models.emojis.AbstractEmoji`
+    #: :type: :class:`hikari.orm.models.emojis.Emoji`
     emoji: _emoji.Emoji
 
     #: The message that was reacted on.

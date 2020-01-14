@@ -15,23 +15,27 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-.pages-activation:
+.deploy-pages-activation:
   retry:
     max: 2
   allow_failure: true
-  variables:
-    GIT_STRATEGY: none
   artifacts:
     paths:
       - public/
+  only:
+    - master
+    - staging
   except:
     - tags
+    - merge_requests
 
 .generate-pages:
-  extends: .pages-activation
+  extends: .deploy-pages-activation
   image: python:3.8.0
-  stage: test
+  stage: deploy
   script:
+    - source tasks/deploy.sh
+    - set-versions "$(python tasks/make-version-string.py ${TARGET_BRANCH})" || true
     - pip install nox
     - git clone ${CI_REPOSITORY_URL} -b ${TARGET_BRANCH} hikari_docs_${TARGET_BRANCH} --depth=1
     - cd hikari_docs_${TARGET_BRANCH}
@@ -49,9 +53,9 @@ staging-pages:
   variables:
     TARGET_BRANCH: staging
 
-pages:
-  extends: .pages-activation
-  stage: pages
+pages:  # deploys the generated artifacts as pages
+  extends: .deploy-pages-activation
+  stage: post-deploy
   image: busybox:1.31.1-musl
   before_script:
     - 'mkdir public || true'
@@ -60,9 +64,19 @@ pages:
     - master-pages
   script:
     - mv public/master/* public
+
+test-pages:
+  image: python:3.8.0
+  stage: test
+  allow_failure: false
+  script:
+    - pip install nox
+    - nox -s documentation
+  artifacts:
+    paths:
+      - public/
   except:
-    - tags
-    - merge_requests
-  only:
     - master
     - staging
+    - schedules
+    - tags

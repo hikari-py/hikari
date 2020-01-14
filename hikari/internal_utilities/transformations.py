@@ -22,6 +22,7 @@ Basic transformation utilities.
 import contextlib
 import typing
 
+from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import unspecified
 
 ValueT = typing.TypeVar("ValueT")
@@ -54,7 +55,7 @@ def put_if_specified(
     mapping: typing.Dict[typing.Hashable, typing.Any],
     key: typing.Hashable,
     value: typing.Any,
-    type_after: CastT = unspecified.UNSPECIFIED,
+    type_after: type_hints.NotRequired[CastT] = unspecified.UNSPECIFIED,
 ) -> None:
     """
     Add a value to the mapping under the given key as long as the value is not :attr:`UNSPECIFIED`
@@ -77,11 +78,59 @@ def put_if_specified(
             mapping[key] = value
 
 
+def get_id(value: typing.Any) -> str:
+    """
+    Used to get the snowflake ID from an object.
+
+    Args:
+        value: The :class:`hikari.orm.model.bases.SnowflakeLikeT` like object to get an ID from.
+
+    Returns:
+        The resultant snowflake ID as a :class:`str`.
+    """
+    return str(int(value))
+
+
+def cast_if_specified(
+    data: typing.Union[ValueT, typing.Iterable[ValueT], unspecified.Unspecified, None],
+    cast: CastT,
+    iterable: bool = False,
+    nullable: bool = False,
+    **kwargs,
+) -> typing.Union[DefaultT, typing.Sequence[DefaultT], None]:
+    """
+    Attempts to cast the supplied data if it is specified.
+
+    Args:
+        data:
+            The data to cast if it is not :class:`UNSPECIFIED`.
+        cast:
+            The function or type to cast the supplied data with.
+        iterable:
+            If this should iterate through `data`, converting each entry defaults to `False`.
+        nullable:
+            If this should skip attempting to cast data when it's :class:`None`, defaults to `False`. If both this and
+            `iterable` are `True` then this will assume that data itself will be nullable rather than entries in data.
+        **kwargs:
+            Optional kwargs to pass-through to cast, along with the data.
+
+    Returns:
+        The casted data.
+    """
+    if data is not unspecified.UNSPECIFIED and (data is not None or not nullable):
+        if iterable:
+            data = [cast(value, **kwargs) for value in data]
+        else:
+            data = cast(data, **kwargs)
+
+    return data
+
+
 def put_if_not_none(
     mapping: typing.Dict[typing.Hashable, typing.Any],
     key: typing.Hashable,
     value: typing.Any,
-    type_after: CastT = unspecified.UNSPECIFIED,
+    type_after: type_hints.NotRequired[CastT] = unspecified.UNSPECIFIED,
 ) -> None:
     """
     Add a value to the mapping under the given key as long as the value is not :attr:`None`
@@ -125,6 +174,36 @@ def format_present_placeholders(string: str, **kwargs) -> str:
     return string.format_map(_SafeFormatDict(**kwargs))
 
 
+def get_parent_id_from_model(obj: typing.Any, parent_object: typing.Optional[typing.Any], attribute: str) -> str:
+    """
+    Attempt to get a parent object ID from the parent object or an object that has the parent object as an attribute.
+
+    Args:
+        obj:
+            The object to try and get the parent object's ID from if parent_object isn't passed.
+        parent_object:
+            Optional the parent object to get the ID from by default, required if obj doesn't
+            have an equivalent to this attached to it as `obj.{attribute}`.
+        attribute:
+            The attribute that the parent_object's equivalent should be attached to obj with.
+
+    Returns:
+        The parent object's ID as :class:`str`.
+
+    Raises:
+        TypeError:
+            If parent_object isn't passed when obj doesn't have it attached as attribute, or if
+            `parent_object` or `obj.{attribute}` don't inherit from :class:`hikari.orm.models.bases.SnowflakeMixin`.
+    """
+    try:
+        return get_id(parent_object or getattr(obj, attribute))
+    except AttributeError:
+        raise TypeError(
+            f"Missing argument '{attribute}' required when passing through an ID or an "
+            f"object that doesn't have '{attribute}' attached to it for a {attribute}-bound model."
+        ) from None
+
+
 def id_map(snowflake_iterable: typing.Iterable[ValueT]) -> typing.MutableMapping[int, ValueT]:
     """
     Given an iterable of elements with an :class:`int` `id` attribute, produce a mutable mapping
@@ -141,7 +220,10 @@ __all__ = [
     "nullable_cast",
     "try_cast",
     "put_if_specified",
+    "get_id",
+    "cast_if_specified",
     "put_if_not_none",
     "format_present_placeholders",
+    "get_parent_id_from_model",
     "id_map",
 ]

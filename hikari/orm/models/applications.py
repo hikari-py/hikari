@@ -132,7 +132,7 @@ class Application(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name", "description")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
         self.icon_hash = payload.get("icon")

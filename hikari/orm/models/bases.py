@@ -63,9 +63,8 @@ class BestEffortEnumMixin:
             return value
 
     def __str__(self):
-        return self.name
-
-    __repr__ = __str__
+        #  We only want this to default to the value for non-int based enums.
+        return self.name.lower() if isinstance(self, int) else self.value
 
 
 class NamedEnumMixin(BestEffortEnumMixin):
@@ -85,9 +84,7 @@ class NamedEnumMixin(BestEffortEnumMixin):
         return cls[name.upper()]
 
     def __str__(self):
-        return self.name
-
-    __repr__ = __str__
+        return self.name.lower()
 
 
 class BaseModel(metaclass=abc.ABCMeta):
@@ -173,7 +170,7 @@ class BaseModel(metaclass=abc.ABCMeta):
 
         return instance
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         """
         Updates the internal state of an existing instance of this object from a raw Discord payload.
         """
@@ -390,51 +387,51 @@ DictImplT = typing.TypeVar("DictImplT", typing.Dict, dict)
 DictFactoryT = typing.Union[typing.Type[DictImplT], typing.Callable[[], DictImplT]]
 
 
-class DictFactory(dict):
+def _dict_factory_convert(value: typing.Any) -> typing.Any:
+    """Try to convert a value, and return the result or original value."""
+    if isinstance(value, MarshalMixin):
+        value = value.to_dict(dict_factory=dict_factory_impl)
+    #  This should cover all int based enums.
+    elif isinstance(value, int):
+        value = int(value)
+    elif isinstance(value, NamedEnumMixin):
+        value = str(value)
+    elif isinstance(value, enum.Enum):
+        value = value.value
+
+    return value
+
+
+def dict_factory_impl(seq=None, **kwargs) -> DictImplT:
     """
     A dictionary factory used for ensuring that values like enums and models are returned in a serializable format.
     """
-
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**{key: self.default(value) for key, value in kwargs.items() if value is not None})
-
-    def __setitem__(self, key, item) -> None:
-        super().__setitem__(key, self.default(item))
-
-    @staticmethod
-    def default(value: typing.Any) -> typing.Any:
-        """Try to convert a value, and return the result or original value."""
-        if isinstance(value, MarshalMixin):
-            value = value.to_dict()
-        elif isinstance(value, enum.Enum):
-            value = value.value
-
-        return value
+    kwargs.update(seq or containers.EMPTY_SEQUENCE)
+    return {key: _dict_factory_convert(value) for key, value in kwargs.items() if value is not None}
 
 
 class MarshalMixin:
     """
-    A mixin used for making models serializable.
+    A mixin used for making serializable models.
 
     Note:
-        Will need to be decorated with :func:`dataclasses.dataclass`.
-        And will require that __init__ is implemented where the args are the object's fields.
+        Any model inheriting from this will need to be decorated with :func:`dataclasses.dataclass` with a dataclass
+         styled `__init__` as this relies on dataclass fields and not the raw attributes in __dict__ or __slots__.
     """
 
     __slots__ = ()
 
-    def to_dict(self, *, dict_factory: DictFactoryT = DictFactory) -> DictImplT:
+    def to_dict(self, *, dict_factory: DictFactoryT = dict_factory_impl) -> DictImplT:
         """Get a dictionary of the the values held by the current object."""
-        attrs = {a: getattr(self, a) for a in self.__slots__}
-        # noinspection PyArgumentList,PyTypeChecker
-        return dict_factory(**attrs)
+        return dataclasses.asdict(self, dict_factory=dict_factory)
 
     # noinspection PyArgumentList,PyDataclass
     @classmethod
-    def from_dict(cls, payload: containers.DiscordObjectT):
+    def from_dict(cls, payload: containers.JSONObject):
         """Initialise the current model from a Discord payload."""
-        params = {field.name: payload.get(field.name) for field in dataclasses.fields(cls)}
-        return cls(**params)
+        return cls(
+            **{field.name: payload[field.name] for field in dataclasses.fields(cls) if field.name in payload}
+        )
 
 
 #: The valid types of a raw unformatted snowflake.
@@ -451,8 +448,8 @@ __all__ = [
     "BaseModel",
     "RawSnowflakeT",
     "SnowflakeLikeT",
-    "DictFactory",
     "MarshalMixin",
     "DictImplT",
+    "dict_factory_impl",
     "DictFactoryT",
 ]

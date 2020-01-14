@@ -28,6 +28,7 @@ from hikari.internal_utilities import reprs
 from hikari.orm import fabric
 from hikari.orm.models import bases
 from hikari.orm.models import colors as _color
+from hikari.orm.models import guilds as _guilds
 from hikari.orm.models import permissions as _permission
 
 
@@ -51,7 +52,7 @@ class PartialRole(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
 
@@ -110,13 +111,13 @@ class Role(PartialRole, bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("id", "name", "position", "is_managed", "is_mentionable", "is_hoisted")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT, guild_id: int) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject, guild_id: int) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self.guild_id = guild_id
         self.update_state(payload)
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         self.name = payload["name"]
         self.color = _color.Color(payload["color"])
         self.is_hoisted = payload["hoist"]
@@ -125,13 +126,17 @@ class Role(PartialRole, bases.BaseModelWithFabric):
         self.is_managed = payload["managed"]
         self.is_mentionable = payload["mentionable"]
 
+    @property
+    def guild(self) -> _guilds.Guild:
+        return self._fabric.state_registry.get_mandatory_guild_by_id(self.guild_id)
+
 
 #: Any type of :class:`PartialRole` (including :class:`Role`), or the :class:`int`/:class:`str` ID of one.
 PartialRoleLikeT = typing.Union[bases.RawSnowflakeT, PartialRole]
 
 
 #: An instance of :class:`Role`, or the :class:`int`/:class:`str` ID of one.
-RoleLikeT = typing.Union[bases.RawSnowflakeT, PartialRole]
+RoleLikeT = typing.Union[bases.RawSnowflakeT, Role]
 
 
 __all__ = ["PartialRole", "Role", "PartialRoleLikeT", "RoleLikeT"]

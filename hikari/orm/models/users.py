@@ -81,7 +81,7 @@ class User(BaseUser, bases.BaseModelWithFabric):
     __repr__ = reprs.repr_of("id", "username", "discriminator", "is_bot")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT):
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject):
         self._fabric = fabric_obj
         self.id = int(payload["id"])
         # We don't expect these to ever change...
@@ -89,7 +89,7 @@ class User(BaseUser, bases.BaseModelWithFabric):
         self.is_system = payload.get("system", False)
         self.update_state(payload)  # lgtm [py/init-calls-subclass]
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         self.username = payload.get("username")
         self.discriminator = int(payload["discriminator"])
         self.avatar_hash = payload.get("avatar")
@@ -203,10 +203,10 @@ class OAuth2User(User):
 
     __repr__ = reprs.repr_of("id", "username", "discriminator", "is_bot", "is_verified", "is_mfa_enabled")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT):
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject):
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         super().update_state(payload)
 
         self.is_mfa_enabled = payload.get("mfa_enabled")
@@ -217,7 +217,7 @@ class OAuth2User(User):
         self.premium_type = transformations.nullable_cast(payload.get("premium_type"), PremiumType)
 
 
-def parse_user(fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> BaseUser:
+def parse_user(fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> BaseUser:
     """
     Consume a fabric object and some type of user payload and try to parse the appropriate type of :class:`IUser`
     for the given payload.

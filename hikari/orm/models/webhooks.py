@@ -70,7 +70,7 @@ class WebhookUser(users.BaseUser):
     #: :type: :class:`str`
     avatar_hash: str
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.id = int(payload["id"])
         self.username = payload["username"]
         self.discriminator = int(payload["discriminator"])
@@ -134,7 +134,7 @@ class Webhook(bases.BaseModelWithFabric, bases.SnowflakeMixin):
     __repr__ = reprs.repr_of("id", "name")
 
     def __init__(
-        self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT, guild_id: typing.Optional[int] = None
+        self, fabric_obj: fabric.Fabric, payload: containers.JSONObject, guild_id: typing.Optional[int] = None
     ) -> None:
         self._fabric = fabric_obj
         self.id = int(payload["id"])

@@ -34,6 +34,7 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import conversions
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import unspecified
 from hikari.net import http_api_base
 
@@ -93,7 +94,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return result["url"]
 
     @_link_developer_portal(_APIResource.GATEWAY)
-    async def get_gateway_bot(self) -> containers.DiscordObjectT:
+    async def get_gateway_bot(self) -> containers.JSONObject:
         """
         Returns:
             An object containing a `url` to connect to, an :class:`int` number of shards recommended to use
@@ -109,10 +110,10 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         self,
         guild_id: str,
         *,
-        user_id: str = unspecified.UNSPECIFIED,
-        action_type: int = unspecified.UNSPECIFIED,
-        limit: int = unspecified.UNSPECIFIED,
-    ) -> containers.DiscordObjectT:
+        user_id: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        action_type: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Get an audit log object for the given guild.
 
@@ -142,7 +143,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/audit-logs", query=query, guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.CHANNEL)
-    async def get_channel(self, channel_id: str) -> containers.DiscordObjectT:
+    async def get_channel(self, channel_id: str) -> containers.JSONObject:
         """
         Get a channel object from a given channel ID.
 
@@ -164,16 +165,16 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         self,
         channel_id: str,
         *,
-        position: int = unspecified.UNSPECIFIED,
-        topic: str = unspecified.UNSPECIFIED,
-        nsfw: bool = unspecified.UNSPECIFIED,
-        rate_limit_per_user: int = unspecified.UNSPECIFIED,
-        bitrate: int = unspecified.UNSPECIFIED,
-        user_limit: int = unspecified.UNSPECIFIED,
-        permission_overwrites: typing.Sequence[containers.DiscordObjectT] = unspecified.UNSPECIFIED,
-        parent_id: str = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
-    ) -> containers.DiscordObjectT:
+        position: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        topic: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        nsfw: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        rate_limit_per_user: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        bitrate: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        user_limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        permission_overwrites: type_hints.NotRequired[typing.Sequence[containers.JSONObject]] = unspecified.UNSPECIFIED,
+        parent_id: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Update one or more aspects of a given channel ID.
 
@@ -234,7 +235,6 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
     async def delete_close_channel(self, channel_id: str) -> None:
         """
         Delete the given channel ID, or if it is a DM, close it.
-
         Args:
             channel_id:
                 The channel ID to delete, or the user ID of the direct message to close.
@@ -259,11 +259,11 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         self,
         channel_id: str,
         *,
-        limit: int = unspecified.UNSPECIFIED,
-        after: str = unspecified.UNSPECIFIED,
-        before: str = unspecified.UNSPECIFIED,
-        around: str = unspecified.UNSPECIFIED,
-    ) -> typing.Sequence[containers.DiscordObjectT]:
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        after: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        before: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        around: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+    ) -> typing.Sequence[containers.JSONObject]:
         """
         Retrieve message history for a given channel. If a user is provided, retrieve the DM history.
 
@@ -310,7 +310,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/channels/{channel_id}/messages", channel_id=channel_id, query=query)
 
     @_link_developer_portal(_APIResource.CHANNEL)
-    async def get_channel_message(self, channel_id: str, message_id: str) -> containers.DiscordObjectT:
+    async def get_channel_message(self, channel_id: str, message_id: str) -> containers.JSONObject:
         """
         Get the message with the given message ID from the channel with the given channel ID.
 
@@ -341,12 +341,12 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         self,
         channel_id: str,
         *,
-        content: str = unspecified.UNSPECIFIED,
-        nonce: str = unspecified.UNSPECIFIED,
-        tts: bool = False,
-        files: typing.Sequence[storage.FileLikeT] = unspecified.UNSPECIFIED,
-        embed: containers.DiscordObjectT = unspecified.UNSPECIFIED,
-    ) -> containers.DiscordObjectT:
+        content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        nonce: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        tts: type_hints.NotRequired[bool] = False,
+        files: type_hints.NotRequired[typing.Sequence[typing.Tuple[str, storage.FileLikeT]]] = unspecified.UNSPECIFIED,
+        embed: type_hints.NotRequired[containers.JSONObject] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Create a message in the given channel or DM.
 
@@ -359,7 +359,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
                 An optional ID to send for opportunistic message creation. This doesn't serve any real purpose for
                 general use, and can usually be ignored.
             tts:
-                If specified and `True`, then the message will be sent.
+                If specified and `True`, then the message will be sent as a TTS message.
             files:
                 If specified, this should be a list of between 1 and 5 tuples. Each tuple should consist of the
                 file name, and either raw :class:`bytes` or an :class:`io.IOBase` derived object with a seek that
@@ -498,10 +498,10 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         message_id: str,
         emoji: str,
         *,
-        before: str = unspecified.UNSPECIFIED,
-        after: str = unspecified.UNSPECIFIED,
-        limit: int = unspecified.UNSPECIFIED,
-    ) -> typing.Sequence[containers.DiscordObjectT]:
+        before: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        after: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+    ) -> typing.Sequence[containers.JSONObject]:
         """
         Get a list of users who reacted with the given emoji on the given message in the given channel or user DM.
 
@@ -569,10 +569,10 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         channel_id: str,
         message_id: str,
         *,
-        content: str = unspecified.UNSPECIFIED,
-        embed: containers.DiscordObjectT = unspecified.UNSPECIFIED,
-        flags: int = unspecified.UNSPECIFIED,
-    ) -> containers.DiscordObjectT:
+        content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        embed: type_hints.NotRequired[containers.JSONObject] = unspecified.UNSPECIFIED,
+        flags: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Update the given message.
 
@@ -651,14 +651,15 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
                 If the channel_id is not found.
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_MESSAGES` permission in the channel.
+            hikari.errors.BadRequest:
+                If any of the messages passed are older than 2 weeks in age or any duplicate message IDs are passed.
 
         Notes:
             This can only be used on guild text channels.
 
             Any message IDs that do not exist or are invalid add towards the total 100 max messages to remove.
-            Duplicate IDs are only counted once in this count.
 
-            This can only delete messages that are newer than 2 weeks in age. If all messages are older than 2 weeks
+            This can only delete messages that are newer than 2 weeks in age. If any of the messages are older than 2 weeks
             then this call will fail.
         """
         await self.request(
@@ -671,10 +672,10 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         channel_id: str,
         overwrite_id: str,
         *,
-        allow: int = unspecified.UNSPECIFIED,
-        deny: int = unspecified.UNSPECIFIED,
-        type_: str = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        allow: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        deny: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        type_: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Edit permissions for a given channel.
@@ -707,7 +708,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         )
 
     @_link_developer_portal(_APIResource.CHANNEL)
-    async def get_channel_invites(self, channel_id: str) -> typing.Sequence[containers.DiscordObjectT]:
+    async def get_channel_invites(self, channel_id: str) -> typing.Sequence[containers.JSONObject]:
         """
         Get invites for a given channel.
 
@@ -731,12 +732,12 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         self,
         channel_id: str,
         *,
-        max_age: int = unspecified.UNSPECIFIED,
-        max_uses: int = unspecified.UNSPECIFIED,
-        temporary: bool = unspecified.UNSPECIFIED,
-        unique: bool = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
-    ) -> containers.DiscordObjectT:
+        max_age: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        max_uses: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        temporary: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        unique: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Create a new invite for the given channel.
 
@@ -818,7 +819,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         await self.request(self.POST, "/channels/{channel_id}/typing", channel_id=channel_id)
 
     @_link_developer_portal(_APIResource.CHANNEL)
-    async def get_pinned_messages(self, channel_id: str) -> typing.Sequence[containers.DiscordObjectT]:
+    async def get_pinned_messages(self, channel_id: str) -> typing.Sequence[containers.JSONObject]:
         """
         Get pinned messages for a given channel.
 
@@ -859,7 +860,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
     @_link_developer_portal(_APIResource.CHANNEL)
     async def delete_pinned_channel_message(self, channel_id: str, message_id: str) -> None:
         """
-        Remove a pinned message to the channel. This will only unpin the message. It will not delete it.
+        Remove a pinned message from the channel. This will only unpin the message. It will not delete it.
 
         Args:
             channel_id:
@@ -878,7 +879,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         )
 
     @_link_developer_portal(_APIResource.EMOJI)
-    async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
+    async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[containers.JSONObject]:
         """
         Gets emojis for a given guild ID.
 
@@ -898,7 +899,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/emojis", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.EMOJI)
-    async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> containers.DiscordObjectT:
+    async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> containers.JSONObject:
         """
         Gets an emoji from a given guild and emoji IDs
 
@@ -928,9 +929,9 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         name: str,
         image: bytes,
         *,
-        roles: typing.Sequence[str] = containers.EMPTY_SEQUENCE,
-        reason: str = unspecified.UNSPECIFIED,
-    ) -> containers.DiscordObjectT:
+        roles: type_hints.NotRequired[typing.Sequence[str]] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Creates a new emoji for a given guild.
 
@@ -958,7 +959,11 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
                 If you attempt to upload an image larger than 256kb, an empty image or an invalid image format.
         """
         assertions.assert_not_none(image, "image must be a valid image")
-        payload = {"name": name, "roles": roles, "image": conversions.image_bytes_to_image_data(image)}
+        payload = {
+            "name": name,
+            "roles": [] if roles is unspecified.UNSPECIFIED else roles,
+            "image": conversions.image_bytes_to_image_data(image),
+        }
 
         return await self.request(
             self.POST, "/guilds/{guild_id}/emojis", guild_id=guild_id, json=payload, reason=reason
@@ -970,10 +975,10 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         guild_id: str,
         emoji_id: str,
         *,
-        name: str = unspecified.UNSPECIFIED,
-        roles: typing.Sequence[str] = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
-    ) -> containers.DiscordObjectT:
+        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        roles: type_hints.NotRequired[typing.Sequence[str]] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Edits an emoji of a given guild
 
@@ -1017,9 +1022,9 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
 
         Args:
             guild_id:
-                The ID of the guild to delete the emoji from
+                The ID of the guild to delete the emoji from.
             emoji_id:
-                The ID of the emoji to be deleted
+                The ID of the emoji to be deleted.
 
         Raises:
             hikari.errors.NotFound:
@@ -1034,14 +1039,15 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
     async def create_guild(
         self,
         name: str,
-        region: str,
-        icon: bytes,
-        verification_level: int,
-        default_message_notifications: int,
-        explicit_content_filter: int,
-        roles: typing.Sequence[containers.DiscordObjectT],
-        channels: typing.Sequence[containers.DiscordObjectT],
-    ) -> containers.DiscordObjectT:
+        *,
+        region: type_hints.NotRequired[str],
+        icon: type_hints.NotRequired[bytes],
+        verification_level: type_hints.NotRequired[int],
+        default_message_notifications: type_hints.NotRequired[int],
+        explicit_content_filter: type_hints.NotRequired[int],
+        roles: type_hints.NotRequired[typing.Sequence[containers.JSONObject]] = unspecified.UNSPECIFIED,
+        channels: type_hints.NotRequired[typing.Sequence[containers.JSONObject]] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Creates a new guild. Can only be used by bots in less than 10 guilds.
 
@@ -1075,18 +1081,18 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         """
         payload = {
             "name": name,
-            "region": region,
-            "verification_level": verification_level,
-            "default_message_notifications": default_message_notifications,
-            "explicit_content_filter": explicit_content_filter,
-            "roles": roles,
-            "channels": channels,
-            "icon": conversions.image_bytes_to_image_data(icon),
         }
+        transformations.put_if_specified(payload, "region", region)
+        transformations.put_if_specified(payload, "verification_level", verification_level)
+        transformations.put_if_specified(payload, "default_message_notifications", default_message_notifications)
+        transformations.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
+        transformations.put_if_specified(payload, "roles", roles)
+        transformations.put_if_specified(payload, "channels", channels)
+        transformations.put_if_specified(payload, "icon", icon, conversions.image_bytes_to_image_data)
         return await self.request(self.POST, "/guilds", json=payload)
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild(self, guild_id: str) -> containers.DiscordObjectT:
+    async def get_guild(self, guild_id: str) -> containers.JSONObject:
         """
         Gets a given guild's object.
 
@@ -1109,19 +1115,19 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         self,
         guild_id: str,
         *,
-        name: str = unspecified.UNSPECIFIED,
-        region: str = unspecified.UNSPECIFIED,
-        verification_level: int = unspecified.UNSPECIFIED,
-        default_message_notifications: int = unspecified.UNSPECIFIED,
-        explicit_content_filter: int = unspecified.UNSPECIFIED,
-        afk_channel_id: str = unspecified.UNSPECIFIED,
-        afk_timeout: int = unspecified.UNSPECIFIED,
-        icon: bytes = unspecified.UNSPECIFIED,
-        owner_id: str = unspecified.UNSPECIFIED,
-        splash: bytes = unspecified.UNSPECIFIED,
-        system_channel_id: str = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
-    ) -> containers.DiscordObjectT:
+        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        region: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        verification_level: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        default_message_notifications: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        explicit_content_filter: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        afk_channel_id: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        afk_timeout: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        icon: type_hints.NotRequired[bytes] = unspecified.UNSPECIFIED,
+        owner_id: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        splash: type_hints.NotRequired[bytes] = unspecified.UNSPECIFIED,
+        system_channel_id: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Edits a given guild.
 
@@ -1197,7 +1203,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         await self.request(self.DELETE, "/guilds/{guild_id}", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_channels(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
+    async def get_guild_channels(self, guild_id: str) -> typing.Sequence[containers.JSONObject]:
         """
         Gets all the channels for a given guild.
 
@@ -1222,17 +1228,17 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         guild_id: str,
         name: str,
         *,
-        type_: int = unspecified.UNSPECIFIED,
-        topic: str = unspecified.UNSPECIFIED,
-        bitrate: int = unspecified.UNSPECIFIED,
-        user_limit: int = unspecified.UNSPECIFIED,
-        rate_limit_per_user: int = unspecified.UNSPECIFIED,
-        position: int = unspecified.UNSPECIFIED,
-        permission_overwrites: typing.Sequence[containers.DiscordObjectT] = unspecified.UNSPECIFIED,
-        parent_id: str = unspecified.UNSPECIFIED,
-        nsfw: bool = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
-    ) -> containers.DiscordObjectT:
+        type_: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        topic: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        bitrate: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        user_limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        rate_limit_per_user: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        position: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        permission_overwrites: type_hints.NotRequired[typing.Sequence[containers.JSONObject]] = unspecified.UNSPECIFIED,
+        parent_id: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        nsfw: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Creates a channel in a given guild.
 
@@ -1317,7 +1323,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         await self.request(self.PATCH, "/guilds/{guild_id}/channels", guild_id=guild_id, json=payload)
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_member(self, guild_id: str, user_id: str) -> containers.DiscordObjectT:
+    async def get_guild_member(self, guild_id: str, user_id: str) -> containers.JSONObject:
         """
         Gets a given guild member.
 
@@ -1338,8 +1344,12 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
 
     @_link_developer_portal(_APIResource.GUILD)
     async def list_guild_members(
-        self, guild_id: str, *, limit: int = unspecified.UNSPECIFIED, after: str = unspecified.UNSPECIFIED
-    ) -> typing.Sequence[containers.DiscordObjectT]:
+        self,
+        guild_id: str,
+        *,
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        after: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+    ) -> typing.Sequence[containers.JSONObject]:
         """
         Lists all members of a given guild.
 
@@ -1389,12 +1399,12 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         guild_id: str,
         user_id: str,
         *,
-        nick: typing.Optional[str] = unspecified.UNSPECIFIED,
-        roles: typing.Sequence[str] = unspecified.UNSPECIFIED,
-        mute: bool = unspecified.UNSPECIFIED,
-        deaf: bool = unspecified.UNSPECIFIED,
-        channel_id: typing.Optional[str] = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        nick: type_hints.NullableNotRequired[str] = unspecified.UNSPECIFIED,
+        roles: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        mute: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        deaf: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        channel_id: type_hints.NullableNotRequired[str] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Edits a member of a given guild.
@@ -1405,7 +1415,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
             user_id:
                 The ID of the member to edit.
             nick:
-                The new nickname string.
+                The new nickname string. Setting it to None explicitly will clear the nickname.
             roles:
                 A list of role IDs the member should have.
             mute:
@@ -1444,7 +1454,11 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
 
     @_link_developer_portal(_APIResource.GUILD)
     async def modify_current_user_nick(
-        self, guild_id: str, nick: typing.Optional[str], *, reason: str = unspecified.UNSPECIFIED
+        self,
+        guild_id: str,
+        nick: typing.Optional[str],
+        *,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> str:
         """
         Edits the current user's nickname for a given guild.
@@ -1453,7 +1467,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
             guild_id:
                 The ID of the guild you want to change the nick on.
             nick:
-                The new nick string.
+                The new nick string. Setting this to `None` clears the nickname.
             reason:
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
                 
@@ -1474,7 +1488,12 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
 
     @_link_developer_portal(_APIResource.GUILD)
     async def add_guild_member_role(
-        self, guild_id: str, user_id: str, role_id: str, *, reason: str = unspecified.UNSPECIFIED
+        self,
+        guild_id: str,
+        user_id: str,
+        role_id: str,
+        *,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Adds a role to a given member.
@@ -1506,7 +1525,12 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
 
     @_link_developer_portal(_APIResource.GUILD)
     async def remove_guild_member_role(
-        self, guild_id: str, user_id: str, role_id: str, *, reason: str = unspecified.UNSPECIFIED
+        self,
+        guild_id: str,
+        user_id: str,
+        role_id: str,
+        *,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Removed a role from a given member.
@@ -1537,7 +1561,9 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         )
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def remove_guild_member(self, guild_id: str, user_id: str, *, reason: str = unspecified.UNSPECIFIED) -> None:
+    async def remove_guild_member(
+        self, guild_id: str, user_id: str, *, reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED
+    ) -> None:
         """
         Kicks a user from a given guild.
 
@@ -1560,7 +1586,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         )
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_bans(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
+    async def get_guild_bans(self, guild_id: str) -> typing.Sequence[containers.JSONObject]:
         """
         Gets the bans for a given guild.
 
@@ -1580,7 +1606,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/bans", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_ban(self, guild_id: str, user_id: str) -> containers.DiscordObjectT:
+    async def get_guild_ban(self, guild_id: str, user_id: str) -> containers.JSONObject:
         """
         Gets a ban from a given guild.
 
@@ -1607,8 +1633,8 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         guild_id: str,
         user_id: str,
         *,
-        delete_message_days: int = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        delete_message_days: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Bans a user from a given guild.
@@ -1637,15 +1663,17 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         )
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def remove_guild_ban(self, guild_id: str, user_id: str, *, reason: str = unspecified.UNSPECIFIED) -> None:
+    async def remove_guild_ban(
+        self, guild_id: str, user_id: str, *, reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED
+    ) -> None:
         """
         Un-bans a user from a given guild.
 
         Args:
             guild_id:
-                The ID of the guild the member belongs to.
+                The ID of the guild to un-ban the user from.
             user_id:
-                The ID of the member you want to un-ban.
+                The ID of the user you want to un-ban.
             reason:
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
@@ -1660,7 +1688,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         )
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_roles(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
+    async def get_guild_roles(self, guild_id: str) -> typing.Sequence[containers.JSONObject]:
         """
         Gets the roles for a given guild.
 
@@ -1684,13 +1712,13 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         self,
         guild_id: str,
         *,
-        name: str = unspecified.UNSPECIFIED,
-        permissions: int = unspecified.UNSPECIFIED,
-        color: int = unspecified.UNSPECIFIED,
-        hoist: bool = unspecified.UNSPECIFIED,
-        mentionable: bool = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
-    ) -> containers.DiscordObjectT:
+        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        permissions: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        color: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        hoist: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        mentionable: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Creates a new role for a given guild.
 
@@ -1732,7 +1760,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
     @_link_developer_portal(_APIResource.GUILD)
     async def modify_guild_role_positions(
         self, guild_id: str, role: typing.Tuple[str, int], *roles: typing.Tuple[str, int]
-    ) -> typing.Sequence[containers.DiscordObjectT]:
+    ) -> typing.Sequence[containers.JSONObject]:
         """
         Edits the position of two or more roles in a given guild.
 
@@ -1764,13 +1792,13 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         guild_id: str,
         role_id: str,
         *,
-        name: str = unspecified.UNSPECIFIED,
-        permissions: int = unspecified.UNSPECIFIED,
-        color: int = unspecified.UNSPECIFIED,
-        hoist: bool = unspecified.UNSPECIFIED,
-        mentionable: bool = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
-    ) -> containers.DiscordObjectT:
+        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        permissions: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        color: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        hoist: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        mentionable: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Edits a role in a given guild.
 
@@ -1864,7 +1892,12 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
 
     @_link_developer_portal(_APIResource.GUILD)
     async def begin_guild_prune(
-        self, guild_id: str, days: int, *, compute_prune_count: bool = False, reason: str = unspecified.UNSPECIFIED
+        self,
+        guild_id: str,
+        days: int,
+        *,
+        compute_prune_count: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> typing.Optional[int]:
         """
         Prunes members of a given guild based on the number of inactive days.
@@ -1891,7 +1924,10 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
             hikari.errors.BadRequest:
                 If you provide invalid values for the `days` and `compute_prune_count` fields.
         """
-        query = {"days": days, "compute_prune_count": compute_prune_count}
+        query = {
+            "days": days,
+            "compute_prune_count": compute_prune_count if compute_prune_count is not unspecified.UNSPECIFIED else False,
+        }
         result = await self.request(
             self.POST, "/guilds/{guild_id}/prune", guild_id=guild_id, query=query, reason=reason
         )
@@ -1902,7 +1938,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
             return None
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_voice_regions(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
+    async def get_guild_voice_regions(self, guild_id: str) -> typing.Sequence[containers.JSONObject]:
         """
         Gets the voice regions for a given guild.
 
@@ -1922,7 +1958,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/regions", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_invites(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
+    async def get_guild_invites(self, guild_id: str) -> typing.Sequence[containers.JSONObject]:
         """
         Gets the invites for a given guild.
 
@@ -1942,7 +1978,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/invites", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
+    async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[containers.JSONObject]:
         """
         Gets the integrations for a given guild.
 
@@ -1963,8 +1999,13 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
 
     @_link_developer_portal(_APIResource.GUILD)
     async def create_guild_integration(
-        self, guild_id: str, type_: str, integration_id: str, *, reason: str = unspecified.UNSPECIFIED
-    ) -> containers.DiscordObjectT:
+        self,
+        guild_id: str,
+        type_: str,
+        integration_id: str,
+        *,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Creates an integrations for a given guild.
 
@@ -1998,10 +2039,10 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         guild_id: str,
         integration_id: str,
         *,
-        expire_behaviour: int = unspecified.UNSPECIFIED,
-        expire_grace_period: int = unspecified.UNSPECIFIED,
-        enable_emojis: bool = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
+        expire_behaviour: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        expire_grace_period: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        enable_emojis: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Edits an integrations for a given guild.
@@ -2043,7 +2084,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
 
     @_link_developer_portal(_APIResource.GUILD)
     async def delete_guild_integration(
-        self, guild_id: str, integration_id: str, *, reason: str = unspecified.UNSPECIFIED
+        self, guild_id: str, integration_id: str, *, reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED
     ) -> None:
         """
         Deletes an integration for the given guild.
@@ -2095,7 +2136,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         )
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_embed(self, guild_id: str) -> containers.DiscordObjectT:
+    async def get_guild_embed(self, guild_id: str) -> containers.JSONObject:
         """
         Gets the embed for a given guild.
 
@@ -2116,8 +2157,12 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
 
     @_link_developer_portal(_APIResource.GUILD)
     async def modify_guild_embed(
-        self, guild_id: str, embed: containers.DiscordObjectT, *, reason: str = unspecified.UNSPECIFIED
-    ) -> containers.DiscordObjectT:
+        self,
+        guild_id: str,
+        embed: containers.JSONObject,
+        *,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Edits the embed for a given guild.
 
@@ -2141,7 +2186,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.PATCH, "/guilds/{guild_id}/embed", guild_id=guild_id, json=embed, reason=reason)
 
     @_link_developer_portal(_APIResource.GUILD)
-    async def get_guild_vanity_url(self, guild_id: str) -> containers.DiscordObjectT:
+    async def get_guild_vanity_url(self, guild_id: str) -> containers.JSONObject:
         """
         Gets the vanity URL for a given guild.
 
@@ -2161,7 +2206,9 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/vanity-url", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.GUILD)
-    def get_guild_widget_image(self, guild_id: str, *, style: str = unspecified.UNSPECIFIED) -> str:
+    def get_guild_widget_image(
+        self, guild_id: str, *, style: type_hints.NotRequired[str] = unspecified.UNSPECIFIED
+    ) -> str:
         """
         Get the URL for a guild widget.
 
@@ -2186,8 +2233,8 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
 
     @_link_developer_portal(_APIResource.INVITE)
     async def get_invite(
-        self, invite_code: str, *, with_counts: bool = unspecified.UNSPECIFIED
-    ) -> containers.DiscordObjectT:
+        self, invite_code: str, *, with_counts: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED
+    ) -> containers.JSONObject:
         """
         Gets the given invite.
 
@@ -2210,7 +2257,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/invites/{invite_code}", invite_code=invite_code, query=query)
 
     @_link_developer_portal(_APIResource.INVITE)
-    async def delete_invite(self, invite_code: str) -> containers.DiscordObjectT:
+    async def delete_invite(self, invite_code: str) -> containers.JSONObject:
         """
         Deletes a given invite.
 
@@ -2235,7 +2282,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
     ##########
 
     @_link_developer_portal(_APIResource.OAUTH2)
-    async def get_current_application_info(self) -> containers.DiscordObjectT:
+    async def get_current_application_info(self) -> containers.JSONObject:
         """
         Get the current application information.
 
@@ -2249,7 +2296,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
     ##########
 
     @_link_developer_portal(_APIResource.USER)
-    async def get_current_user(self) -> containers.DiscordObjectT:
+    async def get_current_user(self) -> containers.JSONObject:
         """
         Gets the current user that is represented by token given to the client.
 
@@ -2259,7 +2306,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/users/@me")
 
     @_link_developer_portal(_APIResource.USER)
-    async def get_user(self, user_id: str) -> containers.DiscordObjectT:
+    async def get_user(self, user_id: str) -> containers.JSONObject:
         """
         Gets a given user.
 
@@ -2278,16 +2325,20 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
 
     @_link_developer_portal(_APIResource.USER)
     async def modify_current_user(
-        self, *, username: str = unspecified.UNSPECIFIED, avatar: bytes = unspecified.UNSPECIFIED
-    ) -> containers.DiscordObjectT:
+        self,
+        *,
+        username: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        avatar: type_hints.NullableNotRequired[bytes] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Edits the current user. If any arguments are unspecified, then that subject is not changed on Discord.
 
         Args:
             username:
-                The new username string.
+                The new username string. If unspecified, then it is not changed.
             avatar:
-                The new avatar image in bytes form.
+                The new avatar image in bytes form. If unspecified, then it is not changed. If it is `None`, the
+                avatar is removed.
 
         Returns:
             The updated user object.
@@ -2302,7 +2353,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.PATCH, "/users/@me", json=payload)
 
     @_link_developer_portal(_APIResource.USER)
-    async def get_current_user_connections(self) -> typing.Sequence[containers.DiscordObjectT]:
+    async def get_current_user_connections(self) -> typing.Sequence[containers.JSONObject]:
         """
         Gets the current user's connections. This endpoint can be used with both Bearer and Bot tokens
         but will usually return an empty list for bots (with there being some exceptions to this
@@ -2317,10 +2368,10 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
     async def get_current_user_guilds(
         self,
         *,
-        before: str = unspecified.UNSPECIFIED,
-        after: str = unspecified.UNSPECIFIED,
-        limit: int = unspecified.UNSPECIFIED,
-    ) -> typing.Sequence[containers.DiscordObjectT]:
+        before: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        after: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+    ) -> typing.Sequence[containers.JSONObject]:
         """
         Gets the guilds the current user is in.
 
@@ -2353,7 +2404,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         await self.request(self.DELETE, "/users/@me/guilds/{guild_id}", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.USER)
-    async def create_dm(self, recipient_id: str) -> containers.DiscordObjectT:
+    async def create_dm(self, recipient_id: str) -> containers.JSONObject:
         """
         Creates a new DM channel with a given user.
 
@@ -2371,7 +2422,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.POST, "/users/@me/channels", json={"recipient_id": recipient_id})
 
     @_link_developer_portal(_APIResource.VOICE)
-    async def list_voice_regions(self) -> typing.Sequence[containers.DiscordObjectT]:
+    async def list_voice_regions(self) -> typing.Sequence[containers.JSONObject]:
         """
         Get the voice regions that are available.
 
@@ -2390,9 +2441,9 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         channel_id: str,
         name: str,
         *,
-        avatar: bytes = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
-    ) -> containers.DiscordObjectT:
+        avatar: type_hints.NotRequired[bytes] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Creates a webhook for a given channel.
 
@@ -2402,7 +2453,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
             name:
                 The webhook's name string.
             avatar:
-                The avatar image in bytes form.
+                The avatar image in bytes form. If unspecified, no avatar is made.
             reason:
                 An optional audit log reason explaining why the change was made.
 
@@ -2424,7 +2475,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         )
 
     @_link_developer_portal(_APIResource.WEBHOOK)
-    async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[containers.DiscordObjectT]:
+    async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[containers.JSONObject]:
         """
         Gets all webhooks from a given channel.
 
@@ -2444,7 +2495,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/channels/{channel_id}/webhooks", channel_id=channel_id)
 
     @_link_developer_portal(_APIResource.WEBHOOK)
-    async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[containers.DiscordObjectT]:
+    async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[containers.JSONObject]:
         """
         Gets all webhooks for a given guild.
 
@@ -2464,7 +2515,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         return await self.request(self.GET, "/guilds/{guild_id}/webhooks", guild_id=guild_id)
 
     @_link_developer_portal(_APIResource.WEBHOOK)
-    async def get_webhook(self, webhook_id: str) -> containers.DiscordObjectT:
+    async def get_webhook(self, webhook_id: str) -> containers.JSONObject:
         """
         Gets a given webhook.
 
@@ -2486,11 +2537,11 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         self,
         webhook_id: str,
         *,
-        name: str = unspecified.UNSPECIFIED,
-        avatar: bytes = unspecified.UNSPECIFIED,
-        channel_id: str = unspecified.UNSPECIFIED,
-        reason: str = unspecified.UNSPECIFIED,
-    ) -> containers.DiscordObjectT:
+        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        avatar: type_hints.NullableNotRequired[bytes] = unspecified.UNSPECIFIED,
+        channel_id: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+    ) -> containers.JSONObject:
         """
         Edits a given webhook.
 
@@ -2500,7 +2551,8 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
             name:
                 The new name string.
             avatar:
-                The new avatar image in bytes form.
+                The new avatar image in bytes form. If unspecified, it is not changed, but if None, then
+                it is removed.
             channel_id:
                 The ID of the new channel the given webhook should be moved to.
             reason:

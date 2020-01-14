@@ -12,3 +12,5 @@ queries:
   - exclude: py/missing-equals
   # Again, do this too regularly to care.
   - exclude: py/inheritance/incorrect-overridden-signature
+  # This gives far too many false positives for me to remotely care now.
+  - exclude: py/similar-function

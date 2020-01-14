@@ -16,31 +16,29 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Sentinel value used internally to represent an entity that was omitted from explicit specification. This
-can be used to mark fields that may be able to be `None` as being optional.
-"""
-
-from hikari.internal_utilities import singleton_meta
 
 
-class Unspecified(metaclass=singleton_meta.SingletonMeta):
+class SingletonMeta(type):
     """
-    Type of an unspecified value.
+    Metaclass that makes the class a singleton. Once an instance has been defined at runtime, it will
+    exist until the interpreter that created it is terminated.
+
+    >>> class Unknown(metaclass=SingletonMeta):
+    ...     def __init__(self):
+    ...         print("Initialized an Unknown!")
+    >>> Unknown() is Unknown()    # True
+
+    Note:
+        the constructors of these classes must not take any arguments other than `self`.
+
+    Warning:
+        this is not thread safe.
     """
 
-    __slots__ = ("__weakref__",)
+    ___instances___ = {}
+    __slots__ = ()
 
-    def __str__(self):
-        return "unspecified"
-
-    def __bool__(self):
-        return False
-
-    __repr__ = __str__
-
-
-#: An attribute that is unspecified by default.
-UNSPECIFIED = Unspecified()
-
-__all__ = ("UNSPECIFIED",)
+    def __call__(cls):
+        if cls not in SingletonMeta.___instances___:
+            SingletonMeta.___instances___[cls] = super().__call__()
+        return SingletonMeta.___instances___[cls]

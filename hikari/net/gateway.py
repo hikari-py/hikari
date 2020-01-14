@@ -37,6 +37,7 @@ import datetime
 import functools
 import json
 import operator
+import random
 import ssl
 import time
 import typing
@@ -55,9 +56,12 @@ from hikari.net import user_agent
 
 
 @dataclasses.dataclass(frozen=True)
-class _WebSocketClosure(RuntimeError):
+class _RestartableClosure(RuntimeError):
     """
-    Raised when the server shuts down the connection unexpectedly.
+    Raised when the server shuts down the connection unexpectedly or we have triggered a closure
+    because the server did something we didn't expect.
+
+    These closures always result in us retrying one way or another, we do not just exit.
     """
 
     __slots__ = ("code", "reason")
@@ -68,14 +72,22 @@ class _WebSocketClosure(RuntimeError):
     reason: str
 
 
-class _ResumeConnection(_WebSocketClosure):
+class _ResumeConnection(_RestartableClosure):
     """Request to restart the client connection using a resume. This is only used internally."""
 
     __slots__ = ()
 
 
-class _RestartConnection(_WebSocketClosure):
+class _RestartConnection(_RestartableClosure):
     """Request by the gateway to completely reconnect using a fresh connection. This is only used internally."""
+
+    __slots__ = ()
+
+
+class _ConnectionShutDownByUser(RuntimeError):
+    """
+    Raised internally when a connection has shut down.
+    """
 
     __slots__ = ()
 
@@ -88,6 +100,33 @@ DispatchHandler = typing.Callable[["GatewayClient", str, typing.Any], typing.Awa
 
 async def _default_dispatch(_gateway, _event, _payload) -> None:
     ...
+
+
+class Backoff:
+    """
+    Simple exponential backoff with maximum backoff cap and random jitter. If the backoff reaches
+    the max backoff, a RuntimeError is raised.
+    """
+
+    __slots__ = ("max_backoff", "retry_count")
+
+    def __init__(self, max_backoff: float):
+        self.max_backoff = max_backoff
+        self.retry_count = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        backoff = (2 ** self.retry_count) + random.random()  # nosec
+        if backoff < self.max_backoff:
+            self.retry_count += 1
+        else:
+            raise RuntimeError("maximum backoff was reached.")
+        return backoff
+
+    def reset(self):
+        self.retry_count = 0
 
 
 class GatewayClient:
@@ -128,6 +167,8 @@ class GatewayClient:
             See :class:`hikari.net.opcodes.GatewayEvent` for the types of known event that can be fired to this
             dispatcher. If the event is in this list, an instance of this enum will be passed as the event name.
             If the event is unknown, a raw string will be passed instead.
+        http_timeout:
+            optional timeout to apply to individual HTTP requests.
         initial_presence:
             A JSON-serializable dict containing the initial presence to set, or `None` to just appear
             `online`. See https://discordapp.com/developers/docs/topics/gateway#update-status for a description
@@ -190,6 +231,8 @@ class GatewayClient:
             optional proxy headers to pass.
         proxy_url:
             optional proxy URL to use.
+        receive_timeout:
+            the time to wait to receive any form of message before considering the connection to be dead.
         shard_count:
             the shard count to use, or `None` if sharding is to be disabled (default).
         shard_id:
@@ -198,8 +241,6 @@ class GatewayClient:
             optional SSL context to use.
         verify_ssl:
             defaulting to True, setting this to false will disable SSL verification.
-        timeout:
-            optional timeout to apply to individual HTTP requests.
 
     Warning:
         It is highly recommended to not alter any attributes of this object whilst the gateway is running unless clearly
@@ -229,16 +270,19 @@ class GatewayClient:
     """
 
     __slots__ = (
-        "_in_buffer",
+        "_backoff",
+        "_client_session_factory",
         "_closed_event",
         "_enable_guild_subscription_events",
+        "_in_buffer",
         "_intents",
-        "_client_session_factory",
         "fingerprint",
         "gateway_event_dispatcher",
         "heartbeat_interval",
         "heartbeat_latency",
+        "http_timeout",
         "in_count",
+        "is_running",
         "initial_presence",
         "internal_event_dispatcher",
         "json_marshaller",
@@ -255,13 +299,13 @@ class GatewayClient:
         "max_persistent_buffer_size",
         "out_count",
         "rate_limit",
+        "ready_event",
         "seq",
         "session_id",
         "shard_count",
         "shard_id",
         "ssl_context",
         "started_at",
-        "timeout",
         "token",
         "trace",
         "url",
@@ -270,13 +314,23 @@ class GatewayClient:
         "zlib_decompressor",
     )
 
+    # Closure codes that are unrecoverable from. This generally means the authentication is wrong or the bot
+    # is not sharded correctly. The user has to fix these themselves, we cannot do it.
     _NEVER_RECONNECT_CODES = (
         opcodes.GatewayClosure.AUTHENTICATION_FAILED,
         opcodes.GatewayClosure.INVALID_SHARD,
         opcodes.GatewayClosure.SHARDING_REQUIRED,
     )
 
+    # Closure codes from the gateway where we should never attempt to resume with and should always restart
+    # the socket with a fresh session.
     _DO_NOT_RESUME_CLOSURE_CODES = (opcodes.GatewayClosure.UNKNOWN_OPCODE,)
+
+    # How often to ping.
+    _AUTOPING_PERIOD = 10
+
+    # How much lag to find acceptable in general operations.
+    _LAG_TOLERANCE_PERCENTAGE = 0.15
 
     def __init__(
         self,
@@ -288,7 +342,8 @@ class GatewayClient:
         connector: aiohttp.BaseConnector = None,
         enable_guild_subscription_events=True,
         gateway_event_dispatcher: DispatchHandler = None,
-        initial_presence: typing.Optional[containers.DiscordObjectT] = None,
+        http_timeout: float = None,
+        initial_presence: typing.Optional[containers.JSONObject] = None,
         intents: opcodes.GatewayIntent = functools.reduce(operator.or_, opcodes.GatewayIntent.__iter__()),
         internal_event_dispatcher: DispatchHandler = None,
         json_marshaller: typing.Callable = None,
@@ -303,7 +358,6 @@ class GatewayClient:
         shard_count: typing.Optional[int] = None,
         shard_id: typing.Optional[int] = None,
         ssl_context: ssl.SSLContext = None,
-        timeout: float = None,
         verify_ssl: bool = True,
     ) -> None:
         loop = loop or asyncio.get_running_loop()
@@ -314,9 +368,10 @@ class GatewayClient:
         self.loop: asyncio.AbstractEventLoop = loop
 
         #: Raw buffer that gets filled by messages. You should not interfere with this field ever.
-        #:
-        #:
         self._in_buffer: bytearray = bytearray()
+
+        #: Holds the backoff to use. We max at 64 seconds.
+        self._backoff = Backoff(64)
 
         #: An :class:`asyncio.Event` that will be triggered whenever the gateway disconnects.
         #: This is only used internally.
@@ -401,6 +456,11 @@ class GatewayClient:
         #: :type: :class:`int` or :class:`None`
         self.shard_id = shard_id
 
+        #: A boolean that represents whether the client is running or not.
+        #:
+        #: :type: :class:`bool`
+        self.is_running = False
+
         #: The heartbeat interval. This is `float('nan')` until the gateway provides us a value to use on startup.
         #:
         #: :type: :class:`float`
@@ -481,7 +541,7 @@ class GatewayClient:
         #: The URI being connected to.
         #:
         #: :type: :class:`str`
-        self.url = f"{uri}?v={self.version}&encoding=json&compression=zlib-stream"
+        self.url = f"{uri}?v={self.version}&encoding=json&compress=zlib-stream"
 
         #: The active websocket connection handling the low-level connection logic. Populated only while
         #: connected.
@@ -518,7 +578,11 @@ class GatewayClient:
         #: Optional timeout for the initial HTTP request.
         #:
         #: :type: :class:`float`
-        self.timeout = timeout
+        self.http_timeout = http_timeout
+
+        #: An event you can wait for to determine when the bot receives the
+        #: READY payload. We use this to indicate we are connected correctly.
+        self.ready_event = asyncio.Event()
 
     @property
     def version(self) -> int:
@@ -537,26 +601,39 @@ class GatewayClient:
         """True if this is considered a shard, false if the bot is running with a single gateway connection."""
         return self.shard_id is not None and self.shard_count is not None
 
-    async def _trigger_resume(self, code: int, reason: str) -> typing.NoReturn:
+    async def _trigger_resume(self, code: int, reason: str, cause=None) -> typing.NoReturn:
         """Trigger a `RESUME` operation. This will raise a :class:`ResumableConnectionClosed` exception."""
-        await self.ws.close(code=code)
-        raise _ResumeConnection(code=code, reason=reason)
+        raise _ResumeConnection(code=code, reason=reason) from cause
 
-    async def _trigger_identify(self, code: int, reason: str) -> typing.NoReturn:
+    async def _trigger_identify(self, code: int, reason: str, cause=None) -> typing.NoReturn:
         """Trigger a re-`IDENTIFY` operation. This will raise a :class:`GatewayRequestedReconnection` exception."""
-        await self.ws.close(code=code)
-        raise _RestartConnection(code=code, reason=reason)
+        raise _RestartConnection(code=code, reason=reason) from cause
 
     async def _receive(self):
-        response = await self.ws.receive()
-        self.logger.debug("< [%s] %s", response.type.name, response.data)
-        if response.type in (aiohttp.WSMsgType.TEXT, aiohttp.WSMsgType.BINARY):
-            return response.data
-        elif response.type == aiohttp.WSMsgType.CLOSE:
-            await self.ws.close()
-            raise _WebSocketClosure(self.ws.close_code, "gateway closed the connection")
-        else:
-            raise TypeError(f"Expected TEXT or BINARY message on websocket but received {response.type}")
+        # Repeat if we ping or pong just to keep that transparently out the way...
+        while True:
+            try:
+                response = await self.ws.receive()
+                self.logger.debug("< [%s] %s", response.type.name, response.data)
+            except asyncio.TimeoutError:
+                await self._trigger_resume(opcodes.GatewayClosure.INTERNAL_ERROR, "websocket connection timed out")
+            else:
+                if response.type in (aiohttp.WSMsgType.TEXT, aiohttp.WSMsgType.BINARY):
+                    return response.data
+                elif response.type == aiohttp.WSMsgType.PING:
+                    self.logger.debug("received ping")
+                    await self.ws.pong()
+                elif response.type == aiohttp.WSMsgType.PONG:
+                    self.logger.debug("received pong")
+                elif response.type == aiohttp.WSMsgType.CLOSE:
+                    await self.ws.close()
+                    raise _RestartableClosure(self.ws.close_code, "gateway closed the connection")
+                elif response.type in (aiohttp.WSMsgType.CLOSING, aiohttp.WSMsgType.CLOSED):
+                    raise _ConnectionShutDownByUser()
+                elif response.type == aiohttp.WSMsgType.ERROR:
+                    raise self.ws.exception()
+                else:
+                    raise TypeError(f"Expected TEXT or BINARY message on websocket but received {response.type}")
 
     async def _send_json(self, payload, skip_rate_limit) -> None:
         if not skip_rate_limit:
@@ -570,7 +647,7 @@ class GatewayClient:
             await self.ws.send_str(raw)
             self.logger.debug("> %s", raw)
 
-    async def _receive_json(self) -> containers.DiscordObjectT:
+    async def _receive_json(self) -> containers.JSONObject:
         msg = await self._receive()
 
         if isinstance(msg, (bytes, bytearray)):
@@ -620,6 +697,11 @@ class GatewayClient:
         )
 
     async def _send_heartbeat(self) -> None:
+        now = time.perf_counter()
+        if self.last_ack_received < self.last_heartbeat_sent:
+            last_sent = now - self.last_heartbeat_sent
+            msg = f"failed to receive an acknowledgement from the previous heartbeat sent ~{last_sent}s ago"
+            await self._trigger_resume(code=opcodes.GatewayClosure.PROTOCOL_VIOLATION, reason=msg)
         await self._send_json({"op": opcodes.GatewayOpcode.HEARTBEAT, "d": self.seq}, True)
         self.logger.debug("sent HEARTBEAT")
         self.last_heartbeat_sent = time.perf_counter()
@@ -633,24 +715,33 @@ class GatewayClient:
         self.heartbeat_latency = self.last_ack_received - self.last_heartbeat_sent
         self.logger.debug("received HEARTBEAT_ACK after %sms", round(self.heartbeat_latency * 1000))
 
-    async def _keep_alive(self) -> None:
+    async def _ping_runner(self):
+        # We keep pinging to expect pongs. This allows us to keep our timeout a little more reasonable.
+        while not self._closed_event.is_set():
+            await self.ws.ping()
+            await asyncio.sleep(self._AUTOPING_PERIOD)
+
+    async def _heartbeat_runner(self) -> None:
         # Send first heartbeat immediately so we know the latency.
         while not self._closed_event.is_set():
             try:
-                now = time.perf_counter()
-                if self.last_heartbeat_sent + self.heartbeat_interval < now:
-                    last_sent = now - self.last_heartbeat_sent
-                    msg = f"failed to receive an acknowledgement from the previous heartbeat sent ~{last_sent}s ago"
-                    await self._trigger_resume(code=opcodes.GatewayClosure.PROTOCOL_VIOLATION, reason=msg)
-
                 await asyncio.wait_for(self._closed_event.wait(), timeout=self.heartbeat_interval)
             except asyncio.TimeoutError:
-                start = time.perf_counter()
-                await self._send_heartbeat()
-                time_taken = time.perf_counter() - start
+                # If we cannot send a heartbeat in around 45 seconds, we are blocked, and we cannot continue to
+                # function as a normal bot.
+                try:
+                    start = time.perf_counter()
+                    await asyncio.wait_for(self._send_heartbeat(), timeout=self.heartbeat_interval)
+                    time_taken = time.perf_counter() - start
 
-                if time_taken > 0.15 * self.heartbeat_latency:
-                    self._handle_slow_client(time_taken)
+                    if time_taken > self._LAG_TOLERANCE_PERCENTAGE * self.heartbeat_latency:
+                        self._handle_slow_client(time_taken)
+                except asyncio.TimeoutError as ex:
+                    await self._trigger_resume(
+                        opcodes.GatewayClosure.INTERNAL_ERROR,
+                        f"bot was unable to send a heartbeat in ~{self.heartbeat_latency}s successfully",
+                        ex,
+                    )
 
     async def _receive_hello(self) -> None:
         hello = await self._receive_json()
@@ -705,7 +796,7 @@ class GatewayClient:
         )
         await self._send_json(payload, False)
 
-    async def _handle_dispatch(self, event: str, payload: containers.DiscordObjectT) -> None:
+    async def _handle_dispatch(self, event: str, payload: containers.JSONObject) -> None:
         if event == opcodes.GatewayEvent.READY:
             await self._handle_ready(payload)
         elif event == opcodes.GatewayEvent.RESUMED:
@@ -718,7 +809,7 @@ class GatewayClient:
                 pass
             self._dispatch_new_event(event, payload, False)
 
-    async def _handle_ready(self, ready_payload: containers.DiscordObjectT) -> None:
+    async def _handle_ready(self, ready_payload: containers.JSONObject) -> None:
         self.trace = ready_payload["_trace"]
         self.session_id = ready_payload["session_id"]
         shard = ready_payload.get("shard")
@@ -726,12 +817,13 @@ class GatewayClient:
         if shard is not None:
             self.shard_id, self.shard_count = shard
 
+        self.ready_event.set()
         self._dispatch_new_event(opcodes.GatewayEvent.READY, ready_payload, False)
 
         self.logger.info("session %s has completed handshake, initial connection is READY", self.session_id)
         self.logger.debug("trace for session %s is %s", self.session_id, self.trace)
 
-    async def _handle_resumed(self, resume_payload: containers.DiscordObjectT) -> None:
+    async def _handle_resumed(self, resume_payload: containers.JSONObject) -> None:
         self.trace = resume_payload["_trace"]
         self.session_id = resume_payload["session_id"]
         self.seq = resume_payload["seq"]
@@ -854,11 +946,7 @@ class GatewayClient:
         )
 
     async def update_status(
-        self,
-        idle_since: typing.Optional[int],
-        game: typing.Optional[containers.DiscordObjectT],
-        status: str,
-        afk: bool,
+        self, idle_since: typing.Optional[int], game: typing.Optional[containers.JSONObject], status: str, afk: bool,
     ) -> None:
         """
         Updates the bot user's status in this shard.
@@ -906,58 +994,63 @@ class GatewayClient:
             :class:`websockets.exceptions.ConnectionClosed`:
                 if the connection is unexpectedly closed before we can start processing.
         """
-        while not self._closed_event.is_set():
-            await self.run_once()
-
-    async def run_once(self) -> None:
-        """
-        Run the gateway once, then finish regardless of the closure reason.
-
-        Raises:
-            :class:`hikari.errors.GatewayError`:
-                if the token provided is invalidated.
-            :class:`hikari.net.ws.WebSocketClosure`:
-                if the connection is unexpectedly closed before we can start processing.
-        """
         websocket_kwargs = dict(
+            autoping=False,
             proxy=self.proxy_url,
             proxy_auth=self.proxy_auth,
             proxy_headers=self.proxy_headers,
             verify_ssl=self.verify_ssl,
             ssl_context=self.ssl_context,
             compress=0,
+            max_msg_size=0,  # fixes #149, due to Discord's iffy message sizes.
+            receive_timeout=2 * self._AUTOPING_PERIOD,
         )
 
-        self.started_at = time.perf_counter()
-        try:
+        self._backoff.reset()
+        session = None
+
+        while not self._closed_event.is_set():
             try:
-                self.logger.debug("creating websocket connection to %s", self.url)
                 session = self._client_session_factory()
+                self.logger.debug("creating websocket connection to %s", self.url)
+
+                self.started_at = time.perf_counter()
+                self.ws = await session.ws_connect(self.url, **websocket_kwargs)
                 try:
-                    self.ws = await session.ws_connect(self.url, **websocket_kwargs)
+                    self.is_running = True
                     await self._run_once()
                 finally:
-                    await session.close()
+                    self.is_running = False
+                    compat.asyncio.create_task(self.ws.close(), name=f"close shard {self.shard_id}")
+            except _ConnectionShutDownByUser:
+                # The user asked us to stop, so don't throw anything. We will just exit on the loop gracefully.
+                self.logger.warning("shard has been shut down by user")
+                self._closed_event.set()
+            except _RestartableClosure:
+                # Something occurred where we want to automatically resume or restart, so reconnect without
+                # exiting, but take the course of the backoff first.
+                next_backoff = next(self._backoff)
+                self.logger.warning("shard has shut down and will retry after a %ss backoff", next_backoff)
+                await asyncio.sleep(next_backoff)
+            except aiohttp.ClientConnectionError as ex:
+                self.logger.error("failed to connect to gateway for initial HTTP upgrade: %s", str(ex))
+                raise ex
             finally:
-                self.logger.info("gateway client shutting down")
-                await self.ws.close()
-
-        except Exception as ex:
-            self.logger.exception("Caught exception. Backing off for a moment", exc_info=ex)
-            # If we have been open less than 10s, wait until 10s is up from started_at.
-            # This prevents tanking people's PCs if a connection issue arises.
-            ten_seconds_time = time.perf_counter() - (self.started_at + 10)
-            await asyncio.sleep(max(0.5, ten_seconds_time))
+                await session.close()
 
     async def _run_once(self):
+        """
+        Manages keeping the websocket that is already assumed to be alive running until the first
+        exception is raised. The callee is expected to manage shutting down any other resources.
+        """
         try:
             await self._receive_hello()
             is_resume = self.seq is not None and self.session_id is not None
             await (self._send_resume() if is_resume else self._send_identify())
             await self._send_heartbeat()
-            await asyncio.gather(self._keep_alive(), self._process_events())
+            await asyncio.gather(self._heartbeat_runner(), self._process_events(), self._ping_runner())
             self._dispatch_new_event(opcodes.GatewayInternalEvent.MANUAL_SHUTDOWN, None, True)
-        except _WebSocketClosure as ex:
+        except _RestartableClosure as ex:
             code, reason = opcodes.GatewayClosure(ex.code), ex.reason or "no reason"
 
             self._dispatch_new_event(opcodes.GatewayInternalEvent.DISCONNECT, {"code": code, "reason": reason}, True)
@@ -969,6 +1062,11 @@ class GatewayClient:
             self.logger.warning("reconnecting after %s [%s]", reason, code)
             if isinstance(ex, _RestartConnection) or code in self._DO_NOT_RESUME_CLOSURE_CODES:
                 self.seq, self.session_id, self.trace = None, None, []
+
+            # Now we are tidy, reraise.
+            raise ex
+        finally:
+            self.ready_event.clear()
 
     def _dispatch_new_event(self, event_name: str, payload, is_internal_event) -> None:
         # This prevents us blocking any task such as the READY handler.

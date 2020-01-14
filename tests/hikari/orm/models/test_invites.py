@@ -39,6 +39,12 @@ def mock_state_registry():
 def fabric_obj(mock_state_registry):
     return fabric.Fabric(state_registry=mock_state_registry)
 
+@pytest.mark.model
+def test_VanityURL():
+    vanity_url_obj = invites.VanityURL({"code": "osososo", "uses": 42})
+    assert vanity_url_obj.code == "osososo"
+    assert vanity_url_obj.uses == 42
+
 
 @pytest.fixture
 def mock_guild_payload():

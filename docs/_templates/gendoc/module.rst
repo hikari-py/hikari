@@ -5,6 +5,12 @@
 
 {% if submodules %}
 
+Documentation
+-------------
+
+.. automodule:: {{ module }}
+    :inherited-members:
+
 Submodules
 ----------
 
@@ -13,8 +19,3 @@ Submodules
     {% endfor %}
 {% endif %}
 
-Documentation
--------------
-
-.. automodule:: {{ module }}
-    :inherited-members:

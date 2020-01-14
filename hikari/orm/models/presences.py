@@ -22,6 +22,7 @@ Presences for members.
 
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import enum
 import typing
@@ -48,7 +49,23 @@ class Status(bases.NamedEnumMixin, enum.Enum):
     OFFLINE = enum.auto()
 
 
-class Presence(bases.BaseModel):
+@dataclasses.dataclass()
+class Presence:
+    since: typing.Optional[typing.Union[float, datetime.datetime]] = None
+    is_afk: bool = False
+    status: Status = Status.ONLINE
+    activity: typing.Optional[Activity] = None
+
+    def to_dict(self):
+        return {
+            "since": int(1_000 * self.since.timestamp()) if isinstance(self.since, datetime.datetime) else self.since,
+            "afk": self.is_afk,
+            "status": self.status.name.lower(),
+            "activity": self.activity.to_dict() if self.activity is not None else None,
+        }
+
+
+class MemberPresence(bases.BaseModel):
     """
     The presence of a member. This includes their status and info on what they are doing currently.
     """
@@ -82,7 +99,7 @@ class Presence(bases.BaseModel):
 
     __repr__ = reprs.repr_of("status")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.activities = containers.EMPTY_SEQUENCE
         self.status = Status.OFFLINE
         self.web_status = Status.OFFLINE
@@ -90,7 +107,7 @@ class Presence(bases.BaseModel):
         self.mobile_status = Status.OFFLINE
         self.update_state(payload)
 
-    def update_state(self, payload: containers.DiscordObjectT) -> None:
+    def update_state(self, payload: containers.JSONObject) -> None:
         client_status = payload.get("client_status", containers.EMPTY_DICT)
 
         if "activities" in payload:
@@ -115,12 +132,33 @@ class Presence(bases.BaseModel):
             )
 
 
+class ActivityType(bases.BestEffortEnumMixin, enum.IntEnum):
+    """
+    The activity state. Can be more than one using bitwise-combinations.
+    """
+
+    #: Shows up as `Playing <name>`
+    PLAYING = 0
+    #: Shows up as `Streaming <name>`.
+    #:
+    #: Warning:
+    #:     Corresponding presences must be associated with VALID Twitch or YouTube stream URLS!
+    STREAMING = 1
+    #: Shows up as `Listening to <name>`.
+    LISTENING = 2
+    #: Shows up as `Watching <name>`. Note that this is not officially documented, so will be likely removed
+    #: in the near future.
+    WATCHING = 3
+    #: A custom status.
+    #:
+    #: To set an emoji with the status, place a unicode emoji or Discord emoji (`:smiley:`) as the first
+    #: part of the status activity name.
+    CUSTOM = 4
+
+
 class Activity(bases.BaseModel):
     """
     A non-rich presence-style activity.
-
-    Note:
-        This can only be received from the gateway, not sent to it.
     """
 
     __slots__ = ("name", "type", "url")
@@ -133,24 +171,26 @@ class Activity(bases.BaseModel):
     #: The type of the activity.
     #:
     #: :type: :class:`str`
-    type: str
+    type: ActivityType
 
     #: The URL of the activity, if applicable
     #:
     #: :type: :class:`str` or `None`
     url: typing.Optional[str]
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
-        self.name = payload.get("name")
-        self.type = transformations.try_cast(payload.get("type"), ActivityType)
-        self.url = payload.get("url")
+    def __init__(
+        self, *, name: str, type: ActivityType = ActivityType.CUSTOM, url: typing.Optional[str] = None
+    ) -> None:
+        self.name = name
+        self.type = ActivityType.get_best_effort_from_value(type)
+        self.url = url
 
     update_state = NotImplemented
 
-    def to_dict(self, *, dict_factory: containers.DictFactoryT = dict) -> containers.DictImplT:
+    def to_dict(self) -> containers.DiscordObjectT:
         attrs = {a: getattr(self, a) for a in self.__slots__}
         # noinspection PyArgumentList,PyTypeChecker
-        return dict_factory(**{k: v for k, v in attrs.items() if v is not None})
+        return dict(**{k: v for k, v in attrs.items() if v is not None})
 
 
 class RichActivity(Activity):
@@ -209,7 +249,11 @@ class RichActivity(Activity):
     __repr__ = reprs.repr_of("id", "name", "type")
 
     def __init__(self, payload: containers.DiscordObjectT) -> None:
-        super().__init__(payload)
+        super().__init__(
+            name=payload.get("name"),
+            type=ActivityType.get_best_effort_from_value(payload.get("type", 0)),
+            url=payload.get("url"),
+        )
         self.id = payload.get("id")
         self.timestamps = transformations.nullable_cast(payload.get("timestamps"), ActivityTimestamps)
         self.application_id = transformations.nullable_cast(payload.get("application_id"), int)
@@ -220,41 +264,15 @@ class RichActivity(Activity):
         self.flags = transformations.nullable_cast(payload.get("flags"), ActivityFlag) or 0
 
 
-def parse_presence_activity(payload: containers.DiscordObjectT,) -> typing.Union[Activity, RichActivity]:
+def parse_presence_activity(payload: containers.JSONObject,) -> typing.Union[Activity, RichActivity]:
     """
     Consumes a payload and decides the type of activity it represents. A corresponding object is then
     constructed and returned as appropriate.
 
     Returns:
-        either a :class:`PresenceActivity` or a :class:`RichPresenceActivity` depending on the
-        implementation details provided.
+        Returns a :class:`RichActivity`
     """
-    impl = RichActivity if any(slot in payload for slot in RichActivity.__slots__) else Activity
-    return impl(payload)
-
-
-class ActivityType(bases.BestEffortEnumMixin, enum.IntEnum):
-    """
-    The activity state. Can be more than one using bitwise-combinations.
-    """
-
-    #: Shows up as `Playing <name>`
-    PLAYING = 0
-    #: Shows up as `Streaming <name>`.
-    #:
-    #: Warning:
-    #:     Corresponding presences must be associated with VALID Twitch or YouTube stream URLS!
-    STREAMING = 1
-    #: Shows up as `Listening to <name>`.
-    LISTENING = 2
-    #: Shows up as `Watching <name>`. Note that this is not officially documented, so will be likely removed
-    #: in the near future.
-    WATCHING = 3
-    #: A custom status.
-    #:
-    #: To set an emoji with the status, place a unicode emoji or Discord emoji (`:smiley:`) as the first
-    #: part of the status activity name.
-    CUSTOM = 4
+    return RichActivity(payload)
 
 
 class ActivityFlag(enum.IntFlag):
@@ -299,7 +317,7 @@ class ActivityParty(bases.BaseModel):
 
     __repr__ = reprs.repr_of("id", "current_size", "max_size")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.id = payload.get("id")
         self.current_size = transformations.nullable_cast(payload.get("current_size"), int)
         self.max_size = transformations.nullable_cast(payload.get("max_size"), int)
@@ -334,7 +352,7 @@ class ActivityAssets(bases.BaseModel):
 
     __repr__ = reprs.repr_of()
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.large_image = payload.get("large_image")
         self.large_text = payload.get("large_text")
         self.small_image = payload.get("small_image")
@@ -361,7 +379,7 @@ class ActivityTimestamps(bases.BaseModel):
 
     __repr__ = reprs.repr_of("start", "end", "duration")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.start = transformations.nullable_cast(payload.get("start"), dates.unix_epoch_to_ts)
         self.end = transformations.nullable_cast(payload.get("end"), dates.unix_epoch_to_ts)
 
@@ -377,6 +395,7 @@ class ActivityTimestamps(bases.BaseModel):
 __all__ = [
     "Status",
     "Presence",
+    "MemberPresence",
     "Activity",
     "RichActivity",
     "parse_presence_activity",

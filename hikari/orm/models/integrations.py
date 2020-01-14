@@ -51,7 +51,7 @@ class IntegrationAccount(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.id = int(payload["id"])
         self.name = payload.get("name")
 
@@ -85,7 +85,7 @@ class PartialIntegration(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
         self.type = payload["type"]
@@ -137,7 +137,7 @@ class Integration(PartialIntegration, bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("id", "name", "is_enabled")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self.is_enabled = payload["enabled"]

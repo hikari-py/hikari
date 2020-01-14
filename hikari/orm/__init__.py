@@ -26,9 +26,9 @@ well as providing an expandable and extendable interface to wrap them together i
 The ORM is separated into several domains of components. This is done to allow
 you to easily write new components if this library does not fit your use case.
 """
-from hikari.orm.gateway import event_types
 from hikari.orm import fabric
 from hikari.orm import gateway
 from hikari.orm import http
 from hikari.orm import models
 from hikari.orm import state
+from hikari.orm.gateway import event_types
