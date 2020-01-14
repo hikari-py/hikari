@@ -235,7 +235,6 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
     async def delete_close_channel(self, channel_id: str) -> None:
         """
         Delete the given channel ID, or if it is a DM, close it.
-
         Args:
             channel_id:
                 The channel ID to delete, or the user ID of the direct message to close.
@@ -345,7 +344,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         nonce: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         tts: type_hints.NotRequired[bool] = False,
-        files: type_hints.NotRequired[typing.Sequence[storage.FileLikeT]] = unspecified.UNSPECIFIED,
+        files: type_hints.NotRequired[typing.Sequence[typing.Tuple[str, storage.FileLikeT]]] = unspecified.UNSPECIFIED,
         embed: type_hints.NotRequired[containers.JSONObject] = unspecified.UNSPECIFIED,
     ) -> containers.JSONObject:
         """
@@ -360,7 +359,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
                 An optional ID to send for opportunistic message creation. This doesn't serve any real purpose for
                 general use, and can usually be ignored.
             tts:
-                If specified and `True`, then the message will be sent.
+                If specified and `True`, then the message will be sent as a TTS message.
             files:
                 If specified, this should be a list of between 1 and 5 tuples. Each tuple should consist of the
                 file name, and either raw :class:`bytes` or an :class:`io.IOBase` derived object with a seek that
@@ -652,14 +651,15 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
                 If the channel_id is not found.
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_MESSAGES` permission in the channel.
+            hikari.errors.BadRequest:
+                If any of the messages passed are older than 2 weeks in age or any duplicate message IDs are passed.
 
         Notes:
             This can only be used on guild text channels.
 
             Any message IDs that do not exist or are invalid add towards the total 100 max messages to remove.
-            Duplicate IDs are only counted once in this count.
 
-            This can only delete messages that are newer than 2 weeks in age. If all messages are older than 2 weeks
+            This can only delete messages that are newer than 2 weeks in age. If any of the messages are older than 2 weeks
             then this call will fail.
         """
         await self.request(
@@ -860,7 +860,7 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
     @_link_developer_portal(_APIResource.CHANNEL)
     async def delete_pinned_channel_message(self, channel_id: str, message_id: str) -> None:
         """
-        Remove a pinned message to the channel. This will only unpin the message. It will not delete it.
+        Remove a pinned message from the channel. This will only unpin the message. It will not delete it.
 
         Args:
             channel_id:
@@ -1022,9 +1022,9 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
 
         Args:
             guild_id:
-                The ID of the guild to delete the emoji from
+                The ID of the guild to delete the emoji from.
             emoji_id:
-                The ID of the emoji to be deleted
+                The ID of the emoji to be deleted.
 
         Raises:
             hikari.errors.NotFound:
@@ -1039,11 +1039,12 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
     async def create_guild(
         self,
         name: str,
-        region: str,
-        icon: bytes,
-        verification_level: int,
-        default_message_notifications: int,
-        explicit_content_filter: int,
+        *,
+        region: type_hints.NotRequired[str],
+        icon: type_hints.NotRequired[bytes],
+        verification_level: type_hints.NotRequired[int],
+        default_message_notifications: type_hints.NotRequired[int],
+        explicit_content_filter: type_hints.NotRequired[int],
         roles: type_hints.NotRequired[typing.Sequence[containers.JSONObject]] = unspecified.UNSPECIFIED,
         channels: type_hints.NotRequired[typing.Sequence[containers.JSONObject]] = unspecified.UNSPECIFIED,
     ) -> containers.JSONObject:
@@ -1080,14 +1081,14 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
         """
         payload = {
             "name": name,
-            "region": region,
-            "verification_level": verification_level,
-            "default_message_notifications": default_message_notifications,
-            "explicit_content_filter": explicit_content_filter,
-            "roles": [] if roles is unspecified.UNSPECIFIED else roles,
-            "channels": [] if channels is unspecified.UNSPECIFIED else channels,
-            "icon": conversions.image_bytes_to_image_data(icon),
         }
+        transformations.put_if_specified(payload, "region", region)
+        transformations.put_if_specified(payload, "verification_level", verification_level)
+        transformations.put_if_specified(payload, "default_message_notifications", default_message_notifications)
+        transformations.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
+        transformations.put_if_specified(payload, "roles", roles)
+        transformations.put_if_specified(payload, "channels", channels)
+        transformations.put_if_specified(payload, "icon", icon, conversions.image_bytes_to_image_data)
         return await self.request(self.POST, "/guilds", json=payload)
 
     @_link_developer_portal(_APIResource.GUILD)
@@ -1670,9 +1671,9 @@ class HTTPAPIImpl(http_api_base.HTTPAPIBase):
 
         Args:
             guild_id:
-                The ID of the guild the member belongs to.
+                The ID of the guild to un-ban the user from.
             user_id:
-                The ID of the member you want to un-ban.
+                The ID of the user you want to un-ban.
             reason:
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 

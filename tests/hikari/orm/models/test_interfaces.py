@@ -53,6 +53,12 @@ class DummyBestEffortEnum(bases.BestEffortEnumMixin, enum.IntEnum):
     BAZ = 27
 
 
+class DummyBestEffortEnumStringBased(bases.BestEffortEnumMixin, enum.Enum):
+    FOO = "bar"
+    BAR = "baz"
+    BAZ = "foo"
+
+
 @pytest.mark.model
 class TestSnowflake:
     def test_Snowflake_init_subclass(self):
@@ -164,30 +170,31 @@ class TestSnowflake:
 @pytest.mark.model
 class TestNamedEnumMixin:
     def test_from_discord_name(self):
-        assert DummyNamedEnum.from_discord_name("bar") == DummyNamedEnum.BAR
+        assert DummyNamedEnum.from_discord_name("bar") is DummyNamedEnum.BAR
 
-    @pytest.mark.parametrize("cast", [str, repr], ids=lambda it: it.__qualname__)
-    def test_str_and_repr(self, cast):
-        assert cast(DummyNamedEnum.BAZ) == "BAZ"
+    def test_str(self):
+        assert str(DummyNamedEnum.BAZ) == "baz"
 
 
 @pytest.mark.model
 class TestBestEffortEnumMixin:
     def test_get_best_effort_from_name_happy_path(self):
-        assert DummyBestEffortEnum.get_best_effort_from_name("BAR") == DummyBestEffortEnum.BAR
+        assert DummyBestEffortEnum.get_best_effort_from_name("BAR") is DummyBestEffortEnum.BAR
 
     def test_get_best_effort_from_name_sad_path(self):
         assert DummyBestEffortEnum.get_best_effort_from_name("BARr") == "BARr"
 
     def test_get_best_effort_from_value_happy_path(self):
-        assert DummyBestEffortEnum.get_best_effort_from_value(18) == DummyBestEffortEnum.BAR
+        assert DummyBestEffortEnum.get_best_effort_from_value(18) is DummyBestEffortEnum.BAR
 
     def test_get_best_effort_from_value_sad_path(self):
         assert DummyBestEffortEnum.get_best_effort_from_value("BARr") == "BARr"
 
-    @pytest.mark.parametrize("cast", [str, repr], ids=lambda it: it.__qualname__)
-    def test_str_and_repr(self, cast):
-        assert cast(DummyBestEffortEnum.BAZ) == "BAZ"
+    def test_str_and_repr(self):
+        assert str(DummyBestEffortEnum.BAZ) == "baz"
+
+    def test_str_with_non_int_based_enum(self):
+        assert str(DummyBestEffortEnumStringBased.BAZ) == "foo"
 
 
 @pytest.mark.model
@@ -430,22 +437,29 @@ class DummyModel(bases.MarshalMixin):
         self.is_a_dummy = is_a_dummy
 
 
-@pytest.fixture()
-def mock_dict():
-    return bases.DictFactory(name=DummyNamedEnum(9), model=DummyModel(is_a_dummy=True), ok="Test", neko=18)
+class DummyEnum(enum.Enum):
+    NYAA = "nyaa"
+    NEKOS = "neko"
 
 
 @pytest.mark.model
-def test_DictFactory_setitem(mock_dict):
-    mock_dict["test"] = DummyNamedEnum(27)
-    mock_dict["test_model"] = DummyModel(False)
-    assert mock_dict["test"] == 27
-    assert mock_dict["test_model"] == {"is_a_dummy": False}
+def test_dict_factory_impl():
+    mock_dict = bases.dict_factory_impl(
+        (("name", DummyNamedEnum(9)), ("model", DummyModel(is_a_dummy=True))),
+        ok="Test",
+        neko=18,
+        enumerated=DummyEnum("nyaa"),
+        named_enumerated=DummyNamedEnum.from_discord_name("bar"),
+    )
 
-
-@pytest.mark.model
-def test_DictFactory_init(mock_dict):
-    assert mock_dict == {"name": 9, "model": {"is_a_dummy": True}, "ok": "Test", "neko": 18}
+    assert mock_dict == {
+        "name": 9,
+        "model": {"is_a_dummy": True},
+        "ok": "Test",
+        "neko": 18,
+        "enumerated": "nyaa",
+        "named_enumerated": 18,
+    }
 
 
 @dataclasses.dataclass()

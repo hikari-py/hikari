@@ -46,6 +46,29 @@ class InviteTargetUserType(bases.BestEffortEnumMixin, enum.IntEnum):
     STREAM = 1
 
 
+class VanityURL(bases.BaseModel):
+    """Represents a guild's vanity URL, only returned by Get Guild Vanity URL."""
+
+    __slots__ = (
+        "code",
+        "uses",
+    )
+
+    #: The unique invite code
+    #:
+    #: :type: :class:`str`
+    code: str
+
+    #: The number of times the invite has been used.
+    #:
+    #: :type: :class:`int`
+    uses: int
+
+    def __init__(self, payload: containers.JSONObject) -> None:
+        self.code = payload["code"]
+        self.uses = int(payload["uses"])
+
+
 class Invite(bases.BaseModel):
     """
     Represents a code that when used, adds a user to a guild or group DM channel.

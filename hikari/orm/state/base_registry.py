@@ -206,7 +206,7 @@ class BaseRegistry(abc.ABC):
         """
         Find a channel by a given ID. Guilds are searched first. If no match is found in a guild, then any open DM
         channels are also checked. If nothing is found still, we return a
-        :class:`hikari.orm.models.interfaces.UnknownObject`.
+        :class:`hikari.orm.models.bases.UnknownObject`.
 
         Args:
             channel_id:
@@ -217,7 +217,7 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.channels.Channel` derivative, or
-            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+            a :class:`hikari.orm.models.bases.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -242,7 +242,7 @@ class BaseRegistry(abc.ABC):
     ) -> typing.Union[emojis.GuildEmoji, bases.UnknownObject[emojis.GuildEmoji]]:
         """
         Find a guild emoji by a given ID. If nothing is found, we return a
-        :class:`hikari.orm.models.interfaces.UnknownObject`.
+        :class:`hikari.orm.models.bases.UnknownObject`.
 
         Args:
             emoji_id:
@@ -255,7 +255,7 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.emojis.GuildEmoji` derivative, or
-            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+            a :class:`hikari.orm.models.bases.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -277,7 +277,7 @@ class BaseRegistry(abc.ABC):
     ) -> typing.Union[guilds.Guild, bases.UnknownObject[guilds.Guild]]:
         """
         Find a guild by a given ID. If nothing is found, we return a
-        :class:`hikari.orm.models.interfaces.UnknownObject`.
+        :class:`hikari.orm.models.bases.UnknownObject`.
 
         Args:
             guild_id:
@@ -288,7 +288,7 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.guilds.Guild` derivative, or
-            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+            a :class:`hikari.orm.models.bases.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -313,7 +313,7 @@ class BaseRegistry(abc.ABC):
     ) -> typing.Union[messages.Message, bases.UnknownObject[messages.Message]]:
         """
         Find a message by a given ID. If nothing is found, we return a
-        :class:`hikari.orm.models.interfaces.UnknownObject`.
+        :class:`hikari.orm.models.bases.UnknownObject`.
 
         Args:
             message_id:
@@ -327,7 +327,7 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.messages.Message` derivative, or
-            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+            a :class:`hikari.orm.models.bases.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -355,7 +355,7 @@ class BaseRegistry(abc.ABC):
     ) -> typing.Union[roles.Role, bases.UnknownObject[roles.Role]]:
         """
         Find a role by a given guild ID and role ID. If nothing is found, we return a
-        :class:`hikari.orm.models.interfaces.UnknownObject`.
+        :class:`hikari.orm.models.bases.UnknownObject`.
 
         Args:
             guild_id:
@@ -368,7 +368,7 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.roles.Role` derivative, or
-            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+            a :class:`hikari.orm.models.bases.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -390,7 +390,7 @@ class BaseRegistry(abc.ABC):
     ) -> typing.Union[users.User, bases.UnknownObject[users.User]]:
         """
         Find a user by a given ID. If nothing is found, we return a
-        :class:`hikari.orm.models.interfaces.UnknownObject`.
+        :class:`hikari.orm.models.bases.UnknownObject`.
 
         Args:
             user_id:
@@ -401,7 +401,7 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.users.User` derivative, or
-            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+            a :class:`hikari.orm.models.bases.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -428,7 +428,7 @@ class BaseRegistry(abc.ABC):
     ) -> typing.Union[members.MemberLikeT, bases.UnknownObject[members.Member]]:
         """
         Find a member by a given user ID and guild ID. If nothing is found, we return a
-        :class:`hikari.orm.models.interfaces.UnknownObject`.
+        :class:`hikari.orm.models.bases.UnknownObject`.
 
         Args:
             user_id:
@@ -441,7 +441,7 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.members.Member` derivative, or
-            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+            a :class:`hikari.orm.models.bases.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
