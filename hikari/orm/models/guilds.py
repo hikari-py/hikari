@@ -507,7 +507,7 @@ class GuildEmbed(bases.BaseModel, bases.MarshalMixin):
         self.channel_id = transformations.nullable_cast(channel_id, int)
 
 
-class WidgetStyle(str, bases.NamedEnumMixin, enum.Enum):
+class WidgetStyle(bases.BestEffortEnumMixin, str, enum.Enum):
     """
     Valid styles of widget for a guild.
     """
@@ -543,6 +543,10 @@ class WidgetStyle(str, bases.NamedEnumMixin, enum.Enum):
     BANNER_4 = "banner4"
 
 
+DefaultMessageNotificationsLevelLikeT = typing.Union[int, DefaultMessageNotificationsLevel]
+ExplicitContentFilterLevelLikeT = typing.Union[int, ExplicitContentFilterLevel]
+VerificationLevelLikeT = typing.Union[int, VerificationLevel]
+WidgetStyleLikeT = typing.Union[str, WidgetStyle]
 GuildLikeT = typing.Union[bases.RawSnowflakeT, Guild]
 
 
@@ -558,6 +562,8 @@ __all__ = [
     "PremiumTier",
     "Ban",
     "WidgetStyle",
+    "VerificationLevelLikeT",
+    "WidgetStyleLikeT",
     "GuildLikeT",
     "GuildEmbed",
 ]

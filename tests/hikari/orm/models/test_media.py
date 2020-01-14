@@ -191,3 +191,37 @@ async def test_File_open():
 @pytest.mark.parametrize("file", [media.File("foo"), media.InMemoryFile("foo", "bar")])
 def test_hash_File(file):
     assert hash(file) == hash(file.name)
+
+
+@pytest.mark.asyncio
+async def test_safe_read_file_with_File():
+    mock_data = mock.MagicMock()
+    mock_file = mock.MagicMock(
+        spec=media.File, open=mock.MagicMock(return_value=mock.AsyncMock(read=mock.AsyncMock(return_value=mock_data))),
+    )
+    mock_file.name = "Nekos"
+    name, file = await media.safe_read_file(mock_file)
+    assert name == "Nekos"
+    assert file is mock_data
+    mock_file.open.assert_called_once()
+    mock_file.open().read.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_safe_read_file_with_InMemoryFile():
+    mock_data = mock.MagicMock()
+    mock_in_memory_file = mock.MagicMock(
+        spec=media.InMemoryFile,
+        open=mock.MagicMock(return_value=mock.MagicMock(read=mock.MagicMock(return_value=mock_data))),
+    )
+    mock_in_memory_file.name = "cafe"
+    name, file = await media.safe_read_file(mock_in_memory_file)
+    assert name == "cafe"
+    assert file is mock_data
+    mock_in_memory_file.open.assert_called_once()
+    mock_in_memory_file.open().read.assert_called_once()
+
+@pytest.mark.asyncio
+@_helpers.assert_raises(type_=ValueError)
+async def test_safe_read_file_raises_ValueError_with_invalid_file():
+    await media.safe_read_file("OK")

@@ -531,6 +531,7 @@ def parse_channel(fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> 
         return typing.cast(Channel, unknown)
 
 
+ChannelTypeLikeT = typing.Union[int, ChannelType]
 #: Any type of channel, or an :class:`int`/:class:`str` ID of one.
 ChannelLikeT = typing.Union[bases.RawSnowflakeT, Channel]
 #: Any type of :class:`TextChannel`, or an :class:`int`/:class:`str` ID of one.
@@ -559,6 +560,7 @@ __all__ = (
     "GuildCategory",
     "GuildAnnouncementChannel",
     "GuildStoreChannel",
+    "ChannelTypeLikeT",
     "ChannelLikeT",
     "TextChannelLikeT",
     "GuildChannelLikeT",

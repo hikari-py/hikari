@@ -77,6 +77,12 @@ class UnicodeEmoji(Emoji):
     def __str__(self):
         return self.value
 
+    @property
+    def url_name(self) -> str:
+        return str(self)
+
+    mention = url_name
+
 
 class UnknownEmoji(Emoji, bases.SnowflakeMixin):
     """
@@ -106,6 +112,10 @@ class UnknownEmoji(Emoji, bases.SnowflakeMixin):
     @property
     def is_unicode(self) -> bool:
         return False
+
+    @property
+    def url_name(self) -> str:
+        return f"{self.name}:{self.id}"
 
 
 class GuildEmoji(UnknownEmoji, bases.BaseModelWithFabric):
@@ -163,6 +173,13 @@ class GuildEmoji(UnknownEmoji, bases.BaseModelWithFabric):
     def guild(self) -> guilds.Guild:
         return self._fabric.state_registry.get_guild_by_id(self._guild_id)
 
+    @property
+    def mention(self) -> str:
+        return f"<{'a' if self.is_animated else ''}:{self.url_name}>"
+
+    def __str__(self):
+        return self.mention
+
 
 def is_payload_guild_emoji_candidate(payload: containers.JSONObject) -> bool:
     """
@@ -200,14 +217,26 @@ def parse_emoji(
         return UnicodeEmoji(payload)
 
 
+#: Any type of emoji or a :class:`str` representation of an unicode emoji.
+EmojiLikeT = typing.Union[Emoji, str]
+
 #: The type of a known emoji.
 KnownEmojiT = typing.Union[UnicodeEmoji, GuildEmoji]
 
 #: A :class:`GuildEmoji`, or an :class:`int`/:class:`str` ID of one.
 GuildEmojiLikeT = typing.Union[bases.RawSnowflakeT, GuildEmoji]
 
-#: A :class:`GuildEmoji`, an :class:`int` ID of one, a :class:`UnicodeEmoji`, or a :class:`str` representation of one.
-KnownEmojiLikeT = typing.Union[int, str, KnownEmojiT]
+#: A :class:`GuildEmoji`, a :class:`UnicodeEmoji`, or a :class:`str` representation of either.
+KnownEmojiLikeT = typing.Union[str, KnownEmojiT]
 
 
-__all__ = ["Emoji", "UnicodeEmoji", "UnknownEmoji", "GuildEmoji", "KnownEmojiT", "GuildEmojiLikeT", "KnownEmojiLikeT"]
+__all__ = [
+    "Emoji",
+    "UnicodeEmoji",
+    "UnknownEmoji",
+    "GuildEmoji",
+    "KnownEmojiT",
+    "EmojiLikeT",
+    "GuildEmojiLikeT",
+    "KnownEmojiLikeT",
+]

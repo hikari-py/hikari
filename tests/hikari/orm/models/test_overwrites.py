@@ -82,3 +82,25 @@ class TestOverwrite:
                 __repr__=overwrites.Overwrite.__repr__,
             )
         )
+
+
+@pytest.mark.model
+class TestOverwriteEntityType:
+    def test_OverwriteEntityType_instancecheck(self):
+        m = mock.MagicMock(spec=hikari.orm.models.members.Member)
+
+        # I wasn't sure of this, so this is just to be safe that my assumption was correct that the mocks
+        # implement instancecheck and subclass check correctly.
+        assert isinstance(m, hikari.orm.models.members.Member)
+        assert type(m) is not hikari.orm.models.members.Member
+
+        assert isinstance(m, overwrites.OverwriteEntityType.MEMBER.value)  # always should be right
+        assert isinstance(m, overwrites.OverwriteEntityType.MEMBER)  # this is what i am concerned about
+
+    def test_OverwriteEntityType_subclasscheck(self):
+        assert issubclass(
+            hikari.orm.models.members.Member, overwrites.OverwriteEntityType.MEMBER.value
+        )  # always should be right
+        assert issubclass(
+            hikari.orm.models.members.Member, overwrites.OverwriteEntityType.MEMBER
+        )  # actual thing to test

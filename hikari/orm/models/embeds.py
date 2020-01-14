@@ -450,7 +450,7 @@ class BaseEmbed(bases.BaseModel):
         """
         return list(map(weakref.proxy, self._fields))
 
-    def to_dict(self, *, dict_factory: bases.DictFactoryT = bases.DictFactory) -> bases.DictImplT:
+    def to_dict(self, *, dict_factory: bases.DictFactoryT = bases.dict_factory_impl) -> bases.DictImplT:
         """
         Converts this embed into a raw payload that Discord's HTTP API will understand.
 
@@ -798,7 +798,7 @@ class Embed(BaseEmbed):
         del self._fields[index]
         return self
 
-    def to_dict(self, *, dict_factory: bases.DictFactoryT = bases.DictFactory) -> bases.DictImplT:
+    def to_dict(self, *, dict_factory: bases.DictFactoryT = bases.dict_factory_impl) -> bases.DictImplT:
         self._perform_total_length_check()
         return super().to_dict(dict_factory=dict_factory)
 
