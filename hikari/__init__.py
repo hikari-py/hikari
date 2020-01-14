@@ -31,5 +31,5 @@ __author__ = "Nekokatt"
 __contributors__ = {"FasterSpeeding", "LunarCoffee", "raatty", "Tmpod", "Zach", "thomm.o", "rock500", "davfsa"}
 __copyright__ = f"© 2019-2020 Nekokatt"
 __license__ = "LGPLv3"
-__version__ = "0.0.66"
+__version__ = "0.0.67"
 __url__ = "https://gitlab.com/nekokatt/hikari"
