@@ -16,31 +16,19 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Sentinel value used internally to represent an entity that was omitted from explicit specification. This
-can be used to mark fields that may be able to be `None` as being optional.
-"""
 
-from hikari.internal_utilities import singleton_meta
+import argparse
+import platform
 
+import hikari
 
-class Unspecified(metaclass=singleton_meta.SingletonMeta):
-    """
-    Type of an unspecified value.
-    """
-
-    __slots__ = ("__weakref__",)
-
-    def __str__(self):
-        return "unspecified"
-
-    def __bool__(self):
-        return False
-
-    __repr__ = __str__
-
-
-#: An attribute that is unspecified by default.
-UNSPECIFIED = Unspecified()
-
-__all__ = ("UNSPECIFIED",)
+parser = argparse.ArgumentParser(prog=hikari.__name__, allow_abbrev=False)
+parser.add_argument(
+    "-V",
+    "--version",
+    action="version",
+    version=f"{hikari.__name__} {hikari.__version__} from {hikari.__path__[0]} (python {platform.python_version()})",
+    help=f"show {hikari.__name__}'s version and exit",
+)
+parser.set_defaults(func=parser.print_help)
+parser.parse_args().func()

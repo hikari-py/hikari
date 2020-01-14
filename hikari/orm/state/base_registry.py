@@ -206,7 +206,7 @@ class BaseRegistry(abc.ABC):
         """
         Find a channel by a given ID. Guilds are searched first. If no match is found in a guild, then any open DM
         channels are also checked. If nothing is found still, we return a
-        :class:`hikari.orm.models.interfaces.UnknownObject`.
+        :class:`hikari.orm.models.bases.UnknownObject`.
 
         Args:
             channel_id:
@@ -217,7 +217,7 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.channels.Channel` derivative, or
-            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+            a :class:`hikari.orm.models.bases.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -242,7 +242,7 @@ class BaseRegistry(abc.ABC):
     ) -> typing.Union[emojis.GuildEmoji, bases.UnknownObject[emojis.GuildEmoji]]:
         """
         Find a guild emoji by a given ID. If nothing is found, we return a
-        :class:`hikari.orm.models.interfaces.UnknownObject`.
+        :class:`hikari.orm.models.bases.UnknownObject`.
 
         Args:
             emoji_id:
@@ -255,7 +255,7 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.emojis.GuildEmoji` derivative, or
-            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+            a :class:`hikari.orm.models.bases.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -277,7 +277,7 @@ class BaseRegistry(abc.ABC):
     ) -> typing.Union[guilds.Guild, bases.UnknownObject[guilds.Guild]]:
         """
         Find a guild by a given ID. If nothing is found, we return a
-        :class:`hikari.orm.models.interfaces.UnknownObject`.
+        :class:`hikari.orm.models.bases.UnknownObject`.
 
         Args:
             guild_id:
@@ -288,7 +288,7 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.guilds.Guild` derivative, or
-            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+            a :class:`hikari.orm.models.bases.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -313,7 +313,7 @@ class BaseRegistry(abc.ABC):
     ) -> typing.Union[messages.Message, bases.UnknownObject[messages.Message]]:
         """
         Find a message by a given ID. If nothing is found, we return a
-        :class:`hikari.orm.models.interfaces.UnknownObject`.
+        :class:`hikari.orm.models.bases.UnknownObject`.
 
         Args:
             message_id:
@@ -327,7 +327,7 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.messages.Message` derivative, or
-            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+            a :class:`hikari.orm.models.bases.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -355,7 +355,7 @@ class BaseRegistry(abc.ABC):
     ) -> typing.Union[roles.Role, bases.UnknownObject[roles.Role]]:
         """
         Find a role by a given guild ID and role ID. If nothing is found, we return a
-        :class:`hikari.orm.models.interfaces.UnknownObject`.
+        :class:`hikari.orm.models.bases.UnknownObject`.
 
         Args:
             guild_id:
@@ -368,7 +368,7 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.roles.Role` derivative, or
-            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+            a :class:`hikari.orm.models.bases.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -390,7 +390,7 @@ class BaseRegistry(abc.ABC):
     ) -> typing.Union[users.User, bases.UnknownObject[users.User]]:
         """
         Find a user by a given ID. If nothing is found, we return a
-        :class:`hikari.orm.models.interfaces.UnknownObject`.
+        :class:`hikari.orm.models.bases.UnknownObject`.
 
         Args:
             user_id:
@@ -401,7 +401,7 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.users.User` derivative, or
-            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+            a :class:`hikari.orm.models.bases.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
@@ -428,7 +428,7 @@ class BaseRegistry(abc.ABC):
     ) -> typing.Union[members.MemberLikeT, bases.UnknownObject[members.Member]]:
         """
         Find a member by a given user ID and guild ID. If nothing is found, we return a
-        :class:`hikari.orm.models.interfaces.UnknownObject`.
+        :class:`hikari.orm.models.bases.UnknownObject`.
 
         Args:
             user_id:
@@ -441,11 +441,11 @@ class BaseRegistry(abc.ABC):
 
         Returns:
             a :class:`hikari.orm.models.members.Member` derivative, or
-            a :class:`hikari.orm.models.interfaces.UnknownObject` if nothing is found.
+            a :class:`hikari.orm.models.bases.UnknownObject` if nothing is found.
         """
 
     @abc.abstractmethod
-    def parse_application(self, application_payload: containers.DiscordObjectT) -> applications.Application:
+    def parse_application(self, application_payload: containers.JSONObject) -> applications.Application:
         """
         Parses an application payload into a workable object.
 
@@ -458,7 +458,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_application_user(self, application_user_payload: containers.DiscordObjectT) -> users.OAuth2User:
+    def parse_application_user(self, application_user_payload: containers.JSONObject) -> users.OAuth2User:
         """
         Parses an application user payload into a workable object.
 
@@ -471,7 +471,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_audit_log(self, audit_log_payload: containers.DiscordObjectT) -> audit_logs.AuditLog:
+    def parse_audit_log(self, audit_log_payload: containers.JSONObject) -> audit_logs.AuditLog:
         """
         Parses an audit log payload into a workable object.
 
@@ -484,7 +484,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_ban(self, ban_payload: containers.DiscordObjectT) -> guilds.Ban:
+    def parse_ban(self, ban_payload: containers.JSONObject) -> guilds.Ban:
         """
         Parse a guild ban payload into an object.
 
@@ -497,18 +497,16 @@ class BaseRegistry(abc.ABC):
         """
 
     @typing.overload
-    def parse_channel(self, channel_payload: containers.DiscordObjectT, guild_obj: None) -> channels.Channel:
+    def parse_channel(self, channel_payload: containers.JSONObject, guild_obj: None) -> channels.Channel:
         ...
 
     @typing.overload
-    def parse_channel(
-        self, channel_payload: containers.DiscordObjectT, guild_obj: guilds.Guild
-    ) -> channels.GuildChannel:
+    def parse_channel(self, channel_payload: containers.JSONObject, guild_obj: guilds.Guild) -> channels.GuildChannel:
         ...
 
     @abc.abstractmethod
     def parse_channel(
-        self, channel_payload: containers.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild]
+        self, channel_payload: containers.JSONObject, guild_obj: typing.Optional[guilds.Guild]
     ) -> channels.Channel:
         """
         Parses a channel payload into a workable object.
@@ -524,7 +522,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_connection(self, connection_payload: containers.DiscordObjectT) -> connections.Connection:
+    def parse_connection(self, connection_payload: containers.JSONObject) -> connections.Connection:
         """
         Parses a connection payload into a workable object.
 
@@ -537,16 +535,16 @@ class BaseRegistry(abc.ABC):
         """
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: containers.DiscordObjectT, guild_obj: None) -> emojis.Emoji:
+    def parse_emoji(self, emoji_payload: containers.JSONObject, guild_obj: None) -> emojis.Emoji:
         ...
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: containers.DiscordObjectT, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
+    def parse_emoji(self, emoji_payload: containers.JSONObject, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
         ...
 
     @abc.abstractmethod
     def parse_emoji(
-        self, emoji_payload: containers.DiscordObjectT, guild_obj: typing.Optional[guilds.Guild]
+        self, emoji_payload: containers.JSONObject, guild_obj: typing.Optional[guilds.Guild]
     ) -> emojis.Emoji:
         """
         Parses a emoji payload into a workable object.
@@ -562,7 +560,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_gateway_bot(self, gateway_bot_payload: containers.DiscordObjectT) -> gateway_bot.GatewayBot:
+    def parse_gateway_bot(self, gateway_bot_payload: containers.JSONObject) -> gateway_bot.GatewayBot:
         """
         Parses a gateway bot payload into a workable object.
 
@@ -575,7 +573,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_guild(self, guild_payload: containers.DiscordObjectT, shard_id: typing.Optional[int]) -> guilds.Guild:
+    def parse_guild(self, guild_payload: containers.JSONObject, shard_id: typing.Optional[int]) -> guilds.Guild:
         """
         Parses a guild payload into a workable object.
 
@@ -590,7 +588,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_integration(self, integration_payload: containers.DiscordObjectT) -> integrations.Integration:
+    def parse_integration(self, integration_payload: containers.JSONObject) -> integrations.Integration:
         """
         Parse a full integration payload.
 
@@ -603,7 +601,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_invite(self, invite_payload: containers.DiscordObjectT) -> invites.Invite:
+    def parse_invite(self, invite_payload: containers.JSONObject) -> invites.Invite:
         """
         Parse an invite payload and any attached metadata.
 
@@ -617,7 +615,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def parse_voice_state(
-        self, voice_state_payload: containers.DiscordObjectT, guild_obj: guilds.Guild
+        self, voice_state_payload: containers.JSONObject, guild_obj: guilds.Guild
     ) -> voices.VoiceState:
         """
         Parse a voice state payload into a workable object.
@@ -635,8 +633,8 @@ class BaseRegistry(abc.ABC):
     @abc.abstractmethod
     def parse_partial_member(
         self,
-        partial_member_payload: containers.DiscordObjectT,
-        user_payload: containers.DiscordObjectT,
+        partial_member_payload: containers.JSONObject,
+        user_payload: containers.JSONObject,
         guild_obj: guilds.Guild,
     ) -> members.Member:
         """
@@ -658,7 +656,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_member(self, member_payload: containers.DiscordObjectT, guild_obj: guilds.Guild) -> members.Member:
+    def parse_member(self, member_payload: containers.JSONObject, guild_obj: guilds.Guild) -> members.Member:
         """
         Parses a member payload into a workable object.
 
@@ -673,7 +671,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_message(self, message_payload: containers.DiscordObjectT) -> messages.Message:
+    def parse_message(self, message_payload: containers.JSONObject) -> messages.Message:
         """
         Parses a message payload into a workable object.
 
@@ -694,7 +692,7 @@ class BaseRegistry(abc.ABC):
     @abc.abstractmethod
     def parse_presence(
         self, member_obj: members.Member, presence_payload: containers.DiscordObjectT
-    ) -> presences.Presence:
+    ) -> presences.MemberPresence:
         """
         Parse a presence for a given guild and user, and attempt to update the member corresponding to the presence
         if it can be found.
@@ -710,7 +708,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_reaction(self, reaction_payload: containers.DiscordObjectT) -> reactions.Reaction:
+    def parse_reaction(self, reaction_payload: containers.JSONObject) -> reactions.Reaction:
         """
         Attempt to parse a reaction object and store it on the corresponding message.
 
@@ -723,7 +721,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_role(self, role_payload: containers.DiscordObjectT, guild_obj: guilds.Guild) -> roles.Role:
+    def parse_role(self, role_payload: containers.JSONObject, guild_obj: guilds.Guild) -> roles.Role:
         """
         Parses a role payload into a workable object.
 
@@ -738,7 +736,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_user(self, user_payload: containers.DiscordObjectT) -> typing.Union[users.User, users.OAuth2User]:
+    def parse_user(self, user_payload: containers.JSONObject) -> typing.Union[users.User, users.OAuth2User]:
         """
         Parses a user payload into a workable object.
 
@@ -758,7 +756,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_webhook(self, webhook_payload: containers.DiscordObjectT) -> webhooks.Webhook:
+    def parse_webhook(self, webhook_payload: containers.JSONObject) -> webhooks.Webhook:
         """
         Parses a webhook payload into a workable object.
 
@@ -771,7 +769,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_webhook_user(self, webhook_user_payload: containers.DiscordObjectT) -> webhooks.WebhookUser:
+    def parse_webhook_user(self, webhook_user_payload: containers.JSONObject) -> webhooks.WebhookUser:
         """
         Parses a webhook user payload into a workable object.
 
@@ -833,7 +831,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_channel(
-        self, channel_payload: containers.DiscordObjectT
+        self, channel_payload: containers.JSONObject
     ) -> typing.Optional[typing.Tuple[channels.Channel, channels.Channel]]:
         """
         Update the given channel represented by the channel payload.
@@ -849,7 +847,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_guild(
-        self, guild_payload: containers.DiscordObjectT
+        self, guild_payload: containers.JSONObject
     ) -> typing.Optional[typing.Tuple[guilds.Guild, guilds.Guild]]:
         """
         Update the given guild represented by the guild payload.
@@ -865,7 +863,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_guild_emojis(
-        self, emoji_list: typing.List[containers.DiscordObjectT], guild_obj: guilds.Guild
+        self, emoji_list: typing.List[containers.JSONObject], guild_obj: guilds.Guild
     ) -> typing.Tuple[typing.FrozenSet[emojis.GuildEmoji], typing.FrozenSet[emojis.GuildEmoji]]:
         """
         Update the emojis in a given guild.
@@ -883,7 +881,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_member(
-        self, member_obj: members.Member, role_objs: typing.Sequence[roles.Role], payload: containers.DiscordObjectT,
+        self, member_obj: members.Member, role_objs: typing.Sequence[roles.Role], payload: containers.JSONObject,
     ) -> typing.Tuple[members.Member, members.Member]:
         """
         Update a member in a given guild. If the member is not already registered, nothing is returned.
@@ -904,7 +902,7 @@ class BaseRegistry(abc.ABC):
     @abc.abstractmethod
     def update_member_presence(
         self, member_obj: members.Member, presence_payload: containers.DiscordObjectT
-    ) -> typing.Tuple[members.Member, presences.Presence, presences.Presence]:
+    ) -> typing.Tuple[members.Member, presences.MemberPresence, presences.MemberPresence]:
         """
         Update the presence for a given user in a given guild.
 
@@ -922,7 +920,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_message(
-        self, payload: containers.DiscordObjectT
+        self, payload: containers.JSONObject
     ) -> typing.Optional[typing.Tuple[messages.Message, messages.Message]]:
         """
         Update a message in the cache.
@@ -939,7 +937,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_role(
-        self, guild_obj: guilds.Guild, role_payload: containers.DiscordObjectT
+        self, guild_obj: guilds.Guild, role_payload: containers.JSONObject
     ) -> typing.Tuple[roles.Role, roles.Role]:
         """
         Update the given role in a given guild.

@@ -85,7 +85,7 @@ class Attachment(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "filename", "size")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.id = int(payload["id"])
         self.filename = payload["filename"]
         self.size = int(payload["size"])
@@ -259,4 +259,32 @@ class File(AbstractFile):
         return hash(self.name)
 
 
-__all__ = ["Attachment", "File", "InMemoryFile"]
+async def safe_read_file(file: AbstractFile) -> typing.Tuple[storage.FileLikeT, str]:
+    """
+    Read a file object derived from :class:`AbstractFile` and then close if necessary.
+
+    Args:
+        file:
+            The :class:`AbstractFile` derived file object.
+
+    Returns:
+        First the file's :class:`str` name.
+        Second, the read :class:`storage.FileLikeT` data.
+
+    Raises:
+        TypeError:
+            IF `file` isn't a :class:`AbstractFile` derived object.
+    """
+    name = getattr(file, "name", None)
+    if isinstance(file, InMemoryFile):
+        file = file.open().read()
+    elif isinstance(file, File):
+        async with file.open() as fp:
+            file = await fp.read()
+    else:
+        raise ValueError(f"Invalid file type '{type(file)}' provided, expected an AbstractFile derivative.")
+
+    return name, file
+
+
+__all__ = ["Attachment", "File", "InMemoryFile", "safe_read_file"]

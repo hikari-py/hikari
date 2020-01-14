@@ -30,8 +30,7 @@ from hikari.internal_utilities import meta
 
 
 class GatewayOpcode(enum.IntEnum):
-    """
-    Gateway opcodes.
+    """Gat
     """
 
     #: An event was dispatched.

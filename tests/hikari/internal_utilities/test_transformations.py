@@ -18,6 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import dataclasses
 import typing
+from unittest import mock
 
 import pytest
 
@@ -72,6 +73,43 @@ def test_put_if_specified_when_type_after_passed():
     assert d == {"foo": "69", "bar": 69}
 
 
+def test_get_id():
+    assert transformations.get_id(mock.MagicMock(__int__=lambda self: 222222)) == "222222"
+
+
+@pytest.mark.parametrize(
+    ["data", "cast_called", "nullable"],
+    [("123123", True, False), (unspecified.UNSPECIFIED, False, False), (None, False, True), (None, True, False),],
+)
+def test_cast_if_specified(data, cast_called, nullable):
+    mock_result = mock.MagicMock()
+    mock_cast = mock.MagicMock(str, return_value=mock_result)
+    result = transformations.cast_if_specified(data, mock_cast, nullable=nullable)
+    if cast_called:
+        assert result is mock_result
+        mock_cast.assert_called_once_with(data)
+    else:
+        assert result is data
+        mock_cast.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ["data", "cast_called", "nullable"],
+    [(["123123",], True, False), (unspecified.UNSPECIFIED, False, False), (None, False, True),],
+)
+def test_cast_if_specified_with_iterable(data, cast_called, nullable):
+    mock_result = mock.MagicMock()
+    mock_cast = mock.MagicMock(str, return_value=mock_result)
+    result = transformations.cast_if_specified(data, mock_cast, nullable=nullable, iterable=True)
+    if cast_called:
+        assert result == [mock_result]
+        for entry in data:
+            mock_cast.assert_called_once_with(entry)
+    else:
+        assert result is data
+        mock_cast.assert_not_called()
+
+
 def test_put_if_not_None_when_not_None():
     d = {}
     transformations.put_if_not_none(d, "foo", 69)
@@ -102,6 +140,26 @@ def test_put_if_not_none_when_type_after_passed():
 )
 def test_format_present_placeholders(fmt, kwargs, expect):
     assert transformations.format_present_placeholders(fmt, **kwargs) == expect
+
+
+@pytest.mark.parametrize(
+    ["model", "parent", "expected_result"],
+    [
+        (12354123, mock.MagicMock(__int__=lambda self: 32341223), "32341223"),
+        (mock.MagicMock(attr=mock.MagicMock(__int__=lambda self: 222222)), 123123123, "123123123"),
+        (mock.MagicMock(attr=mock.MagicMock(__int__=lambda self: 32123123)), unspecified.UNSPECIFIED, "32123123",),
+    ],
+)
+def test_get_parent_id_from_model(model, parent, expected_result):
+    assert transformations.get_parent_id_from_model(model, parent, "attr") == expected_result
+
+
+def test_get_parent_id_from_model_raises_exception():
+    try:
+        transformations.get_parent_id_from_model(1234, unspecified.UNSPECIFIED, "attr")
+        assert False, "Expected TypeError."
+    except TypeError:
+        ...
 
 
 def test_id_map():

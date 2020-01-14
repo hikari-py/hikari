@@ -160,7 +160,7 @@ def test_Member_guild_accessor(fabric_obj):
 
 def test_Member_update_presence_state(fabric_obj):
     guild_obj = mock.MagicMock(guilds.Guild)
-    mock_presence = mock.MagicMock(presences.Presence)
+    mock_presence = mock.MagicMock(presences.MemberPresence)
     fabric_obj.state_registry.parse_user.return_value = mock.MagicMock(users.User, _fabric=fabric_obj, id=123456)
     fabric_obj.state_registry.parse_presence.return_value = mock_presence
     presence_payload = {

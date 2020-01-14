@@ -67,7 +67,7 @@ class BasicChunkerImpl(base_chunker.BaseChunker):
                 *map(lambda g: str(g.id), guild_objs), limit=limit, presences=presences, query=query, user_ids=user_ids,
             )
 
-    async def handle_next_chunk(self, chunk_payload: containers.DiscordObjectT, shard_id: int) -> None:
+    async def handle_next_chunk(self, chunk_payload: containers.JSONObject, shard_id: int) -> None:
         guild_id = int(chunk_payload["guild_id"])
         guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 

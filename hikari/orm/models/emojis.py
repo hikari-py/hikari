@@ -63,7 +63,7 @@ class UnicodeEmoji(Emoji):
     def is_unicode(self) -> bool:
         return True
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.value = payload["name"]
 
     def __eq__(self, other):
@@ -76,6 +76,12 @@ class UnicodeEmoji(Emoji):
 
     def __str__(self):
         return self.value
+
+    @property
+    def url_name(self) -> str:
+        return str(self)
+
+    mention = url_name
 
 
 class UnknownEmoji(Emoji, bases.SnowflakeMixin):
@@ -99,13 +105,17 @@ class UnknownEmoji(Emoji, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
 
     @property
     def is_unicode(self) -> bool:
         return False
+
+    @property
+    def url_name(self) -> str:
+        return f"{self.name}:{self.id}"
 
 
 class GuildEmoji(UnknownEmoji, bases.BaseModelWithFabric):
@@ -149,7 +159,7 @@ class GuildEmoji(UnknownEmoji, bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("id", "name", "is_animated")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT, guild_id: int) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject, guild_id: int) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self._guild_id = guild_id
@@ -163,8 +173,15 @@ class GuildEmoji(UnknownEmoji, bases.BaseModelWithFabric):
     def guild(self) -> guilds.Guild:
         return self._fabric.state_registry.get_guild_by_id(self._guild_id)
 
+    @property
+    def mention(self) -> str:
+        return f"<{'a' if self.is_animated else ''}:{self.url_name}>"
 
-def is_payload_guild_emoji_candidate(payload: containers.DiscordObjectT) -> bool:
+    def __str__(self):
+        return self.mention
+
+
+def is_payload_guild_emoji_candidate(payload: containers.JSONObject) -> bool:
     """
     Returns True if the given dict represents an emoji that is from a guild we actively reside in.
 
@@ -176,7 +193,7 @@ def is_payload_guild_emoji_candidate(payload: containers.DiscordObjectT) -> bool
 
 
 def parse_emoji(
-    fabric_obj: fabric.Fabric, payload: containers.DiscordObjectT, guild_id: typing.Optional[int] = None
+    fabric_obj: fabric.Fabric, payload: containers.JSONObject, guild_id: typing.Optional[int] = None
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:
     """
     Parse the given emoji payload into an appropriate implementation of Emoji.
@@ -200,14 +217,26 @@ def parse_emoji(
         return UnicodeEmoji(payload)
 
 
+#: Any type of emoji or a :class:`str` representation of an unicode emoji.
+EmojiLikeT = typing.Union[Emoji, str]
+
 #: The type of a known emoji.
 KnownEmojiT = typing.Union[UnicodeEmoji, GuildEmoji]
 
 #: A :class:`GuildEmoji`, or an :class:`int`/:class:`str` ID of one.
 GuildEmojiLikeT = typing.Union[bases.RawSnowflakeT, GuildEmoji]
 
-#: A :class:`GuildEmoji`, an :class:`int` ID of one, a :class:`UnicodeEmoji`, or a :class:`str` representation of one.
-KnownEmojiLikeT = typing.Union[int, str, KnownEmojiT]
+#: A :class:`GuildEmoji`, a :class:`UnicodeEmoji`, or a :class:`str` representation of either.
+KnownEmojiLikeT = typing.Union[str, KnownEmojiT]
 
 
-__all__ = ["Emoji", "UnicodeEmoji", "UnknownEmoji", "GuildEmoji", "KnownEmojiT", "GuildEmojiLikeT", "KnownEmojiLikeT"]
+__all__ = [
+    "Emoji",
+    "UnicodeEmoji",
+    "UnknownEmoji",
+    "GuildEmoji",
+    "KnownEmojiT",
+    "EmojiLikeT",
+    "GuildEmojiLikeT",
+    "KnownEmojiLikeT",
+]
