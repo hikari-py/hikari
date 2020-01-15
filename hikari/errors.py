@@ -21,12 +21,6 @@ Core errors that may be raised by this API implementation.
 """
 from __future__ import annotations
 
-import abc
-import typing
-
-from hikari.net import http_api_base
-from hikari.net import opcodes
-
 
 class HikariError(RuntimeError):
     """
