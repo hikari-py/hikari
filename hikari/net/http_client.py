@@ -68,7 +68,6 @@ class HTTPClient(abc.ABC):
         "client_session",
         "in_count",
         "logger",
-        "loop",
         "max_retries",
         "proxy_auth",
         "proxy_headers",
@@ -154,9 +153,8 @@ class HTTPClient(abc.ABC):
     def __init__(
         self,
         *,
-        loop: asyncio.AbstractEventLoop = None,
         allow_redirects: bool = False,
-        json_marshaller: typing.Callable = None,
+        json_serialize: typing.Callable = None,
         connector: aiohttp.BaseConnector = None,
         proxy_headers: aiohttp.typedefs.LooseHeaders = None,
         proxy_auth: aiohttp.BasicAuth = None,
@@ -173,11 +171,9 @@ class HTTPClient(abc.ABC):
             connector:
                 the :class:`aiohttp.BaseConnector` to use for the client session, or `None` if you wish to use the
                 default instead.
-            json_marshaller:
+            json_serialize:
                 a callable that consumes a Python object and returns a JSON-encoded string.
                 This defaults to :func:`json.dumps`.
-            loop:
-                the asyncio event loop to run on.
             proxy_auth:
                 optional proxy authentication to use.
             proxy_headers:
@@ -192,11 +188,6 @@ class HTTPClient(abc.ABC):
                 optional timeout to apply to individual HTTP requests.
         """
 
-        #: The asyncio event loop to run on.
-        #:
-        #: :type: :class:`asyncio.AbstractEventLoop`
-        self.loop = loop or asyncio.get_running_loop()
-
         #: Whether to allow redirects or not.
         #:
         #: :type: :class:`bool`
@@ -209,7 +200,7 @@ class HTTPClient(abc.ABC):
             connector=connector,
             loop=self.loop,
             version=aiohttp.HttpVersion11,
-            json_serialize=json_marshaller or json.dumps,
+            json_serialize=json_serialize or json.dumps,
         )
 
         #: The logger to use for this object.

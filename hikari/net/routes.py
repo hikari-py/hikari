@@ -23,11 +23,6 @@ with rate limit bucketing.
 from typing import Any, Collection, FrozenSet
 
 
-GET = "GET"
-POST = "POST"
-PATCH = "PATCH"
-PUT = "PUT"
-DELETE = "DELETE"
 DEFAULT_MAJOR_PARAMS = {"channel_id", "guild_id", "webhook_id"}
 
 

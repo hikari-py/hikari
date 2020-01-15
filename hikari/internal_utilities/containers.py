@@ -39,6 +39,9 @@ ScalarT = typing.Union[dict, list, int, float, str, bool, None]
 #: around to represent request and response data. This allows an implementation to use this layer as desired.
 JSONObject = typing.Dict[str, ScalarT]
 
+#: A JSON array.
+JSONArray = typing.Sequence[ScalarT]
+
 
 class ObjectProxy(typing.Generic[ValueT], typing.Dict[str, ValueT]):
     """
@@ -135,6 +138,7 @@ EMPTY_DICT: typing.Mapping = types.MappingProxyType({})
 
 __all__ = (
     "ScalarT",
+    "JSONArray",
     "JSONObject",
     "ObjectProxy",
     "LRUDict",

@@ -50,7 +50,6 @@ from hikari.internal_utilities import compat
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import meta
-from hikari.net import opcodes
 from hikari.net import rates
 from hikari.net import user_agent
 
