@@ -340,3 +340,20 @@ def run_in_own_thread(func):
             result.raise_again()
 
     return delegator
+
+
+class AwaitableMock:
+    def __init__(self, return_value=None):
+        self.await_count = 0
+        self.return_value = return_value
+
+    def __await__(self):
+        if False:
+            yield
+        self.await_count += 1
+        return self.return_value
+
+    def assert_awaited_once(self):
+        assert self.await_count == 1
+
+    is_resolved = False

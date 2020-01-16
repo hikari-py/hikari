@@ -247,7 +247,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
             return obj
         else:
             return self._prepare_unknown_with_callback(
-                emoji_id, self.fabric.http_adapter.fetch_guild_emoji, callback_if_unresolved, emoji_id, guild_id
+                emoji_id, self.fabric.http_adapter.fetch_guild_emoji, callback_if_unresolved, emoji_id, guild=guild_id
             )
 
     def get_guild_by_id(self, guild_id: int) -> typing.Optional[guilds.Guild]:
@@ -278,7 +278,11 @@ class StateRegistryImpl(base_registry.BaseRegistry):
             return obj
         else:
             return self._prepare_unknown_with_callback(
-                message_id, self.fabric.http_adapter.fetch_message, callback_if_unresolved, channel_id, message_id
+                message_id,
+                self.fabric.http_adapter.fetch_message,
+                callback_if_unresolved,
+                message_id,
+                channel=channel_id,
             )
 
     def get_role_by_id(self, guild_id: int, role_id: int) -> typing.Optional[roles.Role]:
@@ -341,7 +345,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
             return obj
         else:
             return self._prepare_unknown_with_callback(
-                user_id, self.fabric.http_adapter.fetch_member, callback_if_unresolved, user_id, guild_id
+                user_id, self.fabric.http_adapter.fetch_member, callback_if_unresolved, user_id, guild=guild_id
             )
 
     def parse_application(self, application_payload: containers.JSONObject) -> applications.Application:
