@@ -93,9 +93,12 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
     async def fetch_channel(self, channel: _channels.ChannelLikeT) -> _channels.Channel:
         channel_payload = await self.fabric.http_api.get_channel(transformations.get_id(channel))
         guild_id = channel_payload.get("guild_id")
-        guild_obj = (
-            self.fabric.state_registry.get_mandatory_guild_by_id(int(guild_id)) if guild_id is not None else guild_id
-        )
+        if guild_id is not None:
+            guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(int(guild_id))
+            if not guild_obj.is_resolved:
+                guild_obj = await guild_obj
+        else:
+            guild_obj = None
         return self.fabric.state_registry.parse_channel(channel_payload, guild_obj)
 
     async def update_channel(
@@ -129,9 +132,12 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             reason=reason,
         )
         guild_id = channel_obj.get("guild_id")
-        guild_obj = (
-            self.fabric.state_registry.get_mandatory_guild_by_id(int(guild_id)) if guild_id is not None else guild_id
-        )
+        if guild_id is not None:
+            guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(int(guild_id))
+            if not guild_obj.is_resolved:
+                guild_obj = await guild_obj
+        else:
+            guild_obj = None
         return self.fabric.state_registry.parse_channel(channel_obj, guild_obj)
 
     async def delete_channel(self, channel: _channels.ChannelLikeT) -> None:
@@ -360,12 +366,16 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             emoji_id=transformations.get_id(emoji), guild_id=guild_id
         )
         guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(int(guild_id))
+        if not guild_obj.is_resolved:
+            guild_obj = await guild_obj
         return self.fabric.state_registry.parse_emoji(emoji_payload, guild_obj)
 
     async def fetch_guild_emojis(self, guild: _guilds.GuildLikeT) -> typing.Collection[_emojis.GuildEmoji]:
         guild_id = int(guild)
         emojis_payload = await self.fabric.http_api.list_guild_emojis(guild_id=str(guild_id))
         guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(guild_id)
+        if not guild_obj.is_resolved:
+            guild_obj = await guild_obj
         return [self.fabric.state_registry.parse_emoji(emoji, guild_obj) for emoji in emojis_payload]
 
     async def create_guild_emoji(
@@ -386,6 +396,8 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             reason=reason,
         )
         guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(guild_id)
+        if not guild_obj.is_resolved:
+            guild_obj = await guild_obj
         return self.fabric.state_registry.parse_emoji(emoji_payload, guild_obj)
 
     async def update_guild_emoji(
@@ -482,6 +494,8 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         guild_id = int(guild)
         guild_channels_payload = await self.fabric.http_api.get_guild_channels(guild_id=str(guild_id))
         guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(guild_id)
+        if not guild_obj.is_resolved:
+            guild_obj = await guild_obj
         return [self.fabric.state_registry.parse_channel(channel, guild_obj) for channel in guild_channels_payload]
 
     async def create_guild_channel(  # lgtm [py/similar-function]
@@ -520,6 +534,8 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             reason=reason,
         )
         guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(guild_id)
+        if not guild_obj.is_resolved:
+            guild_obj = await guild_obj
         return self.fabric.state_registry.parse_channel(channel_payload, guild_obj)
 
     async def reposition_guild_channels(
@@ -547,6 +563,8 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             guild_id=guild_id, user_id=transformations.get_id(user)
         )
         guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(int(guild_id))
+        if not guild_obj.is_resolved:
+            guild_obj = await guild_obj
         return self.fabric.state_registry.parse_member(member_payload, guild_obj)
 
     async def fetch_members(
@@ -669,6 +687,8 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         guild_id = int(guild)
         roles_payload = await self.fabric.http_api.get_guild_roles(guild_id=str(guild_id))
         guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(guild_id)
+        if not guild_obj.is_resolved:
+            guild_obj = await guild_obj
         return [self.fabric.state_registry.parse_role(role, guild_obj) for role in roles_payload]
 
     async def create_role(  # lgtm [py/similar-function]
@@ -693,6 +713,8 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             reason=reason,
         )
         guild_obj = self.fabric.state_registry.get_mandatory_guild_by_id(guild_id)
+        if not guild_obj.is_resolved:
+            guild_obj = await guild_obj
         return self.fabric.state_registry.parse_role(role_payload, guild_obj)
 
     async def reposition_roles(

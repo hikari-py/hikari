@@ -148,7 +148,23 @@ class TestHTTPAdapterImpl:
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 532323423432343234, channels.GuildChannel)
-    async def test_fetch_guild_channel_when_is_guild_channel(self, fabric_impl, channel):
+    async def test_fetch_guild_channel_when_is_guild_channel_and_guild_is_unresolved(self, fabric_impl, channel):
+        mock_channel_payload = {"id": "532323423432343234", "name": "nyakuza", "guild_id": "22222222"}
+        mock_guild = mock.MagicMock(guilds.Guild)
+        awaitable_mock = _helpers.AwaitableMock(return_value=mock_guild)
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = awaitable_mock
+        mock_channel = mock.MagicMock(channels.Channel)
+        fabric_impl.state_registry.parse_channel.return_value = mock_channel
+        fabric_impl.http_api.get_channel = mock.AsyncMock(return_value=mock_channel_payload)
+        assert await fabric_impl.http_adapter.fetch_channel(channel) is mock_channel
+        fabric_impl.http_api.get_channel.assert_called_once_with("532323423432343234")
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(22222222)
+        awaitable_mock.assert_awaited_once()
+        fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_channel_payload, mock_guild)
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 532323423432343234, channels.GuildChannel)
+    async def test_fetch_guild_channel_when_is_guild_channel_and_guild_is_resolved(self, fabric_impl, channel):
         mock_channel_payload = {"id": "532323423432343234", "name": "nyakuza", "guild_id": "22222222"}
         mock_guild = mock.MagicMock(guilds.Guild)
         fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = mock_guild
@@ -184,7 +200,34 @@ class TestHTTPAdapterImpl:
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 532323423432343234, channels.TextChannel)
-    async def test_update_guild_channel_without_optionals(self, fabric_impl, channel):
+    async def test_update_guild_channel_without_optionals_with_guild_unresolved(self, fabric_impl, channel):
+        mock_channel_payload = {"id": "20409595959", "name": "mechanical-hands", "guild_id": "4959595959"}
+        mock_guild = mock.MagicMock(guilds.Guild)
+        awaitable_mock = _helpers.AwaitableMock(return_value=mock_guild)
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = awaitable_mock
+        mock_channel = mock.MagicMock(channels.Channel)
+        fabric_impl.http_api.modify_channel = mock.AsyncMock(return_value=mock_channel_payload)
+        fabric_impl.state_registry.parse_channel.return_value = mock_channel
+        assert await fabric_impl.http_adapter.update_channel(channel) is mock_channel
+        fabric_impl.http_api.modify_channel.assert_called_once_with(
+            channel_id="532323423432343234",
+            position=unspecified.UNSPECIFIED,
+            topic=unspecified.UNSPECIFIED,
+            nsfw=unspecified.UNSPECIFIED,
+            rate_limit_per_user=unspecified.UNSPECIFIED,
+            bitrate=unspecified.UNSPECIFIED,
+            user_limit=unspecified.UNSPECIFIED,
+            permission_overwrites=unspecified.UNSPECIFIED,
+            parent_id=unspecified.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
+        )
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(4959595959)
+        awaitable_mock.assert_awaited_once()
+        fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_channel_payload, mock_guild)
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 532323423432343234, channels.TextChannel)
+    async def test_update_guild_channel_without_optionals_with_guild_resolved(self, fabric_impl, channel):
         mock_channel_payload = {"id": "20409595959", "name": "mechanical-hands", "guild_id": "4959595959"}
         mock_guild = mock.MagicMock(guilds.Guild)
         fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = mock_guild
@@ -249,7 +292,9 @@ class TestHTTPAdapterImpl:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 532323423432343234, channels.TextChannel)
     @_helpers.parametrize_valid_id_formats_for_models("parent_category", 324123123123123, channels.GuildCategory)
-    async def test_update_guild_channel_with_all_optionals(self, fabric_impl, channel, parent_category):
+    async def test_update_guild_channel_with_all_optionals_with_guild_resolved(
+        self, fabric_impl, channel, parent_category
+    ):
         mock_channel_payload = {"id": "3949583839939", "name": "nothing-gets-me-down", "guild_id": "4945939393"}
         mock_guild = mock.MagicMock(guilds.Guild)
         fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = mock_guild
@@ -854,7 +899,36 @@ class TestHTTPAdapterImpl:
             ["34332", "345342222"],
         ),
     )
-    async def test_fetch_guild_emoji(self, fabric_impl, emoji, guild):
+    async def test_fetch_guild_emoji_when_guild_is_unresolved(self, fabric_impl, emoji, guild):
+        mock_emoji_payload = {"name": "Nep", "id": "34332", "animated": True}
+        mock_emoji = mock.MagicMock(emojis.GuildEmoji)
+        mock_guild = mock.MagicMock(guilds.Guild)
+        awaitable_mock = _helpers.AwaitableMock(return_value=mock_guild)
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = awaitable_mock
+        fabric_impl.state_registry.parse_emoji.return_value = mock_emoji
+        fabric_impl.http_api.get_guild_emoji = mock.AsyncMock(return_value=mock_emoji_payload)
+        assert await fabric_impl.http_adapter.fetch_guild_emoji(emoji=emoji, guild=guild) is mock_emoji
+        fabric_impl.http_api.get_guild_emoji.assert_called_once_with(guild_id="345342222", emoji_id="34332")
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(345342222)
+        awaitable_mock.assert_awaited_once()
+        fabric_impl.state_registry.parse_emoji.assert_called_once_with(mock_emoji_payload, mock_guild)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["emoji", "guild"],
+        (
+            [
+                _helpers.mock_model(
+                    emojis.GuildEmoji, id=34332, guild=_helpers.mock_model(guilds.Guild, id=345342222),
+                ),
+                unspecified.UNSPECIFIED,
+            ],
+            [34332, _helpers.mock_model(guilds.Guild, id=345342222)],
+            [34332, 345342222],
+            ["34332", "345342222"],
+        ),
+    )
+    async def test_fetch_guild_emoji_when_guild_is_resolved(self, fabric_impl, emoji, guild):
         mock_emoji_payload = {"name": "Nep", "id": "34332", "animated": True}
         mock_emoji = mock.MagicMock(emojis.GuildEmoji)
         mock_guild = mock.MagicMock(guilds.Guild)
@@ -874,7 +948,23 @@ class TestHTTPAdapterImpl:
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 777, guilds.Guild)
-    async def test_fetch_guild_emojis(self, fabric_impl, guild):
+    async def test_fetch_guild_emojis_when_guild_is_unresolved(self, fabric_impl, guild):
+        mock_guild_emoji_payload = {"id": "31232", "name": "sure", "animated": True}
+        mock_guild_emoji = mock.MagicMock(emojis.GuildEmoji)
+        mock_guild = mock.MagicMock(guilds.Guild)
+        awaitable_mock = _helpers.AwaitableMock(return_value=mock_guild)
+        fabric_impl.http_api.list_guild_emojis = mock.AsyncMock(return_value=[mock_guild_emoji_payload])
+        fabric_impl.state_registry.parse_emoji.return_value = mock_guild_emoji
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = awaitable_mock
+        assert await fabric_impl.http_adapter.fetch_guild_emojis(guild) == [mock_guild_emoji]
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(777)
+        awaitable_mock.assert_awaited_once()
+        fabric_impl.state_registry.parse_emoji.assert_called_once_with(mock_guild_emoji_payload, mock_guild)
+        fabric_impl.http_api.list_guild_emojis.assert_called_once_with(guild_id="777")
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 777, guilds.Guild)
+    async def test_fetch_guild_emojis_when_guild_is_resolved(self, fabric_impl, guild):
         mock_guild_emoji_payload = {"id": "31232", "name": "sure", "animated": True}
         mock_guild_emoji = mock.MagicMock(emojis.GuildEmoji)
         mock_guild = mock.MagicMock(guilds.Guild)
@@ -888,7 +978,30 @@ class TestHTTPAdapterImpl:
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 4242, guilds.Guild)
-    async def test_create_guild_emoji_without_optionals(self, fabric_impl, guild):
+    async def test_create_guild_emoji_without_optionals_when_guild_is_unresolved(self, fabric_impl, guild):
+        mock_guild_emoji_payload = {"id": "31232", "name": "sure", "animated": True}
+        mock_guild_emoji = mock.MagicMock(emojis.GuildEmoji)
+        mock_guild = mock.MagicMock(guilds.Guild)
+        awaitable_mock = _helpers.AwaitableMock(return_value=mock_guild)
+        fabric_impl.http_api.create_guild_emoji = mock.AsyncMock(return_value=mock_guild_emoji_payload)
+        fabric_impl.state_registry.parse_emoji.return_value = mock_guild_emoji
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = awaitable_mock
+        assert (
+            await fabric_impl.http_adapter.create_guild_emoji(
+                guild=guild, name="A name", image_data=b"44422242vsewr21",
+            )
+            is mock_guild_emoji
+        )
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(4242)
+        awaitable_mock.assert_awaited_once()
+        fabric_impl.state_registry.parse_emoji.assert_called_once_with(mock_guild_emoji_payload, mock_guild)
+        fabric_impl.http_api.create_guild_emoji.assert_called_once_with(
+            guild_id="4242", name="A name", image=b"44422242vsewr21", roles=[], reason=unspecified.UNSPECIFIED
+        )
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 4242, guilds.Guild)
+    async def test_create_guild_emoji_without_optionals_when_guild_is_resolved(self, fabric_impl, guild):
         mock_guild_emoji_payload = {"id": "31232", "name": "sure", "animated": True}
         mock_guild_emoji = mock.MagicMock(emojis.GuildEmoji)
         mock_guild = mock.MagicMock(guilds.Guild)
@@ -910,7 +1023,7 @@ class TestHTTPAdapterImpl:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 4242, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("role", 6969, roles.Role)
-    async def test_create_guild_emoji_with_all_optionals(self, fabric_impl, guild, role):
+    async def test_create_guild_emoji_with_all_optionals_when_guild_is_resolved(self, fabric_impl, guild, role):
         mock_guild_emoji_payload = {"id": "31232", "name": "sure", "animated": True}
         mock_guild_emoji = mock.MagicMock(emojis.GuildEmoji)
         mock_guild = mock.MagicMock(guilds.Guild)
@@ -1195,7 +1308,23 @@ class TestHTTPAdapterImpl:
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
-    async def test_fetch_guild_channels(self, fabric_impl, guild):
+    async def test_fetch_guild_channels_when_guild_is_unresolved(self, fabric_impl, guild):
+        mock_channel_payload = {"name": "OK", "id": "23123123123123", "type": 0}
+        mock_channel = mock.MagicMock(channels.GuildTextChannel)
+        mock_guild = mock.MagicMock(guilds.Guild)
+        awaitable_mock = _helpers.AwaitableMock(return_value=mock_guild)
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = awaitable_mock
+        fabric_impl.http_api.get_guild_channels = mock.AsyncMock(return_value=[mock_channel_payload])
+        fabric_impl.state_registry.parse_channel.return_value = mock_channel
+        assert await fabric_impl.http_adapter.fetch_guild_channels(guild) == [mock_channel]
+        fabric_impl.http_api.get_guild_channels.assert_called_once_with(guild_id="379953393319542784")
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(379953393319542784)
+        awaitable_mock.assert_awaited_once()
+        fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_channel_payload, mock_guild)
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
+    async def test_fetch_guild_channels_when_guild_is_resolved(self, fabric_impl, guild):
         mock_channel_payload = {"name": "OK", "id": "23123123123123", "type": 0}
         mock_channel = mock.MagicMock(channels.GuildTextChannel)
         mock_guild = mock.MagicMock(guilds.Guild)
@@ -1211,7 +1340,9 @@ class TestHTTPAdapterImpl:
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("category", 537340989808050216, channels.GuildCategory)
     @pytest.mark.parametrize("channel_type", [0, channels.ChannelType.GUILD_TEXT])
-    async def test_create_guild_channel_with_all_optionals(self, fabric_impl, guild, category, channel_type):
+    async def test_create_guild_channel_with_all_optionals_when_guild_is_resolved(
+        self, fabric_impl, guild, category, channel_type
+    ):
         mock_channel_payload = {"id": "215061635574792192", "name": "lolz"}
         mock_channel = mock.MagicMock(channels.GuildTextChannel)
         mock_guild = mock.MagicMock(guilds.Guild)
@@ -1256,7 +1387,41 @@ class TestHTTPAdapterImpl:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     @pytest.mark.parametrize("channel_type", [0, channels.ChannelType.GUILD_TEXT])
-    async def test_create_guild_channel_without_optionals(self, fabric_impl, guild, channel_type):
+    async def test_create_guild_channel_without_optionals_when_guild_is_unresolved(
+        self, fabric_impl, guild, channel_type
+    ):
+        mock_channel_payload = {"id": "215061635574792192", "name": "lolz"}
+        mock_channel = mock.MagicMock(channels.GuildTextChannel)
+        mock_guild = mock.MagicMock(guilds.Guild)
+        awaitable_mock = _helpers.AwaitableMock(return_value=mock_guild)
+        fabric_impl.http_api.create_guild_channel = mock.AsyncMock(return_value=mock_channel_payload)
+        fabric_impl.state_registry.parse_channel.return_value = mock_channel
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = awaitable_mock
+        assert await fabric_impl.http_adapter.create_guild_channel(guild, "OK", channel_type) is mock_channel
+        fabric_impl.http_api.create_guild_channel.assert_called_once_with(
+            guild_id="379953393319542784",
+            name="OK",
+            type_=0,
+            topic=unspecified.UNSPECIFIED,
+            bitrate=unspecified.UNSPECIFIED,
+            user_limit=unspecified.UNSPECIFIED,
+            rate_limit_per_user=unspecified.UNSPECIFIED,
+            position=unspecified.UNSPECIFIED,
+            permission_overwrites=unspecified.UNSPECIFIED,
+            parent_id=unspecified.UNSPECIFIED,
+            nsfw=unspecified.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
+        )
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(379953393319542784)
+        awaitable_mock.assert_awaited_once()
+        fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_channel_payload, mock_guild)
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
+    @pytest.mark.parametrize("channel_type", [0, channels.ChannelType.GUILD_TEXT])
+    async def test_create_guild_channel_without_optionals_when_guild_is_resolved(
+        self, fabric_impl, guild, channel_type
+    ):
         mock_channel_payload = {"id": "215061635574792192", "name": "lolz"}
         mock_channel = mock.MagicMock(channels.GuildTextChannel)
         mock_guild = mock.MagicMock(guilds.Guild)
@@ -1338,7 +1503,43 @@ class TestHTTPAdapterImpl:
             ["131506134161948672", "379953393319542784"],
         ),
     )
-    async def test_fetch_member(self, fabric_impl, guild, user):
+    async def test_fetch_member_when_guild_is_unresolved(self, fabric_impl, guild, user):
+        mock_member_payload = {"nick": "Genre: Help", "user": {"id": "131506134161948672"}}
+        mock_member = mock.MagicMock(members.Member)
+        mock_guild = mock.MagicMock(guilds.Guild)
+        awaitable_mock = _helpers.AwaitableMock(return_value=mock_guild)
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = awaitable_mock
+        fabric_impl.state_registry.parse_member.return_value = mock_member
+        fabric_impl.http_api.get_guild_member = mock.AsyncMock(return_value=mock_member_payload)
+        assert await fabric_impl.http_adapter.fetch_member(user=user, guild=guild) is mock_member
+        fabric_impl.http_api.get_guild_member.assert_called_once_with(
+            user_id="131506134161948672", guild_id="379953393319542784"
+        )
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(379953393319542784)
+        awaitable_mock.assert_awaited_once()
+        fabric_impl.state_registry.parse_member.assert_called_once_with(mock_member_payload, mock_guild)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["user", "guild"],
+        (
+            [
+                _helpers.mock_model(
+                    members.Member,
+                    id=131506134161948672,
+                    guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
+                ),
+                unspecified.UNSPECIFIED,
+            ],
+            [
+                _helpers.mock_model(users.User, id=131506134161948672),
+                _helpers.mock_model(guilds.Guild, id=379953393319542784),
+            ],
+            [131506134161948672, 379953393319542784],
+            ["131506134161948672", "379953393319542784"],
+        ),
+    )
+    async def test_fetch_member_when_guild_is_resolved(self, fabric_impl, guild, user):
         mock_member_payload = {"nick": "Genre: Help", "user": {"id": "131506134161948672"}}
         mock_member = mock.MagicMock(members.Member)
         mock_guild = mock.MagicMock(guilds.Guild)
@@ -1650,7 +1851,23 @@ class TestHTTPAdapterImpl:
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
-    async def test_fetch_roles(self, fabric_impl, guild):
+    async def test_fetch_roles_when_guild_is_unresolved(self, fabric_impl, guild):
+        mock_role_payload = {"id": "595945838", "name": "Iamarole"}
+        mock_role = mock.MagicMock(roles.Role)
+        mock_guild = mock.MagicMock(guilds.Guild)
+        awaitable_mock = _helpers.AwaitableMock(return_value=mock_guild)
+        fabric_impl.http_api.get_guild_roles = mock.AsyncMock(return_value=[mock_role_payload])
+        fabric_impl.state_registry.parse_role.return_value = mock_role
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = awaitable_mock
+        assert await fabric_impl.http_adapter.fetch_roles(guild) == [mock_role]
+        fabric_impl.http_api.get_guild_roles.assert_called_once_with(guild_id="379953393319542784")
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(379953393319542784)
+        awaitable_mock.assert_awaited_once()
+        fabric_impl.state_registry.parse_role.assert_called_once_with(mock_role_payload, mock_guild)
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
+    async def test_fetch_roles_when_guild_is_resolved(self, fabric_impl, guild):
         mock_role_payload = {"id": "595945838", "name": "Iamarole"}
         mock_role = mock.MagicMock(roles.Role)
         mock_guild = mock.MagicMock(guilds.Guild)
@@ -1667,11 +1884,12 @@ class TestHTTPAdapterImpl:
         ["permission", "color"], [(permissions.Permission(512), colors.Color.from_int(4571114)), (512, 4571114)]
     )
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
-    async def test_create_role_with_all_optionals(self, fabric_impl, guild, permission, color):
+    async def test_create_role_with_all_optionals_when_guild_is_resolved(self, fabric_impl, guild, permission, color):
         mock_role_payload = {"id": "424242424242", "name": "OKThisIsaRole"}
         mock_role = mock.MagicMock(roles.Role)
         mock_guild = mock.MagicMock(guilds.Guild)
-        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = mock_guild
+        awaitable_mock = _helpers.AwaitableMock(return_value=mock_guild)
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = awaitable_mock
         fabric_impl.http_api.create_guild_role = mock.AsyncMock(return_value=mock_role_payload)
         fabric_impl.state_registry.parse_role.return_value = mock_role
         assert (
@@ -1690,11 +1908,36 @@ class TestHTTPAdapterImpl:
             reason="DERP",
         )
         fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(379953393319542784)
+        awaitable_mock.assert_awaited_once()
         fabric_impl.state_registry.parse_role.assert_called_once_with(mock_role_payload, mock_guild)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
-    async def test_create_role_without_optionals(self, fabric_impl, guild):
+    async def test_create_role_without_optionals_when_guild_is_unresolved(self, fabric_impl, guild):
+        mock_role_payload = {"id": "424242424242", "name": "OKThisIsaRole"}
+        mock_role = mock.MagicMock(roles.Role)
+        mock_guild = mock.MagicMock(guilds.Guild)
+        awaitable_mock = _helpers.AwaitableMock(return_value=mock_guild)
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = awaitable_mock
+        fabric_impl.http_api.create_guild_role = mock.AsyncMock(return_value=mock_role_payload)
+        fabric_impl.state_registry.parse_role.return_value = mock_role
+        assert await fabric_impl.http_adapter.create_role(guild) is mock_role
+        fabric_impl.http_api.create_guild_role.assert_called_once_with(
+            guild_id="379953393319542784",
+            name=unspecified.UNSPECIFIED,
+            permissions=unspecified.UNSPECIFIED,
+            color=unspecified.UNSPECIFIED,
+            hoist=unspecified.UNSPECIFIED,
+            mentionable=unspecified.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
+        )
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(379953393319542784)
+        awaitable_mock.assert_awaited_once()
+        fabric_impl.state_registry.parse_role.assert_called_once_with(mock_role_payload, mock_guild)
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
+    async def test_create_role_without_optionals_when_guild_is_resolved(self, fabric_impl, guild):
         mock_role_payload = {"id": "424242424242", "name": "OKThisIsaRole"}
         mock_role = mock.MagicMock(roles.Role)
         mock_guild = mock.MagicMock(guilds.Guild)

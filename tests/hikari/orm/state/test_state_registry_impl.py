@@ -492,7 +492,7 @@ class TestStateRegistryImpl:
         result = registry.get_mandatory_guild_emoji_by_id(70, 123, callback_obj)
         assert result is unknown_obj
         registry._prepare_unknown_with_callback.assert_called_with(
-            70, registry.fabric.http_adapter.fetch_guild_emoji, callback_obj, 70, 123
+            70, registry.fabric.http_adapter.fetch_guild_emoji, callback_obj, 70, guild=123
         )
 
     def test_get_guild_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
@@ -559,7 +559,7 @@ class TestStateRegistryImpl:
         result = registry.get_mandatory_message_by_id(70, 420, callback_obj)
 
         registry._prepare_unknown_with_callback.assert_called_with(
-            70, registry.fabric.http_adapter.fetch_message, callback_obj, 420, 70
+            70, registry.fabric.http_adapter.fetch_message, callback_obj, 70, channel=420
         )
 
         assert result is unknown_obj
@@ -752,7 +752,7 @@ class TestStateRegistryImpl:
         result = registry.get_mandatory_member_by_id(1, guild_obj.id, callback_obj)
 
         registry._prepare_unknown_with_callback.assert_called_with(
-            1, registry.fabric.http_adapter.fetch_member, callback_obj, 1, 2
+            1, registry.fabric.http_adapter.fetch_member, callback_obj, 1, guild=2
         )
 
         assert result is unknown_obj
@@ -772,7 +772,7 @@ class TestStateRegistryImpl:
         result = registry.get_mandatory_member_by_id(3, 4, callback_obj)
 
         registry._prepare_unknown_with_callback.assert_called_with(
-            3, registry.fabric.http_adapter.fetch_member, callback_obj, 3, 4
+            3, registry.fabric.http_adapter.fetch_member, callback_obj, 3, guild=4
         )
 
         assert result is unknown_obj
