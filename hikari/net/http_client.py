@@ -198,7 +198,6 @@ class HTTPClient(abc.ABC):
         #: :type: :class:`aiohttp.ClientSession`
         self.client_session = aiohttp.ClientSession(
             connector=connector,
-            loop=self.loop,
             version=aiohttp.HttpVersion11,
             json_serialize=json_serialize or json.dumps,
         )

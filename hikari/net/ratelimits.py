@@ -141,6 +141,7 @@ class GlobalHTTPRateLimiter:
     """
     Rate limit handler for the global HTTP rate limit.
     """
+
     __slots__ = ("logger", "lock_task", "queue")
 
     def __init__(self) -> None:
@@ -193,6 +194,7 @@ class GatewayRateLimiter:
     """
     Aid to adhere to the 120/60 gateway ratelimit.
     """
+
     __slots__ = ("logger", "period", "remaining", "limit", "reset_at", "queue", "throttle_task")
 
     def __init__(self, period: float, limit: int) -> None:

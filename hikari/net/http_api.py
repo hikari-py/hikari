@@ -41,11 +41,11 @@ from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import unspecified
 from hikari.net import errors
 from hikari.net import http_client
-from hikari.net import rate_limits
+from hikari.net import ratelimits
 from hikari.net import routes
 
 
-class HTTPClient(http_client.HTTPClient):
+class HTTPAPI(http_client.HTTPClient):
     def __init__(
         self,
         *,
@@ -74,10 +74,10 @@ class HTTPClient(http_client.HTTPClient):
             json_serialize=json_serialize,
         )
         self.base_url = base_url
-        self.global_ratelimiter = rate_limits.GlobalHTTPRateLimiter()
+        self.global_ratelimiter = ratelimits.GlobalHTTPRateLimiter()
         self.json_serialize = json_serialize
         self.json_deserialize = json_deserialize
-        self.ratelimiter = rate_limits.HTTPRateLimiter()
+        self.ratelimiter = ratelimits.HTTPRateLimiter()
         self.token = token
 
     async def close(self):
@@ -535,9 +535,7 @@ class HTTPClient(http_client.HTTPClient):
 
         route = routes.CHANNEL_MESSAGES.compile(self.POST, channel_id=channel_id)
 
-        return await self._request(route,
-            data=form,
-        )
+        return await self._request(route, data=form,)
 
     async def create_reaction(self, channel_id: str, message_id: str, emoji: str) -> None:
         """
@@ -1293,8 +1291,9 @@ class HTTPClient(http_client.HTTPClient):
         transformations.put_if_specified(payload, "owner_id", owner_id)
         transformations.put_if_specified(payload, "splash", splash, conversions.image_bytes_to_image_data)
         transformations.put_if_specified(payload, "system_channel_id", system_channel_id)
-        return await self._request(self.PATCH, "/guilds/{guild_id}", guild_id=guild_id, json_body=payload,
-                                   reason=reason)
+        return await self._request(
+            self.PATCH, "/guilds/{guild_id}", guild_id=guild_id, json_body=payload, reason=reason
+        )
 
     # pylint: enable=too-many-locals
 
@@ -1851,8 +1850,9 @@ class HTTPClient(http_client.HTTPClient):
         transformations.put_if_specified(payload, "color", color)
         transformations.put_if_specified(payload, "hoist", hoist)
         transformations.put_if_specified(payload, "mentionable", mentionable)
-        return await self._request(self.POST, "/guilds/{guild_id}/roles", guild_id=guild_id, json_body=payload,
-                                   reason=reason)
+        return await self._request(
+            self.POST, "/guilds/{guild_id}/roles", guild_id=guild_id, json_body=payload, reason=reason
+        )
 
     async def modify_guild_role_positions(
         self, guild_id: str, role: typing.Tuple[str, int], *roles: typing.Tuple[str, int]

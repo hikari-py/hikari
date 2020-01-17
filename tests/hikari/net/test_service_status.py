@@ -556,7 +556,7 @@ def mock_client(event_loop):
             pass
 
     with mock.patch("aiohttp.ClientSession", new=ClientSession):
-        yield _helpers.unslot_class(service_status.ServiceStatusClient)(loop=event_loop)
+        yield _helpers.unslot_class(service_status.ServiceStatusClient)()
 
 
 @pytest.fixture()
@@ -571,7 +571,7 @@ def stubbed_client(mock_client):
 @pytest.mark.asyncio
 class TestServiceStatusClient:
     async def test_DiscordServiceStatusClient___init__(self, event_loop):
-        async with service_status.ServiceStatusClient(loop=event_loop) as client:
+        async with service_status.ServiceStatusClient() as client:
             assert client.uri == "https://status.discordapp.com/api/v2"
 
     @pytest.mark.parametrize("method", [None, "get", "post", "patch", "delete", "put"])
