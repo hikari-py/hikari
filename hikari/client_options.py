@@ -22,14 +22,11 @@ Client options that can be set.
 from __future__ import annotations
 
 import dataclasses
-import functools
-import operator
 import ssl
 import typing
 
 import aiohttp.typedefs
 
-from hikari.net import opcodes
 from hikari.orm.gateway import dispatching_event_adapter_impl
 from hikari.orm.models import presences
 
@@ -87,7 +84,6 @@ class ClientOptions:
     enable_guild_subscription_events = True
     http_max_retries: int = 5
     http_timeout: float = None
-    intents: opcodes.GatewayIntent = functools.reduce(operator.or_, opcodes.GatewayIntent.__iter__())
     large_guild_threshold: int = 250
     max_user_dm_channel_count: int = 100
     max_message_cache_size: int = 100

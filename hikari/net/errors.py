@@ -215,5 +215,5 @@ __all__ = (
     "BadRequestHTTPError",
     "UnauthorizedHTTPError",
     "ForbiddenHTTPError",
-    "NotFoundHTTPError"
+    "NotFoundHTTPError",
 )

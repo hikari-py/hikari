@@ -29,6 +29,7 @@ class HikariError(RuntimeError):
     Note:
         You should never initialize this exception directly.
     """
+
     __slots__ = ()
 
 
