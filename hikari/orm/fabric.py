@@ -23,8 +23,9 @@ and data components that are being managed by the application.
 """
 from __future__ import annotations
 
-import dataclasses
 import typing
+
+import dataclasses
 
 from hikari.net import gateway as _gateway
 from hikari.net import http_api as _http_client

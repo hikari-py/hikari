@@ -413,7 +413,6 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
         new_emoji = emojis.parse_emoji(self.fabric, emoji_payload, guild_obj.id if guild_obj is not None else None)
         if isinstance(new_emoji, emojis.GuildEmoji):
-            guild_obj = self.get_mandatory_guild_by_id(guild_obj.id)
             guild_obj.emojis[new_emoji.id] = new_emoji
             self._emojis[new_emoji.id] = new_emoji
 

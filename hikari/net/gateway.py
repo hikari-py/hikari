@@ -45,29 +45,73 @@ from . import ratelimits
 
 
 class GatewayClient:
+    __slots__ = (
+        "closed_event",
+        "compression",
+        "connected_at",
+        "connector",
+        "dispatch",
+        "guild_subscriptions",
+        "http_timeout",
+        "large_threshold",
+        "json_deserialize",
+        "json_serialize",
+        "last_heartbeat_sent",
+        "last_heartbeat_ack_received",
+        "last_ping_sent",
+        "last_pong_received",
+        "logger",
+        "presence",
+        "proxy_auth",
+        "proxy_headers",
+        "proxy_url",
+        "ratelimiter",
+        "receive_timeout",
+        "session",
+        "session_id",
+        "seq",
+        "shard_id",
+        "shard_count",
+        "ssl_context",
+        "token",
+        "url",
+        "verify_ssl",
+        "ws",
+        "zlib",
+    )
+
     def __init__(
         self,
         *,
         compression=True,
+        connector=None,
         dispatch=lambda gw, e, p: None,
         guild_subscriptions=True,
+        http_timeout=0,
         initial_presence=None,
         json_deserialize=json.loads,
         json_serialize=json.dumps,
         large_threshold=1_000,
+        proxy_auth=None,
+        proxy_headers=None,
+        proxy_url=None,
         receive_timeout=10.0,
         session_id=None,
         seq=None,
         shard_id=0,
         shard_count=1,
+        ssl_context=None,
         token,
         url,
+        verify_ssl=True,
     ):
         self.closed_event = asyncio.Event()
         self.compression = compression
         self.connected_at = float("nan")
+        self.connector = connector
         self.dispatch = dispatch
         self.guild_subscriptions = guild_subscriptions
+        self.http_timeout = http_timeout
         self.large_threshold = large_threshold
         self.json_deserialize = json_deserialize
         self.json_serialize = json_serialize
@@ -76,6 +120,9 @@ class GatewayClient:
         self.last_ping_sent = float("nan")
         self.last_pong_received = float("nan")
         self.presence = initial_presence
+        self.proxy_auth = proxy_auth
+        self.proxy_headers = proxy_headers
+        self.proxy_url = proxy_url
         self.ratelimiter = ratelimits.GatewayRateLimiter(60.0, 120)
         self.receive_timeout = receive_timeout
         self.session = None
@@ -83,7 +130,9 @@ class GatewayClient:
         self.seq = seq
         self.shard_id = shard_id if shard_id is not None and shard_count is not None else 0
         self.shard_count = shard_count if shard_id is not None and shard_count is not None else 1
+        self.ssl_context = ssl_context
         self.token = token
+        self.verify_ssl = verify_ssl
         self.ws = None
         self.zlib = zlib.decompressobj()
 
@@ -116,9 +165,19 @@ class GatewayClient:
 
     async def connect(self):
         try:
-            self.session = aiohttp.ClientSession()
+            self.session = aiohttp.ClientSession(connector=self.connector)
             self.ws = await self.session.ws_connect(
-                self.url, receive_timeout=self.receive_timeout, compress=0, autoping=False, max_msg_size=0,
+                self.url,
+                receive_timeout=self.receive_timeout,
+                compress=0,
+                autoping=False,
+                max_msg_size=0,
+                proxy=self.proxy_url,
+                proxy_auth=self.proxy_auth,
+                proxy_headers=self.proxy_headers,
+                verify_ssl=self.verify_ssl,
+                ssl_context=self.ssl_context,
+                timeout=self.http_timeout
             )
 
             self.connected_at = time.perf_counter()
@@ -147,6 +206,10 @@ class GatewayClient:
                 ping_task, heartbeat_task, self.poll_events(),
             )
         finally:
+            with contextlib.suppress(AttributeError):
+                await asyncio.shield(self.ws.close())
+            with contextlib.suppress(AttributeError):
+                await asyncio.shield(self.session.close())
             self.connected_at = float("nan")
             self.last_ping_sent = float("nan")
             self.last_pong_received = float("nan")
@@ -175,7 +238,7 @@ class GatewayClient:
         }
 
         if self.presence:
-            pl["d"]["presence"] = self.presence.to_dict()
+            pl["d"]["presence"] = self.presence
         return self.send(pl)
 
     def resume(self):
@@ -236,13 +299,13 @@ class GatewayClient:
             else:
                 self.logger.debug("ignoring opcode %s with data %r", op, d)
 
-    async def close(self):
-        with contextlib.suppress(AttributeError):
-            await asyncio.shield(self.ws.close())
-        with contextlib.suppress(AttributeError):
-            await asyncio.shield(self.session.close())
+    def close(self):
         if not self.closed_event.is_set():
             self.closed_event.set()
+
+    async def kill(self):
+        if self.ws is not None:
+            await self.ws.close()
 
     async def recv(self):
         while True:
@@ -301,13 +364,16 @@ class GatewayClient:
         await self.ratelimiter.acquire()
         await self.ws.send_str(payload_str)
 
-        self.logger.debug("sent payload %r", payload)
+        self.logger.debug("sent payload %s", payload_str)
 
     async def request_guild_members(
         self, guild_id, *guild_ids, **kwargs,
     ):
         guilds = [guild_id, *guild_ids]
         constraints = {}
+
+        if "presences" in kwargs:
+            constraints["presences"] = kwargs["presences"]
 
         if "user_ids" in kwargs:
             constraints["user_ids"] = kwargs["user_ids"]
@@ -321,17 +387,9 @@ class GatewayClient:
 
         await self.send({"guild_id": guilds, **constraints})
 
-    #: TODO, reimplement this.
     async def update_status(self, presence) -> None:
         self.logger.debug("updating presence to %r", presence)
-        await self.send(
-            {
-                "idle": presence.idle_since,
-                "status": presence.status,
-                "game": (presence.activity.to_dict() if presence.activity is not None else None),
-                "afk": presence.is_afk,
-            }
-        )
+        await self.send(presence)
         self.presence = presence
 
     def __str__(self):
