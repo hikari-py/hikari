@@ -69,19 +69,6 @@ class BaseDispatchingEventAdapter(base_event_handler.BaseEventHandler):
         except Exception as ex:
             self.logger.exception("An exception was discarded", exc_info=ex)
 
-    ###################
-    # Internal events #
-    ###################
-
-    async def handle_disconnect(self, shard: gateway.GatewayClient, payload: containers.JSONObject):
-        ...
-
-    async def handle_connect(self, shard: gateway.GatewayClient, payload: containers.JSONObject):
-        ...
-
-    async def handle_manual_shutdown(self, shard: gateway.GatewayClient, payload: containers.JSONObject):
-        ...
-
     ##################
     # Gateway events #
     ##################
@@ -93,6 +80,9 @@ class BaseDispatchingEventAdapter(base_event_handler.BaseEventHandler):
         ...
 
     async def handle_invalid_session(self, shard: gateway.GatewayClient, payload: containers.JSONObject):
+        ...
+
+    async def handle_disconnect(self, shard: gateway.GatewayClient, payload: containers.JSONObject):
         ...
 
     async def handle_ready(self, shard: gateway.GatewayClient, payload: containers.JSONObject):

@@ -499,7 +499,7 @@ def is_channel_type_dm(channel_type: typing.Union[int, ChannelType]) -> bool:
 
 
 # noinspection PyProtectedMember
-def parse_channel(fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> Channel:
+def parse_channel(fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> typing.Union[DMChannel, GuildChannel]:
     """
     Parse a channel from a channel payload from an API call.
 

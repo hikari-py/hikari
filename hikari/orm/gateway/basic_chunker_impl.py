@@ -66,7 +66,6 @@ class BasicChunkerImpl(base_chunker.BaseChunker):
 
         # We should request the guild info on the shard the guild is using, so aggregate the guilds by the shard id.
         for shard_id, guild_objs in itertools.groupby((guild_obj, *guild_objs), lambda g: g.shard_id):
-            #: TODO don't send thousands per request!
             await self.fabric.gateways[shard_id].request_guild_members(
                 *map(lambda g: str(g.id), guild_objs), **kwargs
             )

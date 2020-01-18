@@ -379,10 +379,11 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         else:
             channel_obj = channels.parse_channel(self.fabric, channel_payload)
             if channels.is_channel_type_dm(channel_payload["type"]):
+                channel_obj: channels.DMChannel
                 self._dm_channels[channel_id] = channel_obj
             else:
+                channel_obj: channels.GuildChannel
                 self._guild_channels[channel_id] = channel_obj
-                channel_obj.guild.channels[channel_id] = channel_obj
 
         return channel_obj
 
