@@ -59,7 +59,11 @@ def dispatch_impl():
 
 @pytest.fixture()
 def gateway_impl():
-    return mock.MagicMock(spec_set=_gateway.GatewayClient)
+    # noinspection PyTypeChecker
+    gw: _gateway.GatewayClient = mock.MagicMock(spec_set=_gateway.GatewayClient)
+    gw.shard_id = 123
+    gw.shard_count = 456
+    return gw
 
 
 @pytest.fixture()

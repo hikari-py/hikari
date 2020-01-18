@@ -82,12 +82,10 @@ class ClientOptions:
     chunk_mode: dispatching_event_adapter_impl.AutoRequestChunksMode = _DEFAULT_CHUNK_MODE
     connector: aiohttp.BaseConnector = None
     enable_guild_subscription_events = True
-    http_max_retries: int = 5
     http_timeout: float = None
     large_guild_threshold: int = 250
     max_user_dm_channel_count: int = 100
     max_message_cache_size: int = 100
-    max_persistent_gateway_buffer_size: int = 3 * 1024 ** 2
     presence: presences.Presence = presences.Presence()
     proxy_auth: aiohttp.BasicAuth = None
     proxy_headers: aiohttp.typedefs.LooseHeaders = None

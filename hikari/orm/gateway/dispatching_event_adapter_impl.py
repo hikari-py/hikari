@@ -107,22 +107,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         user_payload = payload["user"]
 
         self.fabric.state_registry.parse_application_user(user_payload)
-
-        guilds = payload["guilds"]
-
-        guild_objs = []
-
-        for guild_payload in guilds:
-            # Parse unavailable guild.
-            guild_obj = self.fabric.state_registry.parse_guild(guild_payload, gateway.shard_id)
-            guild_objs.append(guild_obj)
-
         self.dispatch(event_types.EventType.READY, gateway)
-
-        if self._request_chunks_mode != AutoRequestChunksMode.NEVER and guild_objs:
-            self.fabric.chunker.load_members_for(
-                *guild_objs, presences=self._request_chunks_mode == AutoRequestChunksMode.MEMBERS_AND_PRESENCES
-            )
 
     async def handle_resumed(self, gateway, _):
         self.dispatch(event_types.EventType.RESUME, gateway)
@@ -224,6 +209,10 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.dispatch(event_types.EventType.GUILD_CREATE, guild)
 
         if not unavailable:
+            if self._request_chunks_mode != AutoRequestChunksMode.NEVER:
+                await self.fabric.chunker.load_members_for(
+                    guild, presences=self._request_chunks_mode == AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+                )
             self.dispatch(event_types.EventType.GUILD_AVAILABLE, guild)
 
     async def handle_guild_update(self, _, payload):

@@ -179,12 +179,12 @@ class HTTPAPI(http_client.HTTPClient):
                 status = resp.status
 
                 if resp.content_type == "application/json":
-                    body = self.json_deserialize(body)
+                    body = self.json_deserialize(raw_body)
                 elif resp.content_type == "text/plain" or resp.content_type == "text/html":
                     raise errors.ServerHTTPError(
                         f"Received unexpected response of type {resp.content_type}",
                         compiled_route,
-                        body.decode(),
+                        raw_body.decode(),
                         status,
                     )
                 else:

@@ -71,10 +71,11 @@ class GatewayConnectionClosedError(GatewayError):
     def __init__(self, code: int = None, reason=None):
         self.code = code
 
-        if code in GatewayCloseCode:
+        try:
+            code = GatewayCloseCode(code)
             code_name = GatewayCloseCode(code).name
             super().__init__(reason or f"Gateway connection closed by server with code {code_name} ({code})")
-        else:
+        except ValueError:
             super().__init__(reason or f"Gateway connection closed by server with code {code}")
 
 

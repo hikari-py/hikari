@@ -25,6 +25,7 @@ to handle events.
 from __future__ import annotations
 
 import abc
+import asyncio
 import logging
 import typing
 
@@ -57,14 +58,14 @@ class BaseDispatchingEventAdapter(base_event_handler.BaseEventHandler):
         self.logger = loggers.get_named_logger(self)
         self.fabric = fabric_obj
 
-    async def consume_raw_event(self, shard, event_name: str, payload: typing.Any) -> None:
+    def consume_raw_event(self, shard, event_name: str, payload: typing.Any) -> None:
         try:
             try:
                 handler = getattr(self, f"handle_{event_name.lower()}")
             except AttributeError:
-                await self.drain_unrecognised_event(shard, event_name, payload)
+                asyncio.create_task(self.drain_unrecognised_event(shard, event_name, payload))
             else:
-                await handler(shard, payload)
+                asyncio.create_task(handler(shard, payload))
         except Exception as ex:
             self.logger.exception("An exception was discarded", exc_info=ex)
 
