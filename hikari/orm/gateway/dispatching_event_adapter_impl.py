@@ -78,24 +78,17 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         self._request_chunks_mode = request_chunks_mode
 
     async def drain_unrecognised_event(self, _, event_name, payload):
-        self.dispatch("raw_" + event_name.lower(), payload)
-        if event_name not in self._ignored_events:
-            self.logger.warning("Received unrecognised event %s, so will ignore it in the future.", event_name)
-            self._ignored_events.add(event_name)
-
-    ###################
-    # Internal events #
-    ###################
-
-    async def handle_connect(self, gateway, _):
-        self.dispatch(event_types.EventType.CONNECT, gateway)
-
-    async def handle_disconnect(self, gateway, payload):
-        self.dispatch(event_types.EventType.DISCONNECT, gateway, payload.get("code"), payload.get("reason"))
+        pass
 
     ##################
     # Gateway events #
     ##################
+
+    async def handle_connect(self, gateway, _):
+        self.dispatch(event_types.EventType.CONNECT, gateway)
+
+    async def handle_disconnect(self, gateway, _):
+        self.dispatch(event_types.EventType.DISCONNECT, gateway)
 
     async def handle_invalid_session(self, gateway, payload):
         self.dispatch(event_types.EventType.INVALID_SESSION, gateway)
@@ -209,10 +202,12 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.dispatch(event_types.EventType.GUILD_CREATE, guild)
 
         if not unavailable:
-            if self._request_chunks_mode != AutoRequestChunksMode.NEVER:
-                await self.fabric.chunker.load_members_for(
-                    guild, presences=self._request_chunks_mode == AutoRequestChunksMode.MEMBERS_AND_PRESENCES
-                )
+            # TODO: implement this using a queue that waits for a few seconds before sending the request to prevent
+            # spamming the gateway with 120 requests in a few seconds, being rate limited, and getting disconnected.
+            # if self._request_chunks_mode != AutoRequestChunksMode.NEVER:
+            #     await self.fabric.chunker.load_members_for(
+            #         guild, presences=self._request_chunks_mode == AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+            #     )
             self.dispatch(event_types.EventType.GUILD_AVAILABLE, guild)
 
     async def handle_guild_update(self, _, payload):

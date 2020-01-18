@@ -67,6 +67,7 @@ class GatewayClient:
         "proxy_url",
         "ratelimiter",
         "receive_timeout",
+        "reconnect_count",
         "session",
         "session_id",
         "seq",
@@ -125,6 +126,7 @@ class GatewayClient:
         self.proxy_url = proxy_url
         self.ratelimiter = ratelimits.GatewayRateLimiter(60.0, 120)
         self.receive_timeout = receive_timeout
+        self.reconnect_count = 0
         self.session = None
         self.session_id = session_id
         self.seq = seq
@@ -191,6 +193,7 @@ class GatewayClient:
             if op != 10:
                 raise errors.GatewayError(f"Expected HELLO opcode 10 but received {op}")
             hb_interval = pl["d"]["heartbeat_interval"] / 1_000.0
+            self.dispatch(self, "RECONNECT" if self.reconnect_count else "CONNECT", None)
             self.logger.info("received HELLO, interval is %ss", hb_interval)
 
             heartbeat_task = asyncio.create_task(self.heartbeat_keep_alive(hb_interval))
@@ -215,6 +218,8 @@ class GatewayClient:
             self.last_pong_received = float("nan")
             self.last_heartbeat_sent = float("nan")
             self.last_heartbeat_ack_received = float("nan")
+            self.reconnect_count += 1
+            self.dispatch(self, "DISCONNECT", None)
 
     def identify(self):
         self.logger.debug("sending IDENTIFY")
@@ -272,14 +277,14 @@ class GatewayClient:
 
     async def poll_events(self):
         while True:
-            next = await self.recv()
+            next_pl = await self.recv()
 
-            op = next["op"]
-            d = next["d"]
+            op = next_pl["op"]
+            d = next_pl["d"]
 
             if op == 0:
-                self.seq = next["s"]
-                event_name = next["t"]
+                self.seq = next_pl["s"]
+                event_name = next_pl["t"]
                 self.dispatch(self, event_name, d)
             elif op == 1:
                 await self.send({"op": 11})
@@ -385,7 +390,13 @@ class GatewayClient:
             "requesting guild members for guilds %s with constraints %s", guilds, constraints,
         )
 
-        await self.send({"guild_id": guilds, **constraints})
+        await self.send({
+            "op": 8,
+            "d": {
+                "guild_id": guilds,
+                **constraints,
+            }
+        })
 
     async def update_status(self, presence) -> None:
         self.logger.debug("updating presence to %r", presence)
