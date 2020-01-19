@@ -31,6 +31,7 @@ References:
 import asyncio
 import contextlib
 import datetime
+import enum
 import json
 import logging
 import math
@@ -42,6 +43,105 @@ import aiohttp
 
 from . import errors
 from . import ratelimits
+from ..internal_utilities import meta
+from ..internal_utilities import type_hints
+
+
+@meta.incubating()
+class GatewayIntent(enum.IntFlag):
+    """
+    Represents an intent on the gateway. This is a bitfield representation of all the categories of event
+    that you wish to receive.
+
+    Any events not in an intent category will be fired regardless of what intents you provide.
+
+    Note:
+        This will currently have no effect on the gateway until the solution is implemented on Discord's
+        gateway. Discussion of proposed interface can be found at
+        https://gist.github.com/msciotti/223272a6f976ce4fda22d271c23d72d9.
+    """
+
+    #: Subscribes to the following events:
+    #:     - GUILD_CREATE
+    #:     - GUILD_DELETE
+    #:     - GUILD_ROLE_CREATE
+    #:     - GUILD_ROLE_UPDATE
+    #:     - GUILD_ROLE_DELETE
+    #:     - CHANNEL_CREATE
+    #:     - CHANNEL_UPDATE
+    #:     - CHANNEL_DELETE
+    #:     - CHANNEL_PINS_UPDATE
+    GUILDS = 1 << 0
+
+    #: Subscribes to the following events:
+    #:     - GUILD_MEMBER_ADD
+    #:     - GUILD_MEMBER_UPDATE
+    #:     - GUILD_MEMBER_REMOVE
+    GUILD_MEMBERS = 1 << 1
+
+    #: Subscribes to the following events:
+    #:     - GUILD_BAN_ADD
+    #:     - GUILD_BAN_REMOVE
+    GUILD_BANS = 1 << 2
+
+    #: Subscribes to the following events:
+    #:     - GUILD_EMOJIS_UPDATE
+    GUILD_EMOJIS = 1 << 3
+
+    #: Subscribes to the following events:
+    #:     - GUILD_INTEGRATIONS_UPDATE
+    GUILD_INTEGRATIONS = 1 << 4
+
+    #: Subscribes to the following events:
+    #:     - WEBHOOKS_UPDATE
+    GUILD_WEBHOOKS = 1 << 5
+
+    #: Subscribes to the following events:
+    #:    - INVITE_CREATE
+    #:    - INVITE_DELETE
+    GUILD_INVITES = 1 << 6
+
+    #: Subscribes to the following events:
+    #:    - VOICE_STATE_UPDATE
+    GUILD_VOICE_STATES = 1 << 7
+
+    #: Subscribes to the following events:
+    #:    - PRESENCE_UPDATE
+    GUILD_PRESENCES = 1 << 8
+
+    #: Subscribes to the following events:
+    #:    - MESSAGE_CREATE
+    #:    - MESSAGE_UPDATE
+    #:    - MESSAGE_DELETE
+    GUILD_MESSAGES = 1 << 9
+
+    #: Subscribes to the following events:
+    #:    - MESSAGE_REACTION_ADD
+    #:    - MESSAGE_REACTION_REMOVE
+    #:    - MESSAGE_REACTION_REMOVE_ALL
+    #:    - MESSAGE_REACTION_REMOVE_EMOJI
+    GUILD_MESSAGE_REACTIONS = 1 << 10
+
+    #: Subscribes to the following events:
+    #:    - TYPING_START
+    GUILD_MESSAGE_TYPING = 1 << 11
+
+    #: Subscribes to the following events:
+    #:    - CHANNEL_CREATE
+    #:    - MESSAGE_CREATE
+    #:    - MESSAGE_UPDATE
+    #:    - MESSAGE_DELETE
+    DIRECT_MESSAGES = 1 << 12
+
+    #: Subscribes to the following events:
+    #:    - MESSAGE_REACTION_ADD
+    #:    - MESSAGE_REACTION_REMOVE
+    #:    - MESSAGE_REACTION_REMOVE_ALL
+    DIRECT_MESSAGE_REACTIONS = 1 << 13
+
+    #: Subscribes to the following events:
+    #:    - TYPING_START
+    DIRECT_MESSAGE_TYPING = 1 << 14
 
 
 class GatewayClient:
@@ -52,8 +152,8 @@ class GatewayClient:
         "connector",
         "debug",
         "dispatch",
-        "guild_subscriptions",
         "http_timeout",
+        "intents",
         "large_threshold",
         "json_deserialize",
         "json_serialize",
@@ -89,9 +189,9 @@ class GatewayClient:
         connector=None,
         debug: bool = False,
         dispatch=lambda gw, e, p: None,
-        guild_subscriptions=True,
         http_timeout=0,
         initial_presence=None,
+        intents: type_hints.NotRequired[GatewayIntent] = None,
         json_deserialize=json.loads,
         json_serialize=json.dumps,
         large_threshold=1_000,
@@ -114,8 +214,8 @@ class GatewayClient:
         self.connector = connector
         self.debug = debug
         self.dispatch = dispatch
-        self.guild_subscriptions = guild_subscriptions
         self.http_timeout = http_timeout
+        self.intents = intents
         self.large_threshold = large_threshold
         self.json_deserialize = json_deserialize
         self.json_serialize = json_serialize
@@ -240,11 +340,16 @@ class GatewayClient:
                         (platform.python_implementation(), platform.python_revision(), platform.python_version(),)
                     ),
                 },
-                "guild_subscriptions": self.guild_subscriptions,
                 "shard": [self.shard_id, self.shard_count],
-                # "intents": ...
-            },
+            }
         }
+
+        # Do not always add this option; if it is None, exclude it for now. According to Mason,
+        # we can only use intents at the time of writing if our bot has less than 100 guilds.
+        # This means we need to give the user the option to opt in to this rather than breaking their
+        # bot with it if they have 100+ guilds. This restriction will be removed eventually.
+        if self.intents is not None:
+            pl["d"]["intents"] = self.intents
 
         if self.presence:
             pl["d"]["presence"] = self.presence
