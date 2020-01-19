@@ -371,7 +371,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
     def parse_channel(
         self, channel_payload: containers.JSONObject, guild_obj: type_hints.Nullable[guilds.Guild] = None
-    ) -> channels.Channel:
+    ) -> typing.Union[channels.DMChannel, channels.GuildChannel]:
         channel_id = int(channel_payload["id"])
         channel_obj = self.get_channel_by_id(channel_id)
 
@@ -383,10 +383,8 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         else:
             channel_obj = channels.parse_channel(self.fabric, channel_payload)
             if channels.is_channel_type_dm(channel_payload["type"]):
-                channel_obj: channels.DMChannel
                 self._dm_channels[channel_id] = channel_obj
             else:
-                channel_obj: channels.GuildChannel
                 self._guild_channels[channel_id] = channel_obj
 
         return channel_obj
