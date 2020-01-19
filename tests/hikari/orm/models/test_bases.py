@@ -28,6 +28,7 @@ import typing
 import pytest
 
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import delegate
 from hikari.orm.models import bases
 from tests.hikari import _helpers
 
@@ -301,6 +302,33 @@ class TestIModel:
 
         obj_copy = obj.copy()
         assert obj_copy.__weakref__ is not obj.__weakref__
+
+    def test_clone_with_delegated_attributes_does_not_copy_them(self):
+        @dataclasses.dataclass()
+        class Base(bases.BaseModel):
+            __slots__ = ("foo", "bar")
+            foo: int
+            bar: dict
+
+        @delegate.delegate_to(Base, "_base")
+        class Delegated(Base):
+            __slots__ = ("_base", "baz")
+            __copy_by_ref__ = ("_base",)
+
+            def __init__(self, _base, baz):
+                self._base = _base
+                self.baz = baz
+
+            _base: Base
+            baz: list
+
+        b = Base(1, {})
+        d = Delegated(b, [])
+
+        assert d.copy()._base is b
+        assert d.copy().baz is not d.baz
+        assert d.copy().foo is d.foo
+        assert d.copy().bar is d.bar
 
     def test___copy_by_ref___is_inherited(self):
         class Base1(bases.BaseModel):
