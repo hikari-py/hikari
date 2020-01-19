@@ -21,7 +21,7 @@ import datetime
 import asyncmock as mock
 import pytest
 
-from hikari.net import service_status
+from hikari.net import status_info_client
 from tests.hikari import _helpers
 
 
@@ -377,7 +377,7 @@ def date_time(*args):
 
 
 def test_Subscriber_from_dict(subscriber_pl):
-    subscriber_obj = service_status.Subscriber.from_dict(subscriber_pl)
+    subscriber_obj = status_info_client.Subscriber.from_dict(subscriber_pl)
 
     assert subscriber_obj.id == "82kp04j58dhm"
     assert subscriber_obj.mode == "email"
@@ -389,12 +389,12 @@ def test_Subscriber_from_dict(subscriber_pl):
 
 
 def test_Subscription_from_dict(subscription_pl):
-    subscription_obj = service_status.Subscription.from_dict(subscription_pl)
-    assert isinstance(subscription_obj.subscriber, service_status.Subscriber)
+    subscription_obj = status_info_client.Subscription.from_dict(subscription_pl)
+    assert isinstance(subscription_obj.subscriber, status_info_client.Subscriber)
 
 
 def test_Page_from_dict(page_pl):
-    page_obj = service_status.Page.from_dict(page_pl)
+    page_obj = status_info_client.Page.from_dict(page_pl)
     assert page_obj.id == "srhpyqt94yxb"
     assert page_obj.name == "Discord"
     assert page_obj.url == "http://status.discordapp.com"
@@ -402,14 +402,14 @@ def test_Page_from_dict(page_pl):
 
 
 def test_Status_from_dict(status_pl):
-    status_obj = service_status.Status.from_dict(status_pl)
+    status_obj = status_info_client.Status.from_dict(status_pl)
 
     assert status_obj.description == "All Systems Operational"
     assert status_obj.indicator == "none"
 
 
 def test_Component_from_dict(component_pl):
-    component_obj = service_status.Component.from_dict(component_pl)
+    component_obj = status_info_client.Component.from_dict(component_pl)
 
     assert component_obj.id == "rhznvxg4v7yh"
     assert component_obj.name == "API"
@@ -422,15 +422,15 @@ def test_Component_from_dict(component_pl):
 
 
 def test_Components_from_dict(components_pl):
-    components_obj = service_status.Components.from_dict(components_pl)
+    components_obj = status_info_client.Components.from_dict(components_pl)
 
-    assert isinstance(components_obj.page, service_status.Page)
+    assert isinstance(components_obj.page, status_info_client.Page)
     for component in components_obj.components:
-        assert isinstance(component, service_status.Component)
+        assert isinstance(component, status_info_client.Component)
 
 
 def test_IncidentUpdate_from_dict(incident_update_pl):
-    obj = service_status.IncidentUpdate.from_dict(incident_update_pl)
+    obj = status_info_client.IncidentUpdate.from_dict(incident_update_pl)
 
     assert obj.id == "xxqwgv42dnx5"
     assert obj.status == "investigating"
@@ -443,7 +443,7 @@ def test_IncidentUpdate_from_dict(incident_update_pl):
 
 
 def test_Incident_from_dict(incident_pl):
-    obj = service_status.Incident.from_dict(incident_pl)
+    obj = status_info_client.Incident.from_dict(incident_pl)
 
     assert obj.id == "2gztsrksff0v"
     assert obj.name == "Global Unavailability"
@@ -457,19 +457,19 @@ def test_Incident_from_dict(incident_pl):
     assert obj.started_at == date_time(2019, 6, 24, 5, 25, 57, 659000)
     assert obj.page_id == "srhpyqt94yxb"
     for update in obj.incident_updates:
-        assert isinstance(update, service_status.IncidentUpdate)
+        assert isinstance(update, status_info_client.IncidentUpdate)
 
 
 def test_Incidents_from_dict(incidents_pl):
-    obj = service_status.Incidents.from_dict(incidents_pl)
+    obj = status_info_client.Incidents.from_dict(incidents_pl)
 
     for incident in obj.incidents:
-        assert isinstance(incident, service_status.Incident)
-    assert isinstance(obj.page, service_status.Page)
+        assert isinstance(incident, status_info_client.Incident)
+    assert isinstance(obj.page, status_info_client.Page)
 
 
 def test_ScheduledMaintenance_from_dict(scheduled_maintenance_pl):
-    obj = service_status.ScheduledMaintenance.from_dict(scheduled_maintenance_pl)
+    obj = status_info_client.ScheduledMaintenance.from_dict(scheduled_maintenance_pl)
 
     assert obj.id == "ymm0202y77k6"
     assert obj.name == "Potentially Disruptive Upgrade"
@@ -483,37 +483,37 @@ def test_ScheduledMaintenance_from_dict(scheduled_maintenance_pl):
     assert obj.started_at == date_time(2016, 10, 16, 16, 57, 0, 0)
     assert obj.page_id == "srhpyqt94yxb"
     for incident in obj.incident_updates:
-        assert isinstance(incident, service_status.IncidentUpdate)
+        assert isinstance(incident, status_info_client.IncidentUpdate)
     assert obj.scheduled_for == date_time(2016, 10, 19, 2, 0, 0, 0)
     assert obj.scheduled_until == date_time(2016, 10, 19, 3, 0, 0, 0)
 
 
 def test_ScheduledMaintenances_from_dict(scheduled_maintenances_pl):
-    obj = service_status.ScheduledMaintenances.from_dict(scheduled_maintenances_pl)
+    obj = status_info_client.ScheduledMaintenances.from_dict(scheduled_maintenances_pl)
 
     for event in obj.scheduled_maintenances:
-        assert isinstance(event, service_status.ScheduledMaintenance)
-    assert isinstance(obj.page, service_status.Page)
+        assert isinstance(event, status_info_client.ScheduledMaintenance)
+    assert isinstance(obj.page, status_info_client.Page)
 
 
 def test_OverallStatus_from_dict(overall_status_pl):
-    obj = service_status.OverallStatus.from_dict(overall_status_pl)
+    obj = status_info_client.OverallStatus.from_dict(overall_status_pl)
 
-    assert isinstance(obj.page, service_status.Page)
-    assert isinstance(obj.status, service_status.Status)
+    assert isinstance(obj.page, status_info_client.Page)
+    assert isinstance(obj.status, status_info_client.Status)
 
 
 def test_Summary_from_dict(summary_pl):
-    obj = service_status.Summary.from_dict(summary_pl)
-    assert isinstance(obj.page, service_status.Page)
+    obj = status_info_client.Summary.from_dict(summary_pl)
+    assert isinstance(obj.page, status_info_client.Page)
     for component in obj.components:
-        assert isinstance(component, service_status.Component)
+        assert isinstance(component, status_info_client.Component)
 
     for incident in obj.incidents:
-        assert isinstance(incident, service_status.Incident)
+        assert isinstance(incident, status_info_client.Incident)
 
     for scheduled_maintenance in obj.incidents:
-        assert isinstance(scheduled_maintenance, service_status.ScheduledMaintenance)
+        assert isinstance(scheduled_maintenance, status_info_client.ScheduledMaintenance)
 
 
 @pytest.fixture()
@@ -556,7 +556,7 @@ def mock_client(event_loop):
             pass
 
     with mock.patch("aiohttp.ClientSession", new=ClientSession):
-        yield _helpers.unslot_class(service_status.ServiceStatusClient)(loop=event_loop)
+        yield _helpers.unslot_class(status_info_client.StatusInfoClient)()
 
 
 @pytest.fixture()
@@ -571,8 +571,8 @@ def stubbed_client(mock_client):
 @pytest.mark.asyncio
 class TestServiceStatusClient:
     async def test_DiscordServiceStatusClient___init__(self, event_loop):
-        async with service_status.ServiceStatusClient(loop=event_loop) as client:
-            assert client.uri == "https://status.discordapp.com/api/v2"
+        async with status_info_client.StatusInfoClient() as client:
+            assert client.url == "https://status.discordapp.com/api/v2"
 
     @pytest.mark.parametrize("method", [None, "get", "post", "patch", "delete", "put"])
     async def test_DiscordServiceStatusClient__perform_request(self, mock_client, method):
@@ -592,20 +592,24 @@ class TestServiceStatusClient:
     @pytest.mark.parametrize(
         ["expected_route", "expected_cast", "name"],
         [
-            ("/summary.json", service_status.Summary, "fetch_summary"),
-            ("/status.json", service_status.OverallStatus, "fetch_status"),
-            ("/components.json", service_status.Components, "fetch_components"),
-            ("/incidents.json", service_status.Incidents, "fetch_all_incidents"),
-            ("/incidents/unresolved.json", service_status.Incidents, "fetch_unresolved_incidents"),
-            ("/scheduled-maintenances.json", service_status.ScheduledMaintenances, "fetch_all_scheduled_maintenances"),
+            ("/summary.json", status_info_client.Summary, "fetch_summary"),
+            ("/status.json", status_info_client.OverallStatus, "fetch_status"),
+            ("/components.json", status_info_client.Components, "fetch_components"),
+            ("/incidents.json", status_info_client.Incidents, "fetch_all_incidents"),
+            ("/incidents/unresolved.json", status_info_client.Incidents, "fetch_unresolved_incidents"),
+            (
+                "/scheduled-maintenances.json",
+                status_info_client.ScheduledMaintenances,
+                "fetch_all_scheduled_maintenances",
+            ),
             (
                 "/scheduled-maintenances/upcoming.json",
-                service_status.ScheduledMaintenances,
+                status_info_client.ScheduledMaintenances,
                 "fetch_upcoming_scheduled_maintenances",
             ),
             (
                 "/scheduled-maintenances/active.json",
-                service_status.ScheduledMaintenances,
+                status_info_client.ScheduledMaintenances,
                 "fetch_active_scheduled_maintenances",
             ),
         ],
@@ -616,7 +620,9 @@ class TestServiceStatusClient:
         assert isinstance(await coro_fn(), expected_cast)
         stubbed_client._perform_request.assert_called_with(expected_route, expected_cast)
 
-    @pytest.mark.parametrize("incident", ["1a2b3c", _helpers.mock_model(service_status.Incident, id="1a2b3c"), None])
+    @pytest.mark.parametrize(
+        "incident", ["1a2b3c", _helpers.mock_model(status_info_client.Incident, id="1a2b3c"), None]
+    )
     async def test_subscribe_email_to_incident(self, incident, stubbed_client):
         if incident is None:
             body = {"subscriber[email]": "somebody@example.com"}
@@ -626,9 +632,11 @@ class TestServiceStatusClient:
         subscriber = await stubbed_client.subscribe_email_to_incidents("somebody@example.com", incident)
         assert subscriber is not None
         args, kwargs = stubbed_client._perform_request.call_args
-        assert args == ("/subscribers.json", service_status.Subscription, body, "post")
+        assert args == ("/subscribers.json", status_info_client.Subscription, body, "post")
 
-    @pytest.mark.parametrize("incident", ["1a2b3c", _helpers.mock_model(service_status.Incident, id="1a2b3c"), None])
+    @pytest.mark.parametrize(
+        "incident", ["1a2b3c", _helpers.mock_model(status_info_client.Incident, id="1a2b3c"), None]
+    )
     async def test_subscribe_webhook_to_incident(self, incident, stubbed_client):
         if incident is None:
             body = {"subscriber[endpoint]": "http://example.com"}
@@ -638,15 +646,15 @@ class TestServiceStatusClient:
         subscriber = await stubbed_client.subscribe_webhook_to_incidents("http://example.com", incident)
         assert subscriber is not None
         stubbed_client._perform_request.assert_called_with(
-            "/subscribers.json", service_status.Subscription, body, "post"
+            "/subscribers.json", status_info_client.Subscription, body, "post"
         )
 
-    @pytest.mark.parametrize("subscriber", ["1a2b3c", _helpers.mock_model(service_status.Subscriber, id="1a2b3c")])
+    @pytest.mark.parametrize("subscriber", ["1a2b3c", _helpers.mock_model(status_info_client.Subscriber, id="1a2b3c")])
     async def test_unsubscribe(self, subscriber, stubbed_client):
         await stubbed_client.unsubscribe(subscriber)
         stubbed_client._perform_request.assert_called_with("/subscribers/1a2b3c.json", None, None, "delete")
 
-    @pytest.mark.parametrize("subscriber", ["1a2b3c", _helpers.mock_model(service_status.Subscriber, id="1a2b3c")])
+    @pytest.mark.parametrize("subscriber", ["1a2b3c", _helpers.mock_model(status_info_client.Subscriber, id="1a2b3c")])
     async def test_resend_confirmation_email(self, subscriber, stubbed_client):
         await stubbed_client.resend_confirmation_email(subscriber)
         stubbed_client._perform_request.assert_called_with(

@@ -32,16 +32,21 @@ from tests.hikari import _helpers
 
 @pytest.fixture()
 def fabric_obj():
+    def make_gateway():
+        gw = mock.MagicMock(spec_set=_gateway.GatewayClient)
+        gw.request_guild_members = mock.AsyncMock()
+        return gw
+
     fabric_obj = fabric.Fabric()
     fabric_obj.state_registry = mock.MagicMock(spec_set=base_registry.BaseRegistry)
     fabric_obj.gateways = {
         # We'd never have None and shard ids together, but this doesn't matter for this test.
-        None: mock.MagicMock(spec_set=_gateway.GatewayClient),
-        0: mock.MagicMock(spec_set=_gateway.GatewayClient),
-        1: mock.MagicMock(spec_set=_gateway.GatewayClient),
-        2: mock.MagicMock(spec_set=_gateway.GatewayClient),
-        3: mock.MagicMock(spec_set=_gateway.GatewayClient),
-        4: mock.MagicMock(spec_set=_gateway.GatewayClient),
+        None: make_gateway(),
+        0: make_gateway(),
+        1: make_gateway(),
+        2: make_gateway(),
+        3: make_gateway(),
+        4: make_gateway(),
     }
     fabric_obj.chunker = basic_chunker_impl.BasicChunkerImpl(fabric_obj)
     return fabric_obj
@@ -75,35 +80,41 @@ def presence_payload():
     }
 
 
-def test_load_members_for_does_not_allow_both_user_ids_and_query(fabric_obj):
+@pytest.mark.asyncio
+async def test_load_members_for_does_not_allow_both_user_ids_and_query(fabric_obj):
     guild_obj1 = _helpers.mock_model(guilds.Guild, id=1234)
     guild_obj2 = _helpers.mock_model(guilds.Guild, id=3456)
     try:
-        fabric_obj.chunker.load_members_for(guild_obj1, guild_obj2, query="a string", user_ids=[9, 18, 27, 36])
+        await fabric_obj.chunker.load_members_for(guild_obj1, guild_obj2, query="a string", user_ids=[9, 18, 27, 36])
         assert False
     except RuntimeError:
         pass
 
 
-def test_load_members_for_when_user_ids_provided(fabric_obj):
+@pytest.mark.asyncio
+async def test_load_members_for_when_user_ids_provided(fabric_obj):
     guild_obj1 = _helpers.mock_model(guilds.Guild, id=1234, shard_id=None)
     guild_obj2 = _helpers.mock_model(guilds.Guild, id=3456, shard_id=None)
-    fabric_obj.chunker.load_members_for(guild_obj1, guild_obj2, user_ids=[9, 18, 27, 36], presences=True, limit=69)
+    await fabric_obj.chunker.load_members_for(
+        guild_obj1, guild_obj2, user_ids=[9, 18, 27, 36], presences=True, limit=69
+    )
     fabric_obj.gateways[None].request_guild_members.assert_called_with(
-        "1234", "3456", limit=69, presences=True, query=None, user_ids=["9", "18", "27", "36"]
+        "1234", "3456", presences=True, user_ids=["9", "18", "27", "36"]
     )
 
 
-def test_load_members_for_when_no_filter_provided(fabric_obj):
+@pytest.mark.asyncio
+async def test_load_members_for_when_no_filter_provided(fabric_obj):
     guild_obj1 = _helpers.mock_model(guilds.Guild, id=1234, shard_id=None)
     guild_obj2 = _helpers.mock_model(guilds.Guild, id=3456, shard_id=None)
-    fabric_obj.chunker.load_members_for(guild_obj1, guild_obj2, presences=True, limit=69)
+    await fabric_obj.chunker.load_members_for(guild_obj1, guild_obj2, presences=True, limit=69)
     fabric_obj.gateways[None].request_guild_members.assert_called_with(
-        "1234", "3456", limit=69, presences=True, query=None, user_ids=None,
+        "1234", "3456", limit=69, presences=True, query=""
     )
 
 
-def test_load_members_for_with_shards(fabric_obj):
+@pytest.mark.asyncio
+async def test_load_members_for_with_shards(fabric_obj):
     guild_obj1 = _helpers.mock_model(guilds.Guild, id=1, shard_id=1)
     guild_obj2 = _helpers.mock_model(guilds.Guild, id=2, shard_id=1)
     guild_obj3 = _helpers.mock_model(guilds.Guild, id=3, shard_id=2)
@@ -114,7 +125,7 @@ def test_load_members_for_with_shards(fabric_obj):
     guild_obj8 = _helpers.mock_model(guilds.Guild, id=8, shard_id=3)
     guild_obj9 = _helpers.mock_model(guilds.Guild, id=9, shard_id=4)
 
-    fabric_obj.chunker.load_members_for(
+    await fabric_obj.chunker.load_members_for(
         guild_obj1,
         guild_obj2,
         guild_obj3,
@@ -124,22 +135,20 @@ def test_load_members_for_with_shards(fabric_obj):
         guild_obj7,
         guild_obj8,
         guild_obj9,
-        user_ids=[9, 18, 27, 36],
-        presences=True,
-        limit=69,
+        **{"user_ids": [9, 18, 27, 36]},
     )
 
     fabric_obj.gateways[1].request_guild_members.assert_called_with(
-        "1", "2", limit=69, presences=True, query=None, user_ids=["9", "18", "27", "36"]
+        "1", "2", presences=True, user_ids=["9", "18", "27", "36"]
     )
     fabric_obj.gateways[2].request_guild_members.assert_called_with(
-        "3", "4", "5", "6", limit=69, presences=True, query=None, user_ids=["9", "18", "27", "36"]
+        "3", "4", "5", "6", presences=True, user_ids=["9", "18", "27", "36"]
     )
     fabric_obj.gateways[3].request_guild_members.assert_called_with(
-        "7", "8", limit=69, presences=True, query=None, user_ids=["9", "18", "27", "36"]
+        "7", "8", presences=True, user_ids=["9", "18", "27", "36"]
     )
     fabric_obj.gateways[4].request_guild_members.assert_called_with(
-        "9", limit=69, presences=True, query=None, user_ids=["9", "18", "27", "36"]
+        "9", presences=True, user_ids=["9", "18", "27", "36"]
     )
 
 

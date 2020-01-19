@@ -29,7 +29,6 @@ import typing
 
 from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import compat
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import reprs
@@ -163,7 +162,7 @@ class PartialChannel(Channel):
         super().__init__(fabric_obj, payload)
 
 
-class TextChannel(Channel, abc.ABC):
+class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pylint: disable=abstract-method
     """
     Any class that can have messages sent to it.
 
@@ -202,7 +201,7 @@ class TextChannel(Channel, abc.ABC):
         Returns:
             A typing indicator context manager.
         """
-        task = compat.asyncio.create_task(self._typing_loop(), name=f"typing indicator in {self}")
+        task = asyncio.create_task(self._typing_loop(), name=f"typing indicator in {self}")
         # Trigger the first typing event before we continue in case something does block
         await self.trigger_typing()
         yield
@@ -499,7 +498,7 @@ def is_channel_type_dm(channel_type: typing.Union[int, ChannelType]) -> bool:
 
 
 # noinspection PyProtectedMember
-def parse_channel(fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> Channel:
+def parse_channel(fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> typing.Union[DMChannel, GuildChannel]:
     """
     Parse a channel from a channel payload from an API call.
 

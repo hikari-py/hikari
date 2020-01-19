@@ -130,11 +130,11 @@ def format(session) -> None:
 
 @nox.session()
 def lint(session) -> None:
-    """Check formating with pylint. Pass the '--exit-zero' flag to check linting only."""
+    """Check formating with pylint"""
     failsafe_install(session, "-e", ".[test,documentation]")
     failsafe_install(session, f"pylint=={PYLINT_VERSION}" if PYLINT_VERSION else "pylint")
     pkg = MAIN_PACKAGE.split(".")[0]
-    session.run("pylint", pkg, "-E", *session.posargs)
+    session.run("pylint", pkg, "--rcfile=pylintrc")
 
 
 @nox.session()
