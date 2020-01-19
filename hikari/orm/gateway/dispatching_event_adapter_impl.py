@@ -27,6 +27,7 @@ import typing
 
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
+from hikari.net import ratelimits
 from hikari.orm import fabric as _fabric
 from hikari.orm.gateway import dispatching_event_adapter
 from hikari.orm.gateway import event_types
@@ -109,17 +110,22 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         guilds = [self.fabric.state_registry.parse_guild(guild, gateway.shard_id) for guild in payload["guilds"]]
 
         if self._request_chunks_mode != AutoRequestChunksMode.NEVER and guilds:
-            asyncio.create_task(self._do_initial_chunking(guilds))
+            asyncio.create_task(self._do_initial_chunking(guilds, gateway.shard_id))
 
         self.fabric.state_registry.parse_application_user(user_payload)
         self.dispatch(event_types.EventType.READY, gateway)
 
-    async def _do_initial_chunking(self, guilds):
-        for i in range(0, len(guilds), self._initial_chunking_slice_size):
-            guilds_slice = guilds[i : i + self._initial_chunking_slice_size]
-            await self.fabric.chunker.load_members_for(
-                *guilds_slice, presences=self._request_chunks_mode == AutoRequestChunksMode.MEMBERS_AND_PRESENCES
-            )
+    async def _do_initial_chunking(self, guilds, shard_id):
+        # Perform bursts, but then wait for 15 seconds. This prevents more than 60/min roughly, which
+        # will prevent us risking spamming the gateway and getting disconnected. This allows us to parse
+        # around 750 guilds/15s per gateway.
+        with ratelimits.GatewayRateLimiter(f"chunking {len(guilds)} guilds on shard {shard_id}", 15, 15) as rate_limit:
+            for i in range(0, len(guilds), self._initial_chunking_slice_size):
+                guilds_slice = guilds[i : i + self._initial_chunking_slice_size]
+                await rate_limit.acquire()
+                await self.fabric.chunker.load_members_for(
+                    *guilds_slice, presences=self._request_chunks_mode == AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+                )
 
     async def handle_resumed(self, gateway, _):
         self.dispatch(event_types.EventType.RESUME, gateway)

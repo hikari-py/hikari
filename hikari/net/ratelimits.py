@@ -122,6 +122,7 @@ This will ensure the garbage collection task is stopped, and will also ensure an
 queues have an :class:`asyncio.CancelledException` set on them to prevent deadlocking ratelimited calls that may
 be waiting to be unlocked.
 """
+import abc
 import asyncio
 import datetime
 import logging
@@ -137,7 +138,28 @@ from hikari.net import routes
 UNKNOWN_HASH = "UNKNOWN"
 
 
-class GlobalHTTPRateLimiter:
+class BaseRateLimiter(abc.ABC):
+    """
+    Base for any rate limiter being used. Supports with-context management.
+    """
+    __slots__ = ()
+
+    @abc.abstractmethod
+    def close(self, *args, **kwargs) -> None:
+        ...
+
+    @abc.abstractmethod
+    def acquire(self, *args, **kwargs):
+        ...
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+
+class GlobalHTTPRateLimiter(BaseRateLimiter):
     """
     Rate limit handler for the global HTTP rate limit.
     """
@@ -149,7 +171,7 @@ class GlobalHTTPRateLimiter:
         self.lock_task: Optional[asyncio.Task] = None
         self.queue: List[asyncio.Future] = []
 
-    def maybe_wait(self) -> asyncio.Future:
+    def acquire(self) -> asyncio.Future:
         loop = asyncio.get_running_loop()
         future = loop.create_future()
         if self.lock_task is not None:
@@ -166,7 +188,7 @@ class GlobalHTTPRateLimiter:
         self.lock_task = loop.create_task(self._unlock_later(retry_after))
 
     async def _unlock_later(self, retry_after: float) -> None:
-        self.logger.warning("you are being globally ratelimited for %ss", retry_after)
+        self.logger.warning("you are being globally rate limited for %ss", retry_after)
         await asyncio.sleep(retry_after)
         while self.queue:
             next_future = self.queue.pop(0)
@@ -185,20 +207,20 @@ class GlobalHTTPRateLimiter:
             future.cancel()
 
         if failed_tasks:
-            self.logger.error("global HTTP ratelimiter closed with %s pending tasks!", failed_tasks)
+            self.logger.error("global HTTP rate limiter closed with %s pending tasks!", failed_tasks)
         else:
-            self.logger.debug("global HTTP ratelimiter closed")
+            self.logger.debug("global HTTP rate limiter closed")
 
 
-class GatewayRateLimiter:
+class GatewayRateLimiter(BaseRateLimiter):
     """
-    Aid to adhere to the 120/60 gateway ratelimit.
+    Aid to adhere to the 120/60 gateway ratelimit. Also used by chunking algorithms elsewhere to prevent spam.
     """
+    __slots__ = ("logger", "name", "period", "remaining", "limit", "reset_at", "queue", "throttle_task")
 
-    __slots__ = ("logger", "period", "remaining", "limit", "reset_at", "queue", "throttle_task")
-
-    def __init__(self, period: float, limit: int) -> None:
+    def __init__(self, name: str, period: float, limit: int) -> None:
         self.logger: logging.Logger = loggers.get_named_logger(self)
+        self.name = name
         self.period: float = period
         self.remaining: int = limit
         self.limit: int = limit
@@ -220,9 +242,9 @@ class GatewayRateLimiter:
             future.cancel()
 
         if failed_tasks:
-            self.logger.error("gateway ratelimiter closed with %s pending tasks!", failed_tasks)
+            self.logger.error("%s rate limiter closed with %s pending tasks!", self.name, failed_tasks)
         else:
-            self.logger.debug("gateway ratelimiter closed")
+            self.logger.debug("%s rate limiter closed", self.name)
 
     def is_empty(self) -> bool:
         return len(self.queue) == 0
@@ -248,7 +270,7 @@ class GatewayRateLimiter:
 
     async def _throttle(self) -> None:
         self.logger.warning(
-            "you are being ratelimited on a websocket, backing off for %ss", self._get_backoff_time(),
+            "you are being rate limited on %s, backing off for %ss", self.name, self._get_backoff_time(),
         )
 
         while self.queue:
@@ -279,7 +301,7 @@ class GatewayRateLimiter:
         self.remaining -= 1
 
 
-class Bucket:
+class Bucket(BaseRateLimiter):
     """
     Component to represent an active rate limit bucket on a specific HTTP route with a specific major parameter
     combo.
@@ -369,7 +391,7 @@ class Bucket:
 
     async def _throttle(self) -> None:
         self._LOGGER.warning(
-            "you are being ratelimited on bucket %s, backing off for %ss", self.name, self._get_backoff_time(),
+            "you are being rate limited on bucket %s, backing off for %ss", self.name, self._get_backoff_time(),
         )
 
         while self.queue:
@@ -402,7 +424,7 @@ class Bucket:
             self.remaining -= 1
 
 
-class HTTPRateLimiter:
+class BucketedHTTPRateLimiter(BaseRateLimiter):
     """
     The main rate limiter implementation to provide bucketed rate limiting for Discord HTTP endpoints that respects
     the bucket rate limit header.
@@ -435,12 +457,12 @@ class HTTPRateLimiter:
     async def _garbage_collector(self) -> None:
         # Prevent filling memory increasingly until we run out by removing dead buckets every 20s
         # Allocations are somewhat cheap if we only do them every so-many seconds, afterall.
-        self.logger.debug("ratelimit garbage collector started")
+        self.logger.debug("rate limit garbage collector started")
         while not self.closed_event.is_set():
             try:
                 await asyncio.wait_for(self.closed_event.wait(), timeout=20)
             except asyncio.TimeoutError:
-                self.logger.debug("performing ratelimit garbage collection pass")
+                self.logger.debug("performing rate limit garbage collection pass")
 
                 try:
                     buckets_to_purge = []
