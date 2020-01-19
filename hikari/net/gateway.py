@@ -50,6 +50,7 @@ class GatewayClient:
         "compression",
         "connected_at",
         "connector",
+        "debug",
         "dispatch",
         "guild_subscriptions",
         "http_timeout",
@@ -86,6 +87,7 @@ class GatewayClient:
         *,
         compression=True,
         connector=None,
+        debug: bool = False,
         dispatch=lambda gw, e, p: None,
         guild_subscriptions=True,
         http_timeout=0,
@@ -110,6 +112,7 @@ class GatewayClient:
         self.compression = compression
         self.connected_at = float("nan")
         self.connector = connector
+        self.debug = debug
         self.dispatch = dispatch
         self.guild_subscriptions = guild_subscriptions
         self.http_timeout = http_timeout
@@ -179,7 +182,7 @@ class GatewayClient:
                 proxy_headers=self.proxy_headers,
                 verify_ssl=self.verify_ssl,
                 ssl_context=self.ssl_context,
-                timeout=self.http_timeout
+                timeout=self.http_timeout,
             )
 
             self.connected_at = time.perf_counter()
@@ -188,7 +191,7 @@ class GatewayClient:
 
             # Parse HELLO
             self.logger.debug("expecting HELLO")
-            pl = await self.recv()
+            pl = await self.receive()
             op = pl["op"]
             if op != 10:
                 raise errors.GatewayError(f"Expected HELLO opcode 10 but received {op}")
@@ -277,7 +280,7 @@ class GatewayClient:
 
     async def poll_events(self):
         while True:
-            next_pl = await self.recv()
+            next_pl = await self.receive()
 
             op = next_pl["op"]
             d = next_pl["d"]
@@ -312,13 +315,23 @@ class GatewayClient:
         if self.ws is not None:
             await self.ws.close()
 
-    async def recv(self):
+    async def receive(self):
         while True:
             message = await self.ws.receive()
-
             if message.type == aiohttp.WSMsgType.TEXT:
-                self.logger.debug("recv payload %r", message.data)
-                return self.json_deserialize(message.data)
+                obj = self.json_deserialize(message.data)
+
+                if self.debug:
+                    self.logger.debug("receive text payload %r", message.data)
+                else:
+                    self.logger.debug(
+                        "receive text payload (op:%s, t:%s, seq:%s, size:%s)",
+                        obj.get("op"),
+                        obj.get("t"),
+                        obj.get("seq"),
+                        len(message.data),
+                    )
+                return obj
             elif message.type == aiohttp.WSMsgType.BINARY:
                 buffer = bytearray(message.data)
                 packets = 1
@@ -330,15 +343,27 @@ class GatewayClient:
                     buffer.extend(message.data)
 
                 pl = self.zlib.decompress(buffer)
-                self.logger.debug("recv %s zlib-encoded packets containing payload %r", packets, pl)
-                return self.json_deserialize(pl)
+                obj = self.json_deserialize(pl)
+
+                if self.debug:
+                    self.logger.debug("receive %s zlib-encoded packets containing payload %r", packets, pl)
+                else:
+                    self.logger.debug(
+                        "receive zlib payload (op:%s, t:%s, seq:%s, size:%s, packets:%s)",
+                        obj.get("op"),
+                        obj.get("t"),
+                        obj.get("seq"),
+                        len(pl),
+                        packets,
+                    )
+                return obj
             elif message.type == aiohttp.WSMsgType.PING:
-                self.logger.debug("recv ping")
+                self.logger.debug("receive ping")
                 await self.ws.pong()
                 self.logger.debug("sent pong")
             elif message.type == aiohttp.WSMsgType.PONG:
                 self.last_pong_received = time.perf_counter()
-                self.logger.debug("recv pong after %ss", self.last_pong_received - self.last_ping_sent)
+                self.logger.debug("receive pong after %ss", self.last_pong_received - self.last_ping_sent)
             elif message.type == aiohttp.WSMsgType.CLOSE:
                 close_code = self.ws.close_code
                 self.logger.debug("connection closed with code %s", close_code)
@@ -369,7 +394,10 @@ class GatewayClient:
         await self.ratelimiter.acquire()
         await self.ws.send_str(payload_str)
 
-        self.logger.debug("sent payload %s", payload_str)
+        if self.debug:
+            self.logger.debug("sent payload %s", payload_str)
+        else:
+            self.logger.debug("sent payload (op:%s, size:%s)", payload.get("op"), len(payload_str))
 
     async def request_guild_members(
         self, guild_id, *guild_ids, **kwargs,
@@ -390,13 +418,7 @@ class GatewayClient:
             "requesting guild members for guilds %s with constraints %s", guilds, constraints,
         )
 
-        await self.send({
-            "op": 8,
-            "d": {
-                "guild_id": guilds,
-                **constraints,
-            }
-        })
+        await self.send({"op": 8, "d": {"guild_id": guilds, **constraints,}})
 
     async def update_status(self, presence) -> None:
         self.logger.debug("updating presence to %r", presence)
