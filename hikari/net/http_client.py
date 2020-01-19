@@ -201,8 +201,6 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 else:
                     body = None
 
-                body: type_hints.Nullable[typing.Union[containers.JSONObject, containers.JSONArray]]
-
             self.ratelimiter.update_rate_limits(
                 compiled_route, real_hash, bucket, remaining, limit, now_date, reset_date,
             )
