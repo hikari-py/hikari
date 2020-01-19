@@ -215,7 +215,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
                 if role_obj in member.roles:
                     member.roles.remove(role_obj)
 
-    def get_channel_by_id(self, channel_id: int) -> typing.Optional[channels.Channel]:
+    def get_channel_by_id(self, channel_id: int) -> typing.Optional[typing.Union[channels.GuildChannel, channels.TextChannel]]:
         # (Doesnt detect "__getitem__" as "get") pylint: disable=no-member
         return self._guild_channels.get(channel_id) or self._dm_channels.get(channel_id)
         # pylint: enable=no-member

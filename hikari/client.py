@@ -25,7 +25,6 @@ import asyncio
 import datetime
 import inspect
 import signal
-import threading
 import typing
 
 from hikari import client_options

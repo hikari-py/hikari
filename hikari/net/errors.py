@@ -74,9 +74,10 @@ class GatewayConnectionClosedError(GatewayError):
         try:
             code = GatewayCloseCode(code)
             code_name = GatewayCloseCode(code).name
-            super().__init__(reason or f"Gateway connection closed by server with code {code_name} ({code})")
         except ValueError:
             super().__init__(reason or f"Gateway connection closed by server with code {code}")
+        else:
+            super().__init__(reason or f"Gateway connection closed by server with code {code_name} ({code})")
 
 
 class GatewayInvalidTokenError(GatewayConnectionClosedError):
