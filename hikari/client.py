@@ -66,7 +66,7 @@ class Client:
         self,
         token: str,
         loop: typing.Optional[asyncio.AbstractEventLoop] = None,
-        options: typing.Optional[client_options.ClientOptions] = None
+        options: typing.Optional[client_options.ClientOptions] = None,
     ) -> None:
         self._client_options = options or client_options.ClientOptions()
         self._event_dispatcher = aio.MuxMap()

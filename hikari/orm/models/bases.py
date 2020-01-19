@@ -114,7 +114,7 @@ class BaseModel(metaclass=abc.ABCMeta):
     __do_not_copy__: typing.ClassVar[typing.Tuple] = (
         "__weakref__",
         delegate.DELEGATE_MEMBERS_FIELD,
-        delegate.DELEGATE_TYPES_FIELD
+        delegate.DELEGATE_TYPES_FIELD,
     )
 
     @classmethod

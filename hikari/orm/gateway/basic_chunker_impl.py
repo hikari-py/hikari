@@ -43,9 +43,6 @@ class BasicChunkerImpl(base_chunker.BaseChunker):
         self.fabric = fabric_obj
         self.logger = loggers.get_named_logger(self)
 
-    # TODO keep track of what is being waited for somehow
-    # use this to prevent multiple load requests on the same guild at the same time, and to detect when
-    # the guild has been loaded.
     async def load_members_for(
         self,
         guild_obj: guilds.Guild,
@@ -66,9 +63,7 @@ class BasicChunkerImpl(base_chunker.BaseChunker):
 
         # We should request the guild info on the shard the guild is using, so aggregate the guilds by the shard id.
         for shard_id, guild_objs in itertools.groupby((guild_obj, *guild_objs), lambda g: g.shard_id):
-            await self.fabric.gateways[shard_id].request_guild_members(
-                *map(lambda g: str(g.id), guild_objs), **kwargs
-            )
+            await self.fabric.gateways[shard_id].request_guild_members(*map(lambda g: str(g.id), guild_objs), **kwargs)
 
     async def handle_next_chunk(self, chunk_payload: containers.JSONObject, shard_id: int) -> None:
         guild_id = int(chunk_payload["guild_id"])

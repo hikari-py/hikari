@@ -21,6 +21,7 @@ Handles consumption of gateway events and converting them to the correct data ty
 """
 from __future__ import annotations
 
+import asyncio
 import enum
 import typing
 
@@ -64,6 +65,10 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             True (default) to automatically trigger the chunker for each guild we receive on a READY
             event. False if you wish to do this manually as needed. This is required to handle
             presence update events for offline users when the shard started.
+        initial_chunking_slice_size:
+            The max number of guilds to chunk per gateway chunk request. If this is too low, you
+            will get ratelimited immediately on startup if you have more than 120 guilds. If this is
+            too high, the gateway will be disconnected. The default is a good round number to use.
     """
 
     def __init__(
@@ -71,11 +76,13 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         fabric_obj: _fabric.Fabric,
         dispatch: typing.Callable[..., None],
         request_chunks_mode: AutoRequestChunksMode = AutoRequestChunksMode.MEMBERS_AND_PRESENCES,
+        initial_chunking_slice_size: int = 50,
     ) -> None:
         super().__init__(fabric_obj)
         self.dispatch = dispatch
         self._ignored_events: typing.MutableSet[str] = set()
         self._request_chunks_mode = request_chunks_mode
+        self._initial_chunking_slice_size = initial_chunking_slice_size
 
     async def drain_unrecognised_event(self, _, event_name, payload):
         pass
@@ -99,8 +106,20 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
     async def handle_ready(self, gateway, payload):
         user_payload = payload["user"]
 
+        guilds = [self.fabric.state_registry.parse_guild(guild, gateway.shard_id) for guild in payload["guilds"]]
+
+        if self._request_chunks_mode != AutoRequestChunksMode.NEVER and guilds:
+            asyncio.create_task(self._do_initial_chunking(guilds))
+
         self.fabric.state_registry.parse_application_user(user_payload)
         self.dispatch(event_types.EventType.READY, gateway)
+
+    async def _do_initial_chunking(self, guilds):
+        for i in range(0, len(guilds), self._initial_chunking_slice_size):
+            guilds_slice = guilds[i : i + self._initial_chunking_slice_size]
+            await self.fabric.chunker.load_members_for(
+                *guilds_slice, presences=self._request_chunks_mode == AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+            )
 
     async def handle_resumed(self, gateway, _):
         self.dispatch(event_types.EventType.RESUME, gateway)
@@ -202,12 +221,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.dispatch(event_types.EventType.GUILD_CREATE, guild)
 
         if not unavailable:
-            # TODO: implement this using a queue that waits for a few seconds before sending the request to prevent
-            # spamming the gateway with 120 requests in a few seconds, being rate limited, and getting disconnected.
-            # if self._request_chunks_mode != AutoRequestChunksMode.NEVER:
-            #     await self.fabric.chunker.load_members_for(
-            #         guild, presences=self._request_chunks_mode == AutoRequestChunksMode.MEMBERS_AND_PRESENCES
-            #     )
             self.dispatch(event_types.EventType.GUILD_AVAILABLE, guild)
 
     async def handle_guild_update(self, _, payload):
