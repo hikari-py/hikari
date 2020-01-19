@@ -137,7 +137,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         if guild_id is not None:
             guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
             if guild_obj is None:
-                self.logger.warning("ignoring received CHANNEL_CREATE for channel in unknown guild %s", guild_id)
+                self.logger.debug("ignoring received CHANNEL_CREATE for channel in unknown guild %s", guild_id)
                 return
         else:
             guild_obj = None
@@ -160,7 +160,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             event = event_types.EventType.DM_CHANNEL_UPDATE if is_dm else event_types.EventType.GUILD_CHANNEL_UPDATE
             self.dispatch(event, *channel_diff)
         else:
-            self.logger.warning("ignoring received CHANNEL_UPDATE for unknown channel %s", channel_id)
+            self.logger.debug("ignoring received CHANNEL_UPDATE for unknown channel %s", channel_id)
 
     async def handle_channel_delete(self, _, payload):
         # Update the channel meta data just for this call.
@@ -170,7 +170,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         if guild_id is not None:
             guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
             if guild_obj is None:
-                self.logger.warning("ignoring received CHANNEL_DELETE for channel in unknown guild %s", guild_id)
+                self.logger.debug("ignoring received CHANNEL_DELETE for channel in unknown guild %s", guild_id)
                 return
         else:
             guild_obj = None
@@ -207,7 +207,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
                 else:
                     self.dispatch(event_types.EventType.GUILD_CHANNEL_PIN_REMOVED)
         else:
-            self.logger.warning(
+            self.logger.debug(
                 "ignoring CHANNEL_PINS_UPDATE for %s channel %s which was not previously cached",
                 "DM" if channels.is_channel_type_dm(payload["type"]) else "guild",
                 channel_id,
@@ -237,7 +237,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         if guild_diff is not None:
             self.dispatch(event_types.EventType.GUILD_UPDATE, *guild_diff)
         else:
-            self.logger.warning("ignoring GUILD_UPDATE for unknown guild %s which was not previously cached")
+            self.logger.debug("ignoring GUILD_UPDATE for unknown guild %s which was not previously cached")
 
     async def handle_guild_delete(self, gateway, payload):
         self.dispatch(event_types.EventType.RAW_GUILD_DELETE, payload)
@@ -284,7 +284,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
                 user = guild.members[user.id]
             self.dispatch(event_types.EventType.GUILD_BAN_ADD, guild, user)
         else:
-            self.logger.warning("ignoring GUILD_BAN_ADD for user %s in unknown guild %s", user.id, guild_id)
+            self.logger.debug("ignoring GUILD_BAN_ADD for user %s in unknown guild %s", user.id, guild_id)
 
     async def handle_guild_ban_remove(self, _, payload):
         self.dispatch(event_types.EventType.RAW_GUILD_BAN_REMOVE, payload)
@@ -295,7 +295,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         if guild is not None:
             self.dispatch(event_types.EventType.GUILD_BAN_REMOVE, guild, user)
         else:
-            self.logger.warning("ignoring GUILD_BAN_REMOVE for user %s in unknown guild %s", user.id, guild_id)
+            self.logger.debug("ignoring GUILD_BAN_REMOVE for user %s in unknown guild %s", user.id, guild_id)
 
     async def handle_guild_emojis_update(self, _, payload):
         self.dispatch(event_types.EventType.RAW_GUILD_EMOJIS_UPDATE, payload)
@@ -306,7 +306,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             diff = self.fabric.state_registry.update_guild_emojis(payload["emojis"], guild_obj)
             self.dispatch(event_types.EventType.GUILD_EMOJIS_UPDATE, guild_obj, *diff)
         else:
-            self.logger.warning("ignoring GUILD_EMOJIS_UPDATE for unknown guild %s", guild_id)
+            self.logger.debug("ignoring GUILD_EMOJIS_UPDATE for unknown guild %s", guild_id)
 
     async def handle_guild_integrations_update(self, _, payload):
         self.dispatch(event_types.EventType.RAW_GUILD_INTEGRATIONS_UPDATE, payload)
@@ -316,7 +316,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         if guild is not None:
             self.dispatch(event_types.EventType.GUILD_INTEGRATIONS_UPDATE, guild)
         else:
-            self.logger.warning("ignoring GUILD_INTEGRATIONS_UPDATE for unknown guild %s", guild_id)
+            self.logger.debug("ignoring GUILD_INTEGRATIONS_UPDATE for unknown guild %s", guild_id)
 
     async def handle_guild_member_add(self, _, payload):
         self.dispatch(event_types.EventType.RAW_GUILD_MEMBER_ADD, payload)
@@ -327,7 +327,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             member = self.fabric.state_registry.parse_member(payload, guild_obj)
             self.dispatch(event_types.EventType.GUILD_MEMBER_ADD, member)
         else:
-            self.logger.warning("ignoring GUILD_MEMBER_ADD for unknown guild %s", guild_id)
+            self.logger.debug("ignoring GUILD_MEMBER_ADD for unknown guild %s", guild_id)
 
     async def handle_guild_member_update(self, gateway, payload):
         self.dispatch(event_types.EventType.RAW_GUILD_MEMBER_UPDATE, payload)
@@ -347,7 +347,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
                 if role_obj is not None:
                     role_objs.append(role_obj)
                 else:
-                    self.logger.warning(
+                    self.logger.debug(
                         "ignoring unknown role %s in GUILD_MEMBER_UPDATE for member %s in guild %s",
                         role_id,
                         user_id,
@@ -357,7 +357,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             member_diff = self.fabric.state_registry.update_member(member_obj, role_objs, payload)
             self.dispatch(event_types.EventType.GUILD_MEMBER_UPDATE, *member_diff)
         else:
-            self.logger.warning("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)
+            self.logger.debug("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)
 
     async def handle_guild_member_remove(self, gateway, payload):
         self.dispatch(event_types.EventType.RAW_GUILD_MEMBER_REMOVE, payload)
@@ -370,7 +370,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.fabric.state_registry.delete_member(member_obj)
             self.dispatch(event_types.EventType.GUILD_MEMBER_REMOVE, member_obj)
         else:
-            self.logger.warning("ignoring GUILD_MEMBER_REMOVE for unknown member %s in guild %s", user_id, guild_id)
+            self.logger.debug("ignoring GUILD_MEMBER_REMOVE for unknown member %s in guild %s", user_id, guild_id)
 
     async def handle_guild_members_chunk(self, gateway, payload):
         self.dispatch(event_types.EventType.RAW_GUILD_MEMBERS_CHUNK, payload)
@@ -386,7 +386,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             role = self.fabric.state_registry.parse_role(payload["role"], guild_obj)
             self.dispatch(event_types.EventType.GUILD_ROLE_CREATE, role)
         else:
-            self.logger.warning("ignoring GUILD_ROLE_CREATE for unknown guild %s", guild_id)
+            self.logger.debug("ignoring GUILD_ROLE_CREATE for unknown guild %s", guild_id)
 
     async def handle_guild_role_update(self, gateway, payload):
         self.dispatch(event_types.EventType.RAW_GUILD_ROLE_UPDATE, payload)
@@ -401,9 +401,9 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
                 self.dispatch(event_types.EventType.GUILD_ROLE_UPDATE, *diff)
             else:
                 role_id = int(payload["role"]["id"])
-                self.logger.warning("ignoring GUILD_ROLE_UPDATE for unknown role %s in guild %s", role_id, guild_id)
+                self.logger.debug("ignoring GUILD_ROLE_UPDATE for unknown role %s in guild %s", role_id, guild_id)
         else:
-            self.logger.warning("ignoring GUILD_ROLE_UPDATE for unknown guild %s", guild_id)
+            self.logger.debug("ignoring GUILD_ROLE_UPDATE for unknown guild %s", guild_id)
 
     async def handle_guild_role_delete(self, gateway, payload):
         self.dispatch(event_types.EventType.RAW_GUILD_ROLE_DELETE, payload)
@@ -418,9 +418,9 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
                 self.fabric.state_registry.delete_role(role_obj)
                 self.dispatch(event_types.EventType.GUILD_ROLE_DELETE, role_obj)
             else:
-                self.logger.warning("ignoring GUILD_ROLE_DELETE for unknown role %s in guild %s", role_id, guild_id)
+                self.logger.debug("ignoring GUILD_ROLE_DELETE for unknown role %s in guild %s", role_id, guild_id)
         else:
-            self.logger.warning("ignoring GUILD_ROLE_DELETE for role %s in unknown guild %s", role_id, guild_id)
+            self.logger.debug("ignoring GUILD_ROLE_DELETE for role %s in unknown guild %s", role_id, guild_id)
 
     async def handle_message_create(self, gateway, payload):
         self.dispatch(event_types.EventType.RAW_MESSAGE_CREATE, payload)
@@ -430,7 +430,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         else:
             message_id = int(payload["id"])
             channel_id = int(payload["channel_id"])
-            self.logger.warning("ignoring MESSAGE_CREATE for message %s in unknown channel %s", message_id, channel_id)
+            self.logger.debug("ignoring MESSAGE_CREATE for message %s in unknown channel %s", message_id, channel_id)
 
     async def handle_message_update(self, gateway, payload):
         self.dispatch(event_types.EventType.RAW_MESSAGE_UPDATE, payload)
@@ -469,7 +469,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         if channel_obj is not None:
             self.dispatch(event_types.EventType.MESSAGE_DELETE_BULK, channel_obj, messages)
         else:
-            self.logger.warning("ignoring MESSAGE_DELETE_BULK for unknown channel %s", channel_id)
+            self.logger.debug("ignoring MESSAGE_DELETE_BULK for unknown channel %s", channel_id)
 
     # This is a headache to do as it has a completely different layout to reactions elsewhere...
     async def handle_message_reaction_add(self, gateway, payload):
@@ -496,7 +496,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.dispatch(event_types.EventType.MESSAGE_REACTION_ADD, reaction_obj, user_obj)
 
         else:
-            self.logger.warning(
+            self.logger.debug(
                 "ignoring MESSAGE_REACTION_ADD for unknown %s %s",
                 "user" if user_id is None else f"guild {guild_id} and member",
                 user_id,
@@ -523,7 +523,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             user_obj = self.fabric.state_registry.get_user_by_id(user_id)
 
         if reaction_obj is None:
-            self.logger.warning(
+            self.logger.debug(
                 "ignoring MESSAGE_REACTION_REMOVE for non existent reaction %s on message %s by %s %s",
                 reaction_obj,
                 message_id,
@@ -533,7 +533,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             return
 
         if user_obj is None:
-            self.logger.warning(
+            self.logger.debug(
                 "ignoring MESSAGE_REACTION_REMOVE for reaction %s on message %s for unknown %s %s",
                 reaction_obj,
                 message_id,
@@ -564,7 +564,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 
         if guild_obj is None:
-            self.logger.warning("ignoring PRESENCE_UPDATE for unknown guild %s", guild_id)
+            self.logger.debug("ignoring PRESENCE_UPDATE for unknown guild %s", guild_id)
             return
 
         user_id = int(payload["user"]["id"])
@@ -573,14 +573,14 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         if user_obj is None:
             # Mediates spam caused by https://gitlab.com/nekokatt/hikari/issues/150
             # TODO: re-enable this message once #150 is resolved.
-            # self.logger.warning("ignoring PRESENCE_UPDATE for unknown user %s in guild %s", user_id, guild_id)
+            # self.logger.debug("ignoring PRESENCE_UPDATE for unknown user %s in guild %s", user_id, guild_id)
             return
 
         member_obj = self.fabric.state_registry.get_member_by_id(user_id, guild_id)
         if member_obj is None:
             # Mediates spam caused by https://gitlab.com/nekokatt/hikari/issues/150
             # TODO: re-enable this message once #150 is resolved.
-            # self.logger.warning("ignoring PRESENCE_UPDATE for unknown member %s in guild %s", user_id, guild_id)
+            # self.logger.debug("ignoring PRESENCE_UPDATE for unknown member %s in guild %s", user_id, guild_id)
             return
 
         presence_diff = self.fabric.state_registry.update_member_presence(member_obj, payload)
@@ -590,7 +590,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         for role_id in role_ids:
             next_role = self.fabric.state_registry.get_role_by_id(guild_id, role_id)
             if next_role is None:
-                self.logger.warning(
+                self.logger.debug(
                     "ignoring unknown role %s being added to user %s in guild %s silently", role_id, user_id, guild_id
                 )
             else:
@@ -607,7 +607,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         channel_obj = self.fabric.state_registry.get_channel_by_id(channel_id)
 
         if channel_obj is None:
-            self.logger.warning("ignoring TYPING_START by user %s in unknown channel %s", user_id, channel_id)
+            self.logger.debug("ignoring TYPING_START by user %s in unknown channel %s", user_id, channel_id)
             return
 
         if channel_obj.is_dm:
@@ -617,7 +617,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             user_obj = channel_obj.guild.members.get(user_id)
 
         if user_obj is None:
-            self.logger.warning("ignoring TYPING_START by unknown user %s in channel %s", user_id, channel_id)
+            self.logger.debug("ignoring TYPING_START by unknown user %s in channel %s", user_id, channel_id)
             return
 
         self.dispatch(event_types.EventType.TYPING_START, user_obj, channel_obj)
@@ -630,12 +630,12 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
     async def handle_voice_state_update(self, gateway, payload):
         self.dispatch(event_types.EventType.RAW_VOICE_STATE_UPDATE, payload)
         # TODO: implement voice.
-        self.logger.warning("received VOICE_STATE_UPDATE but that is not implemented yet")
+        self.logger.debug("received VOICE_STATE_UPDATE but that is not implemented yet")
 
     async def handle_voice_server_update(self, gateway, payload):
         self.dispatch(event_types.EventType.RAW_VOICE_SERVER_UPDATE, payload)
         # TODO: implement voice.
-        self.logger.warning("received VOICE_SERVER_UPDATE but that is not implemented yet")
+        self.logger.debug("received VOICE_SERVER_UPDATE but that is not implemented yet")
 
     async def handle_webhooks_update(self, gateway, payload):
         self.dispatch(event_types.EventType.RAW_WEBHOOKS_UPDATE, payload)
@@ -644,6 +644,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         channel_obj = self.fabric.state_registry.get_channel_by_id(channel_id)
 
         if channel_obj is None:
-            self.logger.warning("ignoring WEBHOOKS_UPDATE in unknown channel %s", channel_id)
+            self.logger.debug("ignoring WEBHOOKS_UPDATE in unknown channel %s", channel_id)
         else:
             self.dispatch(event_types.EventType.WEBHOOKS_UPDATE, channel_obj)
