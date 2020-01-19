@@ -81,6 +81,7 @@ class ClientOptions:
     allow_redirects: bool = False
     chunk_mode: dispatching_event_adapter_impl.AutoRequestChunksMode = _DEFAULT_CHUNK_MODE
     connector: aiohttp.BaseConnector = None
+    debug: bool = False
     enable_guild_subscription_events = True
     http_timeout: float = None
     large_guild_threshold: int = 250

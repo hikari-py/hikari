@@ -185,6 +185,7 @@ class Client:
         for shard_id in shard_ids:
             shard_map[shard_id] = gateway.GatewayClient(
                 dispatch=self._fabric.event_handler.consume_raw_event,
+                debug=self._client_options.debug,
                 token=self.token,
                 url=url,
                 connector=self._client_options.connector,
