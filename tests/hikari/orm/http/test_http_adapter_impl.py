@@ -2323,7 +2323,9 @@ class TestHTTPAdapterImpl:
     async def test_fetch_application_info(self, fabric_impl):
         mock_application_info_payload = {"id": "3423412232", "name": "superflat"}
         mock_application_info = mock.MagicMock(applications.Application)
-        fabric_impl.http_client.get_current_application_info = mock.AsyncMock(return_value=mock_application_info_payload)
+        fabric_impl.http_client.get_current_application_info = mock.AsyncMock(
+            return_value=mock_application_info_payload
+        )
         fabric_impl.state_registry.parse_application.return_value = mock_application_info
         assert await fabric_impl.http_adapter.fetch_application_info() is mock_application_info
         fabric_impl.http_client.get_current_application_info.assert_called_once()
@@ -2363,7 +2365,9 @@ class TestHTTPAdapterImpl:
     async def test_fetch_my_connections(self, fabric_impl):
         mock_user_connections_payload = {"type": "twitch", "id": "534231", "name": "neko_speeding"}
         mock_user_connections = mock.MagicMock(connections.Connection)
-        fabric_impl.http_client.get_current_user_connections = mock.AsyncMock(return_value=[mock_user_connections_payload])
+        fabric_impl.http_client.get_current_user_connections = mock.AsyncMock(
+            return_value=[mock_user_connections_payload]
+        )
         fabric_impl.state_registry.parse_connection.return_value = mock_user_connections
         assert await fabric_impl.http_adapter.fetch_my_connections() == [mock_user_connections]
         fabric_impl.http_client.get_current_user_connections.assert_called_once()

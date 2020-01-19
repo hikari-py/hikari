@@ -49,6 +49,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
     """
     A RESTful client to allow you to interact with the Discord API.
     """
+
     _AUTHENTICATION_SCHEMES = ("Bearer", "Bot")
 
     def __init__(
@@ -613,11 +614,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 If you lack the `MANAGE_MESSAGES` permission, or are in DMs.
         """
         route = routes.REACTION.compile(
-            self.DELETE,
-            channel_id=channel_id,
-            message_id=message_id,
-            emoji=emoji,
-            user_id=user_id,
+            self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji, user_id=user_id,
         )
         await self._request(route)
 

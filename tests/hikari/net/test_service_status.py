@@ -572,7 +572,7 @@ def stubbed_client(mock_client):
 class TestServiceStatusClient:
     async def test_DiscordServiceStatusClient___init__(self, event_loop):
         async with status_info_client.StatusInfoClient() as client:
-            assert client.uri == "https://status.discordapp.com/api/v2"
+            assert client.url == "https://status.discordapp.com/api/v2"
 
     @pytest.mark.parametrize("method", [None, "get", "post", "patch", "delete", "put"])
     async def test_DiscordServiceStatusClient__perform_request(self, mock_client, method):
@@ -597,7 +597,11 @@ class TestServiceStatusClient:
             ("/components.json", status_info_client.Components, "fetch_components"),
             ("/incidents.json", status_info_client.Incidents, "fetch_all_incidents"),
             ("/incidents/unresolved.json", status_info_client.Incidents, "fetch_unresolved_incidents"),
-            ("/scheduled-maintenances.json", status_info_client.ScheduledMaintenances, "fetch_all_scheduled_maintenances"),
+            (
+                "/scheduled-maintenances.json",
+                status_info_client.ScheduledMaintenances,
+                "fetch_all_scheduled_maintenances",
+            ),
             (
                 "/scheduled-maintenances/upcoming.json",
                 status_info_client.ScheduledMaintenances,
@@ -616,7 +620,9 @@ class TestServiceStatusClient:
         assert isinstance(await coro_fn(), expected_cast)
         stubbed_client._perform_request.assert_called_with(expected_route, expected_cast)
 
-    @pytest.mark.parametrize("incident", ["1a2b3c", _helpers.mock_model(status_info_client.Incident, id="1a2b3c"), None])
+    @pytest.mark.parametrize(
+        "incident", ["1a2b3c", _helpers.mock_model(status_info_client.Incident, id="1a2b3c"), None]
+    )
     async def test_subscribe_email_to_incident(self, incident, stubbed_client):
         if incident is None:
             body = {"subscriber[email]": "somebody@example.com"}
@@ -628,7 +634,9 @@ class TestServiceStatusClient:
         args, kwargs = stubbed_client._perform_request.call_args
         assert args == ("/subscribers.json", status_info_client.Subscription, body, "post")
 
-    @pytest.mark.parametrize("incident", ["1a2b3c", _helpers.mock_model(status_info_client.Incident, id="1a2b3c"), None])
+    @pytest.mark.parametrize(
+        "incident", ["1a2b3c", _helpers.mock_model(status_info_client.Incident, id="1a2b3c"), None]
+    )
     async def test_subscribe_webhook_to_incident(self, incident, stubbed_client):
         if incident is None:
             body = {"subscriber[endpoint]": "http://example.com"}

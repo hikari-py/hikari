@@ -142,6 +142,7 @@ class BaseRateLimiter(abc.ABC):
     """
     Base for any rate limiter being used. Supports with-context management.
     """
+
     __slots__ = ()
 
     @abc.abstractmethod
@@ -216,6 +217,7 @@ class GatewayRateLimiter(BaseRateLimiter):
     """
     Aid to adhere to the 120/60 gateway ratelimit. Also used by chunking algorithms elsewhere to prevent spam.
     """
+
     __slots__ = ("logger", "name", "period", "remaining", "limit", "reset_at", "queue", "throttle_task")
 
     def __init__(self, name: str, period: float, limit: int) -> None:

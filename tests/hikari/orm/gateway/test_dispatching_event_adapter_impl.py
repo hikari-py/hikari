@@ -115,46 +115,15 @@ def discord_ready_payload():
 @pytest.mark.orm
 class TestDispatchingEventAdapterImpl:
     @pytest.mark.asyncio
-    async def test_drain_unrecognised_event_first_time_adds_to_ignored_events_set(self, adapter_impl, gateway_impl):
-        adapter_impl._ignored_events.clear()
-        assert not adapter_impl._ignored_events, "ignored events were not empty at the start!"
-
+    async def test_drain_unrecognised_event_first_time_does_nothing(self, adapter_impl, gateway_impl):
         await adapter_impl.drain_unrecognised_event(gateway_impl, "try_to_do_something", ...)
-
-        assert "try_to_do_something" in adapter_impl._ignored_events
-
-    @pytest.mark.asyncio
-    async def test_drain_unrecognised_event_first_time_logs_warning(self, adapter_impl, gateway_impl):
-        adapter_impl._ignored_events.clear()
-        assert not adapter_impl._ignored_events, "ignored events were not empty at the start!"
-
-        await adapter_impl.drain_unrecognised_event(gateway_impl, "try_to_do_something", ...)
-
-        adapter_impl.logger.warning.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_drain_unrecognised_event_second_time_does_not_log_anything(self, adapter_impl, gateway_impl):
-        adapter_impl._ignored_events = {"try_to_do_something"}
-
-        await adapter_impl.drain_unrecognised_event(gateway_impl, "try_to_do_something", ...)
-
-        assert "try_to_do_something" in adapter_impl._ignored_events
-        adapter_impl.logger.warning.assert_not_called()
-
-    @pytest.mark.asyncio
-    async def test_drain_unrecognised_event_invokes_raw_dispatch(self, adapter_impl, gateway_impl, dispatch_impl):
-        await adapter_impl.drain_unrecognised_event(gateway_impl, "try_to_do_something", ...)
-
-        dispatch_impl.assert_called_with("raw_try_to_do_something", ...)
 
     @pytest.mark.asyncio
     async def test_handle_disconnect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
         payload = {"code": 123, "reason": "test"}
         await adapter_impl.handle_disconnect(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(
-            event_types.EventType.DISCONNECT, gateway_impl, payload.get("code"), payload.get("reason")
-        )
+        dispatch_impl.assert_called_with(event_types.EventType.DISCONNECT, gateway_impl)
 
     @pytest.mark.asyncio
     async def test_handle_connect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
