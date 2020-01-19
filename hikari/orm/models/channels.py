@@ -163,7 +163,7 @@ class PartialChannel(Channel):
         super().__init__(fabric_obj, payload)
 
 
-class TextChannel(Channel, abc.ABC):
+class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pylint: disable=abstract-method
     """
     Any class that can have messages sent to it.
 

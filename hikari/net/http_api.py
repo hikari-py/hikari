@@ -472,7 +472,7 @@ class HTTPAPI(http_client.HTTPClient):
             hikari.net.errors.NotFoundError:
                 If the message ID or channel ID is not found.
         """
-        route = routes.CHANNEL_MESSAGE.compile(channel_id=channel_id, message_id=message_id)
+        route = routes.CHANNEL_MESSAGE.compile(self.GET, channel_id=channel_id, message_id=message_id)
         return await self._request(route)
 
     async def create_message(
@@ -2310,7 +2310,7 @@ class HTTPAPI(http_client.HTTPClient):
             The guild must have the widget enabled in the guild settings for this to be valid.
         """
         query = "" if style is unspecified.UNSPECIFIED else f"?style={style}"
-        return f"{self.base_uri}/guilds/{guild_id}/widget.png" + query
+        return f"{self.base_url}/guilds/{guild_id}/widget.png" + query
 
     async def get_invite(
         self, invite_code: str, *, with_counts: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED
@@ -2658,4 +2658,4 @@ class HTTPAPI(http_client.HTTPClient):
         await self._request(self.DELETE, "/webhooks/{webhook_id}", webhook_id=webhook_id)
 
 
-__all__ = ["HTTPAPIImpl"]
+__all__ = ["HTTPAPI"]

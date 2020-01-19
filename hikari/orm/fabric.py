@@ -56,7 +56,7 @@ class Fabric:
     gateways: typing.Dict[typing.Optional[int], _gateway.GatewayClient] = dataclasses.field(default_factory=dict)
 
     #: The base HTTP client for making HTTP requests.
-    http_api: _http_client.HTTPAPIImpl = dataclasses.field(default=NotImplemented)
+    http_api: _http_client.HTTPAPI = dataclasses.field(default=NotImplemented)
 
     #: HTTP adapter bridge component to convert raw HTTP call responses to their ORM
     #: representation.
