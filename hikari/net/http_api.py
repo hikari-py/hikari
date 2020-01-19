@@ -77,7 +77,7 @@ class HTTPAPI(http_client.HTTPClient):
         self.global_ratelimiter = ratelimits.GlobalHTTPRateLimiter()
         self.json_serialize = json_serialize
         self.json_deserialize = json_deserialize
-        self.ratelimiter = ratelimits.HTTPRateLimiter()
+        self.ratelimiter = ratelimits.BucketedHTTPRateLimiter()
         self.token = token
 
     async def close(self):
@@ -126,7 +126,7 @@ class HTTPAPI(http_client.HTTPClient):
             # between the request and response
             request_uuid = uuid.uuid4()
 
-            await asyncio.gather(future, self.global_ratelimiter.maybe_wait())
+            await asyncio.gather(future, self.global_ratelimiter.acquire())
 
             if json_body is not None:
                 body_type = "json"

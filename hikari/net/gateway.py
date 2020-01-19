@@ -127,7 +127,6 @@ class GatewayClient:
         self.proxy_auth = proxy_auth
         self.proxy_headers = proxy_headers
         self.proxy_url = proxy_url
-        self.ratelimiter = ratelimits.GatewayRateLimiter(60.0, 120)
         self.receive_timeout = receive_timeout
         self.reconnect_count = 0
         self.session = None
@@ -150,6 +149,8 @@ class GatewayClient:
         if compression:
             url += "&compress=zlib-stream"
         self.url = url
+
+        self.ratelimiter = ratelimits.GatewayRateLimiter(f"gateway shard {shard_id}/{shard_count}", 60.0, 120)
 
     @property
     def latency(self):
