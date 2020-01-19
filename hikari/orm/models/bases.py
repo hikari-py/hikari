@@ -110,6 +110,8 @@ class BaseModel(metaclass=abc.ABCMeta):
     #: Tracks the fields we shouldn't clone. This always includes the state.
     __copy_by_ref__: typing.ClassVar[typing.Tuple] = ("_fabric",)
 
+    __do_not_copy__: typing.ClassVar[typing.Tuple] = ("__weakref__",)
+
     @classmethod
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__()
@@ -131,18 +133,23 @@ class BaseModel(metaclass=abc.ABCMeta):
         assertions.assert_subclasses(type(cls.__slots__), tuple, "__slots__ should be a tuple")
 
         copy_by_ref = set()
+        do_not_copy = set()
         slots = set()
 
         for base in cls.mro():
             next_slots = getattr(base, "__slots__", containers.EMPTY_COLLECTION)
             next_refs = getattr(base, "__copy_by_ref__", containers.EMPTY_COLLECTION)
+            next_do_not_copies = getattr(base, "__do_not_copy__", containers.EMPTY_COLLECTION)
             for ref in next_refs:
                 copy_by_ref.add(ref)
+            for ref in next_do_not_copies:
+                do_not_copy.add(ref)
             for slot in next_slots:
                 slots.add(slot)
 
         cls.__copy_by_ref__ = tuple(copy_by_ref)
         cls.__all_slots__ = tuple(slots)
+        cls.__do_not_copy__ = tuple(do_not_copy)
 
     def copy(self, copy_func=copy.copy):
         """
@@ -164,7 +171,9 @@ class BaseModel(metaclass=abc.ABCMeta):
 
         for attr in cls.__all_slots__:
             attr_val = getattr(self, attr)
-            if attr in self.__copy_by_ref__:
+            if attr in self.__do_not_copy__:
+                continue
+            elif attr in self.__copy_by_ref__:
                 setattr(instance, attr, attr_val)
             else:
                 setattr(instance, attr, copy_func(attr_val))
