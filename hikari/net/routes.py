@@ -188,7 +188,7 @@ GUILD_WIDGET_IMAGE = RouteTemplate("/guilds/{guild_id}/widget.png")
 GUILD_WEBHOOKS = RouteTemplate("/guilds/{guild_id}/webhooks")
 
 # Invites
-INVITES = RouteTemplate("/invites/{invite_code}")
+INVITE = RouteTemplate("/invites/{invite_code}")
 
 # Users
 USER = RouteTemplate("/user/{user_id}")
@@ -212,7 +212,8 @@ WEBHOOK_WITH_TOKEN_GITHUB = RouteTemplate("/webhooks/{webhook_id}/{webhook_token
 WEBHOOK_WITH_TOKEN_SLACK = RouteTemplate("/webhooks/{webhook_id}/{webhook_token}/slack")
 
 # OAuth2 API
-OAUTH2_APPLICATION = RouteTemplate("/oauth2/applications/@me")
+OAUTH2_APPLICATIONS = RouteTemplate("/oauth2/applications")
+OAUTH2_APPLICATIONS_ME = RouteTemplate("/oauth2/applications/@me")
 OAUTH2_AUTHORIZE = RouteTemplate("/oauth2/authorize")
 OAUTH2_TOKEN = RouteTemplate("/oauth2/token")
 OAUTH2_TOKEN_REVOKE = RouteTemplate("/oauth2/token/revoke")
