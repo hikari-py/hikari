@@ -785,7 +785,9 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         return [self.fabric.state_registry.parse_invite(invite) for invite in invites_payload]
 
     async def fetch_integrations(self, guild: _guilds.GuildLikeT) -> typing.Collection[_integrations.Integration]:
-        integrations_payload = await self.fabric.http_client.get_guild_integrations(guild_id=transformations.get_id(guild))
+        integrations_payload = await self.fabric.http_client.get_guild_integrations(
+            guild_id=transformations.get_id(guild)
+        )
         return [self.fabric.state_registry.parse_integration(integration) for integration in integrations_payload]
 
     async def create_guild_integration(
@@ -938,7 +940,9 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
     async def fetch_channel_webhooks(
         self, channel: _channels.GuildTextChannelLikeT
     ) -> typing.Collection[_webhooks.Webhook]:
-        webhooks_payload = await self.fabric.http_client.get_channel_webhooks(channel_id=transformations.get_id(channel))
+        webhooks_payload = await self.fabric.http_client.get_channel_webhooks(
+            channel_id=transformations.get_id(channel)
+        )
         return tuple(self.fabric.state_registry.parse_webhook(webhook) for webhook in webhooks_payload)
 
     async def fetch_guild_webhooks(self, guild: _guilds.GuildLikeT) -> typing.Collection[_webhooks.Webhook]:
