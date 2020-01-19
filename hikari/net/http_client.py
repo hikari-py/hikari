@@ -25,6 +25,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import datetime
+import email.utils
 import json
 import ssl
 import typing
@@ -181,11 +182,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 limit = int(headers.get("X-RateLimit-Limit", "1"))
                 remaining = int(headers.get("X-RateLimit-Remaining", "1"))
                 bucket = headers.get("X-RateLimit-Bucket", "None")
-                # More accurate than the Date header due to millisecond precision
                 reset = float(headers.get("X-RateLimit-Reset", "0"))
-                now = float(headers.get("X-RateLimit-Reset-After", "0")) - reset
                 reset_date = datetime.datetime.fromtimestamp(reset, tz=datetime.timezone.utc)
-                now_date = datetime.datetime.fromtimestamp(now, tz=datetime.timezone.utc)
+                now_date = email.utils.parsedate_to_datetime(headers["Date"])
 
                 status = resp.status
 

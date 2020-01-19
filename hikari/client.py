@@ -186,6 +186,7 @@ class Client:
             shard_map[shard_id] = gateway.GatewayClient(
                 dispatch=self._fabric.event_handler.consume_raw_event,
                 debug=self._client_options.debug,
+                intents=self._client_options.gateway_intents,
                 token=self.token,
                 url=url,
                 connector=self._client_options.connector,
@@ -196,7 +197,6 @@ class Client:
                 verify_ssl=self._client_options.verify_ssl,
                 http_timeout=self._client_options.http_timeout,
                 large_threshold=self._client_options.large_guild_threshold,
-                guild_subscriptions=self._client_options.enable_guild_subscription_events,
                 initial_presence=self._client_options.presence.to_dict(),
                 shard_id=shard_id,
                 shard_count=shard_count,
