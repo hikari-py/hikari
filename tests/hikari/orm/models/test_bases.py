@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
+import weakref
+
 import dataclasses
 import datetime
 import enum
@@ -26,6 +28,7 @@ import typing
 import pytest
 
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import delegate
 from hikari.orm.models import bases
 from tests.hikari import _helpers
 
@@ -236,7 +239,7 @@ class TestIModel:
 
         assert test.copy().whatever is not whatever
 
-    def test_does_not_clone_fields_in___copy_by_ref___(self):
+    def test_does_not_clone_fields_in___copy_by_ref__(self):
         @dataclasses.dataclass()
         class Test(bases.BaseModel):
             __copy_by_ref__ = ("data",)
@@ -248,6 +251,23 @@ class TestIModel:
 
         assert test.copy() is not test
         assert test.copy().data is data
+
+    def test_does_not_write_fields_in___do_not_copy__(self):
+        @dataclasses.dataclass()
+        class Test(bases.BaseModel):
+            __do_not_copy__ = ("data",)
+            __slots__ = ("data",)
+            data: typing.List[int]
+
+        data = [1, 2, 3]
+        test = Test(data)
+
+        assert test.copy() is not test
+        try:
+            test.copy().data
+            assert False, "this should have raised an AttributeError."
+        except AttributeError:
+            pass
 
     def test_does_not_clone_state_by_default_fields(self):
         @dataclasses.dataclass()
@@ -263,6 +283,52 @@ class TestIModel:
 
         assert test.copy() is not test
         assert test.copy()._fabric is fabric
+
+    def test_clone_with_weakrefs_does_not_copy_them(self):
+        class WeakReffedModel(bases.BaseModel):
+            __slots__ = ("foo", "bar", "__weakref__")
+
+            def __init__(self, foo, bar):
+                self.foo = foo
+                self.bar = bar
+
+        obj = WeakReffedModel(9, 18)
+        # noinspection PyUnusedLocal
+        obj_wr1 = weakref.proxy(obj)
+        # noinspection PyUnusedLocal
+        obj_wr2 = weakref.proxy(obj)
+        # noinspection PyUnusedLocal
+        obj_wr3 = weakref.proxy(obj)
+
+        obj_copy = obj.copy()
+        assert obj_copy.__weakref__ is not obj.__weakref__
+
+    def test_clone_with_delegated_attributes_does_not_copy_them(self):
+        @dataclasses.dataclass()
+        class Base(bases.BaseModel):
+            __slots__ = ("foo", "bar")
+            foo: int
+            bar: dict
+
+        @delegate.delegate_to(Base, "_base")
+        class Delegated(Base):
+            __slots__ = ("_base", "baz")
+            __copy_by_ref__ = ("_base",)
+
+            def __init__(self, _base, baz):
+                self._base = _base
+                self.baz = baz
+
+            _base: Base
+            baz: list
+
+        b = Base(1, {})
+        d = Delegated(b, [])
+
+        assert d.copy()._base is b
+        assert d.copy().baz is not d.baz
+        assert d.copy().foo is d.foo
+        assert d.copy().bar is d.bar
 
     def test___copy_by_ref___is_inherited(self):
         class Base1(bases.BaseModel):

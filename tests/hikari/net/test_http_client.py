@@ -21,12 +21,12 @@ import logging
 import asyncmock as mock
 import pytest
 
-from hikari.net import http_client
+from hikari.net import base_http_client
 
 
 @pytest.mark.asyncio
 async def test_http_client___aenter___and___aexit__():
-    class HTTPClientImpl(http_client.HTTPClient):
+    class HTTPClientImpl(base_http_client.BaseHTTPClient):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
 
@@ -38,7 +38,7 @@ async def test_http_client___aenter___and___aexit__():
 
 @pytest.mark.asyncio
 async def test_http_client_close_calls_client_session_close():
-    class HTTPClientImpl(http_client.HTTPClient):
+    class HTTPClientImpl(base_http_client.BaseHTTPClient):
         def __init__(self, *args, **kwargs):
             self.client_session = mock.MagicMock()
             self.client_session.close = mock.AsyncMock()

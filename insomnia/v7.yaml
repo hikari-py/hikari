@@ -1,21 +1,39 @@
 _type: export
 __export_format: 4
-__export_date: 2019-12-23T13:49:09.824Z
-__export_source: insomnia.desktop.app:v7.0.5
+__export_date: 2020-01-19T15:19:46.495Z
+__export_source: insomnia.desktop.app:v7.0.6
 resources:
-  - _id: req_b7d357e7d7884ab7ad6d775410a9bde0
+  - _id: req_3f79be849f9d4a76ad7fc0572894acb4
     authentication: {}
-    body: {}
-    created: 1577108809820
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"max_age": 86400,
+        	"max_uses": 1,
+        	"temporary": false,
+        	"unique": true
+        }
+    created: 1577108079250
     description: ""
     headers:
-      - name: Authorization
+      - description: ""
+        id: pair_314d74af59264ca4863e4f61e54e9484
+        name: Authorization
         value: "{{authorization}}"
+      - description: ""
+        id: pair_c1e909e6c80b48318872dab2e8d5b4ba
+        name: Content-Type
+        value: application/json
+      - description: ""
+        id: pair_f4fa3371ec2e4a50a1f6931515cc1b1c
+        name: Accept
+        value: application/json
     isPrivate: false
-    metaSortKey: -1577108079300
+    metaSortKey: -1579446582104
     method: POST
-    modified: 1577108856675
-    name: Trigger Typing
+    modified: 1579446750729
+    name: Create Channel Invite
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
     settingDisableRenderRequestBody: false
@@ -24,7 +42,7 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{ api_url  }}/channels/574921092926537729/typing"
+    url: "{{ api_url  }}/channels/574921092926537729/invites"
     _type: request
   - _id: fld_02ddb24b4e5148469979a2364fcc01dc
     created: 1577108071067
@@ -64,37 +82,28 @@ resources:
     name: Discord
     parentId: null
     _type: workspace
-  - _id: req_3f79be849f9d4a76ad7fc0572894acb4
+  - _id: req_6b8efae4c24240d4aef519511a216911
     authentication: {}
     body:
       mimeType: application/json
       text: |-
         {
-        	"max_age": 86400,
-        	"max_uses": 1,
-        	"temporary": false,
-        	"unique": true
+        	"content": "hello"
         }
-    created: 1577108079250
+    created: 1579446582054
     description: ""
     headers:
-      - description: ""
-        id: pair_314d74af59264ca4863e4f61e54e9484
-        name: Authorization
+      - name: Authorization
         value: "{{authorization}}"
-      - description: ""
-        id: pair_c1e909e6c80b48318872dab2e8d5b4ba
-        name: Content-Type
+      - name: Content-Type
         value: application/json
-      - description: ""
-        id: pair_f4fa3371ec2e4a50a1f6931515cc1b1c
-        name: Accept
+      - name: Accept
         value: application/json
     isPrivate: false
-    metaSortKey: -1577108079250
+    metaSortKey: -1579446582054
     method: POST
-    modified: 1577108348854
-    name: Create Channel Invite
+    modified: 1579446662806
+    name: Create Message (JSON)
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
     settingDisableRenderRequestBody: false
@@ -103,8 +112,70 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{ api_url  }}/channels/574921092926537729/invites"
+    url: "{{api_url}}/channels/574921092926537729/messages"
     _type: request
+  - _id: req_b7d357e7d7884ab7ad6d775410a9bde0
+    authentication: {}
+    body: {}
+    created: 1577108809820
+    description: ""
+    headers:
+      - name: Authorization
+        value: "{{authorization}}"
+    isPrivate: false
+    metaSortKey: -1577108079300
+    method: POST
+    modified: 1577108856675
+    name: Trigger Typing
+    parameters: []
+    parentId: fld_02ddb24b4e5148469979a2364fcc01dc
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{ api_url  }}/channels/574921092926537729/typing"
+    _type: request
+  - _id: req_cec8e07486b345eb976d2f7a3dc7c80c
+    authentication: {}
+    body: {}
+    created: 1576849973896
+    description: ""
+    headers:
+      - description: ""
+        id: pair_cba63055d20a428d8f868dd212db687e
+        name: Accept
+        value: application/json
+      - description: ""
+        id: pair_3bc1b69e257c48f3a1c5f12ee3e1d8d3
+        name: ""
+        value: ""
+    isPrivate: false
+    metaSortKey: -1576849859863
+    method: GET
+    modified: 1579446748346
+    name: Gateway
+    parameters: []
+    parentId: fld_cf4330beacd54f18b79efb9c54f2144d
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{api_url}}/gateway"
+    _type: request
+  - _id: fld_cf4330beacd54f18b79efb9c54f2144d
+    created: 1576849973891
+    description: ""
+    environment: {}
+    environmentPropertyOrder: null
+    metaSortKey: -1576979199448
+    modified: 1577108902482
+    name: Gateway
+    parentId: fld_fd85c020b1744299b6016ba69c25966b
+    _type: request_group
   - _id: req_b04831dcab13401aae787f4ca63a8d9d
     authentication: {}
     body: {}
@@ -134,44 +205,99 @@ resources:
     settingStoreCookies: true
     url: "{{api_url}}/gateway/bot"
     _type: request
-  - _id: fld_cf4330beacd54f18b79efb9c54f2144d
-    created: 1576849973891
-    description: ""
-    environment: {}
-    environmentPropertyOrder: null
-    metaSortKey: -1576979199448
-    modified: 1577108902482
-    name: Gateway
-    parentId: fld_fd85c020b1744299b6016ba69c25966b
-    _type: request_group
-  - _id: req_cec8e07486b345eb976d2f7a3dc7c80c
+  - _id: req_39206beb9d5c49d1b8fc029ac38c7073
     authentication: {}
-    body: {}
-    created: 1576849973896
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"name": "a guild I made"
+        }
+    created: 1579445642856
     description: ""
     headers:
-      - description: ""
-        id: pair_cba63055d20a428d8f868dd212db687e
-        name: Accept
+      - name: Authorization
+        value: "{{authorization}}"
+      - name: Content-Type
         value: application/json
-      - description: ""
-        id: pair_3bc1b69e257c48f3a1c5f12ee3e1d8d3
-        name: ""
-        value: ""
+      - name: Accept
+        value: application/json
     isPrivate: false
-    metaSortKey: -1576849859763
-    method: GET
-    modified: 1576852422846
-    name: Gateway
+    metaSortKey: -1579445642856
+    method: POST
+    modified: 1579446242193
+    name: Create Guild
     parameters: []
-    parentId: fld_cf4330beacd54f18b79efb9c54f2144d
+    parentId: fld_1d2d60a473504c10b9e30848d3864d42
     settingDisableRenderRequestBody: false
     settingEncodeUrl: true
     settingFollowRedirects: global
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/gateway"
+    url: "{{ api_url  }}/guilds"
+    _type: request
+  - _id: fld_1d2d60a473504c10b9e30848d3864d42
+    created: 1579445628832
+    description: ""
+    environment: {}
+    environmentPropertyOrder: null
+    metaSortKey: -1576914763638.5
+    modified: 1579445635956
+    name: Guild
+    parentId: fld_fd85c020b1744299b6016ba69c25966b
+    _type: request_group
+  - _id: req_6da7098d14e94f9da6d65c8d67c182cf
+    authentication: {}
+    body:
+      mimeType: application/json
+      text: "{}"
+    created: 1579446676594
+    description: ""
+    headers:
+      - name: Authorization
+        value: "{{authorization}}"
+      - name: Content-Type
+        value: application/json
+      - name: Accept
+        value: application/json
+    isPrivate: false
+    metaSortKey: -1579445642831
+    method: POST
+    modified: 1579446765095
+    name: Create Guild Channel
+    parameters: []
+    parentId: fld_1d2d60a473504c10b9e30848d3864d42
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{api_url}}/guilds/574921006817476608/channels"
+    _type: request
+  - _id: req_d245dfc7d6bf4282ad7405397f6f0f4f
+    authentication: {}
+    body: {}
+    created: 1579446179319
+    description: ""
+    headers:
+      - name: Authorization
+        value: "{{authorization}}"
+    isPrivate: false
+    metaSortKey: -1579445642806
+    method: DELETE
+    modified: 1579446738438
+    name: Delete Guild
+    parameters: []
+    parentId: fld_1d2d60a473504c10b9e30848d3864d42
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{api_url}}/guilds/668468453199446018"
     _type: request
   - _id: req_812faf17a42349a1aee6ee3c16a94620
     authentication: {}
@@ -423,18 +549,18 @@ resources:
     cookies:
       - creation: 2019-12-20T14:26:04.134Z
         domain: discordapp.com
-        expires: 2020-01-19T14:26:03.000Z
+        expires: 2020-02-18T14:54:53.000Z
         extensions:
           - SameSite=Lax
         hostOnly: false
         httpOnly: true
-        id: "32268282673271065"
+        id: "03613449868299301"
         key: __cfduid
-        lastAccessed: 2019-12-20T14:26:04.134Z
+        lastAccessed: 2020-01-19T14:54:53.458Z
         path: /
-        value: dac8aed44419bf68ae39210fe2b40116f1576851963
+        value: d684d488da3623ece8ceee77dcdc1a3f81579445693
     created: 1572465096242
-    modified: 1576851964134
+    modified: 1579445693460
     name: Default Jar
     parentId: wrk_ef4732eebfd640729709f9377913ae41
     _type: cookie_jar

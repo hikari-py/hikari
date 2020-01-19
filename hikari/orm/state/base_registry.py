@@ -582,7 +582,6 @@ class BaseRegistry(abc.ABC):
                 the payload of the guild.
             shard_id:
                 the shard ID, if known. May be `None` if not sharded or the information is not applicable.
-
         Returns:
             a :class:`hikari.orm.models.guilds.Guild` object.
         """
