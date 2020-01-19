@@ -169,28 +169,6 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(event_types.EventType.READY, gateway_impl)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "chunker_mode",
-        [
-            dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS,
-            dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES,
-        ],
-    )
-    async def test_handle_ready_handles_chunker(
-        self, discord_ready_payload, adapter_impl, gateway_impl, chunker_impl, chunker_mode, state_registry_impl,
-    ):
-        guild1 = _helpers.mock_model(guilds.Guild)
-        guild2 = _helpers.mock_model(guilds.Guild)
-        adapter_impl._request_chunks_mode = chunker_mode
-        state_registry_impl.parse_guild = mock.MagicMock(side_effect=[guild1, guild2])
-        await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
-        chunker_impl.load_members_for.assert_called_with(
-            guild1,
-            guild2,
-            presences=chunker_mode == dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES,
-        )
-
-    @pytest.mark.asyncio
     async def test_handle_ready_doesnt_chunk_when_no_guilds_in_payload(
         self, discord_ready_payload, adapter_impl, gateway_impl, chunker_impl, state_registry_impl,
     ):
@@ -206,18 +184,6 @@ class TestDispatchingEventAdapterImpl:
         await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
 
         fabric_impl.state_registry.parse_application_user.assert_called_with(discord_ready_payload["user"])
-
-    @pytest.mark.asyncio
-    async def test_handle_ready_adds_partial_guilds(
-        self, discord_ready_payload, fabric_impl, adapter_impl, gateway_impl
-    ):
-        await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
-
-        raw_guild_1 = {"id": "9182736455463", "unavailable": True}
-        raw_guild_2 = {"id": "72819099110270", "unavailable": True}
-
-        fabric_impl.state_registry.parse_guild.assert_any_call(raw_guild_1, gateway_impl.shard_id)
-        fabric_impl.state_registry.parse_guild.assert_any_call(raw_guild_2, gateway_impl.shard_id)
 
     @pytest.mark.asyncio
     async def test_handle_invalid_session_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
