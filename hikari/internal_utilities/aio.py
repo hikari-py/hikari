@@ -46,7 +46,7 @@ def optional_await(
         description:
             the optional name to give the dispatched task.
         shield:
-            defaults to False. If `True`, the coroutine will be wrapped in a :function:`asyncio.shield`
+            defaults to False. If `True`, the coroutine will be wrapped in a :func:`asyncio.shield`
             to prevent it being cancelled.
 
     Returns:
