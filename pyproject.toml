@@ -19,30 +19,8 @@
 requires = ["wheel", "setuptools"]
 build-backend = "setuptools.build_meta"
 
-classifiers     = [
-    "Development Status :: 2 - Pre-Alpha",
-    "Framework :: AsyncIO",
-    "Intended Audience :: Developers",
-    "Natural Language :: English",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: 3 :: Only",
-    "Topic :: Communications :: Chat",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Typing :: Typed",
-]
-packages        = [
-    {include = "hikari"}
-]
 
 [tool.black]
 line-length     = 120
-target-version  = [
-    "py37", 
-    "py38", 
-    # "py39"
-]
+target-version  = ["py38"]
 include         = ".*py$"

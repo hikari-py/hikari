@@ -18,7 +18,7 @@
 .deploy:
   allow_failure: false
   stage: deploy
-  image: python:3.8.0
+  image: python:3.8.1
   before_script:
     - source tasks/config.sh
     - "[[ \"$CI_PROJECT_URL\" = \"$ORIGINAL_REPO_URL\" ]] || (echo 'You are running off of a fork, so deployment is skipped.' && exit 0)"

@@ -34,7 +34,7 @@ too!
 
 ## What is this API?
 
-A base Python Discord API framework for CPython 3.7 and CPython 3.8 Designed for ease of use,
+A base Python Discord API framework for CPython 3.8 Designed for ease of use,
 customization, and sane defaults.
 
 This API is designed to provide the pure-python interface to the RESTful Discord API and the Gateway. This will provide

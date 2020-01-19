@@ -29,7 +29,6 @@ import typing
 
 from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import compat
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import reprs
@@ -202,7 +201,7 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
         Returns:
             A typing indicator context manager.
         """
-        task = compat.asyncio.create_task(self._typing_loop(), name=f"typing indicator in {self}")
+        task = asyncio.create_task(self._typing_loop(), name=f"typing indicator in {self}")
         # Trigger the first typing event before we continue in case something does block
         await self.trigger_typing()
         yield

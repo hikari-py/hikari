@@ -23,7 +23,6 @@ to be implementation detail that could change at any time, so should not be used
 from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import cache
-from hikari.internal_utilities import compat
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import conversions
 from hikari.internal_utilities import dates
