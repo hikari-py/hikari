@@ -27,8 +27,8 @@ import typing
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import containers
 
-_DELEGATE_MEMBERS_FIELD = "___delegate_members___"
-_DELEGATE_TYPES_FIELD = "___delegate_type_mapping___"
+DELEGATE_MEMBERS_FIELD = "___delegate_members___"
+DELEGATE_TYPES_FIELD = "___delegate_type_mapping___"
 ObjectT = typing.TypeVar("ObjectT")
 
 
@@ -79,7 +79,7 @@ def delegate_to(
         assertions.assert_subclasses(cls, delegate_type)
         delegated_members = set()
         # Tuple of tuples, each sub tuple is (magic_field, delegate_type)
-        delegated_types = getattr(cls, _DELEGATE_TYPES_FIELD, containers.EMPTY_SEQUENCE)
+        delegated_types = getattr(cls, DELEGATE_TYPES_FIELD, containers.EMPTY_SEQUENCE)
 
         # We have three valid cases: either the attribute is a class member, in which case it is in `__dict__`, the
         # attribute is defined in the class `__slots__`, in which case it is in `__dict__`, or the field is given
@@ -97,9 +97,9 @@ def delegate_to(
             delegated_members.add(name)
 
         # Enable repeating the decorator for multiple delegation.
-        delegated_members |= getattr(cls, _DELEGATE_MEMBERS_FIELD, set())
-        setattr(cls, _DELEGATE_MEMBERS_FIELD, frozenset(delegated_members))
-        setattr(cls, _DELEGATE_TYPES_FIELD, (*delegated_types, (magic_field, delegate_type)))
+        delegated_members |= getattr(cls, DELEGATE_MEMBERS_FIELD, set())
+        setattr(cls, DELEGATE_MEMBERS_FIELD, frozenset(delegated_members))
+        setattr(cls, DELEGATE_TYPES_FIELD, (*delegated_types, (magic_field, delegate_type)))
         return cls
 
     return decorator

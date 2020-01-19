@@ -34,6 +34,7 @@ from hikari.internal_utilities import assertions
 from hikari.internal_utilities import compat
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
+from hikari.internal_utilities import delegate
 from hikari.orm import fabric
 
 T = typing.TypeVar("T")
@@ -110,7 +111,11 @@ class BaseModel(metaclass=abc.ABCMeta):
     #: Tracks the fields we shouldn't clone. This always includes the state.
     __copy_by_ref__: typing.ClassVar[typing.Tuple] = ("_fabric",)
 
-    __do_not_copy__: typing.ClassVar[typing.Tuple] = ("__weakref__",)
+    __do_not_copy__: typing.ClassVar[typing.Tuple] = (
+        "__weakref__",
+        delegate.DELEGATE_MEMBERS_FIELD,
+        delegate.DELEGATE_TYPES_FIELD
+    )
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -169,9 +174,11 @@ class BaseModel(metaclass=abc.ABCMeta):
         # noinspection PySuperArguments
         instance = super(BaseModel, cls).__new__(cls)
 
+        delegate_attrs = getattr(instance, delegate.DELEGATE_MEMBERS_FIELD, containers.EMPTY_COLLECTION)
+
         for attr in cls.__all_slots__:
             attr_val = getattr(self, attr)
-            if attr in self.__do_not_copy__:
+            if attr in self.__do_not_copy__ or attr in delegate_attrs:
                 continue
             elif attr in self.__copy_by_ref__:
                 setattr(instance, attr, attr_val)
