@@ -41,7 +41,7 @@ import aiohttp.typedefs
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
-from hikari.net import http_client
+from hikari.net import base_http_client
 
 T = typing.TypeVar("T")
 
@@ -698,7 +698,7 @@ class Summary:
         )
 
 
-class ServiceStatusClient(http_client.HTTPClient):
+class StatusInfoClient(base_http_client.BaseHTTPClient):
     """
     A generic client to allow you to check the current status of Discord's services.
 
@@ -707,7 +707,7 @@ class ServiceStatusClient(http_client.HTTPClient):
         and registered to the current thread.
     """
 
-    __slots__ = ("uri",)
+    __slots__ = ("url",)
 
     @typing.overload
     def __init__(
@@ -760,16 +760,19 @@ class ServiceStatusClient(http_client.HTTPClient):
                 defaulting to True, setting this to false will disable SSL verification.
             timeout:
                 optional timeout to apply to individual HTTP requests.
+            url:
+                the URL to use for StatusPage's API to. If unspecified, it uses the default URL you generally want
+                to be using.
         """
+        self.url = f"https://status.discordapp.com/api/v{self.version}" if "url" not in kwargs else kwargs.pop("url")
         super().__init__(**kwargs)
-        self.uri = f"https://status.discordapp.com/api/v{self.version}"
 
     @property
     def version(self) -> int:
         return 2
 
     async def _perform_request(self, route: str, cast: typing.Optional[typing.Type[T]], data=None, method=None) -> T:
-        coro = super()._request(method or self.GET, self.uri + route, data=data)
+        coro = super()._request(method or self.GET, self.url + route, data=data)
 
         async with coro as resp:
             self.logger.debug(
@@ -900,5 +903,5 @@ __all__ = [
     "ScheduledMaintenances",
     "Summary",
     "OverallStatus",
-    "ServiceStatusClient",
+    "StatusInfoClient",
 ]

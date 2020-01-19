@@ -326,10 +326,10 @@ class GatewayClient:
                     self.logger.debug("receive text payload %r", message.data)
                 else:
                     self.logger.debug(
-                        "receive text payload (op:%s, t:%s, seq:%s, size:%s)",
+                        "receive text payload (op:%s, t:%s, s:%s, size:%s)",
                         obj.get("op"),
                         obj.get("t"),
-                        obj.get("seq"),
+                        obj.get("s"),
                         len(message.data),
                     )
                 return obj
@@ -350,10 +350,10 @@ class GatewayClient:
                     self.logger.debug("receive %s zlib-encoded packets containing payload %r", packets, pl)
                 else:
                     self.logger.debug(
-                        "receive zlib payload (op:%s, t:%s, seq:%s, size:%s, packets:%s)",
+                        "receive zlib payload (op:%s, t:%s, s:%s, size:%s, packets:%s)",
                         obj.get("op"),
                         obj.get("t"),
-                        obj.get("seq"),
+                        obj.get("s"),
                         len(pl),
                         packets,
                     )

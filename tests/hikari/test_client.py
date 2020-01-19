@@ -29,7 +29,7 @@ import asyncmock as mock
 from hikari import client as _client
 from hikari import client_options as _client_options
 from hikari.net import gateway
-from hikari.net import http_api
+from hikari.net import http_client
 from hikari.orm import fabric as _fabric
 from hikari.orm.gateway import basic_chunker_impl
 from hikari.orm.gateway import dispatching_event_adapter_impl

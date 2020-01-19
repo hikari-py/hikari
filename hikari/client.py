@@ -34,7 +34,7 @@ from hikari.internal_utilities import assertions
 from hikari.internal_utilities import loggers
 from hikari.net import errors
 from hikari.net import gateway
-from hikari.net import http_api
+from hikari.net import http_client
 from hikari.orm import fabric
 from hikari.orm.gateway import basic_chunker_impl
 from hikari.orm.gateway import dispatching_event_adapter_impl
@@ -87,7 +87,7 @@ class Client:
         try:
             self._fabric.state_registry = await self._new_state_registry()
             self._fabric.event_handler = await self._new_event_handler()
-            self._fabric.http_api = await self._new_http_api()
+            self._fabric.http_client = await self._new_http_client()
             self._fabric.http_adapter = await self._new_http_adapter()
             self._fabric.gateways = await self._new_shard_map()
             self._fabric.chunker = await self._new_chunker()
@@ -107,8 +107,8 @@ class Client:
             self._fabric, self.dispatch, request_chunks_mode=self._client_options.chunk_mode,
         )
 
-    async def _new_http_api(self):
-        return http_api.HTTPAPI(
+    async def _new_http_client(self):
+        return http_client.HTTPClient(
             allow_redirects=self._client_options.allow_redirects,
             token=f"Bot {self.token}",
             connector=self._client_options.connector,
