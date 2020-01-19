@@ -120,7 +120,7 @@ class RouteTemplate:
         else:
             self.major_params = frozenset(major_params)
 
-    def compile(self, method, **params: Any) -> CompiledRoute:
+    def compile(self, method, /, **params: Any) -> CompiledRoute:
         """
         Generate a formatted :class:`CompiledRoute` for this route, taking into account any URL parameters that have
         been passed, and extracting the major params for bucket hash operations accordingly.
@@ -133,7 +133,7 @@ class RouteTemplate:
         """
         major_hash_part = "-".join((str(params[p]) for p in self.major_params))
 
-        return CompiledRoute(method, self.path_template, self.path_template.format_map(params), major_hash_part,)
+        return CompiledRoute(method, self.path_template, self.path_template.format_map(params), major_hash_part)
 
     def __repr__(self) -> str:
         this_type = type(self).__name__

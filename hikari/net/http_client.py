@@ -803,7 +803,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         transformations.put_if_specified(payload, "allow", allow)
         transformations.put_if_specified(payload, "deny", deny)
         transformations.put_if_specified(payload, "type", type_)
-        route = routes.CHANNEL_PERMISSIONS.compile(channel_id=channel_id, overwrite_id=overwrite_id)
+        route = routes.CHANNEL_PERMISSIONS.compile(self.PATCH, channel_id=channel_id, overwrite_id=overwrite_id)
         await self._request(route, json_body=payload, reason=reason)
 
     async def get_channel_invites(self, channel_id: str) -> typing.Sequence[containers.JSONObject]:

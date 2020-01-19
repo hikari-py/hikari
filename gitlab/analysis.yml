@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 .tools-base:
-  image: python:3.8.0
+  image: python:3.8.1
   stage: test
   before_script:
     - pip install nox

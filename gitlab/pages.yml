@@ -31,7 +31,7 @@
 
 .generate-pages:
   extends: .deploy-pages-activation
-  image: python:3.8.0
+  image: python:3.8.1
   stage: deploy
   script:
     - source tasks/deploy.sh
@@ -66,7 +66,7 @@ pages:  # deploys the generated artifacts as pages
     - mv public/master/* public
 
 test-pages:
-  image: python:3.8.0
+  image: python:3.8.1
   stage: test
   allow_failure: false
   script:

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-FROM        python:3.7.4
+FROM        python:3.8.1
 COPY        . /hikari
 WORKDIR     /hikari
 RUN         pip install nox

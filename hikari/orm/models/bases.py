@@ -31,7 +31,6 @@ import typing
 
 from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import compat
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import delegate
@@ -351,7 +350,7 @@ class UnknownObject(typing.Generic[T], SnowflakeMixin):
             raise NotImplementedError("Cannot resolve this value currently")
         if not isinstance(self._future, asyncio.Future):
             # noinspection PyUnresolvedReferences
-            self._future = compat.asyncio.create_task(
+            self._future = asyncio.create_task(
                 self._future(), name=f"executing {self._future.func.__name__} on UnknownObject with ID {self.id}"
             )
             self._future.add_done_callback(self._invoke_callbacks)

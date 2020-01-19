@@ -15,11 +15,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-.cpython3.7: &cpython37
-  image: python:3.7.4
-
-.cpython3.8: &cpython38
+.cpython3.8.0: &cpython380
   image: python:3.8.0
+
+.cpython3.8.1: &cpython381
+  image: python:3.8.1
 
 .cpython3.9: &cpython39
   image: python:3.9-rc
@@ -65,36 +65,28 @@
     - source tasks/config.sh
     - mkdir public || true
 
-pytest-c3.7:
-  <<: *cpython37
+pytest-c3.8.0:
+  <<: *cpython380
   <<: *noxtest
 
-pytest-c3.8:
-  <<: *cpython38
+pytest-c3.8.1:
+  <<: *cpython381
   <<: *noxtest
 
 pytest-c3.9:
   <<: *cpython39
   <<: *noxtest
 
-setup-c3.7-dryrun:
-  <<: *cpython37
-  <<: *noxpipinstall
-
 setup-c3.8-dryrun:
-  <<: *cpython38
+  <<: *cpython380
   <<: *noxpipinstall
 
 setup-c3.9-dryrun:
   <<: *cpython39
   <<: *noxpipinstall
 
-verify-c3.7-pypi:
-  <<: *cpython37
-  <<: *noxpipinstallshowtime
-
 verify-c3.8-pypi:
-  <<: *cpython38
+  <<: *cpython380
   <<: *noxpipinstallshowtime
 
 verify-c3.9-pypi:
@@ -102,7 +94,7 @@ verify-c3.9-pypi:
   <<: *noxpipinstallshowtime
 
 coverage-coalesce:
-  image: python:3.8.0-alpine
+  image: python:3.8.1-alpine
   stage: verify
   script:
     - pip install coverage
