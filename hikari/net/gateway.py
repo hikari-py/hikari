@@ -250,7 +250,7 @@ class GatewayClient:
             url += "&compress=zlib-stream"
         self.url = url
 
-        self.ratelimiter = ratelimits.GatewayRateLimiter(f"gateway shard {shard_id}/{shard_count}", 60.0, 120)
+        self.ratelimiter = ratelimits.WindowedBurstRateLimiter(f"gateway shard {shard_id}/{shard_count}", 60.0, 120)
 
     @property
     def latency(self):
@@ -341,7 +341,7 @@ class GatewayClient:
                     ),
                 },
                 "shard": [self.shard_id, self.shard_count],
-            }
+            },
         }
 
         # Do not always add this option; if it is None, exclude it for now. According to Mason,
