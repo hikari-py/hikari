@@ -217,8 +217,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
                     member.roles.remove(role_obj)
 
     def get_channel_by_id(
-        self, 
-        channel_id: int
+        self, channel_id: int
     ) -> type_hints.Nullable[typing.Union[channels.GuildChannel, channels.DMChannel]]:
         # (Doesnt detect "__getitem__" as "get") pylint: disable=no-member
         return self._guild_channels.get(channel_id) or self._dm_channels.get(channel_id)
@@ -258,7 +257,9 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return self._guilds.get(guild_id)
 
     def get_mandatory_guild_by_id(  # lgtm [py/similar-function]
-        self, guild_id: int, callback_if_unresolved: type_hints.Nullable[typing.Callable[[guilds.Guild], typing.Any]] = None
+        self,
+        guild_id: int,
+        callback_if_unresolved: type_hints.Nullable[typing.Callable[[guilds.Guild], typing.Any]] = None,
     ) -> typing.Union[guilds.Guild, bases.UnknownObject[guilds.Guild]]:
         obj = self.get_guild_by_id(guild_id)
         if obj is not None:
@@ -323,7 +324,9 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return self._users.get(user_id)
 
     def get_mandatory_user_by_id(  # lgtm [py/similar-function]
-        self, user_id: int, callback_if_unresolved: type_hints.Nullable[typing.Callable[[users.User], typing.Any]] = None
+        self,
+        user_id: int,
+        callback_if_unresolved: type_hints.Nullable[typing.Callable[[users.User], typing.Any]] = None,
     ) -> typing.Union[users.User, bases.UnknownObject[users.User]]:
         obj = self.get_user_by_id(user_id)
         if obj is not None:

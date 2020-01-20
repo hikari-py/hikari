@@ -81,10 +81,10 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             json_serialize=json_serialize,
         )
         self.base_url = base_url
-        self.global_ratelimiter = ratelimits.GlobalHTTPRateLimiter()
+        self.global_ratelimiter = ratelimits.ManualRateLimiter()
         self.json_serialize = json_serialize
         self.json_deserialize = json_deserialize
-        self.ratelimiter = ratelimits.BucketedHTTPRateLimiter()
+        self.ratelimiter = ratelimits.HTTPBucketRateLimiterManager()
 
         if token is not None and not token.startswith(self._AUTHENTICATION_SCHEMES):
             this_type = type(self).__name__
@@ -211,7 +211,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 # We are being rate limited.
                 if body["global"]:
                     retry_after = float(body["retry_after"]) / 1_000
-                    self.global_ratelimiter.lock(retry_after)
+                    self.global_ratelimiter.throttle(retry_after)
                 continue
 
             if status >= 400:
@@ -233,11 +233,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                     raise errors.ClientHTTPError(f"{status}: {resp.reason}", compiled_route, message, code)
 
                 await self._handle_bad_response(
-                    backoff,
-                    "Received a server error response",
-                    compiled_route,
-                    message,
-                    status
+                    backoff, "Received a server error response", compiled_route, message, status
                 )
 
             return body
