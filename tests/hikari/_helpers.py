@@ -357,3 +357,25 @@ class AwaitableMock:
         assert self.await_count == 1
 
     is_resolved = False
+
+
+def retry(max_retries):
+    def decorator(func):
+        assert asyncio.iscoroutinefunction(func), "retry only supports coroutine functions currently"
+
+        @functools.wraps(func)
+        async def retry_wrapper(*args, **kwargs):
+            ex = None
+            for i in range(max_retries + 1):
+                if i:
+                    print("retry", i, "of", max_retries)
+                try:
+                    await func(*args, **kwargs)
+                    return
+                except AssertionError as exc:
+                    ex = exc  # local variable 'ex' referenced before assignment: wtf?
+            raise AssertionError(f"all {max_retries} retries failed") from ex
+
+        return retry_wrapper
+
+    return decorator
