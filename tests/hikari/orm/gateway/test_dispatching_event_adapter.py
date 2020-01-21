@@ -51,7 +51,7 @@ def payload():
 @pytest.mark.asyncio
 async def test_that_consume_raw_event_consumes_a_named_coroutine_if_it_exists(event_adapter_impl, gateway, payload):
     event_adapter_impl.handle_something = mock.MagicMock(wraps=event_adapter_impl.handle_something)
-    await event_adapter_impl.consume_raw_event(gateway, "SOMETHING", payload)
+    event_adapter_impl.consume_raw_event(gateway, "SOMETHING", payload)
     event_adapter_impl.handle_something.assert_called_with(gateway, payload)
 
 
@@ -60,11 +60,11 @@ async def test_that_consume_raw_event_calls_drain_unrecognised_event_hook_on_inv
     event_adapter_impl, gateway, payload
 ):
     event_adapter_impl.drain_unrecognised_event = mock.MagicMock(wraps=event_adapter_impl.drain_unrecognised_event)
-    await event_adapter_impl.consume_raw_event(gateway, "SOMETHING_ELSE", payload)
+    event_adapter_impl.consume_raw_event(gateway, "SOMETHING_ELSE", payload)
     event_adapter_impl.drain_unrecognised_event.assert_called_with(gateway, "SOMETHING_ELSE", payload)
 
 
 @pytest.mark.asyncio
 async def test_that_consume_raw_event_catches_any_exception(event_adapter_impl, gateway, payload):
     event_adapter_impl.drain_unrecognised_event = mock.MagicMock(side_effect=RuntimeError)
-    await event_adapter_impl.consume_raw_event(gateway, "SOMETHING_ELSE", payload)
+    event_adapter_impl.consume_raw_event(gateway, "SOMETHING_ELSE", payload)

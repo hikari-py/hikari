@@ -492,7 +492,7 @@ class TestStateRegistryImpl:
         result = registry.get_mandatory_guild_emoji_by_id(70, 123, callback_obj)
         assert result is unknown_obj
         registry._prepare_unknown_with_callback.assert_called_with(
-            70, registry.fabric.http_adapter.fetch_guild_emoji, callback_obj, 70, 123
+            70, registry.fabric.http_adapter.fetch_guild_emoji, callback_obj, 70, guild=123
         )
 
     def test_get_guild_by_id_cached(self, registry: state_registry_impl.StateRegistryImpl):
@@ -559,7 +559,7 @@ class TestStateRegistryImpl:
         result = registry.get_mandatory_message_by_id(70, 420, callback_obj)
 
         registry._prepare_unknown_with_callback.assert_called_with(
-            70, registry.fabric.http_adapter.fetch_message, callback_obj, 420, 70
+            70, registry.fabric.http_adapter.fetch_message, callback_obj, 70, channel=420
         )
 
         assert result is unknown_obj
@@ -752,7 +752,7 @@ class TestStateRegistryImpl:
         result = registry.get_mandatory_member_by_id(1, guild_obj.id, callback_obj)
 
         registry._prepare_unknown_with_callback.assert_called_with(
-            1, registry.fabric.http_adapter.fetch_member, callback_obj, 1, 2
+            1, registry.fabric.http_adapter.fetch_member, callback_obj, 1, guild=2
         )
 
         assert result is unknown_obj
@@ -772,7 +772,7 @@ class TestStateRegistryImpl:
         result = registry.get_mandatory_member_by_id(3, 4, callback_obj)
 
         registry._prepare_unknown_with_callback.assert_called_with(
-            3, registry.fabric.http_adapter.fetch_member, callback_obj, 3, 4
+            3, registry.fabric.http_adapter.fetch_member, callback_obj, 3, guild=4
         )
 
         assert result is unknown_obj
@@ -895,32 +895,6 @@ class TestStateRegistryImpl:
                 registry.parse_channel(payload)
                 assert channel_obj in registry._dm_channels.values()
                 assert channel_obj not in registry._guild_channels.values()
-
-    @pytest.mark.parametrize(
-        "impl_t",
-        [
-            channels.GuildAnnouncementChannel,
-            channels.GuildVoiceChannel,
-            channels.GuildCategory,
-            channels.GuildTextChannel,
-            channels.GuildStoreChannel,
-        ],
-    )
-    def test_parse_channel_caches_guild_channel_if_uncached_guild_channel(
-        self, registry: state_registry_impl.StateRegistryImpl, impl_t
-    ):
-        payload = {"id": "1234", "type": -1}
-        guild_obj = _helpers.mock_model(guilds.Guild, id=100, channels={})
-        channel_obj = _helpers.mock_model(impl_t, id=1234, guild=guild_obj)
-        registry._dm_channels = _helpers.StrongWeakValuedDict()
-        registry._guild_channels = _helpers.StrongWeakValuedDict()
-        registry.get_channel_by_id = mock.MagicMock(return_value=None)
-        with _helpers.mock_patch(channels.parse_channel, return_value=channel_obj):
-            with _helpers.mock_patch(channels.is_channel_type_dm, return_value=False):
-                registry.parse_channel(payload)
-                assert channel_obj not in registry._dm_channels.values()
-                assert channel_obj in registry._guild_channels.values()
-                assert guild_obj.channels[channel_obj.id] is channel_obj
 
     @pytest.mark.parametrize(
         "impl_t",

@@ -238,6 +238,8 @@ class BaseEmbed(bases.BaseModel):
     _type: str
     _footer: typing.Optional[EmbedFooter]
     _image: typing.Optional[EmbedImage]
+    _provider: typing.Optional[EmbedProvider]
+    _video: typing.Optional[EmbedVideo]
     _thumbnail: typing.Optional[EmbedImage]
     _author: typing.Optional[EmbedAuthor]
     _fields: typing.MutableSequence[EmbedField]
@@ -504,6 +506,7 @@ class BaseEmbed(bases.BaseModel):
 
         embed._type = payload["type"]
 
+        # pylint: disable=assigning-non-slot
         if "author" in payload:
             embed._author = EmbedAuthor.from_dict(payload["author"])
         if "footer" in payload:
@@ -518,6 +521,7 @@ class BaseEmbed(bases.BaseModel):
             embed._provider = EmbedProvider.from_dict(payload["provider"])
         if "video" in payload:
             embed._video = EmbedVideo.from_dict(payload["video"])
+        # pylint: enable=assigning-non-slot
 
         return embed
 

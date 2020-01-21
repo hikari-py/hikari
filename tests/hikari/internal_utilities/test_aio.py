@@ -63,7 +63,7 @@ async def test_optional_await_gets_run_with_await():
 
     wrapped_coro_fn = aio.optional_await()(coro_fn)
 
-    with mock.patch("hikari.internal_utilities.compat.asyncio.create_task", new=mock.AsyncMock()) as create_task:
+    with mock.patch("asyncio.create_task", new=mock.AsyncMock()) as create_task:
         await wrapped_coro_fn(9, 18, 27)
         create_task.assert_called_with(coro_fn(9, 18, 27), name=None)
 
@@ -74,7 +74,7 @@ async def test_optional_await_gets_run_without_await():
 
     wrapped_coro_fn = aio.optional_await()(coro_fn)
 
-    with mock.patch("hikari.internal_utilities.compat.asyncio.create_task") as create_task:
+    with mock.patch("asyncio.create_task") as create_task:
         wrapped_coro_fn(9, 18, 27)
         create_task.assert_called_with(coro_fn(9, 18, 27), name=None)
 
@@ -85,7 +85,7 @@ async def test_optional_await_with_description():
 
     wrapped_coro_fn = aio.optional_await("foo")(coro_fn)
 
-    with mock.patch("hikari.internal_utilities.compat.asyncio.create_task", new=mock.AsyncMock()) as create_task:
+    with mock.patch("asyncio.create_task", new=mock.AsyncMock()) as create_task:
         await wrapped_coro_fn(9, 18, 27)
         create_task.assert_called_with(coro_fn(9, 18, 27), name="foo")
 
@@ -98,7 +98,7 @@ async def test_optional_await_shielded():
     shielded_coro = CoroutineStub()
 
     with mock.patch("asyncio.shield", new=mock.MagicMock(return_value=shielded_coro)) as shield:
-        with mock.patch("hikari.internal_utilities.compat.asyncio.create_task", new=mock.AsyncMock()) as create_task:
+        with mock.patch("asyncio.create_task", new=mock.AsyncMock()) as create_task:
             await wrapped_coro_fn(9, 18, 27)
             shield.assert_called_with(coro_fn(9, 18, 27))
             create_task.assert_called_with(shielded_coro, name=None)

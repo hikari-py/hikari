@@ -221,6 +221,7 @@ async def test_safe_read_file_with_InMemoryFile():
     mock_in_memory_file.open.assert_called_once()
     mock_in_memory_file.open().read.assert_called_once()
 
+
 @pytest.mark.asyncio
 @_helpers.assert_raises(type_=ValueError)
 async def test_safe_read_file_raises_ValueError_with_invalid_file():

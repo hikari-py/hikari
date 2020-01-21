@@ -59,7 +59,11 @@ def dispatch_impl():
 
 @pytest.fixture()
 def gateway_impl():
-    return mock.MagicMock(spec_set=_gateway.GatewayClient)
+    # noinspection PyTypeChecker
+    gw: _gateway.GatewayClient = mock.MagicMock(spec_set=_gateway.GatewayClient)
+    gw.shard_id = 123
+    gw.shard_count = 456
+    return gw
 
 
 @pytest.fixture()
@@ -111,46 +115,15 @@ def discord_ready_payload():
 @pytest.mark.orm
 class TestDispatchingEventAdapterImpl:
     @pytest.mark.asyncio
-    async def test_drain_unrecognised_event_first_time_adds_to_ignored_events_set(self, adapter_impl, gateway_impl):
-        adapter_impl._ignored_events.clear()
-        assert not adapter_impl._ignored_events, "ignored events were not empty at the start!"
-
+    async def test_drain_unrecognised_event_first_time_does_nothing(self, adapter_impl, gateway_impl):
         await adapter_impl.drain_unrecognised_event(gateway_impl, "try_to_do_something", ...)
-
-        assert "try_to_do_something" in adapter_impl._ignored_events
-
-    @pytest.mark.asyncio
-    async def test_drain_unrecognised_event_first_time_logs_warning(self, adapter_impl, gateway_impl):
-        adapter_impl._ignored_events.clear()
-        assert not adapter_impl._ignored_events, "ignored events were not empty at the start!"
-
-        await adapter_impl.drain_unrecognised_event(gateway_impl, "try_to_do_something", ...)
-
-        adapter_impl.logger.warning.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_drain_unrecognised_event_second_time_does_not_log_anything(self, adapter_impl, gateway_impl):
-        adapter_impl._ignored_events = {"try_to_do_something"}
-
-        await adapter_impl.drain_unrecognised_event(gateway_impl, "try_to_do_something", ...)
-
-        assert "try_to_do_something" in adapter_impl._ignored_events
-        adapter_impl.logger.warning.assert_not_called()
-
-    @pytest.mark.asyncio
-    async def test_drain_unrecognised_event_invokes_raw_dispatch(self, adapter_impl, gateway_impl, dispatch_impl):
-        await adapter_impl.drain_unrecognised_event(gateway_impl, "try_to_do_something", ...)
-
-        dispatch_impl.assert_called_with("raw_try_to_do_something", ...)
 
     @pytest.mark.asyncio
     async def test_handle_disconnect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
         payload = {"code": 123, "reason": "test"}
         await adapter_impl.handle_disconnect(gateway_impl, payload)
 
-        dispatch_impl.assert_called_with(
-            event_types.EventType.DISCONNECT, gateway_impl, payload.get("code"), payload.get("reason")
-        )
+        dispatch_impl.assert_called_with(event_types.EventType.DISCONNECT, gateway_impl)
 
     @pytest.mark.asyncio
     async def test_handle_connect_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):
@@ -163,28 +136,6 @@ class TestDispatchingEventAdapterImpl:
     ):
         await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
         dispatch_impl.assert_called_with(event_types.EventType.READY, gateway_impl)
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "chunker_mode",
-        [
-            dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS,
-            dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES,
-        ],
-    )
-    async def test_handle_ready_handles_chunker(
-        self, discord_ready_payload, adapter_impl, gateway_impl, chunker_impl, chunker_mode, state_registry_impl,
-    ):
-        guild1 = _helpers.mock_model(guilds.Guild)
-        guild2 = _helpers.mock_model(guilds.Guild)
-        adapter_impl._request_chunks_mode = chunker_mode
-        state_registry_impl.parse_guild = mock.MagicMock(side_effect=[guild1, guild2])
-        await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
-        chunker_impl.load_members_for.assert_called_with(
-            guild1,
-            guild2,
-            presences=chunker_mode == dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES,
-        )
 
     @pytest.mark.asyncio
     async def test_handle_ready_doesnt_chunk_when_no_guilds_in_payload(
@@ -202,18 +153,6 @@ class TestDispatchingEventAdapterImpl:
         await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
 
         fabric_impl.state_registry.parse_application_user.assert_called_with(discord_ready_payload["user"])
-
-    @pytest.mark.asyncio
-    async def test_handle_ready_adds_partial_guilds(
-        self, discord_ready_payload, fabric_impl, adapter_impl, gateway_impl
-    ):
-        await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
-
-        raw_guild_1 = {"id": "9182736455463", "unavailable": True}
-        raw_guild_2 = {"id": "72819099110270", "unavailable": True}
-
-        fabric_impl.state_registry.parse_guild.assert_any_call(raw_guild_1, gateway_impl.shard_id)
-        fabric_impl.state_registry.parse_guild.assert_any_call(raw_guild_2, gateway_impl.shard_id)
 
     @pytest.mark.asyncio
     async def test_handle_invalid_session_dispatches_event(self, adapter_impl, gateway_impl, dispatch_impl):

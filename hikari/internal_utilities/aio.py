@@ -26,7 +26,6 @@ import functools
 import typing
 
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import compat
 
 CoroutineFunctionT = typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, typing.Any]]
 ReturnT = typing.TypeVar("ReturnT")
@@ -46,7 +45,7 @@ def optional_await(
         description:
             the optional name to give the dispatched task.
         shield:
-            defaults to False. If `True`, the coroutine will be wrapped in a :function:`asyncio.shield`
+            defaults to False. If `True`, the coroutine will be wrapped in a :func:`asyncio.shield`
             to prevent it being cancelled.
 
     Returns:
@@ -59,14 +58,14 @@ def optional_await(
         @functools.wraps(coro_fn)
         def wrapper(*args, **kwargs) -> typing.Awaitable[ReturnT]:
             coro = asyncio.shield(coro_fn(*args, **kwargs)) if shield else coro_fn(*args, **kwargs)
-            return compat.asyncio.create_task(coro, name=description)
+            return asyncio.create_task(coro, name=description)
 
         return wrapper
 
     return decorator
 
 
-class PartialCoroutineProtocolT(compat.typing.Protocol[ReturnT]):
+class PartialCoroutineProtocolT(typing.Protocol[ReturnT]):
     """Represents the type of a :class:`functools.partial` wrapping an :mod:`asyncio` coroutine."""
 
     def __call__(self) -> typing.Coroutine[None, None, ReturnT]:

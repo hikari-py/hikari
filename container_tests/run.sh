@@ -21,11 +21,7 @@ set -e
 TRUE=0
 FALSE=1
 
-dockerfiles=(
-    cpy374
-    cpy380
-    cpy39rc
-)
+dockerfiles=$(find . -name ".dockerfile" -type -f)
 
 run_cmd() {
     printf "\e[0;34m> \e[0;35m%s\e[0m\n" "$*"

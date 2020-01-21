@@ -38,7 +38,7 @@ setuptools.setup(
     license="LGPL-3.0-ONLY",
     url="https://gitlab.com/nekokatt/hikari",
     packages=setuptools.find_namespace_packages(include=["hikari*"]),
-    python_requires=">=3.7.4,<3.10",
+    python_requires=">=3.8.0,<3.10",
     install_requires=[
         "aiofiles~=0.4",
         "aiohttp~=3.6",
@@ -71,7 +71,6 @@ setuptools.setup(
         "Intended Audience :: Developers",
         "Natural Language :: English",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: Implementation :: CPython",
