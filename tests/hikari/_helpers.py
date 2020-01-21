@@ -375,5 +375,7 @@ def retry(max_retries):
                 except AssertionError as exc:
                     ex = exc  # local variable 'ex' referenced before assignment: wtf?
             raise AssertionError(f"all {max_retries} retries failed") from ex
+
         return retry_wrapper
+
     return decorator

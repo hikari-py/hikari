@@ -85,6 +85,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         self.json_serialize = json_serialize
         self.json_deserialize = json_deserialize
         self.ratelimiter = ratelimits.HTTPBucketRateLimiterManager()
+        self.ratelimiter.start()
 
         if token is not None and not token.startswith(self._AUTHENTICATION_SCHEMES):
             this_type = type(self).__name__
