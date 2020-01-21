@@ -131,6 +131,7 @@ import time
 import typing
 
 from hikari.internal_utilities import loggers
+from hikari.internal_utilities import type_hints
 from hikari.net import routes
 
 UNKNOWN_HASH = "UNKNOWN"
@@ -409,8 +410,12 @@ class HTTPBucketRateLimiterManager(IRateLimiter):
         self.routes_to_real_hashes: typing.MutableMapping[routes.CompiledRoute, str] = {}
         self.real_hashes_to_buckets: typing.MutableMapping[str, HTTPBucketRateLimiter] = {}
         self.closed_event: asyncio.Event = asyncio.Event()
-        self.gc_task: asyncio.Task = asyncio.get_running_loop().create_task(self._garbage_collector())
+        self.gc_task: type_hints.Nullable[asyncio.Task] = None
         self.logger: logging.Logger = loggers.get_named_logger(self)
+
+    def start(self, poll_period: float = 20):
+        if not self.gc_task:
+            self.gc_task = asyncio.get_running_loop().create_task(self.gc(poll_period))
 
     def close(self) -> None:
         """
@@ -421,32 +426,35 @@ class HTTPBucketRateLimiterManager(IRateLimiter):
         for bucket in self.real_hashes_to_buckets.values():
             bucket.close()
 
-    async def _garbage_collector(self) -> None:
+    async def gc(self, poll_period: float = 20) -> None:
         # Prevent filling memory increasingly until we run out by removing dead buckets every 20s
-        # Allocations are somewhat cheap if we only do them every so-many seconds, afterall.
+        # Allocations are somewhat cheap if we only do them every so-many seconds, after all.
         self.logger.debug("rate limit garbage collector started")
         while not self.closed_event.is_set():
             try:
-                await asyncio.wait_for(self.closed_event.wait(), timeout=20)
+                await asyncio.wait_for(self.closed_event.wait(), timeout=poll_period)
             except asyncio.TimeoutError:
-                self.logger.debug("performing rate limit garbage collection pass")
-
                 try:
-                    buckets_to_purge = []
-
-                    # Discover and purge
-                    for full_hash, bucket in self.real_hashes_to_buckets.items():
-                        if bucket.is_empty and (bucket.is_unknown or bucket.reset_at < time.perf_counter()):
-                            # If it is still running a throttle and is in memory, it will remain in memory
-                            # but we won't know about it.
-                            buckets_to_purge.append(full_hash)
-
-                    for full_hash in buckets_to_purge:
-                        self.real_hashes_to_buckets[full_hash].close()
-                        del self.real_hashes_to_buckets[full_hash]
-                    self.logger.debug("purged %s stale buckets", len(buckets_to_purge))
+                    self.logger.debug("performing rate limit garbage collection pass")
+                    await self.do_gc_pass()
                 except Exception as ex:
                     self.logger.exception("ignoring garbage collection error for rate limits", exc_info=ex)
+        self.gc_task = None
+
+    async def do_gc_pass(self):
+        buckets_to_purge = []
+
+        # Discover and purge
+        for full_hash, bucket in self.real_hashes_to_buckets.items():
+            if bucket.is_empty and (bucket.is_unknown or bucket.reset_at < time.perf_counter()):
+                # If it is still running a throttle and is in memory, it will remain in memory
+                # but we won't know about it.
+                buckets_to_purge.append(full_hash)
+
+        for full_hash in buckets_to_purge:
+            self.real_hashes_to_buckets[full_hash].close()
+            del self.real_hashes_to_buckets[full_hash]
+        self.logger.debug("purged %s stale buckets", len(buckets_to_purge))
 
     def acquire(self, compiled_route: routes.CompiledRoute) -> typing.Tuple[asyncio.Future, str]:
         """
@@ -469,13 +477,14 @@ class HTTPBucketRateLimiterManager(IRateLimiter):
         # bucket hash to use to update rate limits later.
         if compiled_route not in self.routes_to_real_hashes:
             real_bucket_hash = compiled_route.create_real_bucket_hash(UNKNOWN_HASH)
+            self.routes_to_real_hashes[compiled_route] = real_bucket_hash
+            self.logger.debug("creating new bucket for %s", real_bucket_hash)
+            bucket = HTTPBucketRateLimiter(real_bucket_hash)
+            self.real_hashes_to_buckets[real_bucket_hash] = bucket
         else:
             real_bucket_hash = self.routes_to_real_hashes[compiled_route]
+            bucket = self.real_hashes_to_buckets[real_bucket_hash]
 
-        if compiled_route not in self.routes_to_real_hashes:
-            self.routes_to_real_hashes[compiled_route] = real_bucket_hash
-
-        bucket = self.get_bucket_for_real_hash(real_bucket_hash, True)
         return bucket.acquire(), real_bucket_hash
 
     def update_rate_limits(
@@ -509,28 +518,17 @@ class HTTPBucketRateLimiterManager(IRateLimiter):
         """
         bucket = self.real_hashes_to_buckets.get(real_bucket_hash)
         if bucket is None or not real_bucket_hash.startswith(bucket_header):
-            if compiled_route in self.routes_to_real_hashes:
-                del self.routes_to_real_hashes[compiled_route]
-
             # Recompute vital hashes.
             real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
 
             self.routes_to_real_hashes[compiled_route] = real_bucket_hash
-            bucket = self.get_bucket_for_real_hash(real_bucket_hash, True)
+            self.logger.debug("creating new bucket for %s", real_bucket_hash)
+            bucket = HTTPBucketRateLimiter(real_bucket_hash)
             self.real_hashes_to_buckets[real_bucket_hash] = bucket
 
         reset_after = (reset_at_header - date_header).total_seconds()
         reset_at_monotonic = time.perf_counter() + reset_after
         bucket.update_rate_limit(remaining_header, limit_header, reset_at_monotonic)
-
-    def get_bucket_for_real_hash(self, real_bucket_hash: str, create_if_not_present: bool) -> HTTPBucketRateLimiter:
-        if create_if_not_present and real_bucket_hash not in self.real_hashes_to_buckets:
-            self.logger.debug("creating new bucket for %s", real_bucket_hash)
-            bucket = HTTPBucketRateLimiter(real_bucket_hash)
-            self.real_hashes_to_buckets[real_bucket_hash] = bucket
-            return bucket
-        else:
-            return self.real_hashes_to_buckets[real_bucket_hash]
 
 
 class ExponentialBackOff:
@@ -540,9 +538,7 @@ class ExponentialBackOff:
 
     __slots__ = ("base", "increment", "maximum", "jitter_multiplier")
 
-    def __init__(
-        self, base: float = 1, maximum: float = 64, jitter_multiplier: float = 1
-    ) -> None:
+    def __init__(self, base: float = 1, maximum: float = 64, jitter_multiplier: float = 1) -> None:
         self.base = base
         self.maximum = maximum
         self.increment = 0
