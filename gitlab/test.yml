@@ -21,13 +21,13 @@
 .cpython3.8.1: &cpython381
   image: python:3.8.1
 
-.cpython3.9: &cpython39
+.cpython3.9: &cpython39rc
   image: python:3.9-rc
 
 .nox-test: &noxtest
   extends: .test-env
   script:
-    - nox -stest
+    - bash tasks/retry-aborts.sh nox -stest
     - mv .coverage public/${CI_JOB_NAME}.coverage
   artifacts:
     paths:
@@ -40,12 +40,12 @@
   extends: .test-env
   stage: verify
   script:
-    - nox -spip
+    - bash tasks/retry-aborts.sh nox -s pip
 
 .nox-pip-install-showtime: &noxpipinstallshowtime
   extends: .test-env
   script:
-    - nox -s pip -- --showtime
+    - bash tasks/retry-aborts.sh nox -s pip -- --showtime
   stage: post-deploy
   only:
     - master
@@ -74,7 +74,7 @@ pytest-c3.8.1:
   <<: *noxtest
 
 pytest-c3.9:
-  <<: *cpython39
+  <<: *cpython39rc
   <<: *noxtest
 
 setup-c3.8-dryrun:
@@ -82,7 +82,7 @@ setup-c3.8-dryrun:
   <<: *noxpipinstall
 
 setup-c3.9-dryrun:
-  <<: *cpython39
+  <<: *cpython39rc
   <<: *noxpipinstall
 
 verify-c3.8-pypi:
@@ -90,14 +90,14 @@ verify-c3.8-pypi:
   <<: *noxpipinstallshowtime
 
 verify-c3.9-pypi:
-  <<: *cpython39
+  <<: *cpython39rc
   <<: *noxpipinstallshowtime
 
 coverage-coalesce:
-  image: python:3.8.1-alpine
+  image: python:3.8.1
   stage: verify
   script:
-    - pip install coverage
+    - bash tasks/retry-aborts.sh pip install coverage
     - ls public
     - coverage combine public/*.coverage
     - coverage report

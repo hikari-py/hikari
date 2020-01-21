@@ -36,10 +36,10 @@
   script:
     - source tasks/deploy.sh
     - set-versions "$(python tasks/make-version-string.py ${TARGET_BRANCH})" || true
-    - pip install nox
+    - bash tasks/retry-aborts.sh pip install nox
     - git clone ${CI_REPOSITORY_URL} -b ${TARGET_BRANCH} hikari_docs_${TARGET_BRANCH} --depth=1
     - cd hikari_docs_${TARGET_BRANCH}
-    - nox -s documentation
+    - bash tasks/retry-aborts.sh nox -s documentation
     - rm ../public -rf && mkdir ../public
     - mv public "../public/${TARGET_BRANCH}"
 
@@ -70,8 +70,8 @@ test-pages:
   stage: test
   allow_failure: false
   script:
-    - pip install nox
-    - nox -s documentation
+    - bash tasks/retry-aborts.sh pip install nox
+    - bash tasks/retry-aborts.sh nox -s documentation
   artifacts:
     paths:
       - public/

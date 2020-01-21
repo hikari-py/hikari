@@ -62,33 +62,17 @@ PYTEST_ARGS = [
 ]
 
 
-# Guard against connection resets by retring installs several times before actually giving up.
-def failsafe_install(session, *args):
-    ex = None
-    for i in range(10):
-        try:
-            session.install(*args)
-            ex = None
-            break
-        except Exception as ex:
-            traceback.print_exc()
-            print("trying again...")
-
-    if ex is not None:
-        raise ex
-
-
 @nox.session()
 def test(session) -> None:
     """Run unit tests in Pytest."""
-    failsafe_install(session, "-e", ".[test]")
+    session.run("pip", "install","-e", ".[test]")
     session.run("python", "-m", "pytest", *PYTEST_ARGS, *session.posargs, TEST_PATH)
 
 
 @nox.session()
 def documentation(session) -> None:
     """Generate documentation using Sphinx for the current branch."""
-    failsafe_install(session, "-e", ".[documentation]")
+    session.run("pip", "install","-e", ".[documentation]")
     session.env["SPHINXOPTS"] = SPHINX_OPTS
     tech_dir = pathify(DOCUMENTATION_DIR, TECHNICAL_DIR)
     shutil.rmtree(tech_dir, ignore_errors=True, onerror=lambda *_: None)
@@ -108,7 +92,7 @@ def documentation(session) -> None:
 @nox.session()
 def sast(session) -> None:
     """Run static application security testing with Bandit."""
-    failsafe_install(session, "bandit")
+    session.run("pip", "install","bandit")
     pkg = MAIN_PACKAGE.split(".")[0]
     session.run("bandit", pkg, "-r")
 
@@ -116,23 +100,23 @@ def sast(session) -> None:
 @nox.session()
 def safety(session) -> None:
     """Run safety checks against a vulnerability database using Safety."""
-    failsafe_install(session, "-e", ".")
-    failsafe_install(session, "safety")
+    session.run("pip", "install","-e", ".")
+    session.run("pip", "install","safety")
     session.run("safety", "check")
 
 
 @nox.session()
 def format(session) -> None:
     """Reformat code with Black. Pass the '--check' flag to check formatting only."""
-    failsafe_install(session, "black")
+    session.run("pip", "install","black")
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *session.posargs)
 
 
 @nox.session()
 def lint(session) -> None:
     """Check formating with pylint"""
-    failsafe_install(session, "-e", ".[test,documentation]")
-    failsafe_install(session, f"pylint=={PYLINT_VERSION}" if PYLINT_VERSION else "pylint")
+    session.run("pip", "install","-e", ".[test,documentation]")
+    session.run("pip", "install",f"pylint=={PYLINT_VERSION}" if PYLINT_VERSION else "pylint")
     pkg = MAIN_PACKAGE.split(".")[0]
     session.run("pylint", pkg, "--rcfile=pylintrc")
 
