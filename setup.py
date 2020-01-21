@@ -19,7 +19,7 @@
 
 import setuptools
 
-__version__ = "0.0.67"
+__version__ = "0.0.68"
 
 
 def long_description():
