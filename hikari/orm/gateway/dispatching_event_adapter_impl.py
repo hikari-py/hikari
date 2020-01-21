@@ -119,10 +119,10 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         # Perform bursts, but then wait for 15 seconds. This prevents more than 60/min roughly, which
         # will prevent us risking spamming the gateway and getting disconnected. This allows us to parse
         # around 750 guilds/15s per gateway.
-        with ratelimits.GatewayRateLimiter(f"chunking {len(guilds)} guilds on shard {shard_id}", 15, 15) as rate_limit:
+        with ratelimits.WindowedBurstRateLimiter(f"chunking {len(guilds)} guilds on shard {shard_id}", 15, 15) as limit:
             for i in range(0, len(guilds), self._initial_chunking_slice_size):
                 guilds_slice = guilds[i : i + self._initial_chunking_slice_size]
-                await rate_limit.acquire()
+                await limit.acquire()
                 await self.fabric.chunker.load_members_for(
                     *guilds_slice, presences=self._request_chunks_mode == AutoRequestChunksMode.MEMBERS_AND_PRESENCES
                 )

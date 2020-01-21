@@ -126,32 +126,39 @@ import abc
 import asyncio
 import datetime
 import logging
+import random
 import time
-from typing import List
-from typing import MutableMapping
-from typing import Optional
-from typing import Tuple
+import typing
 
 from hikari.internal_utilities import loggers
+from hikari.internal_utilities import type_hints
 from hikari.net import routes
 
 UNKNOWN_HASH = "UNKNOWN"
 
 
-class BaseRateLimiter(abc.ABC):
+class IRateLimiter(abc.ABC):
     """
-    Base for any rate limiter being used. Supports with-context management.
+    Base for any asyncio-based rate limiter being used. Supports being used as a synchronous context manager.
     """
 
     __slots__ = ()
 
     @abc.abstractmethod
-    def close(self, *args, **kwargs) -> None:
-        ...
+    def acquire(self, *args, **kwargs) -> asyncio.Future:
+        """
+        Acquire permission to perform a task that needs to have rate limit management enforced.
+
+        Returns:
+            A future that should be awaited. Once the future is complete, you can proceed to execute your
+            rate-limited task.
+        """
 
     @abc.abstractmethod
-    def acquire(self, *args, **kwargs):
-        ...
+    def close(self) -> None:
+        """
+        Close the rate limiter, cancelling any internal tasks that are executing.
+        """
 
     def __enter__(self):
         return self
@@ -160,79 +167,26 @@ class BaseRateLimiter(abc.ABC):
         self.close()
 
 
-class GlobalHTTPRateLimiter(BaseRateLimiter):
+class BurstRateLimiter(IRateLimiter, abc.ABC):
     """
-    Rate limit handler for the global HTTP rate limit.
-    """
-
-    __slots__ = ("logger", "lock_task", "queue")
-
-    def __init__(self) -> None:
-        self.logger: logging.Logger = loggers.get_named_logger(self)
-        self.lock_task: Optional[asyncio.Task] = None
-        self.queue: List[asyncio.Future] = []
-
-    def acquire(self) -> asyncio.Future:
-        loop = asyncio.get_running_loop()
-        future = loop.create_future()
-        if self.lock_task is not None:
-            self.queue.append(future)
-        else:
-            future.set_result(None)
-        return future
-
-    def lock(self, retry_after: float) -> None:
-        if self.lock_task is not None:
-            self.lock_task.cancel()
-
-        loop = asyncio.get_running_loop()
-        self.lock_task = loop.create_task(self._unlock_later(retry_after))
-
-    async def _unlock_later(self, retry_after: float) -> None:
-        self.logger.warning("you are being globally rate limited for %ss", retry_after)
-        await asyncio.sleep(retry_after)
-        while self.queue:
-            next_future = self.queue.pop(0)
-            next_future.set_result(None)
-        self.lock_task = None
-
-    def close(self) -> None:
-        if self.lock_task is not None:
-            self.lock_task.cancel()
-
-        failed_tasks = 0
-        while self.queue:
-            failed_tasks += 1
-            future = self.queue.pop(0)
-            # Make the future complete with an exception
-            future.cancel()
-
-        if failed_tasks:
-            self.logger.error("global HTTP rate limiter closed with %s pending tasks!", failed_tasks)
-        else:
-            self.logger.debug("global HTTP rate limiter closed")
-
-
-class GatewayRateLimiter(BaseRateLimiter):
-    """
-    Aid to adhere to the 120/60 gateway ratelimit. Also used by chunking algorithms elsewhere to prevent spam.
+    Base implementation for a burst-based rate limiter. This provides an internal queue and
+    throttling placeholder, as well as complete logic for safely aborting any pending tasks
+    when being shut down.
     """
 
-    __slots__ = ("logger", "name", "period", "remaining", "limit", "reset_at", "queue", "throttle_task")
+    __slots__ = ("name", "throttle_task", "queue", "logger")
 
-    def __init__(self, name: str, period: float, limit: int) -> None:
-        self.logger: logging.Logger = loggers.get_named_logger(self)
+    def __init__(self, name):
         self.name = name
-        self.period: float = period
-        self.remaining: int = limit
-        self.limit: int = limit
-        self.reset_at: float = 0
-        self.queue: List[asyncio.Future] = []
-        self.throttle_task: Optional[asyncio.Task] = None
+        self.throttle_task: typing.Optional[asyncio.Task] = None
+        self.queue = []
+        self.logger: logging.Logger = loggers.get_named_logger(self)
+
+    @abc.abstractmethod
+    def acquire(self, *args, **kwargs) -> asyncio.Future:
+        ...
 
     def close(self) -> None:
-        # These should never occur but it is worth doing them to prevent
-        # dependent code deadlocking if there is a logic error missed anywhere
         if self.throttle_task is not None:
             self.throttle_task.cancel()
 
@@ -248,104 +202,171 @@ class GatewayRateLimiter(BaseRateLimiter):
         else:
             self.logger.debug("%s rate limiter closed", self.name)
 
+    @property
     def is_empty(self) -> bool:
+        """Return True if no futures are on the queue being rate limited."""
         return len(self.queue) == 0
+
+
+class ManualRateLimiter(BurstRateLimiter):
+    """
+    Rate limit handler for the global HTTP rate limit.
+
+    This is a non-preemptive rate limiting algorithm that will always return completed
+    futures until :meth:`throttle` is invoked. Once this is invoked, any subsequent calls to
+    :meth:`acquire` will return incomplete futures that will be enqueued to an internal queue.
+    A task will be spun up to wait for a period of time given to the :meth:`throttle`. Once that
+    has passed, the lock will begin to re-consume incomplete futures on the queue, completing them.
+
+    Triggering a throttle when it is already set will cancel the current throttle task that is
+    sleeping and replace it.
+
+    This is used to enforce the global HTTP rate limit that will occur "randomly" during HTTP
+    API interaction.
+    """
+
+    __slots__ = ()
+
+    def __init__(self) -> None:
+        super().__init__("global HTTP")
 
     def acquire(self) -> asyncio.Future:
         loop = asyncio.get_running_loop()
         future = loop.create_future()
-        self._handle_request(loop, future)
+        if self.throttle_task is not None:
+            self.queue.append(future)
+        else:
+            future.set_result(None)
         return future
 
-    def _handle_request(self, loop: asyncio.AbstractEventLoop, future: asyncio.Future) -> None:
+    def throttle(self, retry_after: float) -> None:
+        if self.throttle_task is not None:
+            self.throttle_task.cancel()
+
+        loop = asyncio.get_running_loop()
+        self.throttle_task = loop.create_task(self.unlock_later(retry_after))
+
+    async def unlock_later(self, retry_after: float) -> None:
+        self.logger.warning("you are being globally rate limited for %ss", retry_after)
+        await asyncio.sleep(retry_after)
+        while self.queue:
+            next_future = self.queue.pop(0)
+            next_future.set_result(None)
+        self.throttle_task = None
+
+
+class WindowedBurstRateLimiter(BurstRateLimiter):
+    """
+    Main implementation for time-window-oriented throttling in bursts.
+
+    This is an abstract base that provides common acquisition and scheduling logic.
+
+    If the rate limit has been hit, acquiring time will return an incomplete future that is placed
+    on the internal queue. A throttle task is then spun up if not already running that will be
+    expected to provide some implementation of backing off and sleeping for a given period of time
+    until the limit has passed, and then proceed to consume futures from the queue while adhering
+    to those rate limits.
+
+    If the throttle task is already running, the acquired future will always be incomplete and
+    enqueued regardless of whether the rate limit is actively reached or not.
+
+    Acquiring a future from this limiter when no throttling task is running and when the rate
+    limit is not reached will always result in the task invoking a drip and a completed future
+    being returned.
+
+    Dripping is left to the implementation of this class, but will be expected to provide some
+    mechanism for updating the internal statistics to represent that a unit has been placed into
+    the bucket.
+    """
+
+    __slots__ = ("reset_at", "remaining", "limit", "period")
+
+    def __init__(self, name: str, period: float, limit: int) -> None:
+        super().__init__(name)
+        self.reset_at = 0
+        self.remaining = 0
+        self.limit = limit
+        self.period = period
+
+    def acquire(self) -> asyncio.Future:
+        loop = asyncio.get_running_loop()
+        future = loop.create_future()
+
         # If we are rate limited, delegate invoking this to the throttler and spin it up
         # if it hasn't started. Likewise, if the throttle task is still running, we should
         # delegate releasing the future to the throttler task so that we still process
         # first-come-first-serve
-        if self.throttle_task is not None or self._is_ratelimited(time.perf_counter()):
+        if self.throttle_task is not None or self.is_rate_limited(time.perf_counter()):
             self.queue.append(future)
             if self.throttle_task is None:
-                self.throttle_task = loop.create_task(self._throttle())
+                self.throttle_task = loop.create_task(self.throttle())
         else:
-            self._drip()
+            self.drip()
             future.set_result(None)
 
-    async def _throttle(self) -> None:
+        return future
+
+    def get_time_until_reset(self, now: float) -> float:
+        if not self.is_rate_limited(now):
+            return 0.0
+        return self.reset_at - now
+
+    def is_rate_limited(self, now: float) -> bool:
+        if self.reset_at <= now:
+            self.remaining = self.limit
+            self.reset_at = now + self.period
+            return False
+
+        return self.remaining <= 0
+
+    def drip(self):
+        self.remaining -= 1
+
+    async def throttle(self) -> None:
         self.logger.warning(
-            "you are being rate limited on %s, backing off for %ss", self.name, self._get_backoff_time(),
+            "you are being rate limited on bucket %s, backing off for %ss",
+            self.name,
+            self.get_time_until_reset(time.perf_counter()),
         )
 
         while self.queue:
-            await asyncio.sleep(self._get_time_until_reset(time.perf_counter()))
-            future = self.queue.pop(0)
-            self._drip()
-            future.set_result(None)
+            sleep_for = self.get_time_until_reset(time.perf_counter())
+            await asyncio.sleep(sleep_for)
+
+            while self.remaining > 0 and self.queue:
+                self.drip()
+                self.queue.pop(0).set_result(None)
 
         self.throttle_task = None
 
-    def _get_backoff_time(self) -> float:
-        now = time.perf_counter()
-        return self._get_time_until_reset(now) if self._is_ratelimited(now) else 0
 
-    def _get_time_until_reset(self, now: float) -> float:
-        reset_at = 0 if self.reset_at is None else self.reset_at
-        return max(0.0, reset_at - now)
-
-    def _is_ratelimited(self, now: float) -> bool:
-        reset_at = 0 if self.reset_at is None else self.reset_at
-        return reset_at >= now and self.remaining <= 0
-
-    def _drip(self) -> None:
-        now = time.perf_counter()
-        if self._get_time_until_reset(now) == 0:
-            self.reset_at = now + self.period
-            self.remaining = self.limit
-        self.remaining -= 1
-
-
-class Bucket(BaseRateLimiter):
+class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
     """
     Component to represent an active rate limit bucket on a specific HTTP route with a specific major parameter
     combo.
+
+    This is somewhat similar to the :class:`WindowedBurstRateLimiter` in how it works:
+
+    This algorithm will use fixed-period time windows that have a given limit (capacity). Each time a task requests
+    processing time, it will drip another unit into the bucket. Once the bucket has reached its limit, nothing
+    can drip and new tasks will be queued until the time window finishes.
+
+    Once the time window finishes, the bucket will empty, returning the current capacity to zero, and tasks that
+    are queued will start being able to drip again.
+
+    Additional logic is provided by the :meth:`update_rate_limit` call which allows dynamically changing the
+    enforced rate limits at any time.
     """
 
-    __slots__ = ("name", "remaining", "limit", "reset_at", "queue", "throttle_task")
-    # We want initialization to be as fast as possible, don't faff with loggers per object.
-    _LOGGER = loggers.get_named_logger(__name__ + ".Bucket")
+    __slots__ = ()
 
     def __init__(self, name: str) -> None:
-        self.name: str = name
-        self.remaining: int = 1
-        self.limit: int = 1
-        self.reset_at: float = 0
-        self.queue: List[asyncio.Future] = []
-        self.throttle_task: Optional[asyncio.Task] = None
+        super().__init__(name, 1, 0)
 
-    def close(self) -> None:
-        # These should never occur but it is worth doing them to prevent
-        # dependent code deadlocking if there is a logic error missed anywhere
-        if self.throttle_task is not None:
-            self.throttle_task.cancel()
-
-        failed_tasks = 0
-        while self.queue:
-            failed_tasks += 1
-            future = self.queue.pop(0)
-            # Make the future complete with an exception
-            future.set_exception(asyncio.CancelledError(f"bucket {self.name} was closed"))
-
-        if failed_tasks:
-            self._LOGGER.error("bucket %s closed with %s pending tasks!", self.name, failed_tasks)
-        else:
-            self._LOGGER.debug("bucket %s closed", self.name)
-
+    @property
     def is_unknown(self) -> bool:
         """Return True if the bucket represents an UNKNOWN bucket."""
         return self.name.startswith(UNKNOWN_HASH)
-
-    def is_empty(self) -> bool:
-        """Return True if the bucket is empty of futures."""
-        return len(self.queue) == 0
 
     def update_rate_limit(self, remaining: int, limit: int, reset_at: float) -> None:
         """
@@ -362,71 +383,16 @@ class Bucket(BaseRateLimiter):
         self.remaining = remaining
         self.limit = limit
         self.reset_at = reset_at
+        self.period = max(0.0, self.reset_at - time.perf_counter())
 
-    def acquire(self) -> asyncio.Future:
-        """
-        Acquire a future call slot.
-
-        Returns:
-            A future that must be awaited, and will complete when your turn to make a call
-            comes along. You are expected to await this and then immediately make your HTTP
-            call. The returned future may already be completed if you can make the call
-            immediately.
-        """
-        loop = asyncio.get_running_loop()
-        future = loop.create_future()
-        self._handle_request(loop, future)
-        return future
-
-    def _handle_request(self, loop: asyncio.AbstractEventLoop, future: asyncio.Future) -> None:
-        # If we are ratelimited, delegate invoking this to the throttler and spin it up
-        # if it hasn't started. Likewise, if the throttle task is
-        # still running, we should delegate releasing the future to the
-        # throttler task so that we still process first-come-first-serve
-        if self.throttle_task is not None or self._is_ratelimited(time.perf_counter()):
-            self.queue.append(future)
-            if self.throttle_task is None:
-                self.throttle_task = loop.create_task(self._throttle())
-        else:
-            self._drip()
-            future.set_result(None)
-
-    async def _throttle(self) -> None:
-        self._LOGGER.warning(
-            "you are being rate limited on bucket %s, backing off for %ss", self.name, self._get_backoff_time(),
-        )
-
-        while self.queue:
-            await asyncio.sleep(self._get_time_until_reset(time.perf_counter()))
-            self.remaining = self.limit
-            future = self.queue.pop(0)
-            self._drip()
-            future.set_result(None)
-
-        self.throttle_task = None
-
-    def _get_backoff_time(self) -> float:
-        now = time.perf_counter()
-        return self._get_time_until_reset(now) if self._is_ratelimited(now) else 0
-
-    def _get_time_until_reset(self, now: float) -> float:
-        reset_at = 0 if self.reset_at is None else self.reset_at
-        return max(0.0, reset_at - now)
-
-    def _is_ratelimited(self, now: float) -> bool:
-        reset_at = 0 if self.reset_at is None else self.reset_at
-        return reset_at >= now and self.remaining <= 0
-
-    def _drip(self) -> None:
-        if not self.is_unknown():
-            if self.remaining <= 0:
-                self._LOGGER.error(
-                    "bucket %s has somehow dripped but was already ratelimited!", self.name,
-                )
+    def drip(self) -> None:
+        # We don't drip unknown buckets: we can't rate limit them as we don't know their real bucket hash or
+        # the current rate limit values Discord put on them...
+        if not self.is_unknown:
             self.remaining -= 1
 
 
-class BucketedHTTPRateLimiter(BaseRateLimiter):
+class HTTPBucketRateLimiterManager(IRateLimiter):
     """
     The main rate limiter implementation to provide bucketed rate limiting for Discord HTTP endpoints that respects
     the bucket rate limit header.
@@ -441,11 +407,15 @@ class BucketedHTTPRateLimiter(BaseRateLimiter):
     )
 
     def __init__(self) -> None:
-        self.routes_to_real_hashes: MutableMapping[routes.CompiledRoute, str] = {}
-        self.real_hashes_to_buckets: MutableMapping[str, Bucket] = {}
+        self.routes_to_real_hashes: typing.MutableMapping[routes.CompiledRoute, str] = {}
+        self.real_hashes_to_buckets: typing.MutableMapping[str, HTTPBucketRateLimiter] = {}
         self.closed_event: asyncio.Event = asyncio.Event()
-        self.gc_task: asyncio.Task = asyncio.get_running_loop().create_task(self._garbage_collector())
+        self.gc_task: type_hints.Nullable[asyncio.Task] = None
         self.logger: logging.Logger = loggers.get_named_logger(self)
+
+    def start(self, poll_period: float = 20):
+        if not self.gc_task:
+            self.gc_task = asyncio.get_running_loop().create_task(self.gc(poll_period))
 
     def close(self) -> None:
         """
@@ -456,34 +426,37 @@ class BucketedHTTPRateLimiter(BaseRateLimiter):
         for bucket in self.real_hashes_to_buckets.values():
             bucket.close()
 
-    async def _garbage_collector(self) -> None:
+    async def gc(self, poll_period: float = 20) -> None:
         # Prevent filling memory increasingly until we run out by removing dead buckets every 20s
-        # Allocations are somewhat cheap if we only do them every so-many seconds, afterall.
+        # Allocations are somewhat cheap if we only do them every so-many seconds, after all.
         self.logger.debug("rate limit garbage collector started")
         while not self.closed_event.is_set():
             try:
-                await asyncio.wait_for(self.closed_event.wait(), timeout=20)
+                await asyncio.wait_for(self.closed_event.wait(), timeout=poll_period)
             except asyncio.TimeoutError:
-                self.logger.debug("performing rate limit garbage collection pass")
-
                 try:
-                    buckets_to_purge = []
-
-                    # Discover and purge
-                    for full_hash, bucket in self.real_hashes_to_buckets.items():
-                        if bucket.is_empty() and (bucket.is_unknown() or bucket.reset_at < time.perf_counter()):
-                            # If it is still running a throttle and is in memory, it will remain in memory
-                            # but we won't know about it.
-                            buckets_to_purge.append(full_hash)
-
-                    for full_hash in buckets_to_purge:
-                        self.real_hashes_to_buckets[full_hash].close()
-                        del self.real_hashes_to_buckets[full_hash]
-                    self.logger.debug("purged %s stale buckets", len(buckets_to_purge))
+                    self.logger.debug("performing rate limit garbage collection pass")
+                    await self.do_gc_pass()
                 except Exception as ex:
                     self.logger.exception("ignoring garbage collection error for rate limits", exc_info=ex)
+        self.gc_task = None
 
-    def acquire(self, compiled_route: routes.CompiledRoute) -> Tuple[asyncio.Future, str]:
+    async def do_gc_pass(self):
+        buckets_to_purge = []
+
+        # Discover and purge
+        for full_hash, bucket in self.real_hashes_to_buckets.items():
+            if bucket.is_empty and (bucket.is_unknown or bucket.reset_at < time.perf_counter()):
+                # If it is still running a throttle and is in memory, it will remain in memory
+                # but we won't know about it.
+                buckets_to_purge.append(full_hash)
+
+        for full_hash in buckets_to_purge:
+            self.real_hashes_to_buckets[full_hash].close()
+            del self.real_hashes_to_buckets[full_hash]
+        self.logger.debug("purged %s stale buckets", len(buckets_to_purge))
+
+    def acquire(self, compiled_route: routes.CompiledRoute) -> typing.Tuple[asyncio.Future, str]:
         """
         Acquire a bucket for the given route.
 
@@ -504,13 +477,14 @@ class BucketedHTTPRateLimiter(BaseRateLimiter):
         # bucket hash to use to update rate limits later.
         if compiled_route not in self.routes_to_real_hashes:
             real_bucket_hash = compiled_route.create_real_bucket_hash(UNKNOWN_HASH)
+            self.routes_to_real_hashes[compiled_route] = real_bucket_hash
+            self.logger.debug("creating new bucket for %s", real_bucket_hash)
+            bucket = HTTPBucketRateLimiter(real_bucket_hash)
+            self.real_hashes_to_buckets[real_bucket_hash] = bucket
         else:
             real_bucket_hash = self.routes_to_real_hashes[compiled_route]
+            bucket = self.real_hashes_to_buckets[real_bucket_hash]
 
-        if compiled_route not in self.routes_to_real_hashes:
-            self.routes_to_real_hashes[compiled_route] = real_bucket_hash
-
-        bucket = self._get_bucket_for_real_hash(real_bucket_hash, True)
         return bucket.acquire(), real_bucket_hash
 
     def update_rate_limits(
@@ -544,25 +518,59 @@ class BucketedHTTPRateLimiter(BaseRateLimiter):
         """
         bucket = self.real_hashes_to_buckets.get(real_bucket_hash)
         if bucket is None or not real_bucket_hash.startswith(bucket_header):
-            if compiled_route in self.routes_to_real_hashes:
-                del self.routes_to_real_hashes[compiled_route]
-
             # Recompute vital hashes.
             real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
 
             self.routes_to_real_hashes[compiled_route] = real_bucket_hash
-            bucket = self._get_bucket_for_real_hash(real_bucket_hash, True)
+            self.logger.debug("creating new bucket for %s", real_bucket_hash)
+            bucket = HTTPBucketRateLimiter(real_bucket_hash)
             self.real_hashes_to_buckets[real_bucket_hash] = bucket
 
         reset_after = (reset_at_header - date_header).total_seconds()
         reset_at_monotonic = time.perf_counter() + reset_after
         bucket.update_rate_limit(remaining_header, limit_header, reset_at_monotonic)
 
-    def _get_bucket_for_real_hash(self, real_bucket_hash: str, create_if_not_present: bool) -> Bucket:
-        if create_if_not_present and real_bucket_hash not in self.real_hashes_to_buckets:
-            self.logger.debug("creating new bucket for %s", real_bucket_hash)
-            bucket = Bucket(real_bucket_hash)
-            self.real_hashes_to_buckets[real_bucket_hash] = bucket
-            return bucket
-        else:
-            return self.real_hashes_to_buckets[real_bucket_hash]
+
+class ExponentialBackOff:
+    """
+    Implementation of an asyncio-compatible exponential back-off algorithm with random jitter.
+    """
+
+    __slots__ = ("base", "increment", "maximum", "jitter_multiplier")
+
+    def __init__(self, base: float = 1, maximum: float = 64, jitter_multiplier: float = 1) -> None:
+        self.base = base
+        self.maximum = maximum
+        self.increment = 0
+        self.jitter_multiplier = jitter_multiplier
+
+    def __next__(self) -> float:
+        """
+        Get the next back off to sleep by.
+        """
+        value = self.base ** self.increment
+
+        self.increment += 1
+
+        if value >= self.maximum:
+            raise asyncio.TimeoutError()
+
+        value += random.random() * self.jitter_multiplier  # nosec
+        return value
+
+    def __iter__(self):
+        return self
+
+    def reset(self) -> None:
+        self.increment = 0
+
+
+__all__ = [
+    "IRateLimiter",
+    "BurstRateLimiter",
+    "ManualRateLimiter",
+    "WindowedBurstRateLimiter",
+    "HTTPBucketRateLimiter",
+    "HTTPBucketRateLimiterManager",
+    "ExponentialBackOff",
+]

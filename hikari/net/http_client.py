@@ -81,10 +81,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             json_serialize=json_serialize,
         )
         self.base_url = base_url
-        self.global_ratelimiter = ratelimits.GlobalHTTPRateLimiter()
+        self.global_ratelimiter = ratelimits.ManualRateLimiter()
         self.json_serialize = json_serialize
         self.json_deserialize = json_deserialize
-        self.ratelimiter = ratelimits.BucketedHTTPRateLimiter()
+        self.ratelimiter = ratelimits.HTTPBucketRateLimiterManager()
+        self.ratelimiter.start()
 
         if token is not None and not token.startswith(self._AUTHENTICATION_SCHEMES):
             this_type = type(self).__name__
@@ -127,6 +128,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
 
         if headers is not None:
             request_headers.update(headers)
+
+        backoff = ratelimits.ExponentialBackOff()
 
         while True:
             # If we are uploading files with io objects in a form body, we need to reset the seeks to 0 to ensure
@@ -191,7 +194,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 if resp.content_type == "application/json":
                     body = self.json_deserialize(raw_body)
                 elif resp.content_type == "text/plain" or resp.content_type == "text/html":
-                    raise errors.ServerHTTPError(
+                    await self._handle_bad_response(
+                        backoff,
                         f"Received unexpected response of type {resp.content_type}",
                         compiled_route,
                         raw_body.decode(),
@@ -208,8 +212,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 # We are being rate limited.
                 if body["global"]:
                     retry_after = float(body["retry_after"]) / 1_000
-                    self.global_ratelimiter.lock(retry_after)
-
+                    self.global_ratelimiter.throttle(retry_after)
                 continue
 
             if status >= 400:
@@ -230,9 +233,19 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 elif status < 500:
                     raise errors.ClientHTTPError(f"{status}: {resp.reason}", compiled_route, message, code)
 
-                raise errors.ServerHTTPError("Received a server error response", message, status, code)
+                await self._handle_bad_response(
+                    backoff, "Received a server error response", compiled_route, message, status
+                )
 
             return body
+
+    async def _handle_bad_response(self, backoff, reason, route, message, status):
+        try:
+            next_sleep = next(backoff)
+            self.logger.warning("received a server error response, backing off for %ss and trying again", next_sleep)
+            await asyncio.sleep(next_sleep)
+        except asyncio.TimeoutError:
+            raise errors.ServerHTTPError(reason, route, message, status)
 
     async def get_gateway(self) -> str:
         """
