@@ -3,13 +3,13 @@
 {{ module }}
 {{ rule }}
 
-{% if submodules %}
-
 Documentation
 -------------
 
 .. automodule:: {{ module }}
     :inherited-members:
+
+{% if submodules %}
 
 Submodules
 ----------

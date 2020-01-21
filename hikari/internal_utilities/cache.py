@@ -23,8 +23,6 @@ import asyncio
 import inspect
 import typing
 
-from hikari.internal_utilities import compat
-
 ReturnT = typing.TypeVar("ReturnT")
 ClassT = typing.TypeVar("ClassT")
 CallT = typing.Callable[..., ReturnT]
@@ -42,7 +40,13 @@ class CachedFunction:
     """
 
     _sentinel = object()
-    __slots__ = ("_call", "_value", "__qualname__", "__dict__", "__name__")
+    __slots__ = (
+        "_call",
+        "_value",
+        "__qualname__",  # pylint: disable=class-variable-slots-conflict
+        "__dict__",
+        "__name__",
+    )
 
     def __init__(self, call, args, kwargs):
         self._value = self._sentinel
@@ -60,9 +64,7 @@ class CachedFunction:
 
     def _coroutine_fn_wrapper(self, call, args, kwargs):
         def fn_wrapper():
-            self._value = compat.asyncio.create_task(
-                call(*args, **kwargs), name="pending CachedFunction coroutine completion"
-            )
+            self._value = asyncio.create_task(call(*args, **kwargs), name="pending CachedFunction coroutine completion")
 
         return fn_wrapper
 
@@ -83,7 +85,13 @@ class CachedProperty:
     instead.
     """
 
-    __slots__ = ("func", "_cache_attr", "__dict__", "__name__", "__qualname__")
+    __slots__ = (
+        "func",
+        "_cache_attr",
+        "__dict__",
+        "__name__",
+        "__qualname__",  # pylint: disable=class-variable-slots-conflict
+    )
 
     def __init__(self, func: CachedPropertyFunctionT, cache_attr: typing.Optional[str]) -> None:
         self.func = func
@@ -121,9 +129,7 @@ class AsyncCachedProperty(CachedProperty):
             setattr(
                 instance,
                 self._cache_attr,
-                compat.asyncio.create_task(
-                    self.func(instance), name="pending AsyncCachedProperty coroutine completion"
-                ),
+                asyncio.create_task(self.func(instance), name="pending AsyncCachedProperty coroutine completion"),
             )
         return getattr(instance, self._cache_attr)
 

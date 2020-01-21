@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 .tools-base:
-  image: python:3.8.0
+  image: python:3.8.1
   stage: test
   before_script:
-    - pip install nox
+    - bash tasks/retry-aborts.sh pip install nox
   only:
     - branches
     - merge_requests
@@ -28,14 +28,19 @@
 black:
   extends: .tools-base
   script:
-    - nox -s format -- --check --diff
+    - bash tasks/retry-aborts.sh nox -s format -- --check --diff
 
 bandit:
   extends: .tools-base
   script:
-    - nox -s sast
+    - bash tasks/retry-aborts.sh nox -s sast
 
 safety:
   extends: .tools-base
   script:
-    - nox -s safety
+    - bash tasks/retry-aborts.sh nox -s safety
+
+pylint:
+  extends: .tools-base
+  script:
+    - bash tasks/retry-aborts.sh nox -s lint

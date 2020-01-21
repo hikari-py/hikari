@@ -26,6 +26,7 @@ Sphinx documentation configuration.
 # http://www.sphinx-doc.org/en/master/config
 import datetime
 import os
+import traceback
 
 import requests
 import sys
@@ -78,7 +79,7 @@ html_theme_options = {
     # Note the "1" or "True" value above as the third argument to indicate
     # an arbitrary url.
     "navbar_links": [
-        ("Hikari", "http://gitlab.com/nekokatt/hikari", True),
+        ("Repository", "http://gitlab.com/nekokatt/hikari", True),
         ("Wiki", "http://gitlab.com/nekokatt/hikari/wikis", True),
         ("CI", "http://gitlab.com/nekokatt/hikari/pipelines", True),
     ],

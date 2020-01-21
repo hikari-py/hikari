@@ -28,1061 +28,531 @@ References:
     - Gateway documentation: https://discordapp.com/developers/docs/topics/gateway
     - Opcode documentation: https://discordapp.com/developers/docs/topics/opcodes-and-status-codes
 """
-from __future__ import annotations
-
 import asyncio
 import contextlib
-import dataclasses
 import datetime
-import functools
+import enum
 import json
-import operator
-import random
-import ssl
+import logging
+import math
+import platform
 import time
-import typing
 import zlib
 
-import aiohttp.typedefs
+import aiohttp
 
-from hikari import errors
-from hikari.internal_utilities import compat
-from hikari.internal_utilities import containers
-from hikari.internal_utilities import loggers
-from hikari.internal_utilities import meta
-from hikari.net import opcodes
-from hikari.net import rates
-from hikari.net import user_agent
+from . import errors
+from . import ratelimits
+from ..internal_utilities import meta
+from ..internal_utilities import type_hints
 
 
-@dataclasses.dataclass(frozen=True)
-class _RestartableClosure(RuntimeError):
+@meta.incubating()
+class GatewayIntent(enum.IntFlag):
     """
-    Raised when the server shuts down the connection unexpectedly or we have triggered a closure
-    because the server did something we didn't expect.
+    Represents an intent on the gateway. This is a bitfield representation of all the categories of event
+    that you wish to receive.
 
-    These closures always result in us retrying one way or another, we do not just exit.
-    """
+    Any events not in an intent category will be fired regardless of what intents you provide.
 
-    __slots__ = ("code", "reason")
-
-    #: The closure code provided.
-    code: int
-    #: The message provided.
-    reason: str
-
-
-class _ResumeConnection(_RestartableClosure):
-    """Request to restart the client connection using a resume. This is only used internally."""
-
-    __slots__ = ()
-
-
-class _RestartConnection(_RestartableClosure):
-    """Request by the gateway to completely reconnect using a fresh connection. This is only used internally."""
-
-    __slots__ = ()
-
-
-class _ConnectionShutDownByUser(RuntimeError):
-    """
-    Raised internally when a connection has shut down.
+    Note:
+        This will currently have no effect on the gateway until the solution is implemented on Discord's
+        gateway. Discussion of proposed interface can be found at
+        https://gist.github.com/msciotti/223272a6f976ce4fda22d271c23d72d9.
     """
 
-    __slots__ = ()
+    #: Subscribes to the following events:
+    #:     - GUILD_CREATE
+    #:     - GUILD_DELETE
+    #:     - GUILD_ROLE_CREATE
+    #:     - GUILD_ROLE_UPDATE
+    #:     - GUILD_ROLE_DELETE
+    #:     - CHANNEL_CREATE
+    #:     - CHANNEL_UPDATE
+    #:     - CHANNEL_DELETE
+    #:     - CHANNEL_PINS_UPDATE
+    GUILDS = 1 << 0
 
+    #: Subscribes to the following events:
+    #:     - GUILD_MEMBER_ADD
+    #:     - GUILD_MEMBER_UPDATE
+    #:     - GUILD_MEMBER_REMOVE
+    GUILD_MEMBERS = 1 << 1
 
-#: The signature of an event dispatcher function. Consumes three arguments. The first is the gateway that triggered
-#: the event. The second is an event name from the gateway, the third is the payload which is assumed to always be a
-#: :class:`dict` with :class:`str` keys. This should be a coroutine function.
-DispatchHandler = typing.Callable[["GatewayClient", str, typing.Any], typing.Awaitable[None]]
+    #: Subscribes to the following events:
+    #:     - GUILD_BAN_ADD
+    #:     - GUILD_BAN_REMOVE
+    GUILD_BANS = 1 << 2
 
+    #: Subscribes to the following events:
+    #:     - GUILD_EMOJIS_UPDATE
+    GUILD_EMOJIS = 1 << 3
 
-async def _default_dispatch(_gateway, _event, _payload) -> None:
-    ...
+    #: Subscribes to the following events:
+    #:     - GUILD_INTEGRATIONS_UPDATE
+    GUILD_INTEGRATIONS = 1 << 4
 
+    #: Subscribes to the following events:
+    #:     - WEBHOOKS_UPDATE
+    GUILD_WEBHOOKS = 1 << 5
 
-class Backoff:
-    """
-    Simple exponential backoff with maximum backoff cap and random jitter. If the backoff reaches
-    the max backoff, a RuntimeError is raised.
-    """
+    #: Subscribes to the following events:
+    #:    - INVITE_CREATE
+    #:    - INVITE_DELETE
+    GUILD_INVITES = 1 << 6
 
-    __slots__ = ("max_backoff", "retry_count")
+    #: Subscribes to the following events:
+    #:    - VOICE_STATE_UPDATE
+    GUILD_VOICE_STATES = 1 << 7
 
-    def __init__(self, max_backoff: float):
-        self.max_backoff = max_backoff
-        self.retry_count = 0
+    #: Subscribes to the following events:
+    #:    - PRESENCE_UPDATE
+    GUILD_PRESENCES = 1 << 8
 
-    def __iter__(self):
-        return self
+    #: Subscribes to the following events:
+    #:    - MESSAGE_CREATE
+    #:    - MESSAGE_UPDATE
+    #:    - MESSAGE_DELETE
+    GUILD_MESSAGES = 1 << 9
 
-    def __next__(self):
-        backoff = (2 ** self.retry_count) + random.random()  # nosec
-        if backoff < self.max_backoff:
-            self.retry_count += 1
-        else:
-            raise RuntimeError("maximum backoff was reached.")
-        return backoff
+    #: Subscribes to the following events:
+    #:    - MESSAGE_REACTION_ADD
+    #:    - MESSAGE_REACTION_REMOVE
+    #:    - MESSAGE_REACTION_REMOVE_ALL
+    #:    - MESSAGE_REACTION_REMOVE_EMOJI
+    GUILD_MESSAGE_REACTIONS = 1 << 10
 
-    def reset(self):
-        self.retry_count = 0
+    #: Subscribes to the following events:
+    #:    - TYPING_START
+    GUILD_MESSAGE_TYPING = 1 << 11
+
+    #: Subscribes to the following events:
+    #:    - CHANNEL_CREATE
+    #:    - MESSAGE_CREATE
+    #:    - MESSAGE_UPDATE
+    #:    - MESSAGE_DELETE
+    DIRECT_MESSAGES = 1 << 12
+
+    #: Subscribes to the following events:
+    #:    - MESSAGE_REACTION_ADD
+    #:    - MESSAGE_REACTION_REMOVE
+    #:    - MESSAGE_REACTION_REMOVE_ALL
+    DIRECT_MESSAGE_REACTIONS = 1 << 13
+
+    #: Subscribes to the following events:
+    #:    - TYPING_START
+    DIRECT_MESSAGE_TYPING = 1 << 14
 
 
 class GatewayClient:
-    """
-    Implementation of the gateway communication layer. This is single threaded and can represent the connection for
-    an un-sharded bot, or for a specific gateway shard. This does not implement voice activity.
-    
-    This implementation targets v7 of the gateway. 
-
-    Args:
-        token:
-            the token to use to authenticate with the gateway.
-        uri:
-            the host to connect to, in the format `wss://gateway.net` or `wss://gateway.net:port`.
-
-            Warning:
-                This must NOT contain a query or a fragment!
-
-    Optional args:
-        connector:
-            the :class:`aiohttp.BaseConnector` to use for the client session, or `None` if you wish to use the
-            default instead.
-        enable_guild_subscription_events:
-            Defaulting to `True`, this will make the gateway emit events for changes to presence in guilds, and
-            for any user-typing events. If you set this to `False`, those events will be ignored and will not
-            be sent by Discord, reducing overall load on the bot significantly in large numbers of guilds.
-        gateway_event_dispatcher:
-            Consumer of any DISPATCH payloads that are received.
-
-            A coroutine function that consumes this gateway client object, a string event name, and a JSON dispatch
-            event payload consumed from the gateway to call each time a dispatch occurs.  The payload will vary between
-            events. If unspecified, this will default to an empty callback that does nothing. This will only consume
-            events that originate from the Discord gateway.
-
-            See https://discordapp.com/developers/docs/topics/gateway#commands-and-events for the types of event that
-            can be fired to this dispatcher.
-
-            See :class:`hikari.net.opcodes.GatewayEvent` for the types of known event that can be fired to this
-            dispatcher. If the event is in this list, an instance of this enum will be passed as the event name.
-            If the event is unknown, a raw string will be passed instead.
-        http_timeout:
-            optional timeout to apply to individual HTTP requests.
-        initial_presence:
-            A JSON-serializable dict containing the initial presence to set, or `None` to just appear
-            `online`. See https://discordapp.com/developers/docs/topics/gateway#update-status for a description
-            of this `update-status` payload object.
-        intents:
-            A bitfield combination of every :class:`hikari.net.opcodes.GatewayIntent` you wish to receive events for.
-
-            Warning:
-                This feature is currently incubating and is not yet supported by the V7 gateway, so will not yet
-                have any effect.
-
-                See https://gist.github.com/msciotti/223272a6f976ce4fda22d271c23d72d9 for a discussion of the
-                proposed implementation. This functionality exists purely as a placeholder for the time being, and
-                will not filter anything out.
-
-            If unspecified, this defaults to requesting all events possible.
-        internal_event_dispatcher:
-            Consumer of internal notable events.
-
-            A coroutine function that consumes this gateway client object, a string event name and a JSON object
-            containing event information to call each time a dispatch occurs. The payload will vary between events.
-            If unspecified, this will default to an empty callback that does nothing. This will only consume events
-            that originate internally, such as when a connection is made, closed, or when an invalid session occurs,
-            etc.
-
-            This exists separately to allow you to filter out non-API compliant events if you desire. If you wish to
-            handle these in the same way as the gateway DISPATCH events, you can just pass the same dispatcher as
-            for `gateway_event_dispatcher`.
-
-            See :class:`hikari.net.opcodes.GatewayInternalEvent` for the types of event that can be fired to this
-            dispatcher, if you wish to use "constant" values in your implementation to represent events.
-        json_marshaller:
-            a callable that consumes a Python object and returns a JSON-encoded string.
-            This defaults to :func:`json.dumps`.
-        json_unmarshaller:
-            a callable that consumes a JSON-encoded string and returns a Python object.
-            This defaults to :func:`json.loads`.
-        json_unmarshaller_object_hook:
-            the object hook to use to parse a JSON object into a Python object. Defaults to
-            :class:`hikari.internal_utilities.data_structures.ObjectProxy`. This means that you can use any
-            received dict as a regular dict, or use "JavaScript"-like dot-notation to access members.
-
-            .. code-block:: python
-
-                d = ObjectProxy(...)
-                assert d.foo[1].bar == d["foo"][1]["bar"]
-        large_threshold:
-            the large threshold limit. Defaults to 50.
-        loop:
-            the event loop to run on. Required.
-        max_persistent_buffer_size:
-            Max size to allow the zlib buffer to grow to before recreating it. This defaults to
-            3MiB. A larger value favours a slight (most likely unnoticeable) overall performance increase, at the cost
-            of memory usage, since the gateway can send payloads tens of megabytes in size potentially. Without
-            truncating, the payload will remain at the largest allocated size even when no longer required to provide
-            that capacity.
-        proxy_auth:
-            optional proxy authentication to use.
-        proxy_headers:
-            optional proxy headers to pass.
-        proxy_url:
-            optional proxy URL to use.
-        receive_timeout:
-            the time to wait to receive any form of message before considering the connection to be dead.
-        shard_count:
-            the shard count to use, or `None` if sharding is to be disabled (default).
-        shard_id:
-            the shard ID to use, or `None` if sharding is to be disabled (default).
-        ssl_context:
-            optional SSL context to use.
-        verify_ssl:
-            defaulting to True, setting this to false will disable SSL verification.
-
-    Warning:
-        It is highly recommended to not alter any attributes of this object whilst the gateway is running unless clearly
-        specified otherwise. Any change to internal state may result in undefined behaviour or effects. This is designed
-        to be a low-level interface to the gateway, and not a general-use object.
-
-    Warning:
-        This must be initialized within a coroutine while an event loop is active
-        and registered to the current thread.
-
-    **Events**
-
-    All events are dispatched with at least two arguments. These are always the first two to be provided, and will
-    always be in the same order.
-
-    Mandatory arguments:
-        gateway:
-            The gateway client that emitted this event. This is provided to allow event adapters to consolidate
-            many shards into one common handler if required.
-        event_name:
-            The string name of the event. For internal events, these will always be in lowercase. Discord will provide
-            events in UPPERCASE instead, so it is useful to call :meth:`str.lower` before processing it.
-
-    As well as any events provided by the Discord API (as described at
-    https://discordapp.com/developers/docs/topics/gateway#commands-and-events), this implementation will provide
-    several other internal event types. These are defined specifically in :mod:`hikari.net.extra_gateway_events`.
-    """
-
     __slots__ = (
-        "_backoff",
-        "_client_session_factory",
-        "_closed_event",
-        "_enable_guild_subscription_events",
-        "_in_buffer",
-        "_intents",
-        "fingerprint",
-        "gateway_event_dispatcher",
-        "heartbeat_interval",
-        "heartbeat_latency",
+        "closed_event",
+        "compression",
+        "connected_at",
+        "connector",
+        "debug",
+        "dispatch",
         "http_timeout",
-        "in_count",
-        "is_running",
-        "initial_presence",
-        "internal_event_dispatcher",
-        "json_marshaller",
-        "json_unmarshaller",
-        "json_unmarshaller_object_hook",
+        "intents",
         "large_threshold",
-        "last_ack_received",
+        "json_deserialize",
+        "json_serialize",
         "last_heartbeat_sent",
+        "last_heartbeat_ack_received",
+        "last_ping_sent",
+        "last_pong_received",
         "logger",
-        "loop",
+        "presence",
         "proxy_auth",
         "proxy_headers",
         "proxy_url",
-        "max_persistent_buffer_size",
-        "out_count",
-        "rate_limit",
-        "ready_event",
-        "seq",
+        "ratelimiter",
+        "receive_timeout",
+        "reconnect_count",
+        "session",
         "session_id",
-        "shard_count",
+        "seq",
         "shard_id",
+        "shard_count",
         "ssl_context",
-        "started_at",
         "token",
-        "trace",
         "url",
         "verify_ssl",
         "ws",
-        "zlib_decompressor",
+        "zlib",
     )
-
-    # Closure codes that are unrecoverable from. This generally means the authentication is wrong or the bot
-    # is not sharded correctly. The user has to fix these themselves, we cannot do it.
-    _NEVER_RECONNECT_CODES = (
-        opcodes.GatewayClosure.AUTHENTICATION_FAILED,
-        opcodes.GatewayClosure.INVALID_SHARD,
-        opcodes.GatewayClosure.SHARDING_REQUIRED,
-    )
-
-    # Closure codes from the gateway where we should never attempt to resume with and should always restart
-    # the socket with a fresh session.
-    _DO_NOT_RESUME_CLOSURE_CODES = (opcodes.GatewayClosure.UNKNOWN_OPCODE,)
-
-    # How often to ping.
-    _AUTOPING_PERIOD = 10
-
-    # How much lag to find acceptable in general operations.
-    _LAG_TOLERANCE_PERCENTAGE = 0.15
 
     def __init__(
         self,
         *,
-        # required args:
-        token: str,
-        uri: str,
-        # optional args:
-        connector: aiohttp.BaseConnector = None,
-        enable_guild_subscription_events=True,
-        gateway_event_dispatcher: DispatchHandler = None,
-        http_timeout: float = None,
-        initial_presence: typing.Optional[containers.JSONObject] = None,
-        intents: opcodes.GatewayIntent = functools.reduce(operator.or_, opcodes.GatewayIntent.__iter__()),
-        internal_event_dispatcher: DispatchHandler = None,
-        json_marshaller: typing.Callable = None,
-        json_unmarshaller: typing.Callable = None,
-        json_unmarshaller_object_hook: typing.Type[dict] = None,
-        large_threshold: int = 50,
-        loop: asyncio.AbstractEventLoop = None,
-        max_persistent_buffer_size: int = 3 * 1024 ** 2,
-        proxy_auth: aiohttp.BasicAuth = None,
-        proxy_headers: aiohttp.typedefs.LooseHeaders = None,
-        proxy_url: str = None,
-        shard_count: typing.Optional[int] = None,
-        shard_id: typing.Optional[int] = None,
-        ssl_context: ssl.SSLContext = None,
-        verify_ssl: bool = True,
-    ) -> None:
-        loop = loop or asyncio.get_running_loop()
-
-        #: The event loop to use.
-        #:
-        #: :type: :class:`asyncio.AbstractEventLoop`
-        self.loop: asyncio.AbstractEventLoop = loop
-
-        #: Raw buffer that gets filled by messages. You should not interfere with this field ever.
-        self._in_buffer: bytearray = bytearray()
-
-        #: Holds the backoff to use. We max at 64 seconds.
-        self._backoff = Backoff(64)
-
-        #: An :class:`asyncio.Event` that will be triggered whenever the gateway disconnects.
-        #: This is only used internally.
-        self._closed_event = asyncio.Event()
-
-        #: True if we want the guild to send events for presence changes and typing events. This is
-        #: private as it cannot be adjusted once initially set without re-identifying.
-        self._enable_guild_subscription_events = enable_guild_subscription_events
-
-        #: The gateway intent to use. This is a bitfield combination of each category of event you wish to
-        #: receive DISPATCH payloads for. See :class:`hikari.net.opcodes.GatewayIntent` for more information.
-        #: This is private as it only applies while we identify.
-        self._intents = intents
-
-        #: Partial that can be used to generate new client sessions when we need them...
-        self._client_session_factory = functools.partial(
-            aiohttp.ClientSession,
-            connector=connector,
-            loop=self.loop,
-            json_serialize=json_marshaller,
-            version=aiohttp.HttpVersion11,
-        )
-
-        #: Callable used to marshal (serialize) payloads into JSON-encoded strings from native Python objects.
-        #:
-        #: Defaults to :func:`json.dumps`. You may want to override this if you choose to use a different
-        #: JSON library, such as one that is compiled.
-        self.json_marshaller = json_marshaller or json.dumps
-
-        #: Callable used to unmarshal (deserialize) JSON-encoded payloads into native Python objects.
-        #:
-        #: Defaults to :func:`json.loads`. You may want to override this if you choose to use a different
-        #: JSON library, such as one that is compiled.
-        self.json_unmarshaller = json_unmarshaller or json.loads
-
-        #: Dict-derived type to use for unmarshalled JSON objects.
-        #:
-        #: For convenience, this defaults to :class:`hikari.internal_utilities.data_structures.ObjectProxy`, since
-        #: this provides a benefit of allowing you to use dicts as if they were normal python objects. If you wish
-        #: to use another implementation, or just default to :class:`dict` instead, it is worth changing this
-        #: attribute.
-        self.json_unmarshaller_object_hook = json_unmarshaller_object_hook or containers.ObjectProxy
-
-        logger_args = (self, shard_id, shard_count) if shard_id is not None and shard_count is not None else (self,)
-
-        #: Logger used to dump information to the console.
-        #:
-        #: :type: :class:`logging.Logger`
-        self.logger = loggers.get_named_logger(*logger_args)
-
-        #: The coroutine function to dispatch any gateway DISPATCH events to.
-        #:
-        #: :type: :class:`hikari.net.gateway.DispatchHandler`
-        self.gateway_event_dispatcher: DispatchHandler = gateway_event_dispatcher or _default_dispatch
-
-        #: The coroutine function to dispatch any connection-related events to.
-        #:
-        #: :type: :class:`hikari.net.gateway.DispatchHandler`
-        self.internal_event_dispatcher: DispatchHandler = internal_event_dispatcher or _default_dispatch
-
-        #: The fingerprint payload used to identify this connection to the gateway.
-        #:
-        #: :type: :class:`dict`
-        self.fingerprint = {
-            "$os": user_agent.system_type(),
-            "$browser": user_agent.library_version(),
-            "$device": user_agent.python_version(),
-        }
-
-        #: ZLIB decompression context.
-        #:
-        #: :type: :class:`zlib.decompressobj`
-        self.zlib_decompressor: typing.Any = zlib.decompressobj()
-
-        #: Number of shards in use, or `None` if not sharded.
-        #:
-        #: :type: :class:`int` or :class:`None`
-        self.shard_count = shard_count
-
-        #: Current shard ID, or `None` if not sharded.
-        #:
-        #: :type: :class:`int` or :class:`None`
-        self.shard_id = shard_id
-
-        #: A boolean that represents whether the client is running or not.
-        #:
-        #: :type: :class:`bool`
-        self.is_running = False
-
-        #: The heartbeat interval. This is `float('nan')` until the gateway provides us a value to use on startup.
-        #:
-        #: :type: :class:`float`
-        self.heartbeat_interval = float("nan")
-
-        #: The time period in seconds that the last heartbeat we sent took to be acknowledged by the gateway. This
-        #: will be `float('inf')` until the first heartbeat is performed and acknowledged.
-        #:
-        #: :type: :class:`float`
-        self.heartbeat_latency = float("inf")
-
-        #: Number of packets that have been received since startup.
-        #:
-        #: :type: :class:`int`
-        self.in_count = 0
-
-        #: The initial presence to use for the bot status once IDENTIFYing with the shard.
-        #:
-        #: :type: :class:`dict` or :class:`None`
-        self.initial_presence = initial_presence
-
-        #: What we regard to be a large guild in member numbers.
-        #:
-        #: :type: :class:`int`
-        self.large_threshold = large_threshold
-
-        #: The :func:`time.perf_counter` that the last heartbeat was acknowledged at. Is `float('nan')` until then.
-        #:
-        #: :type: :class:`float`
-        self.last_ack_received = float("nan")
-
-        #: The :func:`time.perf_counter` that the last heartbeat was sent at. Is `float('nan')` until then.
-        #:
-        #: :type: :class:`float`
-        self.last_heartbeat_sent = float("nan")
-
-        #: What we consider to be a large size for the internal buffer. Any packet over this size results in the buffer
-        #: being completely recreated.
-        #:
-        #: :type: :class:`int`
-        self.max_persistent_buffer_size = max_persistent_buffer_size
-
-        #: Number of packets that have been sent since startup.
-        #:
-        #: :type: :class:`int`
-        self.out_count = 0
-
-        #: Rate limit bucket for the gateway.
-        #:
-        #: :type: :class:`hikari.net.rates.TimedTokenBucket`
-        self.rate_limit = rates.TimedTokenBucket(120, 60, loop)
-
-        #: The `seq` flag value, if there is one set.
-        #:
-        #: :type: :class:`int` or :class:`None`
-        self.seq = None
-
-        #: The session ID in use, if there is one set.
-        #:
-        #: :type: :class:`int` or :class:`None`
-        self.session_id = None
-
-        #: When the gateway connection was started, as a unix timestamp.
-        #:
-        #: :type: :class:`int` or :class:`None`
-        self.started_at: typing.Optional[int] = None
-
-        #: A list of gateway servers that are connected to, once connected.
-        #:
-        #: :type: :class`list` of :class:`str`
-        self.trace: typing.List[str] = []
-
-        #: Token used to authenticate with the gateway.
-        #:
-        #: :type: :class:`str`
-        self.token = token.strip()
-
-        #: The URI being connected to.
-        #:
-        #: :type: :class:`str`
-        self.url = f"{uri}?v={self.version}&encoding=json&compress=zlib-stream"
-
-        #: The active websocket connection handling the low-level connection logic. Populated only while
-        #: connected.
-        #:
-        #: :type: :class:`aiohttp.ClientWebSocketResponse` or :class:`None`
-        self.ws: typing.Optional[aiohttp.ClientWebSocketResponse] = None
-
-        #: Optional SSL context to use.
-        #:
-        #: :type: :class:`ssl.SSLContext`
-        self.ssl_context: ssl.SSLContext = ssl_context
-
-        #: Optional proxy URL to use for HTTP requests.
-        #:
-        #: :type: :class:`str`
-        self.proxy_url = proxy_url
-
-        #: Optional authorization to use if using a proxy.
-        #:
-        #: :type: :class:`aiohttp.BasicAuth`
-        self.proxy_auth = proxy_auth
-
-        #: Optional proxy headers to pass.
-        #:
-        #: :type: :class:`aiohttp.typedefs.LooseHeaders`
-        self.proxy_headers = proxy_headers
-
-        #: If `true`, this will enforce SSL signed certificate verification, otherwise it will
-        #: ignore potentially malicious SSL certificates.
-        #:
-        #: :type: :class:`bool`
-        self.verify_ssl = verify_ssl
-
-        #: Optional timeout for the initial HTTP request.
-        #:
-        #: :type: :class:`float`
+        compression=True,
+        connector=None,
+        debug: bool = False,
+        dispatch=lambda gw, e, p: None,
+        http_timeout=0,
+        initial_presence=None,
+        intents: type_hints.NotRequired[GatewayIntent] = None,
+        json_deserialize=json.loads,
+        json_serialize=json.dumps,
+        large_threshold=1_000,
+        proxy_auth=None,
+        proxy_headers=None,
+        proxy_url=None,
+        receive_timeout=10.0,
+        session_id=None,
+        seq=None,
+        shard_id=0,
+        shard_count=1,
+        ssl_context=None,
+        token,
+        url,
+        verify_ssl=True,
+    ):
+        self.closed_event = asyncio.Event()
+        self.compression = compression
+        self.connected_at = float("nan")
+        self.connector = connector
+        self.debug = debug
+        self.dispatch = dispatch
         self.http_timeout = http_timeout
+        self.intents = intents
+        self.large_threshold = large_threshold
+        self.json_deserialize = json_deserialize
+        self.json_serialize = json_serialize
+        self.last_heartbeat_sent = float("nan")
+        self.last_heartbeat_ack_received = float("nan")
+        self.last_ping_sent = float("nan")
+        self.last_pong_received = float("nan")
+        self.presence = initial_presence
+        self.proxy_auth = proxy_auth
+        self.proxy_headers = proxy_headers
+        self.proxy_url = proxy_url
+        self.receive_timeout = receive_timeout
+        self.reconnect_count = 0
+        self.session = None
+        self.session_id = session_id
+        self.seq = seq
+        self.shard_id = shard_id if shard_id is not None and shard_count is not None else 0
+        self.shard_count = shard_count if shard_id is not None and shard_count is not None else 1
+        self.ssl_context = ssl_context
+        self.token = token
+        self.verify_ssl = verify_ssl
+        self.ws = None
+        self.zlib = zlib.decompressobj()
 
-        #: An event you can wait for to determine when the bot receives the
-        #: READY payload. We use this to indicate we are connected correctly.
-        self.ready_event = asyncio.Event()
+        name = f"hikari.{type(self).__name__}"
+        if shard_count > 1:
+            name += f"{shard_id}"
+        self.logger = logging.getLogger(name)
+
+        url = f"{url}?v=7&encoding=json"
+        if compression:
+            url += "&compress=zlib-stream"
+        self.url = url
+
+        self.ratelimiter = ratelimits.WindowedBurstRateLimiter(f"gateway shard {shard_id}/{shard_count}", 60.0, 120)
 
     @property
-    def version(self) -> int:
-        """The version of the gateway being used."""
-        return 7
+    def latency(self):
+        return self.last_pong_received - self.last_ping_sent
 
     @property
-    def up_time(self) -> datetime.timedelta:
-        """The length of time the gateway has been connected for, or 0 seconds if the client has not yet started."""
-        if self.started_at is None:
-            return datetime.timedelta(seconds=0)
-        return datetime.timedelta(seconds=time.perf_counter() - self.started_at)
+    def heartbeat_latency(self):
+        return self.last_heartbeat_ack_received - self.last_heartbeat_sent
 
     @property
-    def is_shard(self) -> bool:
-        """True if this is considered a shard, false if the bot is running with a single gateway connection."""
-        return self.shard_id is not None and self.shard_count is not None
+    def uptime(self):
+        delta = time.perf_counter() - self.connected_at
+        return datetime.timedelta(seconds=0 if math.isnan(delta) else delta)
 
-    async def _trigger_resume(self, code: int, reason: str, cause=None) -> typing.NoReturn:
-        """Trigger a `RESUME` operation. This will raise a :class:`ResumableConnectionClosed` exception."""
-        raise _ResumeConnection(code=code, reason=reason) from cause
+    @property
+    def is_connected(self):
+        return not math.isnan(self.connected_at)
 
-    async def _trigger_identify(self, code: int, reason: str, cause=None) -> typing.NoReturn:
-        """Trigger a re-`IDENTIFY` operation. This will raise a :class:`GatewayRequestedReconnection` exception."""
-        raise _RestartConnection(code=code, reason=reason) from cause
-
-    async def _receive(self):
-        # Repeat if we ping or pong just to keep that transparently out the way...
-        while True:
-            try:
-                response = await self.ws.receive()
-                self.logger.debug("< [%s] %s", response.type.name, response.data)
-            except asyncio.TimeoutError:
-                await self._trigger_resume(opcodes.GatewayClosure.INTERNAL_ERROR, "websocket connection timed out")
-            else:
-                if response.type in (aiohttp.WSMsgType.TEXT, aiohttp.WSMsgType.BINARY):
-                    return response.data
-                elif response.type == aiohttp.WSMsgType.PING:
-                    self.logger.debug("received ping")
-                    await self.ws.pong()
-                elif response.type == aiohttp.WSMsgType.PONG:
-                    self.logger.debug("received pong")
-                elif response.type == aiohttp.WSMsgType.CLOSE:
-                    await self.ws.close()
-                    raise _RestartableClosure(self.ws.close_code, "gateway closed the connection")
-                elif response.type in (aiohttp.WSMsgType.CLOSING, aiohttp.WSMsgType.CLOSED):
-                    raise _ConnectionShutDownByUser()
-                elif response.type == aiohttp.WSMsgType.ERROR:
-                    raise self.ws.exception()
-                else:
-                    raise TypeError(f"Expected TEXT or BINARY message on websocket but received {response.type}")
-
-    async def _send_json(self, payload, skip_rate_limit) -> None:
-        if not skip_rate_limit:
-            await self.rate_limit.acquire(self._warn_about_internal_rate_limit)
-
-        raw = self.json_marshaller(payload)
-        if len(raw) > 4096:
-            self._handle_payload_oversize(payload)
-        else:
-            self.out_count += 1
-            await self.ws.send_str(raw)
-            self.logger.debug("> %s", raw)
-
-    async def _receive_json(self) -> containers.JSONObject:
-        msg = await self._receive()
-
-        if isinstance(msg, (bytes, bytearray)):
-            self._in_buffer.extend(msg)
-            while not self._in_buffer.endswith(b"\x00\x00\xff\xff"):
-                msg = await self._receive()
-                self._in_buffer.extend(msg)
-
-            msg = self.zlib_decompressor.decompress(self._in_buffer).decode("utf-8")
-
-            # Prevent large packets persisting a massive buffer we never utilise.
-            # TODO: tune this size to get best performance?
-            if len(self._in_buffer) > self.max_persistent_buffer_size:
-                self._in_buffer = bytearray()
-            else:
-                self._in_buffer.clear()
-
-        payload = self.json_unmarshaller(msg, object_hook=self.json_unmarshaller_object_hook)
-
-        if not isinstance(payload, dict):
-            return await self._trigger_identify(code=opcodes.GatewayClosure.TYPE_ERROR, reason="Expected JSON object.")
-
-        self.in_count += 1
-
-        return payload
-
-    def _warn_about_internal_rate_limit(self) -> None:
-        delta = self.rate_limit.reset_at - time.perf_counter()
-        self.logger.warning(
-            "you are being rate limited internally to prevent the gateway from disconnecting you. "
-            "The current rate limit ends in %.2f seconds",
-            delta,
-        )
-
-    def _handle_payload_oversize(self, payload) -> None:
-        self.logger.error(
-            "refusing to send payload as it is too large and sending this would result in a disconnect. "
-            "Payload was: %s",
-            payload,
-        )
-
-    def _handle_slow_client(self, time_taken) -> None:
-        self.logger.warning(
-            "took %sms to send HEARTBEAT, which is more than 15%% of the heartbeat interval. "
-            "Your connection may be poor or the event loop may be blocked or under excessive load",
-            time_taken * 1000,
-        )
-
-    async def _send_heartbeat(self) -> None:
-        now = time.perf_counter()
-        if self.last_ack_received < self.last_heartbeat_sent:
-            last_sent = now - self.last_heartbeat_sent
-            msg = f"failed to receive an acknowledgement from the previous heartbeat sent ~{last_sent}s ago"
-            await self._trigger_resume(code=opcodes.GatewayClosure.PROTOCOL_VIOLATION, reason=msg)
-        await self._send_json({"op": opcodes.GatewayOpcode.HEARTBEAT, "d": self.seq}, True)
-        self.logger.debug("sent HEARTBEAT")
-        self.last_heartbeat_sent = time.perf_counter()
-
-    async def _send_ack(self) -> None:
-        await self._send_json({"op": opcodes.GatewayOpcode.HEARTBEAT_ACK}, True)
-        self.logger.debug("sent HEARTBEAT_ACK")
-
-    async def _handle_ack(self) -> None:
-        self.last_ack_received = time.perf_counter()
-        self.heartbeat_latency = self.last_ack_received - self.last_heartbeat_sent
-        self.logger.debug("received HEARTBEAT_ACK after %sms", round(self.heartbeat_latency * 1000))
-
-    async def _ping_runner(self):
-        # We keep pinging to expect pongs. This allows us to keep our timeout a little more reasonable.
-        while not self._closed_event.is_set():
-            await self.ws.ping()
-            await asyncio.sleep(self._AUTOPING_PERIOD)
-
-    async def _heartbeat_runner(self) -> None:
-        # Send first heartbeat immediately so we know the latency.
-        while not self._closed_event.is_set():
-            try:
-                await asyncio.wait_for(self._closed_event.wait(), timeout=self.heartbeat_interval)
-            except asyncio.TimeoutError:
-                # If we cannot send a heartbeat in around 45 seconds, we are blocked, and we cannot continue to
-                # function as a normal bot.
-                try:
-                    start = time.perf_counter()
-                    await asyncio.wait_for(self._send_heartbeat(), timeout=self.heartbeat_interval)
-                    time_taken = time.perf_counter() - start
-
-                    if time_taken > self._LAG_TOLERANCE_PERCENTAGE * self.heartbeat_latency:
-                        self._handle_slow_client(time_taken)
-                except asyncio.TimeoutError as ex:
-                    await self._trigger_resume(
-                        opcodes.GatewayClosure.INTERNAL_ERROR,
-                        f"bot was unable to send a heartbeat in ~{self.heartbeat_latency}s successfully",
-                        ex,
-                    )
-
-    async def _receive_hello(self) -> None:
-        hello = await self._receive_json()
-        op = hello["op"]
-        if op != opcodes.GatewayOpcode.HELLO:
-            return await self._trigger_resume(
-                code=opcodes.GatewayClosure.PROTOCOL_VIOLATION, reason=f"Expected HELLO but got {op}"
+    async def connect(self):
+        try:
+            self.session = aiohttp.ClientSession(connector=self.connector)
+            self.ws = await self.session.ws_connect(
+                self.url,
+                receive_timeout=self.receive_timeout,
+                compress=0,
+                autoping=False,
+                max_msg_size=0,
+                proxy=self.proxy_url,
+                proxy_auth=self.proxy_auth,
+                proxy_headers=self.proxy_headers,
+                verify_ssl=self.verify_ssl,
+                ssl_context=self.ssl_context,
+                timeout=self.http_timeout,
             )
 
-        d = hello["d"]
-        self.trace = d["_trace"]
-        hb = d["heartbeat_interval"]
-        self.heartbeat_interval = hb / 1000.0
-        self._dispatch_new_event(opcodes.GatewayInternalEvent.CONNECT, None, True)
-        self._dispatch_new_event(opcodes.GatewayEvent.HELLO, d, False)
-        self.logger.info("received HELLO. heartbeat interval is %sms", hb)
+            self.connected_at = time.perf_counter()
 
-    async def _send_resume(self) -> None:
-        payload = {
-            "op": opcodes.GatewayOpcode.RESUME,
-            "d": {"token": self.token, "session_id": self.session_id, "seq": self.seq},
-        }
-        await self._send_json(payload, False)
-        self.logger.info("sent RESUME")
+            ping_task = asyncio.create_task(self.ping_keep_alive())
 
-    async def _send_identify(self) -> None:
-        payload = {
-            "op": opcodes.GatewayOpcode.IDENTIFY,
+            # Parse HELLO
+            self.logger.debug("expecting HELLO")
+            pl = await self.receive()
+            op = pl["op"]
+            if op != 10:
+                raise errors.GatewayError(f"Expected HELLO opcode 10 but received {op}")
+            hb_interval = pl["d"]["heartbeat_interval"] / 1_000.0
+            self.dispatch(self, "RECONNECT" if self.reconnect_count else "CONNECT", None)
+            self.logger.info("received HELLO, interval is %ss", hb_interval)
+
+            heartbeat_task = asyncio.create_task(self.heartbeat_keep_alive(hb_interval))
+
+            if self.session_id is None:
+                await self.identify()
+                self.logger.info("sent IDENTIFY, ready to listen to incoming events")
+            else:
+                await self.resume()
+                self.logger.info("sent RESUME, ready to listen to incoming events")
+
+            await asyncio.gather(
+                ping_task, heartbeat_task, self.poll_events(),
+            )
+        finally:
+            with contextlib.suppress(AttributeError):
+                await asyncio.shield(self.ws.close())
+            with contextlib.suppress(AttributeError):
+                await asyncio.shield(self.session.close())
+            self.connected_at = float("nan")
+            self.last_ping_sent = float("nan")
+            self.last_pong_received = float("nan")
+            self.last_heartbeat_sent = float("nan")
+            self.last_heartbeat_ack_received = float("nan")
+            self.reconnect_count += 1
+            self.dispatch(self, "DISCONNECT", None)
+
+    def identify(self):
+        self.logger.debug("sending IDENTIFY")
+        pl = {
+            "op": 2,
             "d": {
                 "token": self.token,
                 "compress": False,
                 "large_threshold": self.large_threshold,
-                "properties": self.fingerprint,
-                "guild_subscriptions": self._enable_guild_subscription_events,
-                # Do not uncomment this, it will trigger a 4012 shutdown, which is undocumented
-                # behaviour according to the closure codes list at the time of writing
-                # see https://github.com/discordapp/discord-api-docs/issues/1266
-                # "intents": int(self._intents),
+                "properties": {
+                    "$os": " ".join((platform.system(), platform.release(),)),
+                    "$browser": "hikari/1.0.0a1",
+                    "$device": " ".join(
+                        (platform.python_implementation(), platform.python_revision(), platform.python_version(),)
+                    ),
+                },
+                "shard": [self.shard_id, self.shard_count],
             },
         }
 
-        if self.initial_presence is not None:
-            payload["d"]["presence"] = self.initial_presence
+        # Do not always add this option; if it is None, exclude it for now. According to Mason,
+        # we can only use intents at the time of writing if our bot has less than 100 guilds.
+        # This means we need to give the user the option to opt in to this rather than breaking their
+        # bot with it if they have 100+ guilds. This restriction will be removed eventually.
+        if self.intents is not None:
+            pl["d"]["intents"] = self.intents
 
-        if self.is_shard:
-            # noinspection PyTypeChecker
-            payload["d"]["shard"] = [self.shard_id, self.shard_count]
+        if self.presence:
+            pl["d"]["presence"] = self.presence
+        return self.send(pl)
 
-        self.logger.info(
-            "sent IDENTIFY, guild subscriptions are %s",
-            "enabled" if self._enable_guild_subscription_events else "disabled",
-        )
-        await self._send_json(payload, False)
+    def resume(self):
+        self.logger.debug("sending RESUME")
+        pl = {
+            "op": 6,
+            "d": {"token": self.token, "seq": self.seq, "session_id": self.session_id,},
+        }
+        return self.send(pl)
 
-    async def _handle_dispatch(self, event: str, payload: containers.JSONObject) -> None:
-        if event == opcodes.GatewayEvent.READY:
-            await self._handle_ready(payload)
-        elif event == opcodes.GatewayEvent.RESUMED:
-            await self._handle_resumed(payload)
-        else:
-            self.logger.debug("DISPATCH %s", event)
+    async def ping_keep_alive(self):
+        while not self.closed_event.is_set():
+            await self.ws.ping()
+            self.last_ping_sent = time.perf_counter()
+            self.logger.debug("sent ping")
             try:
-                event = opcodes.GatewayEvent(event)
-            except ValueError:
+                await asyncio.wait_for(self.closed_event.wait(), timeout=0.75 * self.receive_timeout)
+            except asyncio.TimeoutError:
                 pass
-            self._dispatch_new_event(event, payload, False)
 
-    async def _handle_ready(self, ready_payload: containers.JSONObject) -> None:
-        self.trace = ready_payload["_trace"]
-        self.session_id = ready_payload["session_id"]
-        shard = ready_payload.get("shard")
-
-        if shard is not None:
-            self.shard_id, self.shard_count = shard
-
-        self.ready_event.set()
-        self._dispatch_new_event(opcodes.GatewayEvent.READY, ready_payload, False)
-
-        self.logger.info("session %s has completed handshake, initial connection is READY", self.session_id)
-        self.logger.debug("trace for session %s is %s", self.session_id, self.trace)
-
-    async def _handle_resumed(self, resume_payload: containers.JSONObject) -> None:
-        self.trace = resume_payload["_trace"]
-        self.session_id = resume_payload["session_id"]
-        self.seq = resume_payload["seq"]
-        self.logger.info("RESUMED successfully")
-        # This is a gateway event, we don't want to capture it with the internal events, so it is
-        # not enumerated.
-        self._dispatch_new_event(opcodes.GatewayEvent.RESUMED, resume_payload, False)
-
-    async def _process_events(self) -> None:
-        """Polls the gateway for new packets and handles dispatching the results."""
-        while not self._closed_event.is_set():
-            await self._process_one_event()
-
-    async def _process_one_event(self) -> None:
-        message = await self._receive_json()
-        op = message["op"]
-        d = message["d"]
-        seq = message.get("s", None)
-        t = message.get("t", None)
-
-        with contextlib.suppress(ValueError):
-            op = opcodes.GatewayOpcode(op)
-
-        if seq is not None:
-            self.seq = seq
-        if op == opcodes.GatewayOpcode.DISPATCH:
-            await self._handle_dispatch(t, d)
-        elif op == opcodes.GatewayOpcode.HEARTBEAT:
-            await self._send_ack()
-        elif op == opcodes.GatewayOpcode.HEARTBEAT_ACK:
-            await self._handle_ack()
-        elif op == opcodes.GatewayOpcode.RECONNECT:
-            self.logger.warning("received RECONNECT, will reconnect with a new session")
-            self._dispatch_new_event(opcodes.GatewayEvent.RECONNECT, d, False)
-            await self._trigger_identify(
-                code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="you requested me to reconnect"
-            )
-        elif op == opcodes.GatewayOpcode.INVALID_SESSION:
-            self._dispatch_new_event(opcodes.GatewayEvent.INVALID_SESSION, d, False)
-            if d is True:
-                self.logger.warning("received INVALID_SESSION, will try to disconnect and RESUME")
-                await self._trigger_resume(
-                    code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="invalid session id so will resume"
-                )
-            else:
-                self.logger.warning("received INVALID_SESSION, will try to re-IDENTIFY")
-                await self._trigger_identify(
-                    code=opcodes.GatewayClosure.NORMAL_CLOSURE, reason="invalid session id so will close"
-                )
-        else:
-            self.logger.warning("received unrecognised opcode %s", op)
-
-    def request_guild_members(
-        self,
-        guild_id: str,
-        *guild_ids: str,
-        limit: int = 0,
-        query: str = None,
-        presences: bool = True,
-        user_ids: typing.Sequence[str] = None,
-    ) -> None:
-        """
-        Requests guild members from the given Guild ID. This can be used to retrieve all members available in a guild.
-
-        Args:
-            guild_id:
-                the first guild ID to request members from.
-            *guild_ids:
-                zero or more additional guild IDs to request members from.
-            query:
-                member names to search for, or empty string to remove the constraint.
-            limit:
-                max number of members to retrieve, or zero to remove the constraint. This will be
-                ignored unless a non-empty `query` is specified.
-            presences:
-                `True` to return presences, `False` otherwise.
-            user_ids:
-                An optional sequence of user IDs to get the details for.
-
-        Warning:
-            Results will be dispatched as events in chunks of 1000 members per guild using the
-            `GUILD_MEMBERS_CHUNK` event. You will need to listen to these yourself and decode
-            them in case more than one occurs at once.
-
-        Warning:
-            You may not specify both `query` and `user_ids` in this call.
-        """
-        payload = {"guild_id": [guild_id, *guild_ids], "presences": presences}
-
-        if user_ids is not None:
-            if query is not None:
-                raise RuntimeError("Cannot specify both user_ids and query together")
-            payload["user_ids"] = [*user_ids]
-        else:
-            payload["query"] = query if query is not None else ""
-            payload["limit"] = limit
-
-        self.logger.debug("requesting members with constraints %s", payload)
-        compat.asyncio.create_task(
-            self._send_json({"op": opcodes.GatewayOpcode.REQUEST_GUILD_MEMBERS, "d": payload}, False,),
-            name=f"send REQUEST_GUILD_MEMBERS (shard {self.shard_id}/{self.shard_count})",
-        )
-
-    @meta.incubating(message="This is not currently documented.")
-    def request_guild_sync(self, guild_id1: str, *guild_ids: str) -> None:
-        """
-        Request that the gateway re-syncs any guilds provided.
-
-        Args:
-            guild_id1:
-                the first guild ID to consider.
-            guild_ids:
-                any additional guild IDs to consider.
-        """
-        guilds = [guild_id1, *guild_ids]
-        self.logger.debug("requesting a guild sync for guilds %s", guilds)
-        compat.asyncio.create_task(
-            self._send_json({"op": opcodes.GatewayOpcode.GUILD_SYNC, "d": guilds}, False),
-            name=f"send GUILD_SYNC (shard {self.shard_id}/{self.shard_count})",
-        )
-
-    async def update_status(
-        self, idle_since: typing.Optional[int], game: typing.Optional[containers.JSONObject], status: str, afk: bool,
-    ) -> None:
-        """
-        Updates the bot user's status in this shard.
-
-        Args:
-            idle_since: unix timestamp in milliseconds that the user has been idle for, or `None` if not idle.
-            game: an activity object representing the activity, or `None` if no activity is set.
-            status: the status string to set.
-            afk: True if the client is AFK, false otherwise.
-        See:
-            - Activity objects: https://discordapp.com/developers/docs/topics/gateway#activity-object
-            - Valid statuses: https://discordapp.com/developers/docs/topics/gateway#update-status-status-types
-        """
-        d = {"idle": idle_since, "game": game, "status": status, "afk": afk}
-
-        self.logger.debug(
-            "updating status to idle since %r with game %r with status %r and afk %r", idle_since, game, status, afk
-        )
-        await self._send_json({"op": opcodes.GatewayOpcode.STATUS_UPDATE, "d": d}, False)
-
-    async def update_voice_state(
-        self, guild_id: str, channel_id: typing.Optional[int], self_mute: bool, self_deaf: bool
-    ) -> None:
-        """
-        Updates the given shard's voice state (used to connect to/disconnect from/move between voice channels.
-
-        Args:
-            guild_id: the guild ID.
-            channel_id: the channel ID, or `None` if you wish to disconnect.
-            self_mute: if `True`, mute the bot, else if `False` keep the bot unmuted.
-            self_deaf: if `True`, deafen the bot, else if `False`, keep the bot listening.
-        """
-        d = {"guild_id": str(guild_id), "channel_id": str(channel_id), "self_mute": self_mute, "self_deaf": self_deaf}
-
-        self.logger.debug("updating voice state %s", d)
-        await self._send_json({"op": opcodes.GatewayOpcode.VOICE_STATE_UPDATE, "d": d}, False)
-
-    async def run(self) -> None:
-        """
-        Run the gateway and attempt to keep it alive for as long as possible using restarts and resumes if needed.
-
-        Raises:
-            :class:`hikari.errors.GatewayError`:
-                if the token provided is invalidated.
-            :class:`websockets.exceptions.ConnectionClosed`:
-                if the connection is unexpectedly closed before we can start processing.
-        """
-        websocket_kwargs = dict(
-            autoping=False,
-            proxy=self.proxy_url,
-            proxy_auth=self.proxy_auth,
-            proxy_headers=self.proxy_headers,
-            verify_ssl=self.verify_ssl,
-            ssl_context=self.ssl_context,
-            compress=0,
-            max_msg_size=0,  # fixes #149, due to Discord's iffy message sizes.
-            receive_timeout=2 * self._AUTOPING_PERIOD,
-        )
-
-        self._backoff.reset()
-        session = None
-
-        while not self._closed_event.is_set():
+    async def heartbeat_keep_alive(self, heartbeat_interval):
+        while not self.closed_event.is_set():
+            if self.last_heartbeat_ack_received < self.last_heartbeat_sent:
+                raise errors.GatewayZombiedError()
+            await self.send({"op": 1, "d": self.seq})
+            self.last_heartbeat_sent = time.perf_counter()
             try:
-                session = self._client_session_factory()
-                self.logger.debug("creating websocket connection to %s", self.url)
+                await asyncio.wait_for(self.closed_event.wait(), timeout=heartbeat_interval)
+            except asyncio.TimeoutError:
+                pass
 
-                self.started_at = time.perf_counter()
-                self.ws = await session.ws_connect(self.url, **websocket_kwargs)
-                try:
-                    self.is_running = True
-                    await self._run_once()
-                finally:
-                    self.is_running = False
-                    compat.asyncio.create_task(self.ws.close(), name=f"close shard {self.shard_id}")
-            except _ConnectionShutDownByUser:
-                # The user asked us to stop, so don't throw anything. We will just exit on the loop gracefully.
-                self.logger.warning("shard has been shut down by user")
-                self._closed_event.set()
-            except _RestartableClosure:
-                # Something occurred where we want to automatically resume or restart, so reconnect without
-                # exiting, but take the course of the backoff first.
-                next_backoff = next(self._backoff)
-                self.logger.warning("shard has shut down and will retry after a %ss backoff", next_backoff)
-                await asyncio.sleep(next_backoff)
-            except aiohttp.ClientConnectionError as ex:
-                self.logger.error("failed to connect to gateway for initial HTTP upgrade: %s", str(ex))
-                raise ex
-            finally:
-                await session.close()
+    async def poll_events(self):
+        while True:
+            next_pl = await self.receive()
 
-    async def _run_once(self):
-        """
-        Manages keeping the websocket that is already assumed to be alive running until the first
-        exception is raised. The callee is expected to manage shutting down any other resources.
-        """
-        try:
-            await self._receive_hello()
-            is_resume = self.seq is not None and self.session_id is not None
-            await (self._send_resume() if is_resume else self._send_identify())
-            await self._send_heartbeat()
-            await asyncio.gather(self._heartbeat_runner(), self._process_events(), self._ping_runner())
-            self._dispatch_new_event(opcodes.GatewayInternalEvent.MANUAL_SHUTDOWN, None, True)
-        except _RestartableClosure as ex:
-            code, reason = opcodes.GatewayClosure(ex.code), ex.reason or "no reason"
+            op = next_pl["op"]
+            d = next_pl["d"]
 
-            self._dispatch_new_event(opcodes.GatewayInternalEvent.DISCONNECT, {"code": code, "reason": reason}, True)
+            if op == 0:
+                self.seq = next_pl["s"]
+                event_name = next_pl["t"]
+                self.dispatch(self, event_name, d)
+            elif op == 1:
+                await self.send({"op": 11})
+            elif op == 7:
+                self.logger.debug("instructed by gateway server to restart connection")
+                raise errors.GatewayMustReconnectError()
+            elif op == 9:
+                resumable = bool(d)
+                self.logger.debug(
+                    "instructed by gateway server to %s session", "resume" if resumable else "restart",
+                )
+                raise errors.GatewayInvalidSessionError(resumable)
+            elif op == 11:
+                self.last_heartbeat_ack_received = time.perf_counter()
+                ack_wait = self.last_heartbeat_ack_received - self.last_heartbeat_sent
+                self.logger.debug("received HEARTBEAT ACK in %ss", ack_wait)
+            else:
+                self.logger.debug("ignoring opcode %s with data %r", op, d)
 
-            if ex.code in self._NEVER_RECONNECT_CODES:
-                self.logger.critical("disconnected after %s [%s]. Please rectify", reason, code)
-                raise errors.GatewayError(code, reason) from ex
+    def close(self):
+        if not self.closed_event.is_set():
+            self.closed_event.set()
 
-            self.logger.warning("reconnecting after %s [%s]", reason, code)
-            if isinstance(ex, _RestartConnection) or code in self._DO_NOT_RESUME_CLOSURE_CODES:
-                self.seq, self.session_id, self.trace = None, None, []
-
-            # Now we are tidy, reraise.
-            raise ex
-        finally:
-            self.ready_event.clear()
-
-    def _dispatch_new_event(self, event_name: str, payload, is_internal_event) -> None:
-        # This prevents us blocking any task such as the READY handler.
-        dispatcher = self.internal_event_dispatcher if is_internal_event else self.gateway_event_dispatcher
-        compat.asyncio.create_task(
-            dispatcher(self, event_name, payload),
-            name=f"dispatching {event_name} event (shard {self.shard_id}/{self.shard_count})",
-        )
-
-    async def close(self) -> None:
-        """
-        Request that the gateway gracefully shuts down.
-        """
-        if not self.ws.closed:
-            self._closed_event.set()
+    async def kill(self):
+        if self.ws is not None:
             await self.ws.close()
 
+    async def receive(self):
+        while True:
+            message = await self.ws.receive()
+            if message.type == aiohttp.WSMsgType.TEXT:
+                obj = self.json_deserialize(message.data)
 
-__all__ = ["GatewayClient"]
+                if self.debug:
+                    self.logger.debug("receive text payload %r", message.data)
+                else:
+                    self.logger.debug(
+                        "receive text payload (op:%s, t:%s, s:%s, size:%s)",
+                        obj.get("op"),
+                        obj.get("t"),
+                        obj.get("s"),
+                        len(message.data),
+                    )
+                return obj
+            elif message.type == aiohttp.WSMsgType.BINARY:
+                buffer = bytearray(message.data)
+                packets = 1
+                while not buffer.endswith(b"\x00\x00\xff\xff"):
+                    packets += 1
+                    message = await self.ws.receive()
+                    if message.type != aiohttp.WSMsgType.BINARY:
+                        raise errors.GatewayError(f"Expected a binary message but got {message.type}")
+                    buffer.extend(message.data)
+
+                pl = self.zlib.decompress(buffer)
+                obj = self.json_deserialize(pl)
+
+                if self.debug:
+                    self.logger.debug("receive %s zlib-encoded packets containing payload %r", packets, pl)
+                else:
+                    self.logger.debug(
+                        "receive zlib payload (op:%s, t:%s, s:%s, size:%s, packets:%s)",
+                        obj.get("op"),
+                        obj.get("t"),
+                        obj.get("s"),
+                        len(pl),
+                        packets,
+                    )
+                return obj
+            elif message.type == aiohttp.WSMsgType.PING:
+                self.logger.debug("receive ping")
+                await self.ws.pong()
+                self.logger.debug("sent pong")
+            elif message.type == aiohttp.WSMsgType.PONG:
+                self.last_pong_received = time.perf_counter()
+                self.logger.debug("receive pong after %ss", self.last_pong_received - self.last_ping_sent)
+            elif message.type == aiohttp.WSMsgType.CLOSE:
+                close_code = self.ws.close_code
+                self.logger.debug("connection closed with code %s", close_code)
+                if close_code == errors.GatewayCloseCode.AUTHENTICATION_FAILED:
+                    raise errors.GatewayInvalidTokenError()
+                elif close_code in (errors.GatewayCloseCode.SESSION_TIMEOUT, errors.GatewayCloseCode.INVALID_SEQ):
+                    raise errors.GatewayInvalidSessionError(False)
+                elif close_code == errors.GatewayCloseCode.SHARDING_REQUIRED:
+                    raise errors.GatewayNeedsShardingError()
+                else:
+                    raise errors.GatewayConnectionClosedError(close_code)
+            elif message.type in (aiohttp.WSMsgType.CLOSING, aiohttp.WSMsgType.CLOSED):
+                self.logger.debug("connection has already closed, so giving up")
+                raise errors.GatewayClientClosedError()
+            elif message.type == aiohttp.WSMsgType.ERROR:
+                ex = self.ws.exception()
+                self.logger.debug("connection encountered some error", exc_info=ex)
+                raise errors.GatewayError("Unexpected exception occurred") from ex
+
+    async def send(self, payload):
+        payload_str = self.json_serialize(payload)
+
+        if len(payload_str) > 4096:
+            raise errors.GatewayError(
+                f"Tried to send a payload greater than 4096 bytes in size (was actually {len(payload_str)}"
+            )
+
+        await self.ratelimiter.acquire()
+        await self.ws.send_str(payload_str)
+
+        if self.debug:
+            self.logger.debug("sent payload %s", payload_str)
+        else:
+            self.logger.debug("sent payload (op:%s, size:%s)", payload.get("op"), len(payload_str))
+
+    async def request_guild_members(
+        self, guild_id, *guild_ids, **kwargs,
+    ):
+        guilds = [guild_id, *guild_ids]
+        constraints = {}
+
+        if "presences" in kwargs:
+            constraints["presences"] = kwargs["presences"]
+
+        if "user_ids" in kwargs:
+            constraints["user_ids"] = kwargs["user_ids"]
+        else:
+            constraints["query"] = kwargs.get("query", "")
+            constraints["limit"] = kwargs.get("limit", 0)
+
+        self.logger.debug(
+            "requesting guild members for guilds %s with constraints %s", guilds, constraints,
+        )
+
+        await self.send({"op": 8, "d": {"guild_id": guilds, **constraints,}})
+
+    async def update_status(self, presence) -> None:
+        self.logger.debug("updating presence to %r", presence)
+        await self.send(presence)
+        self.presence = presence
+
+    def __str__(self):
+        state = "Connected" if self.is_connected else "Disconnected"
+        return f"{state} gateway connection to {self.url} at shard {self.shard_id}/{self.shard_count}"
+
+    def __repr__(self):
+        this_type = type(self).__name__
+        major_attributes = ", ".join(
+            (
+                f"is_connected={self.is_connected!r}",
+                f"latency={self.latency!r}",
+                f"heartbeat_latency={self.heartbeat_latency!r}",
+                f"presence={self.presence!r}",
+                f"shard_id={self.shard_id!r}",
+                f"shard_count={self.shard_count!r}",
+                f"seq={self.seq!r}",
+                f"session_id={self.session_id!r}",
+                f"uptime={self.uptime!r}",
+                f"url={self.url!r}",
+            )
+        )
+
+        return f"{this_type}({major_attributes})"
+
+    def __bool__(self):
+        return self.is_connected

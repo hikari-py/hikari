@@ -530,6 +530,7 @@ class BaseHTTPAdapter(abc.ABC):
             This can only delete messages that are newer than 2 weeks in age. If any of the messages are older than 2
             weeks then this call will fail.
         """
+
     @abc.abstractmethod
     async def update_channel_overwrite(
         self,
@@ -727,6 +728,7 @@ class BaseHTTPAdapter(abc.ABC):
             hikari.errors.NotFound:
                 If the message or channel does not exist.
         """
+
     @abc.abstractmethod
     @typing.overload
     async def fetch_guild_emoji(self, emoji: bases.SnowflakeLikeT, *, guild: _guilds.GuildLikeT) -> _emojis.GuildEmoji:
@@ -1292,6 +1294,7 @@ class BaseHTTPAdapter(abc.ABC):
                 If you pass `mute`, `deaf` or `current_voice_channel` while the member is not connected
                 to a voice channel.
         """
+
     async def update_my_nickname(
         self,
         nick: typing.Optional[str],
@@ -2072,6 +2075,7 @@ class BaseHTTPAdapter(abc.ABC):
             hikari.errors.Forbidden:
                 If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
+
     @abc.abstractmethod
     def fetch_guild_widget_image(
         self, guild: _guilds.GuildLikeT, *, style: type_hints.NotRequired[_guilds.WidgetStyle] = unspecified.UNSPECIFIED

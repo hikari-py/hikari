@@ -187,7 +187,7 @@ class Activity(bases.BaseModel):
 
     update_state = NotImplemented
 
-    def to_dict(self) -> containers.DiscordObjectT:
+    def to_dict(self) -> containers.JSONObject:
         attrs = {a: getattr(self, a) for a in self.__slots__}
         # noinspection PyArgumentList,PyTypeChecker
         return dict(**{k: v for k, v in attrs.items() if v is not None})
@@ -248,7 +248,7 @@ class RichActivity(Activity):
 
     __repr__ = reprs.repr_of("id", "name", "type")
 
-    def __init__(self, payload: containers.DiscordObjectT) -> None:
+    def __init__(self, payload: containers.JSONObject) -> None:
         super().__init__(
             name=payload.get("name"),
             type=ActivityType.get_best_effort_from_value(payload.get("type", 0)),
