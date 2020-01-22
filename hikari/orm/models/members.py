@@ -21,7 +21,6 @@ Members that represent users and their state in specific guilds.
 """
 from __future__ import annotations
 
-import datetime
 import typing
 
 from hikari.internal_utilities import assertions
@@ -30,12 +29,16 @@ from hikari.internal_utilities import dates
 from hikari.internal_utilities import delegate
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.orm import fabric
 from hikari.orm.models import bases
-from hikari.orm.models import guilds
-from hikari.orm.models import presences
-from hikari.orm.models import roles as _roles
 from hikari.orm.models import users
+
+if typing.TYPE_CHECKING:
+    import datetime
+
+    from hikari.orm import fabric
+    from hikari.orm.models import guilds
+    from hikari.orm.models import presences
+    from hikari.orm.models import roles as _roles
 
 
 @delegate.delegate_to(users.User, "user")

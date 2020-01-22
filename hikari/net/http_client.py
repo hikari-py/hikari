@@ -27,7 +27,6 @@ import contextlib
 import datetime
 import email.utils
 import json
-import ssl
 import typing
 import uuid
 
@@ -38,12 +37,16 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import conversions
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import unspecified
 from hikari.net import errors
 from hikari.net import base_http_client
 from hikari.net import ratelimits
 from hikari.net import routes
+
+if typing.TYPE_CHECKING:
+    import ssl
+
+    from hikari.internal_utilities import type_hints
 
 
 class HTTPClient(base_http_client.BaseHTTPClient):
@@ -2205,7 +2208,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_EMBED.compile(self.PATCH, guild_id=guild_id)
-        return await self._request(route, json_body=embed)
+        return await self._request(route, json_body=embed, reason=reason)
 
     async def get_guild_vanity_url(self, guild_id: str) -> containers.JSONObject:
         """

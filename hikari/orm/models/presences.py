@@ -23,7 +23,6 @@ Presences for members.
 from __future__ import annotations
 
 import dataclasses
-import datetime
 import enum
 import typing
 
@@ -32,6 +31,9 @@ from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.orm.models import bases
+
+if typing.TYPE_CHECKING:
+    import datetime
 
 
 class Status(bases.NamedEnumMixin, enum.Enum):

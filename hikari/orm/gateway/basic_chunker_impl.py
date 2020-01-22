@@ -26,9 +26,11 @@ import typing
 
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
-from hikari.orm import fabric
 from hikari.orm.gateway import base_chunker
-from hikari.orm.models import guilds
+
+if typing.TYPE_CHECKING:
+    from hikari.orm import fabric
+    from hikari.orm.models import guilds
 
 
 class BasicChunkerImpl(base_chunker.BaseChunker):

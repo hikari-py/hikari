@@ -18,4 +18,5 @@ exclude_lines =
     ^if __name__ == ['"]__main__['"]:$
     ^\s*...$
     ^\s*@abc.abstractmethod$
+    ^if typing.TYPE_CHECKING:$
 sort = Cover
