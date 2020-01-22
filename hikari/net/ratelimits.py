@@ -122,17 +122,22 @@ This will ensure the garbage collection task is stopped, and will also ensure an
 queues have an :class:`asyncio.CancelledException` set on them to prevent deadlocking ratelimited calls that may
 be waiting to be unlocked.
 """
+from __future__ import annotations
+
 import abc
 import asyncio
-import datetime
-import logging
 import random
 import time
 import typing
 
 from hikari.internal_utilities import loggers
-from hikari.internal_utilities import type_hints
-from hikari.net import routes
+
+if typing.TYPE_CHECKING:
+    import datetime
+    import logging
+
+    from hikari.internal_utilities import type_hints
+    from hikari.net import routes
 
 UNKNOWN_HASH = "UNKNOWN"
 

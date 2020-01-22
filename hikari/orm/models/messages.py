@@ -21,7 +21,6 @@ Messages and attachments.
 """
 from __future__ import annotations
 
-import datetime
 import enum
 import typing
 
@@ -29,16 +28,20 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.orm import fabric
 from hikari.orm.models import bases
-from hikari.orm.models import channels
 from hikari.orm.models import embeds
-from hikari.orm.models import guilds
 from hikari.orm.models import media
 from hikari.orm.models import members
-from hikari.orm.models import reactions
 from hikari.orm.models import users
 from hikari.orm.models import webhooks
+
+if typing.TYPE_CHECKING:
+    import datetime
+
+    from hikari.orm import fabric
+    from hikari.orm.models import channels
+    from hikari.orm.models import guilds
+    from hikari.orm.models import reactions
 
 
 class MessageType(bases.BestEffortEnumMixin, enum.IntEnum):

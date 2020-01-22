@@ -21,15 +21,18 @@ Account integrations.
 """
 from __future__ import annotations
 
-import datetime
 import typing
 
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
-from hikari.orm import fabric
 from hikari.orm.models import bases
-from hikari.orm.models import users
+
+if typing.TYPE_CHECKING:
+    import datetime
+
+    from hikari.orm import fabric
+    from hikari.orm.models import users
 
 
 class IntegrationAccount(bases.BaseModel, bases.SnowflakeMixin):

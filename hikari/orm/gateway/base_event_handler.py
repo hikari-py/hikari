@@ -19,10 +19,13 @@
 """
 Abstract definition of an event handler.
 """
+from __future__ import annotations
+
 import abc
 import typing
 
-from hikari.net import gateway
+if typing.TYPE_CHECKING:
+    from hikari.net import gateway
 
 
 class BaseEventHandler(abc.ABC):
