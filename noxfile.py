@@ -18,6 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import fnmatch
 import os
+import sys
 import shutil
 import traceback
 
@@ -34,6 +35,7 @@ OWNER = "nekokatt"
 TECHNICAL_DIR = "technical"
 TEST_PATH = "tests/hikari"
 PYLINT_VERSION = "2.4.4"
+PYLINT_THRESHOLD = 8
 COVERAGE_RC = ".coveragerc"
 ARTIFACT_DIR = "public"
 DOCUMENTATION_DIR = "docs"
@@ -65,14 +67,14 @@ PYTEST_ARGS = [
 @nox.session()
 def test(session) -> None:
     """Run unit tests in Pytest."""
-    session.run("pip", "install","-e", ".[test]")
+    session.run("pip", "install", "-e", ".[test]")
     session.run("python", "-m", "pytest", *PYTEST_ARGS, *session.posargs, TEST_PATH)
 
 
 @nox.session()
 def documentation(session) -> None:
     """Generate documentation using Sphinx for the current branch."""
-    session.run("pip", "install","-e", ".[documentation]")
+    session.run("pip", "install", "-e", ".[documentation]")
     session.env["SPHINXOPTS"] = SPHINX_OPTS
     tech_dir = pathify(DOCUMENTATION_DIR, TECHNICAL_DIR)
     shutil.rmtree(tech_dir, ignore_errors=True, onerror=lambda *_: None)
@@ -92,7 +94,7 @@ def documentation(session) -> None:
 @nox.session()
 def sast(session) -> None:
     """Run static application security testing with Bandit."""
-    session.run("pip", "install","bandit")
+    session.run("pip", "install", "bandit")
     pkg = MAIN_PACKAGE.split(".")[0]
     session.run("bandit", pkg, "-r")
 
@@ -100,25 +102,29 @@ def sast(session) -> None:
 @nox.session()
 def safety(session) -> None:
     """Run safety checks against a vulnerability database using Safety."""
-    session.run("pip", "install","-e", ".")
-    session.run("pip", "install","safety")
+    session.run("pip", "install", "-e", ".")
+    session.run("pip", "install", "safety")
     session.run("safety", "check")
 
 
 @nox.session()
 def format(session) -> None:
     """Reformat code with Black. Pass the '--check' flag to check formatting only."""
-    session.run("pip", "install","black")
+    session.run("pip", "install", "black")
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *session.posargs)
 
 
 @nox.session()
 def lint(session) -> None:
     """Check formating with pylint"""
-    session.run("pip", "install","-e", ".[test,documentation]")
-    session.run("pip", "install",f"pylint=={PYLINT_VERSION}" if PYLINT_VERSION else "pylint")
+    session.run("pip", "install", "-e", ".[test,documentation]")
+    # TODO: Change code under this comment to the commented code when we update to pylint 2.5
+    # session.run("pip", "install", f"pylint=={PYLINT_VERSION}" if PYLINT_VERSION else "pylint")
+    session.run(
+        "pip", "install", "git+https://github.com/davfsa/pylint"
+    )  # Freezed version of pylint 2.5 post release to make sure that nothing will break
     pkg = MAIN_PACKAGE.split(".")[0]
-    session.run("pylint", pkg, "--rcfile=pylintrc")
+    session.run("pylint", pkg, "--rcfile=pylintrc", f"--fail-under={PYLINT_THRESHOLD}")
 
 
 @nox.session()

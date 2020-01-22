@@ -413,7 +413,7 @@ class AuditLogChangeKey(str, bases.BestEffortEnumMixin, enum.Enum):
     COLOUR = COLOR
 
     def __str__(self):
-        return self.name
+        return str(self.name)
 
 
 def _new_id_map_of(converter):
