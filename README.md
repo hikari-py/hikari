@@ -55,7 +55,7 @@ to solve your use case, rather than fighting inflexible internal abstractions th
 
 ## What is this API **not**?
 
-This API is **not** for people using anything older than CPython 3.7. 
+This API is **not** for people using anything older than CPython 3.8. 
 
 It currently is **not** able to provide voice functionality. Again, this may be added in the future.
 
