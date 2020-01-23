@@ -56,7 +56,7 @@ class Client:
     >>> @client.event()
     ... async def on_ready(shard):
     ...     print("Shard", shard.shard_id, "is ready!")
-    >>> asyncio.run(client.run())
+    >>> client.run()
     """
 
     _SHUTDOWN_SIGNALS = (signal.SIGINT, signal.SIGTERM)

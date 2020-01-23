@@ -25,10 +25,12 @@ import typing
 
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
-from hikari.orm import fabric
 from hikari.orm.models import bases
-from hikari.orm.models import guilds
-from hikari.orm.models import members
+
+if typing.TYPE_CHECKING:
+    from hikari.orm import fabric
+    from hikari.orm.models import guilds
+    from hikari.orm.models import members
 
 
 class VoiceServer(bases.BaseModelWithFabric):

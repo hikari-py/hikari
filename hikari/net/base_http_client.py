@@ -20,17 +20,21 @@
 Provides a base utility class for any component needing an HTTP session that supports
 proxying, SSL configuration, and a standard easy-to-use interface.
 """
+from __future__ import annotations
+
 import abc
-import asyncio
 import json
-import logging
-import ssl
 import typing
 
 import aiohttp.typedefs
 
 from hikari.internal_utilities import loggers
 from hikari.net import user_agent
+
+if typing.TYPE_CHECKING:
+    import asyncio
+    import logging
+    import ssl
 
 
 class BaseHTTPClient(abc.ABC):

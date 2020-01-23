@@ -28,6 +28,8 @@ References:
     - Gateway documentation: https://discordapp.com/developers/docs/topics/gateway
     - Opcode documentation: https://discordapp.com/developers/docs/topics/opcodes-and-status-codes
 """
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import datetime
@@ -37,6 +39,7 @@ import logging
 import math
 import platform
 import time
+import typing
 import zlib
 
 import aiohttp
@@ -44,7 +47,9 @@ import aiohttp
 from . import errors
 from . import ratelimits
 from ..internal_utilities import meta
-from ..internal_utilities import type_hints
+
+if typing.TYPE_CHECKING:
+    from ..internal_utilities import type_hints
 
 
 @meta.incubating()

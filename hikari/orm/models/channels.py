@@ -33,13 +33,15 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.orm import fabric
 from hikari.orm.models import bases
-from hikari.orm.models import guilds as _guild
 from hikari.orm.models import members
 from hikari.orm.models import overwrites
 from hikari.orm.models import users
 from hikari.orm.models import webhooks
+
+if typing.TYPE_CHECKING:
+    from hikari.orm import fabric
+    from hikari.orm.models import guilds as _guild
 
 #: Valid types for a recipient of a DM.
 DMRecipientT = typing.Union[users.User, users.OAuth2User]
