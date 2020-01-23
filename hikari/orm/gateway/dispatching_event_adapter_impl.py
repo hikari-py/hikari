@@ -28,10 +28,12 @@ import typing
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
 from hikari.net import ratelimits
-from hikari.orm import fabric as _fabric
 from hikari.orm.gateway import dispatching_event_adapter
 from hikari.orm.gateway import event_types
 from hikari.orm.models import channels
+
+if typing.TYPE_CHECKING:
+    from hikari.orm import fabric as _fabric
 
 
 class AutoRequestChunksMode(enum.IntEnum):

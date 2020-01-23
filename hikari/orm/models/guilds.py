@@ -22,7 +22,6 @@ Guild models.
 from __future__ import annotations
 
 import dataclasses
-import datetime
 import enum
 import typing
 
@@ -30,15 +29,19 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.orm import fabric
 from hikari.orm.models import bases
-from hikari.orm.models import channels
-from hikari.orm.models import emojis
-from hikari.orm.models import members
 from hikari.orm.models import permissions
-from hikari.orm.models import roles
-from hikari.orm.models import users
-from hikari.orm.models import voices
+
+if typing.TYPE_CHECKING:
+    import datetime
+
+    from hikari.orm import fabric
+    from hikari.orm.models import channels
+    from hikari.orm.models import emojis
+    from hikari.orm.models import members
+    from hikari.orm.models import roles
+    from hikari.orm.models import users
+    from hikari.orm.models import voices
 
 
 class PartialGuild(bases.BaseModel, bases.SnowflakeMixin):

@@ -25,11 +25,13 @@ import typing
 
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
-from hikari.orm import fabric
 from hikari.orm.models import bases
 from hikari.orm.models import colors as _color
-from hikari.orm.models import guilds as _guilds
 from hikari.orm.models import permissions as _permission
+
+if typing.TYPE_CHECKING:
+    from hikari.orm import fabric
+    from hikari.orm.models import guilds as _guilds
 
 
 class PartialRole(bases.BaseModel, bases.SnowflakeMixin):

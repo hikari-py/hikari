@@ -25,16 +25,19 @@ import abc
 import asyncio
 import copy
 import dataclasses
-import datetime
 import enum
 import typing
 
-from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import delegate
-from hikari.orm import fabric
+
+if typing.TYPE_CHECKING:
+    import datetime
+
+    from hikari.internal_utilities import aio
+    from hikari.orm import fabric
 
 T = typing.TypeVar("T")
 U = typing.TypeVar("U")

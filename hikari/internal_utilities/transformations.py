@@ -19,11 +19,16 @@
 """
 Basic transformation utilities.
 """
+from __future__ import annotations
+
 import contextlib
 import typing
 
-from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import unspecified
+
+if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
+    from hikari.orm.models import bases
 
 ValueT = typing.TypeVar("ValueT")
 DefaultT = typing.TypeVar("DefaultT")
@@ -78,7 +83,7 @@ def put_if_specified(
             mapping[key] = value
 
 
-def get_id(value: typing.Any) -> str:
+def get_id(value: bases.SnowflakeLikeT) -> str:
     """
     Used to get the snowflake ID from an object.
 
@@ -174,7 +179,9 @@ def format_present_placeholders(string: str, **kwargs) -> str:
     return string.format_map(_SafeFormatDict(**kwargs))
 
 
-def get_parent_id_from_model(obj: typing.Any, parent_object: typing.Optional[typing.Any], attribute: str) -> str:
+def get_parent_id_from_model(
+    obj: typing.Any, parent_object: typing.Optional[bases.SnowflakeLikeT], attribute: str
+) -> str:
     """
     Attempt to get a parent object ID from the parent object or an object that has the parent object as an attribute.
 
@@ -204,7 +211,9 @@ def get_parent_id_from_model(obj: typing.Any, parent_object: typing.Optional[typ
         ) from None
 
 
-def id_map(snowflake_iterable: typing.Iterable[ValueT]) -> typing.MutableMapping[int, ValueT]:
+def id_map(
+    snowflake_iterable: typing.Iterable[bases.SnowflakeMixin],
+) -> typing.MutableMapping[int, bases.SnowflakeMixin]:
     """
     Given an iterable of elements with an :class:`int` `id` attribute, produce a mutable mapping
     of the IDs to their underlying values.
