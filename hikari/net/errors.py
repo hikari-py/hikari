@@ -94,7 +94,7 @@ class GatewayInvalidSessionError(GatewayConnectionClosedError):
         self.can_resume = can_resume
         super().__init__(
             None,
-            f"The session has been invalidated. "
+            "The session has been invalidated. "
             + ("Restart the shard and RESUME" if can_resume else "Restart the shard with a fresh session"),
         )
 
