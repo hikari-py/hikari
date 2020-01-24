@@ -350,38 +350,28 @@ class BaseHTTPAdapter(abc.ABC):
         """
 
     @abc.abstractmethod
-    @typing.overload
     async def delete_reaction(
-        self,
-        reaction: _emojis.EmojiLikeT,
-        user: _users.BaseUserLikeT,
-        message: bases.SnowflakeLikeT,
-        channel: _channels.ChannelLikeT,
+        self, emoji: _emojis.EmojiLikeT, user: _users.BaseUserLikeT, channel: _channels.ChannelLikeT,
     ) -> None:
         ...
 
     @abc.abstractmethod
     @typing.overload
     async def delete_reaction(
-        self, reaction: _emojis.EmojiLikeT, user: _users.BaseUserLikeT, message: _messages.Message,
+        self, emoji: _emojis.EmojiLikeT, user: _users.BaseUserLikeT, message: _messages.Message
     ) -> None:
         ...
 
     @abc.abstractmethod
-    @typing.overload
-    async def delete_reaction(self, reaction: _reactions.Reaction, user: _users.BaseUserLikeT) -> None:
-        ...
-
-    @abc.abstractmethod
     async def delete_reaction(
-        self, reaction, user, message=unspecified.UNSPECIFIED, channel=unspecified.UNSPECIFIED,
+        self, emoji, user, message, *, channel=unspecified.UNSPECIFIED,
     ):
         """
         Remove a reaction made by a given user using a given emoji on a given message in a given channel or user DM.
 
         Args:
-            reaction:
-                The reaction object or emoji to delete. This can be a :class:`hikari.orm.models.reactions.Reaction`,
+            emoji:
+                The emoji to delete. This can be a :class:`hikari.orm.models.reactions.Reaction`,
                 a series of unicode characters making up a valid Discord emoji, or a custom emoji object or ID.
             user:
                 The object or ID of the user who made the reaction that you wish to remove.
@@ -397,6 +387,41 @@ class BaseHTTPAdapter(abc.ABC):
                 If the channel or message or emoji or user is not found.
             hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_MESSAGES` permission, or are in DMs.
+        """
+
+    @abc.abstractmethod
+    @typing.overload
+    async def delete_all_reactions_for_emoji(
+        self, message: bases.SnowflakeLikeT, emoji: _emojis.EmojiLikeT, *, channel: _channels.GuildChannelLikeT
+    ) -> None:
+        ...
+
+    @abc.abstractmethod
+    @typing.overload
+    async def delete_all_reactions_for_emoji(self, message: _messages.Message, emoji: _emojis.EmojiLikeT) -> None:
+        ...
+
+    @abc.abstractmethod
+    async def delete_all_reactions_for_emoji(
+        self, message, emoji, *, channel=unspecified.UNSPECIFIED,
+    ):
+        """
+        Deletes all reactions from a given message in a given channel for a single emoji.
+
+        Args:
+            emoji:
+                The emoji to delete. This can be a :class:`hikari.orm.models.reactions.Reaction`,
+                a series of unicode characters making up a valid Discord emoji, or a custom emoji object or ID.
+            message:
+                The object or ID of the message to remove reactions from.
+            channel:
+                The object or ID of the channel to remove reactions within, only required when `message` is an ID.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the channel_id or message_id was not found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_MESSAGES` permission.
         """
 
     @abc.abstractmethod

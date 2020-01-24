@@ -28,7 +28,6 @@ import abc
 import asyncio
 import typing
 
-
 from hikari.internal_utilities import loggers
 from hikari.orm.gateway import base_event_handler
 
@@ -149,6 +148,12 @@ class BaseDispatchingEventAdapter(base_event_handler.BaseEventHandler):
     async def handle_guild_role_delete(self, shard: gateway.GatewayClient, payload: type_hints.JSONObject):
         ...
 
+    async def handle_invite_create(self, shard: gateway.GatewayClient, payload: type_hints.JSONObject):
+        ...
+
+    async def handle_invite_delete(self, shard: gateway.GatewayClient, payload: type_hints.JSONObject):
+        ...
+
     async def handle_message_create(self, shard: gateway.GatewayClient, payload: type_hints.JSONObject):
         ...
 
@@ -165,6 +170,9 @@ class BaseDispatchingEventAdapter(base_event_handler.BaseEventHandler):
         ...
 
     async def handle_message_reaction_remove(self, shard: gateway.GatewayClient, payload: type_hints.JSONObject):
+        ...
+
+    async def handle_message_reaction_remove_emoji(self, shard: gateway.GatewayClient, payload: type_hints.JSONObject):
         ...
 
     async def handle_message_reaction_remove_all(self, shard: gateway.GatewayClient, payload: type_hints.JSONObject):
