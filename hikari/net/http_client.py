@@ -191,19 +191,23 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 reset = float(headers.get("X-RateLimit-Reset", "0"))
                 reset_date = datetime.datetime.fromtimestamp(reset, tz=datetime.timezone.utc)
                 now_date = email.utils.parsedate_to_datetime(headers["Date"])
+                content_type = resp.headers["Content-Type"]
 
                 status = resp.status
 
-                if resp.content_type == "application/json":
+                if status == 204:
+                    body = None
+                if content_type == "application/json":
                     body = self.json_deserialize(raw_body)
-                elif resp.content_type == "text/plain" or resp.content_type == "text/html":
+                elif content_type == "text/plain" or content_type == "text/html":
                     await self._handle_bad_response(
                         backoff,
-                        f"Received unexpected response of type {resp.content_type}",
+                        f"Received unexpected response of type {content_type}",
                         compiled_route,
                         raw_body.decode(),
                         status,
                     )
+                    continue
                 else:
                     body = None
 
@@ -239,6 +243,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 await self._handle_bad_response(
                     backoff, "Received a server error response", compiled_route, message, status
                 )
+                continue
 
             return body
 
