@@ -44,12 +44,12 @@ import zlib
 
 import aiohttp
 
-from . import errors
-from . import ratelimits
-from ..internal_utilities import meta
+from hikari.net import errors
+from hikari.net import ratelimits
+from hikari.internal_utilities import meta
 
 if typing.TYPE_CHECKING:
-    from ..internal_utilities import type_hints
+    from hikari.internal_utilities import type_hints
 
 
 @meta.incubating()
@@ -157,7 +157,6 @@ class GatewayClient:
         "connector",
         "debug",
         "dispatch",
-        "http_timeout",
         "intents",
         "large_threshold",
         "json_deserialize",
@@ -194,7 +193,6 @@ class GatewayClient:
         connector=None,
         debug: bool = False,
         dispatch=lambda gw, e, p: None,
-        http_timeout=0,
         initial_presence=None,
         intents: type_hints.NotRequired[GatewayIntent] = None,
         json_deserialize=json.loads,
@@ -219,7 +217,6 @@ class GatewayClient:
         self.connector = connector
         self.debug = debug
         self.dispatch = dispatch
-        self.http_timeout = http_timeout
         self.intents = intents
         self.large_threshold = large_threshold
         self.json_deserialize = json_deserialize
@@ -243,7 +240,7 @@ class GatewayClient:
         self.token = token
         self.verify_ssl = verify_ssl
         self.ws = None
-        self.zlib = zlib.decompressobj()
+        self.zlib = None  # set this per connection or reconnecting can mess up.
 
         name = f"hikari.{type(self).__name__}"
         if shard_count > 1:
@@ -288,12 +285,14 @@ class GatewayClient:
                 proxy_headers=self.proxy_headers,
                 verify_ssl=self.verify_ssl,
                 ssl_context=self.ssl_context,
-                timeout=self.http_timeout,
+                timeout=self.receive_timeout,
             )
 
-            self.connected_at = time.perf_counter()
+            self.zlib = zlib.decompressobj()
 
-            ping_task = asyncio.create_task(self.ping_keep_alive())
+            self.connected_at = time.perf_counter()
+            self.last_pong_received = self.connected_at
+            self.last_heartbeat_ack_received = self.connected_at
 
             # Parse HELLO
             self.logger.debug("expecting HELLO")
@@ -302,33 +301,57 @@ class GatewayClient:
             if op != 10:
                 raise errors.GatewayError(f"Expected HELLO opcode 10 but received {op}")
             hb_interval = pl["d"]["heartbeat_interval"] / 1_000.0
+
             self.dispatch(self, "RECONNECT" if self.reconnect_count else "CONNECT", None)
             self.logger.info("received HELLO, interval is %ss", hb_interval)
 
-            heartbeat_task = asyncio.create_task(self.heartbeat_keep_alive(hb_interval))
-
-            if self.session_id is None:
-                await self.identify()
-                self.logger.info("sent IDENTIFY, ready to listen to incoming events")
-            else:
-                await self.resume()
-                self.logger.info("sent RESUME, ready to listen to incoming events")
-
-            await asyncio.gather(
-                ping_task, heartbeat_task, self.poll_events(),
+            completed, pending_tasks = await asyncio.wait(
+                [self.ping_keep_alive(), self.heartbeat_keep_alive(hb_interval), self.handshake_and_poll_events()],
+                return_when=asyncio.FIRST_COMPLETED
             )
+
+            # Kill other running tasks now.
+            for pending_task in pending_tasks:
+                pending_task.cancel()
+
+            ex = completed.pop().exception()
+
+            if ex is None:
+                # If no exception occurred, we must have exited non-exceptionally, indicating
+                # the close event was set without an error causing that flag to be changed.
+                ex = errors.GatewayClientClosedError()
+            elif isinstance(ex, asyncio.TimeoutError):
+                # If we get timeout errors receiving stuff, propagate as a zombied connection. This
+                # is already done by the ping keepalive and heartbeat keepalive partially, but this
+                # is a second edge case.
+                ex = errors.GatewayZombiedError()
+
+            raise ex
+
         finally:
+            self.logger.debug("closing websocket")
             with contextlib.suppress(AttributeError):
-                await asyncio.shield(self.ws.close())
+                await self.ws.close()
+            self.logger.debug("closing session")
             with contextlib.suppress(AttributeError):
-                await asyncio.shield(self.session.close())
+                await self.session.close()
             self.connected_at = float("nan")
             self.last_ping_sent = float("nan")
             self.last_pong_received = float("nan")
             self.last_heartbeat_sent = float("nan")
             self.last_heartbeat_ack_received = float("nan")
             self.reconnect_count += 1
+            self.closed_event.clear()
             self.dispatch(self, "DISCONNECT", None)
+
+    async def handshake_and_poll_events(self):
+        if self.session_id is None:
+            await self.identify()
+            self.logger.info("sent IDENTIFY, ready to listen to incoming events")
+        else:
+            await self.resume()
+            self.logger.info("sent RESUME, ready to listen to incoming events")
+        await self.poll_events()
 
     def identify(self):
         self.logger.debug("sending IDENTIFY")
@@ -370,9 +393,11 @@ class GatewayClient:
 
     async def ping_keep_alive(self):
         while not self.closed_event.is_set():
+            if self.last_pong_received < self.last_ping_sent:
+                raise errors.GatewayZombiedError()
+            self.logger.debug("sending ping")
             await self.ws.ping()
             self.last_ping_sent = time.perf_counter()
-            self.logger.debug("sent ping")
             try:
                 await asyncio.wait_for(self.closed_event.wait(), timeout=0.75 * self.receive_timeout)
             except asyncio.TimeoutError:
@@ -382,6 +407,7 @@ class GatewayClient:
         while not self.closed_event.is_set():
             if self.last_heartbeat_ack_received < self.last_heartbeat_sent:
                 raise errors.GatewayZombiedError()
+            self.logger.debug("sending heartbeat")
             await self.send({"op": 1, "d": self.seq})
             self.last_heartbeat_sent = time.perf_counter()
             try:
@@ -418,11 +444,9 @@ class GatewayClient:
             else:
                 self.logger.debug("ignoring opcode %s with data %r", op, d)
 
-    def close(self):
+    async def close(self):
         if not self.closed_event.is_set():
             self.closed_event.set()
-
-    async def kill(self):
         if self.ws is not None:
             await self.ws.close()
 

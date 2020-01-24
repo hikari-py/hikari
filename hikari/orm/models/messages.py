@@ -24,6 +24,7 @@ from __future__ import annotations
 import enum
 import typing
 
+from hikari.internal_utilities import aio
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
@@ -324,6 +325,10 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     def is_webhook(self) -> bool:
         """True if the message was from a webhook."""
         return isinstance(self.author, webhooks.WebhookUser)
+
+    @aio.optional_await("delete_message")
+    async def delete(self) -> None:
+        await self._fabric.http_adapter.delete_messages(self)
 
 
 class MessageActivity:
