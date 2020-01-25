@@ -30,10 +30,11 @@ black:
   script:
     - bash tasks/retry-aborts.sh nox -s format -- --check --diff
 
-bandit:
-  extends: .tools-base
-  script:
-    - bash tasks/retry-aborts.sh nox -s sast
+### Now part of CI with GitLab extensions, also includes gitleaks and trufflehog
+# bandit:
+#   extends: .tools-base
+#   script:
+#     - bash tasks/retry-aborts.sh nox -s sast
 
 safety:
   extends: .tools-base
