@@ -247,7 +247,7 @@ class GatewayClient:
             name += f"{shard_id}"
         self.logger = logging.getLogger(name)
 
-        url = f"{url}?v=7&encoding=json"
+        url = f"{url}?v=6&encoding=json"
         if compression:
             url += "&compress=zlib-stream"
         self.url = url
