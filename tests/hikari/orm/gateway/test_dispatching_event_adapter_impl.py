@@ -21,7 +21,7 @@ import datetime
 import inspect
 import logging
 
-import asyncmock as mock
+from unittest import mock
 import pytest
 
 from hikari.net import gateway as _gateway

@@ -24,7 +24,7 @@ import math
 import statistics
 import time
 
-import asyncmock as mock
+from unittest import mock
 import pytest
 
 from hikari.net import ratelimits

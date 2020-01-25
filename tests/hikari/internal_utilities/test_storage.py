@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import io
 
-import mock
+from unittest import mock
 import pytest
 
 from hikari.internal_utilities import storage

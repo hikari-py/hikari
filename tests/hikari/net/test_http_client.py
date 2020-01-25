@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import logging
 
-import asyncmock as mock
+from unittest import mock
 import pytest
 
 from hikari.net import base_http_client
