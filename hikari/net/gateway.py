@@ -244,9 +244,7 @@ class GatewayClient:
         self.zlib = None  # set this per connection or reconnecting can mess up.
 
         self.ratelimiter = ratelimits.WindowedBurstRateLimiter(
-            f"gateway shard {self.shard_id}/{self.shard_count}",
-            60.0,
-            120,
+            f"gateway shard {self.shard_id}/{self.shard_count}", 60.0, 120,
         )
 
         self.logger = logging.getLogger(f"hikari.{type(self).__name__}[#{self.shard_id}]")
@@ -259,14 +257,16 @@ class GatewayClient:
         if compression:
             new_query["compress"] = "zlib-stream"
 
-        self.url = urllib.parse.urlunparse((
-            scheme,
-            netloc,
-            path,
-            params,
-            urllib.parse.urlencode(new_query),  # replace query with the correct one.
-            "",  # no fragment
-        ))
+        self.url = urllib.parse.urlunparse(
+            (
+                scheme,
+                netloc,
+                path,
+                params,
+                urllib.parse.urlencode(new_query),  # replace query with the correct one.
+                "",  # no fragment
+            )
+        )
 
     @property
     def latency(self):
@@ -350,9 +350,9 @@ class GatewayClient:
                 [
                     self._ping_keep_alive(),
                     self._heartbeat_keep_alive(hb_interval),
-                    self._identify_or_resume_then_poll_events()
+                    self._identify_or_resume_then_poll_events(),
                 ],
-                return_when=asyncio.FIRST_COMPLETED
+                return_when=asyncio.FIRST_COMPLETED,
             )
 
             # Kill other running tasks now.
@@ -384,7 +384,7 @@ class GatewayClient:
                     "properties": {
                         "$os": user_agent.system_type(),
                         "$browser": user_agent.library_version(),
-                        "$device": user_agent.python_version()
+                        "$device": user_agent.python_version(),
                     },
                     "shard": [self.shard_id, self.shard_count],
                 },
@@ -573,7 +573,7 @@ class GatewayClient:
             "requesting guild members for guilds %s with constraints %s", guilds, constraints,
         )
 
-        await self._send({"op": 8, "d": {"guild_id": guilds, **constraints, }})
+        await self._send({"op": 8, "d": {"guild_id": guilds, **constraints,}})
 
     async def update_status(self, presence) -> None:
         self.logger.debug("updating presence to %r", presence)

@@ -33,19 +33,10 @@ from tests.hikari import _helpers
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ["input_shard_id", "input_shard_count", "expected_shard_id", "expected_shard_count"],
-    [
-        (None, None, 0, 1),
-        (1, 2, 1, 2),
-        (None, 5, 0, 1),
-        (0, None, 0, 1),
-    ]
+    [(None, None, 0, 1), (1, 2, 1, 2), (None, 5, 0, 1), (0, None, 0, 1),],
 )
 async def test_init_sets_shard_numbers_correctly(
-
-    input_shard_id,
-    input_shard_count,
-    expected_shard_id,
-    expected_shard_count,
+    input_shard_id, input_shard_count, expected_shard_id, expected_shard_count,
 ):
     client = gateway.GatewayClient(shard_id=input_shard_id, shard_count=input_shard_count, token="xxx", url="yyy")
     assert client.shard_id == expected_shard_id
@@ -55,10 +46,7 @@ async def test_init_sets_shard_numbers_correctly(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ["compression", "expected_url_query"],
-    [
-        (True, dict(v=['6'], encoding=["json"], compress=["zlib-stream"])),
-        (False, dict(v=['6'], encoding=["json"])),
-    ]
+    [(True, dict(v=["6"], encoding=["json"], compress=["zlib-stream"])), (False, dict(v=["6"], encoding=["json"])),],
 )
 async def test_compression(compression, expected_url_query):
     url = "ws://baka-im-not-a-http-url:49620/locate/the/bloody/websocket?ayyyyy=lmao"
@@ -96,11 +84,7 @@ async def test_init_connected_at_is_nan():
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ["sent", "received", "predicate"],
-    [
-        (float("nan"), float("nan"), math.isnan),
-        (10.0, float("nan"), math.isnan),
-        (10.0, 31.0, 21.0.__eq__),
-    ]
+    [(float("nan"), float("nan"), math.isnan), (10.0, float("nan"), math.isnan), (10.0, 31.0, 21.0 .__eq__),],
 )
 async def test_latency(sent, received, predicate):
     client = gateway.GatewayClient(token="xxx", url="yyy")
@@ -112,11 +96,7 @@ async def test_latency(sent, received, predicate):
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ["sent", "received", "predicate"],
-    [
-        (float("nan"), float("nan"), math.isnan),
-        (10.0, float("nan"), math.isnan),
-        (10.0, 31.0, 21.0.__eq__),
-    ]
+    [(float("nan"), float("nan"), math.isnan), (10.0, float("nan"), math.isnan), (10.0, 31.0, 21.0 .__eq__),],
 )
 async def test_heart7beat_latency(sent, received, predicate):
     client = gateway.GatewayClient(token="xxx", url="yyy")
@@ -128,10 +108,7 @@ async def test_heart7beat_latency(sent, received, predicate):
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ["connected_at", "now", "expected_uptime"],
-    [
-        (float("nan"), 31.0, datetime.timedelta(seconds=0)),
-        (10.0, 31.0, datetime.timedelta(seconds=21.0)),
-    ]
+    [(float("nan"), 31.0, datetime.timedelta(seconds=0)), (10.0, 31.0, datetime.timedelta(seconds=21.0)),],
 )
 async def test_uptime(connected_at, now, expected_uptime):
     with mock.patch("time.perf_counter", return_value=now):
@@ -141,14 +118,7 @@ async def test_uptime(connected_at, now, expected_uptime):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    ["connected_at", "is_connected"],
-    [
-        (float("nan"), False),
-        (15, True),
-        (2500.0, True),
-    ]
-)
+@pytest.mark.parametrize(["connected_at", "is_connected"], [(float("nan"), False), (15, True), (2500.0, True),])
 async def test_is_connected(connected_at, is_connected):
     client = gateway.GatewayClient(token="xxx", url="yyy")
     client.connected_at = connected_at
@@ -202,12 +172,7 @@ class TestGatewayOpenWebsocket:
 class TestGatewayConnect:
     @property
     def hello_payload(self):
-        return {
-            "op": 10,
-            "d": {
-                "heartbeat_interval": 30_000,
-            }
-        }
+        return {"op": 10, "d": {"heartbeat_interval": 30_000,}}
 
     @pytest.fixture()
     def client(self):
@@ -368,8 +333,9 @@ class TestGatewayConnect:
         except errors.GatewayClientClosedError:
             pass
 
-    async def test_waits_for_identify_or_resume_then_poll_events_to_return_throws_GatewayClientClosedError(self,
-                                                                                                           client):
+    async def test_waits_for_identify_or_resume_then_poll_events_to_return_throws_GatewayClientClosedError(
+        self, client
+    ):
         async def deadlock(*_, **__):
             await asyncio.get_running_loop().create_future()
 
