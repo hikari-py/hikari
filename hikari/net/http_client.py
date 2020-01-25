@@ -59,7 +59,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
     def __init__(
         self,
         *,
-        base_url="https://discordapp.com/api/v7",
+        base_url="https://discordapp.com/api/v6",
         allow_redirects: bool = False,
         connector: aiohttp.BaseConnector = None,
         proxy_headers: aiohttp.typedefs.LooseHeaders = None,
