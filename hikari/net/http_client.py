@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
 Implementation of a basic HTTP client that uses aiohttp to interact with the
-V7 Discord API.
+V6 Discord API.
 """
 from __future__ import annotations
 
