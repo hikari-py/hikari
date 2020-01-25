@@ -119,9 +119,7 @@ class Attachment(bases.BaseModel, bases.SnowflakeMixin):
             # the information incrementally between the response stream and the threadpool without reading the
             # entire content into memory at once, which is more efficient on memory usage for large files.
             async with aiofiles.open(path, "wb", executor=executor, loop=loop) as afp:
-                block = ...
-                while block is not None:
-                    block = await resp.content.readany()
+                while block := await resp.content.readany():
                     await afp.write(block)
 
 

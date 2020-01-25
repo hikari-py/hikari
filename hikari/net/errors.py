@@ -188,7 +188,6 @@ __all__ = (
     "GatewayMustReconnectError",
     "GatewayNeedsShardingError",
     "GatewayZombiedError",
-    "ShardPresence",
     "HTTPError",
     "ServerHTTPError",
     "ClientHTTPError",
