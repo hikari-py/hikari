@@ -45,8 +45,6 @@ setuptools.setup(
     url="https://gitlab.com/nekokatt/hikari",
     packages=setuptools.find_namespace_packages(include=["hikari*"]),
     python_requires=">=3.8.0,<3.10",
-    install_requires=parse_requirements(),
-    extras_require={},
     test_suite="tests",
     zip_safe=False,
     classifiers=[

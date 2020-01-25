@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 
-import asyncmock as mock
+from unittest import mock
 import pytest
 
 from hikari.orm import fabric

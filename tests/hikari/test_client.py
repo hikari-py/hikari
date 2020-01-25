@@ -24,7 +24,7 @@ import signal
 
 import pytest
 
-import asyncmock as mock
+from unittest import mock
 
 from hikari import client as _client
 from hikari import client_options as _client_options
