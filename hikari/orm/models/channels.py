@@ -191,7 +191,7 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
         content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         embed: type_hints.NotRequired[embeds.Embed] = unspecified.UNSPECIFIED,
         files: type_hints.NotRequired[typing.Collection[storage.FileLikeT]] = unspecified.UNSPECIFIED,
-        delete_after: type_hints.NotRequired[float] = unspecified.UNSPECIFIED
+        delete_after: type_hints.NotRequired[float] = unspecified.UNSPECIFIED,
     ) -> messages.Message:
         """
         Send a message to this channel.

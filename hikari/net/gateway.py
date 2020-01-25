@@ -307,7 +307,7 @@ class GatewayClient:
 
             completed, pending_tasks = await asyncio.wait(
                 [self.ping_keep_alive(), self.heartbeat_keep_alive(hb_interval), self.handshake_and_poll_events()],
-                return_when=asyncio.FIRST_COMPLETED
+                return_when=asyncio.FIRST_COMPLETED,
             )
 
             # Kill other running tasks now.
