@@ -30,3 +30,4 @@ include:
   - local: "/gitlab/analysis.yml"
   - local: "/gitlab/pages.yml"
   - local: "/gitlab/deploy.yml"
+  - template: Dependency-Scanning.gitlab-ci.yml
