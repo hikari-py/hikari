@@ -118,28 +118,6 @@ class GatewayZombiedError(GatewayClientClosedError):
         super().__init__("No heartbeat was received, the connection has been closed")
 
 
-class ShardPresence:
-    __slots__ = ("activity", "status", "idle_since", "is_afk")
-
-    def __init__(self, activity=None, status="online", idle_since=0, is_afk=False):
-        self.activity = activity
-        self.status = status
-        self.idle_since = idle_since
-        self.is_afk = is_afk
-
-    def __repr__(self):
-        this_type = type(self).__name__
-        major_attributes = ", ".join(
-            (
-                f"activity={self.activity!r}",
-                f"status={self.status!r}",
-                f"idle_since={self.idle_since!r}",
-                f"is_afk={self.is_afk!r}",
-            )
-        )
-        return f"{this_type}({major_attributes})"
-
-
 class HTTPError(errors.HikariError):
     reason: str
 
