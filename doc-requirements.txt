@@ -1,0 +1,5 @@
+requests
+Jinja2
+sphinx~=2.3
+sphinx-autodoc-typehints~=1.10
+sphinx-bootstrap-theme~=0.7

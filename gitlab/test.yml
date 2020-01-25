@@ -40,11 +40,13 @@
   extends: .test-env
   stage: verify
   script:
-    - bash tasks/retry-aborts.sh nox -s pip
+    - apt install git -y
+    - bash tasks/retry-aborts.sh nox --sessions pip pip_sdist pip_bdist_wheel pip_git
 
 .nox-pip-install-showtime: &noxpipinstallshowtime
   extends: .test-env
   script:
+    - apt install git -y
     - bash tasks/retry-aborts.sh nox -s pip -- --showtime
   stage: post-deploy
   only:
