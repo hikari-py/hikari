@@ -30,5 +30,6 @@ include:
   - local: "/gitlab/analysis.yml"
   - local: "/gitlab/pages.yml"
   - local: "/gitlab/deploy.yml"
-  - template: Dependency-Scanning.gitlab-ci.yml
-  - template: License-Management.gitlab-ci.yml
+  - template: "Dependency-Scanning.gitlab-ci.yml"
+  # TODO: add eventually, but this is currently really really slow :(
+  # - template: "License-Management.gitlab-ci.yml"
