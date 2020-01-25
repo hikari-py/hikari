@@ -222,9 +222,7 @@ class Client:
                 if not do_not_backoff and time.perf_counter() - last_start < 30:
                     next_backoff = next(backoff)
                     self.logger.info(
-                        "shard %s has restarted within 30 seconds, will backoff for %ss",
-                        shard.shard_id,
-                        next_backoff,
+                        "shard %s has restarted within 30 seconds, will backoff for %ss", shard.shard_id, next_backoff,
                     )
                     await asyncio.sleep(next_backoff)
                 else:
@@ -241,7 +239,7 @@ class Client:
                 self.logger.exception(
                     "shard %s has failed to connect to Discord to initialize a websocket connection",
                     shard.shard_id,
-                    exc_info=ex
+                    exc_info=ex,
                 )
             except errors.GatewayZombiedError:
                 self.logger.warning("shard %s has entered a zombie state and will be restarted", shard.shard_id)

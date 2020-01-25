@@ -1,0 +1,2 @@
+aiofiles~=0.4
+aiohttp~=3.6

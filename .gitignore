@@ -26,6 +26,7 @@ public/
 build/
 dist/
 *.egg-info/
+pip-wheel-metadata/
 
 # Tox/Nox-generated files
 .[nt]ox/
