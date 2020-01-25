@@ -45,3 +45,6 @@ pylint:
   extends: .tools-base
   script:
     - bash tasks/retry-aborts.sh nox -s lint
+  artifacts:
+    reports:
+      junit: public/pylint.xml
