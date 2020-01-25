@@ -192,7 +192,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
 
                 if status == 204:
                     body = None
-                if content_type == "application/json":
+                elif content_type == "application/json":
                     body = self.json_deserialize(raw_body)
                 elif content_type == "text/plain" or content_type == "text/html":
                     await self._handle_bad_response(
