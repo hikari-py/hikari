@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 
-import asyncmock as mock
+from unittest import mock
 import pytest
 
 from hikari.net import status_info_client

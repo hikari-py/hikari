@@ -21,7 +21,7 @@ import copy
 import datetime
 from unittest import mock
 
-import asyncmock as mock
+from unittest import mock
 import pytest
 
 from hikari.orm import fabric
