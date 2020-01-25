@@ -199,6 +199,18 @@ class TestPresence:
             "activity": {"name": "", "type": 4},
         }
 
+    def test_Presence___repr__(self, activity):
+        assert repr(
+            _helpers.mock_model(
+                presences.Presence,
+                status=presences.Status.ONLINE,
+                activity=activity,
+                is_afk=True,
+                since=1579859511.00509,
+                __repr__=presences.Presence.__repr__,
+            )
+        )
+
 
 @pytest.mark.model
 class TestMemberPresence:
