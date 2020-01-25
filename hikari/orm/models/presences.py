@@ -56,6 +56,8 @@ class Presence:
     status: Status = Status.ONLINE
     activity: typing.Optional[Activity] = None
 
+    __repr__ = reprs.repr_of("since", "is_afk", "status", "activity")
+
     def to_dict(self):
         return {
             "since": int(1_000 * self.since.timestamp()) if isinstance(self.since, datetime.datetime) else self.since,
