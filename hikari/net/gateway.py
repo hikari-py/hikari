@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-Single-threaded asyncio V7 Gateway implementation. Handles regular heartbeating in a background task
+Single-threaded asyncio V6 Gateway implementation. Handles regular heartbeating in a background task
 on the same event loop. Implements zlib transport compression only.
 
 Can be used as the main gateway connection for a single-sharded bot, or the gateway connection for a specific shard
