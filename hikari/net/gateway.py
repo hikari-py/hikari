@@ -37,16 +37,17 @@ import enum
 import json
 import logging
 import math
-import platform
 import time
 import typing
+import urllib.parse
 import zlib
 
 import aiohttp
 
+from hikari.internal_utilities import meta
 from hikari.net import errors
 from hikari.net import ratelimits
-from hikari.internal_utilities import meta
+from hikari.net import user_agent
 
 if typing.TYPE_CHECKING:
     from hikari.internal_utilities import type_hints
@@ -242,17 +243,30 @@ class GatewayClient:
         self.ws = None
         self.zlib = None  # set this per connection or reconnecting can mess up.
 
-        name = f"hikari.{type(self).__name__}"
-        if shard_count > 1:
-            name += f"{shard_id}"
-        self.logger = logging.getLogger(name)
+        self.ratelimiter = ratelimits.WindowedBurstRateLimiter(
+            f"gateway shard {self.shard_id}/{self.shard_count}", 60.0, 120,
+        )
 
-        url = f"{url}?v=6&encoding=json"
+        self.logger = logging.getLogger(f"hikari.{type(self).__name__}[#{self.shard_id}]")
+
+        # Sanitise the URL...
+        scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url, allow_fragments=True)
+
+        # We use JSON; I'm not having any of that erlang shit in my library!
+        new_query = dict(v=6, encoding="json")
         if compression:
-            url += "&compress=zlib-stream"
-        self.url = url
+            new_query["compress"] = "zlib-stream"
 
-        self.ratelimiter = ratelimits.WindowedBurstRateLimiter(f"gateway shard {shard_id}/{shard_count}", 60.0, 120)
+        self.url = urllib.parse.urlunparse(
+            (
+                scheme,
+                netloc,
+                path,
+                params,
+                urllib.parse.urlencode(new_query),  # replace query with the correct one.
+                "",  # no fragment
+            )
+        )
 
     @property
     def latency(self):
@@ -271,32 +285,59 @@ class GatewayClient:
     def is_connected(self):
         return not math.isnan(self.connected_at)
 
+    @property
+    def _ws_connect_kwargs(self):
+        return dict(
+            url=self.url,
+            receive_timeout=self.receive_timeout,
+            compress=0,
+            autoping=False,
+            max_msg_size=0,
+            proxy=self.proxy_url,
+            proxy_auth=self.proxy_auth,
+            proxy_headers=self.proxy_headers,
+            verify_ssl=self.verify_ssl,
+            ssl_context=self.ssl_context,
+            timeout=self.receive_timeout,
+        )
+
+    @property
+    def _cs_init_kwargs(self):
+        return dict(connector=self.connector)
+
+    @contextlib.asynccontextmanager
+    async def _open_websocket(self):
+        # aiohttp is a horrible thing to mock, so provide the basic start-shutdown logic here so I can mock it
+        # for the rest of the test cases.
+
+        async with aiohttp.ClientSession(**self._cs_init_kwargs) as self.session:
+            async with self.session.ws_connect(**self._ws_connect_kwargs) as self.ws:
+
+                self.connected_at = time.perf_counter()
+                self.last_pong_received = self.connected_at
+                self.last_heartbeat_ack_received = self.connected_at
+
+                yield self.ws
+
+            self.connected_at = float("nan")
+            self.last_ping_sent = float("nan")
+            self.last_pong_received = float("nan")
+            self.last_heartbeat_sent = float("nan")
+            self.last_heartbeat_ack_received = float("nan")
+            self.reconnect_count += 1
+            self.closed_event.clear()
+            self.ws = None
+            self.session = None
+            self.dispatch(self, "DISCONNECT", None)
+
     async def connect(self):
-        try:
-            self.session = aiohttp.ClientSession(connector=self.connector)
-            self.ws = await self.session.ws_connect(
-                self.url,
-                receive_timeout=self.receive_timeout,
-                compress=0,
-                autoping=False,
-                max_msg_size=0,
-                proxy=self.proxy_url,
-                proxy_auth=self.proxy_auth,
-                proxy_headers=self.proxy_headers,
-                verify_ssl=self.verify_ssl,
-                ssl_context=self.ssl_context,
-                timeout=self.receive_timeout,
-            )
+        if self.is_connected:
+            raise RuntimeError("Already connected")
 
+        async with self._open_websocket():
             self.zlib = zlib.decompressobj()
-
-            self.connected_at = time.perf_counter()
-            self.last_pong_received = self.connected_at
-            self.last_heartbeat_ack_received = self.connected_at
-
-            # Parse HELLO
             self.logger.debug("expecting HELLO")
-            pl = await self.receive()
+            pl = await self._receive()
             op = pl["op"]
             if op != 10:
                 raise errors.GatewayError(f"Expected HELLO opcode 10 but received {op}")
@@ -306,7 +347,11 @@ class GatewayClient:
             self.logger.info("received HELLO, interval is %ss", hb_interval)
 
             completed, pending_tasks = await asyncio.wait(
-                [self.ping_keep_alive(), self.heartbeat_keep_alive(hb_interval), self.handshake_and_poll_events()],
+                [
+                    self._ping_keep_alive(),
+                    self._heartbeat_keep_alive(hb_interval),
+                    self._identify_or_resume_then_poll_events(),
+                ],
                 return_when=asyncio.FIRST_COMPLETED,
             )
 
@@ -325,73 +370,48 @@ class GatewayClient:
                 # is already done by the ping keepalive and heartbeat keepalive partially, but this
                 # is a second edge case.
                 ex = errors.GatewayZombiedError()
-
             raise ex
 
-        finally:
-            self.logger.debug("closing websocket")
-            with contextlib.suppress(AttributeError):
-                await self.ws.close()
-            self.logger.debug("closing session")
-            with contextlib.suppress(AttributeError):
-                await self.session.close()
-            self.connected_at = float("nan")
-            self.last_ping_sent = float("nan")
-            self.last_pong_received = float("nan")
-            self.last_heartbeat_sent = float("nan")
-            self.last_heartbeat_ack_received = float("nan")
-            self.reconnect_count += 1
-            self.closed_event.clear()
-            self.dispatch(self, "DISCONNECT", None)
-
-    async def handshake_and_poll_events(self):
+    async def _identify_or_resume_then_poll_events(self):
         if self.session_id is None:
-            await self.identify()
+            self.logger.debug("sending IDENTIFY")
+            pl = {
+                "op": 2,
+                "d": {
+                    "token": self.token,
+                    "compress": False,
+                    "large_threshold": self.large_threshold,
+                    "properties": {
+                        "$os": user_agent.system_type(),
+                        "$browser": user_agent.library_version(),
+                        "$device": user_agent.python_version(),
+                    },
+                    "shard": [self.shard_id, self.shard_count],
+                },
+            }
+
+            # Do not always add this option; if it is None, exclude it for now. According to Mason,
+            # we can only use intents at the time of writing if our bot has less than 100 guilds.
+            # This means we need to give the user the option to opt in to this rather than breaking their
+            # bot with it if they have 100+ guilds. This restriction will be removed eventually.
+            if self.intents is not None:
+                pl["d"]["intents"] = self.intents
+
+            if self.presence:
+                pl["d"]["presence"] = self.presence
+            await self._send(pl)
             self.logger.info("sent IDENTIFY, ready to listen to incoming events")
         else:
-            await self.resume()
+            self.logger.debug("sending RESUME")
+            pl = {
+                "op": 6,
+                "d": {"token": self.token, "seq": self.seq, "session_id": self.session_id},
+            }
+            await self._send(pl)
             self.logger.info("sent RESUME, ready to listen to incoming events")
-        await self.poll_events()
+        await self._poll_events()
 
-    def identify(self):
-        self.logger.debug("sending IDENTIFY")
-        pl = {
-            "op": 2,
-            "d": {
-                "token": self.token,
-                "compress": False,
-                "large_threshold": self.large_threshold,
-                "properties": {
-                    "$os": " ".join((platform.system(), platform.release(),)),
-                    "$browser": "hikari/1.0.0a1",
-                    "$device": " ".join(
-                        (platform.python_implementation(), platform.python_revision(), platform.python_version(),)
-                    ),
-                },
-                "shard": [self.shard_id, self.shard_count],
-            },
-        }
-
-        # Do not always add this option; if it is None, exclude it for now. According to Mason,
-        # we can only use intents at the time of writing if our bot has less than 100 guilds.
-        # This means we need to give the user the option to opt in to this rather than breaking their
-        # bot with it if they have 100+ guilds. This restriction will be removed eventually.
-        if self.intents is not None:
-            pl["d"]["intents"] = self.intents
-
-        if self.presence:
-            pl["d"]["presence"] = self.presence
-        return self.send(pl)
-
-    def resume(self):
-        self.logger.debug("sending RESUME")
-        pl = {
-            "op": 6,
-            "d": {"token": self.token, "seq": self.seq, "session_id": self.session_id,},
-        }
-        return self.send(pl)
-
-    async def ping_keep_alive(self):
+    async def _ping_keep_alive(self):
         while not self.closed_event.is_set():
             if self.last_pong_received < self.last_ping_sent:
                 raise errors.GatewayZombiedError()
@@ -403,21 +423,21 @@ class GatewayClient:
             except asyncio.TimeoutError:
                 pass
 
-    async def heartbeat_keep_alive(self, heartbeat_interval):
+    async def _heartbeat_keep_alive(self, heartbeat_interval):
         while not self.closed_event.is_set():
             if self.last_heartbeat_ack_received < self.last_heartbeat_sent:
                 raise errors.GatewayZombiedError()
             self.logger.debug("sending heartbeat")
-            await self.send({"op": 1, "d": self.seq})
+            await self._send({"op": 1, "d": self.seq})
             self.last_heartbeat_sent = time.perf_counter()
             try:
                 await asyncio.wait_for(self.closed_event.wait(), timeout=heartbeat_interval)
             except asyncio.TimeoutError:
                 pass
 
-    async def poll_events(self):
+    async def _poll_events(self):
         while True:
-            next_pl = await self.receive()
+            next_pl = await self._receive()
 
             op = next_pl["op"]
             d = next_pl["d"]
@@ -427,7 +447,7 @@ class GatewayClient:
                 event_name = next_pl["t"]
                 self.dispatch(self, event_name, d)
             elif op == 1:
-                await self.send({"op": 11})
+                await self._send({"op": 11})
             elif op == 7:
                 self.logger.debug("instructed by gateway server to restart connection")
                 raise errors.GatewayMustReconnectError()
@@ -450,7 +470,7 @@ class GatewayClient:
         if self.ws is not None:
             await self.ws.close()
 
-    async def receive(self):
+    async def _receive(self):
         while True:
             message = await self.ws.receive()
             if message.type == aiohttp.WSMsgType.TEXT:
@@ -518,7 +538,7 @@ class GatewayClient:
                 self.logger.debug("connection encountered some error", exc_info=ex)
                 raise errors.GatewayError("Unexpected exception occurred") from ex
 
-    async def send(self, payload):
+    async def _send(self, payload):
         payload_str = self.json_serialize(payload)
 
         if len(payload_str) > 4096:
@@ -553,11 +573,11 @@ class GatewayClient:
             "requesting guild members for guilds %s with constraints %s", guilds, constraints,
         )
 
-        await self.send({"op": 8, "d": {"guild_id": guilds, **constraints,}})
+        await self._send({"op": 8, "d": {"guild_id": guilds, **constraints,}})
 
     async def update_status(self, presence) -> None:
         self.logger.debug("updating presence to %r", presence)
-        await self.send(presence)
+        await self._send(presence)
         self.presence = presence
 
     def __str__(self):

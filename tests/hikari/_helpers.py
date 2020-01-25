@@ -18,6 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
+import contextlib
 import copy
 import functools
 import inspect
@@ -25,11 +26,12 @@ import logging
 import queue
 import re
 import threading
+import time
 import typing
 import warnings
 import weakref
 
-import asyncmock as mock
+from unittest import mock
 import pytest
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +58,6 @@ def mock_methods_on(obj, except_=(), also_mock=()):
 
     except_ = set(except_)
     also_mock = set(also_mock)
-
     checked = set()
 
     def predicate(name, member):
@@ -379,3 +380,28 @@ def retry(max_retries):
         return retry_wrapper
 
     return decorator
+
+
+class AsyncContextManagerMock:
+    def __init__(self, callback=lambda: None):
+        self.awaited_aenter = False
+        self.awaited_aexit = False
+        self.called = False
+        self.call_args = []
+        self.call_kwargs = {}
+        self.aexit_exc = None
+        self.callback = callback
+
+    async def __aenter__(self):
+        self.awaited_aenter = time.perf_counter()
+        return self.callback()
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self.aexit_exc = exc_val
+        self.awaited_aexit = time.perf_counter()
+
+    def __call__(self, *args, **kwargs):
+        self.called = time.perf_counter()
+        self.call_args = args
+        self.call_kwargs = kwargs
+        return self
