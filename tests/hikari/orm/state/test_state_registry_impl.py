@@ -21,11 +21,9 @@ import copy
 import datetime
 from unittest import mock
 
-from unittest import mock
 import pytest
 
 from hikari.orm import fabric
-from hikari.orm.state import state_registry_impl
 from hikari.orm.models import applications
 from hikari.orm.models import audit_logs
 from hikari.orm.models import bases
@@ -44,6 +42,7 @@ from hikari.orm.models import roles
 from hikari.orm.models import users
 from hikari.orm.models import voices
 from hikari.orm.models import webhooks
+from hikari.orm.state import state_registry_impl
 from tests.hikari import _helpers
 
 

@@ -210,7 +210,7 @@ class Client:
     async def _new_chunker(self):
         return basic_chunker_impl.BasicChunkerImpl(self._fabric)
 
-    async def _shard_keepalive(self, shard: gateway.GatewayClient) -> None:
+    async def _shard_keep_alive(self, shard: gateway.GatewayClient) -> None:
         self.logger.debug("starting keepalive task for shard %s", shard.shard_id)
 
         backoff = ratelimits.ExponentialBackOff(maximum=-1)
@@ -233,7 +233,6 @@ class Client:
                 do_not_backoff = False
                 await shard.connect()
                 self.logger.critical("shard %s shut down silently! this shouldn't happen!", shard.shard_id)
-                await shard.close()
 
             except aiohttp.ClientConnectorError as ex:
                 self.logger.exception(
@@ -243,34 +242,41 @@ class Client:
                 )
             except errors.GatewayZombiedError:
                 self.logger.warning("shard %s has entered a zombie state and will be restarted", shard.shard_id)
-                await shard.close()
             except errors.GatewayInvalidSessionError as ex:
                 if ex.can_resume:
                     self.logger.warning("shard %s has an invalid session, so will attempt to resume", shard.shard_id)
                 else:
                     self.logger.warning("shard %s has an invalid session, so will attempt to reconnect", shard.shard_id)
 
-                await shard.close()
-
                 if not ex.can_resume:
                     shard.seq = None
                     shard.session_id = None
                 do_not_backoff = True
+                await asyncio.sleep(5)
             except errors.GatewayMustReconnectError:
                 self.logger.warning("shard %s has been instructed by Discord to reconnect", shard.shard_id)
-                await shard.close()
                 shard.seq = None
                 shard.session_id = None
                 do_not_backoff = True
+                await asyncio.sleep(5)
             except Exception as ex:
                 self.logger.debug("propagating exception after tidying up shard %s", shard.shard_id, exc_info=ex)
-                await shard.close()
                 raise ex
 
     async def start(self):
         await self._init_new_application_fabric()
         for shard in self._fabric.gateways.values():
-            self._shard_keepalive_tasks[shard] = asyncio.create_task(self._shard_keepalive(shard))
+            if shard.shard_id > 0:
+                # https://github.com/discordapp/discord-api-docs/issues/1328
+
+                # Discord will make us have an invalid session if we identify twice within 5 seconds. If we get
+                # disconnected after identifying for any other reason, tough luck I guess.
+                # This stops this framework chewing up your precious identify counts for the day because of spam
+                # causing invalid sessions.
+                await asyncio.sleep(5)
+
+            self._shard_keepalive_tasks[shard] = asyncio.create_task(self._shard_keep_alive(shard))
+            await shard.identify_event.wait()
         try:
             await asyncio.gather(*self._shard_keepalive_tasks.values())
         except Exception as ex:
@@ -282,7 +288,7 @@ class Client:
         coros = []
 
         for shard in self._fabric.gateways.values():
-            if not shard.closed_event.is_set():
+            if not shard._requesting_close_event.is_set():
                 self.logger.info("requesting shard %s shuts down now", shard.shard_id)
                 coros.append(shard.close())
 
@@ -295,6 +301,7 @@ class Client:
             self.loop.run_until_complete(self.start())
         except KeyboardInterrupt:
             self.logger.info("received KeyboardInterrupt to shut down bot")
+            self.loop.run_until_complete(self.close())
         finally:
             self.logger.info("bot has shut down")
 
@@ -422,4 +429,13 @@ class Client:
         """
         if self._fabric:
             return {shard.shard_id: shard.heartbeat_latency for shard in self._fabric.gateways.values()}
+        return {}
+
+    @property
+    def shards(self) -> typing.Mapping[typing.Optional[int], gateway.GatewayClient]:
+        """
+        Creates a mapping of each shard running, mapping the shard ID to the shard instance itself.
+        """
+        if self._fabric:
+            return {shard.shard_id: shard for shard in self._fabric.gateways.values()}
         return {}

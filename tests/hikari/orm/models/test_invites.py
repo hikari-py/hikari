@@ -22,11 +22,11 @@ from unittest import mock
 import pytest
 
 from hikari.orm import fabric
-from hikari.orm.state import base_registry
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
 from hikari.orm.models import invites
 from hikari.orm.models import users
+from hikari.orm.state import base_registry
 from tests.hikari import _helpers
 
 
