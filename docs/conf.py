@@ -41,7 +41,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "Hikari"
 author = "Nekokatt"
 copyright = author
-version = "0.0.68"
+version = "0.0.69"
 
 is_staging = "dev" in version
 
