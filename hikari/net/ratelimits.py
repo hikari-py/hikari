@@ -122,17 +122,22 @@ This will ensure the garbage collection task is stopped, and will also ensure an
 queues have an :class:`asyncio.CancelledException` set on them to prevent deadlocking ratelimited calls that may
 be waiting to be unlocked.
 """
+from __future__ import annotations
+
 import abc
 import asyncio
-import datetime
-import logging
 import random
 import time
 import typing
 
 from hikari.internal_utilities import loggers
-from hikari.internal_utilities import type_hints
-from hikari.net import routes
+
+if typing.TYPE_CHECKING:
+    import datetime
+    import logging
+
+    from hikari.internal_utilities import type_hints
+    from hikari.net import routes
 
 UNKNOWN_HASH = "UNKNOWN"
 
@@ -534,11 +539,13 @@ class HTTPBucketRateLimiterManager(IRateLimiter):
 class ExponentialBackOff:
     """
     Implementation of an asyncio-compatible exponential back-off algorithm with random jitter.
+
+    Set `maximum` to -1 to prevent an upper limit.
     """
 
     __slots__ = ("base", "increment", "maximum", "jitter_multiplier")
 
-    def __init__(self, base: float = 1, maximum: float = 64, jitter_multiplier: float = 1) -> None:
+    def __init__(self, base: float = 2, maximum: float = 64, jitter_multiplier: float = 1) -> None:
         self.base = base
         self.maximum = maximum
         self.increment = 0
@@ -552,7 +559,7 @@ class ExponentialBackOff:
 
         self.increment += 1
 
-        if value >= self.maximum:
+        if value == self.maximum:
             raise asyncio.TimeoutError()
 
         value += random.random() * self.jitter_multiplier  # nosec

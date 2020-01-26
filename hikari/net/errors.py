@@ -52,9 +52,11 @@ class GatewayCloseCode(enum.IntEnum):
 
 class GatewayError(errors.HikariError):
     reason: str
+    close_code: int
 
-    def __init__(self, reason):
+    def __init__(self, reason, close_code: int = 1006):
         self.reason = reason
+        self.close_code = close_code
 
     def __str__(self):
         return self.reason
@@ -62,7 +64,7 @@ class GatewayError(errors.HikariError):
 
 class GatewayClientClosedError(GatewayError):
     def __init__(self, message="The gateway client has been closed"):
-        super().__init__(message)
+        super().__init__(message, 1000)
 
 
 class GatewayConnectionClosedError(GatewayError):
@@ -94,7 +96,7 @@ class GatewayInvalidSessionError(GatewayConnectionClosedError):
         self.can_resume = can_resume
         super().__init__(
             None,
-            f"The session has been invalidated. "
+            "The session has been invalidated. "
             + ("Restart the shard and RESUME" if can_resume else "Restart the shard with a fresh session"),
         )
 
@@ -116,28 +118,6 @@ class GatewayNeedsShardingError(GatewayConnectionClosedError):
 class GatewayZombiedError(GatewayClientClosedError):
     def __init__(self):
         super().__init__("No heartbeat was received, the connection has been closed")
-
-
-class ShardPresence:
-    __slots__ = ("activity", "status", "idle_since", "is_afk")
-
-    def __init__(self, activity=None, status="online", idle_since=0, is_afk=False):
-        self.activity = activity
-        self.status = status
-        self.idle_since = idle_since
-        self.is_afk = is_afk
-
-    def __repr__(self):
-        this_type = type(self).__name__
-        major_attributes = ", ".join(
-            (
-                f"activity={self.activity!r}",
-                f"status={self.status!r}",
-                f"idle_since={self.idle_since!r}",
-                f"is_afk={self.is_afk!r}",
-            )
-        )
-        return f"{this_type}({major_attributes})"
 
 
 class HTTPError(errors.HikariError):
@@ -210,7 +190,6 @@ __all__ = (
     "GatewayMustReconnectError",
     "GatewayNeedsShardingError",
     "GatewayZombiedError",
-    "ShardPresence",
     "HTTPError",
     "ServerHTTPError",
     "ClientHTTPError",

@@ -16,26 +16,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import asyncio
-import contextlib
-import datetime
 import math
-import signal
+from unittest import mock
 
 import pytest
 
-import asyncmock as mock
-
 from hikari import client as _client
-from hikari import client_options as _client_options
-from hikari.net import gateway
-from hikari.net import http_client
 from hikari.orm import fabric as _fabric
-from hikari.orm.gateway import basic_chunker_impl
-from hikari.orm.gateway import dispatching_event_adapter_impl
-from hikari.orm.http import http_adapter_impl
-from hikari.orm.models import gateway_bot
-from hikari.orm.state import state_registry_impl
 from tests.hikari import _helpers
 
 

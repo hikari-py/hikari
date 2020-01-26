@@ -23,8 +23,8 @@ import logging
 import math
 import statistics
 import time
+from unittest import mock
 
-import asyncmock as mock
 import pytest
 
 from hikari.net import ratelimits

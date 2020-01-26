@@ -22,7 +22,6 @@ A basic type of registry that handles storing global state.
 from __future__ import annotations
 
 import contextlib
-import datetime
 import functools
 import typing
 import weakref
@@ -30,8 +29,6 @@ import weakref
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
-from hikari.orm import fabric
 from hikari.orm.models import applications
 from hikari.orm.models import audit_logs
 from hikari.orm.models import bases
@@ -51,6 +48,12 @@ from hikari.orm.models import users
 from hikari.orm.models import voices
 from hikari.orm.models import webhooks
 from hikari.orm.state import base_registry
+
+if typing.TYPE_CHECKING:
+    import datetime
+
+    from hikari.internal_utilities import type_hints
+    from hikari.orm import fabric
 
 
 class StateRegistryImpl(base_registry.BaseRegistry):

@@ -25,7 +25,10 @@ import asyncio
 import datetime
 import inspect
 import signal
+import time
 import typing
+
+import aiohttp
 
 from hikari import client_options
 from hikari.internal_utilities import aio
@@ -34,6 +37,7 @@ from hikari.internal_utilities import loggers
 from hikari.net import errors
 from hikari.net import gateway
 from hikari.net import http_client
+from hikari.net import ratelimits
 from hikari.orm import fabric
 from hikari.orm.gateway import basic_chunker_impl
 from hikari.orm.gateway import dispatching_event_adapter_impl
@@ -56,7 +60,7 @@ class Client:
     >>> @client.event()
     ... async def on_ready(shard):
     ...     print("Shard", shard.shard_id, "is ready!")
-    >>> asyncio.run(client.run())
+    >>> client.run()
     """
 
     _SHUTDOWN_SIGNALS = (signal.SIGINT, signal.SIGTERM)
@@ -195,7 +199,6 @@ class Client:
                 proxy_url=self._client_options.proxy_url,
                 ssl_context=self._client_options.ssl_context,
                 verify_ssl=self._client_options.verify_ssl,
-                http_timeout=self._client_options.http_timeout,
                 large_threshold=self._client_options.large_guild_threshold,
                 initial_presence=self._client_options.presence.to_dict(),
                 shard_id=shard_id,
@@ -207,60 +210,90 @@ class Client:
     async def _new_chunker(self):
         return basic_chunker_impl.BasicChunkerImpl(self._fabric)
 
-    async def _shard_keepalive(self, shard: gateway.GatewayClient) -> None:
+    async def _shard_keep_alive(self, shard: gateway.GatewayClient) -> None:
         self.logger.debug("starting keepalive task for shard %s", shard.shard_id)
-        while True:
-            connect_task = asyncio.create_task(shard.connect())
-            try:
-                await connect_task
-                self.logger.critical("shard %s shut down silently! this shouldn't happen!", shard.shard_id)
-                shard.close()
-                await connect_task
 
+        backoff = ratelimits.ExponentialBackOff(maximum=-1)
+        last_start = time.perf_counter()
+        do_not_backoff = True
+
+        while True:
+            try:
+                if not do_not_backoff and time.perf_counter() - last_start < 30:
+                    next_backoff = next(backoff)
+                    self.logger.info(
+                        "shard %s has restarted within 30 seconds, will backoff for %ss", shard.shard_id, next_backoff,
+                    )
+                    await asyncio.sleep(next_backoff)
+                else:
+                    backoff.reset()
+
+                last_start = time.perf_counter()
+
+                do_not_backoff = False
+                await shard.connect()
+                self.logger.critical("shard %s shut down silently! this shouldn't happen!", shard.shard_id)
+
+            except aiohttp.ClientConnectorError as ex:
+                self.logger.exception(
+                    "shard %s has failed to connect to Discord to initialize a websocket connection",
+                    shard.shard_id,
+                    exc_info=ex,
+                )
             except errors.GatewayZombiedError:
                 self.logger.warning("shard %s has entered a zombie state and will be restarted", shard.shard_id)
-                shard.close()
-                await connect_task
-
             except errors.GatewayInvalidSessionError as ex:
                 if ex.can_resume:
                     self.logger.warning("shard %s has an invalid session, so will attempt to resume", shard.shard_id)
                 else:
                     self.logger.warning("shard %s has an invalid session, so will attempt to reconnect", shard.shard_id)
 
-                shard.close()
-                await connect_task
-
                 if not ex.can_resume:
                     shard.seq = None
                     shard.session_id = None
-
+                do_not_backoff = True
+                await asyncio.sleep(5)
             except errors.GatewayMustReconnectError:
                 self.logger.warning("shard %s has been instructed by Discord to reconnect", shard.shard_id)
-                shard.close()
-                await connect_task
                 shard.seq = None
                 shard.session_id = None
+                do_not_backoff = True
+                await asyncio.sleep(5)
             except Exception as ex:
                 self.logger.debug("propagating exception after tidying up shard %s", shard.shard_id, exc_info=ex)
-                shard.close()
-                await connect_task
                 raise ex
 
     async def start(self):
         await self._init_new_application_fabric()
         for shard in self._fabric.gateways.values():
-            self._shard_keepalive_tasks[shard] = asyncio.create_task(self._shard_keepalive(shard))
+            if shard.shard_id > 0:
+                # https://github.com/discordapp/discord-api-docs/issues/1328
+
+                # Discord will make us have an invalid session if we identify twice within 5 seconds. If we get
+                # disconnected after identifying for any other reason, tough luck I guess.
+                # This stops this framework chewing up your precious identify counts for the day because of spam
+                # causing invalid sessions.
+                await asyncio.sleep(5)
+
+            self._shard_keepalive_tasks[shard] = asyncio.create_task(self._shard_keep_alive(shard))
+            await shard.identify_event.wait()
         try:
             await asyncio.gather(*self._shard_keepalive_tasks.values())
+        except Exception as ex:
+            raise ex
         finally:
             await self.close()
 
     async def close(self):
+        coros = []
+
         for shard in self._fabric.gateways.values():
-            if not shard.closed_event.is_set():
+            if not shard._requesting_close_event.is_set():
                 self.logger.info("requesting shard %s shuts down now", shard.shard_id)
-                shard.close()
+                coros.append(shard.close())
+
+        if coros:
+            await asyncio.gather(*coros)
 
     def run(self):
         try:
@@ -268,6 +301,7 @@ class Client:
             self.loop.run_until_complete(self.start())
         except KeyboardInterrupt:
             self.logger.info("received KeyboardInterrupt to shut down bot")
+            self.loop.run_until_complete(self.close())
         finally:
             self.logger.info("bot has shut down")
 
@@ -395,4 +429,13 @@ class Client:
         """
         if self._fabric:
             return {shard.shard_id: shard.heartbeat_latency for shard in self._fabric.gateways.values()}
+        return {}
+
+    @property
+    def shards(self) -> typing.Mapping[typing.Optional[int], gateway.GatewayClient]:
+        """
+        Creates a mapping of each shard running, mapping the shard ID to the shard instance itself.
+        """
+        if self._fabric:
+            return {shard.shard_id: shard for shard in self._fabric.gateways.values()}
         return {}

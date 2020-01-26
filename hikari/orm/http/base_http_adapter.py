@@ -26,31 +26,33 @@ import abc
 import typing
 
 from hikari.internal_utilities import containers
-from hikari.internal_utilities import storage
-from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import unspecified
-from hikari.orm.models import applications as _applications
-from hikari.orm.models import audit_logs as _audit_logs
-from hikari.orm.models import bases
-from hikari.orm.models import channels as _channels
-from hikari.orm.models import colors as _colors
-from hikari.orm.models import connections as _connections
-from hikari.orm.models import embeds as _embeds
-from hikari.orm.models import emojis as _emojis
-from hikari.orm.models import gateway_bot as _gateway_bot
-from hikari.orm.models import guilds as _guilds
-from hikari.orm.models import integrations as _integrations
-from hikari.orm.models import invites as _invites
-from hikari.orm.models import media as _media
-from hikari.orm.models import members as _members
-from hikari.orm.models import messages as _messages
-from hikari.orm.models import overwrites as _overwrites
-from hikari.orm.models import permissions as _permissions
-from hikari.orm.models import reactions as _reactions
-from hikari.orm.models import roles as _roles
-from hikari.orm.models import users as _users
-from hikari.orm.models import voices as _voices
-from hikari.orm.models import webhooks as _webhooks
+
+if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import storage
+    from hikari.internal_utilities import type_hints
+    from hikari.orm.models import applications as _applications
+    from hikari.orm.models import audit_logs as _audit_logs
+    from hikari.orm.models import bases
+    from hikari.orm.models import channels as _channels
+    from hikari.orm.models import colors as _colors
+    from hikari.orm.models import connections as _connections
+    from hikari.orm.models import embeds as _embeds
+    from hikari.orm.models import emojis as _emojis
+    from hikari.orm.models import gateway_bot as _gateway_bot
+    from hikari.orm.models import guilds as _guilds
+    from hikari.orm.models import integrations as _integrations
+    from hikari.orm.models import invites as _invites
+    from hikari.orm.models import media as _media
+    from hikari.orm.models import members as _members
+    from hikari.orm.models import messages as _messages
+    from hikari.orm.models import overwrites as _overwrites
+    from hikari.orm.models import permissions as _permissions
+    from hikari.orm.models import reactions as _reactions
+    from hikari.orm.models import roles as _roles
+    from hikari.orm.models import users as _users
+    from hikari.orm.models import voices as _voices
+    from hikari.orm.models import webhooks as _webhooks
 
 
 class BaseHTTPAdapter(abc.ABC):
@@ -429,6 +431,58 @@ class BaseHTTPAdapter(abc.ABC):
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_MESSAGES` permission.
         """
+
+    @abc.abstractmethod
+    @typing.overload
+    async def fetch_reactors(
+        self,
+        reaction: _reactions.Reaction,
+        *,
+        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+    ) -> typing.AsyncIterator[_users.BaseUser]:
+        ...
+
+    @abc.abstractmethod
+    @typing.overload
+    async def fetch_reactors(
+        self,
+        reaction: _emojis.EmojiLikeT,
+        *,
+        message: _messages.Message,
+        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+    ) -> typing.AsyncIterator[_users.BaseUser]:
+        ...
+
+    @abc.abstractmethod
+    @typing.overload
+    async def fetch_reactors(
+        self,
+        reaction: _emojis.EmojiLikeT,
+        *,
+        channel: _channels.ChannelLikeT,
+        message: bases.SnowflakeLikeT,
+        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+    ) -> typing.AsyncIterator[_users.BaseUser]:
+        ...
+
+    @abc.abstractmethod
+    async def fetch_reactors(
+        self,
+        reaction,
+        *,
+        channel=unspecified.UNSPECIFIED,
+        message=unspecified.UNSPECIFIED,
+        before=unspecified.UNSPECIFIED,
+        after=unspecified.UNSPECIFIED,
+        limit=unspecified.UNSPECIFIED,
+    ):
+        ...
 
     @abc.abstractmethod
     @typing.overload

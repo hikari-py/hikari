@@ -26,9 +26,11 @@ import typing
 
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
-from hikari.orm import fabric
 from hikari.orm.models import bases
 from hikari.orm.models import integrations
+
+if typing.TYPE_CHECKING:
+    from hikari.orm import fabric
 
 
 class ConnectionVisibility(bases.BestEffortEnumMixin, enum.IntEnum):

@@ -27,17 +27,19 @@ import typing
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.orm import fabric
 from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import colors
 from hikari.orm.models import guilds
-from hikari.orm.models import integrations
 from hikari.orm.models import overwrites
 from hikari.orm.models import permissions
 from hikari.orm.models import roles
-from hikari.orm.models import users
-from hikari.orm.models import webhooks
+
+if typing.TYPE_CHECKING:
+    from hikari.orm import fabric
+    from hikari.orm.models import integrations
+    from hikari.orm.models import users
+    from hikari.orm.models import webhooks
 
 
 class AuditLog(bases.BaseModel):
@@ -413,7 +415,7 @@ class AuditLogChangeKey(str, bases.BestEffortEnumMixin, enum.Enum):
     COLOUR = COLOR
 
     def __str__(self):
-        return self.name
+        return str(self.name)
 
 
 def _new_id_map_of(converter):

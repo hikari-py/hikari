@@ -2,7 +2,7 @@
 parallel = false
 branch = true
 # Uncomment if coverage starts appearing to be incorrect. This makes the tests run at least twice as slowly.
-#timid  = true
+# timid  = true
 
 [report]
 precision = 2
@@ -16,6 +16,7 @@ exclude_lines =
     ^\s*raise$
     ^\s*pass$
     ^if __name__ == ['"]__main__['"]:$
-    ^\s*...$
+    ^\s*\.\.\.$
     ^\s*@abc.abstractmethod$
+    ^if typing.TYPE_CHECKING:$
 sort = Cover

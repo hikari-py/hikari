@@ -30,18 +30,20 @@ See:
 """
 from __future__ import annotations
 
-import asyncio
 import dataclasses
-import datetime
-import ssl
 import typing
-
-import aiohttp.typedefs
 
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
 from hikari.net import base_http_client
+
+if typing.TYPE_CHECKING:
+    import asyncio
+    import datetime
+    import ssl
+
+    import aiohttp.typedefs
 
 T = typing.TypeVar("T")
 

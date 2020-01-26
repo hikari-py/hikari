@@ -24,9 +24,15 @@ stages:
 variables:
   DOCKER_DRIVER: "overlay2"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  SAST_BANDIT_EXCLUDED_PATHS: tests/*,docs/*,gitlab/*,insomnia/*,public/*,tasks/*,noxfile.py
+  SAST_EXCLUDED_PATHS: tests/*,docs/*,gitlab/*,insomnia/*,public/*,tasks/*,noxfile.py
 
 include:
   - local: "/gitlab/test.yml"
   - local: "/gitlab/analysis.yml"
   - local: "/gitlab/pages.yml"
   - local: "/gitlab/deploy.yml"
+  - template: "Dependency-Scanning.gitlab-ci.yml"
+  - template: "SAST.gitlab-ci.yml"
+  # TO DO: add eventually, but this is currently really really slow :(
+  # - template: "License-Management.gitlab-ci.yml"

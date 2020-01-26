@@ -17,16 +17,17 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
+from unittest import mock
 
-import asyncmock as mock
 import pytest
 
 from hikari.orm import fabric
-from hikari.orm.state import base_registry
+from hikari.orm.http import base_http_adapter
 from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
 from hikari.orm.models import permissions
+from hikari.orm.state import base_registry
 from tests.hikari import _helpers
 
 
@@ -107,7 +108,7 @@ class TestChannel:
 class TestTextChannel:
     @pytest.mark.asyncio
     async def test_trigger_typing_calls_http_adapter(self, mock_fabric):
-        mock_fabric.http_adapter = mock.MagicMock(spec_set=fabric._http_adapter.BaseHTTPAdapter)
+        mock_fabric.http_adapter = mock.MagicMock(spec_set=base_http_adapter.BaseHTTPAdapter)
         mock_fabric.http_adapter.trigger_typing = mock.AsyncMock()
         text_channel = _helpers.mock_model(channels.TextChannel, _fabric=mock_fabric, id=1234)
         await channels.TextChannel.trigger_typing(text_channel)
@@ -115,7 +116,7 @@ class TestTextChannel:
 
     @pytest.mark.asyncio
     async def test_start_typing_loops_until_context_ends(self, mock_fabric):
-        mock_fabric.http_adapter = mock.MagicMock(spec_set=fabric._http_adapter.BaseHTTPAdapter)
+        mock_fabric.http_adapter = mock.MagicMock(spec_set=base_http_adapter.BaseHTTPAdapter)
         mock_fabric.http_adapter.trigger_typing = mock.AsyncMock()
 
         class Impl(channels.TextChannel):
