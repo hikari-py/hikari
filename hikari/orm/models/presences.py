@@ -56,6 +56,8 @@ class Presence:
     status: Status = Status.ONLINE
     activity: typing.Optional[Activity] = None
 
+    __repr__ = reprs.repr_of("since", "is_afk", "status", "activity")
+
     def to_dict(self):
         return {
             "since": int(1_000 * self.since.timestamp()) if isinstance(self.since, datetime.datetime) else self.since,
@@ -156,7 +158,8 @@ class ActivityType(bases.BestEffortEnumMixin, enum.IntEnum):
     CUSTOM = 4
 
 
-class Activity(bases.BaseModel):
+@dataclasses.dataclass()
+class Activity(bases.BaseModel, bases.MarshalMixin):
     """
     A non-rich presence-style activity.
     """
@@ -186,11 +189,6 @@ class Activity(bases.BaseModel):
         self.url = url
 
     update_state = NotImplemented
-
-    def to_dict(self) -> containers.JSONObject:
-        attrs = {a: getattr(self, a) for a in self.__slots__}
-        # noinspection PyArgumentList,PyTypeChecker
-        return dict(**{k: v for k, v in attrs.items() if v is not None})
 
 
 class RichActivity(Activity):
