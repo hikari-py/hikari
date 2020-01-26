@@ -157,6 +157,7 @@ class GatewayClient:
         "connected_at",
         "connector",
         "debug",
+        "disconnect_count",
         "dispatch",
         "intents",
         "large_threshold",
@@ -173,7 +174,6 @@ class GatewayClient:
         "proxy_url",
         "ratelimiter",
         "receive_timeout",
-        "reconnect_count",
         "session",
         "session_id",
         "seq",
@@ -211,12 +211,13 @@ class GatewayClient:
         token,
         url,
         verify_ssl=True,
-    ):
+    ) -> None:
         self.closed_event = asyncio.Event()
         self.compression = compression
         self.connected_at = float("nan")
         self.connector = connector
         self.debug = debug
+        self.disconnect_count = 0
         self.dispatch = dispatch
         self.intents = intents
         self.large_threshold = large_threshold
@@ -231,7 +232,6 @@ class GatewayClient:
         self.proxy_headers = proxy_headers
         self.proxy_url = proxy_url
         self.receive_timeout = receive_timeout
-        self.reconnect_count = 0
         self.session = None
         self.session_id = session_id
         self.seq = seq
@@ -240,7 +240,7 @@ class GatewayClient:
         self.ssl_context = ssl_context
         self.token = token
         self.verify_ssl = verify_ssl
-        self.ws = None
+        self.ws: typing.Optional[aiohttp.ClientWebSocketResponse] = None
         self.zlib = None  # set this per connection or reconnecting can mess up.
 
         self.ratelimiter = ratelimits.WindowedBurstRateLimiter(
@@ -269,21 +269,31 @@ class GatewayClient:
         )
 
     @property
-    def latency(self):
+    def latency(self) -> float:
         return self.last_pong_received - self.last_ping_sent
 
     @property
-    def heartbeat_latency(self):
+    def heartbeat_latency(self) -> float:
         return self.last_heartbeat_ack_received - self.last_heartbeat_sent
 
     @property
-    def uptime(self):
+    def uptime(self) -> datetime.timedelta:
         delta = time.perf_counter() - self.connected_at
         return datetime.timedelta(seconds=0 if math.isnan(delta) else delta)
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         return not math.isnan(self.connected_at)
+
+    @property
+    def reconnect_count(self) -> int:
+        # 0 disconnects + not is_connected => 0
+        # 0 disconnects + is_connected => 0
+        # 1 disconnects + not is_connected = 0
+        # 1 disconnects + is_connected = 1
+        # 2 disconnects + not is_connected = 1
+        # 2 disconnects + is_connected = 2
+        return max(0, self.disconnect_count - int(not self.is_connected))
 
     @property
     def _ws_connect_kwargs(self):
@@ -306,11 +316,12 @@ class GatewayClient:
         return dict(connector=self.connector)
 
     @contextlib.asynccontextmanager
-    async def _open_websocket(self):
+    async def _open_websocket(self, client_session_type=aiohttp.ClientSession):
         # aiohttp is a horrible thing to mock, so provide the basic start-shutdown logic here so I can mock it
         # for the rest of the test cases.
+        self.closed_event.clear()
 
-        async with aiohttp.ClientSession(**self._cs_init_kwargs) as self.session:
+        async with client_session_type(**self._cs_init_kwargs) as self.session:
             async with self.session.ws_connect(**self._ws_connect_kwargs) as self.ws:
 
                 self.connected_at = time.perf_counter()
@@ -324,8 +335,7 @@ class GatewayClient:
             self.last_pong_received = float("nan")
             self.last_heartbeat_sent = float("nan")
             self.last_heartbeat_ack_received = float("nan")
-            self.reconnect_count += 1
-            self.closed_event.clear()
+            self.disconnect_count += 1
             self.ws = None
             self.session = None
             self.dispatch(self, "DISCONNECT", None)
@@ -343,7 +353,7 @@ class GatewayClient:
                 raise errors.GatewayError(f"Expected HELLO opcode 10 but received {op}")
             hb_interval = pl["d"]["heartbeat_interval"] / 1_000.0
 
-            self.dispatch(self, "RECONNECT" if self.reconnect_count else "CONNECT", None)
+            self.dispatch(self, "RECONNECT" if self.disconnect_count else "CONNECT", None)
             self.logger.info("received HELLO, interval is %ss", hb_interval)
 
             completed, pending_tasks = await asyncio.wait(
@@ -414,7 +424,7 @@ class GatewayClient:
     async def _ping_keep_alive(self):
         while not self.closed_event.is_set():
             if self.last_pong_received < self.last_ping_sent:
-                raise errors.GatewayZombiedError()
+                raise asyncio.TimeoutError("connection is a zombie, haven't received PONG for too long")
             self.logger.debug("sending ping")
             await self.ws.ping()
             self.last_ping_sent = time.perf_counter()
@@ -426,7 +436,7 @@ class GatewayClient:
     async def _heartbeat_keep_alive(self, heartbeat_interval):
         while not self.closed_event.is_set():
             if self.last_heartbeat_ack_received < self.last_heartbeat_sent:
-                raise errors.GatewayZombiedError()
+                raise asyncio.TimeoutError("connection is a zombie, haven't received HEARTBEAT ACK for too long")
             self.logger.debug("sending heartbeat")
             await self._send({"op": 1, "d": self.seq})
             self.last_heartbeat_sent = time.perf_counter()
@@ -434,6 +444,12 @@ class GatewayClient:
                 await asyncio.wait_for(self.closed_event.wait(), timeout=heartbeat_interval)
             except asyncio.TimeoutError:
                 pass
+
+    async def close(self):
+        if not self.closed_event.is_set():
+            self.closed_event.set()
+            with contextlib.suppress(asyncio.TimeoutError):
+                await asyncio.wait_for(asyncio.shield(self.ws.close()), timeout=2.0)
 
     async def _poll_events(self):
         while True:
@@ -463,12 +479,6 @@ class GatewayClient:
                 self.logger.debug("received HEARTBEAT ACK in %ss", ack_wait)
             else:
                 self.logger.debug("ignoring opcode %s with data %r", op, d)
-
-    async def close(self):
-        if not self.closed_event.is_set():
-            self.closed_event.set()
-        if self.ws is not None:
-            await self.ws.close()
 
     async def _receive(self):
         while True:
@@ -573,7 +583,7 @@ class GatewayClient:
             "requesting guild members for guilds %s with constraints %s", guilds, constraints,
         )
 
-        await self._send({"op": 8, "d": {"guild_id": guilds, **constraints,}})
+        await self._send({"op": 8, "d": {"guild_id": guilds, **constraints}})
 
     async def update_status(self, presence) -> None:
         self.logger.debug("updating presence to %r", presence)

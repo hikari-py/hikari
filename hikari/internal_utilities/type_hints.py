@@ -28,7 +28,7 @@ T = typing.TypeVar("T")
 #: This can be considered the same as :class:`typing.Optional`, which is a value that can be
 #: optionally set to `None`. We distinguish between `None` and not specifying something at all
 #: when it is a default argument in several places, so this has been redefined with a clearer name.
-Nullable = typing.Optional[T]
+Nullable = typing.Optional
 
 #: A special type hint for an argument that can take the value of
 #: :attr:`hikari.internal_utilities.unspecified.UNSPECIFIED`. This often defines a value that unless
