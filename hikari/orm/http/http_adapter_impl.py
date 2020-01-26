@@ -237,6 +237,18 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             channel_id=transformations.get_parent_id_from_model(message, channel, "channel"),
         )
 
+    async def fetch_reactors(
+        self,
+        reaction: typing.Union[_reactions.Reaction, _emojis.EmojiLikeT],
+        *,
+        channel: type_hints.NotRequired[_channels.ChannelLikeT] = unspecified.UNSPECIFIED,
+        message: type_hints.NotRequired[_messages.MessageLikeT] = unspecified.UNSPECIFIED,
+        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+    ) -> typing.AsyncIterator[_users.BaseUser]:
+        raise NotImplementedError
+
     async def update_message(
         self,
         message: _messages.MessageLikeT,
