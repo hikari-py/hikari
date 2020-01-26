@@ -68,7 +68,7 @@ class ShardOptions:
 #: Use an appropriate number of shards for the size of the bot being run.
 AUTO_SHARD = ShardOptions((), 0)
 #: Use no shards.
-NO_SHARDS = ShardOptions([None], 1)
+NO_SHARDS = ShardOptions((None,), 1)
 
 # This is rather long and obnoxious.
 _DEFAULT_CHUNK_MODE = dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES

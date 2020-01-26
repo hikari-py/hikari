@@ -139,13 +139,17 @@ def lint(session) -> None:
 
         with open(os.path.join(ARTIFACT_DIR, "pylint.xml"), "w") as fp:
             session.run(
-                "pylint", pkg, "--rcfile=pylintrc", f"--fail-under={PYLINT_THRESHOLD}",
+                "pylint",
+                pkg,
+                "--rcfile=pylintrc",
+                f"--fail-under={PYLINT_THRESHOLD}",
                 "--output-format=pylint_junit.JUnitReporter",
-                stdout=fp
+                stdout=fp,
             )
 
 
 if os.getenv("CI"):
+
     @nox.session()
     def pip(session: nox.sessions.Session):
         """Run through sandboxed install of PyPI package (if running on CI)"""

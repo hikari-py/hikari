@@ -17,17 +17,17 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
-
 from unittest import mock
+
 import pytest
 
 from hikari.orm import fabric
 from hikari.orm.http import base_http_adapter
-from hikari.orm.state import base_registry
 from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
 from hikari.orm.models import permissions
+from hikari.orm.state import base_registry
 from tests.hikari import _helpers
 
 

@@ -17,13 +17,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
-import weakref
-
 import dataclasses
 import datetime
 import enum
 import functools
 import typing
+import weakref
 
 import pytest
 

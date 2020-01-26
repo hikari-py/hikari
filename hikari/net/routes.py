@@ -20,8 +20,9 @@
 Provides the valid routes that can be used on the API, as well as mechanisms to aid
 with rate limit bucketing.
 """
-from typing import Any, Collection, FrozenSet
-
+from typing import Any
+from typing import Collection
+from typing import FrozenSet
 
 DEFAULT_MAJOR_PARAMS = {"channel_id", "guild_id", "webhook_id"}
 

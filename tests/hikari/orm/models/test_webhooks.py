@@ -21,8 +21,8 @@ from unittest import mock
 import pytest
 
 from hikari.orm import fabric
-from hikari.orm.state import base_registry
 from hikari.orm.models import webhooks
+from hikari.orm.state import base_registry
 from tests.hikari import _helpers
 
 
