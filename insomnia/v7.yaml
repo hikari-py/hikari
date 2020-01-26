@@ -1,6 +1,6 @@
 _type: export
 __export_format: 4
-__export_date: 2020-01-19T15:19:46.495Z
+__export_date: 2020-01-26T18:17:15.486Z
 __export_source: insomnia.desktop.app:v7.0.6
 resources:
   - _id: req_3f79be849f9d4a76ad7fc0572894acb4
@@ -32,7 +32,7 @@ resources:
     isPrivate: false
     metaSortKey: -1579446582104
     method: POST
-    modified: 1579446750729
+    modified: 1579888478034
     name: Create Channel Invite
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -42,7 +42,8 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{ api_url  }}/channels/574921092926537729/invites"
+    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
+      true %}/invites"
     _type: request
   - _id: fld_02ddb24b4e5148469979a2364fcc01dc
     created: 1577108071067
@@ -102,7 +103,7 @@ resources:
     isPrivate: false
     metaSortKey: -1579446582054
     method: POST
-    modified: 1579446662806
+    modified: 1580061972802
     name: Create Message (JSON)
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -112,7 +113,220 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/channels/574921092926537729/messages"
+    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
+      true %}/messages"
+    _type: request
+  - _id: req_25d53074d2cf44b399bddb805ddab89b
+    authentication: {}
+    body:
+      mimeType: application/json
+      text: ""
+    created: 1579887586462
+    description: ""
+    headers:
+      - name: Authorization
+        value: "{{authorization}}"
+      - name: Content-Type
+        value: application/json
+      - name: Accept
+        value: application/json
+    isPrivate: false
+    metaSortKey: -1579446347254.5
+    method: PUT
+    modified: 1579888368767
+    name: Create Reaction
+    parameters: []
+    parentId: fld_02ddb24b4e5148469979a2364fcc01dc
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
+      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
+      %}/reactions/{% prompt 'emoji', 'emoji', '', '', false, true %}/@me"
+    _type: request
+  - _id: req_8ed678ae359d4170b5720081960696db
+    authentication: {}
+    body:
+      mimeType: application/json
+      text: ""
+    created: 1579888166303
+    description: ""
+    headers:
+      - name: Authorization
+        value: "{{authorization}}"
+      - name: Content-Type
+        value: application/json
+      - name: Accept
+        value: application/json
+    isPrivate: false
+    metaSortKey: -1579446288554.625
+    method: DELETE
+    modified: 1579888898059
+    name: Delete All Reactions
+    parameters: []
+    parentId: fld_02ddb24b4e5148469979a2364fcc01dc
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
+      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
+      %}/reactions"
+    _type: request
+  - _id: req_ab8e42a9978d411aa290e79897d1bcb6
+    authentication: {}
+    body:
+      mimeType: application/json
+      text: ""
+    created: 1579888568770
+    description: ""
+    headers:
+      - name: Authorization
+        value: "{{authorization}}"
+      - name: Content-Type
+        value: application/json
+      - name: Accept
+        value: application/json
+    isPrivate: false
+    metaSortKey: -1579446259204.6875
+    method: DELETE
+    modified: 1579888899729
+    name: Delete All Reactions for Emoji
+    parameters: []
+    parentId: fld_02ddb24b4e5148469979a2364fcc01dc
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
+      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
+      %}/reactions/{% prompt 'emoji', 'emoji', '', '', false, true %}"
+    _type: request
+  - _id: req_82394bee04d94ea5b171da6239d12700
+    authentication: {}
+    body:
+      mimeType: application/json
+      text: ""
+    created: 1579887965188
+    description: ""
+    headers:
+      - name: Authorization
+        value: "{{authorization}}"
+      - name: Content-Type
+        value: application/json
+      - name: Accept
+        value: application/json
+    isPrivate: false
+    metaSortKey: -1579446229854.75
+    method: DELETE
+    modified: 1579888327919
+    name: Delete Own Reaction
+    parameters: []
+    parentId: fld_02ddb24b4e5148469979a2364fcc01dc
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
+      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
+      %}/reactions/{% prompt 'emoji', 'emoji', '', '', false, true %}/@me"
+    _type: request
+  - _id: req_e16bac177c144773a63b51f12cb2e76a
+    authentication: {}
+    body:
+      mimeType: application/json
+      text: ""
+    created: 1579888064162
+    description: ""
+    headers:
+      - name: Authorization
+        value: "{{authorization}}"
+      - name: Content-Type
+        value: application/json
+      - name: Accept
+        value: application/json
+    isPrivate: false
+    metaSortKey: -1579446171154.875
+    method: DELETE
+    modified: 1579888320847
+    name: Delete User Reaction
+    parameters: []
+    parentId: fld_02ddb24b4e5148469979a2364fcc01dc
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
+      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
+      %}/reactions/{% prompt 'emoji', 'emoji', '', '', false, true %}/{% prompt
+      'user_id', 'user_id', '', '', false, true %}"
+    _type: request
+  - _id: req_6711d4d8b3754abb99a3134fd709aefa
+    authentication: {}
+    body:
+      mimeType: application/json
+      text: ""
+    created: 1579886260172
+    description: ""
+    headers:
+      - name: Authorization
+        value: "{{authorization}}"
+    isPrivate: false
+    metaSortKey: -1579446112455
+    method: DELETE
+    modified: 1579888018462
+    name: Delete Message
+    parameters: []
+    parentId: fld_02ddb24b4e5148469979a2364fcc01dc
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
+      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
+      %}"
+    _type: request
+  - _id: req_e545c73cba2d404c8b81eb1b08089ed7
+    authentication: {}
+    body: {}
+    created: 1579888209925
+    description: ""
+    headers:
+      - name: Authorization
+        value: "{{authorization}}"
+      - name: Content-Type
+        value: application/json
+      - name: Accept
+        value: application/json
+    isPrivate: false
+    metaSortKey: -1578277095877.5
+    method: GET
+    modified: 1579888297862
+    name: Get Reactions
+    parameters: []
+    parentId: fld_02ddb24b4e5148469979a2364fcc01dc
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
+      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
+      %}/reactions/{% prompt 'emoji', 'emoji', '', '', false, true %}"
     _type: request
   - _id: req_b7d357e7d7884ab7ad6d775410a9bde0
     authentication: {}
@@ -125,7 +339,7 @@ resources:
     isPrivate: false
     metaSortKey: -1577108079300
     method: POST
-    modified: 1577108856675
+    modified: 1579888455825
     name: Trigger Typing
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -135,7 +349,8 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{ api_url  }}/channels/574921092926537729/typing"
+    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
+      true %}/typing"
     _type: request
   - _id: req_cec8e07486b345eb976d2f7a3dc7c80c
     authentication: {}
@@ -205,6 +420,75 @@ resources:
     settingStoreCookies: true
     url: "{{api_url}}/gateway/bot"
     _type: request
+  - _id: req_b183c6a1162449499255791734c8615e
+    authentication: {}
+    body: {}
+    created: 1579553797487
+    description: ""
+    headers:
+      - name: Authorization
+        value: "{{authorization}}"
+      - name: Content-Type
+        value: application/json
+      - name: Accept
+        value: application/json
+    isPrivate: false
+    metaSortKey: -1579553797487
+    method: GET
+    modified: 1579553810211
+    name: Get Guild Member
+    parameters: []
+    parentId: fld_1d2d60a473504c10b9e30848d3864d42
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{api_url}}/guilds/574921006817476608/members/215061635574792192"
+    _type: request
+  - _id: fld_1d2d60a473504c10b9e30848d3864d42
+    created: 1579445628832
+    description: ""
+    environment: {}
+    environmentPropertyOrder: null
+    metaSortKey: -1576914763638.5
+    modified: 1579445635956
+    name: Guild
+    parentId: fld_fd85c020b1744299b6016ba69c25966b
+    _type: request_group
+  - _id: req_366a70de6ca34316bd6ca890e4125bd3
+    authentication: {}
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"nick": "thomm.o"
+        }
+    created: 1579553628410
+    description: ""
+    headers:
+      - name: Authorization
+        value: "{{authorization}}"
+      - name: Content-Type
+        value: application/json
+      - name: Accept
+        value: application/json
+    isPrivate: false
+    metaSortKey: -1579553628410
+    method: PATCH
+    modified: 1579553772380
+    name: Modify Guild Member
+    parameters: []
+    parentId: fld_1d2d60a473504c10b9e30848d3864d42
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingFollowRedirects: global
+    settingRebuildPath: true
+    settingSendCookies: true
+    settingStoreCookies: true
+    url: "{{api_url}}/guilds/574921006817476608/members/215061635574792192"
+    _type: request
   - _id: req_39206beb9d5c49d1b8fc029ac38c7073
     authentication: {}
     body:
@@ -237,16 +521,6 @@ resources:
     settingStoreCookies: true
     url: "{{ api_url  }}/guilds"
     _type: request
-  - _id: fld_1d2d60a473504c10b9e30848d3864d42
-    created: 1579445628832
-    description: ""
-    environment: {}
-    environmentPropertyOrder: null
-    metaSortKey: -1576914763638.5
-    modified: 1579445635956
-    name: Guild
-    parentId: fld_fd85c020b1744299b6016ba69c25966b
-    _type: request_group
   - _id: req_6da7098d14e94f9da6d65c8d67c182cf
     authentication: {}
     body:
@@ -547,20 +821,32 @@ resources:
     _type: environment
   - _id: jar_29ed27f9c562933de7fccb4654fee3698ef432f8
     cookies:
-      - creation: 2019-12-20T14:26:04.134Z
+      - creation: 2020-01-26T18:05:56.711Z
         domain: discordapp.com
-        expires: 2020-02-18T14:54:53.000Z
+        expires: 2020-02-25T18:05:56.000Z
         extensions:
           - SameSite=Lax
         hostOnly: false
         httpOnly: true
-        id: "03613449868299301"
+        id: "008275641461669814"
         key: __cfduid
-        lastAccessed: 2020-01-19T14:54:53.458Z
+        lastAccessed: 2020-01-26T18:05:56.711Z
         path: /
-        value: d684d488da3623ece8ceee77dcdc1a3f81579445693
+        value: da8497a8d2b96a38bf7e0ac2354539f131580061956
+      - creation: 2020-01-26T18:05:56.711Z
+        domain: discordapp.com
+        extensions:
+          - SameSite=None
+        hostOnly: false
+        httpOnly: true
+        id: "5251071576132795"
+        key: __cfruid
+        lastAccessed: 2020-01-26T18:05:56.711Z
+        path: /
+        secure: true
+        value: 5cabbf7d26a5cd70c380e16bd1fbf5db9918e920-1580061956
     created: 1572465096242
-    modified: 1579445693460
+    modified: 1580061956712
     name: Default Jar
     parentId: wrk_ef4732eebfd640729709f9377913ae41
     _type: cookie_jar

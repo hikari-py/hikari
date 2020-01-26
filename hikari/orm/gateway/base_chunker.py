@@ -28,7 +28,6 @@ from __future__ import annotations
 import abc
 import typing
 
-
 if typing.TYPE_CHECKING:
     from hikari.internal_utilities import containers
     from hikari.orm.models import guilds

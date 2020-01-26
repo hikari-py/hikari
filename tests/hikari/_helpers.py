@@ -31,9 +31,9 @@ import time
 import typing
 import warnings
 import weakref
+from unittest import mock
 
 import async_timeout
-from unittest import mock
 import pytest
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,6 +111,8 @@ def assert_raises(test=None, *, type_, checks=()):
                 logging.exception("Caught exception within test type raising bounds", exc_info=ex)
                 for i, check in enumerate(checks, start=1):
                     assert check(ex), f"Check #{i} ({check}) failed"
+            except AssertionError as ex:
+                raise AssertionError("assertion failed") from ex
             except BaseException as ex:
                 raise AssertionError(f"Expected {type_.__name__} to be raised but got {type(ex).__name__}") from ex
 

@@ -52,9 +52,11 @@ class GatewayCloseCode(enum.IntEnum):
 
 class GatewayError(errors.HikariError):
     reason: str
+    close_code: int
 
-    def __init__(self, reason):
+    def __init__(self, reason, close_code: int = 1006):
         self.reason = reason
+        self.close_code = close_code
 
     def __str__(self):
         return self.reason
@@ -62,7 +64,7 @@ class GatewayError(errors.HikariError):
 
 class GatewayClientClosedError(GatewayError):
     def __init__(self, message="The gateway client has been closed"):
-        super().__init__(message)
+        super().__init__(message, 1000)
 
 
 class GatewayConnectionClosedError(GatewayError):
