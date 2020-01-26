@@ -30,6 +30,16 @@ def activity():
     return presences.Activity(name="")
 
 
+@pytest.fixture
+def hikari_presence(activity):
+    return {
+        "since": datetime.datetime.fromtimestamp(1579859511.00509),
+        "is_afk": True,
+        "status": presences.Status.DND,
+        "activity": activity,
+    }
+
+
 @pytest.fixture()
 def no_presence():
     return {
@@ -169,7 +179,42 @@ def legacy_activity():
 
 @pytest.mark.model
 class TestPresence:
-    def test_parse_no_Presence(self, no_presence):
+    def test_initiate_Presence(self, hikari_presence, activity):
+        p = presences.Presence(**hikari_presence)
+        assert p.activity is activity
+        assert p.since == datetime.datetime.fromtimestamp(1579859511.00509)
+        assert p.status is presences.Status.DND
+
+    def test_Presence_to_dict_without_activity(self, hikari_presence):
+        del hikari_presence["activity"]
+        p = presences.Presence(**hikari_presence)
+        assert p.to_dict() == {"since": 1579859511005, "afk": True, "status": "dnd", "activity": None}
+
+    def test_Presence_to_dict_with_activity(self, hikari_presence):
+        p = presences.Presence(**hikari_presence)
+        assert p.to_dict() == {
+            "since": 1579859511005,
+            "afk": True,
+            "status": "dnd",
+            "activity": {"name": "", "type": 4},
+        }
+
+    def test_Presence___repr__(self, activity):
+        assert repr(
+            _helpers.mock_model(
+                presences.Presence,
+                status=presences.Status.ONLINE,
+                activity=activity,
+                is_afk=True,
+                since=1579859511.00509,
+                __repr__=presences.Presence.__repr__,
+            )
+        )
+
+
+@pytest.mark.model
+class TestMemberPresence:
+    def test_parse_no_MemberPresence(self, no_presence):
         p = presences.MemberPresence(no_presence)
 
         assert p.status == presences.Status.ONLINE
@@ -179,7 +224,7 @@ class TestPresence:
 
         assert len(p.activities) == 0
 
-    def test_parse_legacy_Presence(self, legacy_presence):
+    def test_parse_legacy_MemberPresence(self, legacy_presence):
         p = presences.MemberPresence(legacy_presence)
 
         assert p.status == presences.Status.ONLINE
@@ -191,7 +236,7 @@ class TestPresence:
         a = p.activities[0]
         assert a is not None
 
-    def test_rich_Presence(self, rich_presence):
+    def test_rich_MemberPresence(self, rich_presence):
         p = presences.MemberPresence(rich_presence)
 
         assert p.status == presences.Status.ONLINE
@@ -203,7 +248,7 @@ class TestPresence:
         a = p.activities[0]
         assert a is not None
 
-    def test_Presence_update(self, presence_update):
+    def test_MemberPresence_update(self, presence_update):
         p = presences.MemberPresence(presence_update)
         assert p.status == presences.Status.ONLINE
         assert p.desktop_status == presences.Status.ONLINE
@@ -211,7 +256,7 @@ class TestPresence:
         assert p.mobile_status == presences.Status.OFFLINE
         assert len(p.activities) == 0
 
-    def test_Presence_delta_when_empty(self, presence_delta_empty):
+    def test_MemberPresence_delta_when_empty(self, presence_delta_empty):
         p = presences.MemberPresence(presence_delta_empty)
         assert p.status == presences.Status.OFFLINE
         assert p.desktop_status == presences.Status.OFFLINE
@@ -219,8 +264,7 @@ class TestPresence:
         assert p.mobile_status == presences.Status.OFFLINE
         assert len(p.activities) == 0
 
-    @pytest.mark.model
-    def test_Presence___repr__(self):
+    def test_MemberPresence___repr__(self):
         assert repr(
             _helpers.mock_model(
                 presences.MemberPresence, status=presences.Status.ONLINE, __repr__=presences.MemberPresence.__repr__
@@ -334,7 +378,7 @@ class TestActivityTimestamps:
         assert d == dict(name="Tests :)", type=1, url="https://www.witch.tv/",)
 
     def test_Activity_to_dict_when_empty(self, activity):
-        assert activity.to_dict() == dict(name="", type=presences.ActivityType.CUSTOM)
+        assert activity.to_dict() == dict(name="", type=4)
 
     @pytest.mark.model
     def test_ActivityTimestamps___repr__(self):
