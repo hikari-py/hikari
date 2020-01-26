@@ -23,9 +23,8 @@ and data components that are being managed by the application.
 """
 from __future__ import annotations
 
-import typing
-
 import dataclasses
+import typing
 
 if typing.TYPE_CHECKING:
     from hikari.net import gateway as _gateway
@@ -54,7 +53,7 @@ class Fabric:
     #: A mapping of shard ID's to gateways that are running.
     #:
     #: If no shards are running, then this defaults to one shard under the `None` key.
-    gateways: typing.Dict[typing.Optional[int], _gateway.GatewayClient] = dataclasses.field(default_factory=dict)
+    gateways: typing.Dict[int, _gateway.GatewayClient] = dataclasses.field(default_factory=dict)
 
     #: The base HTTP client for making HTTP requests.
     http_client: _http_client.HTTPClient = dataclasses.field(default=NotImplemented)

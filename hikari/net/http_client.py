@@ -38,8 +38,8 @@ from hikari.internal_utilities import conversions
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
 from hikari.internal_utilities import unspecified
-from hikari.net import errors
 from hikari.net import base_http_client
+from hikari.net import errors
 from hikari.net import ratelimits
 from hikari.net import routes
 

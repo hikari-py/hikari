@@ -16,15 +16,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import asyncio
 from unittest import mock
+
 import pytest
 
 from hikari.internal_utilities import unspecified
 from hikari.net import http_client
 from hikari.orm import fabric
 from hikari.orm.http import http_adapter_impl as _http_adapter_impl
-from hikari.orm.state import base_registry
 from hikari.orm.models import applications
 from hikari.orm.models import audit_logs
 from hikari.orm.models import channels
@@ -46,6 +45,7 @@ from hikari.orm.models import roles
 from hikari.orm.models import users
 from hikari.orm.models import voices
 from hikari.orm.models import webhooks
+from hikari.orm.state import base_registry
 from tests.hikari import _helpers
 
 

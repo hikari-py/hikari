@@ -18,10 +18,11 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 from unittest import mock
+
 import pytest
 
-from hikari.orm.gateway import dispatching_event_adapter
 from hikari.orm import fabric
+from hikari.orm.gateway import dispatching_event_adapter
 
 
 class Impl(dispatching_event_adapter.BaseDispatchingEventAdapter):
