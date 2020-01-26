@@ -26,14 +26,17 @@ from __future__ import annotations
 
 import abc
 import asyncio
-import logging
 import typing
 
-from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
-from hikari.net import gateway
-from hikari.orm import fabric as _fabric
 from hikari.orm.gateway import base_event_handler
+
+if typing.TYPE_CHECKING:
+    import logging
+
+    from hikari.internal_utilities import containers
+    from hikari.net import gateway
+    from hikari.orm import fabric as _fabric
 
 
 class BaseDispatchingEventAdapter(base_event_handler.BaseEventHandler):

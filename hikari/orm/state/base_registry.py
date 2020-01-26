@@ -22,28 +22,30 @@ Handles managing the state of the bot, and the cache.
 from __future__ import annotations
 
 import abc
-import datetime
 import typing
 
-from hikari.internal_utilities import containers
-from hikari.orm.models import applications
-from hikari.orm.models import audit_logs
-from hikari.orm.models import bases
-from hikari.orm.models import channels
-from hikari.orm.models import connections
-from hikari.orm.models import emojis
-from hikari.orm.models import gateway_bot
-from hikari.orm.models import guilds
-from hikari.orm.models import integrations
-from hikari.orm.models import invites
-from hikari.orm.models import members
-from hikari.orm.models import messages
-from hikari.orm.models import presences
-from hikari.orm.models import reactions
-from hikari.orm.models import roles
-from hikari.orm.models import users
-from hikari.orm.models import voices
-from hikari.orm.models import webhooks
+if typing.TYPE_CHECKING:
+    import datetime
+
+    from hikari.internal_utilities import containers
+    from hikari.orm.models import applications
+    from hikari.orm.models import audit_logs
+    from hikari.orm.models import bases
+    from hikari.orm.models import channels
+    from hikari.orm.models import connections
+    from hikari.orm.models import emojis
+    from hikari.orm.models import gateway_bot
+    from hikari.orm.models import guilds
+    from hikari.orm.models import integrations
+    from hikari.orm.models import invites
+    from hikari.orm.models import members
+    from hikari.orm.models import messages
+    from hikari.orm.models import presences
+    from hikari.orm.models import reactions
+    from hikari.orm.models import roles
+    from hikari.orm.models import users
+    from hikari.orm.models import voices
+    from hikari.orm.models import webhooks
 
 
 class BaseRegistry(abc.ABC):

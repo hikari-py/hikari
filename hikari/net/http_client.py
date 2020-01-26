@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
 Implementation of a basic HTTP client that uses aiohttp to interact with the
-V7 Discord API.
+V6 Discord API.
 """
 from __future__ import annotations
 
@@ -27,7 +27,6 @@ import contextlib
 import datetime
 import email.utils
 import json
-import ssl
 import typing
 import uuid
 
@@ -38,12 +37,16 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import conversions
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import unspecified
-from hikari.net import errors
 from hikari.net import base_http_client
+from hikari.net import errors
 from hikari.net import ratelimits
 from hikari.net import routes
+
+if typing.TYPE_CHECKING:
+    import ssl
+
+    from hikari.internal_utilities import type_hints
 
 
 class HTTPClient(base_http_client.BaseHTTPClient):
@@ -56,7 +59,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
     def __init__(
         self,
         *,
-        base_url="https://discordapp.com/api/v7",
+        base_url="https://discordapp.com/api/v6",
         allow_redirects: bool = False,
         connector: aiohttp.BaseConnector = None,
         proxy_headers: aiohttp.typedefs.LooseHeaders = None,
@@ -188,19 +191,23 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 reset = float(headers.get("X-RateLimit-Reset", "0"))
                 reset_date = datetime.datetime.fromtimestamp(reset, tz=datetime.timezone.utc)
                 now_date = email.utils.parsedate_to_datetime(headers["Date"])
+                content_type = resp.headers["Content-Type"]
 
                 status = resp.status
 
-                if resp.content_type == "application/json":
+                if status == 204:
+                    body = None
+                if content_type == "application/json":
                     body = self.json_deserialize(raw_body)
-                elif resp.content_type == "text/plain" or resp.content_type == "text/html":
+                elif content_type == "text/plain" or content_type == "text/html":
                     await self._handle_bad_response(
                         backoff,
-                        f"Received unexpected response of type {resp.content_type}",
+                        f"Received unexpected response of type {content_type}",
                         compiled_route,
                         raw_body.decode(),
                         status,
                     )
+                    continue
                 else:
                     body = None
 
@@ -236,6 +243,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 await self._handle_bad_response(
                     backoff, "Received a server error response", compiled_route, message, status
                 )
+                continue
 
             return body
 
@@ -2205,7 +2213,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_EMBED.compile(self.PATCH, guild_id=guild_id)
-        return await self._request(route, json_body=embed)
+        return await self._request(route, json_body=embed, reason=reason)
 
     async def get_guild_vanity_url(self, guild_id: str) -> containers.JSONObject:
         """

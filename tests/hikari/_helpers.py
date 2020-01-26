@@ -18,18 +18,22 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
+import contextlib
 import copy
 import functools
 import inspect
 import logging
 import queue
 import re
+import socket
 import threading
+import time
 import typing
 import warnings
 import weakref
+from unittest import mock
 
-import asyncmock as mock
+import async_timeout
 import pytest
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +60,6 @@ def mock_methods_on(obj, except_=(), also_mock=()):
 
     except_ = set(except_)
     also_mock = set(also_mock)
-
     checked = set()
 
     def predicate(name, member):
@@ -108,6 +111,8 @@ def assert_raises(test=None, *, type_, checks=()):
                 logging.exception("Caught exception within test type raising bounds", exc_info=ex)
                 for i, check in enumerate(checks, start=1):
                     assert check(ex), f"Check #{i} ({check}) failed"
+            except AssertionError as ex:
+                raise AssertionError("assertion failed") from ex
             except BaseException as ex:
                 raise AssertionError(f"Expected {type_.__name__} to be raised but got {type(ex).__name__}") from ex
 
@@ -379,3 +384,58 @@ def retry(max_retries):
         return retry_wrapper
 
     return decorator
+
+
+class AsyncContextManagerMock:
+    def __init__(self, callback=lambda: None):
+        self.awaited_aenter = False
+        self.awaited_aexit = False
+        self.called = False
+        self.call_args = []
+        self.call_kwargs = {}
+        self.aexit_exc = None
+        self.callback = callback
+
+    async def __aenter__(self):
+        self.awaited_aenter = time.perf_counter()
+        return self.callback()
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self.aexit_exc = exc_val
+        self.awaited_aexit = time.perf_counter()
+
+    def __call__(self, *args, **kwargs):
+        self.called = time.perf_counter()
+        self.call_args = args
+        self.call_kwargs = kwargs
+        return self
+
+
+def timeout_after(time_period):
+    def decorator(func):
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs):
+            thrown_timeout_error = None
+
+            try:
+                async with async_timeout.timeout(time_period):
+                    try:
+                        await func(*args, **kwargs)
+                    except asyncio.TimeoutError as ex:
+                        thrown_timeout_error = ex
+            except asyncio.TimeoutError as ex:
+                raise AssertionError(f"Test took too long (> {time_period}s) and thus failed.") from ex
+
+            if thrown_timeout_error is not None:
+                raise thrown_timeout_error
+
+        return wrapper
+
+    return decorator
+
+
+def free_port():
+    with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(("", 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()[1]

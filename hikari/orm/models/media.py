@@ -22,21 +22,24 @@ Represents various forms of media such as images.
 from __future__ import annotations
 
 import abc
-import asyncio
 import dataclasses
-import io
 import re
 import typing
-from concurrent import futures
 
 import aiofiles
 import aiohttp
 
-from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
 from hikari.orm.models import bases
+
+if typing.TYPE_CHECKING:
+    import asyncio
+    import io
+    from concurrent import futures
+
+    from hikari.internal_utilities import containers
 
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
@@ -116,9 +119,7 @@ class Attachment(bases.BaseModel, bases.SnowflakeMixin):
             # the information incrementally between the response stream and the threadpool without reading the
             # entire content into memory at once, which is more efficient on memory usage for large files.
             async with aiofiles.open(path, "wb", executor=executor, loop=loop) as afp:
-                block = ...
-                while block is not None:
-                    block = await resp.content.readany()
+                while block := await resp.content.readany():
                     await afp.write(block)
 
 

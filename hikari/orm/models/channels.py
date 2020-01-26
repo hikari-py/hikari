@@ -33,13 +33,20 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.orm import fabric
+from hikari.internal_utilities import type_hints
+from hikari.internal_utilities import unspecified
 from hikari.orm.models import bases
-from hikari.orm.models import guilds as _guild
 from hikari.orm.models import members
 from hikari.orm.models import overwrites
 from hikari.orm.models import users
 from hikari.orm.models import webhooks
+
+if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import storage
+    from hikari.orm import fabric
+    from hikari.orm.models import embeds
+    from hikari.orm.models import messages
+    from hikari.orm.models import guilds as _guild
 
 #: Valid types for a recipient of a DM.
 DMRecipientT = typing.Union[users.User, users.OAuth2User]
@@ -177,6 +184,45 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
     #:
     #: :type: :class:`int` or :class:`None`
     last_message_id: typing.Optional[int]
+
+    @aio.optional_await("send message to channel")
+    async def send(
+        self,
+        content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        embed: type_hints.NotRequired[embeds.Embed] = unspecified.UNSPECIFIED,
+        files: type_hints.NotRequired[typing.Collection[storage.FileLikeT]] = unspecified.UNSPECIFIED,
+        delete_after: type_hints.NotRequired[float] = unspecified.UNSPECIFIED,
+    ) -> messages.Message:
+        """
+        Send a message to this channel.
+
+        Args:
+            content:
+                The optional textual content.
+            embed:
+                The optional embed to send.
+            files:
+                A collection of optional attachments.
+            delete_after:
+                An optional period to delete the message after.
+
+        Returns:
+            The created message.
+
+        Note:
+            You must specify at least one of `content`, `embed` or `attachments` for this to be a valid API call.
+        """
+        kwargs: typing.Dict[str, typing.Any] = {}
+        transformations.put_if_specified(kwargs, "content", content)
+        transformations.put_if_specified(kwargs, "embed", embed)
+        transformations.put_if_specified(kwargs, "attachments", files)
+
+        message: messages.Message = await self._fabric.http_adapter.create_message(self, **kwargs)
+
+        if delete_after is not unspecified.UNSPECIFIED:
+            asyncio.get_running_loop().call_later(delete_after, message.delete)
+
+        return message
 
     @aio.optional_await("trigger typing for 10s")
     async def trigger_typing(self) -> None:

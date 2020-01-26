@@ -68,7 +68,7 @@ class ShardOptions:
 #: Use an appropriate number of shards for the size of the bot being run.
 AUTO_SHARD = ShardOptions((), 0)
 #: Use no shards.
-NO_SHARDS = ShardOptions([None], 1)
+NO_SHARDS = ShardOptions((None,), 1)
 
 # This is rather long and obnoxious.
 _DEFAULT_CHUNK_MODE = dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES
@@ -84,13 +84,13 @@ class ClientOptions:
     chunk_mode: dispatching_event_adapter_impl.AutoRequestChunksMode = _DEFAULT_CHUNK_MODE
     connector: type_hints.Nullable[aiohttp.BaseConnector] = None
     debug: bool = False
-    enable_guild_subscription_events = True
+    enable_guild_subscription_events: bool = True
     gateway_intents: type_hints.Nullable[gateway.GatewayIntent] = None
     http_timeout: type_hints.Nullable[float] = None
     large_guild_threshold: int = 250
     max_user_dm_channel_count: int = 100
     max_message_cache_size: int = 100
-    presence: type_hints.Nullable[presences.Presence] = presences.Presence()
+    presence: type_hints.Nullable[presences.Presence] = dataclasses.field(default_factory=presences.Presence)
     proxy_auth: type_hints.Nullable[aiohttp.BasicAuth] = None
     proxy_headers: type_hints.Nullable[aiohttp.typedefs.LooseHeaders] = None
     proxy_url: type_hints.Nullable[str] = None

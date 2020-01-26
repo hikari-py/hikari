@@ -27,6 +27,12 @@ def long_description():
         return fp.read()
 
 
+def parse_requirements():
+    with open("requirements.txt") as fp:
+        dependencies = (d.strip() for d in fp.read().split("\n") if d.strip())
+        return [d for d in dependencies if not d.startswith("#")]
+
+
 setuptools.setup(
     name="hikari",
     version=__version__,
@@ -39,30 +45,8 @@ setuptools.setup(
     url="https://gitlab.com/nekokatt/hikari",
     packages=setuptools.find_namespace_packages(include=["hikari*"]),
     python_requires=">=3.8.0,<3.10",
-    install_requires=[
-        "aiofiles~=0.4",
-        "aiohttp~=3.6",
-    ],
-    extras_require={
-        "test": [
-            "asyncmock~=0.4",
-            "async-timeout~=3.0",
-            "coverage~=5.0",
-            "nox",
-            "pytest~=5.3",
-            "pytest-asyncio~=0.10",
-            "pytest-cov~=2.8",
-            "pytest-html~=2.0",
-            "pytest-testdox~=1.2",
-        ],
-        "documentation": [
-            "requests",
-            "Jinja2",
-            "sphinx~=2.3",
-            "sphinx-autodoc-typehints~=1.10",
-            "sphinx-bootstrap-theme~=0.7",
-        ],
-    },
+    install_requires=parse_requirements(),
+    include_package_data=True,
     test_suite="tests",
     zip_safe=False,
     classifiers=[
