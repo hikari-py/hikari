@@ -434,6 +434,58 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     @typing.overload
+    async def fetch_reactors(
+        self,
+        reaction: _reactions.Reaction,
+        *,
+        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+    ) -> typing.AsyncIterator[_users.BaseUser]:
+        ...
+
+    @abc.abstractmethod
+    @typing.overload
+    async def fetch_reactors(
+        self,
+        reaction: _emojis.EmojiLikeT,
+        *,
+        message: _messages.Message,
+        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+    ) -> typing.AsyncIterator[_users.BaseUser]:
+        ...
+
+    @abc.abstractmethod
+    @typing.overload
+    async def fetch_reactors(
+        self,
+        reaction: _emojis.EmojiLikeT,
+        *,
+        channel: _channels.ChannelLikeT,
+        message: bases.SnowflakeLikeT,
+        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+    ) -> typing.AsyncIterator[_users.BaseUser]:
+        ...
+
+    @abc.abstractmethod
+    async def fetch_reactors(
+        self,
+        reaction,
+        *,
+        channel=unspecified.UNSPECIFIED,
+        message=unspecified.UNSPECIFIED,
+        before=unspecified.UNSPECIFIED,
+        after=unspecified.UNSPECIFIED,
+        limit=unspecified.UNSPECIFIED,
+    ):
+        ...
+
+    @abc.abstractmethod
+    @typing.overload
     async def update_message(
         self,
         message: bases.SnowflakeLikeT,

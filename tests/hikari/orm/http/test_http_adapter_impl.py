@@ -550,6 +550,11 @@ class TestHTTPAdapterImpl:
             message_id="322222212121", channel_id="532432123"
         )
 
+    @_helpers.todo_implement
+    @pytest.mark.asyncio
+    async def test_fetch_reactors(self, fabric_impl):
+        raise NotImplementedError
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         ["message", "channel"],
