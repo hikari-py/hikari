@@ -244,12 +244,12 @@ class BaseHTTPAdapter(abc.ABC):
     @abc.abstractmethod
     @typing.overload
     async def fetch_message(
-        self, message: bases.SnowflakeLikeT, *, channel: _channels.TextChannelLikeT
+        self, message: bases.SnowflakeLikeT, channel: _channels.TextChannelLikeT,
     ) -> _messages.Message:
         ...
 
     @abc.abstractmethod
-    async def fetch_message(self, message, *, channel=unspecified.UNSPECIFIED):
+    async def fetch_message(self, message, channel=unspecified.UNSPECIFIED):
         """
         Get the message with the given message ID from the channel with the given channel ID.
 
@@ -319,13 +319,13 @@ class BaseHTTPAdapter(abc.ABC):
     @abc.abstractmethod
     @typing.overload
     async def create_reaction(
-        self, message: bases.SnowflakeLikeT, emoji: _emojis.KnownEmojiLikeT, *, channel: _channels.ChannelLikeT,
+        self, message: bases.SnowflakeLikeT, emoji: _emojis.KnownEmojiLikeT, channel: _channels.ChannelLikeT,
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def create_reaction(
-        self, message, emoji, *, channel=unspecified.UNSPECIFIED,
+        self, message, emoji, channel=unspecified.UNSPECIFIED,
     ):
         """
         Add a reaction to the given message in the given channel or user DM.
@@ -355,16 +355,15 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         reaction: _emojis.EmojiLikeT,
         user: _users.BaseUserLikeT,
-        *,
-        channel: _channels.ChannelLikeT,
         message: bases.SnowflakeLikeT,
+        channel: _channels.ChannelLikeT,
     ) -> None:
         ...
 
     @abc.abstractmethod
     @typing.overload
     async def delete_reaction(
-        self, reaction: _emojis.EmojiLikeT, user: _users.BaseUserLikeT, *, message: _messages.Message,
+        self, reaction: _emojis.EmojiLikeT, user: _users.BaseUserLikeT, message: _messages.Message,
     ) -> None:
         ...
 
@@ -375,7 +374,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def delete_reaction(
-        self, reaction, user, *, channel=unspecified.UNSPECIFIED, message=unspecified.UNSPECIFIED,
+        self, reaction, user, message=unspecified.UNSPECIFIED, channel=unspecified.UNSPECIFIED,
     ):
         """
         Remove a reaction made by a given user using a given emoji on a given message in a given channel or user DM.
@@ -403,7 +402,7 @@ class BaseHTTPAdapter(abc.ABC):
     @abc.abstractmethod
     @typing.overload
     async def delete_all_reactions(
-        self, message: bases.SnowflakeLikeT, *, channel: _channels.GuildChannelLikeT
+        self, message: bases.SnowflakeLikeT, channel: _channels.GuildChannelLikeT,
     ) -> None:
         ...
 
@@ -414,7 +413,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def delete_all_reactions(
-        self, message, *, channel=unspecified.UNSPECIFIED,
+        self, message, channel=unspecified.UNSPECIFIED,
     ):
         """
         Deletes all reactions from a given message in a given channel.
@@ -449,8 +448,8 @@ class BaseHTTPAdapter(abc.ABC):
     async def fetch_reactors(
         self,
         reaction: _emojis.EmojiLikeT,
-        *,
         message: _messages.Message,
+        *,
         before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
@@ -462,9 +461,9 @@ class BaseHTTPAdapter(abc.ABC):
     async def fetch_reactors(
         self,
         reaction: _emojis.EmojiLikeT,
-        *,
-        channel: _channels.ChannelLikeT,
         message: bases.SnowflakeLikeT,
+        channel: _channels.ChannelLikeT,
+        *,
         before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
@@ -475,9 +474,9 @@ class BaseHTTPAdapter(abc.ABC):
     async def fetch_reactors(
         self,
         reaction,
-        *,
-        channel=unspecified.UNSPECIFIED,
         message=unspecified.UNSPECIFIED,
+        channel=unspecified.UNSPECIFIED,
+        *,
         before=unspecified.UNSPECIFIED,
         after=unspecified.UNSPECIFIED,
         limit=unspecified.UNSPECIFIED,
@@ -489,8 +488,8 @@ class BaseHTTPAdapter(abc.ABC):
     async def update_message(
         self,
         message: bases.SnowflakeLikeT,
-        *,
         channel: _channels.ChannelLikeT,
+        *,
         content: type_hints.NullableNotRequired[str] = unspecified.UNSPECIFIED,
         embed: type_hints.NullableNotRequired[_embeds.Embed] = unspecified.UNSPECIFIED,
         flags: type_hints.NotRequired[_messages.MessageFlagLikeT] = unspecified.UNSPECIFIED,
@@ -513,8 +512,8 @@ class BaseHTTPAdapter(abc.ABC):
     async def update_message(
         self,
         message,
-        *,
         channel=unspecified.UNSPECIFIED,
+        *,
         content=unspecified.UNSPECIFIED,
         embed=unspecified.UNSPECIFIED,
         flags=unspecified.UNSPECIFIED,
@@ -729,7 +728,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     @typing.overload
-    async def pin_message(self, message: bases.SnowflakeLikeT, *, channel: _channels.TextChannelLikeT,) -> None:
+    async def pin_message(self, message: bases.SnowflakeLikeT, channel: _channels.TextChannelLikeT) -> None:
         ...
 
     @abc.abstractmethod
@@ -738,7 +737,7 @@ class BaseHTTPAdapter(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def pin_message(self, message, *, channel=unspecified.UNSPECIFIED):
+    async def pin_message(self, message, channel=unspecified.UNSPECIFIED):
         """
         Add a pinned message to the channel.
 
@@ -757,7 +756,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     @typing.overload
-    async def unpin_message(self, message: bases.SnowflakeLikeT, *, channel: _channels.TextChannelLikeT,) -> None:
+    async def unpin_message(self, message: bases.SnowflakeLikeT, channel: _channels.TextChannelLikeT) -> None:
         ...
 
     @abc.abstractmethod
@@ -766,7 +765,7 @@ class BaseHTTPAdapter(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def unpin_message(self, message, *, channel=unspecified.UNSPECIFIED):
+    async def unpin_message(self, message, channel=unspecified.UNSPECIFIED):
         """
         Remove a pinned message from the channel. This will only unpin the message. It will not delete it.
 
@@ -785,7 +784,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     @typing.overload
-    async def fetch_guild_emoji(self, emoji: bases.SnowflakeLikeT, *, guild: _guilds.GuildLikeT) -> _emojis.GuildEmoji:
+    async def fetch_guild_emoji(self, emoji: bases.SnowflakeLikeT, guild: _guilds.GuildLikeT) -> _emojis.GuildEmoji:
         ...
 
     @abc.abstractmethod
@@ -794,7 +793,7 @@ class BaseHTTPAdapter(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_guild_emoji(self, emoji, *, guild=unspecified.UNSPECIFIED):
+    async def fetch_guild_emoji(self, emoji, guild=unspecified.UNSPECIFIED):
         """
         Gets an emoji from a given guild and emoji IDs
 
@@ -876,8 +875,8 @@ class BaseHTTPAdapter(abc.ABC):
     async def update_guild_emoji(
         self,
         emoji: bases.SnowflakeLikeT,
-        *,
         guild: _guilds.GuildLikeT,
+        *,
         name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         roles: type_hints.NotRequired[typing.Collection[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
@@ -900,8 +899,8 @@ class BaseHTTPAdapter(abc.ABC):
     async def update_guild_emoji(
         self,
         emoji,
-        *,
         guild=unspecified.UNSPECIFIED,
+        *,
         name=unspecified.UNSPECIFIED,
         roles=unspecified.UNSPECIFIED,
         reason=unspecified.UNSPECIFIED,
@@ -932,7 +931,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     @typing.overload
-    async def delete_guild_emoji(self, emoji: bases.SnowflakeLikeT, *, guild: _guilds.GuildLikeT) -> None:
+    async def delete_guild_emoji(self, emoji: bases.SnowflakeLikeT, guild: _guilds.GuildLikeT) -> None:
         ...
 
     @abc.abstractmethod
@@ -941,7 +940,7 @@ class BaseHTTPAdapter(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def delete_guild_emoji(self, emoji, *, guild=unspecified.UNSPECIFIED):
+    async def delete_guild_emoji(self, emoji, guild=unspecified.UNSPECIFIED):
         """
         Deletes an emoji from a given guild
 
@@ -1233,7 +1232,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     @typing.overload
-    async def fetch_member(self, user: _users.BaseUserLikeT, *, guild: _guilds.GuildLikeT) -> _members.Member:
+    async def fetch_member(self, user: _users.BaseUserLikeT, guild: _guilds.GuildLikeT) -> _members.Member:
         ...
 
     @abc.abstractmethod
@@ -1242,7 +1241,7 @@ class BaseHTTPAdapter(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_member(self, user, *, guild=unspecified.UNSPECIFIED):
+    async def fetch_member(self, user, guild=unspecified.UNSPECIFIED):
         """
         Gets a given guild member.
 
@@ -1272,8 +1271,8 @@ class BaseHTTPAdapter(abc.ABC):
     async def update_member(
         self,
         member: bases.SnowflakeLikeT,
-        *,
         guild: _guilds.GuildLikeT,
+        *,
         nick: type_hints.NullableNotRequired[str] = unspecified.UNSPECIFIED,
         roles: type_hints.NotRequired[typing.Collection[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
         mute: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
@@ -1306,8 +1305,8 @@ class BaseHTTPAdapter(abc.ABC):
     async def update_member(
         self,
         member,
-        *,
         guild=unspecified.UNSPECIFIED,
+        *,
         nick=unspecified.UNSPECIFIED,
         roles=unspecified.UNSPECIFIED,
         mute=unspecified.UNSPECIFIED,
@@ -1382,8 +1381,8 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         role: _roles.RoleLikeT,
         member: bases.SnowflakeLikeT,
-        *,
         guild: _guilds.GuildLikeT,
+        *,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
@@ -1401,7 +1400,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def add_role_to_member(
-        self, role, member, *, guild=unspecified.UNSPECIFIED, reason=unspecified.UNSPECIFIED,
+        self, role, member, guild=unspecified.UNSPECIFIED, *, reason=unspecified.UNSPECIFIED,
     ):
         """
         Adds a role to a given member.
@@ -1430,8 +1429,8 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         role: _roles.RoleLikeT,
         member: bases.SnowflakeLikeT,
-        *,
         guild: _guilds.GuildLikeT,
+        *,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
@@ -1449,7 +1448,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def remove_role_from_member(
-        self, role, member, *, guild=unspecified.UNSPECIFIED, reason=unspecified.UNSPECIFIED,
+        self, role, member, guild=unspecified.UNSPECIFIED, *, reason=unspecified.UNSPECIFIED,
     ):
         """
         Removed a role from a given member.
@@ -1477,8 +1476,8 @@ class BaseHTTPAdapter(abc.ABC):
     async def kick_member(
         self,
         member: bases.SnowflakeLikeT,
-        *,
         guild: _guilds.GuildLikeT,
+        *,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
@@ -1492,7 +1491,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def kick_member(
-        self, member, *, guild=unspecified.UNSPECIFIED, reason=unspecified.UNSPECIFIED,
+        self, member, guild=unspecified.UNSPECIFIED, *, reason=unspecified.UNSPECIFIED,
     ):
         """
         Kicks a user from a given guild.
@@ -1558,8 +1557,8 @@ class BaseHTTPAdapter(abc.ABC):
     async def ban_member(
         self,
         member: bases.SnowflakeLikeT,
-        *,
         guild: _guilds.GuildLikeT,
+        *,
         delete_message_days: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> None:
@@ -1580,8 +1579,8 @@ class BaseHTTPAdapter(abc.ABC):
     async def ban_member(
         self,
         member,
-        *,
         guild=unspecified.UNSPECIFIED,
+        *,
         delete_message_days=unspecified.UNSPECIFIED,
         reason=unspecified.UNSPECIFIED,
     ):
@@ -1743,8 +1742,8 @@ class BaseHTTPAdapter(abc.ABC):
     async def update_role(
         self,
         role: _roles.PartialRoleLikeT,
-        *,
         guild: _guilds.GuildLikeT,
+        *,
         name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         permissions: type_hints.NotRequired[_permissions.PermissionLikeT] = unspecified.UNSPECIFIED,
         color: type_hints.NotRequired[_colors.ColorCompatibleT] = unspecified.UNSPECIFIED,
@@ -1773,8 +1772,8 @@ class BaseHTTPAdapter(abc.ABC):
     async def update_role(
         self,
         role: _roles.PartialRoleLikeT,
-        *,
         guild=unspecified.UNSPECIFIED,
+        *,
         name=unspecified.UNSPECIFIED,
         permissions=unspecified.UNSPECIFIED,
         color=unspecified.UNSPECIFIED,
@@ -1816,7 +1815,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     @typing.overload
-    async def delete_role(self, role: _roles.PartialRoleLikeT, *, guild: _guilds.GuildLikeT) -> None:
+    async def delete_role(self, role: _roles.PartialRoleLikeT, guild: _guilds.GuildLikeT) -> None:
         ...
 
     @abc.abstractmethod
@@ -1825,7 +1824,7 @@ class BaseHTTPAdapter(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def delete_role(self, role, *, guild=unspecified.UNSPECIFIED):
+    async def delete_role(self, role, guild=unspecified.UNSPECIFIED):
         """
          Deletes a role from a given guild.
 
