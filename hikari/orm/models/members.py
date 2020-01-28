@@ -35,6 +35,7 @@ from hikari.orm.models import users
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import guilds
     from hikari.orm.models import presences
@@ -69,12 +70,12 @@ class Member(users.User, delegate_fabricated=True):
     #: The optional nickname of the member.
     #:
     #: :type: :class:`str` or `None`
-    nick: typing.Optional[str]
+    nick: type_hints.Nullable[str]
 
     #: The optional date/time that the member Nitro-boosted the guild.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    premium_since: typing.Optional[datetime.datetime]
+    premium_since: type_hints.Nullable[datetime.datetime]
 
     #: Whether the user is deafened in voice.
     #:
@@ -89,7 +90,7 @@ class Member(users.User, delegate_fabricated=True):
     #: The user's online presence. This will be `None` until populated by a gateway event.
     #:
     #: :type: :class:`hikari.orm.models.presences.Presence` or :class:`None`
-    presence: typing.Optional[presences.MemberPresence]
+    presence: type_hints.Nullable[presences.MemberPresence]
 
     __copy_by_ref__ = ("presence", "guild")
 

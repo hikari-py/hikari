@@ -21,6 +21,7 @@ from __future__ import annotations
 import dataclasses
 import typing
 
+from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import reprs
 
 
@@ -29,7 +30,7 @@ def test_repr_with_no_args():
     class User:
         id: int
         name: str
-        nick: typing.Optional[str]
+        nick: type_hints.Nullable[str]
         roles: typing.Sequence[int]
 
         __repr__ = reprs.repr_of()
@@ -43,7 +44,7 @@ def test_repr_with_args():
     class User:
         id: int
         name: str
-        nick: typing.Optional[str]
+        nick: type_hints.Nullable[str]
         roles: typing.Sequence[int]
 
         __repr__ = reprs.repr_of("id", "name")
@@ -63,7 +64,7 @@ def test_repr_with_nested_args():
     class User:
         id: int
         name: str
-        nick: typing.Optional[str]
+        nick: type_hints.Nullable[str]
         role: Role
 
         __repr__ = reprs.repr_of("id", "role.name")

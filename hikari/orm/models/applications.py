@@ -30,6 +30,7 @@ from hikari.orm.models import bases
 from hikari.orm.models import teams
 
 if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import users
 
@@ -70,7 +71,7 @@ class Application(bases.BaseModel, bases.SnowflakeMixin):
     #: The hash of the application's icon.
     #:
     #: :type: :class:`str` or :class:`None`
-    icon_hash: typing.Optional[str]
+    icon_hash: type_hints.Nullable[str]
 
     #: The application's description
     #:
@@ -100,7 +101,7 @@ class Application(bases.BaseModel, bases.SnowflakeMixin):
     #: The summary field for this application's primary SKU's store page if this is a game sold on Discord.
     #:
     #: :type: :class:`str` or :class:`None`
-    summary: typing.Optional[str]
+    summary: type_hints.Nullable[str]
 
     #: The base64 encoded key used for "GetTicket" in the GameSDK.
     #:
@@ -110,27 +111,27 @@ class Application(bases.BaseModel, bases.SnowflakeMixin):
     #: The team that the application belongs to if applicable.
     #:
     #: :type: :class:`hikari.orm.models.teams.Team` or :class:`None`
-    team: typing.Optional[teams.Team]
+    team: type_hints.Nullable[teams.Team]
 
     #: The ID of the guild the application is linked to if it's a game sold on Discord.
     #:
     #: :type: :class:`int` or :class:`None`
-    guild_id: typing.Optional[int]
+    guild_id: type_hints.Nullable[int]
 
     #: The ID of the application's linked Game SKU if it's a game sold on Discord.
     #:
     #: :type: :class:`int` or :class:`None`
-    primary_sku_id: typing.Optional[int]
+    primary_sku_id: type_hints.Nullable[int]
 
     #: The URL slug that links to the application's store page if it's a game sold on Discord.
     #:
     #: :type: :class:`str` or :class:`None`
-    slug_url: typing.Optional[str]
+    slug_url: type_hints.Nullable[str]
 
     #: The hash of the application's store embed image if it is a game sold on Discord.
     #:
     #: :type: :class:`str` or :class:`None`
-    cover_image_hash: typing.Optional[str]
+    cover_image_hash: type_hints.Nullable[str]
 
     __repr__ = reprs.repr_of("id", "name", "description")
 

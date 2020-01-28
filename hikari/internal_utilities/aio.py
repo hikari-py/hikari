@@ -28,7 +28,7 @@ import typing
 from hikari.internal_utilities import assertions
 
 CoroutineFunctionT = typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, typing.Any]]
-ReturnT = typing.TypeVar("ReturnT")
+ReturnT = typing.TypeVar("ReturnT", covariant=True)
 
 
 def optional_await(
@@ -69,6 +69,9 @@ class PartialCoroutineProtocolT(typing.Protocol[ReturnT]):
     """Represents the type of a :class:`functools.partial` wrapping an :mod:`asyncio` coroutine."""
 
     def __call__(self) -> typing.Coroutine[None, None, ReturnT]:
+        ...
+
+    def __await__(self):
         ...
 
 
