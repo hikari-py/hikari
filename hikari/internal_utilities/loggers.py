@@ -24,8 +24,10 @@ import logging
 import typing
 import uuid
 
+from hikari.internal_utilities import type_hints
 
-def get_named_logger(obj: typing.Optional[typing.Any] = None, *extras: typing.Any) -> logging.Logger:
+
+def get_named_logger(obj: type_hints.Nullable[typing.Any] = None, *extra_objs: typing.Any) -> logging.Logger:
     """
     Builds an appropriately named logger. If called with no arguments or with `NoneType`, the current module is used
     to produce the name. If this is run from a location where no module info is available, a random UUID is used
@@ -40,7 +42,7 @@ def get_named_logger(obj: typing.Optional[typing.Any] = None, *extras: typing.An
     Args:
         obj:
             the object to study to produce a logger for.
-        extras:
+        extra_objs:
             optional extra components to add to the end of the logger name.
 
     Returns:
@@ -72,8 +74,8 @@ def get_named_logger(obj: typing.Optional[typing.Any] = None, *extras: typing.An
     except AttributeError:
         obj = str(uuid.uuid4())
 
-    if extras:
-        extras = ", ".join(map(str, extras))
+    if extra_objs:
+        extras = ", ".join(map(str, extra_objs))
         obj = f"{obj}[{extras}]"
 
     return logging.getLogger(obj)

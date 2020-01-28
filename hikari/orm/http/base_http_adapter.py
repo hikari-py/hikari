@@ -148,13 +148,11 @@ class BaseHTTPAdapter(abc.ABC):
         nsfw: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
         rate_limit_per_user: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         bitrate: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        user_limit: int = unspecified.UNSPECIFIED,
+        user_limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         permission_overwrites: type_hints.NotRequired[
             typing.Collection[_overwrites.Overwrite]
         ] = unspecified.UNSPECIFIED,
-        parent_category: type_hints.NotRequired[
-            typing.Optional[_channels.GuildCategoryLikeT]
-        ] = unspecified.UNSPECIFIED,
+        parent_category: type_hints.NullableNotRequired[_channels.GuildCategoryLikeT] = unspecified.UNSPECIFIED,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> _channels.Channel:
         """
@@ -401,9 +399,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     @typing.overload
-    async def delete_all_reactions(
-        self, message: bases.SnowflakeLikeT, channel: _channels.GuildChannelLikeT,
-    ) -> None:
+    async def delete_all_reactions(self, message: bases.SnowflakeLikeT, channel: _channels.GuildChannelLikeT,) -> None:
         ...
 
     @abc.abstractmethod
@@ -1137,7 +1133,7 @@ class BaseHTTPAdapter(abc.ABC):
         permission_overwrites: type_hints.NotRequired[
             typing.Collection[_overwrites.Overwrite]
         ] = unspecified.UNSPECIFIED,
-        parent_category: type_hints.NotRequired[_channels.GuildCategoryLikeT] = unspecified.Unspecified,
+        parent_category: type_hints.NullableNotRequired[_channels.GuildCategoryLikeT] = unspecified.UNSPECIFIED,
         nsfw: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> _channels.GuildChannel:
@@ -1350,7 +1346,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     async def update_my_nickname(
         self,
-        nick: typing.Optional[str],
+        nick: type_hints.Nullable[str],
         guild: _guilds.GuildLikeT,
         *,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
@@ -1873,7 +1869,7 @@ class BaseHTTPAdapter(abc.ABC):
         *,
         compute_prune_count: bool = False,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-    ) -> typing.Optional[int]:
+    ) -> type_hints.Nullable[int]:
         """
         Prunes members of a given guild based on the number of inactive days.
 

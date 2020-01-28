@@ -29,6 +29,7 @@ from hikari.internal_utilities import loggers
 from hikari.orm.gateway import base_chunker
 
 if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import guilds
 
@@ -52,7 +53,7 @@ class BasicChunkerImpl(base_chunker.BaseChunker):
         limit: int = 0,
         presences: bool = True,
         query: str = "",
-        user_ids: typing.Optional[typing.Sequence[int]] = None,
+        user_ids: type_hints.Nullable[typing.Sequence[int]] = None,
     ) -> None:
         kwargs = {"presences": presences}
         if user_ids:

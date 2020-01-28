@@ -35,6 +35,7 @@ from hikari.orm.models import permissions
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import channels
     from hikari.orm.models import emojis
@@ -79,12 +80,12 @@ class PartialGuild(bases.BaseModel, bases.SnowflakeMixin):
     #: Hash code for the guild banner, if it has one.
     #:
     #: :type: :class:`str` or :class:`None`
-    banner_hash: typing.Optional[str]
+    banner_hash: type_hints.Nullable[str]
 
     #: Guild description, if the guild has one assigned. Currently this only applies to discoverable guilds.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.orm.models.roles.Role` objects
-    description: typing.Optional[str]
+    description: type_hints.Nullable[str]
 
     #: The hash of the icon of the guild.
     #:
@@ -104,7 +105,7 @@ class PartialGuild(bases.BaseModel, bases.SnowflakeMixin):
     #: Code for the vanity URL, if the guild has one.
     #:
     #: :type: :class:`str` or :class:`None`
-    vanity_url_code: typing.Optional[str]
+    vanity_url_code: type_hints.Nullable[str]
 
     __repr__ = reprs.repr_of("id", "name")
 
@@ -176,12 +177,12 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #: If the bot is not sharded, this will be `None`.
     #:
     #: :type: :class:`int` or :class:`None`
-    shard_id: typing.Optional[int]
+    shard_id: type_hints.Nullable[int]
 
     #: The AFK channel ID.
     #:
     #: :type: :class:`int`
-    afk_channel_id: typing.Optional[int]
+    afk_channel_id: type_hints.Nullable[int]
 
     #: The owner's ID.
     #:
@@ -191,22 +192,22 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #: The system channel ID.
     #:
     #: :type: :class:`int`
-    system_channel_id: typing.Optional[int]
+    system_channel_id: type_hints.Nullable[int]
 
     #: The voice region.
     #:
     #: :type: :class:`str`
-    voice_region: typing.Optional[str]
+    voice_region: type_hints.Nullable[str]
 
     #: The application ID of the creator of the guild. This is always `None` unless the guild was made by a bot.
     #:
     #: :type: :class:`int` or :class:`None`
-    creator_application_id: typing.Optional[int]
+    creator_application_id: type_hints.Nullable[int]
 
     #: Permissions for our user in the guild, minus channel overrides, if the user is in the guild.
     #:
     #: :type: :class:`hikari.orm.models.permissions.Permission` or :class:`None`
-    my_permissions: typing.Optional[permissions.Permission]
+    my_permissions: type_hints.Nullable[permissions.Permission]
 
     #: Timeout before a user is classed as being AFK in seconds.
     #:
@@ -217,7 +218,7 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #: :attr:`hikari.orm.models.guild.GuildFeature`
     #:
     #: :type: :class:`str` or :class:`None`
-    preferred_locale: typing.Optional[str]
+    preferred_locale: type_hints.Nullable[str]
 
     #: Default level for message notifications in this guild.
     #:
@@ -242,7 +243,7 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #: Number of members. Only stored if the information is actively available.
     #:
     #: :type: :class:`int` or :class:`None`
-    member_count: typing.Optional[int]
+    member_count: type_hints.Nullable[int]
 
     #: MFA level for this guild.
     #:
@@ -252,7 +253,7 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #: The date/time the bot user joined this guild, or :class:`None` if the bot is not in this guild.
     #:
     #: :type: :class:`datetime.datetime` or :class:`None`
-    joined_at: typing.Optional[datetime.datetime]
+    joined_at: type_hints.Nullable[datetime.datetime]
 
     #: True if the guild is considered to be large, or False if it is not. This is defined by whatever the large
     #: threshold for the gateway is set to.
@@ -298,12 +299,12 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #: Describes what can the system channel can do.
     #:
     #: :type: :class:`hikari.orm.models.guilds.SystemChannelFlag`
-    system_channel_flags: typing.Optional[SystemChannelFlag]
+    system_channel_flags: type_hints.Nullable[SystemChannelFlag]
 
     __repr__ = reprs.repr_of("id", "name", "is_unavailable", "is_large", "member_count", "shard_id")
 
     def __init__(
-        self, fabric_obj: fabric.Fabric, payload: containers.JSONObject, shard_id: typing.Optional[int]
+        self, fabric_obj: fabric.Fabric, payload: containers.JSONObject, shard_id: type_hints.Nullable[int]
     ) -> None:
         self._fabric = fabric_obj
         self.shard_id = shard_id
@@ -476,7 +477,7 @@ class Ban(bases.BaseModel):
     #: The reason for the ban, if there is one given.
     #:
     #: :type: :class:`str` or :class:`None`
-    reason: typing.Optional[str]
+    reason: type_hints.Nullable[str]
 
     #: The user who is banned.
     #:
@@ -506,7 +507,7 @@ class GuildEmbed(bases.BaseModel, bases.MarshalMixin):
     #: The ID of the embed's target channel if set.
     #:
     #: :type: :class:`int` or :class:`None`
-    channel_id: typing.Optional[int]
+    channel_id: type_hints.Nullable[int]
 
     __repr__ = reprs.repr_of("enabled", "channel_id")
 

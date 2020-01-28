@@ -35,6 +35,9 @@ from hikari.orm.models import bases
 from hikari.orm.models import colors
 from hikari.orm.models import media
 
+if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
+
 _MAX_EMBED_SIZE = 6000
 
 
@@ -66,11 +69,11 @@ class EmbedVideo(EmbedPart):
     __slots__ = ("url", "height", "width")
 
     #: A :class:`str` containing the URL to the video.
-    url: str
+    url: type_hints.Nullable[str]
     #: A :class:`int` containing the height of the video.
-    height: int
+    height: type_hints.Nullable[int]
     #: A :class:`int` containing the width of the video.
-    width: int
+    width: type_hints.Nullable[int]
 
     def __init__(self, url: str = None, height: int = None, width: int = None) -> None:
         super().__init__()
@@ -90,13 +93,13 @@ class EmbedImage(EmbedPart):
     __slots__ = ("url", "proxy_url", "height", "width")
 
     #: A :class:`str` containing the URL to the image.
-    url: str
+    url: type_hints.Nullable[str]
     #: A :class:`str` containing the proxied URL to the image.
-    proxy_url: str
+    proxy_url: type_hints.Nullable[str]
     #: A :class:`int` containing the height of the image.
-    height: int
+    height: type_hints.Nullable[int]
     #: A :class:`int` containing the width of the image.
-    width: int
+    width: type_hints.Nullable[int]
 
     def __init__(self, url: str = None, proxy_url: str = None, height: int = None, width: int = None) -> None:
         super().__init__()
@@ -117,9 +120,9 @@ class EmbedProvider(EmbedPart):
     __slots__ = ("name", "url")
 
     #: A :class:`str` containing the name of the provider of the embed.
-    name: str
+    name: type_hints.Nullable[str]
     #: A :class:`str` containing the URL of the provider for the embed.
-    url: str
+    url: type_hints.Nullable[str]
 
     def __init__(self, name: str = None, url: str = None) -> None:
         super().__init__()
@@ -138,13 +141,13 @@ class EmbedAuthor(EmbedPart):
     __slots__ = ("name", "url", "icon_url", "proxy_icon_url")
 
     #: A :class:`str` containing the name of the author for the embed.
-    name: str
+    name: type_hints.Nullable[str]
     #: A :class:`str` containing the URL link for the author in the embed.
-    url: str
+    url: type_hints.Nullable[str]
     #: A :class:`str` containing the URL link for the author's icon in the embed.
-    icon_url: str
+    icon_url: type_hints.Nullable[str]
     #: A :class:`str` containing the proxy URL link for the author's icon in the embed.
-    proxy_icon_url: str
+    proxy_icon_url: type_hints.Nullable[str]
 
     def __init__(self, name: str = None, url: str = None, icon_url: str = None, proxy_icon_url: str = None) -> None:
         super().__init__()
@@ -165,11 +168,11 @@ class EmbedFooter(EmbedPart):
     __slots__ = ("icon_url", "text", "proxy_icon_url")
 
     #: A :class:`str` containing the URL to the icon of this footer.
-    icon_url: str
+    icon_url: type_hints.Nullable[str]
     #: A :class:`str` containing the text content in this footer.
-    text: str
+    text: type_hints.Nullable[str]
     #: A :class:`str` containing the proxied URL to the icon of this footer.
-    proxy_icon_url: str
+    proxy_icon_url: type_hints.Nullable[str]
 
     def __init__(self, icon_url: str = None, text: str = None, proxy_icon_url: str = None) -> None:
         super().__init__()
@@ -236,29 +239,29 @@ class BaseEmbed(bases.BaseModel):
     )
 
     _type: str
-    _footer: typing.Optional[EmbedFooter]
-    _image: typing.Optional[EmbedImage]
-    _provider: typing.Optional[EmbedProvider]
-    _video: typing.Optional[EmbedVideo]
-    _thumbnail: typing.Optional[EmbedImage]
-    _author: typing.Optional[EmbedAuthor]
+    _footer: type_hints.Nullable[EmbedFooter]
+    _image: type_hints.Nullable[EmbedImage]
+    _provider: type_hints.Nullable[EmbedProvider]
+    _video: type_hints.Nullable[EmbedVideo]
+    _thumbnail: type_hints.Nullable[EmbedImage]
+    _author: type_hints.Nullable[EmbedAuthor]
     _fields: typing.MutableSequence[EmbedField]
 
-    _title: typing.Optional[str]
-    _description: typing.Optional[str]
-    _url: typing.Optional[str]
-    _timestamp: typing.Optional[datetime.datetime]
-    _color: typing.Optional[typing.Union[int, colors.Color]]
+    _title: type_hints.Nullable[str]
+    _description: type_hints.Nullable[str]
+    _url: type_hints.Nullable[str]
+    _timestamp: type_hints.Nullable[datetime.datetime]
+    _color: type_hints.Nullable[colors.Color]
 
     def __init__(
         self,
         *,
         type: str = "rich",
-        title: str = None,
-        description: str = None,
-        url: str = None,
-        timestamp: datetime.datetime = None,
-        color: typing.Union[int, colors.Color] = None,
+        title: type_hints.Nullable[str] = None,
+        description: type_hints.Nullable[str] = None,
+        url: type_hints.Nullable[str] = None,
+        timestamp: type_hints.Nullable[datetime.datetime] = None,
+        color: type_hints.Nullable[colors.Color] = None,
     ) -> None:
         self._type = type
         self.title = title
@@ -273,14 +276,14 @@ class BaseEmbed(bases.BaseModel):
         self._fields = []
 
     @property
-    def type(self) -> typing.Optional[str]:
+    def type(self) -> type_hints.Nullable[str]:
         """
         The embed type, if it is provided.
         """
         return self._type
 
     @property
-    def title(self) -> typing.Optional[str]:
+    def title(self) -> type_hints.Nullable[str]:
         """
         The title of the embed. Can be set and removed using the `del` operator additionally.
 
@@ -300,7 +303,7 @@ class BaseEmbed(bases.BaseModel):
         self._title = None
 
     @property
-    def url(self) -> typing.Optional[str]:
+    def url(self) -> type_hints.Nullable[str]:
         """
         The URL of the embed's title. Can be set and removed using the `del` operator additionally.
         """
@@ -315,7 +318,7 @@ class BaseEmbed(bases.BaseModel):
         self._url = None
 
     @property
-    def timestamp(self) -> typing.Optional[datetime.datetime]:
+    def timestamp(self) -> type_hints.Nullable[datetime.datetime]:
         """
         The timestamp to set on the embed. Can be set and removed using the `del` operator additionally.
         """
@@ -330,7 +333,7 @@ class BaseEmbed(bases.BaseModel):
         self._timestamp = None
 
     @property
-    def description(self) -> typing.Optional[str]:
+    def description(self) -> type_hints.Nullable[str]:
         """
         The description of the embed. Can be set and removed using the `del` operator additionally.
 
@@ -353,7 +356,7 @@ class BaseEmbed(bases.BaseModel):
         self._description = None
 
     @property
-    def color(self) -> typing.Optional[colors.Color]:
+    def color(self) -> type_hints.Nullable[colors.Color]:
         """
         The color of the embed. Can be set and removed using the `del` operator additionally.
 
@@ -363,7 +366,7 @@ class BaseEmbed(bases.BaseModel):
         return self._color
 
     @color.setter
-    def color(self, color: typing.Optional[typing.Union[colors.Color, int, tuple, list, str]]) -> None:
+    def color(self, color: type_hints.Nullable[typing.Union[colors.Color, typing.SupportsInt]]) -> None:
         self._color = colors.Color[color] if color is not None else None
 
     @color.deleter
@@ -374,7 +377,7 @@ class BaseEmbed(bases.BaseModel):
     colour = color
 
     @property
-    def footer(self) -> typing.Optional[EmbedFooter]:
+    def footer(self) -> type_hints.Nullable[EmbedFooter]:
         """
         The optional footer in this embed. Can also be removed using the `del` operator if you wish to remove
         it entirely.
@@ -391,7 +394,7 @@ class BaseEmbed(bases.BaseModel):
         self._footer = None
 
     @property
-    def image(self) -> typing.Optional[EmbedImage]:
+    def image(self) -> type_hints.Nullable[EmbedImage]:
         """
         The optional image for this embed. Can also be removed using the `del` operator if you wish to remove
         it entirely.
@@ -408,7 +411,7 @@ class BaseEmbed(bases.BaseModel):
         self._image = None
 
     @property
-    def thumbnail(self) -> typing.Optional[EmbedImage]:
+    def thumbnail(self) -> type_hints.Nullable[EmbedImage]:
         """
         The optional thumbnail for this embed. Can also be removed using the `del` operator if you wish to remove
         it entirely.
@@ -425,7 +428,7 @@ class BaseEmbed(bases.BaseModel):
         self._thumbnail = None
 
     @property
-    def author(self) -> typing.Optional[EmbedAuthor]:
+    def author(self) -> type_hints.Nullable[EmbedAuthor]:
         """
         The optional author for this embed. Can also be removed using the `del` operator if you wish to remove
         it entirely.
@@ -485,7 +488,7 @@ class BaseEmbed(bases.BaseModel):
         return d
 
     @classmethod
-    def from_dict(cls: typing.Type[EmbedT], payload: containers.JSONObject) -> EmbedT:
+    def from_dict(cls, payload: containers.JSONObject) -> EmbedT:
         """
         Parses an instance of this embed type from a raw Discord payload.
 
@@ -539,8 +542,8 @@ class ReceivedEmbed(BaseEmbed):
 
     __slots__ = ("_video", "_provider")
 
-    _video: typing.Optional[EmbedVideo]
-    _provider: typing.Optional[EmbedProvider]
+    _video: type_hints.Nullable[EmbedVideo]
+    _provider: type_hints.Nullable[EmbedProvider]
 
     @typing.overload
     def __init__(
@@ -561,7 +564,7 @@ class ReceivedEmbed(BaseEmbed):
         super().__init__(**kwargs)
 
     @property
-    def video(self) -> typing.Optional[EmbedVideo]:
+    def video(self) -> type_hints.Nullable[EmbedVideo]:
         """
         An optional video for this embed.
 
@@ -573,7 +576,7 @@ class ReceivedEmbed(BaseEmbed):
         return weakref.proxy(self._video) if self._video is not None else None
 
     @property
-    def provider(self) -> typing.Optional[EmbedProvider]:
+    def provider(self) -> type_hints.Nullable[EmbedProvider]:
         """
         An optional provider for the embed.
 
@@ -588,7 +591,7 @@ class ReceivedEmbed(BaseEmbed):
 FileOrUrlT = typing.Union[str]
 
 
-def _extract_url(url: FileOrUrlT) -> typing.Tuple[typing.Optional[str], typing.Optional[media.AbstractFile]]:
+def _extract_url(url: FileOrUrlT) -> typing.Tuple[type_hints.Nullable[str], type_hints.Nullable[media.AbstractFile]]:
     if url is None:
         return None, None
     if isinstance(url, media.AbstractFile):

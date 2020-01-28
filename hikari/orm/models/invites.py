@@ -35,6 +35,7 @@ from hikari.orm.models import guilds
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import users
     from hikari.orm.state import base_registry
@@ -106,27 +107,27 @@ class Invite(bases.BaseModel):
     #: The user who created the invite.
     #:
     #: :type: :class:`hikari.orm.models.users.IUser` or :class:`None`
-    inviter: typing.Optional[users.BaseUser]
+    inviter: type_hints.Nullable[users.BaseUser]
 
     #: The user this invite is targeting.
     #:
     #: :type: :class:`hikari.orm.models.users.IUser` or `None`
-    target_user: typing.Optional[users.BaseUser]
+    target_user: type_hints.Nullable[users.BaseUser]
 
     #: The reason this invite targets a user
     #:
     #: :type: :class:`hikari.orm.models.invites.InviteTargetUserType` or `None`
-    target_user_type: typing.Optional[InviteTargetUserType]
+    target_user_type: type_hints.Nullable[InviteTargetUserType]
 
     #: Approximate count of online members.
     #:
     #: :type: :class:`int` or `None`
-    approximate_presence_count: typing.Optional[int]
+    approximate_presence_count: type_hints.Nullable[int]
 
     #: Approximate count of total members.
     #:
     #: :type: :class:`int` or `None`
-    approximate_member_count: typing.Optional[int]
+    approximate_member_count: type_hints.Nullable[int]
 
     __repr__ = reprs.repr_of("code", "inviter.id", "guild", "channel")
 

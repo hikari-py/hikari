@@ -99,7 +99,7 @@ class Color(int, typing.SupportsInt):
 
     __slots__ = ()
 
-    def __new__(cls: typing.Type[Color], raw_rgb: int) -> Color:
+    def __new__(cls: typing.Type[Color], raw_rgb: typing.SupportsInt) -> Color:
         assertions.assert_in_range(raw_rgb, 0, 0xFF_FF_FF, "integer value")
         return super(Color, cls).__new__(cls, raw_rgb)
 
@@ -245,8 +245,7 @@ class Color(int, typing.SupportsInt):
             return cls.from_rgb(*[(c << 4 | c) for c in components])
 
         if len(hex_code) == 6:
-            components = hex_code[:2], hex_code[2:4], hex_code[4:6]
-            return cls.from_rgb(*[int(c, 16) for c in components])
+            return cls.from_rgb(int(hex_code[:2], 16), int(hex_code[2:4], 16), int(hex_code[4:6], 16))
 
         raise ValueError("Color code is invalid length. Must be 3 or 6 digits")
 
@@ -266,11 +265,11 @@ class Color(int, typing.SupportsInt):
 
     # Partially chose to override these as the docstrings contain typos according to Sphinx.
     @classmethod
-    def from_bytes(cls, bytes_: typing.Sequence[int], byteorder: str, *, signed: bool = ...) -> Color:
+    def from_bytes(cls, bytes_: typing.Sequence[int], byteorder: str, *, signed: bool = True) -> Color:
         """Converts the color from bytes."""
         return Color(super().from_bytes(bytes_, byteorder, signed=signed))
 
-    def to_bytes(self, length: int, byteorder: str, *, signed: bool = ...) -> bytes:
+    def to_bytes(self, length: int, byteorder: str, *, signed: bool = True) -> bytes:
         """Converts the color code to bytes."""
         return super().to_bytes(length, byteorder, signed=signed)
 

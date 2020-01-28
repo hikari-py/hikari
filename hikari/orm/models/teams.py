@@ -32,6 +32,7 @@ from hikari.orm.models import bases
 from hikari.orm.models import users
 
 if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
 
 
@@ -50,7 +51,7 @@ class Team(bases.BaseModelWithFabric, bases.SnowflakeMixin):
     #: The optional hashcode of the icon for the team.
     #:
     #: :type: :class:`str` or `None`
-    icon: typing.Optional[str]
+    icon: type_hints.Nullable[str]
 
     #: The members in the team.
     #:
