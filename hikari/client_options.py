@@ -52,13 +52,13 @@ class ShardOptions:
     #: For example, to set all 10 shards up in a 10-shard bot, use:
     #: >>> ShardOptions(range(10), 10)
     #: ...or if you wish to instead use 50 shards and only start shard 20-30, use this:
-    #: >>> ShardOptions(slice(20, 30), 10)
-    #: ...if you need finer control, you can just specify them directly as well:
+    #: >>> ShardOptions(slice(20, 30), 50)
+    #: ...if you need finer control, eg. in a 20 shard bot, you can just specify them directly as well:
     #: >>> ShardOptions([3, 6, 7, 9, 11], 20)
     #:
     #: No sharding is denoted by a one-wide iterable with the value:
-    #: >>> ShardOptions([None], 1)
-    shards: typing.Union[range, slice, typing.Iterable[type_hints.Nullable[int]]]
+    #: >>> ShardOptions([0], 1)
+    shards: typing.Union[range, slice, typing.Iterable[int]]
     #: The total number of shards that the bot will have up, distributed. This is required to be
     #: consistent across multi-sharded applications that are distributed to ensure that the bot
     #: has the guilds correctly distributed across shards.
@@ -67,8 +67,8 @@ class ShardOptions:
 
 #: Use an appropriate number of shards for the size of the bot being run.
 AUTO_SHARD = ShardOptions((), 0)
-#: Use no shards.
-NO_SHARDS = ShardOptions((None,), 1)
+#: Dont use sharding, just shard 0.
+NO_SHARDING = ShardOptions([0], 1)
 
 # This is rather long and obnoxious.
 _DEFAULT_CHUNK_MODE = dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES

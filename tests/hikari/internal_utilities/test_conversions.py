@@ -46,3 +46,11 @@ def test_image_bytes_to_image_data_when_unsuported_image_type_raises_value_error
         assert False
     except ValueError:
         assert True
+
+
+@pytest.mark.parametrize(
+    ["guild_id", "shard_count", "expected_shard_id"],
+    [(574921006817476608, 1, 0), (574921006817476608, 2, 1), (574921006817476608, 3, 2), (574921006817476608, 4, 1)],
+)
+def test_guild_id_to_shard_id(guild_id, shard_count, expected_shard_id):
+    assert conversions.guild_id_to_shard_id(guild_id, shard_count) == expected_shard_id

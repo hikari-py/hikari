@@ -430,7 +430,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
     def parse_gateway_bot(self, gateway_bot_payload: containers.JSONObject) -> gateway_bot.GatewayBot:
         return gateway_bot.GatewayBot(gateway_bot_payload)
 
-    def parse_guild(self, guild_payload: containers.JSONObject, shard_id: type_hints.Nullable[int]) -> guilds.Guild:
+    def parse_guild(self, guild_payload: containers.JSONObject) -> guilds.Guild:
         guild_id = int(guild_payload["id"])
         is_unavailable = guild_payload.get("unavailable", False)
 
@@ -443,7 +443,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
             else:
                 guild_obj.update_state(guild_payload)
         else:
-            guild_obj = guilds.Guild(self.fabric, guild_payload, shard_id)
+            guild_obj = guilds.Guild(self.fabric, guild_payload)
             self._guilds[guild_id] = guild_obj
 
         return guild_obj

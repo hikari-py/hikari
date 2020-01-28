@@ -468,7 +468,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_create(gateway_impl, payload)
 
-        fabric_impl.state_registry.parse_guild.assert_called_with(payload, gateway_impl.shard_id)
+        fabric_impl.state_registry.parse_guild.assert_called_with(payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_create_when_already_known_and_now_available_dispatches_GUILD_AVAILABLE(
@@ -551,7 +551,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl._handle_guild_unavailable(gateway_impl, payload)
 
-        fabric_impl.state_registry.parse_guild.assert_called_with(payload, gateway_impl.shard_id)
+        fabric_impl.state_registry.parse_guild.assert_called_with(payload)
 
     @pytest.mark.asyncio
     async def test__handle_guild_unavailable_when_not_cached_does_not_dispatch_anything(
@@ -594,7 +594,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl._handle_guild_leave(gateway_impl, payload)
 
-        fabric_impl.state_registry.parse_guild.assert_called_with(payload, gateway_impl.shard_id)
+        fabric_impl.state_registry.parse_guild.assert_called_with(payload)
 
     @pytest.mark.asyncio
     async def test__handle_guild_leave_deletes_guild(self, adapter_impl, fabric_impl, gateway_impl):

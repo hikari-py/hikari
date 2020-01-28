@@ -109,7 +109,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
     async def handle_ready(self, gateway, payload):
         user_payload = payload["user"]
 
-        guilds = [self.fabric.state_registry.parse_guild(guild, gateway.shard_id) for guild in payload["guilds"]]
+        guilds = [self.fabric.state_registry.parse_guild(guild) for guild in payload["guilds"]]
 
         if self._request_chunks_mode != AutoRequestChunksMode.NEVER and guilds:
             asyncio.create_task(self._do_initial_chunking(guilds, gateway.shard_id))
@@ -221,7 +221,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         guild_id = int(payload["id"])
         unavailable = payload.get("unavailable", False)
         was_already_loaded = self.fabric.state_registry.get_guild_by_id(guild_id) is not None
-        guild = self.fabric.state_registry.parse_guild(payload, gateway.shard_id)
+        guild = self.fabric.state_registry.parse_guild(payload)
 
         # TODO: do not fire this event if the guild is in the initial unready id set.
         # TODO: if the guild just became ready and was in the initial unready id set, invoke the READY event.
@@ -262,10 +262,10 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         else:
             # We don't have a guild parsed yet. That shouldn't happen but if it does, we can make a note of this
             # so that we don't fail on other events later, and pre-emptively parse this information now.
-            self.fabric.state_registry.parse_guild(payload, gateway.shard_id)
+            self.fabric.state_registry.parse_guild(payload)
 
     async def _handle_guild_leave(self, gateway, payload):
-        guild = self.fabric.state_registry.parse_guild(payload, gateway.shard_id)
+        guild = self.fabric.state_registry.parse_guild(payload)
         self.fabric.state_registry.delete_guild(guild)
         self.dispatch(event_types.EventType.GUILD_LEAVE, guild)
 

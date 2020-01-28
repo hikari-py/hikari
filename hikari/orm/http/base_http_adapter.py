@@ -401,9 +401,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     @typing.overload
-    async def delete_all_reactions(
-        self, message: bases.SnowflakeLikeT, channel: _channels.GuildChannelLikeT,
-    ) -> None:
+    async def delete_all_reactions(self, message: bases.SnowflakeLikeT, channel: _channels.GuildChannelLikeT,) -> None:
         ...
 
     @abc.abstractmethod
