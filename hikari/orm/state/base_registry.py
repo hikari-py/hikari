@@ -575,15 +575,13 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_guild(self, guild_payload: containers.JSONObject, shard_id: typing.Optional[int]) -> guilds.Guild:
+    def parse_guild(self, guild_payload: containers.JSONObject) -> guilds.Guild:
         """
         Parses a guild payload into a workable object.
 
         Args:
             guild_payload:
                 the payload of the guild.
-            shard_id:
-                the shard ID, if known. May be `None` if not sharded or the information is not applicable.
         Returns:
             a :class:`hikari.orm.models.guilds.Guild` object.
         """

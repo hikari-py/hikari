@@ -454,7 +454,7 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
 
     async def fetch_guild(self, guild: _guilds.GuildLikeT) -> _guilds.Guild:
         guild_payload = await self.fabric.http_client.get_guild(guild_id=transformations.get_id(guild))
-        return self.fabric.state_registry.parse_guild(guild_payload, None)
+        return self.fabric.state_registry.parse_guild(guild_payload)
 
     async def update_guild(
         self,
