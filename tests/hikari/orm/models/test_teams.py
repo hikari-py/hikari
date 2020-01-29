@@ -23,6 +23,7 @@ import pytest
 from hikari.orm import fabric
 from hikari.orm.models import teams
 from hikari.orm.models import users
+from hikari.orm.state import base_registry
 from tests.hikari import _helpers
 
 
@@ -43,7 +44,9 @@ def team_payload(member_payload):
 
 @pytest.fixture()
 def fabric_obj():
-    return mock.MagicMock(spec_set=fabric.Fabric)
+    spec = mock.create_autospec(fabric.Fabric)
+    spec.state_registry = mock.create_autospec(base_registry.BaseRegistry)
+    return spec
 
 
 def test_Team(team_payload, fabric_obj, member_payload):

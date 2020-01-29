@@ -581,8 +581,8 @@ class TestServiceStatusClient:
             def from_dict(_):
                 ...
 
-        cast = mock.MagicMock(spec_set=FromDictable)
-        cast.from_dict = mock.MagicMock(spec_set=FromDictable.from_dict, return_value=FromDictable())
+        cast = mock.create_autospec(FromDictable)
+        cast.from_dict = mock.create_autospec(FromDictable.from_dict, return_value=FromDictable())
         data = mock.MagicMock()
 
         resp = await mock_client._perform_request("/foo/bar", cast, data, method)

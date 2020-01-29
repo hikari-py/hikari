@@ -56,8 +56,8 @@ class TestHTTPAdapterImpl:
     def fabric_impl(self):
         fabric_impl = fabric.Fabric()
 
-        http_client_impl = mock.MagicMock(spec_set=http_client.HTTPClient)
-        state_registry_impl = mock.MagicMock(spec_set=base_registry.BaseRegistry)
+        http_client_impl = mock.create_autospec(http_client.HTTPClient)
+        state_registry_impl = mock.create_autospec(base_registry.BaseRegistry)
         http_adapter_impl = _http_adapter_impl.HTTPAdapterImpl(fabric_impl)
 
         fabric_impl.state_registry = state_registry_impl
@@ -78,7 +78,7 @@ class TestHTTPAdapterImpl:
     @pytest.mark.asyncio
     async def test_fetch_gateway_bot(self, fabric_impl):
         mock_model = _helpers.mock_model(gateway_bot.GatewayBot)
-        mock_payload = mock.MagicMock(spec_set=dict)
+        mock_payload = mock.create_autospec(dict)
         fabric_impl.http_client.get_gateway_bot = mock.AsyncMock(return_value=mock_payload)
         fabric_impl.state_registry.parse_gateway_bot.return_value = mock_model
 
@@ -92,7 +92,7 @@ class TestHTTPAdapterImpl:
     @_helpers.parametrize_valid_id_formats_for_models("guild", 112233, guilds.Guild)
     async def test_fetch_audit_log_with_default_args(self, fabric_impl, guild):
         mock_audit_log = _helpers.mock_model(audit_logs.AuditLog)
-        mock_payload = mock.MagicMock(spec_set=dict)
+        mock_payload = mock.create_autospec(dict)
 
         fabric_impl.http_client.get_guild_audit_log = mock.AsyncMock(return_value=mock_payload)
         fabric_impl.state_registry.parse_audit_log.return_value = mock_audit_log
@@ -115,7 +115,7 @@ class TestHTTPAdapterImpl:
     @_helpers.parametrize_valid_id_formats_for_models("user", 334455, users.User, users.OAuth2User)
     async def test_fetch_audit_log_with_optional_args_specified(self, fabric_impl, guild, user):
         mock_audit_log = _helpers.mock_model(audit_logs.AuditLog)
-        mock_payload = mock.MagicMock(spec_set=dict)
+        mock_payload = mock.create_autospec(dict)
 
         fabric_impl.http_client.get_guild_audit_log = mock.AsyncMock(return_value=mock_payload)
         fabric_impl.state_registry.parse_audit_log.return_value = mock_audit_log
@@ -2619,7 +2619,7 @@ class TestHTTPAdapterImpl:
         fabric_impl.state_registry.parse_channel.return_value = mock_dm
         assert await fabric_impl.http_adapter.create_dm_channel(recipient) is mock_dm
         fabric_impl.http_client.create_dm.assert_called_once_with(recipient_id="33333333")
-        fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_dm_payload)
+        fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_dm_payload, None)
 
     @pytest.mark.asyncio
     async def test_fetch_voice_regions(self, fabric_impl):
