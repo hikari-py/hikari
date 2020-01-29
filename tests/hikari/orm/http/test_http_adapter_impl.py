@@ -1274,7 +1274,7 @@ class TestHTTPAdapterImpl:
             roles=unspecified.UNSPECIFIED,
             channels=unspecified.UNSPECIFIED,
         )
-        fabric_impl.state_registry.parse_guild.assert_called_once_with(mock_guild_payload, None)
+        fabric_impl.state_registry.parse_guild.assert_called_once_with(mock_guild_payload)
 
     @_helpers.todo_implement
     @pytest.mark.asyncio
@@ -1331,7 +1331,7 @@ class TestHTTPAdapterImpl:
             roles=[{"id": 2132123}],
             channels=[{"id": 444444}],
         )
-        fabric_impl.state_registry.parse_guild.assert_called_once_with(mock_guild_payload, None)
+        fabric_impl.state_registry.parse_guild.assert_called_once_with(mock_guild_payload)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 1231236545645, guilds.Guild)
@@ -1342,7 +1342,7 @@ class TestHTTPAdapterImpl:
         fabric_impl.http_client.get_guild = mock.AsyncMock(return_value=mock_guild_payload)
         assert await fabric_impl.http_adapter.fetch_guild(guild=guild) is mock_guild
         fabric_impl.http_client.get_guild.assert_called_once_with(guild_id="1231236545645")
-        fabric_impl.state_registry.parse_guild.assert_called_once_with(mock_guild_payload, None)
+        fabric_impl.state_registry.parse_guild.assert_called_once_with(mock_guild_payload)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
