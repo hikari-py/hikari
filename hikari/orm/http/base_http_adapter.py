@@ -350,6 +350,7 @@ class BaseHTTPAdapter(abc.ABC):
         """
 
     @abc.abstractmethod
+    @typing.overload
     async def delete_reaction(
         self, emoji: _emojis.EmojiLikeT, user: _users.BaseUserLikeT, channel: _channels.ChannelLikeT,
     ) -> None:
