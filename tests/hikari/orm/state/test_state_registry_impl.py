@@ -22,6 +22,7 @@ import datetime
 from unittest import mock
 
 import pytest
+from hikari.orm.http import base_http_adapter
 
 from hikari.orm import fabric
 from hikari.orm.models import applications
@@ -42,6 +43,7 @@ from hikari.orm.models import roles
 from hikari.orm.models import users
 from hikari.orm.models import voices
 from hikari.orm.models import webhooks
+from hikari.orm.state import base_registry
 from hikari.orm.state import state_registry_impl
 from tests.hikari import _helpers
 
@@ -449,7 +451,9 @@ class TestStateRegistryImpl:
         dm_channel_obj = _helpers.mock_model(channels.GroupDMChannel, id=1235)
         unknown_obj = _helpers.mock_model(bases.UnknownObject, id=1236)
         callback_obj = mock.MagicMock()
-        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry.fabric = mock.create_autospec(fabric.Fabric)
+        registry.fabric.state_registry = registry
+        registry.fabric.http_adapter = mock.create_autospec(base_http_adapter.BaseHTTPAdapter)
         registry._guild_channels = {guild_channel_obj.id: guild_channel_obj}
         registry._dm_channels = {dm_channel_obj.id: dm_channel_obj}
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
@@ -484,7 +488,9 @@ class TestStateRegistryImpl:
         emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=69)
         unknown_obj = _helpers.mock_model(bases.UnknownObject, id=70)
         callback_obj = mock.MagicMock()
-        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry.fabric = mock.create_autospec(fabric.Fabric)
+        registry.fabric.http_adapter = mock.create_autospec(base_http_adapter.BaseHTTPAdapter)
+        registry.fabric.state_registry = registry
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
         registry._emojis = {emoji_obj.id: emoji_obj}
 
@@ -515,7 +521,9 @@ class TestStateRegistryImpl:
     def test_get_mandatory_guild_by_id_uncached_returns_unknown(self, registry: state_registry_impl.StateRegistryImpl):
         unknown_obj = _helpers.mock_model(bases.UnknownObject, id=70)
         callback_obj = mock.MagicMock()
-        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry.fabric = mock.create_autospec(fabric.Fabric)
+        registry.fabric.http_adapter = mock.create_autospec(base_http_adapter.BaseHTTPAdapter)
+        registry.fabric.state_registry = registry
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
 
         registry._guilds = {}
@@ -552,7 +560,9 @@ class TestStateRegistryImpl:
         registry._message_cache = {}
         unknown_obj = _helpers.mock_model(bases.UnknownObject, id=70)
         callback_obj = mock.MagicMock()
-        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry.fabric = mock.create_autospec(fabric.Fabric)
+        registry.fabric.state_registry = registry
+        registry.fabric.http_adapter = mock.create_autospec(base_http_adapter.BaseHTTPAdapter)
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
 
         result = registry.get_mandatory_message_by_id(70, 420, callback_obj)
@@ -586,7 +596,7 @@ class TestStateRegistryImpl:
     @pytest.mark.asyncio
     async def test__role_fetcher_when_role_found(self, registry: state_registry_impl.StateRegistryImpl):
         target = _helpers.mock_model(roles.Role, id=125, guild_id=120)
-        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry.fabric = mock.create_autospec(fabric.Fabric)
         registry.fabric.http_adapter.fetch_roles = mock.AsyncMock(
             return_value=[
                 _helpers.mock_model(roles.Role, id=123, guild_id=120),
@@ -605,7 +615,7 @@ class TestStateRegistryImpl:
     @_helpers.assert_raises(type_=ValueError)
     async def test__role_fetcher_when_role_not_found(self, registry: state_registry_impl.StateRegistryImpl):
         target = _helpers.mock_model(roles.Role, id=125, guild_id=120)
-        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry.fabric = mock.create_autospec(fabric.Fabric)
         registry.fabric.http_adapter.fetch_roles = mock.AsyncMock(
             return_value=[
                 _helpers.mock_model(roles.Role, id=123, guild_id=120),
@@ -693,7 +703,9 @@ class TestStateRegistryImpl:
     def test_get_mandatory_user_by_id_uncached_returns_unknown(self, registry: state_registry_impl.StateRegistryImpl):
         registry._user = None
         registry._users = _helpers.StrongWeakValuedDict()
-        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry.fabric = mock.create_autospec(fabric.Fabric)
+        registry.fabric.http_adapter = mock.create_autospec(base_http_adapter.BaseHTTPAdapter)
+        registry.fabric.state_registry = registry
         unknown_obj = _helpers.mock_model(bases.UnknownObject, id=1)
         callback_obj = mock.MagicMock()
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
@@ -743,7 +755,9 @@ class TestStateRegistryImpl:
         guild_obj = _helpers.mock_model(guilds.Guild, id=2)
         guild_obj.members = _helpers.StrongWeakValuedDict()
         registry._guilds = {guild_obj.id: guild_obj}
-        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry.fabric = mock.create_autospec(fabric.Fabric)
+        registry.fabric.http_adapter = mock.create_autospec(base_http_adapter.BaseHTTPAdapter)
+        fabric._state_registry = mock.create_autospec(base_registry.BaseRegistry)
         unknown_obj = _helpers.mock_model(bases.UnknownObject, id=1)
         callback_obj = mock.MagicMock()
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
@@ -763,7 +777,9 @@ class TestStateRegistryImpl:
         member_obj = _helpers.mock_model(members.Member, id=2, guild=guild_obj)
         guild_obj.members = {member_obj.id: member_obj}
         registry._guilds = {guild_obj.id: guild_obj}
-        registry.fabric = mock.MagicMock(spec_set=fabric.Fabric)
+        registry.fabric = mock.create_autospec(fabric.Fabric)
+        registry.fabric.http_adapter = mock.create_autospec(base_http_adapter.BaseHTTPAdapter)
+        registry.fabric.state_registry = registry
         unknown_obj = _helpers.mock_model(bases.UnknownObject, id=1)
         callback_obj = mock.MagicMock()
         registry._prepare_unknown_with_callback = mock.MagicMock(return_value=unknown_obj)
@@ -784,7 +800,7 @@ class TestStateRegistryImpl:
             Application.assert_called_once_with(registry.fabric, {})
 
     def test_parse_application_user_given_user_cached(self, registry: state_registry_impl.StateRegistryImpl):
-        oa2_user = mock.MagicMock(spec_set=users.OAuth2User)
+        oa2_user = mock.create_autospec(users.OAuth2User)
         registry._user = oa2_user
         with _helpers.mock_patch(users.OAuth2User, return_value=oa2_user) as OAuth2User:
             parsed_obj = registry.parse_application_user({})
@@ -796,7 +812,7 @@ class TestStateRegistryImpl:
     def test_parse_application_user_given_no_previous_user_cached(
         self, registry: state_registry_impl.StateRegistryImpl
     ):
-        oa2_user = mock.MagicMock(spec_set=users.OAuth2User)
+        oa2_user = mock.create_autospec(users.OAuth2User)
         with _helpers.mock_patch(users.OAuth2User, return_value=oa2_user) as OAuth2User:
             parsed_obj = registry.parse_application_user({})
             assert parsed_obj is oa2_user
@@ -1100,7 +1116,7 @@ class TestStateRegistryImpl:
         user = {"id": "1234"}
         guild = _helpers.mock_model(guilds.Guild, id=659)
         mock_result = _helpers.mock_model(members.Member, id=1234)
-        registry.parse_member = mock.MagicMock(spec_set=registry.parse_member, return_value=mock_result)
+        registry.parse_member = mock.create_autospec(registry.parse_member, return_value=mock_result)
         assert registry.parse_partial_member(partial_member, user, guild) is mock_result
         registry.parse_member.assert_called_with(
             {"roles": ["9", "18", "27"], "nick": "Roy Rodgers McFreely", "user": {"id": "1234"}}, guild
@@ -1209,7 +1225,7 @@ class TestStateRegistryImpl:
             assert parsed_presence is presence_obj
 
     def test_parse_reaction_parses_emoji(self, registry: state_registry_impl.StateRegistryImpl):
-        registry.parse_emoji = mock.MagicMock(spec_set=registry.parse_emoji)
+        registry.parse_emoji = mock.create_autospec(registry.parse_emoji)
         message_obj = _helpers.mock_model(messages.Message, id=42069)
         registry._message_cache = {message_obj.id: message_obj}
         emoji_payload = {"name": "\N{OK HAND SIGN}", "id": None}

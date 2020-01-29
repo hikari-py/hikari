@@ -49,6 +49,8 @@ GENDOC_PATH = pathify(CI_SCRIPT_DIR, "gendoc.py")
 MAIN_PACKAGE_PATH = MAIN_PACKAGE.replace(".", "/")
 REPOSITORY = f"https://gitlab.com/{OWNER}/{MAIN_PACKAGE}"
 PYTEST_ARGS = [
+    "-n",
+    "auto",
     "--cov",
     MAIN_PACKAGE,
     "--cov-config",

@@ -60,7 +60,7 @@ def mock_message(mock_user):
 
 @pytest.fixture()
 def mock_state_registry():
-    return mock.MagicMock(spec_set=base_registry.BaseRegistry)
+    return mock.create_autospec(base_registry.BaseRegistry)
 
 
 @pytest.fixture()
@@ -273,7 +273,7 @@ class TestMessage:
     def test_Message_channel_if_guild_message(self, mock_message, fabric_obj):
         mock_message["guild_id"] = "5432"
         mock_message["channel_id"] = "1234"
-        guild = mock.MagicMock(spec_set=guilds.Guild)
+        guild = mock.create_autospec(guilds.Guild)
         guild.channels = {1234: mock.MagicMock(), 1235: mock.MagicMock()}
         message_obj = messages.Message(fabric_obj, mock_message)
         fabric_obj.state_registry.get_channel_by_id = mock.MagicMock(return_value=message_obj.channel)
@@ -283,7 +283,7 @@ class TestMessage:
 
     def test_Message_channel_if_dm_message(self, mock_message, fabric_obj):
         mock_message["channel_id"] = "1234"
-        channel = mock.MagicMock(spec_set=channels.Channel)
+        channel = mock.create_autospec(channels.Channel)
         fabric_obj.state_registry.get_mandatory_channel_by_id = mock.MagicMock(return_value=channel)
 
         obj = messages.Message(fabric_obj, mock_message)

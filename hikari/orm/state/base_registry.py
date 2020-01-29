@@ -504,7 +504,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @typing.overload
-    def parse_channel(self, channel_payload: containers.JSONObject, guild_obj: None) -> channels.Channel:
+    def parse_channel(self, channel_payload: containers.JSONObject, guild_obj: None) -> channels.DMChannel:
         ...
 
     @typing.overload
