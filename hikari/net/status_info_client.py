@@ -39,6 +39,8 @@ from hikari.internal_utilities import transformations
 from hikari.net import base_http_client
 
 if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
+
     import asyncio
     import datetime
     import ssl
@@ -91,22 +93,22 @@ class Subscriber:
     #: The date/time the description was quarantined at, if applicable.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    quarantined_at: typing.Optional[datetime.datetime]
+    quarantined_at: type_hints.Nullable[datetime.datetime]
 
     #: The optional incident that this subscription is for.
     #:
     #: :type: :class:`hikari.core.models.Incident` or `None`
-    incident: typing.Optional[Incident]
+    incident: type_hints.Nullable[Incident]
 
     #: True if the confirmation notification is skipped.
     #:
     #: :type: :class:`bool` or `None`
-    is_skipped_confirmation_notification: typing.Optional[bool]
+    is_skipped_confirmation_notification: type_hints.Nullable[bool]
 
     #: The optional date/time to stop the subscription..
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    purge_at: typing.Optional[datetime.datetime]
+    purge_at: type_hints.Nullable[datetime.datetime]
 
     @staticmethod
     def from_dict(payload: containers.JSONObject) -> Subscriber:
@@ -194,12 +196,12 @@ class Status:
     #: The indicator that specifies the state of the service.
     #:
     #: :type: :class:`str` or `None`
-    indicator: typing.Optional[str]
+    indicator: type_hints.Nullable[str]
 
     #: The optional description of the service state.
     #:
     #: :type: :class:`str` or `None`
-    description: typing.Optional[str]
+    description: type_hints.Nullable[str]
 
     @staticmethod
     def from_dict(payload: containers.JSONObject) -> Status:
@@ -253,12 +255,12 @@ class Component:
     #: The optional description of the component.
     #:
     #: :type: :class:`str` or `None`
-    description: typing.Optional[str]
+    description: type_hints.Nullable[str]
 
     #: The status of this component.
     #:
     #: :type: :class:`str` or `None`
-    status: typing.Optional[str]
+    status: type_hints.Nullable[str]
 
     @staticmethod
     def from_dict(payload: containers.JSONObject) -> Component:
@@ -329,7 +331,7 @@ class IncidentUpdate:
     #: The date/time to display the update at.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    display_at: typing.Optional[datetime.datetime]
+    display_at: type_hints.Nullable[datetime.datetime]
 
     #: The ID of the corresponding incident.
     #:
@@ -347,7 +349,7 @@ class IncidentUpdate:
     #: The date/time that the update was last changed.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    updated_at: typing.Optional[datetime.datetime]
+    updated_at: type_hints.Nullable[datetime.datetime]
 
     @staticmethod
     def from_dict(payload: containers.JSONObject) -> IncidentUpdate:
@@ -414,7 +416,7 @@ class Incident:
     #: The date and time, if applicable, that the faulty component(s) were being monitored at.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    monitoring_at: typing.Optional[datetime.datetime]
+    monitoring_at: type_hints.Nullable[datetime.datetime]
 
     #: The ID of the page describing this incident.
     #:
@@ -427,7 +429,7 @@ class Incident:
     #: The date and time that the incident finished, if applicable.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    resolved_at: typing.Optional[datetime.datetime]
+    resolved_at: type_hints.Nullable[datetime.datetime]
 
     #: A short permalink to the page describing the incident.
     #:
@@ -442,12 +444,12 @@ class Incident:
     #: The last time the status of the incident was updated.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    updated_at: typing.Optional[datetime.datetime]
+    updated_at: type_hints.Nullable[datetime.datetime]
 
     #: The date and time, if applicable, that the faulty component(s) began to malfunction.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    started_at: typing.Optional[datetime.datetime]
+    started_at: type_hints.Nullable[datetime.datetime]
 
     @staticmethod
     def from_dict(payload: containers.JSONObject) -> Incident:
@@ -546,7 +548,7 @@ class ScheduledMaintenance:
     #: The date and time the event was being monitored since, if applicable.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    monitoring_at: typing.Optional[datetime.datetime]
+    monitoring_at: type_hints.Nullable[datetime.datetime]
 
     #: The ID of the page describing this event.
     #:
@@ -559,17 +561,17 @@ class ScheduledMaintenance:
     #: The optional date/time the event finished at.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    resolved_at: typing.Optional[datetime.datetime]
+    resolved_at: type_hints.Nullable[datetime.datetime]
 
     #: The date/time that the event was scheduled for.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    scheduled_for: typing.Optional[datetime.datetime]
+    scheduled_for: type_hints.Nullable[datetime.datetime]
 
     #: The date/time that the event was scheduled until.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    scheduled_until: typing.Optional[datetime.datetime]
+    scheduled_until: type_hints.Nullable[datetime.datetime]
 
     #: The status of the event.
     #:
@@ -589,7 +591,7 @@ class ScheduledMaintenance:
     #: The date and time, if applicable, that the event began.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    started_at: typing.Optional[datetime.datetime]
+    started_at: type_hints.Nullable[datetime.datetime]
 
     @staticmethod
     def from_dict(payload: containers.JSONObject) -> ScheduledMaintenance:
@@ -773,7 +775,9 @@ class StatusInfoClient(base_http_client.BaseHTTPClient):
     def version(self) -> int:
         return 2
 
-    async def _perform_request(self, route: str, cast: typing.Optional[typing.Type[T]], data=None, method=None) -> T:
+    async def _perform_request(
+        self, route: str, cast: type_hints.Nullable[typing.Type[T]], data=None, method=None
+    ) -> T:
         coro = super()._request(method or self.GET, self.url + route, data=data)
 
         async with coro as resp:
@@ -819,7 +823,7 @@ class StatusInfoClient(base_http_client.BaseHTTPClient):
         return await self._perform_request("/scheduled-maintenances/active.json", ScheduledMaintenances)
 
     async def subscribe_email_to_incidents(
-        self, email: str, incident: typing.Optional[typing.Union[str, Incident]] = None,
+        self, email: str, incident: type_hints.Nullable[typing.Union[str, Incident]] = None,
     ) -> Subscriber:
         """
         Subscribe to a specific incident or all incidents for email updates.
@@ -845,7 +849,7 @@ class StatusInfoClient(base_http_client.BaseHTTPClient):
         return result.subscriber
 
     async def subscribe_webhook_to_incidents(
-        self, url: str, incident: typing.Optional[typing.Union[str, Incident]] = None,
+        self, url: str, incident: type_hints.Nullable[typing.Union[str, Incident]] = None,
     ) -> Subscriber:
         """
         Subscribe to a specific incident or all incidents for webhook updates. This means the given

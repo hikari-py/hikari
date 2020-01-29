@@ -44,6 +44,9 @@ from hikari.orm.gateway import dispatching_event_adapter_impl
 from hikari.orm.http import http_adapter_impl
 from hikari.orm.state import state_registry_impl
 
+if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
+
 
 class Client:
     """
@@ -68,13 +71,13 @@ class Client:
     def __init__(
         self,
         token: str,
-        loop: typing.Optional[asyncio.AbstractEventLoop] = None,
-        options: typing.Optional[client_options.ClientOptions] = None,
+        loop: type_hints.Nullable[asyncio.AbstractEventLoop] = None,
+        options: type_hints.Nullable[client_options.ClientOptions] = None,
     ) -> None:
         self._client_options = options or client_options.ClientOptions()
         self._event_dispatcher = aio.MuxMap()
-        self._fabric: typing.Optional[fabric.Fabric] = None
-        self._shard_keepalive_tasks = {}
+        self._fabric: type_hints.Nullable[fabric.Fabric] = None
+        self._shard_keepalive_tasks: typing.Dict[gateway.GatewayClient, asyncio.Task] = {}
         self.logger = loggers.get_named_logger(self)
         self.token = token
 
@@ -357,7 +360,7 @@ class Client:
         self._event_dispatcher.remove(event_name, coroutine_function)
 
     def event(
-        self, name: typing.Optional[str] = None
+        self, name: type_hints.Nullable[str] = None
     ) -> typing.Callable[[aio.CoroutineFunctionT], aio.CoroutineFunctionT]:
         """
         Generates a decorator for a coroutine function in order to subscribe it as an event listener.
@@ -417,10 +420,10 @@ class Client:
         The average heartbeat latency across all gateway shard connections. If any are not running, you will receive
         a :class:`float` with the value of `NaN` instead.
         """
-        if self._fabric and len(self._fabric.gateways) == 0:
-            # Bot has not yet started.
-            return float("nan")
-        return sum(shard.heartbeat_latency for shard in self._fabric.gateways.values()) / len(self._fabric.gateways)
+        if self._fabric and len(self._fabric.gateways) != 0:
+            return sum(shard.heartbeat_latency for shard in self._fabric.gateways.values()) / len(self._fabric.gateways)
+        # Bot has not yet started.
+        return float("nan")
 
     @property
     def heartbeat_latencies(self) -> typing.Mapping[typing.Optional[int], float]:

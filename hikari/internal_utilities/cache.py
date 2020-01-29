@@ -19,9 +19,15 @@
 """
 Provides mechanisms to cache results of calls lazily.
 """
+from __future__ import annotations
+
 import asyncio
 import inspect
 import typing
+
+if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
+
 
 ReturnT = typing.TypeVar("ReturnT")
 ClassT = typing.TypeVar("ClassT")
@@ -93,14 +99,14 @@ class CachedProperty:
         "__qualname__",  # pylint: disable=class-variable-slots-conflict
     )
 
-    def __init__(self, func: CachedPropertyFunctionT, cache_attr: typing.Optional[str]) -> None:
+    def __init__(self, func: CachedPropertyFunctionT, cache_attr: type_hints.Nullable[str]) -> None:
         self.func = func
         self._cache_attr = cache_attr or "_cp_" + func.__name__
         self.__name__ = getattr(self.func, "__name__", None)
         self.__qualname__ = getattr(self.func, "__qualname__", None)
         self.__dict__ = getattr(self.func, "__dict__", None)
 
-    def __get__(self, instance: typing.Optional[ClassT], owner: typing.Type[ClassT]) -> ReturnT:
+    def __get__(self, instance: type_hints.Nullable[ClassT], owner: typing.Type[ClassT]) -> ReturnT:
         if instance is None:
             return typing.cast(ReturnT, self)
         if not hasattr(instance, self._cache_attr):
@@ -121,7 +127,7 @@ class AsyncCachedProperty(CachedProperty):
 
     __slots__ = ()
 
-    def __get__(self, instance: typing.Optional[ClassT], owner: typing.Type[ClassT]) -> typing.Awaitable[ReturnT]:
+    def __get__(self, instance: type_hints.Nullable[ClassT], owner: typing.Type[ClassT]) -> typing.Awaitable[ReturnT]:
         if instance is None:
             return typing.cast(ReturnT, self)
 

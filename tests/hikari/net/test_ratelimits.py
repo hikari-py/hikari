@@ -422,6 +422,13 @@ class TestHTTPBucketRateLimiterManager:
             assert mgr.gc_task is not None
 
     @pytest.mark.asyncio
+    async def test_exit_closes(self):
+        with mock.patch("hikari.net.ratelimits.HTTPBucketRateLimiterManager.close") as close:
+            with ratelimits.HTTPBucketRateLimiterManager() as mgr:
+                mgr.start(0.01)
+            close.assert_called()
+
+    @pytest.mark.asyncio
     async def test_gc_polls_until_closed_event_set(self):
         # This is shit, but it is good shit.
         with ratelimits.HTTPBucketRateLimiterManager() as mgr:

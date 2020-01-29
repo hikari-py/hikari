@@ -150,7 +150,7 @@ class IRateLimiter(abc.ABC):
     __slots__ = ()
 
     @abc.abstractmethod
-    def acquire(self, *args, **kwargs) -> asyncio.Future:
+    def acquire(self) -> asyncio.Future:
         """
         Acquire permission to perform a task that needs to have rate limit management enforced.
 
@@ -183,12 +183,12 @@ class BurstRateLimiter(IRateLimiter, abc.ABC):
 
     def __init__(self, name):
         self.name = name
-        self.throttle_task: typing.Optional[asyncio.Task] = None
+        self.throttle_task: type_hints.Nullable[asyncio.Task] = None
         self.queue = []
         self.logger: logging.Logger = loggers.get_named_logger(self)
 
     @abc.abstractmethod
-    def acquire(self, *args, **kwargs) -> asyncio.Future:
+    def acquire(self) -> asyncio.Future:
         ...
 
     def close(self) -> None:
@@ -288,7 +288,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
     def __init__(self, name: str, period: float, limit: int) -> None:
         super().__init__(name)
-        self.reset_at = 0
+        self.reset_at = 0.0
         self.remaining = 0
         self.limit = limit
         self.period = period
@@ -397,7 +397,7 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
             self.remaining -= 1
 
 
-class HTTPBucketRateLimiterManager(IRateLimiter):
+class HTTPBucketRateLimiterManager:
     """
     The main rate limiter implementation to provide bucketed rate limiting for Discord HTTP endpoints that respects
     the bucket rate limit header.
@@ -417,6 +417,12 @@ class HTTPBucketRateLimiterManager(IRateLimiter):
         self.closed_event: asyncio.Event = asyncio.Event()
         self.gc_task: type_hints.Nullable[asyncio.Task] = None
         self.logger: logging.Logger = loggers.get_named_logger(self)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     def start(self, poll_period: float = 20):
         if not self.gc_task:

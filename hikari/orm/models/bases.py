@@ -32,6 +32,7 @@ from hikari.internal_utilities import assertions
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import delegate
+from hikari.internal_utilities import type_hints
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -41,6 +42,7 @@ if typing.TYPE_CHECKING:
 
 T = typing.TypeVar("T")
 U = typing.TypeVar("U")
+EnumT = typing.TypeVar("EnumT", bound=enum.Enum)
 
 
 class BestEffortEnumMixin:
@@ -51,22 +53,22 @@ class BestEffortEnumMixin:
     __slots__ = ()
 
     @classmethod
-    def get_best_effort_from_name(cls: typing.Type[T], value: U) -> typing.Union[T, U]:
+    def get_best_effort_from_name(cls, name) -> typing.Union[EnumT, U, str]:
         """Attempt to parse the given value into an enum instance, or if failing, return the input value."""
         try:
-            return cls[value]
+            return cls[name]
         except KeyError:
-            return value
+            return name
 
     @classmethod
-    def get_best_effort_from_value(cls: typing.Type[T], value: U) -> typing.Union[T, U]:
+    def get_best_effort_from_value(cls, value) -> typing.Union[EnumT, U]:
         """Attempt to parse the given value into an enum instance, or if failing, return the input value."""
         try:
             return cls(value)
         except ValueError:
             return value
 
-    def __str__(self):
+    def __str__(self) -> str:
         #  We only want this to default to the value for non-int based enums.
         return self.name.lower() if isinstance(self, int) else self.value
 
@@ -80,14 +82,14 @@ class NamedEnumMixin(BestEffortEnumMixin):
     __slots__ = ()
 
     @classmethod
-    def from_discord_name(cls, name: str):
+    def from_discord_name(cls, name: str) -> EnumT:
         """
         Consume a string as described on the Discord API documentation and return a member of this enum, or
         raise a :class:`KeyError` if the name is invalid.
         """
         return cls[name.upper()]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name.lower()
 
 
@@ -340,15 +342,13 @@ class UnknownObject(typing.Generic[T], SnowflakeMixin):
 
     __slots__ = ("id", "_future", "_callbacks", "__weakref__")
 
-    _CALLBACK_MUX_ALREADY_CALLED = ...
-
-    def __init__(self, id: int, resolver_partial: aio.PartialCoroutineProtocolT[T] = None,) -> None:
+    def __init__(self, id: int, resolver_partial=None) -> None:
         self.id = id
-        self._future = resolver_partial
-        self._callbacks = []
+        self._future: typing.Union[aio.PartialCoroutineProtocolT[T], asyncio.Future, None] = resolver_partial
+        self._callbacks: type_hints.Nullable[typing.Sequence[typing.Callable[[T], typing.Any]]] = []
 
     # noinspection PyCallingNonCallable
-    def __await__(self) -> T:
+    def __await__(self) -> typing.Generator[None, None, T]:
         if self._future is None:
             raise NotImplementedError("Cannot resolve this value currently")
         if not isinstance(self._future, asyncio.Future):
@@ -366,7 +366,7 @@ class UnknownObject(typing.Generic[T], SnowflakeMixin):
         result = completed_task.result()
         for callback in self._callbacks:
             callback(result)
-        self._callbacks = self._CALLBACK_MUX_ALREADY_CALLED
+        self._callbacks = None
 
     def add_done_callback(self, callback: typing.Callable[[T], typing.Any]) -> None:
         """
@@ -389,7 +389,7 @@ class UnknownObject(typing.Generic[T], SnowflakeMixin):
                 A normal function taking the resolved value to replace this object
                 with as the sole argument.
         """
-        if self._callbacks is self._CALLBACK_MUX_ALREADY_CALLED:
+        if self._callbacks is None:
             asyncio.get_running_loop().call_soon(callback, self._future.result())
         else:
             self._callbacks.append(callback)
@@ -403,7 +403,7 @@ class UnknownObject(typing.Generic[T], SnowflakeMixin):
 
 
 DictImplT = typing.TypeVar("DictImplT", typing.Dict, dict)
-DictFactoryT = typing.Union[typing.Type[DictImplT], typing.Callable[[], DictImplT]]
+DictFactoryT = typing.Callable[[typing.List[typing.Tuple[str, typing.Any]]], typing.Dict[typing.Any, typing.Any]]
 
 
 def _dict_factory_convert(value: typing.Any) -> typing.Any:
@@ -451,6 +451,9 @@ class MarshalMixin:
         return cls(**{field.name: payload[field.name] for field in dataclasses.fields(cls) if field.name in payload})
 
 
+#: A SnowflakeMixin type
+SnowflakeMixinT = typing.TypeVar("SnowflakeMixinT", bound=SnowflakeMixin)
+
 #: The valid types of a raw unformatted snowflake.
 RawSnowflakeT = typing.Union[int, str]
 
@@ -459,10 +462,12 @@ SnowflakeLikeT = typing.Union[RawSnowflakeT, SnowflakeMixin, UnknownObject]
 
 __all__ = [
     "SnowflakeMixin",
+    "SnowflakeMixinT",
     "BestEffortEnumMixin",
     "NamedEnumMixin",
     "BaseModelWithFabric",
     "BaseModel",
+    "UnknownObject",
     "RawSnowflakeT",
     "SnowflakeLikeT",
     "MarshalMixin",

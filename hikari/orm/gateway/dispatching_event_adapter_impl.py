@@ -34,6 +34,7 @@ from hikari.orm.models import channels
 
 if typing.TYPE_CHECKING:
     from hikari.orm import fabric as _fabric
+    from hikari.internal_utilities import type_hints
 
 
 class AutoRequestChunksMode(enum.IntEnum):
@@ -187,7 +188,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         self.dispatch(event_types.EventType.RAW_CHANNEL_PINS_UPDATE, payload)
 
         channel_id = int(payload["channel_id"])
-        channel_obj: typing.Optional[channels.Channel] = self.fabric.state_registry.get_channel_by_id(channel_id)
+        channel_obj: type_hints.Nullable[channels.Channel] = self.fabric.state_registry.get_channel_by_id(channel_id)
 
         if channel_obj is not None:
             channel_obj: channels.TextChannel

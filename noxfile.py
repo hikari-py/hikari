@@ -129,7 +129,7 @@ def lint(session) -> None:
     # session.run("pip", "install", f"pylint=={PYLINT_VERSION}" if PYLINT_VERSION else "pylint")
     session.run(
         "pip", "install", "git+https://github.com/davfsa/pylint"
-    )  # Freezed version of pylint 2.5 post release to make sure that nothing will break
+    )  # Freezed version of pylint 2.5 pre-release to make sure that nothing will break
     pkg = MAIN_PACKAGE.split(".")[0]
 
     try:

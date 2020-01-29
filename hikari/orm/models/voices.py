@@ -28,6 +28,7 @@ from hikari.internal_utilities import reprs
 from hikari.orm.models import bases
 
 if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import guilds
     from hikari.orm.models import members
@@ -90,7 +91,7 @@ class VoiceState(bases.BaseModelWithFabric):
     #: The ID of the guild this state is for.
     #:
     #: :type: :class:`int` or `None`
-    guild_id: typing.Optional[int]
+    guild_id: type_hints.Nullable[int]
 
     #: The ID of the channel this state is for.
     #:
@@ -105,7 +106,7 @@ class VoiceState(bases.BaseModelWithFabric):
     #: The guild member this voice state is for.
     #:
     #: :type: :class:`hikari.orm.models.members.Member` or `None`
-    member: typing.Optional[members.Member]
+    member: type_hints.Nullable[members.Member]
 
     #: This voice session's ID.
     #:

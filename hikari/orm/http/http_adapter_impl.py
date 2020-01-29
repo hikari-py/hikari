@@ -603,7 +603,7 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         )
 
     async def update_my_nickname(
-        self, nick: typing.Optional[str], guild: _guilds.GuildLikeT, *, reason: str = unspecified.UNSPECIFIED
+        self, nick: type_hints.Nullable[str], guild: _guilds.GuildLikeT, *, reason: str = unspecified.UNSPECIFIED
     ) -> None:
         await self.fabric.http_client.modify_current_user_nick(
             guild_id=transformations.get_id(guild), nick=nick, reason=reason,
@@ -774,7 +774,7 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         *,
         compute_prune_count: bool = False,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-    ) -> typing.Optional[int]:
+    ) -> type_hints.Nullable[int]:
         return await self.fabric.http_client.begin_guild_prune(
             guild_id=transformations.get_id(guild), days=days, compute_prune_count=compute_prune_count, reason=reason,
         )

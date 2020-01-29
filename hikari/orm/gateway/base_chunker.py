@@ -29,6 +29,7 @@ import abc
 import typing
 
 if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
     from hikari.internal_utilities import containers
     from hikari.orm.models import guilds
 
@@ -48,7 +49,7 @@ class BaseChunker(abc.ABC):
         limit: int = 0,
         presences: bool = True,
         query: str = None,
-        user_ids: typing.Optional[typing.Sequence[int]] = None,
+        user_ids: type_hints.Nullable[typing.Sequence[int]] = None,
     ) -> None:
         """
         Request chunks for the given guilds.
