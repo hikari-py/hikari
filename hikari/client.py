@@ -95,7 +95,7 @@ class Client:
             self._fabric.event_handler = await self._new_event_handler()
             self._fabric.http_client = await self._new_http_client()
             self._fabric.http_adapter = await self._new_http_adapter()
-            self._fabric.gateways = await self._new_shard_map()
+            self._fabric.gateways, self._fabric.shard_count = await self._new_shard_map()
             self._fabric.chunker = await self._new_chunker()
         except Exception as ex:
             self.logger.exception("failed to start a new client", exc_info=ex)
@@ -208,7 +208,7 @@ class Client:
                 shard_count=shard_count,
             )
 
-        return shard_map
+        return shard_map, shard_count
 
     async def _new_chunker(self):
         return basic_chunker_impl.BasicChunkerImpl(self._fabric)
@@ -426,7 +426,7 @@ class Client:
         return float("nan")
 
     @property
-    def heartbeat_latencies(self) -> typing.Mapping[typing.Optional[int], float]:
+    def heartbeat_latencies(self) -> typing.Mapping[int, float]:
         """
         Creates a mapping of each shard ID to the latest heartbeat latency for that shard.
         """
@@ -435,7 +435,7 @@ class Client:
         return {}
 
     @property
-    def shards(self) -> typing.Mapping[typing.Optional[int], gateway.GatewayClient]:
+    def shards(self) -> typing.Mapping[int, gateway.GatewayClient]:
         """
         Creates a mapping of each shard running, mapping the shard ID to the shard instance itself.
         """

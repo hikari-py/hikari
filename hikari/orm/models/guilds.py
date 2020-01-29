@@ -29,6 +29,7 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import conversions
 from hikari.orm.models import bases
 from hikari.orm.models import permissions
 
@@ -174,10 +175,10 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
 
     #: The shard ID that this guild is being served by.
     #:
-    #: If the bot is not sharded, this will be `None`.
+    #: If the bot is not sharded, this will be 0.
     #:
-    #: :type: :class:`int` or :class:`None`
-    shard_id: type_hints.Nullable[int]
+    #: :type: :class:`int`
+    shard_id: int
 
     #: The AFK channel ID.
     #:
@@ -303,17 +304,15 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("id", "name", "is_unavailable", "is_large", "member_count", "shard_id")
 
-    def __init__(
-        self, fabric_obj: fabric.Fabric, payload: containers.JSONObject, shard_id: type_hints.Nullable[int]
-    ) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         self._fabric = fabric_obj
-        self.shard_id = shard_id
+        super().__init__(payload)
+        self.shard_id = conversions.guild_id_to_shard_id(self.id, self._fabric.shard_count)
         self.channels = {}
         self.emojis = {}
         self.members = {}
         self.roles = {}
         self.voice_states = {}
-        super().__init__(payload)
 
     def update_state(self, payload: containers.JSONObject) -> None:
         super().update_state(payload)

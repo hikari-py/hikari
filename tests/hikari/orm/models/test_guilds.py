@@ -153,7 +153,7 @@ def test_guild_payload(
     test_emoji_payload, test_roles_payloads, test_channel_payloads, test_member_payload, test_voice_state_payload
 ):
     return {
-        "id": "123456",
+        "id": "265828729970753537",
         "afk_channel_id": "99998888777766",
         "owner_id": "6969696",
         "region": "eu-central",
@@ -196,7 +196,7 @@ def mock_state_registry():
 
 @pytest.fixture()
 def fabric_obj(mock_state_registry):
-    return fabric.Fabric(state_registry=mock_state_registry)
+    return fabric.Fabric(state_registry=mock_state_registry, shard_count=2)
 
 
 @pytest.mark.model
@@ -235,10 +235,10 @@ class TestGuild:
     def test_available_Guild(
         self, test_guild_payload, test_emoji_payload, test_member_payload, test_voice_state_payload, fabric_obj
     ):
-        guild_obj = guilds.Guild(fabric_obj, test_guild_payload, 9876)
+        guild_obj = guilds.Guild(fabric_obj, test_guild_payload)
 
-        assert guild_obj.shard_id == 9876
-        assert guild_obj.id == 123_456
+        assert guild_obj.shard_id == 0
+        assert guild_obj.id == 265_828_729_970_753_537
         assert guild_obj.afk_channel_id == 99_998_888_777_766
         assert guild_obj.owner_id == 6_969_696
         assert guild_obj.voice_region == "eu-central"
@@ -297,10 +297,10 @@ class TestGuild:
         fabric_obj.state_registry.parse_voice_state.assert_called_once_with(test_voice_state_payload, guild_obj)
 
     def test_unavailable_Guild(self, fabric_obj):
-        guild_obj = guilds.Guild(fabric_obj, {"id": "12345678910", "unavailable": True}, 9876)
+        guild_obj = guilds.Guild(fabric_obj, {"id": "574921006817476608", "unavailable": True})
 
-        assert guild_obj.shard_id == 9876
-        assert guild_obj.id == 12_345_678_910
+        assert guild_obj.shard_id == 1
+        assert guild_obj.id == 574_921_006_817_476_608
         assert guild_obj.is_unavailable
 
     @pytest.mark.model
