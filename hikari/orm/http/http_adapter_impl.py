@@ -279,12 +279,13 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
                 len(message_ids) <= 100, "Only up to 100 messages can be bulk deleted in a single request."
             )
 
-        if additional_messages and len(message_ids) > 1:
-            await self.fabric.http_client.bulk_delete_messages(channel_id=channel_id, messages=message_ids)
-        else:
-            await self.fabric.http_client.delete_message(
-                channel_id=channel_id, message_id=transformations.get_id(first_message)
-            )
+            if len(message_ids) > 1:
+                await self.fabric.http_client.bulk_delete_messages(channel_id=channel_id, messages=message_ids)
+                return
+
+        await self.fabric.http_client.delete_message(
+            channel_id=channel_id, message_id=transformations.get_id(first_message)
+        )
 
     async def update_channel_overwrite(
         self,
@@ -920,7 +921,7 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
 
     async def create_dm_channel(self, recipient: _users.BaseUserLikeT) -> _channels.DMChannel:
         dm_channel_payload = await self.fabric.http_client.create_dm(recipient_id=transformations.get_id(recipient))
-        return self.fabric.state_registry.parse_channel(dm_channel_payload)
+        return self.fabric.state_registry.parse_channel(dm_channel_payload, None)
 
     async def fetch_voice_regions(self) -> typing.Collection[_voices.VoiceRegion]:
         voice_regions_payload = await self.fabric.http_client.list_voice_regions()
