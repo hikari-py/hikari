@@ -12,15 +12,15 @@ do_export CURRENT_VERSION_PATTERN="^__version__\s*=\s*\"\K[^\"]*"
 
 do_export API_NAME="hikari"
 do_export GIT_SVC_HOST="gitlab.com"
-do_export REPO_AUTHOR="nekokatt"
+do_export REPO_AUTHOR="Nekokatt"
 do_export ORIGINAL_REPO_URL="https://${GIT_SVC_HOST}/${REPO_AUTHOR}/${API_NAME}"
 do_export REPOSITORY_URL=$(echo "$CI_REPOSITORY_URL" | perl -pe 's#.*@(.+?(\:\d+)?)/#git@\1:#')
 
 do_export SSH_PRIVATE_KEY_PATH="~/.ssh/id_rsa"
 do_export GIT_TEST_SSH_PATH="git@${GIT_SVC_HOST}"
 
-do_export CI_ROBOT_NAME="${API_NAME} CI"
-do_export CI_ROBOT_EMAIL="$(echo ${API_NAME} | sed 's/ /-/g')-ci@${GIT_SVC_HOST}"
+do_export CI_ROBOT_NAME="${REPO_AUTHOR}"
+do_export CI_ROBOT_EMAIL="3903853-nekokatt@users.noreply.gitlab.com"
 
 do_export SKIP_CI_COMMIT_PHRASE='[skip ci]'
 do_export SKIP_DEPLOY_COMMIT_PHRASE='[skip deploy]'
