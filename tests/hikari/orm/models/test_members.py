@@ -33,7 +33,7 @@ from tests.hikari import _helpers
 
 @pytest.fixture()
 def mock_state_registry():
-    return mock.MagicMock(spec_set=base_registry.BaseRegistry)
+    return mock.create_autospec(base_registry.BaseRegistry)
 
 
 @pytest.fixture()
@@ -133,8 +133,8 @@ def test_Member_update_state(fabric_obj):
 
 @pytest.mark.model
 def test_Member_user_accessor(fabric_obj):
-    user_obj = mock.MagicMock(spec_set=users.User)
-    guild_obj = mock.MagicMock(spec_set=guilds.Guild)
+    user_obj = mock.create_autospec(users.User)
+    guild_obj = mock.create_autospec(guilds.Guild)
     # Member's state is delegated to the inner user.
     user_obj._fabric = fabric_obj
     fabric_obj.state_registry.parse_user = mock.MagicMock(return_value=user_obj)
@@ -147,8 +147,8 @@ def test_Member_user_accessor(fabric_obj):
 
 @pytest.mark.model
 def test_Member_guild_accessor(fabric_obj):
-    user_obj = mock.MagicMock(spec_set=users.User)
-    guild_obj = mock.MagicMock(spec_set=guilds.Guild)
+    user_obj = mock.create_autospec(users.User)
+    guild_obj = mock.create_autospec(guilds.Guild)
     # Member's state is delegated to the inner user.
     user_obj._fabric = fabric
     fabric_obj.state_registry.parse_user = mock.MagicMock(return_value=user_obj)
