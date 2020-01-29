@@ -284,12 +284,12 @@ class TestMessage:
     def test_Message_channel_if_dm_message(self, mock_message, fabric_obj):
         mock_message["channel_id"] = "1234"
         channel = mock.MagicMock(spec_set=channels.Channel)
-        fabric_obj.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel)
+        fabric_obj.state_registry.get_mandatory_channel_by_id = mock.MagicMock(return_value=channel)
 
         obj = messages.Message(fabric_obj, mock_message)
 
         c = obj.channel
-        fabric_obj.state_registry.get_channel_by_id.assert_called_with(1234)
+        fabric_obj.state_registry.get_mandatory_channel_by_id.assert_called_with(1234)
         assert c is channel
 
     @pytest.mark.model

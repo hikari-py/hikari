@@ -31,6 +31,7 @@ from hikari.orm.models import bases
 
 if typing.TYPE_CHECKING:
     from hikari.orm import fabric
+    from hikari.internal_utilities import type_hints
 
 
 class BaseUser(bases.BaseModel, bases.SnowflakeMixin, interface=True):
@@ -59,8 +60,8 @@ class BaseUser(bases.BaseModel, bases.SnowflakeMixin, interface=True):
 
     #: The hash of the user's avatar, or None if they do not have one.
     #:
-    #: :type: :class:`str`
-    avatar_hash: str
+    #: :type: :class:`str` or :class:`None`
+    avatar_hash: type_hints.Nullable[str]
 
     #: True if the user is a bot, False otherwise
     #:
@@ -143,7 +144,7 @@ class OAuth2User(User):
     #: Requires the `identify` OAuth2 scope.
     #:
     #: :type: :class:`bool` or :class:`None` if not available.
-    is_mfa_enabled: typing.Optional[bool]
+    is_mfa_enabled: type_hints.Nullable[bool]
 
     #: The user's chosen language option.
     #:
@@ -172,21 +173,21 @@ class OAuth2User(User):
     #:        >>> # Get the standard locale currency format
     #:        >>> locale.currency_formats['standard']
     #:        <NumberPattern '#,##0.00\xa0¤'>
-    locale: typing.Optional[str]
+    locale: type_hints.Nullable[str]
 
     #: True if the user has verified their email address.
     #:
     #: Requires the `email` OAuth2 scope.
     #:
     #: :type: :class:`bool` or :class:`None` if not available.
-    is_verified: typing.Optional[bool]
+    is_verified: type_hints.Nullable[bool]
 
     #: The user's email address.
     #:
     #: Requires the `email` OAuth2 scope.
     #:
     #: :type: :class:`str` or :class:`None` if not available`
-    email: typing.Optional[str]
+    email: type_hints.Nullable[str]
 
     #: The flags on a user's account. Describes the type of badges the user will have on their
     #: profile, amongst other things.
@@ -194,14 +195,14 @@ class OAuth2User(User):
     #: Requires the `identify` OAuth2 scope.
     #:
     #: :type: :class:`UserFlag` or :class:`None` if not available.
-    flags: typing.Optional[UserFlag]
+    flags: type_hints.Nullable[UserFlag]
 
     #: The type of Nitro subscription that the user has.
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
     #: :type: :class:`PremiumType` or :class:`None` if not available.
-    premium_type: typing.Optional[PremiumType]
+    premium_type: type_hints.Nullable[PremiumType]
 
     __repr__ = reprs.repr_of("id", "username", "discriminator", "is_bot", "is_verified", "is_mfa_enabled")
 

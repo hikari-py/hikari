@@ -36,6 +36,7 @@ from hikari.orm.models import permissions
 from hikari.orm.models import roles
 
 if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import integrations
     from hikari.orm.models import users
@@ -93,7 +94,7 @@ class AuditLogEntry(bases.BaseModel, bases.SnowflakeMixin):
     #: The id of the effected entity.
     #:
     #: :type: :class:`int`
-    target_id: typing.Optional[int]
+    target_id: type_hints.Nullable[int]
 
     #: Sequence of changes made to the target entity.
     #:
@@ -113,12 +114,12 @@ class AuditLogEntry(bases.BaseModel, bases.SnowflakeMixin):
     #: Extra information provided for certain audit log events.
     #:
     #: :type: implementation of :class:`hikari.orm.models.audit_logs.IAuditLogEntryInfo` or `None`
-    options: typing.Optional[BaseAuditLogEntryInfo]
+    options: type_hints.Nullable[BaseAuditLogEntryInfo]
 
     #: The reason for these changes.
     #:
     #: :type: :class:`str` or `None`
-    reason: typing.Optional[str]
+    reason: type_hints.Nullable[str]
 
     __repr__ = reprs.repr_of("id", "user_id", "action_type")
 
@@ -337,7 +338,7 @@ class ChannelOverwriteAuditLogEntryInfo(
 
 def parse_audit_log_entry_info(
     audit_log_entry_info_payload: containers.JSONObject, event_type: int
-) -> typing.Optional[BaseAuditLogEntryInfo]:
+) -> type_hints.Nullable[BaseAuditLogEntryInfo]:
     """
     Parses a specific type of audit log entry info based on the given event type. If nothing corresponds
     to the additional info passed or the event_type given, then `None` is returned instead.
@@ -485,12 +486,12 @@ class AuditLogChange(bases.BaseModel):
     #: The old value of the key.
     #:
     #: :type: :class:`typing.Any` or `None`
-    old_value: typing.Optional[typing.Any]
+    old_value: type_hints.Nullable[typing.Any]
 
     #: The new value of the key.
     #:
     #: :type: :class:`typing.Any` or `None`
-    new_value: typing.Optional[typing.Any]
+    new_value: type_hints.Nullable[typing.Any]
 
     __repr__ = reprs.repr_of("key")
 

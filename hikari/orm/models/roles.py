@@ -129,7 +129,7 @@ class Role(PartialRole, bases.BaseModelWithFabric):
         self.is_mentionable = payload["mentionable"]
 
     @property
-    def guild(self) -> _guilds.Guild:
+    def guild(self) -> typing.Union[_guilds.Guild, bases.UnknownObject[_guilds.Guild]]:
         return self._fabric.state_registry.get_mandatory_guild_by_id(self.guild_id)
 
 

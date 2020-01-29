@@ -20,10 +20,11 @@
 Media tranformation utilities.
 """
 import base64
-import typing
+
+from hikari.internal_utilities import type_hints
 
 
-def image_bytes_to_image_data(img_bytes: bytes) -> typing.Optional[str]:
+def image_bytes_to_image_data(img_bytes: bytes) -> type_hints.Nullable[str]:
     """
     Encode image bytes into an image data string.
 
