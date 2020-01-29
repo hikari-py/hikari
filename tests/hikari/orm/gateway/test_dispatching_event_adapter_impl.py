@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import contextlib
 import datetime
-import inspect
 import logging
 from unittest import mock
 
@@ -189,7 +187,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_channel_create(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_channel_create_for_dm_channel_dispatches_DM_CHANNEL_CREATE(
@@ -224,7 +222,7 @@ class TestDispatchingEventAdapterImpl:
         payload = {"id": "123"}
         await adapter_impl.handle_channel_update(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_channel_update_for_valid_dm_channel_update_dispatches_DM_CHANNEL_UPDATE(
@@ -270,7 +268,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_channel_delete(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_channel_delete_parses_channel(self, adapter_impl, gateway_impl, fabric_impl):
@@ -320,7 +318,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_channel_pins_update(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_channel_pins_update_for_known_channel_invokes_set_last_pinned_timestamp_on_state(
@@ -477,7 +475,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_update(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_delete_when_unavailable_invokes__handle_guild_unavailable(
@@ -636,7 +634,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_ban_add(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_ban_remove_parses_user(self, adapter_impl, gateway_impl, fabric_impl):
@@ -669,7 +667,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_ban_remove(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_emojis_update_when_guild_is_not_cached_does_not_dispatch_anything(
@@ -683,7 +681,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_emojis_update(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_emojis_update_when_guild_is_cached_dispatches_GUILD_EMOJIS_UPDATE(
@@ -723,7 +721,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_integrations_update(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_integrations_update_when_guild_is_cached_dispatches_GUILD_INTEGRATIONS_UPDATE(
@@ -746,7 +744,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_member_add(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_add_when_guild_is_cached_dispatches_GUILD_MEMBER_ADD(
@@ -771,7 +769,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_member_update(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_update_when_member_is_not_cached_does_not_dispatch_anything(
@@ -783,7 +781,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_member_update(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_update_when_role_is_not_cached_does_not_pass_update_member_that_role(
@@ -851,7 +849,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_member_remove(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_remove_when_member_is_cached_deletes_member(
@@ -897,7 +895,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_role_create(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_create_when_guild_is_cached_dispatches_GUILD_ROLE_CREATE(
@@ -921,7 +919,7 @@ class TestDispatchingEventAdapterImpl:
         payload = {"guild_id": "123", "role": {"id": "12"}}
         await adapter_impl.handle_guild_role_update(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_update_when_guild_is_cached_but_role_is_not_cached_does_not_dispatch_anything(
@@ -934,7 +932,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_role_update(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_update_when_diff_is_valid_dispatches_GUILD_ROLE_UPDATE(
@@ -960,7 +958,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_role_delete(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_delete_when_role_is_not_cached_does_not_dispatch_anything(
@@ -972,7 +970,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_role_delete(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_role_delete_when_role_is_cached_deletes_the_role(
@@ -1009,7 +1007,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_create(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_message_create_when_channel_exists_dispatches_MESSAGE_CREATE(
@@ -1033,7 +1031,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_update(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_message_update_when_message_is_cached_dispatches_MESSAGE_UPDATE(
@@ -1057,7 +1055,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_delete(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_message_delete_when_message_is_cached_deletes_message(
@@ -1146,10 +1144,10 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_delete_bulk(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_handle_message_reaction_add_when_message_not_cached_does_dispatch(
+    async def test_handle_message_reaction_add_when_message_not_cached_will_still_dispatch(
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         mock_reaction = mock.MagicMock(reactions.Reaction)
@@ -1268,7 +1266,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_add_when_cannot_resolve_member_does_not_dispatch_anything(
@@ -1291,7 +1289,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_add_when_resolved_member_dispatches_MESSAGE_REACTION_ADD(
@@ -1357,7 +1355,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_reaction_remove(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_remove_when_in_guild_attempts_to_resolve_member_who_added_reaction(
@@ -1420,7 +1418,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_reaction_remove(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_remove_when_reaction_by_that_user_not_cached_does_not_dispatch_anything(
@@ -1443,7 +1441,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_reaction_remove(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_remove_dispatches_MESSAGE_REACTION_REMOVE(
@@ -1478,7 +1476,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_reaction_remove_all(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_remove_all_deletes_all_reactions(
@@ -1521,7 +1519,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_presence_update(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_presence_update_when_user_not_cached_does_not_dispatch_anything(
@@ -1541,7 +1539,7 @@ class TestDispatchingEventAdapterImpl:
         }
         await adapter_impl.handle_presence_update(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_presence_update_when_member_not_cached_does_not_dispatch_anything(
@@ -1563,7 +1561,7 @@ class TestDispatchingEventAdapterImpl:
         }
         await adapter_impl.handle_presence_update(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_presence_update_when_cached_member_invokes_update_member_presence(
@@ -1676,7 +1674,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_typing_start(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_typing_start_by_unknown_user_does_not_dispatch_anything(
@@ -1690,7 +1688,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_typing_start(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_typing_start_in_guild_resolves_member(
@@ -1755,7 +1753,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_webhooks_update(gateway_impl, payload)
 
-        # FIXME: assert not called
+        dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_webhooks_update_when_channel_cached_dispatches_WEBHOOKS_UPDATE(
