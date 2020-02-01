@@ -781,12 +781,6 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
-    @_helpers.assert_raises(type_=ValueError)
-    async def test_delete_messages_raises_value_error_when_too_many_messages_passed(self, fabric_impl):
-        fabric_impl.http_client.bulk_delete_messages = mock.AsyncMock()
-        await fabric_impl.http_adapter.delete_messages(*range(101), channel=321231)
-
-    @pytest.mark.asyncio
     @_helpers.assert_raises(type_=TypeError)
     async def test_delete_messages_raises_type_error_without_channel(self, fabric_impl):
         fabric_impl.http_client.delete_message = mock.AsyncMock()
@@ -1185,6 +1179,7 @@ class TestHTTPAdapterImpl:
             reason=unspecified.UNSPECIFIED,
         )
 
+    @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("role", 53333, roles.Role)
     async def test_update_guild_emoji_with_all_optionals_with_emoji_object(self, fabric_impl, role):
         fabric_impl.http_client.modify_guild_emoji = mock.AsyncMock()
