@@ -23,6 +23,7 @@ proxying, SSL configuration, and a standard easy-to-use interface.
 from __future__ import annotations
 
 import abc
+import contextlib
 import json
 import typing
 
@@ -284,5 +285,6 @@ class BaseHTTPClient(abc.ABC):
         await self.close()
 
     async def close(self):
-        self.logger.debug("Closing HTTPAPI")
-        await self.client_session.close()
+        self.logger.debug("Closing HTTPClient")
+        with contextlib.suppress(Exception):
+            await self.client_session.close()
