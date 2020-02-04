@@ -132,7 +132,7 @@ class Client:
     async def _new_shard_map(self):
         shard_ids = self._client_options.shards
 
-        if not isinstance(shard_ids, client_options.ShardOptions) and shard_ids is not None:
+        if not isinstance(shard_ids, client_options.ShardOptions):
             raise RuntimeError(
                 "shard_ids in client options was not a valid type or value.\n"
                 "\n"
@@ -140,7 +140,7 @@ class Client:
                 "set it to:\n",
                 "   1. Do not specify anything for it. This will default it to `hikari.client_options.AUTO_SHARD` \n"
                 "      which will ask the gateway for the most appropriate settings for your bot on start up.\n"
-                "   2. Set it to `None`. This will turn sharding off and use a single gateway for your bot.\n"
+                "   2. Set it to `hikari.client_options.NO_SHARDING`. This will turn sharding off and use a single gateway for your bot.\n"
                 "   3. Set it to a `hikari.client_options.ShardOptions` object. The first value\n"
                 "      can be either a collection of `int`s, a `slice`, or a `range`, and represents any shard IDs\n"
                 "      to spin up. The second value is the total number of shards that are running for the entire bot\n"
@@ -178,15 +178,18 @@ class Client:
         else:
             url = await self._fabric.http_adapter.gateway_url
 
-            if isinstance(shard_ids, client_options.ShardOptions):
-                if isinstance(shard_ids.shards, slice):
-                    shard_count = shard_ids.shard_count
-                    shard_ids = [i for i in range(shard_ids.shards.start, shard_ids.shards.stop, shard_ids.shards.step)]
-                else:
-                    shard_ids, shard_count = list(shard_ids.shards), shard_ids.shard_count
+            if isinstance(shard_ids.shards, slice):
+                shard_count = shard_ids.shard_count
+                shard_ids = [
+                    i
+                    for i in range(
+                        shard_ids.shards.start if shard_ids.shards.start else 0,
+                        shard_ids.shards.stop,
+                        shard_ids.shards.step if shard_ids.shards.step else 1,
+                    )
+                ]
             else:
-                shard_count = 1
-                shard_ids = [0]
+                shard_ids, shard_count = list(shard_ids.shards), shard_ids.shard_count
 
         shard_map = {}
         for shard_id in shard_ids:
