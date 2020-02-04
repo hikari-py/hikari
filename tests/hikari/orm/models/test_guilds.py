@@ -191,7 +191,7 @@ def test_guild_payload(
 
 @pytest.fixture()
 def mock_state_registry():
-    return mock.create_autospec(base_registry.BaseRegistry)
+    return _helpers.create_autospec(base_registry.BaseRegistry)
 
 
 @pytest.fixture()

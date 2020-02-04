@@ -148,8 +148,8 @@ class TestHTTPClient:
 
     @pytest.mark.asyncio
     async def test_handle_bad_response(self, http_client_impl):
-        backoff = mock.create_autospec(
-            ratelimits.ExponentialBackOff, spec_set=True, __next__=mock.MagicMock(return_value=4)
+        backoff = _helpers.create_autospec(
+            ratelimits.ExponentialBackOff, __next__=mock.MagicMock(return_value=4)
         )
         mock_route = mock.MagicMock(routes.CompiledRoute)
         with mock.patch.object(asyncio, "sleep"):
@@ -160,8 +160,8 @@ class TestHTTPClient:
 
     @pytest.mark.asyncio
     async def test_handle_bad_response_raises_server_http_error_on_timeout(self, http_client_impl):
-        backoff = mock.create_autospec(
-            ratelimits.ExponentialBackOff, spec_set=True, __next__=mock.MagicMock(side_effect=asyncio.TimeoutError())
+        backoff = _helpers.create_autospec(
+            ratelimits.ExponentialBackOff, __next__=mock.MagicMock(side_effect=asyncio.TimeoutError())
         )
         mock_route = mock.MagicMock(routes.CompiledRoute)
         mock_exception = errors.ServerHTTPError("A reason", ..., ..., ...)
