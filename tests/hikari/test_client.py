@@ -37,7 +37,7 @@ from tests.hikari import _helpers
 @pytest.mark.asyncio
 class TestClient:
     def gateway_client(self, id, latency=None):
-        gw = mock.create_autospec(_gateway.GatewayClient, spec_set=True)
+        gw = _helpers.create_autospec(_gateway.GatewayClient)
         gw.shard_id = id
         gw.heartbeat_latency = latency
         return gw
@@ -53,8 +53,8 @@ class TestClient:
     def fabric(self):
         fabric = _fabric.Fabric()
 
-        http_adapter_impl = mock.create_autospec(_http_adapter_impl.HTTPAdapterImpl, spec_set=True)
-        http_event_handler = mock.create_autospec(_base_event_handler.BaseEventHandler, spec_set=True)
+        http_adapter_impl = _helpers.create_autospec(_http_adapter_impl.HTTPAdapterImpl)
+        http_event_handler = _helpers.create_autospec(_base_event_handler.BaseEventHandler)
 
         fabric.http_adapter = http_adapter_impl
         fabric.event_handler = http_event_handler

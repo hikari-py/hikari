@@ -718,8 +718,8 @@ class TestClose:
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("close",))
-        client.ws = mock.create_autospec(aiohttp.ClientWebSocketResponse)
-        client.session = mock.create_autospec(aiohttp.ClientSession)
+        client.ws = _helpers.create_autospec(aiohttp.ClientWebSocketResponse)
+        client.session = _helpers.create_autospec(aiohttp.ClientSession)
         client.closed_event = asyncio.Event()
         return client
 

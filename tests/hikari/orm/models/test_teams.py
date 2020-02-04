@@ -44,8 +44,8 @@ def team_payload(member_payload):
 
 @pytest.fixture()
 def fabric_obj():
-    spec = mock.create_autospec(fabric.Fabric)
-    spec.state_registry = mock.create_autospec(base_registry.BaseRegistry)
+    spec = _helpers.create_autospec(fabric.Fabric)
+    spec.state_registry = _helpers.create_autospec(base_registry.BaseRegistry)
     return spec
 
 
