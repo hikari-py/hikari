@@ -40,8 +40,7 @@ class ShardOptions:
 
     Special cases:
         No sharding desired:
-            >>> None  # set this to None explicitly, or...
-            >>> ShardOptions([None], 1)    # tell it to use no shards
+            >>> ShardOptions([0], 1)
         Automatically determine how to shard:
             >>> ShardOptions([], 0)
     """
@@ -94,6 +93,6 @@ class ClientOptions:
     proxy_auth: type_hints.Nullable[aiohttp.BasicAuth] = None
     proxy_headers: type_hints.Nullable[aiohttp.typedefs.LooseHeaders] = None
     proxy_url: type_hints.Nullable[str] = None
-    shards: type_hints.Nullable[ShardOptions] = AUTO_SHARD
+    shards: ShardOptions = AUTO_SHARD
     ssl_context: type_hints.Nullable[ssl.SSLContext] = None
     verify_ssl: bool = True

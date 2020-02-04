@@ -361,6 +361,9 @@ class AwaitableMock:
     def assert_awaited_once(self):
         assert self.await_count == 1
 
+    def assert_not_awaited(self):
+        assert self.await_count == 0
+
     is_resolved = False
 
 
