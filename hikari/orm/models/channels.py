@@ -33,7 +33,6 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import unspecified
 from hikari.orm.models import bases
 from hikari.orm.models import members
@@ -42,6 +41,7 @@ from hikari.orm.models import users
 from hikari.orm.models import webhooks
 
 if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
     from hikari.internal_utilities import storage
     from hikari.orm import fabric
     from hikari.orm.models import embeds
@@ -131,11 +131,11 @@ class Channel(abc.ABC, bases.BaseModelWithFabric, bases.SnowflakeMixin):
     @classmethod
     def get_channel_class_from_type(
         cls, type_id: typing.Union[ChannelType, int]
-    ) -> typing.Optional[typing.Type[Channel]]:
+    ) -> type_hints.Nullable[typing.Type[Channel]]:
         return cls._channel_implementations.get(type_id)
 
     @property
-    def is_dm(self) -> typing.Optional[bool]:
+    def is_dm(self) -> type_hints.Nullable[bool]:
         channel_type = getattr(self, "type", None)
         # If type isn't set or is unknown then return None
         if not isinstance(channel_type, ChannelType):
@@ -183,7 +183,7 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
     #: The optional ID of the last message to be sent.
     #:
     #: :type: :class:`int` or :class:`None`
-    last_message_id: typing.Optional[int]
+    last_message_id: type_hints.Nullable[int]
 
     @aio.optional_await("send message to channel")
     async def send(
@@ -277,7 +277,7 @@ class GuildChannel(Channel):
     #: The parent channel ID.
     #:
     #: :type: :class:`int` or :class:`None`
-    parent_id: typing.Optional[int]
+    parent_id: type_hints.Nullable[int]
 
     #: The position of the channel in the channel list.
     #:
@@ -313,11 +313,14 @@ class GuildChannel(Channel):
         self.parent_id = transformations.nullable_cast(payload.get("parent_id"), int)
 
     @property
-    def guild(self) -> _guild.Guild:
+    def guild(self) -> type_hints.Nullable[_guild.Guild]:
+        """
+        If the guild is not cached, this will return None
+        """
         return self._fabric.state_registry.get_guild_by_id(self.guild_id)
 
     @property
-    def parent(self) -> typing.Optional[GuildCategory]:
+    def parent(self) -> type_hints.Nullable[GuildCategory]:
         return self.guild.channels[self.parent_id] if self.parent_id is not None else None
 
 
@@ -331,7 +334,7 @@ class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT):
     #: The channel topic.
     #:
     #: :type: :class:`str` or :class:`None`
-    topic: typing.Optional[str]
+    topic: type_hints.Nullable[str]
 
     #: How many seconds a user has to wait before sending consecutive messages.
     #:
@@ -341,7 +344,7 @@ class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT):
     #: The optional ID of the last message to be sent.
     #:
     #: :type: :class:`int` or :class:`None`
-    last_message_id: typing.Optional[int]
+    last_message_id: type_hints.Nullable[int]
 
     #: Whether the channel is NSFW or not
     #:
@@ -371,7 +374,7 @@ class DMChannel(TextChannel, type=ChannelType.DM):
     #: The optional ID of the last message to be sent.
     #:
     #: :type: :class:`int` or :class:`None`
-    last_message_id: typing.Optional[int]
+    last_message_id: type_hints.Nullable[int]
 
     #: Sequence of recipients in the DM chat.
     #:
@@ -408,7 +411,7 @@ class GuildVoiceChannel(GuildChannel, type=ChannelType.GUILD_VOICE):
     #: The max number of users in the voice channel, or None if there is no limit.
     #:
     #: :type: :class:`int` or :class:`None`
-    user_limit: typing.Optional[int]
+    user_limit: type_hints.Nullable[int]
 
     __repr__ = reprs.repr_of("id", "name", "guild.name", "bitrate", "user_limit")
 
@@ -436,18 +439,18 @@ class GroupDMChannel(DMChannel, type=ChannelType.GROUP_DM):
     #: Hash of the icon for the chat, if there is one.
     #:
     #: :type: :class:`str` or :class:`None`
-    icon_hash: typing.Optional[str]
+    icon_hash: type_hints.Nullable[str]
 
     #: Name for the chat, if there is one.
     #:
     #: :type: :class:`str` or :class:`None`
-    name: typing.Optional[str]
+    name: type_hints.Nullable[str]
 
     #: If the chat was made by a bot, this will be the application ID of the bot that made it. For all other cases it
     #: will be `None`.
     #:
     #: :type: :class:`int` or :class:`None`
-    owner_application_id: typing.Optional[int]
+    owner_application_id: type_hints.Nullable[int]
 
     __repr__ = reprs.repr_of("id", "name")
 
@@ -491,12 +494,12 @@ class GuildAnnouncementChannel(GuildChannel, type=ChannelType.GUILD_ANNOUNCEMENT
     #: The channel topic.
     #:
     #: :type: :class:`str` or :class:`None`
-    topic: typing.Optional[str]
+    topic: type_hints.Nullable[str]
 
     #: The optional ID of the last message to be sent.
     #:
     #: :type: :class:`int` or :class:`None`
-    last_message_id: typing.Optional[int]
+    last_message_id: type_hints.Nullable[int]
 
     #: Whether the channel is NSFW or not
     #:

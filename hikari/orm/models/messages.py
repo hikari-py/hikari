@@ -39,6 +39,7 @@ from hikari.orm.models import webhooks
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import channels
     from hikari.orm.models import guilds
@@ -153,7 +154,7 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     #: The optional guild ID of the guild the message was sent in, where applicable.
     #:
     #: :type: :class:`int` or `None`
-    guild_id: typing.Optional[int]
+    guild_id: type_hints.Nullable[int]
 
     #: The entity that generated this message.
     #:
@@ -168,12 +169,12 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     #: The actual textual content of the message.
     #:
     #: :type: :class:`str`
-    content: typing.Optional[str]
+    content: type_hints.Nullable[str]
 
     #: The timestamp that the message was last edited at, or `None` if not ever edited.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    edited_at: typing.Optional[datetime.datetime]
+    edited_at: type_hints.Nullable[datetime.datetime]
 
     #: True if this message was a TTS message, False otherwise.
     #:
@@ -203,12 +204,12 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     #: The application associated with this message (applicable for rich presence-related chat embeds only).
     #:
     #: :type: :class:`hikari.orm.models.messages.MessageApplication` or `None`
-    application: typing.Optional[MessageApplication]
+    application: type_hints.Nullable[MessageApplication]
 
     #: The activity associated with this message (applicable for rich presence-related chat embeds only).
     #:
     #: :type: :class:`hikari.orm.models.messages.MessageActivity` or `None`
-    activity: typing.Optional[MessageActivity]
+    activity: type_hints.Nullable[MessageActivity]
 
     #: The type of message.
     #:
@@ -228,7 +229,7 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     #: Optional crossposting reference. Only valid if the message is a cross post.
     #:
     #: :type: :class:`hikari.orm.models.messages.MessageCrossPost` or `None` if not a cross post.
-    crosspost_of: typing.Optional[MessageCrosspost]
+    crosspost_of: type_hints.Nullable[MessageCrosspost]
 
     __repr__ = reprs.repr_of("id", "author", "type", "is_tts", "created_at", "edited_at")
 
@@ -303,7 +304,10 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
                 self._fabric.state_registry.parse_reaction(reaction_payload)
 
     @property
-    def guild(self) -> typing.Optional[guilds.Guild]:
+    def guild(self) -> type_hints.Nullable[guilds.Guild]:
+        """
+        If the guild is not cached, this will return None
+        """
         return self._fabric.state_registry.get_guild_by_id(self.guild_id) if self.guild_id else None
 
     @property
@@ -315,11 +319,12 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         channels.GuildStoreChannel,
         channels.DMChannel,
         channels.GroupDMChannel,
+        bases.UnknownObject,
     ]:
         # We may as well just use this to get it. It is pretty much as fast, but it reduces the amount of testing
         # needed for code that is essentially the same.
         # noinspection PyTypeChecker
-        return self._fabric.state_registry.get_channel_by_id(self.channel_id)
+        return self._fabric.state_registry.get_mandatory_channel_by_id(self.channel_id)
 
     @property
     def is_webhook(self) -> bool:
@@ -346,7 +351,7 @@ class MessageActivity:
     #: The optional party ID associated with the message.
     #:
     #: :type: :class:`int` or `None`
-    party_id: typing.Optional[int]
+    party_id: type_hints.Nullable[int]
 
     __repr__ = reprs.repr_of("type", "party_id")
 
@@ -370,7 +375,7 @@ class MessageApplication(bases.BaseModel, bases.SnowflakeMixin):
     #: The optional ID for the cover image of the application.
     #:
     #: :type: :class:`int` or `None`
-    cover_image_id: typing.Optional[int]
+    cover_image_id: type_hints.Nullable[int]
 
     #: The application description
     #:
@@ -380,7 +385,7 @@ class MessageApplication(bases.BaseModel, bases.SnowflakeMixin):
     #: The optional ID of the application's icon
     #:
     #: :type: :class:`str` or `None`
-    icon_image_id: typing.Optional[int]
+    icon_image_id: type_hints.Nullable[int]
 
     #: The application name
     #:
@@ -411,7 +416,7 @@ class MessageCrosspost:
     #:     documentation, but the situations that cause this to occur are not currently documented.
     #:
     #: :type: :class:`int` or `None`.
-    message_id: typing.Optional[int]
+    message_id: type_hints.Nullable[int]
 
     #: The ID of the guild that the message originated from.
     #: :type: :class:`int`.
@@ -424,7 +429,7 @@ class MessageCrosspost:
     #:     documentation, but the situations that cause this to occur are not currently documented.
     #:
     #: :type: :class:`int` or `None`.
-    guild_id: typing.Optional[int]
+    guild_id: type_hints.Nullable[int]
 
     __repr__ = reprs.repr_of("message_id", "guild_id", "channel_id")
 

@@ -30,13 +30,14 @@ if typing.TYPE_CHECKING:
     from hikari.internal_utilities import type_hints
     from hikari.orm.models import bases
 
-ValueT = typing.TypeVar("ValueT")
+CastInputT = typing.TypeVar("CastInputT")
+CastOutputT = typing.TypeVar("CastOutputT")
 DefaultT = typing.TypeVar("DefaultT")
-TypeCastT = typing.Type[ValueT]
-CastT = typing.Union[TypeCastT, typing.Callable[[typing.Any], ValueT]]
+TypeCastT = typing.Callable[[CastInputT], CastOutputT]
+ResultT = typing.Union[CastOutputT, DefaultT]
 
 
-def nullable_cast(value: typing.Any, cast: CastT) -> typing.Optional[ValueT]:
+def nullable_cast(value: CastInputT, cast: TypeCastT) -> ResultT:
     """
     Attempts to cast the given `value` with the given `cast`, but only if the `value` is
     not `None`. If it is `None`, then `None` is returned instead.
@@ -46,7 +47,7 @@ def nullable_cast(value: typing.Any, cast: CastT) -> typing.Optional[ValueT]:
     return cast(value)
 
 
-def try_cast(value: typing.Any, cast: CastT, default: DefaultT = None) -> typing.Union[ValueT, DefaultT]:
+def try_cast(value: CastInputT, cast: TypeCastT, default: DefaultT = None) -> ResultT:
     """
     Try to cast the given value to the given cast. If it throws a :class:`Exception` or derivative, it will
     return `default` instead of the cast value instead.
@@ -60,7 +61,7 @@ def put_if_specified(
     mapping: typing.Dict[typing.Hashable, typing.Any],
     key: typing.Hashable,
     value: typing.Any,
-    type_after: type_hints.NotRequired[CastT] = unspecified.UNSPECIFIED,
+    type_after: type_hints.Nullable[TypeCastT] = None,
 ) -> None:
     """
     Add a value to the mapping under the given key as long as the value is not :attr:`UNSPECIFIED`
@@ -74,10 +75,9 @@ def put_if_specified(
             The value to add.
         type_after:
             Optional type to apply to the value when added.
-            Defaults to :attr:`hikari.internal_utilities.unspecified.UNSPECIFIED`.
     """
     if value is not unspecified.UNSPECIFIED:
-        if type_after is not unspecified.UNSPECIFIED:
+        if type_after:
             mapping[key] = type_after(value)
         else:
             mapping[key] = value
@@ -97,12 +97,12 @@ def get_id(value: bases.SnowflakeLikeT) -> str:
 
 
 def cast_if_specified(
-    data: typing.Union[ValueT, typing.Iterable[ValueT], unspecified.Unspecified, None],
-    cast: CastT,
+    data: typing.Union[CastInputT, typing.Iterable[CastInputT], unspecified.Unspecified, None],
+    cast: TypeCastT,
     iterable: bool = False,
     nullable: bool = False,
     **kwargs,
-) -> typing.Union[DefaultT, typing.Sequence[DefaultT], None]:
+) -> typing.Union[CastInputT, typing.Iterable[CastInputT], unspecified.Unspecified, None]:
     """
     Attempts to cast the supplied data if it is specified.
 
@@ -135,7 +135,7 @@ def put_if_not_none(
     mapping: typing.Dict[typing.Hashable, typing.Any],
     key: typing.Hashable,
     value: typing.Any,
-    type_after: type_hints.NotRequired[CastT] = unspecified.UNSPECIFIED,
+    type_after: type_hints.Nullable[TypeCastT] = None,
 ) -> None:
     """
     Add a value to the mapping under the given key as long as the value is not :attr:`None`
@@ -149,10 +149,9 @@ def put_if_not_none(
             The value to add.
         type_after:
             Optional type to apply to the value when added.
-            Defaults to :attr:`hikari.internal_utilities.unspecified.UNSPECIFIED`.
     """
     if value is not None:
-        if type_after is not unspecified.UNSPECIFIED:
+        if type_after:
             mapping[key] = type_after(value)
         else:
             mapping[key] = value
@@ -180,7 +179,7 @@ def format_present_placeholders(string: str, **kwargs) -> str:
 
 
 def get_parent_id_from_model(
-    obj: typing.Any, parent_object: typing.Optional[bases.SnowflakeLikeT], attribute: str
+    obj: typing.Any, parent_object: type_hints.Nullable[bases.SnowflakeLikeT], attribute: str
 ) -> str:
     """
     Attempt to get a parent object ID from the parent object or an object that has the parent object as an attribute.
@@ -212,8 +211,8 @@ def get_parent_id_from_model(
 
 
 def id_map(
-    snowflake_iterable: typing.Iterable[bases.SnowflakeMixin],
-) -> typing.MutableMapping[int, bases.SnowflakeMixin]:
+    snowflake_iterable: typing.Iterable[bases.SnowflakeMixinT],
+) -> typing.MutableMapping[int, bases.SnowflakeMixinT]:
     """
     Given an iterable of elements with an :class:`int` `id` attribute, produce a mutable mapping
     of the IDs to their underlying values.
@@ -222,10 +221,11 @@ def id_map(
 
 
 __all__ = [
-    "ValueT",
+    "CastInputT",
+    "CastOutputT",
     "DefaultT",
     "TypeCastT",
-    "CastT",
+    "ResultT",
     "nullable_cast",
     "try_cast",
     "put_if_specified",

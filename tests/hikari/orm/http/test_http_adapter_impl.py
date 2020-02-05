@@ -56,8 +56,8 @@ class TestHTTPAdapterImpl:
     def fabric_impl(self):
         fabric_impl = fabric.Fabric()
 
-        http_client_impl = mock.MagicMock(spec_set=http_client.HTTPClient)
-        state_registry_impl = mock.MagicMock(spec_set=base_registry.BaseRegistry)
+        http_client_impl = _helpers.create_autospec(http_client.HTTPClient)
+        state_registry_impl = _helpers.create_autospec(base_registry.BaseRegistry)
         http_adapter_impl = _http_adapter_impl.HTTPAdapterImpl(fabric_impl)
 
         fabric_impl.state_registry = state_registry_impl
@@ -78,7 +78,7 @@ class TestHTTPAdapterImpl:
     @pytest.mark.asyncio
     async def test_fetch_gateway_bot(self, fabric_impl):
         mock_model = _helpers.mock_model(gateway_bot.GatewayBot)
-        mock_payload = mock.MagicMock(spec_set=dict)
+        mock_payload = _helpers.create_autospec(dict)
         fabric_impl.http_client.get_gateway_bot = mock.AsyncMock(return_value=mock_payload)
         fabric_impl.state_registry.parse_gateway_bot.return_value = mock_model
 
@@ -92,7 +92,7 @@ class TestHTTPAdapterImpl:
     @_helpers.parametrize_valid_id_formats_for_models("guild", 112233, guilds.Guild)
     async def test_fetch_audit_log_with_default_args(self, fabric_impl, guild):
         mock_audit_log = _helpers.mock_model(audit_logs.AuditLog)
-        mock_payload = mock.MagicMock(spec_set=dict)
+        mock_payload = _helpers.create_autospec(dict)
 
         fabric_impl.http_client.get_guild_audit_log = mock.AsyncMock(return_value=mock_payload)
         fabric_impl.state_registry.parse_audit_log.return_value = mock_audit_log
@@ -115,7 +115,7 @@ class TestHTTPAdapterImpl:
     @_helpers.parametrize_valid_id_formats_for_models("user", 334455, users.User, users.OAuth2User)
     async def test_fetch_audit_log_with_optional_args_specified(self, fabric_impl, guild, user):
         mock_audit_log = _helpers.mock_model(audit_logs.AuditLog)
-        mock_payload = mock.MagicMock(spec_set=dict)
+        mock_payload = _helpers.create_autospec(dict)
 
         fabric_impl.http_client.get_guild_audit_log = mock.AsyncMock(return_value=mock_payload)
         fabric_impl.state_registry.parse_audit_log.return_value = mock_audit_log
@@ -359,26 +359,33 @@ class TestHTTPAdapterImpl:
         raise NotImplementedError
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["message", "channel"],
-        (
-            [
-                _helpers.mock_model(
-                    messages.Message, id=322222212121, channel=_helpers.mock_model(channels.Channel, id=532432123),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [322222212121, _helpers.mock_model(channels.Channel, id=532432123),],
-            [322222212121, 532432123],
-            ["322222212121", "532432123"],
-        ),
-    )
+    @pytest.mark.parametrize("message", ("322222212121", 322222212121))
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 532432123, channels.Channel)
     async def test_fetch_message(self, fabric_impl, message, channel):
         mock_message_payload = {"id": "4444444", "content": "Hello World!"}
         mock_message = mock.MagicMock(messages.Message)
         fabric_impl.state_registry.parse_message.return_value = mock_message
         fabric_impl.http_client.get_channel_message = mock.AsyncMock(return_value=mock_message_payload)
         assert await fabric_impl.http_adapter.fetch_message(message, channel=channel) is mock_message
+        fabric_impl.http_client.get_channel_message.assert_called_once_with(
+            channel_id="532432123", message_id="322222212121"
+        )
+        fabric_impl.state_registry.parse_message.assert_called_once_with(mock_message_payload)
+
+    @pytest.mark.asyncio
+    async def test_fetch_message_with_message_obj(self, fabric_impl):
+        mock_message_payload = {"id": "4444444", "content": "Hello World!"}
+        mock_message = mock.MagicMock(messages.Message)
+        fabric_impl.state_registry.parse_message.return_value = mock_message
+        fabric_impl.http_client.get_channel_message = mock.AsyncMock(return_value=mock_message_payload)
+        assert (
+            await fabric_impl.http_adapter.fetch_message(
+                _helpers.mock_model(
+                    messages.Message, id=322222212121, channel=_helpers.mock_model(channels.Channel, id=532432123),
+                )
+            )
+            is mock_message
+        )
         fabric_impl.http_client.get_channel_message.assert_called_once_with(
             channel_id="532432123", message_id="322222212121"
         )
@@ -450,22 +457,29 @@ class TestHTTPAdapterImpl:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        ["message", "channel"],
-        (
-            [
+        "emoji", ["emoji:20202020", mock.MagicMock(emojis.UnknownEmoji, url_name="emoji:20202020")]
+    )
+    async def test_create_reaction_with_message_obj(self, fabric_impl, emoji):
+        fabric_impl.http_client.create_reaction = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.create_reaction(
                 _helpers.mock_model(
                     messages.Message, id=322222212121, channel=_helpers.mock_model(channels.Channel, id=532432123),
                 ),
-                unspecified.UNSPECIFIED,
-            ],
-            [322222212121, _helpers.mock_model(channels.Channel, id=532432123)],
-            [322222212121, 532432123],
-            ["322222212121", "532432123"],
-        ),
-    )
+                emoji,
+            )
+            is None
+        )
+        fabric_impl.http_client.create_reaction.assert_called_once_with(
+            emoji="emoji:20202020", message_id="322222212121", channel_id="532432123"
+        )
+
+    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "emoji", ["emoji:20202020", mock.MagicMock(emojis.UnknownEmoji, url_name="emoji:20202020")]
     )
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 532432123, channels.Channel)
+    @pytest.mark.parametrize("message", (322222212121, "322222212121"))
     async def test_create_reaction(self, fabric_impl, message, emoji, channel):
         fabric_impl.http_client.create_reaction = mock.AsyncMock()
         assert await fabric_impl.http_adapter.create_reaction(message, emoji, channel=channel) is None
@@ -480,11 +494,13 @@ class TestHTTPAdapterImpl:
         await fabric_impl.http_adapter.create_reaction("321123", "2123123")
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["reaction", "channel", "message"],
-        (
-            [
-                _helpers.mock_model(
+    @_helpers.parametrize_valid_id_formats_for_models("user", 21323212312, members.Member)
+    async def test_delete_reaction_with_reaction_obj(self, fabric_impl, user):
+        fabric_impl.http_client.delete_user_reaction = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.delete_reaction(
+                user=user,
+                reaction=_helpers.mock_model(
                     reactions.Reaction,
                     emoji=_helpers.mock_model(
                         emojis.GuildEmoji, id=21212121212, name="nya", url_name="nya:21212121212"
@@ -493,20 +509,38 @@ class TestHTTPAdapterImpl:
                         messages.Message, id=532432123, channel=_helpers.mock_model(channels.Channel, id=434343)
                     ),
                 ),
-                unspecified.UNSPECIFIED,
-                unspecified.UNSPECIFIED,
-            ],
-            [
-                mock.MagicMock(emojis.UnknownEmoji, url_name="nya:21212121212"),
-                _helpers.mock_model(channels.Channel, id=434343),
-                _helpers.mock_model(messages.Message, id=532432123),
-            ],
-            [mock.MagicMock(emojis.UnknownEmoji, url_name="nya:21212121212"), 434343, 532432123],
-            ["nya:21212121212", 434343, 532432123],
-            ["nya:21212121212", "434343", "532432123"],
-        ),
-    )
+            )
+            is None
+        )
+        fabric_impl.http_client.delete_user_reaction.assert_called_once_with(
+            emoji="nya:21212121212", user_id="21323212312", channel_id="434343", message_id="532432123",
+        )
+
+    @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("user", 21323212312, members.Member)
+    async def test_delete_reaction_with_message_and_unknown_emoji_objects(self, fabric_impl, user):
+        fabric_impl.http_client.delete_user_reaction = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.delete_reaction(
+                reaction=mock.MagicMock(emojis.UnknownEmoji, url_name="nya:21212121212"),
+                user=user,
+                message=_helpers.mock_model(
+                    messages.Message, id=532432123, channel=_helpers.mock_model(channels.Channel, id=434343)
+                ),
+            )
+            is None
+        )
+        fabric_impl.http_client.delete_user_reaction.assert_called_once_with(
+            emoji="nya:21212121212", user_id="21323212312", channel_id="434343", message_id="532432123",
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "reaction", (mock.MagicMock(emojis.UnknownEmoji, url_name="nya:21212121212"), "nya:21212121212")
+    )
+    @pytest.mark.parametrize("message", (532432123, "532432123"))
+    @_helpers.parametrize_valid_id_formats_for_models("user", 21323212312, members.Member)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 434343, channels.Channel)
     async def test_delete_reaction(self, fabric_impl, reaction, channel, message, user):
         fabric_impl.http_client.delete_user_reaction = mock.AsyncMock()
         assert (
@@ -521,31 +555,37 @@ class TestHTTPAdapterImpl:
 
     @pytest.mark.asyncio
     @_helpers.assert_raises(type_=TypeError)
-    @pytest.mark.parametrize(
-        ["message", "channel"], (["123", unspecified.UNSPECIFIED], [unspecified.UNSPECIFIED, "423"])
-    )
-    async def test_delete_reaction_raises_type_error_without_chanel(self, fabric_impl, channel, message):
+    async def test_delete_reaction_raises_type_error_without_chanel(self, fabric_impl):
         fabric_impl.http_client.delete_user_reaction = mock.AsyncMock()
-        await fabric_impl.http_adapter.delete_reaction("OwO:123", "123", channel=channel, message=message)
+        await fabric_impl.http_adapter.delete_reaction("OwO:123", 123, message=202020)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["message", "channel"],
-        (
-            [
+    @_helpers.assert_raises(type_=TypeError)
+    async def test_delete_reaction_raises_type_error_without_message(self, fabric_impl):
+        fabric_impl.http_client.delete_user_reaction = mock.AsyncMock()
+        await fabric_impl.http_adapter.delete_reaction("OwO:123", 123, channel=202020)
+
+    @pytest.mark.asyncio
+    async def test_delete_all_reaction_with_message_obj(self, fabric_impl):
+        fabric_impl.http_client.delete_all_reactions = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.delete_all_reactions(
                 _helpers.mock_model(
-                    messages.Message, id=322222212121, channel=_helpers.mock_model(channels.Channel, id=532432123),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [322222212121, _helpers.mock_model(channels.Channel, id=532432123)],
-            [322222212121, 532432123],
-            ["322222212121", "532432123"],
-        ),
-    )
+                    messages.Message, id=322222212121, channel=_helpers.mock_model(channels.Channel, id=532432123)
+                )
+            )
+            is None
+        )
+        fabric_impl.http_client.delete_all_reactions.assert_called_once_with(
+            message_id="322222212121", channel_id="532432123"
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("message", (322222212121, "322222212121"))
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 532432123, channels.Channel)
     async def test_delete_all_reaction(self, fabric_impl, message, channel):
         fabric_impl.http_client.delete_all_reactions = mock.AsyncMock()
-        assert await fabric_impl.http_adapter.delete_all_reactions(message, channel=channel,) is None
+        assert await fabric_impl.http_adapter.delete_all_reactions(message, channel=channel) is None
         fabric_impl.http_client.delete_all_reactions.assert_called_once_with(
             message_id="322222212121", channel_id="532432123"
         )
@@ -556,20 +596,31 @@ class TestHTTPAdapterImpl:
         raise NotImplementedError
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["message", "channel"],
-        (
-            [
+    async def test_update_message_without_optionals_with_message_obj(self, fabric_impl):
+        mock_message_payload = {"id": "32123123", "content": "whoop"}
+        mock_message = mock.MagicMock(messages.Message)
+        fabric_impl.http_client.edit_message = mock.AsyncMock(return_value=mock_message_payload)
+        fabric_impl.state_registry.parse_message.return_value = mock_message
+        assert (
+            await fabric_impl.http_adapter.update_message(
                 _helpers.mock_model(
                     messages.Message, id=322222212121, channel=_helpers.mock_model(channels.Channel, id=532432123),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [322222212121, _helpers.mock_model(channels.Channel, id=532432123)],
-            [322222212121, 532432123],
-            ["322222212121", "532432123"],
-        ),
-    )
+                )
+            )
+            is mock_message
+        )
+        fabric_impl.state_registry.parse_message.assert_called_once_with(mock_message_payload)
+        fabric_impl.http_client.edit_message.assert_called_once_with(
+            message_id="322222212121",
+            channel_id="532432123",
+            content=unspecified.UNSPECIFIED,
+            embed=unspecified.UNSPECIFIED,
+            flags=unspecified.UNSPECIFIED,
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("message", (322222212121, "322222212121"))
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 532432123, channels.Channel)
     async def test_update_message_without_optionals(self, fabric_impl, message, channel):
         mock_message_payload = {"id": "32123123", "content": "whoop"}
         mock_message = mock.MagicMock(messages.Message)
@@ -586,20 +637,34 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["message", "channel"],
-        (
-            [
+    async def test_update_message_with_all_optionals_with_message_obj(self, fabric_impl):
+        mock_message_payload = {"id": "32123123", "content": "whoop"}
+        mock_message = mock.MagicMock(messages.Message)
+        fabric_impl.http_client.edit_message = mock.AsyncMock(return_value=mock_message_payload)
+        fabric_impl.state_registry.parse_message.return_value = mock_message
+        assert (
+            await fabric_impl.http_adapter.update_message(
                 _helpers.mock_model(
                     messages.Message, id=322222212121, channel=_helpers.mock_model(channels.Channel, id=532432123),
                 ),
-                unspecified.UNSPECIFIED,
-            ],
-            [322222212121, _helpers.mock_model(channels.Channel, id=532432123)],
-            [322222212121, 532432123],
-            ["322222212121", "532432123"],
-        ),
-    )
+                content="OK",
+                embed=embeds.Embed(description="This_is_an_embed"),
+                flags=4,
+            )
+            is mock_message
+        )
+        fabric_impl.state_registry.parse_message.assert_called_once_with(mock_message_payload)
+        fabric_impl.http_client.edit_message.assert_called_once_with(
+            message_id="322222212121",
+            channel_id="532432123",
+            content="OK",
+            embed={"description": "This_is_an_embed", "type": "rich"},
+            flags=4,
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("message", ("322222212121", 322222212121))
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 532432123, channels.Channel)
     async def test_update_message_with_all_optionals(self, fabric_impl, message, channel):
         mock_message_payload = {"id": "32123123", "content": "whoop"}
         mock_message = mock.MagicMock(messages.Message)
@@ -627,40 +692,49 @@ class TestHTTPAdapterImpl:
         await fabric_impl.http_adapter.update_message(123123)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["message", "channel"],
-        (
-            [
+    async def test_delete_messages_single_with_message_obj(self, fabric_impl):
+        fabric_impl.http_client.delete_message = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.delete_messages(
                 _helpers.mock_model(
                     messages.Message, id=55544322, channel=_helpers.mock_model(channels.Channel, id=543234),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [55544322, _helpers.mock_model(channels.Channel, id=543234)],
-            [55544322, 543234],
-            ["55544322", "543234"],
-        ),
-    )
+                )
+            )
+            is None
+        )
+        fabric_impl.http_client.delete_message.assert_called_once_with(channel_id="543234", message_id="55544322")
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("message", (55544322, "55544322"))
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 543234, channels.Channel)
     async def test_delete_messages_single(self, fabric_impl, message, channel):
         fabric_impl.http_client.delete_message = mock.AsyncMock()
         assert await fabric_impl.http_adapter.delete_messages(message, channel=channel) is None
         fabric_impl.http_client.delete_message.assert_called_once_with(channel_id="543234", message_id="55544322")
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["message", "channel"],
-        (
-            [
+    @_helpers.parametrize_valid_id_formats_for_models("additional_message", 55544322, messages.Message)
+    async def test_delete_messages_single_duplicated_with_message_obj(self, fabric_impl, additional_message):
+        fabric_impl.http_client.delete_message = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.delete_messages(
                 _helpers.mock_model(
                     messages.Message, id=55544322, channel=_helpers.mock_model(channels.Channel, id=543234),
                 ),
-                unspecified.UNSPECIFIED,
-            ],
-            [55544322, _helpers.mock_model(channels.Channel, id=543234)],
-            [55544322, 543234],
-            ["55544322", "543234"],
-        ),
-    )
+                additional_message,
+                55544322,
+                55544322,
+                55544322,
+            )
+            is None
+        )
+        fabric_impl.http_client.delete_message.assert_called_once_with(
+            channel_id="543234", message_id="55544322",
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("message", (55544322, "55544322"))
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 543234, channels.Channel)
     @_helpers.parametrize_valid_id_formats_for_models("additional_message", 55544322, messages.Message)
     async def test_delete_messages_single_duplicated(self, fabric_impl, message, additional_message, channel):
         fabric_impl.http_client.delete_message = mock.AsyncMock()
@@ -675,20 +749,26 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["message", "channel"],
-        (
-            [
+    @_helpers.parametrize_valid_id_formats_for_models("additional_message", 213123123, messages.Message)
+    async def test_delete_messages_multiple_with_message_obj(self, fabric_impl, additional_message):
+        fabric_impl.http_client.bulk_delete_messages = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.delete_messages(
                 _helpers.mock_model(
                     messages.Message, id=55544322, channel=_helpers.mock_model(channels.Channel, id=543234),
                 ),
-                unspecified.UNSPECIFIED,
-            ],
-            [55544322, _helpers.mock_model(channels.Channel, id=543234)],
-            [55544322, 543234],
-            ["55544322", "543234"],
-        ),
-    )
+                additional_message,
+                213123123,
+            )
+            is None
+        )
+        fabric_impl.http_client.bulk_delete_messages.assert_called_once_with(
+            channel_id="543234", messages=["55544322", "213123123"]
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("message", (55544322, "55544322"))
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 543234, channels.Channel)
     @_helpers.parametrize_valid_id_formats_for_models("additional_message", 213123123, messages.Message)
     async def test_delete_messages_multiple(self, fabric_impl, message, additional_message, channel):
         fabric_impl.http_client.bulk_delete_messages = mock.AsyncMock()
@@ -699,12 +779,6 @@ class TestHTTPAdapterImpl:
         fabric_impl.http_client.bulk_delete_messages.assert_called_once_with(
             channel_id="543234", messages=["55544322", "213123123"]
         )
-
-    @pytest.mark.asyncio
-    @_helpers.assert_raises(type_=ValueError)
-    async def test_delete_messages_raises_value_error_when_too_many_messages_passed(self, fabric_impl):
-        fabric_impl.http_client.bulk_delete_messages = mock.AsyncMock()
-        await fabric_impl.http_adapter.delete_messages(*range(101), channel=321231)
 
     @pytest.mark.asyncio
     @_helpers.assert_raises(type_=TypeError)
@@ -835,20 +909,23 @@ class TestHTTPAdapterImpl:
         fabric_impl.state_registry.parse_message.assert_called_once_with(mock_message_payload)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["message", "channel"],
-        (
-            [
+    async def test_pin_message_with_message_obj(self, fabric_impl):
+        fabric_impl.http_client.add_pinned_channel_message = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.pin_message(
                 _helpers.mock_model(
                     messages.Message, id=322222212121, channel=_helpers.mock_model(channels.Channel, id=532432123),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [322222212121, _helpers.mock_model(channels.Channel, id=532432123)],
-            [322222212121, 532432123],
-            ["322222212121", "532432123"],
-        ),
-    )
+                )
+            )
+            is None
+        )
+        fabric_impl.http_client.add_pinned_channel_message.assert_called_once_with(
+            message_id="322222212121", channel_id="532432123"
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("message", (322222212121, "322222212121"))
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 532432123, channels.Channel)
     async def test_pin_message(self, fabric_impl, message, channel):
         fabric_impl.http_client.add_pinned_channel_message = mock.AsyncMock()
         assert await fabric_impl.http_adapter.pin_message(message, channel=channel) is None
@@ -863,20 +940,23 @@ class TestHTTPAdapterImpl:
         await fabric_impl.http_adapter.pin_message("41231")
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["message", "channel"],
-        (
-            [
+    async def test_unpin_message_with_message_obj(self, fabric_impl):
+        fabric_impl.http_client.delete_pinned_channel_message = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.unpin_message(
                 _helpers.mock_model(
                     messages.Message, id=322222212121, channel=_helpers.mock_model(channels.Channel, id=532432123),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [322222212121, _helpers.mock_model(channels.Channel, id=532432123)],
-            [322222212121, 532432123],
-            ["322222212121", "532432123"],
-        ),
-    )
+                )
+            )
+            is None
+        )
+        fabric_impl.http_client.delete_pinned_channel_message.assert_called_once_with(
+            message_id="322222212121", channel_id="532432123"
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("message", (322222212121, "322222212121"))
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 532432123, channels.Channel)
     async def test_unpin_message(self, fabric_impl, message, channel):
         fabric_impl.http_client.delete_pinned_channel_message = mock.AsyncMock()
         assert await fabric_impl.http_adapter.unpin_message(message, channel=channel) is None
@@ -891,20 +971,30 @@ class TestHTTPAdapterImpl:
         await fabric_impl.http_adapter.unpin_message("3123")
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["emoji", "guild"],
-        (
-            [
-                _helpers.mock_model(
+    async def test_fetch_guild_emoji_when_guild_is_unresolved_with_emoji_obj(self, fabric_impl):
+        mock_emoji_payload = {"name": "Nep", "id": "34332", "animated": True}
+        mock_emoji = mock.MagicMock(emojis.GuildEmoji)
+        mock_guild = mock.MagicMock(guilds.Guild)
+        awaitable_mock = _helpers.AwaitableMock(return_value=mock_guild)
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = awaitable_mock
+        fabric_impl.state_registry.parse_emoji.return_value = mock_emoji
+        fabric_impl.http_client.get_guild_emoji = mock.AsyncMock(return_value=mock_emoji_payload)
+        assert (
+            await fabric_impl.http_adapter.fetch_guild_emoji(
+                emoji=_helpers.mock_model(
                     emojis.GuildEmoji, id=34332, guild=_helpers.mock_model(guilds.Guild, id=345342222),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [34332, _helpers.mock_model(guilds.Guild, id=345342222)],
-            [34332, 345342222],
-            ["34332", "345342222"],
-        ),
-    )
+                )
+            )
+            is mock_emoji
+        )
+        fabric_impl.http_client.get_guild_emoji.assert_called_once_with(guild_id="345342222", emoji_id="34332")
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(345342222)
+        awaitable_mock.assert_awaited_once()
+        fabric_impl.state_registry.parse_emoji.assert_called_once_with(mock_emoji_payload, mock_guild)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("emoji", (34332, "34332"))
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 345342222, guilds.Guild)
     async def test_fetch_guild_emoji_when_guild_is_unresolved(self, fabric_impl, emoji, guild):
         mock_emoji_payload = {"name": "Nep", "id": "34332", "animated": True}
         mock_emoji = mock.MagicMock(emojis.GuildEmoji)
@@ -920,20 +1010,28 @@ class TestHTTPAdapterImpl:
         fabric_impl.state_registry.parse_emoji.assert_called_once_with(mock_emoji_payload, mock_guild)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["emoji", "guild"],
-        (
-            [
-                _helpers.mock_model(
+    async def test_fetch_guild_emoji_when_guild_is_resolved_with_emoji_obj(self, fabric_impl):
+        mock_emoji_payload = {"name": "Nep", "id": "34332", "animated": True}
+        mock_emoji = mock.MagicMock(emojis.GuildEmoji)
+        mock_guild = mock.MagicMock(guilds.Guild)
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = mock_guild
+        fabric_impl.state_registry.parse_emoji.return_value = mock_emoji
+        fabric_impl.http_client.get_guild_emoji = mock.AsyncMock(return_value=mock_emoji_payload)
+        assert (
+            await fabric_impl.http_adapter.fetch_guild_emoji(
+                emoji=_helpers.mock_model(
                     emojis.GuildEmoji, id=34332, guild=_helpers.mock_model(guilds.Guild, id=345342222),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [34332, _helpers.mock_model(guilds.Guild, id=345342222)],
-            [34332, 345342222],
-            ["34332", "345342222"],
-        ),
-    )
+                )
+            )
+            is mock_emoji
+        )
+        fabric_impl.http_client.get_guild_emoji.assert_called_once_with(guild_id="345342222", emoji_id="34332")
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(345342222)
+        fabric_impl.state_registry.parse_emoji.assert_called_once_with(mock_emoji_payload, mock_guild)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("emoji", (34332, "34332"))
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 345342222, guilds.Guild)
     async def test_fetch_guild_emoji_when_guild_is_resolved(self, fabric_impl, emoji, guild):
         mock_emoji_payload = {"name": "Nep", "id": "34332", "animated": True}
         mock_emoji = mock.MagicMock(emojis.GuildEmoji)
@@ -1049,20 +1147,27 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["emoji", "guild"],
-        (
-            [
-                _helpers.mock_model(
+    async def test_update_guild_emoji_without_optionals_with_emoji_obj(self, fabric_impl):
+        fabric_impl.http_client.modify_guild_emoji = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.update_guild_emoji(
+                emoji=_helpers.mock_model(
                     emojis.GuildEmoji, id=34332, guild=_helpers.mock_model(guilds.Guild, id=345342222),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [34332, _helpers.mock_model(guilds.Guild, id=345342222)],
-            [34332, 345342222],
-            ["34332", "345342222"],
-        ),
-    )
+                )
+            )
+            is None
+        )
+        fabric_impl.http_client.modify_guild_emoji.assert_called_once_with(
+            emoji_id="34332",
+            guild_id="345342222",
+            name=unspecified.UNSPECIFIED,
+            roles=unspecified.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("emoji", (34332, "34332"))
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 345342222, guilds.Guild)
     async def test_update_guild_emoji_without_optionals(self, fabric_impl, emoji, guild):
         fabric_impl.http_client.modify_guild_emoji = mock.AsyncMock()
         assert await fabric_impl.http_adapter.update_guild_emoji(emoji=emoji, guild=guild) is None
@@ -1075,20 +1180,27 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["emoji", "guild"],
-        (
-            [
-                _helpers.mock_model(
+    @_helpers.parametrize_valid_id_formats_for_models("role", 53333, roles.Role)
+    async def test_update_guild_emoji_with_all_optionals_with_emoji_object(self, fabric_impl, role):
+        fabric_impl.http_client.modify_guild_emoji = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.update_guild_emoji(
+                emoji=_helpers.mock_model(
                     emojis.GuildEmoji, id=34332, guild=_helpers.mock_model(guilds.Guild, id=345342222),
                 ),
-                unspecified.UNSPECIFIED,
-            ],
-            [34332, _helpers.mock_model(guilds.Guild, id=345342222)],
-            [34332, 345342222],
-            ["34332", "345342222"],
-        ),
-    )
+                name="ok",
+                roles=[role],
+                reason="BYE BYE",
+            )
+            is None
+        )
+        fabric_impl.http_client.modify_guild_emoji.assert_called_once_with(
+            emoji_id="34332", guild_id="345342222", name="ok", roles=["53333"], reason="BYE BYE",
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("emoji", (34332, "34332"))
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 345342222, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("role", 53333, roles.Role)
     async def test_update_guild_emoji_with_all_optionals(self, fabric_impl, emoji, guild, role):
         fabric_impl.http_client.modify_guild_emoji = mock.AsyncMock()
@@ -1109,20 +1221,23 @@ class TestHTTPAdapterImpl:
         await fabric_impl.http_adapter.update_guild_emoji("22222")
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["emoji", "guild"],
-        (
-            [
-                _helpers.mock_model(
+    async def test_delete_guild_emoji_with_emoji_obj(self, fabric_impl):
+        fabric_impl.http_client.delete_guild_emoji = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.delete_guild_emoji(
+                emoji=_helpers.mock_model(
                     emojis.GuildEmoji, id=34332, guild=_helpers.mock_model(guilds.Guild, id=345342222),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [34332, _helpers.mock_model(guilds.Guild, id=345342222)],
-            [34332, 345342222],
-            ["34332", "345342222"],
-        ),
-    )
+                )
+            )
+            is None
+        )
+        fabric_impl.http_client.delete_guild_emoji.assert_called_once_with(
+            emoji_id="34332", guild_id="345342222",
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("emoji", (34332, "34332"))
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 345342222, guilds.Guild)
     async def test_delete_guild_emoji(self, fabric_impl, emoji, guild):
         fabric_impl.http_client.delete_guild_emoji = mock.AsyncMock()
         assert await fabric_impl.http_adapter.delete_guild_emoji(emoji=emoji, guild=guild) is None
@@ -1154,7 +1269,7 @@ class TestHTTPAdapterImpl:
             roles=unspecified.UNSPECIFIED,
             channels=unspecified.UNSPECIFIED,
         )
-        fabric_impl.state_registry.parse_guild.assert_called_once_with(mock_guild_payload, None)
+        fabric_impl.state_registry.parse_guild.assert_called_once_with(mock_guild_payload)
 
     @_helpers.todo_implement
     @pytest.mark.asyncio
@@ -1211,7 +1326,7 @@ class TestHTTPAdapterImpl:
             roles=[{"id": 2132123}],
             channels=[{"id": 444444}],
         )
-        fabric_impl.state_registry.parse_guild.assert_called_once_with(mock_guild_payload, None)
+        fabric_impl.state_registry.parse_guild.assert_called_once_with(mock_guild_payload)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 1231236545645, guilds.Guild)
@@ -1222,7 +1337,7 @@ class TestHTTPAdapterImpl:
         fabric_impl.http_client.get_guild = mock.AsyncMock(return_value=mock_guild_payload)
         assert await fabric_impl.http_adapter.fetch_guild(guild=guild) is mock_guild
         fabric_impl.http_client.get_guild.assert_called_once_with(guild_id="1231236545645")
-        fabric_impl.state_registry.parse_guild.assert_called_once_with(mock_guild_payload, None)
+        fabric_impl.state_registry.parse_guild.assert_called_once_with(mock_guild_payload)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
@@ -1453,25 +1568,30 @@ class TestHTTPAdapterImpl:
         fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_channel_payload, mock_guild)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["channel", "guild"],
-        (
-            [
-                _helpers.mock_model(
-                    channels.GuildChannel,
-                    id=131506134161948672,
-                    guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
+    @_helpers.parametrize_valid_id_formats_for_models("additional_channel", 381870553235193857, channels.Channel)
+    async def test_reposition_guild_channels_with_channel_obj(self, fabric_impl, additional_channel):
+        fabric_impl.http_client.modify_guild_channel_positions = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.reposition_guild_channels(
+                (
+                    0,
+                    _helpers.mock_model(
+                        channels.GuildChannel,
+                        id=131506134161948672,
+                        guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
+                    ),
                 ),
-                unspecified.UNSPECIFIED,
-            ],
-            [
-                _helpers.mock_model(channels.GuildChannel, id=131506134161948672),
-                _helpers.mock_model(guilds.Guild, id=379953393319542784),
-            ],
-            [131506134161948672, 379953393319542784],
-            ["131506134161948672", "379953393319542784"],
-        ),
-    )
+                (1, additional_channel),
+            )
+            is None
+        )
+        fabric_impl.http_client.modify_guild_channel_positions.assert_called_once_with(
+            "379953393319542784", ("131506134161948672", 0), ("381870553235193857", 1)
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("channel", (131506134161948672, "131506134161948672"))
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("additional_channel", 381870553235193857, channels.Channel)
     async def test_reposition_guild_channels(self, fabric_impl, guild, channel, additional_channel):
         fabric_impl.http_client.modify_guild_channel_positions = mock.AsyncMock()
@@ -1490,25 +1610,34 @@ class TestHTTPAdapterImpl:
         await fabric_impl.http_adapter.reposition_guild_channels((0, 123), (1, 4321))
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["user", "guild"],
-        (
-            [
-                _helpers.mock_model(
+    async def test_fetch_member_when_guild_is_unresolved_with_member_obj(self, fabric_impl):
+        mock_member_payload = {"nick": "Genre: Help", "user": {"id": "131506134161948672"}}
+        mock_member = mock.MagicMock(members.Member)
+        mock_guild = mock.MagicMock(guilds.Guild)
+        awaitable_mock = _helpers.AwaitableMock(return_value=mock_guild)
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = awaitable_mock
+        fabric_impl.state_registry.parse_member.return_value = mock_member
+        fabric_impl.http_client.get_guild_member = mock.AsyncMock(return_value=mock_member_payload)
+        assert (
+            await fabric_impl.http_adapter.fetch_member(
+                user=_helpers.mock_model(
                     members.Member,
                     id=131506134161948672,
                     guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [
-                _helpers.mock_model(users.User, id=131506134161948672),
-                _helpers.mock_model(guilds.Guild, id=379953393319542784),
-            ],
-            [131506134161948672, 379953393319542784],
-            ["131506134161948672", "379953393319542784"],
-        ),
-    )
+                )
+            )
+            is mock_member
+        )
+        fabric_impl.http_client.get_guild_member.assert_called_once_with(
+            user_id="131506134161948672", guild_id="379953393319542784"
+        )
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(379953393319542784)
+        awaitable_mock.assert_awaited_once()
+        fabric_impl.state_registry.parse_member.assert_called_once_with(mock_member_payload, mock_guild)
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("user", 131506134161948672, users.User)
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     async def test_fetch_member_when_guild_is_unresolved(self, fabric_impl, guild, user):
         mock_member_payload = {"nick": "Genre: Help", "user": {"id": "131506134161948672"}}
         mock_member = mock.MagicMock(members.Member)
@@ -1526,25 +1655,32 @@ class TestHTTPAdapterImpl:
         fabric_impl.state_registry.parse_member.assert_called_once_with(mock_member_payload, mock_guild)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["user", "guild"],
-        (
-            [
-                _helpers.mock_model(
+    async def test_fetch_member_when_guild_is_resolved_with_member_obj(self, fabric_impl):
+        mock_member_payload = {"nick": "Genre: Help", "user": {"id": "131506134161948672"}}
+        mock_member = mock.MagicMock(members.Member)
+        mock_guild = mock.MagicMock(guilds.Guild)
+        fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = mock_guild
+        fabric_impl.state_registry.parse_member.return_value = mock_member
+        fabric_impl.http_client.get_guild_member = mock.AsyncMock(return_value=mock_member_payload)
+        assert (
+            await fabric_impl.http_adapter.fetch_member(
+                user=_helpers.mock_model(
                     members.Member,
                     id=131506134161948672,
                     guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [
-                _helpers.mock_model(users.User, id=131506134161948672),
-                _helpers.mock_model(guilds.Guild, id=379953393319542784),
-            ],
-            [131506134161948672, 379953393319542784],
-            ["131506134161948672", "379953393319542784"],
-        ),
-    )
+                )
+            )
+            is mock_member
+        )
+        fabric_impl.http_client.get_guild_member.assert_called_once_with(
+            user_id="131506134161948672", guild_id="379953393319542784"
+        )
+        fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(379953393319542784)
+        fabric_impl.state_registry.parse_member.assert_called_once_with(mock_member_payload, mock_guild)
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("user", 131506134161948672, users.User)
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     async def test_fetch_member_when_guild_is_resolved(self, fabric_impl, guild, user):
         mock_member_payload = {"nick": "Genre: Help", "user": {"id": "131506134161948672"}}
         mock_member = mock.MagicMock(members.Member)
@@ -1571,25 +1707,40 @@ class TestHTTPAdapterImpl:
         raise NotImplementedError
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["member", "guild"],
-        (
-            [
-                _helpers.mock_model(
+    @_helpers.parametrize_valid_id_formats_for_models("role", 1232123123, roles.Role)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 55554554, channels.GuildVoiceChannel)
+    async def test_update_member_with_all_optionals_with_member_obj(self, fabric_impl, role, channel):
+        fabric_impl.http_client.modify_guild_member = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.update_member(
+                member=_helpers.mock_model(
                     members.Member,
                     id=131506134161948672,
                     guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
                 ),
-                unspecified.UNSPECIFIED,
-            ],
-            [
-                _helpers.mock_model(users.User, id=131506134161948672),
-                _helpers.mock_model(guilds.Guild, id=379953393319542784),
-            ],
-            [131506134161948672, 379953393319542784],
-            ["131506134161948672", "379953393319542784"],
-        ),
-    )
+                nick="ok Nick",
+                roles=[role],
+                mute=True,
+                deaf=False,
+                current_voice_channel=channel,
+                reason="OK",
+            )
+            is None
+        )
+        fabric_impl.http_client.modify_guild_member.assert_called_once_with(
+            user_id="131506134161948672",
+            guild_id="379953393319542784",
+            nick="ok Nick",
+            roles=["1232123123"],
+            mute=True,
+            deaf=False,
+            channel_id="55554554",
+            reason="OK",
+        )
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("member", 131506134161948672, users.User)
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("role", 1232123123, roles.Role)
     @_helpers.parametrize_valid_id_formats_for_models("channel", 55554554, channels.GuildVoiceChannel)
     async def test_update_member_with_all_optionals(self, fabric_impl, member, guild, role, channel):
@@ -1619,25 +1770,32 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["member", "guild"],
-        (
-            [
-                _helpers.mock_model(
+    async def test_update_member_without_optionals_with_member_obj(self, fabric_impl):
+        fabric_impl.http_client.modify_guild_member = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.update_member(
+                member=_helpers.mock_model(
                     members.Member,
                     id=131506134161948672,
                     guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [
-                _helpers.mock_model(users.User, id=131506134161948672),
-                _helpers.mock_model(guilds.Guild, id=379953393319542784),
-            ],
-            [131506134161948672, 379953393319542784],
-            ["131506134161948672", "379953393319542784"],
-        ),
-    )
+                )
+            )
+            is None
+        )
+        fabric_impl.http_client.modify_guild_member.assert_called_once_with(
+            user_id="131506134161948672",
+            guild_id="379953393319542784",
+            nick=unspecified.UNSPECIFIED,
+            roles=unspecified.UNSPECIFIED,
+            mute=unspecified.UNSPECIFIED,
+            deaf=unspecified.UNSPECIFIED,
+            channel_id=unspecified.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
+        )
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("member", 131506134161948672, users.User)
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     async def test_update_member_without_optionals(self, fabric_impl, member, guild):
         fabric_impl.http_client.modify_guild_member = mock.AsyncMock()
         assert await fabric_impl.http_adapter.update_member(member=member, guild=guild) is None
@@ -1668,25 +1826,31 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["member", "guild"],
-        (
-            [
-                _helpers.mock_model(
+    @_helpers.parametrize_valid_id_formats_for_models("role", 123123123123, roles.Role)
+    async def test_add_role_to_member_with_member_obj(self, fabric_impl, role):
+        fabric_impl.http_client.add_guild_member_role = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.add_role_to_member(
+                member=_helpers.mock_model(
                     members.Member,
                     id=131506134161948672,
                     guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
                 ),
-                unspecified.UNSPECIFIED,
-            ],
-            [
-                _helpers.mock_model(users.User, id=131506134161948672),
-                _helpers.mock_model(guilds.Guild, id=379953393319542784),
-            ],
-            [131506134161948672, 379953393319542784],
-            ["131506134161948672", "379953393319542784"],
-        ),
-    )
+                role=role,
+                reason="rolling, rolling, rolling, rolling.",
+            )
+            is None
+        )
+        fabric_impl.http_client.add_guild_member_role.assert_called_once_with(
+            guild_id="379953393319542784",
+            user_id="131506134161948672",
+            role_id="123123123123",
+            reason="rolling, rolling, rolling, rolling.",
+        )
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("member", 131506134161948672, users.User)
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("role", 123123123123, roles.Role)
     async def test_add_role_to_member(self, fabric_impl, member, guild, role):
         fabric_impl.http_client.add_guild_member_role = mock.AsyncMock()
@@ -1710,25 +1874,31 @@ class TestHTTPAdapterImpl:
         await fabric_impl.http_adapter.add_role_to_member("212", "333")
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["member", "guild"],
-        (
-            [
-                _helpers.mock_model(
+    @_helpers.parametrize_valid_id_formats_for_models("role", 123123123123, roles.Role)
+    async def test_remove_role_from_member_with_member_obj(self, fabric_impl, role):
+        fabric_impl.http_client.remove_guild_member_role = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.remove_role_from_member(
+                member=_helpers.mock_model(
                     members.Member,
                     id=131506134161948672,
                     guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
                 ),
-                unspecified.UNSPECIFIED,
-            ],
-            [
-                _helpers.mock_model(users.User, id=131506134161948672),
-                _helpers.mock_model(guilds.Guild, id=379953393319542784),
-            ],
-            [131506134161948672, 379953393319542784],
-            ["131506134161948672", "379953393319542784"],
-        ),
-    )
+                role=role,
+                reason="rolling, rolling, rolling, rolling.",
+            )
+            is None
+        )
+        fabric_impl.http_client.remove_guild_member_role.assert_called_once_with(
+            guild_id="379953393319542784",
+            user_id="131506134161948672",
+            role_id="123123123123",
+            reason="rolling, rolling, rolling, rolling.",
+        )
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("member", 131506134161948672, users.User)
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("role", 123123123123, roles.Role)
     async def test_remove_role_from_member(self, fabric_impl, member, guild, role):
         fabric_impl.http_client.remove_guild_member_role = mock.AsyncMock()
@@ -1752,25 +1922,26 @@ class TestHTTPAdapterImpl:
         await fabric_impl.http_adapter.remove_role_from_member("222", "444")
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["member", "guild"],
-        (
-            [
-                _helpers.mock_model(
+    async def test_kick_member_with_member_obj(self, fabric_impl):
+        fabric_impl.http_client.remove_guild_member = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.kick_member(
+                member=_helpers.mock_model(
                     members.Member,
                     id=131506134161948672,
                     guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
                 ),
-                unspecified.UNSPECIFIED,
-            ],
-            [
-                _helpers.mock_model(users.User, id=131506134161948672),
-                _helpers.mock_model(guilds.Guild, id=379953393319542784),
-            ],
-            [131506134161948672, 379953393319542784],
-            ["131506134161948672", "379953393319542784"],
-        ),
-    )
+                reason="bye",
+            )
+            is None
+        )
+        fabric_impl.http_client.remove_guild_member.assert_called_once_with(
+            guild_id="379953393319542784", user_id="131506134161948672", reason="bye"
+        )
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("member", 131506134161948672, users.User)
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     async def test_kick_member(self, fabric_impl, member, guild):
         fabric_impl.http_client.remove_guild_member = mock.AsyncMock()
         assert await fabric_impl.http_adapter.kick_member(member=member, guild=guild, reason="bye") is None
@@ -1810,25 +1981,27 @@ class TestHTTPAdapterImpl:
         fabric_impl.http_client.get_guild_bans.assert_called_once_with(guild_id="379953393319542784")
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["member", "guild"],
-        (
-            [
-                _helpers.mock_model(
+    async def test_ban_member_with_member_object(self, fabric_impl):
+        fabric_impl.http_client.create_guild_ban = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.ban_member(
+                member=_helpers.mock_model(
                     members.Member,
                     id=131506134161948672,
                     guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
                 ),
-                unspecified.UNSPECIFIED,
-            ],
-            [
-                _helpers.mock_model(users.User, id=131506134161948672),
-                _helpers.mock_model(guilds.Guild, id=379953393319542784),
-            ],
-            [131506134161948672, 379953393319542784],
-            ["131506134161948672", "379953393319542784"],
-        ),
-    )
+                delete_message_days=6,
+                reason="bye",
+            )
+            is None
+        )
+        fabric_impl.http_client.create_guild_ban.assert_called_once_with(
+            guild_id="379953393319542784", user_id="131506134161948672", delete_message_days=6, reason="bye"
+        )
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("member", 131506134161948672, users.User)
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     async def test_ban_member(self, fabric_impl, member, guild):
         fabric_impl.http_client.create_guild_ban = mock.AsyncMock()
         assert (
@@ -1964,20 +2137,30 @@ class TestHTTPAdapterImpl:
         fabric_impl.state_registry.parse_role.assert_called_once_with(mock_role_payload, mock_guild)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["role", "guild"],
-        (
-            [
-                _helpers.mock_model(
-                    roles.Role, id=115590097100865541, guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
+    @_helpers.parametrize_valid_id_formats_for_models("additional_role", 245321970760024064, roles.Role)
+    async def test_reposition_roles_with_role_obj(self, fabric_impl, additional_role):
+        fabric_impl.http_client.modify_guild_role_positions = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.reposition_roles(
+                (
+                    1,
+                    _helpers.mock_model(
+                        roles.Role,
+                        id=115590097100865541,
+                        guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
+                    ),
                 ),
-                unspecified.UNSPECIFIED,
-            ],
-            [115590097100865541, _helpers.mock_model(guilds.Guild, id=379953393319542784)],
-            [115590097100865541, 379953393319542784],
-            ["115590097100865541", "379953393319542784"],
-        ),
-    )
+                (2, additional_role),
+            )
+            is None
+        )
+        fabric_impl.http_client.modify_guild_role_positions.assert_called_once_with(
+            "379953393319542784", ("115590097100865541", 1), ("245321970760024064", 2)
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("role", (115590097100865541, "115590097100865541"))
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("additional_role", 245321970760024064, roles.Role)
     async def test_reposition_roles(self, fabric_impl, guild, role, additional_role):
         fabric_impl.http_client.modify_guild_role_positions = mock.AsyncMock()
@@ -1993,24 +2176,42 @@ class TestHTTPAdapterImpl:
         await fabric_impl.http_adapter.reposition_roles((1, 321), (2, 5432))
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["role", "guild"],
-        (
-            [
-                _helpers.mock_model(
-                    roles.Role, id=115590097100865541, guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [115590097100865541, _helpers.mock_model(guilds.Guild, id=379953393319542784)],
-            [115590097100865541, 379953393319542784],
-            ["115590097100865541", "379953393319542784"],
-        ),
-    )
     @pytest.mark.parametrize(
         ("permission", "color"), [(permissions.Permission(512), colors.Color.from_int(4571114)), (512, 4571114)]
     )
+    async def test_update_role_with_all_optionals_with_role_obj(self, fabric_impl, permission, color):
+        fabric_impl.http_client.modify_guild_role = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.update_role(
+                _helpers.mock_model(
+                    roles.Role, id=115590097100865541, guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
+                ),
+                name="Nekos",
+                permissions=permission,
+                color=color,
+                hoist=True,
+                mentionable=True,
+                reason="OK",
+            )
+            is None
+        )
+        fabric_impl.http_client.modify_guild_role.assert_called_once_with(
+            guild_id="379953393319542784",
+            role_id="115590097100865541",
+            name="Nekos",
+            permissions=512,
+            color=4571114,
+            hoist=True,
+            mentionable=True,
+            reason="OK",
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("role", ("115590097100865541", 115590097100865541))
+    @pytest.mark.parametrize(
+        ("permission", "color"), [(permissions.Permission(512), colors.Color.from_int(4571114)), (512, 4571114)]
+    )
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     async def test_update_role_with_all_optionals(self, fabric_impl, guild, role, permission, color):
         fabric_impl.http_client.modify_guild_role = mock.AsyncMock()
         assert (
@@ -2038,20 +2239,30 @@ class TestHTTPAdapterImpl:
         )
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["role", "guild"],
-        (
-            [
+    async def test_update_role_without_optionals_with_role_object(self, fabric_impl):
+        fabric_impl.http_client.modify_guild_role = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.update_role(
                 _helpers.mock_model(
                     roles.Role, id=115590097100865541, guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [115590097100865541, _helpers.mock_model(guilds.Guild, id=379953393319542784)],
-            [115590097100865541, 379953393319542784],
-            ["115590097100865541", "379953393319542784"],
-        ),
-    )
+                )
+            )
+            is None
+        )
+        fabric_impl.http_client.modify_guild_role.assert_called_once_with(
+            guild_id="379953393319542784",
+            role_id="115590097100865541",
+            name=unspecified.UNSPECIFIED,
+            permissions=unspecified.UNSPECIFIED,
+            color=unspecified.UNSPECIFIED,
+            hoist=unspecified.UNSPECIFIED,
+            mentionable=unspecified.UNSPECIFIED,
+            reason=unspecified.UNSPECIFIED,
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("role", ("115590097100865541", 115590097100865541))
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     async def test_update_role_without_optionals(self, fabric_impl, guild, role):
         fabric_impl.http_client.modify_guild_role = mock.AsyncMock()
         assert await fabric_impl.http_adapter.update_role(role, guild=guild) is None
@@ -2072,23 +2283,26 @@ class TestHTTPAdapterImpl:
         await fabric_impl.http_adapter.update_role(213212312)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["role", "guild"],
-        (
-            [
-                _helpers.mock_model(
-                    roles.Role, id=115590097100865541, guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
-                ),
-                unspecified.UNSPECIFIED,
-            ],
-            [115590097100865541, _helpers.mock_model(guilds.Guild, id=379953393319542784)],
-            [115590097100865541, 379953393319542784],
-            ["115590097100865541", "379953393319542784"],
-        ),
-    )
+    @pytest.mark.parametrize("role", (115590097100865541, "115590097100865541"))
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     async def test_delete_role(self, fabric_impl, guild, role):
         fabric_impl.http_client.delete_guild_role = mock.AsyncMock()
         assert await fabric_impl.http_adapter.delete_role(role, guild=guild) is None
+        fabric_impl.http_client.delete_guild_role.assert_called_once_with(
+            guild_id="379953393319542784", role_id="115590097100865541"
+        )
+
+    @pytest.mark.asyncio
+    async def test_delete_role_with_role_obj(self, fabric_impl):
+        fabric_impl.http_client.delete_guild_role = mock.AsyncMock()
+        assert (
+            await fabric_impl.http_adapter.delete_role(
+                _helpers.mock_model(
+                    roles.Role, id=115590097100865541, guild=_helpers.mock_model(guilds.Guild, id=379953393319542784),
+                ),
+            )
+            is None
+        )
         fabric_impl.http_client.delete_guild_role.assert_called_once_with(
             guild_id="379953393319542784", role_id="115590097100865541"
         )
@@ -2400,7 +2614,7 @@ class TestHTTPAdapterImpl:
         fabric_impl.state_registry.parse_channel.return_value = mock_dm
         assert await fabric_impl.http_adapter.create_dm_channel(recipient) is mock_dm
         fabric_impl.http_client.create_dm.assert_called_once_with(recipient_id="33333333")
-        fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_dm_payload)
+        fabric_impl.state_registry.parse_channel.assert_called_once_with(mock_dm_payload, None)
 
     @pytest.mark.asyncio
     async def test_fetch_voice_regions(self, fabric_impl):

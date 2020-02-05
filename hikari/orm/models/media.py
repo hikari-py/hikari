@@ -39,6 +39,7 @@ if typing.TYPE_CHECKING:
     import io
     from concurrent import futures
 
+    from hikari.internal_utilities import type_hints
     from hikari.internal_utilities import containers
 
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
@@ -79,12 +80,12 @@ class Attachment(bases.BaseModel, bases.SnowflakeMixin):
     #: Width of the attachment (`None` unless the attachment is an image).
     #:
     #: :type: :class:`int` or `None`
-    width: typing.Optional[int]
+    width: type_hints.Nullable[int]
 
     #: Height of the attachment (`None` unless the attachment is an image).
     #:
     #: :type: :class:`int` or `None`
-    height: typing.Optional[int]
+    height: type_hints.Nullable[int]
 
     __repr__ = reprs.repr_of("id", "filename", "size")
 
@@ -106,8 +107,8 @@ class Attachment(bases.BaseModel, bases.SnowflakeMixin):
         self,
         path: str,
         *,
-        loop: typing.Optional[asyncio.AbstractEventLoop] = None,
-        executor: typing.Optional[futures.Executor] = None,
+        loop: type_hints.Nullable[asyncio.AbstractEventLoop] = None,
+        executor: type_hints.Nullable[futures.Executor] = None,
     ) -> None:
         async with aiohttp.request("get", self.url) as resp:
             resp.raise_for_status()
@@ -142,13 +143,13 @@ class AbstractFile(bases.BaseModel, abc.ABC):
         self,
         mode: str = "r",
         buffering: int = -1,
-        encoding: typing.Optional[str] = None,
-        errors: typing.Optional[str] = None,
+        encoding: type_hints.Nullable[str] = None,
+        errors: type_hints.Nullable[str] = None,
         newline: str = None,
-        opener: typing.Optional[typing.Callable[[str, int], ...]] = None,
+        opener: type_hints.Nullable[typing.Callable[[str, int], ...]] = None,
         *,
-        loop: typing.Optional[asyncio.AbstractEventLoop] = None,
-        executor: typing.Optional[futures.Executor] = None,
+        loop: type_hints.Nullable[asyncio.AbstractEventLoop] = None,
+        executor: type_hints.Nullable[futures.Executor] = None,
     ) -> io.IOBase:
         """
         Reads the contents of the file safely.
@@ -210,7 +211,6 @@ class AbstractFile(bases.BaseModel, abc.ABC):
         """
 
 
-@dataclasses.dataclass()
 class InMemoryFile(AbstractFile):
     """
     Wraps a bytes-like object that is assumed to be located in-memory and provides the same interface to it
@@ -225,7 +225,11 @@ class InMemoryFile(AbstractFile):
     #: :type: :class:`hikari.internal_utilities.io_helpers.BytesLikeT`
     data: storage.BytesLikeT
 
-    def open(self, *args, **kwargs) -> io.IOBase:
+    def __init__(self, name: str, data: storage.BytesLikeT) -> None:
+        super().__init__(name)
+        self.data = data
+
+    def open(self, *args, **kwargs) -> typing.Union[io.BytesIO, io.StringIO]:
         """
         Returns a seekable object across the contents of the file. This will either
         be a :class:`io.StringIO` if a string-like object, or otherwise a :class:`io.BytesIO`.
@@ -260,7 +264,7 @@ class File(AbstractFile):
         return hash(self.name)
 
 
-async def safe_read_file(file: AbstractFile) -> typing.Tuple[storage.FileLikeT, str]:
+async def safe_read_file(file: AbstractFile) -> typing.Tuple[str, storage.FileLikeT]:
     """
     Read a file object derived from :class:`AbstractFile` and then close if necessary.
 
@@ -273,19 +277,19 @@ async def safe_read_file(file: AbstractFile) -> typing.Tuple[storage.FileLikeT, 
         Second, the read :class:`storage.FileLikeT` data.
 
     Raises:
-        TypeError:
-            IF `file` isn't a :class:`AbstractFile` derived object.
+        ValueError:
+            If `file` isn't a :class:`AbstractFile` derived object.
     """
     name = getattr(file, "name", None)
     if isinstance(file, InMemoryFile):
-        file = file.open().read()
+        file_output = file.open().read()
     elif isinstance(file, File):
         async with file.open() as fp:
-            file = await fp.read()
+            file_output = await fp.read()
     else:
         raise ValueError(f"Invalid file type '{type(file)}' provided, expected an AbstractFile derivative.")
 
-    return name, file
+    return name, file_output
 
 
 __all__ = ["Attachment", "File", "InMemoryFile", "safe_read_file"]

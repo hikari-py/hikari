@@ -34,6 +34,7 @@ from hikari.orm.models import channels
 
 if typing.TYPE_CHECKING:
     from hikari.orm import fabric as _fabric
+    from hikari.internal_utilities import type_hints
 
 
 class AutoRequestChunksMode(enum.IntEnum):
@@ -109,7 +110,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
     async def handle_ready(self, gateway, payload):
         user_payload = payload["user"]
 
-        guilds = [self.fabric.state_registry.parse_guild(guild, gateway.shard_id) for guild in payload["guilds"]]
+        guilds = [self.fabric.state_registry.parse_guild(guild) for guild in payload["guilds"]]
 
         if self._request_chunks_mode != AutoRequestChunksMode.NEVER and guilds:
             asyncio.create_task(self._do_initial_chunking(guilds, gateway.shard_id))
@@ -187,7 +188,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         self.dispatch(event_types.EventType.RAW_CHANNEL_PINS_UPDATE, payload)
 
         channel_id = int(payload["channel_id"])
-        channel_obj: typing.Optional[channels.Channel] = self.fabric.state_registry.get_channel_by_id(channel_id)
+        channel_obj: type_hints.Nullable[channels.Channel] = self.fabric.state_registry.get_channel_by_id(channel_id)
 
         if channel_obj is not None:
             channel_obj: channels.TextChannel
@@ -221,7 +222,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         guild_id = int(payload["id"])
         unavailable = payload.get("unavailable", False)
         was_already_loaded = self.fabric.state_registry.get_guild_by_id(guild_id) is not None
-        guild = self.fabric.state_registry.parse_guild(payload, gateway.shard_id)
+        guild = self.fabric.state_registry.parse_guild(payload)
 
         # TODO: do not fire this event if the guild is in the initial unready id set.
         # TODO: if the guild just became ready and was in the initial unready id set, invoke the READY event.
@@ -262,10 +263,10 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         else:
             # We don't have a guild parsed yet. That shouldn't happen but if it does, we can make a note of this
             # so that we don't fail on other events later, and pre-emptively parse this information now.
-            self.fabric.state_registry.parse_guild(payload, gateway.shard_id)
+            self.fabric.state_registry.parse_guild(payload)
 
     async def _handle_guild_leave(self, gateway, payload):
-        guild = self.fabric.state_registry.parse_guild(payload, gateway.shard_id)
+        guild = self.fabric.state_registry.parse_guild(payload)
         self.fabric.state_registry.delete_guild(guild)
         self.dispatch(event_types.EventType.GUILD_LEAVE, guild)
 
