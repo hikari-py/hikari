@@ -32,7 +32,7 @@ from tests.hikari import _helpers
 
 @pytest.fixture()
 def mock_state_registry():
-    return mock.create_autospec(base_registry.BaseRegistry)
+    return _helpers.create_autospec(base_registry.BaseRegistry)
 
 
 @pytest.fixture()

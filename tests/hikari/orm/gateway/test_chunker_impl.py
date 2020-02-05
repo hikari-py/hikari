@@ -33,12 +33,12 @@ from tests.hikari import _helpers
 @pytest.fixture()
 def fabric_obj():
     def make_gateway():
-        gw = mock.create_autospec(_gateway.GatewayClient)
+        gw = _helpers.create_autospec(_gateway.GatewayClient)
         gw.request_guild_members = mock.AsyncMock()
         return gw
 
     fabric_obj = fabric.Fabric()
-    fabric_obj.state_registry = mock.create_autospec(base_registry.BaseRegistry)
+    fabric_obj.state_registry = _helpers.create_autospec(base_registry.BaseRegistry)
     fabric_obj.gateways = {
         # We'd never have None and shard ids together, but this doesn't matter for this test.
         None: make_gateway(),
@@ -154,7 +154,7 @@ async def test_load_members_for_with_shards(fabric_obj):
 
 @pytest.mark.asyncio
 async def test_handle_next_chunk_for_unknown_guild_does_nothing(fabric_obj, guild_chunk_payload_no_presences):
-    fabric_obj.chunker.logger = mock.create_autospec(logging.Logger)
+    fabric_obj.chunker.logger = _helpers.create_autospec(logging.Logger)
     fabric_obj.state_registry.get_guild_by_id = mock.MagicMock(
         spec_set=fabric_obj.state_registry.get_guild_by_id, return_value=None
     )
@@ -196,7 +196,7 @@ async def test_handle_next_chunk_for_members_with_presences(
     fabric_obj.state_registry.get_guild_by_id = mock.MagicMock(
         spec_set=fabric_obj.state_registry.get_guild_by_id, return_value=guild_obj
     )
-    fabric_obj.chunker.logger = mock.create_autospec(logging.Logger)
+    fabric_obj.chunker.logger = _helpers.create_autospec(logging.Logger)
 
     await fabric_obj.chunker.handle_next_chunk(guild_chunk_payload_presences, 1)
 
