@@ -43,23 +43,23 @@ from tests.hikari import _helpers
 
 @pytest.fixture()
 def logger_impl():
-    return mock.create_autospec(logging.Logger)
+    return _helpers.create_autospec(logging.Logger)
 
 
 @pytest.fixture()
 def state_registry_impl():
-    return mock.create_autospec(base_registry.BaseRegistry)
+    return _helpers.create_autospec(base_registry.BaseRegistry)
 
 
 @pytest.fixture()
 def dispatch_impl():
-    return mock.create_autospec(lambda name, *args: None)
+    return _helpers.create_autospec(lambda name, *args: None)
 
 
 @pytest.fixture()
 def gateway_impl():
     # noinspection PyTypeChecker
-    gw: _gateway.GatewayClient = mock.create_autospec(_gateway.GatewayClient)
+    gw: _gateway.GatewayClient = _helpers.create_autospec(_gateway.GatewayClient)
     gw.shard_id = 123
     gw.shard_count = 456
     return gw
@@ -67,7 +67,7 @@ def gateway_impl():
 
 @pytest.fixture()
 def chunker_impl():
-    return mock.create_autospec(_chunker.BaseChunker)
+    return _helpers.create_autospec(_chunker.BaseChunker)
 
 
 @pytest.fixture()
@@ -938,7 +938,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_guild_members_chunk_calls_chunker(self, adapter_impl, fabric_impl, gateway_impl):
-        fabric_impl.chunker = mock.create_autospec(_chunker.BaseChunker)
+        fabric_impl.chunker = _helpers.create_autospec(_chunker.BaseChunker)
         fabric_impl.chunker.handle_next_chunk = mock.AsyncMock()
 
         payload = {...}
