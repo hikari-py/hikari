@@ -23,12 +23,13 @@ import pytest
 
 from hikari.orm import fabric
 from hikari.orm.gateway import dispatching_event_adapter
+from tests.hikari import _helpers
 
 
 class Impl(dispatching_event_adapter.BaseDispatchingEventAdapter):
     # noinspection PyMissingConstructor
     def __init__(self):
-        super().__init__(mock.MagicMock(spec_set=fabric.Fabric))
+        super().__init__(_helpers.create_autospec(fabric.Fabric))
 
     async def handle_something(self, gateway, payload):
         pass

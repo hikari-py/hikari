@@ -44,6 +44,9 @@ from hikari.orm.gateway import dispatching_event_adapter_impl
 from hikari.orm.http import http_adapter_impl
 from hikari.orm.state import state_registry_impl
 
+if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
+
 
 class Client:
     """
@@ -68,13 +71,13 @@ class Client:
     def __init__(
         self,
         token: str,
-        loop: typing.Optional[asyncio.AbstractEventLoop] = None,
-        options: typing.Optional[client_options.ClientOptions] = None,
+        loop: type_hints.Nullable[asyncio.AbstractEventLoop] = None,
+        options: type_hints.Nullable[client_options.ClientOptions] = None,
     ) -> None:
         self._client_options = options or client_options.ClientOptions()
         self._event_dispatcher = aio.MuxMap()
-        self._fabric: typing.Optional[fabric.Fabric] = None
-        self._shard_keepalive_tasks = {}
+        self._fabric: type_hints.Nullable[fabric.Fabric] = None
+        self._shard_keepalive_tasks: typing.Dict[gateway.GatewayClient, asyncio.Task] = {}
         self.logger = loggers.get_named_logger(self)
         self.token = token
 
@@ -92,7 +95,7 @@ class Client:
             self._fabric.event_handler = await self._new_event_handler()
             self._fabric.http_client = await self._new_http_client()
             self._fabric.http_adapter = await self._new_http_adapter()
-            self._fabric.gateways = await self._new_shard_map()
+            self._fabric.gateways, self._fabric.shard_count = await self._new_shard_map()
             self._fabric.chunker = await self._new_chunker()
         except Exception as ex:
             self.logger.exception("failed to start a new client", exc_info=ex)
@@ -129,7 +132,7 @@ class Client:
     async def _new_shard_map(self):
         shard_ids = self._client_options.shards
 
-        if not isinstance(shard_ids, client_options.ShardOptions) and shard_ids is not None:
+        if not isinstance(shard_ids, client_options.ShardOptions):
             raise RuntimeError(
                 "shard_ids in client options was not a valid type or value.\n"
                 "\n"
@@ -137,7 +140,7 @@ class Client:
                 "set it to:\n",
                 "   1. Do not specify anything for it. This will default it to `hikari.client_options.AUTO_SHARD` \n"
                 "      which will ask the gateway for the most appropriate settings for your bot on start up.\n"
-                "   2. Set it to `None`. This will turn sharding off and use a single gateway for your bot.\n"
+                "   2. Set it to `hikari.client_options.NO_SHARDING`. This will turn sharding off and use a single gateway for your bot.\n"
                 "   3. Set it to a `hikari.client_options.ShardOptions` object. The first value\n"
                 "      can be either a collection of `int`s, a `slice`, or a `range`, and represents any shard IDs\n"
                 "      to spin up. The second value is the total number of shards that are running for the entire bot\n"
@@ -175,15 +178,18 @@ class Client:
         else:
             url = await self._fabric.http_adapter.gateway_url
 
-            if isinstance(shard_ids, client_options.ShardOptions):
-                if isinstance(shard_ids.shards, slice):
-                    shard_count = shard_ids.shard_count
-                    shard_ids = [i for i in range(shard_ids.shards.start, shard_ids.shards.stop, shard_ids.shards.step)]
-                else:
-                    shard_ids, shard_count = list(shard_ids.shards), shard_ids.shard_count
+            if isinstance(shard_ids.shards, slice):
+                shard_count = shard_ids.shard_count
+                shard_ids = [
+                    i
+                    for i in range(
+                        shard_ids.shards.start if shard_ids.shards.start else 0,
+                        shard_ids.shards.stop,
+                        shard_ids.shards.step if shard_ids.shards.step else 1,
+                    )
+                ]
             else:
-                shard_count = 1
-                shard_ids = [0]
+                shard_ids, shard_count = list(shard_ids.shards), shard_ids.shard_count
 
         shard_map = {}
         for shard_id in shard_ids:
@@ -205,7 +211,7 @@ class Client:
                 shard_count=shard_count,
             )
 
-        return shard_map
+        return shard_map, shard_count
 
     async def _new_chunker(self):
         return basic_chunker_impl.BasicChunkerImpl(self._fabric)
@@ -357,7 +363,7 @@ class Client:
         self._event_dispatcher.remove(event_name, coroutine_function)
 
     def event(
-        self, name: typing.Optional[str] = None
+        self, name: type_hints.Nullable[str] = None
     ) -> typing.Callable[[aio.CoroutineFunctionT], aio.CoroutineFunctionT]:
         """
         Generates a decorator for a coroutine function in order to subscribe it as an event listener.
@@ -417,13 +423,13 @@ class Client:
         The average heartbeat latency across all gateway shard connections. If any are not running, you will receive
         a :class:`float` with the value of `NaN` instead.
         """
-        if self._fabric and len(self._fabric.gateways) == 0:
-            # Bot has not yet started.
-            return float("nan")
-        return sum(shard.heartbeat_latency for shard in self._fabric.gateways.values()) / len(self._fabric.gateways)
+        if self._fabric and len(self._fabric.gateways) != 0:
+            return sum(shard.heartbeat_latency for shard in self._fabric.gateways.values()) / len(self._fabric.gateways)
+        # Bot has not yet started.
+        return float("nan")
 
     @property
-    def heartbeat_latencies(self) -> typing.Mapping[typing.Optional[int], float]:
+    def heartbeat_latencies(self) -> typing.Mapping[int, float]:
         """
         Creates a mapping of each shard ID to the latest heartbeat latency for that shard.
         """
@@ -432,7 +438,7 @@ class Client:
         return {}
 
     @property
-    def shards(self) -> typing.Mapping[typing.Optional[int], gateway.GatewayClient]:
+    def shards(self) -> typing.Mapping[int, gateway.GatewayClient]:
         """
         Creates a mapping of each shard running, mapping the shard ID to the shard instance itself.
         """

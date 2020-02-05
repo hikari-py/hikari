@@ -33,13 +33,13 @@ from tests.hikari import _helpers
 
 @pytest.fixture
 def mock_fabric():
-    mock_state = mock.MagicMock(spec_set=base_registry.BaseRegistry)
+    mock_state = _helpers.create_autospec(base_registry.BaseRegistry)
     return fabric.Fabric(NotImplemented, mock_state)
 
 
 @pytest.fixture
 def mock_guild():
-    return mock.MagicMock(spec_set=guilds.Guild)
+    return _helpers.create_autospec(guilds.Guild)
 
 
 @pytest.fixture
@@ -108,7 +108,7 @@ class TestChannel:
 class TestTextChannel:
     @pytest.mark.asyncio
     async def test_trigger_typing_calls_http_adapter(self, mock_fabric):
-        mock_fabric.http_adapter = mock.MagicMock(spec_set=base_http_adapter.BaseHTTPAdapter)
+        mock_fabric.http_adapter = _helpers.create_autospec(base_http_adapter.BaseHTTPAdapter)
         mock_fabric.http_adapter.trigger_typing = mock.AsyncMock()
         text_channel = _helpers.mock_model(channels.TextChannel, _fabric=mock_fabric, id=1234)
         await channels.TextChannel.trigger_typing(text_channel)
@@ -116,7 +116,7 @@ class TestTextChannel:
 
     @pytest.mark.asyncio
     async def test_start_typing_loops_until_context_ends(self, mock_fabric):
-        mock_fabric.http_adapter = mock.MagicMock(spec_set=base_http_adapter.BaseHTTPAdapter)
+        mock_fabric.http_adapter = _helpers.create_autospec(base_http_adapter.BaseHTTPAdapter)
         mock_fabric.http_adapter.trigger_typing = mock.AsyncMock()
 
         class Impl(channels.TextChannel):
@@ -140,7 +140,7 @@ class TestTextChannel:
 class TestGuildChannel:
     def test_GuildChannel_parent_when_specified(self, mock_fabric, mock_guild):
         mock_fabric.state_registry.get_guild_by_id.return_value = mock_guild
-        mock_guild.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
+        mock_guild.channels = {1234: _helpers.create_autospec(channels.GuildCategory)}
 
         # Random impl i pulled out the hat.
         guild_text_channel_obj = channels.GuildTextChannel(
@@ -174,7 +174,7 @@ class TestGuildChannel:
 
     def test_GuildChannel_parent_when_unspecified(self, mock_fabric, mock_guild):
         mock_fabric.state_registry.get_guild_by_id.return_value = mock_guild
-        mock_guild.channels = {1234: mock.MagicMock(spec_set=channels.GuildCategory)}
+        mock_guild.channels = {1234: _helpers.create_autospec(channels.GuildCategory)}
 
         guild_text_channel_obj = channels.GuildTextChannel(
             mock_fabric,

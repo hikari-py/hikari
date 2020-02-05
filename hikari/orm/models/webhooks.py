@@ -31,6 +31,7 @@ from hikari.orm.models import bases
 from hikari.orm.models import users
 
 if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
 
 
@@ -116,7 +117,7 @@ class Webhook(bases.BaseModelWithFabric, bases.SnowflakeMixin):
     #: The optional user for the webhook.
     #:
     #: :type: :class:`WebhookUser` or `None`
-    user: typing.Optional[WebhookUser]
+    user: type_hints.Nullable[WebhookUser]
 
     #: The name of the webhook.
     #:
@@ -126,17 +127,17 @@ class Webhook(bases.BaseModelWithFabric, bases.SnowflakeMixin):
     #: The name of the webhook.
     #:
     #: :type: :class:`str` or `None`
-    avatar_hash: typing.Optional[str]
+    avatar_hash: type_hints.Nullable[str]
 
     #: The token of the webhook, if available.
     #:
     #: :type: :class:`str` or `None`
-    token: typing.Optional[str]
+    token: type_hints.Nullable[str]
 
     __repr__ = reprs.repr_of("id", "name")
 
     def __init__(
-        self, fabric_obj: fabric.Fabric, payload: containers.JSONObject, guild_id: typing.Optional[int] = None
+        self, fabric_obj: fabric.Fabric, payload: containers.JSONObject, guild_id: type_hints.Nullable[int] = None
     ) -> None:
         self._fabric = fabric_obj
         self.id = int(payload["id"])

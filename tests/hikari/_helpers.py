@@ -167,7 +167,7 @@ def _can_weakref(spec_set):
 
 def mock_model(spec_set: typing.Type[T] = object, hash_code_provider=None, **kwargs) -> T:
     # Enables type hinting for my own reference, and quick attribute setting.
-    obj = mock.MagicMock(spec_set=spec_set)
+    obj = create_autospec(spec_set)
     for name, value in kwargs.items():
         setattr(obj, name, value)
 
@@ -291,7 +291,7 @@ class AssertWarns:
 
     def __enter__(self):
         self.old_warning = warnings.warn_explicit
-        self.mocked_warning = mock.MagicMock(spec_set=warnings.warn)
+        self.mocked_warning = create_autospec(warnings.warn)
         self.context = mock.patch("warnings.warn", new=self.mocked_warning)
         self.context.__enter__()
         return self
@@ -360,6 +360,9 @@ class AwaitableMock:
 
     def assert_awaited_once(self):
         assert self.await_count == 1
+
+    def assert_not_awaited(self):
+        assert self.await_count == 0
 
     is_resolved = False
 
@@ -439,3 +442,7 @@ def free_port():
         s.bind(("", 0))
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         return s.getsockname()[1]
+
+
+def create_autospec(spec, *args, **kwargs):
+    return mock.create_autospec(spec, spec_set=True, *args, **kwargs)

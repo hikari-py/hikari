@@ -38,7 +38,7 @@ def webhook_user():
 
 @pytest.fixture()
 def mock_state_registry():
-    return mock.MagicMock(spec_set=base_registry.BaseRegistry)
+    return _helpers.create_autospec(base_registry.BaseRegistry)
 
 
 @pytest.fixture()

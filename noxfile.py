@@ -49,6 +49,8 @@ GENDOC_PATH = pathify(CI_SCRIPT_DIR, "gendoc.py")
 MAIN_PACKAGE_PATH = MAIN_PACKAGE.replace(".", "/")
 REPOSITORY = f"https://gitlab.com/{OWNER}/{MAIN_PACKAGE}"
 PYTEST_ARGS = [
+    "-n",
+    "auto",
     "--cov",
     MAIN_PACKAGE,
     "--cov-config",
@@ -129,7 +131,7 @@ def lint(session) -> None:
     # session.run("pip", "install", f"pylint=={PYLINT_VERSION}" if PYLINT_VERSION else "pylint")
     session.run(
         "pip", "install", "git+https://github.com/davfsa/pylint"
-    )  # Freezed version of pylint 2.5 post release to make sure that nothing will break
+    )  # Freezed version of pylint 2.5 pre-release to make sure that nothing will break
     pkg = MAIN_PACKAGE.split(".")[0]
 
     try:

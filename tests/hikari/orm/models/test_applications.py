@@ -28,7 +28,7 @@ from tests.hikari import _helpers
 
 @pytest.fixture
 def fabric_obj():
-    mock_state_registry = mock.MagicMock(spec_set=base_registry.BaseRegistry)
+    mock_state_registry = _helpers.create_autospec(base_registry.BaseRegistry)
     return fabric.Fabric(state_registry=mock_state_registry)
 
 

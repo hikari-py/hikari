@@ -29,6 +29,8 @@ from hikari import orm
 # Client
 from hikari.client import Client
 from hikari.client_options import ClientOptions
+from hikari.client_options import ShardOptions
+
 from hikari.net.errors import BadRequestHTTPError
 from hikari.net.errors import ClientHTTPError
 from hikari.net.errors import ForbiddenHTTPError

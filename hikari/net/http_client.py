@@ -99,14 +99,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
     async def close(self):
         with contextlib.suppress(Exception):
             self.ratelimiter.close()
-        with contextlib.suppress(Exception):
-            await self.client_session.close()
-
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, ex_t, ex, ex_tb):
-        await self.close()
+        await super().close()
 
     async def _request(
         self,
@@ -116,17 +109,17 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         query=None,
         form_body=None,
         json_body: type_hints.Nullable[typing.Union[containers.JSONObject, containers.JSONArray]] = None,
-        reason=None,
-        re_seekable_resources=containers.EMPTY_COLLECTION,
+        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        re_seekable_resources: typing.Collection[typing.Any] = containers.EMPTY_COLLECTION,
         **kwargs,
-    ) -> typing.Union[containers.JSONObject, containers.JSONArray]:
+    ) -> containers.JSONObject:
         future, real_hash = self.ratelimiter.acquire(compiled_route)
         request_headers = {"X-RateLimit-Precision": "millisecond"}
 
         if self.token is not None:
             request_headers["Authorization"] = self.token
 
-        if reason is not None:
+        if reason and reason is not unspecified.UNSPECIFIED:
             request_headers["X-Audit-Log-Reason"] = reason
 
         if headers is not None:
@@ -247,7 +240,14 @@ class HTTPClient(base_http_client.BaseHTTPClient):
 
             return body
 
-    async def _handle_bad_response(self, backoff, reason, route, message, status):
+    async def _handle_bad_response(
+        self,
+        backoff: ratelimits.ExponentialBackOff,
+        reason: str,
+        route: routes.CompiledRoute,
+        message: str,
+        status: int,
+    ) -> None:
         try:
             next_sleep = next(backoff)
             self.logger.warning("received a server error response, backing off for %ss and trying again", next_sleep)
@@ -1105,7 +1105,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             hikari.net.errors.ForbiddenError:
                 If you either lack the `MANAGE_EMOJIS` permission or are not a member of the given guild.
         """
-        payload = {"name": name, "roles": roles}
+        payload = {}
+        transformations.put_if_specified(payload, "name", name)
+        transformations.put_if_specified(payload, "roles", roles)
         route = routes.GUILD_EMOJI.compile(self.PATCH, guild_id=guild_id, emoji_id=emoji_id)
         return await self._request(route, json_body=payload, reason=reason)
 
@@ -1488,7 +1490,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         user_id: str,
         *,
         nick: type_hints.NullableNotRequired[str] = unspecified.UNSPECIFIED,
-        roles: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        roles: type_hints.NotRequired[typing.Sequence[str]] = unspecified.UNSPECIFIED,
         mute: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
         deaf: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
         channel_id: type_hints.NullableNotRequired[str] = unspecified.UNSPECIFIED,
@@ -1561,7 +1563,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 If you provide a disallowed nickname, one that is too long, or one that is empty.
         """
         payload = {"nick": nick}
-        route = routes.OWN_GUILD_NICKNAME.compile(self.GET, guild_id=guild_id)
+        route = routes.OWN_GUILD_NICKNAME.compile(self.PATCH, guild_id=guild_id)
         await self._request(route, json_body=payload, reason=reason)
 
     async def add_guild_member_role(
@@ -2025,7 +2027,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INVITES.compile(self.GET, guild_id=guild_id)
-        return await self._request(route, guild_id=guild_id)
+        return await self._request(route)
 
     async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[containers.JSONObject]:
         """
@@ -2114,12 +2116,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             hikari.net.errors.ForbiddenError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
-        payload = {
-            "expire_behaviour": expire_behaviour,
-            "expire_grace_period": expire_grace_period,
-            # This is inconsistently named in their API.
-            "enable_emoticons": enable_emojis,
-        }
+        payload = {}
+        transformations.put_if_specified(payload, "expire_behaviour", expire_behaviour)
+        transformations.put_if_specified(payload, "expire_grace_period", expire_grace_period)
+        # This is inconsistently named in their API.
+        transformations.put_if_specified(payload, "enable_emoticons", enable_emojis)
         route = routes.GUILD_INTEGRATION.compile(self.PATCH, guild_id=guild_id, integration_id=integration_id)
         await self._request(route, json_body=payload, reason=reason)
 
@@ -2182,7 +2183,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             hikari.net.errors.ForbiddenError:
                 If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
-        route = routes.GUILD_EMBED.compile(self.DELETE, guild_id=guild_id)
+        route = routes.GUILD_EMBED.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
     async def modify_guild_embed(

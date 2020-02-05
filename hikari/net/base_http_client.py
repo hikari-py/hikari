@@ -23,6 +23,7 @@ proxying, SSL configuration, and a standard easy-to-use interface.
 from __future__ import annotations
 
 import abc
+import contextlib
 import json
 import typing
 
@@ -35,6 +36,8 @@ if typing.TYPE_CHECKING:
     import asyncio
     import logging
     import ssl
+
+    from hikari.internal_utilities import type_hints
 
 
 class BaseHTTPClient(abc.ABC):
@@ -111,27 +114,27 @@ class BaseHTTPClient(abc.ABC):
     #: Proxy authorization info.
     #:
     #: :type: :class:`aiohttp.BasicAuth` or `None`
-    proxy_auth: typing.Optional[aiohttp.BasicAuth]
+    proxy_auth: type_hints.Nullable[aiohttp.BasicAuth]
 
     #: Proxy headers.
     #:
     #: :type: :class:`aiohttp.typedefs.LooseHeaders` or `None`
-    proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders]
+    proxy_headers: type_hints.Nullable[aiohttp.typedefs.LooseHeaders]
 
     #: Proxy URL to use.
     #:
     #: :type: :class:`str` or `None`
-    proxy_url: typing.Optional[str]
+    proxy_url: type_hints.Nullable[str]
 
     #: SSL context to use.
     #:
     #: :type: :class:`ssl.SSLContext` or `None`
-    ssl_context: typing.Optional[ssl.SSLContext]
+    ssl_context: type_hints.Nullable[ssl.SSLContext]
 
     #: Response timeout.
     #:
     #: :type: :class:`float` or `None` if using the default for `aiohttp`.
-    timeout: typing.Optional[float]
+    timeout: type_hints.Nullable[float]
 
     #: The user agent being used.
     #:
@@ -282,5 +285,6 @@ class BaseHTTPClient(abc.ABC):
         await self.close()
 
     async def close(self):
-        self.logger.debug("Closing HTTPAPI")
-        await self.client_session.close()
+        self.logger.debug("Closing HTTPClient")
+        with contextlib.suppress(Exception):
+            await self.client_session.close()

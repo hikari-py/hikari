@@ -20,10 +20,11 @@
 Media tranformation utilities.
 """
 import base64
-import typing
+
+from hikari.internal_utilities import type_hints
 
 
-def image_bytes_to_image_data(img_bytes: bytes) -> typing.Optional[str]:
+def image_bytes_to_image_data(img_bytes: bytes) -> type_hints.Nullable[str]:
     """
     Encode image bytes into an image data string.
 
@@ -58,3 +59,19 @@ def image_bytes_to_image_data(img_bytes: bytes) -> typing.Optional[str]:
     image_data = base64.b64encode(img_bytes).decode()
 
     return f"data:{img_type};base64,{image_data}"
+
+
+def guild_id_to_shard_id(guild_id: int, shard_count: int) -> int:
+    """
+    Get the shard id of the given guild id.
+
+    Args:
+        guild_id:
+            The ID of the guild.
+        shard_count:
+            The ammount of shards that are being used overal to connect to Discord.
+
+    Returns:
+        The shard the given guild is in.
+    """
+    return (guild_id >> 22) % shard_count

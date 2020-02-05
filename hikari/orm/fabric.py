@@ -27,6 +27,7 @@ import dataclasses
 import typing
 
 if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
     from hikari.net import gateway as _gateway
     from hikari.net import http_client as _http_client
     from hikari.orm.gateway import base_chunker as _chunker
@@ -51,9 +52,10 @@ class Fabric:
     state_registry: _state_registry.BaseRegistry = dataclasses.field(default=NotImplemented)
 
     #: A mapping of shard ID's to gateways that are running.
-    #:
-    #: If no shards are running, then this defaults to one shard under the `None` key.
     gateways: typing.Dict[int, _gateway.GatewayClient] = dataclasses.field(default_factory=dict)
+
+    #: The ammount of shards that are being used overal to connect to Discord
+    shard_count: int = 0
 
     #: The base HTTP client for making HTTP requests.
     http_client: _http_client.HTTPClient = dataclasses.field(default=NotImplemented)

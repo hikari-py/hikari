@@ -43,23 +43,23 @@ from tests.hikari import _helpers
 
 @pytest.fixture()
 def logger_impl():
-    return mock.MagicMock(spec_set=logging.Logger)
+    return _helpers.create_autospec(logging.Logger)
 
 
 @pytest.fixture()
 def state_registry_impl():
-    return mock.MagicMock(spec_set=base_registry.BaseRegistry)
+    return _helpers.create_autospec(base_registry.BaseRegistry)
 
 
 @pytest.fixture()
 def dispatch_impl():
-    return mock.MagicMock(spec_set=lambda name, *args: None)
+    return _helpers.create_autospec(lambda name, *args: None)
 
 
 @pytest.fixture()
 def gateway_impl():
     # noinspection PyTypeChecker
-    gw: _gateway.GatewayClient = mock.MagicMock(spec_set=_gateway.GatewayClient)
+    gw: _gateway.GatewayClient = _helpers.create_autospec(_gateway.GatewayClient)
     gw.shard_id = 123
     gw.shard_count = 456
     return gw
@@ -67,7 +67,7 @@ def gateway_impl():
 
 @pytest.fixture()
 def chunker_impl():
-    return mock.MagicMock(spec_set=_chunker.BaseChunker)
+    return _helpers.create_autospec(_chunker.BaseChunker)
 
 
 @pytest.fixture()
@@ -468,7 +468,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_guild_create(gateway_impl, payload)
 
-        fabric_impl.state_registry.parse_guild.assert_called_with(payload, gateway_impl.shard_id)
+        fabric_impl.state_registry.parse_guild.assert_called_with(payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_create_when_already_known_and_now_available_dispatches_GUILD_AVAILABLE(
@@ -551,7 +551,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl._handle_guild_unavailable(gateway_impl, payload)
 
-        fabric_impl.state_registry.parse_guild.assert_called_with(payload, gateway_impl.shard_id)
+        fabric_impl.state_registry.parse_guild.assert_called_with(payload)
 
     @pytest.mark.asyncio
     async def test__handle_guild_unavailable_when_not_cached_does_not_dispatch_anything(
@@ -594,7 +594,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl._handle_guild_leave(gateway_impl, payload)
 
-        fabric_impl.state_registry.parse_guild.assert_called_with(payload, gateway_impl.shard_id)
+        fabric_impl.state_registry.parse_guild.assert_called_with(payload)
 
     @pytest.mark.asyncio
     async def test__handle_guild_leave_deletes_guild(self, adapter_impl, fabric_impl, gateway_impl):
@@ -938,7 +938,7 @@ class TestDispatchingEventAdapterImpl:
 
     @pytest.mark.asyncio
     async def test_handle_guild_members_chunk_calls_chunker(self, adapter_impl, fabric_impl, gateway_impl):
-        fabric_impl.chunker = mock.MagicMock(spec_set=_chunker.BaseChunker)
+        fabric_impl.chunker = _helpers.create_autospec(_chunker.BaseChunker)
         fabric_impl.chunker.handle_next_chunk = mock.AsyncMock()
 
         payload = {...}
@@ -1248,6 +1248,7 @@ class TestDispatchingEventAdapterImpl:
     ):
         message_obj = _helpers.mock_model(messages.Message, id=789)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
         payload = {
             "user_id": "123",
             "channel_id": "456",
@@ -1257,7 +1258,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
 
-        fabric_impl.state_registry.parse_emoji.asset_called_with(payload["emoji"], None)
+        fabric_impl.state_registry.parse_emoji.assert_called_with(payload["emoji"], None)
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_add_increments_reaction_count(
@@ -1276,7 +1277,7 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
 
-        fabric_impl.state_registry.increment_reaction_count.asset_called_with(message_obj, emoji_obj)
+        fabric_impl.state_registry.increment_reaction_count.assert_called_with(message_obj, emoji_obj)
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_add_when_in_guild_attempts_to_resolve_member_who_added_reaction(

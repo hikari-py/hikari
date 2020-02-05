@@ -29,8 +29,10 @@ from hikari.internal_utilities import reprs
 from hikari.orm.models import bases
 
 if typing.TYPE_CHECKING:
+    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import guilds
+    from hikari.orm.models import users
 
 
 class Emoji(bases.BaseModel, abc.ABC):
@@ -134,7 +136,7 @@ class GuildEmoji(UnknownEmoji, bases.BaseModelWithFabric):
     )
 
     _role_ids: typing.Sequence[int]
-    _guild_id: typing.Optional[int]
+    _guild_id: int
 
     #: `True` if the emoji requires colons to be mentioned; `False` otherwise.
     #:
@@ -144,7 +146,7 @@ class GuildEmoji(UnknownEmoji, bases.BaseModelWithFabric):
     #: The user who made the object, if available.
     #:
     #: :type: :class:`hikari.orm.models.users.User` or `None`
-    user: typing.Optional[user.User]
+    user: type_hints.Nullable[users.User]
 
     #: `True` if the emoji is managed as part of an integration with Twitch, `False` otherwise.
     #:
@@ -169,7 +171,10 @@ class GuildEmoji(UnknownEmoji, bases.BaseModelWithFabric):
         self._role_ids = [int(r) for r in payload.get("roles", containers.EMPTY_SEQUENCE)]
 
     @property
-    def guild(self) -> guilds.Guild:
+    def guild(self) -> type_hints.Nullable[guilds.Guild]:
+        """
+        If the guild is not cached, this will return None
+        """
         return self._fabric.state_registry.get_guild_by_id(self._guild_id)
 
     @property
@@ -192,7 +197,7 @@ def is_payload_guild_emoji_candidate(payload: containers.JSONObject) -> bool:
 
 
 def parse_emoji(
-    fabric_obj: fabric.Fabric, payload: containers.JSONObject, guild_id: typing.Optional[int] = None
+    fabric_obj: fabric.Fabric, payload: containers.JSONObject, guild_id: type_hints.Nullable[int] = None
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:
     """
     Parse the given emoji payload into an appropriate implementation of Emoji.
