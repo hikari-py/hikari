@@ -921,6 +921,31 @@ class TestStateRegistryImpl:
             channels.GuildCategory,
             channels.GuildTextChannel,
             channels.GuildStoreChannel,
+        ],
+    )
+    def test_parse_channel_caches_guild_channel_if_uncached_guild_channel(
+        self, registry: state_registry_impl.StateRegistryImpl, impl_t
+    ):
+        payload = {"id": "1234", "type": -1}
+        guild_obj = _helpers.mock_model(guilds.Guild, id=567, channels={})
+        channel_obj = _helpers.mock_model(impl_t, id=1234)
+        registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        registry.get_channel_by_id = mock.MagicMock(return_value=None)
+        with _helpers.mock_patch(channels.parse_channel, return_value=channel_obj):
+            with _helpers.mock_patch(channels.is_channel_type_dm, return_value=False):
+                registry.parse_channel(payload)
+                assert channel_obj not in registry._dm_channels.values()
+                assert channel_obj in registry._guild_channels.values()
+                assert guild_obj.channels[1234] == channel_obj
+
+    @pytest.mark.parametrize(
+        "impl_t",
+        [
+            channels.GuildAnnouncementChannel,
+            channels.GuildVoiceChannel,
+            channels.GuildCategory,
+            channels.GuildTextChannel,
+            channels.GuildStoreChannel,
             channels.DMChannel,
             channels.GroupDMChannel,
         ],
