@@ -306,13 +306,13 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
 
     def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
         self._fabric = fabric_obj
-        super().__init__(payload)
-        self.shard_id = conversions.guild_id_to_shard_id(self.id, self._fabric.shard_count)
         self.channels = {}
         self.emojis = {}
         self.members = {}
         self.roles = {}
         self.voice_states = {}
+        super().__init__(payload)
+        self.shard_id = conversions.guild_id_to_shard_id(self.id, self._fabric.shard_count)
 
     def update_state(self, payload: containers.JSONObject) -> None:
         super().update_state(payload)
