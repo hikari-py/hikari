@@ -383,6 +383,8 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
         if guild_obj is not None:
             channel_payload["guild_id"] = guild_obj.id
+        else:
+            guild_obj = self.get_guild_by_id(transformations.nullable_cast(channel_payload.get("guild_id"), int))
 
         if channel_obj is not None:
             channel_obj.update_state(channel_payload)
@@ -391,6 +393,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
             if channels.is_channel_type_dm(channel_payload["type"]):
                 self._dm_channels[channel_id] = channel_obj
             else:
+                guild_obj.channels[channel_id] = channel_obj
                 self._guild_channels[channel_id] = channel_obj
 
         return channel_obj
