@@ -308,9 +308,9 @@ class TestClient:
 
     async def test_closes_unclosed_shards(self):
         shard0 = self.gateway_client(0)
-        shard0._requesting_close_event.is_set = mock.MagicMock(return_value=True)
+        shard0.requesting_close_event.is_set = mock.MagicMock(return_value=True)
         shard1 = self.gateway_client(1)
-        shard1._requesting_close_event.is_set = mock.MagicMock(return_value=False)
+        shard1.requesting_close_event.is_set = mock.MagicMock(return_value=False)
 
         client = _client.Client("token")
         client._fabric = _fabric.Fabric(gateways={0: shard0, 1: shard1})
@@ -325,9 +325,9 @@ class TestClient:
 
     async def test_closes_doesnt_do_anything_if_shards_are_closed(self):
         shard0 = self.gateway_client(0)
-        shard0._requesting_close_event.is_set = mock.MagicMock(return_value=True)
+        shard0.requesting_close_event.is_set = mock.MagicMock(return_value=True)
         shard1 = self.gateway_client(1)
-        shard1._requesting_close_event.is_set = mock.MagicMock(return_value=True)
+        shard1.requesting_close_event.is_set = mock.MagicMock(return_value=True)
 
         client = _client.Client("token")
         client._fabric = _fabric.Fabric(gateways={0: shard0, 1: shard1})

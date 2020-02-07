@@ -148,9 +148,7 @@ class TestHTTPClient:
 
     @pytest.mark.asyncio
     async def test_handle_bad_response(self, http_client_impl):
-        backoff = _helpers.create_autospec(
-            ratelimits.ExponentialBackOff, __next__=mock.MagicMock(return_value=4)
-        )
+        backoff = _helpers.create_autospec(ratelimits.ExponentialBackOff, __next__=mock.MagicMock(return_value=4))
         mock_route = mock.MagicMock(routes.CompiledRoute)
         with mock.patch.object(asyncio, "sleep"):
             await http_client_impl._handle_bad_response(
