@@ -184,7 +184,7 @@ class GatewayClient:
         "_proxy_headers",
         "_proxy_url",
         "_ratelimiter",
-        "_requesting_close_event",
+        "requesting_close_event",
         "_session",
         "session_id",
         "seq",
@@ -244,7 +244,7 @@ class GatewayClient:
         self._proxy_auth = proxy_auth
         self._proxy_headers = proxy_headers
         self._proxy_url = proxy_url
-        self._requesting_close_event = asyncio.Event()
+        self.requesting_close_event = asyncio.Event()
         self._session = None
         self.session_id = session_id
         self.seq = seq
@@ -332,9 +332,9 @@ class GatewayClient:
         self._presence = presence
 
     async def close(self, close_code: int = 1000):
-        if not self._requesting_close_event.is_set():
+        if not self.requesting_close_event.is_set():
             self.status = GatewayStatus.SHUTTING_DOWN
-            self._requesting_close_event.set()
+            self.requesting_close_event.set()
             # These will attribute error if they are not set; in this case we don't care, just ignore it.
             with contextlib.suppress(asyncio.TimeoutError, AttributeError):
                 await asyncio.wait_for(asyncio.shield(self._ws.close(code=close_code)), timeout=2.0)
@@ -349,7 +349,7 @@ class GatewayClient:
         self.closed_event.clear()
         self.hello_event.clear()
         self.identify_event.clear()
-        self._requesting_close_event.clear()
+        self.requesting_close_event.clear()
 
         self._session = client_session_type(**self._cs_init_kwargs)
         close_code = 1006  # Abnormal closure
@@ -475,7 +475,7 @@ class GatewayClient:
         await self._poll_events()
 
     async def _heartbeat_keep_alive(self, heartbeat_interval):
-        while not self._requesting_close_event.is_set():
+        while not self.requesting_close_event.is_set():
             if self.last_message_received < self.last_heartbeat_sent:
                 raise asyncio.TimeoutError(
                     f"{self.shard_id}: connection is a zombie, haven't received HEARTBEAT ACK for too long"
@@ -484,12 +484,12 @@ class GatewayClient:
             await self._send({"op": 1, "d": self.seq})
             self.last_heartbeat_sent = time.perf_counter()
             try:
-                await asyncio.wait_for(self._requesting_close_event.wait(), timeout=heartbeat_interval)
+                await asyncio.wait_for(self.requesting_close_event.wait(), timeout=heartbeat_interval)
             except asyncio.TimeoutError:
                 pass
 
     async def _poll_events(self):
-        while not self._requesting_close_event.is_set():
+        while not self.requesting_close_event.is_set():
             self.status = GatewayStatus.WAITING_FOR_MESSAGES
             next_pl = await self._receive()
             self.status = GatewayStatus.PROCESSING_NEW_MESSAGE
