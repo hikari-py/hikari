@@ -677,7 +677,7 @@ class TestHeartbeatKeepAlive:
         if task.done():
             raise task.exception()
 
-        client._requesting_close_event.set()
+        client.requesting_close_event.set()
         await asyncio.sleep(2)
         assert task.done()
 
@@ -689,7 +689,7 @@ class TestHeartbeatKeepAlive:
     ):
         task: asyncio.Future = event_loop.create_task(client._heartbeat_keep_alive(100_000))
         await asyncio.sleep(2)
-        client._requesting_close_event.set()
+        client.requesting_close_event.set()
         await asyncio.sleep(0.1)
         assert task.done()
 
@@ -725,10 +725,10 @@ class TestClose:
 
     @_helpers.timeout_after(1.0)
     async def test_closing_already_closing_websocket_does_nothing(self, client):
-        client._requesting_close_event.set()
-        client._requesting_close_event.set = mock.MagicMock()
+        client.requesting_close_event.set()
+        client.requesting_close_event.set = mock.MagicMock()
         await client.close()
-        client._requesting_close_event.set.assert_not_called()
+        client.requesting_close_event.set.assert_not_called()
 
     @_helpers.timeout_after(1.0)
     async def test_closing_first_time_sets_closed_event(self, client):
@@ -740,7 +740,7 @@ class TestClose:
     async def test_closing_ws_first_time_only_waits_2s(self, client):
         client.closed_event.clear()
 
-        async def close(code):
+        async def close(_):
             await asyncio.sleep(10.0)
 
         client.ws.close = close
@@ -793,7 +793,7 @@ class TestPollEvents:
     @_helpers.timeout_after(5.0)
     async def test_opcode_0(self, client):
         def receive():
-            client._requesting_close_event.set()
+            client.requesting_close_event.set()
             return {"op": 0, "d": {"content": "whatever"}, "t": "MESSAGE_CREATE", "s": 123}
 
         client._receive = mock.AsyncMock(wraps=receive)
