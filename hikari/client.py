@@ -294,7 +294,7 @@ class Client:
         coros = []
 
         for shard in self._fabric.gateways.values():
-            if not shard._requesting_close_event.is_set():
+            if not shard.requesting_close_event.is_set():
                 self.logger.info("requesting shard %s shuts down now", shard.shard_id)
                 coros.append(shard.close())
 
