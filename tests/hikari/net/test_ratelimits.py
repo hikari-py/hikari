@@ -26,6 +26,7 @@ import time
 from unittest import mock
 
 import pytest
+from hikari.net import routes
 
 from hikari.net import ratelimits
 from tests.hikari import _helpers
@@ -360,13 +361,17 @@ class TestWindowedBurstRateLimiter:
 
 
 class TestHTTPBucketRateLimiter:
+    @pytest.fixture()
+    def compiled_route(self):
+        return routes.CompiledRoute("get", "/foo/bar", "/foo/bar", "1a2b3c")
+
     @pytest.mark.parametrize("name", ["spaghetti", ratelimits.UNKNOWN_HASH])
-    def test_is_unknown(self, name):
-        with ratelimits.HTTPBucketRateLimiter(name) as rl:
+    def test_is_unknown(self, name, compiled_route):
+        with ratelimits.HTTPBucketRateLimiter(name, compiled_route) as rl:
             assert rl.is_unknown is (name == ratelimits.UNKNOWN_HASH)
 
-    def test_update_rate_limit(self):
-        with ratelimits.HTTPBucketRateLimiter(__name__) as rl:
+    def test_update_rate_limit(self, compiled_route):
+        with ratelimits.HTTPBucketRateLimiter(__name__, compiled_route) as rl:
             rl.remaining = 1
             rl.limit = 2
             rl.reset_at = 3
@@ -381,8 +386,8 @@ class TestHTTPBucketRateLimiter:
             assert rl.period == 27 - 4.20
 
     @pytest.mark.parametrize("name", ["spaghetti", ratelimits.UNKNOWN_HASH])
-    def test_drip(self, name):
-        with ratelimits.HTTPBucketRateLimiter(name) as rl:
+    def test_drip(self, name, compiled_route):
+        with ratelimits.HTTPBucketRateLimiter(name, compiled_route) as rl:
             rl.remaining = 1
             rl.drip()
             assert rl.remaining == 0 if name != ratelimits.UNKNOWN_HASH else 1

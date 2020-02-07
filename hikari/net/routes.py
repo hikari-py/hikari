@@ -40,7 +40,7 @@ class CompiledRoute:
             The part of the hash identifier to use for the compiled set of major parameters.
     """
 
-    __slots__ = ("method", "major_params_hash", "compiled_path", "hash_code")
+    __slots__ = ("method", "major_params_hash", "compiled_path", "hash_code", "__weakref__")
 
     #: The method to use on the route.
     method: str
