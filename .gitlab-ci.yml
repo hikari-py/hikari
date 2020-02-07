@@ -34,5 +34,10 @@ include:
   - local: "/gitlab/deploy.yml"
   - template: "Dependency-Scanning.gitlab-ci.yml"
   - template: "SAST.gitlab-ci.yml"
-  # TO DO: add eventually, but this is currently really really slow :(
-  # - template: "License-Management.gitlab-ci.yml"
+  - template: "License-Management.gitlab-ci.yml"
+  
+license_scanning:
+  # Overly slow currently, so only run on staging and master.
+  only:
+    - master
+    - staging
