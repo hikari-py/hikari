@@ -129,6 +129,7 @@ import asyncio
 import random
 import time
 import typing
+import weakref
 
 from hikari.internal_utilities import loggers
 
@@ -363,10 +364,13 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
     enforced rate limits at any time.
     """
 
-    __slots__ = ()
+    __slots__ = ("compiled_route",)
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, compiled_route: routes.CompiledRoute) -> None:
         super().__init__(name, 1, 0)
+        # We store this since the compiled route mapping acts as a weak key dictionary to aid in auto garbage
+        # collecting itself; this acts as our solid reference.
+        self.compiled_route = compiled_route
 
     @property
     def is_unknown(self) -> bool:
@@ -412,7 +416,7 @@ class HTTPBucketRateLimiterManager:
     )
 
     def __init__(self) -> None:
-        self.routes_to_real_hashes: typing.MutableMapping[routes.CompiledRoute, str] = {}
+        self.routes_to_real_hashes: typing.MutableMapping[routes.CompiledRoute, str] = weakref.WeakKeyDictionary()
         self.real_hashes_to_buckets: typing.MutableMapping[str, HTTPBucketRateLimiter] = {}
         self.closed_event: asyncio.Event = asyncio.Event()
         self.gc_task: type_hints.Nullable[asyncio.Task] = None
@@ -465,6 +469,7 @@ class HTTPBucketRateLimiterManager:
         for full_hash in buckets_to_purge:
             self.real_hashes_to_buckets[full_hash].close()
             del self.real_hashes_to_buckets[full_hash]
+
         self.logger.debug("purged %s stale buckets", len(buckets_to_purge))
 
     def acquire(self, compiled_route: routes.CompiledRoute) -> typing.Tuple[asyncio.Future, str]:
@@ -489,12 +494,15 @@ class HTTPBucketRateLimiterManager:
         if compiled_route not in self.routes_to_real_hashes:
             real_bucket_hash = compiled_route.create_real_bucket_hash(UNKNOWN_HASH)
             self.routes_to_real_hashes[compiled_route] = real_bucket_hash
-            self.logger.debug("creating new bucket for %s", real_bucket_hash)
-            bucket = HTTPBucketRateLimiter(real_bucket_hash)
-            self.real_hashes_to_buckets[real_bucket_hash] = bucket
         else:
             real_bucket_hash = self.routes_to_real_hashes[compiled_route]
+
+        try:
             bucket = self.real_hashes_to_buckets[real_bucket_hash]
+        except KeyError:
+            self.logger.debug("creating new bucket for %s", real_bucket_hash)
+            bucket = HTTPBucketRateLimiter(real_bucket_hash, compiled_route)
+            self.real_hashes_to_buckets[real_bucket_hash] = bucket
 
         return bucket.acquire(), real_bucket_hash
 
@@ -529,12 +537,15 @@ class HTTPBucketRateLimiterManager:
         """
         bucket = self.real_hashes_to_buckets.get(real_bucket_hash)
         if bucket is None or not real_bucket_hash.startswith(bucket_header):
+            # No need to destroy the old bucket reference, as it will be collected periodically later
+            # by the GC task.
+
             # Recompute vital hashes.
             real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
 
             self.routes_to_real_hashes[compiled_route] = real_bucket_hash
             self.logger.debug("creating new bucket for %s", real_bucket_hash)
-            bucket = HTTPBucketRateLimiter(real_bucket_hash)
+            bucket = HTTPBucketRateLimiter(real_bucket_hash, compiled_route)
             self.real_hashes_to_buckets[real_bucket_hash] = bucket
 
         reset_after = (reset_at_header - date_header).total_seconds()
