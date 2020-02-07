@@ -22,7 +22,10 @@ Provides mechanisms to cache results of calls lazily.
 from __future__ import annotations
 
 import asyncio
+import functools
 import inspect
+import os
+import sys
 import typing
 
 if typing.TYPE_CHECKING:
@@ -34,6 +37,15 @@ ClassT = typing.TypeVar("ClassT")
 CallT = typing.Callable[..., ReturnT]
 CachedFunctionT = typing.Callable[..., ReturnT]
 CachedPropertyFunctionT = typing.Callable[[ClassT], ReturnT]
+
+
+# Hacky workaround to Sphinx being unable to document cached properties. We simply make the
+# decorators return their inputs when this is True.
+__is_sphinx = os.getenv("SPHINX_IS_GENERATING_DOCUMENTATION") is not None
+
+
+def __noop_decorator(func):
+    return func
 
 
 class CachedFunction:
@@ -102,8 +114,6 @@ class CachedProperty:
     def __init__(self, func: CachedPropertyFunctionT, cache_attr: type_hints.Nullable[str]) -> None:
         self.func = func
         self._cache_attr = cache_attr or "_cp_" + func.__name__
-        self.__name__ = getattr(self.func, "__name__", None)
-        self.__qualname__ = getattr(self.func, "__qualname__", None)
         self.__dict__ = getattr(self.func, "__dict__", None)
 
     def __get__(self, instance: type_hints.Nullable[ClassT], owner: typing.Type[ClassT]) -> ReturnT:
@@ -159,9 +169,9 @@ def cached_function(*args, **kwargs) -> typing.Callable[[CachedFunctionT], typin
     """
 
     def decorator(func):
-        return CachedFunction(func, args, kwargs)
+        return functools.wraps(func)(CachedFunction(func, args, kwargs))
 
-    return decorator
+    return decorator if not __is_sphinx else __noop_decorator
 
 
 def cached_property(
@@ -173,12 +183,13 @@ def cached_property(
     """
 
     def decorator(func: CachedPropertyFunctionT) -> typing.Union[CachedProperty, AsyncCachedProperty]:
-        if asyncio.iscoroutinefunction(func):
-            return AsyncCachedProperty(func, cache_name)
-        else:
-            return CachedProperty(func, cache_name)
+        cls = AsyncCachedProperty if asyncio.iscoroutinefunction(func) else CachedProperty
+        return typing.cast(
+            typing.Union[CachedProperty, AsyncCachedProperty],
+            functools.wraps(func)(cls(func, cache_name))
+        )
 
-    return decorator
+    return decorator if not __is_sphinx else __noop_decorator
 
 
 __all__ = ["cached_property", "cached_function"]
