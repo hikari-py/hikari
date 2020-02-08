@@ -547,7 +547,9 @@ def is_channel_type_dm(channel_type: typing.Union[int, ChannelType]) -> bool:
 
 
 # noinspection PyProtectedMember
-def parse_channel(fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> typing.Union[DMChannel, GuildChannel]:
+def parse_channel(
+    fabric_obj: fabric.Fabric, payload: containers.JSONObject
+) -> typing.Union[DMChannel, GuildChannel, bases.UnknownObject[Channel]]:
     """
     Parse a channel from a channel payload from an API call.
 
@@ -576,7 +578,7 @@ def parse_channel(fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> 
             "no channel type of value %s is implemented, so it cannot be parsed correctly.", channel_type
         )
         unknown = bases.UnknownObject(int(payload.get("id", "-1")))
-        return typing.cast(Channel, unknown)
+        return unknown
 
 
 ChannelTypeLikeT = typing.Union[int, ChannelType]
