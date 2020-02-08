@@ -159,6 +159,9 @@ class EventType(str, enum.Enum):
     RECONNECT = "reconnect"
     RESUME = "resume"
 
+    STARTUP = "startup"
+    SHUTDOWN = "shutdown"
+
     #: Should be implemented in the future. For now, will never get fired.
     INVITE_CREATE = "invite_create"
     #: Should be implemented in the future. For now, will never get fired.
