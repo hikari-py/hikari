@@ -22,11 +22,14 @@ Asyncio extensions and utilities.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import functools
 import typing
 
-from hikari.internal_utilities import assertions
+import async_timeout
 
+from hikari.internal_utilities import assertions
+from hikari.internal_utilities import type_hints
 
 ReturnT = typing.TypeVar("ReturnT", covariant=True)
 CoroutineFunctionT = typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, ReturnT]]
@@ -82,6 +85,7 @@ class EventDelegate:
     that may be triggered, and acts as the mechanism for storing and calling event handlers when they need to be
     invoked.
     """
+
     def __init__(self) -> None:
         self._muxes = {}
 
@@ -156,4 +160,33 @@ def completed_future(result: typing.Any = None) -> asyncio.Future:
     return future
 
 
-__all__ = ["optional_await", "CoroutineFunctionT", "PartialCoroutineProtocolT", "EventDelegate", "completed_future"]
+@contextlib.asynccontextmanager
+async def maybe_timeout(timeout: type_hints.Nullable[typing.Union[float, int]]):
+    """
+    Wrapper for :mod:`async_timeout` that may or may not actually wait for a timeout, depending on how it is called.
+
+    This is a :class:`contextlib.AbstractAsyncContextManager`, so must be used in an `async with` block:
+
+    >>> async with maybe_timeout(30):
+    ...     await some_slow_task
+
+    Args:
+        timeout:
+            The timeout to wait for before raising an :class:`asyncio.TimeoutError`. If this is `None`, then this
+            will never be raised.
+    """
+    if timeout is not None:
+        async with async_timeout.timeout(timeout):
+            yield
+    else:
+        yield
+
+
+__all__ = [
+    "optional_await",
+    "CoroutineFunctionT",
+    "PartialCoroutineProtocolT",
+    "EventDelegate",
+    "completed_future",
+    "maybe_timeout",
+]

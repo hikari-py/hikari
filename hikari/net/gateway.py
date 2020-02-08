@@ -410,6 +410,7 @@ class GatewayClient:
             self.last_message_received = float("nan")
             self.disconnect_count += 1
             self._ws = None
+            await self._session.close()
             self._session = None
             self.dispatch(self, "DISCONNECT", None)
 

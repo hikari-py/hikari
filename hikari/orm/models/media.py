@@ -292,4 +292,4 @@ async def safe_read_file(file: AbstractFile) -> typing.Tuple[str, storage.FileLi
     return name, file_output
 
 
-__all__ = ["Attachment", "File", "InMemoryFile", "safe_read_file"]
+__all__ = ["AbstractFile", "Attachment", "File", "InMemoryFile", "safe_read_file"]
