@@ -27,8 +27,9 @@ import typing
 
 from hikari.internal_utilities import assertions
 
-CoroutineFunctionT = typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, typing.Any]]
+
 ReturnT = typing.TypeVar("ReturnT", covariant=True)
+CoroutineFunctionT = typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, ReturnT]]
 
 
 def optional_await(
@@ -68,18 +69,32 @@ def optional_await(
 class PartialCoroutineProtocolT(typing.Protocol[ReturnT]):
     """Represents the type of a :class:`functools.partial` wrapping an :mod:`asyncio` coroutine."""
 
-    def __call__(self) -> typing.Coroutine[None, None, ReturnT]:
+    def __call__(self, *args, **kwargs) -> typing.Coroutine[None, None, ReturnT]:
         ...
 
     def __await__(self):
         ...
 
 
-class MuxMap:
-    def __init__(self):
+class EventDelegate:
+    """
+    A multiplexing map. This is essentially an event delegation mapoing that stores callbacks for various events
+    that may be triggered, and acts as the mechanism for storing and calling event handlers when they need to be
+    invoked.
+    """
+    def __init__(self) -> None:
         self._muxes = {}
 
     def add(self, name: str, coroutine_function: CoroutineFunctionT) -> None:
+        """
+        Register a new event callback to a given event name.
+
+        Args:
+            name:
+                The name of the event to register to.
+            coroutine_function:
+                The event callback to invoke when this event is fired.
+        """
         assertions.assert_that(
             asyncio.iscoroutinefunction(coroutine_function), "You must subscribe a coroutine function only", TypeError
         )
@@ -88,6 +103,16 @@ class MuxMap:
         self._muxes[name].append(coroutine_function)
 
     def remove(self, name: str, coroutine_function: CoroutineFunctionT) -> None:
+        """
+        Remove the given coroutine function from the handlers for the given event. The name is mandatory to enable
+        supporting registering the same event callback for multiple event types.
+
+        Args:
+            name:
+                The event to remove from.
+            coroutine_function:
+                The event callback to remove.
+        """
         if name in self._muxes and coroutine_function in self._muxes[name]:
             if len(self._muxes[name]) - 1 == 0:
                 del self._muxes[name]
@@ -95,8 +120,40 @@ class MuxMap:
                 self._muxes[name].remove(coroutine_function)
 
     def dispatch(self, name: str, *args) -> asyncio.Future:
+        """
+        Dispatch a given event.
+
+        Args:
+            name:
+                The name of the event to dispatch.
+            *args:
+                The parameters to pass to the event callback.
+
+        Returns:
+            A future. This may be a gathering future of the callbacks to invoke, or it may be
+            a completed future object. Regardless, this result will be scheduled on the event loop
+            automatically, and does not need to be awaited. Awaiting this future will await
+            completion of all invoked event handlers.
+        """
         if name in self._muxes:
             return asyncio.gather(*(callback(*args) for callback in self._muxes[name]))
+        return completed_future()
 
 
-__all__ = ["optional_await", "CoroutineFunctionT", "PartialCoroutineProtocolT", "MuxMap"]
+def completed_future(result: typing.Any = None) -> asyncio.Future:
+    """
+    Create a future on the current running loop that is completed, then return it.
+
+    Args:
+        result:
+            The value to set for the result of the future.
+
+    Returns:
+        The completed future.
+    """
+    future = asyncio.get_event_loop().create_future()
+    future.set_result(result)
+    return future
+
+
+__all__ = ["optional_await", "CoroutineFunctionT", "PartialCoroutineProtocolT", "EventDelegate", "completed_future"]
