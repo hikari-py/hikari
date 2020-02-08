@@ -293,7 +293,18 @@ class TestClient:
 
         shard0.identify_event.wait.assert_called_once()
 
-    async def test_start_raices_exception_when_exception_and_closes(self):
+    @_helpers.assert_does_not_raise(type_=RuntimeError)
+    async def test_start_doesnt_raise_exception_when_bot_is_closed(self):
+        client = _client.Client("token")
+        client._init_new_application_fabric = mock.AsyncMock()
+        client.close = mock.AsyncMock()
+        client.is_closed = True
+        client._fabric = _fabric.Fabric()
+
+        with mock.patch("asyncio.gather", side_effect=RuntimeError):
+            await client.start()
+
+    async def test_start_raises_exception_when_exception_and_closes(self):
         client = _client.Client("token")
         client._init_new_application_fabric = mock.AsyncMock()
         client.close = mock.AsyncMock()
@@ -305,6 +316,20 @@ class TestClient:
                 assert False
             except:
                 client.close.assert_called_once()
+
+    async def test_closes_returns_when_already_closed(self):
+        shard0 = self.gateway_client(0)
+        shard0.requesting_close_event.is_set = mock.MagicMock(return_value=False)
+
+        client = _client.Client("token")
+        client._fabric = _fabric.Fabric(gateways={0: shard0})
+        client.is_closed = True
+        gather_future = _helpers.AwaitableMock()
+
+        with mock.patch("asyncio.gather", return_value=gather_future):
+            await client.close()
+
+        gather_future.assert_not_awaited()
 
     async def test_closes_unclosed_shards(self):
         shard0 = self.gateway_client(0)

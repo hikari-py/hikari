@@ -41,6 +41,7 @@ from hikari.net import ratelimits
 from hikari.orm import fabric
 from hikari.orm.gateway import basic_chunker_impl
 from hikari.orm.gateway import dispatching_event_adapter_impl
+from hikari.orm.gateway import event_types
 from hikari.orm.http import http_adapter_impl
 from hikari.orm.state import state_registry_impl
 
@@ -80,6 +81,7 @@ class Client:
         self._shard_keepalive_tasks: typing.Dict[gateway.GatewayClient, asyncio.Task] = {}
         self.logger = loggers.get_named_logger(self)
         self.token = token
+        self.is_closed = False
 
         try:
             self.loop = loop or asyncio.get_event_loop()
@@ -271,6 +273,7 @@ class Client:
 
     async def start(self):
         await self._init_new_application_fabric()
+        self.dispatch(event_types.EventType.STARTUP)
         for shard in self._fabric.gateways.values():
             if shard.shard_id > 0:
                 # https://github.com/discordapp/discord-api-docs/issues/1328
@@ -286,11 +289,17 @@ class Client:
         try:
             await asyncio.gather(*self._shard_keepalive_tasks.values())
         except Exception as ex:
-            raise ex
+            if not self.is_closed:
+                raise ex
         finally:
             await self.close()
 
     async def close(self):
+        if self.is_closed:
+            return
+
+        self.dispatch(event_types.EventType.SHUTDOWN)
+        self.is_closed = True
         coros = []
 
         for shard in self._fabric.gateways.values():
