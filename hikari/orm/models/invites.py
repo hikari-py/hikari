@@ -212,4 +212,4 @@ def parse_invite(fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> t
 InviteLikeT = typing.Union[str, Invite, InviteWithMetadata]
 
 
-__all__ = ["Invite", "InviteWithMetadata", "InviteTargetUserType", "InviteLikeT"]
+__all__ = ["Invite", "InviteWithMetadata", "InviteTargetUserType", "InviteLikeT", "VanityURL"]

@@ -27,7 +27,6 @@ import dataclasses
 import typing
 
 if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import type_hints
     from hikari.net import gateway as _gateway
     from hikari.net import http_client as _http_client
     from hikari.orm.gateway import base_chunker as _chunker

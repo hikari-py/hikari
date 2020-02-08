@@ -62,6 +62,7 @@ class MockClientSession:
         self.aenter = 0
         self.aexit = 0
         self.ws = MockWS()
+        self.close = mock.AsyncMock()
 
     def __call__(self, *args, **kwargs):
         self.args = args
