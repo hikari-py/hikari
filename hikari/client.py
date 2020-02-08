@@ -76,7 +76,7 @@ class Client:
         options: type_hints.Nullable[client_options.ClientOptions] = None,
     ) -> None:
         self._client_options = options or client_options.ClientOptions()
-        self._event_dispatcher = aio.MuxMap()
+        self._event_dispatcher = aio.EventDelegate()
         self._fabric: type_hints.Nullable[fabric.Fabric] = None
         self._shard_keepalive_tasks: typing.Dict[gateway.GatewayClient, asyncio.Task] = {}
         self.logger = loggers.get_named_logger(self)
