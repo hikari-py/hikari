@@ -102,7 +102,7 @@ coverage-coalesce:
     - bash tasks/retry-aborts.sh pip install coverage
     - ls public
     - coverage combine public/*.coverage
-    - coverage report
+    - coverage report -i
   coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
   only:
     - branches

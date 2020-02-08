@@ -16,10 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-from unittest import mock
 import asyncio
 import json
 import ssl
+from unittest import mock
 
 import aiohttp
 import pytest
@@ -148,9 +148,7 @@ class TestHTTPClient:
 
     @pytest.mark.asyncio
     async def test_handle_bad_response(self, http_client_impl):
-        backoff = _helpers.create_autospec(
-            ratelimits.ExponentialBackOff, __next__=mock.MagicMock(return_value=4)
-        )
+        backoff = _helpers.create_autospec(ratelimits.ExponentialBackOff, __next__=mock.MagicMock(return_value=4))
         mock_route = mock.MagicMock(routes.CompiledRoute)
         with mock.patch.object(asyncio, "sleep"):
             await http_client_impl._handle_bad_response(

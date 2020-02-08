@@ -85,6 +85,7 @@ def documentation(session) -> None:
     tech_dir = pathify(DOCUMENTATION_DIR, TECHNICAL_DIR)
     shutil.rmtree(tech_dir, ignore_errors=True, onerror=lambda *_: None)
     os.mkdir(tech_dir)
+    session.env["SPHINX_IS_GENERATING_DOCUMENTATION"] = "true"
     session.run(
         "python",
         GENDOC_PATH,

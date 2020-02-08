@@ -17,7 +17,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-User agent information that is calculated on startup and stored for the lifetime of the application.
+Anonymous system information that we have to provide to Discord when using their API.
+
+This information contains details such as the version of Python you are using, and
+the version of this library, the OS you are making requests from, etc.
+
+This information is provided to enable Discord to detect that you are using a
+valid bot and not attempting to abuse the API.
 """
 import platform
 
@@ -26,6 +32,15 @@ from hikari.internal_utilities import cache
 
 @cache.cached_function()
 def library_version() -> str:
+    """
+    Returns:
+        A string representing the version of this library.
+
+    Example:
+        >>> from hikari.net import user_agent
+        >>> print(user_agent.library_version())
+        hikari 0.0.71
+    """
     from hikari import __version__
 
     return f"hikari {__version__}"
@@ -33,23 +48,53 @@ def library_version() -> str:
 
 @cache.cached_function()
 def python_version() -> str:
+    """
+    Returns:
+        A string representing the version of this release of Python.
+
+    Example:
+        >>> from hikari.net import user_agent
+        >>> print(user_agent.python_version())
+        CPython 3.8.1 GCC 9.2.0
+    """
     attrs = [
         platform.python_implementation(),
         platform.python_version(),
         platform.python_branch(),
         platform.python_compiler(),
     ]
-    return " ".join(a for a in attrs if a.strip())
+    return " ".join(a.strip() for a in attrs if a.strip())
 
 
 @cache.cached_function()
 def system_type() -> str:
+    """
+    Returns:
+        A string representing the system being used.
+
+    Example:
+        >>> from hikari.net import user_agent
+        >>> print(user_agent.system_type())
+        Linux-5.4.15-2-MANJARO-x86_64-with-glibc2.2.5
+
+    I use arch btw.
+    """
     # Might change this eventually to be more detailed, who knows.
-    return platform.system()
+    return platform.platform()
 
 
 @cache.cached_function()
 def user_agent() -> str:
+    """
+    Returns:
+        The string to use for the library `User-Agent` HTTP header that is required
+        to be sent with every HTTP request.
+
+    Example:
+        >>> from hikari.net import user_agent
+        >>> print(user_agent.user_agent())
+        DiscordBot (https://gitlab.com/nekokatt/hikari, 0.0.71) CPython 3.8.1 GCC 9.2.0 Linux
+    """
     from hikari import __version__, __url__
 
     system = system_type()
