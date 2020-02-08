@@ -16,21 +16,27 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import math
-import datetime
 import asyncio
-import aiohttp
-
-import pytest
+import datetime
+import importlib
+import math
+import multiprocessing
+import os
+import signal
+import time
 from unittest import mock
+
+import aiohttp
+import pytest
 
 from hikari import client as _client
 from hikari import client_options
-from hikari.orm import fabric as _fabric
-from hikari.orm.http import http_adapter_impl as _http_adapter_impl
-from hikari.orm.gateway import base_event_handler as _base_event_handler
 from hikari.net import errors as _errors
 from hikari.net import gateway as _gateway
+from hikari.net import http_client as _http_client
+from hikari.orm import fabric as _fabric
+from hikari.orm.gateway import base_event_handler as _base_event_handler
+from hikari.orm.http import http_adapter_impl as _http_adapter_impl
 from tests.hikari import _helpers
 
 
@@ -71,14 +77,14 @@ class TestClient:
 
     async def test__init_new_application_fabric_closes_and_raises_RuntimeError_when_error_when_initiating_fabric(self):
         client = _client.Client("token")
-        client.close = mock.AsyncMock()
+        client.shutdown = mock.AsyncMock()
         client._new_state_registry = mock.AsyncMock(side_effect=RuntimeError)
 
         try:
             await client._init_new_application_fabric()
             assert False
         except RuntimeError:
-            client.close.assert_called_once()
+            client.shutdown.assert_called_once()
 
     async def test__init_new_application_fabric(self, empty_obj):
         client = _client.Client("token")
@@ -304,10 +310,9 @@ class TestClient:
         with mock.patch("asyncio.gather", side_effect=RuntimeError):
             await client.start()
 
-    async def test_start_raises_exception_when_exception_and_closes(self):
+    async def test_start_raises_exception_when_exception(self):
         client = _client.Client("token")
         client._init_new_application_fabric = mock.AsyncMock()
-        client.close = mock.AsyncMock()
         client._fabric = _fabric.Fabric()
 
         with mock.patch("asyncio.gather", side_effect=RuntimeError):
@@ -315,9 +320,21 @@ class TestClient:
                 await client.start()
                 assert False
             except:
-                client.close.assert_called_once()
+                pass
 
-    async def test_closes_returns_when_already_closed(self):
+    async def test_join_raises_exception_when_exception(self):
+        client = _client.Client("token")
+        client._init_new_application_fabric = mock.AsyncMock()
+        client._fabric = _fabric.Fabric()
+
+        with mock.patch("asyncio.gather", side_effect=RuntimeError):
+            try:
+                await client.start()
+                assert False
+            except:
+                pass
+
+    async def test_shutdown_returns_when_already_closed(self):
         shard0 = self.gateway_client(0)
         shard0.requesting_close_event.is_set = mock.MagicMock(return_value=False)
 
@@ -327,11 +344,11 @@ class TestClient:
         gather_future = _helpers.AwaitableMock()
 
         with mock.patch("asyncio.gather", return_value=gather_future):
-            await client.close()
+            await client.shutdown()
 
         gather_future.assert_not_awaited()
 
-    async def test_closes_unclosed_shards(self):
+    async def test_shutdown_unclosed_shards(self):
         shard0 = self.gateway_client(0)
         shard0.requesting_close_event.is_set = mock.MagicMock(return_value=True)
         shard1 = self.gateway_client(1)
@@ -342,13 +359,13 @@ class TestClient:
         gather_future = _helpers.AwaitableMock()
 
         with mock.patch("asyncio.gather", return_value=gather_future):
-            await client.close()
+            await client.shutdown()
 
         gather_future.assert_awaited_once()
         shard0.close.assert_not_called()
         shard1.close.assert_called_once()
 
-    async def test_closes_doesnt_do_anything_if_shards_are_closed(self):
+    async def test_shutdown_doesnt_do_anything_if_shards_are_closed(self):
         shard0 = self.gateway_client(0)
         shard0.requesting_close_event.is_set = mock.MagicMock(return_value=True)
         shard1 = self.gateway_client(1)
@@ -359,29 +376,40 @@ class TestClient:
         gather_future = _helpers.AwaitableMock()
 
         with mock.patch("asyncio.gather", return_value=gather_future):
-            await client.close()
+            await client.shutdown()
 
         gather_future.assert_not_awaited()
         shard0.close.assert_not_called()
         shard1.close.assert_not_called()
 
-    async def test_run_calls_close_when_KeyboardInterrupt(self):
+    async def test_run_calls_shutdown_when_KeyboardInterrupt(self):
         client = _client.Client("token")
-        client.close = mock.MagicMock()
+        client.shutdown = mock.MagicMock()
         client.loop.run_until_complete = mock.MagicMock(side_effect=[KeyboardInterrupt, None])
 
         client.run()
 
-        client.loop.run_until_complete.assert_called_with(client.close())
+        client.loop.run_until_complete.assert_called_with(client.shutdown())
 
     async def test_run_calls_start(self):
         client = _client.Client("token")
         client.start = mock.MagicMock()
+        client.join = mock.MagicMock()
         client.loop.run_until_complete = mock.MagicMock()
 
         client.run()
 
-        client.loop.run_until_complete.assert_called_with(client.start())
+        client.loop.run_until_complete.assert_any_call(client.start())
+
+    async def test_run_calls_join(self):
+        client = _client.Client("token")
+        client.start = mock.MagicMock()
+        client.join = mock.MagicMock()
+        client.loop.run_until_complete = mock.MagicMock()
+
+        client.run()
+
+        client.loop.run_until_complete.assert_any_call(client.join())
 
     async def test_dispatch(self):
         client = _client.Client("token")
@@ -495,3 +523,93 @@ class TestClient:
         client._fabric = _fabric.Fabric(gateways={0: shard0, 1: shard1})
 
         assert client.shards == {0: shard0, 1: shard1}
+
+
+def filter_unimplemented(*args):
+    return [arg for arg in args if arg is not NotImplemented]
+
+
+class TestClientShutdownHandling:
+    def create_process(self, expect_shutdown):
+        class Process(multiprocessing.Process):
+            def __init__(self):
+                super().__init__(daemon=True)
+                self.q = multiprocessing.Queue()
+
+            def run(self) -> None:
+                try:
+                    importlib.import_module("logging").basicConfig(level="DEBUG")
+                    mock_http_client = mock.create_autospec(_http_client.HTTPClient, spec_set=True)
+
+                    def mock_shard(id: int, count: int):
+                        class MockShard(_gateway.GatewayClient):
+                            async def connect(self, client_session_type=aiohttp.ClientSession):
+                                await asyncio.sleep(0.1)
+                                print("mocking identify")
+                                self.identify_event.set()
+
+                        return MockShard(shard_id=id, shard_count=count, token="1a2b3c", url="wss://localhost:8080")
+
+                    shards = [mock_shard(i, 5) for i in range(5)]
+
+                    class Client(_client.Client):
+                        _SHARD_IDENTIFY_WAIT = 0.1
+
+                        async def _new_shard_map(mock):
+                            print("shard_map is created")
+                            return {shard.shard_id: shard for shard in shards}, len(shards)
+
+                        async def _new_http_client(mock):
+                            print("http_client is up")
+                            return mock_http_client
+
+                        async def _shard_keep_alive(mock, shard: _gateway.GatewayClient) -> None:
+                            print("shard is up")
+                            await asyncio.get_event_loop().create_future()
+
+                        shutdown = mock.AsyncMock()
+                        destroy = mock.AsyncMock()
+
+                    bot = Client("1a2b3c")
+                    bot.loop = asyncio.get_event_loop()
+
+                    try:
+                        bot.run()
+                    finally:
+                        if expect_shutdown:
+                            bot.shutdown.assert_called_once()
+                        else:
+                            bot.shutdown.assert_not_called()
+                    self.q.put(None)
+                except BaseException as ex:
+                    self.q.put(ex)
+
+        return Process()
+
+    @staticmethod
+    def run_process_then_fire_signal(proc, signal_to_fire):
+        proc.start()
+        time.sleep(0.75)
+        os.kill(proc.pid, signal_to_fire)
+        proc.join(timeout=5)
+
+    @pytest.mark.parametrize(
+        "signal_to_fire",
+        filter_unimplemented(
+            getattr(signal, "SIGINT", NotImplemented),  # causes keyboard interrupt.
+            getattr(signal, "SIGTERM", NotImplemented),
+        ),
+    )
+    def test_safe_signal_handling(self, signal_to_fire):
+        proc = self.create_process(expect_shutdown=True)
+        self.run_process_then_fire_signal(proc, signal_to_fire)
+
+        result = proc.q.get_nowait()
+        if result is not None:
+            raise result
+
+    @pytest.mark.parametrize("signal_to_fire", filter_unimplemented(getattr(signal, "SIGKILL", NotImplemented)))
+    def test_unsafe_signal_handling(self, signal_to_fire):
+        proc = self.create_process(expect_shutdown=False)
+        self.run_process_then_fire_signal(proc, signal_to_fire)
+        assert proc.q.empty()

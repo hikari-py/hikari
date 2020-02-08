@@ -26,10 +26,10 @@ import enum
 import typing
 
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import conversions
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import conversions
 from hikari.orm.models import bases
 from hikari.orm.models import permissions
 

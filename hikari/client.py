@@ -33,6 +33,7 @@ import aiohttp
 from hikari import client_options
 from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
+from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.net import errors
 from hikari.net import gateway
@@ -51,7 +52,9 @@ if typing.TYPE_CHECKING:
 
 class Client:
     """
-    A basic implementation of a client for running a Discord bot.
+    A highly configurable implementation of a client for running a Discord bot. This contains logic wrapped around
+    orchestrating all of the internal components to work together correctly, autosharding where appropriate,
+    initializing all internal components, as well as registering and dispatching events.
 
     Args:
         token:
@@ -67,6 +70,7 @@ class Client:
     >>> client.run()
     """
 
+    _SHARD_IDENTIFY_WAIT = 5.0
     _SHUTDOWN_SIGNALS = (signal.SIGINT, signal.SIGTERM)
 
     def __init__(
@@ -101,9 +105,13 @@ class Client:
             self._fabric.chunker = await self._new_chunker()
         except Exception as ex:
             self.logger.exception("failed to start a new client", exc_info=ex)
-            await self.close()
             self._fabric = None
-            raise RuntimeError("failed to initialize application fabric fully")
+
+            # Again, something is already going wrong
+            try:
+                await self.shutdown()
+            finally:
+                raise RuntimeError("failed to initialize application fabric fully")
 
     async def _new_state_registry(self):
         return state_registry_impl.StateRegistryImpl(
@@ -142,7 +150,8 @@ class Client:
                 "set it to:\n",
                 "   1. Do not specify anything for it. This will default it to `hikari.client_options.AUTO_SHARD` \n"
                 "      which will ask the gateway for the most appropriate settings for your bot on start up.\n"
-                "   2. Set it to `hikari.client_options.NO_SHARDING`. This will turn sharding off and use a single gateway for your bot.\n"
+                "   2. Set it to `hikari.client_options.NO_SHARDING`. This will turn sharding off and use a single \n"
+                "      gateway for your bot.\n"
                 "   3. Set it to a `hikari.client_options.ShardOptions` object. The first value\n"
                 "      can be either a collection of `int`s, a `slice`, or a `range`, and represents any shard IDs\n"
                 "      to spin up. The second value is the total number of shards that are running for the entire bot\n"
@@ -267,13 +276,31 @@ class Client:
                 shard.session_id = None
                 do_not_backoff = True
                 await asyncio.sleep(5)
+            except errors.GatewayConnectionClosedError:
+                self.logger.warning("shard %s has been disconnected, will attempt to reconnect", shard.shard_id)
+            except errors.GatewayClientClosedError:
+                self.logger.warning("shard %s has shut down because the client is closing", shard.shard_id)
+                return
             except Exception as ex:
-                self.logger.debug("propagating exception after tidying up shard %s", shard.shard_id, exc_info=ex)
+                self.logger.debug("propagating exception %s", shard.shard_id, exc_info=ex)
                 raise ex
 
     async def start(self):
+        """
+        Starts all shards without hitting the identify rate limit, but will not block afterwards.
+
+        Warning:
+            If any exception occurs, this will not close the client. You must catch any exception and/or signal
+            yourself and invoke :meth:`shutdown` manually.
+
+            For a complete solution to running a client with appropriate exception and signal handling, see
+            :meth:`run`.
+
+            Note that closing the client is the only way to invoke any shutdown events that are registered correctly.
+        """
+        await self.dispatch(event_types.EventType.PRE_STARTUP)
         await self._init_new_application_fabric()
-        self.dispatch(event_types.EventType.STARTUP)
+
         for shard in self._fabric.gateways.values():
             if shard.shard_id > 0:
                 # https://github.com/discordapp/discord-api-docs/issues/1328
@@ -282,45 +309,115 @@ class Client:
                 # disconnected after identifying for any other reason, tough luck I guess.
                 # This stops this framework chewing up your precious identify counts for the day because of spam
                 # causing invalid sessions.
-                await asyncio.sleep(5)
+                await asyncio.sleep(self._SHARD_IDENTIFY_WAIT)
 
             self._shard_keepalive_tasks[shard] = asyncio.create_task(self._shard_keep_alive(shard))
             await shard.identify_event.wait()
-        try:
-            await asyncio.gather(*self._shard_keepalive_tasks.values())
-        except Exception as ex:
-            if not self.is_closed:
-                raise ex
-        finally:
-            await self.close()
 
-    async def close(self):
+        await self.dispatch(event_types.EventType.POST_STARTUP)
+
+    async def join(self):
+        """
+        Wait for shards to shut down. This can be used to keep your bot running after starting it.
+
+        Warning:
+            If any exception occurs, this will not close the client. You must catch any exception and/or signal
+            yourself and invoke :meth:`shutdown` manually.
+
+            For a complete solution to running a client with appropriate exception and signal handling, see
+            :meth:`run`.
+
+            Note that closing the client is the only way to invoke any shutdown events that are registered correctly.
+        """
+        await asyncio.gather(*self._shard_keepalive_tasks.values())
+
+    async def destroy(self):
+        """
+        Destroys all shards without waiting for them to shut down properly first.
+
+        Warning:
+            You do not generally want to call this unless you want your bot to stop immediately.
+            This will not invoke any shutdown events.
+
+            If you simply wish to programmatically shut your bot down, you can just call
+            :meth:`shutdown`.
+        """
+        for shard, task in self._shard_keepalive_tasks.items():
+            if not task.done():
+                self.logger.warning("destroying shard %s", shard.shard_id)
+                task.cancel()
+
+    async def shutdown(
+        self, shard_timeout: type_hints.Nullable[float] = None,
+    ):
+        """
+        Requests that the client safely shuts down any running shards.
+
+        Args:
+            shard_timeout:
+                The time to wait for shards to shut down before forcefully destroying them. This
+                defaults to `None`.
+        """
         if self.is_closed:
             return
 
-        self.dispatch(event_types.EventType.SHUTDOWN)
-        self.is_closed = True
-        coros = []
+        try:
+            self.logger.warning("client is shutting down permanently")
 
-        for shard in self._fabric.gateways.values():
-            if not shard.requesting_close_event.is_set():
-                self.logger.info("requesting shard %s shuts down now", shard.shard_id)
-                coros.append(shard.close())
+            await self.dispatch(event_types.EventType.PRE_SHUTDOWN)
 
-        if coros:
-            await asyncio.gather(*coros)
+            coros = []
+
+            for shard in self._fabric.gateways.values():
+                if not shard.requesting_close_event.is_set():
+                    self.logger.debug("requesting shard %s shuts down now", shard.shard_id)
+                    coros.append(shard.close())
+
+            try:
+                async with aio.maybe_timeout(shard_timeout):
+                    if coros:
+                        await asyncio.gather(*coros)
+            except Exception as ex:
+                self.logger.exception("failed to shut down shards safely, will destroy them instead", exc_info=ex)
+                await self.destroy()
+
+            self.is_closed = True
+        finally:
+            self.logger.warning("closing HTTP connection pool")
+
+            try:
+                # If we can't shut this down, we can't do much else. It is probably a bug.
+                await self._fabric.http_client.close()
+            except Exception as ex:
+                self.logger.debug("failed to close HTTP client", exc_info=ex)
+            finally:
+                await self.dispatch(event_types.EventType.POST_SHUTDOWN)
 
     def run(self):
-        try:
-            self.logger.info("starting bot")
-            self.loop.run_until_complete(self.start())
-        except KeyboardInterrupt:
-            self.logger.info("received KeyboardInterrupt to shut down bot")
-            self.loop.run_until_complete(self.close())
-        finally:
-            self.logger.info("bot has shut down")
+        """
+        Runs the client on the event loop associated with this :class:`Client`. This is similar to invoking
+        :meth:`start` and then :meth:`join`, but has signal handling for OS signals such as `SIGINT` (which
+        triggers a :class:`KeyboardInterrupt`), and `SIGTERM`, which is invoked when the OS politely requests
+        that the process shuts down. This will also ensure that :meth:`shutdown` is invoked correctly
+        regardless of how the client terminated.
+        """
+        self.logger.info("starting client")
 
-    def dispatch(self, event: str, *args) -> None:
+        def sigterm_handler(*_):
+            raise KeyboardInterrupt()
+
+        try:
+            self.loop.add_signal_handler(signal.SIGTERM, sigterm_handler)
+            self.loop.run_until_complete(self.start())
+            self.loop.run_until_complete(self.join())
+        except KeyboardInterrupt:
+            self.logger.info("received signal to shut down client")
+        finally:
+            self.loop.run_until_complete(self.shutdown())
+            self.loop.remove_signal_handler(signal.SIGTERM)
+            self.logger.info("client has shut down")
+
+    def dispatch(self, event: str, *args):
         """
         Dispatches an event to any listeners.
 
@@ -330,10 +427,15 @@ class Client:
             *args:
                 Any arguments to pass to the event.
 
-        Note:
-            Any event is dispatched as a future asynchronously. This will not wait for that to occur.
+        Returns:
+            The gathering future for any event handlers that will be dispatched, or a completed
+            future with no result if no event handlers existed for this event. You may optionally
+            await this future if you want to ensure you wait for all dispatchers to be executed,
+            (for example, when handling shutdown event logic), but generally you should not
+            await this result, as that will allow it to execute asynchronously.
         """
-        self._event_dispatcher.dispatch(event, *args)
+        self.logger.debug("dispatching event %s with %s args", event, len(args))
+        return self._event_dispatcher.dispatch(event, *args)
 
     def add_event(self, event_name: str, coroutine_function: aio.CoroutineFunctionT) -> None:
         """
@@ -355,7 +457,7 @@ class Client:
 
     def remove_event(self, event_name: str, coroutine_function: aio.CoroutineFunctionT) -> None:
         """
-        Unsubscribes the given event coroutine function from the given event name, if it is there.
+        Un-subscribes the given event coroutine function from the given event name, if it is there.
 
         Args:
             event_name:
@@ -364,7 +466,7 @@ class Client:
                 The coroutine function callback to remove.
         """
         self.logger.debug(
-            "unsubscribing %s%s from %s event",
+            "un-subscribing %s%s from %s event",
             coroutine_function.__name__,
             inspect.signature(coroutine_function),
             event_name,
@@ -440,17 +542,17 @@ class Client:
     @property
     def heartbeat_latencies(self) -> typing.Mapping[int, float]:
         """
-        Creates a mapping of each shard ID to the latest heartbeat latency for that shard.
+        A mapping of each shard ID to the latest heartbeat latency for that shard.
         """
         if self._fabric:
             return {shard.shard_id: shard.heartbeat_latency for shard in self._fabric.gateways.values()}
-        return {}
+        return containers.EMPTY_DICT
 
     @property
     def shards(self) -> typing.Mapping[int, gateway.GatewayClient]:
         """
-        Creates a mapping of each shard running, mapping the shard ID to the shard instance itself.
+        A mapping of each shard running, mapping the shard ID to the shard instance itself.
         """
         if self._fabric:
             return {shard.shard_id: shard for shard in self._fabric.gateways.values()}
-        return {}
+        return containers.EMPTY_DICT

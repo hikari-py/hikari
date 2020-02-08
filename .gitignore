@@ -32,8 +32,8 @@ pip-wheel-metadata/
 .[nt]ox/
 
 # Coverage-generated files
-.coverage
-**/*,cover
+.coverage*
+**/*,cover*
 
 # PyTest-generated files
 .pytest/

@@ -21,8 +21,8 @@ from __future__ import annotations
 import dataclasses
 import typing
 
-from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import reprs
+from hikari.internal_utilities import type_hints
 
 
 def test_repr_with_no_args():

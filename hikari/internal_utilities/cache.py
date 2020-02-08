@@ -25,7 +25,6 @@ import asyncio
 import functools
 import inspect
 import os
-import sys
 import typing
 
 if typing.TYPE_CHECKING:
@@ -185,8 +184,7 @@ def cached_property(
     def decorator(func: CachedPropertyFunctionT) -> typing.Union[CachedProperty, AsyncCachedProperty]:
         cls = AsyncCachedProperty if asyncio.iscoroutinefunction(func) else CachedProperty
         return typing.cast(
-            typing.Union[CachedProperty, AsyncCachedProperty],
-            functools.wraps(func)(cls(func, cache_name))
+            typing.Union[CachedProperty, AsyncCachedProperty], functools.wraps(func)(cls(func, cache_name))
         )
 
     return decorator if not __is_sphinx else __noop_decorator
