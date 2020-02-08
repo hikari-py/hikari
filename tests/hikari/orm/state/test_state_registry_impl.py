@@ -22,9 +22,9 @@ import datetime
 from unittest import mock
 
 import pytest
-from hikari.orm.http import base_http_adapter
 
 from hikari.orm import fabric
+from hikari.orm.http import base_http_adapter
 from hikari.orm.models import applications
 from hikari.orm.models import audit_logs
 from hikari.orm.models import bases
