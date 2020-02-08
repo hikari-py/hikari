@@ -78,7 +78,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
     def __init__(
         self,
         fabric_obj: _fabric.Fabric,
-        dispatch: typing.Callable[..., None],
+        dispatch: typing.Callable[..., typing.Any],
         request_chunks_mode: AutoRequestChunksMode = AutoRequestChunksMode.MEMBERS_AND_PRESENCES,
         initial_chunking_slice_size: int = 50,
     ) -> None:

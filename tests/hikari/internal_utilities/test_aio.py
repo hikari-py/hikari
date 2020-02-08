@@ -49,68 +49,68 @@ class CoroutineFunctionStub:
         return CoroutineStub(*args, **kwargs)
 
 
-def test_coro_stub_eq():
-    assert CoroutineStub(9, 18, x=27) == CoroutineStub(9, 18, x=27)
+class TestCoroutineFunctionStubUsedInTests:
+    def test_coro_stub_eq(self):
+        assert CoroutineStub(9, 18, x=27) == CoroutineStub(9, 18, x=27)
+
+    # POC for the stuff we use in tests
+    def test_coro_stub_neq(self):
+        assert CoroutineStub(9, 18, x=27) != CoroutineStub(9, 18, x=36)
 
 
-def test_coro_stub_neq():
-    assert CoroutineStub(9, 18, x=27) != CoroutineStub(9, 18, x=36)
+class TestOptionalAwait:
+    @pytest.mark.asyncio
+    async def test_optional_await_gets_run_with_await(self):
+        coro_fn = CoroutineFunctionStub()
 
+        wrapped_coro_fn = aio.optional_await()(coro_fn)
 
-@pytest.mark.asyncio
-async def test_optional_await_gets_run_with_await():
-    coro_fn = CoroutineFunctionStub()
-
-    wrapped_coro_fn = aio.optional_await()(coro_fn)
-
-    with mock.patch("asyncio.create_task", new=mock.AsyncMock()) as create_task:
-        await wrapped_coro_fn(9, 18, 27)
-        create_task.assert_called_with(coro_fn(9, 18, 27), name=None)
-
-
-@pytest.mark.asyncio
-async def test_optional_await_gets_run_without_await():
-    coro_fn = CoroutineFunctionStub()
-
-    wrapped_coro_fn = aio.optional_await()(coro_fn)
-
-    with mock.patch("asyncio.create_task") as create_task:
-        wrapped_coro_fn(9, 18, 27)
-        create_task.assert_called_with(coro_fn(9, 18, 27), name=None)
-
-
-@pytest.mark.asyncio
-async def test_optional_await_with_description():
-    coro_fn = CoroutineFunctionStub()
-
-    wrapped_coro_fn = aio.optional_await("foo")(coro_fn)
-
-    with mock.patch("asyncio.create_task", new=mock.AsyncMock()) as create_task:
-        await wrapped_coro_fn(9, 18, 27)
-        create_task.assert_called_with(coro_fn(9, 18, 27), name="foo")
-
-
-@pytest.mark.asyncio
-async def test_optional_await_shielded():
-    coro_fn = CoroutineFunctionStub()
-    wrapped_coro_fn = aio.optional_await(shield=True)(coro_fn)
-
-    shielded_coro = CoroutineStub()
-
-    with mock.patch("asyncio.shield", new=mock.MagicMock(return_value=shielded_coro)) as shield:
         with mock.patch("asyncio.create_task", new=mock.AsyncMock()) as create_task:
             await wrapped_coro_fn(9, 18, 27)
-            shield.assert_called_with(coro_fn(9, 18, 27))
-            create_task.assert_called_with(shielded_coro, name=None)
+            create_task.assert_called_with(coro_fn(9, 18, 27), name=None)
+
+    @pytest.mark.asyncio
+    async def test_optional_await_gets_run_without_await(self):
+        coro_fn = CoroutineFunctionStub()
+
+        wrapped_coro_fn = aio.optional_await()(coro_fn)
+
+        with mock.patch("asyncio.create_task") as create_task:
+            wrapped_coro_fn(9, 18, 27)
+            create_task.assert_called_with(coro_fn(9, 18, 27), name=None)
+
+    @pytest.mark.asyncio
+    async def test_optional_await_with_description(self):
+        coro_fn = CoroutineFunctionStub()
+
+        wrapped_coro_fn = aio.optional_await("foo")(coro_fn)
+
+        with mock.patch("asyncio.create_task", new=mock.AsyncMock()) as create_task:
+            await wrapped_coro_fn(9, 18, 27)
+            create_task.assert_called_with(coro_fn(9, 18, 27), name="foo")
+
+    @pytest.mark.asyncio
+    async def test_optional_await_shielded(self):
+        coro_fn = CoroutineFunctionStub()
+        wrapped_coro_fn = aio.optional_await(shield=True)(coro_fn)
+
+        shielded_coro = CoroutineStub()
+
+        with mock.patch("asyncio.shield", new=mock.MagicMock(return_value=shielded_coro)) as shield:
+            with mock.patch("asyncio.create_task", new=mock.AsyncMock()) as create_task:
+                await wrapped_coro_fn(9, 18, 27)
+                shield.assert_called_with(coro_fn(9, 18, 27))
+                create_task.assert_called_with(shielded_coro, name=None)
 
 
-class TestMuxMap:
+class TestEventDelegate:
     @pytest.fixture()
     def mux_map(self):
-        return aio.MuxMap()
+        return aio.EventDelegate()
 
+    # noinspection PyTypeChecker
     @_helpers.assert_raises(type_=TypeError)
-    def test_add_not_coroutine_fuction(self, mux_map):
+    def test_add_not_coroutine_function(self, mux_map):
         mux_map.add("foo", lambda: None)
 
     def test_add_coroutine_function_when_no_others_with_name(self, mux_map):
@@ -192,3 +192,38 @@ class TestMuxMap:
     def test_dispatch_to_non_existant_muxes(self, mux_map):
         # Should not throw.
         mux_map.dispatch("foo", "a", "b", "c")
+
+    @pytest.mark.asyncio
+    async def test_dispatch_is_awaitable_if_nothing_is_invoked(self, mux_map):
+        coro_fn = mock.AsyncMock()
+
+        mux_map.add("foo", coro_fn)
+        await mux_map.dispatch("bar")
+
+    @pytest.mark.asyncio
+    async def test_dispatch_is_awaitable_if_something_is_invoked(self, mux_map):
+        coro_fn = mock.AsyncMock()
+
+        mux_map.add("foo", coro_fn)
+        await mux_map.dispatch("foo")
+
+
+class TestCompletedFuture:
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("args", [(), (12,)])
+    async def test_is_awaitable(self, args):
+        await aio.completed_future(*args)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("args", [(), (12,)])
+    async def test_is_completed(self, args):
+        future = aio.completed_future(*args)
+        assert future.done()
+
+    @pytest.mark.asyncio
+    async def test_default_result_is_none(self):
+        assert aio.completed_future().result() is None
+
+    @pytest.mark.asyncio
+    async def test_non_default_result(self):
+        assert aio.completed_future(...).result() is ...

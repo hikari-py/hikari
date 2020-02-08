@@ -119,7 +119,7 @@ nav, .alert, .admonition {
 
 /*************************** layout fixes ***************************/
 
-h1, h2, h3, h4, h5, h6{
+h1, h2, h3, h4, h5, h6, .navbar-brand, .navbar-text .navbar-version {
     word-wrap: break-word;
     font-family: 'Lato', sans-serif !important;
 }

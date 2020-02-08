@@ -402,6 +402,7 @@ __all__ = [
     "parse_presence_activity",
     "ActivityType",
     "ActivityFlag",
+    "ActivityParty",
     "ActivityAssets",
     "ActivityTimestamps",
 ]
