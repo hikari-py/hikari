@@ -131,6 +131,9 @@ class RouteTemplate:
                 The method to use.
             **params:
                 any parameters to interpolate into the route path.
+
+        Returns:
+            The compiled route.
         """
         major_hash_part = "-".join((str(params[p]) for p in self.major_params))
 
