@@ -45,7 +45,7 @@ class TestBaseRateLimiter:
 
 
 class TestBurstRateLimiter:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_burst_limiter(self):
         class Impl(ratelimits.BurstRateLimiter):
             def acquire(self, *args, **kwargs) -> asyncio.Future:
@@ -171,7 +171,7 @@ class TestManualRateLimiter:
 
 
 class TestWindowedBurstRateLimiter:
-    @pytest.fixture()
+    @pytest.fixture
     def ratelimiter(self):
         inst = _helpers.unslot_class(ratelimits.WindowedBurstRateLimiter)(__name__, 3, 3)
         yield inst
@@ -361,7 +361,7 @@ class TestWindowedBurstRateLimiter:
 
 
 class TestHTTPBucketRateLimiter:
-    @pytest.fixture()
+    @pytest.fixture
     def compiled_route(self):
         return routes.CompiledRoute("get", "/foo/bar", "/foo/bar", "1a2b3c")
 

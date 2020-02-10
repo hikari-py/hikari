@@ -30,7 +30,7 @@ from hikari.orm.state import base_registry
 from tests.hikari import _helpers
 
 
-@pytest.fixture()
+@pytest.fixture
 def fabric_obj():
     def make_gateway():
         gw = _helpers.create_autospec(_gateway.GatewayClient)
@@ -52,22 +52,22 @@ def fabric_obj():
     return fabric_obj
 
 
-@pytest.fixture()
+@pytest.fixture
 def guild_chunk_payload_no_presences(member_payload):
     return {"guild_id": "1", "members": [member_payload]}
 
 
-@pytest.fixture()
+@pytest.fixture
 def guild_chunk_payload_presences(member_payload, presence_payload):
     return {"guild_id": "1", "members": [member_payload], "presences": [presence_payload]}
 
 
-@pytest.fixture()
+@pytest.fixture
 def member_payload():
     return {"user": {"id": "1234", "username": "blah", "discriminator": "6969", "avatar": None}}
 
 
-@pytest.fixture()
+@pytest.fixture
 def presence_payload():
     return {
         "user": {"id": "1234"},

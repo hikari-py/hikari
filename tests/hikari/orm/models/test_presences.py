@@ -40,7 +40,7 @@ def hikari_presence(activity):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def no_presence():
     return {
         "user": {"id": "339767912841871360"},
@@ -51,12 +51,12 @@ def no_presence():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def presence_delta_empty():
     return {"user": {"id": "339767912841871360"}}
 
 
-@pytest.fixture()
+@pytest.fixture
 def presence_update():
     return {
         "user": {"id": "339767912841871360"},
@@ -69,7 +69,7 @@ def presence_update():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def legacy_presence():
     return {
         "user": {"id": "506109712710762498"},
@@ -92,7 +92,7 @@ def legacy_presence():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def rich_presence():
     return {
         "user": {"id": "537340989808050216"},
@@ -135,7 +135,7 @@ def rich_presence():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def assets():
     return {
         "small_text": "Using PyCharm",
@@ -145,17 +145,17 @@ def assets():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def party():
     return {"id": "1a2b3c", "current_size": 4, "max_size": 5}
 
 
-@pytest.fixture()
+@pytest.fixture
 def timestamps():
     return {"start": 1566116552964, "end": 1566135892633}
 
 
-@pytest.fixture()
+@pytest.fixture
 def rich_activity(assets, party, timestamps):
     return {
         "type": 2,
@@ -172,7 +172,7 @@ def rich_activity(assets, party, timestamps):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def legacy_activity():
     return {"type": 0, "name": "with yo mama", "url": None}
 

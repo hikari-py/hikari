@@ -52,7 +52,7 @@ from tests.hikari import _helpers
 # noinspection PyDunderSlots
 @pytest.mark.orm
 class TestHTTPAdapterImpl:
-    @pytest.fixture()
+    @pytest.fixture
     def fabric_impl(self):
         fabric_impl = fabric.Fabric()
 
