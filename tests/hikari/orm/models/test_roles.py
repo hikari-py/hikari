@@ -32,7 +32,7 @@ def mock_state_registry():
     return _helpers.create_autospec(base_registry.BaseRegistry)
 
 
-@pytest.fixture()
+@pytest.fixture
 def fabric_obj(mock_state_registry):
     return fabric.Fabric(state_registry=mock_state_registry)
 
