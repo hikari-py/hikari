@@ -41,22 +41,22 @@ from hikari.orm.state import base_registry
 from tests.hikari import _helpers
 
 
-@pytest.fixture()
+@pytest.fixture
 def logger_impl():
     return _helpers.create_autospec(logging.Logger)
 
 
-@pytest.fixture()
+@pytest.fixture
 def state_registry_impl():
     return _helpers.create_autospec(base_registry.BaseRegistry)
 
 
-@pytest.fixture()
+@pytest.fixture
 def dispatch_impl():
     return _helpers.create_autospec(lambda name, *args: None)
 
 
-@pytest.fixture()
+@pytest.fixture
 def gateway_impl():
     # noinspection PyTypeChecker
     gw: _gateway.GatewayClient = _helpers.create_autospec(_gateway.GatewayClient)
@@ -65,17 +65,17 @@ def gateway_impl():
     return gw
 
 
-@pytest.fixture()
+@pytest.fixture
 def chunker_impl():
     return _helpers.create_autospec(_chunker.BaseChunker)
 
 
-@pytest.fixture()
+@pytest.fixture
 def fabric_impl(state_registry_impl, gateway_impl, chunker_impl):
     return fabric.Fabric(state_registry=state_registry_impl, gateways={None: gateway_impl}, chunker=chunker_impl)
 
 
-@pytest.fixture()
+@pytest.fixture
 def adapter_impl(fabric_impl, dispatch_impl, logger_impl):
     instance = _helpers.unslot_class(dispatching_event_adapter_impl.DispatchingEventAdapterImpl)(
         fabric_impl, dispatch_impl,
@@ -85,7 +85,7 @@ def adapter_impl(fabric_impl, dispatch_impl, logger_impl):
     return instance
 
 
-@pytest.fixture()
+@pytest.fixture
 def discord_ready_payload():
     return {
         # https://discordapp.com/developers/docs/topics/gateway#ready-ready-event-fields

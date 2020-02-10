@@ -32,12 +32,12 @@ from hikari.orm.state import base_registry
 from tests.hikari import _helpers
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_user():
     return {"id": "1234", "username": "potato"}
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_message(mock_user):
     return {
         "type": 0,
@@ -58,12 +58,12 @@ def mock_message(mock_user):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_state_registry():
     return _helpers.create_autospec(base_registry.BaseRegistry)
 
 
-@pytest.fixture()
+@pytest.fixture
 def fabric_obj(mock_state_registry):
     return fabric.Fabric(state_registry=mock_state_registry)
 

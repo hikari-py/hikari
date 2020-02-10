@@ -55,7 +55,7 @@ class TestClient:
 
         return Foo()
 
-    @pytest.fixture()
+    @pytest.fixture
     def fabric(self):
         fabric = _fabric.Fabric()
 

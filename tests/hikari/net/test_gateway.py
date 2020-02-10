@@ -213,7 +213,7 @@ class TestGatewayClientWebSocketKwargsProperty:
 
 @pytest.mark.asyncio
 class TestGatewayConnect:
-    @pytest.fixture()
+    @pytest.fixture
     def client_session_t(self):
         return MockClientSession()
 
@@ -225,7 +225,7 @@ class TestGatewayConnect:
     def non_hello_payload(self):
         return {"op": 69, "d": "yeet"}
 
-    @pytest.fixture()
+    @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(gateway.GatewayClient)(url="ws://localhost", token="xxx")
@@ -481,7 +481,7 @@ class TestGatewayConnect:
 
 @pytest.mark.asyncio
 class TestGatewayClientIdentifyOrResumeThenPollEvents:
-    @pytest.fixture()
+    @pytest.fixture
     def client(self):
         client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("_identify_or_resume_then_poll_events",))
@@ -654,7 +654,7 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
 
 @pytest.mark.asyncio
 class TestHeartbeatKeepAlive:
-    @pytest.fixture()
+    @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
@@ -714,7 +714,7 @@ class TestHeartbeatKeepAlive:
 
 @pytest.mark.asyncio
 class TestClose:
-    @pytest.fixture()
+    @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
@@ -784,7 +784,7 @@ class TestClose:
 
 @pytest.mark.asyncio
 class TestPollEvents:
-    @pytest.fixture()
+    @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")

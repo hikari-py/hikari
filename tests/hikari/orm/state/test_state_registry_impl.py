@@ -48,7 +48,7 @@ from hikari.orm.state import state_registry_impl
 from tests.hikari import _helpers
 
 
-@pytest.fixture()
+@pytest.fixture
 def registry():
     fabric_obj = fabric.Fabric()
 
