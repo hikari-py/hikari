@@ -29,12 +29,10 @@ from unittest import mock
 import aiohttp
 import pytest
 
-from hikari import client as _client
-from hikari import client_options
 from hikari.net import errors as _errors
 from hikari.net import gateway as _gateway
 from hikari.net import http_client as _http_client
-from hikari.orm import fabric as _fabric
+from hikari.orm import fabric as _fabric, client as _client, client_options
 from hikari.orm.gateway import base_event_handler as _base_event_handler
 from hikari.orm.http import http_adapter_impl as _http_adapter_impl
 from tests.hikari import _helpers

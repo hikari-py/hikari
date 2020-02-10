@@ -21,22 +21,17 @@ Hikari's core framework for writing Discord bots in Python.
 """
 from __future__ import annotations
 
-from hikari import client
+from hikari.orm import client
 from hikari import errors
 from hikari import net
 from hikari import orm
 
-# Client
-from hikari.client import Client
-from hikari.client_options import ClientOptions
-from hikari.client_options import ShardOptions
+# Errors
 from hikari.net.errors import BadRequestHTTPError
 from hikari.net.errors import ClientHTTPError
 from hikari.net.errors import ForbiddenHTTPError
 from hikari.net.errors import GatewayClientClosedError
 from hikari.net.errors import GatewayConnectionClosedError
-
-# Errors
 from hikari.net.errors import GatewayError
 from hikari.net.errors import GatewayInvalidSessionError
 from hikari.net.errors import GatewayInvalidTokenError
@@ -53,6 +48,9 @@ from hikari.net.gateway import GatewayClient
 
 # HTTP Client
 from hikari.net.http_client import HTTPClient
+
+# Bot client
+from hikari.orm.client import Client
 
 # Fabric
 from hikari.orm.fabric import Fabric
