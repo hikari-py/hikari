@@ -173,7 +173,7 @@ def test_CachedFunction___qualname__():
     assert cached_call.__qualname__ == "test_CachedFunction___qualname__.<locals>.potato"
 
 
-@pytest.fixture()
+@pytest.fixture
 def cached_property_usage():
     class CachedPropertyUsage:
         call_count = 0
@@ -186,7 +186,7 @@ def cached_property_usage():
     return CachedPropertyUsage()
 
 
-@pytest.fixture()
+@pytest.fixture
 def async_cached_property_usage():
     class CachedPropertyUsage:
         call_count = 0

@@ -39,7 +39,7 @@ class DummySnowflake(bases.BaseModel, bases.SnowflakeMixin):
     id: int
 
 
-@pytest.fixture()
+@pytest.fixture
 def neko_snowflake():
     return DummySnowflake(537_340_989_808_050_216)
 
