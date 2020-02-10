@@ -85,7 +85,7 @@ class MockClientSession:
 class TestGatewayClientConstructor:
     @pytest.mark.parametrize(
         ["input_shard_id", "input_shard_count", "expected_shard_id", "expected_shard_count"],
-        [(None, None, 0, 1), (1, 2, 1, 2), (None, 5, 0, 1), (0, None, 0, 1),],
+        [(None, None, 0, 1), (1, 2, 1, 2), (None, 5, 0, 1), (0, None, 0, 1), ],
     )
     async def test_init_sets_shard_numbers_correctly(
         self, input_shard_id, input_shard_count, expected_shard_id, expected_shard_count,
@@ -93,6 +93,10 @@ class TestGatewayClientConstructor:
         client = gateway.GatewayClient(shard_id=input_shard_id, shard_count=input_shard_count, token="xxx", url="yyy")
         assert client.shard_id == expected_shard_id
         assert client.shard_count == expected_shard_count
+
+    async def test_dispatch_is_callable(self):
+        client = gateway.GatewayClient(token="xxx", url="yyy")
+        client.dispatch(client, "ping", "pong")
 
     @pytest.mark.parametrize(
         ["compression", "expected_url_query"],
@@ -128,7 +132,7 @@ class TestGatewayClientConstructor:
 class TestGatewayClientUptimeProperty:
     @pytest.mark.parametrize(
         ["connected_at", "now", "expected_uptime"],
-        [(float("nan"), 31.0, datetime.timedelta(seconds=0)), (10.0, 31.0, datetime.timedelta(seconds=21.0)),],
+        [(float("nan"), 31.0, datetime.timedelta(seconds=0)), (10.0, 31.0, datetime.timedelta(seconds=21.0)), ],
     )
     async def test_uptime(self, connected_at, now, expected_uptime):
         with mock.patch("time.perf_counter", return_value=now):
@@ -139,7 +143,7 @@ class TestGatewayClientUptimeProperty:
 
 @pytest.mark.asyncio
 class TestGatewayClientIsConnectedProperty:
-    @pytest.mark.parametrize(["connected_at", "is_connected"], [(float("nan"), False), (15, True), (2500.0, True),])
+    @pytest.mark.parametrize(["connected_at", "is_connected"], [(float("nan"), False), (15, True), (2500.0, True), ])
     async def test_is_connected(self, connected_at, is_connected):
         client = gateway.GatewayClient(token="xxx", url="yyy")
         client._connected_at = connected_at
@@ -173,7 +177,7 @@ class TestGatewayClientAiohttpClientSessionKwargsProperty:
     async def test_right_stuff_is_included(self):
         connector = mock.MagicMock()
 
-        client = gateway.GatewayClient(url="...", token="...", connector=connector,)
+        client = gateway.GatewayClient(url="...", token="...", connector=connector, )
 
         assert client._cs_init_kwargs == dict(connector=connector)
 
@@ -226,7 +230,7 @@ class TestGatewayConnect:
 
     @property
     def hello_payload(self):
-        return {"op": 10, "d": {"heartbeat_interval": 30_000,}}
+        return {"op": 10, "d": {"heartbeat_interval": 30_000, }}
 
     @property
     def non_hello_payload(self):
@@ -656,7 +660,7 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
 
         await client._identify_or_resume_then_poll_events()
 
-        client._send.assert_awaited_once_with({"op": 6, "d": {"token": "1234", "session_id": 69420, "seq": seq,}})
+        client._send.assert_awaited_once_with({"op": 6, "d": {"token": "1234", "session_id": 69420, "seq": seq, }})
 
 
 @pytest.mark.asyncio
@@ -809,3 +813,63 @@ class TestPollEvents:
         await client._poll_events()
 
         client.dispatch.assert_called_with(client, "MESSAGE_CREATE", {"content": "whatever"})
+
+
+@pytest.mark.asyncio
+class TestRequestGuildMembers:
+    @pytest.fixture
+    def client(self, event_loop):
+        asyncio.set_event_loop(event_loop)
+        client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
+        client = _helpers.mock_methods_on(client, except_=("request_guild_members",))
+        return client
+
+    async def test_no_kwargs(self, client):
+        await client.request_guild_members("1234", "5678")
+        client._send.assert_awaited_once_with({
+            "op": 8,
+            "d": {
+                "guild_id": ["1234", "5678"], "query": "", "limit": 0
+            }
+        })
+
+    @pytest.mark.parametrize(
+        ["kwargs", "expected_limit", "expected_query"],
+        [
+            ({"limit": 22}, 22, ""),
+            ({"query": "lol"}, 0, "lol"),
+            ({"limit": 22, "query": "lol"}, 22, "lol"),
+        ]
+    )
+    async def test_limit_and_query(self, client, kwargs, expected_limit, expected_query):
+        await client.request_guild_members("1234", "5678", **kwargs)
+        client._send.assert_awaited_once_with({
+            "op": 8,
+            "d": {
+                "guild_id": ["1234", "5678"],
+                "query": expected_query,
+                "limit": expected_limit,
+            }
+        })
+
+    async def test_user_ids(self, client):
+        await client.request_guild_members("1234", "5678", user_ids=["9", "18", "27"])
+        client._send.assert_awaited_once_with({
+            "op": 8,
+            "d": {
+                "guild_id": ["1234", "5678"], "user_ids": ["9", "18", "27"]
+            }
+        })
+
+    @pytest.mark.parametrize("presences", [True, False])
+    async def test_presences(self, client, presences):
+        await client.request_guild_members("1234", "5678", presences=presences)
+        client._send.assert_awaited_once_with({
+            "op": 8,
+            "d": {
+                "guild_id": ["1234", "5678"],
+                "query": "",
+                "limit": 0,
+                "presences": presences
+            }
+        })
