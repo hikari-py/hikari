@@ -385,17 +385,11 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
 
         code = payload["code"]
         channel_id = int(payload["channel_id"])
-        guild_id = int(payload["guild_id"])
         channel_obj = self.fabric.state_registry.get_channel_by_id(channel_id)
-        guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 
-        if guild_obj is None:
+        if channel_obj is None:
             self.logger.debug(
-                "ignoring INVITE_DELETE for invite %s in unknown guild %s and channel %s", code, guild_id, channel_id,
-            )
-        elif channel_obj is None:
-            self.logger.debug(
-                "ignoring INVITE_DELETE for invite %s in guild %s unknown channel %s", code, guild_id, channel_id,
+                "ignoring INVITE_DELETE for invite %s in unknown channel %s", code, channel_id,
             )
         else:
             self.dispatch(event_types.EventType.INVITE_DELETE, code, channel_obj)

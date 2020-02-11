@@ -113,6 +113,12 @@ class EventType(str, enum.Enum):
     RAW_GUILD_ROLE_DELETE = "raw_guild_role_delete"
     GUILD_ROLE_DELETE = "guild_role_delete"
 
+    RAW_INVITE_CREATE = "raw_invite_create"
+    INVITE_CREATE = "invite_create"
+
+    RAW_INVITE_DELETE = "raw_invite_delete"
+    INVITE_DELETE = "invite_delete"
+
     RAW_MESSAGE_CREATE = "raw_message_create"
     MESSAGE_CREATE = "message_create"
 

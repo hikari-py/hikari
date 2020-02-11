@@ -999,6 +999,41 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(event_types.EventType.GUILD_ROLE_DELETE, role_obj)
 
     @pytest.mark.asyncio
+    async def test_handle_invite_create(self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl):
+        mock_invite_obj = _helpers.mock_model(invites.Invite)
+        fabric_impl.state_registry.parse_invite.return_value = mock_invite_obj
+        mock_payload = {"guild_id": "4949499494", "channel_id": "3939393993", "code": "vjI3A2"}
+
+        await adapter_impl.handle_invite_create(gateway_impl, mock_payload)
+
+        fabric_impl.state_registry.parse_invite.assert_called_once_with(mock_payload)
+        dispatch_impl.assert_called_once_with(event_types.EventType.INVITE_CREATE, mock_invite_obj)
+
+    @pytest.mark.asyncio
+    async def test_handle_invite_delete_doesnt_dispatch_with_unknown_channel(
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+    ):
+        mock_payload = {"guild_id": "3334444", "channel_id": "3939393993", "code": "kofe28s"}
+        fabric_impl.state_registry.get_channel_by_id.return_value = None
+
+        await adapter_impl.handle_invite_delete(gateway_impl, mock_payload)
+
+        dispatch_impl.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_handle_invite_delete_dispatches_with_unknown_channel(
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+    ):
+        mock_channel_obj = _helpers.mock_model(channels.Channel)
+        mock_payload = {"guild_id": "3334444", "channel_id": "3939393993", "code": "kofe28s"}
+        fabric_impl.state_registry.get_channel_by_id.return_value = mock_channel_obj
+
+        await adapter_impl.handle_invite_delete(gateway_impl, mock_payload)
+        fabric_impl.state_registry.get_channel_by_id.assert_called_once_with(3939393993)
+
+        dispatch_impl.assert_called_once_with(event_types.EventType.INVITE_DELETE, "kofe28s", mock_channel_obj)
+
+    @pytest.mark.asyncio
     async def test_handle_message_create_when_channel_does_not_exist_does_not_dispatch_anything(
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
@@ -1466,6 +1501,35 @@ class TestDispatchingEventAdapterImpl:
         await adapter_impl.handle_message_reaction_remove(gateway_impl, payload)
 
         dispatch_impl.assert_called_with(event_types.EventType.MESSAGE_REACTION_REMOVE, reaction_obj, user_obj)
+
+    @pytest.mark.asyncio
+    async def test_handle_message_reaction_remove_emoji_when_message_not_cached(
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+    ):
+        mock_payload = {"message_id": "29929292992"}
+        fabric_impl.state_registry.get_message_by_id.return_value = None
+
+        await adapter_impl.handle_message_reaction_remove_emoji(gateway_impl, mock_payload)
+
+        fabric_impl.state_registry.parse_emoji.assert_not_called()
+        fabric_impl.state_registry.delete_reaction.assert_not_called()
+        dispatch_impl.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_handle_message_reaction_remove_emoji_when_message_is_cached(
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+    ):
+        mock_payload = {"message_id": "29929292992", "emoji": {"id": "42", "name": "nyaster"}}
+        mock_emoji = _helpers.mock_model(emojis.GuildEmoji)
+        mock_message = _helpers.mock_model(messages.Message)
+        fabric_impl.state_registry.get_message_by_id.return_value = mock_message
+        fabric_impl.state_registry.parse_emoji.return_value = mock_emoji
+
+        await adapter_impl.handle_message_reaction_remove_emoji(gateway_impl, mock_payload)
+
+        fabric_impl.state_registry.parse_emoji.assert_called_once_with({"id": "42", "name": "nyaster"}, None)
+        fabric_impl.state_registry.delete_reaction.assert_called_once_with(mock_message, None, mock_emoji)
+        dispatch_impl.assert_called_once_with(event_types.EventType.MESSAGE_REACTION_REMOVE_ALL, mock_message)
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_remove_all_when_uncached_message_does_not_dispatch_anything(
