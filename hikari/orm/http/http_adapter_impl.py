@@ -212,7 +212,6 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         self,
         message: _messages.MessageLikeT,
         emoji: _emojis.EmojiLikeT,
-        *,
         channel: type_hints.NotRequired[_channels.ChannelLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         await self.fabric.http_client.delete_all_reactions_for_emoji(
@@ -226,7 +225,6 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         emoji: _emojis.EmojiLikeT,
         user: _users.BaseUserLikeT,
         message: _messages.MessageLikeT,
-        *,
         channel: type_hints.NotRequired[_channels.ChannelLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         emoji = getattr(emoji, "emoji", emoji)

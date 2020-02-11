@@ -352,7 +352,11 @@ class BaseHTTPAdapter(abc.ABC):
     @abc.abstractmethod
     @typing.overload
     async def delete_reaction(
-        self, emoji: _emojis.EmojiLikeT, user: _users.BaseUserLikeT, channel: _channels.ChannelLikeT,
+        self,
+        emoji: _emojis.EmojiLikeT,
+        user: _users.BaseUserLikeT,
+        message: bases.SnowflakeLikeT,
+        channel: _channels.ChannelLikeT,
     ) -> None:
         ...
 
@@ -365,7 +369,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def delete_reaction(
-        self, emoji, user, message, *, channel=unspecified.UNSPECIFIED,
+        self, emoji, user, message, channel=unspecified.UNSPECIFIED,
     ):
         """
         Remove a reaction made by a given user using a given emoji on a given message in a given channel or user DM.
@@ -393,7 +397,7 @@ class BaseHTTPAdapter(abc.ABC):
     @abc.abstractmethod
     @typing.overload
     async def delete_all_reactions_for_emoji(
-        self, message: bases.SnowflakeLikeT, emoji: _emojis.EmojiLikeT, *, channel: _channels.GuildChannelLikeT
+        self, message: bases.SnowflakeLikeT, emoji: _emojis.EmojiLikeT, channel: _channels.GuildChannelLikeT
     ) -> None:
         ...
 
@@ -404,7 +408,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def delete_all_reactions_for_emoji(
-        self, message, emoji, *, channel=unspecified.UNSPECIFIED,
+        self, message, emoji, channel=unspecified.UNSPECIFIED,
     ):
         """
         Deletes all reactions from a given message in a given channel for a single emoji.
