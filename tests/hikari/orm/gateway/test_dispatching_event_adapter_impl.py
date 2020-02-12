@@ -67,7 +67,10 @@ def gateway_impl():
 
 @pytest.fixture
 def chunker_impl():
-    return _helpers.create_autospec(_chunker.BaseChunker)
+    chunker = _helpers.create_autospec(_chunker.BaseChunker)
+    chunker.load_members_for = mock.AsyncMock()
+
+    return chunker
 
 
 @pytest.fixture
@@ -135,15 +138,6 @@ class TestDispatchingEventAdapterImpl:
     ):
         await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
         dispatch_impl.assert_called_with(event_types.EventType.READY, gateway_impl)
-
-    @pytest.mark.asyncio
-    async def test_handle_ready_doesnt_chunk_when_no_guilds_in_payload(
-        self, discord_ready_payload, adapter_impl, gateway_impl, chunker_impl, state_registry_impl,
-    ):
-        discord_ready_payload["guilds"] = []
-        adapter_impl._request_chunks_mode = dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES
-        await adapter_impl.handle_ready(gateway_impl, discord_ready_payload)
-        chunker_impl.load_members_for.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_ready_adds_application_user(
@@ -469,6 +463,34 @@ class TestDispatchingEventAdapterImpl:
         await adapter_impl.handle_guild_create(gateway_impl, payload)
 
         fabric_impl.state_registry.parse_guild.assert_called_with(payload)
+
+    @pytest.mark.asyncio
+    async def test_handle_guild_create_chunks_guild_when_available_and_large(
+        self, adapter_impl, gateway_impl, chunker_impl, fabric_impl
+    ):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, is_large=True)
+        fabric_impl.state_registry.parse_guild = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        payload = {"id": "123", "unavailable": False}
+        adapter_impl._request_chunks_mode = dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+
+        await adapter_impl.handle_guild_create(gateway_impl, payload)
+
+        chunker_impl.load_members_for.assert_called_once_with(guild_obj, presences=True)
+
+    @pytest.mark.asyncio
+    async def test_handle_guild_create_doesnt_chunk_when_guild_is_small(
+        self, adapter_impl, gateway_impl, chunker_impl, fabric_impl
+    ):
+        guild_obj = _helpers.mock_model(guilds.Guild, id=123, is_large=False)
+        fabric_impl.state_registry.parse_guild = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        payload = {"id": "123", "unavailable": False}
+        adapter_impl._request_chunks_mode = dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+
+        await adapter_impl.handle_guild_create(gateway_impl, payload)
+
+        chunker_impl.load_members_for.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_guild_create_when_already_known_and_now_available_dispatches_GUILD_AVAILABLE(

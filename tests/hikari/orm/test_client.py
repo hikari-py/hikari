@@ -34,6 +34,7 @@ from hikari.orm import client as _client
 from hikari.orm import client_options
 from hikari.orm import fabric as _fabric
 from hikari.orm.gateway import base_event_handler as _base_event_handler
+from hikari.orm.gateway import basic_chunker_impl as _basic_chunker_impl
 from hikari.orm.http import http_adapter_impl as _http_adapter_impl
 from tests.hikari import _helpers
 
@@ -57,11 +58,8 @@ class TestClient:
     def fabric(self):
         fabric = _fabric.Fabric()
 
-        http_adapter_impl = _helpers.create_autospec(_http_adapter_impl.HTTPAdapterImpl)
-        http_event_handler = _helpers.create_autospec(_base_event_handler.BaseEventHandler)
-
-        fabric.http_adapter = http_adapter_impl
-        fabric.event_handler = http_event_handler
+        fabric.http_adapter = _helpers.create_autospec(_http_adapter_impl.HTTPAdapterImpl)
+        fabric.event_handler = _helpers.create_autospec(_base_event_handler.BaseEventHandler)
 
         return fabric
 
@@ -353,7 +351,9 @@ class TestClient:
         shard1.requesting_close_event.is_set = mock.MagicMock(return_value=False)
 
         client = _client.Client("token")
-        client._fabric = _fabric.Fabric(gateways={0: shard0, 1: shard1})
+        client._fabric = _fabric.Fabric(
+            gateways={0: shard0, 1: shard1}, chunker=_helpers.create_autospec(_basic_chunker_impl.BasicChunkerImpl)
+        )
         gather_future = _helpers.AwaitableMock()
 
         with mock.patch("asyncio.gather", return_value=gather_future):
@@ -370,7 +370,9 @@ class TestClient:
         shard1.requesting_close_event.is_set = mock.MagicMock(return_value=True)
 
         client = _client.Client("token")
-        client._fabric = _fabric.Fabric(gateways={0: shard0, 1: shard1})
+        client._fabric = _fabric.Fabric(
+            gateways={0: shard0, 1: shard1}, chunker=_helpers.create_autospec(_basic_chunker_impl.BasicChunkerImpl)
+        )
         gather_future = _helpers.AwaitableMock()
 
         with mock.patch("asyncio.gather", return_value=gather_future):
@@ -379,6 +381,15 @@ class TestClient:
         gather_future.assert_not_awaited()
         shard0.close.assert_not_called()
         shard1.close.assert_not_called()
+
+    async def test_shutdown_closes_chunker(self):
+        client = _client.Client("token")
+        chunker = _helpers.create_autospec(_basic_chunker_impl.BasicChunkerImpl)
+        client._fabric = _fabric.Fabric(gateways={}, chunker=chunker)
+
+        await client.shutdown()
+
+        chunker.close.assert_called_once()
 
     @_helpers.stupid_windows_please_stop_breaking_my_tests
     async def test_run_calls_shutdown_when_KeyboardInterrupt(self):
@@ -451,6 +462,7 @@ class TestClient:
         client = _client.Client("token")
 
         with mock.patch("hikari.client.Client.add_event") as add_event:
+
             @client.event()
             async def on_message_create():
                 ...
@@ -461,6 +473,7 @@ class TestClient:
         client = _client.Client("token")
 
         with mock.patch("hikari.client.Client.add_event") as add_event:
+
             @client.event()
             async def message_create():
                 ...
@@ -471,6 +484,7 @@ class TestClient:
         client = _client.Client("token")
 
         with mock.patch("hikari.client.Client.add_event") as add_event:
+
             @client.event("message_create")
             async def foo():
                 ...

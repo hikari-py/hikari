@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import asyncio
 import logging
 from unittest import mock
 
@@ -48,7 +49,7 @@ def fabric_obj():
         3: make_gateway(),
         4: make_gateway(),
     }
-    fabric_obj.chunker = basic_chunker_impl.BasicChunkerImpl(fabric_obj)
+    fabric_obj.chunker = _helpers.unslot_class(basic_chunker_impl.BasicChunkerImpl)(fabric_obj)
     return fabric_obj
 
 
@@ -80,37 +81,48 @@ def presence_payload():
     }
 
 
+@_helpers.assert_raises(type_=RuntimeError)
 @pytest.mark.asyncio
 async def test_load_members_for_does_not_allow_both_user_ids_and_query(fabric_obj):
     guild_obj1 = _helpers.mock_model(guilds.Guild, id=1234)
     guild_obj2 = _helpers.mock_model(guilds.Guild, id=3456)
-    try:
-        await fabric_obj.chunker.load_members_for(guild_obj1, guild_obj2, query="a string", user_ids=[9, 18, 27, 36])
-        assert False
-    except RuntimeError:
-        pass
+
+    await fabric_obj.chunker.load_members_for(guild_obj1, guild_obj2, query="a string", user_ids=[9, 18, 27, 36])
+
+
+@_helpers.assert_raises(type_=RuntimeError)
+@pytest.mark.asyncio
+async def test_load_members_for_does_not_allow_both_user_ids_and_limit(fabric_obj):
+    guild_obj1 = _helpers.mock_model(guilds.Guild, id=1234)
+    guild_obj2 = _helpers.mock_model(guilds.Guild, id=3456)
+
+    await fabric_obj.chunker.load_members_for(guild_obj1, guild_obj2, limit=69, user_ids=[9, 18, 27, 36])
 
 
 @pytest.mark.asyncio
 async def test_load_members_for_when_user_ids_provided(fabric_obj):
-    guild_obj1 = _helpers.mock_model(guilds.Guild, id=1234, shard_id=None)
-    guild_obj2 = _helpers.mock_model(guilds.Guild, id=3456, shard_id=None)
-    await fabric_obj.chunker.load_members_for(
-        guild_obj1, guild_obj2, user_ids=[9, 18, 27, 36], presences=True, limit=69
-    )
-    fabric_obj.gateways[None].request_guild_members.assert_called_with(
-        "1234", "3456", presences=True, user_ids=["9", "18", "27", "36"]
-    )
+    guild_obj1 = _helpers.mock_model(guilds.Guild, id=1234, shard_id=0)
+    guild_obj2 = _helpers.mock_model(guilds.Guild, id=3456, shard_id=0)
+
+    with mock.patch("asyncio.create_task"):
+        await fabric_obj.chunker.load_members_for(guild_obj1, guild_obj2, user_ids=[9, 18, 27], presences=False)
+
+    assert fabric_obj.chunker.queues[0].get_nowait() == [1234, {"presences": False, "user_ids": ["9", "18", "27"]}]
+    assert fabric_obj.chunker.queues[0].get_nowait() == [3456, {"presences": False, "user_ids": ["9", "18", "27"]}]
+    assert fabric_obj.chunker.queues[0].empty()
 
 
 @pytest.mark.asyncio
 async def test_load_members_for_when_no_filter_provided(fabric_obj):
-    guild_obj1 = _helpers.mock_model(guilds.Guild, id=1234, shard_id=None)
-    guild_obj2 = _helpers.mock_model(guilds.Guild, id=3456, shard_id=None)
-    await fabric_obj.chunker.load_members_for(guild_obj1, guild_obj2, presences=True, limit=69)
-    fabric_obj.gateways[None].request_guild_members.assert_called_with(
-        "1234", "3456", limit=69, presences=True, query=""
-    )
+    guild_obj1 = _helpers.mock_model(guilds.Guild, id=1234, shard_id=0)
+    guild_obj2 = _helpers.mock_model(guilds.Guild, id=3456, shard_id=0)
+
+    with mock.patch("asyncio.create_task"):
+        await fabric_obj.chunker.load_members_for(guild_obj1, guild_obj2, presences=False, limit=69)
+
+    assert fabric_obj.chunker.queues[0].get_nowait() == [1234, {"presences": False, "query": "", "limit": 69}]
+    assert fabric_obj.chunker.queues[0].get_nowait() == [3456, {"presences": False, "query": "", "limit": 69}]
+    assert fabric_obj.chunker.queues[0].empty()
 
 
 @pytest.mark.asyncio
@@ -138,18 +150,59 @@ async def test_load_members_for_with_shards(fabric_obj):
         **{"user_ids": [9, 18, 27, 36]},
     )
 
-    fabric_obj.gateways[1].request_guild_members.assert_called_with(
-        "1", "2", presences=True, user_ids=["9", "18", "27", "36"]
-    )
-    fabric_obj.gateways[2].request_guild_members.assert_called_with(
-        "3", "4", "5", "6", presences=True, user_ids=["9", "18", "27", "36"]
-    )
-    fabric_obj.gateways[3].request_guild_members.assert_called_with(
-        "7", "8", presences=True, user_ids=["9", "18", "27", "36"]
-    )
-    fabric_obj.gateways[4].request_guild_members.assert_called_with(
-        "9", presences=True, user_ids=["9", "18", "27", "36"]
-    )
+    assert fabric_obj.chunker.queues[1].get_nowait() == [1, {"presences": True, "user_ids": ["9", "18", "27", "36"]}]
+    assert fabric_obj.chunker.queues[1].get_nowait() == [2, {"presences": True, "user_ids": ["9", "18", "27", "36"]}]
+    assert fabric_obj.chunker.queues[1].empty()
+
+    assert fabric_obj.chunker.queues[2].get_nowait() == [3, {"presences": True, "user_ids": ["9", "18", "27", "36"]}]
+    assert fabric_obj.chunker.queues[2].get_nowait() == [4, {"presences": True, "user_ids": ["9", "18", "27", "36"]}]
+    assert fabric_obj.chunker.queues[2].get_nowait() == [5, {"presences": True, "user_ids": ["9", "18", "27", "36"]}]
+    assert fabric_obj.chunker.queues[2].get_nowait() == [6, {"presences": True, "user_ids": ["9", "18", "27", "36"]}]
+    assert fabric_obj.chunker.queues[2].empty()
+
+    assert fabric_obj.chunker.queues[3].get_nowait() == [7, {"presences": True, "user_ids": ["9", "18", "27", "36"]}]
+    assert fabric_obj.chunker.queues[3].get_nowait() == [8, {"presences": True, "user_ids": ["9", "18", "27", "36"]}]
+    assert fabric_obj.chunker.queues[3].empty()
+
+    assert fabric_obj.chunker.queues[4].get_nowait() == [9, {"presences": True, "user_ids": ["9", "18", "27", "36"]}]
+    assert fabric_obj.chunker.queues[4].empty()
+
+
+@pytest.mark.asyncio
+async def test_load_members_for_creates_queue_for_shard_if_non_existent(fabric_obj):
+    guild_obj = _helpers.mock_model(guilds.Guild, id=1, shard_id=0)
+    fabric_obj.chunker.queues = {}
+
+    await fabric_obj.chunker.load_members_for(guild_obj)
+
+    assert fabric_obj.chunker.queues[0].get_nowait() == [1, {"presences": True, "query": "", "limit": 0}]
+    assert fabric_obj.chunker.queues[0].empty()
+
+
+@pytest.mark.asyncio
+async def test_load_members_for_creates_task_for_shard_if_non_existent(fabric_obj):
+    guild_obj = _helpers.mock_model(guilds.Guild, id=1, shard_id=0)
+    fabric_obj.chunker.shard_chunkers = {}
+    fabric_obj.chunker._do_chunk_for_shard = mock.MagicMock()
+
+    with mock.patch("asyncio.create_task") as create_task:
+        await fabric_obj.chunker.load_members_for(guild_obj)
+
+        create_task.assert_called_once_with(fabric_obj.chunker._do_chunk_for_shard(0))
+
+
+@pytest.mark.asyncio
+async def test__do_chunk_for_shard_goes_through_all_the_queue_and_then_selfdestroys(fabric_obj):
+    queue = asyncio.Queue()
+    await queue.put([123, {"presences": True}])
+
+    fabric_obj.chunker.queues = {0: queue}
+    fabric_obj.chunker.shard_chunkers = {0: None}
+
+    await fabric_obj.chunker._do_chunk_for_shard(0)
+
+    fabric_obj.gateways[0].request_guild_members.assert_called_with(123, presences=True)
+    assert fabric_obj.chunker.shard_chunkers == {}
 
 
 @pytest.mark.asyncio
@@ -202,3 +255,15 @@ async def test_handle_next_chunk_for_members_with_presences(
 
     fabric_obj.state_registry.parse_member.assert_called_with(member_payload, guild_obj)
     fabric_obj.state_registry.parse_presence.assert_called_with(member_obj, presence_payload)
+
+
+def test_close_cancels_all_shard_tasks(event_loop, fabric_obj):
+    task1 = event_loop.create_future()
+    task2 = event_loop.create_future()
+
+    fabric_obj.chunker.shard_chunkers = {0: task1, 1: task2}
+
+    fabric_obj.chunker.close()
+
+    assert task1.cancelled()
+    assert task2.cancelled()
