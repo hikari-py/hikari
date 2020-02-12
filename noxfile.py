@@ -70,17 +70,17 @@ PYTEST_ARGS = [
 @nox.session()
 def test(session) -> None:
     """Run unit tests in Pytest."""
-    session.run("pip", "install", "-Ur", "requirements.txt")
-    session.run("pip", "install", "-Ur", "dev-requirements.txt")
+    session.install("-r", "requirements.txt")
+    session.install("-r", "dev-requirements.txt")
     session.run("python", "-m", "pytest", *PYTEST_ARGS, *session.posargs, TEST_PATH)
 
 
 @nox.session()
 def documentation(session) -> None:
     """Generate documentation using Sphinx for the current branch."""
-    session.run("pip", "install", "-Ur", "requirements.txt")
-    session.run("pip", "install", "-Ur", "dev-requirements.txt")
-    session.run("pip", "install", "-Ur", "doc-requirements.txt")
+    session.install("-r", "requirements.txt")
+    session.install("-r", "dev-requirements.txt")
+    session.install("-r", "doc-requirements.txt")
     session.env["SPHINXOPTS"] = SPHINX_OPTS
     tech_dir = pathify(DOCUMENTATION_DIR, TECHNICAL_DIR)
     shutil.rmtree(tech_dir, ignore_errors=True, onerror=lambda *_: None)
@@ -101,7 +101,7 @@ def documentation(session) -> None:
 @nox.session()
 def sast(session) -> None:
     """Run static application security testing with Bandit."""
-    session.run("pip", "install", "bandit")
+    session.install("bandit")
     pkg = MAIN_PACKAGE.split(".")[0]
     session.run("bandit", pkg, "-r")
 
@@ -109,30 +109,29 @@ def sast(session) -> None:
 @nox.session()
 def safety(session) -> None:
     """Run safety checks against a vulnerability database using Safety."""
-    session.run("pip", "install", "-Ur", "requirements.txt")
-    session.run("pip", "install", "safety")
+    session.install("-r", "requirements.txt")
+    session.install("safety")
     session.run("safety", "check")
 
 
 @nox.session()
 def format(session) -> None:
     """Reformat code with Black. Pass the '--check' flag to check formatting only."""
-    session.run("pip", "install", "black")
+    session.install("black")
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *session.posargs)
 
 
 @nox.session()
 def lint(session) -> None:
     """Check formating with pylint"""
-    session.run("pip", "install", "-Ur", "requirements.txt")
-    session.run("pip", "install", "-Ur", "dev-requirements.txt")
-    session.run("pip", "install", "-Ur", "doc-requirements.txt")
-    session.run("pip", "install", "pylint-junit==0.2.0")
+    session.install("-r", "requirements.txt")
+    session.install("-r", "dev-requirements.txt")
+    session.install("-r", "doc-requirements.txt")
+    session.install("pylint-junit==0.2.0")
     # TODO: Change code under this comment to the commented code when we update to pylint 2.5
     # session.run("pip", "install", f"pylint=={PYLINT_VERSION}" if PYLINT_VERSION else "pylint")
-    session.run(
-        "pip", "install", "git+https://github.com/davfsa/pylint"
-    )  # Freezed version of pylint 2.5 pre-release to make sure that nothing will break
+    # frozen version of pylint 2.5 pre-release to make sure that nothing will break
+    session.install("git+https://github.com/davfsa/pylint")
     pkg = MAIN_PACKAGE.split(".")[0]
 
     try:
@@ -171,7 +170,7 @@ def pip_bdist_wheel(session: nox.sessions.Session):
     """
     Test installing a bdist_wheel package.
     """
-    session.run("pip", "install", "wheel")
+    session.install("wheel")
     session.run("python", "setup.py", "build", "bdist_wheel")
 
     print("Testing installing from wheel")
@@ -195,7 +194,7 @@ def pip_sdist(session: nox.sessions.Session):
     """
     Test installing an sdist package.
     """
-    session.run("pip", "install", "wheel")
+    session.install("wheel")
     session.run("python", "setup.py", "build", "sdist")
 
     print("Testing installing from wheel")
@@ -243,8 +242,8 @@ def pip_git(session: nox.sessions.Session):
 
     with tempfile.TemporaryDirectory() as temp_dir:
         with temp_chdir(session, temp_dir) as project_dir:
-            session.run("pip", "install", f"git+file://{project_dir}")
-            session.run("pip", "install", MAIN_PACKAGE)
+            session.install(f"git+file://{project_dir}")
+            session.install(MAIN_PACKAGE)
             session.run("python", "-m", MAIN_PACKAGE, "-V")
 
     print("Installed as git dir in temporary environment successfully!")
@@ -252,7 +251,7 @@ def pip_git(session: nox.sessions.Session):
 
 def pip_showtime(session):
     print("Testing we can install packaged pypi object")
-    session.run("pip", "install", MAIN_PACKAGE)
+    session.install(MAIN_PACKAGE)
     session.run("python", "-c", f"import {MAIN_PACKAGE}; print({MAIN_PACKAGE}.__version__)")
     # Prevent nox caching old versions and using those when tests run.
     session.run("pip", "uninstall", "-vvv", "-y", MAIN_PACKAGE)
@@ -263,7 +262,7 @@ def pip_from_ref(session):
     url = session.env.get("CI_PROJECT_URL", REPOSITORY)
     sha1 = session.env.get("CI_COMMIT_SHA", "master")
     slug = f"git+{url}.git@{sha1}"
-    session.run("pip", "install", slug)
+    session.install(slug)
     session.run("python", "-c", f"import {MAIN_PACKAGE}; print({MAIN_PACKAGE}.__version__)")
     # Prevent nox caching old versions and using those when tests run.
     session.run("pip", "uninstall", "-vvv", "-y", MAIN_PACKAGE)
