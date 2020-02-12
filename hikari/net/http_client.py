@@ -302,9 +302,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             An audit log object.
 
         Raises:
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the given permissions to view an audit log.
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild does not exist.
         """
         query = {}
@@ -326,7 +326,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The channel object that has been found.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.ForbiddenHTTPError:
+                If the current token doesn't have access to the channel.
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel does not exist.
         """
         route = routes.CHANNEL.compile(self.GET, channel_id=channel_id)
@@ -381,11 +383,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The channel object that has been modified.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel does not exist.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the permission to make the change.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide incorrect options for the corresponding channel type (e.g. a `bitrate` for a text
                 channel).
         """
@@ -416,9 +418,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             Deleted channels cannot be un-deleted. Deletion of DMs is able to be undone by reopening the DM.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel does not exist
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you do not have permission to delete the channel.
         """
         route = routes.CHANNEL.compile(self.DELETE, channel_id=channel_id)
@@ -451,10 +453,10 @@ class HTTPClient(base_http_client.BaseHTTPClient):
 
         Warning:
             You can only specify a maximum of one from `before`, `after`, and `around`. Specifying more than one will
-            cause a :class:`hikari.net.errors.BadRequestError` to be raised.
+            cause a :class:`hikari.net.errors.BadRequestHTTPError` to be raised.
 
         Note:
-            If you are missing the `VIEW_CHANNEL` permission, you will receive a :class:`hikari.net.errors.ForbiddenError`.
+            If you are missing the `VIEW_CHANNEL` permission, you will receive a :class:`hikari.net.errors.ForbiddenHTTPError`.
             If you are instead missing the `READ_MESSAGE_HISTORY` permission, you will always receive zero results, and
             thus an empty list will be returned instead.
 
@@ -462,12 +464,12 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of message objects.
 
         Raises:
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack permission to read the channel.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If your query is malformed, has an invalid value for `limit`, or contains more than one of `after`,
                 `before` and `around`.
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the given `channel_id` was not found, or the message ID provided for one of the filter arguments
                 is not found.
         """
@@ -496,9 +498,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             This requires the `READ_MESSAGE_HISTORY` permission to be set.
 
         Raises:
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack permission to see the message.
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the message ID or channel ID is not found.
         """
         route = routes.CHANNEL_MESSAGE.compile(self.GET, channel_id=channel_id, message_id=message_id)
@@ -535,12 +537,12 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 if specified, this embed will be sent with the message.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel ID is not found.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If the file is too large, the embed exceeds the defined limits, if the message content is specified and
                 empty or greater than 2000 characters, or if neither of content, file or embed are specified.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack permissions to send to this channel.
 
         Returns:
@@ -579,12 +581,12 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 emoji, or it can be in the form of name:id for a custom emoji.
 
         Raises:
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If this is the first reaction using this specific emoji on this message and you lack the `ADD_REACTIONS`
                 permission. If you lack `READ_MESSAGE_HISTORY`, this may also raise this error.
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel or message is not found, or if the emoji is not found.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If the emoji is not valid, unknown, or formatted incorrectly
         """
         route = routes.OWN_REACTION.compile(self.PUT, channel_id=channel_id, message_id=message_id, emoji=emoji)
@@ -604,7 +606,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 emoji, or it can be a snowflake ID for a custom emoji.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.ForbiddenHTTPError:
+                If you lack permission to do this.
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel or message or emoji is not found.
         """
         route = routes.OWN_REACTION.compile(self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji)
@@ -626,9 +630,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 The ID of the user who made the reaction that you wish to remove.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel or message or emoji or user is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_MESSAGES` permission, or are in DMs.
         """
         route = routes.REACTION.compile(
@@ -669,6 +673,12 @@ class HTTPClient(base_http_client.BaseHTTPClient):
 
         Returns:
             A list of user objects.
+
+        Raises:
+            hikari.net.errors.ForbiddenHTTPError:
+                If the current token lacks access to this message.
+            hikari.net.errors.NotFoundHTTPError:
+                If the target entity doesn't exist.
         """
         query = {}
         transformations.put_if_specified(query, "before", before)
@@ -688,9 +698,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 The message ID to remove reactions from.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel_id or message_id was not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_MESSAGES` permission.
         """
         route = routes.ALL_REACTIONS.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
@@ -724,12 +734,12 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A replacement message object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel_id or message_id is not found.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If the embed exceeds any of the embed limits if specified, or the content is specified and consists
                 only of whitespace, is empty, or is more than 2,000 characters in length.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you try to edit content or embed on a message you did not author or try to edit the flags
                 on a message you did not author without the `MANAGE_MESSAGES` permission.
         """
@@ -751,10 +761,10 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 The message ID that was sent.
 
         Raises:
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you did not author the message and are in a DM, or if you did not author the message and lack the
                 `MANAGE_MESSAGES` permission in a guild channel.
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel or message was not found.
         """
         route = routes.CHANNEL_MESSAGE.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
@@ -771,11 +781,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 A list of 2-100 message IDs to remove in the channel.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel_id is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_MESSAGES` permission in the channel.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If any of the messages passed are older than 2 weeks in age or any duplicate message IDs are passed.
 
         Notes:
@@ -816,6 +826,12 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 "member" if it is for a member, or "role" if it is for a role.
             reason:
                 An optional audit log reason explaining why the change was made.
+
+        Raises:
+            hikari.net.errors.NotFoundHTTPError:
+                If the target channel or overwrite doesn't exist.
+            hikari.net.errors.ForbiddenHTTPError:
+                If the current token lacks permission to do this.
         """
         payload = {}
         transformations.put_if_specified(payload, "allow", allow)
@@ -836,9 +852,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of invite objects.
 
         Raises:
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_CHANNELS` permission.
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel does not exist.
         """
         route = routes.CHANNEL_INVITES.compile(self.GET, channel_id=channel_id)
@@ -876,11 +892,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             An invite object.
 
         Raises:
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `CREATE_INSTANT_MESSAGES` permission.
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel does not exist.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If the arguments provided are not valid (e.g. negative age, etc).
         """
         payload = {}
@@ -902,9 +918,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 The override ID to remove.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the overwrite or channel ID does not exist.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_ROLES` permission for that channel.
         """
         route = routes.CHANNEL_PERMISSIONS.compile(self.DELETE, channel_id=channel_id, overwrite_id=overwrite_id)
@@ -920,10 +936,10 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 in DMs.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel is not found.
-            hikari.net.errors.ForbiddenError:
-                If you are not in the guild the channel is in
+            hikari.net.errors.ForbiddenHTTPError:
+                If you are not in the guild the channel belongs to.
         """
         route = routes.CHANNEL_TYPING.compile(self.POST, channel_id=channel_id)
         await self._request(route)
@@ -940,8 +956,10 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of messages.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If no channel matching the ID exists.
+            hikari.net.errors.ForbiddenHTTPError:
+                If you lack permission to do this.
         """
         route = routes.CHANNEL_PINS.compile(self.GET, channel_id=channel_id)
         return await self._request(route)
@@ -957,9 +975,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 The message in the channel to pin.
 
         Raises:
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_MESSAGES` permission.
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the message or channel does not exist.
         """
         route = routes.CHANNEL_PINS.compile(self.PUT, channel_id=channel_id, message_id=message_id)
@@ -976,9 +994,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 The message in the channel to unpin.
 
         Raises:
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_MESSAGES` permission.
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the message or channel does not exist.
         """
         route = routes.CHANNEL_PIN.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
@@ -996,9 +1014,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of emoji objects.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you aren't a member of said guild.
         """
         route = routes.GUILD_EMOJIS.compile(self.GET, guild_id=guild_id)
@@ -1018,9 +1036,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             An emoji object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the emoji aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you aren't a member of said guild.
         """
         route = routes.GUILD_EMOJI.compile(self.GET, guild_id=guild_id, emoji_id=emoji_id)
@@ -1054,11 +1072,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The newly created emoji object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you attempt to upload an image larger than 256kb, an empty image or an invalid image format.
         """
         assertions.assert_not_none(image, "image must be a valid image")
@@ -1100,9 +1118,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The updated emoji object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the emoji aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_EMOJIS` permission or are not a member of the given guild.
         """
         payload = {}
@@ -1122,9 +1140,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 The ID of the emoji to be deleted.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the emoji aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
         """
         route = routes.GUILD_EMOJI.compile(self.DELETE, guild_id=guild_id, emoji_id=emoji_id)
@@ -1168,9 +1186,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The newly created guild object.
 
         Raises:
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If your bot is on 10 or more guilds.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide unsupported fields like `parent_id` in channel objects.
         """
         payload = {"name": name}
@@ -1196,8 +1214,10 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The requested guild object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
+            hikari.net.errors.ForbiddenHTTPError:
+                If the current token doesn't have access to the guild.
         """
         route = routes.GUILD.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
@@ -1256,9 +1276,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The edited guild object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = {}
@@ -1287,9 +1307,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 The ID of the guild to be deleted.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you're not the guild owner.
         """
         route = routes.GUILD.compile(self.DELETE, guild_id=guild_id)
@@ -1307,9 +1327,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of channel objects.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you're not in the guild.
         """
         route = routes.GUILD_CHANNELS.compile(self.GET, guild_id=guild_id)
@@ -1365,11 +1385,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The newly created channel object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_CHANNEL` permission or are not in the target guild or are not in the guild.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you omit the `name` argument.
         """
         payload = {"name": name}
@@ -1401,12 +1421,12 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 integer positions to change to.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or any of the channels aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_CHANNELS` permission or are not a member of said guild or are not in
                 The guild.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide anything other than the `id` and `position` fields for the channels.
         """
         payload = [{"id": ch[0], "position": ch[1]} for ch in (channel, *channels)]
@@ -1427,8 +1447,10 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The requested member object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
-                If either the guild or the member aren't found or are not in the guild.
+            hikari.net.errors.NotFoundHTTPError:
+                If either the guild or the member aren't found.
+            hikari.net.errors.ForbiddenHTTPError:
+                If you don't have access to the target guild.
         """
         route = routes.GUILD_MEMBER.compile(self.GET, guild_id=guild_id, user_id=user_id)
         return await self._request(route)
@@ -1471,11 +1493,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of member objects.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you are not in the guild.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide invalid values for the `limit` and `after` fields.
         """
         query = {}
@@ -1517,14 +1539,14 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             reason:
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild, user, channel or any of the roles aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack any of the applicable permissions
                 (`MANAGE_NICKNAMES`, `MANAGE_ROLES`, `MUTE_MEMBERS`, `DEAFEN_MEMBERS` or `MOVE_MEMBERS`).
                 Note that to move a member you must also have permission to connect to the end channel.
                 This will also be raised if you're not in the guild.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you pass `mute`, `deaf` or `channel_id` while the member is not connected to a voice channel.
         """
         payload = {}
@@ -1555,11 +1577,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
                 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `CHANGE_NICKNAME` permission or are not in the guild.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide a disallowed nickname, one that is too long, or one that is empty.
         """
         payload = {"nick": nick}
@@ -1588,9 +1610,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild, member or role aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER_ROLE.compile(self.PUT, guild_id=guild_id, user_id=user_id, role_id=role_id)
@@ -1618,9 +1640,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild, member or role aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER_ROLE.compile(self.DELETE, guild_id=guild_id, user_id=user_id, role_id=role_id)
@@ -1641,9 +1663,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or member aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `KICK_MEMBERS` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
@@ -1661,9 +1683,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of ban objects.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         route = routes.GUILD_BANS.compile(self.GET, guild_id=guild_id)
@@ -1683,9 +1705,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A ban object for the requested user.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the user aren't found, or if the user is not banned.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         route = routes.GUILD_BAN.compile(self.GET, guild_id=guild_id, user_id=user_id)
@@ -1713,9 +1735,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or member aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         query = {}
@@ -1739,9 +1761,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or member aren't found, or the member is not banned.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `BAN_MEMBERS` permission or are not a in the guild.
         """
         route = routes.GUILD_BAN.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
@@ -1759,9 +1781,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of role objects.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you're not in the guild.
         """
         route = routes.GUILD_ROLES.compile(self.GET, guild_id=guild_id)
@@ -1801,11 +1823,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The newly created role object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_ROLES` permission or you're not in the guild.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide invalid values for the role attributes.
         """
         payload = {}
@@ -1835,11 +1857,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of all the guild roles.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or any of the roles aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_ROLES` permission or you're not in the guild.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide invalid values for the `position` fields.
         """
         payload = [{"id": r[0], "position": r[1]} for r in (role, *roles)]
@@ -1883,11 +1905,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The edited role object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or role aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_ROLES` permission or you're not in the guild.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide invalid values for the role attributes.
         """
         payload = {}
@@ -1910,9 +1932,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 The ID of the role you want to delete.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the role aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         route = routes.GUILD_ROLE.compile(self.DELETE, guild_id=guild_id, role_id=role_id)
@@ -1932,11 +1954,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             the number of members estimated to be pruned.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `KICK_MEMBERS` or you are not in the guild.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you pass an invalid amount of days.
         """
         payload = {"days": days}
@@ -1970,11 +1992,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             of members who were kicked.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found:
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `KICK_MEMBER` permission or are not in the guild.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide invalid values for the `days` and `compute_prune_count` fields.
         """
         query = {
@@ -2001,9 +2023,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of voice region objects.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found:
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you are not in the guild.
         """
         route = routes.GUILD_VOICE_REGIONS.compile(self.GET, guild_id=guild_id)
@@ -2021,9 +2043,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of invite objects (with metadata).
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INVITES.compile(self.GET, guild_id=guild_id)
@@ -2041,9 +2063,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of integration objects.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATIONS.compile(self.GET, guild_id=guild_id)
@@ -2074,9 +2096,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The newly created integration object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = {"type": type_, "id": integration_id}
@@ -2111,9 +2133,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the integration aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = {}
@@ -2139,9 +2161,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the integration aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATION.compile(self.DELETE, guild_id=guild_id, integration_id=integration_id)
@@ -2158,9 +2180,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 The ID of the integration to sync.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the integration aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATION_SYNC.compile(self.POST, guild_id=guild_id, integration_id=integration_id)
@@ -2178,9 +2200,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A guild embed object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_EMBED.compile(self.GET, guild_id=guild_id)
@@ -2208,9 +2230,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The updated embed object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_EMBED.compile(self.PATCH, guild_id=guild_id)
@@ -2228,9 +2250,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A partial invite object containing the vanity URL in the `code` field.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_VANITY_URL.compile(self.GET, guild_id=guild_id)
@@ -2278,7 +2300,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The requested invite object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the invite is not found.
         """
         query = {}
@@ -2298,9 +2320,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The deleted invite object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the invite is not found.
-            hikari.net.errors.ForbiddenError
+            hikari.net.errors.ForbiddenHTTPError
                 If you lack either `MANAGE_CHANNELS` on the channel the invite belongs to or `MANAGE_GUILD` for
                 guild-global delete.
         """
@@ -2347,7 +2369,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The requested user object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the user is not found.
         """
         route = routes.USER.compile(self.GET, user_id=user_id)
@@ -2373,7 +2395,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The updated user object.
 
         Raises:
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you pass username longer than the limit (2-32) or an invalid image.
         """
         payload = {}
@@ -2408,7 +2430,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of partial guild objects.
 
         Raises:
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If you pass both `before` and `after`.
         """
         query = {}
@@ -2427,7 +2449,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 The ID of the guild to leave.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
         """
         route = routes.LEAVE_GUILD.compile(self.DELETE, guild_id=guild_id)
@@ -2445,7 +2467,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The newly created DM channel object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the recipient is not found.
         """
         payload = {"recipient_id": recipient_id}
@@ -2490,11 +2512,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The newly created webhook object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_WEBHOOKS` permission or can not see the given channel.
-            hikari.net.errors.BadRequestError:
+            hikari.net.errors.BadRequestHTTPError:
                 If the avatar image is too big or the format is invalid.
         """
         payload = {"name": name}
@@ -2514,9 +2536,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of webhook objects for the give channel.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_WEBHOOKS` permission or can not see the given channel.
         """
         route = routes.CHANNEL_WEBHOOKS.compile(self.GET, channel_id=channel_id)
@@ -2534,9 +2556,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             A list of webhook objects for the given guild.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the given guild.
         """
         route = routes.GUILD_WEBHOOKS.compile(self.GET, guild_id=guild_id)
@@ -2554,8 +2576,10 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The requested webhook object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the webhook is not found.
+            ForbiddenHTTPError:
+                If you're not in the guild that owns this webhook or lack the `MANAGE_WEBHOOKS` permission.
         """
         route = routes.WEBHOOK.compile(self.GET, webhook_id=webhook_id)
         return await self._request(route)
@@ -2589,9 +2613,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The updated webhook object.
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the webhook or the channel aren't found.
-            hikari.net.errors.ForbiddenError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook belongs
                 to.
         """
@@ -2611,10 +2635,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 The ID of the webhook to delete
 
         Raises:
-            hikari.net.errors.NotFoundError:
+            hikari.net.errors.NotFoundHTTPError:
                 If the webhook is not found.
-            hikari.net.errors.ForbiddenError:
-                If you're not the webhook owner.
+            hikari.net.errors.ForbiddenHTTPError:
+                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook belongs
+                to.
         """
         route = routes.WEBHOOK.compile(self.DELETE, webhook_id=webhook_id)
         await self._request(route)
