@@ -22,6 +22,7 @@ The primary client for writing a bot with Hikari.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import datetime
 import inspect
 import signal
@@ -360,13 +361,13 @@ class Client:
         if self.is_closed:
             return
 
-        try:
-            self.logger.warning("client is shutting down permanently")
+        self.logger.warning("client is shutting down permanently")
 
-            await self.dispatch(event_types.EventType.PRE_SHUTDOWN)
+        await self.dispatch(event_types.EventType.PRE_SHUTDOWN)
 
-            coros = []
+        coros = []
 
+        if self._fabric is not None:
             for shard in self._fabric.gateways.values():
                 if not shard.requesting_close_event.is_set():
                     self.logger.debug("requesting shard %s shuts down now", shard.shard_id)
@@ -378,19 +379,18 @@ class Client:
                         await asyncio.gather(*coros)
             except Exception as ex:
                 self.logger.exception("failed to shut down shards safely, will destroy them instead", exc_info=ex)
-                await self.destroy()
 
-            self.is_closed = True
+        self.is_closed = True
+        self.logger.warning("closing HTTP connection pool")
+
+        try:
+            # If we can't shut this down, we can't do much else. It is probably a bug.
+            await self._fabric.http_client.close()
+        except Exception as ex:
+            self.logger.debug("failed to close HTTP client", exc_info=ex)
         finally:
-            self.logger.warning("closing HTTP connection pool")
-
-            try:
-                # If we can't shut this down, we can't do much else. It is probably a bug.
-                await self._fabric.http_client.close()
-            except Exception as ex:
-                self.logger.debug("failed to close HTTP client", exc_info=ex)
-            finally:
-                await self.dispatch(event_types.EventType.POST_SHUTDOWN)
+            await self.dispatch(event_types.EventType.POST_SHUTDOWN)
+            await self.destroy()
 
     def run(self):
         """
@@ -406,14 +406,22 @@ class Client:
             raise KeyboardInterrupt()
 
         try:
-            self.loop.add_signal_handler(signal.SIGTERM, sigterm_handler)
+            # Not implemented on Windows
+            with contextlib.suppress(NotImplementedError):
+                self.loop.add_signal_handler(signal.SIGTERM, sigterm_handler)
+
             self.loop.run_until_complete(self.start())
             self.loop.run_until_complete(self.join())
         except KeyboardInterrupt:
             self.logger.info("received signal to shut down client")
         finally:
+
             self.loop.run_until_complete(self.shutdown())
-            self.loop.remove_signal_handler(signal.SIGTERM)
+
+            # Not implemented on Windows
+            with contextlib.suppress(NotImplementedError):
+                self.loop.remove_signal_handler(signal.SIGTERM)
+
             self.logger.info("client has shut down")
 
     def dispatch(self, event: str, *args):
