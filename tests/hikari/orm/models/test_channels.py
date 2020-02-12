@@ -21,11 +21,15 @@ from unittest import mock
 
 import pytest
 
+from hikari.internal_utilities import unspecified
 from hikari.orm import fabric
 from hikari.orm.http import base_http_adapter
 from hikari.orm.models import bases
 from hikari.orm.models import channels
+from hikari.orm.models import embeds
 from hikari.orm.models import guilds
+from hikari.orm.models import media
+from hikari.orm.models import messages
 from hikari.orm.models import permissions
 from hikari.orm.state import base_registry
 from tests.hikari import _helpers
@@ -106,6 +110,44 @@ class TestChannel:
 
 @pytest.mark.model
 class TestTextChannel:
+    @pytest.mark.asyncio
+    async def test_send_without_optionals(self, mock_fabric):
+        mock_fabric.http_adapter = _helpers.create_autospec(base_http_adapter.BaseHTTPAdapter)
+        mock_message = mock.MagicMock(messages.Message)
+        mock_fabric.http_adapter.create_message.return_value = mock_message
+        text_channel = _helpers.mock_model(channels.TextChannel, _fabric=mock_fabric, id=1234)
+        assert await channels.TextChannel.send(text_channel) is mock_message
+        mock_fabric.http_adapter.create_message.assert_called_once_with(
+            text_channel, content=unspecified.UNSPECIFIED, embed=unspecified.UNSPECIFIED, files=unspecified.UNSPECIFIED,
+        )
+
+    @pytest.mark.asyncio
+    async def test_send_with_optionals(self, mock_fabric):
+        mock_fabric.http_adapter = _helpers.create_autospec(base_http_adapter.BaseHTTPAdapter)
+        mock_message = mock.MagicMock(messages.Message)
+        mock_embed = mock.MagicMock(embeds.Embed)
+        mock_file = mock.MagicMock(media.AbstractFile)
+        mock_fabric.http_adapter.create_message.return_value = mock_message
+        text_channel = _helpers.mock_model(channels.TextChannel, _fabric=mock_fabric, id=1234)
+        result = await channels.TextChannel.send(text_channel, content="owo", embed=mock_embed, files=[mock_file])
+        assert result is mock_message
+        mock_fabric.http_adapter.create_message.assert_called_once_with(
+            text_channel, content="owo", embed=mock_embed, files=[mock_file],
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("delete_after", (42, 42.42))
+    async def test_send_registers_delete_after(self, mock_fabric, delete_after):
+        mock_fabric.http_adapter = _helpers.create_autospec(base_http_adapter.BaseHTTPAdapter)
+        mock_message = mock.MagicMock(messages.Message)
+        mock_fabric.http_adapter.create_message.return_value = mock_message
+        text_channel = _helpers.mock_model(channels.TextChannel, _fabric=mock_fabric, id=1234)
+        mock_loop = mock.MagicMock(asyncio.AbstractEventLoop)
+        with mock.patch.object(asyncio, "get_running_loop", return_value=mock_loop):
+            await channels.TextChannel.send(text_channel, delete_after=delete_after)
+            asyncio.get_running_loop.assert_called_once()
+            mock_loop.call_later.assert_called_once_with(delete_after, mock_message.delete)
+
     @pytest.mark.asyncio
     async def test_trigger_typing_calls_http_adapter(self, mock_fabric):
         mock_fabric.http_adapter = _helpers.create_autospec(base_http_adapter.BaseHTTPAdapter)

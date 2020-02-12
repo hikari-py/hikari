@@ -191,7 +191,7 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
         content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         embed: type_hints.NotRequired[embeds.Embed] = unspecified.UNSPECIFIED,
         files: type_hints.NotRequired[typing.Collection[storage.FileLikeT]] = unspecified.UNSPECIFIED,
-        delete_after: type_hints.NotRequired[float] = unspecified.UNSPECIFIED,
+        delete_after: typing.Union[float, int, unspecified.Unspecified] = unspecified.UNSPECIFIED,
     ) -> messages.Message:
         """
         Send a message to this channel.
@@ -212,12 +212,9 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
         Note:
             You must specify at least one of `content`, `embed` or `attachments` for this to be a valid API call.
         """
-        kwargs: typing.Dict[str, typing.Any] = {}
-        transformations.put_if_specified(kwargs, "content", content)
-        transformations.put_if_specified(kwargs, "embed", embed)
-        transformations.put_if_specified(kwargs, "attachments", files)
-
-        message: messages.Message = await self._fabric.http_adapter.create_message(self, **kwargs)
+        message: messages.Message = await self._fabric.http_adapter.create_message(
+            self, content=content, embed=embed, files=files
+        )
 
         if delete_after is not unspecified.UNSPECIFIED:
             asyncio.get_running_loop().call_later(delete_after, message.delete)
