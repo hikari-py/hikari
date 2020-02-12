@@ -23,6 +23,7 @@ import copy
 import functools
 import inspect
 import logging
+import os
 import queue
 import re
 import socket
@@ -435,6 +436,10 @@ def timeout_after(time_period):
         return wrapper
 
     return decorator
+
+
+def stupid_windows_please_stop_breaking_my_tests(test):
+    return pytest.mark.skipif(os.name == "nt", reason="This test will not pass on Windows :(")(test)
 
 
 def free_port():
