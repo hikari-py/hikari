@@ -18,12 +18,10 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 import datetime
-import importlib
 import math
-import multiprocessing
 import os
 import signal
-import time
+import unittest
 from unittest import mock
 
 import aiohttp
@@ -32,7 +30,9 @@ import pytest
 from hikari.net import errors as _errors
 from hikari.net import gateway as _gateway
 from hikari.net import http_client as _http_client
-from hikari.orm import fabric as _fabric, client as _client, client_options
+from hikari.orm import client as _client
+from hikari.orm import client_options
+from hikari.orm import fabric as _fabric
 from hikari.orm.gateway import base_event_handler as _base_event_handler
 from hikari.orm.http import http_adapter_impl as _http_adapter_impl
 from tests.hikari import _helpers
@@ -380,13 +380,13 @@ class TestClient:
         shard0.close.assert_not_called()
         shard1.close.assert_not_called()
 
+    @_helpers.stupid_windows_please_stop_breaking_my_tests
     async def test_run_calls_shutdown_when_KeyboardInterrupt(self):
         client = _client.Client("token")
         client.shutdown = mock.MagicMock()
         client.loop.run_until_complete = mock.MagicMock(side_effect=[KeyboardInterrupt, None])
 
         client.run()
-
         client.loop.run_until_complete.assert_called_with(client.shutdown())
 
     async def test_run_calls_start(self):
@@ -451,7 +451,6 @@ class TestClient:
         client = _client.Client("token")
 
         with mock.patch("hikari.client.Client.add_event") as add_event:
-
             @client.event()
             async def on_message_create():
                 ...
@@ -462,7 +461,6 @@ class TestClient:
         client = _client.Client("token")
 
         with mock.patch("hikari.client.Client.add_event") as add_event:
-
             @client.event()
             async def message_create():
                 ...
@@ -473,7 +471,6 @@ class TestClient:
         client = _client.Client("token")
 
         with mock.patch("hikari.client.Client.add_event") as add_event:
-
             @client.event("message_create")
             async def foo():
                 ...
@@ -528,86 +525,58 @@ def filter_unimplemented(*args):
 
 
 class TestClientShutdownHandling:
-    def create_process(self, expect_shutdown):
-        class Process(multiprocessing.Process):
-            def __init__(self):
-                super().__init__(daemon=True)
-                self.q = multiprocessing.Queue()
+    def _do_test_safe_signal_handling(self, signal_to_fire):
+        loop = asyncio.new_event_loop()
+        loop.set_debug(True)
+        asyncio.set_event_loop(loop)
 
-            def run(self) -> None:
-                try:
-                    importlib.import_module("logging").basicConfig(level="DEBUG")
-                    mock_http_client = mock.create_autospec(_http_client.HTTPClient, spec_set=True)
+        mock_http_client = mock.create_autospec(_http_client.HTTPClient, spec_set=True)
 
-                    def mock_shard(id: int, count: int):
-                        class MockShard(_gateway.GatewayClient):
-                            async def connect(self, client_session_type=aiohttp.ClientSession):
-                                await asyncio.sleep(0.1)
-                                print("mocking identify")
-                                self.identify_event.set()
+        def mock_shard(id: int, count: int):
+            class MockShard(_gateway.GatewayClient):
+                async def connect(self, client_session_type=aiohttp.ClientSession):
+                    await asyncio.sleep(0.1)
+                    print("mocking identify")
+                    self.identify_event.set()
 
-                        return MockShard(shard_id=id, shard_count=count, token="1a2b3c", url="wss://localhost:8080")
+            return MockShard(shard_id=id, shard_count=count, token="1a2b3c", url="wss://localhost:8080")
 
-                    shards = [mock_shard(i, 5) for i in range(5)]
+        shards = [mock_shard(i, 5) for i in range(5)]
 
-                    class Client(_client.Client):
-                        _SHARD_IDENTIFY_WAIT = 0.1
+        class Client(_client.Client):
+            _SHARD_IDENTIFY_WAIT = 0.1
 
-                        async def _new_shard_map(mock):
-                            print("shard_map is created")
-                            return {shard.shard_id: shard for shard in shards}, len(shards)
+            def __init__(self, *args, **kwargs):
+                self.shutdown = mock.MagicMock(wraps=super().shutdown)
+                self.destroy = mock.MagicMock(wraps=super().destroy)
+                super().__init__(*args, **kwargs)
 
-                        async def _new_http_client(mock):
-                            print("http_client is up")
-                            return mock_http_client
+            async def _new_shard_map(mock):
+                print("shard_map is created")
+                return {shard.shard_id: shard for shard in shards}, len(shards)
 
-                        async def _shard_keep_alive(mock, shard: _gateway.GatewayClient) -> None:
-                            print("shard is up")
-                            await asyncio.get_event_loop().create_future()
+            async def _new_http_client(mock):
+                print("http_client is up")
+                return mock_http_client
 
-                        shutdown = mock.AsyncMock()
-                        destroy = mock.AsyncMock()
+            async def _shard_keep_alive(mock, shard: _gateway.GatewayClient) -> None:
+                print("shard is up")
+                await asyncio.get_event_loop().create_future()
 
-                    bot = Client("1a2b3c")
-                    bot.loop = asyncio.get_event_loop()
+        bot = Client("1a2b3c", loop=loop)
 
-                    try:
-                        bot.run()
-                    finally:
-                        if expect_shutdown:
-                            bot.shutdown.assert_called_once()
-                        else:
-                            bot.shutdown.assert_not_called()
-                    self.q.put(None)
-                except BaseException as ex:
-                    self.q.put(ex)
+        try:
+            bot.loop.call_later(0.5, os.kill, os.getpid(), signal_to_fire)
+            bot.run()
+        finally:
+            bot.loop.close()
+            bot.shutdown.assert_called_once()
+            bot.destroy.assert_called_once()
 
-        return Process()
+    @_helpers.stupid_windows_please_stop_breaking_my_tests
+    def test_sigint(self):
+        self._do_test_safe_signal_handling(signal.SIGINT)
 
-    @staticmethod
-    def run_process_then_fire_signal(proc, signal_to_fire):
-        proc.start()
-        time.sleep(0.75)
-        os.kill(proc.pid, signal_to_fire)
-        proc.join(timeout=5)
-
-    @pytest.mark.parametrize(
-        "signal_to_fire",
-        filter_unimplemented(
-            getattr(signal, "SIGINT", NotImplemented),  # causes keyboard interrupt.
-            getattr(signal, "SIGTERM", NotImplemented),
-        ),
-    )
-    def test_safe_signal_handling(self, signal_to_fire):
-        proc = self.create_process(expect_shutdown=True)
-        self.run_process_then_fire_signal(proc, signal_to_fire)
-
-        result = proc.q.get_nowait()
-        if result is not None:
-            raise result
-
-    @pytest.mark.parametrize("signal_to_fire", filter_unimplemented(getattr(signal, "SIGKILL", NotImplemented)))
-    def test_unsafe_signal_handling(self, signal_to_fire):
-        proc = self.create_process(expect_shutdown=False)
-        self.run_process_then_fire_signal(proc, signal_to_fire)
-        assert proc.q.empty()
+    @_helpers.stupid_windows_please_stop_breaking_my_tests
+    def test_sigterm(self):
+        self._do_test_safe_signal_handling(signal.SIGTERM)
