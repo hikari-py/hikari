@@ -42,13 +42,13 @@ class BaseChunker(abc.ABC):
     __slots__ = ()
 
     @abc.abstractmethod
-    def load_members_for(
+    async def load_members_for(
         self,
         guild_obj: guilds.Guild,
         *guild_objs: guilds.Guild,
         limit: int = 0,
         presences: bool = True,
-        query: str = None,
+        query: str = "",
         user_ids: type_hints.Nullable[typing.Sequence[int]] = None,
     ) -> None:
         """
@@ -73,7 +73,7 @@ class BaseChunker(abc.ABC):
                 in the given sequence.
 
         Warning:
-            Specifying both a query and user_ids is not supported and will raise
+            Specifying both a query/limit and user_ids is not supported and will raise
             a :class:`RuntimeError`.
         """
 
@@ -90,5 +90,5 @@ class BaseChunker(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def close(self):
+    def close(self):
         """Close the chunker safely (kill any tasks running) if applicable."""
