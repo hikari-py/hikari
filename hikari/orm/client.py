@@ -368,6 +368,8 @@ class Client:
         coros = []
 
         if self._fabric is not None:
+            self._fabric.chunker.close()
+
             for shard in self._fabric.gateways.values():
                 if not shard.requesting_close_event.is_set():
                     self.logger.debug("requesting shard %s shuts down now", shard.shard_id)
