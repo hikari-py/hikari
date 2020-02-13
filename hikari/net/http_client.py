@@ -42,6 +42,7 @@ from hikari.net import base_http_client
 from hikari.net import errors
 from hikari.net import ratelimits
 from hikari.net import routes
+from hikari.net import versions
 
 if typing.TYPE_CHECKING:
     import ssl
@@ -59,7 +60,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
     def __init__(
         self,
         *,
-        base_url="https://discordapp.com/api/v6",
+        base_url="https://discordapp.com/api/v{0.version}",
         allow_redirects: bool = False,
         connector: aiohttp.BaseConnector = None,
         proxy_headers: aiohttp.typedefs.LooseHeaders = None,
@@ -71,6 +72,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         json_deserialize=json.loads,
         json_serialize=json.dumps,
         token,
+        version: versions.HTTPAPIVersion = versions.HTTPAPIVersion.STABLE,
     ):
         super().__init__(
             allow_redirects=allow_redirects,
@@ -83,7 +85,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             timeout=timeout,
             json_serialize=json_serialize,
         )
-        self.base_url = base_url
+        self.version = version
+        self.base_url = base_url.format(self)
         self.global_ratelimiter = ratelimits.ManualRateLimiter()
         self.json_serialize = json_serialize
         self.json_deserialize = json_deserialize

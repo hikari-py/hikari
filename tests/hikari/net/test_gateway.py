@@ -31,6 +31,7 @@ import pytest
 from hikari.net import errors
 from hikari.net import gateway
 from hikari.net import user_agent
+from hikari.net import versions
 from tests.hikari import _helpers
 
 
@@ -180,22 +181,28 @@ class TestGatewayClientAiohttpClientSessionKwargsProperty:
 @pytest.mark.asyncio
 class TestGatewayClientWebSocketKwargsProperty:
     async def test_right_stuff_is_included(self):
-        url = "foobarbaz"
-        proxy_url = "http://localhost.lan"
+        url = "http://localhost.lan/discord"
+        proxy_url = "http://localhost.lan/some_proxy"
         proxy_auth = mock.MagicMock()
         proxy_headers = mock.MagicMock()
         verify_ssl = True
         ssl_context = mock.MagicMock()
 
         client = gateway.GatewayClient(
-            url="...",
+            url=url,
             token="...",
             proxy_url=proxy_url,
             proxy_auth=proxy_auth,
             proxy_headers=proxy_headers,
             verify_ssl=verify_ssl,
             ssl_context=ssl_context,
+            version=versions.GatewayVersion.STABLE,
         )
+
+        scheme, netloc, url, params, query, fragment = urllib.parse.urlparse(client._url)
+        query = urllib.parse.parse_qs(query)
+        assert query["v"] == [str(versions.GatewayVersion.STABLE.value)]
+
         client._url = url
 
         assert client._ws_connect_kwargs == dict(
