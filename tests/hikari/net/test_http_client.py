@@ -31,6 +31,7 @@ from hikari.net import errors
 from hikari.net import http_client
 from hikari.net import ratelimits
 from hikari.net import routes
+from hikari.net import versions
 from tests.hikari import _helpers
 
 
@@ -67,7 +68,7 @@ class TestHTTPClient:
                     timeout=None,
                     json_serialize=json.dumps,
                 )
-                assert client.base_url == "https://discordapp.com/api/v6"
+                assert client.base_url == f"https://discordapp.com/api/v{int(versions.HTTPAPIVersion.STABLE)}"
                 assert client.global_ratelimiter is mock_manual_rate_limiter
                 assert client.json_serialize is json.dumps
                 assert client.json_deserialize is json.loads
@@ -132,7 +133,8 @@ class TestHTTPClient:
     @mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager")
     @_helpers.assert_raises(type_=RuntimeError)
     def test__init__raises_runtime_error_with_invalid_token(self, *args):
-        http_client.HTTPClient(token="An-invalid-TOKEN")
+        with http_client.HTTPClient(token="An-invalid-TOKEN"):
+            pass
 
     @pytest.mark.asyncio
     async def test_close(self, http_client_impl):

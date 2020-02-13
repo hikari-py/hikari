@@ -29,6 +29,7 @@ import aiohttp.typedefs
 
 from hikari.internal_utilities import type_hints
 from hikari.net import gateway
+from hikari.net import versions
 from hikari.orm.gateway import dispatching_event_adapter_impl
 from hikari.orm.models import presences
 
@@ -88,10 +89,15 @@ class ClientOptions:
     #: The :class:`aiohttp.BaseConnector` to use for the client session. This is used for both the websocket
     #: and any HTTP requests.
     connector: type_hints.Nullable[aiohttp.BaseConnector] = None
-    #: Whether to enable debugging or not.
+    #: Whether to enable debugging or not. This enables dumping request contents and gateway payload contents
+    #: to the logger, amongst other things that may harm the performance of your application.
     debug: bool = False
     #: The intents to send to the gateway on IDENTIFY.
     gateway_intents: type_hints.Nullable[gateway.GatewayIntent] = None
+    #: The gateway API version to use. This defaults to the most recent documented stable API version.
+    gateway_version: versions.GatewayVersion = versions.GatewayVersion.STABLE
+    #: The REST API version to use. This defaults to the most recent documented stable API version.
+    http_api_version: versions.HTTPAPIVersion = versions.HTTPAPIVersion.STABLE
     #: The timeout to apply to individual HTTP requests. Any request that takes longer than this time period
     #: will be cancelled with an :class:`asyncio.TimeoutError`
     http_timeout: type_hints.Nullable[float] = None

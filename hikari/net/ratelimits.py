@@ -23,14 +23,15 @@ rate limit handling that conforms to the passed bucket headers correctly.
 What is the theory behind this implementation?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In this module, we refer to a :class:`CompiledRoute` as a definition of a route with specific major parameter values
-included (e.g. `POST /channels/123/messages`), and a :class:`RouteTemplate` as a definition of a route without specific
-parameter values included (e.g. `POST /channels/{channel_id}/messages`). We can compile a `CompiledRoute` from a
-`RouteTemplate` by providing the corresponding parameters as kwargs.
+In this module, we refer to a :class:`hikari.net.routes.CompiledRoute` as a definition of a route with specific major
+parameter values included (e.g. `POST /channels/123/messages`), and a :class:`hikari.net.routes.RouteTemplate` as a
+definition of a route without specific parameter values included (e.g. `POST /channels/{channel_id}/messages`). We
+can compile a `hikari.net.routes.CompiledRoute` from a :class:`hikari.net.routes.RouteTemplate` by providing the
+corresponding parameters as kwargs.
 
 In this module, a "bucket" is an internal data structure that describes the rate limit state for a specific
-:class:`CompiledRoute`, and can manage delaying tasks in the event that we begin to get rate limited. It also supports
-providing in-order execution of queued tasks.
+:class:`hikari.net.routes.CompiledRoute`, and can manage delaying tasks in the event that we begin to get rate
+limited. It also supports providing in-order execution of queued tasks.
 
 Discord allocates types of buckets to routes. If you are making a request and there is a valid rate limit on the route
 you hit, you should receive an `X-RateLimit-Bucket` header from the server in your response. This is a hash that
@@ -42,44 +43,47 @@ in the same bucket, but `GET /channels/123/messages/789` and `PATCH /channels/12
 the same bucket. Discord may or may not change this at any time, so hard coding this logic is not a useful thing to be
 doing.
 
-Rate limits, on the other hand, apply to a bucket and are specific to the major parameters of the compiled route. This
-means that `POST /channels/123/messages` and `POST /channels/456/messages` do not share the same real bucket, despite
-Discord providing the same bucket hash. A :class:`RealBucketHash`, therefore, as the :class:`str` hash of the bucket
-that Discord sends us in a response concatenated to the corresponding major parameters. This is used for quick bucket
-indexing internally in this module.
+Rate limits, on the other hand, apply to a bucket and are specific to the major parameters of the compiled route.
+This means that `POST /channels/123/messages` and `POST /channels/456/messages` do not share the same real bucket,
+despite Discord providing the same bucket hash. A :class:`hikari.net.ratelimits.RealBucketHash`, therefore,
+is the :class:`str` hash of the bucket that Discord sends us in a response concatenated to the corresponding major
+parameters. This is used for quick bucket indexing internally in this module.
 
-One issue that occurs from this is that we cannot effectively hash a :class:`CompiledRoute` that has not yet been hit,
-meaning that until we receive a response from this endpoint, we have no idea what our rate limits could be, nor the
-bucket that they sit in. This is usually not problematic, as the first request to an endpoint should never be rate
-limited unless you are hitting it from elsewhere in the same time window outside your Hikari application. To manage
-this situation, unknown endpoints are allocated to a special unlimited bucket until they have an initial bucket hash
-code allocated from a response. Once this happens, the route is reallocated a dedicated bucket. Unknown buckets have
-a hardcoded initial hash code internally.
+One issue that occurs from this is that we cannot effectively hash a :class:`hikari.net.routes.CompiledRoute`
+that has not yet been hit, meaning that until we receive a response from this endpoint, we have no idea what our rate
+limits could be, nor the bucket that they sit in. This is usually not problematic, as the first request to an
+endpoint should never be rate limited unless you are hitting it from elsewhere in the same time window outside your
+Hikari application. To manage this situation, unknown endpoints are allocated to a special unlimited bucket until
+they have an initial bucket hash code allocated from a response. Once this happens, the route is reallocated a
+dedicated bucket. Unknown buckets have a hardcoded initial hash code internally.
 
 Initially acquiring time on a bucket
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Each time you :meth:`RateLimiter.acquire` a request timeslice for a given :class:`CompiledRoute`, several things
-happen. The first is that we attempt to find the existing bucket for that route, if there is one, or get an unknown
-bucket otherwise. This is done by creating a :class:`RealBucketHash` from the compiled route. The initial hash is
-calculated using a lookup table that maps :class:`CompiledRoute` objects to their corresponding initial hash codes,
-or to the unknown bucket hash code if not yet known. This initial hash is processed by the :class`CompiledRoute` to
-provide the :class:`RealBucketHash` we need to get the route's bucket object internally.
+Each time you :meth:`hikari.net.ratelimits.RateLimiter.acquire` a request timeslice for a given
+:class:`hikari.net.ratelimits.CompiledRoute`, several things happen. The first is that we attempt to find the
+existing bucket for that route, if there is one, or get an unknown bucket otherwise. This is done by creating a
+:class:`hikari.net.ratelimits.RealBucketHash` from the compiled route. The initial hash is calculated using a lookup
+table that maps :class:`hikari.net.ratelimits.CompiledRoute` objects to their corresponding initial hash codes,
+or to the unknown bucket hash code if not yet known. This initial hash is processed by the
+:class`hikari.net.ratelimits.CompiledRoute` to provide the :class:`RealBucketHash` we need to get the route's bucket
+object internally.
 
-The :meth:`RateLimiter.acquire` method will take the bucket and acquire a new timeslice on it. This takes the form
-of a :class:`asyncio.Future` which should be awaited by the caller and will complete once the caller is allowed to make
-a request. Most of the time, this is done instantly, but if the bucket has an active rate limit preventing requests
-being sent, then the future will be paused until the rate limit is over. This may be longer than the rate limit
-period if you have queued a large number of requests during this limit, as it is first-come-first-served.
+The :meth:`hikari.net.ratelimits.RateLimiter.acquire` method will take the bucket and acquire a new timeslice on it.
+This takes the form of a :class:`asyncio.Future` which should be awaited by the caller and will complete once the
+caller is allowed to make a request. Most of the time, this is done instantly, but if the bucket has an active rate
+limit preventing requests being sent, then the future will be paused until the rate limit is over. This may be longer
+than the rate limit period if you have queued a large number of requests during this limit,
+as it is first-come-first-served.
 
 Acquiring a rate limited bucket will start a bucket-wide task (if not already running) that will wait until the
 rate limit has completed before allowing more timeslice futures to complete. This is done while observing the rate
 limits again, so can easily begin to re-ratelimit itself if needed. Once the task is complete, it tidies itself up
 and disposes of itself. This task will complete once the queue becomes empty.
 
-The result of :meth:`RateLimiter.acquire` is a tuple of a :class:`asyncio.Future` to await on which completes when
-you are allowed to proceed with making a request, and a :class`RealBucketHash` which should be stored temporarily.
-This will be explained in the next section.
+The result of :meth:`hikari.net.ratelimits.RateLimiter.acquire` is a tuple of a :class:`asyncio.Future` to await on
+which completes when you are allowed to proceed with making a request, and a :class`RealBucketHash` which should be
+stored temporarily. This will be explained in the next section.
 
 When you make your response, you should be sure to set the `X-RateLimit-Precision` header to `millisecond` to ensure
 a much greater accuracy against rounding errors for rate limits (reduces the error margin from 1 second to 1
@@ -90,22 +94,23 @@ Handling the rate limit headers of a response
 
 Once you have received your response, you are expected to extract the values of the vital rate limit headers manually
 and parse them to the correct datatypes. These headers are:
-    - `Date`: the response date on the server. This should be parsed to a :class:`datetime.datetime` using
-        :meth:`email.utils.parsedate_to_datetime`.
-    - `X-RateLimit-Limit`: an :class:`int` describing the max requests in the bucket from empty to being rate limited.
-    - `X-RateLimit-Remaining`: an :class:`int` describing the remaining number of requests before rate limiting occurs
-        in the current window.
-    - `X-RateLimit-Bucket`: a :class:`str` containing the initial bucket hash.
-    - `X-RateLimit-Reset`: a :class:`float` containing the number of seconds since 1st January 1970 at 0:00:00 UTC
-        at which the current ratelimit window resets. This should be parsed to a :class:`datetime` using
-        :meth:`datetime.datetime.fromtimestamp`, passing :attr:`datetime.timezone.utc` as a second parameter.
 
-Additionally, you need to have the :class:`RealBucketHash` you acquired from the :meth:`RateLimiter.acquire` call
-earlier.
+- `Date`: the response date on the server. This should be parsed to a :class:`datetime.datetime` using
+    :meth:`email.utils.parsedate_to_datetime`.
+- `X-RateLimit-Limit`: an :class:`int` describing the max requests in the bucket from empty to being rate limited.
+- `X-RateLimit-Remaining`: an :class:`int` describing the remaining number of requests before rate limiting occurs
+    in the current window.
+- `X-RateLimit-Bucket`: a :class:`str` containing the initial bucket hash.
+- `X-RateLimit-Reset`: a :class:`float` containing the number of seconds since 1st January 1970 at 0:00:00 UTC
+    at which the current ratelimit window resets. This should be parsed to a :class:`datetime` using
+    :meth:`datetime.datetime.fromtimestamp`, passing :attr:`datetime.timezone.utc` as a second parameter.
 
-Each of the above values should be passed to the :meth:`RateLimiter.update_rate_limits` method to ensure that the
-bucket you acquired time from is correctly updated should Discord decide to alter their ratelimits on the fly without
-warning (including timings and the bucket).
+Additionally, you need to have the :class:`RealBucketHash` you acquired from the
+:meth:`hikari.net.ratelimits.RateLimiter.acquire` call earlier.
+
+Each of the above values should be passed to the :meth:`hikari.net.ratelimits.RateLimiter.update_rate_limits` method
+to ensure that the bucket you acquired time from is correctly updated should Discord decide to alter their ratelimits
+on the fly without warning (including timings and the bucket).
 
 This method will manage creating new buckets as needed and resetting vital information in each bucket you use.
 

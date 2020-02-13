@@ -49,6 +49,10 @@ from hikari.net.gateway import GatewayClient
 # HTTP Client
 from hikari.net.http_client import HTTPClient
 
+# API versions
+from hikari.net.versions import GatewayVersion
+from hikari.net.versions import HTTPAPIVersion
+
 # Bot client
 from hikari.orm.client import Client
 
