@@ -630,3 +630,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.logger.debug("ignoring WEBHOOKS_UPDATE in unknown channel %s", channel_id)
         else:
             self.dispatch(event_types.EventType.WEBHOOKS_UPDATE, channel_obj)
+
+    async def handle_invite_create(self, gateway, payload):
+        invite_obj = self.fabric.state_registry.parse_invite(payload)
+        self.dispatch(event_types.EventType.INVITE_CREATE, invite_obj)
