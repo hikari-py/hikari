@@ -26,3 +26,4 @@ from hikari.net import ratelimits
 from hikari.net import routes
 from hikari.net import status_info_client
 from hikari.net import user_agent
+from hikari.net import versions
