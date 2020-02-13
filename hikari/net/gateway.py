@@ -47,6 +47,7 @@ from hikari.internal_utilities import loggers
 from hikari.net import errors
 from hikari.net import ratelimits
 from hikari.net import user_agent
+from hikari.net import versions
 
 if typing.TYPE_CHECKING:
     from hikari.internal_utilities import type_hints
@@ -178,7 +179,7 @@ class GatewayClient:
         "_json_serialize",
         "last_heartbeat_sent",
         "last_message_received",
-        "_logger",
+        "logger",
         "_presence",
         "_proxy_auth",
         "_proxy_headers",
@@ -195,6 +196,7 @@ class GatewayClient:
         "_token",
         "_url",
         "_verify_ssl",
+        "version",
         "_ws",
         "_zlib",
     )
@@ -222,6 +224,7 @@ class GatewayClient:
         token,
         url,
         verify_ssl=True,
+        version: versions.GatewayVersion = versions.GatewayVersion.STABLE,
     ) -> None:
         self._compression = compression
         self.closed_event = asyncio.Event()
@@ -254,6 +257,7 @@ class GatewayClient:
         self.status = GatewayStatus.OFFLINE
         self._token = token
         self._verify_ssl = verify_ssl
+        self.version = version
         self._ws: typing.Optional[aiohttp.ClientWebSocketResponse] = None
         self._zlib = None  # set this per connection or reconnecting can mess up.
 
@@ -261,13 +265,13 @@ class GatewayClient:
             f"gateway shard {self.shard_id}/{self.shard_count}", 60.0, 120,
         )
 
-        self._logger = loggers.get_named_logger(self, self.shard_id)
+        self.logger = loggers.get_named_logger(self, self.shard_id)
 
         # Sanitise the URL...
         scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url, allow_fragments=True)
 
         # We use JSON; I'm not having any of that erlang shit in my library!
-        new_query = dict(v=6, encoding="json")
+        new_query = dict(v=int(self.version), encoding="json")
         if compression:
             new_query["compress"] = "zlib-stream"
 
@@ -281,6 +285,8 @@ class GatewayClient:
                 "",  # no fragment
             )
         )
+
+        self.logger.debug("using Gateway version %s", int(version))
 
     @property
     def uptime(self) -> datetime.timedelta:
@@ -320,14 +326,14 @@ class GatewayClient:
             constraints["query"] = kwargs.get("query", "")
             constraints["limit"] = kwargs.get("limit", 0)
 
-        self._logger.debug(
+        self.logger.debug(
             "requesting guild members for guilds %s with constraints %s", guilds, constraints,
         )
 
         await self._send({"op": 8, "d": {"guild_id": guilds, **constraints}})
 
     async def update_status(self, presence) -> None:
-        self._logger.debug("updating presence to %r", presence)
+        self.logger.debug("updating presence to %r", presence)
         await self._send(presence)
         self._presence = presence
 
@@ -361,7 +367,7 @@ class GatewayClient:
 
             self._connected_at = time.perf_counter()
             self._zlib = zlib.decompressobj()
-            self._logger.debug("expecting HELLO")
+            self.logger.debug("expecting HELLO")
             pl = await self._receive()
 
             op = pl["op"]
@@ -373,7 +379,7 @@ class GatewayClient:
             self.hello_event.set()
 
             self.dispatch(self, "RECONNECT" if self.disconnect_count else "CONNECT", None)
-            self._logger.info("received HELLO, interval is %ss", self.heartbeat_interval)
+            self.logger.info("received HELLO, interval is %ss", self.heartbeat_interval)
 
             completed, pending_tasks = await asyncio.wait(
                 [self._heartbeat_keep_alive(self.heartbeat_interval), self._identify_or_resume_then_poll_events()],
@@ -435,7 +441,7 @@ class GatewayClient:
     async def _identify_or_resume_then_poll_events(self):
         if self.session_id is None:
             self.status = GatewayStatus.IDENTIFYING
-            self._logger.debug("sending IDENTIFY")
+            self.logger.debug("sending IDENTIFY")
             pl = {
                 "op": 2,
                 "d": {
@@ -461,16 +467,16 @@ class GatewayClient:
             if self._presence:
                 pl["d"]["presence"] = self._presence
             await self._send(pl)
-            self._logger.info("sent IDENTIFY, ready to listen to incoming events")
+            self.logger.info("sent IDENTIFY, ready to listen to incoming events")
         else:
             self.status = GatewayStatus.RESUMING
-            self._logger.debug("sending RESUME")
+            self.logger.debug("sending RESUME")
             pl = {
                 "op": 6,
                 "d": {"token": self._token, "seq": self.seq, "session_id": self.session_id},
             }
             await self._send(pl)
-            self._logger.info("sent RESUME, ready to listen to incoming events")
+            self.logger.info("sent RESUME, ready to listen to incoming events")
 
         self.identify_event.set()
         await self._poll_events()
@@ -481,7 +487,7 @@ class GatewayClient:
                 raise asyncio.TimeoutError(
                     f"{self.shard_id}: connection is a zombie, haven't received HEARTBEAT ACK for too long"
                 )
-            self._logger.debug("sending heartbeat")
+            self.logger.debug("sending heartbeat")
             await self._send({"op": 1, "d": self.seq})
             self.last_heartbeat_sent = time.perf_counter()
             try:
@@ -505,20 +511,20 @@ class GatewayClient:
             elif op == 1:
                 await self._send({"op": 11})
             elif op == 7:
-                self._logger.debug("instructed by gateway server to restart connection")
+                self.logger.debug("instructed by gateway server to restart connection")
                 raise errors.GatewayMustReconnectError()
             elif op == 9:
                 can_resume = bool(d)
-                self._logger.info(
+                self.logger.info(
                     "instructed by gateway server to %s session", "resume" if can_resume else "restart",
                 )
                 raise errors.GatewayInvalidSessionError(can_resume)
             elif op == 11:
                 now = time.perf_counter()
                 self.heartbeat_latency = now - self.last_heartbeat_sent
-                self._logger.debug("received HEARTBEAT ACK in %ss", self.heartbeat_latency)
+                self.logger.debug("received HEARTBEAT ACK in %ss", self.heartbeat_latency)
             else:
-                self._logger.debug("ignoring opcode %s with data %r", op, d)
+                self.logger.debug("ignoring opcode %s with data %r", op, d)
 
     async def _receive(self):
         while True:
@@ -527,9 +533,9 @@ class GatewayClient:
                 obj = self._json_deserialize(message.data)
 
                 if self._debug:
-                    self._logger.debug("receive text payload %r", message.data)
+                    self.logger.debug("receive text payload %r", message.data)
                 else:
-                    self._logger.debug(
+                    self.logger.debug(
                         "receive text payload (op:%s, t:%s, s:%s, size:%s)",
                         obj.get("op"),
                         obj.get("t"),
@@ -551,9 +557,9 @@ class GatewayClient:
                 obj = self._json_deserialize(pl)
 
                 if self._debug:
-                    self._logger.debug("receive %s zlib-encoded packets containing payload %r", packets, pl)
+                    self.logger.debug("receive %s zlib-encoded packets containing payload %r", packets, pl)
                 else:
-                    self._logger.debug(
+                    self.logger.debug(
                         "receive zlib payload (op:%s, t:%s, s:%s, size:%s, packets:%s)",
                         obj.get("op"),
                         obj.get("t"),
@@ -564,7 +570,7 @@ class GatewayClient:
                 return obj
             elif message.type == aiohttp.WSMsgType.CLOSE:
                 close_code = self._ws.close_code
-                self._logger.debug("connection closed with code %s", close_code)
+                self.logger.debug("connection closed with code %s", close_code)
                 if close_code == errors.GatewayCloseCode.AUTHENTICATION_FAILED:
                     raise errors.GatewayInvalidTokenError()
                 elif close_code in (errors.GatewayCloseCode.SESSION_TIMEOUT, errors.GatewayCloseCode.INVALID_SEQ):
@@ -574,11 +580,11 @@ class GatewayClient:
                 else:
                     raise errors.GatewayConnectionClosedError(close_code)
             elif message.type in (aiohttp.WSMsgType.CLOSING, aiohttp.WSMsgType.CLOSED):
-                self._logger.debug("connection has been marked as closed")
+                self.logger.debug("connection has been marked as closed")
                 raise errors.GatewayClientClosedError()
             elif message.type == aiohttp.WSMsgType.ERROR:
                 ex = self._ws.exception()
-                self._logger.debug("connection encountered some error", exc_info=ex)
+                self.logger.debug("connection encountered some error", exc_info=ex)
                 raise errors.GatewayError("Unexpected exception occurred") from ex
 
     async def _receive_one_packet(self):
@@ -598,9 +604,9 @@ class GatewayClient:
         await self._ws.send_str(payload_str)
 
         if self._debug:
-            self._logger.debug("sent payload %s", payload_str)
+            self.logger.debug("sent payload %s", payload_str)
         else:
-            self._logger.debug("sent payload (op:%s, size:%s)", payload.get("op"), len(payload_str))
+            self.logger.debug("sent payload (op:%s, size:%s)", payload.get("op"), len(payload_str))
 
     def __str__(self):
         state = "Connected" if self.is_connected else "Disconnected"

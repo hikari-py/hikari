@@ -134,6 +134,7 @@ class Client:
             ssl_context=self._client_options.ssl_context,
             verify_ssl=self._client_options.verify_ssl,
             timeout=self._client_options.http_timeout,
+            version=self._client_options.http_api_version,
         )
 
     async def _new_http_adapter(self):
@@ -220,6 +221,7 @@ class Client:
                 initial_presence=self._client_options.presence.to_dict(),
                 shard_id=shard_id,
                 shard_count=shard_count,
+                version=self._client_options.gateway_version,
             )
 
         return shard_map, shard_count

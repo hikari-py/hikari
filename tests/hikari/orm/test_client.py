@@ -451,6 +451,7 @@ class TestClient:
         client = _client.Client("token")
 
         with mock.patch("hikari.client.Client.add_event") as add_event:
+
             @client.event()
             async def on_message_create():
                 ...
@@ -461,6 +462,7 @@ class TestClient:
         client = _client.Client("token")
 
         with mock.patch("hikari.client.Client.add_event") as add_event:
+
             @client.event()
             async def message_create():
                 ...
@@ -471,6 +473,7 @@ class TestClient:
         client = _client.Client("token")
 
         with mock.patch("hikari.client.Client.add_event") as add_event:
+
             @client.event("message_create")
             async def foo():
                 ...
