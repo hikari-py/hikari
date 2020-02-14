@@ -432,17 +432,13 @@ class TestHTTPClient:
         mock_route = mock.MagicMock(routes.REACTIONS)
         with mock.patch.object(routes, "REACTIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert (
-                await http_client_impl.get_reactions(
-                    "29292929", "48484848", "emoji:42", before="5555555", after="3333333", limit=40
-                )
+                await http_client_impl.get_reactions("29292929", "48484848", "emoji:42", after="3333333", limit=40)
                 is mock_response
             )
             routes.REACTIONS.compile.assert_called_once_with(
                 http_client_impl.GET, channel_id="29292929", message_id="48484848", emoji="emoji:42"
             )
-        http_client_impl._request.assert_called_once_with(
-            mock_route, query={"before": "5555555", "after": "3333333", "limit": 40}
-        )
+        http_client_impl._request.assert_called_once_with(mock_route, query={"after": "3333333", "limit": 40})
 
     @pytest.mark.asyncio
     async def test_delete_all_reactions(self, http_client_impl):
