@@ -239,7 +239,6 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         message: type_hints.NotRequired[_messages.MessageLikeT] = unspecified.UNSPECIFIED,
         channel: type_hints.NotRequired[_channels.ChannelLikeT] = unspecified.UNSPECIFIED,
         *,
-        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_users.BaseUser]:
