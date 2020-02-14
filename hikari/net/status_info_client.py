@@ -33,6 +33,7 @@ from __future__ import annotations
 import dataclasses
 import typing
 
+import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
@@ -111,7 +112,7 @@ class Subscriber:
     purge_at: type_hints.Nullable[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload: containers.JSONObject) -> Subscriber:
+    def from_dict(payload: hikari.internal_utilities.type_hints.JSONObject) -> Subscriber:
         return Subscriber(
             id=payload["id"],
             email=payload["email"],
@@ -140,7 +141,7 @@ class Subscription:
     subscriber: Subscriber
 
     @staticmethod
-    def from_dict(payload: containers.JSONObject) -> Subscription:
+    def from_dict(payload: hikari.internal_utilities.type_hints.JSONObject) -> Subscription:
         return Subscription(subscriber=Subscriber.from_dict(payload["subscriber"]))
 
 
@@ -176,7 +177,7 @@ class Page:
     updated_at: datetime.datetime
 
     @staticmethod
-    def from_dict(payload: containers.JSONObject) -> Page:
+    def from_dict(payload: hikari.internal_utilities.type_hints.JSONObject) -> Page:
         return Page(
             id=payload["id"],
             name=payload["name"],
@@ -204,7 +205,7 @@ class Status:
     description: type_hints.Nullable[str]
 
     @staticmethod
-    def from_dict(payload: containers.JSONObject) -> Status:
+    def from_dict(payload: hikari.internal_utilities.type_hints.JSONObject) -> Status:
         return Status(indicator=payload.get("indicator"), description=payload.get("description"))
 
 
@@ -263,7 +264,7 @@ class Component:
     status: type_hints.Nullable[str]
 
     @staticmethod
-    def from_dict(payload: containers.JSONObject) -> Component:
+    def from_dict(payload: hikari.internal_utilities.type_hints.JSONObject) -> Component:
         return Component(
             id=payload["id"],
             name=payload["name"],
@@ -295,7 +296,7 @@ class Components:
     components: typing.Sequence[Component]
 
     @staticmethod
-    def from_dict(payload: containers.JSONObject) -> Components:
+    def from_dict(payload: hikari.internal_utilities.type_hints.JSONObject) -> Components:
         return Components(
             page=Page.from_dict(payload["page"]),
             components=[Component.from_dict(c) for c in payload.get("components", [])],
@@ -352,7 +353,7 @@ class IncidentUpdate:
     updated_at: type_hints.Nullable[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload: containers.JSONObject) -> IncidentUpdate:
+    def from_dict(payload: hikari.internal_utilities.type_hints.JSONObject) -> IncidentUpdate:
         return IncidentUpdate(
             id=payload["id"],
             body=payload["body"],
@@ -452,7 +453,7 @@ class Incident:
     started_at: type_hints.Nullable[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload: containers.JSONObject) -> Incident:
+    def from_dict(payload: hikari.internal_utilities.type_hints.JSONObject) -> Incident:
         return Incident(
             id=payload["id"],
             name=payload["name"],
@@ -490,7 +491,7 @@ class Incidents:
     incidents: typing.Sequence[Incident]
 
     @staticmethod
-    def from_dict(payload: containers.JSONObject) -> Incidents:
+    def from_dict(payload: hikari.internal_utilities.type_hints.JSONObject) -> Incidents:
         return Incidents(Page.from_dict(payload["page"]), [Incident.from_dict(i) for i in payload["incidents"]])
 
 
@@ -594,7 +595,7 @@ class ScheduledMaintenance:
     started_at: type_hints.Nullable[datetime.datetime]
 
     @staticmethod
-    def from_dict(payload: containers.JSONObject) -> ScheduledMaintenance:
+    def from_dict(payload: hikari.internal_utilities.type_hints.JSONObject) -> ScheduledMaintenance:
         return ScheduledMaintenance(
             id=payload["id"],
             name=payload["name"],
@@ -635,7 +636,7 @@ class ScheduledMaintenances:
     scheduled_maintenances: typing.Sequence[ScheduledMaintenance]
 
     @staticmethod
-    def from_dict(payload: containers.JSONObject) -> ScheduledMaintenances:
+    def from_dict(payload: hikari.internal_utilities.type_hints.JSONObject) -> ScheduledMaintenances:
         return ScheduledMaintenances(
             page=Page.from_dict(payload["page"]),
             scheduled_maintenances=[ScheduledMaintenance.from_dict(sm) for sm in payload["scheduled_maintenances"]],
@@ -661,7 +662,7 @@ class OverallStatus:
     status: Status
 
     @staticmethod
-    def from_dict(payload: containers.JSONObject) -> OverallStatus:
+    def from_dict(payload: hikari.internal_utilities.type_hints.JSONObject) -> OverallStatus:
         return OverallStatus(page=Page.from_dict(payload["page"]), status=Status.from_dict(payload["status"]),)
 
 
@@ -690,7 +691,7 @@ class Summary:
     scheduled_maintenances: typing.Sequence[ScheduledMaintenance]
 
     @staticmethod
-    def from_dict(payload: containers.JSONObject) -> Summary:
+    def from_dict(payload: hikari.internal_utilities.type_hints.JSONObject) -> Summary:
         return Summary(
             page=Page.from_dict(payload["page"]),
             scheduled_maintenances=[

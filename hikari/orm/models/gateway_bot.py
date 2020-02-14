@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import datetime
 
+import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.orm.models import bases
@@ -48,7 +49,7 @@ class GatewayBot(bases.BaseModel):
 
     __repr__ = reprs.repr_of("url", "shards", "session_start_limit.remaining")
 
-    def __init__(self, payload: containers.JSONObject) -> None:
+    def __init__(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
         self.url = payload["url"]
         self.shards = int(payload["shards"])
         self.session_start_limit = SessionStartLimit(payload["session_start_limit"])
@@ -81,7 +82,7 @@ class SessionStartLimit(bases.BaseModel):
 
     __repr__ = reprs.repr_of("total", "remaining", "reset_at")
 
-    def __init__(self, payload: containers.JSONObject) -> None:
+    def __init__(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
         self.total = int(payload["total"])
         self.remaining = int(payload["remaining"])
         reset_after = float(payload["reset_after"])

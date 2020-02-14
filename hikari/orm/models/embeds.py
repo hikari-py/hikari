@@ -27,6 +27,7 @@ import datetime
 import typing
 import weakref
 
+import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
@@ -488,7 +489,7 @@ class BaseEmbed(bases.BaseModel):
         return d
 
     @classmethod
-    def from_dict(cls, payload: containers.JSONObject) -> EmbedT:
+    def from_dict(cls, payload: hikari.internal_utilities.type_hints.JSONObject) -> EmbedT:
         """
         Parses an instance of this embed type from a raw Discord payload.
 

@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import typing
 
+import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.orm.models import bases
@@ -58,13 +59,13 @@ class VoiceServer(bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("guild_id", "endpoint")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
         self._fabric = fabric_obj
         self.token = payload["token"]
         self.guild_id = int(payload["guild_id"])
         self.update_state(payload)
 
-    def update_state(self, payload: containers.JSONObject) -> None:
+    def update_state(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
         self.endpoint = payload["endpoint"]
 
 
@@ -145,7 +146,7 @@ class VoiceState(bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("user_id", "channel_id", "guild_id", "session_id")
 
-    def __init__(self, fabric_obj: fabric.Fabric, guild_obj: guilds.Guild, payload: containers.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, guild_obj: guilds.Guild, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
         self._fabric = fabric_obj
         self.user_id = int(payload["user_id"])
         self.guild_id = guild_obj.id
@@ -159,7 +160,7 @@ class VoiceState(bases.BaseModelWithFabric):
 
         self.update_state(payload)
 
-    def update_state(self, payload: containers.JSONObject) -> None:
+    def update_state(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
         self.channel_id = int(payload["channel_id"])
         self.is_deaf = payload.get("deaf", False)
         self.is_mute = payload.get("mute", False)
@@ -208,7 +209,7 @@ class VoiceRegion(bases.BaseModel):
 
     __repr__ = reprs.repr_of("name", "is_vip", "is_deprecated")
 
-    def __init__(self, payload: containers.JSONObject) -> None:
+    def __init__(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
         self.id = payload["id"]
         self.name = payload["name"]
         self.is_vip = payload["vip"]
