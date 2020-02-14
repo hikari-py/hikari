@@ -26,6 +26,7 @@ import weakref
 
 import pytest
 
+import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import delegate
 from hikari.internal_utilities import type_hints
@@ -537,7 +538,7 @@ class DummyModel2(bases.MarshalMixin):
     model: DummyModel
     optional: type_hints.Nullable[str]
 
-    def __init__(self, id: int, name: str, nekos: typing.List[int], model: containers.JSONObject, optional=None):
+    def __init__(self, id: int, name: str, nekos: typing.List[int], model: hikari.internal_utilities.type_hints.JSONObject, optional=None):
         self.id = id
         self.name = name
         self.nekos = nekos

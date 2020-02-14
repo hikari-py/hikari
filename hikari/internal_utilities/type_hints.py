@@ -40,3 +40,5 @@ NotRequired = typing.Union[T, unspecified.Unspecified]
 NullableNotRequired = typing.Union[T, None, unspecified.Unspecified]
 
 __all__ = ["Nullable", "NotRequired", "NullableNotRequired"]
+JSONObject = typing.MutableMapping[str, typing.Any]
+JSONArray = typing.Sequence[typing.Any]

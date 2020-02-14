@@ -29,6 +29,7 @@ import typing
 import aiofiles
 import aiohttp
 
+import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
@@ -89,7 +90,7 @@ class Attachment(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "filename", "size")
 
-    def __init__(self, payload: containers.JSONObject) -> None:
+    def __init__(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
         self.id = int(payload["id"])
         self.filename = payload["filename"]
         self.size = int(payload["size"])

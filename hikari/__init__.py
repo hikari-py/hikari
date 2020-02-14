@@ -138,9 +138,4 @@ from hikari.orm.models.voices import VoiceState
 from hikari.orm.models.webhooks import Webhook
 from hikari.orm.models.webhooks import WebhookUser
 
-__author__ = "Nekokatt"
-__contributors__ = {"FasterSpeeding", "LunarCoffee", "raatty", "Tmpod", "Zach", "thomm.o", "rock500", "davfsa"}
-__copyright__ = "© 2019-2020 Nekokatt"
-__license__ = "LGPLv3"
-__version__ = "0.0.72"
-__url__ = "https://gitlab.com/nekokatt/hikari"
+from hikari.__about import *

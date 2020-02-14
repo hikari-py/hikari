@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import typing
 
+import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.orm.models import bases
@@ -54,7 +55,7 @@ class PartialRole(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: containers.JSONObject) -> None:
+    def __init__(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
 
@@ -113,13 +114,13 @@ class Role(PartialRole, bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("id", "name", "position", "is_managed", "is_mentionable", "is_hoisted")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject, guild_id: int) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject, guild_id: int) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self.guild_id = guild_id
         self.update_state(payload)
 
-    def update_state(self, payload: containers.JSONObject) -> None:
+    def update_state(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
         self.name = payload["name"]
         self.color = _color.Color(payload["color"])
         self.is_hoisted = payload["hoist"]

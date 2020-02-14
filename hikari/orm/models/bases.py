@@ -28,6 +28,7 @@ import dataclasses
 import enum
 import typing
 
+import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
@@ -191,7 +192,7 @@ class BaseModel(metaclass=abc.ABCMeta):
 
         return instance
 
-    def update_state(self, payload: containers.JSONObject) -> None:
+    def update_state(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
         """
         Updates the internal state of an existing instance of this object from a raw Discord payload.
         """
@@ -446,7 +447,7 @@ class MarshalMixin:
 
     # noinspection PyArgumentList,PyDataclass
     @classmethod
-    def from_dict(cls, payload: containers.JSONObject):
+    def from_dict(cls, payload: hikari.internal_utilities.type_hints.JSONObject):
         """Initialise the current model from a Discord payload."""
         return cls(**{field.name: payload[field.name] for field in dataclasses.fields(cls) if field.name in payload})
 
