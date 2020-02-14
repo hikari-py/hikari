@@ -38,7 +38,7 @@ safety:
 bandit:
   extends: .tools-base
   script:
-    - bash tasks/retry-aborts.sh nox -s bandit 
+    - bash tasks/retry-aborts.sh nox -s sast  
 
 pylint:
   extends: .tools-base
