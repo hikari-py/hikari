@@ -24,9 +24,9 @@ from __future__ import annotations
 import enum
 import typing
 
-import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
+from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 from hikari.orm.models import integrations
 
@@ -106,7 +106,7 @@ class Connection(bases.BaseModelWithFabric, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("type", "id", "name")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         self._fabric = fabric_obj
         self.id = payload["id"]
         self.name = payload["name"]

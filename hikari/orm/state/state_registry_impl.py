@@ -26,10 +26,10 @@ import functools
 import typing
 import weakref
 
-import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import type_hints
 from hikari.orm.models import applications
 from hikari.orm.models import audit_logs
 from hikari.orm.models import bases
@@ -53,7 +53,6 @@ from hikari.orm.state import base_registry
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
 
 
@@ -359,14 +358,10 @@ class StateRegistryImpl(base_registry.BaseRegistry):
                 user_id, self.fabric.http_adapter.fetch_member, callback_if_unresolved, user_id, guild=guild_id
             )
 
-    def parse_application(
-        self, application_payload: hikari.internal_utilities.type_hints.JSONObject
-    ) -> applications.Application:
+    def parse_application(self, application_payload: type_hints.JSONObject) -> applications.Application:
         return applications.Application(self.fabric, application_payload)
 
-    def parse_application_user(
-        self, application_user_payload: hikari.internal_utilities.type_hints.JSONObject
-    ) -> users.OAuth2User:
+    def parse_application_user(self, application_user_payload: type_hints.JSONObject) -> users.OAuth2User:
         if self._user is not None:
             self._user.update_state(application_user_payload)
         else:
@@ -374,18 +369,14 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
         return self._user
 
-    def parse_audit_log(
-        self, audit_log_payload: hikari.internal_utilities.type_hints.JSONObject
-    ) -> audit_logs.AuditLog:
+    def parse_audit_log(self, audit_log_payload: type_hints.JSONObject) -> audit_logs.AuditLog:
         return audit_logs.AuditLog(self.fabric, audit_log_payload)
 
-    def parse_ban(self, ban_payload: hikari.internal_utilities.type_hints.JSONObject) -> guilds.Ban:
+    def parse_ban(self, ban_payload: type_hints.JSONObject) -> guilds.Ban:
         return guilds.Ban(self.fabric, ban_payload)
 
     def parse_channel(
-        self,
-        channel_payload: hikari.internal_utilities.type_hints.JSONObject,
-        guild_obj: type_hints.Nullable[guilds.Guild] = None,
+        self, channel_payload: type_hints.JSONObject, guild_obj: type_hints.Nullable[guilds.Guild] = None,
     ) -> typing.Union[channels.DMChannel, channels.GuildChannel]:
         channel_id = int(channel_payload["id"])
         channel_obj = self.get_channel_by_id(channel_id)
@@ -407,22 +398,16 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
         return channel_obj
 
-    def parse_connection(
-        self, connection_payload: hikari.internal_utilities.type_hints.JSONObject
-    ) -> connections.Connection:
+    def parse_connection(self, connection_payload: type_hints.JSONObject) -> connections.Connection:
         return connections.Connection(self.fabric, connection_payload)
 
     # These fix typing issues in the update_guild_emojis method.
     @typing.overload
-    def parse_emoji(
-        self, emoji_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: guilds.Guild
-    ) -> emojis.GuildEmoji:
+    def parse_emoji(self, emoji_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
         ...
 
     @typing.overload
-    def parse_emoji(
-        self, emoji_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: None
-    ) -> emojis.Emoji:
+    def parse_emoji(self, emoji_payload: type_hints.JSONObject, guild_obj: None) -> emojis.Emoji:
         ...
 
     def parse_emoji(self, emoji_payload, guild_obj):
@@ -445,12 +430,10 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
         return new_emoji
 
-    def parse_gateway_bot(
-        self, gateway_bot_payload: hikari.internal_utilities.type_hints.JSONObject
-    ) -> gateway_bot.GatewayBot:
+    def parse_gateway_bot(self, gateway_bot_payload: type_hints.JSONObject) -> gateway_bot.GatewayBot:
         return gateway_bot.GatewayBot(gateway_bot_payload)
 
-    def parse_guild(self, guild_payload: hikari.internal_utilities.type_hints.JSONObject) -> guilds.Guild:
+    def parse_guild(self, guild_payload: type_hints.JSONObject) -> guilds.Guild:
         guild_id = int(guild_payload["id"])
         is_unavailable = guild_payload.get("unavailable", False)
 
@@ -468,16 +451,14 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
         return guild_obj
 
-    def parse_integration(
-        self, integration_payload: hikari.internal_utilities.type_hints.JSONObject
-    ) -> integrations.Integration:
+    def parse_integration(self, integration_payload: type_hints.JSONObject) -> integrations.Integration:
         return integrations.Integration(self.fabric, integration_payload)
 
-    def parse_invite(self, invite_payload: hikari.internal_utilities.type_hints.JSONObject) -> invites.Invite:
+    def parse_invite(self, invite_payload: type_hints.JSONObject) -> invites.Invite:
         return invites.parse_invite(self.fabric, invite_payload)
 
     def parse_voice_state(
-        self, voice_state_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: guilds.Guild
+        self, voice_state_payload: type_hints.JSONObject, guild_obj: guilds.Guild
     ) -> voices.VoiceState:
         user_id = int(voice_state_payload["user_id"])
 
@@ -492,17 +473,15 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
     def parse_partial_member(
         self,
-        partial_member_payload: hikari.internal_utilities.type_hints.JSONObject,
-        user_payload: hikari.internal_utilities.type_hints.JSONObject,
+        partial_member_payload: type_hints.JSONObject,
+        user_payload: type_hints.JSONObject,
         guild_obj: guilds.Guild,
     ) -> members.Member:
         # Cheap workaround for Discord's inconsistency here.
         partial_member_payload["user"] = user_payload
         return self.parse_member(partial_member_payload, guild_obj)
 
-    def parse_member(
-        self, member_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: guilds.Guild
-    ) -> members.Member:
+    def parse_member(self, member_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> members.Member:
         member_id = int(member_payload["user"]["id"])
 
         if member_id in guild_obj.members:
@@ -518,7 +497,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         guild_obj.members[member_id] = member_obj
         return member_obj
 
-    def parse_message(self, message_payload: hikari.internal_utilities.type_hints.JSONObject) -> messages.Message:
+    def parse_message(self, message_payload: type_hints.JSONObject) -> messages.Message:
         # Always update the cache with the new message.
         message_id = int(message_payload["id"])
 
@@ -529,7 +508,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return message_obj
 
     def parse_presence(
-        self, member_obj: members.Member, presence_payload: hikari.internal_utilities.type_hints.JSONObject
+        self, member_obj: members.Member, presence_payload: type_hints.JSONObject
     ) -> presences.MemberPresence:
         presence_obj = presences.MemberPresence(presence_payload)
         member_obj.presence = presence_obj
@@ -554,9 +533,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
             message_obj.reactions.append(new_reaction_obj)
         return new_reaction_obj
 
-    def parse_role(
-        self, role_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: guilds.Guild
-    ) -> roles.Role:
+    def parse_role(self, role_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> roles.Role:
         role_id = int(role_payload["id"])
         if role_id in guild_obj.roles:
             role = guild_obj.roles[role_id]
@@ -567,7 +544,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
             guild_obj.roles[role_payload.id] = role_payload
             return role_payload
 
-    def parse_user(self, user_payload: hikari.internal_utilities.type_hints.JSONObject) -> users.BaseUser:
+    def parse_user(self, user_payload: type_hints.JSONObject) -> users.BaseUser:
         # If the user already exists, then just return their existing object. We expect discord to tell us if they
         # get updated if they are a member, and for anything else the object will just be disposed of once we are
         # finished with it anyway.
@@ -588,12 +565,10 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
         return existing_user
 
-    def parse_webhook(self, webhook_payload: hikari.internal_utilities.type_hints.JSONObject) -> webhooks.Webhook:
+    def parse_webhook(self, webhook_payload: type_hints.JSONObject) -> webhooks.Webhook:
         return webhooks.Webhook(self.fabric, webhook_payload)
 
-    def parse_webhook_user(
-        self, webhook_user_payload: hikari.internal_utilities.type_hints.JSONObject
-    ) -> webhooks.WebhookUser:
+    def parse_webhook_user(self, webhook_user_payload: type_hints.JSONObject) -> webhooks.WebhookUser:
         return webhooks.WebhookUser(webhook_user_payload)
 
     def set_guild_unavailability(self, guild_obj: guilds.Guild, is_unavailable: bool) -> None:
@@ -614,7 +589,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         member_obj.roles = [role for role in role_objs]
 
     def update_channel(
-        self, channel_payload: hikari.internal_utilities.type_hints.JSONObject
+        self, channel_payload: type_hints.JSONObject
     ) -> type_hints.Nullable[typing.Tuple[channels.Channel, channels.Channel]]:
         channel_id = int(channel_payload["id"])
         existing_channel = self.get_channel_by_id(channel_id)
@@ -626,7 +601,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return None
 
     def update_guild(
-        self, guild_payload: hikari.internal_utilities.type_hints.JSONObject
+        self, guild_payload: type_hints.JSONObject
     ) -> type_hints.Nullable[typing.Tuple[guilds.Guild, guilds.Guild]]:
         guild_id = int(guild_payload["id"])
         guild_obj = self.get_guild_by_id(guild_id)
@@ -638,7 +613,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return None
 
     def update_guild_emojis(
-        self, emoji_list: typing.List[hikari.internal_utilities.type_hints.JSONObject], guild_obj: guilds.Guild
+        self, emoji_list: typing.List[type_hints.JSONObject], guild_obj: guilds.Guild
     ) -> type_hints.Nullable[typing.Tuple[typing.FrozenSet[emojis.GuildEmoji], typing.FrozenSet[emojis.GuildEmoji]]]:
         old_emojis = frozenset(guild_obj.emojis.values())
         new_emojis = frozenset(self.parse_emoji(emoji_obj, guild_obj) for emoji_obj in emoji_list)
@@ -646,10 +621,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return old_emojis, new_emojis
 
     def update_member(
-        self,
-        member_obj: members.Member,
-        role_objs: typing.Sequence[roles.Role],
-        payload: hikari.internal_utilities.type_hints.JSONObject,
+        self, member_obj: members.Member, role_objs: typing.Sequence[roles.Role], payload: type_hints.JSONObject,
     ) -> type_hints.Nullable[typing.Tuple[members.Member, members.Member]]:
         new_member = member_obj
         old_member = new_member.copy()
@@ -657,14 +629,14 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return old_member, new_member
 
     def update_member_presence(
-        self, member_obj: members.Member, presence_payload: hikari.internal_utilities.type_hints.JSONObject
+        self, member_obj: members.Member, presence_payload: type_hints.JSONObject
     ) -> type_hints.Nullable[typing.Tuple[members.Member, presences.MemberPresence, presences.MemberPresence]]:
         old_presence = member_obj.presence
         new_presence = self.parse_presence(member_obj, presence_payload)
         return member_obj, old_presence, new_presence
 
     def update_message(
-        self, payload: hikari.internal_utilities.type_hints.JSONObject
+        self, payload: type_hints.JSONObject
     ) -> type_hints.Nullable[typing.Tuple[messages.Message, messages.Message]]:
         message_id = int(payload["id"])
         if message_id in self._message_cache:
@@ -677,7 +649,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return None
 
     def update_role(
-        self, guild_obj: guilds.Guild, payload: hikari.internal_utilities.type_hints.JSONObject
+        self, guild_obj: guilds.Guild, payload: type_hints.JSONObject
     ) -> type_hints.Nullable[typing.Tuple[roles.Role, roles.Role]]:
         role_id = int(payload["id"])
         existing_role = guild_obj.roles.get(role_id)

@@ -44,9 +44,9 @@ import zlib
 
 import aiohttp.typedefs
 
-import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
+from hikari.internal_utilities import type_hints
 from hikari.net import errors
 from hikari.net import ratelimits
 from hikari.net import user_agent
@@ -54,7 +54,6 @@ from hikari.net import versions
 
 if typing.TYPE_CHECKING:
     import logging
-    from hikari.internal_utilities import type_hints
 
 
 class GatewayIntent(enum.IntFlag):
@@ -169,7 +168,7 @@ class GatewayStatus(str, enum.Enum):
 
 
 #: The signature for an event dispatch callback.
-DispatchT = typing.Callable[["GatewayClient", str, hikari.internal_utilities.type_hints.JSONObject], None]
+DispatchT = typing.Callable[["GatewayClient", str, type_hints.JSONObject], None]
 
 
 class GatewayClient:
@@ -544,7 +543,7 @@ class GatewayClient:
 
         await self._send({"op": 8, "d": {"guild_id": guilds, **constraints}})
 
-    async def update_status(self, presence: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    async def update_status(self, presence: type_hints.JSONObject) -> None:
         """
         Change the presence of the bot user for this shard.
 
@@ -612,7 +611,7 @@ class GatewayClient:
             self.dispatch(
                 self,
                 "RECONNECT" if self.disconnect_count else "CONNECT",
-                typing.cast(hikari.internal_utilities.type_hints.JSONObject, containers.EMPTY_DICT),
+                typing.cast(type_hints.JSONObject, containers.EMPTY_DICT),
             )
             self.logger.info("received HELLO, interval is %ss", self.heartbeat_interval)
 
@@ -653,7 +652,7 @@ class GatewayClient:
             self._ws = None
             await self._session.close()
             self._session = None
-            self.dispatch(self, "DISCONNECT", typing.cast(hikari.internal_utilities.type_hints.JSONObject, containers.EMPTY_DICT))
+            self.dispatch(self, "DISCONNECT", typing.cast(type_hints.JSONObject, containers.EMPTY_DICT))
 
     @property
     def _ws_connect_kwargs(self):

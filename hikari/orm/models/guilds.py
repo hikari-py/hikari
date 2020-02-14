@@ -25,19 +25,18 @@ import dataclasses
 import enum
 import typing
 
-import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import conversions
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 from hikari.orm.models import permissions
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import channels
     from hikari.orm.models import emojis
@@ -111,11 +110,11 @@ class PartialGuild(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, payload: type_hints.JSONObject) -> None:
         self.id = transformations.nullable_cast(payload.get("id"), int)
         self.update_state(payload)  # lgtm [py/init-calls-subclass]
 
-    def update_state(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def update_state(self, payload: type_hints.JSONObject) -> None:
         self.name = payload.get("name")
         self.icon_hash = payload.get("icon")
         self.splash_hash = payload.get("splash")
@@ -305,7 +304,7 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("id", "name", "is_unavailable", "is_large", "member_count", "shard_id")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         self._fabric = fabric_obj
         self.channels = {}
         self.emojis = {}
@@ -315,7 +314,7 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
         super().__init__(payload)
         self.shard_id = conversions.guild_id_to_shard_id(self.id, self._fabric.shard_count)
 
-    def update_state(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def update_state(self, payload: type_hints.JSONObject) -> None:
         super().update_state(payload)
         self.afk_channel_id = transformations.nullable_cast(payload.get("afk_channel_id"), int)
         self.owner_id = transformations.nullable_cast(payload.get("owner_id"), int)
@@ -486,7 +485,7 @@ class Ban(bases.BaseModel):
 
     __repr__ = reprs.repr_of("user", "reason")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         self.reason = payload.get("reason")
         self.user = fabric_obj.state_registry.parse_user(payload.get("user"))
 

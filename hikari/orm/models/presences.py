@@ -27,15 +27,12 @@ import datetime
 import enum
 import typing
 
-import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
-
-if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import type_hints
 
 
 class Status(bases.NamedEnumMixin, enum.Enum):
@@ -105,7 +102,7 @@ class MemberPresence(bases.BaseModel):
 
     __repr__ = reprs.repr_of("status")
 
-    def __init__(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, payload: type_hints.JSONObject) -> None:
         self.activities = containers.EMPTY_SEQUENCE
         self.status = Status.OFFLINE
         self.web_status = Status.OFFLINE
@@ -113,7 +110,7 @@ class MemberPresence(bases.BaseModel):
         self.mobile_status = Status.OFFLINE
         self.update_state(payload)
 
-    def update_state(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def update_state(self, payload: type_hints.JSONObject) -> None:
         client_status = payload.get("client_status", containers.EMPTY_DICT)
 
         if "activities" in payload:
@@ -250,7 +247,7 @@ class RichActivity(Activity):
 
     __repr__ = reprs.repr_of("id", "name", "type")
 
-    def __init__(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, payload: type_hints.JSONObject) -> None:
         super().__init__(
             name=payload.get("name"),
             type=ActivityType.get_best_effort_from_value(payload.get("type", 0)),
@@ -266,9 +263,7 @@ class RichActivity(Activity):
         self.flags = transformations.nullable_cast(payload.get("flags"), ActivityFlag) or 0
 
 
-def parse_presence_activity(
-    payload: hikari.internal_utilities.type_hints.JSONObject,
-) -> typing.Union[Activity, RichActivity]:
+def parse_presence_activity(payload: type_hints.JSONObject,) -> typing.Union[Activity, RichActivity]:
     """
     Consumes a payload and decides the type of activity it represents. A corresponding object is then
     constructed and returned as appropriate.
@@ -321,7 +316,7 @@ class ActivityParty(bases.BaseModel):
 
     __repr__ = reprs.repr_of("id", "current_size", "max_size")
 
-    def __init__(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, payload: type_hints.JSONObject) -> None:
         self.id = payload.get("id")
         self.current_size = transformations.nullable_cast(payload.get("current_size"), int)
         self.max_size = transformations.nullable_cast(payload.get("max_size"), int)
@@ -356,7 +351,7 @@ class ActivityAssets(bases.BaseModel):
 
     __repr__ = reprs.repr_of()
 
-    def __init__(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, payload: type_hints.JSONObject) -> None:
         self.large_image = payload.get("large_image")
         self.large_text = payload.get("large_text")
         self.small_image = payload.get("small_image")
@@ -383,7 +378,7 @@ class ActivityTimestamps(bases.BaseModel):
 
     __repr__ = reprs.repr_of("start", "end", "duration")
 
-    def __init__(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, payload: type_hints.JSONObject) -> None:
         self.start = transformations.nullable_cast(payload.get("start"), dates.unix_epoch_to_ts)
         self.end = transformations.nullable_cast(payload.get("end"), dates.unix_epoch_to_ts)
 

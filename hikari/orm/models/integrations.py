@@ -23,9 +23,9 @@ from __future__ import annotations
 
 import typing
 
-import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
+from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 
 if typing.TYPE_CHECKING:
@@ -54,7 +54,7 @@ class IntegrationAccount(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, payload: type_hints.JSONObject) -> None:
         self.id = int(payload["id"])
         self.name = payload.get("name")
 
@@ -88,7 +88,7 @@ class PartialIntegration(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, payload: type_hints.JSONObject) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
         self.type = payload["type"]
@@ -140,7 +140,7 @@ class Integration(PartialIntegration, bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("id", "name", "is_enabled")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self.is_enabled = payload["enabled"]
