@@ -80,7 +80,9 @@ class BaseChunker(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def handle_next_chunk(self, chunk_payload: hikari.internal_utilities.type_hints.JSONObject, shard_id: int) -> None:
+    async def handle_next_chunk(
+        self, chunk_payload: hikari.internal_utilities.type_hints.JSONObject, shard_id: int
+    ) -> None:
         """
         Handle a new chunk from the gateway.
 

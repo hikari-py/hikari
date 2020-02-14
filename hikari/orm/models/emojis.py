@@ -161,7 +161,9 @@ class GuildEmoji(UnknownEmoji, bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("id", "name", "is_animated")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject, guild_id: int) -> None:
+    def __init__(
+        self, fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject, guild_id: int
+    ) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self._guild_id = guild_id
@@ -198,7 +200,9 @@ def is_payload_guild_emoji_candidate(payload: hikari.internal_utilities.type_hin
 
 
 def parse_emoji(
-    fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject, guild_id: type_hints.Nullable[int] = None
+    fabric_obj: fabric.Fabric,
+    payload: hikari.internal_utilities.type_hints.JSONObject,
+    guild_id: type_hints.Nullable[int] = None,
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:
     """
     Parse the given emoji payload into an appropriate implementation of Emoji.

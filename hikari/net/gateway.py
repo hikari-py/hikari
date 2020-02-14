@@ -157,6 +157,7 @@ class GatewayStatus(str, enum.Enum):
     """
     Various states that a gateway connection can be in.
     """
+
     OFFLINE = "offline"
     CONNECTING = "connecting"
     WAITING_FOR_HELLO = "waiting for HELLO"
@@ -255,6 +256,7 @@ class GatewayClient:
             version.
             
     """
+
     __slots__ = (
         "closed_event",
         "_compression",
@@ -323,7 +325,7 @@ class GatewayClient:
         # Sanitise the URL...
         scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url, allow_fragments=True)
 
-        new_query = dict(v=int(self.version), encoding="json")
+        new_query = dict(v=int(version), encoding="json")
         if compression:
             # payload compression
             new_query["compress"] = "zlib-stream"
@@ -487,22 +489,11 @@ class GatewayClient:
         return max(0, self.disconnect_count - int(not self.is_connected))
 
     @typing.overload
-    async def request_guild_members(
-        self,
-        guild_id: str,
-        *guild_ids: str,
-        limit: int = 0,
-        query: str = ""
-    ) -> None:
+    async def request_guild_members(self, guild_id: str, *guild_ids: str, limit: int = 0, query: str = "") -> None:
         ...
 
     @typing.overload
-    async def request_guild_members(
-        self,
-        guild_id: str,
-        *guild_ids: str,
-        user_ids: typing.Collection[str]
-    ) -> None:
+    async def request_guild_members(self, guild_id: str, *guild_ids: str, user_ids: typing.Collection[str]) -> None:
         ...
 
     async def request_guild_members(self, guild_id, *guild_ids, **kwargs):
@@ -621,7 +612,7 @@ class GatewayClient:
             self.dispatch(
                 self,
                 "RECONNECT" if self.disconnect_count else "CONNECT",
-                typing.cast(type_hints.JSONObject, containers.EMPTY_DICT)
+                typing.cast(type_hints.JSONObject, containers.EMPTY_DICT),
             )
             self.logger.info("received HELLO, interval is %ss", self.heartbeat_interval)
 

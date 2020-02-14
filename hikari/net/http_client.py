@@ -112,8 +112,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         headers=None,
         query=None,
         form_body=None,
-        json_body: type_hints.Nullable[typing.Union[
-            hikari.internal_utilities.type_hints.JSONObject, hikari.internal_utilities.type_hints.JSONArray]] = None,
+        json_body: type_hints.Nullable[
+            typing.Union[
+                hikari.internal_utilities.type_hints.JSONObject, hikari.internal_utilities.type_hints.JSONArray
+            ]
+        ] = None,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         re_seekable_resources: typing.Collection[typing.Any] = containers.EMPTY_COLLECTION,
         **kwargs,
@@ -349,7 +352,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         rate_limit_per_user: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         bitrate: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         user_limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        permission_overwrites: type_hints.NotRequired[typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]] = unspecified.UNSPECIFIED,
+        permission_overwrites: type_hints.NotRequired[
+            typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]
+        ] = unspecified.UNSPECIFIED,
         parent_id: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> hikari.internal_utilities.type_hints.JSONObject:
@@ -486,7 +491,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         route = routes.CHANNEL_MESSAGES.compile(self.GET, channel_id=channel_id)
         return await self._request(route, query=query)
 
-    async def get_channel_message(self, channel_id: str, message_id: str) -> hikari.internal_utilities.type_hints.JSONObject:
+    async def get_channel_message(
+        self, channel_id: str, message_id: str
+    ) -> hikari.internal_utilities.type_hints.JSONObject:
         """
         Get the message with the given message ID from the channel with the given channel ID.
 
@@ -840,8 +847,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         route = routes.CHANNEL_PERMISSIONS.compile(self.PATCH, channel_id=channel_id, overwrite_id=overwrite_id)
         await self._request(route, json_body=payload, reason=reason)
 
-    async def get_channel_invites(self, channel_id: str) -> typing.Sequence[
-        hikari.internal_utilities.type_hints.JSONObject]:
+    async def get_channel_invites(
+        self, channel_id: str
+    ) -> typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]:
         """
         Get invites for a given channel.
 
@@ -945,8 +953,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         route = routes.CHANNEL_TYPING.compile(self.POST, channel_id=channel_id)
         await self._request(route)
 
-    async def get_pinned_messages(self, channel_id: str) -> typing.Sequence[
-        hikari.internal_utilities.type_hints.JSONObject]:
+    async def get_pinned_messages(
+        self, channel_id: str
+    ) -> typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]:
         """
         Get pinned messages for a given channel.
 
@@ -1004,7 +1013,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         route = routes.CHANNEL_PIN.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
         await self._request(route)
 
-    async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]:
+    async def list_guild_emojis(
+        self, guild_id: str
+    ) -> typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]:
         """
         Gets emojis for a given guild ID.
 
@@ -1159,8 +1170,12 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         verification_level: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         default_message_notifications: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         explicit_content_filter: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        roles: type_hints.NotRequired[typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]] = unspecified.UNSPECIFIED,
-        channels: type_hints.NotRequired[typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]] = unspecified.UNSPECIFIED,
+        roles: type_hints.NotRequired[
+            typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]
+        ] = unspecified.UNSPECIFIED,
+        channels: type_hints.NotRequired[
+            typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]
+        ] = unspecified.UNSPECIFIED,
     ) -> hikari.internal_utilities.type_hints.JSONObject:
         """
         Creates a new guild. Can only be used by bots in less than 10 guilds.
@@ -1317,8 +1332,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         route = routes.GUILD.compile(self.DELETE, guild_id=guild_id)
         await self._request(route)
 
-    async def get_guild_channels(self, guild_id: str) -> typing.Sequence[
-        hikari.internal_utilities.type_hints.JSONObject]:
+    async def get_guild_channels(
+        self, guild_id: str
+    ) -> typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]:
         """
         Gets all the channels for a given guild.
 
@@ -1349,7 +1365,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         user_limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         rate_limit_per_user: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         position: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        permission_overwrites: type_hints.NotRequired[typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]] = unspecified.UNSPECIFIED,
+        permission_overwrites: type_hints.NotRequired[
+            typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]
+        ] = unspecified.UNSPECIFIED,
         parent_id: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         nsfw: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
@@ -2014,8 +2032,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         except (TypeError, KeyError):
             return None
 
-    async def get_guild_voice_regions(self, guild_id: str) -> typing.Sequence[
-        hikari.internal_utilities.type_hints.JSONObject]:
+    async def get_guild_voice_regions(
+        self, guild_id: str
+    ) -> typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]:
         """
         Gets the voice regions for a given guild.
 
@@ -2035,7 +2054,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         route = routes.GUILD_VOICE_REGIONS.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    async def get_guild_invites(self, guild_id: str) -> typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]:
+    async def get_guild_invites(
+        self, guild_id: str
+    ) -> typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]:
         """
         Gets the invites for a given guild.
 
@@ -2055,8 +2076,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         route = routes.GUILD_INVITES.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[
-        hikari.internal_utilities.type_hints.JSONObject]:
+    async def get_guild_integrations(
+        self, guild_id: str
+    ) -> typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]:
         """
         Gets the integrations for a given guild.
 
@@ -2529,8 +2551,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         route = routes.CHANNEL_WEBHOOKS.compile(self.POST, channel_id=channel_id)
         return await self._request(route, json_body=payload, reason=reason)
 
-    async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[
-        hikari.internal_utilities.type_hints.JSONObject]:
+    async def get_channel_webhooks(
+        self, channel_id: str
+    ) -> typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]:
         """
         Gets all webhooks from a given channel.
 
@@ -2550,8 +2573,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         route = routes.CHANNEL_WEBHOOKS.compile(self.GET, channel_id=channel_id)
         return await self._request(route)
 
-    async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[
-        hikari.internal_utilities.type_hints.JSONObject]:
+    async def get_guild_webhooks(
+        self, guild_id: str
+    ) -> typing.Sequence[hikari.internal_utilities.type_hints.JSONObject]:
         """
         Gets all webhooks for a given guild.
 

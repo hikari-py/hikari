@@ -146,7 +146,12 @@ class VoiceState(bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("user_id", "channel_id", "guild_id", "session_id")
 
-    def __init__(self, fabric_obj: fabric.Fabric, guild_obj: guilds.Guild, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(
+        self,
+        fabric_obj: fabric.Fabric,
+        guild_obj: guilds.Guild,
+        payload: hikari.internal_utilities.type_hints.JSONObject,
+    ) -> None:
         self._fabric = fabric_obj
         self.user_id = int(payload["user_id"])
         self.guild_id = guild_obj.id

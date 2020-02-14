@@ -88,7 +88,9 @@ class BasicChunkerImpl(base_chunker.BaseChunker):
 
             del self.shard_chunkers[shard_id]
 
-    async def handle_next_chunk(self, chunk_payload: hikari.internal_utilities.type_hints.JSONObject, shard_id: int) -> None:
+    async def handle_next_chunk(
+        self, chunk_payload: hikari.internal_utilities.type_hints.JSONObject, shard_id: int
+    ) -> None:
         guild_id = int(chunk_payload["guild_id"])
         guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 
