@@ -612,7 +612,7 @@ class GatewayClient:
             self.dispatch(
                 self,
                 "RECONNECT" if self.disconnect_count else "CONNECT",
-                typing.cast(type_hints.JSONObject, containers.EMPTY_DICT),
+                typing.cast(hikari.internal_utilities.type_hints.JSONObject, containers.EMPTY_DICT),
             )
             self.logger.info("received HELLO, interval is %ss", self.heartbeat_interval)
 
@@ -653,7 +653,7 @@ class GatewayClient:
             self._ws = None
             await self._session.close()
             self._session = None
-            self.dispatch(self, "DISCONNECT", typing.cast(type_hints.JSONObject, containers.EMPTY_DICT))
+            self.dispatch(self, "DISCONNECT", typing.cast(hikari.internal_utilities.type_hints.JSONObject, containers.EMPTY_DICT))
 
     @property
     def _ws_connect_kwargs(self):
