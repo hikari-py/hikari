@@ -18,7 +18,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
-import contextlib
 import copy
 import functools
 import inspect
@@ -26,7 +25,6 @@ import logging
 import os
 import queue
 import re
-import socket
 import threading
 import time
 import typing

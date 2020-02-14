@@ -23,3 +23,5 @@ __email__ = "nekoka.tt@outlook.com"
 __license__ = "LGPL-3.0-ONLY"
 __version__ = "0.0.73.dev"
 __url__ = "https://gitlab.com/nekokatt/hikari"
+
+__all__ = ("__author__", "__copyright__", "__email__", "__license__", "__version__", "__url__")

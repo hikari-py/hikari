@@ -27,7 +27,6 @@ import weakref
 import pytest
 
 import hikari.internal_utilities.type_hints
-from hikari.internal_utilities import containers
 from hikari.internal_utilities import delegate
 from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases

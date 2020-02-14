@@ -29,7 +29,6 @@ import weakref
 
 import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import assertions
-from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
 from hikari.orm.models import bases

@@ -28,6 +28,7 @@ import aiohttp
 import async_timeout
 import pytest
 
+from hikari.internal_utilities import containers
 from hikari.net import errors
 from hikari.net import gateway
 from hikari.net import user_agent
@@ -336,7 +337,7 @@ class TestGatewayConnect:
         client.dispatch = mock.MagicMock()
         with self.suppress_closure():
             await client.connect(client_session_t)
-        client.dispatch.assert_called_with(client, "DISCONNECT", None)
+        client.dispatch.assert_called_with(client, "DISCONNECT", containers.EMPTY_DICT)
 
     @_helpers.timeout_after(10.0)
     async def test_new_zlib_each_time(self, client, client_session_t):

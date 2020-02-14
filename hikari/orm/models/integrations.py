@@ -24,7 +24,6 @@ from __future__ import annotations
 import typing
 
 import hikari.internal_utilities.type_hints
-from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.orm.models import bases
