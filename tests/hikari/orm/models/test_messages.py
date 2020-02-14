@@ -137,7 +137,9 @@ class TestMessage:
         message_obj = messages.Message(fabric_obj, mock_message)
         # noinspection PyTypeChecker
         message_obj.update_state({"reactions": [{"id": None, "value": "\N{OK HAND SIGN}"}]})
-        fabric_obj.state_registry.parse_reaction.assert_called_once_with({"id": None, "value": "\N{OK HAND SIGN}"})
+        fabric_obj.state_registry.parse_reaction.assert_called_once_with(
+            {"id": None, "value": "\N{OK HAND SIGN}"}, 12345, 67890
+        )
 
     @pytest.mark.parametrize(
         ("is_webhook", "user_type"),
