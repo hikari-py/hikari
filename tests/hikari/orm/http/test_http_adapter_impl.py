@@ -505,9 +505,8 @@ class TestHTTPAdapterImpl:
                     emoji=_helpers.mock_model(
                         emojis.GuildEmoji, id=21212121212, name="nya", url_name="nya:21212121212"
                     ),
-                    message=_helpers.mock_model(
-                        messages.Message, id=532432123, channel=_helpers.mock_model(channels.Channel, id=434343)
-                    ),
+                    message_id=532432123,
+                    channel_id=434343,
                 ),
             )
             is None

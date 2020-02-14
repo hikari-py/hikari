@@ -1248,10 +1248,14 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(event_types.EventType.RAW_MESSAGE_DELETE_BULK, payload)
 
     @pytest.mark.asyncio
-    async def test_handle_message_reaction_add_when_message_not_cached_does_not_dispatch_anything(
+    async def test_handle_message_reaction_add_when_message_not_cached_does_dispatch(
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
-        fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=None)
+        mock_reaction = mock.MagicMock(reactions.Reaction)
+        mock_user = mock.MagicMock(users.User)
+        fabric_impl.state_registry.get_message_by_id.return_value = None
+        fabric_impl.state_registry.get_user_by_id.return_value = mock_user
+        fabric_impl.state_registry.parse_reaction.return_value = mock_reaction
         payload = {
             "user_id": "123",
             "channel_id": "456",
@@ -1261,9 +1265,9 @@ class TestDispatchingEventAdapterImpl:
 
         await adapter_impl.handle_message_reaction_add(gateway_impl, payload)
 
-        # Not called other than the raw from earlier.
-        dispatch_impl.assert_called_once()
-        dispatch_impl.assert_called_with(event_types.EventType.RAW_MESSAGE_REACTION_ADD, payload)
+        dispatch_impl.assert_called_with(
+            event_types.EventType.MESSAGE_REACTION_ADD, mock_reaction, mock_user,
+        )
 
     @pytest.mark.asyncio
     async def test_handle_message_reaction_add_parses_emoji(
@@ -1400,7 +1404,7 @@ class TestDispatchingEventAdapterImpl:
         message_obj = _helpers.mock_model(messages.Message, id=789)
         guild_obj = _helpers.mock_model(guilds.Guild, id=345)
         emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
-        reaction_obj = _helpers.mock_model(reactions.Reaction, count=1, emoji=emoji_obj, message=message_obj)
+        reaction_obj = _helpers.mock_model(reactions.Reaction, count=1, emoji=emoji_obj, message_id=message_obj.id)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
         fabric_impl.state_registry.get_member_by_id = mock.MagicMock(return_value=member_obj)
@@ -1425,7 +1429,7 @@ class TestDispatchingEventAdapterImpl:
         user_obj = _helpers.mock_model(users.User, id=123)
         message_obj = _helpers.mock_model(messages.Message, id=789)
         emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
-        reaction_obj = _helpers.mock_model(reactions.Reaction, count=1, emoji=emoji_obj, message=message_obj)
+        reaction_obj = _helpers.mock_model(reactions.Reaction, count=1, emoji=emoji_obj, message_id=message_obj.id)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
         fabric_impl.state_registry.get_user_by_id = mock.MagicMock(return_value=user_obj)
@@ -1531,7 +1535,7 @@ class TestDispatchingEventAdapterImpl:
     ):
         message_obj = _helpers.mock_model(messages.Message, id=789)
         emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
-        reaction_obj = _helpers.mock_model(reactions.Reaction, count=0, emoji=emoji_obj, message=message_obj)
+        reaction_obj = _helpers.mock_model(reactions.Reaction, count=0, emoji=emoji_obj, message_id=message_obj.id)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
         fabric_impl.state_registry.get_user_by_id = mock.MagicMock(return_value=None)
@@ -1557,7 +1561,7 @@ class TestDispatchingEventAdapterImpl:
         user_obj = _helpers.mock_model(users.User, id=123)
         message_obj = _helpers.mock_model(messages.Message, id=789)
         emoji_obj = _helpers.mock_model(emojis.GuildEmoji, id=1234, name="potatobiofire", is_animated=False)
-        reaction_obj = _helpers.mock_model(reactions.Reaction, count=0, emoji=emoji_obj, message=message_obj)
+        reaction_obj = _helpers.mock_model(reactions.Reaction, count=0, emoji=emoji_obj, message_id=message_obj.id)
         fabric_impl.state_registry.get_message_by_id = mock.MagicMock(return_value=message_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
         fabric_impl.state_registry.get_user_by_id = mock.MagicMock(return_value=user_obj)
