@@ -266,7 +266,9 @@ class RichActivity(Activity):
         self.flags = transformations.nullable_cast(payload.get("flags"), ActivityFlag) or 0
 
 
-def parse_presence_activity(payload: hikari.internal_utilities.type_hints.JSONObject, ) -> typing.Union[Activity, RichActivity]:
+def parse_presence_activity(
+    payload: hikari.internal_utilities.type_hints.JSONObject,
+) -> typing.Union[Activity, RichActivity]:
     """
     Consumes a payload and decides the type of activity it represents. A corresponding object is then
     constructed and returned as appropriate.

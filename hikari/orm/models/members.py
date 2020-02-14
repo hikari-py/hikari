@@ -98,7 +98,9 @@ class Member(users.User, delegate_fabricated=True):
     __repr__ = reprs.repr_of("id", "username", "discriminator", "is_bot", "guild.id", "guild.name", "nick", "joined_at")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, guild: guilds.Guild, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(
+        self, fabric_obj: fabric.Fabric, guild: guilds.Guild, payload: hikari.internal_utilities.type_hints.JSONObject
+    ) -> None:
         self.presence = None
         self.user = fabric_obj.state_registry.parse_user(payload["user"])
         self.guild = guild
@@ -112,7 +114,9 @@ class Member(users.User, delegate_fabricated=True):
         self.update_state(role_objs, payload)
 
     # noinspection PyMethodOverriding
-    def update_state(self, role_objs: typing.Sequence[_roles.Role], payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def update_state(
+        self, role_objs: typing.Sequence[_roles.Role], payload: hikari.internal_utilities.type_hints.JSONObject
+    ) -> None:
         self.roles = list(role_objs)
         self.premium_since = transformations.nullable_cast(payload.get("premium_since"), dates.parse_iso_8601_ts)
         self.nick = payload.get("nick")

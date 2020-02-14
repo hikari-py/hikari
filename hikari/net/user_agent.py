@@ -41,7 +41,7 @@ def library_version() -> str:
         >>> print(user_agent.library_version())
         hikari 0.0.71
     """
-    from hikari import __version__
+    from hikari._about import __version__
 
     return f"hikari {__version__}"
 
@@ -95,7 +95,7 @@ def user_agent() -> str:
         >>> print(user_agent.user_agent())
         DiscordBot (https://gitlab.com/nekokatt/hikari, 0.0.71) CPython 3.8.1 GCC 9.2.0 Linux
     """
-    from hikari import __version__, __url__
+    from hikari._about import __version__, __url__
 
     system = system_type()
     python = python_version()

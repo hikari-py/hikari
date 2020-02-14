@@ -199,7 +199,9 @@ class InviteWithMetadata(Invite):
         self.is_revoked = payload.get("revoked", False)
 
 
-def parse_invite(fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject) -> typing.Union[Invite, InviteWithMetadata]:
+def parse_invite(
+    fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject
+) -> typing.Union[Invite, InviteWithMetadata]:
     """
     Consume a fabric object and some type of invite payload and try to parse
     whether this invite includes metadata or not for the given payload.

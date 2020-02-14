@@ -138,4 +138,4 @@ from hikari.orm.models.voices import VoiceState
 from hikari.orm.models.webhooks import Webhook
 from hikari.orm.models.webhooks import WebhookUser
 
-from hikari.__about import *
+from hikari._about import *

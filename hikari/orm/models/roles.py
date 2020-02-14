@@ -114,7 +114,9 @@ class Role(PartialRole, bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("id", "name", "position", "is_managed", "is_mentionable", "is_hoisted")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject, guild_id: int) -> None:
+    def __init__(
+        self, fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject, guild_id: int
+    ) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self.guild_id = guild_id

@@ -454,7 +454,9 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_application(self, application_payload: hikari.internal_utilities.type_hints.JSONObject) -> applications.Application:
+    def parse_application(
+        self, application_payload: hikari.internal_utilities.type_hints.JSONObject
+    ) -> applications.Application:
         """
         Parses an application payload into a workable object.
 
@@ -467,7 +469,9 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_application_user(self, application_user_payload: hikari.internal_utilities.type_hints.JSONObject) -> users.OAuth2User:
+    def parse_application_user(
+        self, application_user_payload: hikari.internal_utilities.type_hints.JSONObject
+    ) -> users.OAuth2User:
         """
         Parses an application user payload into a workable object.
 
@@ -480,7 +484,9 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_audit_log(self, audit_log_payload: hikari.internal_utilities.type_hints.JSONObject) -> audit_logs.AuditLog:
+    def parse_audit_log(
+        self, audit_log_payload: hikari.internal_utilities.type_hints.JSONObject
+    ) -> audit_logs.AuditLog:
         """
         Parses an audit log payload into a workable object.
 
@@ -506,16 +512,22 @@ class BaseRegistry(abc.ABC):
         """
 
     @typing.overload
-    def parse_channel(self, channel_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: None) -> channels.DMChannel:
+    def parse_channel(
+        self, channel_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: None
+    ) -> channels.DMChannel:
         ...
 
     @typing.overload
-    def parse_channel(self, channel_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: guilds.Guild) -> channels.GuildChannel:
+    def parse_channel(
+        self, channel_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: guilds.Guild
+    ) -> channels.GuildChannel:
         ...
 
     @abc.abstractmethod
     def parse_channel(
-        self, channel_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: type_hints.Nullable[guilds.Guild]
+        self,
+        channel_payload: hikari.internal_utilities.type_hints.JSONObject,
+        guild_obj: type_hints.Nullable[guilds.Guild],
     ) -> channels.Channel:
         """
         Parses a channel payload into a workable object.
@@ -531,7 +543,9 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_connection(self, connection_payload: hikari.internal_utilities.type_hints.JSONObject) -> connections.Connection:
+    def parse_connection(
+        self, connection_payload: hikari.internal_utilities.type_hints.JSONObject
+    ) -> connections.Connection:
         """
         Parses a connection payload into a workable object.
 
@@ -545,16 +559,22 @@ class BaseRegistry(abc.ABC):
         ...
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
+    def parse_emoji(
+        self, emoji_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: guilds.Guild
+    ) -> emojis.GuildEmoji:
         ...
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: None) -> emojis.Emoji:
+    def parse_emoji(
+        self, emoji_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: None
+    ) -> emojis.Emoji:
         ...
 
     @abc.abstractmethod
     def parse_emoji(
-        self, emoji_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: type_hints.Nullable[guilds.Guild]
+        self,
+        emoji_payload: hikari.internal_utilities.type_hints.JSONObject,
+        guild_obj: type_hints.Nullable[guilds.Guild],
     ) -> emojis.Emoji:
         """
         Parses a emoji payload into a workable object.
@@ -570,7 +590,9 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_gateway_bot(self, gateway_bot_payload: hikari.internal_utilities.type_hints.JSONObject) -> gateway_bot.GatewayBot:
+    def parse_gateway_bot(
+        self, gateway_bot_payload: hikari.internal_utilities.type_hints.JSONObject
+    ) -> gateway_bot.GatewayBot:
         """
         Parses a gateway bot payload into a workable object.
 
@@ -595,7 +617,9 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_integration(self, integration_payload: hikari.internal_utilities.type_hints.JSONObject) -> integrations.Integration:
+    def parse_integration(
+        self, integration_payload: hikari.internal_utilities.type_hints.JSONObject
+    ) -> integrations.Integration:
         """
         Parse a full integration payload.
 
@@ -663,7 +687,9 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_member(self, member_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: guilds.Guild) -> members.Member:
+    def parse_member(
+        self, member_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: guilds.Guild
+    ) -> members.Member:
         """
         Parses a member payload into a workable object.
 
@@ -734,7 +760,9 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_role(self, role_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: guilds.Guild) -> roles.Role:
+    def parse_role(
+        self, role_payload: hikari.internal_utilities.type_hints.JSONObject, guild_obj: guilds.Guild
+    ) -> roles.Role:
         """
         Parses a role payload into a workable object.
 
@@ -749,7 +777,9 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_user(self, user_payload: hikari.internal_utilities.type_hints.JSONObject) -> typing.Union[users.User, users.OAuth2User]:
+    def parse_user(
+        self, user_payload: hikari.internal_utilities.type_hints.JSONObject
+    ) -> typing.Union[users.User, users.OAuth2User]:
         """
         Parses a user payload into a workable object.
 
@@ -782,7 +812,9 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_webhook_user(self, webhook_user_payload: hikari.internal_utilities.type_hints.JSONObject) -> webhooks.WebhookUser:
+    def parse_webhook_user(
+        self, webhook_user_payload: hikari.internal_utilities.type_hints.JSONObject
+    ) -> webhooks.WebhookUser:
         """
         Parses a webhook user payload into a workable object.
 
@@ -894,7 +926,10 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_member(
-        self, member_obj: members.Member, role_objs: typing.Sequence[roles.Role], payload: hikari.internal_utilities.type_hints.JSONObject,
+        self,
+        member_obj: members.Member,
+        role_objs: typing.Sequence[roles.Role],
+        payload: hikari.internal_utilities.type_hints.JSONObject,
     ) -> typing.Tuple[members.Member, members.Member]:
         """
         Update a member in a given guild. If the member is not already registered, nothing is returned.

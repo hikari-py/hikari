@@ -138,7 +138,10 @@ class Webhook(bases.BaseModelWithFabric, bases.SnowflakeMixin):
     __repr__ = reprs.repr_of("id", "name")
 
     def __init__(
-        self, fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject, guild_id: type_hints.Nullable[int] = None
+        self,
+        fabric_obj: fabric.Fabric,
+        payload: hikari.internal_utilities.type_hints.JSONObject,
+        guild_id: type_hints.Nullable[int] = None,
     ) -> None:
         self._fabric = fabric_obj
         self.id = int(payload["id"])
