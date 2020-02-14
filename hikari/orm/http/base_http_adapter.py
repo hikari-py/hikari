@@ -641,6 +641,8 @@ class BaseHTTPAdapter(abc.ABC):
         max_uses: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         temporary: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
         unique: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        target_user: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        target_user_type: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> _invites.Invite:
         """
