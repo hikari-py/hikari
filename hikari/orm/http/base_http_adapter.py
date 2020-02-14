@@ -435,7 +435,6 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         reaction: _reactions.Reaction,
         *,
-        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_users.BaseUser]:
@@ -448,7 +447,6 @@ class BaseHTTPAdapter(abc.ABC):
         reaction: _emojis.EmojiLikeT,
         message: _messages.Message,
         *,
-        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_users.BaseUser]:
@@ -462,7 +460,6 @@ class BaseHTTPAdapter(abc.ABC):
         message: bases.SnowflakeLikeT,
         channel: _channels.ChannelLikeT,
         *,
-        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_users.BaseUser]:
@@ -475,7 +472,6 @@ class BaseHTTPAdapter(abc.ABC):
         message=unspecified.UNSPECIFIED,
         channel=unspecified.UNSPECIFIED,
         *,
-        before=unspecified.UNSPECIFIED,
         after=unspecified.UNSPECIFIED,
         limit=unspecified.UNSPECIFIED,
     ):

@@ -649,7 +649,6 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         message_id: str,
         emoji: str,
         *,
-        before: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         after: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
     ) -> typing.Sequence[containers.JSONObject]:
@@ -664,9 +663,6 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             emoji:
                 The emoji to get. This can either be a series of unicode characters making up a valid Discord
                 emoji, or it can be a snowflake ID for a custom emoji.
-            before:
-                An optional user ID. If specified, only users with a snowflake that is lexicographically less than the
-                value will be returned.
             after:
                 An optional user ID. If specified, only users with a snowflake that is lexicographically greater than
                 the value will be returned.
@@ -684,7 +680,6 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 If the target entity doesn't exist.
         """
         query = {}
-        transformations.put_if_specified(query, "before", before)
         transformations.put_if_specified(query, "after", after)
         transformations.put_if_specified(query, "limit", limit)
         route = routes.REACTIONS.compile(self.GET, channel_id=channel_id, message_id=message_id, emoji=emoji)
