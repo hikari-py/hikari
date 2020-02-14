@@ -23,15 +23,14 @@ from __future__ import annotations
 
 import typing
 
-import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 from hikari.orm.models import teams
 
 if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import users
 
@@ -136,7 +135,7 @@ class Application(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name", "description")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
         self.icon_hash = payload.get("icon")

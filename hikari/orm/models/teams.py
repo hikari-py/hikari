@@ -24,15 +24,14 @@ from __future__ import annotations
 import enum
 import typing
 
-import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import delegate
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 from hikari.orm.models import users
 
 if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
 
 
@@ -65,7 +64,7 @@ class Team(bases.BaseModelWithFabric, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "owner_user_id")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         self._fabric = fabric_obj
         self.id = int(payload["id"])
         self.icon = payload.get("icon")
@@ -105,7 +104,7 @@ class TeamMember(users.BaseUser, delegate_fabricated=True):
 
     __repr__ = reprs.repr_of("team_id", "permissions", "membership_state", "user.id", "user.username")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: hikari.internal_utilities.type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         self.team_id = int(payload["team_id"])
         self.permissions = set(payload["permissions"])
         self.membership_state = MembershipState(payload["membership_state"])

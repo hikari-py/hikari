@@ -27,16 +27,13 @@ import datetime
 import typing
 import weakref
 
-import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 from hikari.orm.models import colors
 from hikari.orm.models import media
-
-if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import type_hints
 
 _MAX_EMBED_SIZE = 6000
 
@@ -488,7 +485,7 @@ class BaseEmbed(bases.BaseModel):
         return d
 
     @classmethod
-    def from_dict(cls, payload: hikari.internal_utilities.type_hints.JSONObject) -> EmbedT:
+    def from_dict(cls, payload: type_hints.JSONObject) -> EmbedT:
         """
         Parses an instance of this embed type from a raw Discord payload.
 

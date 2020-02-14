@@ -23,20 +23,19 @@ from __future__ import annotations
 
 import typing
 
-import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import delegate
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 from hikari.orm.models import users
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import guilds
     from hikari.orm.models import presences
@@ -98,9 +97,7 @@ class Member(users.User, delegate_fabricated=True):
     __repr__ = reprs.repr_of("id", "username", "discriminator", "is_bot", "guild.id", "guild.name", "nick", "joined_at")
 
     # noinspection PyMissingConstructor
-    def __init__(
-        self, fabric_obj: fabric.Fabric, guild: guilds.Guild, payload: hikari.internal_utilities.type_hints.JSONObject
-    ) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, guild: guilds.Guild, payload: type_hints.JSONObject) -> None:
         self.presence = None
         self.user = fabric_obj.state_registry.parse_user(payload["user"])
         self.guild = guild
@@ -114,16 +111,14 @@ class Member(users.User, delegate_fabricated=True):
         self.update_state(role_objs, payload)
 
     # noinspection PyMethodOverriding
-    def update_state(
-        self, role_objs: typing.Sequence[_roles.Role], payload: hikari.internal_utilities.type_hints.JSONObject
-    ) -> None:
+    def update_state(self, role_objs: typing.Sequence[_roles.Role], payload: type_hints.JSONObject) -> None:
         self.roles = list(role_objs)
         self.premium_since = transformations.nullable_cast(payload.get("premium_since"), dates.parse_iso_8601_ts)
         self.nick = payload.get("nick")
         self.is_deaf = payload.get("deaf", False)
         self.is_mute = payload.get("mute", False)
 
-    def update_presence_state(self, presence_payload: hikari.internal_utilities.type_hints.JSONObject = None) -> None:
+    def update_presence_state(self, presence_payload: type_hints.JSONObject = None) -> None:
         user_id = presence_payload["user"]["id"]
         assertions.assert_that(
             int(user_id) == self.id, f"Presence object from User `{user_id}` doesn't match Member `{self.id}`."
