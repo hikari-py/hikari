@@ -853,19 +853,29 @@ class TestHTTPAdapterImpl:
             max_uses=unspecified.UNSPECIFIED,
             temporary=unspecified.UNSPECIFIED,
             unique=unspecified.UNSPECIFIED,
+            target_user=unspecified.UNSPECIFIED,
+            target_user_type=unspecified.UNSPECIFIED,
             reason=unspecified.UNSPECIFIED,
         )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 115590097100865541, channels.Channel)
-    async def test_create_invite_for_channel_with_all_optionals(self, fabric_impl, channel):
+    @_helpers.parametrize_valid_id_formats_for_models("user", 9494949494, users.User)
+    async def test_create_invite_for_channel_with_all_optionals(self, fabric_impl, channel, user):
         mock_invite_payload = {"code": "doweqs"}
         mock_invite = mock.MagicMock(invites.Invite)
         fabric_impl.http_client.create_channel_invite = mock.AsyncMock(return_value=mock_invite_payload)
         fabric_impl.state_registry.parse_invite.return_value = mock_invite
         assert (
             await fabric_impl.http_adapter.create_invite_for_channel(
-                channel, max_age=5, max_uses=42, temporary=False, unique=True, reason="good luck stopping me kid.",
+                channel,
+                max_age=5,
+                max_uses=42,
+                temporary=False,
+                unique=True,
+                target_user=user,
+                target_user_type=42,
+                reason="good luck stopping me kid.",
             )
             is mock_invite
         )
@@ -876,6 +886,8 @@ class TestHTTPAdapterImpl:
             max_uses=42,
             temporary=False,
             unique=True,
+            target_user="9494949494",
+            target_user_type=42,
             reason="good luck stopping me kid.",
         )
 
