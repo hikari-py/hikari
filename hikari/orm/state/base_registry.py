@@ -713,13 +713,19 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_reaction(self, reaction_payload: containers.JSONObject) -> reactions.Reaction:
+    def parse_reaction(
+        self, reaction_payload: containers.JSONObject, channel_id: int, message_id: int,
+    ) -> reactions.Reaction:
         """
         Attempt to parse a reaction object and store it on the corresponding message.
 
         Args:
             reaction_payload:
-                the reaction object to parse.
+                The reaction object to parse.
+            channel_id:
+                The :class:`int` ID of the channel this reaction occurred in.
+            message_id:
+                The :class:`int` ID of the message this reaction occurred on.
 
         Returns:
             a :class:`hikari.orm.models.reactions.Reaction` object.

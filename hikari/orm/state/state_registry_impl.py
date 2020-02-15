@@ -130,7 +130,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
                 reaction_obj.count += 1
                 return reaction_obj
 
-        reaction_obj = reactions.Reaction(1, emoji_obj, message_obj)
+        reaction_obj = reactions.Reaction(self.fabric, 1, emoji_obj, message_obj.id, message_obj.channel_id)
         message_obj.reactions.append(reaction_obj)
         return reaction_obj
 
@@ -187,7 +187,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
     def delete_reaction(self, message_obj: messages.Message, user_obj: users.User, emoji_obj: emojis.Emoji) -> None:
         # We do not store info about the user, so just ignore that parameter.
         for reaction_obj in message_obj.reactions:
-            if reaction_obj.emoji == emoji_obj and reaction_obj.message.id == reaction_obj.message.id:
+            if reaction_obj.emoji == emoji_obj:
                 message_obj.reactions.remove(reaction_obj)
                 # Set this to zero so that if a reference to this object exists elsewhere, it reflects that it has
                 # been removed from the message.
@@ -514,15 +514,14 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         member_obj.presence = presence_obj
         return presence_obj
 
-    def parse_reaction(self, reaction_payload: containers.JSONObject) -> reactions.Reaction:
-        message_id = int(reaction_payload["message_id"])
+    def parse_reaction(
+        self, reaction_payload: containers.JSONObject, message_id: int, channel_id: int,
+    ) -> reactions.Reaction:
         count = int(reaction_payload["count"])
         emoji_obj = self.parse_emoji(reaction_payload["emoji"], None)
 
-        # I hope this message won't ever be unresolved, honestly. Because I have no nice way of getting the info I need
-        # to fabricate this damn API call. Thanks Discord.
+        new_reaction_obj = reactions.Reaction(self.fabric, count, emoji_obj, message_id, channel_id)
         message_obj = self.get_message_by_id(message_id)
-        new_reaction_obj = reactions.Reaction(count, emoji_obj, message_obj or bases.UnknownObject(message_id))
 
         if message_obj:
             # Prevent attribute-erroring if the message was not cached...
