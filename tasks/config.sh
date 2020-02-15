@@ -4,7 +4,7 @@ echo "===============CONFIGURATION==============="
 
 function do_export() {
     echo "exported $*"
-    export "$*"
+    export "${*?}"
 }
 
 do_export CURRENT_VERSION_FILE="setup.py"
@@ -14,7 +14,7 @@ do_export API_NAME="hikari"
 do_export GIT_SVC_HOST="gitlab.com"
 do_export REPO_AUTHOR="Nekokatt"
 do_export ORIGINAL_REPO_URL="https://${GIT_SVC_HOST}/${REPO_AUTHOR}/${API_NAME}"
-do_export REPOSITORY_URL=$(echo "$CI_REPOSITORY_URL" | perl -pe 's#.*@(.+?(\:\d+)?)/#git@\1:#')
+do_export REPOSITORY_URL="$(echo "$CI_REPOSITORY_URL" | perl -pe 's#.*@(.+?(\:\d+)?)/#git@\1:#')"
 
 do_export SSH_PRIVATE_KEY_PATH="~/.ssh/id_rsa"
 do_export GIT_TEST_SSH_PATH="git@${GIT_SVC_HOST}"
@@ -65,12 +65,6 @@ cat > /dev/null << EOF
   Preproduction environment:
     PYPI_REPO
 
-  VARIABLES TO DEFINE IN SCHEDULED JOBS
-  =====================================
-
-    CI_IS_SCHEDULED - set to 1 and the job will discard any pypi cache. This has the effect that
-                      the job will automatically renew its cache first. This also means the cache can be
-                      kept up-to-date by schedules, keeping repeated builds running quickly.
 EOF
 
 echo "=============END CONFIGURATION============="

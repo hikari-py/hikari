@@ -18,7 +18,7 @@
   image: python:3.8.1
   stage: verify
   before_script:
-    - bash tasks/retry-aborts.sh pip install nox
+    - bash tasks/retry_aborts.sh pip install nox
   only:
     - branches
     - merge_requests
@@ -28,17 +28,22 @@
 black:
   extends: .tools-base
   script:
-    - bash tasks/retry-aborts.sh nox -s format -- --check --diff
+    - bash tasks/retry_aborts.sh nox -s format -- --check --diff
 
 safety:
   extends: .tools-base
   script:
-    - bash tasks/retry-aborts.sh nox -s safety
+    - bash tasks/retry_aborts.sh nox -s safety
+
+bandit:
+  extends: .tools-base
+  script:
+    - bash tasks/retry_aborts.sh nox -s sast
 
 pylint:
   extends: .tools-base
   script:
-    - bash tasks/retry-aborts.sh nox -s lint
+    - bash tasks/retry_aborts.sh nox -s lint
   artifacts:
     reports:
       junit: public/pylint.xml

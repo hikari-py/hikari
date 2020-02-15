@@ -4,7 +4,7 @@
 # source "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"/config.sh
 
 function set-versions() {
-    bash tasks/transform-versions.sh $1
+    bash tasks/transform_versions.sh $1
 }
 
 function deploy-to-pypi() {
@@ -62,7 +62,7 @@ function do-deployment() {
     git checkout -f "${COMMIT_REF}"
 
     old_version=$(grep -oP "${CURRENT_VERSION_PATTERN}" "${CURRENT_VERSION_FILE}")
-    current_version=$(python tasks/make-version-string.py "${COMMIT_REF}")
+    current_version=$(python tasks/make_version_string.py "${COMMIT_REF}")
 
     pip install -e .
 
