@@ -5,24 +5,26 @@
 # code to a temporary file each time. If the output contains 'connection reset by peer', an internal flag gets set
 # that will make the script sleep for a couple of seconds and retry again. Otherwise, the exit code that was saved
 # is used as the script exit code.
-for i in $(seq 1 10); do
-    echo -en "\e[1;31m#$i \e[0m"
+retries=10
+for i in $(seq 1 ${retries}); do
+    echo -e "\e[1;31mAttempt #$i/$retries of \e[0;33m$*\e[0m"
     continue=1
-    exec 3< <($* 2>&1; echo $? > /tmp/exit_code)
-    while read -u 3 line; do
-        echo ${line}
-        if echo ${line} | grep -iq "Connection reset by peer"; then
-            echo "Connection reset by peer, retrying." >&1
+    # shellcheck disable=SC2068
+    exec 3< <($@ 2>&1; echo $? > /tmp/exit_code)
+    while read -ru 3 line; do
+        echo "${line}"
+        if echo "${line}" | grep -iq "Connection reset by peer"; then
+            echo -e "\e[1;31mConnection reset by peer, retrying.\e[0m" >&1
             continue=0
         fi
     done
-    exit_code=$(cat /tmp/exit_code | xargs)
+    exit_code=$(xargs < /tmp/exit_code)
     if [[ ! ${continue} -eq 0 ]]; then
-        exit ${exit_code}
+        exit "${exit_code}"
     else
         sleep 2
     fi
 done
-code=$(cat /tmp/exit_code | xargs)
+code=$(xargs < /tmp/exit_code)
 rm /tmp/exit_code
-exit ${code}
+exit "${code}"

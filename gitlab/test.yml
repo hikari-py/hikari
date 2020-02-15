@@ -27,7 +27,7 @@
 .nox-test: &noxtest
   extends: .test-env
   script:
-    - bash tasks/retry-aborts.sh nox -stest
+    - bash tasks/retry_aborts.sh nox -stest
     - mv .coverage public/${CI_JOB_NAME}.coverage
   artifacts:
     paths:
@@ -41,13 +41,13 @@
   stage: verify
   script:
     - apt install git -y
-    - bash tasks/retry-aborts.sh nox --sessions pip pip_sdist pip_bdist_wheel pip_git
+    - bash tasks/retry_aborts.sh nox --sessions pip pip_sdist pip_bdist_wheel pip_git
 
 .nox-pip-install-showtime: &noxpipinstallshowtime
   extends: .test-env
   script:
     - apt install git -y
-    - bash tasks/retry-aborts.sh nox -s pip -- --showtime
+    - bash tasks/retry_aborts.sh nox -s pip -- --showtime
   stage: post-deploy
   only:
     - master
@@ -63,7 +63,7 @@
   stage: test
   before_script:
     - apt-get install -qy git gcc g++ make
-    - bash tasks/retry-aborts.sh pip install nox
+    - bash tasks/retry_aborts.sh pip install nox
     - source tasks/config.sh
     - mkdir public || true
 
@@ -99,7 +99,7 @@ coverage-coalesce:
   image: python:3.8.1
   stage: verify
   script:
-    - bash tasks/retry-aborts.sh pip install coverage
+    - bash tasks/retry_aborts.sh pip install coverage
     - ls public
     - coverage combine public/*.coverage
     - coverage report -i
@@ -109,3 +109,10 @@ coverage-coalesce:
     - merge_requests
     - tags
     - schedules
+
+verify-autoversioning-logic:
+    <<: *cpython380
+    before_script:
+      - bash tasks/retry_aborts.sh pip install requests
+    script:
+      - bash tasks/test_make_version_string.sh
