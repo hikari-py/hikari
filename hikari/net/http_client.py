@@ -865,6 +865,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         max_uses: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         temporary: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
         unique: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        target_user: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        target_user_type: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> type_hints.JSONObject:
         """
@@ -882,6 +884,10 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 are given a role. Defaults to `False`.
             unique:
                 If `True`, never reuse a similar invite. Defaults to `False`.
+            target_user:
+                The ID of the user this invite should target, if set.
+            target_user_type:
+                The type of target for this invite, if set.
             reason:
                 An optional audit log reason explaining why the change was made.
 
@@ -901,6 +907,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         transformations.put_if_specified(payload, "max_uses", max_uses)
         transformations.put_if_specified(payload, "temporary", temporary)
         transformations.put_if_specified(payload, "unique", unique)
+        transformations.put_if_specified(payload, "target_user", target_user)
+        transformations.put_if_specified(payload, "target_user_type", target_user_type)
         route = routes.CHANNEL_INVITES.compile(self.POST, channel_id=channel_id)
         return await self._request(route, json_body=payload, reason=reason)
 
