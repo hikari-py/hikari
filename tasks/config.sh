@@ -7,7 +7,7 @@ function do_export() {
     export "$*"
 }
 
-do_export CURRENT_VERSION_FILE="setup.py"
+do_export CURRENT_VERSION_FILE="hikari/_about.py"
 do_export CURRENT_VERSION_PATTERN="^__version__\s*=\s*\"\K[^\"]*"
 
 do_export API_NAME="hikari"
