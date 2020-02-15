@@ -317,6 +317,8 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         max_uses: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         temporary: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
         unique: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        target_user: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        target_user_type: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> _invites.Invite:
         invite_payload = await self.fabric.http_client.create_channel_invite(
@@ -325,6 +327,8 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             max_uses=max_uses,
             temporary=temporary,
             unique=unique,
+            target_user=transformations.cast_if_specified(target_user, transformations.get_id),
+            target_user_type=target_user_type,
             reason=reason,
         )
         return self.fabric.state_registry.parse_invite(invite_payload)
