@@ -32,12 +32,12 @@ from hikari.orm.gateway import event_types
 from hikari.orm.models import channels
 from hikari.orm.models import emojis
 from hikari.orm.models import guilds
+from hikari.orm.models import invites
 from hikari.orm.models import members
 from hikari.orm.models import messages
 from hikari.orm.models import reactions
 from hikari.orm.models import roles
 from hikari.orm.models import users
-from hikari.orm.models import invites
 from hikari.orm.state import base_registry
 from tests.hikari import _helpers
 

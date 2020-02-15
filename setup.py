@@ -36,7 +36,7 @@ def parse_meta():
         code = fp.read()
 
     token_pattern = re.compile(
-        r"^__(?P<key>\w+)?__\s*=\s*(?P<quote>[(?:'{3})(?:\"{3})'\"])(?P<value>.*?)(?P=quote)", re.M
+        r"^__(?P<key>\w+)?__\s*=\s*(?P<quote>(?:'{3}|\"{3}|'|\"))(?P<value>.*?)(?P=quote)", re.M
     )
 
     groups = {}
