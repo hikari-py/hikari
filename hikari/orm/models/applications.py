@@ -70,7 +70,7 @@ class Application(bases.BaseModel, bases.SnowflakeMixin):
 
     #: The hash of the application's icon.
     #:
-    #: :type: :class:`str` or or `None`
+    #: :type: :class:`str` or `None`
     icon_hash: type_hints.Nullable[str]
 
     #: The application's description
@@ -100,7 +100,7 @@ class Application(bases.BaseModel, bases.SnowflakeMixin):
 
     #: The summary field for this application's primary SKU's store page if this is a game sold on Discord.
     #:
-    #: :type: :class:`str` or or `None`
+    #: :type: :class:`str` or `None`
     summary: type_hints.Nullable[str]
 
     #: The base64 encoded key used for "GetTicket" in the GameSDK.
@@ -110,27 +110,27 @@ class Application(bases.BaseModel, bases.SnowflakeMixin):
 
     #: The team that the application belongs to if applicable.
     #:
-    #: :type: :class:`hikari.orm.models.teams.Team` or or `None`
+    #: :type: :class:`hikari.orm.models.teams.Team` or `None`
     team: type_hints.Nullable[teams.Team]
 
     #: The ID of the guild the application is linked to if it's a game sold on Discord.
     #:
-    #: :type: :class:`int` or or `None`
+    #: :type: :class:`int` or `None`
     guild_id: type_hints.Nullable[int]
 
     #: The ID of the application's linked Game SKU if it's a game sold on Discord.
     #:
-    #: :type: :class:`int` or or `None`
+    #: :type: :class:`int` or `None`
     primary_sku_id: type_hints.Nullable[int]
 
     #: The URL slug that links to the application's store page if it's a game sold on Discord.
     #:
-    #: :type: :class:`str` or or `None`
+    #: :type: :class:`str` or `None`
     slug_url: type_hints.Nullable[str]
 
     #: The hash of the application's store embed image if it is a game sold on Discord.
     #:
-    #: :type: :class:`str` or or `None`
+    #: :type: :class:`str` or `None`
     cover_image_hash: type_hints.Nullable[str]
 
     __repr__ = reprs.repr_of("id", "name", "description")

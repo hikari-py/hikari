@@ -28,7 +28,6 @@ from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 
 if typing.TYPE_CHECKING:
-
     from hikari.orm import fabric
     from hikari.orm.models import guilds
     from hikari.orm.models import members
