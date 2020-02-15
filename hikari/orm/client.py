@@ -39,7 +39,8 @@ from hikari.net import errors
 from hikari.net import gateway
 from hikari.net import http_client
 from hikari.net import ratelimits
-from hikari.orm import fabric, client_options
+from hikari.orm import client_options
+from hikari.orm import fabric
 from hikari.orm.gateway import basic_chunker_impl
 from hikari.orm.gateway import dispatching_event_adapter_impl
 from hikari.orm.gateway import event_types

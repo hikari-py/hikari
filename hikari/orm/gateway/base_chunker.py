@@ -28,9 +28,9 @@ from __future__ import annotations
 import abc
 import typing
 
+from hikari.internal_utilities import type_hints
+
 if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import type_hints
-    from hikari.internal_utilities import containers
     from hikari.orm.models import guilds
 
 
@@ -78,7 +78,7 @@ class BaseChunker(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def handle_next_chunk(self, chunk_payload: containers.JSONObject, shard_id: int) -> None:
+    async def handle_next_chunk(self, chunk_payload: type_hints.JSONObject, shard_id: int) -> None:
         """
         Handle a new chunk from the gateway.
 

@@ -21,10 +21,10 @@ Hikari's core framework for writing Discord bots in Python.
 """
 from __future__ import annotations
 
-from hikari.orm import client
 from hikari import errors
 from hikari import net
 from hikari import orm
+from hikari._about import *
 
 # Errors
 from hikari.net.errors import BadRequestHTTPError
@@ -52,6 +52,7 @@ from hikari.net.http_client import HTTPClient
 # API versions
 from hikari.net.versions import GatewayVersion
 from hikari.net.versions import HTTPAPIVersion
+from hikari.orm import client
 
 # Bot client
 from hikari.orm.client import Client
@@ -137,10 +138,3 @@ from hikari.orm.models.voices import VoiceServer
 from hikari.orm.models.voices import VoiceState
 from hikari.orm.models.webhooks import Webhook
 from hikari.orm.models.webhooks import WebhookUser
-
-__author__ = "Nekokatt"
-__contributors__ = {"FasterSpeeding", "LunarCoffee", "raatty", "Tmpod", "Zach", "thomm.o", "rock500", "davfsa"}
-__copyright__ = "© 2019-2020 Nekokatt"
-__license__ = "LGPLv3"
-__version__ = "0.0.72"
-__url__ = "https://gitlab.com/nekokatt/hikari"

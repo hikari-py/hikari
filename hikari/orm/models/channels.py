@@ -33,6 +33,7 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import unspecified
 from hikari.orm.models import bases
 from hikari.orm.models import members
@@ -41,7 +42,6 @@ from hikari.orm.models import users
 from hikari.orm.models import webhooks
 
 if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import type_hints
     from hikari.internal_utilities import storage
     from hikari.orm import fabric
     from hikari.orm.models import embeds
@@ -112,7 +112,7 @@ class Channel(abc.ABC, bases.BaseModelWithFabric, bases.SnowflakeMixin):
     id: int
 
     @abc.abstractmethod
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         self._fabric = fabric_obj
         self.id = int(payload["id"])
         self.update_state(payload)
@@ -163,7 +163,7 @@ class PartialChannel(Channel):
 
     __repr__ = reprs.repr_of("id", "name", "type")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         self.name = payload["name"]
         self.type = ChannelType.get_best_effort_from_value(payload["type"])
         super().__init__(fabric_obj, payload)
@@ -182,7 +182,7 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
 
     #: The optional ID of the last message to be sent.
     #:
-    #: :type: :class:`int` or :class:`None`
+    #: :type: :class:`int` or or `None`
     last_message_id: type_hints.Nullable[int]
 
     @aio.optional_await("send message to channel")
@@ -273,7 +273,7 @@ class GuildChannel(Channel):
 
     #: The parent channel ID.
     #:
-    #: :type: :class:`int` or :class:`None`
+    #: :type: :class:`int` or or `None`
     parent_id: type_hints.Nullable[int]
 
     #: The position of the channel in the channel list.
@@ -292,11 +292,11 @@ class GuildChannel(Channel):
     name: str
 
     @abc.abstractmethod
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         self.guild_id = int(payload["guild_id"])
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: containers.JSONObject) -> None:
+    def update_state(self, payload: type_hints.JSONObject) -> None:
         self.position = int(payload["position"])
 
         overwrite_objs = []
@@ -330,7 +330,7 @@ class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT):
 
     #: The channel topic.
     #:
-    #: :type: :class:`str` or :class:`None`
+    #: :type: :class:`str` or or `None`
     topic: type_hints.Nullable[str]
 
     #: How many seconds a user has to wait before sending consecutive messages.
@@ -340,7 +340,7 @@ class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT):
 
     #: The optional ID of the last message to be sent.
     #:
-    #: :type: :class:`int` or :class:`None`
+    #: :type: :class:`int` or or `None`
     last_message_id: type_hints.Nullable[int]
 
     #: Whether the channel is NSFW or not
@@ -350,10 +350,10 @@ class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT):
 
     __repr__ = reprs.repr_of("id", "name", "guild.name", "is_nsfw")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: containers.JSONObject) -> None:
+    def update_state(self, payload: type_hints.JSONObject) -> None:
         super().update_state(payload)
         self.is_nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
@@ -370,7 +370,7 @@ class DMChannel(TextChannel, type=ChannelType.DM):
 
     #: The optional ID of the last message to be sent.
     #:
-    #: :type: :class:`int` or :class:`None`
+    #: :type: :class:`int` or or `None`
     last_message_id: type_hints.Nullable[int]
 
     #: Sequence of recipients in the DM chat.
@@ -381,10 +381,10 @@ class DMChannel(TextChannel, type=ChannelType.DM):
     __repr__ = reprs.repr_of("id")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: containers.JSONObject) -> None:
+    def update_state(self, payload: type_hints.JSONObject) -> None:
         super().update_state(payload)
         self.last_message_id = transformations.nullable_cast(payload.get("last_message_id"), int)
         self.recipients = typing.cast(
@@ -407,15 +407,15 @@ class GuildVoiceChannel(GuildChannel, type=ChannelType.GUILD_VOICE):
 
     #: The max number of users in the voice channel, or None if there is no limit.
     #:
-    #: :type: :class:`int` or :class:`None`
+    #: :type: :class:`int` or or `None`
     user_limit: type_hints.Nullable[int]
 
     __repr__ = reprs.repr_of("id", "name", "guild.name", "bitrate", "user_limit")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: containers.JSONObject) -> None:
+    def update_state(self, payload: type_hints.JSONObject) -> None:
         super().update_state(payload)
         self.bitrate = payload.get("bitrate") or None
         self.user_limit = payload.get("user_limit") or None
@@ -435,27 +435,27 @@ class GroupDMChannel(DMChannel, type=ChannelType.GROUP_DM):
 
     #: Hash of the icon for the chat, if there is one.
     #:
-    #: :type: :class:`str` or :class:`None`
+    #: :type: :class:`str` or or `None`
     icon_hash: type_hints.Nullable[str]
 
     #: Name for the chat, if there is one.
     #:
-    #: :type: :class:`str` or :class:`None`
+    #: :type: :class:`str` or or `None`
     name: type_hints.Nullable[str]
 
     #: If the chat was made by a bot, this will be the application ID of the bot that made it. For all other cases it
     #: will be `None`.
     #:
-    #: :type: :class:`int` or :class:`None`
+    #: :type: :class:`int` or or `None`
     owner_application_id: type_hints.Nullable[int]
 
     __repr__ = reprs.repr_of("id", "name")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: containers.JSONObject) -> None:
+    def update_state(self, payload: type_hints.JSONObject) -> None:
         super().update_state(payload)
         self.icon_hash = payload.get("icon")
         self.name = payload.get("name")
@@ -472,7 +472,7 @@ class GuildCategory(GuildChannel, type=ChannelType.GUILD_CATEGORY):
 
     __repr__ = reprs.repr_of("id", "name", "guild.name")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
 
 
@@ -490,12 +490,12 @@ class GuildAnnouncementChannel(GuildChannel, type=ChannelType.GUILD_ANNOUNCEMENT
 
     #: The channel topic.
     #:
-    #: :type: :class:`str` or :class:`None`
+    #: :type: :class:`str` or or `None`
     topic: type_hints.Nullable[str]
 
     #: The optional ID of the last message to be sent.
     #:
-    #: :type: :class:`int` or :class:`None`
+    #: :type: :class:`int` or or `None`
     last_message_id: type_hints.Nullable[int]
 
     #: Whether the channel is NSFW or not
@@ -506,10 +506,10 @@ class GuildAnnouncementChannel(GuildChannel, type=ChannelType.GUILD_ANNOUNCEMENT
     __repr__ = reprs.repr_of("id", "name", "guild.name", "is_nsfw")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: containers.JSONObject) -> None:
+    def update_state(self, payload: type_hints.JSONObject) -> None:
         super().update_state(payload)
         self.is_nsfw = payload.get("nsfw", False)
         self.topic = payload.get("topic")
@@ -525,7 +525,7 @@ class GuildStoreChannel(GuildChannel, type=ChannelType.GUILD_STORE):
 
     __repr__ = reprs.repr_of("id", "name", "guild.name")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
 
 
@@ -545,7 +545,7 @@ def is_channel_type_dm(channel_type: typing.Union[int, ChannelType]) -> bool:
 
 # noinspection PyProtectedMember
 def parse_channel(
-    fabric_obj: fabric.Fabric, payload: containers.JSONObject
+    fabric_obj: fabric.Fabric, payload: type_hints.JSONObject
 ) -> typing.Union[DMChannel, GuildChannel, bases.UnknownObject[Channel]]:
     """
     Parse a channel from a channel payload from an API call.

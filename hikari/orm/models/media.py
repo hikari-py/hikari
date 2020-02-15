@@ -32,6 +32,7 @@ import aiohttp
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 
 if typing.TYPE_CHECKING:
@@ -39,8 +40,6 @@ if typing.TYPE_CHECKING:
     import io
     from concurrent import futures
 
-    from hikari.internal_utilities import type_hints
-    from hikari.internal_utilities import containers
 
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
@@ -89,7 +88,7 @@ class Attachment(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "filename", "size")
 
-    def __init__(self, payload: containers.JSONObject) -> None:
+    def __init__(self, payload: type_hints.JSONObject) -> None:
         self.id = int(payload["id"])
         self.filename = payload["filename"]
         self.size = int(payload["size"])

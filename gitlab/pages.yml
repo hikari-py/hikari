@@ -36,7 +36,6 @@
   script:
     - pip install requests
     - source tasks/deploy.sh
-    - set-versions "$(python tasks/make-version-string.py ${TARGET_BRANCH})" || true
     - bash tasks/retry-aborts.sh pip install nox
     - git clone ${CI_REPOSITORY_URL} -b ${TARGET_BRANCH} hikari_docs_${TARGET_BRANCH} --depth=1
     - cd hikari_docs_${TARGET_BRANCH}
