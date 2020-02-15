@@ -24,10 +24,10 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
