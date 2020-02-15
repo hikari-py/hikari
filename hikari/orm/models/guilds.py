@@ -80,7 +80,7 @@ class PartialGuild(bases.BaseModel, bases.SnowflakeMixin):
 
     #: Hash code for the guild banner, if it has one.
     #:
-    #: :type: :class:`str` or or `None`
+    #: :type: :class:`str` or `None`
     banner_hash: type_hints.Nullable[str]
 
     #: Guild description, if the guild has one assigned. Currently this only applies to discoverable guilds.
@@ -105,7 +105,7 @@ class PartialGuild(bases.BaseModel, bases.SnowflakeMixin):
 
     #: Code for the vanity URL, if the guild has one.
     #:
-    #: :type: :class:`str` or or `None`
+    #: :type: :class:`str` or `None`
     vanity_url_code: type_hints.Nullable[str]
 
     __repr__ = reprs.repr_of("id", "name")
@@ -202,12 +202,12 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
 
     #: The application ID of the creator of the guild. This is always `None` unless the guild was made by a bot.
     #:
-    #: :type: :class:`int` or or `None`
+    #: :type: :class:`int` or `None`
     creator_application_id: type_hints.Nullable[int]
 
     #: Permissions for our user in the guild, minus channel overrides, if the user is in the guild.
     #:
-    #: :type: :class:`hikari.orm.models.permissions.Permission` or or `None`
+    #: :type: :class:`hikari.orm.models.permissions.Permission` or `None`
     my_permissions: type_hints.Nullable[permissions.Permission]
 
     #: Timeout before a user is classed as being AFK in seconds.
@@ -218,7 +218,7 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #: The preferred locale of the guild. This is only populated if the guild has the
     #: :attr:`hikari.orm.models.guild.GuildFeature`
     #:
-    #: :type: :class:`str` or or `None`
+    #: :type: :class:`str` or `None`
     preferred_locale: type_hints.Nullable[str]
 
     #: Default level for message notifications in this guild.
@@ -243,7 +243,7 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
 
     #: Number of members. Only stored if the information is actively available.
     #:
-    #: :type: :class:`int` or or `None`
+    #: :type: :class:`int` or `None`
     member_count: type_hints.Nullable[int]
 
     #: MFA level for this guild.
@@ -251,9 +251,9 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #: :type: :class:`hikari.orm.models.guilds.MFALevel`
     mfa_level: MFALevel
 
-    #: The date/time the bot user joined this guild, or or `None` if the bot is not in this guild.
+    #: The date/time the bot user joined this guild, or `None` if the bot is not in this guild.
     #:
-    #: :type: :class:`datetime.datetime` or or `None`
+    #: :type: :class:`datetime.datetime` or `None`
     joined_at: type_hints.Nullable[datetime.datetime]
 
     #: True if the guild is considered to be large, or False if it is not. This is defined by whatever the large
@@ -475,7 +475,7 @@ class Ban(bases.BaseModel):
 
     #: The reason for the ban, if there is one given.
     #:
-    #: :type: :class:`str` or or `None`
+    #: :type: :class:`str` or `None`
     reason: type_hints.Nullable[str]
 
     #: The user who is banned.
@@ -505,7 +505,7 @@ class GuildEmbed(bases.BaseModel, bases.MarshalMixin):
 
     #: The ID of the embed's target channel if set.
     #:
-    #: :type: :class:`int` or or `None`
+    #: :type: :class:`int` or `None`
     channel_id: type_hints.Nullable[int]
 
     __repr__ = reprs.repr_of("enabled", "channel_id")

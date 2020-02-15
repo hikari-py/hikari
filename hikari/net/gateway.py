@@ -206,7 +206,7 @@ class GatewayClient:
             :class:`GatewayClient` The second is the event name.
         initial_presence:
             A raw JSON object as a :class:`dict` that should be set as the initial presence of the
-            bot user once online. If or `None`, then it will be set to the default, which is
+            bot user once online. If `None`, then it will be set to the default, which is
             showing up as online without a custom status message.
         intents:
             Bitfield of intents to use. If you use the V7 API, this is mandatory. This field will
@@ -221,12 +221,12 @@ class GatewayClient:
             request that member chunks be sent using :meth:`request_member_chunks`.
         proxy_auth:
             Optional :class:`aiohttp.BasicAuth` object that can be provided to allow authenticating
-            with a proxy if you use one. Leave or `None` to ignore.
+            with a proxy if you use one. Leave `None` to ignore.
         proxy_headers:
             Optional :class:`aiohttp.typedefs.LooseHeaders` to provide as headers to allow the 
-            connection through a proxy if you use one. Leave or `None` to ignore.
+            connection through a proxy if you use one. Leave `None` to ignore.
         proxy_url:
-            Optional :class:`str` to use for a proxy server. If or `None`, then it is ignored.
+            Optional :class:`str` to use for a proxy server. If `None`, then it is ignored.
         session_id:
             The session ID to use. If specified along with a `seq`, then the gateway client
             will attempt to RESUME an existing session rather than re-IDENTIFY. Otherwise, it
@@ -422,7 +422,7 @@ class GatewayClient:
 
         #: The current session ID, if known.
         #:
-        #: :type: :class:`str` or or `None`
+        #: :type: :class:`str` or `None`
         self.session_id: type_hints.Nullable[str] = session_id
 
         #: The current sequence number for state synchronization with the API, if known.

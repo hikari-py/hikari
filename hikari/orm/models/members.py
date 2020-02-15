@@ -89,7 +89,7 @@ class Member(users.User, delegate_fabricated=True):
 
     #: The user's online presence. This will be `None` until populated by a gateway event.
     #:
-    #: :type: :class:`hikari.orm.models.presences.Presence` or or `None`
+    #: :type: :class:`hikari.orm.models.presences.Presence` or `None`
     presence: type_hints.Nullable[presences.MemberPresence]
 
     __copy_by_ref__ = ("presence", "guild")
