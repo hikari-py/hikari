@@ -24,8 +24,8 @@
     - "[[ \"$CI_PROJECT_URL\" = \"$ORIGINAL_REPO_URL\" ]] || (echo 'You are running off of a fork, so deployment is skipped.' && exit 0)"
     - apt-get update
     - apt-get install curl git openssh-client -y
-    - bash tasks/retry-aborts.sh pip install twine wheel
-    - bash tasks/retry-aborts.sh pip install -e .
+    - bash tasks/retry_aborts.sh pip install twine wheel
+    - bash tasks/retry_aborts.sh pip install -e .
 
 prerelease:
   retry:
