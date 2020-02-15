@@ -26,7 +26,6 @@ import weakref
 
 import pytest
 
-import hikari.internal_utilities.type_hints
 from hikari.internal_utilities import delegate
 from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
@@ -542,7 +541,7 @@ class DummyModel2(bases.MarshalMixin):
         id: int,
         name: str,
         nekos: typing.List[int],
-        model: hikari.internal_utilities.type_hints.JSONObject,
+        model: type_hints.JSONObject,
         optional=None,
     ):
         self.id = id

@@ -420,7 +420,6 @@ class Client:
         except KeyboardInterrupt:
             self.logger.info("received signal to shut down client")
         finally:
-
             self.loop.run_until_complete(self.shutdown())
 
             # Not implemented on Windows

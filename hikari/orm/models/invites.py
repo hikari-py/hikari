@@ -105,7 +105,7 @@ class Invite(bases.BaseModel):
 
     #: The user who created the invite.
     #:
-    #: :type: :class:`hikari.orm.models.users.IUser` or or `None`
+    #: :type: :class:`hikari.orm.models.users.IUser` or `None`
     inviter: type_hints.Nullable[users.BaseUser]
 
     #: The user this invite is targeting.
