@@ -462,17 +462,17 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
     async def handle_message_reaction_add(self, gateway, payload):
         self.dispatch(event_types.EventType.RAW_MESSAGE_REACTION_ADD, payload)
         guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
+        channel_id = int(payload["channel_id"])
         message_id = int(payload["message_id"])
         user_id = int(payload["user_id"])
         message_obj = self.fabric.state_registry.get_message_by_id(message_id)
-        guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 
         if message_obj is None:
-            # Message was not cached, so ignore
-            return
-
-        emoji_obj = self.fabric.state_registry.parse_emoji(payload["emoji"], guild_obj)
-        reaction_obj = self.fabric.state_registry.increment_reaction_count(message_obj, emoji_obj)
+            reaction_obj = self.fabric.state_registry.parse_reaction(payload, message_id, channel_id)
+        else:
+            reaction_obj = self.fabric.state_registry.increment_reaction_count(
+                message_obj, self.fabric.state_registry.parse_emoji(payload["emoji"], None),
+            )
 
         if guild_id is not None:
             user_obj = self.fabric.state_registry.get_member_by_id(user_id, guild_id)
@@ -481,7 +481,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
 
         if user_obj is not None:
             self.dispatch(event_types.EventType.MESSAGE_REACTION_ADD, reaction_obj, user_obj)
-
         else:
             self.logger.debug(
                 "ignoring MESSAGE_REACTION_ADD for unknown %s %s",

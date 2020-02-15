@@ -301,7 +301,7 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         if "reactions" in payload:
             self.reactions = []
             for reaction_payload in payload.get("reactions"):
-                self._fabric.state_registry.parse_reaction(reaction_payload)
+                self._fabric.state_registry.parse_reaction(reaction_payload, self.id, self.channel_id)
 
     @property
     def guild(self) -> type_hints.Nullable[guilds.Guild]:

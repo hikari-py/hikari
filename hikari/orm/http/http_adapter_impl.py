@@ -215,9 +215,9 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         channel: type_hints.NotRequired[_channels.ChannelLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         emoji = getattr(reaction, "emoji", reaction)
-        message = message or getattr(reaction, "message", message)
+        channel = channel or getattr(reaction, "channel_id", channel)
         await self.fabric.http_client.delete_user_reaction(
-            message_id=transformations.get_parent_id_from_model(reaction, message, "message"),
+            message_id=transformations.get_parent_id_from_model(reaction, message, "message_id"),
             channel_id=transformations.get_parent_id_from_model(message, channel, "channel"),
             emoji=getattr(emoji, "url_name", emoji),
             user_id=transformations.get_id(user),
