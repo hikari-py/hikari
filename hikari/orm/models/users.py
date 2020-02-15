@@ -59,7 +59,7 @@ class BaseUser(bases.BaseModel, bases.SnowflakeMixin, interface=True):
 
     #: The hash of the user's avatar, or None if they do not have one.
     #:
-    #: :type: :class:`str` or or `None`
+    #: :type: :class:`str` or `None`
     avatar_hash: type_hints.Nullable[str]
 
     #: True if the user is a bot, False otherwise
@@ -142,14 +142,14 @@ class OAuth2User(User):
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
-    #: :type: :class:`bool` or or `None` if not available.
+    #: :type: :class:`bool` or `None` if not available.
     is_mfa_enabled: type_hints.Nullable[bool]
 
     #: The user's chosen language option.
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
-    #: :type: :class:`str` or or `None` if not available.
+    #: :type: :class:`str` or `None` if not available.
     #:
     #: Note:
     #:     If you wish to obtain further information about a locale, and what it provides, you
@@ -178,14 +178,14 @@ class OAuth2User(User):
     #:
     #: Requires the `email` OAuth2 scope.
     #:
-    #: :type: :class:`bool` or or `None` if not available.
+    #: :type: :class:`bool` or `None` if not available.
     is_verified: type_hints.Nullable[bool]
 
     #: The user's email address.
     #:
     #: Requires the `email` OAuth2 scope.
     #:
-    #: :type: :class:`str` or or `None` if not available`
+    #: :type: :class:`str` or `None` if not available`
     email: type_hints.Nullable[str]
 
     #: The flags on a user's account. Describes the type of badges the user will have on their
@@ -193,14 +193,14 @@ class OAuth2User(User):
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
-    #: :type: :class:`UserFlag` or or `None` if not available.
+    #: :type: :class:`UserFlag` or `None` if not available.
     flags: type_hints.Nullable[UserFlag]
 
     #: The type of Nitro subscription that the user has.
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
-    #: :type: :class:`PremiumType` or or `None` if not available.
+    #: :type: :class:`PremiumType` or `None` if not available.
     premium_type: type_hints.Nullable[PremiumType]
 
     __repr__ = reprs.repr_of("id", "username", "discriminator", "is_bot", "is_verified", "is_mfa_enabled")

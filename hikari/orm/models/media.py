@@ -40,7 +40,6 @@ if typing.TYPE_CHECKING:
     import io
     from concurrent import futures
 
-
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
 

@@ -39,6 +39,14 @@ NotRequired = typing.Union[T, unspecified.Unspecified]
 #: Shorthand for :attr:`Nullable` AND :attr:`NotRequired`.
 NullableNotRequired = typing.Union[T, None, unspecified.Unspecified]
 
-__all__ = ["Nullable", "NotRequired", "NullableNotRequired"]
+#: Type hint for a Discord-compatible object.
+#:
+#: This is a :class:`builtins.dict` of :class:`builtins.str` keys that map to any value. Since the
+#: :mod:`hikari.net` module does not enforce concrete models for values sent and received, mappings are passed
+#: around to represent request and response data. This allows an implementation to use this layer as desired.
 JSONObject = typing.MutableMapping[str, typing.Any]
+
+#: A JSON array.
 JSONArray = typing.Sequence[typing.Any]
+
+__all__ = ["Nullable", "NotRequired", "NullableNotRequired", "JSONObject", "JSONArray"]

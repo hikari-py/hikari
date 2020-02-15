@@ -182,7 +182,7 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
 
     #: The optional ID of the last message to be sent.
     #:
-    #: :type: :class:`int` or or `None`
+    #: :type: :class:`int` or `None`
     last_message_id: type_hints.Nullable[int]
 
     @aio.optional_await("send message to channel")
@@ -273,7 +273,7 @@ class GuildChannel(Channel):
 
     #: The parent channel ID.
     #:
-    #: :type: :class:`int` or or `None`
+    #: :type: :class:`int` or `None`
     parent_id: type_hints.Nullable[int]
 
     #: The position of the channel in the channel list.
@@ -330,7 +330,7 @@ class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT):
 
     #: The channel topic.
     #:
-    #: :type: :class:`str` or or `None`
+    #: :type: :class:`str` or `None`
     topic: type_hints.Nullable[str]
 
     #: How many seconds a user has to wait before sending consecutive messages.
@@ -340,7 +340,7 @@ class GuildTextChannel(GuildChannel, TextChannel, type=ChannelType.GUILD_TEXT):
 
     #: The optional ID of the last message to be sent.
     #:
-    #: :type: :class:`int` or or `None`
+    #: :type: :class:`int` or `None`
     last_message_id: type_hints.Nullable[int]
 
     #: Whether the channel is NSFW or not
@@ -370,7 +370,7 @@ class DMChannel(TextChannel, type=ChannelType.DM):
 
     #: The optional ID of the last message to be sent.
     #:
-    #: :type: :class:`int` or or `None`
+    #: :type: :class:`int` or `None`
     last_message_id: type_hints.Nullable[int]
 
     #: Sequence of recipients in the DM chat.
@@ -407,7 +407,7 @@ class GuildVoiceChannel(GuildChannel, type=ChannelType.GUILD_VOICE):
 
     #: The max number of users in the voice channel, or None if there is no limit.
     #:
-    #: :type: :class:`int` or or `None`
+    #: :type: :class:`int` or `None`
     user_limit: type_hints.Nullable[int]
 
     __repr__ = reprs.repr_of("id", "name", "guild.name", "bitrate", "user_limit")
@@ -435,18 +435,18 @@ class GroupDMChannel(DMChannel, type=ChannelType.GROUP_DM):
 
     #: Hash of the icon for the chat, if there is one.
     #:
-    #: :type: :class:`str` or or `None`
+    #: :type: :class:`str` or `None`
     icon_hash: type_hints.Nullable[str]
 
     #: Name for the chat, if there is one.
     #:
-    #: :type: :class:`str` or or `None`
+    #: :type: :class:`str` or `None`
     name: type_hints.Nullable[str]
 
     #: If the chat was made by a bot, this will be the application ID of the bot that made it. For all other cases it
     #: will be `None`.
     #:
-    #: :type: :class:`int` or or `None`
+    #: :type: :class:`int` or `None`
     owner_application_id: type_hints.Nullable[int]
 
     __repr__ = reprs.repr_of("id", "name")
@@ -490,12 +490,12 @@ class GuildAnnouncementChannel(GuildChannel, type=ChannelType.GUILD_ANNOUNCEMENT
 
     #: The channel topic.
     #:
-    #: :type: :class:`str` or or `None`
+    #: :type: :class:`str` or `None`
     topic: type_hints.Nullable[str]
 
     #: The optional ID of the last message to be sent.
     #:
-    #: :type: :class:`int` or or `None`
+    #: :type: :class:`int` or `None`
     last_message_id: type_hints.Nullable[int]
 
     #: Whether the channel is NSFW or not

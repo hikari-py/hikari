@@ -40,7 +40,6 @@ from hikari.internal_utilities import type_hints
 from hikari.net import base_http_client
 
 if typing.TYPE_CHECKING:
-
     import asyncio
     import datetime
     import ssl
