@@ -18,7 +18,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
-import contextlib
 import copy
 import functools
 import inspect
@@ -26,7 +25,6 @@ import logging
 import os
 import queue
 import re
-import socket
 import threading
 import time
 import typing
@@ -440,13 +438,6 @@ def timeout_after(time_period):
 
 def stupid_windows_please_stop_breaking_my_tests(test):
     return pytest.mark.skipif(os.name == "nt", reason="This test will not pass on Windows :(")(test)
-
-
-def free_port():
-    with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-        s.bind(("", 0))
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return s.getsockname()[1]
 
 
 def create_autospec(spec, *args, **kwargs):

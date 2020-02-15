@@ -24,10 +24,10 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
@@ -35,7 +35,6 @@ from hikari.orm.models import guilds
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import users
     from hikari.orm.state import base_registry
@@ -68,7 +67,7 @@ class VanityURL(bases.BaseModel):
     #: :type: :class:`int`
     uses: int
 
-    def __init__(self, payload: containers.JSONObject) -> None:
+    def __init__(self, payload: type_hints.JSONObject) -> None:
         self.code = payload["code"]
         self.uses = int(payload["uses"])
 
@@ -106,7 +105,7 @@ class Invite(bases.BaseModel):
 
     #: The user who created the invite.
     #:
-    #: :type: :class:`hikari.orm.models.users.IUser` or :class:`None`
+    #: :type: :class:`hikari.orm.models.users.IUser` or or `None`
     inviter: type_hints.Nullable[users.BaseUser]
 
     #: The user this invite is targeting.
@@ -131,7 +130,7 @@ class Invite(bases.BaseModel):
 
     __repr__ = reprs.repr_of("code", "inviter.id", "guild", "channel")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         self.code = payload["code"]
         self.guild = transformations.nullable_cast(payload.get("guild"), guilds.PartialGuild)
         self.channel = channels.PartialChannel(fabric_obj, payload["channel"])
@@ -188,7 +187,7 @@ class InviteWithMetadata(Invite):
 
     __repr__ = reprs.repr_of("code", "guild", "channel", "inviter.id", "uses", "max_uses", "created_at")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
         super().__init__(fabric_obj, payload)
         self.uses = int(payload["uses"])
         self.max_uses = int(payload["max_uses"])
@@ -198,7 +197,7 @@ class InviteWithMetadata(Invite):
         self.is_revoked = payload.get("revoked", False)
 
 
-def parse_invite(fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> typing.Union[Invite, InviteWithMetadata]:
+def parse_invite(fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> typing.Union[Invite, InviteWithMetadata]:
     """
     Consume a fabric object and some type of invite payload and try to parse
     whether this invite includes metadata or not for the given payload.

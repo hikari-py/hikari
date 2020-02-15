@@ -26,11 +26,11 @@ import typing
 
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
+from hikari.internal_utilities import type_hints
 from hikari.net import ratelimits
 from hikari.orm.gateway import base_chunker
 
 if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import guilds
 
@@ -87,7 +87,7 @@ class BasicChunkerImpl(base_chunker.BaseChunker):
 
             del self.shard_chunkers[shard_id]
 
-    async def handle_next_chunk(self, chunk_payload: containers.JSONObject, shard_id: int) -> None:
+    async def handle_next_chunk(self, chunk_payload: type_hints.JSONObject, shard_id: int) -> None:
         guild_id = int(chunk_payload["guild_id"])
         guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 

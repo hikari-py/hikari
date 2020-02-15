@@ -16,15 +16,36 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import os
+import re
+import types
 
 import setuptools
 
-__version__ = "0.0.72"
+
+name = "hikari"
 
 
 def long_description():
     with open("README.md") as fp:
         return fp.read()
+
+
+def parse_meta():
+    with open(os.path.join(name, "_about.py")) as fp:
+        code = fp.read()
+
+    token_pattern = re.compile(
+        r"^__(?P<key>\w+)?__\s*=\s*(?P<quote>(?:'{3}|\"{3}|'|\"))(?P<value>.*?)(?P=quote)", re.M
+    )
+
+    groups = {}
+
+    for match in token_pattern.finditer(code):
+        group = match.groupdict()
+        groups[group["key"]] = group["value"]
+
+    return types.SimpleNamespace(**groups)
 
 
 def parse_requirements():
@@ -33,17 +54,19 @@ def parse_requirements():
         return [d for d in dependencies if not d.startswith("#")]
 
 
+metadata = parse_meta()
+
 setuptools.setup(
-    name="hikari",
-    version=__version__,
+    name=name,
+    version=metadata.version,
     description="A sane Discord API for Python 3 built on asyncio and good intentions",
     long_description=long_description(),
     long_description_content_type="text/markdown",
-    author="Nekokatt",
-    author_email="nekoka.tt@outlook.com",
-    license="LGPL-3.0-ONLY",
-    url="https://gitlab.com/nekokatt/hikari",
-    packages=setuptools.find_namespace_packages(include=["hikari*"]),
+    author=metadata.author,
+    author_email=metadata.email,
+    license=metadata.license,
+    url=metadata.url,
+    packages=setuptools.find_namespace_packages(include=[name + "*"]),
     python_requires=">=3.8.0,<3.10",
     install_requires=parse_requirements(),
     include_package_data=True,

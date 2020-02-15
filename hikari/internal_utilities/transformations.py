@@ -114,7 +114,7 @@ def cast_if_specified(
         iterable:
             If this should iterate through `data`, converting each entry defaults to `False`.
         nullable:
-            If this should skip attempting to cast data when it's :class:`None`, defaults to `False`. If both this and
+            If this should skip attempting to cast data when it's or `None`, defaults to `False`. If both this and
             `iterable` are `True` then this will assume that data itself will be nullable rather than entries in data.
         **kwargs:
             Optional kwargs to pass-through to cast, along with the data.

@@ -37,6 +37,17 @@ pypi_server = "pypi.org"
 api_name = os.environ["API_NAME"]
 pypi_json_url = f"https://{pypi_server}/pypi/{api_name}/json"
 
+
+# Inspect the version in pyproject.toml
+with open(os.path.join(api_name, "_about.py")) as fp:
+    previous_version = re.findall(r"^__version__\s*=\s*\"(.*?)\"", fp.read(), re.M)[0]
+    previous_version_parts = re.match(r"(\d+)\.(\d+)\.(\d+)", previous_version)
+    previous_major = int(previous_version_parts.group(1)) if previous_version_parts else 0
+    previous_minor = int(previous_version_parts.group(2)) if previous_version_parts else 0
+    previous_micro = int(previous_version_parts.group(3)) if previous_version_parts else 0
+    print("Previous committed version was", ".".join(map(str, (previous_major, previous_minor, previous_micro))))
+
+
 print("Querying API at", pypi_json_url, file=sys.stderr)
 
 with requests.get(pypi_json_url) as resp:
@@ -50,15 +61,6 @@ with requests.get(pypi_json_url) as resp:
         root = resp.json()
         releases = root["releases"]
         current_version = root["info"]["version"]
-
-
-# Inspect the version in pyproject.toml
-with open("setup.py") as fp:
-    previous_version = re.findall(r"^__version__\s*=\s*\"(.*?)\"", fp.read(), re.M)[0]
-    previous_version_parts = re.match(r"(\d+)\.(\d+)\.(\d+)", previous_version)
-    previous_major = int(previous_version_parts.group(1)) if previous_version_parts else 0
-    previous_minor = int(previous_version_parts.group(2)) if previous_version_parts else 0
-    previous_micro = int(previous_version_parts.group(3)) if previous_version_parts else 0
 
 if is_staging:
     # If development, we release a patch.

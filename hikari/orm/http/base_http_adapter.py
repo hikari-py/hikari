@@ -1894,7 +1894,7 @@ class BaseHTTPAdapter(abc.ABC):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Returns:
-            :class:`None` if `compute_prune_count` is `False`, or an :class:`int` representing the number
+            or `None` if `compute_prune_count` is `False`, or an :class:`int` representing the number
             of members who were kicked.
 
         Raises:
