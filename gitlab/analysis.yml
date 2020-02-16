@@ -16,7 +16,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 .tools-base:
   image: python:3.8.1
-  stage: verify
+  stage: test
   before_script:
     - bash tasks/retry_aborts.sh pip install nox
   only:
@@ -35,11 +35,6 @@ safety:
   script:
     - bash tasks/retry_aborts.sh nox -s safety
 
-bandit:
-  extends: .tools-base
-  script:
-    - bash tasks/retry_aborts.sh nox -s sast
-
 pylint:
   extends: .tools-base
   script:
@@ -47,3 +42,27 @@ pylint:
   artifacts:
     reports:
       junit: public/pylint.xml
+
+include:
+  - template: "Dependency-Scanning.gitlab-ci.yml"
+  - template: "SAST.gitlab-ci.yml"
+  - template: "License-Scanning.gitlab-ci.yml"
+
+sast:
+  variables:
+    SAST_BANDIT_EXCLUDED_PATHS: tests/*,docs/*,gitlab/*,insomnia/*,public/*,tasks/*,noxfile.py
+    SAST_EXCLUDED_PATHS: tests/*,docs/*,gitlab/*,insomnia/*,public/*,tasks/*,noxfile.py
+
+license_scanning:
+  # Overly slow to run and not very important, so skip normally to get 5 minutes back on 
+  # each pipeline.
+  only:
+    - schedules
+
+dependency_scanning:
+  only:
+    - merge_requests
+    - schedules
+
+
+

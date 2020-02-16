@@ -34,7 +34,7 @@ is_pages = len(sys.argv) > 1 and "pages" in sys.argv[1:]
 
 log_message("will use", "staging" if is_staging else "prod", "configuration for this next version")
 if is_pages:
-    log_message("will not bump versions up, this is just for gitlab pages.")
+    log_message("will not bump versions up, this is just for gitlab pages")
 
 pypi_server = "pypi.org"
 api_name = os.getenv("API_NAME", "hikari")
@@ -96,23 +96,33 @@ with requests.get(pypi_json_url) as resp:
 aboutpy_prod_v = LooseVersion(".".join(map(str, aboutpy_v.version[:3])))
 log_message("_about.py represents a version that would result in", aboutpy_prod_v, "being released to prod")
 
+
 if is_staging:
     if is_pages:
         # Just keep the main version bits and the `dev` but not the specific patch, as it is easier to work with.
         result_v = aboutpy_prod_v.vstring + ".dev"
     else:
+
         # staging release.
-        # if we already have a pypi dev release with the same major.minor.micro as the one in _about.py, then
-        # find the biggest number and add 1 to the patch.
-        try:
-            next_patch = latest_matching_staging_v.version[4] + 1
-        except IndexError:
-            # someone messed the version string up or something, meh, just assume it is fine.
-            log_message(latest_matching_staging_v, "doesn't match a patch staging version, so just ignoring it")
-            next_patch = 1
-        log_message("using next patch of", next_patch)
-        bits = [*map(str, latest_matching_staging_v.version[:3]), f"dev{next_patch}"]
-        result_v = LooseVersion(".".join(bits))
+        # if we already have a pypi dev release with the same major.minor.micro as the one in _about.py, then check
+        # if the _about.py has a dev version in it or a release version. If it is a release version, we want to
+        # increment the micro digit, as this is the CI updating its version. Otherwise, find the biggest number 
+        # and add 1 to the patch. 
+        if aboutpy_prod_v.vstring == aboutpy_v.vstring:
+            log_message("looks like we are performing a new version number update from x.x.x to (x.x.x+1.dev)!")
+            last_index = len(aboutpy_prod_v.version) - 1
+            bits = [*map(str, aboutpy_prod_v.version[:last_index]), f"{aboutpy_prod_v.version[last_index] + 1}.dev"]
+            result_v = LooseVersion(".".join(bits))
+        else:
+            try:
+                next_patch = latest_matching_staging_v.version[4] + 1
+            except IndexError:
+                # someone messed the version string up or something, meh, just assume it is fine.
+                log_message(latest_matching_staging_v, "doesn't match a patch staging version, so just ignoring it")
+                next_patch = 1
+            log_message("using next patch of", next_patch)
+            bits = [*map(str, latest_matching_staging_v.version[:3]), f"dev{next_patch}"]
+            result_v = LooseVersion(".".join(bits))
 else:
     if not is_pages:
         # ignore what is on PyPI and just use the aboutpy_prod_version, unless it is on the releases list, then

@@ -38,7 +38,7 @@
 
 .nox-pip-install: &noxpipinstall
   extends: .test-env
-  stage: verify
+  stage: test
   script:
     - apt install git -y
     - bash tasks/retry_aborts.sh nox --sessions pip pip_sdist pip_bdist_wheel pip_git
@@ -97,7 +97,7 @@ verify-c3.9-pypi:
 
 coverage-coalesce:
   image: python:3.8.1
-  stage: verify
+  stage: results
   script:
     - bash tasks/retry_aborts.sh pip install coverage
     - ls public

@@ -34,11 +34,11 @@ tests() {
     assert 300.300.300.dev1 when using staging no_pages 300.300.300.dev
     assert 300.300.300.dev2 when using staging no_pages 300.300.300.dev1
     assert 300.300.300.dev10000 when using staging no_pages 300.300.300.dev9999
-    assert 300.300.300.dev1 when using staging no_pages 300.300.300
+    assert 300.300.301.dev when using staging no_pages 300.300.300
     assert 300.300.300.dev1 when using staging no_pages 300.300.300sdasdfgafg
-    assert 300.300.dev1 when using staging no_pages 300.300
-    assert 300.dev1 when using staging no_pages 300
-    assert 0.0.0.dev1 when using staging no_pages ""
+    assert 300.301.dev when using staging no_pages 300.300
+    assert 301.dev when using staging no_pages 300
+    assert 0.0.1.dev when using staging no_pages ""
 
     assert 300.300.300 when using master pages 300.300.300.dev
     assert 300.300.300 when using master pages 300.300.300.dev1
