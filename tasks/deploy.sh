@@ -29,6 +29,7 @@ function deploy-to-svc() {
     chmod 600 ~/.ssh/id_rsa
     ssh-keyscan -t rsa ${GIT_SVC_HOST} >> ~/.ssh/known_hosts
     ssh-add ~/.ssh/id_rsa
+    git remote set-url ${REMOTE_NAME} "${REPOSITORY_URL}"
     # Verify the key works.
     ssh "${GIT_TEST_SSH_PATH}"
     git commit -am "(ci) Deployed ${current_version} to PyPI [skip deploy]" --allow-empty
@@ -52,7 +53,6 @@ function do-deployment() {
     
     local old_version
     local current_version
-    git remote set-url ${REMOTE_NAME} "${REPOSITORY_URL}"
     git config user.name "${CI_ROBOT_NAME}"
     git config user.email "${CI_ROBOT_EMAIL}"
 
