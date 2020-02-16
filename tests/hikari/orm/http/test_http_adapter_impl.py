@@ -500,9 +500,7 @@ class TestHTTPAdapterImpl:
         fabric_impl.http_client.delete_user_reaction = mock.AsyncMock()
         assert (
             await fabric_impl.http_adapter.delete_reaction(
-                emoji=_helpers.mock_model(
-                    emojis.GuildEmoji, id=21212121212, name="nya", url_name="nya:21212121212"
-                ),
+                emoji=_helpers.mock_model(emojis.GuildEmoji, id=21212121212, name="nya", url_name="nya:21212121212"),
                 user=user,
                 message=532432123,
                 channel=434343,
