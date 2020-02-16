@@ -554,13 +554,29 @@ class TestHTTPClient:
         with mock.patch.object(routes, "CHANNEL_INVITES", compile=mock.MagicMock(return_value=mock_route)):
             assert (
                 await http_client_impl.create_channel_invite(
-                    "99992929", max_age=5, max_uses=7, temporary=True, unique=False, target_user="29292929292", target_user_type=2, reason="XD"
+                    "99992929",
+                    max_age=5,
+                    max_uses=7,
+                    temporary=True,
+                    unique=False,
+                    target_user="29292929292",
+                    target_user_type=2,
+                    reason="XD",
                 )
                 is mock_response
             )
             routes.CHANNEL_INVITES.compile.assert_called_once_with(http_client_impl.POST, channel_id="99992929")
         http_client_impl._request.assert_called_once_with(
-            mock_route, json_body={"max_age": 5, "max_uses": 7, "temporary": True, "unique": False, "target_user": "29292929292", "target_user_type": 2}, reason="XD"
+            mock_route,
+            json_body={
+                "max_age": 5,
+                "max_uses": 7,
+                "temporary": True,
+                "unique": False,
+                "target_user": "29292929292",
+                "target_user_type": 2,
+            },
+            reason="XD",
         )
 
     @pytest.mark.asyncio

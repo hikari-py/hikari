@@ -263,6 +263,8 @@ class TestIModel:
 
         assert test.copy() is not test
         try:
+            # this is intentional, as it will error if the test is not passing.
+            # noinspection PyStatementEffect
             test.copy().data
             assert False, "this should have raised an AttributeError."
         except AttributeError:
@@ -537,12 +539,7 @@ class DummyModel2(bases.MarshalMixin):
     optional: type_hints.Nullable[str]
 
     def __init__(
-        self,
-        id: int,
-        name: str,
-        nekos: typing.List[int],
-        model: type_hints.JSONObject,
-        optional=None,
+        self, id: int, name: str, nekos: typing.List[int], model: type_hints.JSONObject, optional=None,
     ):
         self.id = id
         self.name = name
