@@ -15,18 +15,64 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-.cpython3.8.0: &cpython380
+include:
+  - template: "Dependency-Scanning.gitlab-ci.yml"
+  - template: "SAST.gitlab-ci.yml"
+  - template: "License-Scanning.gitlab-ci.yml"
+
+sast:
+  variables:
+    SAST_BANDIT_EXCLUDED_PATHS: tests/*,docs/*,gitlab/*,insomnia/*,public/*,tasks/*,noxfile.py
+    SAST_EXCLUDED_PATHS: tests/*,docs/*,gitlab/*,insomnia/*,public/*,tasks/*,noxfile.py
+
+license_scanning:
+  # Overly slow to run and not very important, so skip normally to get 5 minutes back on
+  # each pipeline.
+  only:
+    - schedules
+
+dependency_scanning:
+  only:
+    - merge_requests
+    - schedules
+
+.venv:
+  before_script:
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - bash tasks/retry_aborts.sh pip install nox
+  only:
+    - branches
+    - merge_requests
+    - tags
+    - schedules
+
+
+.cpython3.8.0:
   image: python:3.8.0
+  extends: .venv
 
-.cpython3.8.1: &cpython381
+.cpython3.8.1:
   image: python:3.8.1
+  extends: .venv
 
-.cpython3.9: &cpython39rc
+.cpython3.9-rc:
   image: python:3.9-rc
+  extends: .venv
 
-.nox-test: &noxtest
-  extends: .test-env
+.cpython-tool-alpine:
+  image: python:3.8.1-alpine
+  extends: .venv
+
+.cpython-tool-buster:
+  extends: .cpython3.8.1
+
+.nox-test:
   script:
+    - apt-get install -qy git gcc g++ make
+    - bash tasks/retry_aborts.sh pip install nox
+    - source tasks/config.sh
+    - mkdir public || true
     - bash tasks/retry_aborts.sh nox -stest
     - mv .coverage public/${CI_JOB_NAME}.coverage
   artifacts:
@@ -36,67 +82,67 @@
     reports:
       junit: public/tests.xml
 
-.nox-pip-install: &noxpipinstall
-  extends: .test-env
-  stage: test
+.nox-pip-install:
   script:
     - apt install git -y
     - bash tasks/retry_aborts.sh nox --sessions pip pip_sdist pip_bdist_wheel pip_git
 
-.nox-pip-install-showtime: &noxpipinstallshowtime
-  extends: .test-env
+.nox-pip-install-showtime:
   script:
     - apt install git -y
     - bash tasks/retry_aborts.sh nox -s pip -- --showtime
   stage: post-deploy
   only:
     - master
-    - staging 
-
-.test-env:
-  only:
-    - branches
-    - merge_requests
-    - tags
-    - schedules
-  allow_failure: false
-  stage: test
-  before_script:
-    - apt-get install -qy git gcc g++ make
-    - bash tasks/retry_aborts.sh pip install nox
-    - source tasks/config.sh
-    - mkdir public || true
+    - staging
 
 pytest-c3.8.0:
-  <<: *cpython380
-  <<: *noxtest
+  extends:
+    - .cpython-3.8.0
+    - .nox-test
 
 pytest-c3.8.1:
-  <<: *cpython381
-  <<: *noxtest
+  extends:
+    - .cpython-3.8.1
+    - .nox-test
 
-pytest-c3.9:
-  <<: *cpython39rc
-  <<: *noxtest
+pytest-c3.9-rc:
+  extends:
+    - .cpython-3.9-rc
+    - .nox-test
 
-setup-c3.8-dryrun:
-  <<: *cpython380
-  <<: *noxpipinstall
+install-c3.8.0:
+  extends:
+    - .cpython-3.8.0
+    - .nox-pip-install
 
-setup-c3.9-dryrun:
-  <<: *cpython39rc
-  <<: *noxpipinstall
+install-c3.8.1:
+  extends:
+    - .cpython-3.8.1
+    - .nox-pip-install
 
-verify-c3.8-pypi:
-  <<: *cpython380
-  <<: *noxpipinstallshowtime
+install-c3.9-rc:
+  extends:
+    - .cpython-3.9-rc
+    - .nox-pip-install
 
-verify-c3.9-pypi:
-  <<: *cpython39rc
-  <<: *noxpipinstallshowtime
+verify-c3.8.0-pypi:
+  extends:
+    - .cpython-3.8.0
+    - .nox-pip-install-showtime
+
+verify-c3.8.1-pypi:
+  extends:
+    - .cpython-3.8.1
+    - .nox-pip-install-showtime
+
+verify-c3.9-rc-pypi:
+  extends:
+    - .cpython-3.9-rc
+    - .nox-pip-install-showtime
 
 coverage-coalesce:
-  image: python:3.8.1
+  extends: .cpython-tool-alpine
   stage: results
   script:
     - bash tasks/retry_aborts.sh pip install coverage
@@ -111,8 +157,28 @@ coverage-coalesce:
     - schedules
 
 verify-autoversioning-logic:
-    <<: *cpython380
+    extends: .cpython-tool-alpine
+    stage: test
     before_script:
       - bash tasks/retry_aborts.sh pip install requests
     script:
       - bash tasks/test_make_version_string.sh
+
+black:
+  extends: .cpython-tool-buster
+  script:
+    - bash tasks/retry_aborts.sh nox -s format -- --check --diff
+
+safety:
+  extends: .cpython-tool-buster
+  script:
+    - bash tasks/retry_aborts.sh nox -s safety
+
+pylint:
+  extends: .cpython-tool-buster
+  script:
+    - bash tasks/retry_aborts.sh nox -s lint
+  artifacts:
+    reports:
+      junit: public/pylint.xml
+
