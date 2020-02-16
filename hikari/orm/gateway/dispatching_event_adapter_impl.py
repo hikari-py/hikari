@@ -235,7 +235,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         else:
             await self._handle_guild_leave(gateway, payload)
 
-    async def _handle_guild_unavailable(self, gateway, payload):
+    async def _handle_guild_unavailable(self, _, payload):
         # We shouldn't ever need to parse this payload unless we have inconsistent state, but if that happens,
         # lets attempt to fix it.
         guild_id = int(payload["id"])
@@ -249,7 +249,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             # so that we don't fail on other events later, and pre-emptively parse this information now.
             self.fabric.state_registry.parse_guild(payload)
 
-    async def _handle_guild_leave(self, gateway, payload):
+    async def _handle_guild_leave(self, _, payload):
         guild = self.fabric.state_registry.parse_guild(payload)
         self.fabric.state_registry.delete_guild(guild)
         self.dispatch(event_types.EventType.GUILD_LEAVE, guild)
@@ -630,6 +630,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         else:
             self.dispatch(event_types.EventType.WEBHOOKS_UPDATE, channel_obj)
 
-    async def handle_invite_create(self, gateway, payload):
+    async def handle_invite_create(self, _, payload):
         invite_obj = self.fabric.state_registry.parse_invite(payload)
         self.dispatch(event_types.EventType.INVITE_CREATE, invite_obj)
