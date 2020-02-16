@@ -58,6 +58,7 @@ pages:  # deploys the generated artifacts as pages
   image: busybox:1.31.1-musl
   before_script:
     - 'mkdir public || true'
+    - git log -n 1 "${CI_COMMIT_SHA}" --format="%B" | grep -iqE "\[\s*(skip|no|don'?t|do\s+not)\s+pages?\s*\]" && echo "SKIPPING ${CI_JOB_STAGE} STAGE JOB" && exit 0
   dependencies:
     - staging-pages
     - master-pages
