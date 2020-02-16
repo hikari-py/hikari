@@ -23,10 +23,8 @@ stages:
 
 variables:
   DOCKER_DRIVER: "overlay2"
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
  
 include:
   - local: "/gitlab/test.yml"
-  - local: "/gitlab/analysis.yml"
   - local: "/gitlab/pages.yml"
   - local: "/gitlab/deploy.yml"
