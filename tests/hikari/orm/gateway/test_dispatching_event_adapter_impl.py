@@ -1830,25 +1830,3 @@ class TestDispatchingEventAdapterImpl:
         await adapter_impl.handle_webhooks_update(gateway_impl, payload)
 
         dispatch_impl.assert_called_with(event_types.EventType.WEBHOOKS_UPDATE, channel_obj)
-
-    @pytest.mark.asyncio
-    async def test_handle_invite_create(self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl):
-        timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
-        invite_obj = _helpers.mock_model(invites.Invite)
-        fabric_impl.state_registry.parse_invite = mock.MagicMock(return_value=invite_obj)
-
-        payload = {
-            "channel_id": "123",
-            "code": "urmom",
-            "created_at": timestamp.isoformat(),
-            "guild_id": "456",
-            "inviter": {"avatar": "TotallyAnAvatar", "discriminator": 6666, "id": "987", "username": "hugh_mungus"},
-            "max_age": 69,
-            "max_uses": 420,
-            "temporary": False,
-            "uses": 1337,
-        }
-
-        await adapter_impl.handle_invite_create(gateway_impl, payload)
-        fabric_impl.state_registry.parse_invite.assert_called_once_with(payload)
-        dispatch_impl.assert_called_once_with(event_types.EventType.INVITE_CREATE, invite_obj)
