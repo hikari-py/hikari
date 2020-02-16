@@ -65,7 +65,8 @@ function do-deployment() {
 
     old_version=$(grep -oP "${CURRENT_VERSION_PATTERN}" "${CURRENT_VERSION_FILE}")
     current_version=$(python tasks/make_version_string.py "${COMMIT_REF}")
-
+    
+    set-versions "${current_version}"
     pip install -e .
 
     case "${COMMIT_REF}" in
@@ -78,7 +79,6 @@ function do-deployment() {
             deploy-to-svc "${old_version}" "${current_version}"
             ;;
         ${PREPROD_BRANCH})
-            set-versions "${current_version}"
             deploy-to-pypi
             ;;
         *)
