@@ -160,15 +160,17 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_reaction(self, message_obj: messages.Message, user_obj: users.User, emoji_obj: emojis.Emoji) -> None:
+    def delete_reaction(
+        self, message_obj: messages.Message, user_obj: type_hints.Nullable[users.User], emoji_obj: emojis.Emoji
+    ) -> None:
         """
-        Attempt to remove the given reaction from the given message by the given user..
+        Attempt to remove the given reaction from the given message by the given user.
 
         Args:
             message_obj:
                 the message to remove the reaction from.
             user_obj:
-                the user to remove the reaction from.
+                the user to remove the reaction from. If None, all reactions for that emoji are removed.
             emoji_obj:
                 the parsed emoji object that the reaction was made as.
         """
@@ -508,6 +510,16 @@ class BaseRegistry(abc.ABC):
         ...
 
     @typing.overload
+    def parse_channel(self, channel_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> channels.GuildChannel:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def parse_channel(self, channel_payload: type_hints.JSONObject, guild_obj: None) -> channels.DMChannel:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
     def parse_channel(self, channel_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> channels.GuildChannel:
         ...
 

@@ -163,7 +163,8 @@ CHANNEL_WEBHOOKS = RouteTemplate("/channels/{channel_id}/webhooks")
 
 # Reactions
 ALL_REACTIONS = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions")
-REACTION = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{used_id}")
+REACTION_EMOJI = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions/{emoji}")
+REACTION_EMOJI_USER = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{used_id}")
 REACTIONS = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions/{emoji}")
 
 # Guilds

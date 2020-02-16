@@ -192,7 +192,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
 
                 if status == 204:
                     body = None
-                if content_type == "application/json":
+                elif content_type == "application/json":
                     body = self.json_deserialize(raw_body)
                 elif content_type == "text/plain" or content_type == "text/html":
                     await self._handle_bad_response(
@@ -616,6 +616,28 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         route = routes.OWN_REACTION.compile(self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji)
         await self._request(route)
 
+    async def delete_all_reactions_for_emoji(self, channel_id: str, message_id: str, emoji: str) -> None:
+        """
+        Remove all reactions for a single given emoji on a given message in a given channel or user DM.
+
+        Args:
+            channel_id:
+                The channel ID to remove from.
+            message_id:
+                The message ID to remove from.
+            emoji:
+                The emoji to delete. This can either be a series of unicode characters making up a valid Discord
+                emoji, or it can be a snowflake ID for a custom emoji.
+
+        Raises:
+            hikari.net.errors.NotFoundError:
+                If the channel or message or emoji or user is not found.
+            hikari.net.errors.ForbiddenError:
+                If you lack the `MANAGE_MESSAGES` permission, or are in DMs.
+        """
+        route = routes.REACTION_EMOJI.compile(self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji)
+        await self._request(route)
+
     async def delete_user_reaction(self, channel_id: str, message_id: str, emoji: str, user_id: str) -> None:
         """
         Remove a reaction made by a given user using a given emoji on a given message in a given channel or user DM.
@@ -637,7 +659,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_MESSAGES` permission, or are in DMs.
         """
-        route = routes.REACTION.compile(
+        route = routes.REACTION_EMOJI_USER.compile(
             self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji, user_id=user_id,
         )
         await self._request(route)
