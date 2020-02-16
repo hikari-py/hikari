@@ -32,7 +32,6 @@ try:
     WEBHOOK_URL = os.environ["RELEASE_WEBHOOK"]
     ENVIRONMENT = os.environ["RELEASE_WEBHOOK_NAME"]
     COLOUR = os.environ["RELEASE_WEBHOOK_COLOUR"]
-    DESCRIPTION = os.environ["RELEASE_WEBHOOK_DESCRIPTION"]
     BRIEF = f"[{VERSION}] New {ENVIRONMENT} deployment!"
     AUTHOR = os.environ["REPO_AUTHOR"]
 
@@ -41,14 +40,13 @@ try:
         json = {
             "embeds": [
                 {
-                    "title": NAME,
+                    "title": f"{NAME} - {RELEASE_WEBHOOK_NAME}",
                     "footer": {
                         "text": BRIEF + "\n\n" + DESCRIPTION,
                     },
                     "color": int(COLOUR, 16),
                     "author": {"name": AUTHOR},
-                    "description": f"[{NAME} v{VERSION}]({DEPLOYMENT_HOST}/project/{NAME}/{VERSION}) has "
-                                   f"just been put into {ENVIRONMENT}."
+                    "description": f"[{NAME} v{VERSION}]({DEPLOYMENT_HOST}/project/{NAME}/{VERSION})"
                 }
             ]
         },
