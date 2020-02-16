@@ -16,14 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Network components for the Hikari Discord API.
-"""
-from hikari.net import base_http_client
-from hikari.net import gateway
-from hikari.net import http_client
-from hikari.net import ratelimits
-from hikari.net import routes
-from hikari.net import status_info_client
-from hikari.net import user_agent
-from hikari.net import versions
+
+__author__ = "Nekokatt"
+__copyright__ = "© 2019-2020 Nekokatt"
+__email__ = "nekoka.tt@outlook.com"
+__license__ = "LGPL-3.0-ONLY"
+__version__ = "0.0.73.dev"
+__url__ = "https://gitlab.com/nekokatt/hikari"
+
+__all__ = ["__author__", "__copyright__", "__email__", "__license__", "__version__", "__url__"]

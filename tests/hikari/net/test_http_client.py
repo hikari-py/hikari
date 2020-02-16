@@ -31,6 +31,7 @@ from hikari.net import errors
 from hikari.net import http_client
 from hikari.net import ratelimits
 from hikari.net import routes
+from hikari.net import versions
 from tests.hikari import _helpers
 
 
@@ -67,7 +68,7 @@ class TestHTTPClient:
                     timeout=None,
                     json_serialize=json.dumps,
                 )
-                assert client.base_url == "https://discordapp.com/api/v6"
+                assert client.base_url == f"https://discordapp.com/api/v{int(versions.HTTPAPIVersion.STABLE)}"
                 assert client.global_ratelimiter is mock_manual_rate_limiter
                 assert client.json_serialize is json.dumps
                 assert client.json_deserialize is json.loads
@@ -132,7 +133,8 @@ class TestHTTPClient:
     @mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager")
     @_helpers.assert_raises(type_=RuntimeError)
     def test__init__raises_runtime_error_with_invalid_token(self, *args):
-        http_client.HTTPClient(token="An-invalid-TOKEN")
+        with http_client.HTTPClient(token="An-invalid-TOKEN"):
+            pass
 
     @pytest.mark.asyncio
     async def test_close(self, http_client_impl):
@@ -402,11 +404,20 @@ class TestHTTPClient:
         http_client_impl._request.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
+    async def test_delete_all_reactions_for_emoji(self, http_client_impl):
+        mock_route = mock.MagicMock(routes.REACTION_EMOJI)
+        with mock.patch.object(routes, "REACTION_EMOJI", compile=mock.MagicMock(return_value=mock_route)):
+            assert await http_client_impl.delete_all_reactions_for_emoji("222", "333", "222:owo") is None
+            routes.REACTION_EMOJI.compile.assert_called_once_with(
+                http_client_impl.DELETE, channel_id="222", message_id="333", emoji="222:owo"
+            )
+
+    @pytest.mark.asyncio
     async def test_delete_user_reaction(self, http_client_impl):
-        mock_route = mock.MagicMock(routes.REACTION)
-        with mock.patch.object(routes, "REACTION", compile=mock.MagicMock(return_value=mock_route)):
+        mock_route = mock.MagicMock(routes.REACTION_EMOJI_USER)
+        with mock.patch.object(routes, "REACTION_EMOJI_USER", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.delete_user_reaction("11111", "4444", "emoji:42", "29292992") is None
-            routes.REACTION.compile.assert_called_once_with(
+            routes.REACTION_EMOJI_USER.compile.assert_called_once_with(
                 http_client_impl.DELETE, channel_id="11111", message_id="4444", emoji="emoji:42", user_id="29292992"
             )
         http_client_impl._request.assert_called_once_with(mock_route)
@@ -430,17 +441,13 @@ class TestHTTPClient:
         mock_route = mock.MagicMock(routes.REACTIONS)
         with mock.patch.object(routes, "REACTIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert (
-                await http_client_impl.get_reactions(
-                    "29292929", "48484848", "emoji:42", before="5555555", after="3333333", limit=40
-                )
+                await http_client_impl.get_reactions("29292929", "48484848", "emoji:42", after="3333333", limit=40)
                 is mock_response
             )
             routes.REACTIONS.compile.assert_called_once_with(
                 http_client_impl.GET, channel_id="29292929", message_id="48484848", emoji="emoji:42"
             )
-        http_client_impl._request.assert_called_once_with(
-            mock_route, query={"before": "5555555", "after": "3333333", "limit": 40}
-        )
+        http_client_impl._request.assert_called_once_with(mock_route, query={"after": "3333333", "limit": 40})
 
     @pytest.mark.asyncio
     async def test_delete_all_reactions(self, http_client_impl):
@@ -556,13 +563,29 @@ class TestHTTPClient:
         with mock.patch.object(routes, "CHANNEL_INVITES", compile=mock.MagicMock(return_value=mock_route)):
             assert (
                 await http_client_impl.create_channel_invite(
-                    "99992929", max_age=5, max_uses=7, temporary=True, unique=False, reason="XD"
+                    "99992929",
+                    max_age=5,
+                    max_uses=7,
+                    temporary=True,
+                    unique=False,
+                    target_user="29292929292",
+                    target_user_type=2,
+                    reason="XD",
                 )
                 is mock_response
             )
             routes.CHANNEL_INVITES.compile.assert_called_once_with(http_client_impl.POST, channel_id="99992929")
         http_client_impl._request.assert_called_once_with(
-            mock_route, json_body={"max_age": 5, "max_uses": 7, "temporary": True, "unique": False,}, reason="XD"
+            mock_route,
+            json_body={
+                "max_age": 5,
+                "max_uses": 7,
+                "temporary": True,
+                "unique": False,
+                "target_user": "29292929292",
+                "target_user_type": 2,
+            },
+            reason="XD",
         )
 
     @pytest.mark.asyncio

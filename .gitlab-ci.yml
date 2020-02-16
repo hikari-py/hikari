@@ -24,8 +24,11 @@ stages:
 variables:
   DOCKER_DRIVER: "overlay2"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  SAST_BANDIT_EXCLUDED_PATHS: tests/*,docs/*,gitlab/*,insomnia/*,public/*,tasks/*,noxfile.py
-  SAST_EXCLUDED_PATHS: tests/*,docs/*,gitlab/*,insomnia/*,public/*,tasks/*,noxfile.py
+ 
+sast:
+  variables:
+    SAST_BANDIT_EXCLUDED_PATHS: tests/*,docs/*,gitlab/*,insomnia/*,public/*,tasks/*,noxfile.py
+    SAST_EXCLUDED_PATHS: tests/*,docs/*,gitlab/*,insomnia/*,public/*,tasks/*,noxfile.py
 
 include:
   - local: "/gitlab/test.yml"

@@ -29,16 +29,6 @@ from hikari.internal_utilities import assertions
 HashableT = typing.TypeVar("HashableT", bound=typing.Hashable)
 ValueT = typing.TypeVar("ValueT")
 
-#: Type hint for a Discord-compatible object.
-#:
-#: This is a :class:`builtins.dict` of :class:`builtins.str` keys that map to any value. Since the
-#: :mod:`hikari.net` module does not enforce concrete models for values sent and received, mappings are passed
-#: around to represent request and response data. This allows an implementation to use this layer as desired.
-JSONObject = typing.MutableMapping[str, typing.Any]
-
-#: A JSON array.
-JSONArray = typing.Sequence[typing.Any]
-
 
 class ObjectProxy(typing.Generic[ValueT], typing.Dict[str, ValueT]):
     """
@@ -134,8 +124,6 @@ EMPTY_DICT: typing.Mapping = types.MappingProxyType({})
 
 
 __all__ = (
-    "JSONArray",
-    "JSONObject",
     "ObjectProxy",
     "LRUDict",
     "EMPTY_SEQUENCE",

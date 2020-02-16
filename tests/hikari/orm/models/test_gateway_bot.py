@@ -25,12 +25,12 @@ from hikari.orm.models import gateway_bot
 from tests.hikari import _helpers
 
 
-@pytest.fixture()
+@pytest.fixture
 def session_start_payload():
     return {"total": 1000, "remaining": 999, "reset_after": 14400000}
 
 
-@pytest.fixture()
+@pytest.fixture
 def gateway_bot_payload(session_start_payload):
     return {"url": "wss://gateway.discord.gg/", "shards": 9, "session_start_limit": session_start_payload}
 

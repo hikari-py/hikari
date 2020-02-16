@@ -28,9 +28,9 @@ from __future__ import annotations
 import abc
 import typing
 
+from hikari.internal_utilities import type_hints
+
 if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import type_hints
-    from hikari.internal_utilities import containers
     from hikari.orm.models import guilds
 
 
@@ -42,13 +42,13 @@ class BaseChunker(abc.ABC):
     __slots__ = ()
 
     @abc.abstractmethod
-    def load_members_for(
+    async def load_members_for(
         self,
         guild_obj: guilds.Guild,
         *guild_objs: guilds.Guild,
         limit: int = 0,
         presences: bool = True,
-        query: str = None,
+        query: str = "",
         user_ids: type_hints.Nullable[typing.Sequence[int]] = None,
     ) -> None:
         """
@@ -73,12 +73,12 @@ class BaseChunker(abc.ABC):
                 in the given sequence.
 
         Warning:
-            Specifying both a query and user_ids is not supported and will raise
+            Specifying both a query/limit and user_ids is not supported and will raise
             a :class:`RuntimeError`.
         """
 
     @abc.abstractmethod
-    async def handle_next_chunk(self, chunk_payload: containers.JSONObject, shard_id: int) -> None:
+    async def handle_next_chunk(self, chunk_payload: type_hints.JSONObject, shard_id: int) -> None:
         """
         Handle a new chunk from the gateway.
 
@@ -90,5 +90,5 @@ class BaseChunker(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def close(self):
+    def close(self):
         """Close the chunker safely (kill any tasks running) if applicable."""

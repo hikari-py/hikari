@@ -115,9 +115,9 @@ class BaseHTTPAdapter(abc.ABC):
             An :class:`hikari.orm.models.audit_logs.AuditLog` object.
 
         Raises:
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the given permissions to view an audit log.
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild does not exist.
         """
 
@@ -134,7 +134,9 @@ class BaseHTTPAdapter(abc.ABC):
             The :class:`hikari.orm.models.channels.Channel` object that has been found.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.ForbiddenHTTPError:
+                If the current token doesn't have access to the channel.
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel does not exist.
         """
 
@@ -190,11 +192,11 @@ class BaseHTTPAdapter(abc.ABC):
             The :class:`hikari.orm.models.channels.Channel` object that has been modified.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel does not exist.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the permission to make the change.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide incorrect options for the corresponding channel type (e.g. a `bitrate` for a text
                 channel).
         """
@@ -215,9 +217,9 @@ class BaseHTTPAdapter(abc.ABC):
             Deleted channels cannot be un-deleted. Deletion of DMs is able to be undone by reopening the DM.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel does not exist
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you do not have permission to delete the channel.
         """
 
@@ -264,9 +266,9 @@ class BaseHTTPAdapter(abc.ABC):
             This requires the `READ_MESSAGE_HISTORY` permission to be set.
 
         Raises:
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack permission to see the message.
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the message ID or channel ID is not found.
         """
 
@@ -297,12 +299,12 @@ class BaseHTTPAdapter(abc.ABC):
                 if specified, this embed will be sent with the message.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel ID is not found.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If the file is too large, the embed exceeds the defined limits, if the message content is specified and
                 empty or greater than 2000 characters, or if neither of content, file or embed are specified.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack permissions to send to this channel.
 
         Returns:
@@ -338,12 +340,12 @@ class BaseHTTPAdapter(abc.ABC):
                 The object or ID of the channel to add the reaction in, only required when `message` is an ID.
 
         Raises:
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If this is the first reaction using this specific emoji on this message and you lack the `ADD_REACTIONS`
                 permission. If you lack `READ_MESSAGE_HISTORY`, this may also raise this error.
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel or message is not found, or if the emoji is not found.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If the emoji is not valid, unknown, or formatted incorrectly
         """
 
@@ -351,7 +353,7 @@ class BaseHTTPAdapter(abc.ABC):
     @typing.overload
     async def delete_reaction(
         self,
-        reaction: _emojis.EmojiLikeT,
+        emoji: _emojis.EmojiLikeT,
         user: _users.BaseUserLikeT,
         message: bases.SnowflakeLikeT,
         channel: _channels.ChannelLikeT,
@@ -361,25 +363,20 @@ class BaseHTTPAdapter(abc.ABC):
     @abc.abstractmethod
     @typing.overload
     async def delete_reaction(
-        self, reaction: _emojis.EmojiLikeT, user: _users.BaseUserLikeT, message: _messages.Message,
+        self, emoji: _emojis.EmojiLikeT, user: _users.BaseUserLikeT, message: _messages.Message
     ) -> None:
         ...
 
     @abc.abstractmethod
-    @typing.overload
-    async def delete_reaction(self, reaction: _reactions.Reaction, user: _users.BaseUserLikeT) -> None:
-        ...
-
-    @abc.abstractmethod
     async def delete_reaction(
-        self, reaction, user, message=unspecified.UNSPECIFIED, channel=unspecified.UNSPECIFIED,
+        self, emoji, user, message, channel=unspecified.UNSPECIFIED,
     ):
         """
         Remove a reaction made by a given user using a given emoji on a given message in a given channel or user DM.
 
         Args:
-            reaction:
-                The reaction object or emoji to delete. This can be a :class:`hikari.orm.models.reactions.Reaction`,
+            emoji:
+                The emoji to delete. This can be a :class:`hikari.orm.models.reactions.Reaction`,
                 a series of unicode characters making up a valid Discord emoji, or a custom emoji object or ID.
             user:
                 The object or ID of the user who made the reaction that you wish to remove.
@@ -391,10 +388,45 @@ class BaseHTTPAdapter(abc.ABC):
                 rather than a reaction object.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel or message or emoji or user is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_MESSAGES` permission, or are in DMs.
+        """
+
+    @abc.abstractmethod
+    @typing.overload
+    async def delete_all_reactions_for_emoji(
+        self, message: bases.SnowflakeLikeT, emoji: _emojis.EmojiLikeT, channel: _channels.GuildChannelLikeT
+    ) -> None:
+        ...
+
+    @abc.abstractmethod
+    @typing.overload
+    async def delete_all_reactions_for_emoji(self, message: _messages.Message, emoji: _emojis.EmojiLikeT) -> None:
+        ...
+
+    @abc.abstractmethod
+    async def delete_all_reactions_for_emoji(
+        self, message, emoji, channel=unspecified.UNSPECIFIED,
+    ):
+        """
+        Deletes all reactions from a given message in a given channel for a single emoji.
+
+        Args:
+            emoji:
+                The emoji to delete. This can be a :class:`hikari.orm.models.reactions.Reaction`,
+                a series of unicode characters making up a valid Discord emoji, or a custom emoji object or ID.
+            message:
+                The object or ID of the message to remove reactions from.
+            channel:
+                The object or ID of the channel to remove reactions within, only required when `message` is an ID.
+
+        Raises:
+            hikari.errors.NotFound:
+                If the channel_id or message_id was not found.
+            hikari.errors.Forbidden:
+                If you lack the `MANAGE_MESSAGES` permission.
         """
 
     @abc.abstractmethod
@@ -421,9 +453,9 @@ class BaseHTTPAdapter(abc.ABC):
                 The object or ID of the channel to remove reactions within, only required when `message` is an ID.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel_id or message_id was not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_MESSAGES` permission.
         """
 
@@ -433,7 +465,6 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         reaction: _reactions.Reaction,
         *,
-        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_users.BaseUser]:
@@ -446,7 +477,6 @@ class BaseHTTPAdapter(abc.ABC):
         reaction: _emojis.EmojiLikeT,
         message: _messages.Message,
         *,
-        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_users.BaseUser]:
@@ -460,7 +490,6 @@ class BaseHTTPAdapter(abc.ABC):
         message: bases.SnowflakeLikeT,
         channel: _channels.ChannelLikeT,
         *,
-        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_users.BaseUser]:
@@ -473,7 +502,6 @@ class BaseHTTPAdapter(abc.ABC):
         message=unspecified.UNSPECIFIED,
         channel=unspecified.UNSPECIFIED,
         *,
-        before=unspecified.UNSPECIFIED,
         after=unspecified.UNSPECIFIED,
         limit=unspecified.UNSPECIFIED,
     ):
@@ -533,12 +561,12 @@ class BaseHTTPAdapter(abc.ABC):
             The new :class:`hikari.orm.messages.Message` object.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel_id or message_id is not found.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If the embed exceeds any of the embed limits if specified, or the content is specified and consists
                 only of whitespace, is empty, or is more than 2,000 characters in length.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you try to edit content or embed on a message you did not author or try to edit the flags
                 on a message you did not author without the `MANAGE_MESSAGES` permission.
         """
@@ -562,11 +590,11 @@ class BaseHTTPAdapter(abc.ABC):
                 The object or ID of the channel to delete messages from, only required when `first_message` is an ID.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_MESSAGES` permission in the channel.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If any of the messages passed are older than 2 weeks in age.
             ValueError:
                 If more than 100 messages are passed.
@@ -607,6 +635,12 @@ class BaseHTTPAdapter(abc.ABC):
                 The type of entity this overwrite targets (member or role).
             reason:
                 An optional audit log reason explaining why the change was made.
+
+        Raises:
+            hikari.net.errors.NotFoundHTTPError:
+                If the target channel or overwrite doesn't exist.
+            hikari.net.errors.ForbiddenHTTPError:
+                If the current token lacks permission to do this.
         """
 
     @abc.abstractmethod
@@ -622,9 +656,9 @@ class BaseHTTPAdapter(abc.ABC):
             A sequence of :class:`hikari.orm.models.invites.Invite` objects.
 
         Raises:
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_CHANNELS` permission.
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel does not exist.
         """
 
@@ -637,6 +671,8 @@ class BaseHTTPAdapter(abc.ABC):
         max_uses: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         temporary: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
         unique: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        target_user: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        target_user_type: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> _invites.Invite:
         """
@@ -661,11 +697,11 @@ class BaseHTTPAdapter(abc.ABC):
             An :class:`hikari.orm.models.invites.Invite` object.
 
         Raises:
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `CREATE_INSTANT_MESSAGES` permission.
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel does not exist.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If the arguments provided are not valid (e.g. negative age, etc).
         """
 
@@ -683,9 +719,9 @@ class BaseHTTPAdapter(abc.ABC):
                 The object or ID of the overwrite to remove.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the overwrite or channel ID does not exist.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_ROLES` permission for that channel.
         """
 
@@ -699,10 +735,10 @@ class BaseHTTPAdapter(abc.ABC):
                 The object or ID of the channel to appear to be typing in.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel is not found.
-            hikari.errors.Forbidden:
-                If you are not in the guild the channel is in
+            hikari.net.errors.ForbiddenHTTPError:
+                If you are not in the guild the channel belongs to.
         """
 
     @abc.abstractmethod
@@ -718,8 +754,10 @@ class BaseHTTPAdapter(abc.ABC):
             A sequence of :class:`hikari.orm.models.messages.Message`.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If no channel matching the ID exists.
+            hikari.net.errors.ForbiddenHTTPError:
+                If you lack permission to do this.
         """
 
     @abc.abstractmethod
@@ -744,9 +782,9 @@ class BaseHTTPAdapter(abc.ABC):
                 The object or ID of the channel to add a pin to, only required when `message` is an ID.
 
         Raises:
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_MESSAGES` permission.
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the message or channel does not exist.
         """
 
@@ -772,9 +810,9 @@ class BaseHTTPAdapter(abc.ABC):
                 The object or ID of the channel to remove a pin from, only required when `message` is an ID.
 
         Raises:
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_MESSAGES` permission.
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the message or channel does not exist.
         """
 
@@ -803,9 +841,9 @@ class BaseHTTPAdapter(abc.ABC):
             A :class:`hikari.orm.models.emojis.GuildEmoji` object.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the emoji aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you aren't a member of said guild.
         """
 
@@ -822,9 +860,9 @@ class BaseHTTPAdapter(abc.ABC):
             A list of :class:`hikari.orm.models.emojis.GuildEmoji` objects.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you aren't a member of said guild.
         """
 
@@ -858,11 +896,11 @@ class BaseHTTPAdapter(abc.ABC):
              The newly created emoji object.
 
          Raises:
-             hikari.errors.NotFound:
+             hikari.net.errors.NotFoundHTTPError:
                  If the guild is not found.
-             hikari.errors.Forbidden:
+             hikari.net.errors.ForbiddenHTTPError:
                  If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
-             hikari.errors.BadRequest:
+             hikari.net.errors.BadRequestHTTPError:
                  If you attempt to upload an image larger than 256kb, an empty image or an invalid image format.
          """
 
@@ -919,9 +957,9 @@ class BaseHTTPAdapter(abc.ABC):
                 An optional audit log reason explaining why the change was made.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the emoji aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_EMOJIS` permission or are not a member of the given guild.
         """
 
@@ -947,9 +985,9 @@ class BaseHTTPAdapter(abc.ABC):
                 The ID of the guild to delete the emoji from, only required when `emoji` is an ID.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the emoji aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
         """
 
@@ -996,9 +1034,9 @@ class BaseHTTPAdapter(abc.ABC):
             The newly created :class:`hikari.orm.models.guilds.Guild` object.
 
         Raises:
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If your bot is on 10 or more guilds.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide unsupported fields like `parent_id` in channel objects.
         """
 
@@ -1015,8 +1053,10 @@ class BaseHTTPAdapter(abc.ABC):
             The requested :class:`hikari.orm.models.guilds.Guild` object.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
+            hikari.net.errors.ForbiddenHTTPError:
+                If the current token doesn't have access to the guild.
         """
 
     @abc.abstractmethod
@@ -1076,9 +1116,9 @@ class BaseHTTPAdapter(abc.ABC):
                 Optional reason to apply to the audit log.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
 
@@ -1092,9 +1132,9 @@ class BaseHTTPAdapter(abc.ABC):
                 The object or ID of the guild to be deleted.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you're not the guild owner.
         """
 
@@ -1112,9 +1152,9 @@ class BaseHTTPAdapter(abc.ABC):
             A list of :class:`hikari.orm.models.channels.GuildChannel` objects.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you're not in the guild.
         """
 
@@ -1171,11 +1211,11 @@ class BaseHTTPAdapter(abc.ABC):
             The newly created channel object.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_CHANNEL` permission or are not in the target guild or are not in the guild.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If you omit the `name` argument.
         """
 
@@ -1217,12 +1257,12 @@ class BaseHTTPAdapter(abc.ABC):
                 tuple of int, int (rather than int, GuildChannel).
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or any of the channels aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_CHANNELS` permission or are not a member of said guild or are not in
                 The guild.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide anything other than the `id` and `position` fields for the channels.
         """
 
@@ -1252,8 +1292,10 @@ class BaseHTTPAdapter(abc.ABC):
             The requested :class:`hikari.orm.models.members.Member` object.
 
         Raises:
-            hikari.errors.NotFound:
-                If either the guild or the member aren't found or are not in the guild.
+            hikari.net.errors.NotFoundHTTPError:
+                If either the guild or the member aren't found.
+            hikari.net.errors.ForbiddenHTTPError:
+                If you don't have access to the target guild.
         """
 
     @abc.abstractmethod
@@ -1332,14 +1374,14 @@ class BaseHTTPAdapter(abc.ABC):
             reason:
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild, user, channel or any of the roles aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack any of the applicable permissions
                 (`MANAGE_NICKNAMES`, `MANAGE_ROLES`, `MUTE_MEMBERS`, `DEAFEN_MEMBERS` or `MOVE_MEMBERS`).
                 Note that to move a member you must also have permission to connect to the end channel.
                 This will also be raised if you're not in the guild.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If you pass `mute`, `deaf` or `current_voice_channel` while the member is not connected
                 to a voice channel.
         """
@@ -1363,11 +1405,11 @@ class BaseHTTPAdapter(abc.ABC):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `CHANGE_NICKNAME` permission or are not in the guild.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide a disallowed nickname, one that is too long, or one that is empty.
         """
 
@@ -1413,9 +1455,9 @@ class BaseHTTPAdapter(abc.ABC):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild, member or role aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
 
@@ -1461,9 +1503,9 @@ class BaseHTTPAdapter(abc.ABC):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild, member or role aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
 
@@ -1502,9 +1544,9 @@ class BaseHTTPAdapter(abc.ABC):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or member aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `KICK_MEMBERS` permission or are not in the guild.
         """
 
@@ -1523,9 +1565,9 @@ class BaseHTTPAdapter(abc.ABC):
             A :class:`hikari.orm.models.guilds.Ban` object for the requested user.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the user aren't found, or if the user is not banned.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
 
@@ -1542,9 +1584,9 @@ class BaseHTTPAdapter(abc.ABC):
             A list of :class:`hikari.orm.models.guilds.Ban` objects.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
 
@@ -1595,9 +1637,9 @@ class BaseHTTPAdapter(abc.ABC):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or member aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
 
@@ -1621,9 +1663,9 @@ class BaseHTTPAdapter(abc.ABC):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or member aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `BAN_MEMBERS` permission or are not a in the guild.
         """
 
@@ -1640,9 +1682,9 @@ class BaseHTTPAdapter(abc.ABC):
             A list of :class:`hikari.orm.models.roles.Role` objects.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you're not in the guild.
         """
 
@@ -1681,11 +1723,11 @@ class BaseHTTPAdapter(abc.ABC):
             The newly created role object.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_ROLES` permission or you're not in the guild.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide invalid values for the role attributes.
         """
 
@@ -1725,11 +1767,11 @@ class BaseHTTPAdapter(abc.ABC):
                 partial role object.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or any of the roles aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_ROLES` permission or you're not in the guild.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide invalid values for the `position` fields.
         """
 
@@ -1801,11 +1843,11 @@ class BaseHTTPAdapter(abc.ABC):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or role aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_ROLES` permission or you're not in the guild.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide invalid values for the role attributes.
         """
 
@@ -1832,9 +1874,9 @@ class BaseHTTPAdapter(abc.ABC):
                  partial role object.
 
          Raises:
-             hikari.errors.NotFound:
+             hikari.net.errors.NotFoundHTTPError:
                  If either the guild or the role aren't found.
-             hikari.errors.Forbidden:
+             hikari.net.errors.ForbiddenHTTPError:
                  If you lack the `MANAGE_ROLES` permission or are not in the guild.
          """
 
@@ -1853,11 +1895,11 @@ class BaseHTTPAdapter(abc.ABC):
              the number of members estimated to be pruned.
 
          Raises:
-             hikari.errors.NotFound:
+             hikari.net.errors.NotFoundHTTPError:
                  If the guild is not found.
-             hikari.errors.Forbidden:
+             hikari.net.errors.ForbiddenHTTPError:
                  If you lack the `KICK_MEMBERS` or you are not in the guild.
-             hikari.errors.BadRequest:
+             hikari.net.errors.BadRequestHTTPError:
                  If you pass an invalid amount of days.
          """
 
@@ -1884,15 +1926,15 @@ class BaseHTTPAdapter(abc.ABC):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Returns:
-            :class:`None` if `compute_prune_count` is `False`, or an :class:`int` representing the number
+            `None` if `compute_prune_count` is `False`, or an :class:`int` representing the number
             of members who were kicked.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found:
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `KICK_MEMBER` permission or are not in the guild.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If you provide invalid values for the `days` and `compute_prune_count` fields.
         """
 
@@ -1909,9 +1951,9 @@ class BaseHTTPAdapter(abc.ABC):
             A list of :class:`hikari.orm.models.voices.VoiceRegion` objects.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found:
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you are not in the guild.
         """
 
@@ -1928,9 +1970,9 @@ class BaseHTTPAdapter(abc.ABC):
             A list of :class:`hikari.orm.models.invites.InviteWithMetadata` objects.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
 
@@ -1947,9 +1989,9 @@ class BaseHTTPAdapter(abc.ABC):
             A list of :class:`hikari.orm.models.integrations.Integration`  objects.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
 
@@ -1979,9 +2021,9 @@ class BaseHTTPAdapter(abc.ABC):
             The newly created :class:`hikari.orm.models.integrations.Integration` object.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
 
@@ -2014,9 +2056,9 @@ class BaseHTTPAdapter(abc.ABC):
                 Optional reason to add to audit logs for the guild explaining why the operation was performed.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the integration aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
 
@@ -2032,9 +2074,9 @@ class BaseHTTPAdapter(abc.ABC):
                 The object or ID of the integration to delete.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the integration aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
 
@@ -2052,9 +2094,9 @@ class BaseHTTPAdapter(abc.ABC):
                 The object or ID of the integration to sync.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the guild or the integration aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
 
@@ -2071,9 +2113,9 @@ class BaseHTTPAdapter(abc.ABC):
               A :class:`hikari.orm.models.guilds.GuildEmbed` object.
 
           Raises:
-              hikari.errors.NotFound:
+              hikari.net.errors.NotFoundHTTPError:
                   If the guild is not found.
-              hikari.errors.Forbidden:
+              hikari.net.errors.ForbiddenHTTPError:
                   If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
 
@@ -2100,9 +2142,9 @@ class BaseHTTPAdapter(abc.ABC):
             The updated :class:`hikari.orm.models.guilds.GuildEmbed` object.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
 
@@ -2119,9 +2161,9 @@ class BaseHTTPAdapter(abc.ABC):
             A :class:`hikari.orm.models.invites.VanityURL` object.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
 
@@ -2167,7 +2209,7 @@ class BaseHTTPAdapter(abc.ABC):
             The requested :class:`hikari.orm.models.invites.Invite` object.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the invite is not found.
         """
 
@@ -2181,9 +2223,9 @@ class BaseHTTPAdapter(abc.ABC):
                 The object or ID for the invite to be deleted.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the invite is not found.
-            hikari.errors.Forbidden
+            hikari.net.errors.ForbiddenHTTPError
                 If you lack either `MANAGE_CHANNELS` on the channel the invite belongs to or `MANAGE_GUILD` for
                 guild-global delete.
         """
@@ -2201,7 +2243,7 @@ class BaseHTTPAdapter(abc.ABC):
             The requested :class:`hikari.orm.models.users.IUser` derivative object.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the user is not found.
         """
 
@@ -2240,7 +2282,7 @@ class BaseHTTPAdapter(abc.ABC):
                 The new avatar image as a filek like object.
 
         Raises:
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If you pass username longer than the limit (2-32) or an invalid image.
         """
 
@@ -2274,7 +2316,7 @@ class BaseHTTPAdapter(abc.ABC):
                 The object or ID of the guild to leave.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
         """
 
@@ -2291,7 +2333,7 @@ class BaseHTTPAdapter(abc.ABC):
              The newly created :class:`hikari.orm.models.channels.DMChannel` object.
 
          Raises:
-             hikari.errors.NotFound:
+             hikari.net.errors.NotFoundHTTPError:
                  If the recipient is not found.
          """
 
@@ -2334,11 +2376,11 @@ class BaseHTTPAdapter(abc.ABC):
             The newly created :class:`hikari.orm.models.webhooks.Webhook` object.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_WEBHOOKS` permission or can not see the given channel.
-            hikari.errors.BadRequest:
+            hikari.net.errors.BadRequestHTTPError:
                 If the avatar image is too big or the format is invalid.
         """
 
@@ -2359,9 +2401,9 @@ class BaseHTTPAdapter(abc.ABC):
             A list of :class:`hikari.orm.models.webhooks.Webhook` objects for the give channel.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the channel is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_WEBHOOKS` permission or can not see the given channel.
         """
 
@@ -2378,9 +2420,9 @@ class BaseHTTPAdapter(abc.ABC):
             A list of :class:`hikari.orm.models.webhooks.Webhook` objects for the given guild.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the guild is not found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the given guild.
         """
 
@@ -2397,8 +2439,10 @@ class BaseHTTPAdapter(abc.ABC):
             The requested :class:`hikari.orm.models.webhooks.Webhook` object.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the webhook is not found.
+            ForbiddenHTTPError:
+                If you're not in the guild that owns this webhook or lack the `MANAGE_WEBHOOKS` permission.
         """
 
     @abc.abstractmethod
@@ -2428,9 +2472,9 @@ class BaseHTTPAdapter(abc.ABC):
                 An optional audit log reason explaining why the change was made.
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If either the webhook or the channel aren't found.
-            hikari.errors.Forbidden:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook belongs
                 to.
         """
@@ -2445,8 +2489,9 @@ class BaseHTTPAdapter(abc.ABC):
                 The object or ID of the webhook to delete
 
         Raises:
-            hikari.errors.NotFound:
+            hikari.net.errors.NotFoundHTTPError:
                 If the webhook is not found.
-            hikari.errors.Forbidden:
-                If you're not the webhook owner.
+            hikari.net.errors.ForbiddenHTTPError:
+                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook belongs
+                to.
         """

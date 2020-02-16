@@ -45,7 +45,7 @@ def gateway():
     return mock.MagicMock()
 
 
-@pytest.fixture()
+@pytest.fixture
 def payload():
     return {}
 

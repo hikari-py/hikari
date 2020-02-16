@@ -22,6 +22,7 @@ The primary client for writing a bot with Hikari.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import datetime
 import inspect
 import signal
@@ -30,7 +31,6 @@ import typing
 
 import aiohttp
 
-from hikari import client_options
 from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import containers
@@ -39,6 +39,7 @@ from hikari.net import errors
 from hikari.net import gateway
 from hikari.net import http_client
 from hikari.net import ratelimits
+from hikari.orm import client_options
 from hikari.orm import fabric
 from hikari.orm.gateway import basic_chunker_impl
 from hikari.orm.gateway import dispatching_event_adapter_impl
@@ -134,6 +135,7 @@ class Client:
             ssl_context=self._client_options.ssl_context,
             verify_ssl=self._client_options.verify_ssl,
             timeout=self._client_options.http_timeout,
+            version=self._client_options.http_api_version,
         )
 
     async def _new_http_adapter(self):
@@ -220,6 +222,7 @@ class Client:
                 initial_presence=self._client_options.presence.to_dict(),
                 shard_id=shard_id,
                 shard_count=shard_count,
+                version=self._client_options.gateway_version,
             )
 
         return shard_map, shard_count
@@ -361,12 +364,14 @@ class Client:
         if self.is_closed:
             return
 
-        try:
-            self.logger.warning("client is shutting down permanently")
+        self.logger.warning("client is shutting down permanently")
 
-            await self.dispatch(event_types.EventType.PRE_SHUTDOWN)
+        await self.dispatch(event_types.EventType.PRE_SHUTDOWN)
 
-            coros = []
+        coros = []
+
+        if self._fabric is not None:
+            self._fabric.chunker.close()
 
             for shard in self._fabric.gateways.values():
                 if not shard.requesting_close_event.is_set():
@@ -379,19 +384,18 @@ class Client:
                         await asyncio.gather(*coros)
             except Exception as ex:
                 self.logger.exception("failed to shut down shards safely, will destroy them instead", exc_info=ex)
-                await self.destroy()
 
-            self.is_closed = True
+        self.is_closed = True
+        self.logger.warning("closing HTTP connection pool")
+
+        try:
+            # If we can't shut this down, we can't do much else. It is probably a bug.
+            await self._fabric.http_client.close()
+        except Exception as ex:
+            self.logger.debug("failed to close HTTP client", exc_info=ex)
         finally:
-            self.logger.warning("closing HTTP connection pool")
-
-            try:
-                # If we can't shut this down, we can't do much else. It is probably a bug.
-                await self._fabric.http_client.close()
-            except Exception as ex:
-                self.logger.debug("failed to close HTTP client", exc_info=ex)
-            finally:
-                await self.dispatch(event_types.EventType.POST_SHUTDOWN)
+            await self.dispatch(event_types.EventType.POST_SHUTDOWN)
+            await self.destroy()
 
     def run(self):
         """
@@ -407,14 +411,21 @@ class Client:
             raise KeyboardInterrupt()
 
         try:
-            self.loop.add_signal_handler(signal.SIGTERM, sigterm_handler)
+            # Not implemented on Windows
+            with contextlib.suppress(NotImplementedError):
+                self.loop.add_signal_handler(signal.SIGTERM, sigterm_handler)
+
             self.loop.run_until_complete(self.start())
             self.loop.run_until_complete(self.join())
         except KeyboardInterrupt:
             self.logger.info("received signal to shut down client")
         finally:
             self.loop.run_until_complete(self.shutdown())
-            self.loop.remove_signal_handler(signal.SIGTERM)
+
+            # Not implemented on Windows
+            with contextlib.suppress(NotImplementedError):
+                self.loop.remove_signal_handler(signal.SIGTERM)
+
             self.logger.info("client has shut down")
 
     def dispatch(self, event: str, *args):

@@ -36,13 +36,14 @@ from hikari.orm.models import invites as _invites
 from hikari.orm.models import media as _media
 from hikari.orm.models import voices as _voices
 
+from hikari.orm.models import channels as _channels
+
 if typing.TYPE_CHECKING:
     from hikari.internal_utilities import type_hints
     from hikari.orm import fabric as _fabric
     from hikari.orm.models import applications as _applications
     from hikari.orm.models import audit_logs as _audit_logs
     from hikari.orm.models import bases
-    from hikari.orm.models import channels as _channels
     from hikari.orm.models import colors as _colors
     from hikari.orm.models import connections as _connections
     from hikari.orm.models import embeds as _embeds
@@ -207,17 +208,28 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             emoji=getattr(emoji, "url_name", emoji),
         )
 
-    async def delete_reaction(
+    async def delete_all_reactions_for_emoji(
         self,
-        reaction: typing.Union[_reactions.Reaction, _emojis.EmojiLikeT],
-        user: _users.BaseUserLikeT,
-        message: type_hints.NotRequired[_messages.MessageLikeT] = unspecified.UNSPECIFIED,
+        message: _messages.MessageLikeT,
+        emoji: _emojis.EmojiLikeT,
         channel: type_hints.NotRequired[_channels.ChannelLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
-        emoji = getattr(reaction, "emoji", reaction)
-        message = message or getattr(reaction, "message", message)
+        await self.fabric.http_client.delete_all_reactions_for_emoji(
+            message_id=transformations.get_id(message),
+            channel_id=transformations.get_parent_id_from_model(message, channel, "channel"),
+            emoji=getattr(emoji, "url_name", emoji),
+        )
+
+    async def delete_reaction(
+        self,
+        emoji: _emojis.EmojiLikeT,
+        user: _users.BaseUserLikeT,
+        message: _messages.MessageLikeT,
+        channel: type_hints.NotRequired[_channels.ChannelLikeT] = unspecified.UNSPECIFIED,
+    ) -> None:
+        emoji = getattr(emoji, "emoji", emoji)
         await self.fabric.http_client.delete_user_reaction(
-            message_id=transformations.get_parent_id_from_model(reaction, message, "message"),
+            message_id=transformations.get_id(message),
             channel_id=transformations.get_parent_id_from_model(message, channel, "channel"),
             emoji=getattr(emoji, "url_name", emoji),
             user_id=transformations.get_id(user),
@@ -239,7 +251,6 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         message: type_hints.NotRequired[_messages.MessageLikeT] = unspecified.UNSPECIFIED,
         channel: type_hints.NotRequired[_channels.ChannelLikeT] = unspecified.UNSPECIFIED,
         *,
-        before: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
         limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_users.BaseUser]:
@@ -272,7 +283,7 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         channel_id = transformations.get_parent_id_from_model(first_message, channel, "channel")
         if additional_messages:
             message_ids = list(
-                # dict.formkeys is used to remove duplicate entries that would cause discord to return an error.
+                # dict.fromkeys is used to remove duplicate entries that would cause discord to return an error.
                 dict.fromkeys(transformations.get_id(message) for message in (first_message, *additional_messages))
             )
             assertions.assert_that(
@@ -318,6 +329,8 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         max_uses: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         temporary: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
         unique: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
+        target_user: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        target_user_type: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
     ) -> _invites.Invite:
         invite_payload = await self.fabric.http_client.create_channel_invite(
@@ -326,6 +339,8 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             max_uses=max_uses,
             temporary=temporary,
             unique=unique,
+            target_user=transformations.cast_if_specified(target_user, transformations.get_id),
+            target_user_type=target_user_type,
             reason=reason,
         )
         return self.fabric.state_registry.parse_invite(invite_payload)

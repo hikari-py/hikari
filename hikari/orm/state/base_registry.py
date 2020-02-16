@@ -24,11 +24,11 @@ from __future__ import annotations
 import abc
 import typing
 
+from hikari.internal_utilities import type_hints
+
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.internal_utilities import type_hints
-    from hikari.internal_utilities import containers
     from hikari.orm.models import applications
     from hikari.orm.models import audit_logs
     from hikari.orm.models import bases
@@ -160,15 +160,17 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_reaction(self, message_obj: messages.Message, user_obj: users.User, emoji_obj: emojis.Emoji) -> None:
+    def delete_reaction(
+        self, message_obj: messages.Message, user_obj: type_hints.Nullable[users.User], emoji_obj: emojis.Emoji
+    ) -> None:
         """
-        Attempt to remove the given reaction from the given message by the given user..
+        Attempt to remove the given reaction from the given message by the given user.
 
         Args:
             message_obj:
                 the message to remove the reaction from.
             user_obj:
-                the user to remove the reaction from.
+                the user to remove the reaction from. If None, all reactions for that emoji are removed.
             emoji_obj:
                 the parsed emoji object that the reaction was made as.
         """
@@ -452,7 +454,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_application(self, application_payload: containers.JSONObject) -> applications.Application:
+    def parse_application(self, application_payload: type_hints.JSONObject) -> applications.Application:
         """
         Parses an application payload into a workable object.
 
@@ -465,7 +467,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_application_user(self, application_user_payload: containers.JSONObject) -> users.OAuth2User:
+    def parse_application_user(self, application_user_payload: type_hints.JSONObject) -> users.OAuth2User:
         """
         Parses an application user payload into a workable object.
 
@@ -478,7 +480,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_audit_log(self, audit_log_payload: containers.JSONObject) -> audit_logs.AuditLog:
+    def parse_audit_log(self, audit_log_payload: type_hints.JSONObject) -> audit_logs.AuditLog:
         """
         Parses an audit log payload into a workable object.
 
@@ -491,7 +493,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_ban(self, ban_payload: containers.JSONObject) -> guilds.Ban:
+    def parse_ban(self, ban_payload: type_hints.JSONObject) -> guilds.Ban:
         """
         Parse a guild ban payload into an object.
 
@@ -504,16 +506,26 @@ class BaseRegistry(abc.ABC):
         """
 
     @typing.overload
-    def parse_channel(self, channel_payload: containers.JSONObject, guild_obj: None) -> channels.DMChannel:
+    def parse_channel(self, channel_payload: type_hints.JSONObject, guild_obj: None) -> channels.DMChannel:
         ...
 
     @typing.overload
-    def parse_channel(self, channel_payload: containers.JSONObject, guild_obj: guilds.Guild) -> channels.GuildChannel:
+    def parse_channel(self, channel_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> channels.GuildChannel:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def parse_channel(self, channel_payload: type_hints.JSONObject, guild_obj: None) -> channels.DMChannel:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def parse_channel(self, channel_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> channels.GuildChannel:
         ...
 
     @abc.abstractmethod
     def parse_channel(
-        self, channel_payload: containers.JSONObject, guild_obj: type_hints.Nullable[guilds.Guild]
+        self, channel_payload: type_hints.JSONObject, guild_obj: type_hints.Nullable[guilds.Guild],
     ) -> channels.Channel:
         """
         Parses a channel payload into a workable object.
@@ -529,7 +541,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_connection(self, connection_payload: containers.JSONObject) -> connections.Connection:
+    def parse_connection(self, connection_payload: type_hints.JSONObject) -> connections.Connection:
         """
         Parses a connection payload into a workable object.
 
@@ -543,16 +555,16 @@ class BaseRegistry(abc.ABC):
         ...
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: containers.JSONObject, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
+    def parse_emoji(self, emoji_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
         ...
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: containers.JSONObject, guild_obj: None) -> emojis.Emoji:
+    def parse_emoji(self, emoji_payload: type_hints.JSONObject, guild_obj: None) -> emojis.Emoji:
         ...
 
     @abc.abstractmethod
     def parse_emoji(
-        self, emoji_payload: containers.JSONObject, guild_obj: type_hints.Nullable[guilds.Guild]
+        self, emoji_payload: type_hints.JSONObject, guild_obj: type_hints.Nullable[guilds.Guild],
     ) -> emojis.Emoji:
         """
         Parses a emoji payload into a workable object.
@@ -568,7 +580,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_gateway_bot(self, gateway_bot_payload: containers.JSONObject) -> gateway_bot.GatewayBot:
+    def parse_gateway_bot(self, gateway_bot_payload: type_hints.JSONObject) -> gateway_bot.GatewayBot:
         """
         Parses a gateway bot payload into a workable object.
 
@@ -581,7 +593,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_guild(self, guild_payload: containers.JSONObject) -> guilds.Guild:
+    def parse_guild(self, guild_payload: type_hints.JSONObject) -> guilds.Guild:
         """
         Parses a guild payload into a workable object.
 
@@ -593,7 +605,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_integration(self, integration_payload: containers.JSONObject) -> integrations.Integration:
+    def parse_integration(self, integration_payload: type_hints.JSONObject) -> integrations.Integration:
         """
         Parse a full integration payload.
 
@@ -606,7 +618,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_invite(self, invite_payload: containers.JSONObject) -> invites.Invite:
+    def parse_invite(self, invite_payload: type_hints.JSONObject) -> invites.Invite:
         """
         Parse an invite payload and any attached metadata.
 
@@ -620,7 +632,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def parse_voice_state(
-        self, voice_state_payload: containers.JSONObject, guild_obj: guilds.Guild
+        self, voice_state_payload: type_hints.JSONObject, guild_obj: guilds.Guild
     ) -> voices.VoiceState:
         """
         Parse a voice state payload into a workable object.
@@ -638,8 +650,8 @@ class BaseRegistry(abc.ABC):
     @abc.abstractmethod
     def parse_partial_member(
         self,
-        partial_member_payload: containers.JSONObject,
-        user_payload: containers.JSONObject,
+        partial_member_payload: type_hints.JSONObject,
+        user_payload: type_hints.JSONObject,
         guild_obj: guilds.Guild,
     ) -> members.Member:
         """
@@ -661,7 +673,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_member(self, member_payload: containers.JSONObject, guild_obj: guilds.Guild) -> members.Member:
+    def parse_member(self, member_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> members.Member:
         """
         Parses a member payload into a workable object.
 
@@ -676,7 +688,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_message(self, message_payload: containers.JSONObject) -> messages.Message:
+    def parse_message(self, message_payload: type_hints.JSONObject) -> messages.Message:
         """
         Parses a message payload into a workable object.
 
@@ -696,7 +708,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def parse_presence(
-        self, member_obj: members.Member, presence_payload: containers.JSONObject
+        self, member_obj: members.Member, presence_payload: type_hints.JSONObject
     ) -> presences.MemberPresence:
         """
         Parse a presence for a given guild and user, and attempt to update the member corresponding to the presence
@@ -713,20 +725,26 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_reaction(self, reaction_payload: containers.JSONObject) -> reactions.Reaction:
+    def parse_reaction(
+        self, reaction_payload: type_hints.JSONObject, channel_id: int, message_id: int,
+    ) -> reactions.Reaction:
         """
         Attempt to parse a reaction object and store it on the corresponding message.
 
         Args:
             reaction_payload:
-                the reaction object to parse.
+                The reaction object to parse.
+            channel_id:
+                The :class:`int` ID of the channel this reaction occurred in.
+            message_id:
+                The :class:`int` ID of the message this reaction occurred on.
 
         Returns:
             a :class:`hikari.orm.models.reactions.Reaction` object.
         """
 
     @abc.abstractmethod
-    def parse_role(self, role_payload: containers.JSONObject, guild_obj: guilds.Guild) -> roles.Role:
+    def parse_role(self, role_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> roles.Role:
         """
         Parses a role payload into a workable object.
 
@@ -741,7 +759,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_user(self, user_payload: containers.JSONObject) -> typing.Union[users.User, users.OAuth2User]:
+    def parse_user(self, user_payload: type_hints.JSONObject) -> typing.Union[users.User, users.OAuth2User]:
         """
         Parses a user payload into a workable object.
 
@@ -761,7 +779,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_webhook(self, webhook_payload: containers.JSONObject) -> webhooks.Webhook:
+    def parse_webhook(self, webhook_payload: type_hints.JSONObject) -> webhooks.Webhook:
         """
         Parses a webhook payload into a workable object.
 
@@ -774,7 +792,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_webhook_user(self, webhook_user_payload: containers.JSONObject) -> webhooks.WebhookUser:
+    def parse_webhook_user(self, webhook_user_payload: type_hints.JSONObject) -> webhooks.WebhookUser:
         """
         Parses a webhook user payload into a workable object.
 
@@ -836,7 +854,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_channel(
-        self, channel_payload: containers.JSONObject
+        self, channel_payload: type_hints.JSONObject
     ) -> type_hints.Nullable[typing.Tuple[channels.Channel, channels.Channel]]:
         """
         Update the given channel represented by the channel payload.
@@ -852,7 +870,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_guild(
-        self, guild_payload: containers.JSONObject
+        self, guild_payload: type_hints.JSONObject
     ) -> type_hints.Nullable[typing.Tuple[guilds.Guild, guilds.Guild]]:
         """
         Update the given guild represented by the guild payload.
@@ -868,7 +886,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_guild_emojis(
-        self, emoji_list: typing.List[containers.JSONObject], guild_obj: guilds.Guild
+        self, emoji_list: typing.List[type_hints.JSONObject], guild_obj: guilds.Guild
     ) -> typing.Tuple[typing.FrozenSet[emojis.GuildEmoji], typing.FrozenSet[emojis.GuildEmoji]]:
         """
         Update the emojis in a given guild.
@@ -886,7 +904,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_member(
-        self, member_obj: members.Member, role_objs: typing.Sequence[roles.Role], payload: containers.JSONObject,
+        self, member_obj: members.Member, role_objs: typing.Sequence[roles.Role], payload: type_hints.JSONObject,
     ) -> typing.Tuple[members.Member, members.Member]:
         """
         Update a member in a given guild. If the member is not already registered, nothing is returned.
@@ -906,7 +924,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_member_presence(
-        self, member_obj: members.Member, presence_payload: containers.JSONObject
+        self, member_obj: members.Member, presence_payload: type_hints.JSONObject
     ) -> typing.Tuple[members.Member, presences.MemberPresence, presences.MemberPresence]:
         """
         Update the presence for a given user in a given guild.
@@ -925,7 +943,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_message(
-        self, payload: containers.JSONObject
+        self, payload: type_hints.JSONObject
     ) -> type_hints.Nullable[typing.Tuple[messages.Message, messages.Message]]:
         """
         Update a message in the cache.
@@ -942,7 +960,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_role(
-        self, guild_obj: guilds.Guild, role_payload: containers.JSONObject
+        self, guild_obj: guilds.Guild, role_payload: type_hints.JSONObject
     ) -> typing.Tuple[roles.Role, roles.Role]:
         """
         Update the given role in a given guild.

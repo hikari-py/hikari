@@ -53,5 +53,7 @@ try:
             ]
         },
     )
-except BaseException as ex:
+except Exception as ex:
     traceback.print_exception(type(ex), ex, ex.__traceback__)
+except (SystemExit, KeyboardInterrupt):
+    pass

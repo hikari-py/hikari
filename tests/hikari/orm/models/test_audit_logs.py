@@ -27,12 +27,12 @@ from hikari.orm.state import base_registry
 from tests.hikari import _helpers
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_state_registry():
     return _helpers.create_autospec(base_registry.BaseRegistry)
 
 
-@pytest.fixture()
+@pytest.fixture
 def fabric_obj(mock_state_registry):
     return fabric.Fabric(state_registry=mock_state_registry)
 
@@ -50,7 +50,7 @@ def mock_user_payload():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_webhook_payload(mock_user_payload):
     return {
         "name": "this is a webhook",
@@ -64,7 +64,7 @@ def mock_webhook_payload(mock_user_payload):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_audit_log_payload(mock_user_payload, mock_webhook_payload):
     return {
         "users": [mock_user_payload],

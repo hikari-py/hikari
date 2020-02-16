@@ -104,7 +104,7 @@ class TestOptionalAwait:
 
 
 class TestEventDelegate:
-    @pytest.fixture()
+    @pytest.fixture
     def mux_map(self):
         return aio.EventDelegate()
 
