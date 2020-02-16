@@ -20,15 +20,14 @@
   stage: deploy
   image: python:3.8.1
   before_script:
+    - git log -n 1 "${CI_COMMIT_SHA}" --format="%B" | grep -iqE "\[\s*(skip|no|don'?t|do\s+not)\s+deploy(ments?)?\s*\]" && echo "SKIPPING ${CI_JOB_STAGE} STAGE JOB" && exit 0
     - source tasks/config.sh
     - apt-get update
-    - apt-get install curl git openssh-client -qy
-    - bash tasks/retry_aborts.sh pip install twine wheel
+    - apt-get install curl openssh-client -qy
+    - bash tasks/retry_aborts.sh pip install twine wheel black
     - bash tasks/retry_aborts.sh pip install -e .
 
 prerelease:
-  retry:
-    max: 2
   extends: .deploy
   only:
     - staging
@@ -38,15 +37,13 @@ prerelease:
     - schedules
   variables:
     RELEASE_WEBHOOK_NAME: "New development snapshot of the next release has been published"
-    RELEASE_WEBHOOK_COLOUR: "0X2C2F33"
+    RELEASE_WEBHOOK_COLOUR: "0x2C2F33"
   script:
-    - "git log -1 --pretty=%B | grep -iq '\\[skip deploy\\]' && (echo 'Deployment was skipped by commit message.' && exit 0)"
-    - export RELEASE_WEBHOOK_DESCRIPTION=''
     - source tasks/deploy.sh
     - do-deployment
   environment:
-    name:
-      staging
+    name: staging
+    url: https://pypi.org/project/hikari/#history
 
 release:
   extends: .deploy
@@ -60,9 +57,8 @@ release:
     RELEASE_WEBHOOK_NAME: "NEW VERSION OF HIKARI HAS BEEN RELEASED!"
     RELEASE_WEBHOOK_COLOUR: "0x7289DA"
   script:
-    - export RELEASE_WEBHOOK_DESCRIPTION=''
     - source tasks/deploy.sh
     - do-deployment
   environment:
-    name:
-      prod
+    name: prod
+    url: https://pypi.org/project/hikari/
