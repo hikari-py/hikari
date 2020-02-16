@@ -29,6 +29,7 @@ import aiohttp.typedefs
 
 from hikari.internal_utilities import type_hints
 from hikari.net import gateway
+from hikari.net import versions
 from hikari.orm.gateway import dispatching_event_adapter_impl
 from hikari.orm.models import presences
 
@@ -79,20 +80,46 @@ class ClientOptions:
     Represents customization settings that can be set for a bot.
     """
 
+    #: Whether to allow redirects or not.
+    #: This defaults to `False` for security reasons, only modify this if you are receiving multiple
+    #: redirection responses causing requests to fail.
     allow_redirects: bool = False
+    #: Options for automatically retrieving all guild members in a guild when a READY event is fired.
     chunk_mode: dispatching_event_adapter_impl.AutoRequestChunksMode = _DEFAULT_CHUNK_MODE
+    #: The :class:`aiohttp.BaseConnector` to use for the client session. This is used for both the websocket
+    #: and any HTTP requests.
     connector: type_hints.Nullable[aiohttp.BaseConnector] = None
+    #: Whether to enable debugging or not. This enables dumping request contents and gateway payload contents
+    #: to the logger, amongst other things that may harm the performance of your application.
     debug: bool = False
-    enable_guild_subscription_events: bool = True
+    #: The intents to send to the gateway on IDENTIFY.
     gateway_intents: type_hints.Nullable[gateway.GatewayIntent] = None
+    #: The gateway API version to use. This defaults to the most recent documented stable API version.
+    gateway_version: versions.GatewayVersion = versions.GatewayVersion.STABLE
+    #: The REST API version to use. This defaults to the most recent documented stable API version.
+    http_api_version: versions.HTTPAPIVersion = versions.HTTPAPIVersion.STABLE
+    #: The timeout to apply to individual HTTP requests. Any request that takes longer than this time period
+    #: will be cancelled with an :class:`asyncio.TimeoutError`
     http_timeout: type_hints.Nullable[float] = None
+    #: The total number of members where the gateway will stop sending offline members in the guild member list.
     large_guild_threshold: int = 250
+    #: The maximum DM channels stored in the cache.
     max_user_dm_channel_count: int = 100
+    #: The maximum messages stored in the cache.
     max_message_cache_size: int = 100
+    #: The initial presence to start the bot with.
     presence: type_hints.Nullable[presences.Presence] = dataclasses.field(default_factory=presences.Presence)
+    #: The proxy authentication to use.
     proxy_auth: type_hints.Nullable[aiohttp.BasicAuth] = None
+    #: The proxy headers to pass.
     proxy_headers: type_hints.Nullable[aiohttp.typedefs.LooseHeaders] = None
+    #: The proxy URL to use.
     proxy_url: type_hints.Nullable[str] = None
+    #: The shard configuration to use. Check :class:`hikari.client_options.ShardOptions` for more information.
     shards: ShardOptions = AUTO_SHARD
+    #: The SSL context to use.
     ssl_context: type_hints.Nullable[ssl.SSLContext] = None
+    #: Whether to enable SSL verification or not.
+    #: Generally you want this enabled to ensure that the SSL certificate that Discord provides is genuine,
+    #: however, some awkward proxies can cause this to not work, in which case you would want to disable this.
     verify_ssl: bool = True

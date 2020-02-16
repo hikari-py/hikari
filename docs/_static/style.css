@@ -275,13 +275,18 @@ dl {
 dl.class {
     margin-top: 4em !important;
     margin-bottom: 4em !important;
+    line-height: 2em;
 }
 
 dl > dd {
     margin-left: 4em;
-    font-size: 90%;
+    line-height: 2em;
 }
 
 .sig-name.descname {
     font-size: inherit !important;
+}
+
+p {
+    line-height: 2em;
 }

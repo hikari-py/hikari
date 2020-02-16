@@ -21,15 +21,16 @@ Basic implementation of a chunker.
 """
 from __future__ import annotations
 
-import itertools
+import asyncio
 import typing
 
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
+from hikari.internal_utilities import type_hints
+from hikari.net import ratelimits
 from hikari.orm.gateway import base_chunker
 
 if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import guilds
 
@@ -40,11 +41,13 @@ class BasicChunkerImpl(base_chunker.BaseChunker):
     and presences received with the given fabric's state registry.
     """
 
-    __slots__ = ("logger", "fabric")
+    __slots__ = ("logger", "fabric", "queues", "shard_chunkers")
 
-    def __init__(self, fabric_obj: fabric.Fabric):
+    def __init__(self, fabric_obj: fabric.Fabric, presences: bool = True) -> None:
         self.fabric = fabric_obj
         self.logger = loggers.get_named_logger(self)
+        self.queues: typing.Dict[int, asyncio.Queue] = {}
+        self.shard_chunkers: typing.Dict[int, asyncio.Task] = {}
 
     async def load_members_for(
         self,
@@ -52,23 +55,39 @@ class BasicChunkerImpl(base_chunker.BaseChunker):
         *guild_objs: guilds.Guild,
         limit: int = 0,
         presences: bool = True,
-        query: str = "",
+        query: type_hints.Nullable[str] = None,
         user_ids: type_hints.Nullable[typing.Sequence[int]] = None,
     ) -> None:
         kwargs = {"presences": presences}
         if user_ids:
-            if query:
-                raise RuntimeError("you may not specify both a query and user_ids when requesting member chunks")
+            if query or limit:
+                raise RuntimeError("you may not specify both a query/limit and user_ids when requesting member chunks")
             kwargs["user_ids"] = list(map(str, user_ids))
         else:
-            kwargs["query"] = query
+            kwargs["query"] = query if query else ""
             kwargs["limit"] = limit
 
-        # We should request the guild info on the shard the guild is using, so aggregate the guilds by the shard id.
-        for shard_id, guild_objs in itertools.groupby((guild_obj, *guild_objs), lambda g: g.shard_id):
-            await self.fabric.gateways[shard_id].request_guild_members(*map(lambda g: str(g.id), guild_objs), **kwargs)
+        for guild in (guild_obj, *guild_objs):
+            shard_id = guild.shard_id
+            if shard_id not in self.queues:
+                self.queues[shard_id] = asyncio.Queue()
 
-    async def handle_next_chunk(self, chunk_payload: containers.JSONObject, shard_id: int) -> None:
+            await self.queues[shard_id].put([guild.id, kwargs])
+
+            if shard_id not in self.shard_chunkers:
+                task = asyncio.create_task(self._do_chunk_for_shard(shard_id))
+                self.shard_chunkers[shard_id] = task
+
+    async def _do_chunk_for_shard(self, shard_id: int) -> None:
+        with ratelimits.WindowedBurstRateLimiter(f"chunking guilds on shard {shard_id}", 60, 60) as limit:
+            while not self.queues[shard_id].empty():
+                guild_id, request_kwargs = self.queues[shard_id].get_nowait()
+                await limit.acquire()
+                await self.fabric.gateways[shard_id].request_guild_members(guild_id, **request_kwargs)
+
+            del self.shard_chunkers[shard_id]
+
+    async def handle_next_chunk(self, chunk_payload: type_hints.JSONObject, shard_id: int) -> None:
         guild_id = int(chunk_payload["guild_id"])
         guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 
@@ -91,5 +110,7 @@ class BasicChunkerImpl(base_chunker.BaseChunker):
             if presence_payload is not None:
                 self.fabric.state_registry.parse_presence(member_obj, presence_payload)
 
-    async def close(self):
-        pass
+    def close(self) -> None:
+        while self.shard_chunkers:
+            _, future = self.shard_chunkers.popitem()
+            future.cancel()

@@ -28,9 +28,11 @@ import aiohttp
 import async_timeout
 import pytest
 
+from hikari.internal_utilities import containers
 from hikari.net import errors
 from hikari.net import gateway
 from hikari.net import user_agent
+from hikari.net import versions
 from tests.hikari import _helpers
 
 
@@ -82,16 +84,15 @@ class MockClientSession:
 
 @pytest.mark.asyncio
 class TestGatewayClientConstructor:
-    @pytest.mark.parametrize(
-        ["input_shard_id", "input_shard_count", "expected_shard_id", "expected_shard_count"],
-        [(None, None, 0, 1), (1, 2, 1, 2), (None, 5, 0, 1), (0, None, 0, 1),],
-    )
-    async def test_init_sets_shard_numbers_correctly(
-        self, input_shard_id, input_shard_count, expected_shard_id, expected_shard_count,
-    ):
+    async def test_init_sets_shard_numbers_correctly(self,):
+        input_shard_id, input_shard_count, expected_shard_id, expected_shard_count = 1, 2, 1, 2
         client = gateway.GatewayClient(shard_id=input_shard_id, shard_count=input_shard_count, token="xxx", url="yyy")
         assert client.shard_id == expected_shard_id
         assert client.shard_count == expected_shard_count
+
+    async def test_dispatch_is_callable(self):
+        client = gateway.GatewayClient(token="xxx", url="yyy")
+        client.dispatch(client, "ping", "pong")
 
     @pytest.mark.parametrize(
         ["compression", "expected_url_query"],
@@ -180,22 +181,28 @@ class TestGatewayClientAiohttpClientSessionKwargsProperty:
 @pytest.mark.asyncio
 class TestGatewayClientWebSocketKwargsProperty:
     async def test_right_stuff_is_included(self):
-        url = "foobarbaz"
-        proxy_url = "http://localhost.lan"
+        url = "http://localhost.lan/discord"
+        proxy_url = "http://localhost.lan/some_proxy"
         proxy_auth = mock.MagicMock()
         proxy_headers = mock.MagicMock()
         verify_ssl = True
         ssl_context = mock.MagicMock()
 
         client = gateway.GatewayClient(
-            url="...",
+            url=url,
             token="...",
             proxy_url=proxy_url,
             proxy_auth=proxy_auth,
             proxy_headers=proxy_headers,
             verify_ssl=verify_ssl,
             ssl_context=ssl_context,
+            version=versions.GatewayVersion.STABLE,
         )
+
+        scheme, netloc, url, params, query, fragment = urllib.parse.urlparse(client._url)
+        query = urllib.parse.parse_qs(query)
+        assert query["v"] == [str(versions.GatewayVersion.STABLE.value)]
+
         client._url = url
 
         assert client._ws_connect_kwargs == dict(
@@ -213,7 +220,7 @@ class TestGatewayClientWebSocketKwargsProperty:
 
 @pytest.mark.asyncio
 class TestGatewayConnect:
-    @pytest.fixture()
+    @pytest.fixture
     def client_session_t(self):
         return MockClientSession()
 
@@ -225,7 +232,7 @@ class TestGatewayConnect:
     def non_hello_payload(self):
         return {"op": 69, "d": "yeet"}
 
-    @pytest.fixture()
+    @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(gateway.GatewayClient)(url="ws://localhost", token="xxx")
@@ -330,7 +337,7 @@ class TestGatewayConnect:
         client.dispatch = mock.MagicMock()
         with self.suppress_closure():
             await client.connect(client_session_t)
-        client.dispatch.assert_called_with(client, "DISCONNECT", None)
+        client.dispatch.assert_called_with(client, "DISCONNECT", containers.EMPTY_DICT)
 
     @_helpers.timeout_after(10.0)
     async def test_new_zlib_each_time(self, client, client_session_t):
@@ -481,7 +488,7 @@ class TestGatewayConnect:
 
 @pytest.mark.asyncio
 class TestGatewayClientIdentifyOrResumeThenPollEvents:
-    @pytest.fixture()
+    @pytest.fixture
     def client(self):
         client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("_identify_or_resume_then_poll_events",))
@@ -654,7 +661,7 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
 
 @pytest.mark.asyncio
 class TestHeartbeatKeepAlive:
-    @pytest.fixture()
+    @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
@@ -714,7 +721,7 @@ class TestHeartbeatKeepAlive:
 
 @pytest.mark.asyncio
 class TestClose:
-    @pytest.fixture()
+    @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
@@ -784,7 +791,7 @@ class TestClose:
 
 @pytest.mark.asyncio
 class TestPollEvents:
-    @pytest.fixture()
+    @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
@@ -802,3 +809,40 @@ class TestPollEvents:
         await client._poll_events()
 
         client.dispatch.assert_called_with(client, "MESSAGE_CREATE", {"content": "whatever"})
+
+
+@pytest.mark.asyncio
+class TestRequestGuildMembers:
+    @pytest.fixture
+    def client(self, event_loop):
+        asyncio.set_event_loop(event_loop)
+        client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
+        client = _helpers.mock_methods_on(client, except_=("request_guild_members",))
+        return client
+
+    async def test_no_kwargs(self, client):
+        await client.request_guild_members("1234", "5678")
+        client._send.assert_awaited_once_with({"op": 8, "d": {"guild_id": ["1234", "5678"], "query": "", "limit": 0}})
+
+    @pytest.mark.parametrize(
+        ["kwargs", "expected_limit", "expected_query"],
+        [({"limit": 22}, 22, ""), ({"query": "lol"}, 0, "lol"), ({"limit": 22, "query": "lol"}, 22, "lol"),],
+    )
+    async def test_limit_and_query(self, client, kwargs, expected_limit, expected_query):
+        await client.request_guild_members("1234", "5678", **kwargs)
+        client._send.assert_awaited_once_with(
+            {"op": 8, "d": {"guild_id": ["1234", "5678"], "query": expected_query, "limit": expected_limit,}}
+        )
+
+    async def test_user_ids(self, client):
+        await client.request_guild_members("1234", "5678", user_ids=["9", "18", "27"])
+        client._send.assert_awaited_once_with(
+            {"op": 8, "d": {"guild_id": ["1234", "5678"], "user_ids": ["9", "18", "27"]}}
+        )
+
+    @pytest.mark.parametrize("presences", [True, False])
+    async def test_presences(self, client, presences):
+        await client.request_guild_members("1234", "5678", presences=presences)
+        client._send.assert_awaited_once_with(
+            {"op": 8, "d": {"guild_id": ["1234", "5678"], "query": "", "limit": 0, "presences": presences}}
+        )

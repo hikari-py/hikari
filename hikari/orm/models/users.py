@@ -24,14 +24,13 @@ from __future__ import annotations
 import enum
 import typing
 
-from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
+from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 
 if typing.TYPE_CHECKING:
     from hikari.orm import fabric
-    from hikari.internal_utilities import type_hints
 
 
 class BaseUser(bases.BaseModel, bases.SnowflakeMixin, interface=True):
@@ -60,7 +59,7 @@ class BaseUser(bases.BaseModel, bases.SnowflakeMixin, interface=True):
 
     #: The hash of the user's avatar, or None if they do not have one.
     #:
-    #: :type: :class:`str` or :class:`None`
+    #: :type: :class:`str` or `None`
     avatar_hash: type_hints.Nullable[str]
 
     #: True if the user is a bot, False otherwise
@@ -84,7 +83,7 @@ class User(BaseUser, bases.BaseModelWithFabric):
     __repr__ = reprs.repr_of("id", "username", "discriminator", "is_bot")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject):
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject):
         self._fabric = fabric_obj
         self.id = int(payload["id"])
         # We don't expect these to ever change...
@@ -92,7 +91,7 @@ class User(BaseUser, bases.BaseModelWithFabric):
         self.is_system = payload.get("system", False)
         self.update_state(payload)  # lgtm [py/init-calls-subclass]
 
-    def update_state(self, payload: containers.JSONObject) -> None:
+    def update_state(self, payload: type_hints.JSONObject) -> None:
         self.username = payload.get("username")
         self.discriminator = int(payload["discriminator"])
         self.avatar_hash = payload.get("avatar")
@@ -108,13 +107,14 @@ class UserFlag(enum.IntFlag):
     DISCORD_EMPLOYEE = 1 << 0
     DISCORD_PARTNER = 1 << 1
     HYPESQUAD_EVENTS = 1 << 2
-    BUG_HUNTER = 1 << 3
+    BUG_HUNTER_LEVEL_1 = 1 << 3
     HYPESQUAD_HOUSE_BRAVERY = 1 << 6
     HYPESQUAD_HOUSE_BRILLIANCE = 1 << 7
     HYPESQUAD_HOUSE_BALANCE = 1 << 8
     EARLY_SUPPORTER = 1 << 9
     TEAM_USER = 1 << 10
     SYSTEM = 1 << 12
+    BUG_HUNTER_LEVEL_2 = 1 << 14
 
 
 class PremiumType(bases.BestEffortEnumMixin, enum.IntEnum):
@@ -143,14 +143,14 @@ class OAuth2User(User):
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
-    #: :type: :class:`bool` or :class:`None` if not available.
+    #: :type: :class:`bool` or `None` if not available.
     is_mfa_enabled: type_hints.Nullable[bool]
 
     #: The user's chosen language option.
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
-    #: :type: :class:`str` or :class:`None` if not available.
+    #: :type: :class:`str` or `None` if not available.
     #:
     #: Note:
     #:     If you wish to obtain further information about a locale, and what it provides, you
@@ -179,14 +179,14 @@ class OAuth2User(User):
     #:
     #: Requires the `email` OAuth2 scope.
     #:
-    #: :type: :class:`bool` or :class:`None` if not available.
+    #: :type: :class:`bool` or `None` if not available.
     is_verified: type_hints.Nullable[bool]
 
     #: The user's email address.
     #:
     #: Requires the `email` OAuth2 scope.
     #:
-    #: :type: :class:`str` or :class:`None` if not available`
+    #: :type: :class:`str` or `None` if not available`
     email: type_hints.Nullable[str]
 
     #: The flags on a user's account. Describes the type of badges the user will have on their
@@ -194,22 +194,22 @@ class OAuth2User(User):
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
-    #: :type: :class:`UserFlag` or :class:`None` if not available.
+    #: :type: :class:`UserFlag` or `None` if not available.
     flags: type_hints.Nullable[UserFlag]
 
     #: The type of Nitro subscription that the user has.
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
-    #: :type: :class:`PremiumType` or :class:`None` if not available.
+    #: :type: :class:`PremiumType` or `None` if not available.
     premium_type: type_hints.Nullable[PremiumType]
 
     __repr__ = reprs.repr_of("id", "username", "discriminator", "is_bot", "is_verified", "is_mfa_enabled")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject):
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject):
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: containers.JSONObject) -> None:
+    def update_state(self, payload: type_hints.JSONObject) -> None:
         super().update_state(payload)
 
         self.is_mfa_enabled = payload.get("mfa_enabled")
@@ -220,7 +220,7 @@ class OAuth2User(User):
         self.premium_type = transformations.nullable_cast(payload.get("premium_type"), PremiumType)
 
 
-def parse_user(fabric_obj: fabric.Fabric, payload: containers.JSONObject) -> BaseUser:
+def parse_user(fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> BaseUser:
     """
     Consume a fabric object and some type of user payload and try to parse the appropriate type of :class:`IUser`
     for the given payload.

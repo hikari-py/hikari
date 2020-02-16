@@ -103,7 +103,6 @@ resources:
     isPrivate: false
     metaSortKey: -1579446582054
     method: POST
-    modified: 1580061972802
     name: Create Message (JSON)
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -113,8 +112,7 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
-      true %}/messages"
+    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false, true %}/messages"
     _type: request
   - _id: req_25d53074d2cf44b399bddb805ddab89b
     authentication: {}
@@ -820,33 +818,9 @@ resources:
     parentId: wrk_ef4732eebfd640729709f9377913ae41
     _type: environment
   - _id: jar_29ed27f9c562933de7fccb4654fee3698ef432f8
-    cookies:
-      - creation: 2020-01-26T18:05:56.711Z
-        domain: discordapp.com
-        expires: 2020-02-25T18:05:56.000Z
-        extensions:
-          - SameSite=Lax
-        hostOnly: false
-        httpOnly: true
-        id: "008275641461669814"
-        key: __cfduid
-        lastAccessed: 2020-01-26T18:05:56.711Z
-        path: /
-        value: da8497a8d2b96a38bf7e0ac2354539f131580061956
-      - creation: 2020-01-26T18:05:56.711Z
-        domain: discordapp.com
-        extensions:
-          - SameSite=None
-        hostOnly: false
-        httpOnly: true
-        id: "5251071576132795"
-        key: __cfruid
-        lastAccessed: 2020-01-26T18:05:56.711Z
-        path: /
-        secure: true
-        value: 5cabbf7d26a5cd70c380e16bd1fbf5db9918e920-1580061956
+    cookies: []
     created: 1572465096242
-    modified: 1580061956712
+    modified: 1579888936589
     name: Default Jar
     parentId: wrk_ef4732eebfd640729709f9377913ae41
     _type: cookie_jar

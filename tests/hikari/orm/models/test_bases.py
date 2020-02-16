@@ -26,7 +26,6 @@ import weakref
 
 import pytest
 
-from hikari.internal_utilities import containers
 from hikari.internal_utilities import delegate
 from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
@@ -39,7 +38,7 @@ class DummySnowflake(bases.BaseModel, bases.SnowflakeMixin):
     id: int
 
 
-@pytest.fixture()
+@pytest.fixture
 def neko_snowflake():
     return DummySnowflake(537_340_989_808_050_216)
 
@@ -264,6 +263,8 @@ class TestIModel:
 
         assert test.copy() is not test
         try:
+            # this is intentional, as it will error if the test is not passing.
+            # noinspection PyStatementEffect
             test.copy().data
             assert False, "this should have raised an AttributeError."
         except AttributeError:
@@ -537,7 +538,9 @@ class DummyModel2(bases.MarshalMixin):
     model: DummyModel
     optional: type_hints.Nullable[str]
 
-    def __init__(self, id: int, name: str, nekos: typing.List[int], model: containers.JSONObject, optional=None):
+    def __init__(
+        self, id: int, name: str, nekos: typing.List[int], model: type_hints.JSONObject, optional=None,
+    ):
         self.id = id
         self.name = name
         self.nekos = nekos

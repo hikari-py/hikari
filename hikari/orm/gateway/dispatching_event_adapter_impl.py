@@ -21,13 +21,11 @@ Handles consumption of gateway events and converting them to the correct data ty
 """
 from __future__ import annotations
 
-import asyncio
 import enum
 import typing
 
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
-from hikari.net import ratelimits
 from hikari.orm.gateway import dispatching_event_adapter
 from hikari.orm.gateway import event_types
 from hikari.orm.models import channels
@@ -39,7 +37,7 @@ if typing.TYPE_CHECKING:
 
 class AutoRequestChunksMode(enum.IntEnum):
     """
-    Options for automatically retrieving all guild members in a guild when a READY event is fired.
+    Options for automatically retrieving all guild members in a guild.
     """
 
     #: Never autochunk guilds.
@@ -69,10 +67,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             True (default) to automatically trigger the chunker for each guild we receive on a READY
             event. False if you wish to do this manually as needed. This is required to handle
             presence update events for offline users when the shard started.
-        initial_chunking_slice_size:
-            The max number of guilds to chunk per gateway chunk request. If this is too low, you
-            will get ratelimited immediately on startup if you have more than 120 guilds. If this is
-            too high, the gateway will be disconnected. The default is a good round number to use.
     """
 
     def __init__(
@@ -80,13 +74,11 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         fabric_obj: _fabric.Fabric,
         dispatch: typing.Callable[..., typing.Any],
         request_chunks_mode: AutoRequestChunksMode = AutoRequestChunksMode.MEMBERS_AND_PRESENCES,
-        initial_chunking_slice_size: int = 50,
     ) -> None:
         super().__init__(fabric_obj)
         self.dispatch = dispatch
         self._ignored_events: typing.MutableSet[str] = set()
         self._request_chunks_mode = request_chunks_mode
-        self._initial_chunking_slice_size = initial_chunking_slice_size
 
     async def drain_unrecognised_event(self, _, event_name, payload):
         pass
@@ -110,32 +102,13 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
     async def handle_ready(self, gateway, payload):
         user_payload = payload["user"]
 
-        guilds = [self.fabric.state_registry.parse_guild(guild) for guild in payload["guilds"]]
-
-        if self._request_chunks_mode != AutoRequestChunksMode.NEVER and guilds:
-            asyncio.create_task(self._do_initial_chunking(guilds, gateway.shard_id))
-
         self.fabric.state_registry.parse_application_user(user_payload)
         self.dispatch(event_types.EventType.READY, gateway)
-
-    async def _do_initial_chunking(self, guilds, shard_id):
-        # Perform bursts, but then wait for 15 seconds. This prevents more than 60/min roughly, which
-        # will prevent us risking spamming the gateway and getting disconnected. This allows us to parse
-        # around 750 guilds/15s per gateway.
-        with ratelimits.WindowedBurstRateLimiter(f"chunking {len(guilds)} guilds on shard {shard_id}", 15, 15) as limit:
-            for i in range(0, len(guilds), self._initial_chunking_slice_size):
-                guilds_slice = guilds[i : i + self._initial_chunking_slice_size]
-                await limit.acquire()
-                await self.fabric.chunker.load_members_for(
-                    *guilds_slice, presences=self._request_chunks_mode == AutoRequestChunksMode.MEMBERS_AND_PRESENCES
-                )
 
     async def handle_resumed(self, gateway, _):
         self.dispatch(event_types.EventType.RESUME, gateway)
 
     async def handle_channel_create(self, _, payload):
-        self.dispatch(event_types.EventType.RAW_CHANNEL_CREATE, payload)
-
         guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
         if guild_id is not None:
             guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
@@ -153,8 +126,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.dispatch(event_types.EventType.GUILD_CHANNEL_CREATE, channel_obj)
 
     async def handle_channel_update(self, _, payload):
-        self.dispatch(event_types.EventType.RAW_CHANNEL_UPDATE, payload)
-
         channel_id = int(payload["id"])
         channel_diff = self.fabric.state_registry.update_channel(payload)
 
@@ -167,8 +138,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
 
     async def handle_channel_delete(self, _, payload):
         # Update the channel meta data just for this call.
-        self.dispatch(event_types.EventType.RAW_CHANNEL_DELETE, payload)
-
         guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
         if guild_id is not None:
             guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
@@ -185,8 +154,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         self.dispatch(event, channel_obj)
 
     async def handle_channel_pins_update(self, _, payload):
-        self.dispatch(event_types.EventType.RAW_CHANNEL_PINS_UPDATE, payload)
-
         channel_id = int(payload["channel_id"])
         channel_obj: type_hints.Nullable[channels.Channel] = self.fabric.state_registry.get_channel_by_id(channel_id)
 
@@ -217,8 +184,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             )
 
     async def handle_guild_create(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_GUILD_CREATE, payload)
-
         guild_id = int(payload["id"])
         unavailable = payload.get("unavailable", False)
         was_already_loaded = self.fabric.state_registry.get_guild_by_id(guild_id) is not None
@@ -230,11 +195,18 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.dispatch(event_types.EventType.GUILD_CREATE, guild)
 
         if not unavailable:
+            if self._request_chunks_mode != AutoRequestChunksMode.NEVER and guild.is_large:
+                presences = self._request_chunks_mode == AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+                self.logger.debug(
+                    "requesting members from guild %s to be chunked %s presences",
+                    guild_id,
+                    "with" if presences else "without",
+                )
+                await self.fabric.chunker.load_members_for(guild, presences=presences)
+
             self.dispatch(event_types.EventType.GUILD_AVAILABLE, guild)
 
     async def handle_guild_update(self, _, payload):
-        self.dispatch(event_types.EventType.RAW_GUILD_UPDATE, payload)
-
         guild_diff = self.fabric.state_registry.update_guild(payload)
 
         if guild_diff is not None:
@@ -243,7 +215,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.logger.debug("ignoring GUILD_UPDATE for unknown guild %s which was not previously cached")
 
     async def handle_guild_delete(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_GUILD_DELETE, payload)
         # This should always be unspecified if the guild was left,
         # but if discord suddenly send "False" instead, it will still work.
         if payload.get("unavailable", False):
@@ -251,7 +222,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         else:
             await self._handle_guild_leave(gateway, payload)
 
-    async def _handle_guild_unavailable(self, gateway, payload):
+    async def _handle_guild_unavailable(self, _, payload):
         # We shouldn't ever need to parse this payload unless we have inconsistent state, but if that happens,
         # lets attempt to fix it.
         guild_id = int(payload["id"])
@@ -265,14 +236,12 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             # so that we don't fail on other events later, and pre-emptively parse this information now.
             self.fabric.state_registry.parse_guild(payload)
 
-    async def _handle_guild_leave(self, gateway, payload):
+    async def _handle_guild_leave(self, _, payload):
         guild = self.fabric.state_registry.parse_guild(payload)
         self.fabric.state_registry.delete_guild(guild)
         self.dispatch(event_types.EventType.GUILD_LEAVE, guild)
 
     async def handle_guild_ban_add(self, _, payload):
-        self.dispatch(event_types.EventType.RAW_GUILD_BAN_ADD, payload)
-
         guild_id = int(payload["guild_id"])
         guild = self.fabric.state_registry.get_guild_by_id(guild_id)
         user = self.fabric.state_registry.parse_user(payload["user"])
@@ -290,8 +259,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.logger.debug("ignoring GUILD_BAN_ADD for user %s in unknown guild %s", user.id, guild_id)
 
     async def handle_guild_ban_remove(self, _, payload):
-        self.dispatch(event_types.EventType.RAW_GUILD_BAN_REMOVE, payload)
-
         guild_id = int(payload["guild_id"])
         guild = self.fabric.state_registry.get_guild_by_id(guild_id)
         user = self.fabric.state_registry.parse_user(payload["user"])
@@ -301,8 +268,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.logger.debug("ignoring GUILD_BAN_REMOVE for user %s in unknown guild %s", user.id, guild_id)
 
     async def handle_guild_emojis_update(self, _, payload):
-        self.dispatch(event_types.EventType.RAW_GUILD_EMOJIS_UPDATE, payload)
-
         guild_id = int(payload["guild_id"])
         guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
         if guild_obj is not None:
@@ -312,8 +277,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.logger.debug("ignoring GUILD_EMOJIS_UPDATE for unknown guild %s", guild_id)
 
     async def handle_guild_integrations_update(self, _, payload):
-        self.dispatch(event_types.EventType.RAW_GUILD_INTEGRATIONS_UPDATE, payload)
-
         guild_id = int(payload["guild_id"])
         guild = self.fabric.state_registry.get_guild_by_id(guild_id)
         if guild is not None:
@@ -322,8 +285,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.logger.debug("ignoring GUILD_INTEGRATIONS_UPDATE for unknown guild %s", guild_id)
 
     async def handle_guild_member_add(self, _, payload):
-        self.dispatch(event_types.EventType.RAW_GUILD_MEMBER_ADD, payload)
-
         guild_id = int(payload.pop("guild_id"))
         guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
         if guild_obj is not None:
@@ -333,8 +294,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.logger.debug("ignoring GUILD_MEMBER_ADD for unknown guild %s", guild_id)
 
     async def handle_guild_member_update(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_GUILD_MEMBER_UPDATE, payload)
-
         guild_id = int(payload["guild_id"])
         guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
         user_id = int(payload["user"]["id"])
@@ -363,8 +322,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.logger.debug("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)
 
     async def handle_guild_member_remove(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_GUILD_MEMBER_REMOVE, payload)
-
         user_id = int(payload["user"]["id"])
         guild_id = int(payload["guild_id"])
         member_obj = self.fabric.state_registry.get_member_by_id(user_id, guild_id)
@@ -376,12 +333,9 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.logger.debug("ignoring GUILD_MEMBER_REMOVE for unknown member %s in guild %s", user_id, guild_id)
 
     async def handle_guild_members_chunk(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_GUILD_MEMBERS_CHUNK, payload)
         await self.fabric.chunker.handle_next_chunk(payload, gateway.shard_id)
 
     async def handle_guild_role_create(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_GUILD_ROLE_CREATE, payload)
-
         guild_id = int(payload["guild_id"])
         guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 
@@ -392,8 +346,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.logger.debug("ignoring GUILD_ROLE_CREATE for unknown guild %s", guild_id)
 
     async def handle_guild_role_update(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_GUILD_ROLE_UPDATE, payload)
-
         guild_id = int(payload["guild_id"])
         guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 
@@ -409,8 +361,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.logger.debug("ignoring GUILD_ROLE_UPDATE for unknown guild %s", guild_id)
 
     async def handle_guild_role_delete(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_GUILD_ROLE_DELETE, payload)
-
         guild_id = int(payload["guild_id"])
         role_id = int(payload["role_id"])
         guild = self.fabric.state_registry.get_guild_by_id(guild_id)
@@ -425,8 +375,26 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         else:
             self.logger.debug("ignoring GUILD_ROLE_DELETE for role %s in unknown guild %s", role_id, guild_id)
 
+    async def handle_invite_create(self, gateway, payload):
+        invite_obj = self.fabric.state_registry.parse_invite(payload)
+        self.dispatch(event_types.EventType.INVITE_CREATE, invite_obj)
+
+    async def handle_invite_delete(self, gateway, payload):
+        # Requested feedback for full details to be sent instead of incredibly partial details:
+        # https://github.com/discordapp/discord-api-docs/pull/1309#issuecomment-578255949
+
+        code = payload["code"]
+        channel_id = int(payload["channel_id"])
+        channel_obj = self.fabric.state_registry.get_channel_by_id(channel_id)
+
+        if channel_obj is None:
+            self.logger.debug(
+                "ignoring INVITE_DELETE for invite %s in unknown channel %s", code, channel_id,
+            )
+        else:
+            self.dispatch(event_types.EventType.INVITE_DELETE, code, channel_obj)
+
     async def handle_message_create(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_MESSAGE_CREATE, payload)
         message = self.fabric.state_registry.parse_message(payload)
         if message is not None:
             self.dispatch(event_types.EventType.MESSAGE_CREATE, message)
@@ -436,7 +404,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.logger.debug("ignoring MESSAGE_CREATE for message %s in unknown channel %s", message_id, channel_id)
 
     async def handle_message_update(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_MESSAGE_UPDATE, payload)
         diff = self.fabric.state_registry.update_message(payload)
 
         # Don't bother logging this, it will probably happen a lot, as this state occurs whenever a message not cached
@@ -445,8 +412,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.dispatch(event_types.EventType.MESSAGE_UPDATE, *diff)
 
     async def handle_message_delete(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_MESSAGE_DELETE, payload)
-
         message_id = int(payload["id"])
         message_obj = self.fabric.state_registry.get_message_by_id(message_id)
 
@@ -462,7 +427,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         return message_obj
 
     async def handle_message_delete_bulk(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_MESSAGE_DELETE_BULK, payload)
 
         channel_id = int(payload["channel_id"])
         messages = (int(message_id) for message_id in payload["ids"])
@@ -476,19 +440,18 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
 
     # This is a headache to do as it has a completely different layout to reactions elsewhere...
     async def handle_message_reaction_add(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_MESSAGE_REACTION_ADD, payload)
         guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
+        channel_id = int(payload["channel_id"])
         message_id = int(payload["message_id"])
         user_id = int(payload["user_id"])
         message_obj = self.fabric.state_registry.get_message_by_id(message_id)
-        guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 
         if message_obj is None:
-            # Message was not cached, so ignore
-            return
-
-        emoji_obj = self.fabric.state_registry.parse_emoji(payload["emoji"], guild_obj)
-        reaction_obj = self.fabric.state_registry.increment_reaction_count(message_obj, emoji_obj)
+            reaction_obj = self.fabric.state_registry.parse_reaction(payload, message_id, channel_id)
+        else:
+            reaction_obj = self.fabric.state_registry.increment_reaction_count(
+                message_obj, self.fabric.state_registry.parse_emoji(payload["emoji"], None),
+            )
 
         if guild_id is not None:
             user_obj = self.fabric.state_registry.get_member_by_id(user_id, guild_id)
@@ -497,7 +460,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
 
         if user_obj is not None:
             self.dispatch(event_types.EventType.MESSAGE_REACTION_ADD, reaction_obj, user_obj)
-
         else:
             self.logger.debug(
                 "ignoring MESSAGE_REACTION_ADD for unknown %s %s",
@@ -506,18 +468,16 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             )
 
     async def handle_message_reaction_remove(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_MESSAGE_REACTION_REMOVE, payload)
         guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
         message_id = int(payload["message_id"])
         user_id = int(payload["user_id"])
         message_obj = self.fabric.state_registry.get_message_by_id(message_id)
-        guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 
         if message_obj is None:
             # Message was not cached, so ignore
             return
 
-        emoji_obj = self.fabric.state_registry.parse_emoji(payload["emoji"], guild_obj)
+        emoji_obj = self.fabric.state_registry.parse_emoji(payload["emoji"], None)
         reaction_obj = self.fabric.state_registry.decrement_reaction_count(message_obj, emoji_obj)
 
         if guild_id is not None:
@@ -547,8 +507,21 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
 
         self.dispatch(event_types.EventType.MESSAGE_REACTION_REMOVE, reaction_obj, user_obj)
 
+    async def handle_message_reaction_remove_emoji(self, gateway, payload):
+        message_id = int(payload["message_id"])
+
+        message_obj = self.fabric.state_registry.get_message_by_id(message_id)
+
+        if message_obj is None:
+            # Not cached, so ignore.
+            return
+
+        emoji_obj = self.fabric.state_registry.parse_emoji(payload["emoji"], None)
+
+        self.fabric.state_registry.delete_reaction(message_obj, None, emoji_obj)
+        self.dispatch(event_types.EventType.MESSAGE_REACTION_REMOVE_ALL, message_obj)
+
     async def handle_message_reaction_remove_all(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_MESSAGE_REACTION_REMOVE_ALL, payload)
         message_id = int(payload["message_id"])
 
         message_obj = self.fabric.state_registry.get_message_by_id(message_id)
@@ -561,8 +534,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         self.dispatch(event_types.EventType.MESSAGE_REACTION_REMOVE_ALL, message_obj)
 
     async def handle_presence_update(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_PRESENCE_UPDATE, payload)
-
         guild_id = int(payload["guild_id"])
         guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
 
@@ -600,7 +571,6 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         self.dispatch(event_types.EventType.PRESENCE_UPDATE, *presence_diff)
 
     async def handle_typing_start(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_TYPING_START, payload)
         channel_id = int(payload["channel_id"])
         user_id = int(payload["user_id"])
         channel_obj = self.fabric.state_registry.get_channel_by_id(channel_id)
@@ -622,22 +592,18 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         self.dispatch(event_types.EventType.TYPING_START, user_obj, channel_obj)
 
     async def handle_user_update(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_USER_UPDATE, payload)
         user_obj = self.fabric.state_registry.parse_user(payload)
         self.dispatch(event_types.EventType.USER_UPDATE, user_obj)
 
     async def handle_voice_state_update(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_VOICE_STATE_UPDATE, payload)
         # TODO: implement voice.
         self.logger.debug("received VOICE_STATE_UPDATE but that is not implemented yet")
 
     async def handle_voice_server_update(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_VOICE_SERVER_UPDATE, payload)
         # TODO: implement voice.
         self.logger.debug("received VOICE_SERVER_UPDATE but that is not implemented yet")
 
     async def handle_webhooks_update(self, gateway, payload):
-        self.dispatch(event_types.EventType.RAW_WEBHOOKS_UPDATE, payload)
         channel_id = int(payload["channel_id"])
 
         channel_obj = self.fabric.state_registry.get_channel_by_id(channel_id)

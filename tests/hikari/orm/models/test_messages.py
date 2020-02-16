@@ -32,12 +32,12 @@ from hikari.orm.state import base_registry
 from tests.hikari import _helpers
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_user():
     return {"id": "1234", "username": "potato"}
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_message(mock_user):
     return {
         "type": 0,
@@ -58,12 +58,12 @@ def mock_message(mock_user):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_state_registry():
     return _helpers.create_autospec(base_registry.BaseRegistry)
 
 
-@pytest.fixture()
+@pytest.fixture
 def fabric_obj(mock_state_registry):
     return fabric.Fabric(state_registry=mock_state_registry)
 
@@ -137,7 +137,9 @@ class TestMessage:
         message_obj = messages.Message(fabric_obj, mock_message)
         # noinspection PyTypeChecker
         message_obj.update_state({"reactions": [{"id": None, "value": "\N{OK HAND SIGN}"}]})
-        fabric_obj.state_registry.parse_reaction.assert_called_once_with({"id": None, "value": "\N{OK HAND SIGN}"})
+        fabric_obj.state_registry.parse_reaction.assert_called_once_with(
+            {"id": None, "value": "\N{OK HAND SIGN}"}, 12345, 67890
+        )
 
     @pytest.mark.parametrize(
         ("is_webhook", "user_type"),

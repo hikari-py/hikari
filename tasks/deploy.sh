@@ -49,6 +49,8 @@ function deploy-to-svc() {
     # git -c color.status=always log --all --decorate --oneline --graph -n 50
     # Use [skip deploy] instead of [skip ci] so that our pages rebuild still...
     git merge origin/${PROD_BRANCH} --no-ff --strategy-option theirs --allow-unrelated-histories -m "Merged ${PROD_BRANCH} ${current_version} into ${PREPROD_BRANCH} ${SKIP_CI_COMMIT_PHRASE}"
+    set-versions "${current_version}.dev"
+    git commit -am "Updated version for next development release ${SKIP_CI_COMMIT_PHRASE}"
     git push ${REMOTE_NAME} ${PREPROD_BRANCH}
 }
 
@@ -63,7 +65,8 @@ function do-deployment() {
 
     old_version=$(grep -oP "${CURRENT_VERSION_PATTERN}" "${CURRENT_VERSION_FILE}")
     current_version=$(python tasks/make_version_string.py "${COMMIT_REF}")
-
+    
+    set-versions "${current_version}"
     pip install -e .
 
     case "${COMMIT_REF}" in
@@ -76,7 +79,6 @@ function do-deployment() {
             deploy-to-svc "${old_version}" "${current_version}"
             ;;
         ${PREPROD_BRANCH})
-            set-versions "${current_version}"
             deploy-to-pypi
             ;;
         *)

@@ -26,10 +26,10 @@ import typing
 
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
+from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 
 if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import type_hints
     from hikari.orm import fabric
     from hikari.orm.models import guilds
     from hikari.orm.models import users
@@ -67,7 +67,7 @@ class UnicodeEmoji(Emoji):
     def is_unicode(self) -> bool:
         return True
 
-    def __init__(self, payload: containers.JSONObject) -> None:
+    def __init__(self, payload: type_hints.JSONObject) -> None:
         self.value = payload["name"]
 
     def __eq__(self, other):
@@ -106,7 +106,7 @@ class UnknownEmoji(Emoji, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: containers.JSONObject) -> None:
+    def __init__(self, payload: type_hints.JSONObject) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
 
@@ -160,7 +160,7 @@ class GuildEmoji(UnknownEmoji, bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("id", "name", "is_animated")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: containers.JSONObject, guild_id: int) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject, guild_id: int) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self._guild_id = guild_id
@@ -185,7 +185,7 @@ class GuildEmoji(UnknownEmoji, bases.BaseModelWithFabric):
         return self.mention
 
 
-def is_payload_guild_emoji_candidate(payload: containers.JSONObject) -> bool:
+def is_payload_guild_emoji_candidate(payload: type_hints.JSONObject) -> bool:
     """
     Returns True if the given dict represents an emoji that is from a guild we actively reside in.
 
@@ -197,7 +197,7 @@ def is_payload_guild_emoji_candidate(payload: containers.JSONObject) -> bool:
 
 
 def parse_emoji(
-    fabric_obj: fabric.Fabric, payload: containers.JSONObject, guild_id: type_hints.Nullable[int] = None
+    fabric_obj: fabric.Fabric, payload: type_hints.JSONObject, guild_id: type_hints.Nullable[int] = None,
 ) -> typing.Union[UnicodeEmoji, UnknownEmoji, GuildEmoji]:
     """
     Parse the given emoji payload into an appropriate implementation of Emoji.

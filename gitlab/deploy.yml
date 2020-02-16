@@ -21,9 +21,8 @@
   image: python:3.8.1
   before_script:
     - source tasks/config.sh
-    - "[[ \"$CI_PROJECT_URL\" = \"$ORIGINAL_REPO_URL\" ]] || (echo 'You are running off of a fork, so deployment is skipped.' && exit 0)"
     - apt-get update
-    - apt-get install curl git openssh-client -y
+    - apt-get install curl git openssh-client -qy
     - bash tasks/retry_aborts.sh pip install twine wheel
     - bash tasks/retry_aborts.sh pip install -e .
 
@@ -38,8 +37,8 @@ prerelease:
     - merge_requests
     - schedules
   variables:
-    RELEASE_WEBHOOK_NAME: "pypi (staging 'dev' release)"
-    RELEASE_WEBHOOK_COLOUR: "0xd34615"
+    RELEASE_WEBHOOK_NAME: "New development snapshot of the next release has been published"
+    RELEASE_WEBHOOK_COLOUR: "0X2C2F33"
   script:
     - "git log -1 --pretty=%B | grep -iq '\\[skip deploy\\]' && (echo 'Deployment was skipped by commit message.' && exit 0)"
     - export RELEASE_WEBHOOK_DESCRIPTION=''
@@ -58,10 +57,9 @@ release:
     - merge_requests
     - schedules
   variables:
-    RELEASE_WEBHOOK_NAME: "pypi"
-    RELEASE_WEBHOOK_COLOUR: "0x5c2040"
+    RELEASE_WEBHOOK_NAME: "NEW VERSION OF HIKARI HAS BEEN RELEASED!"
+    RELEASE_WEBHOOK_COLOUR: "0x7289DA"
   script:
-    - "git log -1 --pretty=%B | grep -iq '\\[skip deploy\\]' && (echo 'Deployment was skipped by commit message.' && exit 0)"
     - export RELEASE_WEBHOOK_DESCRIPTION=''
     - source tasks/deploy.sh
     - do-deployment

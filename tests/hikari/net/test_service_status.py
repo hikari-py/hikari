@@ -25,7 +25,7 @@ from hikari.net import status_info_client
 from tests.hikari import _helpers
 
 
-@pytest.fixture()
+@pytest.fixture
 def active_scheduled_maintenances_pl(page_pl):
     return {
         "page": page_pl,
@@ -33,7 +33,7 @@ def active_scheduled_maintenances_pl(page_pl):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def component_pl():
     return {
         "id": "rhznvxg4v7yh",
@@ -51,7 +51,7 @@ def component_pl():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def components_pl(component_pl, page_pl):
     return {
         "page": page_pl,
@@ -104,7 +104,7 @@ def components_pl(component_pl, page_pl):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def incidents_pl(page_pl, incident_pl):
     return {
         "page": page_pl,
@@ -112,7 +112,7 @@ def incidents_pl(page_pl, incident_pl):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def incident_pl(incident_update_pl):
     return {
         "id": "2gztsrksff0v",
@@ -146,7 +146,7 @@ def incident_pl(incident_update_pl):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def page_pl():
     return {
         "id": "srhpyqt94yxb",
@@ -157,7 +157,7 @@ def page_pl():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def scheduled_maintenances_pl(page_pl, scheduled_maintenance_pl):
     return {
         "page": page_pl,
@@ -165,7 +165,7 @@ def scheduled_maintenances_pl(page_pl, scheduled_maintenance_pl):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def scheduled_maintenance_pl(incident_update_pl):
     return {
         "id": "ymm0202y77k6",
@@ -220,12 +220,12 @@ def scheduled_maintenance_pl(incident_update_pl):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def subscription_pl(subscriber_pl):
     return {"subscriber": subscriber_pl}
 
 
-@pytest.fixture()
+@pytest.fixture
 def subscriber_pl():
     return {
         "created_at": "2019-06-24T07:29:43.684-07:00",
@@ -238,7 +238,7 @@ def subscriber_pl():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def summary_pl(page_pl):
     return {
         "page": page_pl,
@@ -289,7 +289,7 @@ def summary_pl(page_pl):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def incident_update_pl():
     return {
         "id": "xxqwgv42dnx5",
@@ -306,7 +306,7 @@ def incident_update_pl():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def unresolved_pl(page_pl, incident_update_pl):
     return {
         "page": page_pl,
@@ -345,7 +345,7 @@ def unresolved_pl(page_pl, incident_update_pl):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def upcoming_scheduled_maintenances_pl(page_pl):
     return {
         "page": page_pl,
@@ -353,12 +353,12 @@ def upcoming_scheduled_maintenances_pl(page_pl):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def status_pl():
     return {"indicator": "none", "description": "All Systems Operational"}
 
 
-@pytest.fixture()
+@pytest.fixture
 def overall_status_pl(status_pl):
     return {
         "page": {
@@ -516,7 +516,7 @@ def test_Summary_from_dict(summary_pl):
         assert isinstance(scheduled_maintenance, status_info_client.ScheduledMaintenance)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_client(event_loop):
     class Response:
         def __init__(self, session):
@@ -559,7 +559,7 @@ def mock_client(event_loop):
         yield _helpers.unslot_class(status_info_client.StatusInfoClient)()
 
 
-@pytest.fixture()
+@pytest.fixture
 def stubbed_client(mock_client):
     def perform_request(_, cast, *__, **___):
         return _helpers.mock_model(cast)

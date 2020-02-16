@@ -26,7 +26,9 @@ Sphinx documentation configuration.
 # http://www.sphinx-doc.org/en/master/config
 import datetime
 import os
+import re
 import traceback
+import types
 
 import requests
 import sys
@@ -36,12 +38,33 @@ import sphinx_bootstrap_theme
 
 sys.path.insert(0, os.path.abspath(".."))
 
+
+name = "hikari"
+
+
+with open(os.path.join("..", name, "_about.py")) as fp:
+    code = fp.read()
+
+token_pattern = re.compile(r"^__(?P<key>\w+)?__\s*=\s*(?P<quote>(?:'{3}|\"{3}|'|\"))(?P<value>.*?)(?P=quote)", re.M)
+
+groups = {}
+
+for match in token_pattern.finditer(code):
+    group = match.groupdict()
+    groups[group["key"]] = group["value"]
+    del match, group
+
+meta = types.SimpleNamespace(**groups)
+
+del groups, token_pattern, code, fp
+
+
 # -- Project information -----------------------------------------------------
 
-project = "Hikari"
-author = "Nekokatt"
-copyright = author
-version = "0.0.72"
+project = name.title()
+author = meta.author
+copyright = meta.copyright
+version = meta.version
 
 is_staging = "dev" in version
 

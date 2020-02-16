@@ -27,7 +27,7 @@ from hikari.orm.state import base_registry
 from tests.hikari import _helpers
 
 
-@pytest.fixture()
+@pytest.fixture
 def member_payload():
     return {
         "membership_state": 2,
@@ -37,12 +37,12 @@ def member_payload():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def team_payload(member_payload):
     return {"icon": "1a2b3c", "id": "1234321", "members": [member_payload], "owner_user_id": "9876789"}
 
 
-@pytest.fixture()
+@pytest.fixture
 def fabric_obj():
     spec = _helpers.create_autospec(fabric.Fabric)
     spec.state_registry = _helpers.create_autospec(base_registry.BaseRegistry)
