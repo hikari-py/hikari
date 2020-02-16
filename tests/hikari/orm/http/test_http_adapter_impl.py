@@ -491,7 +491,8 @@ class TestHTTPAdapterImpl:
     @_helpers.assert_raises(type_=TypeError)
     async def test_create_reaction_raises_type_error_without_channel(self, fabric_impl):
         fabric_impl.http_client.create_reaction = mock.AsyncMock()
-        await fabric_impl.http_adapter.create_reaction("321123", "2123123")
+        # noinspection PyTypeChecker
+        await fabric_impl.http_adapter.create_reaction("321123", "emoji:42")
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("user", 21323212312, members.Member)
@@ -499,53 +500,59 @@ class TestHTTPAdapterImpl:
         fabric_impl.http_client.delete_user_reaction = mock.AsyncMock()
         assert (
             await fabric_impl.http_adapter.delete_reaction(
+                emoji=_helpers.mock_model(emojis.GuildEmoji, id=21212121212, name="nya", url_name="nya:21212121212"),
                 user=user,
-                reaction=_helpers.mock_model(
-                    reactions.Reaction,
-                    emoji=_helpers.mock_model(
-                        emojis.GuildEmoji, id=21212121212, name="nya", url_name="nya:21212121212"
-                    ),
-                    message_id=532432123,
-                    channel_id=434343,
-                ),
+                message=532432123,
+                channel=434343,
             )
             is None
         )
-        fabric_impl.http_client.delete_user_reaction.assert_called_once_with(
-            emoji="nya:21212121212", user_id="21323212312", channel_id="434343", message_id="532432123",
+
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 2388383, channels.Channel)
+    @pytest.mark.parametrize("message", ("2020202020", 2020202020))
+    @pytest.mark.parametrize(
+        "emoji", ("2929292:dododo", _helpers.mock_model(emojis.GuildEmoji, url_name="2929292:dododo"))
+    )
+    async def test_delete_all_reactions_for_emoji(self, fabric_impl, channel, message, emoji):
+        fabric_impl.http_client.delete_all_reactions_for_emoji = mock.AsyncMock()
+        assert await fabric_impl.http_adapter.delete_all_reactions_for_emoji(message, emoji, channel) is None
+        fabric_impl.http_client.delete_all_reactions_for_emoji.assert_called_once_with(
+            message_id="2020202020", channel_id="2388383", emoji="2929292:dododo",
         )
+
+    @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=TypeError)
+    async def test_delete_all_reactions_for_emoji_raises_type_error_without_channel(self, fabric_impl):
+        # noinspection PyTypeChecker
+        await fabric_impl.http_adapter.delete_all_reactions_for_emoji("2222", "wow:3939")
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("user", 21323212312, members.Member)
     async def test_delete_reaction_with_message_and_unknown_emoji_objects(self, fabric_impl, user):
         fabric_impl.http_client.delete_user_reaction = mock.AsyncMock()
-        assert (
-            await fabric_impl.http_adapter.delete_reaction(
-                reaction=mock.MagicMock(emojis.UnknownEmoji, url_name="nya:21212121212"),
-                user=user,
-                message=_helpers.mock_model(
-                    messages.Message, id=532432123, channel=_helpers.mock_model(channels.Channel, id=434343)
-                ),
-            )
-            is None
+        result = await fabric_impl.http_adapter.delete_reaction(
+            emoji=mock.MagicMock(emojis.UnknownEmoji, url_name="nya:21212121212"),
+            user=user,
+            message=_helpers.mock_model(
+                messages.Message, id=532432123, channel=_helpers.mock_model(channels.Channel, id=434343)
+            ),
         )
+        assert result is None
         fabric_impl.http_client.delete_user_reaction.assert_called_once_with(
             emoji="nya:21212121212", user_id="21323212312", channel_id="434343", message_id="532432123",
         )
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "reaction", (mock.MagicMock(emojis.UnknownEmoji, url_name="nya:21212121212"), "nya:21212121212")
+        "emoji", (mock.MagicMock(emojis.UnknownEmoji, url_name="nya:21212121212"), "nya:21212121212")
     )
     @pytest.mark.parametrize("message", (532432123, "532432123"))
     @_helpers.parametrize_valid_id_formats_for_models("user", 21323212312, members.Member)
     @_helpers.parametrize_valid_id_formats_for_models("channel", 434343, channels.Channel)
-    async def test_delete_reaction(self, fabric_impl, reaction, channel, message, user):
+    async def test_delete_reaction(self, fabric_impl, emoji, channel, message, user):
         fabric_impl.http_client.delete_user_reaction = mock.AsyncMock()
         assert (
-            await fabric_impl.http_adapter.delete_reaction(
-                reaction=reaction, user=user, channel=channel, message=message,
-            )
+            await fabric_impl.http_adapter.delete_reaction(emoji=emoji, user=user, channel=channel, message=message)
             is None
         )
         fabric_impl.http_client.delete_user_reaction.assert_called_once_with(
@@ -556,12 +563,14 @@ class TestHTTPAdapterImpl:
     @_helpers.assert_raises(type_=TypeError)
     async def test_delete_reaction_raises_type_error_without_chanel(self, fabric_impl):
         fabric_impl.http_client.delete_user_reaction = mock.AsyncMock()
+        # noinspection PyTypeChecker
         await fabric_impl.http_adapter.delete_reaction("OwO:123", 123, message=202020)
 
     @pytest.mark.asyncio
     @_helpers.assert_raises(type_=TypeError)
     async def test_delete_reaction_raises_type_error_without_message(self, fabric_impl):
         fabric_impl.http_client.delete_user_reaction = mock.AsyncMock()
+        # noinspection PyArgumentList
         await fabric_impl.http_adapter.delete_reaction("OwO:123", 123, channel=202020)
 
     @pytest.mark.asyncio

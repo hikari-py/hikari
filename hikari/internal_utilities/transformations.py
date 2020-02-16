@@ -93,7 +93,7 @@ def get_id(value: bases.SnowflakeLikeT) -> str:
     Returns:
         The resultant snowflake ID as a :class:`str`.
     """
-    return str(int(value))
+    return str(value.id if hasattr(value, "id") else int(value))
 
 
 def cast_if_specified(

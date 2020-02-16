@@ -24,7 +24,7 @@ from __future__ import annotations
 from hikari import errors
 from hikari import net
 from hikari import orm
-from hikari._about import *
+from hikari._about import __author__, __copyright__, __email__, __license__, __version__, __url__
 
 # Errors
 from hikari.net.errors import BadRequestHTTPError

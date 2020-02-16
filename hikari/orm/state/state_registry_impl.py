@@ -184,7 +184,9 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         with contextlib.suppress(KeyError):
             del member_obj.guild.members[member_obj.id]
 
-    def delete_reaction(self, message_obj: messages.Message, user_obj: users.User, emoji_obj: emojis.Emoji) -> None:
+    def delete_reaction(
+        self, message_obj: messages.Message, user_obj: type_hints.Nullable[users.User], emoji_obj: emojis.Emoji
+    ) -> None:
         # We do not store info about the user, so just ignore that parameter.
         for reaction_obj in message_obj.reactions:
             if reaction_obj.emoji == emoji_obj:

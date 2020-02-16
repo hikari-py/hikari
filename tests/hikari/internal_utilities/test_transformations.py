@@ -73,8 +73,15 @@ def test_put_if_specified_when_type_after_passed():
     assert d == {"foo": "69", "bar": 69}
 
 
-def test_get_id():
-    assert transformations.get_id(mock.MagicMock(__int__=lambda self: 222222)) == "222222"
+def test_get_id_for_model():
+    obj = mock.MagicMock()
+    obj.id = 123
+    assert transformations.get_id(obj.id) == "123"
+
+
+@pytest.mark.parametrize("value", ["123", 123])
+def test_get_id_for_sparse_value(value):
+    assert transformations.get_id(value) == "123"
 
 
 @pytest.mark.parametrize(
@@ -142,12 +149,20 @@ def test_format_present_placeholders(fmt, kwargs, expect):
     assert transformations.format_present_placeholders(fmt, **kwargs) == expect
 
 
+class IdObject:
+    def __init__(self, id):
+        self.id = id
+
+    def __int__(self):
+        return self.id
+
+
 @pytest.mark.parametrize(
     ["model", "parent", "expected_result"],
     [
-        (12354123, mock.MagicMock(__int__=lambda self: 32341223), "32341223"),
-        (mock.MagicMock(attr=mock.MagicMock(__int__=lambda self: 222222)), 123123123, "123123123"),
-        (mock.MagicMock(attr=mock.MagicMock(__int__=lambda self: 32123123)), unspecified.UNSPECIFIED, "32123123",),
+        (12354123, IdObject(32341223), "32341223"),
+        (mock.MagicMock(attr=IdObject(222222)), 123123123, "123123123"),
+        (mock.MagicMock(attr=IdObject(32123123)), unspecified.UNSPECIFIED, "32123123",),
     ],
 )
 def test_get_parent_id_from_model(model, parent, expected_result):

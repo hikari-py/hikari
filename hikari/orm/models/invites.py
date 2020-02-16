@@ -95,8 +95,8 @@ class Invite(bases.BaseModel):
 
     #: The guild the invite is for
     #:
-    #: :type: :class:`hikari.orm.models.guilds.PartialGuild`
-    guild: guilds.PartialGuild
+    #: :type: :class:`hikari.orm.models.guilds.PartialGuild` or :class:`None`
+    guild: type_hints.Nullable[guilds.PartialGuild]
 
     #: The channel the invite points to
     #:

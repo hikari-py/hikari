@@ -404,11 +404,20 @@ class TestHTTPClient:
         http_client_impl._request.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
+    async def test_delete_all_reactions_for_emoji(self, http_client_impl):
+        mock_route = mock.MagicMock(routes.REACTION_EMOJI)
+        with mock.patch.object(routes, "REACTION_EMOJI", compile=mock.MagicMock(return_value=mock_route)):
+            assert await http_client_impl.delete_all_reactions_for_emoji("222", "333", "222:owo") is None
+            routes.REACTION_EMOJI.compile.assert_called_once_with(
+                http_client_impl.DELETE, channel_id="222", message_id="333", emoji="222:owo"
+            )
+
+    @pytest.mark.asyncio
     async def test_delete_user_reaction(self, http_client_impl):
-        mock_route = mock.MagicMock(routes.REACTION)
-        with mock.patch.object(routes, "REACTION", compile=mock.MagicMock(return_value=mock_route)):
+        mock_route = mock.MagicMock(routes.REACTION_EMOJI_USER)
+        with mock.patch.object(routes, "REACTION_EMOJI_USER", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.delete_user_reaction("11111", "4444", "emoji:42", "29292992") is None
-            routes.REACTION.compile.assert_called_once_with(
+            routes.REACTION_EMOJI_USER.compile.assert_called_once_with(
                 http_client_impl.DELETE, channel_id="11111", message_id="4444", emoji="emoji:42", user_id="29292992"
             )
         http_client_impl._request.assert_called_once_with(mock_route)
