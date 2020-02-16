@@ -515,12 +515,12 @@ class BaseRegistry(abc.ABC):
 
     @typing.overload
     @abc.abstractmethod
-    def parse_channel(self, channel_payload: containers.JSONObject, guild_obj: None) -> channels.DMChannel:
+    def parse_channel(self, channel_payload: type_hints.JSONObject, guild_obj: None) -> channels.DMChannel:
         ...
 
     @typing.overload
     @abc.abstractmethod
-    def parse_channel(self, channel_payload: containers.JSONObject, guild_obj: guilds.Guild) -> channels.GuildChannel:
+    def parse_channel(self, channel_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> channels.GuildChannel:
         ...
 
     @abc.abstractmethod
