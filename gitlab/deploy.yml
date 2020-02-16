@@ -24,7 +24,7 @@
     - source tasks/config.sh
     - apt-get update
     - apt-get install curl openssh-client -qy
-    - bash tasks/retry_aborts.sh pip install twine wheel black
+    - bash tasks/retry_aborts.sh pip install twine wheel
     - bash tasks/retry_aborts.sh pip install -e .
 
 prerelease:

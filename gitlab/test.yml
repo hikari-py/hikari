@@ -38,6 +38,7 @@ dependency_scanning:
 
 .venv:
   before_script:
+    - which apt-get || (echo "Detected Alpine docker image, installing bash." && apk add bash)
     - python -m venv .venv
     - source .venv/bin/activate
     - bash tasks/retry_aborts.sh pip install nox
@@ -47,16 +48,23 @@ dependency_scanning:
     - tags
     - schedules
 
+.cache:
+  cache:
+    key: "${CI_STAGE_NAME}-${CI_JOB_NAME}"
+    paths:
+      - .nox/
+      - .pytest_cache/
+      - .venv/
 
-.cpython3.8.0:
+.cpython-3.8.0:
   image: python:3.8.0
   extends: .venv
 
-.cpython3.8.1:
+.cpython-3.8.1:
   image: python:3.8.1
   extends: .venv
 
-.cpython3.9-rc:
+.cpython-3.9-rc:
   image: python:3.9-rc
   extends: .venv
 
@@ -65,9 +73,10 @@ dependency_scanning:
   extends: .venv
 
 .cpython-tool-buster:
-  extends: .cpython3.8.1
+  extends: .cpython-3.8.1
 
 .nox-test:
+  extends: .cache
   script:
     - apt-get install -qy git gcc g++ make
     - bash tasks/retry_aborts.sh pip install nox
@@ -83,6 +92,7 @@ dependency_scanning:
       junit: public/tests.xml
 
 .nox-pip-install:
+  extends: .cache
   script:
     - apt install git -y
     - bash tasks/retry_aborts.sh nox --sessions pip pip_sdist pip_bdist_wheel pip_git
@@ -142,7 +152,9 @@ verify-c3.9-rc-pypi:
     - .nox-pip-install-showtime
 
 coverage-coalesce:
-  extends: .cpython-tool-alpine
+  extends:
+    - .cpython-tool-alpine
+    - .cache
   stage: results
   script:
     - bash tasks/retry_aborts.sh pip install coverage
@@ -159,26 +171,29 @@ coverage-coalesce:
 verify-autoversioning-logic:
     extends: .cpython-tool-alpine
     stage: test
-    before_script:
-      - bash tasks/retry_aborts.sh pip install requests
     script:
+      - bash tasks/retry_aborts.sh pip install requests
       - bash tasks/test_make_version_string.sh
 
 black:
-  extends: .cpython-tool-buster
+  extends:
+    - .cpython-tool-buster
+    - .cache
   script:
     - bash tasks/retry_aborts.sh nox -s format -- --check --diff
 
 safety:
-  extends: .cpython-tool-buster
+  extends:
+    - .cpython-tool-buster
   script:
     - bash tasks/retry_aborts.sh nox -s safety
 
 pylint:
-  extends: .cpython-tool-buster
+  extends:
+    - .cpython-tool-buster
+    - .cache
   script:
     - bash tasks/retry_aborts.sh nox -s lint
   artifacts:
     reports:
       junit: public/pylint.xml
-
