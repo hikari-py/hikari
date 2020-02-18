@@ -113,12 +113,13 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         json_body: type_hints.Nullable[typing.Union[type_hints.JSONObject, type_hints.JSONArray]] = None,
         reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         re_seekable_resources: typing.Collection[typing.Any] = containers.EMPTY_COLLECTION,
+        suppress_authorization_header: bool = False,
         **kwargs,
     ) -> type_hints.JSONObject:
         future, real_hash = self.ratelimiter.acquire(compiled_route)
         request_headers = {"X-RateLimit-Precision": "millisecond"}
 
-        if self.token is not None:
+        if self.token is not None and not suppress_authorization_header:
             request_headers["Authorization"] = self.token
 
         if reason and reason is not unspecified.UNSPECIFIED:
