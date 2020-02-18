@@ -143,10 +143,10 @@ class TestHTTPClient:
             mock_close.assert_called_once_with()
         http_client_impl.ratelimiter.close.assert_called_once_with()
 
-    @pytest.mark.skip
+    @_helpers.todo_implement
     @pytest.mark.asyncio
     async def test_request(self):
-        ...
+        raise NotImplementedError()
 
     @pytest.mark.asyncio
     async def test_handle_bad_response(self, http_client_impl):
