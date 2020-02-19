@@ -63,10 +63,21 @@ class GatewayIntent(enum.IntFlag):
 
     Any events not in an intent category will be fired regardless of what intents you provide.
 
+    Warnings
+    --------
 
-    Warning:
-        If you are using the V7 Gateway, you will be REQUIRED to provide some form of intent value when
-        you connect. Failure to do so may result in immediate termination of the session server-side.
+    If you are using the V7 Gateway, you will be REQUIRED to provide some form of intent value when
+    you connect. Failure to do so may result in immediate termination of the session server-side.
+
+    Notes
+    -----
+
+    Discord now places limits on certain events you can receive without whitelisting your bot first. On the
+    `Bot` tab in the developer's portal for your bot, you should now have the option to enable functionality
+    for receiving these events.
+
+    If you attempt to request an intent type that you have not whitelisted your bot for, you will be
+    disconnected on startup with a `4014` closure code.
     """
 
     #: Subscribes to the following events:
@@ -85,6 +96,10 @@ class GatewayIntent(enum.IntFlag):
     #: * GUILD_MEMBER_ADD
     #: * GUILD_MEMBER_UPDATE
     #: * GUILD_MEMBER_REMOVE
+    #:
+    #: Warnings
+    #: --------
+    #: This intent is privileged, and requires enabling/whitelisting to use.
     GUILD_MEMBERS = 1 << 1
 
     #: Subscribes to the following events:
@@ -115,6 +130,10 @@ class GatewayIntent(enum.IntFlag):
 
     #: Subscribes to the following events:
     #: * PRESENCE_UPDATE
+    #:
+    #: Warnings
+    #: --------
+    #: This intent is privileged, and requires enabling/whitelisting to use.
     GUILD_PRESENCES = 1 << 8
 
     #: Subscribes to the following events:
@@ -543,7 +562,7 @@ class GatewayClient:
 
         await self._send({"op": 8, "d": {"guild_id": guilds, **constraints}})
 
-    async def update_status(self, presence: type_hints.JSONObject) -> None:
+    async def update_presence(self, presence: type_hints.JSONObject) -> None:
         """
         Change the presence of the bot user for this shard.
 
@@ -552,7 +571,7 @@ class GatewayClient:
                 The new presence payload to set.
         """
         self.logger.debug("updating presence to %r", presence)
-        await self._send(presence)
+        await self._send({"op": 3, "d": presence})
         self._presence = presence
 
     async def close(self, close_code: int = 1000) -> None:

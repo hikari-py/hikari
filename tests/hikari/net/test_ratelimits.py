@@ -482,7 +482,7 @@ class TestHTTPBucketRateLimiterManager:
 
             mgr.real_hashes_to_buckets["foobar"] = bucket
 
-            await mgr.do_gc_pass()
+            mgr.do_gc_pass()
 
             assert "foobar" not in mgr.real_hashes_to_buckets
             bucket.close.assert_called_once()
@@ -497,7 +497,7 @@ class TestHTTPBucketRateLimiterManager:
 
             mgr.real_hashes_to_buckets["foobar"] = bucket
 
-            await mgr.do_gc_pass()
+            mgr.do_gc_pass()
 
             assert "foobar" in mgr.real_hashes_to_buckets
             bucket.close.assert_not_called()
@@ -512,7 +512,7 @@ class TestHTTPBucketRateLimiterManager:
 
             mgr.real_hashes_to_buckets["foobar"] = bucket
 
-            await mgr.do_gc_pass()
+            mgr.do_gc_pass()
 
             assert "foobar" not in mgr.real_hashes_to_buckets
             bucket.close.assert_called_once()
@@ -526,7 +526,7 @@ class TestHTTPBucketRateLimiterManager:
 
             mgr.real_hashes_to_buckets["foobar"] = bucket
 
-            await mgr.do_gc_pass()
+            mgr.do_gc_pass()
 
             assert "foobar" in mgr.real_hashes_to_buckets
             bucket.close.assert_not_called()
@@ -537,7 +537,10 @@ class TestHTTPBucketRateLimiterManager:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
 
+            # This isn't a coroutine; why would I await it?
+            # noinspection PyAsyncCall
             mgr.acquire(route)
+
             assert "UNKNOWN;bobs" in mgr.real_hashes_to_buckets
             assert isinstance(mgr.real_hashes_to_buckets["UNKNOWN;bobs"], ratelimits.HTTPBucketRateLimiter)
 
@@ -547,22 +550,30 @@ class TestHTTPBucketRateLimiterManager:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
 
+            # This isn't a coroutine; why would I await it?
+            # noinspection PyAsyncCall
             mgr.acquire(route)
-            assert mgr.routes_to_real_hashes[route] == "UNKNOWN;bobs"
+
+            assert mgr.routes_to_hashes[route] == "UNKNOWN"
 
     @pytest.mark.asyncio
     async def test_acquire_route_when_route_cached_already_obtains_hash_from_route_and_bucket_from_hash(self):
         with ratelimits.HTTPBucketRateLimiterManager() as mgr:
             route = mock.MagicMock()
+            route.create_real_bucket_hash = mock.MagicMock(return_value="eat pant;1234")
             bucket = mock.MagicMock()
-            mgr.routes_to_real_hashes[route] = "eat pant"
-            mgr.real_hashes_to_buckets["eat pant"] = bucket
+            mgr.routes_to_hashes[route] = "eat pant"
+            mgr.real_hashes_to_buckets["eat pant;1234"] = bucket
+
+            # This isn't a coroutine; why would I await it?
+            # noinspection PyAsyncCall
             mgr.acquire(route)
+
             # yes i test this twice, sort of. no, there isn't another way to verify this. sue me.
             bucket.acquire.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_acquire_route_returns_acquired_future_and_real_hash_for_new_bucket(self):
+    async def test_acquire_route_returns_acquired_future(self):
         with ratelimits.HTTPBucketRateLimiterManager() as mgr:
             route = mock.MagicMock()
 
@@ -570,30 +581,29 @@ class TestHTTPBucketRateLimiterManager:
             with mock.patch("hikari.net.ratelimits.HTTPBucketRateLimiter", return_value=bucket):
                 route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
 
-                f, rb_hash = mgr.acquire(route)
+                f = mgr.acquire(route)
                 assert f is bucket.acquire()
-                assert rb_hash == "UNKNOWN;bobs"
 
     @pytest.mark.asyncio
-    async def test_acquire_route_returns_acquired_future_and_real_hash_for_new_bucket(self):
+    async def test_acquire_route_returns_acquired_future_for_new_bucket(self):
         with ratelimits.HTTPBucketRateLimiterManager() as mgr:
             route = mock.MagicMock()
+            route.create_real_bucket_hash = mock.MagicMock(return_value="eat pant;bobs")
             bucket = mock.MagicMock()
-            mgr.routes_to_real_hashes[route] = "eat pant;bobs"
+            mgr.routes_to_hashes[route] = "eat pant"
             mgr.real_hashes_to_buckets["eat pant;bobs"] = bucket
 
-            f, rb_hash = mgr.acquire(route)
+            f = mgr.acquire(route)
             assert f is bucket.acquire()
-            assert rb_hash == "eat pant;bobs"
 
     @pytest.mark.asyncio
     async def test_update_rate_limits_if_wrong_bucket_hash_reroutes_route(self):
         with ratelimits.HTTPBucketRateLimiterManager() as mgr:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
-            mgr.routes_to_real_hashes[route] = "123"
-            mgr.update_rate_limits(route, "123", "blep", 22, 23, datetime.datetime.now(), datetime.datetime.now())
-            assert mgr.routes_to_real_hashes[route] == "blep;bobs"
+            mgr.routes_to_hashes[route] = "123"
+            mgr.update_rate_limits(route, "blep", 22, 23, datetime.datetime.now(), datetime.datetime.now())
+            assert mgr.routes_to_hashes[route] == "blep"
             assert isinstance(mgr.real_hashes_to_buckets["blep;bobs"], ratelimits.HTTPBucketRateLimiter)
 
     @pytest.mark.asyncio
@@ -601,11 +611,11 @@ class TestHTTPBucketRateLimiterManager:
         with ratelimits.HTTPBucketRateLimiterManager() as mgr:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
-            mgr.routes_to_real_hashes[route] = "123;bobs"
+            mgr.routes_to_hashes[route] = "123"
             bucket = mock.MagicMock()
             mgr.real_hashes_to_buckets["123;bobs"] = bucket
-            mgr.update_rate_limits(route, "123;bobs", "123", 22, 23, datetime.datetime.now(), datetime.datetime.now())
-            assert mgr.routes_to_real_hashes[route] == "123;bobs"
+            mgr.update_rate_limits(route, "123", 22, 23, datetime.datetime.now(), datetime.datetime.now())
+            assert mgr.routes_to_hashes[route] == "123"
             assert mgr.real_hashes_to_buckets["123;bobs"] is bucket
 
     @pytest.mark.asyncio
@@ -613,7 +623,7 @@ class TestHTTPBucketRateLimiterManager:
         with ratelimits.HTTPBucketRateLimiterManager() as mgr:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
-            mgr.routes_to_real_hashes[route] = "123;bobs"
+            mgr.routes_to_hashes[route] = "123"
             bucket = mock.MagicMock()
             mgr.real_hashes_to_buckets["123;bobs"] = bucket
             date = datetime.datetime.now().replace(year=2004)
@@ -621,7 +631,7 @@ class TestHTTPBucketRateLimiterManager:
 
             with mock.patch("time.perf_counter", return_value=27):
                 expect_reset_at_monotonic = 27 + (reset_at - date).total_seconds()
-                mgr.update_rate_limits(route, "123;bobs", "123", 22, 23, date, reset_at)
+                mgr.update_rate_limits(route, "123", 22, 23, date, reset_at)
                 bucket.update_rate_limit.assert_called_once_with(22, 23, expect_reset_at_monotonic)
 
 

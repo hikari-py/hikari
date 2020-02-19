@@ -846,3 +846,22 @@ class TestRequestGuildMembers:
         client._send.assert_awaited_once_with(
             {"op": 8, "d": {"guild_id": ["1234", "5678"], "query": "", "limit": 0, "presences": presences}}
         )
+
+
+@pytest.mark.asyncio
+class TestUpdatePresence:
+    @pytest.fixture
+    def client(self, event_loop):
+        asyncio.set_event_loop(event_loop)
+        client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
+        client = _helpers.mock_methods_on(client, except_=("update_presence",))
+        return client
+
+    async def test_sends_payload(self, client):
+        await client.update_presence({"foo": "bar"})
+        client._send.assert_awaited_once_with({"op": 3, "d": {"foo": "bar"}})
+
+    async def test_caches_payload_for_later(self, client):
+        client._presence = {"baz": "bork"}
+        await client.update_presence({"foo": "bar"})
+        assert client._presence == {"foo": "bar"}

@@ -48,6 +48,13 @@ class GatewayCloseCode(enum.IntEnum):
     INVALID_SHARD = 4010
     #: The session would have handled too many guilds - you are required to shard your connection in order to connect.
     SHARDING_REQUIRED = 4011
+    #: You sent an invalid version for the gateway.
+    INVALID_VERSION = 4012
+    #: You sent an invalid intent for a Gateway Intent. You may have incorrectly calculated the bitwise value.
+    INVALID_INTENT = 4013
+    #: You sent a disallowed intent for a Gateway Intent. You may have tried to specify an intent that you
+    #: have not enabled or are not whitelisted for.
+    DISALLOWED_INTENT = 4014
 
 
 class GatewayError(errors.HikariError):
