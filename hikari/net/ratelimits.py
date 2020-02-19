@@ -960,7 +960,7 @@ class ExponentialBackOff:
 
         self.increment += 1
 
-        if value > self.maximum:
+        if self.maximum is not None and value >= self.maximum:
             raise asyncio.TimeoutError()
 
         value += random.random() * self.jitter_multiplier  # nosec
