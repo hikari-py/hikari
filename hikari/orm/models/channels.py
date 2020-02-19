@@ -244,11 +244,13 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
         Returns:
             A typing indicator context manager.
         """
-        task = asyncio.create_task(self._typing_loop(), name=f"typing indicator in {self}")
         # Trigger the first typing event before we continue in case something does block
         await self.trigger_typing()
-        yield
-        task.cancel()
+        task = asyncio.create_task(self._typing_loop(), name=f"typing indicator in {self}")
+        try:
+            yield
+        finally:
+            task.cancel()
 
     async def _typing_loop(self):
         try:

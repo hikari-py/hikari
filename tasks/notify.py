@@ -30,10 +30,8 @@ try:
     NAME = sys.argv[2]
     DEPLOYMENT_HOST = "https://pypi.org"
     WEBHOOK_URL = os.environ["RELEASE_WEBHOOK"]
-    ENVIRONMENT = os.environ["RELEASE_WEBHOOK_NAME"]
+    MESSAGE = os.environ["RELEASE_WEBHOOK_NAME"]
     COLOUR = os.environ["RELEASE_WEBHOOK_COLOUR"]
-    DESCRIPTION = os.environ["RELEASE_WEBHOOK_DESCRIPTION"]
-    BRIEF = f"[{VERSION}] New {ENVIRONMENT} deployment!"
     AUTHOR = os.environ["REPO_AUTHOR"]
 
     requests.post(
@@ -41,14 +39,10 @@ try:
         json = {
             "embeds": [
                 {
-                    "title": NAME,
-                    "footer": {
-                        "text": BRIEF + "\n\n" + DESCRIPTION,
-                    },
+                    "title": f"{NAME} - {MESSAGE}",
                     "color": int(COLOUR, 16),
                     "author": {"name": AUTHOR},
-                    "description": f"[{NAME} v{VERSION}]({DEPLOYMENT_HOST}/project/{NAME}/{VERSION}) has "
-                                   f"just been put into {ENVIRONMENT}."
+                    "description": f"[{NAME} v{VERSION}]({DEPLOYMENT_HOST}/project/{NAME}/{VERSION})"
                 }
             ]
         },

@@ -65,13 +65,16 @@ class TestClient:
     async def test_init_raises_RuntimeError_if_raised_when_getting_loop(self):
         with mock.patch("asyncio.get_event_loop", side_effect=RuntimeError):
             try:
-                _client.Client("token")
+                _client.Client()
                 assert False
             except RuntimeError:
                 pass
 
+    async def test_init_sets_token_to_None(self):
+        assert _client.Client().token is None
+
     async def test__init_new_application_fabric_closes_and_raises_RuntimeError_when_error_when_initiating_fabric(self):
-        client = _client.Client("token")
+        client = _client.Client()
         client.shutdown = mock.AsyncMock()
         client._new_state_registry = mock.AsyncMock(side_effect=RuntimeError)
 
@@ -82,7 +85,7 @@ class TestClient:
             client.shutdown.assert_called_once()
 
     async def test__init_new_application_fabric(self, empty_obj):
-        client = _client.Client("token")
+        client = _client.Client()
         client._new_state_registry = mock.AsyncMock(return_value=empty_obj)
         client._new_event_handler = mock.AsyncMock(return_value=empty_obj)
         client._new_http_client = mock.AsyncMock(return_value=empty_obj)
@@ -101,13 +104,13 @@ class TestClient:
         client._fabric.chunker = empty_obj
 
     async def test__new_state_registry(self, empty_obj):
-        client = _client.Client("token")
+        client = _client.Client()
 
         with mock.patch("hikari.orm.state.state_registry_impl.StateRegistryImpl", return_value=empty_obj):
             assert await client._new_state_registry() == empty_obj
 
     async def test__new_event_handler(self, empty_obj):
-        client = _client.Client("token")
+        client = _client.Client()
 
         with mock.patch(
             "hikari.orm.gateway.dispatching_event_adapter_impl.DispatchingEventAdapterImpl", return_value=empty_obj
@@ -115,20 +118,20 @@ class TestClient:
             assert await client._new_event_handler() == empty_obj
 
     async def test__new_http_client(self, empty_obj):
-        client = _client.Client("token")
+        client = _client.Client()
 
         with mock.patch("hikari.net.http_client.HTTPClient", return_value=empty_obj):
             assert await client._new_http_client() == empty_obj
 
     async def test__new_http_adapter(self, empty_obj):
-        client = _client.Client("token")
+        client = _client.Client()
 
         with mock.patch("hikari.orm.http.http_adapter_impl.HTTPAdapterImpl", return_value=empty_obj):
             assert await client._new_http_adapter() == empty_obj
 
     @_helpers.assert_raises(type_=RuntimeError)
     async def test__new_shard_map_errors_when_invalid_shards(self):
-        client = _client.Client("token")
+        client = _client.Client()
         client._client_options = client_options.ClientOptions(shards=None)
 
         await client._new_shard_map()
@@ -142,7 +145,7 @@ class TestClient:
             session_start_limit: Remaining = Remaining()
             shards: int = 10
 
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = fabric
         client._fabric.http_adapter.fetch_gateway_bot = mock.AsyncMock(return_value=GatewayBot)
         client._client_options = client_options.ClientOptions(shards=client_options.AUTO_SHARD)
@@ -160,7 +163,7 @@ class TestClient:
             url: str = "wss://some-site.com"
             shards: int = 3
 
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = fabric
         client._fabric.http_adapter.fetch_gateway_bot = mock.AsyncMock(return_value=GatewayBot)
         client._client_options = client_options.ClientOptions(shards=client_options.AUTO_SHARD)
@@ -175,7 +178,7 @@ class TestClient:
         async def get_gateway():
             return "wss://some-site.com"
 
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = fabric
         client._fabric.http_adapter.gateway_url = get_gateway()
         client._client_options = client_options.ClientOptions(shards=client_options.NO_SHARDING)
@@ -190,7 +193,7 @@ class TestClient:
         async def get_gateway():
             return "wss://some-site.com"
 
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = fabric
         client._fabric.http_adapter.gateway_url = get_gateway()
         client._client_options = client_options.ClientOptions(shards=client_options.ShardOptions(slice(25, 27), 30))
@@ -202,13 +205,13 @@ class TestClient:
         assert shard_map == {25: empty_obj, 26: empty_obj}
 
     async def test__new_chunker(self, empty_obj):
-        client = _client.Client("token")
+        client = _client.Client()
 
         with mock.patch("hikari.orm.gateway.basic_chunker_impl.BasicChunkerImpl", return_value=empty_obj):
             assert await client._new_chunker() == empty_obj
 
     async def test__shard_keep_alive_when_shard_shuts_down_silently(self):
-        client = _client.Client("token")
+        client = _client.Client()
         shard0 = self.gateway_client(0)
         shard0.connect = mock.AsyncMock(side_effect=[None, RuntimeError])
 
@@ -230,7 +233,7 @@ class TestClient:
         ],
     )
     async def test__shard_keep_alive_handles_errors(self, error):
-        client = _client.Client("token")
+        client = _client.Client()
         shard0 = self.gateway_client(0)
         shard0.connect = mock.AsyncMock(side_effect=[error, RuntimeError])
 
@@ -242,7 +245,7 @@ class TestClient:
                 assert isinstance(ex, RuntimeError)
 
     async def test__shard_keep_alive_ignores_ClientClosedError(self):
-        client = _client.Client("token")
+        client = _client.Client()
         shard0 = self.gateway_client(0)
         shard0.connect = mock.AsyncMock(side_effect=_errors.GatewayClientClosedError)
 
@@ -253,12 +256,20 @@ class TestClient:
             except Exception as ex:
                 assert False
 
-    async def test_start_initializes_fabric(self):
-        client = _client.Client("token")
+    async def test_start_sets_token(self):
+        client = _client.Client()
         client._init_new_application_fabric = mock.AsyncMock()
         client._fabric = _fabric.Fabric()
 
-        await client.start()
+        await client.start("token")
+        assert client.token == "token"
+
+    async def test_start_initializes_fabric(self):
+        client = _client.Client()
+        client._init_new_application_fabric = mock.AsyncMock()
+        client._fabric = _fabric.Fabric()
+
+        await client.start("token")
 
         client._init_new_application_fabric.assert_called_once()
 
@@ -268,13 +279,13 @@ class TestClient:
         shard1 = self.gateway_client(1)
         shard1.identify_event.wait = mock.AsyncMock()
 
-        client = _client.Client("token")
+        client = _client.Client()
         client._init_new_application_fabric = mock.AsyncMock()
         client._fabric = _fabric.Fabric(gateways={0: shard0, 1: shard1})
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             with mock.patch("asyncio.sleep", new=mock.AsyncMock()) as sleep:
-                await client.start()
+                await client.start("token")
 
                 sleep.assert_called_once_with(5)
 
@@ -282,14 +293,14 @@ class TestClient:
         shard0 = self.gateway_client(0)
         shard0.identify_event.wait = mock.AsyncMock()
 
-        client = _client.Client("token")
+        client = _client.Client()
         client._init_new_application_fabric = mock.AsyncMock()
         client._shard_keep_alive = mock.MagicMock()
         client._fabric = _fabric.Fabric(gateways={0: shard0})
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             with mock.patch("asyncio.create_task") as create_task:
-                await client.start()
+                await client.start("1a2b3c")
 
             create_task.assert_called_with(client._shard_keep_alive(shard0))
 
@@ -297,17 +308,17 @@ class TestClient:
         shard0 = self.gateway_client(0)
         shard0.identify_event.wait = mock.AsyncMock()
 
-        client = _client.Client("token")
+        client = _client.Client()
         client._init_new_application_fabric = mock.AsyncMock()
         client._fabric = _fabric.Fabric(gateways={0: shard0})
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            await client.start()
+            await client.start("token")
 
         shard0.identify_event.wait.assert_called_once()
 
     async def test_join_gathers_shard_keepalive_tasks(self, event_loop):
-        client = _client.Client("token")
+        client = _client.Client()
         shard = self.gateway_client(0)
         task = _helpers.create_autospec(asyncio.Task)
         client._shard_keepalive_tasks = {shard: task}
@@ -318,7 +329,7 @@ class TestClient:
             gather.assert_called_once_with(*[task])
 
     async def test_destroy_doesnt_destroy_the_shard_if_done(self, event_loop):
-        client = _client.Client("token")
+        client = _client.Client()
         shard = self.gateway_client(0)
         task = _helpers.create_autospec(asyncio.Task)
         task.done = mock.MagicMock(return_value=True)
@@ -333,7 +344,7 @@ class TestClient:
         shard0 = self.gateway_client(0)
         shard0.requesting_close_event.is_set = mock.MagicMock(return_value=False)
 
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = _fabric.Fabric(gateways={0: shard0})
         client.is_closed = True
         gather_future = _helpers.AwaitableMock()
@@ -349,7 +360,7 @@ class TestClient:
         shard1 = self.gateway_client(1)
         shard1.requesting_close_event.is_set = mock.MagicMock(return_value=False)
 
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = _fabric.Fabric(
             gateways={0: shard0, 1: shard1}, chunker=_helpers.create_autospec(_basic_chunker_impl.BasicChunkerImpl)
         )
@@ -368,7 +379,7 @@ class TestClient:
         shard1 = self.gateway_client(1)
         shard1.requesting_close_event.is_set = mock.MagicMock(return_value=False)
 
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = _fabric.Fabric(
             gateways={0: shard0, 1: shard1}, chunker=_helpers.create_autospec(_basic_chunker_impl.BasicChunkerImpl)
         )
@@ -383,7 +394,7 @@ class TestClient:
         shard1 = self.gateway_client(1)
         shard1.requesting_close_event.is_set = mock.MagicMock(return_value=True)
 
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = _fabric.Fabric(
             gateways={0: shard0, 1: shard1}, chunker=_helpers.create_autospec(_basic_chunker_impl.BasicChunkerImpl)
         )
@@ -397,7 +408,7 @@ class TestClient:
         shard1.close.assert_not_called()
 
     async def test_shutdown_closes_chunker(self):
-        client = _client.Client("token")
+        client = _client.Client()
         chunker = _helpers.create_autospec(_basic_chunker_impl.BasicChunkerImpl)
         client._fabric = _fabric.Fabric(gateways={}, chunker=chunker)
 
@@ -406,7 +417,7 @@ class TestClient:
         chunker.close.assert_called_once()
 
     async def test_shutdown_doesnt_do_anything_if_no_fabric(self):
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = None
         gather_future = _helpers.AwaitableMock()
 
@@ -417,35 +428,35 @@ class TestClient:
 
     @_helpers.stupid_windows_please_stop_breaking_my_tests
     async def test_run_calls_shutdown_when_KeyboardInterrupt(self):
-        client = _client.Client("token")
+        client = _client.Client()
         client.shutdown = mock.MagicMock()
         client.loop.run_until_complete = mock.MagicMock(side_effect=[KeyboardInterrupt, None])
 
-        client.run()
+        client.run("token")
         client.loop.run_until_complete.assert_called_with(client.shutdown())
 
     async def test_run_calls_start(self):
-        client = _client.Client("token")
+        client = _client.Client()
         client.start = mock.MagicMock()
         client.join = mock.MagicMock()
         client.loop.run_until_complete = mock.MagicMock()
 
-        client.run()
+        client.run("token")
 
-        client.loop.run_until_complete.assert_any_call(client.start())
+        client.loop.run_until_complete.assert_any_call(client.start("token"))
 
     async def test_run_calls_join(self):
-        client = _client.Client("token")
+        client = _client.Client()
         client.start = mock.MagicMock()
         client.join = mock.MagicMock()
         client.loop.run_until_complete = mock.MagicMock()
 
-        client.run()
+        client.run("token")
 
         client.loop.run_until_complete.assert_any_call(client.join())
 
     async def test_dispatch(self):
-        client = _client.Client("token")
+        client = _client.Client()
         client._event_dispatcher.dispatch = mock.MagicMock()
 
         client.dispatch("message_create", "foo", 1, True)
@@ -456,7 +467,7 @@ class TestClient:
         async def foo():
             ...
 
-        client = _client.Client("token")
+        client = _client.Client()
         client._event_dispatcher.add = mock.MagicMock()
 
         client.add_event("message_create", foo)
@@ -467,7 +478,7 @@ class TestClient:
         async def foo():
             ...
 
-        client = _client.Client("token")
+        client = _client.Client()
         client._event_dispatcher.remove = mock.MagicMock()
 
         client.remove_event("message_create", foo)
@@ -476,14 +487,14 @@ class TestClient:
 
     @_helpers.assert_raises(type_=RuntimeError)
     async def test_event_when_name_is_not_str_nor_None_raises(self):
-        client = _client.Client("token")
+        client = _client.Client()
 
         @client.event(True)
         async def on_message_create():
             ...
 
     async def test_event_without_name_and_starts_with_on(self):
-        client = _client.Client("token")
+        client = _client.Client()
 
         with mock.patch("hikari.client.Client.add_event") as add_event:
 
@@ -494,7 +505,7 @@ class TestClient:
             add_event.assert_called_with("message_create", on_message_create)
 
     async def test_event_without_name_and_doesnt_start_with_on(self):
-        client = _client.Client("token")
+        client = _client.Client()
 
         with mock.patch("hikari.client.Client.add_event") as add_event:
 
@@ -505,7 +516,7 @@ class TestClient:
             add_event.assert_called_with("message_create", message_create)
 
     async def test_event_with_name(self):
-        client = _client.Client("token")
+        client = _client.Client()
 
         with mock.patch("hikari.client.Client.add_event") as add_event:
 
@@ -516,34 +527,34 @@ class TestClient:
             add_event.assert_called_with("message_create", foo)
 
     async def test_heartbeat_latency_when_bot_not_started_is_nan(self):
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = _fabric.Fabric()
         client._fabric.gateways = {}
 
         assert math.isnan(client.heartbeat_latency)
 
     async def test_heartbeat_latency_when_bot_started(self):
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = _fabric.Fabric()
         client._fabric.gateways = {0: self.gateway_client(0, 1), 1: self.gateway_client(1, 2)}
 
         assert client.heartbeat_latency == 1.5
 
     async def test_hearbeat_latencies_when_bot_not_started(self):
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = None
 
         assert client.heartbeat_latencies == {}
 
     async def test_hearbeat_latencies(self):
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = _fabric.Fabric()
         client._fabric.gateways = {0: self.gateway_client(0, 0.1), 1: self.gateway_client(1, 0.2)}
 
         assert client.heartbeat_latencies == {0: 0.1, 1: 0.2}
 
     async def test_shards_when_bot_not_started(self):
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = None
 
         assert client.shards == {}
@@ -552,7 +563,7 @@ class TestClient:
         shard0 = self.gateway_client(0)
         shard1 = self.gateway_client(1)
 
-        client = _client.Client("token")
+        client = _client.Client()
         client._fabric = _fabric.Fabric(gateways={0: shard0, 1: shard1})
 
         assert client.shards == {0: shard0, 1: shard1}
@@ -601,11 +612,11 @@ class TestClientShutdownHandling:
                 print("shard is up")
                 await asyncio.get_event_loop().create_future()
 
-        bot = Client("1a2b3c", loop=loop)
+        bot = Client(loop=loop)
 
         try:
             bot.loop.call_later(0.5, os.kill, os.getpid(), signal_to_fire)
-            bot.run()
+            bot.run("1a2b3c")
         finally:
             bot.loop.close()
             bot.shutdown.assert_called_once()

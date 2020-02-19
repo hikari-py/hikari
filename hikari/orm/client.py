@@ -54,7 +54,7 @@ if typing.TYPE_CHECKING:
 class Client:
     """
     A highly configurable implementation of a client for running a Discord bot. This contains logic wrapped around
-    orchestrating all of the internal components to work together correctly, autosharding where appropriate,
+    orchestrating all of the internal components to work together correctly, auto-sharding where appropriate,
     initializing all internal components, as well as registering and dispatching events.
 
     Args:
@@ -76,7 +76,6 @@ class Client:
 
     def __init__(
         self,
-        token: str,
         loop: type_hints.Nullable[asyncio.AbstractEventLoop] = None,
         options: type_hints.Nullable[client_options.ClientOptions] = None,
     ) -> None:
@@ -85,7 +84,7 @@ class Client:
         self._fabric: type_hints.Nullable[fabric.Fabric] = None
         self._shard_keepalive_tasks: typing.Dict[gateway.GatewayClient, asyncio.Task] = {}
         self.logger = loggers.get_named_logger(self)
-        self.token = token
+        self.token = None
         self.is_closed = False
 
         try:
@@ -233,7 +232,7 @@ class Client:
     async def _shard_keep_alive(self, shard: gateway.GatewayClient) -> None:
         self.logger.debug("starting keepalive task for shard %s", shard.shard_id)
 
-        backoff = ratelimits.ExponentialBackOff(maximum=-1)
+        backoff = ratelimits.ExponentialBackOff(maximum=None)
         last_start = time.perf_counter()
         do_not_backoff = True
 
@@ -288,19 +287,29 @@ class Client:
                 self.logger.debug("propagating exception %s", shard.shard_id, exc_info=ex)
                 raise ex
 
-    async def start(self):
+    async def start(self, token: str):
         """
         Starts all shards without hitting the identify rate limit, but will not block afterwards.
 
-        Warning:
-            If any exception occurs, this will not close the client. You must catch any exception and/or signal
-            yourself and invoke :meth:`shutdown` manually.
+        Parameters
+        ----------
 
-            For a complete solution to running a client with appropriate exception and signal handling, see
-            :meth:`run`.
+        token : str
+            The bot token to use to authenticate with Discord.
 
-            Note that closing the client is the only way to invoke any shutdown events that are registered correctly.
+        Warnings
+        --------
+        If any exception occurs, this will not close the client. You must catch any exception and/or signal
+        yourself and invoke :meth:`shutdown` manually.
+
+        For a complete solution to running a client with appropriate exception and signal handling, see
+        :meth:`run`.
+
+        Note that closing the client is the only way to invoke any shutdown events that are registered correctly.
         """
+        # TODO: prevent multiple start() calls.
+        self.token = token
+
         await self.dispatch(event_types.EventType.PRE_STARTUP)
         await self._init_new_application_fabric()
 
@@ -397,13 +406,19 @@ class Client:
             await self.dispatch(event_types.EventType.POST_SHUTDOWN)
             await self.destroy()
 
-    def run(self):
+    def run(self, token: str):
         """
         Runs the client on the event loop associated with this :class:`Client`. This is similar to invoking
         :meth:`start` and then :meth:`join`, but has signal handling for OS signals such as `SIGINT` (which
         triggers a :class:`KeyboardInterrupt`), and `SIGTERM`, which is invoked when the OS politely requests
         that the process shuts down. This will also ensure that :meth:`shutdown` is invoked correctly
         regardless of how the client terminated.
+
+        Parameters
+        ----------
+
+        token : str
+            The bot token to use to authenticate with Discord.
         """
         self.logger.info("starting client")
 
@@ -415,7 +430,7 @@ class Client:
             with contextlib.suppress(NotImplementedError):
                 self.loop.add_signal_handler(signal.SIGTERM, sigterm_handler)
 
-            self.loop.run_until_complete(self.start())
+            self.loop.run_until_complete(self.start(token))
             self.loop.run_until_complete(self.join())
         except KeyboardInterrupt:
             self.logger.info("received signal to shut down client")

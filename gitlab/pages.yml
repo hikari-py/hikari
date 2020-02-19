@@ -23,16 +23,15 @@
     paths:
       - public/
   only:
-    - master
-    - staging
+    - branches
   except:
-    - tags
     - merge_requests
+    - tags
 
 .generate-pages:
   extends: .deploy-pages-activation
   image: python:3.8.1
-  stage: deploy
+  stage: test
   script:
     - pip install requests
     - source tasks/deploy.sh
@@ -55,28 +54,16 @@ staging-pages:
 
 pages:  # deploys the generated artifacts as pages
   extends: .deploy-pages-activation
-  stage: post-deploy
+  stage: results
   image: busybox:1.31.1-musl
   before_script:
     - 'mkdir public || true'
+    - git log -n 1 "${CI_COMMIT_SHA}" --format="%B" | grep -iqE "\[\s*(skip|no|don'?t|do\s+not)\s+pages?\s*\]" && echo "SKIPPING ${CI_JOB_STAGE} STAGE JOB" && exit 0
   dependencies:
     - staging-pages
     - master-pages
   script:
     - mv public/master/* public
-
-test-pages:
-  image: python:3.8.1
-  stage: test
-  allow_failure: false
-  script:
-    - bash tasks/retry_aborts.sh pip install nox
-    - bash tasks/retry_aborts.sh nox -s documentation
-  artifacts:
-    paths:
-      - public/
-  except:
+  only:
     - master
     - staging
-    - schedules
-    - tags
