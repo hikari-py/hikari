@@ -27,6 +27,7 @@ Sphinx documentation configuration.
 import datetime
 import os
 import re
+import shutil
 import traceback
 import types
 
@@ -77,6 +78,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
 ]
 
 templates_path = ["_templates"]
@@ -186,16 +188,12 @@ rst_epilog = """
 
 if not is_staging:
     rst_epilog += textwrap.dedent(
-        """
-        .. |staging_link| replace:: If you want the latest staging documentation instead, please visit 
-                                    `this page <staging/index.html>`__.
-    """
+        """.. |staging_link| replace:: If you want the latest staging documentation instead, please visit 
+            `this page <staging/index.html>`__."""
     )
 else:
     rst_epilog += textwrap.dedent(
-        """
-        .. |staging_link| replace:: This is the documentation for the development release
-    """
+        """.. |staging_link| replace:: This is the documentation for the development release"""
     )
 
 

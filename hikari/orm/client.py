@@ -232,7 +232,7 @@ class Client:
     async def _shard_keep_alive(self, shard: gateway.GatewayClient) -> None:
         self.logger.debug("starting keepalive task for shard %s", shard.shard_id)
 
-        backoff = ratelimits.ExponentialBackOff(maximum=-1)
+        backoff = ratelimits.ExponentialBackOff(maximum=None)
         last_start = time.perf_counter()
         do_not_backoff = True
 

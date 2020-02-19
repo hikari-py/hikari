@@ -74,6 +74,7 @@ dt:target, span.highlighted {
 .mi { color: #AE81FF !important; }  /* int literal */
 .mf { color: #AE81FF !important; }  /* float literal */
 .mh { color: #AE81FF !important; }  /* hex literal */
+.mn { color: #AE81FF !important; }  /* no clue, but it fixes MathJAX LaTeX rendering... */
 .mo { color: #AE81FF !important; }  /* octal literal */
 .mb { color: #AE81FF !important; }  /* bool literal */
 .sd { color: #8F8C7E !important; }  /* multiple line docstring */
@@ -263,7 +264,7 @@ code {
     pre { font-family: 'Fira Code VF', monospace; }
 }
 
-.navbar-brand, h1, h2, h3, h4, h5, h6 {
+.navbar-brand, h1, h2, h3, h4, h5, h6, .navbar-text .navbar-version {
     font-family: 'Indie Flower', cursive;
 }
 
