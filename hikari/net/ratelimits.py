@@ -336,7 +336,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.remaining -= 1
 
     async def throttle(self) -> None:
-        self.logger.warning(
+        self.logger.debug(
             "you are being rate limited on bucket %s, backing off for %ss",
             self.name,
             self.get_time_until_reset(time.perf_counter()),
