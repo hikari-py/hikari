@@ -52,10 +52,14 @@ from hikari.net.http_client import HTTPClient
 # API versions
 from hikari.net.versions import GatewayVersion
 from hikari.net.versions import HTTPAPIVersion
-from hikari.orm import client
 
 # Bot client
+from hikari.orm import client
 from hikari.orm.client import Client
+from hikari.orm.client_options import ClientOptions
+from hikari.orm.client_options import ShardOptions
+from hikari.orm.client_options import AUTO_SHARD
+from hikari.orm.client_options import NO_SHARDING
 
 # Fabric
 from hikari.orm.fabric import Fabric
