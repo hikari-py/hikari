@@ -63,7 +63,10 @@ pages:  # deploys the generated artifacts as pages
     - staging-pages
     - master-pages
   script:
-    - mv public/master/* public
+    - cd public/master
+    - 'find . -maxdepth 1 -exec mv {} .. \;'
+    - cd ../..
+    - rm public/master -Rvf
   only:
     - master
     - staging
