@@ -256,6 +256,7 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
         try:
             while True:
                 await asyncio.sleep(self._TYPING_TIMEOUT)
+                await self.trigger_typing()
         except asyncio.CancelledError:
             pass
 

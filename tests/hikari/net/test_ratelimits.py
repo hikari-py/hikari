@@ -482,7 +482,7 @@ class TestHTTPBucketRateLimiterManager:
 
             mgr.real_hashes_to_buckets["foobar"] = bucket
 
-            await mgr.do_gc_pass()
+            mgr.do_gc_pass()
 
             assert "foobar" not in mgr.real_hashes_to_buckets
             bucket.close.assert_called_once()
@@ -497,7 +497,7 @@ class TestHTTPBucketRateLimiterManager:
 
             mgr.real_hashes_to_buckets["foobar"] = bucket
 
-            await mgr.do_gc_pass()
+            mgr.do_gc_pass()
 
             assert "foobar" in mgr.real_hashes_to_buckets
             bucket.close.assert_not_called()
@@ -512,7 +512,7 @@ class TestHTTPBucketRateLimiterManager:
 
             mgr.real_hashes_to_buckets["foobar"] = bucket
 
-            await mgr.do_gc_pass()
+            mgr.do_gc_pass()
 
             assert "foobar" not in mgr.real_hashes_to_buckets
             bucket.close.assert_called_once()
@@ -526,7 +526,7 @@ class TestHTTPBucketRateLimiterManager:
 
             mgr.real_hashes_to_buckets["foobar"] = bucket
 
-            await mgr.do_gc_pass()
+            mgr.do_gc_pass()
 
             assert "foobar" in mgr.real_hashes_to_buckets
             bucket.close.assert_not_called()
