@@ -115,8 +115,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         re_seekable_resources: typing.Collection[typing.Any] = containers.EMPTY_COLLECTION,
         suppress_authorization_header: bool = False,
         **kwargs,
-    ) -> type_hints.JSONObject:
-        future, real_hash = self.ratelimiter.acquire(compiled_route)
+    ) -> typing.Any:
+        bucket_ratelimit_future = self.ratelimiter.acquire(compiled_route)
         request_headers = {"X-RateLimit-Precision": "millisecond"}
 
         if self.token is not None and not suppress_authorization_header:
@@ -140,7 +140,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             # between the request and response
             request_uuid = uuid.uuid4()
 
-            await asyncio.gather(future, self.global_ratelimiter.acquire())
+            await asyncio.gather(bucket_ratelimit_future, self.global_ratelimiter.acquire())
 
             if json_body is not None:
                 body_type = "json"
@@ -207,9 +207,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 else:
                     body = None
 
-            self.ratelimiter.update_rate_limits(
-                compiled_route, real_hash, bucket, remaining, limit, now_date, reset_date,
-            )
+            self.ratelimiter.update_rate_limits(compiled_route, bucket, remaining, limit, now_date, reset_date)
 
             if status == 429:
                 # We are being rate limited.

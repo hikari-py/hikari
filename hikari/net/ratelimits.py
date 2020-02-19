@@ -136,6 +136,8 @@ import time
 import typing
 import weakref
 
+from hikari.internal_utilities import aio
+
 from hikari.internal_utilities import loggers
 
 if typing.TYPE_CHECKING:
@@ -372,7 +374,7 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
     __slots__ = ("compiled_route",)
 
     def __init__(self, name: str, compiled_route: routes.CompiledRoute) -> None:
-        super().__init__(name, 1, 0)
+        super().__init__(name, 1, 1)
         # We store this since the compiled route mapping acts as a weak key dictionary to aid in auto garbage
         # collecting itself; this acts as our solid reference.
         self.compiled_route = compiled_route
@@ -399,6 +401,9 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
         self.reset_at = reset_at
         self.period = max(0.0, self.reset_at - time.perf_counter())
 
+    def acquire(self) -> asyncio.Future:
+        return aio.completed_future(None) if self.is_unknown else super().acquire()
+
     def drip(self) -> None:
         # We don't drip unknown buckets: we can't rate limit them as we don't know their real bucket hash or
         # the current rate limit values Discord put on them...
@@ -413,7 +418,7 @@ class HTTPBucketRateLimiterManager:
     """
 
     __slots__ = (
-        "routes_to_real_hashes",
+        "routes_to_hashes",
         "real_hashes_to_buckets",
         "closed_event",
         "gc_task",
@@ -421,7 +426,7 @@ class HTTPBucketRateLimiterManager:
     )
 
     def __init__(self) -> None:
-        self.routes_to_real_hashes: typing.MutableMapping[routes.CompiledRoute, str] = weakref.WeakKeyDictionary()
+        self.routes_to_hashes: typing.MutableMapping[routes.CompiledRoute, str] = weakref.WeakKeyDictionary()
         self.real_hashes_to_buckets: typing.MutableMapping[str, HTTPBucketRateLimiter] = {}
         self.closed_event: asyncio.Event = asyncio.Event()
         self.gc_task: type_hints.Nullable[asyncio.Task] = None
@@ -477,7 +482,7 @@ class HTTPBucketRateLimiterManager:
 
         self.logger.debug("purged %s stale buckets", len(buckets_to_purge))
 
-    def acquire(self, compiled_route: routes.CompiledRoute) -> typing.Tuple[asyncio.Future, str]:
+    def acquire(self, compiled_route: routes.CompiledRoute) -> asyncio.Future:
         """
         Acquire a bucket for the given route.
 
@@ -486,8 +491,7 @@ class HTTPBucketRateLimiterManager:
                 The route to get the bucket for.
 
         Returns:
-            A future to await that completes when you are allowed to run your request logic, and a bucket
-            hash to pass to the :meth:`update_rate_limits` method afterwards.
+            A future to await that completes when you are allowed to run your request logic.
 
             The returned future MUST be awaited, and will complete when your turn to make a call
             comes along. You are expected to await this and then immediately make your HTTP
@@ -496,11 +500,12 @@ class HTTPBucketRateLimiterManager:
         """
         # Returns a future to await on to wait to be allowed to send the request, and a
         # bucket hash to use to update rate limits later.
-        if compiled_route not in self.routes_to_real_hashes:
-            real_bucket_hash = compiled_route.create_real_bucket_hash(UNKNOWN_HASH)
-            self.routes_to_real_hashes[compiled_route] = real_bucket_hash
+        if compiled_route in self.routes_to_hashes:
+            bucket_hash = self.routes_to_hashes[compiled_route]
         else:
-            real_bucket_hash = self.routes_to_real_hashes[compiled_route]
+            bucket_hash = UNKNOWN_HASH
+
+        real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_hash)
 
         try:
             bucket = self.real_hashes_to_buckets[real_bucket_hash]
@@ -509,13 +514,12 @@ class HTTPBucketRateLimiterManager:
             bucket = HTTPBucketRateLimiter(real_bucket_hash, compiled_route)
             self.real_hashes_to_buckets[real_bucket_hash] = bucket
 
-        return bucket.acquire(), real_bucket_hash
+        return bucket.acquire()
 
     def update_rate_limits(
         self,
         compiled_route: routes.CompiledRoute,
-        real_bucket_hash: str,
-        bucket_header: str,
+        bucket_header: type_hints.Nullable[str],
         remaining_header: int,
         limit_header: int,
         date_header: datetime.datetime,
@@ -527,10 +531,8 @@ class HTTPBucketRateLimiterManager:
         Args:
             compiled_route:
                 The route to get the bucket for.
-            real_bucket_hash:
-                The hash returned by :meth:`acquire`
             bucket_header:
-                The X-RateLimit-Bucket header.
+                The X-RateLimit-Bucket header that was provided in the response, or `None` if not present.
             remaining_header:
                 The X-RateLimit-Remaining header cast to an :class:`int`.
             limit_header:
@@ -540,18 +542,16 @@ class HTTPBucketRateLimiterManager:
             reset_at_header:
                 The X-RateLimit-Reset header value as a :class:`datetime.datetime`.
         """
-        bucket = self.real_hashes_to_buckets.get(real_bucket_hash)
-        if bucket is None or not real_bucket_hash.startswith(bucket_header):
-            # No need to destroy the old bucket reference, as it will be collected periodically later
-            # by the GC task.
+        if compiled_route not in self.routes_to_hashes:
+            self.routes_to_hashes[compiled_route] = bucket_header
 
-            # Recompute vital hashes.
-            real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
+        real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
 
-            self.routes_to_real_hashes[compiled_route] = real_bucket_hash
-            self.logger.debug("creating new bucket for %s", real_bucket_hash)
+        if real_bucket_hash not in self.real_hashes_to_buckets:
             bucket = HTTPBucketRateLimiter(real_bucket_hash, compiled_route)
             self.real_hashes_to_buckets[real_bucket_hash] = bucket
+        else:
+            bucket = self.real_hashes_to_buckets[real_bucket_hash]
 
         reset_after = (reset_at_header - date_header).total_seconds()
         reset_at_monotonic = time.perf_counter() + reset_after
