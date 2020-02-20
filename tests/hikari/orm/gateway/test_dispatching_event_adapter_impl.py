@@ -25,6 +25,7 @@ import pytest
 from hikari.net import gateway as _gateway
 from hikari.orm import fabric
 from hikari.orm.gateway import base_chunker as _chunker
+from hikari.orm.gateway import chunk_mode
 from hikari.orm.gateway import dispatching_event_adapter_impl
 from hikari.orm.gateway import event_types
 from hikari.orm.models import channels
@@ -83,7 +84,7 @@ def adapter_impl(fabric_impl, dispatch_impl, logger_impl):
         fabric_impl, dispatch_impl,
     )
     instance.logger = logger_impl
-    instance._request_chunks_mode = dispatching_event_adapter_impl.AutoRequestChunksMode.NEVER
+    instance._request_chunks_mode = chunk_mode.ChunkMode.NEVER
     return instance
 
 
@@ -407,7 +408,7 @@ class TestDispatchingEventAdapterImpl:
         fabric_impl.state_registry.parse_guild = mock.MagicMock(return_value=guild_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
         payload = {"id": "123", "unavailable": False}
-        adapter_impl._request_chunks_mode = dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+        adapter_impl._request_chunks_mode = chunk_mode.ChunkMode.MEMBERS_AND_PRESENCES
 
         await adapter_impl.handle_guild_create(gateway_impl, payload)
 
@@ -421,7 +422,7 @@ class TestDispatchingEventAdapterImpl:
         fabric_impl.state_registry.parse_guild = mock.MagicMock(return_value=guild_obj)
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
         payload = {"id": "123", "unavailable": False}
-        adapter_impl._request_chunks_mode = dispatching_event_adapter_impl.AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+        adapter_impl._request_chunks_mode = chunk_mode.ChunkMode.MEMBERS_AND_PRESENCES
 
         await adapter_impl.handle_guild_create(gateway_impl, payload)
 

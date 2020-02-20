@@ -46,9 +46,7 @@ from hikari.orm.gateway import dispatching_event_adapter_impl
 from hikari.orm.gateway import event_types
 from hikari.orm.http import http_adapter_impl
 from hikari.orm.state import state_registry_impl
-
-if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import type_hints
+from hikari.orm.models import presences
 
 
 class Client:
@@ -64,11 +62,11 @@ class Client:
             Other :class:`hikari.client_options.ClientOptions` to set. If not provided, sensible
             defaults are used instead.
 
-    >>> client = Client("token_here")
+    >>> client = Client()
     >>> @client.event()
     ... async def on_ready(shard):
     ...     print("Shard", shard.shard_id, "is ready!")
-    >>> client.run()
+    >>> client.run("token")
     """
 
     _SHARD_IDENTIFY_WAIT = 5.0
@@ -76,12 +74,12 @@ class Client:
 
     def __init__(
         self,
-        loop: type_hints.Nullable[asyncio.AbstractEventLoop] = None,
-        options: type_hints.Nullable[client_options.ClientOptions] = None,
+        loop: typing.Optional[asyncio.AbstractEventLoop] = None,
+        options: typing.Optional[client_options.ClientOptions] = None,
     ) -> None:
         self._client_options = options or client_options.ClientOptions()
         self._event_dispatcher = aio.EventDelegate()
-        self._fabric: type_hints.Nullable[fabric.Fabric] = None
+        self._fabric: fabric.Fabric = fabric.Fabric()
         self._shard_keepalive_tasks: typing.Dict[gateway.GatewayClient, asyncio.Task] = {}
         self.logger = loggers.get_named_logger(self)
         self.token = None
@@ -93,9 +91,36 @@ class Client:
             # No event loop is on this thread yet.
             raise RuntimeError("No event loop is running on this thread. Please make one and set it explicitly.")
 
-    async def _init_new_application_fabric(self):
-        self._fabric = fabric.Fabric()
+    @property
+    def heartbeat_latency(self) -> float:
+        """
+        The average heartbeat latency across all gateway shard connections. If any are not running, you will receive
+        a :class:`float` with the value of `NaN` instead.
+        """
+        if self._fabric and len(self._fabric.gateways) != 0:
+            return sum(shard.heartbeat_latency for shard in self._fabric.gateways.values()) / len(self._fabric.gateways)
+        # Bot has not yet started.
+        return float("nan")
 
+    @property
+    def heartbeat_latencies(self) -> typing.Mapping[int, float]:
+        """
+        A mapping of each shard ID to the latest heartbeat latency for that shard.
+        """
+        if self._fabric:
+            return {shard.shard_id: shard.heartbeat_latency for shard in self._fabric.gateways.values()}
+        return containers.EMPTY_DICT
+
+    @property
+    def shards(self) -> typing.Mapping[int, gateway.GatewayClient]:
+        """
+        A mapping of each shard running, mapping the shard ID to the shard instance itself.
+        """
+        if self._fabric:
+            return {shard.shard_id: shard for shard in self._fabric.gateways.values()}
+        return containers.EMPTY_DICT
+
+    async def _init_new_application_fabric(self):
         try:
             self._fabric.state_registry = await self._new_state_registry()
             self._fabric.event_handler = await self._new_event_handler()
@@ -204,6 +229,10 @@ class Client:
                 shard_ids, shard_count = list(shard_ids.shards), shard_ids.shard_count
 
         shard_map = {}
+
+        initial_activity = self._client_options.initial_activity
+        initial_activity = initial_activity is not None and initial_activity.to_dict()
+
         for shard_id in shard_ids:
             shard_map[shard_id] = gateway.GatewayClient(
                 dispatch=self._fabric.event_handler.consume_raw_event,
@@ -218,7 +247,12 @@ class Client:
                 ssl_context=self._client_options.ssl_context,
                 verify_ssl=self._client_options.verify_ssl,
                 large_threshold=self._client_options.large_guild_threshold,
-                initial_presence=self._client_options.presence.to_dict(),
+                initial_presence={
+                    "status": self._client_options.initial_status.value,
+                    "activity": initial_activity,
+                    "afk": False,
+                    "since": None,
+                },
                 shard_id=shard_id,
                 shard_count=shard_count,
                 version=self._client_options.gateway_version,
@@ -360,7 +394,7 @@ class Client:
                 task.cancel()
 
     async def shutdown(
-        self, shard_timeout: type_hints.Nullable[float] = None,
+        self, shard_timeout: typing.Optional[float] = None,
     ):
         """
         Requests that the client safely shuts down any running shards.
@@ -500,7 +534,7 @@ class Client:
         self._event_dispatcher.remove(event_name, coroutine_function)
 
     def event(
-        self, name: type_hints.Nullable[str] = None
+        self, name: typing.Optional[str] = None
     ) -> typing.Callable[[aio.CoroutineFunctionT], aio.CoroutineFunctionT]:
         """
         Generates a decorator for a coroutine function in order to subscribe it as an event listener.
@@ -554,31 +588,74 @@ class Client:
 
         return decorator
 
-    @property
-    def heartbeat_latency(self) -> float:
-        """
-        The average heartbeat latency across all gateway shard connections. If any are not running, you will receive
-        a :class:`float` with the value of `NaN` instead.
-        """
-        if self._fabric and len(self._fabric.gateways) != 0:
-            return sum(shard.heartbeat_latency for shard in self._fabric.gateways.values()) / len(self._fabric.gateways)
-        # Bot has not yet started.
-        return float("nan")
+    async def update_presence(
+        self,
+        *,
+        activity: typing.Optional[presences.Activity] = ...,
+        status: presences.Status = ...,
+        afk: bool = ...,
+        shard_ids: typing.Collection[int] = ...,
+        idle_since: typing.Optional[datetime.datetime] = ...,
+    ) -> None:
+        """Update the bot's presence.
 
-    @property
-    def heartbeat_latencies(self) -> typing.Mapping[int, float]:
-        """
-        A mapping of each shard ID to the latest heartbeat latency for that shard.
-        """
-        if self._fabric:
-            return {shard.shard_id: shard.heartbeat_latency for shard in self._fabric.gateways.values()}
-        return containers.EMPTY_DICT
+        Parameters
+        ----------
+        activity : :obj:`hikari.orm.models.presences.Activity`, optional
+            If specified, the activity to change to. Can be set to `None` to
+            clear the activity.
+        status : :obj:`hikari.orm.models.presences.Status`
+            If specified, the status to change to.
+        afk : :obj:`hikari.orm.models.presences.Status`
+            If `True`, set the bot to be AFK. If `False`, set it to not be AFK.
+            If unspecified, don't change the state.
+        shard_ids : :obj:`typing.Collection` [ :obj:`int` ]
+            The IDs of the shards to update the presence on. If
+            unspecified, the default is to update all shards at once.
+        idle_since : :obj:`datetime.datetime`, optional
+            When the bot reported itself to be idle, or `None` if it is not
+            idle.
 
-    @property
-    def shards(self) -> typing.Mapping[int, gateway.GatewayClient]:
+        Raises
+        ------
+
+        ValueError:
+            If an empty collection of shard IDs is passed or an invalid shard ID is passed.
+
+            If a value error is raised, no presences will be changed.
         """
-        A mapping of each shard running, mapping the shard ID to the shard instance itself.
-        """
-        if self._fabric:
-            return {shard.shard_id: shard for shard in self._fabric.gateways.values()}
-        return containers.EMPTY_DICT
+        if shard_ids is ...:
+            shard_ids = self._fabric.gateways.keys()
+        elif not shard_ids:
+            raise ValueError("You must specify at least one shard")
+        else:
+            # Validate shard IDs are valid shards we can change. We check this pre-emptively to
+            # attempt to make the operation as atomic as possible...
+            for shard_id in shard_ids:
+                if shard_id not in self._fabric.gateways:
+                    raise ValueError(f"Shard with ID {shard_id} is not part of this application instance")
+
+        coroutines = []
+
+        if isinstance(idle_since, datetime.datetime):
+            idle_since = idle_since.timestamp() * 1_000
+
+        for shard_id in shard_ids:
+            shard = self._fabric.gateways[shard_id]
+            presence_dict = shard.current_presence
+
+            # We explicitly check if it is an instance, since passing invalid data here can cause the
+            # gateway to disconnect with an invalid opcode error if we don't sanitise this. Silly
+            # mistakes shouldn't kill the websocket, even if we do immediately restart.
+            if isinstance(status, presences.Status):
+                presence_dict["status"] = status.value
+            if isinstance(activity, presences.Activity):
+                presence_dict["game"] = activity.to_dict() if activity is not None else None
+            if isinstance(afk, bool):
+                presence_dict["afk"] = afk
+            if isinstance(idle_since, int) or idle_since is None:
+                presence_dict["since"] = idle_since
+
+            coroutines.append(asyncio.create_task(shard.update_presence(presence_dict)))
+
+        await asyncio.gather(*coroutines)

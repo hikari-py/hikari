@@ -178,41 +178,6 @@ def legacy_activity():
 
 
 @pytest.mark.model
-class TestPresence:
-    def test_initiate_Presence(self, hikari_presence, activity):
-        p = presences.Presence(**hikari_presence)
-        assert p.activity is activity
-        assert p.since == datetime.datetime.fromtimestamp(1579859511.00509)
-        assert p.status is presences.Status.DND
-
-    def test_Presence_to_dict_without_activity(self, hikari_presence):
-        del hikari_presence["activity"]
-        p = presences.Presence(**hikari_presence)
-        assert p.to_dict() == {"since": 1579859511005, "afk": True, "status": "dnd", "activity": None}
-
-    def test_Presence_to_dict_with_activity(self, hikari_presence):
-        p = presences.Presence(**hikari_presence)
-        assert p.to_dict() == {
-            "since": 1579859511005,
-            "afk": True,
-            "status": "dnd",
-            "activity": {"name": "", "type": 4},
-        }
-
-    def test_Presence___repr__(self, activity):
-        assert repr(
-            _helpers.mock_model(
-                presences.Presence,
-                status=presences.Status.ONLINE,
-                activity=activity,
-                is_afk=True,
-                since=1579859511.00509,
-                __repr__=presences.Presence.__repr__,
-            )
-        )
-
-
-@pytest.mark.model
 class TestMemberPresence:
     def test_parse_no_MemberPresence(self, no_presence):
         p = presences.MemberPresence(no_presence)
@@ -378,7 +343,7 @@ class TestActivityTimestamps:
         assert d == dict(name="Tests :)", type=1, url="https://www.witch.tv/",)
 
     def test_Activity_to_dict_when_empty(self, activity):
-        assert activity.to_dict() == dict(name="", type=4)
+        assert activity.to_dict() == dict(name="", type=0)
 
     @pytest.mark.model
     def test_ActivityTimestamps___repr__(self):
