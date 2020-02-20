@@ -43,7 +43,7 @@ class BasicChunkerImpl(base_chunker.BaseChunker):
 
     __slots__ = ("logger", "fabric", "queues", "shard_chunkers")
 
-    def __init__(self, fabric_obj: fabric.Fabric, presences: bool = True) -> None:
+    def __init__(self, fabric_obj: fabric.Fabric) -> None:
         self.fabric = fabric_obj
         self.logger = loggers.get_named_logger(self)
         self.queues: typing.Dict[int, asyncio.Queue] = {}

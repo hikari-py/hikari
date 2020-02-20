@@ -496,7 +496,7 @@ class TestClient:
     async def test_event_without_name_and_starts_with_on(self):
         client = _client.Client()
 
-        with mock.patch("hikari.client.Client.add_event") as add_event:
+        with mock.patch("hikari.orm.client.Client.add_event") as add_event:
 
             @client.event()
             async def on_message_create():
@@ -507,7 +507,7 @@ class TestClient:
     async def test_event_without_name_and_doesnt_start_with_on(self):
         client = _client.Client()
 
-        with mock.patch("hikari.client.Client.add_event") as add_event:
+        with mock.patch("hikari.orm.client.Client.add_event") as add_event:
 
             @client.event()
             async def message_create():
@@ -518,7 +518,7 @@ class TestClient:
     async def test_event_with_name(self):
         client = _client.Client()
 
-        with mock.patch("hikari.client.Client.add_event") as add_event:
+        with mock.patch("hikari.orm.client.Client.add_event") as add_event:
 
             @client.event("message_create")
             async def foo():

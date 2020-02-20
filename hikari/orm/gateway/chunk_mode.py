@@ -17,20 +17,22 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """
-The Hikari Object Relational Model.
-
-This provides an object-oriented interface to the Discord API, and provides features
-such as the ability to cache certain objects and details that the API provides us, as
-well as providing an expandable and extendable interface to wrap them together in.
-
-The ORM is separated into several domains of components. This is done to allow
-you to easily write new components if this library does not fit your use case.
+Auto-requesting chunking options.
 """
-from hikari.orm import client
-from hikari.orm import client_options
-from hikari.orm import fabric
-from hikari.orm import gateway
-from hikari.orm import http
-from hikari.orm import models
-from hikari.orm import state
-from hikari.orm.gateway import event_types
+import enum
+
+
+class ChunkMode(enum.IntEnum):
+    """
+    Options for automatically retrieving all guild members in a guild.
+    """
+
+    #: Never autochunk guilds.
+    NEVER = 0
+    #: Autochunk guild members only.
+    MEMBERS = 1
+    #: Autochunk guild members and their presences.
+    MEMBERS_AND_PRESENCES = 2
+
+
+__all__ = ["ChunkMode"]

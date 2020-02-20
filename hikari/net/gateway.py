@@ -506,6 +506,17 @@ class GatewayClient:
         # 2 disconnects + is_connected = 2
         return max(0, self.disconnect_count - int(not self.is_connected))
 
+    @property
+    def current_presence(self) -> type_hints.JSONObject:
+        """
+        Returns
+        -------
+
+        The current presence for the shard.
+        """
+        # Make a shallow copy to prevent mutation.
+        return dict(self._presence or {})
+
     @typing.overload
     async def request_guild_members(self, guild_id: str, *guild_ids: str, limit: int = 0, query: str = "") -> None:
         ...
@@ -570,6 +581,11 @@ class GatewayClient:
             presence : dict
                 The new presence payload to set.
         """
+        presence.setdefault("since", None)
+        presence.setdefault("game", None)
+        presence.setdefault("status", "online")
+        presence.setdefault("afk", False)
+
         self.logger.debug("updating presence to %r", presence)
         await self._send({"op": 3, "d": presence})
         self._presence = presence
@@ -823,7 +839,12 @@ class GatewayClient:
                 return obj
             elif message.type == aiohttp.WSMsgType.CLOSE:
                 close_code = self._ws.close_code
-                self.logger.debug("connection closed with code %s", close_code)
+                try:
+                    meaning = errors.GatewayCloseCode(close_code)
+                except ValueError:
+                    meaning = "???"
+
+                self.logger.debug("connection closed with code %s (%s)", close_code, meaning)
                 if close_code == errors.GatewayCloseCode.AUTHENTICATION_FAILED:
                     raise errors.GatewayInvalidTokenError()
                 elif close_code in (errors.GatewayCloseCode.SESSION_TIMEOUT, errors.GatewayCloseCode.INVALID_SEQ):
