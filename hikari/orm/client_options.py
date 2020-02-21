@@ -33,7 +33,7 @@ from hikari.net import versions
 from hikari.orm.models import presences
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass()
 class ShardOptions:
     """
     Represents allowable shards.
@@ -65,7 +65,7 @@ class ShardOptions:
 
 
 #: Use an appropriate number of shards for the size of the bot being run.
-AUTO_SHARD = ShardOptions((), 0)
+AUTO_SHARDING = ShardOptions((), 0)
 #: Dont use sharding, just shard 0.
 NO_SHARDING = ShardOptions([0], 1)
 
@@ -102,6 +102,9 @@ class ClientOptions:
     http_timeout: typing.Optional[float] = None
     #: The total number of members where the gateway will stop sending offline members in the guild member list.
     large_guild_threshold: int = 250
+    #: If True, API status changes are watched periodically, and any important notices will be displayed in your
+    #: logs. Defaults to True.
+    log_api_status_changes: bool = True
     #: The maximum DM channels stored in the cache.
     max_user_dm_channel_count: int = 100
     #: The maximum messages stored in the cache.
@@ -117,10 +120,13 @@ class ClientOptions:
     #: The proxy URL to use.
     proxy_url: typing.Optional[str] = None
     #: The shard configuration to use. Check :class:`hikari.client_options.ShardOptions` for more information.
-    shards: ShardOptions = AUTO_SHARD
+    shards: ShardOptions = AUTO_SHARDING
     #: The SSL context to use.
     ssl_context: typing.Optional[ssl.SSLContext] = None
     #: Whether to enable SSL verification or not.
     #: Generally you want this enabled to ensure that the SSL certificate that Discord provides is genuine,
     #: however, some awkward proxies can cause this to not work, in which case you would want to disable this.
     verify_ssl: bool = True
+
+
+__all__ = ["ClientOptions", "ShardOptions", "NO_SHARDING", "AUTO_SHARDING"]

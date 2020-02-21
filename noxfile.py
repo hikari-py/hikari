@@ -62,12 +62,16 @@ PYTEST_ARGS = [
     "--cov-branch",
     f"--junitxml={ARTIFACT_DIR}/tests.xml",
     "--showlocals",
-    "--testdox",
-    "--force-testdox",
 ]
 
+if not os.getenv("CI"):
+    PYTEST_ARGS += [
+        "--testdox",
+        "--force-testdox",
+    ]
 
-@nox.session()
+
+@nox.session(reuse_venv=True)
 def test(session) -> None:
     """Run unit tests in Pytest."""
     session.install("-r", "requirements.txt")
@@ -75,7 +79,7 @@ def test(session) -> None:
     session.run("python", "-m", "pytest", *PYTEST_ARGS, *session.posargs, TEST_PATH)
 
 
-@nox.session()
+@nox.session(reuse_venv=True)
 def documentation(session) -> None:
     """Generate documentation using Sphinx for the current branch."""
     session.install("-r", "requirements.txt")
@@ -98,7 +102,7 @@ def documentation(session) -> None:
     session.run("python", "-m", "sphinx.cmd.build", DOCUMENTATION_DIR, ARTIFACT_DIR, "-b", "html")
 
 
-@nox.session()
+@nox.session(reuse_venv=True)
 def sast(session) -> None:
     """Run static application security testing with Bandit."""
     session.install("bandit")
@@ -106,7 +110,7 @@ def sast(session) -> None:
     session.run("bandit", pkg, "-r")
 
 
-@nox.session()
+@nox.session(reuse_venv=True)
 def safety(session) -> None:
     """Run safety checks against a vulnerability database using Safety."""
     session.install("-r", "requirements.txt")
@@ -114,14 +118,14 @@ def safety(session) -> None:
     session.run("safety", "check")
 
 
-@nox.session()
+@nox.session(reuse_venv=True)
 def format(session) -> None:
     """Reformat code with Black. Pass the '--check' flag to check formatting only."""
     session.install("black")
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *session.posargs)
 
 
-@nox.session()
+@nox.session(reuse_venv=True)
 def lint(session) -> None:
     """Check formating with pylint"""
     session.install("-r", "requirements.txt")
@@ -152,7 +156,7 @@ def lint(session) -> None:
 
 if os.getenv("CI"):
 
-    @nox.session()
+    @nox.session(reuse_venv=False)
     def pip(session: nox.sessions.Session):
         """Run through sandboxed install of PyPI package (if running on CI)"""
         if "--showtime" not in session.posargs:

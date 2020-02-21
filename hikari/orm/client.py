@@ -30,6 +30,7 @@ import time
 import typing
 
 import aiohttp
+from hikari.net import status_info_client
 
 from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
@@ -39,6 +40,7 @@ from hikari.net import errors
 from hikari.net import gateway
 from hikari.net import http_client
 from hikari.net import ratelimits
+from hikari.orm import api_status_checker
 from hikari.orm import client_options
 from hikari.orm import fabric
 from hikari.orm.gateway import basic_chunker_impl
@@ -50,17 +52,23 @@ from hikari.orm.models import presences
 
 
 class Client:
-    """
-    A highly configurable implementation of a client for running a Discord bot. This contains logic wrapped around
-    orchestrating all of the internal components to work together correctly, auto-sharding where appropriate,
-    initializing all internal components, as well as registering and dispatching events.
+    """The main class to use to run a bot.
 
-    Args:
-        token:
-            The bot token to sign in with.
-        options:
-            Other :class:`hikari.client_options.ClientOptions` to set. If not provided, sensible
-            defaults are used instead.
+    A highly configurable implementation of a client for running a Discord bot.
+    This contains logic wrapped around orchestrating all of the internal
+    components to work together correctly, auto-sharding where appropriate,
+    initializing all internal components, as well as registering and dispatching
+    events.
+
+    Parameters
+    ----------
+    loop : :obj:`asyncio.AbstractEventLoop`, optional
+        The event loop to run on. If not specified, the default loop for the
+        thread is used instead.
+    options : :obj:`hikari.client_options.ClientOptions`, optional
+        An settings object that can be optionally specified to allow you to
+        customise certain parts of how the client works. If unspecified,
+        default values are used instead.
 
     >>> client = Client()
     >>> @client.event()
@@ -80,6 +88,8 @@ class Client:
         self._client_options = options or client_options.ClientOptions()
         self._event_dispatcher = aio.EventDelegate()
         self._fabric: fabric.Fabric = fabric.Fabric()
+        self._api_status_logging_task: typing.Optional[asyncio.Task] = None
+        self._api_status_client: typing.Optional[status_info_client.StatusInfoClient] = None
         self._shard_keepalive_tasks: typing.Dict[gateway.GatewayClient, asyncio.Task] = {}
         self.logger = loggers.get_named_logger(self)
         self.token = None
@@ -93,9 +103,10 @@ class Client:
 
     @property
     def heartbeat_latency(self) -> float:
-        """
-        The average heartbeat latency across all gateway shard connections. If any are not running, you will receive
-        a :class:`float` with the value of `NaN` instead.
+        """The average heartbeat latency across all gateway shard connections.
+
+        If any are not running, you will receive a :class:`float` with the value
+        of `NaN` instead.
         """
         if self._fabric and len(self._fabric.gateways) != 0:
             return sum(shard.heartbeat_latency for shard in self._fabric.gateways.values()) / len(self._fabric.gateways)
@@ -104,8 +115,8 @@ class Client:
 
     @property
     def heartbeat_latencies(self) -> typing.Mapping[int, float]:
-        """
-        A mapping of each shard ID to the latest heartbeat latency for that shard.
+        """A mapping of each shard ID to the latest heartbeat latency for that
+        shard.
         """
         if self._fabric:
             return {shard.shard_id: shard.heartbeat_latency for shard in self._fabric.gateways.values()}
@@ -113,8 +124,8 @@ class Client:
 
     @property
     def shards(self) -> typing.Mapping[int, gateway.GatewayClient]:
-        """
-        A mapping of each shard running, mapping the shard ID to the shard instance itself.
+        """A mapping of each shard running, mapping the shard ID to the shard
+        instance itself.
         """
         if self._fabric:
             return {shard.shard_id: shard for shard in self._fabric.gateways.values()}
@@ -122,6 +133,9 @@ class Client:
 
     async def _init_new_application_fabric(self):
         try:
+            if self._client_options.log_api_status_changes:
+                self._init_api_status_logger()
+
             self._fabric.state_registry = await self._new_state_registry()
             self._fabric.event_handler = await self._new_event_handler()
             self._fabric.http_client = await self._new_http_client()
@@ -137,6 +151,25 @@ class Client:
                 await self.shutdown()
             finally:
                 raise RuntimeError("failed to initialize application fabric fully")
+
+    def _init_api_status_logger(self):
+        self.logger.debug("starting API status monitoring task")
+
+        self._api_status_client = status_info_client.StatusInfoClient(
+            allow_redirects=self._client_options.allow_redirects,
+            connector=self._client_options.connector,
+            proxy_headers=self._client_options.proxy_headers,
+            proxy_auth=self._client_options.proxy_auth,
+            proxy_url=self._client_options.proxy_url,
+            ssl_context=self._client_options.ssl_context,
+            verify_ssl=self._client_options.verify_ssl,
+            timeout=self._client_options.http_timeout,
+        )
+
+        self._api_status_logging_task = self.loop.create_task(
+            api_status_checker.log_api_incidents(self._api_status_client),
+            name="Watch for Discord API status changes and log anything important",
+        )
 
     async def _new_state_registry(self):
         return state_registry_impl.StateRegistryImpl(
@@ -188,9 +221,13 @@ class Client:
 
         # Use comparison rather than identify, this lets the user unmarshal a JSON file using lib X if they wish
         # to load config from file directly into the bot.
-        if self._client_options.shards == client_options.AUTO_SHARD:
+        if self._client_options.shards == client_options.AUTO_SHARDING:
             gateway_bot = await self._fabric.http_adapter.fetch_gateway_bot()
-            self.logger.info("the gateway has recommended %s shard(s) for this bot", gateway_bot.shards)
+            self.logger.info(
+                "the gateway has recommended %s shard%s for this bot",
+                gateway_bot.shards,
+                "s" if gateway_bot.shards - 1 else "",
+            )
 
             # Hope this cannot go below zero, but who knows with Discord.
             if gateway_bot.session_start_limit.remaining <= 0:
@@ -322,8 +359,8 @@ class Client:
                 raise ex
 
     async def start(self, token: str):
-        """
-        Starts all shards without hitting the identify rate limit, but will not block afterwards.
+        """Starts all shards without hitting the identify rate limit, but
+        without blocking afterwards.
 
         Parameters
         ----------
@@ -333,13 +370,15 @@ class Client:
 
         Warnings
         --------
-        If any exception occurs, this will not close the client. You must catch any exception and/or signal
-        yourself and invoke :meth:`shutdown` manually.
+        If any exception occurs, this will not close the client. You must catch
+        any exception and/or signal yourself and invoke :meth:`shutdown`
+        manually.
 
-        For a complete solution to running a client with appropriate exception and signal handling, see
-        :meth:`run`.
+        For a complete solution to running a client with appropriate exception
+        and signal handling, see :meth:`run`.
 
-        Note that closing the client is the only way to invoke any shutdown events that are registered correctly.
+        Note that closing the client is the only way to invoke any shutdown
+        events that are registered correctly.
         """
         # TODO: prevent multiple start() calls.
         self.token = token
@@ -363,46 +402,56 @@ class Client:
         await self.dispatch(event_types.EventType.POST_STARTUP)
 
     async def join(self):
-        """
-        Wait for shards to shut down. This can be used to keep your bot running after starting it.
+        """Wait for shards to shut down. This can be used to keep your bot
+        running after starting it.
 
-        Warning:
-            If any exception occurs, this will not close the client. You must catch any exception and/or signal
-            yourself and invoke :meth:`shutdown` manually.
+        Warnings
+        --------
+        If any exception occurs, this will not close the client. You must catch
+        any exception and/or signal yourself and invoke :meth:`shutdown`
+        manually.
 
-            For a complete solution to running a client with appropriate exception and signal handling, see
-            :meth:`run`.
+        For a complete solution to running a client with appropriate exception
+        and signal handling, see :meth:`run`.
 
-            Note that closing the client is the only way to invoke any shutdown events that are registered correctly.
+        Note that closing the client is the only way to invoke any shutdown
+        events that are registered correctly.
         """
         await asyncio.gather(*self._shard_keepalive_tasks.values())
 
     async def destroy(self):
-        """
-        Destroys all shards without waiting for them to shut down properly first.
+        """Destroys all shards without waiting for them to shut down properly
+        first.
 
-        Warning:
-            You do not generally want to call this unless you want your bot to stop immediately.
-            This will not invoke any shutdown events.
+        Warnings
+        --------
+        You do not generally want to call this unless you want your bot to stop
+        immediately. This will not invoke any shutdown events.
 
-            If you simply wish to programmatically shut your bot down, you can just call
-            :meth:`shutdown`.
+        If you simply wish to programmatically shut your bot down, you should
+        just call :meth:`shutdown`.
         """
         for shard, task in self._shard_keepalive_tasks.items():
             if not task.done():
                 self.logger.warning("destroying shard %s", shard.shard_id)
                 task.cancel()
 
+        if self._api_status_logging_task is not None and not self._api_status_logging_task.done():
+            self.logger.debug("stopping API status monitoring task")
+            self._api_status_logging_task.cancel()
+            await self._api_status_client.close()
+
     async def shutdown(
         self, shard_timeout: typing.Optional[float] = None,
     ):
-        """
-        Requests that the client safely shuts down any running shards.
+        """Requests that the client safely shuts down any running shards, and
+        closes any resources that are open.
 
-        Args:
-            shard_timeout:
-                The time to wait for shards to shut down before forcefully destroying them. This
-                defaults to `None`.
+        Parameters
+        ----------
+        shard_timeout : :obj:`float`, optional
+            The time to wait for shards to shut down before forcefully
+            destroying them. This defaults to `None`.
         """
         if self.is_closed:
             return
@@ -441,16 +490,18 @@ class Client:
             await self.destroy()
 
     def run(self, token: str):
-        """
-        Runs the client on the event loop associated with this :class:`Client`. This is similar to invoking
-        :meth:`start` and then :meth:`join`, but has signal handling for OS signals such as `SIGINT` (which
-        triggers a :class:`KeyboardInterrupt`), and `SIGTERM`, which is invoked when the OS politely requests
-        that the process shuts down. This will also ensure that :meth:`shutdown` is invoked correctly
-        regardless of how the client terminated.
+        """Run the bot.
+
+        Runs the client on the event loop associated with this :class:`Client`.
+        This is similar to invoking :meth:`start` and then :meth:`join`, but has
+        signal handling for OS signals such as `SIGINT` (triggers a
+        :class:`KeyboardInterrupt`), and `SIGTERM`, which is invoked when the
+        OS politely requests that the process shuts down. This will also ensure
+        that :meth:`shutdown` is invoked correctly regardless of how the client
+        terminated.
 
         Parameters
         ----------
-
         token : str
             The bot token to use to authenticate with Discord.
         """
@@ -477,21 +528,24 @@ class Client:
 
             self.logger.info("client has shut down")
 
-    def dispatch(self, event: str, *args):
-        """
-        Dispatches an event to any listeners.
+    def dispatch(self, event: str, *args: typing.Any) -> asyncio.Future:
+        """Dispatches an event to any listeners for the event name.
 
-        Args:
-            event:
-                The event name to dispatch.
-            *args:
-                Any arguments to pass to the event.
+        Parameters
+        ----------
+        event : :obj:`str`
+            The event name to dispatch.
+        *args: :obj:`typing.Any`
+            Any arguments to pass to the event.
 
-        Returns:
-            The gathering future for any event handlers that will be dispatched, or a completed
-            future with no result if no event handlers existed for this event. You may optionally
-            await this future if you want to ensure you wait for all dispatchers to be executed,
-            (for example, when handling shutdown event logic), but generally you should not
+        Returns
+        -------
+        :obj:`asyncio.Future`
+            The gathering future for any event handlers that will be dispatched,
+            or a completed future with no result if no event handlers existed
+            for this event. You may optionally await this future if you want to
+            ensure you wait for all dispatchers to be executed, (for example,
+            when handling shutdown event logic), but generally you should not
             await this result, as that will allow it to execute asynchronously.
         """
         self.logger.debug("dispatching event %s with %s args", event, len(args))
@@ -501,11 +555,12 @@ class Client:
         """
         Subscribes the given event coroutine function to the given event name.
 
-        Args:
-            event_name:
-                The event to add to.
-            coroutine_function:
-                The coroutine function callback to add.
+        Parameters
+        ----------
+        event_name : :obj:`str`
+            The event to add to.
+        coroutine_function : coroutine function
+            The coroutine function callback to add.
         """
         self.logger.debug(
             "subscribing %s%s to %s event",
@@ -516,14 +571,15 @@ class Client:
         self._event_dispatcher.add(event_name, coroutine_function)
 
     def remove_event(self, event_name: str, coroutine_function: aio.CoroutineFunctionT) -> None:
-        """
-        Un-subscribes the given event coroutine function from the given event name, if it is there.
+        """Un-subscribes the given event coroutine function from the given
+        event name, if it is there.
 
-        Args:
-            event_name:
-                The event to remove from.
-            coroutine_function:
-                The coroutine function callback to remove.
+        Parameters
+        ----------
+        event_name : :obj:`str
+            The event to remove from.
+        coroutine_function : coroutine function
+            The coroutine function callback to remove.
         """
         self.logger.debug(
             "un-subscribing %s%s from %s event",
@@ -536,16 +592,21 @@ class Client:
     def event(
         self, name: typing.Optional[str] = None
     ) -> typing.Callable[[aio.CoroutineFunctionT], aio.CoroutineFunctionT]:
-        """
-        Generates a decorator for a coroutine function in order to subscribe it as an event listener.
+        """Generates a decorator for a coroutine function in order to subscribe
+        it as an event listener.
 
-        Args:
-            name:
-                The name of the event to subscribe to. If you do not supply this, then the name of the coroutine
-                function itself is used, minus the word **on_** if present at the start.
+        Parameters
+        ----------
+        name : :obj:`str`, optional
+            The name of the event to subscribe to. If you do not supply this,
+            then the name of the coroutine function itself is used,
+            minus the word **on_** if present at the start.
 
-        Returns:
-            A decorator that decorates a coroutine function and returns the coroutine function passed to it.
+        Returns
+        -------
+        decorator(coroutine function)
+            A decorator that decorates a coroutine function and returns the
+            coroutine function passed to it.
 
         >>> @client.event()
         ... async def on_message_create(message):
@@ -594,8 +655,8 @@ class Client:
         activity: typing.Optional[presences.Activity] = ...,
         status: presences.Status = ...,
         afk: bool = ...,
-        shard_ids: typing.Collection[int] = ...,
         idle_since: typing.Optional[datetime.datetime] = ...,
+        shard_ids: typing.Collection[int] = ...,
     ) -> None:
         """Update the bot's presence.
 
@@ -609,18 +670,19 @@ class Client:
         afk : :obj:`hikari.orm.models.presences.Status`
             If `True`, set the bot to be AFK. If `False`, set it to not be AFK.
             If unspecified, don't change the state.
-        shard_ids : :obj:`typing.Collection` [ :obj:`int` ]
-            The IDs of the shards to update the presence on. If
-            unspecified, the default is to update all shards at once.
         idle_since : :obj:`datetime.datetime`, optional
             When the bot reported itself to be idle, or `None` if it is not
             idle.
+        shard_ids : :obj:`typing.Collection` [ :obj:`int` ]
+            The IDs of the shards to update the presence on. If
+            unspecified, the default is to update all shards at once.
 
         Raises
         ------
 
         ValueError:
-            If an empty collection of shard IDs is passed or an invalid shard ID is passed.
+            If an empty collection of shard IDs is passed or an invalid shard
+            ID is passed.
 
             If a value error is raised, no presences will be changed.
         """
@@ -659,3 +721,6 @@ class Client:
             coroutines.append(asyncio.create_task(shard.update_presence(presence_dict)))
 
         await asyncio.gather(*coroutines)
+
+
+__all__ = ["Client"]

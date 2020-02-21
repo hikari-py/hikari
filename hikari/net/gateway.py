@@ -48,127 +48,13 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import type_hints
 from hikari.net import errors
+from hikari.net import gateway_intents
 from hikari.net import ratelimits
 from hikari.net import user_agent
 from hikari.net import versions
 
 if typing.TYPE_CHECKING:
     import logging
-
-
-class GatewayIntent(enum.IntFlag):
-    """
-    Represents an intent on the gateway. This is a bitfield representation of all the categories of event
-    that you wish to receive.
-
-    Any events not in an intent category will be fired regardless of what intents you provide.
-
-    Warnings
-    --------
-
-    If you are using the V7 Gateway, you will be REQUIRED to provide some form of intent value when
-    you connect. Failure to do so may result in immediate termination of the session server-side.
-
-    Notes
-    -----
-
-    Discord now places limits on certain events you can receive without whitelisting your bot first. On the
-    `Bot` tab in the developer's portal for your bot, you should now have the option to enable functionality
-    for receiving these events.
-
-    If you attempt to request an intent type that you have not whitelisted your bot for, you will be
-    disconnected on startup with a `4014` closure code.
-    """
-
-    #: Subscribes to the following events:
-    #: * GUILD_CREATE
-    #: * GUILD_DELETE
-    #: * GUILD_ROLE_CREATE
-    #: * GUILD_ROLE_UPDATE
-    #: * GUILD_ROLE_DELETE
-    #: * CHANNEL_CREATE
-    #: * CHANNEL_UPDATE
-    #: * CHANNEL_DELETE
-    #: * CHANNEL_PINS_UPDATE
-    GUILDS = 1 << 0
-
-    #: Subscribes to the following events:
-    #: * GUILD_MEMBER_ADD
-    #: * GUILD_MEMBER_UPDATE
-    #: * GUILD_MEMBER_REMOVE
-    #:
-    #: Warnings
-    #: --------
-    #: This intent is privileged, and requires enabling/whitelisting to use.
-    GUILD_MEMBERS = 1 << 1
-
-    #: Subscribes to the following events:
-    #: * GUILD_BAN_ADD
-    #: * GUILD_BAN_REMOVE
-    GUILD_BANS = 1 << 2
-
-    #: Subscribes to the following events:
-    #: * GUILD_EMOJIS_UPDATE
-    GUILD_EMOJIS = 1 << 3
-
-    #: Subscribes to the following events:
-    #: * GUILD_INTEGRATIONS_UPDATE
-    GUILD_INTEGRATIONS = 1 << 4
-
-    #: Subscribes to the following events:
-    #: * WEBHOOKS_UPDATE
-    GUILD_WEBHOOKS = 1 << 5
-
-    #: Subscribes to the following events:
-    #: * INVITE_CREATE
-    #: * INVITE_DELETE
-    GUILD_INVITES = 1 << 6
-
-    #: Subscribes to the following events:
-    #: * VOICE_STATE_UPDATE
-    GUILD_VOICE_STATES = 1 << 7
-
-    #: Subscribes to the following events:
-    #: * PRESENCE_UPDATE
-    #:
-    #: Warnings
-    #: --------
-    #: This intent is privileged, and requires enabling/whitelisting to use.
-    GUILD_PRESENCES = 1 << 8
-
-    #: Subscribes to the following events:
-    #: * MESSAGE_CREATE
-    #: * MESSAGE_UPDATE
-    #: * MESSAGE_DELETE
-    GUILD_MESSAGES = 1 << 9
-
-    #: Subscribes to the following events:
-    #: * MESSAGE_REACTION_ADD
-    #: * MESSAGE_REACTION_REMOVE
-    #: * MESSAGE_REACTION_REMOVE_ALL
-    #: * MESSAGE_REACTION_REMOVE_EMOJI
-    GUILD_MESSAGE_REACTIONS = 1 << 10
-
-    #: Subscribes to the following events:
-    #: * TYPING_START
-    GUILD_MESSAGE_TYPING = 1 << 11
-
-    #: Subscribes to the following events:
-    #: * CHANNEL_CREATE
-    #: * MESSAGE_CREATE
-    #: * MESSAGE_UPDATE
-    #: * MESSAGE_DELETE
-    DIRECT_MESSAGES = 1 << 12
-
-    #: Subscribes to the following events:
-    #: * MESSAGE_REACTION_ADD
-    #: * MESSAGE_REACTION_REMOVE
-    #: * MESSAGE_REACTION_REMOVE_ALL
-    DIRECT_MESSAGE_REACTIONS = 1 << 13
-
-    #: Subscribes to the following events
-    #: * TYPING_START
-    DIRECT_MESSAGE_TYPING = 1 << 14
 
 
 class GatewayStatus(str, enum.Enum):
@@ -319,22 +205,22 @@ class GatewayClient:
         self,
         *,
         compression: bool = True,
-        connector: type_hints.Nullable[aiohttp.BaseConnector] = None,
+        connector: typing.Optional[aiohttp.BaseConnector] = None,
         debug: bool = False,
         dispatch: DispatchT = lambda gw, e, p: None,
-        initial_presence: type_hints.Nullable[type_hints.JSONObject] = None,
-        intents: type_hints.Nullable[GatewayIntent] = None,
+        initial_presence: typing.Optional[type_hints.JSONObject] = None,
+        intents: typing.Optional[gateway_intents.GatewayIntent] = None,
         json_deserialize: typing.Callable[[typing.AnyStr], type_hints.JSONObject] = json.loads,
         json_serialize: typing.Callable[[type_hints.JSONObject], typing.AnyStr] = json.dumps,
         large_threshold: int = 250,
-        proxy_auth: type_hints.Nullable[aiohttp.BasicAuth] = None,
-        proxy_headers: type_hints.Nullable[aiohttp.typedefs.LooseHeaders] = None,
-        proxy_url: type_hints.Nullable[str] = None,
-        session_id: type_hints.Nullable[str] = None,
-        seq: type_hints.Nullable[int] = None,
+        proxy_auth: typing.Optional[aiohttp.BasicAuth] = None,
+        proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders] = None,
+        proxy_url: typing.Optional[str] = None,
+        session_id: typing.Optional[str] = None,
+        seq: typing.Optional[int] = None,
         shard_id: int = 0,
         shard_count: int = 1,
-        ssl_context: type_hints.Nullable[ssl.SSLContext] = None,
+        ssl_context: typing.Optional[ssl.SSLContext] = None,
         token: str,
         url: str,
         verify_ssl: bool = True,
@@ -354,26 +240,26 @@ class GatewayClient:
 
         self._compression: bool = compression
         self._connected_at: float = float("nan")
-        self._connector: type_hints.Nullable[aiohttp.BaseConnector] = connector
+        self._connector: typing.Optional[aiohttp.BaseConnector] = connector
         self._debug: bool = debug
-        self._intents: type_hints.Nullable[GatewayIntent] = intents
+        self._intents: typing.Optional[intents.GatewayIntent] = intents
         self._large_threshold: int = large_threshold
         self._json_deserialize: typing.Callable[[typing.AnyStr], type_hints.JSONObject] = json_deserialize
         self._json_serialize: typing.Callable[[type_hints.JSONObject], typing.AnyStr] = json_serialize
-        self._presence: type_hints.Nullable[type_hints.JSONObject] = initial_presence
-        self._proxy_auth: type_hints.Nullable[aiohttp.BasicAuth] = proxy_auth
-        self._proxy_headers: type_hints.Nullable[aiohttp.typedefs.LooseHeaders] = proxy_headers
-        self._proxy_url: type_hints.Nullable[str] = proxy_url
+        self._presence: typing.Optional[type_hints.JSONObject] = initial_presence
+        self._proxy_auth: typing.Optional[aiohttp.BasicAuth] = proxy_auth
+        self._proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders] = proxy_headers
+        self._proxy_url: typing.Optional[str] = proxy_url
         self._ratelimiter: ratelimits.WindowedBurstRateLimiter = ratelimits.WindowedBurstRateLimiter(
             f"gateway shard {shard_id}/{shard_count}", 60.0, 120
         )
-        self._session: type_hints.Nullable[aiohttp.ClientSession] = None
-        self._ssl_context: type_hints.Nullable[ssl.SSLContext] = ssl_context
+        self._session: typing.Optional[aiohttp.ClientSession] = None
+        self._ssl_context: typing.Optional[ssl.SSLContext] = ssl_context
         self._token: str = token
         self._url: str = url
         self._verify_ssl: bool = verify_ssl
-        self._ws: type_hints.Nullable[aiohttp.ClientWebSocketResponse] = None
-        self._zlib: type_hints.Nullable[zlib.decompressobj] = None
+        self._ws: typing.Optional[aiohttp.ClientWebSocketResponse] = None
+        self._zlib: typing.Optional[zlib.decompressobj] = None
 
         #: An event that is set when the connection closes.
         #:
@@ -442,12 +328,12 @@ class GatewayClient:
         #: The current session ID, if known.
         #:
         #: :type: :class:`str` or `None`
-        self.session_id: type_hints.Nullable[str] = session_id
+        self.session_id: typing.Optional[str] = session_id
 
         #: The current sequence number for state synchronization with the API, if known.
         #:
         #: :type: :class:`int` or `None`.
-        self.seq: type_hints.Nullable[int] = seq
+        self.seq: typing.Optional[int] = seq
 
         #: The shard ID.
         #:
@@ -906,3 +792,6 @@ class GatewayClient:
 
     def __bool__(self):
         return self.is_connected
+
+
+__all__ = ["GatewayStatus", "GatewayClient"]
