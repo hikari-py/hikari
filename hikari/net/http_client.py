@@ -115,7 +115,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         re_seekable_resources: typing.Collection[typing.Any] = containers.EMPTY_COLLECTION,
         suppress_authorization_header: bool = False,
         **kwargs,
-    ) -> typing.Any:
+    ) -> typing.Union[type_hints.JSONObject, type_hints.JSONArray, None]:
         bucket_ratelimit_future = self.ratelimiter.acquire(compiled_route)
         request_headers = {"X-RateLimit-Precision": "millisecond"}
 
@@ -513,7 +513,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         *,
         content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         nonce: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        tts: type_hints.NotRequired[bool] = False,
+        tts: bool = False,
         files: type_hints.NotRequired[typing.Sequence[typing.Tuple[str, storage.FileLikeT]]] = unspecified.UNSPECIFIED,
         embed: type_hints.NotRequired[type_hints.JSONObject] = unspecified.UNSPECIFIED,
     ) -> type_hints.JSONObject:
@@ -2590,13 +2590,17 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         route = routes.GUILD_WEBHOOKS.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    async def get_webhook(self, webhook_id: str) -> type_hints.JSONObject:
+    async def get_webhook(
+        self, webhook_id: str, *, webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED
+    ) -> type_hints.JSONObject:
         """
         Gets a given webhook.
 
         Args:
             webhook_id:
                 The ID of the webhook to get.
+            webhook_token:
+                If specified, the webhook token to use to get it (bypassing bot authorization).
 
         Returns:
             The requested webhook object.
@@ -2606,14 +2610,20 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 If the webhook is not found.
             ForbiddenHTTPError:
                 If you're not in the guild that owns this webhook or lack the `MANAGE_WEBHOOKS` permission.
+            hikari.net.errors.UnauthorizedHTTPError:
+                If you pass a token that's invalid for the target webhook.
         """
-        route = routes.WEBHOOK.compile(self.GET, webhook_id=webhook_id)
-        return await self._request(route)
+        if webhook_token is unspecified.UNSPECIFIED:
+            route = routes.WEBHOOK.compile(self.GET, webhook_id=webhook_id)
+        else:
+            route = routes.WEBHOOK_WITH_TOKEN.compile(self.GET, webhook_id=webhook_id, webhook_token=webhook_token)
+        return await self._request(route, suppress_authorization_header=webhook_token is not unspecified.UNSPECIFIED)
 
     async def modify_webhook(
         self,
         webhook_id: str,
         *,
+        webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         avatar: type_hints.NullableNotRequired[bytes] = unspecified.UNSPECIFIED,
         channel_id: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
@@ -2625,6 +2635,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         Args:
             webhook_id:
                 The ID of the webhook to edit.
+            webhook_token:
+                If specified, the webhook token to use to modify it (bypassing bot authorization).
             name:
                 The new name string.
             avatar:
@@ -2642,33 +2654,137 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             hikari.net.errors.NotFoundHTTPError:
                 If either the webhook or the channel aren't found.
             hikari.net.errors.ForbiddenHTTPError:
-                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook belongs
-                to.
+                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook
+                belongs to.
+            hikari.net.errors.UnauthorizedHTTPError:
+                If you pass a token that's invalid for the target webhook.
         """
         payload = {}
         transformations.put_if_specified(payload, "name", name)
         transformations.put_if_specified(payload, "channel_id", channel_id)
         transformations.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
-        route = routes.WEBHOOK.compile(self.PATCH, webhook_id=webhook_id)
-        return await self._request(route, json_body=payload, reason=reason)
+        if webhook_token is unspecified.UNSPECIFIED:
+            route = routes.WEBHOOK.compile(self.PATCH, webhook_id=webhook_id)
+        else:
+            route = routes.WEBHOOK_WITH_TOKEN.compile(self.PATCH, webhook_id=webhook_id, webhook_token=webhook_token)
+        return await self._request(
+            route,
+            json_body=payload,
+            reason=reason,
+            suppress_authorization_header=webhook_token is not unspecified.UNSPECIFIED,
+        )
 
-    async def delete_webhook(self, webhook_id: str) -> None:
+    async def delete_webhook(
+        self, webhook_id: str, *, webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED
+    ) -> None:
         """
         Deletes a given webhook.
 
         Args:
             webhook_id:
                 The ID of the webhook to delete
+            webhook_token:
+                If specified, the webhook token to use to delete it (bypassing bot authorization).
 
         Raises:
             hikari.net.errors.NotFoundHTTPError:
                 If the webhook is not found.
             hikari.net.errors.ForbiddenHTTPError:
-                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook belongs
-                to.
+                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook
+                belongs to.
+            hikari.net.errors.UnauthorizedHTTPError:
+                If you pass a token that's invalid for the target webhook.
         """
-        route = routes.WEBHOOK.compile(self.DELETE, webhook_id=webhook_id)
-        await self._request(route)
+        if webhook_token is unspecified.UNSPECIFIED:
+            route = routes.WEBHOOK.compile(self.DELETE, webhook_id=webhook_id)
+        else:
+            route = routes.WEBHOOK_WITH_TOKEN.compile(self.DELETE, webhook_id=webhook_id, webhook_token=webhook_token)
+        await self._request(route, suppress_authorization_header=webhook_token is not unspecified.UNSPECIFIED)
+
+    async def execute_webhook(
+        self,
+        webhook_id: str,
+        webhook_token: str,
+        *,
+        content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        username: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        avatar_url: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        tts: bool = False,
+        wait: bool = False,
+        file: type_hints.NotRequired[typing.Tuple[str, storage.FileLikeT]] = unspecified.UNSPECIFIED,
+        embeds: type_hints.NotRequired[typing.Sequence[type_hints.JSONObject]] = unspecified.UNSPECIFIED,
+    ) -> typing.Optional[type_hints.JSONObject]:
+        """
+        Create a message in the given channel or DM.
+
+        Parameters
+        ----------
+        webhook_id : :obj:`str`
+            The ID of the webhook to execute.
+        webhook_token : :obj:`str`
+            The token of the webhook to execute.
+        content : :obj:`str`, optional
+            The webhook message content to send.
+        username : :obj:`str`, optional
+            Used to override the webhook's username for this request.
+        avatar_url : :obj:`str`, optional
+            The url of an image to override the webhook's avatar with
+            for this message.
+        tts : :obj:`bool`, optional
+            Whether this webhook should create a TTS message.
+        wait : :obj:`bool`, optional
+            Whether this request should wait for the webhook to be executed
+            and return the resultant message object.
+        file : :obj:`bytes` or :obj:`io.IOBase`, optional
+            A tuple of the file name and either raw bytes or a io.IOBase
+            derived object that points to a buffer containing said file.
+        embeds : :obj:`typing.Sequence` [:obj:`dict`], optional
+            A sequence of embed objects that will be sent with this message.
+
+        Raises
+        ------
+        hikari.net.errors.NotFoundHTTPError
+            If the channel ID or webhook ID is not found.
+        hikari.net.errors.BadRequestHTTPError:
+            If the file is too large, the embed exceeds the defined limits,
+            if the message content is specified and empty or greater than 2000
+            characters, or if neither of content, file or embed are specified.
+        hikari.net.errors.ForbiddenHTTPError:
+            If you lack permissions to send to this channel.
+        hikari.net.errors.UnauthorizedHTTPError:
+            If you pass a token that's invalid for the target webhook.
+
+        Returns
+        -------
+        :obj:`hikari.internal_utilities.type_hints.JSONObject` or :obj:`None`
+            The created message object if wait is True else None.
+        """
+        form = aiohttp.FormData()
+
+        json_payload = {"tts": tts}
+        transformations.put_if_specified(json_payload, "content", content)
+        transformations.put_if_specified(json_payload, "username", username)
+        transformations.put_if_specified(json_payload, "avatar_url", avatar_url)
+        transformations.put_if_specified(json_payload, "embeds", embeds)
+
+        form.add_field("payload_json", json.dumps(json_payload), content_type="application/json")
+
+        if file is not unspecified.UNSPECIFIED:
+            file_name, file = file
+            file = storage.make_resource_seekable(file)
+            re_seekable_resources = [file]
+            form.add_field("file", file, filename=file_name, content_type="application/octet-stream")
+        else:
+            re_seekable_resources = []
+
+        route = routes.WEBHOOK_WITH_TOKEN.compile(self.POST, webhook_id=webhook_id, webhook_token=webhook_token)
+        return await self._request(
+            route,
+            form_body=form,
+            re_seekable_resources=re_seekable_resources,
+            query={"wait": str(wait)},
+            suppress_authorization_header=True,
+        )
 
 
 __all__ = ["HTTPClient"]

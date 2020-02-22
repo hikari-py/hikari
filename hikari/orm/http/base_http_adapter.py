@@ -296,7 +296,7 @@ class BaseHTTPAdapter(abc.ABC):
                 If specified, this should be a list of between 1 and 5 :class:`hikari.orm.models.media.AbstractFile`
                 derived objects
             embed:
-                if specified, this embed will be sent with the message.
+                If specified, this embed will be sent with the message.
 
         Raises:
             hikari.net.errors.NotFoundHTTPError:
@@ -424,7 +424,7 @@ class BaseHTTPAdapter(abc.ABC):
 
         Raises:
             hikari.errors.NotFound:
-                If the channel_id or message_id was not found.
+                If the channel or message was not found.
             hikari.errors.Forbidden:
                 If you lack the `MANAGE_MESSAGES` permission.
         """
@@ -454,7 +454,7 @@ class BaseHTTPAdapter(abc.ABC):
 
         Raises:
             hikari.net.errors.NotFoundHTTPError:
-                If the channel_id or message_id was not found.
+                If the channel or message was not found.
             hikari.net.errors.ForbiddenHTTPError:
                 If you lack the `MANAGE_MESSAGES` permission.
         """
@@ -562,7 +562,7 @@ class BaseHTTPAdapter(abc.ABC):
 
         Raises:
             hikari.net.errors.NotFoundHTTPError:
-                If the channel_id or message_id is not found.
+                If the channel or message is not found.
             hikari.net.errors.BadRequestHTTPError:
                 If the embed exceeds any of the embed limits if specified, or the content is specified and consists
                 only of whitespace, is empty, or is more than 2,000 characters in length.
@@ -2427,13 +2427,17 @@ class BaseHTTPAdapter(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_webhook(self, webhook: _webhooks.WebhookLikeT) -> _webhooks.Webhook:
+    async def fetch_webhook(
+        self, webhook: _webhooks.WebhookLikeT, *, webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED
+    ) -> _webhooks.Webhook:
         """
         Gets a given webhook.
 
         Args:
             webhook:
                 The ID of the webhook to get.
+            webhook_token:
+                If specified, used to bypass bot authorization.
 
         Returns:
             The requested :class:`hikari.orm.models.webhooks.Webhook` object.
@@ -2441,8 +2445,10 @@ class BaseHTTPAdapter(abc.ABC):
         Raises:
             hikari.net.errors.NotFoundHTTPError:
                 If the webhook is not found.
-            ForbiddenHTTPError:
+            hikari.net.errors.ForbiddenHTTPError:
                 If you're not in the guild that owns this webhook or lack the `MANAGE_WEBHOOKS` permission.
+            hikari.net.errors.UnauthorizedHTTPError:
+                If the `webhook_token` passed is invalid for the target webhook.
         """
 
     @abc.abstractmethod
@@ -2450,6 +2456,7 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         webhook: _webhooks.WebhookLikeT,
         *,
+        webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         avatar_data: type_hints.NotRequired[storage.FileLikeT] = unspecified.UNSPECIFIED,
         #: TODO: Can we make webhooks to announcement channels/store channels?
@@ -2462,6 +2469,8 @@ class BaseHTTPAdapter(abc.ABC):
         Args:
             webhook:
                 The object or ID of the webhook to edit.
+            webhook_token:
+                If specified, used to bypass bot authorization.
             name:
                 The new name string.
             avatar_data:
@@ -2475,23 +2484,90 @@ class BaseHTTPAdapter(abc.ABC):
             hikari.net.errors.NotFoundHTTPError:
                 If either the webhook or the channel aren't found.
             hikari.net.errors.ForbiddenHTTPError:
-                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook belongs
-                to.
+                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook
+                belongs to.
+            hikari.net.errors.UnauthorizedHTTPError:
+                If the `webhook_token` passed is invalid for the target webhook.
         """
 
     @abc.abstractmethod
-    async def delete_webhook(self, webhook: _webhooks.WebhookLikeT) -> None:
+    async def delete_webhook(
+        self, webhook: _webhooks.WebhookLikeT, *, webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED
+    ) -> None:
         """
         Deletes a given webhook.
 
         Args:
             webhook:
                 The object or ID of the webhook to delete
+            webhook_token:
+                If specified, used to bypass bot authorization.
 
         Raises:
             hikari.net.errors.NotFoundHTTPError:
                 If the webhook is not found.
             hikari.net.errors.ForbiddenHTTPError:
-                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook belongs
-                to.
+                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook
+                belongs to.
+            hikari.net.errors.UnauthorizedHTTPError:
+                If the `webhook_token` passed is invalid for the target webhook.
+        """
+
+    async def execute_webhook(
+        self,
+        webhook: _webhooks.WebhookLikeT,
+        webhook_token: str,
+        *,
+        content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        username: type_hints.NotRequired[str] = unspecified.Unspecified,
+        avatar_url: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        tts: bool = False,
+        wait: bool = False,
+        file: type_hints.NotRequired[typing.Tuple[str, storage.FileLikeT]] = unspecified.UNSPECIFIED,
+        embeds: type_hints.NotRequired[typing.Sequence[_embeds.Embed]] = unspecified.UNSPECIFIED,
+    ) -> typing.Optional[_messages.Message]:
+        """
+        Trigger a wehbhook to create a message.
+
+        Parameters
+        ----------
+        webhook : :obj:`hikari.orm.models.webhooks.WebhookLikeT`
+            The ID or object of the webhook to trigger.
+        webhook_token : :obj:`str`
+            The :class:`str` authentication token of the webhook to trigger.
+        content : :obj:`str`, optional
+            The webhook message content to send.
+        username : :obj:`str`, optional
+            Used to override the webhook's default username for this message.
+        avatar_url : :obj:`str`, optional
+            Used to override the webhook's default avatar for this message.
+        tts : :obj:`bool`, optional
+            Whether this webhook should create a TTS message.
+        wait : :obj:`bool`, optional
+            Whether this request should wait for the webhook to be executed
+            and return a message object, defaults to `False`.
+        file : :obj:`hikari.orm.models.media.AbstractFile`, optional
+            If specified, this should be the AbstractFile derived object to
+            send with the webhook.
+        embeds : :obj:`typing.Sequence` [:obj:`hikari.orm.models.embeds.Embed`], optional
+            If specified, this should be a sequence of between 1 and 10
+            embed objects to send with the message.
+
+        Raises
+        ------
+        hikari.net.errors.NotFoundHTTPError
+            If the webhook ID is not found.
+        hikari.net.errors.BadRequestHTTPError
+            If the file is too large, the embed exceeds the defined limits, if
+            the message content is specified and empty or greater than 2000
+            characters, or if neither of content, file or embed are specified.
+        hikari.net.errors.ForbiddenHTTPError
+            If you lack permissions to send to this channel.
+        hikari.net.errors.UnauthorizedHTTPError
+            If the `webhook_token` passed is invalid for the target webhook.
+
+        Returns
+        -------
+        :obj:`hikari.orm.models.messages.Message` or :obj:`None`
+            The created message object if wait is True else None.
         """
