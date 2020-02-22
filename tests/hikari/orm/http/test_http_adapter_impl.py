@@ -16,10 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import io
 from unittest import mock
 
 import pytest
 
+from hikari.internal_utilities import storage
 from hikari.internal_utilities import unspecified
 from hikari.net import http_client
 from hikari.orm import fabric
@@ -40,7 +42,6 @@ from hikari.orm.models import members
 from hikari.orm.models import messages
 from hikari.orm.models import overwrites
 from hikari.orm.models import permissions
-from hikari.orm.models import reactions
 from hikari.orm.models import roles
 from hikari.orm.models import users
 from hikari.orm.models import voices
@@ -414,26 +415,21 @@ class TestHTTPAdapterImpl:
             embed=unspecified.UNSPECIFIED,
         )
 
-    @pytest.mark.skip(reason="tests are now failing...")
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 2121231312, channels.Channel)
     async def test_create_message_with_all_optionals(self, fabric_impl, channel):
         mock_message_payload = {"id": "32123123", "content": "whoop"}
         mock_message = mock.MagicMock(messages.Message)
-        mock_file = mock.MagicMock(
-            spec=media.File,
-            open=mock.MagicMock(return_value=mock.AsyncMock(read=mock.AsyncMock(return_value=b"53234234"))),
-        )
-        mock_file.name = "Nekos"
-        mock_in_memory_file = mock.MagicMock(
-            spec=media.InMemoryFile,
-            open=mock.MagicMock(return_value=mock.MagicMock(read=mock.MagicMock(return_value=b"4ascbdas32"))),
-        )
-        mock_in_memory_file.name = "cafe"
+        mock_file = mock.MagicMock(spec=media.File)
+        mock_file_data = mock.MagicMock(io.BytesIO)
+        mock_in_memory_file = mock.MagicMock(spec=media.InMemoryFile)
+        mock_in_memory_data = mock.MagicMock(io.BytesIO)
         fabric_impl.state_registry.parse_message.return_value = mock_message
         fabric_impl.http_client.create_message = mock.AsyncMock(return_value=mock_message_payload)
-        assert (
-            await fabric_impl.http_adapter.create_message(
+        with mock.patch.object(
+            media, "safe_read_file", side_effect=[("Nekos", mock_file_data), ("cafe", mock_in_memory_data)]
+        ):
+            result = await fabric_impl.http_adapter.create_message(
                 channel,
                 content="hey, hey",
                 tts=True,
@@ -444,14 +440,15 @@ class TestHTTPAdapterImpl:
                     assets_to_upload=[mock_in_memory_file],
                 ),
             )
-            is mock_message
-        )
+            assert media.safe_read_file.call_count == 2
+            media.safe_read_file.assert_has_calls((mock.call(mock_file), mock.call(mock_in_memory_file)))
+        assert result is mock_message
         fabric_impl.state_registry.parse_message.assert_called_once_with(mock_message_payload)
         fabric_impl.http_client.create_message.assert_called_once_with(
             channel_id="2121231312",
             content="hey, hey",
             tts=True,
-            files=[("Nekos", b"53234234"), ("cafe", b"4ascbdas32")],
+            files=[("Nekos", mock_file_data), ("cafe", mock_in_memory_data)],
             embed={"description": "fi", "type": "rich"},
         )
 
@@ -508,6 +505,7 @@ class TestHTTPAdapterImpl:
             is None
         )
 
+    @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 2388383, channels.Channel)
     @pytest.mark.parametrize("message", ("2020202020", 2020202020))
     @pytest.mark.parametrize(
@@ -1107,20 +1105,22 @@ class TestHTTPAdapterImpl:
         mock_guild_emoji = mock.MagicMock(emojis.GuildEmoji)
         mock_guild = mock.MagicMock(guilds.Guild)
         awaitable_mock = _helpers.AwaitableMock(return_value=mock_guild)
+        mock_image_file = mock.MagicMock(memoryview)
+        mock_image_bytes = b"44422242vsewr21"
         fabric_impl.http_client.create_guild_emoji = mock.AsyncMock(return_value=mock_guild_emoji_payload)
         fabric_impl.state_registry.parse_emoji.return_value = mock_guild_emoji
         fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = awaitable_mock
-        assert (
-            await fabric_impl.http_adapter.create_guild_emoji(
-                guild=guild, name="A name", image_data=b"44422242vsewr21",
+        with mock.patch.object(storage, "get_bytes_from_resource", return_value=mock_image_bytes):
+            result = await fabric_impl.http_adapter.create_guild_emoji(
+                guild=guild, name="A name", image_data=mock_image_file,
             )
-            is mock_guild_emoji
-        )
+            assert result is mock_guild_emoji
+            storage.get_bytes_from_resource.assert_called_once_with(mock_image_file)
         fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(4242)
         awaitable_mock.assert_awaited_once()
         fabric_impl.state_registry.parse_emoji.assert_called_once_with(mock_guild_emoji_payload, mock_guild)
         fabric_impl.http_client.create_guild_emoji.assert_called_once_with(
-            guild_id="4242", name="A name", image=b"44422242vsewr21", roles=[], reason=unspecified.UNSPECIFIED
+            guild_id="4242", name="A name", image=mock_image_bytes, roles=[], reason=unspecified.UNSPECIFIED
         )
 
     @pytest.mark.asyncio
@@ -1129,19 +1129,21 @@ class TestHTTPAdapterImpl:
         mock_guild_emoji_payload = {"id": "31232", "name": "sure", "animated": True}
         mock_guild_emoji = mock.MagicMock(emojis.GuildEmoji)
         mock_guild = mock.MagicMock(guilds.Guild)
+        mock_image_data = mock.MagicMock(memoryview)
+        mock_image_bytes = b"44422242vsewr21"
         fabric_impl.http_client.create_guild_emoji = mock.AsyncMock(return_value=mock_guild_emoji_payload)
         fabric_impl.state_registry.parse_emoji.return_value = mock_guild_emoji
         fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = mock_guild
-        assert (
-            await fabric_impl.http_adapter.create_guild_emoji(
-                guild=guild, name="A name", image_data=b"44422242vsewr21",
+        with mock.patch.object(storage, "get_bytes_from_resource", return_value=mock_image_bytes):
+            result = await fabric_impl.http_adapter.create_guild_emoji(
+                guild=guild, name="A name", image_data=mock_image_data
             )
-            is mock_guild_emoji
-        )
+            assert result is mock_guild_emoji
+            storage.get_bytes_from_resource.assert_called_once_with(mock_image_data)
         fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(4242)
         fabric_impl.state_registry.parse_emoji.assert_called_once_with(mock_guild_emoji_payload, mock_guild)
         fabric_impl.http_client.create_guild_emoji.assert_called_once_with(
-            guild_id="4242", name="A name", image=b"44422242vsewr21", roles=[], reason=unspecified.UNSPECIFIED
+            guild_id="4242", name="A name", image=mock_image_bytes, roles=[], reason=unspecified.UNSPECIFIED
         )
 
     @pytest.mark.asyncio
@@ -1151,19 +1153,21 @@ class TestHTTPAdapterImpl:
         mock_guild_emoji_payload = {"id": "31232", "name": "sure", "animated": True}
         mock_guild_emoji = mock.MagicMock(emojis.GuildEmoji)
         mock_guild = mock.MagicMock(guilds.Guild)
+        mock_image_data = mock.MagicMock(memoryview)
+        mock_image_bytes = b"44422242vsewr21"
         fabric_impl.http_client.create_guild_emoji = mock.AsyncMock(return_value=mock_guild_emoji_payload)
         fabric_impl.state_registry.parse_emoji.return_value = mock_guild_emoji
         fabric_impl.state_registry.get_mandatory_guild_by_id.return_value = mock_guild
-        assert (
-            await fabric_impl.http_adapter.create_guild_emoji(
-                guild=guild, name="A name", image_data=b"44422242vsewr21", roles=(role,), reason="Needed more nekos.",
+        with mock.patch.object(storage, "get_bytes_from_resource", return_value=mock_image_bytes):
+            result = await fabric_impl.http_adapter.create_guild_emoji(
+                guild=guild, name="A name", image_data=mock_image_data, roles=(role,), reason="Needed more nekos.",
             )
-            is mock_guild_emoji
-        )
+            assert result is mock_guild_emoji
+            storage.get_bytes_from_resource.assert_called_once_with(mock_image_data)
         fabric_impl.state_registry.get_mandatory_guild_by_id.assert_called_once_with(4242)
         fabric_impl.state_registry.parse_emoji.assert_called_once_with(mock_guild_emoji_payload, mock_guild)
         fabric_impl.http_client.create_guild_emoji.assert_called_once_with(
-            guild_id="4242", name="A name", image=b"44422242vsewr21", roles=["6969"], reason="Needed more nekos.",
+            guild_id="4242", name="A name", image=mock_image_bytes, roles=["6969"], reason="Needed more nekos.",
         )
 
     @pytest.mark.asyncio
@@ -1321,25 +1325,27 @@ class TestHTTPAdapterImpl:
     ):
         mock_guild_payload = {"id": 231232, "owner_id": 115590097100865541}
         mock_guild = mock.MagicMock(guilds.Guild)
+        mock_icon_data = mock.MagicMock(memoryview)
+        mock_icon_bytes = b"5324324"
         fabric_impl.http_client.create_guild = mock.AsyncMock(return_value=mock_guild_payload)
         fabric_impl.state_registry.parse_guild.return_value = mock_guild
-        assert (
-            await fabric_impl.http_adapter.create_guild(
+        with mock.patch.object(storage, "get_bytes_from_resource", return_value=mock_icon_bytes):
+            result = await fabric_impl.http_adapter.create_guild(
                 "I am a guild",
                 region="LONDON",
-                icon_data=b"5324324",
+                icon_data=mock_icon_data,
                 verification_level=verification_level,
                 default_message_notifications=default_message_notifications,
                 explicit_content_filter=explicit_content_filter,
                 roles=[role],
                 channels=[channel],
             )
-            is mock_guild
-        )
+            assert result is mock_guild
+            storage.get_bytes_from_resource.assert_called_once_with(mock_icon_data)
         fabric_impl.http_client.create_guild.assert_called_once_with(
             name="I am a guild",
             region="LONDON",
-            icon=b"5324324",
+            icon=mock_icon_bytes,
             verification_level=2,
             default_message_notifications=1,
             explicit_content_filter=0,
@@ -1385,8 +1391,12 @@ class TestHTTPAdapterImpl:
         explicit_content_filter,
     ):
         fabric_impl.http_client.modify_guild = mock.AsyncMock()
-        assert (
-            await fabric_impl.http_adapter.update_guild(
+        mock_icon_data = mock.MagicMock(memoryview)
+        mock_icon_bytes = b"54345"
+        mock_splash_data = mock.MagicMock(memoryview)
+        mock_splash_bytes = b"45234"
+        with mock.patch.object(storage, "get_bytes_from_resource", side_effect=(mock_icon_bytes, mock_splash_bytes)):
+            result = await fabric_impl.http_adapter.update_guild(
                 guild,
                 name="OK",
                 region="London",
@@ -1395,14 +1405,15 @@ class TestHTTPAdapterImpl:
                 explicit_content_filter=explicit_content_filter,
                 afk_channel=channel,
                 afk_timeout=50,
-                icon_data=b"54345",
+                icon_data=mock_icon_data,
                 owner=user,
-                splash_data=b"45234",
+                splash_data=mock_splash_data,
                 system_channel=channel,
                 reason="OK",
             )
-            is None
-        )
+            assert result is None
+            storage.get_bytes_from_resource.assert_has_calls((mock.call(mock_icon_data), mock.call(mock_splash_data)))
+
         fabric_impl.http_client.modify_guild.assert_called_once_with(
             guild_id="379953393319542784",
             name="OK",
@@ -1412,9 +1423,9 @@ class TestHTTPAdapterImpl:
             explicit_content_filter=0,
             afk_channel_id="7655462341233211",
             afk_timeout=50,
-            icon=b"54345",
+            icon=mock_icon_bytes,
             owner_id="341232132132123",
-            splash=b"45234",
+            splash=mock_splash_bytes,
             system_channel_id="7655462341233211",
             reason="OK",
         )
@@ -2702,12 +2713,24 @@ class TestHTTPAdapterImpl:
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("webhook", 878787, webhooks.Webhook)
-    async def test_fetch_webhook(self, fabric_impl, mock_webhook_payload, mock_webhook, webhook):
+    async def test_fetch_webhook_without_token(self, fabric_impl, mock_webhook_payload, mock_webhook, webhook):
         fabric_impl.http_client.get_webhook = mock.AsyncMock(return_value=mock_webhook_payload)
         fabric_impl.state_registry.parse_webhook.return_value = mock_webhook
 
         assert await fabric_impl.http_adapter.fetch_webhook(webhook) is mock_webhook
-        fabric_impl.http_client.get_webhook.assert_called_once_with(webhook_id="878787")
+        fabric_impl.http_client.get_webhook.assert_called_once_with(
+            webhook_id="878787", webhook_token=unspecified.UNSPECIFIED
+        )
+        fabric_impl.state_registry.parse_webhook.assert_called_once_with(mock_webhook_payload)
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("webhook", 878787, webhooks.Webhook)
+    async def test_fetch_webhook_without_token(self, fabric_impl, mock_webhook_payload, mock_webhook, webhook):
+        fabric_impl.http_client.get_webhook = mock.AsyncMock(return_value=mock_webhook_payload)
+        fabric_impl.state_registry.parse_webhook.return_value = mock_webhook
+
+        assert await fabric_impl.http_adapter.fetch_webhook(webhook, webhook_token="nyaa_pnaa_uwu") is mock_webhook
+        fabric_impl.http_client.get_webhook.assert_called_once_with(webhook_id="878787", webhook_token="nyaa_pnaa_uwu")
         fabric_impl.state_registry.parse_webhook.assert_called_once_with(mock_webhook_payload)
 
     @pytest.mark.asyncio
@@ -2719,6 +2742,7 @@ class TestHTTPAdapterImpl:
         assert await fabric_impl.http_adapter.update_webhook(webhook) is mock_webhook
         fabric_impl.http_client.modify_webhook.assert_called_once_with(
             webhook_id="646464",
+            webhook_token=unspecified.UNSPECIFIED,
             name=unspecified.UNSPECIFIED,
             avatar=unspecified.UNSPECIFIED,
             channel_id=unspecified.UNSPECIFIED,
@@ -2733,20 +2757,95 @@ class TestHTTPAdapterImpl:
         fabric_impl.http_client.modify_webhook = mock.AsyncMock(return_value=mock_webhook_payload)
         fabric_impl.state_registry.parse_webhook.return_value = mock_webhook
 
-        assert (
-            await fabric_impl.http_adapter.update_webhook(
-                webhook, name="Nekohook", avatar_data=b"dookx0o2", channel=mock_channel, reason="We need more cats."
-            )
-            is mock_webhook
+        result = await fabric_impl.http_adapter.update_webhook(
+            webhook,
+            webhook_token="uwu_owo_uvu",
+            name="Nekohook",
+            avatar_data=b"dookx0o2",
+            channel=mock_channel,
+            reason="We need more cats.",
         )
+        assert result is mock_webhook
         fabric_impl.http_client.modify_webhook.assert_called_once_with(
-            webhook_id="646464", name="Nekohook", avatar=b"dookx0o2", channel_id="42", reason="We need more cats.",
+            webhook_id="646464",
+            webhook_token="uwu_owo_uvu",
+            name="Nekohook",
+            avatar=b"dookx0o2",
+            channel_id="42",
+            reason="We need more cats.",
         )
         fabric_impl.state_registry.parse_webhook.assert_called_once_with(mock_webhook_payload)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("webhook", 33331111, webhooks.Webhook)
-    async def test_delete_webhook(self, fabric_impl, webhook):
+    async def test_delete_webhook_without_token(self, fabric_impl, webhook):
         fabric_impl.http_client.delete_webhook = mock.AsyncMock()
         assert await fabric_impl.http_adapter.delete_webhook(webhook) is None
-        fabric_impl.http_client.delete_webhook.assert_called_once_with(webhook_id="33331111")
+        fabric_impl.http_client.delete_webhook.assert_called_once_with(
+            webhook_id="33331111", webhook_token=unspecified.UNSPECIFIED
+        )
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("webhook", 33331111, webhooks.Webhook)
+    async def test_delete_webhook_with_token(self, fabric_impl, webhook):
+        fabric_impl.http_client.delete_webhook = mock.AsyncMock()
+        assert await fabric_impl.http_adapter.delete_webhook(webhook, webhook_token="uwu_uwu_uwu") is None
+        fabric_impl.http_client.delete_webhook.assert_called_once_with(
+            webhook_id="33331111", webhook_token="uwu_uwu_uwu"
+        )
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("webhook", 115590097100865541, webhooks.Webhook)
+    async def test_execute_webhook_when_all_unspecified(self, fabric_impl, webhook):
+        fabric_impl.http_client.execute_webhook.return_value = None
+        assert await fabric_impl.http_adapter.execute_webhook(webhook, "uwu_uwu_owo") is None
+        fabric_impl.http_client.execute_webhook.assert_called_once_with(
+            webhook_id="115590097100865541",
+            webhook_token="uwu_uwu_owo",
+            content=unspecified.UNSPECIFIED,
+            username=unspecified.UNSPECIFIED,
+            avatar_url=unspecified.UNSPECIFIED,
+            tts=False,
+            wait=False,
+            file=unspecified.UNSPECIFIED,
+            embeds=unspecified.UNSPECIFIED,
+        )
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("webhook", 115590097100865541, webhooks.Webhook)
+    async def test_execute_webhook_when_filled_and_waiting(self, fabric_impl, webhook):
+        mock_response = {"content": "525252525", "id": "55555555"}
+        mock_message = mock.MagicMock(webhooks.Webhook)
+        fabric_impl.state_registry.parse_message.return_value = mock_message
+        fabric_impl.http_client.execute_webhook.return_value = mock_response
+        mock_file = mock.MagicMock(media.AbstractFile)
+        mock_file_data = mock.MagicMock(io.BytesIO)
+        mock_embed_data = {"type": "rich", "description": "blah blah blah"}
+        mock_embed = mock.MagicMock(embeds.Embed, to_dict=mock.MagicMock(return_value=mock_embed_data))
+        with mock.patch.object(media, "safe_read_file", return_value=("blah.txt", mock_file_data)):
+            result = await fabric_impl.http_adapter.execute_webhook(
+                webhook,
+                "uwu_uwu_owo",
+                content="CONTENT NOT REQUIRED",
+                username="Nyaaster",
+                avatar_url="localhost/",
+                tts=True,
+                wait=True,
+                file=mock_file,
+                embeds=[mock_embed],
+            )
+            assert result is mock_message
+            media.safe_read_file.assert_called_once_with(mock_file)
+        fabric_impl.state_registry.parse_message.assert_called_once_with(mock_response)
+        mock_embed.to_dict.assert_called_once()
+        fabric_impl.http_client.execute_webhook.assert_called_once_with(
+            webhook_id="115590097100865541",
+            webhook_token="uwu_uwu_owo",
+            content="CONTENT NOT REQUIRED",
+            username="Nyaaster",
+            avatar_url="localhost/",
+            tts=True,
+            wait=True,
+            file=("blah.txt", mock_file_data),
+            embeds=[mock_embed_data],
+        )
