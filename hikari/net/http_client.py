@@ -40,6 +40,7 @@ from hikari.internal_utilities import transformations
 from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import unspecified
 from hikari.net import base_http_client
+from hikari.net import codes
 from hikari.net import errors
 from hikari.net import ratelimits
 from hikari.net import routes
@@ -191,17 +192,19 @@ class HTTPClient(base_http_client.BaseHTTPClient):
 
                 status = resp.status
 
-                if status == 204:
+                with contextlib.suppress(ValueError):
+                    status = codes.HTTPStatusCode(status)
+
+                if status == codes.HTTPStatusCode.NO_CONTENT:
                     body = None
                 elif content_type == "application/json":
                     body = self.json_deserialize(raw_body)
                 elif content_type == "text/plain" or content_type == "text/html":
                     await self._handle_bad_response(
                         backoff,
-                        f"Received unexpected response of type {content_type}",
-                        compiled_route,
-                        raw_body.decode(),
                         status,
+                        compiled_route,
+                        f"Received unexpected response of type {content_type} with body: {raw_body!r}",
                     )
                     continue
                 else:
@@ -209,34 +212,35 @@ class HTTPClient(base_http_client.BaseHTTPClient):
 
             self.ratelimiter.update_rate_limits(compiled_route, bucket, remaining, limit, now_date, reset_date)
 
-            if status == 429:
+            if status == codes.HTTPStatusCode.TOO_MANY_REQUESTS:
                 # We are being rate limited.
                 if body["global"]:
                     retry_after = float(body["retry_after"]) / 1_000
                     self.global_ratelimiter.throttle(retry_after)
                 continue
 
-            if status >= 400:
+            if status >= codes.HTTPStatusCode.BAD_REQUEST:
                 try:
                     message = body["message"]
                     code = int(body["code"])
+
+                    with contextlib.suppress(ValueError):
+                        code = codes.JSONErrorCode(code)
                 except (ValueError, KeyError):
-                    message, code = "", -1
+                    message, code = None, None
 
-                if status == 400:
+                if status == codes.HTTPStatusCode.BAD_REQUEST:
                     raise errors.BadRequestHTTPError(compiled_route, message, code)
-                elif status == 401:
+                elif status == codes.HTTPStatusCode.UNAUTHORIZED:
                     raise errors.UnauthorizedHTTPError(compiled_route, message, code)
-                elif status == 403:
+                elif status == codes.HTTPStatusCode.FORBIDDEN:
                     raise errors.ForbiddenHTTPError(compiled_route, message, code)
-                elif status == 404:
+                elif status == codes.HTTPStatusCode.NOT_FOUND:
                     raise errors.NotFoundHTTPError(compiled_route, message, code)
-                elif status < 500:
-                    raise errors.ClientHTTPError(f"{status}: {resp.reason}", compiled_route, message, code)
+                elif status < codes.HTTPStatusCode.INTERNAL_SERVER_ERROR:
+                    raise errors.ClientHTTPError(status, compiled_route, message, code)
 
-                await self._handle_bad_response(
-                    backoff, "Received a server error response", compiled_route, message, status
-                )
+                await self._handle_bad_response(backoff, status, compiled_route, message, code)
                 continue
 
             return body
@@ -244,17 +248,17 @@ class HTTPClient(base_http_client.BaseHTTPClient):
     async def _handle_bad_response(
         self,
         backoff: ratelimits.ExponentialBackOff,
-        reason: str,
+        status: typing.Union[codes.HTTPStatusCode, int, None],
         route: routes.CompiledRoute,
-        message: str,
-        status: int,
+        message: typing.Optional[str],
+        code: typing.Union[codes.JSONErrorCode, int, None],
     ) -> None:
         try:
             next_sleep = next(backoff)
             self.logger.warning("received a server error response, backing off for %ss and trying again", next_sleep)
             await asyncio.sleep(next_sleep)
         except asyncio.TimeoutError:
-            raise errors.ServerHTTPError(reason, route, message, status)
+            raise errors.ServerHTTPError(status, route, message, code)
 
     async def get_gateway(self) -> str:
         """

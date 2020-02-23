@@ -24,6 +24,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import datetime
+import functools
 import inspect
 import signal
 import time
@@ -70,6 +71,9 @@ class Client:
         customise certain parts of how the client works. If unspecified,
         default values are used instead.
 
+    Examples
+    --------
+
     >>> client = Client()
     >>> @client.event()
     ... async def on_ready(shard):
@@ -85,6 +89,8 @@ class Client:
         loop: typing.Optional[asyncio.AbstractEventLoop] = None,
         options: typing.Optional[client_options.ClientOptions] = None,
     ) -> None:
+        self._is_started = False
+        self._is_closed = False
         self._client_options = options or client_options.ClientOptions()
         self._event_dispatcher = aio.EventDelegate()
         self._fabric: fabric.Fabric = fabric.Fabric()
@@ -93,7 +99,6 @@ class Client:
         self._shard_keepalive_tasks: typing.Dict[gateway.GatewayClient, asyncio.Task] = {}
         self.logger = loggers.get_named_logger(self)
         self.token = None
-        self.is_closed = False
 
         try:
             self.loop = loop or asyncio.get_event_loop()
@@ -130,6 +135,16 @@ class Client:
         if self._fabric:
             return {shard.shard_id: shard for shard in self._fabric.gateways.values()}
         return containers.EMPTY_DICT
+
+    @property
+    def is_started(self):
+        """True if the client has started. False otherwise."""
+        return self._is_started
+
+    @property
+    def is_closed(self):
+        """True if the client has been closed. False otherwise."""
+        return self._is_closed
 
     async def _init_new_application_fabric(self):
         try:
@@ -349,7 +364,7 @@ class Client:
                 shard.session_id = None
                 do_not_backoff = True
                 await asyncio.sleep(5)
-            except errors.GatewayConnectionClosedError:
+            except errors.GatewayServerClosedConnectionError:
                 self.logger.warning("shard %s has been disconnected, will attempt to reconnect", shard.shard_id)
             except errors.GatewayClientClosedError:
                 self.logger.warning("shard %s has shut down because the client is closing", shard.shard_id)
@@ -380,26 +395,38 @@ class Client:
         Note that closing the client is the only way to invoke any shutdown
         events that are registered correctly.
         """
-        # TODO: prevent multiple start() calls.
+        if self._is_started:
+            raise RuntimeError("Cannot start a client that is already running")
+
+        self._is_started = True
+        self._is_closed = False
+
         self.token = token
 
-        await self.dispatch(event_types.EventType.PRE_STARTUP)
-        await self._init_new_application_fabric()
+        try:
+            await self.dispatch(event_types.EventType.PRE_STARTUP)
+            await self._init_new_application_fabric()
 
-        for shard in self._fabric.gateways.values():
-            if shard.shard_id > 0:
+            # This sleep logic seems a little backwards, but it ensures we don't sleep after
+            # the last shard starts.
+            for i, shard in enumerate(self._fabric.gateways.values()):
                 # https://github.com/discordapp/discord-api-docs/issues/1328
 
                 # Discord will make us have an invalid session if we identify twice within 5 seconds. If we get
                 # disconnected after identifying for any other reason, tough luck I guess.
                 # This stops this framework chewing up your precious identify counts for the day because of spam
                 # causing invalid sessions.
-                await asyncio.sleep(self._SHARD_IDENTIFY_WAIT)
+                if i > 0:
+                    await asyncio.sleep(self._SHARD_IDENTIFY_WAIT)
 
-            self._shard_keepalive_tasks[shard] = asyncio.create_task(self._shard_keep_alive(shard))
-            await shard.identify_event.wait()
+                self._shard_keepalive_tasks[shard] = asyncio.create_task(self._shard_keep_alive(shard))
+                await shard.identify_event.wait()
+            await self.dispatch(event_types.EventType.POST_STARTUP)
 
-        await self.dispatch(event_types.EventType.POST_STARTUP)
+        except Exception as ex:
+            # If we are started, mark that we haven't started, then re-raise.
+            self._is_started = False
+            raise ex
 
     async def join(self):
         """Wait for shards to shut down. This can be used to keep your bot
@@ -441,6 +468,9 @@ class Client:
             self._api_status_logging_task.cancel()
             await self._api_status_client.close()
 
+        self._is_closed = True
+        self._is_started = False
+
     async def shutdown(
         self, shard_timeout: typing.Optional[float] = None,
     ):
@@ -453,41 +483,40 @@ class Client:
             The time to wait for shards to shut down before forcefully
             destroying them. This defaults to `None`.
         """
-        if self.is_closed:
+        if self._is_closed:
             return
 
         self.logger.warning("client is shutting down permanently")
 
         await self.dispatch(event_types.EventType.PRE_SHUTDOWN)
 
-        coros = []
-
-        if self._fabric is not None:
-            self._fabric.chunker.close()
-
-            for shard in self._fabric.gateways.values():
-                if not shard.requesting_close_event.is_set():
-                    self.logger.debug("requesting shard %s shuts down now", shard.shard_id)
-                    coros.append(shard.close())
-
-            try:
-                async with aio.maybe_timeout(shard_timeout):
-                    if coros:
-                        await asyncio.gather(*coros)
-            except Exception as ex:
-                self.logger.exception("failed to shut down shards safely, will destroy them instead", exc_info=ex)
-
-        self.is_closed = True
-        self.logger.warning("closing HTTP connection pool")
+        partials = []
 
         try:
-            # If we can't shut this down, we can't do much else. It is probably a bug.
-            await self._fabric.http_client.close()
+            if self._fabric is not None:
+                self._fabric.chunker.close()
+
+                for shard in self._fabric.gateways.values():
+                    if not shard.requesting_close_event.is_set():
+                        self.logger.debug("requesting shard %s shuts down now", shard.shard_id)
+                        partials.append(functools.partial(shard.close))
+
+                try:
+                    async with aio.maybe_timeout(shard_timeout):
+                        if partials:
+                            await asyncio.gather(*(partial() for partial in partials))
+                except Exception as ex:
+                    self.logger.exception("failed to shut down shards safely, will destroy them instead", exc_info=ex)
+
+                self.logger.warning("closing HTTP connection pool")
+
+                # If we can't shut this down, we can't do much else. It is probably a bug.
+                await self._fabric.http_client.close()
         except Exception as ex:
             self.logger.debug("failed to close HTTP client", exc_info=ex)
         finally:
-            await self.dispatch(event_types.EventType.POST_SHUTDOWN)
             await self.destroy()
+            await self.dispatch(event_types.EventType.POST_SHUTDOWN)
 
     def run(self, token: str):
         """Run the bot.
@@ -604,10 +633,15 @@ class Client:
 
         Returns
         -------
-        decorator(coroutine function)
+        decorator
             A decorator that decorates a coroutine function and returns the
             coroutine function passed to it.
 
+        Examples
+        --------
+
+        >>> client = Client()
+        >>>
         >>> @client.event()
         ... async def on_message_create(message):
         ...     if not message.author.is_bot and message.content == "!ping":
@@ -636,7 +670,7 @@ class Client:
             RuntimeError,
         )
 
-        def decorator(coroutine_function: aio.CoroutineFunctionT) -> aio.CoroutineFunctionT:
+        def decorator(coroutine_function):
             if name is None:
                 if coroutine_function.__name__.startswith("on_"):
                     event_name = coroutine_function.__name__[3:]
@@ -679,13 +713,23 @@ class Client:
 
         Raises
         ------
-
         ValueError:
             If an empty collection of shard IDs is passed or an invalid shard
             ID is passed.
 
-            If a value error is raised, no presences will be changed.
+            Will also be raised if no presence change will be made due to lack
+            of parameters given to change anything (e.g. empty call or call
+            only with `shard_ids`)
+        RuntimeError:
+            If the client is not running.
+
+        Notes
+        -----
+        If an error is raised, no presences will be changed.
         """
+        if not self._is_started:
+            raise RuntimeError("Cannot update presence on a client that is not running")
+
         if shard_ids is ...:
             shard_ids = self._fabric.gateways.keys()
         elif not shard_ids:
@@ -697,13 +741,21 @@ class Client:
                 if shard_id not in self._fabric.gateways:
                     raise ValueError(f"Shard with ID {shard_id} is not part of this application instance")
 
-        coroutines = []
+        if all((arg is ... for arg in (activity, status, afk, idle_since))):
+            raise ValueError("You must specify at least one presence parameter to change")
+
+        partials = []
 
         if isinstance(idle_since, datetime.datetime):
             idle_since = idle_since.timestamp() * 1_000
 
         for shard_id in shard_ids:
             shard = self._fabric.gateways[shard_id]
+
+            if not shard.is_connected:
+                self.logger.warning("not updating presence on shard %s as it is not connected", shard_id)
+                continue
+
             presence_dict = shard.current_presence
 
             # We explicitly check if it is an instance, since passing invalid data here can cause the
@@ -718,9 +770,11 @@ class Client:
             if isinstance(idle_since, int) or idle_since is None:
                 presence_dict["since"] = idle_since
 
-            coroutines.append(asyncio.create_task(shard.update_presence(presence_dict)))
+            # Use a partial to store the call until we want to invoke it. This way the operation
+            # is atomic, and we don't get errors about not awaiting coroutines
+            partials.append(functools.partial(shard.update_presence, presence_dict))
 
-        await asyncio.gather(*coroutines)
+        await asyncio.gather(*(partial() for partial in partials))
 
 
 __all__ = ["Client"]

@@ -276,7 +276,7 @@ class TestClientShardKeepAlive:
             _errors.GatewayInvalidSessionError(False),
             _errors.GatewayInvalidSessionError(True),
             _errors.GatewayMustReconnectError,
-            _errors.GatewayConnectionClosedError,
+            _errors.GatewayServerClosedConnectionError,
         ],
     )
     async def test__shard_keep_alive_handles_errors(self, error):
@@ -367,6 +367,35 @@ class TestClientStart:
 
         shard0.identify_event.wait.assert_called_once()
 
+    @_helpers.timeout_after(3)
+    @_helpers.assert_raises(type_=RuntimeError)
+    async def test_cannot_start_if_already_started(self):
+        shard0 = gateway_client(0)
+        shard0.identify_event.wait = mock.AsyncMock()
+
+        client = _client.Client()
+        client._is_started = True
+        client._init_new_application_fabric = mock.AsyncMock()
+        client._fabric = _fabric.Fabric(gateways={0: shard0})
+        await client.start("123")
+
+    async def test_is_started_is_False_if_fails_to_start(self):
+        shard0 = gateway_client(0)
+        shard0.identify_event.wait = mock.AsyncMock()
+
+        client = _client.Client()
+        client._init_new_application_fabric = mock.AsyncMock()
+        client._fabric = _fabric.Fabric(gateways={0: shard0})
+        client.dispatch = mock.MagicMock(side_effect=RuntimeError())
+
+        try:
+            await client.start("1a2b3c")
+            assert False
+        except RuntimeError:
+            pass
+
+        assert client._is_started is False
+
 
 @pytest.mark.asyncio
 class TestClientJoin:
@@ -405,7 +434,7 @@ class TestClientShutdown:
 
         client = _client.Client()
         client._fabric = _fabric.Fabric(gateways={0: shard0})
-        client.is_closed = True
+        client._is_closed = True
         gather_future = _helpers.AwaitableMock()
 
         with mock.patch("asyncio.gather", return_value=gather_future):
@@ -652,6 +681,22 @@ class TestClientShardsProperty:
         assert client.shards == {0: shard0, 1: shard1}
 
 
+class TestIsStartedProperty:
+    @pytest.mark.parametrize("is_started", (True, False))
+    def test_is_started(self, is_started):
+        client = _client.Client()
+        client._is_started = is_started
+        assert client.is_started is is_started
+
+
+class TestIsClosedProperty:
+    @pytest.mark.parametrize("is_closed", (True, False))
+    def test_is_closed(self, is_closed):
+        client = _client.Client()
+        client._is_closed = is_closed
+        assert client.is_closed is is_closed
+
+
 def filter_unimplemented(*args):
     return [arg for arg in args if arg is not NotImplemented]
 
@@ -711,6 +756,7 @@ class TestClientShutdownHandling:
         self._do_test_safe_signal_handling(signal.SIGTERM)
 
 
+@pytest.mark.asyncio
 class TestUpdatePresence:
     @pytest.fixture
     def shard0_initial_presence(self):
@@ -725,6 +771,7 @@ class TestUpdatePresence:
     def shard0(self, shard0_initial_presence):
         s = mock.create_autospec(_gateway.GatewayClient, spec_set=True)
         s.current_presence = shard0_initial_presence
+        s.is_connected = True
         return s
 
     @pytest.fixture
@@ -740,6 +787,7 @@ class TestUpdatePresence:
     def shard1(self, shard1_initial_presence):
         s = mock.create_autospec(_gateway.GatewayClient, spec_set=True)
         s.current_presence = shard1_initial_presence
+        s.is_connected = True
         return s
 
     @pytest.fixture
@@ -755,6 +803,7 @@ class TestUpdatePresence:
     def shard2(self, shard2_initial_presence):
         s = mock.create_autospec(_gateway.GatewayClient, spec_set=True)
         s.current_presence = shard2_initial_presence
+        s.is_connected = True
         return s
 
     @pytest.fixture
@@ -767,9 +816,10 @@ class TestUpdatePresence:
             2: shard2,
         }
 
+        client._is_started = True
+
         return client
 
-    @pytest.mark.asyncio
     async def test_update_presence_partial_update_on_activity_only(
         self,
         mock_client,
@@ -801,7 +851,6 @@ class TestUpdatePresence:
         shard1.update_presence.assert_not_called()
         shard2.update_presence.assert_called_once_with(expect2)
 
-    @pytest.mark.asyncio
     async def test_update_presence_partial_update_on_status_only(
         self,
         mock_client,
@@ -828,7 +877,6 @@ class TestUpdatePresence:
         shard1.update_presence.assert_not_called()
         shard2.update_presence.assert_called_once_with(expect2)
 
-    @pytest.mark.asyncio
     async def test_update_presence_partial_update_on_afk_only(
         self,
         mock_client,
@@ -855,7 +903,6 @@ class TestUpdatePresence:
         shard1.update_presence.assert_not_called()
         shard2.update_presence.assert_called_once_with(expect2)
 
-    @pytest.mark.asyncio
     async def test_update_presence_partial_update_on_idle_since_only(
         self,
         mock_client,
@@ -883,7 +930,6 @@ class TestUpdatePresence:
         shard1.update_presence.assert_not_called()
         shard2.update_presence.assert_called_once_with(expect2)
 
-    @pytest.mark.asyncio
     async def test_update_presence_partial_update_on_multiple_fields(
         self,
         mock_client,
@@ -925,7 +971,51 @@ class TestUpdatePresence:
         shard1.update_presence.assert_not_called()
         shard2.update_presence.assert_called_once_with(expect2)
 
-    @pytest.mark.asyncio
+    async def test_update_presence_ignores_disconnected_shards(
+        self,
+        mock_client,
+        shard0,
+        shard1,
+        shard2,
+        shard0_initial_presence,
+        shard1_initial_presence,
+        shard2_initial_presence,
+    ):
+        shard_ids = [0, 2]
+
+        activity = mock.MagicMock(spec=presences.Activity)
+        activity_dict = {
+            "name": "foo",
+            "type": 0,
+        }
+        activity.to_dict = mock.MagicMock(return_value=activity_dict)
+        new_status = presences.Status.ONLINE
+        is_afk = True
+        idle_since = mock.MagicMock(spec=datetime.datetime)
+        idle_since.timestamp = mock.MagicMock(return_value=69)
+
+        shard0.is_connected = False
+        shard1.is_connected = False
+        shard2.is_connected = False
+
+        await mock_client.update_presence(
+            activity=activity, status=new_status, afk=is_afk, idle_since=idle_since, shard_ids=shard_ids,
+        )
+
+        expect0 = dict(shard0_initial_presence)
+        expect2 = dict(shard2_initial_presence)
+        expect0["game"] = activity_dict
+        expect2["game"] = activity_dict
+        expect0["status"] = new_status.value
+        expect2["status"] = new_status.value
+        expect0["afk"] = is_afk
+        expect2["afk"] = is_afk
+        expect0["since"] = 69_000
+        expect2["since"] = 69_000
+        shard0.update_presence.assert_not_called()
+        shard1.update_presence.assert_not_called()
+        shard2.update_presence.assert_not_called()
+
     async def test_update_presence_with_no_shard_ids_arg_updates_all_shards(
         self,
         mock_client,
@@ -949,3 +1039,26 @@ class TestUpdatePresence:
         shard0.update_presence.assert_called_once_with(expect0)
         shard1.update_presence.assert_called_once_with(expect1)
         shard2.update_presence.assert_called_once_with(expect2)
+
+    @_helpers.assert_raises(type_=ValueError)
+    async def test_update_presence_with_no_args_raises_ValueError(self, mock_client):
+        await mock_client.update_presence()
+
+    @_helpers.assert_raises(type_=ValueError)
+    async def test_update_presence_with_empty_shard_ids_raises_ValueError(self, mock_client):
+        await mock_client.update_presence(shard_ids=[], status=presences.Status.DO_NOT_DISTURB)
+
+    @_helpers.assert_raises(type_=ValueError)
+    async def test_update_presence_with_no_presence_args_raises_ValueError(self, mock_client):
+        await mock_client.update_presence(shard_ids=[0, 1, 2])
+
+    @_helpers.assert_raises(type_=ValueError)
+    async def test_update_presence_with_unmanaged_shard_id_raises_ValueError(self, mock_client):
+        mock_client._fabric.gateways[4] = mock.create_autospec(_gateway.GatewayClient, spec_set=True)
+        # Shard 3 doesn't exist, so will go bang.
+        await mock_client.update_presence(shard_ids=[0, 1, 2, 3, 4])
+
+    @_helpers.assert_raises(type_=RuntimeError)
+    async def test_update_presence_when_client_not_running_raises_RuntimeError(self, mock_client):
+        mock_client._is_started = False
+        await mock_client.update_presence(activity=None)

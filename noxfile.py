@@ -62,13 +62,9 @@ PYTEST_ARGS = [
     "--cov-branch",
     f"--junitxml={ARTIFACT_DIR}/tests.xml",
     "--showlocals",
+    # "--testdox",
+    # "--force-testdox",
 ]
-
-if not os.getenv("CI"):
-    PYTEST_ARGS += [
-        "--testdox",
-        "--force-testdox",
-    ]
 
 
 @nox.session(reuse_venv=True)

@@ -47,8 +47,8 @@ import aiohttp.typedefs
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import type_hints
+from hikari.net import codes
 from hikari.net import errors
-from hikari.net import gateway_intents
 from hikari.net import ratelimits
 from hikari.net import user_agent
 from hikari.net import versions
@@ -77,88 +77,101 @@ DispatchT = typing.Callable[["GatewayClient", str, type_hints.JSONObject], None]
 
 
 class GatewayClient:
-    """
-    Implementation of a client for the Discord Gateway. This is a websocket connection to Discord that
-    is used to inform your application of events that occur, and to allow you to change your presence,
+    """Implementation of a client for the Discord Gateway.
+    This is a websocket connection to Discord that is used to inform your
+    application of events that occur, and to allow you to change your presence,
     amongst other real-time applications.
 
     Each :class:`GatewayClient` represents a single shard.
 
     Expected events that may be passed to the event dispatcher are documented in the
     `gateway event reference <https://discordapp.com/developers/docs/topics/gateway#commands-and-events>`_.
-    No normalization of the gateway event names occurs, and no transformation of . In addition to this,
-    a few internal events can also be triggered to notify you of changes to the connection state.
+    No normalization of the gateway event names occurs. In addition to this,
+    a few internal events can also be triggered to notify you of changes to
+    the connection state.
     * `CONNECT` - fired on initial connection to Discord.
-    * `RECONNECT` - fired if we have previously been connected to Discord but are making a new
+    * `RECONNECT` - fired if we have previously been connected to Discord
+        but are making a new
         connection on an existing :class:`GatewayClient` instance.
     * `DISCONNECT` - fired when the connection is closed for any reason.
 
-    Args:
-        compression:
-            If True, then payload compression is enabled on the connection. If False, no payloads
-            are compressed. You usually want to keep this enabled.
-        connector:
-            The :class:`aiohttp.BaseConnector` to use for the HTTP session that gets upgraded to a
-            websocket connection. You can use this to customise connection pooling, etc.
-        debug:
-            If True, the client is configured to provide extra contextual information to use when
-            debugging this library or extending it. This includes logging every payload that is
-            sent or received to the logger as debug entries. Generally it is best to keep this
-            disabled.
-        dispatch:
-            The method to invoke with any dispatched events. This must not be a coroutine function, 
-            and must take three arguments only. The first is the reference to this 
-            :class:`GatewayClient` The second is the event name.
-        initial_presence:
-            A raw JSON object as a :class:`dict` that should be set as the initial presence of the
-            bot user once online. If `None`, then it will be set to the default, which is
-            showing up as online without a custom status message.
-        intents:
-            Bitfield of intents to use. If you use the V7 API, this is mandatory. This field will
-            determine what events you will receive.
-        json_deserialize:
-            A custom JSON deserializer function to use. Defaults to :func:`json.loads`.
-        json_serialize:
-            A custom JSON serializer function to use. Defaults to :func:`json.dumps`.
-        large_threshold:
-            The number of members that have to be in a guild for it to be considered to be "large".
-            Large guilds will not have member information sent automatically, and must manually
-            request that member chunks be sent using :meth:`request_member_chunks`.
-        proxy_auth:
-            Optional :class:`aiohttp.BasicAuth` object that can be provided to allow authenticating
-            with a proxy if you use one. Leave `None` to ignore.
-        proxy_headers:
-            Optional :class:`aiohttp.typedefs.LooseHeaders` to provide as headers to allow the 
-            connection through a proxy if you use one. Leave `None` to ignore.
-        proxy_url:
-            Optional :class:`str` to use for a proxy server. If `None`, then it is ignored.
-        session_id:
-            The session ID to use. If specified along with a `seq`, then the gateway client
-            will attempt to RESUME an existing session rather than re-IDENTIFY. Otherwise, it
-            will be ignored.
-        seq:
-            The sequence number to use. If specified along with a `session_id`, then the gateway
-            client will attempt to RESUME an existing session rather than re-IDENTIFY. Otherwise,
-            it will be ignored.
-        shard_id:
-            The shard ID of this gateway client. Defaults to 0.
-        shard_count:
-            The number of shards on this gateway. Defaults to 1, which implies no sharding is
-            taking place.
-        ssl_context:
-            An optional custom :class:`ssl.SSLContext` to provide to customise how SSL works.
-        token:
-            The mandatory bot token for the bot account to use, minus the "Bot" authentication
-            prefix used elsewhere.
-        url:
-            The websocket URL to use.
-        verify_ssl:
-            If True, SSL verification is enabled, which is generally what you want. If you get
-            SSL issues, you can try turning this off at your own risk.
-        version:
-            The version of the gateway API to use. Defaults to the most recent stable documented
-            version.
-            
+    Parameters
+    ----------
+    compression: :obj:`bool`
+        If True, then payload compression is enabled on the connection.
+        If False, no payloads are compressed. You usually want to keep this
+        enabled.
+    connector: :obj:`aiohttp.BaseConnector`, optional
+        The :class:`aiohttp.BaseConnector` to use for the HTTP session that
+        gets upgraded to a websocket connection. You can use this to customise
+        connection pooling, etc.
+    debug: :obj:`bool`
+        If True, the client is configured to provide extra contextual
+        information to use when debugging this library or extending it. This
+        includes logging every payload that is sent or received to the logger
+        as debug entries. Generally it is best to keep this disabled.
+    dispatch: dispatch function
+        The function to invoke with any dispatched events. This must not be a
+        coroutine function, and must take three arguments only. The first is
+        the reference to this :class:`GatewayClient` The second is the
+        event name.
+    initial_presence: :obj:`dict`, optional
+        A raw JSON object as a :class:`dict` that should be set as the initial
+        presence of the bot user once online. If `None`, then it will be set to
+        the default, which is showing up as online without a custom status
+        message.
+    intents: :obj:`hikari.net.codes.GatewayIntent`, optional
+        Bitfield of intents to use. If you use the V7 API, this is mandatory.
+        This field will determine what events you will receive.
+    json_deserialize: deserialization function
+        A custom JSON deserializer function to use. Defaults to
+        :func:`json.loads`.
+    json_serialize: serialization function
+        A custom JSON serializer function to use. Defaults to
+        :func:`json.dumps`.
+    large_threshold: :obj:`int`
+        The number of members that have to be in a guild for it to be
+        considered to be "large". Large guilds will not have member information
+        sent automatically, and must manually request that member chunks be
+        sent using :meth:`request_member_chunks`.
+    proxy_auth: :obj:`aiohttp.BasicAuth`, optional
+        Optional :class:`aiohttp.BasicAuth` object that can be provided to
+        allow authenticating with a proxy if you use one. Leave `None` to
+        ignore.
+    proxy_headers: :obj:`aiohttp.typedefs.LooseHeaders`, optional
+        Optional :class:`aiohttp.typedefs.LooseHeaders` to provide as headers
+        to allow the connection through a proxy if you use one. Leave `None`
+        to ignore.
+    proxy_url: :obj:`str`, optional
+        Optional :class:`str` to use for a proxy server. If `None`, then it
+        is ignored.
+    session_id: :obj:`str`, optional
+        The session ID to use. If specified along with a `seq`, then the
+        gateway client will attempt to RESUME an existing session rather than
+        re-IDENTIFY. Otherwise, it will be ignored.
+    seq: :obj:`int`, optional
+        The sequence number to use. If specified along with a `session_id`, then
+        the gateway client will attempt to RESUME an existing session rather
+        than re-IDENTIFY. Otherwise, it will be ignored.
+    shard_id: :obj:`int`
+        The shard ID of this gateway client. Defaults to 0.
+    shard_count: :obj:`int`
+        The number of shards on this gateway. Defaults to 1, which implies no
+        sharding is taking place.
+    ssl_context: :obj:`ssl.SSLContext`, optional
+        An optional custom :class:`ssl.SSLContext` to provide to customise how
+        SSL works.
+    token: :obj:`str`
+        The mandatory bot token for the bot account to use, minus the "Bot"
+        authentication prefix used elsewhere.
+    url: :obj:`str`
+        The websocket URL to use.
+    verify_ssl: :obj:`bool`
+        If True, SSL verification is enabled, which is generally what you want.
+        If you get SSL issues, you can try turning this off at your own risk.
+    version: :obj:`hikari.net.versions.GatewayVersion`
+        The version of the gateway API to use. Defaults to the most recent
+        stable documented version.
     """
 
     __slots__ = (
@@ -201,6 +214,106 @@ class GatewayClient:
         "_zlib",
     )
 
+    #: An event that is set when the connection closes.
+    #:
+    #: :type: :class:`asyncio.Event`
+    closed_event: asyncio.Event
+
+    #: The number of times we have disconnected from the gateway on this
+    #: client instance.
+    #:
+    #: :type: :class:`int`
+    disconnect_count: int
+
+    #: The dispatch method to call when dispatching a new event. This is
+    #: the method passed in the constructor.
+    dispatch: DispatchT
+
+    #: The heartbeat interval Discord instructed the client to beat at.
+    #: This is `nan` until this information is received.
+    #:
+    #: :type: :class:`float`
+    heartbeat_interval: float
+
+    #: The most recent heartbeat latency measurement in seconds. This is
+    #: `nan` until this information is available. The latency is calculated
+    #: as the time between sending a `HEARTBEAT` payload and receiving a
+    #: `HEARTBEAT_ACK` response.
+    #:
+    #: :type: :class:`float`
+    heartbeat_latency: float
+
+    #: An event that is set when Discord sends a `HELLO` payload. This
+    #: indicates some sort of connection has successfully been made.
+    #:
+    #: :type: :class:`asyncio.Event`
+    hello_event: asyncio.Event
+
+    #: An event that is set when the client has successfully `IDENTIFY`ed
+    #: or `RESUMED` with the gateway. This indicates regular communication
+    #: can now take place on the connection and events can be expected to
+    #: be received.
+    #:
+    #: :type: :class:`asyncio.Event`
+    identify_event: asyncio.Event
+
+    #: The monotonic timestamp that the last `HEARTBEAT` was sent at, or
+    #: `nan` if no `HEARTBEAT` has yet been sent.
+    #:
+    #: :type: :class:`float`
+    last_heartbeat_sent: float
+
+    #: The monotonic timestamp at which the last payload was received from
+    #: Discord. If this was more than the :attr:`heartbeat_interval` from
+    #: the current time, then the connection is assumed to be zombied and
+    #: is shut down. If no messages have been received yet, this is `nan`.
+    #:
+    #: :type: :class:`float`
+    last_message_received: float
+
+    #: The logger used for dumping information about what this client is doing.
+    #:
+    #: :type: :class:`logging.Logger`
+    logger: logging.Logger
+
+    #: An event that is set when something requests that the connection
+    #: should close somewhere.
+    #:
+    #: :type: :class:`asyncio.Event`
+    requesting_close_event: asyncio.Event
+
+    #: The current session ID, if known.
+    #:
+    #: :type: :class:`str` or `None`
+    session_id: typing.Optional[str]
+
+    #: The current sequence number for state synchronization with the API,
+    #: if known.
+    #:
+    #: :type: :class:`int` or `None`.
+    seq: typing.Optional[int]
+
+    #: The shard ID.
+    #:
+    #: :type: :class:`int`
+    shard_id: int
+
+    #: The number of shards in use for the bot.
+    #:
+    #: :type: :class:`int`
+    shard_count: int
+
+    #: The current status of the gateway. This can be used to print out
+    #: informative context for large sharded bots.
+    #:
+    #: :type: :class:`GatewayStatus`
+    status: GatewayStatus
+
+    #: The API version to use on Discord.
+    #:
+    #: :type: :class:`hikari.net.versions.GatewayVersion`
+    version: versions.GatewayVersion
+
     def __init__(
         self,
         *,
@@ -209,7 +322,7 @@ class GatewayClient:
         debug: bool = False,
         dispatch: DispatchT = lambda gw, e, p: None,
         initial_presence: typing.Optional[type_hints.JSONObject] = None,
-        intents: typing.Optional[gateway_intents.GatewayIntent] = None,
+        intents: typing.Optional[codes.GatewayIntent] = None,
         json_deserialize: typing.Callable[[typing.AnyStr], type_hints.JSONObject] = json.loads,
         json_serialize: typing.Callable[[type_hints.JSONObject], typing.AnyStr] = json.dumps,
         large_threshold: int = 250,
@@ -260,110 +373,33 @@ class GatewayClient:
         self._verify_ssl: bool = verify_ssl
         self._ws: typing.Optional[aiohttp.ClientWebSocketResponse] = None
         self._zlib: typing.Optional[zlib.decompressobj] = None
-
-        #: An event that is set when the connection closes.
-        #:
-        #: :type: :class:`asyncio.Event`
         self.closed_event: asyncio.Event = asyncio.Event()
-
-        #: The number of times we have disconnected from the gateway on this client instance.
-        #:
-        #: :type: :class:`int`
         self.disconnect_count: int = 0
-
-        #: The dispatch method to call when dispatching a new event. This is
-        #: the method passed in the constructor.
         self.dispatch: DispatchT = dispatch
-
-        #: The heartbeat interval Discord instructed the client to beat at. This is `nan` until
-        #: this information is received.
-        #:
-        #: :type: :class:`float`
         self.heartbeat_interval: float = float("nan")
-
-        #: The most recent heartbeat latency measurement in seconds. This is `nan` until
-        #: this information is available. The latency is calculated as the time between sending
-        #: a `HEARTBEAT` payload and receiving a `HEARTBEAT_ACK` response.
-        #:
-        #: :type: :class:`float`
         self.heartbeat_latency: float = float("nan")
-
-        #: An event that is set when Discord sends a `HELLO` payload. This indicates some sort of
-        #: connection has successfully been made.
-        #:
-        #: :type: :class:`asyncio.Event`
         self.hello_event: asyncio.Event = asyncio.Event()
-
-        #: An event that is set when the client has successfully `IDENTIFY`ed or `RESUMED` with the
-        #: gateway. This indicates regular communication can now take place on the connection and
-        #: events can be expected to be received.
-        #:
-        #: :type: :class:`asyncio.Event`
         self.identify_event: asyncio.Event = asyncio.Event()
-
-        #: The monotonic timestamp that the last `HEARTBEAT` was sent at, or `nan` if no
-        #: `HEARTBEAT` has yet been sent.
-        #:
-        #: :type: :class:`float`
         self.last_heartbeat_sent: float = float("nan")
-
-        #: The monotonic timestamp at which the last payload was received from Discord. If this
-        #: was more than the :attr:`heartbeat_interval` from the current time, then the connection
-        #: is assumed to be zombied and is shut down. If no messages have been received yet, this
-        #: is `nan`.
-        #:
-        #: :type: :class:`float`
         self.last_message_received: float = float("nan")
-
-        #: The logger used for dumping information about what this client is doing.
-        #:
-        #: :type: :class:`logging.Logger`
         self.logger: logging.Logger = loggers.get_named_logger(self, shard_id)
-
-        #: An event that is set when something requests that the connection should close somewhere.
-        #:
-        #: :type: :class:`asyncio.Event`
         self.requesting_close_event: asyncio.Event = asyncio.Event()
-
-        #: The current session ID, if known.
-        #:
-        #: :type: :class:`str` or `None`
         self.session_id: typing.Optional[str] = session_id
-
-        #: The current sequence number for state synchronization with the API, if known.
-        #:
-        #: :type: :class:`int` or `None`.
         self.seq: typing.Optional[int] = seq
-
-        #: The shard ID.
-        #:
-        #: :type: :class:`int`
         self.shard_id: int = shard_id
-
-        #: The number of shards in use for the bot.
-        #:
-        #: :type: :class:`int`
         self.shard_count: int = shard_count
-
-        #: The current status of the gateway. This can be used to print out informative context for large sharded
-        #: bots.
-        #:
-        #: :type: :class:`GatewayStatus`
         self.status: GatewayStatus = GatewayStatus.OFFLINE
-
-        #: The API version to use on Discord.
-        #:
-        #: :type: :class:`hikari.net.versions.GatewayVersion`
         self.version: versions.GatewayVersion = version
-
         self.logger.debug("using Gateway version %s", int(version))
 
     @property
     def uptime(self) -> datetime.timedelta:
         """
-        Returns:
-            The amount of time the connection has been running for. If it isn't running, this will
-            always return 0 seconds.
+        Returns
+        -------
+        :obj:`datetime.timedelta`
+            The amount of time the connection has been running for. If it isn't
+            running, this will always return 0 seconds.
         """
         delta = time.perf_counter() - self._connected_at
         return datetime.timedelta(seconds=0 if math.isnan(delta) else delta)
@@ -371,18 +407,23 @@ class GatewayClient:
     @property
     def is_connected(self) -> bool:
         """
-        Returns:
-             `True` if this gateway client is actively connected to something, or
-             `False` if it is not running.
+        Returns
+        -------
+        :obj:`bool`
+            True if this gateway client is actively connected to something, or
+            False if it is not running.
         """
         return not math.isnan(self._connected_at)
 
     @property
     def reconnect_count(self) -> int:
         """
-        Returns:
-            The number of times this client has been reconnected since it was initialized. This can be used as a
-            debugging context, but is also used internally for exception management.
+        Returns
+        -------
+        :obj:`int`
+            The number of times this client has been reconnected since it was
+            initialized. This can be used as a debugging context, but is also
+            used internally for exception management.
         """
         # 0 disconnects + not is_connected => 0
         # 0 disconnects + is_connected => 0
@@ -397,7 +438,6 @@ class GatewayClient:
         """
         Returns
         -------
-
         The current presence for the shard.
         """
         # Make a shallow copy to prevent mutation.
@@ -412,34 +452,39 @@ class GatewayClient:
         ...
 
     async def request_guild_members(self, guild_id, *guild_ids, **kwargs):
-        """
-        Requests the guild members for a guild or set of guilds. These guilds must be
-        being served by this shard, and the results will be provided with `GUILD_MEMBER_CHUNK`
-        events.
+        """Requests the guild members for a guild or set of guilds.
 
-        Args:
-            guild_id : str
-                The first guild to request members for.
-            *guild_ids : str
-                Additional guilds to request members for.
-            **kwargs :
-                Optional arguments.
+        These guilds must be being served by this shard, and the results will be
+        provided to the dispatcher with `GUILD_MEMBER_CHUNK` events.
 
-        Keyword Args:
-            limit : int
-                Limit for the number of members to respond with. Set to 0 to be unlimited.
-            query : str
-                An optional string to filter members with. If specified, only members who have a
-                username starting with this string will be returned.
-            user_ids : `list` [`str`]
-                 An optional list of user IDs to return member info about.
+        Parameters
+        ----------
+        guild_id : :obj:`str`
+            The first guild to request members for.
+        *guild_ids : :obj:`str`
+            Additional guilds to request members for.
+        **kwargs :
+            Optional arguments.
 
-        Note:
-            You may not specify `user_ids` at the same time as `limit` and `query`. Likewise,
-            if you specify one of `limit` or `query`, the other must also be included. The default
-            if no optional arguments are specified is to use a `limit` of `0` and a `query` of
-            `""` (empty-string).
+        Keyword Args
+        ------------
+        limit : :obj:`int`
+            Limit for the number of members to respond with. Set to 0 to be
+            unlimited.
+        query : :obj:`str`
+            An optional string to filter members with. If specified, only
+            members who have a username starting with this string will be
+            returned.
+        user_ids : `list` [ `str` ]
+             An optional list of user IDs to return member info about.
 
+        Notes
+        -----
+        You may not specify `user_ids` at the same time as `limit` and
+        `query`. Likewise, if you specify one of `limit` or `query`, the
+        other must also be included. The default if no optional arguments
+        are specified is to use a `limit` of `0` and a `query` of
+        `""` (empty-string).
         """
         guilds = [guild_id, *guild_ids]
         constraints = {}
@@ -457,15 +502,15 @@ class GatewayClient:
             "requesting guild members for guilds %s with constraints %s", guilds, constraints,
         )
 
-        await self._send({"op": 8, "d": {"guild_id": guilds, **constraints}})
+        await self._send({"op": codes.GatewayOpcode.REQUEST_GUILD_MEMBERS, "d": {"guild_id": guilds, **constraints}})
 
     async def update_presence(self, presence: type_hints.JSONObject) -> None:
-        """
-        Change the presence of the bot user for this shard.
+        """Change the presence of the bot user for this shard.
 
-        Args:
-            presence : dict
-                The new presence payload to set.
+        Parameters
+        ----------
+        presence : :obj:`dict`
+            The new presence payload to set.
         """
         presence.setdefault("since", None)
         presence.setdefault("game", None)
@@ -473,16 +518,16 @@ class GatewayClient:
         presence.setdefault("afk", False)
 
         self.logger.debug("updating presence to %r", presence)
-        await self._send({"op": 3, "d": presence})
+        await self._send({"op": codes.GatewayOpcode.PRESENCE_UPDATE, "d": presence})
         self._presence = presence
 
     async def close(self, close_code: int = 1000) -> None:
-        """
-        Request this gateway connection closes.
+        """Request this gateway connection closes.
 
-        Args:
-            close_code : int
-                The close code to use. Defaults to `1000` (normal closure).
+        Parameters
+        ----------
+        close_code : :obj:`int`
+            The close code to use. Defaults to `1000` (normal closure).
         """
         if not self.requesting_close_event.is_set():
             self.status = GatewayStatus.SHUTTING_DOWN
@@ -496,9 +541,15 @@ class GatewayClient:
 
     async def connect(self, client_session_type=aiohttp.ClientSession) -> None:
         """
-        Connect to the gateway and return if it closes.
+        Connect to the gateway and return when it closes (usually with some
+        form of exception documented in :mod:`hikari.net.errors`.
 
-        # todo: finish
+        Parameters
+        ----------
+        client_session_type : :obj:`type`
+            The client session implementation to use. You generally do not want
+            to change this from the default, which is
+            :obj:`aiohttp.ClientSession`.
         """
         if self.is_connected:
             raise RuntimeError("Already connected")
@@ -509,7 +560,7 @@ class GatewayClient:
         self.requesting_close_event.clear()
 
         self._session = client_session_type(**self._cs_init_kwargs)
-        close_code = 1006  # Abnormal closure
+        close_code = codes.GatewayCloseCode.ABNORMAL_CLOSURE
 
         try:
             self.status = GatewayStatus.CONNECTING
@@ -551,13 +602,14 @@ class GatewayClient:
                 # If no exception occurred, we must have exited non-exceptionally, indicating
                 # the close event was set without an error causing that flag to be changed.
                 ex = errors.GatewayClientClosedError()
+                close_code = codes.GatewayCloseCode.NORMAL_CLOSURE
             elif isinstance(ex, asyncio.TimeoutError):
                 # If we get timeout errors receiving stuff, propagate as a zombied connection. This
                 # is already done by the ping keepalive and heartbeat keepalive partially, but this
                 # is a second edge case.
                 ex = errors.GatewayZombiedError()
 
-            if isinstance(ex, errors.GatewayError):
+            if hasattr(ex, "close_code"):
                 close_code = ex.close_code
 
             raise ex
@@ -598,7 +650,7 @@ class GatewayClient:
             self.status = GatewayStatus.IDENTIFYING
             self.logger.debug("sending IDENTIFY")
             pl = {
-                "op": 2,
+                "op": codes.GatewayOpcode.IDENTIFY,
                 "d": {
                     "token": self._token,
                     "compress": False,
@@ -620,6 +672,7 @@ class GatewayClient:
                 pl["d"]["intents"] = self._intents
 
             if self._presence:
+                # noinspection PyTypeChecker
                 pl["d"]["presence"] = self._presence
             await self._send(pl)
             self.logger.info("sent IDENTIFY, ready to listen to incoming events")
@@ -627,7 +680,7 @@ class GatewayClient:
             self.status = GatewayStatus.RESUMING
             self.logger.debug("sending RESUME")
             pl = {
-                "op": 6,
+                "op": codes.GatewayOpcode.RESUME,
                 "d": {"token": self._token, "seq": self.seq, "session_id": self.session_id},
             }
             await self._send(pl)
@@ -643,7 +696,7 @@ class GatewayClient:
                     f"{self.shard_id}: connection is a zombie, haven't received HEARTBEAT ACK for too long"
                 )
             self.logger.debug("sending heartbeat")
-            await self._send({"op": 1, "d": self.seq})
+            await self._send({"op": codes.GatewayOpcode.HEARTBEAT, "d": self.seq})
             self.last_heartbeat_sent = time.perf_counter()
             try:
                 await asyncio.wait_for(self.requesting_close_event.wait(), timeout=heartbeat_interval)
@@ -659,22 +712,22 @@ class GatewayClient:
             op = next_pl["op"]
             d = next_pl["d"]
 
-            if op == 0:
+            if op == codes.GatewayOpcode.DISPATCH:
                 self.seq = next_pl["s"]
                 event_name = next_pl["t"]
                 self.dispatch(self, event_name, d)
-            elif op == 1:
-                await self._send({"op": 11})
-            elif op == 7:
+            elif op == codes.GatewayOpcode.HEARTBEAT:
+                await self._send({"op": codes.GatewayOpcode.HEARTBEAT_ACK})
+            elif op == codes.GatewayOpcode.RECONNECT:
                 self.logger.debug("instructed by gateway server to restart connection")
                 raise errors.GatewayMustReconnectError()
-            elif op == 9:
+            elif op == codes.GatewayOpcode.INVALID_SESSION:
                 can_resume = bool(d)
                 self.logger.info(
                     "instructed by gateway server to %s session", "resume" if can_resume else "restart",
                 )
                 raise errors.GatewayInvalidSessionError(can_resume)
-            elif op == 11:
+            elif op == codes.GatewayOpcode.HEARTBEAT_ACK:
                 now = time.perf_counter()
                 self.heartbeat_latency = now - self.last_heartbeat_sent
                 self.logger.debug("received HEARTBEAT ACK in %ss", self.heartbeat_latency)
@@ -726,19 +779,19 @@ class GatewayClient:
             elif message.type == aiohttp.WSMsgType.CLOSE:
                 close_code = self._ws.close_code
                 try:
-                    meaning = errors.GatewayCloseCode(close_code)
+                    meaning = codes.GatewayCloseCode(close_code)
                 except ValueError:
                     meaning = "???"
 
                 self.logger.debug("connection closed with code %s (%s)", close_code, meaning)
-                if close_code == errors.GatewayCloseCode.AUTHENTICATION_FAILED:
+                if close_code == codes.GatewayCloseCode.AUTHENTICATION_FAILED:
                     raise errors.GatewayInvalidTokenError()
-                elif close_code in (errors.GatewayCloseCode.SESSION_TIMEOUT, errors.GatewayCloseCode.INVALID_SEQ):
+                elif close_code in (codes.GatewayCloseCode.SESSION_TIMEOUT, codes.GatewayCloseCode.INVALID_SEQ):
                     raise errors.GatewayInvalidSessionError(False)
-                elif close_code == errors.GatewayCloseCode.SHARDING_REQUIRED:
+                elif close_code == codes.GatewayCloseCode.SHARDING_REQUIRED:
                     raise errors.GatewayNeedsShardingError()
                 else:
-                    raise errors.GatewayConnectionClosedError(close_code)
+                    raise errors.GatewayServerClosedConnectionError(close_code)
             elif message.type in (aiohttp.WSMsgType.CLOSING, aiohttp.WSMsgType.CLOSED):
                 self.logger.debug("connection has been marked as closed")
                 raise errors.GatewayClientClosedError()

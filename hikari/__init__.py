@@ -29,6 +29,7 @@ from hikari import errors
 
 from hikari.errors import *
 
+from hikari.net.codes import *
 from hikari.net.errors import *
 from hikari.net.gateway import *
 from hikari.net.http_client import *

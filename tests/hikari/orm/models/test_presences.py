@@ -229,6 +229,12 @@ class TestMemberPresence:
         assert p.mobile_status == presences.Status.OFFLINE
         assert len(p.activities) == 0
 
+    def test_MemberPresence_mobile_desktop_and_web(self, presence_delta_empty):
+        p = presences.MemberPresence({"client_status": {"mobile": "offline", "desktop": "online", "web": "dnd",}})
+        assert p.desktop_status == presences.Status.ONLINE
+        assert p.web_status == presences.Status.DO_NOT_DISTURB
+        assert p.mobile_status == presences.Status.OFFLINE
+
     def test_MemberPresence___repr__(self):
         assert repr(
             _helpers.mock_model(
