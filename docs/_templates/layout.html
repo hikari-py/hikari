@@ -11,15 +11,15 @@
     <meta property="og:image" content="https://assets.gitlab-static.net/uploads/-/system/project/avatar/12050696/Hikari-Logo_1.png" />
     <meta property="og:description" content="A sane Discord Bot framework for modern Python and asyncio." />
     <meta property="theme-color" content="#ff029a" />
+    <script defer
+      data-project-id=''
+      data-project-path=''
+      <!-- Remove the following line to use the same script for multiple merge requests -->
+      data-merge-request-id=''
+      data-mr-url=''
+      id='review-app-toolbar-script'
+      src='https://gitlab.com/assets/webpack/visual_review_toolbar.js'></script> 
     {{ super() }}
-    <script>
-        if (typeof(snowStorm) !== "undefined") {
-            console.log("snowing");
-            snowStorm.useTwinkleEffect = true;
-            snowStorm.animationInterval = 50;
-            snowStorm.flakesMaxActive = 30;
-        }
-    </script>
 {% endblock %}
 
 {# Don't add a footer #}
