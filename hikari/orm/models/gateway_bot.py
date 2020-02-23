@@ -61,7 +61,7 @@ class SessionStartLimit(bases.BaseModel):
     If you exceed this, you will have your token reset by Discord.
     """
 
-    __slots__ = ("total", "remaining", "reset_at")
+    __slots__ = ("total", "remaining", "reset_after", "reset_at")
 
     #: Total number of times you can IDENTIFY with the gateway.
     #:
@@ -74,6 +74,11 @@ class SessionStartLimit(bases.BaseModel):
     #: :type: :class:`int`
     remaining: int
 
+    #: How long until the limit is reset.
+    #:
+    #: :type: :class:`datetime.timedelta`
+    reset_after: datetime.timedelta
+
     #: When the limit will be reset.
     #:
     #: :type: :class:`datetime.datetime`
@@ -84,8 +89,10 @@ class SessionStartLimit(bases.BaseModel):
     def __init__(self, payload: type_hints.JSONObject) -> None:
         self.total = int(payload["total"])
         self.remaining = int(payload["remaining"])
-        reset_after = float(payload["reset_after"])
-        self.reset_at = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(milliseconds=reset_after)
+        self.reset_after = datetime.timedelta(seconds=float(payload["reset_after"]) / 1_000)
+        self.reset_at = (
+            datetime.datetime.now(tz=datetime.timezone.utc) + self.reset_after
+        )
 
     @property
     def used(self) -> int:
