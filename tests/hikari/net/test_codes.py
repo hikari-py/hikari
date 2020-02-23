@@ -16,18 +16,25 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Network components for the Hikari Discord API.
 
-These components describe the low level parts of Hikari. No model classes exist
-for these; the majority of communication is done via JSON arrays and objects
-(so :class:`dict`s and :class:`list`s).
-"""
-from hikari.net import base_http_client
 from hikari.net import codes
-from hikari.net import gateway
-from hikari.net import http_client
-from hikari.net import ratelimits
-from hikari.net import routes
-from hikari.net import status_info_client
-from hikari.net import user_agent
-from hikari.net import versions
+
+
+def test_str_HTTPStatusCode():
+    assert str(codes.HTTPStatusCode.TOO_MANY_REQUESTS) == "429 Too Many Requests"
+    assert str(codes.HTTPStatusCode.IM_A_TEAPOT) == "418 I'm a teapot"
+
+
+def test_str_GatewayCloseCode():
+    assert str(codes.GatewayCloseCode.ABNORMAL_CLOSURE) == "1006 Abnormal Closure"
+
+
+def test_str_GatewayOpcode():
+    assert str(codes.GatewayOpcode.HEARTBEAT_ACK) == "11 Heartbeat Ack"
+
+
+def test_str_JSONErrorCode():
+    assert (
+        str(codes.JSONErrorCode.CANNOT_EDIT_A_MESSAGE_AUTHORED_BY_ANOTHER_USER)
+        == "50005 Cannot Edit A Message Authored By Another User"
+    )

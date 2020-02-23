@@ -1831,3 +1831,13 @@ class TestDispatchingEventAdapterImpl:
         await adapter_impl.handle_webhooks_update(gateway_impl, payload)
 
         dispatch_impl.assert_called_with(event_types.EventType.WEBHOOKS_UPDATE, channel_obj)
+
+    @pytest.mark.asyncio
+    async def test_update_voice_state_update(self, adapter_impl, gateway_impl):
+        await adapter_impl.handle_voice_state_update(gateway_impl, mock.MagicMock())
+        assert True  # nothing to test yet.
+
+    @pytest.mark.asyncio
+    async def test_update_voice_server_update(self, adapter_impl, gateway_impl):
+        await adapter_impl.handle_voice_server_update(gateway_impl, mock.MagicMock())
+        assert True  # nothing to test yet.
