@@ -169,6 +169,19 @@ class TestGatewayReconnectCountProperty:
 
 
 @pytest.mark.asyncio
+class TestGatewayCurrentPresenceProperty:
+    async def test_returns_presence(self):
+        client = gateway.GatewayClient(token="xxx", url="yyy")
+        client._presence = {"foo": "bar"}
+        assert client.current_presence == {"foo": "bar"}
+
+    async def test_returns_copy(self):
+        client = gateway.GatewayClient(token="xxx", url="yyy")
+        client._presence = {"foo": "bar"}
+        assert client.current_presence is not client._presence
+
+
+@pytest.mark.asyncio
 class TestGatewayClientAiohttpClientSessionKwargsProperty:
     async def test_right_stuff_is_included(self):
         connector = mock.MagicMock()
@@ -729,6 +742,7 @@ class TestClose:
         client.ws = _helpers.create_autospec(aiohttp.ClientWebSocketResponse)
         client.session = _helpers.create_autospec(aiohttp.ClientSession)
         client.closed_event = asyncio.Event()
+        client._presence = {}
         return client
 
     @_helpers.timeout_after(1.0)
@@ -858,10 +872,17 @@ class TestUpdatePresence:
         return client
 
     async def test_sends_payload(self, client):
-        await client.update_presence({"foo": "bar"})
-        client._send.assert_awaited_once_with({"op": 3, "d": {"foo": "bar"}})
+        await client.update_presence({"afk": True, "game": {"name": "69", "type": 1}, "since": 69, "status": "dnd"})
+        client._send.assert_awaited_once_with(
+            {"op": 3, "d": {"afk": True, "game": {"name": "69", "type": 1}, "since": 69, "status": "dnd"}}
+        )
 
     async def test_caches_payload_for_later(self, client):
         client._presence = {"baz": "bork"}
+        await client.update_presence({"afk": True, "game": {"name": "69", "type": 1}, "since": 69, "status": "dnd"})
+        assert client._presence == {"afk": True, "game": {"name": "69", "type": 1}, "since": 69, "status": "dnd"}
+
+    async def test_injects_default_fields(self, client):
         await client.update_presence({"foo": "bar"})
-        assert client._presence == {"foo": "bar"}
+        for k in ("foo", "afk", "game", "since", "status"):
+            assert k in client._presence

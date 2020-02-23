@@ -970,14 +970,19 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         webhooks_payload = await self.fabric.http_client.get_guild_webhooks(guild_id=transformations.get_id(guild))
         return tuple(self.fabric.state_registry.parse_webhook(webhook) for webhook in webhooks_payload)
 
-    async def fetch_webhook(self, webhook: _webhooks.WebhookLikeT) -> _webhooks.Webhook:
-        webhook_payload = await self.fabric.http_client.get_webhook(webhook_id=transformations.get_id(webhook))
+    async def fetch_webhook(
+        self, webhook: _webhooks.WebhookLikeT, *, webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED
+    ) -> _webhooks.Webhook:
+        webhook_payload = await self.fabric.http_client.get_webhook(
+            webhook_id=transformations.get_id(webhook), webhook_token=webhook_token
+        )
         return self.fabric.state_registry.parse_webhook(webhook_payload)
 
     async def update_webhook(
         self,
         webhook: _webhooks.WebhookLikeT,
         *,
+        webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         avatar_data: type_hints.NotRequired[storage.FileLikeT] = unspecified.UNSPECIFIED,
         channel: type_hints.NotRequired[_channels.GuildTextChannelLikeT] = unspecified.UNSPECIFIED,
@@ -985,6 +990,7 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
     ) -> _webhooks.Webhook:
         webhook_payload = await self.fabric.http_client.modify_webhook(
             webhook_id=transformations.get_id(webhook),
+            webhook_token=webhook_token,
             name=name,
             avatar=transformations.cast_if_specified(avatar_data, storage.get_bytes_from_resource),
             channel_id=transformations.cast_if_specified(channel, transformations.get_id),
@@ -992,5 +998,37 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         )
         return self.fabric.state_registry.parse_webhook(webhook_payload)
 
-    async def delete_webhook(self, webhook: _webhooks.WebhookLikeT) -> None:
-        await self.fabric.http_client.delete_webhook(webhook_id=transformations.get_id(webhook))
+    async def delete_webhook(
+        self, webhook: _webhooks.WebhookLikeT, webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED
+    ) -> None:
+        await self.fabric.http_client.delete_webhook(
+            webhook_id=transformations.get_id(webhook), webhook_token=webhook_token
+        )
+
+    async def execute_webhook(
+        self,
+        webhook: _webhooks.WebhookLikeT,
+        webhook_token: str,
+        *,
+        content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        username: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        avatar_url: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        tts: type_hints.NotRequired[bool] = False,
+        wait: bool = False,
+        file: type_hints.NotRequired[_media.AbstractFile] = unspecified.UNSPECIFIED,
+        embeds: type_hints.NotRequired[typing.Sequence[type_hints.JSONObject]] = unspecified.UNSPECIFIED,
+    ) -> typing.Optional[_messages.Message]:
+        response = await self.fabric.http_client.execute_webhook(
+            webhook_id=transformations.get_id(webhook),
+            webhook_token=webhook_token,
+            content=content,
+            username=username,
+            avatar_url=avatar_url,
+            tts=tts,
+            wait=wait,
+            file=await _media.safe_read_file(file) if file is not unspecified.UNSPECIFIED else file,
+            embeds=transformations.cast_if_specified(embeds, lambda obj: obj.to_dict(), iterable=True),
+        )
+
+        if wait:
+            return self.fabric.state_registry.parse_message(response)

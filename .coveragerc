@@ -4,6 +4,8 @@ parallel = true
 branch = true
 # Uncomment if coverage starts appearing to be incorrect. This makes the tests run at least twice as slowly.
 # timid  = true
+omit =
+    hikari/__main__.py
 
 [report]
 precision = 2
