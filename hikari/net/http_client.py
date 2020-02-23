@@ -187,7 +187,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 reset = float(headers.get("X-RateLimit-Reset", "0"))
                 reset_date = datetime.datetime.fromtimestamp(reset, tz=datetime.timezone.utc)
                 now_date = email.utils.parsedate_to_datetime(headers["Date"])
-                content_type = resp.headers["Content-Type"]
+                content_type = resp.headers.get("Content-Type")
 
                 status = resp.status
 
