@@ -519,7 +519,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
     def parse_reaction(
         self, reaction_payload: type_hints.JSONObject, message_id: int, channel_id: int,
     ) -> reactions.Reaction:
-        count = int(reaction_payload["count"])
+        count = int(reaction_payload["count"]) if "count" in reaction_payload else 1
         emoji_obj = self.parse_emoji(reaction_payload["emoji"], None)
 
         new_reaction_obj = reactions.Reaction(self.fabric, count, emoji_obj, message_id, channel_id)
