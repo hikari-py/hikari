@@ -16,21 +16,25 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-The Hikari Object Relational Model.
 
-This provides an object-oriented interface to the Discord API, and provides features
-such as the ability to cache certain objects and details that the API provides us, as
-well as providing an expandable and extendable interface to wrap them together in.
+from hikari.net import codes
 
-The ORM is separated into several domains of components. This is done to allow
-you to easily write new components if this library does not fit your use case.
-"""
-from hikari.orm import client
-from hikari.orm import client_options
-from hikari.orm import fabric
-from hikari.orm import gateway
-from hikari.orm import http
-from hikari.orm import models
-from hikari.orm import state
-from hikari.orm.gateway import event_types
+
+def test_str_HTTPStatusCode():
+    assert str(codes.HTTPStatusCode.TOO_MANY_REQUESTS) == "429 Too Many Requests"
+    assert str(codes.HTTPStatusCode.IM_A_TEAPOT) == "418 I'm a teapot"
+
+
+def test_str_GatewayCloseCode():
+    assert str(codes.GatewayCloseCode.ABNORMAL_CLOSURE) == "1006 Abnormal Closure"
+
+
+def test_str_GatewayOpcode():
+    assert str(codes.GatewayOpcode.HEARTBEAT_ACK) == "11 Heartbeat Ack"
+
+
+def test_str_JSONErrorCode():
+    assert (
+        str(codes.JSONErrorCode.CANNOT_EDIT_A_MESSAGE_AUTHORED_BY_ANOTHER_USER)
+        == "50005 Cannot Edit A Message Authored By Another User"
+    )

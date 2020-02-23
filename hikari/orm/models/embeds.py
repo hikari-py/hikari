@@ -823,3 +823,6 @@ class Embed(BaseEmbed):
         assertions.assert_that(
             total_size <= _MAX_EMBED_SIZE, f"Total characters in an embed can not exceed {_MAX_EMBED_SIZE}"
         )
+
+
+__all__ = ["Embed", "ReceivedEmbed"]
