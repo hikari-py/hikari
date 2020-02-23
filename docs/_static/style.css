@@ -47,6 +47,11 @@ pre {
     border-color: transparent !important;
 }
 
+dl.field-list > dt {
+    padding-left: 0 !important;
+    word-break: normal !important;
+}
+
 dt:target, span.highlighted {
     background-color: transparent !important;
     text-decoration: underline;
@@ -116,6 +121,7 @@ nav, .alert, .admonition {
     background-image: none !important;
     background-color: #303030 !important;
     border-color: transparent !important;
+    position: relative !important;
 }
 
 /*************************** layout fixes ***************************/
