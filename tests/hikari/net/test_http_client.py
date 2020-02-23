@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
+import io
 import json
 import ssl
 from unittest import mock
@@ -24,6 +25,7 @@ from unittest import mock
 import aiohttp
 import pytest
 
+from hikari.internal_utilities import conversions
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import unspecified
 from hikari.net import base_http_client
@@ -49,7 +51,7 @@ class TestHTTPClient:
         return HTTPClientImpl()
 
     @mock.patch.object(base_http_client.BaseHTTPClient, "__init__")
-    def test__init__without_with_bot_token_and_without_optionals(self, mock_init):
+    def test__init__with_bot_token_and_without_optionals(self, mock_init):
         mock_manual_rate_limiter = mock.MagicMock()
         mock_http_bucket_rate_limit_manager = mock.MagicMock()
         with mock.patch.object(ratelimits, "ManualRateLimiter", return_value=mock_manual_rate_limiter):
@@ -332,7 +334,7 @@ class TestHTTPClient:
         mock_response = {"content": "nyaa, nyaa, nyaa."}
         http_client_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_MESSAGE)
-        mock_form = mock.MagicMock(spec_set=aiohttp.FormData)
+        mock_form = mock.MagicMock(spec_set=aiohttp.FormData, add_field=mock.MagicMock())
         with mock.patch.object(routes, "CHANNEL_MESSAGES", compile=mock.MagicMock(return_value=mock_route)):
             with mock.patch.object(aiohttp, "FormData", autospec=True, return_value=mock_form):
                 assert await http_client_impl.create_message("22222222") is mock_response
@@ -343,42 +345,52 @@ class TestHTTPClient:
         http_client_impl._request.assert_called_once_with(mock_route, form_body=mock_form, re_seekable_resources=[])
 
     @pytest.mark.asyncio
-    async def test_create_message_with_optionals(self, http_client_impl):
+    @mock.patch.object(routes, "CHANNEL_MESSAGES")
+    @mock.patch.object(aiohttp, "FormData", autospec=True)
+    @mock.patch.object(storage, "make_resource_seekable")
+    @mock.patch.object(json, "dumps")
+    async def test_create_message_with_optionals(
+        self, dumps, make_resource_seekable, FormData, CHANNEL_MESSAGES, http_client_impl
+    ):
         mock_response = {"content": "nyaa, nyaa, nyaa."}
         http_client_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_MESSAGE)
-        mock_form = mock.MagicMock(spec_set=aiohttp.FormData)
-        with mock.patch.object(routes, "CHANNEL_MESSAGES", compile=mock.MagicMock(return_value=mock_route)):
-            with mock.patch.object(aiohttp, "FormData", autospec=True, return_value=mock_form):
-                mock_file = mock.MagicMock()
-                with mock.patch.object(storage, "make_resource_seekable", return_value=mock_file):
-                    result = await http_client_impl.create_message(
-                        "22222222",
-                        content="I am a message",
-                        nonce="ag993okskm_cdolsio",
-                        tts=True,
-                        files=[("file.txt", b"okdsio9u8oij32")],
-                        embed={"content": "I am an embed"},
-                    )
-                    assert result is mock_response
-                routes.CHANNEL_MESSAGES.compile.assert_called_once_with(http_client_impl.POST, channel_id="22222222")
-                mock_form.add_field.assert_has_calls(
-                    (
-                        mock.call(
-                            "payload_json",
-                            json.dumps(
-                                {
-                                    "tts": True,
-                                    "content": "I am a message",
-                                    "nonce": "ag993okskm_cdolsio",
-                                    "embed": {"content": "I am an embed"},
-                                }
-                            ),
-                            content_type="application/json",
-                        ),
-                        mock.call("file0", mock_file, filename="file.txt", content_type="application/octet-stream"),
-                    )
-                )
+        CHANNEL_MESSAGES.compile.return_value = mock_route
+        mock_form = mock.MagicMock(spec_set=aiohttp.FormData, add_field=mock.MagicMock())
+        FormData.return_value = mock_form
+        mock_file = mock.MagicMock(io.BytesIO)
+        make_resource_seekable.return_value = mock_file
+        mock_json = '{"description": "I am a message", "tts": "True"}'
+        dumps.return_value = mock_json
+
+        result = await http_client_impl.create_message(
+            "22222222",
+            content="I am a message",
+            nonce="ag993okskm_cdolsio",
+            tts=True,
+            files=[("file.txt", b"okdsio9u8oij32")],
+            embed={"description": "I am an embed"},
+        )
+        assert result is mock_response
+        CHANNEL_MESSAGES.compile.assert_called_once_with(http_client_impl.POST, channel_id="22222222")
+        make_resource_seekable.assert_called_once_with(b"okdsio9u8oij32")
+        dumps.assert_called_once_with(
+            {
+                "tts": True,
+                "content": "I am a message",
+                "nonce": "ag993okskm_cdolsio",
+                "embed": {"description": "I am an embed"},
+            }
+        )
+
+        mock_form.add_field.assert_has_calls(
+            (
+                mock.call("payload_json", mock_json, content_type="application/json"),
+                mock.call("file0", mock_file, filename="file.txt", content_type="application/octet-stream"),
+            ),
+            any_order=True,
+        )
+        assert mock_form.add_field.call_count == 2
         http_client_impl._request.assert_called_once_with(
             mock_route, form_body=mock_form, re_seekable_resources=[mock_file]
         )
@@ -663,14 +675,16 @@ class TestHTTPClient:
         mock_response = {"id": "33", "name": "OwO"}
         http_client_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_EMOJI)
+        mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "GUILD_EMOJIS", compile=mock.MagicMock(return_value=mock_route)):
-            assert (
-                await http_client_impl.create_guild_emoji("2222", "iEmoji", b"\211PNG\r\n\032\nblah") is mock_response
-            )
-            routes.GUILD_EMOJIS.compile.assert_called_once_with(http_client_impl.POST, guild_id="2222")
+            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
+                result = await http_client_impl.create_guild_emoji("2222", "iEmoji", b"\211PNG\r\n\032\nblah")
+                assert result is mock_response
+                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
+                routes.GUILD_EMOJIS.compile.assert_called_once_with(http_client_impl.POST, guild_id="2222")
         http_client_impl._request.assert_called_once_with(
             mock_route,
-            json_body={"name": "iEmoji", "roles": [], "image": "data:image/png;base64,iVBORw0KGgpibGFo"},
+            json_body={"name": "iEmoji", "roles": [], "image": mock_image_data},
             reason=unspecified.UNSPECIFIED,
         )
 
@@ -679,21 +693,18 @@ class TestHTTPClient:
         mock_response = {"id": "33", "name": "OwO"}
         http_client_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_EMOJI)
+        mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "GUILD_EMOJIS", compile=mock.MagicMock(return_value=mock_route)):
-            assert (
-                await http_client_impl.create_guild_emoji(
+            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
+                result = await http_client_impl.create_guild_emoji(
                     "2222", "iEmoji", b"\211PNG\r\n\032\nblah", roles=["292929", "484884"], reason="uwu owo"
                 )
-                is mock_response
-            )
-            routes.GUILD_EMOJIS.compile.assert_called_once_with(http_client_impl.POST, guild_id="2222")
+                assert result is mock_response
+                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
+                routes.GUILD_EMOJIS.compile.assert_called_once_with(http_client_impl.POST, guild_id="2222")
         http_client_impl._request.assert_called_once_with(
             mock_route,
-            json_body={
-                "name": "iEmoji",
-                "roles": ["292929", "484884"],
-                "image": "data:image/png;base64,iVBORw0KGgpibGFo",
-            },
+            json_body={"name": "iEmoji", "roles": ["292929", "484884"], "image": mock_image_data},
             reason="uwu owo",
         )
 
@@ -749,24 +760,27 @@ class TestHTTPClient:
         mock_response = {"id": "99999", "name": "Guildith-Sama"}
         http_client_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD)
+        mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "GUILDS", compile=mock.MagicMock(return_value=mock_route)):
-            result = await http_client_impl.create_guild(
-                "GUILD TIME",
-                region="london",
-                icon=b"\211PNG\r\n\032\nblah",
-                verification_level=2,
-                explicit_content_filter=1,
-                roles=[{"name": "a role"}],
-                channels=[{"type": 0, "name": "444"}],
-            )
-            assert result is mock_response
-            routes.GUILDS.compile.assert_called_once_with(http_client_impl.POST)
+            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
+                result = await http_client_impl.create_guild(
+                    "GUILD TIME",
+                    region="london",
+                    icon=b"\211PNG\r\n\032\nblah",
+                    verification_level=2,
+                    explicit_content_filter=1,
+                    roles=[{"name": "a role"}],
+                    channels=[{"type": 0, "name": "444"}],
+                )
+                assert result is mock_response
+                routes.GUILDS.compile.assert_called_once_with(http_client_impl.POST)
+                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
         http_client_impl._request.assert_called_once_with(
             mock_route,
             json_body={
                 "name": "GUILD TIME",
                 "region": "london",
-                "icon": "data:image/png;base64,iVBORw0KGgpibGFo",
+                "icon": mock_image_data,
                 "verification_level": 2,
                 "explicit_content_filter": 1,
                 "roles": [{"name": "a role"}],
@@ -799,25 +813,39 @@ class TestHTTPClient:
         mock_response = {"id": "42", "name": "Hikari"}
         http_client_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD)
+        mock_icon_data = "data:image/png;base64,iVBORw0KGgpibGFo"
+        mock_splash_data = "data:image/png;base64,iVBORw0KGgpicnVo"
         with mock.patch.object(routes, "GUILD", compile=mock.MagicMock(return_value=mock_route)):
-            result = await http_client_impl.modify_guild(
-                "49949495",
-                name="Deutschland",
-                region="deutschland",
-                verification_level=2,
-                default_message_notifications=1,
-                explicit_content_filter=0,
-                afk_channel_id="49494949",
-                afk_timeout=5,
-                icon=b"\211PNG\r\n\032\nblah",
-                owner_id="379953393319542784",
-                splash=b"\211PNG\r\n\032\nbruh",
-                system_channel_id="123123123123",
-                reason="I USED TO RULE THE WORLD.",
-            )
-            assert result is mock_response
+            with mock.patch.object(
+                conversions, "image_bytes_to_image_data", side_effect=(mock_icon_data, mock_splash_data)
+            ):
+                result = await http_client_impl.modify_guild(
+                    "49949495",
+                    name="Deutschland",
+                    region="deutschland",
+                    verification_level=2,
+                    default_message_notifications=1,
+                    explicit_content_filter=0,
+                    afk_channel_id="49494949",
+                    afk_timeout=5,
+                    icon=b"\211PNG\r\n\032\nblah",
+                    owner_id="379953393319542784",
+                    splash=b"\211PNG\r\n\032\nbruh",
+                    system_channel_id="123123123123",
+                    reason="I USED TO RULE THE WORLD.",
+                )
+                assert result is mock_response
 
-            routes.GUILD.compile.assert_called_once_with(http_client_impl.PATCH, guild_id="49949495")
+                routes.GUILD.compile.assert_called_once_with(http_client_impl.PATCH, guild_id="49949495")
+                assert conversions.image_bytes_to_image_data.call_count == 2
+                conversions.image_bytes_to_image_data.assert_has_calls(
+                    (
+                        mock.call.__bool__(),
+                        mock.call(b"\211PNG\r\n\032\nblah"),
+                        mock.call.__bool__(),
+                        mock.call(b"\211PNG\r\n\032\nbruh"),
+                    )
+                )
         http_client_impl._request.assert_called_once_with(
             mock_route,
             json_body={
@@ -828,9 +856,9 @@ class TestHTTPClient:
                 "explicit_content_filter": 0,
                 "afk_channel_id": "49494949",
                 "afk_timeout": 5,
-                "icon": "data:image/png;base64,iVBORw0KGgpibGFo",
+                "icon": mock_icon_data,
                 "owner_id": "379953393319542784",
-                "splash": "data:image/png;base64,iVBORw0KGgpicnVo",
+                "splash": mock_splash_data,
                 "system_channel_id": "123123123123",
             },
             reason="I USED TO RULE THE WORLD.",
@@ -1509,14 +1537,17 @@ class TestHTTPClient:
         mock_response = {"id": "44444", "username": "Watashi"}
         http_client_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.OWN_USER)
+        mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "OWN_USER", compile=mock.MagicMock(return_value=mock_route)):
-            assert (
-                await http_client_impl.modify_current_user(username="Watashi 2", avatar=b"\211PNG\r\n\032\nblah")
-                is mock_response
-            )
-            routes.OWN_USER.compile.assert_called_once_with(http_client_impl.PATCH)
+            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
+                result = await http_client_impl.modify_current_user(
+                    username="Watashi 2", avatar=b"\211PNG\r\n\032\nblah"
+                )
+                assert result is mock_response
+                routes.OWN_USER.compile.assert_called_once_with(http_client_impl.PATCH)
+                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
         http_client_impl._request.assert_called_once_with(
-            mock_route, json_body={"username": "Watashi 2", "avatar": "data:image/png;base64,iVBORw0KGgpibGFo"}
+            mock_route, json_body={"username": "Watashi 2", "avatar": mock_image_data}
         )
 
     @pytest.mark.asyncio
@@ -1598,18 +1629,17 @@ class TestHTTPClient:
         mock_response = {"channel_id": "39393993", "id": "8383838"}
         http_client_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_WEBHOOKS)
+        mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "CHANNEL_WEBHOOKS", compile=mock.MagicMock(return_value=mock_route)):
-            assert (
-                await http_client_impl.create_webhook(
+            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
+                result = await http_client_impl.create_webhook(
                     "39393939", "I am a webhook", avatar=b"\211PNG\r\n\032\nblah", reason="get reasoned"
                 )
-                is mock_response
-            )
-            routes.CHANNEL_WEBHOOKS.compile.assert_called_once_with(http_client_impl.POST, channel_id="39393939")
+                assert result is mock_response
+                routes.CHANNEL_WEBHOOKS.compile.assert_called_once_with(http_client_impl.POST, channel_id="39393939")
+                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
         http_client_impl._request.assert_called_once_with(
-            mock_route,
-            json_body={"name": "I am a webhook", "avatar": "data:image/png;base64,iVBORw0KGgpibGFo"},
-            reason="get reasoned",
+            mock_route, json_body={"name": "I am a webhook", "avatar": mock_image_data}, reason="get reasoned",
         )
 
     @pytest.mark.asyncio
@@ -1633,27 +1663,41 @@ class TestHTTPClient:
         http_client_impl._request.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
-    async def test_get_webhook(self, http_client_impl):
+    async def test_get_webhook_without_token(self, http_client_impl):
         mock_response = {"channel_id": "39393993", "id": "8383838"}
         http_client_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.WEBHOOK)
         with mock.patch.object(routes, "WEBHOOK", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.get_webhook("9393939") is mock_response
             routes.WEBHOOK.compile.assert_called_once_with(http_client_impl.GET, webhook_id="9393939")
-        http_client_impl._request.assert_called_once_with(mock_route)
+        http_client_impl._request.assert_called_once_with(mock_route, suppress_authorization_header=False)
 
     @pytest.mark.asyncio
-    async def test_modify_webhook_without_optionals(self, http_client_impl):
+    async def test_get_webhook_with_token(self, http_client_impl):
+        mock_response = {"channel_id": "39393993", "id": "8383838"}
+        http_client_impl._request.return_value = mock_response
+        mock_route = mock.MagicMock(routes.WEBHOOK_WITH_TOKEN)
+        with mock.patch.object(routes, "WEBHOOK_WITH_TOKEN", compile=mock.MagicMock(return_value=mock_route)):
+            assert await http_client_impl.get_webhook("9393939", webhook_token="a_webhook_token") is mock_response
+            routes.WEBHOOK_WITH_TOKEN.compile.assert_called_once_with(
+                http_client_impl.GET, webhook_id="9393939", webhook_token="a_webhook_token"
+            )
+        http_client_impl._request.assert_called_once_with(mock_route, suppress_authorization_header=True)
+
+    @pytest.mark.asyncio
+    async def test_modify_webhook_without_optionals_without_token(self, http_client_impl):
         mock_response = {"channel_id": "39393993", "id": "8383838"}
         http_client_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.WEBHOOK)
         with mock.patch.object(routes, "WEBHOOK", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.modify_webhook("929292") is mock_response
             routes.WEBHOOK.compile.assert_called_once_with(http_client_impl.PATCH, webhook_id="929292")
-        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(
+            mock_route, json_body={}, reason=unspecified.UNSPECIFIED, suppress_authorization_header=False
+        )
 
     @pytest.mark.asyncio
-    async def test_modify_webhook_with_optionals(self, http_client_impl):
+    async def test_modify_webhook_with_optionals_without_token(self, http_client_impl):
         mock_response = {"channel_id": "39393993", "id": "8383838"}
         http_client_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.WEBHOOK)
@@ -1669,12 +1713,121 @@ class TestHTTPClient:
             mock_route,
             json_body={"name": "nyaa", "avatar": "data:image/png;base64,iVBORw0KGgpibGFo", "channel_id": "2929292929",},
             reason="nuzzle",
+            suppress_authorization_header=False,
         )
 
     @pytest.mark.asyncio
-    async def test_delete_webhook(self, http_client_impl):
+    async def test_modify_webhook_without_optionals_with_token(self, http_client_impl):
+        mock_response = {"channel_id": "39393993", "id": "8383838"}
+        http_client_impl._request.return_value = mock_response
+        mock_route = mock.MagicMock(routes.WEBHOOK_WITH_TOKEN)
+        with mock.patch.object(routes, "WEBHOOK_WITH_TOKEN", compile=mock.MagicMock(return_value=mock_route)):
+            assert await http_client_impl.modify_webhook("929292", webhook_token="a_webhook_token") is mock_response
+            routes.WEBHOOK_WITH_TOKEN.compile.assert_called_once_with(
+                http_client_impl.PATCH, webhook_id="929292", webhook_token="a_webhook_token"
+            )
+        http_client_impl._request.assert_called_once_with(
+            mock_route, json_body={}, reason=unspecified.UNSPECIFIED, suppress_authorization_header=True
+        )
+
+    @pytest.mark.asyncio
+    async def test_delete_webhook_without_token(self, http_client_impl):
         mock_route = mock.MagicMock(routes.WEBHOOK)
         with mock.patch.object(routes, "WEBHOOK", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.delete_webhook("9393939") is None
             routes.WEBHOOK.compile.assert_called_once_with(http_client_impl.DELETE, webhook_id="9393939")
-        http_client_impl._request.assert_called_once_with(mock_route)
+        http_client_impl._request.assert_called_once_with(mock_route, suppress_authorization_header=False)
+
+    @pytest.mark.asyncio
+    async def test_delete_webhook_with_token(self, http_client_impl):
+        mock_route = mock.MagicMock(routes.WEBHOOK_WITH_TOKEN)
+        with mock.patch.object(routes, "WEBHOOK_WITH_TOKEN", compile=mock.MagicMock(return_value=mock_route)):
+            assert await http_client_impl.delete_webhook("9393939", webhook_token="a_webhook_token") is None
+            routes.WEBHOOK_WITH_TOKEN.compile.assert_called_once_with(
+                http_client_impl.DELETE, webhook_id="9393939", webhook_token="a_webhook_token"
+            )
+        http_client_impl._request.assert_called_once_with(mock_route, suppress_authorization_header=True)
+
+    @pytest.mark.asyncio
+    async def test_execute_webhook_without_optionals(self, http_client_impl):
+        mock_form = mock.MagicMock(spec_set=aiohttp.FormData, add_field=mock.MagicMock())
+        mock_route = mock.MagicMock(routes.WEBHOOK_WITH_TOKEN)
+        http_client_impl._request.return_value = None
+        mock_json = '{"tts": "False"}'
+        with mock.patch.object(aiohttp, "FormData", autospec=True, return_value=mock_form):
+            with mock.patch.object(routes, "WEBHOOK_WITH_TOKEN", compile=mock.MagicMock(return_value=mock_route)):
+                with mock.patch.object(json, "dumps", return_value=mock_json):
+                    assert await http_client_impl.execute_webhook("9393939", "a_webhook_token") is None
+                    routes.WEBHOOK_WITH_TOKEN.compile.assert_called_once_with(
+                        http_client_impl.POST, webhook_id="9393939", webhook_token="a_webhook_token"
+                    )
+                    json.dumps.assert_called_once_with({"tts": False})
+        mock_form.add_field.assert_called_once_with("payload_json", mock_json, content_type="application/json")
+        http_client_impl._request.assert_called_once_with(
+            mock_route,
+            form_body=mock_form,
+            re_seekable_resources=[],
+            query={"wait": "False"},
+            suppress_authorization_header=True,
+        )
+
+    @pytest.mark.asyncio
+    @mock.patch.object(aiohttp, "FormData", autospec=True)
+    @mock.patch.object(routes, "WEBHOOK_WITH_TOKEN")
+    @mock.patch.object(json, "dumps")
+    @mock.patch.object(storage, "make_resource_seekable")
+    async def test_execute_webhook_with_optionals(
+        self, make_resource_seekable, dumps, WEBHOOK_WITH_TOKEN, FormData, http_client_impl
+    ):
+        mock_form = mock.MagicMock(spec_set=aiohttp.FormData, add_field=mock.MagicMock())
+        FormData.return_value = mock_form
+        mock_route = mock.MagicMock(routes.WEBHOOK_WITH_TOKEN)
+        WEBHOOK_WITH_TOKEN.compile.return_value = mock_route
+        mock_response = {"id": "53", "content": "la"}
+        http_client_impl._request.return_value = mock_response
+        mock_bytes = mock.MagicMock(io.BytesIO)
+        make_resource_seekable.return_value = mock_bytes
+        mock_json = '{"content": "A messages", "username": "agent 42"}'
+        dumps.return_value = mock_json
+        response = await http_client_impl.execute_webhook(
+            "9393939",
+            "a_webhook_token",
+            content="A message",
+            username="agent 42",
+            avatar_url="https://localhost.bump",
+            tts=True,
+            wait=True,
+            file=("file.txt", b"4444ididid"),
+            embeds=[{"type": "rich", "description": "A DESCRIPTION"}],
+        )
+        assert response is mock_response
+        make_resource_seekable.assert_called_once_with(b"4444ididid")
+        routes.WEBHOOK_WITH_TOKEN.compile.assert_called_once_with(
+            http_client_impl.POST, webhook_id="9393939", webhook_token="a_webhook_token"
+        )
+        dumps.assert_called_once_with(
+            {
+                "tts": True,
+                "content": "A message",
+                "username": "agent 42",
+                "avatar_url": "https://localhost.bump",
+                "embeds": [{"type": "rich", "description": "A DESCRIPTION"}],
+            }
+        )
+
+        assert mock_form.add_field.call_count == 2
+        mock_form.add_field.assert_has_calls(
+            (
+                mock.call("payload_json", mock_json, content_type="application/json"),
+                mock.call("file", mock_bytes, filename="file.txt", content_type="application/octet-stream"),
+            ),
+            any_order=True,
+        )
+
+        http_client_impl._request.assert_called_once_with(
+            mock_route,
+            form_body=mock_form,
+            re_seekable_resources=[mock_bytes],
+            query={"wait": "True"},
+            suppress_authorization_header=True,
+        )

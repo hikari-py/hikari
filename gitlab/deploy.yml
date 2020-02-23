@@ -43,7 +43,7 @@ prerelease:
     - do-deployment
   environment:
     name: staging
-    url: https://pypi.org/project/hikari/#history
+    url: https://nekokatt.gitlab.io/hikari/staging
 
 release:
   extends: .deploy
@@ -61,4 +61,4 @@ release:
     - do-deployment
   environment:
     name: prod
-    url: https://pypi.org/project/hikari/
+    url: https://nekokatt.gitlab.io/hikari

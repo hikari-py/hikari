@@ -44,9 +44,11 @@ class Reaction(bases.BaseModelWithFabric):
     #:
     #: :type: :class:`int`
     #:
-    #: Warning:
-    #:     This value may not be completely accurate. To get an accurate count, either request the message from the
-    #:     HTTP API, or request the list of users who reacted to it.
+    #: Warnings
+    #: --------
+    #: This value may not be completely accurate. To get an accurate count,
+    #: either request the message from the HTTP API, or request the list of
+    #: users who reacted to it.
     count: int
 
     #: The emoji used for the reaction.

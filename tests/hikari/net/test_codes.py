@@ -17,11 +17,24 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-__author__ = "Nekokatt"
-__copyright__ = "© 2019-2020 Nekokatt"
-__email__ = "3903853-nekokatt@users.noreply.gitlab.com"
-__license__ = "LGPL-3.0-ONLY"
-__version__ = "0.0.75.dev"
-__url__ = "https://gitlab.com/nekokatt/hikari"
+from hikari.net import codes
 
-__all__ = ["__author__", "__copyright__", "__email__", "__license__", "__version__", "__url__"]
+
+def test_str_HTTPStatusCode():
+    assert str(codes.HTTPStatusCode.TOO_MANY_REQUESTS) == "429 Too Many Requests"
+    assert str(codes.HTTPStatusCode.IM_A_TEAPOT) == "418 I'm a teapot"
+
+
+def test_str_GatewayCloseCode():
+    assert str(codes.GatewayCloseCode.ABNORMAL_CLOSURE) == "1006 Abnormal Closure"
+
+
+def test_str_GatewayOpcode():
+    assert str(codes.GatewayOpcode.HEARTBEAT_ACK) == "11 Heartbeat Ack"
+
+
+def test_str_JSONErrorCode():
+    assert (
+        str(codes.JSONErrorCode.CANNOT_EDIT_A_MESSAGE_AUTHORED_BY_ANOTHER_USER)
+        == "50005 Cannot Edit A Message Authored By Another User"
+    )

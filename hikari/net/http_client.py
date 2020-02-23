@@ -40,6 +40,7 @@ from hikari.internal_utilities import transformations
 from hikari.internal_utilities import type_hints
 from hikari.internal_utilities import unspecified
 from hikari.net import base_http_client
+from hikari.net import codes
 from hikari.net import errors
 from hikari.net import ratelimits
 from hikari.net import routes
@@ -115,7 +116,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         re_seekable_resources: typing.Collection[typing.Any] = containers.EMPTY_COLLECTION,
         suppress_authorization_header: bool = False,
         **kwargs,
-    ) -> typing.Any:
+    ) -> typing.Union[type_hints.JSONObject, type_hints.JSONArray, None]:
         bucket_ratelimit_future = self.ratelimiter.acquire(compiled_route)
         request_headers = {"X-RateLimit-Precision": "millisecond"}
 
@@ -187,21 +188,23 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 reset = float(headers.get("X-RateLimit-Reset", "0"))
                 reset_date = datetime.datetime.fromtimestamp(reset, tz=datetime.timezone.utc)
                 now_date = email.utils.parsedate_to_datetime(headers["Date"])
-                content_type = resp.headers["Content-Type"]
+                content_type = resp.headers.get("Content-Type")
 
                 status = resp.status
 
-                if status == 204:
+                with contextlib.suppress(ValueError):
+                    status = codes.HTTPStatusCode(status)
+
+                if status == codes.HTTPStatusCode.NO_CONTENT:
                     body = None
                 elif content_type == "application/json":
                     body = self.json_deserialize(raw_body)
                 elif content_type == "text/plain" or content_type == "text/html":
                     await self._handle_bad_response(
                         backoff,
-                        f"Received unexpected response of type {content_type}",
-                        compiled_route,
-                        raw_body.decode(),
                         status,
+                        compiled_route,
+                        f"Received unexpected response of type {content_type} with body: {raw_body!r}",
                     )
                     continue
                 else:
@@ -209,34 +212,35 @@ class HTTPClient(base_http_client.BaseHTTPClient):
 
             self.ratelimiter.update_rate_limits(compiled_route, bucket, remaining, limit, now_date, reset_date)
 
-            if status == 429:
+            if status == codes.HTTPStatusCode.TOO_MANY_REQUESTS:
                 # We are being rate limited.
                 if body["global"]:
                     retry_after = float(body["retry_after"]) / 1_000
                     self.global_ratelimiter.throttle(retry_after)
                 continue
 
-            if status >= 400:
+            if status >= codes.HTTPStatusCode.BAD_REQUEST:
                 try:
                     message = body["message"]
                     code = int(body["code"])
+
+                    with contextlib.suppress(ValueError):
+                        code = codes.JSONErrorCode(code)
                 except (ValueError, KeyError):
-                    message, code = "", -1
+                    message, code = None, None
 
-                if status == 400:
+                if status == codes.HTTPStatusCode.BAD_REQUEST:
                     raise errors.BadRequestHTTPError(compiled_route, message, code)
-                elif status == 401:
+                elif status == codes.HTTPStatusCode.UNAUTHORIZED:
                     raise errors.UnauthorizedHTTPError(compiled_route, message, code)
-                elif status == 403:
+                elif status == codes.HTTPStatusCode.FORBIDDEN:
                     raise errors.ForbiddenHTTPError(compiled_route, message, code)
-                elif status == 404:
+                elif status == codes.HTTPStatusCode.NOT_FOUND:
                     raise errors.NotFoundHTTPError(compiled_route, message, code)
-                elif status < 500:
-                    raise errors.ClientHTTPError(f"{status}: {resp.reason}", compiled_route, message, code)
+                elif status < codes.HTTPStatusCode.INTERNAL_SERVER_ERROR:
+                    raise errors.ClientHTTPError(status, compiled_route, message, code)
 
-                await self._handle_bad_response(
-                    backoff, "Received a server error response", compiled_route, message, status
-                )
+                await self._handle_bad_response(backoff, status, compiled_route, message, code)
                 continue
 
             return body
@@ -244,17 +248,17 @@ class HTTPClient(base_http_client.BaseHTTPClient):
     async def _handle_bad_response(
         self,
         backoff: ratelimits.ExponentialBackOff,
-        reason: str,
+        status: typing.Union[codes.HTTPStatusCode, int, None],
         route: routes.CompiledRoute,
-        message: str,
-        status: int,
+        message: typing.Optional[str],
+        code: typing.Union[codes.JSONErrorCode, int, None],
     ) -> None:
         try:
             next_sleep = next(backoff)
             self.logger.warning("received a server error response, backing off for %ss and trying again", next_sleep)
             await asyncio.sleep(next_sleep)
         except asyncio.TimeoutError:
-            raise errors.ServerHTTPError(reason, route, message, status)
+            raise errors.ServerHTTPError(status, route, message, code)
 
     async def get_gateway(self) -> str:
         """
@@ -513,7 +517,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         *,
         content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         nonce: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        tts: type_hints.NotRequired[bool] = False,
+        tts: bool = False,
         files: type_hints.NotRequired[typing.Sequence[typing.Tuple[str, storage.FileLikeT]]] = unspecified.UNSPECIFIED,
         embed: type_hints.NotRequired[type_hints.JSONObject] = unspecified.UNSPECIFIED,
     ) -> type_hints.JSONObject:
@@ -2590,13 +2594,17 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         route = routes.GUILD_WEBHOOKS.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    async def get_webhook(self, webhook_id: str) -> type_hints.JSONObject:
+    async def get_webhook(
+        self, webhook_id: str, *, webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED
+    ) -> type_hints.JSONObject:
         """
         Gets a given webhook.
 
         Args:
             webhook_id:
                 The ID of the webhook to get.
+            webhook_token:
+                If specified, the webhook token to use to get it (bypassing bot authorization).
 
         Returns:
             The requested webhook object.
@@ -2606,14 +2614,20 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 If the webhook is not found.
             ForbiddenHTTPError:
                 If you're not in the guild that owns this webhook or lack the `MANAGE_WEBHOOKS` permission.
+            hikari.net.errors.UnauthorizedHTTPError:
+                If you pass a token that's invalid for the target webhook.
         """
-        route = routes.WEBHOOK.compile(self.GET, webhook_id=webhook_id)
-        return await self._request(route)
+        if webhook_token is unspecified.UNSPECIFIED:
+            route = routes.WEBHOOK.compile(self.GET, webhook_id=webhook_id)
+        else:
+            route = routes.WEBHOOK_WITH_TOKEN.compile(self.GET, webhook_id=webhook_id, webhook_token=webhook_token)
+        return await self._request(route, suppress_authorization_header=webhook_token is not unspecified.UNSPECIFIED)
 
     async def modify_webhook(
         self,
         webhook_id: str,
         *,
+        webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
         avatar: type_hints.NullableNotRequired[bytes] = unspecified.UNSPECIFIED,
         channel_id: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
@@ -2625,6 +2639,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         Args:
             webhook_id:
                 The ID of the webhook to edit.
+            webhook_token:
+                If specified, the webhook token to use to modify it (bypassing bot authorization).
             name:
                 The new name string.
             avatar:
@@ -2642,33 +2658,137 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             hikari.net.errors.NotFoundHTTPError:
                 If either the webhook or the channel aren't found.
             hikari.net.errors.ForbiddenHTTPError:
-                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook belongs
-                to.
+                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook
+                belongs to.
+            hikari.net.errors.UnauthorizedHTTPError:
+                If you pass a token that's invalid for the target webhook.
         """
         payload = {}
         transformations.put_if_specified(payload, "name", name)
         transformations.put_if_specified(payload, "channel_id", channel_id)
         transformations.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
-        route = routes.WEBHOOK.compile(self.PATCH, webhook_id=webhook_id)
-        return await self._request(route, json_body=payload, reason=reason)
+        if webhook_token is unspecified.UNSPECIFIED:
+            route = routes.WEBHOOK.compile(self.PATCH, webhook_id=webhook_id)
+        else:
+            route = routes.WEBHOOK_WITH_TOKEN.compile(self.PATCH, webhook_id=webhook_id, webhook_token=webhook_token)
+        return await self._request(
+            route,
+            json_body=payload,
+            reason=reason,
+            suppress_authorization_header=webhook_token is not unspecified.UNSPECIFIED,
+        )
 
-    async def delete_webhook(self, webhook_id: str) -> None:
+    async def delete_webhook(
+        self, webhook_id: str, *, webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED
+    ) -> None:
         """
         Deletes a given webhook.
 
         Args:
             webhook_id:
                 The ID of the webhook to delete
+            webhook_token:
+                If specified, the webhook token to use to delete it (bypassing bot authorization).
 
         Raises:
             hikari.net.errors.NotFoundHTTPError:
                 If the webhook is not found.
             hikari.net.errors.ForbiddenHTTPError:
-                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook belongs
-                to.
+                If you either lack the `MANAGE_WEBHOOKS` permission or aren't a member of the guild this webhook
+                belongs to.
+            hikari.net.errors.UnauthorizedHTTPError:
+                If you pass a token that's invalid for the target webhook.
         """
-        route = routes.WEBHOOK.compile(self.DELETE, webhook_id=webhook_id)
-        await self._request(route)
+        if webhook_token is unspecified.UNSPECIFIED:
+            route = routes.WEBHOOK.compile(self.DELETE, webhook_id=webhook_id)
+        else:
+            route = routes.WEBHOOK_WITH_TOKEN.compile(self.DELETE, webhook_id=webhook_id, webhook_token=webhook_token)
+        await self._request(route, suppress_authorization_header=webhook_token is not unspecified.UNSPECIFIED)
+
+    async def execute_webhook(
+        self,
+        webhook_id: str,
+        webhook_token: str,
+        *,
+        content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        username: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        avatar_url: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        tts: bool = False,
+        wait: bool = False,
+        file: type_hints.NotRequired[typing.Tuple[str, storage.FileLikeT]] = unspecified.UNSPECIFIED,
+        embeds: type_hints.NotRequired[typing.Sequence[type_hints.JSONObject]] = unspecified.UNSPECIFIED,
+    ) -> typing.Optional[type_hints.JSONObject]:
+        """
+        Create a message in the given channel or DM.
+
+        Parameters
+        ----------
+        webhook_id : :obj:`str`
+            The ID of the webhook to execute.
+        webhook_token : :obj:`str`
+            The token of the webhook to execute.
+        content : :obj:`str`, optional
+            The webhook message content to send.
+        username : :obj:`str`, optional
+            Used to override the webhook's username for this request.
+        avatar_url : :obj:`str`, optional
+            The url of an image to override the webhook's avatar with
+            for this message.
+        tts : :obj:`bool`, optional
+            Whether this webhook should create a TTS message.
+        wait : :obj:`bool`, optional
+            Whether this request should wait for the webhook to be executed
+            and return the resultant message object.
+        file : :obj:`bytes` or :obj:`io.IOBase`, optional
+            A tuple of the file name and either raw bytes or a io.IOBase
+            derived object that points to a buffer containing said file.
+        embeds : :obj:`typing.Sequence` [:obj:`dict`], optional
+            A sequence of embed objects that will be sent with this message.
+
+        Raises
+        ------
+        hikari.net.errors.NotFoundHTTPError
+            If the channel ID or webhook ID is not found.
+        hikari.net.errors.BadRequestHTTPError:
+            If the file is too large, the embed exceeds the defined limits,
+            if the message content is specified and empty or greater than 2000
+            characters, or if neither of content, file or embed are specified.
+        hikari.net.errors.ForbiddenHTTPError:
+            If you lack permissions to send to this channel.
+        hikari.net.errors.UnauthorizedHTTPError:
+            If you pass a token that's invalid for the target webhook.
+
+        Returns
+        -------
+        :obj:`hikari.internal_utilities.type_hints.JSONObject` or :obj:`None`
+            The created message object if wait is True else None.
+        """
+        form = aiohttp.FormData()
+
+        json_payload = {"tts": tts}
+        transformations.put_if_specified(json_payload, "content", content)
+        transformations.put_if_specified(json_payload, "username", username)
+        transformations.put_if_specified(json_payload, "avatar_url", avatar_url)
+        transformations.put_if_specified(json_payload, "embeds", embeds)
+
+        form.add_field("payload_json", json.dumps(json_payload), content_type="application/json")
+
+        if file is not unspecified.UNSPECIFIED:
+            file_name, file = file
+            file = storage.make_resource_seekable(file)
+            re_seekable_resources = [file]
+            form.add_field("file", file, filename=file_name, content_type="application/octet-stream")
+        else:
+            re_seekable_resources = []
+
+        route = routes.WEBHOOK_WITH_TOKEN.compile(self.POST, webhook_id=webhook_id, webhook_token=webhook_token)
+        return await self._request(
+            route,
+            form_body=form,
+            re_seekable_resources=re_seekable_resources,
+            query={"wait": str(wait)},
+            suppress_authorization_header=True,
+        )
 
 
 __all__ = ["HTTPClient"]

@@ -21,31 +21,18 @@ Handles consumption of gateway events and converting them to the correct data ty
 """
 from __future__ import annotations
 
-import enum
 import typing
 
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
 from hikari.orm.gateway import dispatching_event_adapter
 from hikari.orm.gateway import event_types
+from hikari.orm.gateway import chunk_mode
 from hikari.orm.models import channels
 
 if typing.TYPE_CHECKING:
     from hikari.orm import fabric as _fabric
     from hikari.internal_utilities import type_hints
-
-
-class AutoRequestChunksMode(enum.IntEnum):
-    """
-    Options for automatically retrieving all guild members in a guild.
-    """
-
-    #: Never autochunk guilds.
-    NEVER = 0
-    #: Autochunk guild members only.
-    MEMBERS = 1
-    #: Autochunk guild members and their presences.
-    MEMBERS_AND_PRESENCES = 2
 
 
 class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEventAdapter):
@@ -73,7 +60,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         self,
         fabric_obj: _fabric.Fabric,
         dispatch: typing.Callable[..., typing.Any],
-        request_chunks_mode: AutoRequestChunksMode = AutoRequestChunksMode.MEMBERS_AND_PRESENCES,
+        request_chunks_mode: chunk_mode.ChunkMode = chunk_mode.ChunkMode.MEMBERS_AND_PRESENCES,
     ) -> None:
         super().__init__(fabric_obj)
         self.dispatch = dispatch
@@ -195,8 +182,8 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             self.dispatch(event_types.EventType.GUILD_CREATE, guild)
 
         if not unavailable:
-            if self._request_chunks_mode != AutoRequestChunksMode.NEVER and guild.is_large:
-                presences = self._request_chunks_mode == AutoRequestChunksMode.MEMBERS_AND_PRESENCES
+            if self._request_chunks_mode != chunk_mode.ChunkMode.NEVER and guild.is_large:
+                presences = self._request_chunks_mode == chunk_mode.ChunkMode.MEMBERS_AND_PRESENCES
                 self.logger.debug(
                     "requesting members from guild %s to be chunked %s presences",
                     guild_id,

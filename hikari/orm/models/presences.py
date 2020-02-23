@@ -41,31 +41,15 @@ class Status(bases.NamedEnumMixin, enum.Enum):
     """
 
     #: Online/green.
-    ONLINE = enum.auto()
+    ONLINE = "online"
     #: Idle/yellow.
-    IDLE = enum.auto()
+    IDLE = "idle"
     #: Do not disturb/red.
-    DND = enum.auto()
+    DND = "dnd"
+    #: Alias for :attr:`DND`
+    DO_NOT_DISTURB = DND
     #: Offline/grey.
-    OFFLINE = enum.auto()
-
-
-@dataclasses.dataclass()
-class Presence:
-    since: type_hints.Nullable[typing.Union[float, datetime.datetime]] = None
-    is_afk: bool = False
-    status: Status = Status.ONLINE
-    activity: type_hints.Nullable[Activity] = None
-
-    __repr__ = reprs.repr_of("since", "is_afk", "status", "activity")
-
-    def to_dict(self):
-        return {
-            "since": int(1_000 * self.since.timestamp()) if isinstance(self.since, datetime.datetime) else self.since,
-            "afk": self.is_afk,
-            "status": self.status.name.lower(),
-            "activity": self.activity.to_dict() if self.activity is not None else None,
-        }
+    OFFLINE = "offline"
 
 
 class MemberPresence(bases.BaseModel):
@@ -180,10 +164,10 @@ class Activity(bases.BaseModel, bases.MarshalMixin):
     #: The URL of the activity, if applicable
     #:
     #: :type: :class:`str` or `None`
-    url: type_hints.Nullable[str]
+    url: typing.Optional[str]
 
     def __init__(
-        self, *, name: str, type: ActivityType = ActivityType.CUSTOM, url: type_hints.Nullable[str] = None
+        self, *, name: str, type: ActivityType = ActivityType.PLAYING, url: typing.Optional[str] = None
     ) -> None:
         self.name = name
         self.type = ActivityType.get_best_effort_from_value(type)
@@ -213,32 +197,32 @@ class RichActivity(Activity):
     #: The start and end timestamps for the activity, if applicable, else `None`
     #:
     #: :type: :class:`hikari.orm.models.presences.ActivityTimestamps` or `None`
-    timestamps: type_hints.Nullable[ActivityTimestamps]
+    timestamps: typing.Optional[ActivityTimestamps]
 
     #: The ID of the application, or `None`
     #:
     #: :type: :class:`int` or `None`
-    application_id: type_hints.Nullable[int]
+    application_id: typing.Optional[int]
 
     #: Details of the activity, or `None`
     #:
     #: :type: :class:`str` or `None`
-    details: type_hints.Nullable[str]
+    details: typing.Optional[str]
 
     #: The state of the activity, or `None`
     #:
     #: :type: :class:`str` or `None`
-    state: type_hints.Nullable[str]
+    state: typing.Optional[str]
 
     #: The party in the activity, or `None`
     #:
     #: :type: :class:`hikari.orm.models.presences.ActivityParty` or `None`
-    party: type_hints.Nullable[ActivityParty]
+    party: typing.Optional[ActivityParty]
 
     #: Any assets provided with the activity, or `None`
     #:
     #: :type: :class:`hikari.orm.models.presences.ActivityAssets` or `None`
-    assets: type_hints.Nullable[ActivityAssets]
+    assets: typing.Optional[ActivityAssets]
 
     #: Any flags on the activity.
     #:
@@ -302,17 +286,17 @@ class ActivityParty(bases.BaseModel):
     #: Warning:
     #:     Unlike most IDs in this API, this is a :class:`str`, and *NOT* an :class:`int`, also unlike other IDs, this
     #:     may or may not be specified at all.
-    id: type_hints.Nullable[str]
+    id: typing.Optional[str]
 
     #: The size of the party, if applicable, else `None`.
     #:
     #: :type: :class:`int` or `None`
-    current_size: type_hints.Nullable[int]
+    current_size: typing.Optional[int]
 
     #: The maximum size of the party, if applicable, else `None`.
     #:
     #: :type: :class:`int` or `None`
-    max_size: type_hints.Nullable[int]
+    max_size: typing.Optional[int]
 
     __repr__ = reprs.repr_of("id", "current_size", "max_size")
 
@@ -332,22 +316,22 @@ class ActivityAssets(bases.BaseModel):
     #: Large image asset, or `None`.
     #:
     #: :type: :class:`str` or `None`
-    large_image: type_hints.Nullable[str]
+    large_image: typing.Optional[str]
 
     #: Large image text, or `None`.
     #:
     #: :type: :class:`str` or `None`
-    large_text: type_hints.Nullable[str]
+    large_text: typing.Optional[str]
 
     #: Small image asset, or `None`.
     #:
     #: :type: :class:`str` or `None`
-    small_image: type_hints.Nullable[str]
+    small_image: typing.Optional[str]
 
     #: Small image text, or `None`.
     #:
     #: :type: :class:`str` or `None`
-    small_text: type_hints.Nullable[str]
+    small_text: typing.Optional[str]
 
     __repr__ = reprs.repr_of()
 
@@ -369,12 +353,12 @@ class ActivityTimestamps(bases.BaseModel):
     #: The start timestamp, or `None` if not specified.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    start: type_hints.Nullable[datetime.datetime]
+    start: typing.Optional[datetime.datetime]
 
     #: The end timestamp, or `None` if not specified.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    end: type_hints.Nullable[datetime.datetime]
+    end: typing.Optional[datetime.datetime]
 
     __repr__ = reprs.repr_of("start", "end", "duration")
 
@@ -383,7 +367,7 @@ class ActivityTimestamps(bases.BaseModel):
         self.end = transformations.nullable_cast(payload.get("end"), dates.unix_epoch_to_ts)
 
     @property
-    def duration(self) -> type_hints.Nullable[datetime.timedelta]:
+    def duration(self) -> typing.Optional[datetime.timedelta]:
         """
         Returns:
               a timedelta if both the start and end is specified, else `None`
@@ -393,7 +377,6 @@ class ActivityTimestamps(bases.BaseModel):
 
 __all__ = [
     "Status",
-    "Presence",
     "MemberPresence",
     "Activity",
     "RichActivity",

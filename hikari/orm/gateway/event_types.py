@@ -79,3 +79,6 @@ class EventType(str, enum.Enum):
     VOICE_SERVER_UPDATE = "voice_server_update"
     VOICE_STATE_UPDATE = "voice_state_update"
     WEBHOOKS_UPDATE = "webhooks_update"
+
+
+__all__ = ["EventType"]

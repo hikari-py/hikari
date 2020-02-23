@@ -108,7 +108,7 @@ def components_pl(component_pl, page_pl):
 def incidents_pl(page_pl, incident_pl):
     return {
         "page": page_pl,
-        "incidents": [incident_pl,],
+        "incidents": [incident_pl],
     }
 
 
@@ -161,7 +161,7 @@ def page_pl():
 def scheduled_maintenances_pl(page_pl, scheduled_maintenance_pl):
     return {
         "page": page_pl,
-        "scheduled_maintenances": [scheduled_maintenance_pl,],
+        "scheduled_maintenances": [scheduled_maintenance_pl],
     }
 
 
@@ -376,8 +376,8 @@ def date_time(*args):
     return datetime.datetime(*args, tzinfo=datetime.timezone(datetime.timedelta(hours=-7)))
 
 
-def test_Subscriber_from_dict(subscriber_pl):
-    subscriber_obj = status_info_client.Subscriber.from_dict(subscriber_pl)
+def test_Subscriber_from_dict(subscription_pl):
+    subscriber_obj = status_info_client.Subscriber.from_dict(subscription_pl)
 
     assert subscriber_obj.id == "82kp04j58dhm"
     assert subscriber_obj.mode == "email"
@@ -389,8 +389,8 @@ def test_Subscriber_from_dict(subscriber_pl):
 
 
 def test_Subscription_from_dict(subscription_pl):
-    subscription_obj = status_info_client.Subscription.from_dict(subscription_pl)
-    assert isinstance(subscription_obj.subscriber, status_info_client.Subscriber)
+    subscription_obj = status_info_client.Subscriber.from_dict(subscription_pl)
+    assert isinstance(subscription_obj, status_info_client.Subscriber)
 
 
 def test_Page_from_dict(page_pl):
@@ -422,7 +422,7 @@ def test_Component_from_dict(component_pl):
 
 
 def test_Components_from_dict(components_pl):
-    components_obj = status_info_client.Components.from_dict(components_pl)
+    components_obj = status_info_client.ComponentsPage.from_dict(components_pl)
 
     assert isinstance(components_obj.page, status_info_client.Page)
     for component in components_obj.components:
@@ -456,14 +456,16 @@ def test_Incident_from_dict(incident_pl):
     assert obj.shortlink == "http://stspg.io/15e073752"
     assert obj.started_at == date_time(2019, 6, 24, 5, 25, 57, 659000)
     assert obj.page_id == "srhpyqt94yxb"
-    for update in obj.incident_updates:
+    for key, update in obj.incident_updates.items():
+        assert key == update.id
         assert isinstance(update, status_info_client.IncidentUpdate)
 
 
 def test_Incidents_from_dict(incidents_pl):
-    obj = status_info_client.Incidents.from_dict(incidents_pl)
+    obj = status_info_client.IncidentsPage.from_dict(incidents_pl)
 
-    for incident in obj.incidents:
+    for key, incident in obj.incidents.items():
+        assert key == incident.id
         assert isinstance(incident, status_info_client.Incident)
     assert isinstance(obj.page, status_info_client.Page)
 
@@ -482,22 +484,24 @@ def test_ScheduledMaintenance_from_dict(scheduled_maintenance_pl):
     assert obj.shortlink == "http://stspg.io/4ERc"
     assert obj.started_at == date_time(2016, 10, 16, 16, 57, 0, 0)
     assert obj.page_id == "srhpyqt94yxb"
-    for incident in obj.incident_updates:
+    for key, incident in obj.incident_updates.items():
+        assert key == incident.id
         assert isinstance(incident, status_info_client.IncidentUpdate)
     assert obj.scheduled_for == date_time(2016, 10, 19, 2, 0, 0, 0)
     assert obj.scheduled_until == date_time(2016, 10, 19, 3, 0, 0, 0)
 
 
 def test_ScheduledMaintenances_from_dict(scheduled_maintenances_pl):
-    obj = status_info_client.ScheduledMaintenances.from_dict(scheduled_maintenances_pl)
+    obj = status_info_client.ScheduledMaintenancesPage.from_dict(scheduled_maintenances_pl)
 
-    for event in obj.scheduled_maintenances:
+    for key, event in obj.scheduled_maintenances.items():
+        assert key == event.id
         assert isinstance(event, status_info_client.ScheduledMaintenance)
     assert isinstance(obj.page, status_info_client.Page)
 
 
 def test_OverallStatus_from_dict(overall_status_pl):
-    obj = status_info_client.OverallStatus.from_dict(overall_status_pl)
+    obj = status_info_client.StatusPage.from_dict(overall_status_pl)
 
     assert isinstance(obj.page, status_info_client.Page)
     assert isinstance(obj.status, status_info_client.Status)
@@ -516,8 +520,47 @@ def test_Summary_from_dict(summary_pl):
         assert isinstance(scheduled_maintenance, status_info_client.ScheduledMaintenance)
 
 
+def test_IncidentsPage_unresolved_incidents():
+    investigating = _helpers.mock_model(status_info_client.Incident, status="investigating", id="8008135")
+    identified = _helpers.mock_model(status_info_client.Incident, status="identified", id="e")
+    monitoring = _helpers.mock_model(status_info_client.Incident, status="monitoring", id="floof")
+    resolved = _helpers.mock_model(status_info_client.Incident, status="resolved", id="69")
+    postmortem = _helpers.mock_model(status_info_client.Incident, status="postmortem", id="2b")
+
+    summary = status_info_client.IncidentsPage(
+        page=mock.create_autospec(status_info_client.Page, spec_set=True),
+        incidents={i.id: i for i in (investigating, identified, monitoring, resolved, postmortem)},
+    )
+
+    assert summary.unresolved_incidents == {
+        investigating.id: investigating,
+        identified.id: identified,
+        monitoring.id: monitoring,
+    }
+
+
+def test_IncidentsPage_resolved_incidents():
+    investigating = _helpers.mock_model(status_info_client.Incident, status="investigating", id="8008135")
+    identified = _helpers.mock_model(status_info_client.Incident, status="identified", id="e")
+    monitoring = _helpers.mock_model(status_info_client.Incident, status="monitoring", id="floof")
+    resolved = _helpers.mock_model(status_info_client.Incident, status="resolved", id="69")
+    postmortem = _helpers.mock_model(status_info_client.Incident, status="postmortem", id="2b")
+
+    summary = status_info_client.IncidentsPage(
+        page=mock.create_autospec(status_info_client.Page, spec_set=True),
+        incidents={i.id: i for i in (investigating, identified, monitoring, resolved, postmortem)},
+    )
+
+    assert summary.resolved_incidents == {
+        resolved.id: resolved,
+        postmortem.id: postmortem,
+    }
+
+
 @pytest.fixture
 def mock_client(event_loop):
+    assert event_loop
+
     class Response:
         def __init__(self, session):
             self.session = session
@@ -542,7 +585,7 @@ def mock_client(event_loop):
             pass
 
     class ClientSession:
-        def __init__(self, **kwargs):
+        def __init__(self, **_):
             self.request = mock.MagicMock(wraps=Response(self))
             self.mock_response_body = mock.MagicMock()
 
@@ -559,6 +602,247 @@ def mock_client(event_loop):
         yield _helpers.unslot_class(status_info_client.StatusInfoClient)()
 
 
+def test_Summary_unresolved_incidents():
+    investigating = _helpers.mock_model(status_info_client.Incident, status="investigating", id="8008135")
+    identified = _helpers.mock_model(status_info_client.Incident, status="identified", id="e")
+    monitoring = _helpers.mock_model(status_info_client.Incident, status="monitoring", id="floof")
+    resolved = _helpers.mock_model(status_info_client.Incident, status="resolved", id="69")
+    postmortem = _helpers.mock_model(status_info_client.Incident, status="postmortem", id="2b")
+
+    summary = status_info_client.Summary(
+        page=mock.create_autospec(status_info_client.Page, spec_set=True),
+        components=mock.create_autospec(list),
+        incidents=[investigating, identified, monitoring, resolved, postmortem],
+        scheduled_maintenances=[],
+    )
+
+    assert summary.unresolved_incidents == {
+        investigating.id: investigating,
+        identified.id: identified,
+        monitoring.id: monitoring,
+    }
+
+
+def test_Summary_resolved_incidents():
+    investigating = _helpers.mock_model(status_info_client.Incident, status="investigating", id="8008135")
+    identified = _helpers.mock_model(status_info_client.Incident, status="identified", id="e")
+    monitoring = _helpers.mock_model(status_info_client.Incident, status="monitoring", id="floof")
+    resolved = _helpers.mock_model(status_info_client.Incident, status="resolved", id="69")
+    postmortem = _helpers.mock_model(status_info_client.Incident, status="postmortem", id="2b")
+
+    summary = status_info_client.Summary(
+        page=mock.create_autospec(status_info_client.Page, spec_set=True),
+        components=mock.create_autospec(list),
+        incidents=[investigating, identified, monitoring, resolved, postmortem],
+        scheduled_maintenances=[],
+    )
+
+    assert summary.resolved_incidents == {
+        resolved.id: resolved,
+        postmortem.id: postmortem,
+    }
+
+
+def test_Summary_upcoming_scheduled_maintenances():
+    scheduled = _helpers.mock_model(status_info_client.ScheduledMaintenance, status="scheduled", id="1")
+    in_progress = _helpers.mock_model(status_info_client.ScheduledMaintenance, status="in progress", id="2")
+    verifying = _helpers.mock_model(status_info_client.ScheduledMaintenance, status="verifying", id="3")
+    completed = _helpers.mock_model(status_info_client.ScheduledMaintenance, status="completed", id="4")
+
+    summary = status_info_client.Summary(
+        page=mock.create_autospec(status_info_client.Page, spec_set=True),
+        components=mock.create_autospec(list),
+        incidents=[],
+        scheduled_maintenances=[scheduled, in_progress, verifying, completed],
+    )
+
+    assert summary.upcoming_scheduled_maintenances == {
+        scheduled.id: scheduled,
+    }
+
+
+def test_Summary_ongoing_scheduled_maintenances():
+    scheduled = _helpers.mock_model(status_info_client.ScheduledMaintenance, status="scheduled", id="1")
+    in_progress = _helpers.mock_model(status_info_client.ScheduledMaintenance, status="in progress", id="2")
+    verifying = _helpers.mock_model(status_info_client.ScheduledMaintenance, status="verifying", id="3")
+    completed = _helpers.mock_model(status_info_client.ScheduledMaintenance, status="completed", id="4")
+
+    summary = status_info_client.Summary(
+        page=mock.create_autospec(status_info_client.Page, spec_set=True),
+        components=mock.create_autospec(list),
+        incidents=[],
+        scheduled_maintenances=[scheduled, in_progress, verifying, completed],
+    )
+
+    assert summary.ongoing_scheduled_maintenances == {
+        in_progress.id: in_progress,
+        verifying.id: verifying,
+    }
+
+
+def test_Summary_completed_scheduled_maintenances():
+    scheduled = _helpers.mock_model(status_info_client.ScheduledMaintenance, status="scheduled", id="1")
+    in_progress = _helpers.mock_model(status_info_client.ScheduledMaintenance, status="in progress", id="2")
+    verifying = _helpers.mock_model(status_info_client.ScheduledMaintenance, status="verifying", id="3")
+    completed = _helpers.mock_model(status_info_client.ScheduledMaintenance, status="completed", id="4")
+
+    summary = status_info_client.Summary(
+        page=mock.create_autospec(status_info_client.Page, spec_set=True),
+        components=mock.create_autospec(list),
+        incidents=[],
+        scheduled_maintenances=[scheduled, in_progress, verifying, completed],
+    )
+
+    assert summary.completed_scheduled_maintenances == {completed.id: completed}
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        status_info_client.Subscriber,
+        status_info_client.Page,
+        status_info_client.Component,
+        status_info_client.IncidentUpdate,
+        status_info_client.Incident,
+        status_info_client.ScheduledMaintenance,
+    ],
+)
+def test_model_is_hashable_on_id(model):
+    instance1 = _helpers.mock_model(model, id=1234)
+    instance2 = _helpers.mock_model(model, id=1234)
+    instance3 = _helpers.mock_model(model, id=1235)
+
+    assert hash(instance1) == hash(instance2)
+    assert hash(instance2) != hash(instance3)
+
+
+def test_Subscriber_eq():
+    inst1 = status_info_client.Subscriber("id1", "blah", "blah", datetime.datetime.now(), None, None, None, None)
+    inst2 = status_info_client.Subscriber("id1", "blah", "blah", datetime.datetime.now(), None, None, None, None)
+    inst3 = status_info_client.Subscriber("id3", "blah", "blah", datetime.datetime.now(), None, None, None, None)
+    assert inst1 == inst2
+    assert inst1 != inst3
+    inst4 = status_info_client.Incident(
+        "id1", "foo", "bar", {}, datetime.datetime.now(), None, "12", None, "goo.gl", "??", None, None
+    )
+    assert inst1 != inst4
+
+
+def test_Page_eq():
+    inst1 = status_info_client.Page("id1", "foo", "goo.gl", datetime.datetime.now())
+    inst2 = status_info_client.Page("id1", "foo", "goo.gl", datetime.datetime.now())
+    inst3 = status_info_client.Page("id3", "foo", "goo.gl", datetime.datetime.now())
+    assert inst1 == inst2
+    assert inst1 != inst3
+    inst4 = status_info_client.Incident(
+        "id1", "foo", "bar", {}, datetime.datetime.now(), None, "12", None, "goo.gl", "??", None, None
+    )
+    assert inst1 != inst4
+
+
+def test_Component_eq():
+    inst1 = status_info_client.Component(
+        "id1", "foo", datetime.datetime.now(), "12a", 12, datetime.datetime.now(), None, None
+    )
+    inst2 = status_info_client.Component(
+        "id1", "foo", datetime.datetime.now(), "12a", 12, datetime.datetime.now(), None, None
+    )
+    inst3 = status_info_client.Component(
+        "id3", "foo", datetime.datetime.now(), "12a", 12, datetime.datetime.now(), None, None
+    )
+    assert inst1 == inst2
+    assert inst1 != inst3
+    inst4 = status_info_client.Incident(
+        "id1", "foo", "bar", {}, datetime.datetime.now(), None, "12", None, "goo.gl", "??", None, None
+    )
+    assert inst1 != inst4
+
+
+def test_IncidentUpdate_eq():
+    inst1 = status_info_client.IncidentUpdate("id1", "foo", datetime.datetime.now(), None, "1a2", "foo", None)
+    inst2 = status_info_client.IncidentUpdate("id1", "foo", datetime.datetime.now(), None, "1a2", "foo", None)
+    inst3 = status_info_client.IncidentUpdate("id3", "foo", datetime.datetime.now(), None, "1a2", "foo", None)
+    assert inst1 == inst2
+    assert inst1 != inst3
+    inst4 = status_info_client.Incident(
+        "id1", "foo", "bar", {}, datetime.datetime.now(), None, "12", None, "goo.gl", "??", None, None
+    )
+    assert inst1 != inst4
+
+
+def test_Incident_eq():
+    inst1 = status_info_client.Incident(
+        "id1", "foo", "bar", {}, datetime.datetime.now(), None, "12", None, "goo.gl", "??", None, None
+    )
+    inst2 = status_info_client.Incident(
+        "id1", "foo", "bar", {}, datetime.datetime.now(), None, "12", None, "goo.gl", "??", None, None
+    )
+    inst3 = status_info_client.Incident(
+        "id3", "foo", "bar", {}, datetime.datetime.now(), None, "12", None, "goo.gl", "??", None, None
+    )
+    assert inst1 == inst2
+    assert inst1 != inst3
+    inst4 = status_info_client.IncidentUpdate("id1", "foo", datetime.datetime.now(), None, "1a2", "foo", None)
+    assert inst1 != inst4
+
+
+def test_ScheduledMaintenance_eq():
+    inst1 = status_info_client.ScheduledMaintenance(
+        "id1",
+        "foo",
+        "bar",
+        {},
+        datetime.datetime.now(),
+        None,
+        "1a2b",
+        None,
+        None,
+        None,
+        "oof",
+        datetime.datetime.now(),
+        "goo.gl",
+        None,
+    )
+    inst2 = status_info_client.ScheduledMaintenance(
+        "id1",
+        "foo",
+        "bar",
+        {},
+        datetime.datetime.now(),
+        None,
+        "1a2b",
+        None,
+        None,
+        None,
+        "oof",
+        datetime.datetime.now(),
+        "goo.gl",
+        None,
+    )
+    inst3 = status_info_client.ScheduledMaintenance(
+        "id3",
+        "foo",
+        "bar",
+        {},
+        datetime.datetime.now(),
+        None,
+        "1a2b",
+        None,
+        None,
+        None,
+        "oof",
+        datetime.datetime.now(),
+        "goo.gl",
+        None,
+    )
+    assert inst1 == inst2
+    assert inst1 != inst3
+    inst4 = status_info_client.Incident(
+        "id1", "foo", "bar", {}, datetime.datetime.now(), None, "12", None, "goo.gl", "??", None, None
+    )
+    assert inst1 != inst4
+
+
 @pytest.fixture
 def stubbed_client(mock_client):
     def perform_request(_, cast, *__, **___):
@@ -571,6 +855,7 @@ def stubbed_client(mock_client):
 @pytest.mark.asyncio
 class TestServiceStatusClient:
     async def test_DiscordServiceStatusClient___init__(self, event_loop):
+        assert event_loop
         async with status_info_client.StatusInfoClient() as client:
             assert client.url == "https://status.discordapp.com/api/v2"
 
@@ -593,23 +878,23 @@ class TestServiceStatusClient:
         ["expected_route", "expected_cast", "name"],
         [
             ("/summary.json", status_info_client.Summary, "fetch_summary"),
-            ("/status.json", status_info_client.OverallStatus, "fetch_status"),
-            ("/components.json", status_info_client.Components, "fetch_components"),
-            ("/incidents.json", status_info_client.Incidents, "fetch_all_incidents"),
-            ("/incidents/unresolved.json", status_info_client.Incidents, "fetch_unresolved_incidents"),
+            ("/status.json", status_info_client.StatusPage, "fetch_status"),
+            ("/components.json", status_info_client.ComponentsPage, "fetch_components"),
+            ("/incidents.json", status_info_client.IncidentsPage, "fetch_all_incidents"),
+            ("/incidents/unresolved.json", status_info_client.IncidentsPage, "fetch_unresolved_incidents"),
             (
                 "/scheduled-maintenances.json",
-                status_info_client.ScheduledMaintenances,
+                status_info_client.ScheduledMaintenancesPage,
                 "fetch_all_scheduled_maintenances",
             ),
             (
                 "/scheduled-maintenances/upcoming.json",
-                status_info_client.ScheduledMaintenances,
+                status_info_client.ScheduledMaintenancesPage,
                 "fetch_upcoming_scheduled_maintenances",
             ),
             (
                 "/scheduled-maintenances/active.json",
-                status_info_client.ScheduledMaintenances,
+                status_info_client.ScheduledMaintenancesPage,
                 "fetch_active_scheduled_maintenances",
             ),
         ],
@@ -632,7 +917,7 @@ class TestServiceStatusClient:
         subscriber = await stubbed_client.subscribe_email_to_incidents("somebody@example.com", incident)
         assert subscriber is not None
         args, kwargs = stubbed_client._perform_request.call_args
-        assert args == ("/subscribers.json", status_info_client.Subscription, body, "post")
+        assert args == ("/subscribers.json", status_info_client.Subscriber, body, "post")
 
     @pytest.mark.parametrize(
         "incident", ["1a2b3c", _helpers.mock_model(status_info_client.Incident, id="1a2b3c"), None]
@@ -646,7 +931,7 @@ class TestServiceStatusClient:
         subscriber = await stubbed_client.subscribe_webhook_to_incidents("http://example.com", incident)
         assert subscriber is not None
         stubbed_client._perform_request.assert_called_with(
-            "/subscribers.json", status_info_client.Subscription, body, "post"
+            "/subscribers.json", status_info_client.Subscriber, body, "post"
         )
 
     @pytest.mark.parametrize("subscriber", ["1a2b3c", _helpers.mock_model(status_info_client.Subscriber, id="1a2b3c")])

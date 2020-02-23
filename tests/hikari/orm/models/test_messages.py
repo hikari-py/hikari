@@ -20,6 +20,7 @@ import datetime
 from unittest import mock
 
 import pytest
+from hikari.orm.http import base_http_adapter
 
 from hikari.orm import fabric
 from hikari.orm.models import channels
@@ -38,7 +39,7 @@ def mock_user():
 
 
 @pytest.fixture
-def mock_message(mock_user):
+def mock_message_payload(mock_user):
     return {
         "type": 0,
         "id": "12345",
@@ -64,41 +65,49 @@ def mock_state_registry():
 
 
 @pytest.fixture
-def fabric_obj(mock_state_registry):
-    return fabric.Fabric(state_registry=mock_state_registry)
+def mock_http_adapter():
+    return _helpers.create_autospec(base_http_adapter.BaseHTTPAdapter)
+
+
+@pytest.fixture
+def fabric_obj(mock_state_registry, mock_http_adapter):
+    mock_obj = mock.create_autospec(fabric.Fabric, spec_set=True)
+    mock_obj.state_registry = mock_state_registry
+    mock_obj.http_adapter = mock_http_adapter
+    return mock_obj
 
 
 @pytest.mark.model
 class TestMessage:
-    def test_Message_parsing_User(self, mock_message, mock_user, fabric_obj):
-        assert "webhook_id" not in mock_message, "this test needs a mock message with no webhook id set :("
-        messages.Message(fabric_obj, mock_message)
+    def test_parsing_User(self, mock_message_payload, mock_user, fabric_obj):
+        assert "webhook_id" not in mock_message_payload, "this test needs a mock message with no webhook id set :("
+        messages.Message(fabric_obj, mock_message_payload)
         fabric_obj.state_registry.parse_user.assert_called_with(mock_user)
         fabric_obj.state_registry.parse_member.assert_not_called()
         fabric_obj.state_registry.parse_webhook.assert_not_called()
 
-    def test_Message_parsing_Member(self, mock_message, mock_user, fabric_obj):
-        mock_message["guild_id"] = "909090"
-        mock_message["member"] = {"foo": "bar", "baz": "bork"}
-        mock_message["author"] = {"ayy": "lmao"}
+    def test_parsing_Member(self, mock_message_payload, mock_user, fabric_obj):
+        mock_message_payload["guild_id"] = "909090"
+        mock_message_payload["member"] = {"foo": "bar", "baz": "bork"}
+        mock_message_payload["author"] = {"ayy": "lmao"}
         guild_obj = _helpers.mock_model(guilds.Guild, id=909090)
         fabric_obj.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
-        messages.Message(fabric_obj, mock_message)
+        messages.Message(fabric_obj, mock_message_payload)
         fabric_obj.state_registry.parse_partial_member.assert_called_with(
             {"foo": "bar", "baz": "bork"}, {"ayy": "lmao"}, guild_obj
         )
         fabric_obj.state_registry.parse_webhook.assert_not_called()
 
-    def test_Message_parsing_Webhook(self, mock_message, mock_user, fabric_obj):
-        mock_message["guild_id"] = "909090"
-        mock_message["webhook_id"] = object()  # we don't care what this really is
-        messages.Message(fabric_obj, mock_message)
+    def test_parsing_Webhook(self, mock_message_payload, mock_user, fabric_obj):
+        mock_message_payload["guild_id"] = "909090"
+        mock_message_payload["webhook_id"] = object()  # we don't care what this really is
+        messages.Message(fabric_obj, mock_message_payload)
         fabric_obj.state_registry.parse_webhook_user.assert_called_with(mock_user)
         fabric_obj.state_registry.parse_user.assert_not_called()
         fabric_obj.state_registry.parse_member.assert_not_called()
 
-    def test_Message_simple_test_data(self, mock_message, mock_user, fabric_obj):
-        message_obj = messages.Message(fabric_obj, mock_message)
+    def test_simple_test_data(self, mock_message_payload, mock_user, fabric_obj):
+        message_obj = messages.Message(fabric_obj, mock_message_payload)
 
         assert message_obj.type is messages.MessageType.DEFAULT
         assert message_obj.id == 12345
@@ -118,9 +127,9 @@ class TestMessage:
         assert message_obj.flags & messages.MessageFlag.SUPPRESS_EMBEDS
         fabric_obj.state_registry.parse_user.assert_called_with(mock_user)
 
-    def test_Message_update_state_with_no_payload(self, mock_message, fabric_obj):
-        initial = messages.Message(fabric_obj, mock_message)
-        updated = messages.Message(fabric_obj, mock_message)
+    def test_update_state_with_no_payload(self, mock_message_payload, fabric_obj):
+        initial = messages.Message(fabric_obj, mock_message_payload)
+        updated = messages.Message(fabric_obj, mock_message_payload)
         updated.update_state({})
         assert initial.author == updated.author
         assert initial.edited_at == updated.edited_at
@@ -133,8 +142,8 @@ class TestMessage:
         assert initial.content == updated.content
         assert initial.reactions == updated.reactions
 
-    def test_Message_update_state_reactions(self, mock_message, fabric_obj):
-        message_obj = messages.Message(fabric_obj, mock_message)
+    def test_update_state_reactions(self, mock_message_payload, fabric_obj):
+        message_obj = messages.Message(fabric_obj, mock_message_payload)
         # noinspection PyTypeChecker
         message_obj.update_state({"reactions": [{"id": None, "value": "\N{OK HAND SIGN}"}]})
         fabric_obj.state_registry.parse_reaction.assert_called_once_with(
@@ -145,12 +154,12 @@ class TestMessage:
         ("is_webhook", "user_type"),
         [(True, webhooks.WebhookUser), (False, users.User), (False, users.OAuth2User), (False, members.Member),],
     )
-    def test_is_webhook(self, mock_message, fabric_obj, is_webhook, user_type):
-        message_obj = messages.Message(fabric_obj, mock_message)
+    def test_is_webhook(self, mock_message_payload, fabric_obj, is_webhook, user_type):
+        message_obj = messages.Message(fabric_obj, mock_message_payload)
         message_obj.author = _helpers.mock_model(user_type)
         assert message_obj.is_webhook is is_webhook
 
-    def test_Message_complex_test_data(self, mock_user, fabric_obj):
+    def test_complex_test_data(self, mock_user, fabric_obj):
         message_obj = messages.Message(
             fabric_obj,
             {
@@ -254,9 +263,9 @@ class TestMessage:
         assert message_obj.crosspost_of.message_id == 306588351130107906
         assert message_obj.crosspost_of.guild_id == 278325129692446720
 
-    def test_Message_guild_if_guild_message(self, mock_message, fabric_obj):
-        mock_message["guild_id"] = "91827"
-        message_obj = messages.Message(fabric_obj, mock_message)
+    def test_guild_if_guild_message(self, mock_message_payload, fabric_obj):
+        mock_message_payload["guild_id"] = "91827"
+        message_obj = messages.Message(fabric_obj, mock_message_payload)
 
         guild = mock.MagicMock()
         fabric_obj.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild)
@@ -266,36 +275,35 @@ class TestMessage:
 
         fabric_obj.state_registry.get_guild_by_id.assert_called_with(91827)
 
-    def test_Message_guild_if_dm_message(self, mock_message, fabric_obj):
-        message_obj = messages.Message(fabric_obj, mock_message)
+    def test_guild_if_dm_message(self, mock_message_payload, fabric_obj):
+        message_obj = messages.Message(fabric_obj, mock_message_payload)
         assert message_obj.guild is None
 
         fabric_obj.state_registry.get_guild_by_id.assert_not_called()
 
-    def test_Message_channel_if_guild_message(self, mock_message, fabric_obj):
-        mock_message["guild_id"] = "5432"
-        mock_message["channel_id"] = "1234"
+    def test_channel_if_guild_message(self, mock_message_payload, fabric_obj):
+        mock_message_payload["guild_id"] = "5432"
+        mock_message_payload["channel_id"] = "1234"
         guild = _helpers.create_autospec(guilds.Guild)
         guild.channels = {1234: mock.MagicMock(), 1235: mock.MagicMock()}
-        message_obj = messages.Message(fabric_obj, mock_message)
+        message_obj = messages.Message(fabric_obj, mock_message_payload)
         fabric_obj.state_registry.get_channel_by_id = mock.MagicMock(return_value=message_obj.channel)
         guild.channels[1234] = message_obj.channel
         c = message_obj.channel
         assert c is guild.channels[1234]
 
-    def test_Message_channel_if_dm_message(self, mock_message, fabric_obj):
-        mock_message["channel_id"] = "1234"
+    def test_channel_if_dm_message(self, mock_message_payload, fabric_obj):
+        mock_message_payload["channel_id"] = "1234"
         channel = _helpers.create_autospec(channels.Channel)
         fabric_obj.state_registry.get_mandatory_channel_by_id = mock.MagicMock(return_value=channel)
 
-        obj = messages.Message(fabric_obj, mock_message)
+        obj = messages.Message(fabric_obj, mock_message_payload)
 
         c = obj.channel
         fabric_obj.state_registry.get_mandatory_channel_by_id.assert_called_with(1234)
         assert c is channel
 
-    @pytest.mark.model
-    def test_Message___repr__(self):
+    def test_repr(self):
         assert repr(
             _helpers.mock_model(
                 messages.Message,
@@ -308,6 +316,13 @@ class TestMessage:
                 __repr__=messages.Message.__repr__,
             )
         )
+
+    @pytest.mark.asyncio
+    async def test_delete(self, mock_message_payload, fabric_obj):
+        obj = messages.Message(fabric_obj, mock_message_payload)
+
+        await obj.delete()
+        fabric_obj.http_adapter.delete_messages.assert_awaited_once_with(obj)
 
 
 @pytest.mark.model
