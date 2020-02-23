@@ -19,179 +19,354 @@
 """
 Errors that can be raised by networking components.
 """
-import enum
+from __future__ import annotations
+
+import typing
 
 from hikari import errors
+from hikari.net import codes
 from hikari.net import routes
 
 
-class GatewayCloseCode(enum.IntEnum):
-    #: We're not sure what went wrong. Try reconnecting?
-    UNKNOWN_ERROR = 4000
-    #: You sent an invalid Gateway opcode or an invalid payload for an opcode. Don't do that!
-    UNKNOWN_OPCODE = 4001
-    #: You sent an invalid payload to us. Don't do that!
-    DECODE_ERROR = 4002
-    #: You sent us a payload prior to identifying.
-    NOT_AUTHENTICATED = 4003
-    #: The account token sent with your identify payload is incorrect.
-    AUTHENTICATION_FAILED = 4004
-    #: You sent more than one identify payload. Don't do that!
-    ALREADY_AUTHENTICATED = 4005
-    #: The sequence sent when resuming the session was invalid. Reconnect and start a new session.
-    INVALID_SEQ = 4007
-    #: Woah nelly! You're sending payloads to us too quickly. Slow it down!
-    RATE_LIMITED = 4008
-    #: Your session timed out. Reconnect and start a new one.
-    SESSION_TIMEOUT = 4009
-    #: You sent us an invalid shard when identifying.
-    INVALID_SHARD = 4010
-    #: The session would have handled too many guilds - you are required to shard your connection in order to connect.
-    SHARDING_REQUIRED = 4011
-    #: You sent an invalid version for the gateway.
-    INVALID_VERSION = 4012
-    #: You sent an invalid intent for a Gateway Intent. You may have incorrectly calculated the bitwise value.
-    INVALID_INTENT = 4013
-    #: You sent a disallowed intent for a Gateway Intent. You may have tried to specify an intent that you
-    #: have not enabled or are not whitelisted for.
-    DISALLOWED_INTENT = 4014
-
-
 class GatewayError(errors.HikariError):
+    """A base exception type for anything that can be thrown by the Gateway.
+
+    Parameters
+    ----------
+    reason : :obj:`str`
+        A string explaining the issue.
+    """
+
+    #: A string to explain the issue.
+    #:
+    #: :type: :obj:`str`
     reason: str
-    close_code: int
 
-    def __init__(self, reason, close_code: int = 1006):
+    def __init__(self, reason: str) -> None:
         self.reason = reason
-        self.close_code = close_code
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.reason
 
 
 class GatewayClientClosedError(GatewayError):
-    def __init__(self, message="The gateway client has been closed"):
-        super().__init__(message, 1000)
+    """An exception raised when you programmatically shut down the bot
+    client-side.
+
+    Parameters
+    ----------
+    reason : :obj:`str`
+        A string explaining the issue.
+    """
+
+    def __init__(self, reason="The gateway client has been closed") -> None:
+        super().__init__(reason)
 
 
-class GatewayConnectionClosedError(GatewayError):
-    code: int
+class GatewayServerClosedConnectionError(GatewayError):
+    """An exception raised when the server closes the connection.
 
-    def __init__(self, code: int = None, reason=None):
-        self.code = code
+    Parameters
+    ----------
+    close_code : :obj:`hikari.net.codes.GatewayCloseCode` or :obj:`int` or :obj:`None`
+        The close code provided by the server, if there was one.
+    reason : :obj:`str`
+        A string explaining the issue.
+    """
 
-        try:
-            code = GatewayCloseCode(code)
-            code_name = GatewayCloseCode(code).name
-        except ValueError:
-            super().__init__(reason or f"Gateway connection closed by server with code {code}")
-        else:
-            super().__init__(reason or f"Gateway connection closed by server with code {code_name} ({code})")
+    close_code: typing.Union[codes.GatewayCloseCode, int, None]
+
+    def __init__(
+        self, close_code: typing.Union[codes.GatewayCloseCode, int, None] = None, reason: typing.Optional[str] = None
+    ) -> None:
+        if reason is None:
+            try:
+                name = close_code.name
+            except AttributeError:
+                name = str(close_code) if close_code is not None else "no reason"
+
+            reason = f"Gateway connection closed by server ({name})"
+
+        self.close_code = close_code
+        super().__init__(reason)
 
 
-class GatewayInvalidTokenError(GatewayConnectionClosedError):
-    def __init__(self):
+class GatewayInvalidTokenError(GatewayServerClosedConnectionError):
+    """An exception that is raised if you failed to authenticate with a valid
+    token to the Gateway.
+    """
+
+    def __init__(self) -> None:
         super().__init__(
-            GatewayCloseCode.AUTHENTICATION_FAILED, "The account token specified is invalid for the gateway connection",
+            codes.GatewayCloseCode.AUTHENTICATION_FAILED,
+            "The account token specified is invalid for the gateway connection",
         )
 
 
-class GatewayInvalidSessionError(GatewayConnectionClosedError):
+class GatewayInvalidSessionError(GatewayServerClosedConnectionError):
+    """An exception raised if a Gateway session becomes invalid.
+
+    Parameters
+    ----------
+    can_resume : :obj:`bool`
+        True if the connection will be able to RESUME next time it starts rather
+        than re-IDENTIFYing, or False if you need to IDENTIFY again instead.
+    """
+
+    #: True if the next reconnection can be RESUMED. False if it has to be
+    #: coordinated by re-IDENFITYing.
+    #:
+    #: :type: :obj:`bool`
     can_resume: bool
 
-    def __init__(self, can_resume):
+    def __init__(self, can_resume: bool) -> None:
         self.can_resume = can_resume
+        instruction = "restart the shard and RESUME" if can_resume else "restart the shard with a fresh session"
+        super().__init__(reason=f"The session has been invalidated; {instruction}")
+
+
+class GatewayMustReconnectError(GatewayServerClosedConnectionError):
+    """An exception raised when the Gateway has to re-connect with a new session
+    (thus re-IDENTIFYing in the process).
+
+    """
+
+    def __init__(self) -> None:
+        super().__init__(reason="The gateway server has requested that the client reconnects with a new session")
+
+
+class GatewayNeedsShardingError(GatewayServerClosedConnectionError):
+    """An exception raised if you have too many guilds on one of the current
+    Gateway shards.
+
+    This is a sign you need to increase the number of shards that your bot is
+    running with in order to connect to Discord.
+    """
+
+    def __init__(self) -> None:
         super().__init__(
-            None,
-            "The session has been invalidated. "
-            + ("Restart the shard and RESUME" if can_resume else "Restart the shard with a fresh session"),
-        )
-
-
-class GatewayMustReconnectError(GatewayConnectionClosedError):
-    def __init__(self):
-        super().__init__(
-            None, "The gateway server has requested that the client reconnects with a new session",
-        )
-
-
-class GatewayNeedsShardingError(GatewayConnectionClosedError):
-    def __init__(self):
-        super().__init__(
-            GatewayCloseCode.SHARDING_REQUIRED, "You are in too many guilds. Shard the bot to connect",
+            codes.GatewayCloseCode.SHARDING_REQUIRED, "You are in too many guilds. Shard the bot to connect",
         )
 
 
 class GatewayZombiedError(GatewayClientClosedError):
-    def __init__(self):
+    """An exception raised if a shard becomes zombied.
+
+    This means that Discord is no longer responding to us, and we have
+    disconnected due to a timeout
+    """
+
+    def __init__(self) -> None:
         super().__init__("No heartbeat was received, the connection has been closed")
 
 
 class HTTPError(errors.HikariError):
+    """Base exception raised if an HTTP error occurs.
+
+    Parameters
+    ----------
+    reason : :obj:`str`
+        A meaningful explanation of the problem.
+    """
+
+    #: A meaningful explanation of the problem.
+    #:
+    #: :type: :obj:`str`
     reason: str
 
-    def __init__(self, reason):
+    def __init__(self, reason: str) -> None:
         self.reason = reason
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.reason
 
 
-class ServerHTTPError(HTTPError):
-    route: routes.CompiledRoute
-    message: str
-    status: int
+class CodedHTTPError(HTTPError):
+    """An HTTP exception that has contextual response information with it.
 
-    def __init__(self, reason, route, message, status):
-        super().__init__(reason)
-        self.route = route
-        self.message = message
+    Parameters
+    ----------
+    status : :obj:`int` or :obj:`hikari.net.codes.HTTPStatusCode`
+        The HTTP status code that was returned by the server.
+    route : :obj:`hikari.net.routes.CompiledRoute`
+        The HTTP route that was being invoked when this exception occurred.
+    message : :obj:`str`, optional
+        An optional message if provided in the response payload.
+    json_code : :obj:`hikari.net.codes.JSONErrorCode` or :obj:`int`, optional
+        An optional error code the server provided us.
+    """
+
+    #: The HTTP status code that was returned by the server.
+    #:
+    #: :type: :obj:`int` or :obj:`int` or :obj:`hikari.net.codes.HTTPStatusCode`
+    status: typing.Union[int, codes.HTTPStatusCode]
+
+    #: The HTTP route that was being invoked when this exception occurred.
+    #:
+    #: :type: :obj:`hikari.net.routes.CompiledRoute`
+    route: routes.CompiledRoute
+
+    #: An optional contextual message the server provided us with in the
+    #: response body.
+    #
+    #: :type: :obj: `str`, optional
+    message: typing.Optional[str]
+
+    #: An optional contextual error code the server provided us with in the
+    #: response body.
+    #
+    #: :type: :obj:`hikari.net.codes.JSONErrorCode` or :obj:`int`, optional
+    json_code: typing.Union[codes.JSONErrorCode, int, None]
+
+    def __init__(
+        self,
+        status: typing.Union[int, codes.HTTPStatusCode],
+        route: routes.CompiledRoute,
+        message: typing.Optional[str],
+        json_code: typing.Union[codes.JSONErrorCode, int, None],
+    ) -> None:
+        super().__init__(str(status))
         self.status = status
-
-    def __str__(self):
-        return f"{self.reason}: {self.message}"
-
-
-class ClientHTTPError(HTTPError):
-    route: routes.CompiledRoute
-    message: str
-    code: int
-
-    def __init__(self, reason, route, message, code):
-        super().__init__(reason)
         self.route = route
         self.message = message
-        self.code = code
+        self.json_code = json_code
 
-    def __str__(self):
-        return f"{self.reason}: ({self.code}) {self.message}"
+    def __str__(self) -> str:
+        return f"{self.reason}: ({self.json_code}) {self.message}"
 
 
-class BadRequestHTTPError(ClientHTTPError):
-    def __init__(self, route, message, code):
-        super().__init__("400: Bad Request", route, message, code)
+class ServerHTTPError(CodedHTTPError):
+    """An exception raised if a server-side error occurs when interacting with
+    the HTTP API.
+
+    If you get these, DO NOT PANIC! Your bot is working perfectly fine. Discord
+    have probably broken something again.
+    """
+
+
+class ClientHTTPError(CodedHTTPError):
+    """An exception raised if a client-side error occurs when interacting with
+    the HTTP API.
+
+    If you get one of these, you most likely have a mistake in your code, or
+    have found a bug with this library.
+
+    If you are sure that your code is correct, please register a bug at
+    https://gitlab.com/nekokatt/hikari/issues and we will take a look for you.
+    """
+
+
+class BadRequestHTTPError(CodedHTTPError):
+    """A specific case of :obj:`ClientHTTPError` that occurs when you send
+    Discord information in an unexpected format, miss required information out,
+    or give bad values for stuff.
+
+    An example might be sending a message without any content, or an embed with
+    more than 6000 characters.
+
+    Parameters
+    ----------
+    route : :obj:`hikari.net.routes.CompiledRoute`
+        The HTTP route that was being invoked when this exception occurred.
+    message : :obj:`str`, optional
+        An optional message if provided in the response payload.
+    json_code : :obj:`hikari.net.codes.JSONErrorCode` or :obj:`int`, optional
+        An optional error code the server provided us.
+    """
+
+    def __init__(
+        self,
+        route: routes.CompiledRoute,
+        message: typing.Optional[str],
+        json_code: typing.Union[codes.JSONErrorCode, int, None],
+    ) -> None:
+        super().__init__(codes.HTTPStatusCode.BAD_REQUEST, route, message, json_code)
 
 
 class UnauthorizedHTTPError(ClientHTTPError):
-    def __init__(self, route, message, code):
-        super().__init__("401: Unauthorized", route, message, code)
+    """A specific case of :obj:`ClientHTTPError` that occurs when you have
+    invalid authorization details to access the given resource.
+
+    This usually means that you have an incorrect token.
+
+    Parameters
+    ----------
+    route : :obj:`hikari.net.routes.CompiledRoute`
+        The HTTP route that was being invoked when this exception occurred.
+    message : :obj:`str`, optional
+        An optional message if provided in the response payload.
+    json_code : :obj:`hikari.net.codes.JSONErrorCode` or :obj:`int`, optional
+        An optional error code the server provided us.
+    """
+
+    def __init__(
+        self,
+        route: routes.CompiledRoute,
+        message: typing.Optional[str],
+        json_code: typing.Union[codes.JSONErrorCode, int, None],
+    ) -> None:
+        super().__init__(codes.HTTPStatusCode.UNAUTHORIZED, route, message, json_code)
 
 
 class ForbiddenHTTPError(ClientHTTPError):
-    def __init__(self, route, message, code):
-        super().__init__("403: Forbidden", route, message, code)
+    """A specific case of :obj:`ClientHTTPError` that occurs when you
+    are not allowed to view a given resource.
+
+    This occurs when you are missing permissions, or are using an endpoint that
+    your account is not allowed to see without being whitelisted.
+
+    This will not occur if your token is invalid.
+
+    Parameters
+    ----------
+    route : :obj:`hikari.net.routes.CompiledRoute`
+        The HTTP route that was being invoked when this exception occurred.
+    message : :obj:`str`, optional
+        An optional message if provided in the response payload.
+    json_code : :obj:`hikari.net.codes.JSONErrorCode` or :obj:`int`, optional
+        An optional error code the server provided us.
+    """
+
+    def __init__(
+        self,
+        route: routes.CompiledRoute,
+        message: typing.Optional[str],
+        json_code: typing.Union[codes.JSONErrorCode, int, None],
+    ) -> None:
+        super().__init__(codes.HTTPStatusCode.FORBIDDEN, route, message, json_code)
 
 
 class NotFoundHTTPError(ClientHTTPError):
-    def __init__(self, route, message, code):
-        super().__init__("404: Not Found", route, message, code)
+    """A specific case of :obj:`ClientHTTPError` that occurs when you try to
+    refer to something that doesn't exist on Discord.
+
+    This might be referring to a user ID, channel ID, guild ID, etc that does
+    not exist, or it might be attempting to use an HTTP endpoint that is not
+    found.
+
+    Parameters
+    ----------
+    route : :obj:`hikari.net.routes.CompiledRoute`
+        The HTTP route that was being invoked when this exception occurred.
+    message : :obj:`str`, optional
+        An optional message if provided in the response payload.
+    json_code : :obj:`hikari.net.codes.JSONErrorCode` or :obj:`int`, optional
+        An optional error code the server provided us.
+    """
+
+    def __init__(
+        self,
+        route: routes.CompiledRoute,
+        message: typing.Optional[str],
+        json_code: typing.Union[codes.JSONErrorCode, int, None],
+    ) -> None:
+        super().__init__(codes.HTTPStatusCode.NOT_FOUND, route, message, json_code)
 
 
 __all__ = (
-    "GatewayCloseCode",
     "GatewayError",
     "GatewayClientClosedError",
-    "GatewayConnectionClosedError",
+    "GatewayServerClosedConnectionError",
     "GatewayInvalidTokenError",
     "GatewayInvalidSessionError",
     "GatewayMustReconnectError",

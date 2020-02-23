@@ -24,5 +24,6 @@ from dicts and lists to objects, as well as chunker handlers.
 from hikari.orm.gateway import base_chunker
 from hikari.orm.gateway import base_event_handler
 from hikari.orm.gateway import basic_chunker_impl
+from hikari.orm.gateway import chunk_mode
 from hikari.orm.gateway import dispatching_event_adapter
 from hikari.orm.gateway import dispatching_event_adapter_impl

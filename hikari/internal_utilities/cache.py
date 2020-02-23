@@ -43,7 +43,7 @@ CachedPropertyFunctionT = typing.Callable[[ClassT], ReturnT]
 __is_sphinx = os.getenv("SPHINX_IS_GENERATING_DOCUMENTATION") is not None
 
 
-def __noop_decorator(func):
+def __noop_decorator(func):  # pragma: no cover
     return func
 
 

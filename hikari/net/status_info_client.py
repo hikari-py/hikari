@@ -16,23 +16,29 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Retrieves the status of Discord systems, and can subscribe to update lists via Email and webhooks.
+"""API status information.
 
-Note:
-    This API is not overly well documented on a low level, and the API documentation often does not directly
-    tarry up with the underlying specification. Thus, some details may be undocumented or omitted or 
-    incorrect. If you notice anything that may be erraneous, please file a ticket on the bugtracker
-    at https://gitlab.com/nekokatt/hikari/issues.
+Retrieves the status of Discord systems, and can subscribe to update lists via
+Email and webhooks.
 
-See:
-    https://status.discordapp.com/api/v2
+Notes
+-----
+    This API is not overly well documented on a low level, and the API
+    documentation often does not directly tarry up with the underlying
+    specification. Thus, some details may be undocumented or omitted or
+    incorrect. If you notice anything that may be erroneous, please file a
+    ticket on the bug tracker at https://gitlab.com/nekokatt/hikari/issues.
+
+See
+---
+https://status.discordapp.com/api/v2
 """
 from __future__ import annotations
 
 import dataclasses
 import typing
 
+from hikari.internal_utilities import cache
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
@@ -49,11 +55,9 @@ if typing.TYPE_CHECKING:
 T = typing.TypeVar("T")
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass()
 class Subscriber:
-    """
-    A subscription to an incident.
-    """
+    """A subscription to an incident."""
 
     __slots__ = (
         "id",
@@ -92,25 +96,33 @@ class Subscriber:
     #: The date/time the description was quarantined at, if applicable.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    quarantined_at: type_hints.Nullable[datetime.datetime]
+    quarantined_at: typing.Optional[datetime.datetime]
 
     #: The optional incident that this subscription is for.
     #:
     #: :type: :class:`hikari.core.models.Incident` or `None`
-    incident: type_hints.Nullable[Incident]
+    incident: typing.Optional[Incident]
 
     #: True if the confirmation notification is skipped.
     #:
     #: :type: :class:`bool` or `None`
-    is_skipped_confirmation_notification: type_hints.Nullable[bool]
+    is_skipped_confirmation_notification: typing.Optional[bool]
 
     #: The optional date/time to stop the subscription..
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    purge_at: type_hints.Nullable[datetime.datetime]
+    purge_at: typing.Optional[datetime.datetime]
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and self.id == other.id
 
     @staticmethod
     def from_dict(payload: type_hints.JSONObject) -> Subscriber:
+        payload = payload["subscriber"]
+
         return Subscriber(
             id=payload["id"],
             email=payload["email"],
@@ -125,25 +137,7 @@ class Subscriber:
         )
 
 
-@dataclasses.dataclass(frozen=True)
-class Subscription:
-    """
-    A subscription to an incident.
-    """
-
-    __slots__ = ("subscriber",)
-
-    #: The subscription body.
-    #:
-    #: :type: :class:`hikari.orm.models.Subscriber`
-    subscriber: Subscriber
-
-    @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> Subscription:
-        return Subscription(subscriber=Subscriber.from_dict(payload["subscriber"]))
-
-
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass()
 class Page:
     """
     A page element.
@@ -174,6 +168,12 @@ class Page:
     #: :type: :class:`datetime.datetime`
     updated_at: datetime.datetime
 
+    def __hash__(self):
+        return hash(self.id)
+
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and self.id == other.id
+
     @staticmethod
     def from_dict(payload: type_hints.JSONObject) -> Page:
         return Page(
@@ -184,7 +184,7 @@ class Page:
         )
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass()
 class Status:
     """
     A status description.
@@ -195,23 +195,21 @@ class Status:
     #: The indicator that specifies the state of the service.
     #:
     #: :type: :class:`str` or `None`
-    indicator: type_hints.Nullable[str]
+    indicator: typing.Optional[str]
 
     #: The optional description of the service state.
     #:
     #: :type: :class:`str` or `None`
-    description: type_hints.Nullable[str]
+    description: typing.Optional[str]
 
     @staticmethod
     def from_dict(payload: type_hints.JSONObject) -> Status:
         return Status(indicator=payload.get("indicator"), description=payload.get("description"))
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass()
 class Component:
-    """
-    A component description.
-    """
+    """A component description."""
 
     __slots__ = ("id", "name", "created_at", "page_id", "position", "updated_at", "description", "status")
 
@@ -254,12 +252,18 @@ class Component:
     #: The optional description of the component.
     #:
     #: :type: :class:`str` or `None`
-    description: type_hints.Nullable[str]
+    description: typing.Optional[str]
 
     #: The status of this component.
     #:
     #: :type: :class:`str` or `None`
-    status: type_hints.Nullable[str]
+    status: typing.Optional[str]
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and self.id == other.id
 
     @staticmethod
     def from_dict(payload: type_hints.JSONObject) -> Component:
@@ -275,33 +279,31 @@ class Component:
         )
 
 
-@dataclasses.dataclass(frozen=True)
-class Components:
-    """
-    A collection of :class:`Component` objects.
-    """
+@dataclasses.dataclass()
+class ComponentsPage:
+    """A collection of :class:`Component` objects."""
 
     __slots__ = ("page", "components")
 
     #: The page for this list of components.
     #:
-    #: :type: :class:`hikari.orm.models.Page`
+    #: :type: :class:`Page`
     page: Page
 
     #: The list of components.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.Component`
+    #: :type: :class:`typing.Sequence` of :class:`Component`
     components: typing.Sequence[Component]
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> Components:
-        return Components(
+    def from_dict(payload: type_hints.JSONObject) -> ComponentsPage:
+        return ComponentsPage(
             page=Page.from_dict(payload["page"]),
             components=[Component.from_dict(c) for c in payload.get("components", [])],
         )
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass()
 class IncidentUpdate:
     """
     An informative status update for a specific incident.
@@ -330,7 +332,7 @@ class IncidentUpdate:
     #: The date/time to display the update at.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    display_at: type_hints.Nullable[datetime.datetime]
+    display_at: typing.Optional[datetime.datetime]
 
     #: The ID of the corresponding incident.
     #:
@@ -348,7 +350,13 @@ class IncidentUpdate:
     #: The date/time that the update was last changed.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    updated_at: type_hints.Nullable[datetime.datetime]
+    updated_at: typing.Optional[datetime.datetime]
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and self.id == other.id
 
     @staticmethod
     def from_dict(payload: type_hints.JSONObject) -> IncidentUpdate:
@@ -363,11 +371,9 @@ class IncidentUpdate:
         )
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass()
 class Incident:
-    """
-    An incident.
-    """
+    """An incident."""
 
     __slots__ = (
         "id",
@@ -402,10 +408,11 @@ class Incident:
     #: :type: :class:`str`
     impact: str
 
-    #: A list of zero or more updates to the status of this incident.
+    #: A mapping of zero or more updates to the status of this incident. This maps the
+    #: update ID to the update data.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.IncidentUpdate`
-    incident_updates: typing.Sequence[IncidentUpdate]
+    #: :type: :class:`typing.Mapping` [ :obj:`str`, :obj:`IncidentUpdate` ]
+    incident_updates: typing.Mapping[str, IncidentUpdate]
 
     #: The date and time, if applicable, that the faulty component(s) were created at.
     #:
@@ -415,7 +422,7 @@ class Incident:
     #: The date and time, if applicable, that the faulty component(s) were being monitored at.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    monitoring_at: type_hints.Nullable[datetime.datetime]
+    monitoring_at: typing.Optional[datetime.datetime]
 
     #: The ID of the page describing this incident.
     #:
@@ -428,7 +435,7 @@ class Incident:
     #: The date and time that the incident finished, if applicable.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    resolved_at: type_hints.Nullable[datetime.datetime]
+    resolved_at: typing.Optional[datetime.datetime]
 
     #: A short permalink to the page describing the incident.
     #:
@@ -443,24 +450,30 @@ class Incident:
     #: The last time the status of the incident was updated.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    updated_at: type_hints.Nullable[datetime.datetime]
+    updated_at: typing.Optional[datetime.datetime]
 
     #: The date and time, if applicable, that the faulty component(s) began to malfunction.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    started_at: type_hints.Nullable[datetime.datetime]
+    started_at: typing.Optional[datetime.datetime]
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and self.id == other.id
 
     @staticmethod
     def from_dict(payload: type_hints.JSONObject) -> Incident:
+        updates = (IncidentUpdate.from_dict(i) for i in payload.get("incident_updates", containers.EMPTY_SEQUENCE))
+
         return Incident(
             id=payload["id"],
             name=payload["name"],
             status=payload["status"],
             created_at=transformations.try_cast(payload["created_at"], dates.parse_iso_8601_ts),
             updated_at=transformations.try_cast(payload.get("updated_at"), dates.parse_iso_8601_ts),
-            incident_updates=[
-                IncidentUpdate.from_dict(i) for i in payload.get("incident_updates", containers.EMPTY_SEQUENCE)
-            ],
+            incident_updates={u.id: u for u in updates},
             monitoring_at=transformations.try_cast(payload.get("monitoring_at"), dates.parse_iso_8601_ts),
             resolved_at=transformations.try_cast(payload.get("resolved_at"), dates.parse_iso_8601_ts),
             shortlink=payload["shortlink"],
@@ -470,34 +483,43 @@ class Incident:
         )
 
 
-@dataclasses.dataclass(frozen=True)
-class Incidents:
-    """
-    A collection of :class:`Incident` objects.
-    """
+@dataclasses.dataclass()
+class IncidentsPage:
+    """A collection of :class:`Incident` objects."""
 
-    __slot__ = ("page", "incidents")
+    __slot__ = ("page", "incidents", "_cp_unresolved_incidents", "_cp_resolved_incidents")
 
     #: The page listing the incidents.
     #:
-    #: :type: :class:`hikari.orm.models.Page`
+    #: :type: :class:`Page`
     page: Page
 
-    #: The list of incidents on the page.
+    #: The incidents on the page.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.Incident`
-    incidents: typing.Sequence[Incident]
+    #: :type: :obj:`typing.Mapping` [ :obj:`str`, :obj:`Incident` ]
+    incidents: typing.Mapping[str, Incident]
+
+    @cache.cached_property()
+    def unresolved_incidents(self) -> typing.Mapping[str, Incident]:
+        return {
+            i.id: i
+            for i in self.incidents.values()
+            if i.status.lower() in ("investigating", "identified", "monitoring")
+        }
+
+    @cache.cached_property()
+    def resolved_incidents(self) -> typing.Mapping[str, Incident]:
+        return {i.id: i for i in self.incidents.values() if i.status.lower() in ("resolved", "postmortem")}
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> Incidents:
-        return Incidents(Page.from_dict(payload["page"]), [Incident.from_dict(i) for i in payload["incidents"]])
+    def from_dict(payload: type_hints.JSONObject) -> IncidentsPage:
+        incidents = (Incident.from_dict(i) for i in payload["incidents"])
+        return IncidentsPage(Page.from_dict(payload["page"]), {incident.id: incident for incident in incidents})
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass()
 class ScheduledMaintenance:
-    """
-    A description of a maintenance that is scheduled to be performed.
-    """
+    """A description of a maintenance that is scheduled to be performed."""
 
     __slots__ = (
         "id",
@@ -534,10 +556,10 @@ class ScheduledMaintenance:
     #: :type: :class:`str`
     impact: str
 
-    #: Zero or more updates to this event.
+    #: Zero or more updates to this event. This maps the update ID to the update data.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.IncidentUpdate`
-    incident_updates: typing.Sequence[IncidentUpdate]
+    #: :type: :obj:`typing.Mapping` [ `:obj:`str`, :obj:`IncidentUpdate` ]
+    incident_updates: typing.Mapping[str, IncidentUpdate]
 
     #: The date and time the event was created at.
     #:
@@ -547,7 +569,7 @@ class ScheduledMaintenance:
     #: The date and time the event was being monitored since, if applicable.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    monitoring_at: type_hints.Nullable[datetime.datetime]
+    monitoring_at: typing.Optional[datetime.datetime]
 
     #: The ID of the page describing this event.
     #:
@@ -560,17 +582,17 @@ class ScheduledMaintenance:
     #: The optional date/time the event finished at.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    resolved_at: type_hints.Nullable[datetime.datetime]
+    resolved_at: typing.Optional[datetime.datetime]
 
     #: The date/time that the event was scheduled for.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    scheduled_for: type_hints.Nullable[datetime.datetime]
+    scheduled_for: typing.Optional[datetime.datetime]
 
     #: The date/time that the event was scheduled until.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    scheduled_until: type_hints.Nullable[datetime.datetime]
+    scheduled_until: typing.Optional[datetime.datetime]
 
     #: The status of the event.
     #:
@@ -590,17 +612,23 @@ class ScheduledMaintenance:
     #: The date and time, if applicable, that the event began.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    started_at: type_hints.Nullable[datetime.datetime]
+    started_at: typing.Optional[datetime.datetime]
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and self.id == other.id
 
     @staticmethod
     def from_dict(payload: type_hints.JSONObject) -> ScheduledMaintenance:
+        updates = (IncidentUpdate.from_dict(iu) for iu in payload.get("incident_updates", containers.EMPTY_SEQUENCE))
+
         return ScheduledMaintenance(
             id=payload["id"],
             name=payload["name"],
             impact=payload["impact"],
-            incident_updates=[
-                IncidentUpdate.from_dict(iu) for iu in payload.get("incident_updates", containers.EMPTY_SEQUENCE)
-            ],
+            incident_updates={u.id: u for u in updates},
             monitoring_at=transformations.try_cast(payload.get("monitoring_at"), dates.parse_iso_8601_ts),
             page_id=payload["page_id"],
             resolved_at=transformations.try_cast(payload.get("resolved_at"), dates.parse_iso_8601_ts),
@@ -614,35 +642,33 @@ class ScheduledMaintenance:
         )
 
 
-@dataclasses.dataclass(frozen=True)
-class ScheduledMaintenances:
-    """
-    A collection of maintenance events
-    .
-    """
+@dataclasses.dataclass()
+class ScheduledMaintenancesPage:
+    """A collection of maintenance events."""
 
     __slots__ = ("page", "scheduled_maintenances")
 
     #: The page containing this information.
     #:
-    #: :type: :class:`hikari.orm.models.Page`
+    #: :type: :class:`Page`
     page: Page
 
-    #: The list of items on the page.
+    #: The maintenance items on the page. Maps the entry ID to the information
+    #: associated with it.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.ScheduledMaintenance`
-    scheduled_maintenances: typing.Sequence[ScheduledMaintenance]
+    #: :type: :obj:`typing.Mapping` [ :obj:`str`, :class:`ScheduledMaintenance` ]
+    scheduled_maintenances: typing.Mapping[str, ScheduledMaintenance]
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> ScheduledMaintenances:
-        return ScheduledMaintenances(
-            page=Page.from_dict(payload["page"]),
-            scheduled_maintenances=[ScheduledMaintenance.from_dict(sm) for sm in payload["scheduled_maintenances"]],
+    def from_dict(payload: type_hints.JSONObject) -> ScheduledMaintenancesPage:
+        maintenances = (ScheduledMaintenance.from_dict(sm) for sm in payload["scheduled_maintenances"])
+        return ScheduledMaintenancesPage(
+            page=Page.from_dict(payload["page"]), scheduled_maintenances={m.id: m for m in maintenances},
         )
 
 
-@dataclasses.dataclass(frozen=True)
-class OverallStatus:
+@dataclasses.dataclass()
+class StatusPage:
     """
     A description of the overall API status.
     """
@@ -651,42 +677,81 @@ class OverallStatus:
 
     #: The page describing this summary.
     #:
-    #: :type: :class:`hikari.orm.models.Page`
+    #: :type: :class:`Page`
     page: Page
 
     #: The overall system status.
     #:
-    #: :type: :class:`hikari.orm.models.Status`
+    #: :type: :class:`Status`
     status: Status
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> OverallStatus:
-        return OverallStatus(page=Page.from_dict(payload["page"]), status=Status.from_dict(payload["status"]),)
+    def from_dict(payload: type_hints.JSONObject) -> StatusPage:
+        return StatusPage(page=Page.from_dict(payload["page"]), status=Status.from_dict(payload["status"]),)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass()
 class Summary:
-    __slots__ = ("page", "components", "incidents", "scheduled_maintenances")
+    """
+    A summary of the API status.
+    """
+
+    __slots__ = (
+        "page",
+        "components",
+        "incidents",
+        "scheduled_maintenances",
+        "_cp_unresolved_incidents",
+        "_cp_resolved_incidents",
+        "_cp_upcoming_scheduled_maintenances",
+        "_cp_ongoing_scheduled_maintenances",
+        "_cp_completed_scheduled_maintenances",
+    )
 
     #: The page describing this summary.
     #:
-    #: :type: :class:`hikari.orm.models.Page`
+    #: :type: :class:`Page`
     page: Page
 
     #: The status of each component in the system.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.Component`
+    #: :type: :class:`typing.Sequence` [ :class:`Component` ]
     components: typing.Sequence[Component]
 
     #: The list of incidents that have occurred/are occurring to components in this system.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.Incident`
+    #: :type: :class:`typing.Sequence` [ :class:`Incident` ]
     incidents: typing.Sequence[Incident]
 
     #: A list of maintenance tasks that have been/will be undertaken.
     #:
-    #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.ScheduledMaintenance`
+    #: :type: :class:`typing.Sequence` [ :class:`ScheduledMaintenance` ]
     scheduled_maintenances: typing.Sequence[ScheduledMaintenance]
+
+    @cache.cached_property()
+    def unresolved_incidents(self) -> typing.Mapping[str, Incident]:
+        look_for = ("investigating", "identified", "monitoring")
+        return {i.id: i for i in self.incidents if i.status.lower() in look_for}
+
+    @cache.cached_property()
+    def resolved_incidents(self) -> typing.Mapping[str, Incident]:
+        look_for = ("resolved", "postmortem")
+        return {i.id: i for i in self.incidents if i.status.lower() in look_for}
+
+    @cache.cached_property()
+    def upcoming_scheduled_maintenances(self) -> typing.Mapping[str, ScheduledMaintenance]:
+        look_for = ("scheduled",)
+        return {sm.id: sm for sm in self.scheduled_maintenances if sm.status.lower() in look_for}
+
+    @cache.cached_property()
+    def ongoing_scheduled_maintenances(self) -> typing.Mapping[str, ScheduledMaintenance]:
+        look_for = ("in progress", "verifying")
+        return {sm.id: sm for sm in self.scheduled_maintenances if sm.status.lower() in look_for}
+
+    @cache.cached_property()
+    def completed_scheduled_maintenances(self) -> typing.Mapping[str, ScheduledMaintenance]:
+        look_for = ("completed",)
+        return {sm.id: sm for sm in self.scheduled_maintenances if sm.status.lower() in look_for}
 
     @staticmethod
     def from_dict(payload: type_hints.JSONObject) -> Summary:
@@ -702,12 +767,13 @@ class Summary:
 
 
 class StatusInfoClient(base_http_client.BaseHTTPClient):
-    """
-    A generic client to allow you to check the current status of Discord's services.
+    """A generic client to allow you to check the current status of Discord's
+    services.
 
-    Warning:
-        This must be initialized within a coroutine while an event loop is active
-        and registered to the current thread.
+    Warnings
+    --------
+    This must be initialized within a coroutine while an event loop is active
+    and registered to the current thread.
     """
 
     __slots__ = ("url",)
@@ -774,9 +840,7 @@ class StatusInfoClient(base_http_client.BaseHTTPClient):
     def version(self) -> int:
         return 2
 
-    async def _perform_request(
-        self, route: str, cast: type_hints.Nullable[typing.Type[T]], data=None, method=None
-    ) -> T:
+    async def _perform_request(self, route: str, cast: typing.Optional[typing.Type[T]], data=None, method=None) -> T:
         coro = super()._request(method or self.GET, self.url + route, data=data)
 
         async with coro as resp:
@@ -793,36 +857,36 @@ class StatusInfoClient(base_http_client.BaseHTTPClient):
         """Fetch the overall service summary."""
         return await self._perform_request("/summary.json", Summary)
 
-    async def fetch_status(self) -> OverallStatus:
+    async def fetch_status(self) -> StatusPage:
         """Fetch the overall service status."""
-        return await self._perform_request("/status.json", OverallStatus)
+        return await self._perform_request("/status.json", StatusPage)
 
-    async def fetch_components(self) -> Components:
+    async def fetch_components(self) -> ComponentsPage:
         """Fetch information on the status of all API components."""
-        return await self._perform_request("/components.json", Components)
+        return await self._perform_request("/components.json", ComponentsPage)
 
-    async def fetch_all_incidents(self) -> Incidents:
+    async def fetch_all_incidents(self) -> IncidentsPage:
         """Fetch information on all incidents both past and present."""
-        return await self._perform_request("/incidents.json", Incidents)
+        return await self._perform_request("/incidents.json", IncidentsPage)
 
-    async def fetch_unresolved_incidents(self) -> Incidents:
+    async def fetch_unresolved_incidents(self) -> IncidentsPage:
         """Fetch information on all incidents that are ongoing."""
-        return await self._perform_request("/incidents/unresolved.json", Incidents)
+        return await self._perform_request("/incidents/unresolved.json", IncidentsPage)
 
-    async def fetch_all_scheduled_maintenances(self) -> ScheduledMaintenances:
+    async def fetch_all_scheduled_maintenances(self) -> ScheduledMaintenancesPage:
         """Fetch information on all scheduled maintenances both past, present, and future."""
-        return await self._perform_request("/scheduled-maintenances.json", ScheduledMaintenances)
+        return await self._perform_request("/scheduled-maintenances.json", ScheduledMaintenancesPage)
 
-    async def fetch_upcoming_scheduled_maintenances(self) -> ScheduledMaintenances:
+    async def fetch_upcoming_scheduled_maintenances(self) -> ScheduledMaintenancesPage:
         """Fetch information on scheduled maintenances that are upcoming."""
-        return await self._perform_request("/scheduled-maintenances/upcoming.json", ScheduledMaintenances)
+        return await self._perform_request("/scheduled-maintenances/upcoming.json", ScheduledMaintenancesPage)
 
-    async def fetch_active_scheduled_maintenances(self) -> ScheduledMaintenances:
+    async def fetch_active_scheduled_maintenances(self) -> ScheduledMaintenancesPage:
         """Fetch information on all ongoing scheduled maintenances."""
-        return await self._perform_request("/scheduled-maintenances/active.json", ScheduledMaintenances)
+        return await self._perform_request("/scheduled-maintenances/active.json", ScheduledMaintenancesPage)
 
     async def subscribe_email_to_incidents(
-        self, email: str, incident: type_hints.Nullable[typing.Union[str, Incident]] = None,
+        self, email: str, incident: typing.Optional[typing.Union[str, Incident]] = None,
     ) -> Subscriber:
         """
         Subscribe to a specific incident or all incidents for email updates.
@@ -844,11 +908,10 @@ class StatusInfoClient(base_http_client.BaseHTTPClient):
         if incident is not None:
             body["subscriber[incident]"] = incident.id if isinstance(incident, Incident) else incident
 
-        result = await self._perform_request("/subscribers.json", Subscription, body, self.POST)
-        return result.subscriber
+        return await self._perform_request("/subscribers.json", Subscriber, body, self.POST)
 
     async def subscribe_webhook_to_incidents(
-        self, url: str, incident: type_hints.Nullable[typing.Union[str, Incident]] = None,
+        self, url: str, incident: typing.Optional[typing.Union[str, Incident]] = None,
     ) -> Subscriber:
         """
         Subscribe to a specific incident or all incidents for webhook updates. This means the given
@@ -870,8 +933,7 @@ class StatusInfoClient(base_http_client.BaseHTTPClient):
         if incident is not None:
             body["subscriber[incident]"] = incident.id if isinstance(incident, Incident) else incident
 
-        result = await self._perform_request("/subscribers.json", Subscription, body, self.POST)
-        return result.subscriber
+        return await self._perform_request("/subscribers.json", Subscriber, body, self.POST)
 
     async def unsubscribe(self, subscriber: typing.Union[str, Subscriber]) -> None:
         """
@@ -896,17 +958,16 @@ class StatusInfoClient(base_http_client.BaseHTTPClient):
 
 __all__ = [
     "Subscriber",
-    "Subscription",
     "Page",
     "Status",
     "Component",
-    "Components",
+    "ComponentsPage",
     "IncidentUpdate",
     "Incident",
-    "Incidents",
+    "IncidentsPage",
     "ScheduledMaintenance",
-    "ScheduledMaintenances",
+    "ScheduledMaintenancesPage",
     "Summary",
-    "OverallStatus",
+    "StatusPage",
     "StatusInfoClient",
 ]

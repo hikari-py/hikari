@@ -111,7 +111,7 @@ def assert_raises(test=None, *, type_, checks=()):
                 for i, check in enumerate(checks, start=1):
                     assert check(ex), f"Check #{i} ({check}) failed"
             except AssertionError as ex:
-                raise AssertionError("assertion failed") from ex
+                raise ex
             except BaseException as ex:
                 raise AssertionError(f"Expected {type_.__name__} to be raised but got {type(ex).__name__}") from ex
 

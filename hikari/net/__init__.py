@@ -16,10 +16,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Network components for the Hikari Discord API.
+"""Network components for the Hikari Discord API.
+
+These components describe the low level parts of Hikari. No model classes exist
+for these; the majority of communication is done via JSON arrays and objects
+(so :class:`dict`s and :class:`list`s).
 """
 from hikari.net import base_http_client
+from hikari.net import codes
 from hikari.net import gateway
 from hikari.net import http_client
 from hikari.net import ratelimits
