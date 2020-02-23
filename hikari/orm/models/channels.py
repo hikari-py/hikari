@@ -212,6 +212,8 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
         Note:
             You must specify at least one of `content`, `embed` or `attachments` for this to be a valid API call.
         """
+        if content is not unspecified.UNSPECIFIED:
+            content = str(content)
         message: messages.Message = await self._fabric.http_adapter.create_message(
             self, content=content, embed=embed, files=files
         )
