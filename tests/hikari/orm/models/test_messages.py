@@ -88,10 +88,12 @@ class TestMessage:
 
     def test_parsing_Member(self, mock_message_payload, mock_user, fabric_obj):
         mock_message_payload["guild_id"] = "909090"
+        mock_message_payload["channel_id"] = "1234"
         mock_message_payload["member"] = {"foo": "bar", "baz": "bork"}
         mock_message_payload["author"] = {"ayy": "lmao"}
         guild_obj = _helpers.mock_model(guilds.Guild, id=909090)
-        fabric_obj.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        channel_obj = _helpers.mock_model(channels.GuildChannel, id=1234, guild=guild_obj)
+        fabric_obj.state_registry.get_mandatory_channel_by_id = mock.MagicMock(return_value=channel_obj)
         messages.Message(fabric_obj, mock_message_payload)
         fabric_obj.state_registry.parse_partial_member.assert_called_with(
             {"foo": "bar", "baz": "bork"}, {"ayy": "lmao"}, guild_obj
@@ -112,7 +114,6 @@ class TestMessage:
         assert message_obj.type is messages.MessageType.DEFAULT
         assert message_obj.id == 12345
         assert message_obj.channel_id == 67890
-        assert message_obj.guild_id is None
         assert message_obj.edited_at is None
         assert message_obj.is_tts is True
         assert message_obj.is_mentioning_everyone is False
@@ -214,7 +215,6 @@ class TestMessage:
         assert message_obj.type is messages.MessageType.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2
         assert message_obj.id == 12345
         assert message_obj.channel_id == 67890
-        assert message_obj.guild_id == 102234
         assert message_obj.edited_at == datetime.datetime(
             2019, 10, 10, 5, 22, 33, 23456, tzinfo=datetime.timezone(datetime.timedelta(hours=2, minutes=30))
         )
@@ -262,24 +262,6 @@ class TestMessage:
         assert message_obj.crosspost_of.channel_id == 278325129692446722
         assert message_obj.crosspost_of.message_id == 306588351130107906
         assert message_obj.crosspost_of.guild_id == 278325129692446720
-
-    def test_guild_if_guild_message(self, mock_message_payload, fabric_obj):
-        mock_message_payload["guild_id"] = "91827"
-        message_obj = messages.Message(fabric_obj, mock_message_payload)
-
-        guild = mock.MagicMock()
-        fabric_obj.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild)
-
-        g = message_obj.guild
-        assert g is guild
-
-        fabric_obj.state_registry.get_guild_by_id.assert_called_with(91827)
-
-    def test_guild_if_dm_message(self, mock_message_payload, fabric_obj):
-        message_obj = messages.Message(fabric_obj, mock_message_payload)
-        assert message_obj.guild is None
-
-        fabric_obj.state_registry.get_guild_by_id.assert_not_called()
 
     def test_channel_if_guild_message(self, mock_message_payload, fabric_obj):
         mock_message_payload["guild_id"] = "5432"
