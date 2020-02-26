@@ -19,7 +19,7 @@
 import contextlib
 import copy
 import datetime
-from unittest import mock
+import cymock as mock
 
 import pytest
 
