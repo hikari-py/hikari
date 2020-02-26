@@ -105,6 +105,9 @@ class ClientOptions:
     #: If True, API status changes are watched periodically, and any important notices will be displayed in your
     #: logs. Defaults to True.
     log_api_status_changes: bool = True
+    #: If True, will poll PyPI for the package information. If a new stable version is available,
+    #: will be displayed in your logs. Defaults to True.
+    package_version_check: bool = True
     #: The maximum DM channels stored in the cache.
     max_user_dm_channel_count: int = 100
     #: The maximum messages stored in the cache.

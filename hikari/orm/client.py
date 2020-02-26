@@ -42,6 +42,7 @@ from hikari.net import gateway
 from hikari.net import http_client
 from hikari.net import ratelimits
 from hikari.orm import api_status_checker
+from hikari.orm import pypi_version_checker
 from hikari.orm import client_options
 from hikari.orm import fabric
 from hikari.orm.gateway import basic_chunker_impl
@@ -404,6 +405,12 @@ class Client:
         self.token = token
 
         try:
+            if self._client_options.package_version_check:
+                asyncio.create_task(
+                    pypi_version_checker.check_package_version(),
+                    name="Check PyPI for latest stable version and warn if not in latest",
+                )
+
             await self.dispatch(event_types.EventType.PRE_STARTUP)
             await self._init_new_application_fabric()
 
