@@ -30,6 +30,7 @@ from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
 from hikari.internal_utilities import type_hints
+from hikari.net import codes
 from hikari.orm.models import bases
 from hikari.orm.models import embeds
 from hikari.orm.models import media
@@ -125,6 +126,7 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
 
     __slots__ = (
         "_fabric",
+        "is_dm",
         "channel_id",
         "guild_id",
         "author",
@@ -153,7 +155,9 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
 
     #: The optional guild ID of the guild the message was sent in, where applicable.
     #:
-    #: :type: :class:`int` or `None`
+    #: If this is from an HTTP API call, this info will be unavailable.
+    #:
+    #: :type: :class:`int` or `None`.
     guild_id: type_hints.Nullable[int]
 
     #: The entity that generated this message.
@@ -304,11 +308,81 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
                 self._fabric.state_registry.parse_reaction(reaction_payload, self.id, self.channel_id)
 
     @property
-    def guild(self) -> type_hints.Nullable[guilds.Guild]:
+    def guild(self) -> guilds.Guild:
+        """Attempt to get the guild from the cache that this message corresponds
+        to.
+
+        This is somewhat more difficult to achieve, since events will contain
+        guild_id info, but REST API objects will not. While historically this
+        was not an issue with bots assuming to always have guild info present,
+        the ability to now supply gateway intents obfuscates this much more, as
+        we can receive messages where we have no knowledge of the guild it came
+        from.
+
+        If you have GUILDS intent disabled, and you received this message as
+        part of an event, then this will raise a :obj:`RuntimeError`. Likewise
+        if it was a cache miss due to eventual consistency, this will also
+        error.
+
+        If the message was a DM, or the message was received from the REST API,
+        the information we need to provide a consistent result will not be
+        present, so this will raise :obj:`NotImplementedError` in those cases.
+
+        If you want to check if the message was from a DM, you should check that
+        the :attr:`channel` is an instance of
+        :obj:`hikari.orm.models.channels.DMChannel` by using :obj:`isinstance`.
+
+        Raises
+        ------
+        :obj:`RuntimeError`
+            The cache is invalid for the bot (likely a Discord issue), or you
+            do not have the `GUILDS` intent enabled.
+        :obj:`NotImplementedError`
+            The message is a DM message, or the a message that was not sent in
+            a gateway event (guild IDs are not sent with message details by
+            Discord in any other situations unfortunately).
         """
-        If the guild is not cached, this will return None
-        """
-        return self._fabric.state_registry.get_guild_by_id(self.guild_id) if self.guild_id else None
+        if self.guild_id is not None:
+            guild = self._fabric.state_registry.get_guild_by_id(self.guild_id)
+
+            if guild is not None:
+                return guild
+
+            # If we reach here, the guild is not cached. This might be the
+            # GUILDS intent is not set, or the cache might be invalid.
+            # We should assume if we reach here that the object was made by
+            # a shard and not from a REST call, and that there is definitely
+            # a guild to go by (i.e. this isn't a message in a DM).
+            shard_id = transformations.guild_id_to_shard_id(self.guild_id, self._fabric.shard_count)
+
+            # Check the shard for the intent.
+            intents = self._fabric.gateways[shard_id].intents
+
+            if intents is None:
+                # We are screwed, this shouldn't have happened and I don't know how to fix this!
+                raise RuntimeError(
+                    "The guild is not cached. Looks like the internal cache is invalid. This may be a problem with "
+                    "Discord, or it may be a bug. If this persists, try restarting the bot to re-fetch the guild cache."
+                )
+
+            if intents ^ codes.GatewayIntent.GUILDS:
+                # No intent. No cache. will be there.
+                raise RuntimeError(
+                    "You do not have the GUILDS intent enabled, and thus will not have guild information in your "
+                    "internal cache. You must either use the guild_id to fetch this from the REST API manually, or "
+                    "enable this intent."
+                )
+
+            # If the intent is here, we can assume the channel is cached too unless something is broken.
+            return self.channel.guild
+        else:
+            # This might have been a REST API call, or it might be a DM. Regardless, we cannot tell.
+            # If anyone does not like this behaviour, then I apologise but apparently you are not a
+            # Night-approved use case a la https://github.com/discordapp/discord-api-docs/issues/912
+            raise NotImplementedError(
+                "This may be a DM, or it may be received from the REST API, in which case this information is not "
+                "readily available."
+            )
 
     @property
     def channel(
@@ -324,7 +398,7 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         # We may as well just use this to get it. It is pretty much as fast, but it reduces the amount of testing
         # needed for code that is essentially the same.
         # noinspection PyTypeChecker
-        return self._fabric.state_registry.get_mandatory_channel_by_id(self.channel_id)
+        return self._fabric.state_registry.get_channel_by_id(self.channel_id)
 
     @property
     def is_webhook(self) -> bool:

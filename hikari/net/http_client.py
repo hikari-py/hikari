@@ -34,7 +34,6 @@ import aiohttp.typedefs
 
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import containers
-from hikari.internal_utilities import conversions
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
 from hikari.internal_utilities import type_hints
@@ -1113,7 +1112,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         payload = {
             "name": name,
             "roles": [] if roles is unspecified.UNSPECIFIED else roles,
-            "image": conversions.image_bytes_to_image_data(image),
+            "image": transformations.image_bytes_to_image_data(image),
         }
         route = routes.GUILD_EMOJIS.compile(self.POST, guild_id=guild_id)
         return await self._request(route, json_body=payload, reason=reason)
@@ -1228,7 +1227,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         transformations.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
         transformations.put_if_specified(payload, "roles", roles)
         transformations.put_if_specified(payload, "channels", channels)
-        transformations.put_if_specified(payload, "icon", icon, conversions.image_bytes_to_image_data)
+        transformations.put_if_specified(payload, "icon", icon, transformations.image_bytes_to_image_data)
         route = routes.GUILDS.compile(self.POST)
         return await self._request(route, json_body=payload)
 
@@ -1319,9 +1318,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         transformations.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
         transformations.put_if_specified(payload, "afk_channel_id", afk_channel_id)
         transformations.put_if_specified(payload, "afk_timeout", afk_timeout)
-        transformations.put_if_specified(payload, "icon", icon, conversions.image_bytes_to_image_data)
+        transformations.put_if_specified(payload, "icon", icon, transformations.image_bytes_to_image_data)
         transformations.put_if_specified(payload, "owner_id", owner_id)
-        transformations.put_if_specified(payload, "splash", splash, conversions.image_bytes_to_image_data)
+        transformations.put_if_specified(payload, "splash", splash, transformations.image_bytes_to_image_data)
         transformations.put_if_specified(payload, "system_channel_id", system_channel_id)
         route = routes.GUILD.compile(self.PATCH, guild_id=guild_id)
         return await self._request(route, json_body=payload, reason=reason)
@@ -2430,7 +2429,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         """
         payload = {}
         transformations.put_if_specified(payload, "username", username)
-        transformations.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
+        transformations.put_if_specified(payload, "avatar", avatar, transformations.image_bytes_to_image_data)
         route = routes.OWN_USER.compile(self.PATCH)
         return await self._request(route, json_body=payload)
 
@@ -2550,7 +2549,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 If the avatar image is too big or the format is invalid.
         """
         payload = {"name": name}
-        transformations.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
+        transformations.put_if_specified(payload, "avatar", avatar, transformations.image_bytes_to_image_data)
         route = routes.CHANNEL_WEBHOOKS.compile(self.POST, channel_id=channel_id)
         return await self._request(route, json_body=payload, reason=reason)
 
@@ -2666,7 +2665,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         payload = {}
         transformations.put_if_specified(payload, "name", name)
         transformations.put_if_specified(payload, "channel_id", channel_id)
-        transformations.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
+        transformations.put_if_specified(payload, "avatar", avatar, transformations.image_bytes_to_image_data)
         if webhook_token is unspecified.UNSPECIFIED:
             route = routes.WEBHOOK.compile(self.PATCH, webhook_id=webhook_id)
         else:
