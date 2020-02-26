@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import dataclasses
 import typing
-from unittest import mock
+import cymock as mock
 
 import pytest
 

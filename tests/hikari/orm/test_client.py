@@ -21,7 +21,7 @@ import datetime
 import math
 import os
 import signal
-from unittest import mock
+import cymock as mock
 
 import aiohttp
 import pytest
