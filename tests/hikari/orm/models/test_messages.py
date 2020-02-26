@@ -296,7 +296,7 @@ class TestMessage:
     def test_channel_if_dm_message(self, mock_message_payload, fabric_obj):
         mock_message_payload["channel_id"] = "1234"
         channel = _helpers.create_autospec(channels.Channel)
-        fabric_obj.state_registry.get_mandatory_channel_by_id = mock.MagicMock(return_value=channel)
+        fabric_obj.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel)
 
         obj = messages.Message(fabric_obj, mock_message_payload)
 
