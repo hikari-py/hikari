@@ -126,6 +126,7 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     __slots__ = (
         "_fabric",
         "channel_id",
+        "guild_id",
         "author",
         "id",
         "edited_at",
@@ -149,6 +150,11 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     #:
     #: :type: :class:`int` or `None`
     channel_id: int
+
+    #: The optional guild ID of the guild the message was sent in, where applicable.
+    #:
+    #: :type: :class:`int` or `None`
+    guild_id: type_hints.Nullable[int]
 
     #: The entity that generated this message.
     #:
@@ -232,6 +238,7 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         self.id = int(payload["id"])
 
         self.channel_id = int(payload["channel_id"])
+        self.guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
 
         self.is_tts = payload["tts"]
         self.crosspost_of = MessageCrosspost(payload["message_reference"]) if "message_reference" in payload else None
@@ -260,7 +267,7 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         if "member" in payload:
             # Messages always contain partial members, not full members.
             self.author = self._fabric.state_registry.parse_partial_member(
-                payload["member"], payload["author"], self.channel.guild
+                payload["member"], payload["author"], self.guild
             )
         elif "webhook_id" in payload:
             self.author = self._fabric.state_registry.parse_webhook_user(payload["author"])
@@ -295,6 +302,13 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
             self.reactions = []
             for reaction_payload in payload.get("reactions"):
                 self._fabric.state_registry.parse_reaction(reaction_payload, self.id, self.channel_id)
+
+    @property
+    def guild(self) -> type_hints.Nullable[guilds.Guild]:
+        """
+        If the guild is not cached, this will return None
+        """
+        return self._fabric.state_registry.get_guild_by_id(self.guild_id) if self.guild_id else None
 
     @property
     def channel(
