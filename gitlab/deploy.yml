@@ -16,6 +16,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 .deploy:
+  resource_group: deploy
+  retry: 2
   allow_failure: false
   stage: deploy
   image: python:3.8.1
