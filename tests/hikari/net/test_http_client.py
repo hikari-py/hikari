@@ -25,8 +25,8 @@ from unittest import mock
 import aiohttp
 import pytest
 
-from hikari.internal_utilities import conversions
 from hikari.internal_utilities import storage
+from hikari.internal_utilities import transformations
 from hikari.internal_utilities import unspecified
 from hikari.net import base_http_client
 from hikari.net import errors
@@ -677,10 +677,10 @@ class TestHTTPClient:
         mock_route = mock.MagicMock(routes.GUILD_EMOJI)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "GUILD_EMOJIS", compile=mock.MagicMock(return_value=mock_route)):
-            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
+            with mock.patch.object(transformations, "image_bytes_to_image_data", return_value=mock_image_data):
                 result = await http_client_impl.create_guild_emoji("2222", "iEmoji", b"\211PNG\r\n\032\nblah")
                 assert result is mock_response
-                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
+                transformations.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
                 routes.GUILD_EMOJIS.compile.assert_called_once_with(http_client_impl.POST, guild_id="2222")
         http_client_impl._request.assert_called_once_with(
             mock_route,
@@ -695,12 +695,12 @@ class TestHTTPClient:
         mock_route = mock.MagicMock(routes.GUILD_EMOJI)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "GUILD_EMOJIS", compile=mock.MagicMock(return_value=mock_route)):
-            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
+            with mock.patch.object(transformations, "image_bytes_to_image_data", return_value=mock_image_data):
                 result = await http_client_impl.create_guild_emoji(
                     "2222", "iEmoji", b"\211PNG\r\n\032\nblah", roles=["292929", "484884"], reason="uwu owo"
                 )
                 assert result is mock_response
-                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
+                transformations.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
                 routes.GUILD_EMOJIS.compile.assert_called_once_with(http_client_impl.POST, guild_id="2222")
         http_client_impl._request.assert_called_once_with(
             mock_route,
@@ -762,7 +762,7 @@ class TestHTTPClient:
         mock_route = mock.MagicMock(routes.GUILD)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "GUILDS", compile=mock.MagicMock(return_value=mock_route)):
-            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
+            with mock.patch.object(transformations, "image_bytes_to_image_data", return_value=mock_image_data):
                 result = await http_client_impl.create_guild(
                     "GUILD TIME",
                     region="london",
@@ -774,7 +774,7 @@ class TestHTTPClient:
                 )
                 assert result is mock_response
                 routes.GUILDS.compile.assert_called_once_with(http_client_impl.POST)
-                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
+                transformations.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
         http_client_impl._request.assert_called_once_with(
             mock_route,
             json_body={
@@ -817,7 +817,7 @@ class TestHTTPClient:
         mock_splash_data = "data:image/png;base64,iVBORw0KGgpicnVo"
         with mock.patch.object(routes, "GUILD", compile=mock.MagicMock(return_value=mock_route)):
             with mock.patch.object(
-                conversions, "image_bytes_to_image_data", side_effect=(mock_icon_data, mock_splash_data)
+                transformations, "image_bytes_to_image_data", side_effect=(mock_icon_data, mock_splash_data)
             ):
                 result = await http_client_impl.modify_guild(
                     "49949495",
@@ -837,8 +837,8 @@ class TestHTTPClient:
                 assert result is mock_response
 
                 routes.GUILD.compile.assert_called_once_with(http_client_impl.PATCH, guild_id="49949495")
-                assert conversions.image_bytes_to_image_data.call_count == 2
-                conversions.image_bytes_to_image_data.assert_has_calls(
+                assert transformations.image_bytes_to_image_data.call_count == 2
+                transformations.image_bytes_to_image_data.assert_has_calls(
                     (
                         mock.call.__bool__(),
                         mock.call(b"\211PNG\r\n\032\nblah"),
@@ -1539,13 +1539,13 @@ class TestHTTPClient:
         mock_route = mock.MagicMock(routes.OWN_USER)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "OWN_USER", compile=mock.MagicMock(return_value=mock_route)):
-            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
+            with mock.patch.object(transformations, "image_bytes_to_image_data", return_value=mock_image_data):
                 result = await http_client_impl.modify_current_user(
                     username="Watashi 2", avatar=b"\211PNG\r\n\032\nblah"
                 )
                 assert result is mock_response
                 routes.OWN_USER.compile.assert_called_once_with(http_client_impl.PATCH)
-                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
+                transformations.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
         http_client_impl._request.assert_called_once_with(
             mock_route, json_body={"username": "Watashi 2", "avatar": mock_image_data}
         )
@@ -1631,13 +1631,13 @@ class TestHTTPClient:
         mock_route = mock.MagicMock(routes.CHANNEL_WEBHOOKS)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "CHANNEL_WEBHOOKS", compile=mock.MagicMock(return_value=mock_route)):
-            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
+            with mock.patch.object(transformations, "image_bytes_to_image_data", return_value=mock_image_data):
                 result = await http_client_impl.create_webhook(
                     "39393939", "I am a webhook", avatar=b"\211PNG\r\n\032\nblah", reason="get reasoned"
                 )
                 assert result is mock_response
                 routes.CHANNEL_WEBHOOKS.compile.assert_called_once_with(http_client_impl.POST, channel_id="39393939")
-                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
+                transformations.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
         http_client_impl._request.assert_called_once_with(
             mock_route, json_body={"name": "I am a webhook", "avatar": mock_image_data}, reason="get reasoned",
         )
