@@ -30,7 +30,7 @@ import time
 import typing
 import warnings
 import weakref
-from unittest import mock
+import cymock as mock
 
 import async_timeout
 import pytest
