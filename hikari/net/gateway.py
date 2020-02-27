@@ -416,6 +416,19 @@ class GatewayClient:
         return not math.isnan(self._connected_at)
 
     @property
+    def intents(self) -> typing.Optional[codes.GatewayIntent]:
+        """
+        Returns
+        -------
+        :obj:`hikari.net.codes.GatewayIntent`, optional
+            The intents being used. If this is None, no intent usage was being
+            used on this shard. On V6 this would be regular usage as prior to
+            the intents change in January 2020. If on V7, you just won't be
+            able to connect at all to the gateway.
+        """
+        return self._intents
+
+    @property
     def reconnect_count(self) -> int:
         """
         Returns

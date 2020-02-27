@@ -33,6 +33,7 @@ from hikari.internal_utilities import transformations
 from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 from hikari.orm.models import colors
+from hikari.orm.models import colours
 from hikari.orm.models import media
 
 _MAX_EMBED_SIZE = 6000
@@ -259,13 +260,14 @@ class BaseEmbed(bases.BaseModel):
         url: type_hints.Nullable[str] = None,
         timestamp: type_hints.Nullable[datetime.datetime] = None,
         color: type_hints.Nullable[colors.Color] = None,
+        colour: typing.Union[int, colours.Colour] = None,
     ) -> None:
         self._type = type
         self.title = title
         self.description = description
         self.url = url
         self.timestamp = timestamp
-        self.color = color
+        self.color = color if color is not None else colour
         self._footer = None
         self._image = None
         self._thumbnail = None
@@ -378,13 +380,8 @@ class BaseEmbed(bases.BaseModel):
         """
         The optional footer in this embed. Can also be removed using the `del` operator if you wish to remove
         it entirely.
-
-        Note:
-            This is a :class:`weakref.proxy`. It will only exist while the embed
-            itself exists. Assigning it and passing it around once the embed is no longer
-            accessible **will not work**.
         """
-        return weakref.proxy(self._footer) if self._footer is not None else None
+        return self._footer
 
     @footer.deleter
     def footer(self):
@@ -395,13 +392,8 @@ class BaseEmbed(bases.BaseModel):
         """
         The optional image for this embed. Can also be removed using the `del` operator if you wish to remove
         it entirely.
-
-        Note:
-            This is a :class:`weakref.proxy`. It will only exist while the embed
-            itself exists. Assigning it and passing it around once the embed is no longer
-            accessible **will not work**.
         """
-        return weakref.proxy(self._image) if self._image is not None else None
+        return self._image
 
     @image.deleter
     def image(self):
@@ -412,13 +404,8 @@ class BaseEmbed(bases.BaseModel):
         """
         The optional thumbnail for this embed. Can also be removed using the `del` operator if you wish to remove
         it entirely.
-
-        Note:
-            This is a :class:`weakref.proxy`. It will only exist while the embed
-            itself exists. Assigning it and passing it around once the embed is no longer
-            accessible **will not work**.
         """
-        return weakref.proxy(self._thumbnail) if self._thumbnail is not None else None
+        return self._thumbnail
 
     @thumbnail.deleter
     def thumbnail(self):
@@ -429,13 +416,8 @@ class BaseEmbed(bases.BaseModel):
         """
         The optional author for this embed. Can also be removed using the `del` operator if you wish to remove
         it entirely.
-
-        Note:
-            This is a :class:`weakref.proxy`. It will only exist while the embed
-            itself exists. Assigning it and passing it around once the embed is no longer
-            accessible **will not work**.
         """
-        return weakref.proxy(self._author) if self._author is not None else None
+        return self._author
 
     @author.deleter
     def author(self):
@@ -445,12 +427,8 @@ class BaseEmbed(bases.BaseModel):
     def fields(self) -> typing.Sequence[EmbedField]:
         """
         A sequence of the embed fields for this embed. This may be empty.
-
-        Note:
-            This is a collection of :class:`weakref.proxy`. They will only exist while the embed
-            itself exists. Extracting them and storing them separately **will not work**.
         """
-        return list(map(weakref.proxy, self._fields))
+        return list(self._fields)
 
     def to_dict(self, *, dict_factory: bases.DictFactoryT = bases.dict_factory_impl) -> bases.DictImplT:
         """
@@ -552,6 +530,7 @@ class ReceivedEmbed(BaseEmbed):
         url: str = None,
         timestamp: datetime.datetime = None,
         color: typing.Union[int, colors.Color] = None,
+        colour: typing.Union[int, colours.Colour] = None,
     ) -> None:
         ...
 
@@ -564,25 +543,15 @@ class ReceivedEmbed(BaseEmbed):
     def video(self) -> type_hints.Nullable[EmbedVideo]:
         """
         An optional video for this embed.
-
-        Note:
-            This is a :class:`weakref.proxy`. It will only exist while the embed
-            itself exists. Assigning it and passing it around once the embed is no longer
-            accessible **will not work**.
         """
-        return weakref.proxy(self._video) if self._video is not None else None
+        return self._video
 
     @property
     def provider(self) -> type_hints.Nullable[EmbedProvider]:
         """
         An optional provider for the embed.
-
-        Note:
-            This is a :class:`weakref.proxy`. It will only exist while the embed
-            itself exists. Assigning it and passing it around once the embed is no longer
-            accessible **will not work**.
         """
-        return weakref.proxy(self._provider) if self._provider is not None else None
+        return self._provider
 
 
 FileOrUrlT = typing.Union[str]
@@ -624,6 +593,7 @@ class Embed(BaseEmbed):
         url: str = None,
         timestamp: datetime.datetime = None,
         color: typing.Union[int, colors.Color] = None,
+        colour: typing.Union[int, colours.Colour] = None,
     ) -> None:
         ...
 
@@ -674,7 +644,6 @@ class Embed(BaseEmbed):
 
         Warning:
             The text must not exceed 2048 characters.
-
         """
         assertions.assert_that(
             text is None or len(text.strip()) > 0, "footer.text must not be empty or purely whitespace"
@@ -693,15 +662,13 @@ class Embed(BaseEmbed):
             image: the optional file or URL to the image to set.
 
         If you call this and do not specify a value for a field, it will clear the existing value. This will clear any
-        existing thumbnail, additionally.
+        existing image, additionally.
 
         Returns:
             This embed to allow method chaining.
-
         """
         image, file = _extract_url(image)
         self._image = EmbedImage(url=image)
-        self._thumbnail = None
         self._maybe_ref_file_obj(self._image, file)
         return self
 
@@ -720,7 +687,6 @@ class Embed(BaseEmbed):
         """
         image, file = _extract_url(image)
         self._thumbnail = EmbedImage(url=image)
-        self._image = None
         self._maybe_ref_file_obj(self._thumbnail, file)
         return self
 
