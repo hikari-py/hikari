@@ -241,7 +241,6 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         self.id = int(payload["id"])
 
         self.channel_id = int(payload["channel_id"])
-        self.guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
 
         self.is_tts = payload["tts"]
         self.crosspost_of = MessageCrosspost(payload["message_reference"]) if "message_reference" in payload else None
@@ -256,6 +255,7 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         self.activity = None
         self.application = None
         self.edited_at = None
+        self.guild_id = None
         self.is_mentioning_everyone = False
         self.attachments = containers.EMPTY_SEQUENCE
         self.embeds = containers.EMPTY_SEQUENCE
@@ -267,6 +267,9 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         self.update_state(payload)
 
     def update_state(self, payload: type_hints.JSONObject) -> None:
+        if "guild_id" in payload:
+            self.guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
+
         if "member" in payload:
             # Messages always contain partial members, not full members.
             self.author = self._fabric.state_registry.parse_partial_member(
