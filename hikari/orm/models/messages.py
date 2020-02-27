@@ -126,7 +126,6 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
 
     __slots__ = (
         "_fabric",
-        "is_dm",
         "channel_id",
         "guild_id",
         "author",
