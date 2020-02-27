@@ -26,7 +26,6 @@ import enum
 import typing
 
 from hikari.internal_utilities import containers
-from hikari.internal_utilities import conversions
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
@@ -312,7 +311,7 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
         self.roles = {}
         self.voice_states = {}
         super().__init__(payload)
-        self.shard_id = conversions.guild_id_to_shard_id(self.id, self._fabric.shard_count)
+        self.shard_id = transformations.guild_id_to_shard_id(self.id, self._fabric.shard_count)
 
     def update_state(self, payload: type_hints.JSONObject) -> None:
         super().update_state(payload)

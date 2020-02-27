@@ -22,7 +22,7 @@ import datetime
 import math
 import time
 import urllib.parse
-from unittest import mock
+import cymock as mock
 
 import aiohttp
 import async_timeout
@@ -502,7 +502,8 @@ class TestGatewayConnect:
 @pytest.mark.asyncio
 class TestGatewayClientIdentifyOrResumeThenPollEvents:
     @pytest.fixture
-    def client(self):
+    def client(self, event_loop):
+        asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("_identify_or_resume_then_poll_events",))
 
