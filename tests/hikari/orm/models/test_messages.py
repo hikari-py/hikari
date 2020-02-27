@@ -136,6 +136,7 @@ class TestMessage:
         assert initial.is_mentioning_everyone == updated.is_mentioning_everyone
         assert initial.attachments == updated.attachments
         assert initial.embeds == updated.embeds
+        assert initial.guild_id == updated.guild_id
         assert initial.is_pinned == updated.is_pinned
         assert initial.application == updated.application
         assert initial.activity == updated.activity
