@@ -134,6 +134,8 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         "reactions",
         "content",
         "is_tts",
+        "user_mentions",
+        "role_mentions",
         "is_mentioning_everyone",
         "attachments",
         "embeds",
@@ -183,6 +185,16 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     #:
     #: :type: :class:`bool`
     is_tts: bool
+
+    #: The IDs of the users this message mentions.
+    #:
+    #: :type: :class:`typing.Sequence` of `int`
+    user_mentions: typing.Sequence[int]
+
+    #: The IDs of the roles this message mentions.
+    #:
+    #: :type: :class:`typing.Sequence` of `int`
+    role_mentions: typing.Sequence[int]
 
     #: Whether this message mentions @everyone/@here or not.
     #:
@@ -256,6 +268,8 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         self.application = None
         self.edited_at = None
         self.guild_id = None
+        self.user_mentions = []
+        self.role_mentions = []
         self.is_mentioning_everyone = False
         self.attachments = containers.EMPTY_SEQUENCE
         self.embeds = containers.EMPTY_SEQUENCE
@@ -282,6 +296,12 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
 
         if "edited_timestamp" in payload:
             self.edited_at = transformations.nullable_cast(payload.get("edited_timestamp"), dates.parse_iso_8601_ts)
+
+        if "mentions" in payload:
+            self.user_mentions = [int(u["id"]) for u in payload["mentions"]]
+
+        if "mention_roles" in payload:
+            self.role_mentions = [int(r) for r in payload["mention_roles"]]
 
         if "mention_everyone" in payload:
             self.is_mentioning_everyone = payload["mention_everyone"]

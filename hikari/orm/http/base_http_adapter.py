@@ -281,6 +281,9 @@ class BaseHTTPAdapter(abc.ABC):
         tts: bool = False,
         files: type_hints.NotRequired[typing.Collection[_media.AbstractFile]] = unspecified.UNSPECIFIED,
         embed: type_hints.NotRequired[_embeds.Embed] = unspecified.UNSPECIFIED,
+        mention_everyone: bool = True,
+        user_mentions: type_hints.NotRequired[typing.Iterable[_users.BaseUserLikeT]] = unspecified.UNSPECIFIED,
+        role_mentions: type_hints.NotRequired[typing.Iterable[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
     ) -> _messages.Message:
         """
         Create a message in the given channel or DM.
@@ -289,21 +292,30 @@ class BaseHTTPAdapter(abc.ABC):
             channel:
                 The ID or object of the channel or dm channel to send to.
             content:
-                The message content to send.
+                If specified, the message content to send with the message.
             tts:
-                If specified and `True`, then the message will be sent as a TTS message.
+                If `True`, then the message will be sent as a TTS message.
             files:
-                If specified, this should be a list of between 1 and 5 :class:`hikari.orm.models.media.AbstractFile`
-                derived objects
+                If specified, this should be a list of :class:`hikari.orm.models.media.AbstractFile`
+                derived objects in the range :math:`[1,5]`.
             embed:
                 If specified, this embed will be sent with the message.
+            mention_everyone:
+                If `True`, parse @everyone and @here mentions from the message content.
+            user_mentions:
+                If specified, the user mentions to parse from the message content. If not specified, all of them will be parsed.
+            role_mentions:
+                If specified, the role mentions to parse from the message content. If not specified, all of them will be parsed.
 
         Raises:
             hikari.net.errors.NotFoundHTTPError:
                 If the channel ID is not found.
+            ValueError:
+                If more than 100 user_mentions/role_mentions are provided.
             hikari.net.errors.BadRequestHTTPError:
-                If the file is too large, the embed exceeds the defined limits, if the message content is specified and
-                empty or greater than 2000 characters, or if neither of content, file or embed are specified.
+                This can be raised if the file is too large; if the embed exceeds the defined limits; 
+                if the message content is specified only and empty or greater than 2000 characters; 
+                if neither content, file or embed are specified.
             hikari.net.errors.ForbiddenHTTPError:
                 If you lack permissions to send to this channel.
 

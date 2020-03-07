@@ -520,6 +520,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         tts: bool = False,
         files: type_hints.NotRequired[typing.Sequence[typing.Tuple[str, storage.FileLikeT]]] = unspecified.UNSPECIFIED,
         embed: type_hints.NotRequired[type_hints.JSONObject] = unspecified.UNSPECIFIED,
+        allowed_mentions: type_hints.NotRequired[type_hints.JSONObject] = unspecified.UNSPECIFIED,
     ) -> type_hints.JSONObject:
         """
         Create a message in the given channel or DM.
@@ -528,25 +529,29 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             channel_id:
                 The channel or user ID to send to.
             content:
-                The message content to send.
+                If specified, the message content to send with the message.
             nonce:
                 An optional ID to send for opportunistic message creation. This doesn't serve any real purpose for
                 general use, and can usually be ignored.
             tts:
-                If specified and `True`, then the message will be sent as a TTS message.
+                If `True`, then the message will be sent as a TTS message.
             files:
                 If specified, this should be a list of between 1 and 5 tuples. Each tuple should consist of the
                 file name, and either raw :class:`bytes` or an :class:`io.IOBase` derived object with a seek that
                 points to a buffer containing said file.
             embed:
-                if specified, this embed will be sent with the message.
+                If specified, the embed to send with the message.
+            allowed_mentions:
+                If specified, the mentions to ping with the message. If not specified, will ping all mentions.
 
         Raises:
             hikari.net.errors.NotFoundHTTPError:
                 If the channel ID is not found.
             hikari.net.errors.BadRequestHTTPError:
-                If the file is too large, the embed exceeds the defined limits, if the message content is specified and
-                empty or greater than 2000 characters, or if neither of content, file or embed are specified.
+                This can be raised if the file is too large; if the embed exceeds the defined limits; 
+                if the message content is specified only and empty or greater than 2000 characters; 
+                if neither content, file or embed are specified; if there is a duplicate id in allowed_mention; 
+                if select parse all users/roles mentions but then specify them.
             hikari.net.errors.ForbiddenHTTPError:
                 If you lack permissions to send to this channel.
 
@@ -559,6 +564,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         transformations.put_if_specified(json_payload, "content", content)
         transformations.put_if_specified(json_payload, "nonce", nonce)
         transformations.put_if_specified(json_payload, "embed", embed)
+        transformations.put_if_specified(json_payload, "allowed_mentions", allowed_mentions)
 
         form.add_field("payload_json", json.dumps(json_payload), content_type="application/json")
 
