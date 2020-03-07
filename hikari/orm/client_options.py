@@ -28,7 +28,7 @@ import typing
 import aiohttp.typedefs
 
 from hikari.orm.gateway import chunk_mode as _chunk_mode
-from hikari.net import gateway
+from hikari.net import codes
 from hikari.net import versions
 from hikari.orm.models import presences
 
@@ -92,7 +92,7 @@ class ClientOptions:
     #: to the logger, amongst other things that may harm the performance of your application.
     debug: bool = False
     #: The intents to send to the gateway on IDENTIFY.
-    gateway_intents: typing.Optional[gateway.GatewayIntent] = None
+    gateway_intents: typing.Optional[codes.GatewayIntent] = None
     #: The gateway API version to use. This defaults to the most recent documented stable API version.
     gateway_version: versions.GatewayVersion = versions.GatewayVersion.STABLE
     #: The REST API version to use. This defaults to the most recent documented stable API version.
