@@ -30,6 +30,7 @@ from hikari.orm.models import embeds
 from hikari.orm.models import guilds
 from hikari.orm.models import media
 from hikari.orm.models import messages
+from hikari.orm.models import overwrites
 from hikari.orm.models import permissions
 from hikari.orm.state import base_registry
 from tests.hikari import _helpers
@@ -260,27 +261,29 @@ class TestGuildChannel:
 @pytest.mark.model
 class TestGuildTextChannel:
     def test_GuildTextChannel(self, mock_fabric):
-        guild_text_channel_obj = channels.GuildTextChannel(
-            mock_fabric,
-            {
-                "type": 0,
-                "id": "1234567",
-                "guild_id": "696969",
-                "position": 100,
-                "permission_overwrites": [],
-                "nsfw": True,
-                "parent_id": None,
-                "rate_limit_per_user": 420,
-                "topic": "nsfw stuff",
-                "name": "shh!",
-            },
-        )
+        mock_overwrite = _helpers.mock_model(overwrites.Overwrite, id=42)
+        with mock.patch.object(overwrites.Overwrite, "from_dict", return_value=mock_overwrite):
+            guild_text_channel_obj = channels.GuildTextChannel(
+                mock_fabric,
+                {
+                    "type": 0,
+                    "id": "1234567",
+                    "guild_id": "696969",
+                    "position": 100,
+                    "permission_overwrites": [{"type": "user", "allow": 42}],
+                    "nsfw": True,
+                    "parent_id": None,
+                    "rate_limit_per_user": 420,
+                    "topic": "nsfw stuff",
+                    "name": "shh!",
+                },
+            )
 
         assert guild_text_channel_obj.type is channels.ChannelType.GUILD_TEXT
         assert guild_text_channel_obj.id == 1234567
         assert guild_text_channel_obj.guild_id == 696969
         assert guild_text_channel_obj.position == 100
-        assert guild_text_channel_obj.permission_overwrites == []
+        assert guild_text_channel_obj.permission_overwrites == {42: mock_overwrite}
         assert guild_text_channel_obj.is_nsfw is True
         assert guild_text_channel_obj.parent_id is None
         assert guild_text_channel_obj.rate_limit_per_user == 420
@@ -341,7 +344,7 @@ class TestGuildVoiceChannel:
         assert guild_voice_channel_obj.id == 9292929
         assert guild_voice_channel_obj.guild_id == 929
         assert guild_voice_channel_obj.position == 66
-        assert guild_voice_channel_obj.permission_overwrites == []
+        assert guild_voice_channel_obj.permission_overwrites == {}
         assert guild_voice_channel_obj.name == "roy rodgers mc freely"
         assert guild_voice_channel_obj.bitrate == 999
         assert guild_voice_channel_obj.user_limit is None
@@ -418,7 +421,7 @@ class TestGuildCategory:
         assert guild_category_obj.position == 69
         assert guild_category_obj.guild_id == 54321
         assert guild_category_obj.id == 123456
-        assert guild_category_obj.permission_overwrites == []
+        assert guild_category_obj.permission_overwrites == {}
         assert not guild_category_obj.is_dm
 
     def test_GuildCategory___repr__(self):
@@ -456,7 +459,7 @@ class TestGuildAnnouncementChannel:
         assert guild_announcement_channel_obj.id == 4444
         assert guild_announcement_channel_obj.guild_id == 1111
         assert guild_announcement_channel_obj.position == 24
-        assert guild_announcement_channel_obj.permission_overwrites == []
+        assert guild_announcement_channel_obj.permission_overwrites == {}
         assert guild_announcement_channel_obj.name
         assert guild_announcement_channel_obj.is_nsfw is False
         assert guild_announcement_channel_obj.parent_id == 3232
@@ -497,7 +500,7 @@ class TestGuildStoreChannel:
         assert guild_store_channel_obj.id == 9876
         assert guild_store_channel_obj.guild_id == 7676
         assert guild_store_channel_obj.position == 9
-        assert guild_store_channel_obj.permission_overwrites == []
+        assert guild_store_channel_obj.permission_overwrites == {}
         assert guild_store_channel_obj.name == "a"
         assert guild_store_channel_obj.parent_id == 32
         assert not guild_store_channel_obj.is_dm
