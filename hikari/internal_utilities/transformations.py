@@ -25,7 +25,7 @@ import base64
 import contextlib
 import typing
 
-from hikari.internal_utilities import unspecified, type_hints
+from hikari.internal_utilities import unspecified
 
 if typing.TYPE_CHECKING:
     from hikari.internal_utilities import type_hints
@@ -290,5 +290,5 @@ __all__ = [
     "get_parent_id_from_model",
     "id_map",
     "guild_id_to_shard_id",
-    "image_bytes_to_image_data"
+    "image_bytes_to_image_data",
 ]
