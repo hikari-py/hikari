@@ -168,11 +168,11 @@ REACTION_EMOJI_USER = RouteTemplate("/channels/{channel_id}/messages/{message_id
 REACTIONS = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions/{emoji}")
 
 # Guilds
-GUILD = RouteTemplate("/guild/{guild_id}")
+GUILD = RouteTemplate("/guilds/{guild_id}")
 GUILDS = RouteTemplate("/guilds")
 GUILD_AUDIT_LOGS = RouteTemplate("/guilds/{guild_id}/audit-logs")
-GUILD_BAN = RouteTemplate("/guild/{guild_id}/bans/{user_id}")
-GUILD_BANS = RouteTemplate("/guild/{guild_id}/bans")
+GUILD_BAN = RouteTemplate("/guilds/{guild_id}/bans/{user_id}")
+GUILD_BANS = RouteTemplate("/guilds/{guild_id}/bans")
 GUILD_CHANNELS = RouteTemplate("/guilds/{guild_id}/channels")
 GUILD_EMBED = RouteTemplate("/guilds/{guild_id}/embed")
 GUILD_EMOJI = RouteTemplate("/guilds/{guild_id}/emojis/{emoji_id}")
@@ -196,7 +196,7 @@ GUILD_WEBHOOKS = RouteTemplate("/guilds/{guild_id}/webhooks")
 INVITE = RouteTemplate("/invites/{invite_code}")
 
 # Users
-USER = RouteTemplate("/user/{user_id}")
+USER = RouteTemplate("/users/{user_id}")
 
 # @me
 LEAVE_GUILD = RouteTemplate("/users/@me/guilds/{guild_id}")
