@@ -904,7 +904,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_member(
-        self, member_obj: members.Member, role_objs: typing.Sequence[roles.Role], payload: type_hints.JSONObject,
+        self, member_obj: members.Member, payload: type_hints.JSONObject,
     ) -> typing.Tuple[members.Member, members.Member]:
         """
         Update a member in a given guild. If the member is not already registered, nothing is returned.
@@ -912,8 +912,6 @@ class BaseRegistry(abc.ABC):
         Args:
             member_obj:
                 the member to update.
-            role_objs:
-                the list of roles the member should have.
             payload:
                 the new member object data.
 
