@@ -25,11 +25,9 @@ import asyncio
 
 import aiohttp
 
-from hikari.net import ratelimits
-
 from hikari.internal_utilities import loggers
+from hikari.net import ratelimits
 from hikari.net import status_info_client
-
 
 logger = loggers.get_named_logger(__name__)
 

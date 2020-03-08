@@ -21,9 +21,9 @@ import datetime
 import math
 import os
 import signal
-import cymock as mock
 
 import aiohttp
+import cymock as mock
 import pytest
 
 from hikari.net import errors as _errors

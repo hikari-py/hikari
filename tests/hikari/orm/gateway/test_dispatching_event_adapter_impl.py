@@ -18,8 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 import logging
-import cymock as mock
 
+import cymock as mock
 import pytest
 
 from hikari.net import gateway as _gateway

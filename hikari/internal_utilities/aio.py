@@ -180,11 +180,7 @@ class EventDelegate:
         return completed_future()
 
     def wait_for(
-        self,
-        name: str,
-        *,
-        timeout: typing.Optional[float],
-        predicate: typing.Callable[..., bool]
+        self, name: str, *, timeout: typing.Optional[float], predicate: typing.Callable[..., bool]
     ) -> asyncio.Future:
         """Given an event name, wait for the event to occur once, then return
         the arguments that accompanied the event as the result.

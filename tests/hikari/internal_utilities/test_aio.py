@@ -211,12 +211,7 @@ class TestEventDelegate:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("predicate_return", (True, False))
     @pytest.mark.parametrize(
-        ("in_event_args", "expected_result"),
-        [
-            ((), None,),
-            ((12,), 12),
-            ((12, 22, 33), (12, 22, 33))
-        ]
+        ("in_event_args", "expected_result"), [((), None,), ((12,), 12), ((12, 22, 33), (12, 22, 33))]
     )
     @_helpers.timeout_after(1)
     async def test_dispatch_awakens_matching_futures(
@@ -257,12 +252,7 @@ class TestEventDelegate:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("predicate_return", (True, False))
     @pytest.mark.parametrize(
-        ("in_event_args", "expected_result"),
-        [
-            ((), None,),
-            ((12,), 12),
-            ((12, 22, 33), (12, 22, 33))
-        ]
+        ("in_event_args", "expected_result"), [((), None,), ((12,), 12), ((12, 22, 33), (12, 22, 33))]
     )
     @_helpers.timeout_after(1)
     async def test_dispatch_removes_awoken_future(
@@ -334,12 +324,7 @@ class TestEventDelegate:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        ("in_event_args", "expected_result"),
-        [
-            ((), None,),
-            ((12,), 12),
-            ((12, 22, 33), (12, 22, 33))
-        ]
+        ("in_event_args", "expected_result"), [((), None,), ((12,), 12), ((12, 22, 33), (12, 22, 33))]
     )
     @_helpers.timeout_after(2)
     async def test_wait_for_returns_matching_event_args_when_invoked(self, mux_map, in_event_args, expected_result):
@@ -357,12 +342,7 @@ class TestEventDelegate:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        ("in_event_args", "expected_result"),
-        [
-            ((), None,),
-            ((12,), 12),
-            ((12, 22, 33), (12, 22, 33))
-        ]
+        ("in_event_args", "expected_result"), [((), None,), ((12,), 12), ((12, 22, 33), (12, 22, 33))]
     )
     @_helpers.timeout_after(2)
     async def test_wait_for_returns_matching_event_args_when_invoked_but_no_predicate_match(
@@ -384,7 +364,6 @@ class TestEventDelegate:
         await mux_map.wait_for("foobar", timeout=1, predicate=predicate)
         assert False, "event was marked as succeeded when it shouldn't have been"
 
-
     @pytest.mark.asyncio
     @_helpers.timeout_after(2)
     @_helpers.assert_raises(type_=RuntimeError)
@@ -398,7 +377,9 @@ class TestEventDelegate:
     @pytest.mark.parametrize("predicate_side_effect", (True, False, RuntimeError()))
     @_helpers.timeout_after(5)
     @_helpers.assert_raises(type_=asyncio.TimeoutError)
-    async def test_other_events_in_same_waiter_event_name_do_not_awaken_us(self, mux_map, predicate_side_effect, event_loop):
+    async def test_other_events_in_same_waiter_event_name_do_not_awaken_us(
+        self, mux_map, predicate_side_effect, event_loop
+    ):
         mux_map._waiters["foobar"] = {event_loop.create_future(): mock.MagicMock(side_effect=predicate_side_effect)}
 
         future = mux_map.wait_for("foobar", timeout=1, predicate=mock.MagicMock(return_value=False))
