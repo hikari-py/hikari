@@ -783,5 +783,140 @@ class Client:
 
         await asyncio.gather(*(partial() for partial in partials))
 
+    async def wait_for(
+        self,
+        event_name: str,
+        *,
+        timeout: typing.Optional[float],
+        predicate: typing.Callable[..., bool],
+    ) -> typing.Any:
+        """Wait for an event to occur that matches an optional predicate.
+
+        If a timeout is given and that is reached, then an
+        :obj:`asyncio.TimeoutError` is raised.
+
+        Arguments for each event that matches the given name will be passed
+        as parameters to the given predicate. If the predicate returns a
+        true-like value, then those arguments will be the result of this call
+        immediately. If the predicate returns a Falsy value, the event will be
+        ignored. If the predicate throws an exception, that will be raised
+        immediately.
+
+        Examples
+        --------
+
+        This example will start after you send a message saying `hk.after_me`.
+        It will wait for you to send another message and then send the same
+        message. If you take more than 10 seconds, it will say "You were too
+        slow."
+
+        .. code-block:: python
+
+            @client.event()
+            async def on_message(first_message):
+                if first_message.content == "hk.after_me" and not first_message.author.is_bot:
+                    def check(msg):
+                        return (
+                            msg.author == first_message.author
+                            and msg.channel == first_message.channel
+                        )
+
+                    try:
+                        new_message = await client.wait_for(
+                            "message_create",
+                            timeout=10,
+                            predicate=check
+                        )
+
+                        # be wary of @everyone and @here pings if you put this in your bot.
+                        await first_message.channel.send(new_message.content)
+
+                    except asyncio.TimeoutError:
+                        await first_message.channel.send("You were too slow.")
+
+        The next example shows how to wait for a reaction on a message the bot
+        sends. When a reaction is added, the emoji is sent by a message. If the
+        reaction is not added within 20 seconds, an asyncio.TimeoutError is raised
+        instead.
+
+        .. code-block:: python
+
+            target_message = await message.channel.send("Add an emoji to me.")
+
+            def check(reaction, user):
+                return reaction.message_id == target_message.id and not user.is_bot
+
+            # Wrap in a try-catch like in the previous example to handle
+            # when the timeout is hit.
+            reaction, user = await client.wait_for(
+                "message_reaction_add",
+                timeout=20,
+                predicate=check)
+            await target_message.channel.send(f"{user} just reacted with {reaction.emoji}")
+
+        The following example shows an event listener for `MESSAGE_CREATE` that
+        when receiving `n.add` as a message, will start to wait for the user
+        to send numbers in following messages. Each number that is sent in the
+        same channel by the author of the original message will be added to a
+        total. If the user doesn't send a number for 10 seconds, the sum will
+        be returned.
+
+        .. code-block:: python
+
+            @client.event()
+            async def on_message(first_message):
+                if first_message.content != "n.add":
+                    return
+
+                await first_message.channel.send("Send some numbers to add together")
+
+                total = 0.0
+
+                def check(new_message):
+                    return (
+                        new_message.author == first_message.author
+                        and new_message.channel == first_message.channel
+                        and new_message.content.isdigit()
+                    )
+
+                try:
+                    while True:
+                        new_message = client.wait_for(
+                            "message_create",
+                            timeout=10,
+                            predicate=check
+                        )
+
+                        total += int(new_message.content)
+                except asyncio.TimeoutError:
+                    await first_message.channel.send(f"The sum is {total}")
+
+        Parameters
+        ----------
+        event_name : :obj:`str`
+            The name of the event to wait for. This should not include an `on_`
+            prefix to the name.
+        timeout : :obj:`float`, optional
+            How long to wait for in seconds before cancelling with an
+            :obj:`asyncio.TimeoutError`. If `None`, then no timeout is ever
+            reached. You should be careful to
+        predicate : optional
+            A function that takes the arguments passed with the event as
+            parameters and returns `True` if the event is a match, or `False`
+            if it is not. This cannot be a coroutine function.
+
+        Returns
+        -------
+        Any arguments passed to the matching event.
+
+        Raises
+        ------
+        :obj:`asyncio.TimeoutError`:
+            If the timeout is not `None` and is reached.
+        :obj:`Exception`:
+            If any exception is raised by your predicate.
+        """
+        return await self._event_dispatcher.wait_for(event_name, timeout=timeout, predicate=predicate)
+
 
 __all__ = ["Client"]
