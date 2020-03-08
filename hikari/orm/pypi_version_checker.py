@@ -19,6 +19,8 @@
 """
 A helper utility class that checks PyPI for the latest stable version of the package.
 """
+__all__ = ["check_package_version"]
+
 import contextlib
 import functools
 

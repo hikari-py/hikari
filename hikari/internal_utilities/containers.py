@@ -19,6 +19,16 @@
 """
 Custom data structures and constant values.
 """
+__all__ = [
+    "ObjectProxy",
+    "LRUDict",
+    "EMPTY_SEQUENCE",
+    "EMPTY_SET",
+    "EMPTY_COLLECTION",
+    "EMPTY_DICT",
+    "empty_generator",
+]
+
 import types
 import typing
 
@@ -125,14 +135,3 @@ EMPTY_DICT: typing.Mapping = types.MappingProxyType({})
 
 #: A generator expression that is always exhausted and can never yield anything.
 empty_generator = (_ for _ in EMPTY_COLLECTION)
-
-
-__all__ = (
-    "ObjectProxy",
-    "LRUDict",
-    "EMPTY_SEQUENCE",
-    "EMPTY_SET",
-    "EMPTY_COLLECTION",
-    "EMPTY_DICT",
-    "empty_generator",
-)

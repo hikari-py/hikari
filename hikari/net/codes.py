@@ -19,6 +19,8 @@
 """
 Enumerations for opcodes and status codes.
 """
+__all__ = ["HTTPStatusCode", "GatewayCloseCode", "GatewayOpcode", "JSONErrorCode", "GatewayIntent"]
+
 import enum
 
 # Doesnt work correctly with enums, so since this file is all enums, ignore
@@ -445,5 +447,3 @@ class GatewayIntent(enum.IntFlag):
 
 
 # pylint: enable=no-member
-
-__all__ = ["HTTPStatusCode", "GatewayCloseCode", "GatewayOpcode", "JSONErrorCode", "GatewayIntent"]

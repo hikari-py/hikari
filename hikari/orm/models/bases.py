@@ -21,6 +21,23 @@ Model ABCs and mixins.
 """
 from __future__ import annotations
 
+
+__all__ = [
+    "SnowflakeMixin",
+    "SnowflakeMixinT",
+    "BestEffortEnumMixin",
+    "NamedEnumMixin",
+    "BaseModelWithFabric",
+    "BaseModel",
+    "UnknownObject",
+    "RawSnowflakeT",
+    "SnowflakeLikeT",
+    "MarshalMixin",
+    "DictImplT",
+    "dict_factory_impl",
+    "DictFactoryT",
+]
+
 import abc
 import asyncio
 import copy
@@ -459,19 +476,3 @@ RawSnowflakeT = typing.Union[int, str]
 
 #: A raw snowflake type or an :class:`ISnowflake` instance.
 SnowflakeLikeT = typing.Union[RawSnowflakeT, SnowflakeMixin, UnknownObject]
-
-__all__ = [
-    "SnowflakeMixin",
-    "SnowflakeMixinT",
-    "BestEffortEnumMixin",
-    "NamedEnumMixin",
-    "BaseModelWithFabric",
-    "BaseModel",
-    "UnknownObject",
-    "RawSnowflakeT",
-    "SnowflakeLikeT",
-    "MarshalMixin",
-    "DictImplT",
-    "dict_factory_impl",
-    "DictFactoryT",
-]

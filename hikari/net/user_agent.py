@@ -25,6 +25,8 @@ the version of this library, the OS you are making requests from, etc.
 This information is provided to enable Discord to detect that you are using a
 valid bot and not attempting to abuse the API.
 """
+__all__ = ["library_version", "python_version", "system_type", "user_agent"]
+
 import platform
 
 from hikari.internal_utilities import cache
@@ -100,6 +102,3 @@ def user_agent() -> str:
     system = system_type()
     python = python_version()
     return f"DiscordBot ({__url__}, {__version__}) {python} {system}"
-
-
-__all__ = ("library_version", "python_version", "system_type", "user_agent")

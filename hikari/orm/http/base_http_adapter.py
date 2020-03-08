@@ -22,6 +22,8 @@ to use to interact with the HTTP API.
 """
 from __future__ import annotations
 
+__all__ = ["BaseHTTPAdapter"]
+
 import abc
 import typing
 

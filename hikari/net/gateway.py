@@ -30,6 +30,8 @@ References:
 """
 from __future__ import annotations
 
+__all__ = ["GatewayStatus", "GatewayClient"]
+
 import asyncio
 import contextlib
 import datetime
@@ -858,6 +860,3 @@ class GatewayClient:
 
     def __bool__(self):
         return self.is_connected
-
-
-__all__ = ["GatewayStatus", "GatewayClient"]

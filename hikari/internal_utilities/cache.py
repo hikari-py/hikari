@@ -21,6 +21,8 @@ Provides mechanisms to cache results of calls lazily.
 """
 from __future__ import annotations
 
+__all__ = ["cached_property", "cached_function"]
+
 import asyncio
 import functools
 import inspect
@@ -188,6 +190,3 @@ def cached_property(
         )
 
     return decorator if not __is_sphinx else __noop_decorator
-
-
-__all__ = ["cached_property", "cached_function"]

@@ -24,6 +24,8 @@ to handle events.
 """
 from __future__ import annotations
 
+__all__ = ["BaseDispatchingEventAdapter"]
+
 import abc
 import asyncio
 import typing

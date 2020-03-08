@@ -21,6 +21,8 @@ Members that represent users and their state in specific guilds.
 """
 from __future__ import annotations
 
+__all__ = ["Member", "MemberLikeT"]
+
 import typing
 
 from hikari.internal_utilities import assertions
@@ -121,6 +123,3 @@ class Member(users.User, delegate_fabricated=True):
 
 #: A :class:`Member`, or an :class:`int`/:class:`str` ID of one.
 MemberLikeT = typing.Union[bases.RawSnowflakeT, Member]
-
-
-__all__ = ["Member"]

@@ -21,6 +21,24 @@ Errors that can be raised by networking components.
 """
 from __future__ import annotations
 
+__all__ = [
+    "GatewayError",
+    "GatewayClientClosedError",
+    "GatewayServerClosedConnectionError",
+    "GatewayInvalidTokenError",
+    "GatewayInvalidSessionError",
+    "GatewayMustReconnectError",
+    "GatewayNeedsShardingError",
+    "GatewayZombiedError",
+    "HTTPError",
+    "ServerHTTPError",
+    "ClientHTTPError",
+    "BadRequestHTTPError",
+    "UnauthorizedHTTPError",
+    "ForbiddenHTTPError",
+    "NotFoundHTTPError",
+]
+
 import typing
 
 from hikari import errors
@@ -361,22 +379,3 @@ class NotFoundHTTPError(ClientHTTPError):
         json_code: typing.Union[codes.JSONErrorCode, int, None],
     ) -> None:
         super().__init__(codes.HTTPStatusCode.NOT_FOUND, route, message, json_code)
-
-
-__all__ = (
-    "GatewayError",
-    "GatewayClientClosedError",
-    "GatewayServerClosedConnectionError",
-    "GatewayInvalidTokenError",
-    "GatewayInvalidSessionError",
-    "GatewayMustReconnectError",
-    "GatewayNeedsShardingError",
-    "GatewayZombiedError",
-    "HTTPError",
-    "ServerHTTPError",
-    "ClientHTTPError",
-    "BadRequestHTTPError",
-    "UnauthorizedHTTPError",
-    "ForbiddenHTTPError",
-    "NotFoundHTTPError",
-)
