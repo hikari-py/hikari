@@ -123,6 +123,10 @@ EMPTY_COLLECTION: typing.Collection = tuple()
 EMPTY_DICT: typing.Mapping = types.MappingProxyType({})
 
 
+#: A generator expression that is always exhausted and can never yield anything.
+empty_generator = (_ for _ in EMPTY_COLLECTION)
+
+
 __all__ = (
     "ObjectProxy",
     "LRUDict",
@@ -130,4 +134,5 @@ __all__ = (
     "EMPTY_SET",
     "EMPTY_COLLECTION",
     "EMPTY_DICT",
+    "empty_generator",
 )

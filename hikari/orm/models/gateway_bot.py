@@ -90,9 +90,7 @@ class SessionStartLimit(bases.BaseModel):
         self.total = int(payload["total"])
         self.remaining = int(payload["remaining"])
         self.reset_after = datetime.timedelta(seconds=float(payload["reset_after"]) / 1_000)
-        self.reset_at = (
-            datetime.datetime.now(tz=datetime.timezone.utc) + self.reset_after
-        )
+        self.reset_at = datetime.datetime.now(tz=datetime.timezone.utc) + self.reset_after
 
     @property
     def used(self) -> int:

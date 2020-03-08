@@ -21,9 +21,9 @@ import datetime
 import math
 import os
 import signal
-import cymock as mock
 
 import aiohttp
+import cymock as mock
 import pytest
 
 from hikari.net import errors as _errors
@@ -1062,3 +1062,20 @@ class TestUpdatePresence:
     async def test_update_presence_when_client_not_running_raises_RuntimeError(self, mock_client):
         mock_client._is_started = False
         await mock_client.update_presence(activity=None)
+
+
+@pytest.mark.asyncio
+class TestWaitFor:
+    @_helpers.timeout_after(1)
+    async def test_wait_for_delegates_to_event_handler(self, event_loop):
+        client = _client.Client(loop=event_loop)
+        client._event_dispatcher = mock.MagicMock()
+        a, b, c = object(), object(), object()
+        client._event_dispatcher.wait_for = mock.AsyncMock(return_value=(a, b, c))
+        predicate = mock.MagicMock()
+
+        result = await client.wait_for("foo", timeout=10, predicate=predicate)
+
+        client._event_dispatcher.wait_for.assert_awaited_once_with("foo", timeout=10, predicate=predicate)
+
+        assert result == (a, b, c)

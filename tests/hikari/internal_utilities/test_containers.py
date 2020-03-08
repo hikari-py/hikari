@@ -157,3 +157,9 @@ class TestDefaultImmutableMapping:
     def test___iter__(self):
         m = containers.DefaultImmutableMapping({"foo": "bar", "baz": "bork"}, 12)
         assert {*iter(m)} == {"foo", "baz"}
+
+
+class TestEmptyGenerator:
+    def test_nothing_is_yielded(self):
+        items = list(containers.empty_generator)
+        assert len(items) == 0

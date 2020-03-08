@@ -19,8 +19,8 @@
 import contextlib
 import copy
 import datetime
-import cymock as mock
 
+import cymock as mock
 import pytest
 
 from hikari.orm import fabric

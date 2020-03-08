@@ -30,9 +30,9 @@ import time
 import typing
 import warnings
 import weakref
-import cymock as mock
 
 import async_timeout
+import cymock as mock
 import pytest
 
 _LOGGER = logging.getLogger(__name__)
