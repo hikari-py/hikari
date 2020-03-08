@@ -27,9 +27,9 @@ import typing
 
 import aiohttp.typedefs
 
-from hikari.orm.gateway import chunk_mode as _chunk_mode
 from hikari.net import codes
 from hikari.net import versions
+from hikari.orm.gateway import chunk_mode as _chunk_mode
 from hikari.orm.models import presences
 
 

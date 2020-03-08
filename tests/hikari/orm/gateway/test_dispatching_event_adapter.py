@@ -18,7 +18,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 import cymock as mock
-
 import pytest
 
 from hikari.orm import fabric

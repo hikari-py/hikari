@@ -19,8 +19,8 @@
 """
 A helper utility class that checks PyPI for the latest stable version of the package.
 """
-import functools
 import contextlib
+import functools
 
 import aiohttp
 

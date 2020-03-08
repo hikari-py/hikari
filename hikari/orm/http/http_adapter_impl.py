@@ -31,12 +31,11 @@ from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
 from hikari.internal_utilities import unspecified
 from hikari.orm.http import base_http_adapter
+from hikari.orm.models import channels as _channels
 from hikari.orm.models import guilds as _guilds
 from hikari.orm.models import invites as _invites
 from hikari.orm.models import media as _media
 from hikari.orm.models import voices as _voices
-
-from hikari.orm.models import channels as _channels
 
 if typing.TYPE_CHECKING:
     from hikari.internal_utilities import type_hints

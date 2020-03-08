@@ -21,24 +21,26 @@ Hikari's core framework for writing Discord bots in Python.
 """
 from __future__ import annotations
 
-from hikari._about import __author__, __copyright__, __email__, __license__, __version__, __url__
-
+from hikari import errors
 from hikari import net
 from hikari import orm
-from hikari import errors
-
+from hikari._about import __author__
+from hikari._about import __copyright__
+from hikari._about import __email__
+from hikari._about import __license__
+from hikari._about import __url__
+from hikari._about import __version__
 from hikari.errors import *
-
 from hikari.net.codes import *
 from hikari.net.errors import *
 from hikari.net.gateway import *
 from hikari.net.http_client import *
 from hikari.net.status_info_client import *
 from hikari.net.versions import *
-
+from hikari.orm.client import *
+from hikari.orm.client_options import *
 from hikari.orm.gateway.chunk_mode import *
 from hikari.orm.gateway.event_types import *
-
 from hikari.orm.models.applications import *
 from hikari.orm.models.audit_logs import *
 from hikari.orm.models.channels import *
@@ -62,6 +64,3 @@ from hikari.orm.models.teams import *
 from hikari.orm.models.users import *
 from hikari.orm.models.voices import *
 from hikari.orm.models.webhooks import *
-
-from hikari.orm.client import *
-from hikari.orm.client_options import *

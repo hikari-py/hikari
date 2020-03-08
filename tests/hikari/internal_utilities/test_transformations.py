@@ -18,8 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import dataclasses
 import typing
-import cymock as mock
 
+import cymock as mock
 import pytest
 
 from hikari.internal_utilities import transformations
