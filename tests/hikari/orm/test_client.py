@@ -551,7 +551,7 @@ class TestClientRun:
 class TestClientDispatch:
     async def test_dispatch(self):
         client = _client.Client()
-        client._event_dispatcher.dispatch = mock.MagicMock()
+        client._event_dispatcher = mock.MagicMock()
 
         client.dispatch("message_create", "foo", 1, True)
 
@@ -565,7 +565,7 @@ class TestClientAddEvent:
             ...
 
         client = _client.Client()
-        client._event_dispatcher.add = mock.MagicMock()
+        client._event_dispatcher = mock.MagicMock()
 
         client.add_event("message_create", foo)
 
@@ -579,7 +579,7 @@ class TestClientRemoveEvent:
             ...
 
         client = _client.Client()
-        client._event_dispatcher.remove = mock.MagicMock()
+        client._event_dispatcher = mock.MagicMock()
 
         client.remove_event("message_create", foo)
 
