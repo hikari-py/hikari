@@ -35,7 +35,7 @@ def repr_of(*args: str) -> typing.Callable[[typing.Any], str]:
             id: int
             name: str
             nick: typing.Optional[str]
-            roles: typing.Sequence[Role]
+            role_ids: typing.Sequence[int]
 
             __repr__ = repr_of("id", "name", "nick")
 

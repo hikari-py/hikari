@@ -51,7 +51,7 @@ class Member(users.User, delegate_fabricated=True):
     and fields to a wrapped user object which is shared with the corresponding member in every guild the user is in.
     """
 
-    __slots__ = ("user", "guild", "roles", "joined_at", "nick", "premium_since", "presence", "is_deaf", "is_mute")
+    __slots__ = ("user", "guild", "role_ids", "joined_at", "nick", "premium_since", "presence", "is_deaf", "is_mute")
 
     #: The underlying user object.
     user: users.User
@@ -59,8 +59,8 @@ class Member(users.User, delegate_fabricated=True):
     #: The guild that the member is in.
     guild: guilds.Guild
 
-    #: The roles that the member is in.
-    roles: typing.MutableSequence[_roles.Role]
+    #: The IDs of the roles the member has.
+    role_ids: typing.Sequence[int]
 
     #: The date and time the member joined this guild.
     #:
@@ -102,17 +102,10 @@ class Member(users.User, delegate_fabricated=True):
         self.user = fabric_obj.state_registry.parse_user(payload["user"])
         self.guild = guild
         self.joined_at = dates.parse_iso_8601_ts(payload["joined_at"])
+        self.update_state(payload)
 
-        role_objs = [
-            fabric_obj.state_registry.get_role_by_id(self.guild.id, int(rid))
-            for rid in payload.get("role_ids", containers.EMPTY_SEQUENCE)
-        ]
-
-        self.update_state(role_objs, payload)
-
-    # noinspection PyMethodOverriding
-    def update_state(self, role_objs: typing.Sequence[_roles.Role], payload: type_hints.JSONObject) -> None:
-        self.roles = list(role_objs)
+    def update_state(self, payload: type_hints.JSONObject) -> None:
+        self.role_ids = [int(role_id) for role_id in payload.get("roles", containers.EMPTY_SEQUENCE)]
         self.premium_since = transformations.nullable_cast(payload.get("premium_since"), dates.parse_iso_8601_ts)
         self.nick = payload.get("nick")
         self.is_deaf = payload.get("deaf", False)

@@ -205,7 +205,6 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
         message_obj.reactions.clear()
 
-    # noinspection PyProtectedMember
     def delete_role(self, role_obj: roles.Role) -> None:
         guild_id = role_obj.guild_id
         with contextlib.suppress(KeyError):
@@ -214,12 +213,8 @@ class StateRegistryImpl(base_registry.BaseRegistry):
             del guild_obj.roles[role_obj.id]
 
             for member in guild_obj.members.values():
-                # TODO: make member role references weak, perhaps?
-                # Would require me to store the actual roles rather than the IDs though...
-
-                # Protected member access, but much more efficient for this case than resolving every role repeatedly.
-                if role_obj in member.roles:
-                    member.roles.remove(role_obj)
+                if role_obj.id in member.role_ids:
+                    member.role_ids.remove(role_obj.id)
 
     def get_channel_by_id(
         self, channel_id: int
@@ -488,10 +483,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
         if member_id in guild_obj.members:
             member_obj = guild_obj.members[member_id]
-            role_objs = [
-                self.get_mandatory_role_by_id(guild_obj.id, int(role_id)) for role_id in member_payload["roles"]
-            ]
-            member_obj.update_state(role_objs, member_payload)
+            member_obj.update_state(member_payload)
             return member_obj
 
         member_obj = members.Member(self.fabric, guild_obj, member_payload)
@@ -588,7 +580,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
     def set_roles_for_member(self, role_objs: typing.Sequence[roles.Role], member_obj: members.Member) -> None:
         # Doesn't even need to be a method but I am trying to keep attribute changing code in this class
         # so that it isn't coupling dependent classes of this one to the model implementation as much.
-        member_obj.roles = [role for role in role_objs]
+        member_obj.role_ids = [role.id for role in role_objs]
 
     def update_channel(
         self, channel_payload: type_hints.JSONObject
@@ -623,11 +615,11 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return old_emojis, new_emojis
 
     def update_member(
-        self, member_obj: members.Member, role_objs: typing.Sequence[roles.Role], payload: type_hints.JSONObject,
+        self, member_obj: members.Member, payload: type_hints.JSONObject,
     ) -> type_hints.Nullable[typing.Tuple[members.Member, members.Member]]:
         new_member = member_obj
         old_member = new_member.copy()
-        new_member.update_state(role_objs, payload)
+        new_member.update_state(payload)
         return old_member, new_member
 
     def update_member_presence(

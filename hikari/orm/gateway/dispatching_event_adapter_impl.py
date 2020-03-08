@@ -288,22 +288,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
         if guild_obj is not None and user_id in guild_obj.members:
             member_obj = guild_obj.members[user_id]
 
-            role_ids = payload["roles"]
-            role_objs = []
-
-            for role_id in role_ids:
-                role_obj = self.fabric.state_registry.get_role_by_id(guild_id, int(role_id))
-                if role_obj is not None:
-                    role_objs.append(role_obj)
-                else:
-                    self.logger.debug(
-                        "ignoring unknown role %s in GUILD_MEMBER_UPDATE for member %s in guild %s",
-                        role_id,
-                        user_id,
-                        guild_id,
-                    )
-
-            member_diff = self.fabric.state_registry.update_member(member_obj, role_objs, payload)
+            member_diff = self.fabric.state_registry.update_member(member_obj, payload)
             self.dispatch(event_types.EventType.GUILD_MEMBER_UPDATE, *member_diff)
         else:
             self.logger.debug("ignoring GUILD_MEMBER_UPDATE for unknown guild %s", guild_id)
