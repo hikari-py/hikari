@@ -21,6 +21,8 @@ A basic type of registry that handles storing global state.
 """
 from __future__ import annotations
 
+__all__ = ["StateRegistryImpl"]
+
 import contextlib
 import functools
 import typing

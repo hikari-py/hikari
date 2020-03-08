@@ -22,6 +22,8 @@ V6 Discord API.
 """
 from __future__ import annotations
 
+__all__ = ["HTTPClient"]
+
 import asyncio
 import contextlib
 import datetime
@@ -2795,6 +2797,3 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             query={"wait": str(wait)},
             suppress_authorization_header=True,
         )
-
-
-__all__ = ["HTTPClient"]

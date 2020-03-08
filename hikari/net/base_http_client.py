@@ -22,6 +22,8 @@ proxying, SSL configuration, and a standard easy-to-use interface.
 """
 from __future__ import annotations
 
+__all__ = ["BaseHTTPClient"]
+
 import abc
 import contextlib
 import json

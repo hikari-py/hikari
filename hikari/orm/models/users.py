@@ -21,6 +21,8 @@ Generic users not bound to a guild, and guild-bound member definitions.
 """
 from __future__ import annotations
 
+__all__ = ["BaseUser", "User", "UserFlag", "PremiumType", "OAuth2User", "BaseUserLikeT"]
+
 import enum
 import typing
 
@@ -239,6 +241,3 @@ def parse_user(fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> Bas
 
 #: Any type of :class:`IUser`, or an :class:`int`/:class:`str` ID of one.
 BaseUserLikeT = typing.Union[bases.RawSnowflakeT, BaseUser]
-
-
-__all__ = ["BaseUser", "User", "UserFlag", "PremiumType", "OAuth2User", "BaseUserLikeT"]

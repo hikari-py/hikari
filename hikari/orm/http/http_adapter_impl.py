@@ -21,6 +21,8 @@ Implementation of a basic HTTP adapter.
 """
 from __future__ import annotations
 
+__all__ = ["HTTPAdapterImpl"]
+
 import asyncio
 import typing
 

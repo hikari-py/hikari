@@ -21,6 +21,15 @@ Asyncio extensions and utilities.
 """
 from __future__ import annotations
 
+__all__ = [
+    "optional_await",
+    "CoroutineFunctionT",
+    "PartialCoroutineProtocolT",
+    "EventDelegate",
+    "completed_future",
+    "maybe_timeout",
+]
+
 import asyncio
 import contextlib
 import dataclasses
@@ -361,13 +370,3 @@ async def maybe_timeout(timeout: type_hints.Nullable[typing.Union[float, int]]):
             yield
     else:
         yield
-
-
-__all__ = [
-    "optional_await",
-    "CoroutineFunctionT",
-    "PartialCoroutineProtocolT",
-    "EventDelegate",
-    "completed_future",
-    "maybe_timeout",
-]

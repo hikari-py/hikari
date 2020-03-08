@@ -21,6 +21,8 @@ A role within a guild.
 """
 from __future__ import annotations
 
+__all__ = ["PartialRole", "Role", "PartialRoleLikeT", "RoleLikeT"]
+
 import typing
 
 from hikari.internal_utilities import reprs
@@ -139,6 +141,3 @@ PartialRoleLikeT = typing.Union[bases.RawSnowflakeT, PartialRole]
 
 #: An instance of :class:`Role`, or the :class:`int`/:class:`str` ID of one.
 RoleLikeT = typing.Union[bases.RawSnowflakeT, Role]
-
-
-__all__ = ["PartialRole", "Role", "PartialRoleLikeT", "RoleLikeT"]

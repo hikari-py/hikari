@@ -21,6 +21,8 @@ The primary client for writing a bot with Hikari.
 """
 from __future__ import annotations
 
+__all__ = ["Client"]
+
 import asyncio
 import contextlib
 import datetime
@@ -913,6 +915,3 @@ class Client:
             If any exception is raised by your predicate.
         """
         return await self._event_dispatcher.wait_for(event_name, timeout=timeout, predicate=predicate)
-
-
-__all__ = ["Client"]

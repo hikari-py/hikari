@@ -21,6 +21,8 @@ Application models.
 """
 from __future__ import annotations
 
+__all__ = ["Application"]
+
 import typing
 
 from hikari.internal_utilities import containers
@@ -151,6 +153,3 @@ class Application(bases.BaseModel, bases.SnowflakeMixin):
         self.primary_sku_id = transformations.nullable_cast(payload.get("primary_sku_id"), int)
         self.slug_url = payload.get("slug")
         self.cover_image_hash = payload.get("cover_image")
-
-
-__all__ = ["Application"]

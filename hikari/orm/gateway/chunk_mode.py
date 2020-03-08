@@ -19,6 +19,8 @@
 """
 Auto-requesting chunking options.
 """
+__all__ = ["ChunkMode"]
+
 import enum
 
 
@@ -33,6 +35,3 @@ class ChunkMode(enum.IntEnum):
     MEMBERS = 1
     #: Autochunk guild members and their presences.
     MEMBERS_AND_PRESENCES = 2
-
-
-__all__ = ["ChunkMode"]

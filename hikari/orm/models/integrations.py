@@ -21,6 +21,8 @@ Account integrations.
 """
 from __future__ import annotations
 
+__all__ = ["Integration", "IntegrationAccount", "PartialIntegration", "PartialIntegrationLikeT", "IntegrationLikeT"]
+
 import typing
 
 from hikari.internal_utilities import dates
@@ -158,5 +160,3 @@ PartialIntegrationLikeT = typing.Union[bases.RawSnowflakeT, PartialIntegration]
 
 #: An instance of :class:`Integration`, or the :class:`int`/:class:`str` ID of one.
 IntegrationLikeT = typing.Union[bases.RawSnowflakeT, Integration]
-
-__all__ = ["Integration", "IntegrationAccount", "PartialIntegration", "PartialIntegrationLikeT", "IntegrationLikeT"]

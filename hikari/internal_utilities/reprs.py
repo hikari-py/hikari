@@ -19,6 +19,8 @@
 """
 Provides an automated repr generator.
 """
+__all__ = ["repr_of"]
+
 import reprlib
 import typing
 

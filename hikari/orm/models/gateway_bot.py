@@ -21,6 +21,8 @@ Additional types used for specific HTTP call responses, etc.
 """
 from __future__ import annotations
 
+__all__ = ["GatewayBot", "SessionStartLimit"]
+
 import datetime
 
 from hikari.internal_utilities import reprs
@@ -96,6 +98,3 @@ class SessionStartLimit(bases.BaseModel):
     def used(self) -> int:
         """The number of times you have IDENTIFIED in this time window."""
         return self.total - self.remaining
-
-
-__all__ = ["GatewayBot", "SessionStartLimit"]

@@ -21,6 +21,8 @@ Invitations to guilds.
 """
 from __future__ import annotations
 
+__all__ = ["Invite", "InviteWithMetadata", "InviteTargetUserType", "InviteLikeT", "VanityURL"]
+
 import enum
 import typing
 
@@ -209,6 +211,3 @@ def parse_invite(fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> t
 
 #: An :class:`Invite` or :class:`InviteWithMetadata` or the :class:`str` code of an invite object.
 InviteLikeT = typing.Union[str, Invite, InviteWithMetadata]
-
-
-__all__ = ["Invite", "InviteWithMetadata", "InviteTargetUserType", "InviteLikeT", "VanityURL"]

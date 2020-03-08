@@ -21,6 +21,30 @@ Channel models.
 """
 from __future__ import annotations
 
+__all__ = [
+    "DMRecipientT",
+    "GuildRecipientT",
+    "ChannelType",
+    "Channel",
+    "TextChannel",
+    "PartialChannel",
+    "GuildChannel",
+    "GuildTextChannel",
+    "DMChannel",
+    "GuildVoiceChannel",
+    "GroupDMChannel",
+    "GuildCategory",
+    "GuildAnnouncementChannel",
+    "GuildStoreChannel",
+    "ChannelTypeLikeT",
+    "ChannelLikeT",
+    "TextChannelLikeT",
+    "GuildChannelLikeT",
+    "GuildCategoryLikeT",
+    "GuildTextChannelLikeT",
+    "GuildVoiceChannelLikeT",
+]
+
 import abc
 import asyncio
 import contextlib
@@ -608,27 +632,3 @@ GuildCategoryLikeT = typing.Union[bases.RawSnowflakeT, GuildCategory]
 GuildTextChannelLikeT = typing.Union[bases.RawSnowflakeT, GuildTextChannel]
 #: A :class:`GuildVoiceChannel`, or an :class:`int`/:class:`str` ID of one.
 GuildVoiceChannelLikeT = typing.Union[bases.RawSnowflakeT, GuildVoiceChannel]
-
-__all__ = (
-    "DMRecipientT",
-    "GuildRecipientT",
-    "ChannelType",
-    "Channel",
-    "TextChannel",
-    "PartialChannel",
-    "GuildChannel",
-    "GuildTextChannel",
-    "DMChannel",
-    "GuildVoiceChannel",
-    "GroupDMChannel",
-    "GuildCategory",
-    "GuildAnnouncementChannel",
-    "GuildStoreChannel",
-    "ChannelTypeLikeT",
-    "ChannelLikeT",
-    "TextChannelLikeT",
-    "GuildChannelLikeT",
-    "GuildCategoryLikeT",
-    "GuildTextChannelLikeT",
-    "GuildVoiceChannelLikeT",
-)

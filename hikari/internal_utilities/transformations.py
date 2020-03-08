@@ -21,6 +21,25 @@ Basic transformation utilities.
 """
 from __future__ import annotations
 
+__all__ = [
+    "CastInputT",
+    "CastOutputT",
+    "DefaultT",
+    "TypeCastT",
+    "ResultT",
+    "nullable_cast",
+    "try_cast",
+    "put_if_specified",
+    "get_id",
+    "cast_if_specified",
+    "put_if_not_none",
+    "format_present_placeholders",
+    "get_parent_id_from_model",
+    "id_map",
+    "guild_id_to_shard_id",
+    "image_bytes_to_image_data",
+]
+
 import base64
 import contextlib
 import typing
@@ -272,23 +291,3 @@ def guild_id_to_shard_id(guild_id: int, shard_count: int) -> int:
         The shard the given guild is in.
     """
     return (guild_id >> 22) % shard_count
-
-
-__all__ = [
-    "CastInputT",
-    "CastOutputT",
-    "DefaultT",
-    "TypeCastT",
-    "ResultT",
-    "nullable_cast",
-    "try_cast",
-    "put_if_specified",
-    "get_id",
-    "cast_if_specified",
-    "put_if_not_none",
-    "format_present_placeholders",
-    "get_parent_id_from_model",
-    "id_map",
-    "guild_id_to_shard_id",
-    "image_bytes_to_image_data",
-]

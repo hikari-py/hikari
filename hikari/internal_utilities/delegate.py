@@ -21,6 +21,8 @@ Implements a basic type delegation system that piggybacks off of the standard
 inheritance system in Python and boasts full dataclass compatibility in the 
 process.
 """
+__all__ = ["delegate_to", "DelegatedProperty"]
+
 import inspect
 import typing
 
@@ -115,6 +117,3 @@ def _should_ignore_attribute_for_field(name, value):
         or name.startswith("__")
         or name in _SPECIAL_ATTRS_TO_IGNORE
     )
-
-
-__all__ = ("delegate_to", "DelegatedProperty")
