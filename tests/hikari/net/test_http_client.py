@@ -23,9 +23,8 @@ import ssl
 import unittest.mock
 
 import aiohttp
-import pytest
-
 import cymock as mock
+import pytest
 
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations

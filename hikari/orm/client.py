@@ -31,7 +31,6 @@ import time
 import typing
 
 import aiohttp
-from hikari.net import status_info_client
 
 from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
@@ -41,16 +40,17 @@ from hikari.net import errors
 from hikari.net import gateway
 from hikari.net import http_client
 from hikari.net import ratelimits
+from hikari.net import status_info_client
 from hikari.orm import api_status_checker
-from hikari.orm import pypi_version_checker
 from hikari.orm import client_options
 from hikari.orm import fabric
+from hikari.orm import pypi_version_checker
 from hikari.orm.gateway import basic_chunker_impl
 from hikari.orm.gateway import dispatching_event_adapter_impl
 from hikari.orm.gateway import event_types
 from hikari.orm.http import http_adapter_impl
-from hikari.orm.state import state_registry_impl
 from hikari.orm.models import presences
+from hikari.orm.state import state_registry_impl
 
 
 class Client:
@@ -784,11 +784,7 @@ class Client:
         await asyncio.gather(*(partial() for partial in partials))
 
     async def wait_for(
-        self,
-        event_name: str,
-        *,
-        timeout: typing.Optional[float],
-        predicate: typing.Callable[..., bool],
+        self, event_name: str, *, timeout: typing.Optional[float], predicate: typing.Callable[..., bool],
     ) -> typing.Any:
         """Wait for an event to occur that matches an optional predicate.
 

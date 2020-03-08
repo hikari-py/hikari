@@ -17,12 +17,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
-import cymock as mock
 
+import cymock as mock
 import pytest
-from hikari.orm.http import base_http_adapter
 
 from hikari.orm import fabric
+from hikari.orm.http import base_http_adapter
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
 from hikari.orm.models import members
