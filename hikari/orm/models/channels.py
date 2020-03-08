@@ -47,6 +47,7 @@ if typing.TYPE_CHECKING:
     from hikari.orm.models import embeds
     from hikari.orm.models import messages
     from hikari.orm.models import guilds as _guild
+    from hikari.orm.models import roles as _roles
 
 #: Valid types for a recipient of a DM.
 DMRecipientT = typing.Union[users.User, users.OAuth2User]
@@ -189,9 +190,12 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
     async def send(
         self,
         content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        embed: type_hints.NotRequired[embeds.Embed] = unspecified.UNSPECIFIED,
         files: type_hints.NotRequired[typing.Collection[storage.FileLikeT]] = unspecified.UNSPECIFIED,
-        delete_after: typing.Union[float, int, unspecified.Unspecified] = unspecified.UNSPECIFIED,
+        embed: type_hints.NotRequired[embeds.Embed] = unspecified.UNSPECIFIED,
+        mention_everyone: bool = True,
+        user_mentions: type_hints.NotRequired[typing.Iterable[users.BaseUserLikeT]] = unspecified.UNSPECIFIED,
+        role_mentions: type_hints.NotRequired[typing.Sequence[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
+        delete_after: type_hints.NotRequired[typing.Union[float, int]] = unspecified.UNSPECIFIED,
     ) -> messages.Message:
         """
         Send a message to this channel.
@@ -199,10 +203,16 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
         Args:
             content:
                 The optional textual content.
-            embed:
-                The optional embed to send.
             files:
                 A collection of optional attachments.
+            embed:
+                The optional embed to send.
+            mention_everyone:
+                Whether to parse @everyone and @here mentions from the message content.
+            user_mentions:
+                If specified, the user mentions to parse from the message content. If not specified, all of them will be parsed.
+            role_mentions:
+                If specified, the role mentions to parse from the message content. If not specified, all of them will be parsed.
             delete_after:
                 An optional period to delete the message after.
 
@@ -215,7 +225,13 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
         if content is not unspecified.UNSPECIFIED:
             content = str(content)
         message: messages.Message = await self._fabric.http_adapter.create_message(
-            self, content=content, embed=embed, files=files
+            self,
+            content=content,
+            embed=embed,
+            files=files,
+            mention_everyone=mention_everyone,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
         )
 
         if delete_after is not unspecified.UNSPECIFIED:

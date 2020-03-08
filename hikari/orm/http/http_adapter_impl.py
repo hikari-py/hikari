@@ -177,7 +177,36 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
         tts: bool = False,
         files: type_hints.NotRequired[typing.Collection[_media.AbstractFile]] = unspecified.UNSPECIFIED,
         embed: type_hints.NotRequired[_embeds.Embed] = unspecified.UNSPECIFIED,
+        mention_everyone: bool = True,
+        user_mentions: type_hints.NotRequired[typing.Iterable[_users.BaseUserLikeT]] = unspecified.UNSPECIFIED,
+        role_mentions: type_hints.NotRequired[typing.Iterable[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
     ) -> _messages.Message:
+        types = []
+        if mention_everyone:
+            types.append("everyone")
+        if user_mentions is not unspecified.UNSPECIFIED:
+            user_mentions = list(
+                # dict.fromkeys is used to remove duplicate entries that would cause discord to return an error.
+                dict.fromkeys(transformations.get_id(user) for user in user_mentions)
+            )
+            assertions.assert_that(len(user_mentions) <= 100, "Only up to 100 users can be provided.")
+        else:
+            types.append("users")
+        if role_mentions is not unspecified.UNSPECIFIED:
+            role_mentions = list(
+                # dict.fromkeys is used to remove duplicate entries that would cause discord to return an error.
+                dict.fromkeys(transformations.get_id(role) for role in role_mentions)
+            )
+            assertions.assert_that(len(role_mentions) <= 100, "Only up to 100 roles can be provided.")
+        else:
+            types.append("roles")
+
+        allowed_mentions = {}
+        if types and types != ["everyone", "users", "roles"]:
+            allowed_mentions["parse"] = types
+        transformations.put_if_specified(allowed_mentions, "users", user_mentions)
+        transformations.put_if_specified(allowed_mentions, "roles", role_mentions)
+
         message_payload = await self.fabric.http_client.create_message(
             channel_id=transformations.get_id(channel),
             content=content,
@@ -193,6 +222,7 @@ class HTTPAdapterImpl(base_http_adapter.BaseHTTPAdapter):
             )
             or unspecified.UNSPECIFIED,
             embed=transformations.cast_if_specified(embed, lambda obj: obj.to_dict()),
+            allowed_mentions=allowed_mentions if allowed_mentions else unspecified.UNSPECIFIED,
         )
         return self.fabric.state_registry.parse_message(message_payload)
 

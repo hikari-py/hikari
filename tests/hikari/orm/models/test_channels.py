@@ -118,7 +118,13 @@ class TestTextChannel:
         text_channel = _helpers.mock_model(channels.TextChannel, _fabric=mock_fabric, id=1234)
         assert await channels.TextChannel.send(text_channel) is mock_message
         mock_fabric.http_adapter.create_message.assert_called_once_with(
-            text_channel, content=unspecified.UNSPECIFIED, embed=unspecified.UNSPECIFIED, files=unspecified.UNSPECIFIED,
+            text_channel,
+            content=unspecified.UNSPECIFIED,
+            embed=unspecified.UNSPECIFIED,
+            files=unspecified.UNSPECIFIED,
+            mention_everyone=True,
+            user_mentions=unspecified.UNSPECIFIED,
+            role_mentions=unspecified.UNSPECIFIED,
         )
 
     @pytest.mark.asyncio
@@ -129,10 +135,24 @@ class TestTextChannel:
         mock_file = mock.MagicMock(media.AbstractFile)
         mock_fabric.http_adapter.create_message.return_value = mock_message
         text_channel = _helpers.mock_model(channels.TextChannel, _fabric=mock_fabric, id=1234)
-        result = await channels.TextChannel.send(text_channel, content="owo", embed=mock_embed, files=[mock_file])
+        result = await channels.TextChannel.send(
+            text_channel,
+            content="owo",
+            embed=mock_embed,
+            files=[mock_file],
+            mention_everyone=False,
+            user_mentions=["123"],
+            role_mentions=["123"],
+        )
         assert result is mock_message
         mock_fabric.http_adapter.create_message.assert_called_once_with(
-            text_channel, content="owo", embed=mock_embed, files=[mock_file],
+            text_channel,
+            content="owo",
+            embed=mock_embed,
+            files=[mock_file],
+            mention_everyone=False,
+            user_mentions=["123"],
+            role_mentions=["123"],
         )
 
     @pytest.mark.asyncio
