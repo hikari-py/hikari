@@ -395,23 +395,33 @@ class Feature(bases.NamedEnumMixin, enum.Enum):
     """
     Features that a guild can provide.
     """
-
-    # We could have done this as a bitfield of flags but Discord hasn't done a concrete definition of what these
-    # can be, I had to read other libraries to see how they handled it...
+    #: Guild has access to set an animated guild icon.
     ANIMATED_ICON = enum.auto()
+    #: Guild has access to set a guild banner image.
     BANNER = enum.auto()
+    #: Guild has access to use commerce features (i.e. create store channels).
     COMMERCE = enum.auto()
+    #: Guild is able to be discovered in the directory.
     DISCOVERABLE = enum.auto()
+    #: Guild is able to be featured in the directory.
     FEATURABLE = enum.auto()
+    #: Guild has access to set an invite splash background.
     INVITE_SPLASH = enum.auto()
     MORE_EMOJI = enum.auto()
+    #: Guild has access to create news channels.
     NEWS = enum.auto()
     LURKABLE = enum.auto()
+    #: Guild is partnered.
     PARTNERED = enum.auto()
+    #: Guild is public, go figure.
     PUBLIC = enum.auto()
+    #: Guild cannot be public. Who would have guessed?
     PUBLIC_DISABLED = enum.auto()
+    #: Guild has access to set a vanity URL.
     VANITY_URL = enum.auto()
+    #: Guild is verified.
     VERIFIED = enum.auto()
+    #: Guild has access to set 384kbps bitrate in voice (previously VIP voice servers).
     VIP_REGIONS = enum.auto()
 
 
