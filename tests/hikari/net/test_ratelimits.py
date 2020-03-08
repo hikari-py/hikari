@@ -23,8 +23,8 @@ import logging
 import math
 import statistics
 import time
-import cymock as mock
 
+import cymock as mock
 import pytest
 
 from hikari.net import ratelimits

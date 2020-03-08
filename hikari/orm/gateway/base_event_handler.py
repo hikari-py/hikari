@@ -21,6 +21,8 @@ Abstract definition of an event handler.
 """
 from __future__ import annotations
 
+__all__ = ["BaseEventHandler"]
+
 import abc
 import typing
 

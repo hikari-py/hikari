@@ -22,10 +22,10 @@ import datetime
 import math
 import time
 import urllib.parse
-import cymock as mock
 
 import aiohttp
 import async_timeout
+import cymock as mock
 import pytest
 
 from hikari.internal_utilities import containers

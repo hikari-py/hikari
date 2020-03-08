@@ -19,9 +19,12 @@
 """
 Enumerations for opcodes and status codes.
 """
+__all__ = ["HTTPStatusCode", "GatewayCloseCode", "GatewayOpcode", "JSONErrorCode", "GatewayIntent"]
+
 import enum
 
-
+# Doesnt work correctly with enums, so since this file is all enums, ignore
+# pylint: disable=no-member
 class HTTPStatusCode(enum.IntEnum):
     """HTTP status codes that a conforming HTTP server should give us on
     Discord.
@@ -443,4 +446,4 @@ class GatewayIntent(enum.IntFlag):
     DIRECT_MESSAGE_TYPING = 1 << 14
 
 
-__all__ = ["HTTPStatusCode", "GatewayCloseCode", "GatewayOpcode", "JSONErrorCode", "GatewayIntent"]
+# pylint: enable=no-member

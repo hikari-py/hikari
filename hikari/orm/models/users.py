@@ -21,6 +21,8 @@ Generic users not bound to a guild, and guild-bound member definitions.
 """
 from __future__ import annotations
 
+__all__ = ["BaseUser", "User", "UserFlag", "PremiumType", "OAuth2User", "BaseUserLikeT"]
+
 import enum
 import typing
 
@@ -54,8 +56,8 @@ class BaseUser(bases.BaseModel, bases.SnowflakeMixin, interface=True):
 
     #: The 4-digit discriminator of the object.
     #:
-    #: :type: :class:`int`
-    discriminator: int
+    #: :type: :class:`str`
+    discriminator: str
 
     #: The hash of the user's avatar, or None if they do not have one.
     #:
@@ -66,6 +68,9 @@ class BaseUser(bases.BaseModel, bases.SnowflakeMixin, interface=True):
     #:
     #: :type: :class:`bool`
     is_bot: bool
+
+    def __str__(self):
+        return f"@{self.username}#{self.discriminator}"
 
 
 class User(BaseUser, bases.BaseModelWithFabric):
@@ -93,7 +98,7 @@ class User(BaseUser, bases.BaseModelWithFabric):
 
     def update_state(self, payload: type_hints.JSONObject) -> None:
         self.username = payload.get("username")
-        self.discriminator = int(payload["discriminator"])
+        self.discriminator = payload["discriminator"]
         self.avatar_hash = payload.get("avatar")
 
 
@@ -236,6 +241,3 @@ def parse_user(fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> Bas
 
 #: Any type of :class:`IUser`, or an :class:`int`/:class:`str` ID of one.
 BaseUserLikeT = typing.Union[bases.RawSnowflakeT, BaseUser]
-
-
-__all__ = ["BaseUser", "User", "UserFlag", "PremiumType", "OAuth2User", "BaseUserLikeT"]

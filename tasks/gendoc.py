@@ -34,7 +34,7 @@ import jinja2
 
 def is_valid_python_file(path):
     base = os.path.basename(path)
-    return not base.startswith("__") and (os.path.isdir(path) or base.endswith(".py"))
+    return not base.startswith("_") and (os.path.isdir(path) or base.endswith(".py"))
 
 
 def to_module_name(base):

@@ -21,6 +21,8 @@ Permission overwrites.
 """
 from __future__ import annotations
 
+__all__ = ["Overwrite", "OverwriteEntityType", "OverwriteEntityTypeLikeT"]
+
 import dataclasses
 import enum
 import typing
@@ -116,6 +118,3 @@ class Overwrite(bases.BaseModel, bases.SnowflakeMixin, bases.MarshalMixin):
 OverwriteEntityTypeLikeT = typing.Union[bases.RawSnowflakeT, OverwriteEntityType]
 #: A :class:`Overwrite`, or an :class:`int`/:class:`str` ID of one.
 OverwriteLikeT = typing.Union[bases.RawSnowflakeT, Overwrite]
-
-
-__all__ = ["Overwrite", "OverwriteEntityType", "OverwriteEntityTypeLikeT"]

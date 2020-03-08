@@ -21,6 +21,8 @@ Webhooks.
 """
 from __future__ import annotations
 
+__all__ = ["WebhookUser", "Webhook", "WebhookLikeT"]
+
 import enum
 import typing
 
@@ -151,5 +153,3 @@ class Webhook(bases.BaseModelWithFabric, bases.SnowflakeMixin):
 
 #: A :class:`Webhook` instance, or the :class:`int`/:class:`str` ID of one.
 WebhookLikeT = typing.Union[bases.RawSnowflakeT, Webhook]
-
-__all__ = ["WebhookUser", "Webhook", "WebhookLikeT"]

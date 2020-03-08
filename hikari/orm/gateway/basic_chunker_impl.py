@@ -21,6 +21,8 @@ Basic implementation of a chunker.
 """
 from __future__ import annotations
 
+__all__ = ["BasicChunkerImpl"]
+
 import asyncio
 import typing
 

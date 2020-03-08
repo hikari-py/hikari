@@ -21,6 +21,19 @@ Messages and attachments.
 """
 from __future__ import annotations
 
+__all__ = [
+    "AuthorT",
+    "MessageType",
+    "MessageActivityType",
+    "Message",
+    "MessageActivity",
+    "MessageApplication",
+    "MessageCrosspost",
+    "MessageFlag",
+    "MessageLikeT",
+    "MessageFlagLikeT",
+]
+
 import enum
 import typing
 
@@ -126,7 +139,6 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
 
     __slots__ = (
         "_fabric",
-        "is_dm",
         "channel_id",
         "guild_id",
         "author",
@@ -135,6 +147,8 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         "reactions",
         "content",
         "is_tts",
+        "user_mentions",
+        "role_mentions",
         "is_mentioning_everyone",
         "attachments",
         "embeds",
@@ -184,6 +198,16 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     #:
     #: :type: :class:`bool`
     is_tts: bool
+
+    #: The IDs of the users this message mentions.
+    #:
+    #: :type: :class:`typing.Sequence` of `int`
+    user_mentions: typing.Sequence[int]
+
+    #: The IDs of the roles this message mentions.
+    #:
+    #: :type: :class:`typing.Sequence` of `int`
+    role_mentions: typing.Sequence[int]
 
     #: Whether this message mentions @everyone/@here or not.
     #:
@@ -242,7 +266,6 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         self.id = int(payload["id"])
 
         self.channel_id = int(payload["channel_id"])
-        self.guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
 
         self.is_tts = payload["tts"]
         self.crosspost_of = MessageCrosspost(payload["message_reference"]) if "message_reference" in payload else None
@@ -257,6 +280,9 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         self.activity = None
         self.application = None
         self.edited_at = None
+        self.guild_id = None
+        self.user_mentions = []
+        self.role_mentions = []
         self.is_mentioning_everyone = False
         self.attachments = containers.EMPTY_SEQUENCE
         self.embeds = containers.EMPTY_SEQUENCE
@@ -268,6 +294,9 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
         self.update_state(payload)
 
     def update_state(self, payload: type_hints.JSONObject) -> None:
+        if "guild_id" in payload:
+            self.guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
+
         if "member" in payload:
             # Messages always contain partial members, not full members.
             self.author = self._fabric.state_registry.parse_partial_member(
@@ -280,6 +309,12 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
 
         if "edited_timestamp" in payload:
             self.edited_at = transformations.nullable_cast(payload.get("edited_timestamp"), dates.parse_iso_8601_ts)
+
+        if "mentions" in payload:
+            self.user_mentions = [int(u["id"]) for u in payload["mentions"]]
+
+        if "mention_roles" in payload:
+            self.role_mentions = [int(r) for r in payload["mention_roles"]]
 
         if "mention_everyone" in payload:
             self.is_mentioning_everyone = payload["mention_everyone"]
@@ -518,16 +553,3 @@ class MessageCrosspost:
 #: A :class:`Message`, or an :class:`int`/:class:`str` ID of one.
 MessageLikeT = typing.Union[bases.RawSnowflakeT, Message]
 MessageFlagLikeT = typing.Union[int, MessageFlag]
-
-__all__ = [
-    "AuthorT",
-    "MessageType",
-    "MessageActivityType",
-    "Message",
-    "MessageActivity",
-    "MessageApplication",
-    "MessageCrosspost",
-    "MessageFlag",
-    "MessageLikeT",
-    "MessageFlagLikeT",
-]

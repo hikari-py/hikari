@@ -19,6 +19,8 @@
 """
 Decorators used to document, deprecate, or incubate other components in this API.
 """
+__all__ = ["deprecated", "incubating"]
+
 import asyncio
 import functools
 import inspect

@@ -17,15 +17,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
-import cymock as mock
 
 import aiohttp
 import async_timeout
+import cymock as mock
 import pytest
+
 from hikari.net import ratelimits
-
 from hikari.net import status_info_client
-
 from hikari.orm import api_status_checker
 from tests.hikari import _helpers
 

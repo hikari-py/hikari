@@ -19,19 +19,15 @@
 """
 Utilities for creating and naming loggers in this library in a consistent way.
 """
-import inspect
+__all__ = ["get_named_logger"]
+
 import logging
 import typing
-import uuid
-
-from hikari.internal_utilities import type_hints
 
 
-def get_named_logger(obj: type_hints.Nullable[typing.Any] = None, *extra_objs: typing.Any) -> logging.Logger:
+def get_named_logger(obj: typing.Any, *extra_objs: typing.Any) -> logging.Logger:
     """
-    Builds an appropriately named logger. If called with no arguments or with `NoneType`, the current module is used
-    to produce the name. If this is run from a location where no module info is available, a random UUID is used
-    instead.
+    Builds an appropriately named logger.
 
     If the passed object is an instance of a class, the class is used instead.
 
@@ -48,31 +44,11 @@ def get_named_logger(obj: type_hints.Nullable[typing.Any] = None, *extra_objs: t
     Returns:
         a created logger.
     """
-    try:
-        if obj is None:
-            stack = inspect.stack()
-            frame = stack[1]
-            module_name = frame[0]
+    if not isinstance(obj, str):
+        if not isinstance(obj, type):
+            obj = type(obj)
 
-            # https://docs.python.org/3/library/inspect.html#the-interpreter-stack
-            # prevents "leaking memory" on the interpreter stack if the user disabled gc cyclic
-            # reference detection.
-            del stack, frame
-
-            obj = inspect.getmodule(module_name)
-
-            # No module was found... maybe we are in an interactive session or some compiled module?
-            if obj is None:
-                raise AttributeError
-            else:
-                obj = obj.__name__
-        elif not isinstance(obj, str):
-            if not isinstance(obj, type):
-                obj = type(obj)
-
-            obj = f"{obj.__module__}.{obj.__qualname__}"
-    except AttributeError:
-        obj = str(uuid.uuid4())
+        obj = f"{obj.__module__}.{obj.__qualname__}"
 
     if extra_objs:
         extras = ", ".join(map(str, extra_objs))

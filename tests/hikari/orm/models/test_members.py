@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
-import cymock as mock
 
+import cymock as mock
 import pytest
 
 from hikari.orm import fabric
@@ -104,12 +104,6 @@ def test_Member_with_no_optional_fields(fabric_obj):
 
 @pytest.mark.model
 def test_Member_update_state(fabric_obj):
-    role_one = _helpers.mock_model(roles.Role)
-    role_two = _helpers.mock_model(roles.Role)
-    role_three = _helpers.mock_model(roles.Role)
-
-    role_objs = [role_one, role_two, role_three]
-
     user_dict = {"id": "123456", "username": "Boris Johnson", "discriminator": "6969", "avatar": "1a2b3c4d"}
     guild_obj = _helpers.mock_model(guilds.Guild, id=12345)
     member_obj = members.Member(
@@ -123,12 +117,12 @@ def test_Member_update_state(fabric_obj):
         },
     )
 
-    member_obj.update_state(role_objs, {"nick": "potato", "deaf": True, "mute": True})
+    member_obj.update_state({"nick": "potato", "deaf": True, "mute": True, "roles": ["31123123", "5434534", "76654"]})
     assert member_obj.nick == "potato"
     assert member_obj.is_deaf is True
     assert member_obj.is_mute is True
     assert member_obj.premium_since is None
-    assert member_obj.roles == role_objs
+    assert member_obj.role_ids == [31123123, 5434534, 76654]
 
 
 @pytest.mark.model

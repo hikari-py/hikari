@@ -21,14 +21,27 @@ Asyncio extensions and utilities.
 """
 from __future__ import annotations
 
+__all__ = [
+    "optional_await",
+    "CoroutineFunctionT",
+    "PartialCoroutineProtocolT",
+    "EventDelegate",
+    "completed_future",
+    "maybe_timeout",
+]
+
 import asyncio
 import contextlib
+import dataclasses
 import functools
+import inspect
 import typing
+import weakref
 
 import async_timeout
 
 from hikari.internal_utilities import assertions
+from hikari.internal_utilities import loggers
 from hikari.internal_utilities import type_hints
 
 ReturnT = typing.TypeVar("ReturnT", covariant=True)
@@ -79,15 +92,61 @@ class PartialCoroutineProtocolT(typing.Protocol[ReturnT]):
         ...
 
 
+@dataclasses.dataclass(frozen=True)
+class EventExceptionContext:
+    """A dataclass that contains information about where an exception was thrown from."""
+
+    __slots__ = ("event_name", "callback", "args", "exception")
+
+    #: The name of the event that triggered the exception.
+    #:
+    #: :type: :obj:`str`
+    event_name: str
+
+    #: The event handler that was being invoked.
+    #:
+    #: :type: :obj:`CoroutineFunctionT`
+    callback: CoroutineFunctionT
+
+    #: The arguments passed to the event callback.
+    #:
+    #: :type: :obj:`typing.Sequence` [ :obj:`typing.Any` ]
+    args: typing.Sequence[typing.Any]
+
+    #: The exception that was thrown.
+    #:
+    #: :type: :obj:`Exception`
+    exception: Exception
+
+
 class EventDelegate:
-    """
-    A multiplexing map. This is essentially an event delegation mapoing that stores callbacks for various events
-    that may be triggered, and acts as the mechanism for storing and calling event handlers when they need to be
-    invoked.
+    """Handles storing and dispatching to event listeners and one-time event
+    waiters.
+
+    Event listeners once registered will be stored until they are manually
+    removed. Each time an event is dispatched with a matching name, they will
+    be invoked on the event loop.
+
+    One-time event waiters are futures that will be completed when a matching
+    event is fired. Once they are matched, they are removed from the listener
+    list. Each listener has a corresponding predicate that is invoked prior
+    to completing the waiter, with any event parameters being passed to the
+    predicate. If the predicate returns False, the waiter is not completed. This
+    allows filtering of certain events and conditions in a procedural way.
+
+    Parameters
+    ----------
+    exception_event: :obj:`str`
+        The event to invoke if an exception is caught.
     """
 
-    def __init__(self) -> None:
-        self._muxes = {}
+    __slots__ = ("exception_event", "logger", "_listeners", "_waiters")
+
+    def __init__(self, exception_event: str) -> None:
+        self._listeners = {}
+        self._waiters = {}
+        self.logger = loggers.get_named_logger(self)
+        self.exception_event = exception_event
 
     def add(self, name: str, coroutine_function: CoroutineFunctionT) -> None:
         """
@@ -102,9 +161,9 @@ class EventDelegate:
         assertions.assert_that(
             asyncio.iscoroutinefunction(coroutine_function), "You must subscribe a coroutine function only", TypeError
         )
-        if name not in self._muxes:
-            self._muxes[name] = []
-        self._muxes[name].append(coroutine_function)
+        if name not in self._listeners:
+            self._listeners[name] = []
+        self._listeners[name].append(coroutine_function)
 
     def remove(self, name: str, coroutine_function: CoroutineFunctionT) -> None:
         """
@@ -117,31 +176,162 @@ class EventDelegate:
             coroutine_function:
                 The event callback to remove.
         """
-        if name in self._muxes and coroutine_function in self._muxes[name]:
-            if len(self._muxes[name]) - 1 == 0:
-                del self._muxes[name]
+        if name in self._listeners and coroutine_function in self._listeners[name]:
+            if len(self._listeners[name]) - 1 == 0:
+                del self._listeners[name]
             else:
-                self._muxes[name].remove(coroutine_function)
+                self._listeners[name].remove(coroutine_function)
 
-    def dispatch(self, name: str, *args) -> asyncio.Future:
+    # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
+    # confusing telepathy comments to the user.
+    def dispatch(self, name: str, *args):
+        """Dispatch a given event to all listeners and waiters that are
+        applicable.
+
+        Parameters
+        ----------
+        name: :obj:`str`
+            The name of the event to dispatch.
+        *args: zero or more :obj:`typing.Any`
+            The parameters to pass to the event callback.
+
+        Returns
+        -------
+        :obj:`asyncio.Future`:
+            This may be a gathering future of the callbacks to invoke, or it may
+            be a completed future object. Regardless, this result will be
+            scheduled on the event loop automatically, and does not need to be
+            awaited. Awaiting this future will await completion of all invoked
+            event handlers.
         """
-        Dispatch a given event.
+        if name in self._waiters:
+            # Unwrap single or no argument events.
+            if len(args) == 1:
+                waiter_result_args = args[0]
+            elif not args:
+                waiter_result_args = None
+            else:
+                waiter_result_args = args
 
-        Args:
-            name:
-                The name of the event to dispatch.
-            *args:
-                The parameters to pass to the event callback.
+            for future, predicate in tuple(self._waiters[name].items()):
+                try:
+                    if predicate(*args):
+                        future.set_result(waiter_result_args)
+                        del self._waiters[name][future]
+                except Exception as ex:
+                    future.set_exception(ex)
+                    del self._waiters[name][future]
 
-        Returns:
-            A future. This may be a gathering future of the callbacks to invoke, or it may be
-            a completed future object. Regardless, this result will be scheduled on the event loop
-            automatically, and does not need to be awaited. Awaiting this future will await
-            completion of all invoked event handlers.
+            if not self._waiters[name]:
+                del self._waiters[name]
+
+        # Hack to stop PyCharm saying you need to await this function when you do not need to await
+        # it.
+        future: typing.Any
+
+        if name in self._listeners:
+            coros = (self._catch(callback, name, args) for callback in self._listeners[name])
+            future = asyncio.gather(*coros)
+        else:
+            future = completed_future()
+
+        return future
+
+    async def _catch(self, callback, name, args):
+        try:
+            return await callback(*args)
+        except Exception as ex:
+            # Pop the top-most frame to remove this _catch call.
+            # The user doesn't need it in their traceback.
+            ex.__traceback__ = ex.__traceback__.tb_next
+            self.handle_exception(ex, name, args, callback)
+
+    def handle_exception(
+        self, exception: Exception, event_name: str, args: typing.Sequence[typing.Any], callback: CoroutineFunctionT
+    ) -> None:
+        """Function that is passed any exception. This allows users to override
+        this with a custom implementation if desired.
+
+        This implementation will check to see if the event that triggered the
+        exception is an exception event. If this exceptino was caused by the
+        :attr:`exception_event`, then nothing is dispatched (thus preventing
+        an exception handler recursively re-triggering itself). Otherwise, an
+        :attr:`exception_event` is dispatched with a
+        :class:`EventExceptionContext` as the sole parameter.
+
+        Parameters
+        ----------
+        exception: :obj:`Exception`
+            The exception that triggered this call.
+        event_name: :obj:`str`
+            The name of the event that triggered the exception.
+        args: :obj:`typing.Sequence` [ :obj:`typing.Any` ]
+            The arguments passed to the event that threw an exception.
+        callback: :obj:`CoroutineFunctionT`
+            The callback that threw the exception.
         """
-        if name in self._muxes:
-            return asyncio.gather(*(callback(*args) for callback in self._muxes[name]))
-        return completed_future()
+        # Do not recurse if a dodgy exception handler is added.
+        if event_name != self.exception_event:
+            self.logger.exception('Exception occurred in handler for event "%s"', event_name, exc_info=exception)
+            ctx = EventExceptionContext(event_name, callback, args, exception)
+            self.dispatch(self.exception_event, ctx)
+        else:
+            self.logger.exception(
+                'Exception occurred in handler for event "%s", and the exception has been dropped',
+                event_name,
+                exc_info=exception,
+            )
+
+    def wait_for(
+        self, name: str, *, timeout: typing.Optional[float], predicate: typing.Callable[..., bool]
+    ) -> asyncio.Future:
+        """Given an event name, wait for the event to occur once, then return
+        the arguments that accompanied the event as the result.
+
+        Events can be filtered using a given predicate function. If unspecified,
+        the first event of the given name will be a match.
+
+        Every event that matches the event name that the bot receives will be
+        checked. Thus, if you need to wait for events in a specific guild or
+        channel, or from a specific person, you want to give a predicate that
+        checks this.
+
+        Parameters
+        ----------
+        name : :obj:`str`
+            The name of the event to wait for.
+        timeout : :obj:`float`, optional
+            The timeout to wait for before cancelling and raising an
+            :obj:`asyncio.TimeoutError` instead. If this is `None`, this will
+            wait forever. Care must be taken if you use `None` as this may
+            leak memory if you do this from an event listener that gets
+            repeatedly called. If you want to do this, you should consider
+            using an event listener instead of this function.
+        predicate :
+            A function that takes the arguments for the event and returns True
+            if it is a match, or False if it should be ignored.
+            This cannot be a coroutine function.
+
+        Returns
+        -------
+        A future that when awaited will provide a the arguments passed to the
+        first matching event. If no arguments are passed to the event, then
+        `None` is the result. If one argument is passed to the event, then
+        that argument is the result, otherwise a tuple of arguments is the
+        result instead.
+
+        Note that awaiting this result will raise an :obj:`asyncio.TimeoutError`
+        if the timeout is hit and no match is found. If the predicate throws
+        any exception, this is raised immediately.
+        """
+        future = asyncio.get_event_loop().create_future()
+        if name not in self._waiters:
+            # This is used as a weakref dict to allow automatically tidying up
+            # any future that falls out of scope entirely.
+            self._waiters[name] = weakref.WeakKeyDictionary()
+        self._waiters[name][future] = predicate
+        # noinspection PyTypeChecker
+        return asyncio.ensure_future(asyncio.wait_for(future, timeout))
 
 
 def completed_future(result: typing.Any = None) -> asyncio.Future:
@@ -175,18 +365,8 @@ async def maybe_timeout(timeout: type_hints.Nullable[typing.Union[float, int]]):
             The timeout to wait for before raising an :class:`asyncio.TimeoutError`. If this is `None`, then this
             will never be raised.
     """
-    if timeout is not None:
+    if timeout is not None and timeout > 0:
         async with async_timeout.timeout(timeout):
             yield
     else:
         yield
-
-
-__all__ = [
-    "optional_await",
-    "CoroutineFunctionT",
-    "PartialCoroutineProtocolT",
-    "EventDelegate",
-    "completed_future",
-    "maybe_timeout",
-]
