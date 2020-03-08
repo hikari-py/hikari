@@ -666,6 +666,7 @@ class TestHTTPClient:
             tts=True,
             files=[("file.txt", b"okdsio9u8oij32")],
             embed={"description": "I am an embed"},
+            allowed_mentions={"users": ["123"], "roles": ["456"]},
         )
         assert result is mock_response
         CHANNEL_MESSAGES.compile.assert_called_once_with(http_client_impl.POST, channel_id="22222222")
@@ -676,6 +677,7 @@ class TestHTTPClient:
                 "content": "I am a message",
                 "nonce": "ag993okskm_cdolsio",
                 "embed": {"description": "I am an embed"},
+                "allowed_mentions": {"users": ["123"], "roles": ["456"]},
             }
         )
 
