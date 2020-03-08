@@ -52,7 +52,7 @@ def test_User_when_not_a_bot_or_system(fabric_obj):
 
     assert user_obj.id == 123456
     assert user_obj.username == "Boris Johnson"
-    assert user_obj.discriminator == 6969
+    assert user_obj.discriminator == "6969"
     assert user_obj.avatar_hash == "1a2b3c4d"
     assert user_obj.is_bot is False
     assert user_obj.is_system is False
@@ -74,7 +74,7 @@ def test_User_when_is_a_bot_and_system(fabric_obj):
 
     assert user_obj.id == 123456
     assert user_obj.username == "Boris Johnson"
-    assert user_obj.discriminator == 6969
+    assert user_obj.discriminator == "6969"
     assert user_obj.avatar_hash is None
     assert user_obj.is_bot is True
     assert user_obj.is_system is True
@@ -84,7 +84,7 @@ def test_User_when_is_a_bot_and_system(fabric_obj):
 def test_User___repr__():
     assert repr(
         _helpers.mock_model(
-            users.User, id=42, username="foo", discriminator=1234, is_bot=True, __repr__=users.User.__repr__
+            users.User, id=42, username="foo", discriminator="1234", is_bot=True, __repr__=users.User.__repr__
         )
     )
 
@@ -124,7 +124,7 @@ def test_OAuth2User(fabric_obj):
 
     assert user_obj.id == 123456
     assert user_obj.username == "Boris Johnson"
-    assert user_obj.discriminator == 6969
+    assert user_obj.discriminator == "6969"
     assert user_obj.avatar_hash == "1a2b3c4d"
     assert user_obj.is_bot is False
     assert user_obj.is_system is False

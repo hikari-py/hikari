@@ -54,8 +54,8 @@ class BaseUser(bases.BaseModel, bases.SnowflakeMixin, interface=True):
 
     #: The 4-digit discriminator of the object.
     #:
-    #: :type: :class:`int`
-    discriminator: int
+    #: :type: :class:`str`
+    discriminator: str
 
     #: The hash of the user's avatar, or None if they do not have one.
     #:
@@ -96,7 +96,7 @@ class User(BaseUser, bases.BaseModelWithFabric):
 
     def update_state(self, payload: type_hints.JSONObject) -> None:
         self.username = payload.get("username")
-        self.discriminator = int(payload["discriminator"])
+        self.discriminator = payload["discriminator"]
         self.avatar_hash = payload.get("avatar")
 
 
