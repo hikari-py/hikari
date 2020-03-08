@@ -21,6 +21,8 @@ Voice models.
 """
 from __future__ import annotations
 
+__all__ = ["VoiceServer", "VoiceState", "VoiceRegion"]
+
 import typing
 
 from hikari.internal_utilities import reprs
@@ -214,6 +216,3 @@ class VoiceRegion(bases.BaseModel):
         self.is_optimal = payload["optimal"]
         self.is_deprecated = payload["deprecated"]
         self.is_custom = payload["custom"]
-
-
-__all__ = ["VoiceServer", "VoiceState", "VoiceRegion"]

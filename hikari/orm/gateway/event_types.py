@@ -19,6 +19,8 @@
 """
 Expected events that this framework can dispatch.
 """
+__all__ = ["EventType"]
+
 import enum
 
 
@@ -26,6 +28,11 @@ class EventType(str, enum.Enum):
     """
     Events that the standard gateway event adapter can provide.
     """
+
+    #: A special event that should have a handler that consumes a
+    #: :class:`hikari.internal_utilities.aio.EventExceptionContext` as the sole
+    #: parameter.
+    EXCEPTION = "exception"
 
     CONNECT = "connect"
     DISCONNECT = "disconnect"
@@ -80,5 +87,5 @@ class EventType(str, enum.Enum):
     VOICE_STATE_UPDATE = "voice_state_update"
     WEBHOOKS_UPDATE = "webhooks_update"
 
-
-__all__ = ["EventType"]
+    def __str__(self):
+        return str(self.value)

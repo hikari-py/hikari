@@ -21,15 +21,17 @@ Client options that can be set.
 """
 from __future__ import annotations
 
+__all__ = ["ClientOptions", "ShardOptions", "NO_SHARDING", "AUTO_SHARDING"]
+
 import dataclasses
 import ssl
 import typing
 
 import aiohttp.typedefs
 
-from hikari.orm.gateway import chunk_mode as _chunk_mode
-from hikari.net import gateway
+from hikari.net import codes
 from hikari.net import versions
+from hikari.orm.gateway import chunk_mode as _chunk_mode
 from hikari.orm.models import presences
 
 
@@ -92,7 +94,7 @@ class ClientOptions:
     #: to the logger, amongst other things that may harm the performance of your application.
     debug: bool = False
     #: The intents to send to the gateway on IDENTIFY.
-    gateway_intents: typing.Optional[gateway.GatewayIntent] = None
+    gateway_intents: typing.Optional[codes.GatewayIntent] = None
     #: The gateway API version to use. This defaults to the most recent documented stable API version.
     gateway_version: versions.GatewayVersion = versions.GatewayVersion.STABLE
     #: The REST API version to use. This defaults to the most recent documented stable API version.
@@ -130,6 +132,3 @@ class ClientOptions:
     #: Generally you want this enabled to ensure that the SSL certificate that Discord provides is genuine,
     #: however, some awkward proxies can cause this to not work, in which case you would want to disable this.
     verify_ssl: bool = True
-
-
-__all__ = ["ClientOptions", "ShardOptions", "NO_SHARDING", "AUTO_SHARDING"]

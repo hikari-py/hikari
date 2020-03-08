@@ -20,6 +20,7 @@
 Sentinel value used internally to represent an entity that was omitted from explicit specification. This
 can be used to mark fields that may be able to be `None` as being optional.
 """
+__all__ = ["UNSPECIFIED"]
 
 from hikari.internal_utilities import singleton_meta
 
@@ -42,5 +43,3 @@ class Unspecified(metaclass=singleton_meta.SingletonMeta):
 
 #: An attribute that is unspecified by default.
 UNSPECIFIED = Unspecified()
-
-__all__ = ("UNSPECIFIED",)

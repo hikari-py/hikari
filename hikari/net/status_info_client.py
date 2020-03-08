@@ -35,6 +35,22 @@ https://status.discordapp.com/api/v2
 """
 from __future__ import annotations
 
+__all__ = [
+    "Subscriber",
+    "Page",
+    "Status",
+    "Component",
+    "ComponentsPage",
+    "IncidentUpdate",
+    "Incident",
+    "IncidentsPage",
+    "ScheduledMaintenance",
+    "ScheduledMaintenancesPage",
+    "Summary",
+    "StatusPage",
+    "StatusInfoClient",
+]
+
 import dataclasses
 import typing
 
@@ -954,20 +970,3 @@ class StatusInfoClient(base_http_client.BaseHTTPClient):
         """
         sub_id = subscriber.id if isinstance(subscriber, Subscriber) else subscriber
         await self._perform_request(f"/subscribers/{sub_id}/resend_confirmation", None, None, self.POST)
-
-
-__all__ = [
-    "Subscriber",
-    "Page",
-    "Status",
-    "Component",
-    "ComponentsPage",
-    "IncidentUpdate",
-    "Incident",
-    "IncidentsPage",
-    "ScheduledMaintenance",
-    "ScheduledMaintenancesPage",
-    "Summary",
-    "StatusPage",
-    "StatusInfoClient",
-]

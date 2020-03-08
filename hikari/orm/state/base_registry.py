@@ -21,6 +21,8 @@ Handles managing the state of the bot, and the cache.
 """
 from __future__ import annotations
 
+__all__ = ["BaseRegistry"]
+
 import abc
 import typing
 
@@ -904,7 +906,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_member(
-        self, member_obj: members.Member, role_objs: typing.Sequence[roles.Role], payload: type_hints.JSONObject,
+        self, member_obj: members.Member, payload: type_hints.JSONObject,
     ) -> typing.Tuple[members.Member, members.Member]:
         """
         Update a member in a given guild. If the member is not already registered, nothing is returned.
@@ -912,8 +914,6 @@ class BaseRegistry(abc.ABC):
         Args:
             member_obj:
                 the member to update.
-            role_objs:
-                the list of roles the member should have.
             payload:
                 the new member object data.
 
@@ -976,6 +976,3 @@ class BaseRegistry(abc.ABC):
             second being the new :class:`hikari.orm.models.roles.Role` state. If the `guild_id` does not correspond to
             a guild in the cache, then `None` is returned instead.
         """
-
-
-__all__ = ["BaseRegistry"]

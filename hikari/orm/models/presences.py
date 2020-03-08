@@ -19,8 +19,20 @@
 """
 Presences for members.
 """
-
 from __future__ import annotations
+
+__all__ = [
+    "Status",
+    "MemberPresence",
+    "Activity",
+    "RichActivity",
+    "parse_presence_activity",
+    "ActivityType",
+    "ActivityFlag",
+    "ActivityParty",
+    "ActivityAssets",
+    "ActivityTimestamps",
+]
 
 import dataclasses
 import datetime
@@ -373,17 +385,3 @@ class ActivityTimestamps(bases.BaseModel):
               a timedelta if both the start and end is specified, else `None`
         """
         return self.end - self.start if self.start is not None and self.end is not None else None
-
-
-__all__ = [
-    "Status",
-    "MemberPresence",
-    "Activity",
-    "RichActivity",
-    "parse_presence_activity",
-    "ActivityType",
-    "ActivityFlag",
-    "ActivityParty",
-    "ActivityAssets",
-    "ActivityTimestamps",
-]

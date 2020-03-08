@@ -21,15 +21,15 @@ A helper utility class that polls the API status pages every so often to check
 if the API is having any difficulties. If any are detected, this is printed to
 the logs.
 """
+__all__ = ["log_api_incidents"]
+
 import asyncio
 
 import aiohttp
 
-from hikari.net import ratelimits
-
 from hikari.internal_utilities import loggers
+from hikari.net import ratelimits
 from hikari.net import status_info_client
-
 
 logger = loggers.get_named_logger(__name__)
 

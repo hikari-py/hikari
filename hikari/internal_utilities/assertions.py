@@ -22,6 +22,17 @@ on any failure.
 """
 from __future__ import annotations
 
+__all__ = [
+    "assert_that",
+    "assert_not_none",
+    "assert_is_natural",
+    "assert_is_slotted",
+    "assert_subclasses",
+    "assert_is_instance",
+    "assert_is_mixin",
+    "assert_in_range",
+]
+
 import inspect
 import typing
 
@@ -132,15 +143,3 @@ def assert_in_range(value, min_inclusive, max_inclusive, name: str = None):
     if not (min_inclusive <= value <= max_inclusive):
         name = name or "The value"
         raise ValueError(f"{name} must be in the inclusive range of {min_inclusive} and {max_inclusive}")
-
-
-__all__ = (
-    "assert_that",
-    "assert_not_none",
-    "assert_is_natural",
-    "assert_is_slotted",
-    "assert_subclasses",
-    "assert_is_instance",
-    "assert_is_mixin",
-    "assert_in_range",
-)

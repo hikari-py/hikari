@@ -21,6 +21,17 @@ Types of emoji.
 """
 from __future__ import annotations
 
+__all__ = [
+    "Emoji",
+    "UnicodeEmoji",
+    "UnknownEmoji",
+    "GuildEmoji",
+    "KnownEmojiT",
+    "EmojiLikeT",
+    "GuildEmojiLikeT",
+    "KnownEmojiLikeT",
+]
+
 import abc
 import typing
 
@@ -232,15 +243,3 @@ GuildEmojiLikeT = typing.Union[bases.RawSnowflakeT, GuildEmoji]
 
 #: A :class:`GuildEmoji`, a :class:`UnicodeEmoji`, or a :class:`str` representation of either.
 KnownEmojiLikeT = typing.Union[str, KnownEmojiT]
-
-
-__all__ = [
-    "Emoji",
-    "UnicodeEmoji",
-    "UnknownEmoji",
-    "GuildEmoji",
-    "KnownEmojiT",
-    "EmojiLikeT",
-    "GuildEmojiLikeT",
-    "KnownEmojiLikeT",
-]

@@ -23,6 +23,8 @@ and data components that are being managed by the application.
 """
 from __future__ import annotations
 
+__all__ = ["Fabric"]
+
 import dataclasses
 import typing
 

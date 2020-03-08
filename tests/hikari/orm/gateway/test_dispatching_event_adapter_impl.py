@@ -18,8 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 import logging
-import cymock as mock
 
+import cymock as mock
 import pytest
 
 from hikari.net import gateway as _gateway
@@ -785,47 +785,23 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_handle_guild_member_update_when_role_is_not_cached_does_not_pass_update_member_that_role(
-        self, adapter_impl, gateway_impl, fabric_impl
-    ):
-        role_obj = _helpers.mock_model(roles.Role, id=1)
-        member_obj = _helpers.mock_model(members.Member, id=123, nick=None)
-        guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={}, roles={})
-        guild_obj.members = {member_obj.id: member_obj}
-        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
-        fabric_impl.state_registry.get_role_by_id = mock.MagicMock(return_value=None)
-        payload = {
-            "guild_id": str(guild_obj.id),
-            "user": {"id": str(member_obj.id)},
-            "nick": "potatoboi",
-            "roles": [role_obj.id],
-        }
-
-        await adapter_impl.handle_guild_member_update(gateway_impl, payload)
-
-        fabric_impl.state_registry.update_member.assert_called_with(member_obj, [], payload)
-
-    @pytest.mark.asyncio
     async def test_handle_guild_member_update_calls_update_member_with_roles_and_nick(
         self, adapter_impl, gateway_impl, fabric_impl
     ):
-        role_obj = _helpers.mock_model(roles.Role, id=1)
         member_obj = _helpers.mock_model(members.Member, id=123, nick=None)
         guild_obj = _helpers.mock_model(guilds.Guild, id=123, members={}, roles={})
         guild_obj.members = {member_obj.id: member_obj}
-        guild_obj.roles = {role_obj.id: role_obj}
         fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
-        fabric_impl.state_registry.get_role_by_id = mock.MagicMock(return_value=role_obj)
         payload = {
             "guild_id": str(guild_obj.id),
             "user": {"id": str(member_obj.id)},
             "nick": "potatoboi",
-            "roles": [role_obj.id],
+            "roles": ["69429"],
         }
 
         await adapter_impl.handle_guild_member_update(gateway_impl, payload)
 
-        fabric_impl.state_registry.update_member.assert_called_with(member_obj, [role_obj], payload)
+        fabric_impl.state_registry.update_member.assert_called_with(member_obj, payload)
 
     @pytest.mark.asyncio
     async def test_handle_guild_member_update_when_member_is_cached_dispatches_GUILD_MEMBER_UPDATE(

@@ -17,12 +17,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
-import cymock as mock
 
+import cymock as mock
 import pytest
-from hikari.orm.http import base_http_adapter
 
 from hikari.orm import fabric
+from hikari.orm.http import base_http_adapter
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
 from hikari.orm.models import members
@@ -48,6 +48,8 @@ def mock_message_payload(mock_user):
         "author": mock_user,
         "edited_timestamp": None,
         "tts": True,
+        "mentions": [],
+        "mention_roles": [],
         "mention_everyone": False,
         "attachments": [],
         "embeds": [],
@@ -115,6 +117,8 @@ class TestMessage:
         assert message_obj.guild_id is None
         assert message_obj.edited_at is None
         assert message_obj.is_tts is True
+        assert message_obj.user_mentions == []
+        assert message_obj.role_mentions == []
         assert message_obj.is_mentioning_everyone is False
         assert len(message_obj.attachments) == 0
         assert len(message_obj.embeds) == 0
@@ -134,8 +138,11 @@ class TestMessage:
         assert initial.author == updated.author
         assert initial.edited_at == updated.edited_at
         assert initial.is_mentioning_everyone == updated.is_mentioning_everyone
+        assert initial.user_mentions == updated.user_mentions
+        assert initial.role_mentions == updated.role_mentions
         assert initial.attachments == updated.attachments
         assert initial.embeds == updated.embeds
+        assert initial.guild_id == updated.guild_id
         assert initial.is_pinned == updated.is_pinned
         assert initial.application == updated.application
         assert initial.activity == updated.activity
@@ -170,6 +177,15 @@ class TestMessage:
                 "guild_id": "102234",
                 "edited_timestamp": "2019-10-10T05:22:33.023456+02:30",
                 "tts": False,
+                "mentions": [
+                    {
+                        "id": "456",
+                        "username": "hikari",
+                        "avatar": "a cat walked on my keyboard",
+                        "discriminator": "0001",
+                    }
+                ],
+                "mention_roles": [123],
                 "mention_everyone": True,
                 "attachments": [
                     {
@@ -219,6 +235,8 @@ class TestMessage:
             2019, 10, 10, 5, 22, 33, 23456, tzinfo=datetime.timezone(datetime.timedelta(hours=2, minutes=30))
         )
         assert message_obj.is_tts is False
+        assert message_obj.user_mentions == [456]
+        assert message_obj.role_mentions == [123]
         assert message_obj.is_mentioning_everyone is True
         assert message_obj.is_pinned is True
         assert message_obj.content == "some pointless text"

@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import io
-import cymock as mock
 
+import cymock as mock
 import pytest
 
 from hikari.internal_utilities import storage
@@ -413,11 +413,14 @@ class TestHTTPAdapterImpl:
             tts=False,
             files=unspecified.UNSPECIFIED,
             embed=unspecified.UNSPECIFIED,
+            allowed_mentions=unspecified.UNSPECIFIED,
         )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 2121231312, channels.Channel)
-    async def test_create_message_with_all_optionals(self, fabric_impl, channel):
+    @_helpers.parametrize_valid_id_formats_for_models("user", 123, users.User)
+    @_helpers.parametrize_valid_id_formats_for_models("role", 456, roles.Role)
+    async def test_create_message_with_all_optionals(self, fabric_impl, channel, user, role):
         mock_message_payload = {"id": "32123123", "content": "whoop"}
         mock_message = mock.MagicMock(messages.Message)
         mock_file = mock.MagicMock(spec=media.File)
@@ -439,6 +442,9 @@ class TestHTTPAdapterImpl:
                     to_dict=mock.MagicMock(return_value={"description": "fi", "type": "rich"}),
                     assets_to_upload=[mock_in_memory_file],
                 ),
+                mention_everyone=True,
+                user_mentions=[user],
+                role_mentions=[role],
             )
             assert media.safe_read_file.call_count == 2
             media.safe_read_file.assert_has_calls((mock.call(mock_file), mock.call(mock_in_memory_file)))
@@ -450,6 +456,21 @@ class TestHTTPAdapterImpl:
             tts=True,
             files=[("Nekos", mock_file_data), ("cafe", mock_in_memory_data)],
             embed={"description": "fi", "type": "rich"},
+            allowed_mentions={"parse": ["everyone"], "users": ["123"], "roles": ["456"]},
+        )
+
+    @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=ValueError)
+    async def test_create_message_raises_ValueError_if_more_than_100_user_mentions_provided(self, fabric_impl):
+        await fabric_impl.http_adapter.create_message(
+            "1234", content="hey, hey", user_mentions=[i for i in range(101)],
+        )
+
+    @pytest.mark.asyncio
+    @_helpers.assert_raises(type_=ValueError)
+    async def test_create_message_raises_ValueError_if_more_than_100_role_mentions_provided(self, fabric_impl):
+        await fabric_impl.http_adapter.create_message(
+            "1234", content="hey, hey", role_mentions=[i for i in range(101)],
         )
 
     @pytest.mark.asyncio

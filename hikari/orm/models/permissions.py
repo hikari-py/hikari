@@ -30,6 +30,8 @@ Note:
 """
 from __future__ import annotations
 
+__all__ = ["Permission", "PermissionLikeT"]
+
 import enum
 import typing
 
@@ -199,6 +201,3 @@ MANAGE_EMOJIS = Permission.MANAGE_EMOJIS
 #: A valid permissions set. This might be an :class:`int`, a :class:`typing.Collection` of :class:`str` permission
 #: names, or a :class:`Permission` object.
 PermissionLikeT = typing.Union[int, typing.Collection[str], Permission]
-
-
-__all__ = ["Permission", "PermissionLikeT"]

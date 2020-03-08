@@ -21,6 +21,30 @@ Channel models.
 """
 from __future__ import annotations
 
+__all__ = [
+    "DMRecipientT",
+    "GuildRecipientT",
+    "ChannelType",
+    "Channel",
+    "TextChannel",
+    "PartialChannel",
+    "GuildChannel",
+    "GuildTextChannel",
+    "DMChannel",
+    "GuildVoiceChannel",
+    "GroupDMChannel",
+    "GuildCategory",
+    "GuildAnnouncementChannel",
+    "GuildStoreChannel",
+    "ChannelTypeLikeT",
+    "ChannelLikeT",
+    "TextChannelLikeT",
+    "GuildChannelLikeT",
+    "GuildCategoryLikeT",
+    "GuildTextChannelLikeT",
+    "GuildVoiceChannelLikeT",
+]
+
 import abc
 import asyncio
 import contextlib
@@ -47,6 +71,7 @@ if typing.TYPE_CHECKING:
     from hikari.orm.models import embeds
     from hikari.orm.models import messages
     from hikari.orm.models import guilds as _guild
+    from hikari.orm.models import roles as _roles
 
 #: Valid types for a recipient of a DM.
 DMRecipientT = typing.Union[users.User, users.OAuth2User]
@@ -189,9 +214,12 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
     async def send(
         self,
         content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        embed: type_hints.NotRequired[embeds.Embed] = unspecified.UNSPECIFIED,
         files: type_hints.NotRequired[typing.Collection[storage.FileLikeT]] = unspecified.UNSPECIFIED,
-        delete_after: typing.Union[float, int, unspecified.Unspecified] = unspecified.UNSPECIFIED,
+        embed: type_hints.NotRequired[embeds.Embed] = unspecified.UNSPECIFIED,
+        mention_everyone: bool = True,
+        user_mentions: type_hints.NotRequired[typing.Iterable[users.BaseUserLikeT]] = unspecified.UNSPECIFIED,
+        role_mentions: type_hints.NotRequired[typing.Sequence[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
+        delete_after: type_hints.NotRequired[typing.Union[float, int]] = unspecified.UNSPECIFIED,
     ) -> messages.Message:
         """
         Send a message to this channel.
@@ -199,10 +227,16 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
         Args:
             content:
                 The optional textual content.
-            embed:
-                The optional embed to send.
             files:
                 A collection of optional attachments.
+            embed:
+                The optional embed to send.
+            mention_everyone:
+                Whether to parse @everyone and @here mentions from the message content.
+            user_mentions:
+                If specified, the user mentions to parse from the message content. If not specified, all of them will be parsed.
+            role_mentions:
+                If specified, the role mentions to parse from the message content. If not specified, all of them will be parsed.
             delete_after:
                 An optional period to delete the message after.
 
@@ -215,7 +249,13 @@ class TextChannel(Channel, abc.ABC):  # (We dont need to override __init__) pyli
         if content is not unspecified.UNSPECIFIED:
             content = str(content)
         message: messages.Message = await self._fabric.http_adapter.create_message(
-            self, content=content, embed=embed, files=files
+            self,
+            content=content,
+            embed=embed,
+            files=files,
+            mention_everyone=mention_everyone,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
         )
 
         if delete_after is not unspecified.UNSPECIFIED:
@@ -287,8 +327,8 @@ class GuildChannel(Channel):
 
     #: A sequence of permission overwrites for this channel.
     #:
-    #: :type: :class:`typing.Sequence` of :attr:`hikari.orm.models.overwrites.Overwrite`
-    permission_overwrites: typing.Sequence[overwrites.Overwrite]
+    #: :type: :class:`typing.Mapping` of :class:`int` to :attr:`hikari.orm.models.overwrites.Overwrite`
+    permission_overwrites: typing.Mapping[int, overwrites.Overwrite]
 
     #: The name of the channel.
     #:
@@ -302,14 +342,11 @@ class GuildChannel(Channel):
 
     def update_state(self, payload: type_hints.JSONObject) -> None:
         self.position = int(payload["position"])
-
-        overwrite_objs = []
-
-        for raw_overwrite in payload["permission_overwrites"]:
-            overwrite_obj = overwrites.Overwrite.from_dict(raw_overwrite)
-            overwrite_objs.append(overwrite_obj)
-
-        self.permission_overwrites = overwrite_objs
+        # noinspection PyTypeChecker
+        self.permission_overwrites = transformations.id_map(
+            overwrites.Overwrite.from_dict(raw_overwrite)
+            for raw_overwrite in payload.get("permission_overwrites", containers.EMPTY_SEQUENCE)
+        )
         self.name = payload["name"]
         self.parent_id = transformations.nullable_cast(payload.get("parent_id"), int)
 
@@ -595,27 +632,3 @@ GuildCategoryLikeT = typing.Union[bases.RawSnowflakeT, GuildCategory]
 GuildTextChannelLikeT = typing.Union[bases.RawSnowflakeT, GuildTextChannel]
 #: A :class:`GuildVoiceChannel`, or an :class:`int`/:class:`str` ID of one.
 GuildVoiceChannelLikeT = typing.Union[bases.RawSnowflakeT, GuildVoiceChannel]
-
-__all__ = (
-    "DMRecipientT",
-    "GuildRecipientT",
-    "ChannelType",
-    "Channel",
-    "TextChannel",
-    "PartialChannel",
-    "GuildChannel",
-    "GuildTextChannel",
-    "DMChannel",
-    "GuildVoiceChannel",
-    "GroupDMChannel",
-    "GuildCategory",
-    "GuildAnnouncementChannel",
-    "GuildStoreChannel",
-    "ChannelTypeLikeT",
-    "ChannelLikeT",
-    "TextChannelLikeT",
-    "GuildChannelLikeT",
-    "GuildCategoryLikeT",
-    "GuildTextChannelLikeT",
-    "GuildVoiceChannelLikeT",
-)

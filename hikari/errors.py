@@ -21,6 +21,8 @@ Core errors that may be raised by this API implementation.
 """
 from __future__ import annotations
 
+__all__ = ["HikariError"]
+
 
 class HikariError(RuntimeError):
     """
@@ -31,6 +33,3 @@ class HikariError(RuntimeError):
     """
 
     __slots__ = ()
-
-
-__all__ = ("HikariError",)

@@ -21,6 +21,8 @@ Represents various forms of media such as images.
 """
 from __future__ import annotations
 
+__all__ = ["AbstractFile", "Attachment", "File", "InMemoryFile", "safe_read_file"]
+
 import abc
 import dataclasses
 import re
@@ -288,6 +290,3 @@ async def safe_read_file(file: AbstractFile) -> typing.Tuple[str, storage.FileLi
         raise ValueError(f"Invalid file type '{type(file)}' provided, expected an AbstractFile derivative.")
 
     return name, file_output
-
-
-__all__ = ["AbstractFile", "Attachment", "File", "InMemoryFile", "safe_read_file"]
