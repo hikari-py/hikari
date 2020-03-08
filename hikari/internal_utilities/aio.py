@@ -25,6 +25,7 @@ __all__ = [
     "optional_await",
     "CoroutineFunctionT",
     "PartialCoroutineProtocolT",
+    "EventExceptionContext",
     "EventDelegate",
     "completed_future",
     "maybe_timeout",
