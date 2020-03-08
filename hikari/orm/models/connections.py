@@ -21,6 +21,8 @@ User Connection models returned by oauth and user related HTTP endpoints.
 """
 from __future__ import annotations
 
+__all__ = ["Connection", "ConnectionVisibility"]
+
 import enum
 import typing
 
@@ -119,6 +121,3 @@ class Connection(bases.BaseModelWithFabric, bases.SnowflakeMixin):
         self.is_friend_synced = payload["friend_sync"]
         self.is_showing_activity = payload["show_activity"]
         self.visibility = ConnectionVisibility(payload["visibility"])
-
-
-__all__ = ["Connection", "ConnectionVisibility"]

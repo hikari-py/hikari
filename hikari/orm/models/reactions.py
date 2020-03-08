@@ -21,6 +21,8 @@ Reactions to a message.
 """
 from __future__ import annotations
 
+__all__ = ["Reaction"]
+
 import typing
 
 from hikari.internal_utilities import reprs
@@ -124,6 +126,3 @@ class Reaction(bases.BaseModelWithFabric):
         return self._fabric.state_registry.get_message_by_id(message_id=self.message_id)
 
     __repr__ = reprs.repr_of("count", "emoji", "channel_id", "message_id")
-
-
-__all__ = ["Reaction"]

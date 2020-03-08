@@ -19,6 +19,8 @@
 """
 Other useful typehints that are uncategorised.
 """
+__all__ = ["Nullable", "NotRequired", "NullableNotRequired", "JSONObject", "JSONArray"]
+
 import typing
 
 from hikari.internal_utilities import unspecified
@@ -48,5 +50,3 @@ JSONObject = typing.MutableMapping[str, typing.Any]
 
 #: A JSON array.
 JSONArray = typing.Sequence[typing.Any]
-
-__all__ = ["Nullable", "NotRequired", "NullableNotRequired", "JSONObject", "JSONArray"]

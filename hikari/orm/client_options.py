@@ -21,6 +21,8 @@ Client options that can be set.
 """
 from __future__ import annotations
 
+__all__ = ["ClientOptions", "ShardOptions", "NO_SHARDING", "AUTO_SHARDING"]
+
 import dataclasses
 import ssl
 import typing
@@ -130,6 +132,3 @@ class ClientOptions:
     #: Generally you want this enabled to ensure that the SSL certificate that Discord provides is genuine,
     #: however, some awkward proxies can cause this to not work, in which case you would want to disable this.
     verify_ssl: bool = True
-
-
-__all__ = ["ClientOptions", "ShardOptions", "NO_SHARDING", "AUTO_SHARDING"]

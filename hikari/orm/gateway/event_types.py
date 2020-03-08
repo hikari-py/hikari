@@ -19,6 +19,8 @@
 """
 Expected events that this framework can dispatch.
 """
+__all__ = ["EventType"]
+
 import enum
 
 
@@ -86,7 +88,4 @@ class EventType(str, enum.Enum):
     WEBHOOKS_UPDATE = "webhooks_update"
 
     def __str__(self):
-        return self.value
-
-
-__all__ = ["EventType"]
+        return str(self.value)

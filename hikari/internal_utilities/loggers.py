@@ -19,6 +19,8 @@
 """
 Utilities for creating and naming loggers in this library in a consistent way.
 """
+__all__ = ["get_named_logger"]
+
 import logging
 import typing
 

@@ -21,6 +21,8 @@ Models for the Teams API for OAuth2 applications.
 """
 from __future__ import annotations
 
+__all__ = ["MembershipState", "TeamMember", "Team"]
+
 import enum
 import typing
 
@@ -120,6 +122,3 @@ class MembershipState(bases.BestEffortEnumMixin, enum.IntEnum):
     INVITED = 1
     #: The user has accepted an invite and is a team member officially.
     ACCEPTED = 2
-
-
-__all__ = ["MembershipState", "TeamMember", "Team"]
