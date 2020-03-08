@@ -72,6 +72,11 @@ dependency_scanning:
   image: python:3.8.1
   extends: .venv
 
+.cpython-3.8.2:
+  interruptible: true
+  image: python:3.8.1
+  extends: .venv
+
 .cpython-3.9-rc:
   interruptible: true
   image: python:3.9-rc
@@ -127,6 +132,11 @@ pytest-c3.8.1:
     - .cpython-3.8.1
     - .nox-test
 
+pytest-c3.8.2:
+  extends:
+    - .cpython-3.8.2
+    - .nox-test
+
 pytest-c3.9-rc:
   extends:
     - .cpython-3.9-rc
@@ -142,6 +152,11 @@ install-c3.8.1:
     - .cpython-3.8.1
     - .nox-pip-install
 
+install-c3.8.2:
+  extends:
+    - .cpython-3.8.2
+    - .nox-pip-install
+
 install-c3.9-rc:
   extends:
     - .cpython-3.9-rc
@@ -155,6 +170,11 @@ verify-c3.8.0-pypi:
 verify-c3.8.1-pypi:
   extends:
     - .cpython-3.8.1
+    - .nox-pip-install-showtime
+
+verify-c3.8.2-pypi:
+  extends:
+    - .cpython-3.8.2
     - .nox-pip-install-showtime
 
 verify-c3.9-rc-pypi:
