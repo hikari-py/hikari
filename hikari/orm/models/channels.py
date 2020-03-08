@@ -303,8 +303,8 @@ class GuildChannel(Channel):
 
     #: A sequence of permission overwrites for this channel.
     #:
-    #: :type: :class:`typing.Sequence` of :attr:`hikari.orm.models.overwrites.Overwrite`
-    permission_overwrites: typing.Sequence[overwrites.Overwrite]
+    #: :type: :class:`typing.Mapping` of :class:`int` to :attr:`hikari.orm.models.overwrites.Overwrite`
+    permission_overwrites: typing.Mapping[int, overwrites.Overwrite]
 
     #: The name of the channel.
     #:
@@ -318,14 +318,11 @@ class GuildChannel(Channel):
 
     def update_state(self, payload: type_hints.JSONObject) -> None:
         self.position = int(payload["position"])
-
-        overwrite_objs = []
-
-        for raw_overwrite in payload["permission_overwrites"]:
-            overwrite_obj = overwrites.Overwrite.from_dict(raw_overwrite)
-            overwrite_objs.append(overwrite_obj)
-
-        self.permission_overwrites = overwrite_objs
+        # noinspection PyTypeChecker
+        self.permission_overwrites = transformations.id_map(
+            overwrites.Overwrite.from_dict(raw_overwrite)
+            for raw_overwrite in payload.get("permission_overwrites", containers.EMPTY_SEQUENCE)
+        )
         self.name = payload["name"]
         self.parent_id = transformations.nullable_cast(payload.get("parent_id"), int)
 
