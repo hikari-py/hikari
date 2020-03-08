@@ -431,6 +431,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
             user_obj = self.fabric.state_registry.get_user_by_id(user_id)
 
         if user_obj is not None:
+            # FIXME: what if the intent was disabled to see member info?
             self.dispatch(event_types.EventType.MESSAGE_REACTION_ADD, reaction_obj, user_obj)
         else:
             self.logger.debug(

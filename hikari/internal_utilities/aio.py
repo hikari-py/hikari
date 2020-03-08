@@ -23,13 +23,16 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import dataclasses
 import functools
+import inspect
 import typing
 import weakref
 
 import async_timeout
 
 from hikari.internal_utilities import assertions
+from hikari.internal_utilities import loggers
 from hikari.internal_utilities import type_hints
 
 ReturnT = typing.TypeVar("ReturnT", covariant=True)
@@ -80,6 +83,33 @@ class PartialCoroutineProtocolT(typing.Protocol[ReturnT]):
         ...
 
 
+@dataclasses.dataclass(frozen=True)
+class EventExceptionContext:
+    """A dataclass that contains information about where an exception was thrown from."""
+
+    __slots__ = ("event_name", "callback", "args", "exception")
+
+    #: The name of the event that triggered the exception.
+    #:
+    #: :type: :obj:`str`
+    event_name: str
+
+    #: The event handler that was being invoked.
+    #:
+    #: :type: :obj:`CoroutineFunctionT`
+    callback: CoroutineFunctionT
+
+    #: The arguments passed to the event callback.
+    #:
+    #: :type: :obj:`typing.Sequence` [ :obj:`typing.Any` ]
+    args: typing.Sequence[typing.Any]
+
+    #: The exception that was thrown.
+    #:
+    #: :type: :obj:`Exception`
+    exception: Exception
+
+
 class EventDelegate:
     """Handles storing and dispatching to event listeners and one-time event
     waiters.
@@ -94,11 +124,20 @@ class EventDelegate:
     to completing the waiter, with any event parameters being passed to the
     predicate. If the predicate returns False, the waiter is not completed. This
     allows filtering of certain events and conditions in a procedural way.
+
+    Parameters
+    ----------
+    exception_event: :obj:`str`
+        The event to invoke if an exception is caught.
     """
 
-    def __init__(self) -> None:
+    __slots__ = ("exception_event", "logger", "_listeners", "_waiters")
+
+    def __init__(self, exception_event: str) -> None:
         self._listeners = {}
         self._waiters = {}
+        self.logger = loggers.get_named_logger(self)
+        self.exception_event = exception_event
 
     def add(self, name: str, coroutine_function: CoroutineFunctionT) -> None:
         """
@@ -134,24 +173,27 @@ class EventDelegate:
             else:
                 self._listeners[name].remove(coroutine_function)
 
-    def dispatch(self, name: str, *args) -> asyncio.Future:
-        """
-        Dispatch a given event.
+    # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
+    # confusing telepathy comments to the user.
+    def dispatch(self, name: str, *args):
+        """Dispatch a given event to all listeners and waiters that are
+        applicable.
 
-        Args:
-            name:
-                The name of the event to dispatch.
-            *args:
-                The parameters to pass to the event callback.
+        Parameters
+        ----------
+        name: :obj:`str`
+            The name of the event to dispatch.
+        *args: zero or more :obj:`typing.Any`
+            The parameters to pass to the event callback.
 
-        Returns:
-            A future. This may be a gathering future of the callbacks to invoke, or it may be
-            a completed future object. Regardless, this result will be scheduled on the event loop
-            automatically, and does not need to be awaited. Awaiting this future will await
-            completion of all invoked event handlers.
-
-            The result either way of awaiting this future will be two values. A set of return values
-            and a set of
+        Returns
+        -------
+        :obj:`asyncio.Future`:
+            This may be a gathering future of the callbacks to invoke, or it may
+            be a completed future object. Regardless, this result will be
+            scheduled on the event loop automatically, and does not need to be
+            awaited. Awaiting this future will await completion of all invoked
+            event handlers.
         """
         if name in self._waiters:
             # Unwrap single or no argument events.
@@ -174,10 +216,62 @@ class EventDelegate:
             if not self._waiters[name]:
                 del self._waiters[name]
 
-        if name in self._listeners:
-            return asyncio.gather(*(callback(*args) for callback in self._listeners[name]))
+        # Hack to stop PyCharm saying you need to await this function when you do not need to await
+        # it.
+        future: typing.Any
 
-        return completed_future()
+        if name in self._listeners:
+            coros = (self._catch(callback, name, args) for callback in self._listeners[name])
+            future = asyncio.gather(*coros)
+        else:
+            future = completed_future()
+
+        return future
+
+    async def _catch(self, callback, name, args):
+        try:
+            return await callback(*args)
+        except Exception as ex:
+            # Pop the top-most frame to remove this _catch call.
+            # The user doesn't need it in their traceback.
+            ex.__traceback__ = ex.__traceback__.tb_next
+            self.handle_exception(ex, name, args, callback)
+
+    def handle_exception(
+        self, exception: Exception, event_name: str, args: typing.Sequence[typing.Any], callback: CoroutineFunctionT
+    ) -> None:
+        """Function that is passed any exception. This allows users to override
+        this with a custom implementation if desired.
+
+        This implementation will check to see if the event that triggered the
+        exception is an exception event. If this exceptino was caused by the
+        :attr:`exception_event`, then nothing is dispatched (thus preventing
+        an exception handler recursively re-triggering itself). Otherwise, an
+        :attr:`exception_event` is dispatched with a
+        :class:`EventExceptionContext` as the sole parameter.
+
+        Parameters
+        ----------
+        exception: :obj:`Exception`
+            The exception that triggered this call.
+        event_name: :obj:`str`
+            The name of the event that triggered the exception.
+        args: :obj:`typing.Sequence` [ :obj:`typing.Any` ]
+            The arguments passed to the event that threw an exception.
+        callback: :obj:`CoroutineFunctionT`
+            The callback that threw the exception.
+        """
+        # Do not recurse if a dodgy exception handler is added.
+        if event_name != self.exception_event:
+            self.logger.exception('Exception occurred in handler for event "%s"', event_name, exc_info=exception)
+            ctx = EventExceptionContext(event_name, callback, args, exception)
+            self.dispatch(self.exception_event, ctx)
+        else:
+            self.logger.exception(
+                'Exception occurred in handler for event "%s", and the exception has been dropped',
+                event_name,
+                exc_info=exception,
+            )
 
     def wait_for(
         self, name: str, *, timeout: typing.Optional[float], predicate: typing.Callable[..., bool]

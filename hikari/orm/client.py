@@ -93,7 +93,7 @@ class Client:
         self._is_started = False
         self._is_closed = False
         self._client_options = options or client_options.ClientOptions()
-        self._event_dispatcher = aio.EventDelegate()
+        self._event_dispatcher = aio.EventDelegate(event_types.EventType.EXCEPTION)
         self._fabric: fabric.Fabric = fabric.Fabric()
         self._api_status_logging_task: typing.Optional[asyncio.Task] = None
         self._api_status_client: typing.Optional[status_info_client.StatusInfoClient] = None

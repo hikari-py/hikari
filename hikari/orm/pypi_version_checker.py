@@ -31,7 +31,7 @@ logger = loggers.get_named_logger(__name__)
 
 
 @functools.total_ordering
-class Version:
+class _Version:
     def __init__(self, version):
         self.major, _, rest = version.partition(".")
         self.major = int(self.major)
@@ -42,10 +42,7 @@ class Version:
         self.dev = "dev" not in rest
 
     def to_tuple(self):
-        return (self.major, self.minor, self.micro, self.dev)
-
-    def __eq__(self, other):
-        return self.__class__ == other.__class__ and self.to_tuple() == other.to_tuple()
+        return self.major, self.minor, self.micro, self.dev
 
     def __lt__(self, other):
         return self.__class__ == other.__class__ and self.to_tuple() < other.to_tuple()
@@ -61,9 +58,9 @@ async def check_package_version() -> None:
     with contextlib.suppress(aiohttp.ClientError):
         async with aiohttp.ClientSession() as session:
             async with session.get("https://pypi.python.org/pypi/hikari/json") as resp:
-                pypi_version = Version((await resp.json())["info"]["version"])
+                pypi_version = _Version((await resp.json())["info"]["version"])
 
-        installed_version = Version(_about.__version__)
+        installed_version = _Version(_about.__version__)
 
         if installed_version < pypi_version:
             logger.warning(
