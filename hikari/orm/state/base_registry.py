@@ -21,6 +21,8 @@ Handles managing the state of the bot, and the cache.
 """
 from __future__ import annotations
 
+__all__ = ["BaseRegistry"]
+
 import abc
 import typing
 
@@ -974,6 +976,3 @@ class BaseRegistry(abc.ABC):
             second being the new :class:`hikari.orm.models.roles.Role` state. If the `guild_id` does not correspond to
             a guild in the cache, then `None` is returned instead.
         """
-
-
-__all__ = ["BaseRegistry"]

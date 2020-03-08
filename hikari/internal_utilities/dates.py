@@ -19,6 +19,8 @@
 """
 Date/Time utilities.
 """
+__all__ = ["parse_http_date", "parse_iso_8601_ts", "discord_epoch_to_datetime", "unix_epoch_to_ts"]
+
 import datetime
 import email.utils
 import re
@@ -99,6 +101,3 @@ def unix_epoch_to_ts(epoch) -> datetime.datetime:
         Number of seconds since 1/1/1970 within a datetime object (UTC).
     """
     return datetime.datetime.fromtimestamp(epoch / 1000, datetime.timezone.utc)
-
-
-__all__ = ("parse_http_date", "parse_iso_8601_ts", "discord_epoch_to_datetime", "unix_epoch_to_ts")

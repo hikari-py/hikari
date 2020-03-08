@@ -19,6 +19,8 @@
 """
 IO utilities.
 """
+__all__ = ["make_resource_seekable", "get_bytes_from_resource", "FileLikeT", "BytesLikeT"]
+
 import io
 import typing
 
@@ -72,5 +74,3 @@ BytesLikeT = typing.Union[bytes, bytearray, memoryview, str, io.StringIO, io.Byt
 
 #: Type description for any object that can be considered to be file-like.
 FileLikeT = typing.Union[BytesLikeT, io.BufferedRandom, io.BufferedReader, io.BufferedRWPair]
-
-__all__ = ("make_resource_seekable", "get_bytes_from_resource", "FileLikeT", "BytesLikeT")

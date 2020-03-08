@@ -159,6 +159,16 @@ ratelimited calls that may be waiting to be unlocked.
 """
 from __future__ import annotations
 
+__all__ = [
+    "IRateLimiter",
+    "BurstRateLimiter",
+    "ManualRateLimiter",
+    "WindowedBurstRateLimiter",
+    "HTTPBucketRateLimiter",
+    "HTTPBucketRateLimiterManager",
+    "ExponentialBackOff",
+]
+
 import abc
 import asyncio
 import random
@@ -973,14 +983,3 @@ class ExponentialBackOff:
     def reset(self):
         """Resets the exponential back-off."""
         self.increment = 0
-
-
-__all__ = [
-    "IRateLimiter",
-    "BurstRateLimiter",
-    "ManualRateLimiter",
-    "WindowedBurstRateLimiter",
-    "HTTPBucketRateLimiter",
-    "HTTPBucketRateLimiterManager",
-    "ExponentialBackOff",
-]

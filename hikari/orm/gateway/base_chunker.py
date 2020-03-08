@@ -25,6 +25,8 @@ place.
 """
 from __future__ import annotations
 
+__all__ = ["BaseChunker"]
+
 import abc
 import typing
 

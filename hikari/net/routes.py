@@ -20,6 +20,8 @@
 Provides the valid routes that can be used on the API, as well as mechanisms to aid
 with rate limit bucketing.
 """
+__all__ = ["CompiledRoute", "RouteTemplate"]
+
 from typing import Any
 from typing import Collection
 from typing import FrozenSet

@@ -21,6 +21,8 @@ Handles consumption of gateway events and converting them to the correct data ty
 """
 from __future__ import annotations
 
+__all__ = ["DispatchingEventAdapterImpl"]
+
 import typing
 
 from hikari.internal_utilities import dates

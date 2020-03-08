@@ -21,6 +21,24 @@ Guild models.
 """
 from __future__ import annotations
 
+__all__ = [
+    "PartialGuild",
+    "Guild",
+    "SystemChannelFlag",
+    "Feature",
+    "DefaultMessageNotificationsLevel",
+    "ExplicitContentFilterLevel",
+    "MFALevel",
+    "VerificationLevel",
+    "PremiumTier",
+    "Ban",
+    "WidgetStyle",
+    "VerificationLevelLikeT",
+    "WidgetStyleLikeT",
+    "GuildLikeT",
+    "GuildEmbed",
+]
+
 import dataclasses
 import enum
 import typing
@@ -555,22 +573,3 @@ ExplicitContentFilterLevelLikeT = typing.Union[int, ExplicitContentFilterLevel]
 VerificationLevelLikeT = typing.Union[int, VerificationLevel]
 WidgetStyleLikeT = typing.Union[str, WidgetStyle]
 GuildLikeT = typing.Union[bases.RawSnowflakeT, Guild]
-
-
-__all__ = [
-    "PartialGuild",
-    "Guild",
-    "SystemChannelFlag",
-    "Feature",
-    "DefaultMessageNotificationsLevel",
-    "ExplicitContentFilterLevel",
-    "MFALevel",
-    "VerificationLevel",
-    "PremiumTier",
-    "Ban",
-    "WidgetStyle",
-    "VerificationLevelLikeT",
-    "WidgetStyleLikeT",
-    "GuildLikeT",
-    "GuildEmbed",
-]

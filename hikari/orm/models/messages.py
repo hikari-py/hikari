@@ -21,6 +21,19 @@ Messages and attachments.
 """
 from __future__ import annotations
 
+__all__ = [
+    "AuthorT",
+    "MessageType",
+    "MessageActivityType",
+    "Message",
+    "MessageActivity",
+    "MessageApplication",
+    "MessageCrosspost",
+    "MessageFlag",
+    "MessageLikeT",
+    "MessageFlagLikeT",
+]
+
 import enum
 import typing
 
@@ -540,16 +553,3 @@ class MessageCrosspost:
 #: A :class:`Message`, or an :class:`int`/:class:`str` ID of one.
 MessageLikeT = typing.Union[bases.RawSnowflakeT, Message]
 MessageFlagLikeT = typing.Union[int, MessageFlag]
-
-__all__ = [
-    "AuthorT",
-    "MessageType",
-    "MessageActivityType",
-    "Message",
-    "MessageActivity",
-    "MessageApplication",
-    "MessageCrosspost",
-    "MessageFlag",
-    "MessageLikeT",
-    "MessageFlagLikeT",
-]

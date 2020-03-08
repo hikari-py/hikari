@@ -19,6 +19,8 @@
 """
 API version enumeration.
 """
+__all__ = ["HTTPAPIVersion", "GatewayVersion"]
+
 import enum
 
 
@@ -54,6 +56,3 @@ class GatewayVersion(enum.IntEnum):
 
     #: The recommended stable API release to default to.
     STABLE = V6
-
-
-__all__ = ["HTTPAPIVersion", "GatewayVersion"]
