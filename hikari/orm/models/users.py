@@ -67,6 +67,9 @@ class BaseUser(bases.BaseModel, bases.SnowflakeMixin, interface=True):
     #: :type: :class:`bool`
     is_bot: bool
 
+    def __str__(self):
+        return f"@{self.username}#{self.discriminator}"
+
 
 class User(BaseUser, bases.BaseModelWithFabric):
     """

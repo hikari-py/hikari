@@ -90,6 +90,22 @@ def test_User___repr__():
 
 
 @pytest.mark.model
+def test_User__str__():
+    user_obj = users.User(
+        fabric_obj,
+        {
+            "id": "123456",
+            "username": "BorisJohnson",
+            "discriminator": "6969",
+            "avatar": None,
+            "bot": True,
+            "system": True,
+        },
+    )
+    assert str(user_obj) == f"@{user_obj.username}#{user_obj.discriminator}"
+
+
+@pytest.mark.model
 def test_OAuth2User(fabric_obj):
     user_obj = users.OAuth2User(
         fabric_obj,
