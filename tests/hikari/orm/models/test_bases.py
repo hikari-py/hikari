@@ -159,6 +159,25 @@ class TestSnowflake:
 
         assert SnowflakeImpl1(1) != SnowflakeImpl2(2)
 
+    def test___eq___when_matching_type_subclass_and_matching_id(self):
+        class Base1(bases.SnowflakeMixin):
+            __slots__ = ("id",)
+
+            def __init__(self, id_):
+                self.id = id_
+
+        class Base2(Base1):
+            pass
+
+        first = Base1(123)
+        second = Base2(123)
+        third = Base2(124)
+
+        assert first == second
+        assert second == first
+        assert first != third
+        assert third != first
+
     def test_cast_snowflake_to_int(self):
         class SnowflakeImpl(bases.BaseModel, bases.SnowflakeMixin):
             __slots__ = ("id",)
