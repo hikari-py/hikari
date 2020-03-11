@@ -98,7 +98,7 @@ class User(BaseUser, bases.BaseModelWithFabric):
 
     def update_state(self, payload: type_hints.JSONObject) -> None:
         self.username = payload.get("username")
-        self.discriminator = payload["discriminator"]
+        self.discriminator = payload.get("discriminator")
         self.avatar_hash = payload.get("avatar")
 
 
