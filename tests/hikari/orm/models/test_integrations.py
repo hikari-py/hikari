@@ -72,7 +72,7 @@ class TestIntegration:
                 "enabled": True,
                 "syncing": False,
                 "role_id": "69696969",
-                "expire_behavior": 2,
+                "expire_behavior": 1,
                 "expire_grace_period": 420,
                 "user": user_dict,
                 "account": account_dict,
@@ -86,6 +86,7 @@ class TestIntegration:
         assert integration_obj.is_enabled is True
         assert integration_obj.is_syncing is False
         assert integration_obj.role_id == 69696969
+        assert integration_obj.expire_behavior == integrations.ExpireBehavior.KICK
         assert integration_obj.expire_grace_period == 420
         assert integration_obj.synced_at == datetime.datetime(
             2016, 3, 31, 19, 15, 39, 954000, tzinfo=datetime.timezone.utc

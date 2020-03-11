@@ -25,6 +25,7 @@ __all__ = [
     "optional_await",
     "CoroutineFunctionT",
     "PartialCoroutineProtocolT",
+    "EventExceptionContext",
     "EventDelegate",
     "completed_future",
     "maybe_timeout",
@@ -34,7 +35,6 @@ import asyncio
 import contextlib
 import dataclasses
 import functools
-import inspect
 import typing
 import weakref
 
@@ -42,7 +42,6 @@ import async_timeout
 
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import loggers
-from hikari.internal_utilities import type_hints
 
 ReturnT = typing.TypeVar("ReturnT", covariant=True)
 CoroutineFunctionT = typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, ReturnT]]
@@ -351,7 +350,7 @@ def completed_future(result: typing.Any = None) -> asyncio.Future:
 
 
 @contextlib.asynccontextmanager
-async def maybe_timeout(timeout: type_hints.Nullable[typing.Union[float, int]]):
+async def maybe_timeout(timeout: typing.Optional[typing.Union[float, int]]):
     """
     Wrapper for :mod:`async_timeout` that may or may not actually wait for a timeout, depending on how it is called.
 

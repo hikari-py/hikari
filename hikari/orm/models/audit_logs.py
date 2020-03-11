@@ -45,20 +45,16 @@ import typing
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import colors
 from hikari.orm.models import guilds
+from hikari.orm.models import integrations
 from hikari.orm.models import overwrites
 from hikari.orm.models import permissions
 from hikari.orm.models import roles
-
-if typing.TYPE_CHECKING:
-    from hikari.orm import fabric
-    from hikari.orm.models import integrations
-    from hikari.orm.models import users
-    from hikari.orm.models import webhooks
+from hikari.orm.models import users
+from hikari.orm.models import webhooks
 
 
 class AuditLog(bases.BaseModel):
@@ -88,7 +84,7 @@ class AuditLog(bases.BaseModel):
     #: :type: :class:`typing.Sequence` of :class:`hikari.orm.models.audit_logs.AuditLogEntry`
     audit_log_entries: typing.Sequence[AuditLogEntry]
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: typing.Any, payload: typing.Dict) -> None:
         self.webhooks = {
             fabric_obj.state_registry.parse_webhook(wh) for wh in payload.get("webhooks", containers.EMPTY_SEQUENCE)
         }
@@ -112,7 +108,7 @@ class AuditLogEntry(bases.BaseModel, bases.SnowflakeMixin):
     #: The id of the effected entity.
     #:
     #: :type: :class:`int`
-    target_id: type_hints.Nullable[int]
+    target_id: typing.Optional[int]
 
     #: Sequence of changes made to the target entity.
     #:
@@ -132,16 +128,16 @@ class AuditLogEntry(bases.BaseModel, bases.SnowflakeMixin):
     #: Extra information provided for certain audit log events.
     #:
     #: :type: implementation of :class:`hikari.orm.models.audit_logs.IAuditLogEntryInfo` or `None`
-    options: type_hints.Nullable[BaseAuditLogEntryInfo]
+    options: typing.Optional[BaseAuditLogEntryInfo]
 
     #: The reason for these changes.
     #:
     #: :type: :class:`str` or `None`
-    reason: type_hints.Nullable[str]
+    reason: typing.Optional[str]
 
     __repr__ = reprs.repr_of("id", "user_id", "action_type")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.target_id = transformations.nullable_cast(payload.get("target_id"), int)
         self.changes = [AuditLogChange(change) for change in payload.get("changes", containers.EMPTY_SEQUENCE)]
         self.user_id = int(payload["user_id"])
@@ -292,7 +288,7 @@ class MessageDeleteAuditLogEntryInfo(BaseAuditLogEntryInfo, event_types=[AuditLo
 
     __repr__ = reprs.repr_of("count", "channel_id")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.count = int(payload["count"])
         self.channel_id = int(payload["channel_id"])
 
@@ -349,14 +345,14 @@ class ChannelOverwriteAuditLogEntryInfo(
 
     __repr__ = reprs.repr_of("id", "type")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.id = int(payload["id"])
         self.type = overwrites.OverwriteEntityType.from_discord_name(payload["type"])
 
 
 def parse_audit_log_entry_info(
-    audit_log_entry_info_payload: type_hints.JSONObject, event_type: int
-) -> type_hints.Nullable[BaseAuditLogEntryInfo]:
+    audit_log_entry_info_payload: typing.Dict, event_type: int
+) -> typing.Optional[BaseAuditLogEntryInfo]:
     """
     Parses a specific type of audit log entry info based on the given event type. If nothing corresponds
     to the additional info passed or the event_type given, then `None` is returned instead.
@@ -504,16 +500,16 @@ class AuditLogChange(bases.BaseModel):
     #: The old value of the key.
     #:
     #: :type: :class:`typing.Any` or `None`
-    old_value: type_hints.Nullable[typing.Any]
+    old_value: typing.Optional[typing.Any]
 
     #: The new value of the key.
     #:
     #: :type: :class:`typing.Any` or `None`
-    new_value: type_hints.Nullable[typing.Any]
+    new_value: typing.Optional[typing.Any]
 
     __repr__ = reprs.repr_of("key")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.key = AuditLogChangeKey.get_best_effort_from_value(payload["key"])
         converter = AUDIT_LOG_ENTRY_CONVERTERS.get(self.key, lambda x: x)
         self.old_value = transformations.nullable_cast(payload.get("old_value"), converter)

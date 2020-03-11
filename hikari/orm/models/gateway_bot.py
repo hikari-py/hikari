@@ -24,9 +24,9 @@ from __future__ import annotations
 __all__ = ["GatewayBot", "SessionStartLimit"]
 
 import datetime
+import typing
 
 from hikari.internal_utilities import reprs
-from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 
 
@@ -50,7 +50,7 @@ class GatewayBot(bases.BaseModel):
 
     __repr__ = reprs.repr_of("url", "shards", "session_start_limit.remaining")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.url = payload["url"]
         self.shards = int(payload["shards"])
         self.session_start_limit = SessionStartLimit(payload["session_start_limit"])
@@ -88,7 +88,7 @@ class SessionStartLimit(bases.BaseModel):
 
     __repr__ = reprs.repr_of("total", "remaining", "reset_at")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.total = int(payload["total"])
         self.remaining = int(payload["remaining"])
         self.reset_after = datetime.timedelta(seconds=float(payload["reset_after"]) / 1_000)

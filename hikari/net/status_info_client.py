@@ -51,22 +51,19 @@ __all__ = [
     "StatusInfoClient",
 ]
 
+import asyncio
 import dataclasses
+import datetime
+import ssl
 import typing
+
+import aiohttp.typedefs
 
 from hikari.internal_utilities import cache
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
 from hikari.net import base_http_client
-
-if typing.TYPE_CHECKING:
-    import asyncio
-    import datetime
-    import ssl
-
-    import aiohttp.typedefs
 
 T = typing.TypeVar("T")
 
@@ -136,7 +133,7 @@ class Subscriber:
         return isinstance(other, type(self)) and self.id == other.id
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> Subscriber:
+    def from_dict(payload: typing.Dict) -> Subscriber:
         payload = payload["subscriber"]
 
         return Subscriber(
@@ -191,7 +188,7 @@ class Page:
         return isinstance(other, type(self)) and self.id == other.id
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> Page:
+    def from_dict(payload: typing.Dict) -> Page:
         return Page(
             id=payload["id"],
             name=payload["name"],
@@ -219,7 +216,7 @@ class Status:
     description: typing.Optional[str]
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> Status:
+    def from_dict(payload: typing.Dict) -> Status:
         return Status(indicator=payload.get("indicator"), description=payload.get("description"))
 
 
@@ -282,7 +279,7 @@ class Component:
         return isinstance(other, type(self)) and self.id == other.id
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> Component:
+    def from_dict(payload: typing.Dict) -> Component:
         return Component(
             id=payload["id"],
             name=payload["name"],
@@ -312,7 +309,7 @@ class ComponentsPage:
     components: typing.Sequence[Component]
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> ComponentsPage:
+    def from_dict(payload: typing.Dict) -> ComponentsPage:
         return ComponentsPage(
             page=Page.from_dict(payload["page"]),
             components=[Component.from_dict(c) for c in payload.get("components", [])],
@@ -375,7 +372,7 @@ class IncidentUpdate:
         return isinstance(other, type(self)) and self.id == other.id
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> IncidentUpdate:
+    def from_dict(payload: typing.Dict) -> IncidentUpdate:
         return IncidentUpdate(
             id=payload["id"],
             body=payload["body"],
@@ -480,7 +477,7 @@ class Incident:
         return isinstance(other, type(self)) and self.id == other.id
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> Incident:
+    def from_dict(payload: typing.Dict) -> Incident:
         updates = (IncidentUpdate.from_dict(i) for i in payload.get("incident_updates", containers.EMPTY_SEQUENCE))
 
         return Incident(
@@ -528,7 +525,7 @@ class IncidentsPage:
         return {i.id: i for i in self.incidents.values() if i.status.lower() in ("resolved", "postmortem")}
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> IncidentsPage:
+    def from_dict(payload: typing.Dict) -> IncidentsPage:
         incidents = (Incident.from_dict(i) for i in payload["incidents"])
         return IncidentsPage(Page.from_dict(payload["page"]), {incident.id: incident for incident in incidents})
 
@@ -637,7 +634,7 @@ class ScheduledMaintenance:
         return isinstance(other, type(self)) and self.id == other.id
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> ScheduledMaintenance:
+    def from_dict(payload: typing.Dict) -> ScheduledMaintenance:
         updates = (IncidentUpdate.from_dict(iu) for iu in payload.get("incident_updates", containers.EMPTY_SEQUENCE))
 
         return ScheduledMaintenance(
@@ -676,7 +673,7 @@ class ScheduledMaintenancesPage:
     scheduled_maintenances: typing.Mapping[str, ScheduledMaintenance]
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> ScheduledMaintenancesPage:
+    def from_dict(payload: typing.Dict) -> ScheduledMaintenancesPage:
         maintenances = (ScheduledMaintenance.from_dict(sm) for sm in payload["scheduled_maintenances"])
         return ScheduledMaintenancesPage(
             page=Page.from_dict(payload["page"]), scheduled_maintenances={m.id: m for m in maintenances},
@@ -702,7 +699,7 @@ class StatusPage:
     status: Status
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> StatusPage:
+    def from_dict(payload: typing.Dict) -> StatusPage:
         return StatusPage(page=Page.from_dict(payload["page"]), status=Status.from_dict(payload["status"]),)
 
 
@@ -770,7 +767,7 @@ class Summary:
         return {sm.id: sm for sm in self.scheduled_maintenances if sm.status.lower() in look_for}
 
     @staticmethod
-    def from_dict(payload: type_hints.JSONObject) -> Summary:
+    def from_dict(payload: typing.Dict) -> Summary:
         return Summary(
             page=Page.from_dict(payload["page"]),
             scheduled_maintenances=[

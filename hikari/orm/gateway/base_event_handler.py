@@ -26,8 +26,7 @@ __all__ = ["BaseEventHandler"]
 import abc
 import typing
 
-if typing.TYPE_CHECKING:
-    from hikari.net import gateway
+from hikari.net import gateway
 
 
 class BaseEventHandler(abc.ABC):

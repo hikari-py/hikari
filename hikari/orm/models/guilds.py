@@ -40,6 +40,7 @@ __all__ = [
 ]
 
 import dataclasses
+import datetime
 import enum
 import typing
 
@@ -47,20 +48,14 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
+from hikari.orm.models import channels
+from hikari.orm.models import emojis
+from hikari.orm.models import members
 from hikari.orm.models import permissions
-
-if typing.TYPE_CHECKING:
-    import datetime
-
-    from hikari.orm import fabric
-    from hikari.orm.models import channels
-    from hikari.orm.models import emojis
-    from hikari.orm.models import members
-    from hikari.orm.models import roles
-    from hikari.orm.models import users
-    from hikari.orm.models import voices
+from hikari.orm.models import roles
+from hikari.orm.models import users
+from hikari.orm.models import voices
 
 
 class PartialGuild(bases.BaseModel, bases.SnowflakeMixin):
@@ -98,12 +93,12 @@ class PartialGuild(bases.BaseModel, bases.SnowflakeMixin):
     #: Hash code for the guild banner, if it has one.
     #:
     #: :type: :class:`str` or `None`
-    banner_hash: type_hints.Nullable[str]
+    banner_hash: typing.Optional[str]
 
     #: Guild description, if the guild has one assigned. Currently this only applies to discoverable guilds.
     #:
     #: :type: :class:`dict` mapping :class:`int` to :class:`hikari.orm.models.roles.Role` objects
-    description: type_hints.Nullable[str]
+    description: typing.Optional[str]
 
     #: The hash of the icon of the guild.
     #:
@@ -123,15 +118,15 @@ class PartialGuild(bases.BaseModel, bases.SnowflakeMixin):
     #: Code for the vanity URL, if the guild has one.
     #:
     #: :type: :class:`str` or `None`
-    vanity_url_code: type_hints.Nullable[str]
+    vanity_url_code: typing.Optional[str]
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.id = transformations.nullable_cast(payload.get("id"), int)
         self.update_state(payload)  # lgtm [py/init-calls-subclass]
 
-    def update_state(self, payload: type_hints.JSONObject) -> None:
+    def update_state(self, payload: typing.Dict) -> None:
         self.name = payload.get("name")
         self.icon_hash = payload.get("icon")
         self.splash_hash = payload.get("splash")
@@ -200,7 +195,7 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #: The AFK channel ID.
     #:
     #: :type: :class:`int`
-    afk_channel_id: type_hints.Nullable[int]
+    afk_channel_id: typing.Optional[int]
 
     #: The owner's ID.
     #:
@@ -210,22 +205,22 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #: The system channel ID.
     #:
     #: :type: :class:`int`
-    system_channel_id: type_hints.Nullable[int]
+    system_channel_id: typing.Optional[int]
 
     #: The voice region.
     #:
     #: :type: :class:`str`
-    voice_region: type_hints.Nullable[str]
+    voice_region: typing.Optional[str]
 
     #: The application ID of the creator of the guild. This is always `None` unless the guild was made by a bot.
     #:
     #: :type: :class:`int` or `None`
-    creator_application_id: type_hints.Nullable[int]
+    creator_application_id: typing.Optional[int]
 
     #: Permissions for our user in the guild, minus channel overrides, if the user is in the guild.
     #:
     #: :type: :class:`hikari.orm.models.permissions.Permission` or `None`
-    my_permissions: type_hints.Nullable[permissions.Permission]
+    my_permissions: typing.Optional[permissions.Permission]
 
     #: Timeout before a user is classed as being AFK in seconds.
     #:
@@ -236,7 +231,7 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #: :attr:`hikari.orm.models.guild.GuildFeature`
     #:
     #: :type: :class:`str` or `None`
-    preferred_locale: type_hints.Nullable[str]
+    preferred_locale: typing.Optional[str]
 
     #: Default level for message notifications in this guild.
     #:
@@ -261,7 +256,7 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #: Number of members. Only stored if the information is actively available.
     #:
     #: :type: :class:`int` or `None`
-    member_count: type_hints.Nullable[int]
+    member_count: typing.Optional[int]
 
     #: MFA level for this guild.
     #:
@@ -271,7 +266,7 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #: The date/time the bot user joined this guild, or `None` if the bot is not in this guild.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    joined_at: type_hints.Nullable[datetime.datetime]
+    joined_at: typing.Optional[datetime.datetime]
 
     #: True if the guild is considered to be large, or False if it is not. This is defined by whatever the large
     #: threshold for the gateway is set to.
@@ -317,11 +312,11 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #: Describes what can the system channel can do.
     #:
     #: :type: :class:`hikari.orm.models.guilds.SystemChannelFlag`
-    system_channel_flags: type_hints.Nullable[SystemChannelFlag]
+    system_channel_flags: typing.Optional[SystemChannelFlag]
 
     __repr__ = reprs.repr_of("id", "name", "is_unavailable", "is_large", "member_count", "shard_id")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: typing.Any, payload: typing.Dict) -> None:
         self._fabric = fabric_obj
         self.channels = {}
         self.emojis = {}
@@ -331,7 +326,7 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
         super().__init__(payload)
         self.shard_id = transformations.guild_id_to_shard_id(self.id, self._fabric.shard_count)
 
-    def update_state(self, payload: type_hints.JSONObject) -> None:
+    def update_state(self, payload: typing.Dict) -> None:
         super().update_state(payload)
         self.afk_channel_id = transformations.nullable_cast(payload.get("afk_channel_id"), int)
         self.owner_id = transformations.nullable_cast(payload.get("owner_id"), int)
@@ -396,22 +391,33 @@ class Feature(bases.NamedEnumMixin, enum.Enum):
     Features that a guild can provide.
     """
 
-    # We could have done this as a bitfield of flags but Discord hasn't done a concrete definition of what these
-    # can be, I had to read other libraries to see how they handled it...
+    #: Guild has access to set an animated guild icon.
     ANIMATED_ICON = enum.auto()
+    #: Guild has access to set a guild banner image.
     BANNER = enum.auto()
+    #: Guild has access to use commerce features (i.e. create store channels).
     COMMERCE = enum.auto()
+    #: Guild is able to be discovered in the directory.
     DISCOVERABLE = enum.auto()
+    #: Guild is able to be featured in the directory.
     FEATURABLE = enum.auto()
+    #: Guild has access to set an invite splash background.
     INVITE_SPLASH = enum.auto()
     MORE_EMOJI = enum.auto()
+    #: Guild has access to create news channels.
     NEWS = enum.auto()
     LURKABLE = enum.auto()
+    #: Guild is partnered.
     PARTNERED = enum.auto()
+    #: Guild is public, go figure.
     PUBLIC = enum.auto()
+    #: Guild cannot be public. Who would have guessed?
     PUBLIC_DISABLED = enum.auto()
+    #: Guild has access to set a vanity URL.
     VANITY_URL = enum.auto()
+    #: Guild is verified.
     VERIFIED = enum.auto()
+    #: Guild has access to set 384kbps bitrate in voice (previously VIP voice servers).
     VIP_REGIONS = enum.auto()
 
 
@@ -493,7 +499,7 @@ class Ban(bases.BaseModel):
     #: The reason for the ban, if there is one given.
     #:
     #: :type: :class:`str` or `None`
-    reason: type_hints.Nullable[str]
+    reason: typing.Optional[str]
 
     #: The user who is banned.
     #:
@@ -502,7 +508,7 @@ class Ban(bases.BaseModel):
 
     __repr__ = reprs.repr_of("user", "reason")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: typing.Any, payload: typing.Dict) -> None:
         self.reason = payload.get("reason")
         self.user = fabric_obj.state_registry.parse_user(payload.get("user"))
 
@@ -523,7 +529,7 @@ class GuildEmbed(bases.BaseModel, bases.MarshalMixin):
     #: The ID of the embed's target channel if set.
     #:
     #: :type: :class:`int` or `None`
-    channel_id: type_hints.Nullable[int]
+    channel_id: typing.Optional[int]
 
     __repr__ = reprs.repr_of("enabled", "channel_id")
 

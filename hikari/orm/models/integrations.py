@@ -21,20 +21,32 @@ Account integrations.
 """
 from __future__ import annotations
 
-__all__ = ["Integration", "IntegrationAccount", "PartialIntegration", "PartialIntegrationLikeT", "IntegrationLikeT"]
+__all__ = [
+    "Integration",
+    "IntegrationAccount",
+    "PartialIntegration",
+    "PartialIntegrationLikeT",
+    "IntegrationLikeT",
+    "ExpireBehavior",
+]
 
+import datetime
+import enum
 import typing
 
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
-from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
+from hikari.orm.models import users
 
-if typing.TYPE_CHECKING:
-    import datetime
 
-    from hikari.orm import fabric
-    from hikari.orm.models import users
+class ExpireBehavior(bases.BestEffortEnumMixin, enum.IntEnum):
+    """Behavior for expiring subscribers."""
+
+    #: Remove the role.
+    REMOVE_ROLE = 0
+    #: Kick the subscriber.
+    KICK = 1
 
 
 class IntegrationAccount(bases.BaseModel, bases.SnowflakeMixin):
@@ -56,7 +68,7 @@ class IntegrationAccount(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.id = int(payload["id"])
         self.name = payload.get("name")
 
@@ -90,7 +102,7 @@ class PartialIntegration(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
         self.type = payload["type"]
@@ -107,6 +119,7 @@ class Integration(PartialIntegration, bases.BaseModelWithFabric):
         "is_enabled",
         "is_syncing",
         "role_id",
+        "expire_behavior",
         "expire_grace_period",
         "user",
         "account",
@@ -125,6 +138,11 @@ class Integration(PartialIntegration, bases.BaseModelWithFabric):
     #: :type: :class:`bool`
     is_syncing: bool
 
+    #: The expire behavior for any subscribers.
+    #:
+    #: :type: :class:`ExpireBehavior`
+    expire_behavior: ExpireBehavior
+
     #: The grace period for expiring subscribers.
     #:
     #: :type: :class:`int`
@@ -142,12 +160,13 @@ class Integration(PartialIntegration, bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("id", "name", "is_enabled")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: typing.Any, payload: typing.Dict) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self.is_enabled = payload["enabled"]
         self.is_syncing = payload["syncing"]
         self.role_id = int(payload["role_id"])
+        self.expire_behavior = ExpireBehavior.get_best_effort_from_value(payload.get("expire_behavior"))
         self.expire_grace_period = int(payload["expire_grace_period"])
         self.user = self._fabric.state_registry.parse_user(payload["user"])
         self.synced_at = dates.parse_iso_8601_ts(payload["synced_at"])

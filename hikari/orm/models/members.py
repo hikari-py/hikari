@@ -23,6 +23,7 @@ from __future__ import annotations
 
 __all__ = ["Member", "MemberLikeT"]
 
+import datetime
 import typing
 
 from hikari.internal_utilities import assertions
@@ -31,17 +32,10 @@ from hikari.internal_utilities import dates
 from hikari.internal_utilities import delegate
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
+from hikari.orm.models import guilds
+from hikari.orm.models import presences
 from hikari.orm.models import users
-
-if typing.TYPE_CHECKING:
-    import datetime
-
-    from hikari.orm import fabric
-    from hikari.orm.models import guilds
-    from hikari.orm.models import presences
-    from hikari.orm.models import roles as _roles
 
 
 @delegate.delegate_to(users.User, "user")
@@ -72,12 +66,12 @@ class Member(users.User, delegate_fabricated=True):
     #: The optional nickname of the member.
     #:
     #: :type: :class:`str` or `None`
-    nick: type_hints.Nullable[str]
+    nick: typing.Optional[str]
 
     #: The optional date/time that the member Nitro-boosted the guild.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    premium_since: type_hints.Nullable[datetime.datetime]
+    premium_since: typing.Optional[datetime.datetime]
 
     #: Whether the user is deafened in voice.
     #:
@@ -92,28 +86,28 @@ class Member(users.User, delegate_fabricated=True):
     #: The user's online presence. This will be `None` until populated by a gateway event.
     #:
     #: :type: :class:`hikari.orm.models.presences.Presence` or `None`
-    presence: type_hints.Nullable[presences.MemberPresence]
+    presence: typing.Optional[presences.MemberPresence]
 
     __copy_by_ref__ = ("presence", "guild")
 
     __repr__ = reprs.repr_of("id", "username", "discriminator", "is_bot", "guild.id", "guild.name", "nick", "joined_at")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, guild: guilds.Guild, payload: type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: typing.Any, guild: guilds.Guild, payload: typing.Dict) -> None:
         self.presence = None
         self.user = fabric_obj.state_registry.parse_user(payload["user"])
         self.guild = guild
         self.joined_at = dates.parse_iso_8601_ts(payload["joined_at"])
         self.update_state(payload)
 
-    def update_state(self, payload: type_hints.JSONObject) -> None:
+    def update_state(self, payload: typing.Dict) -> None:
         self.role_ids = [int(role_id) for role_id in payload.get("roles", containers.EMPTY_SEQUENCE)]
         self.premium_since = transformations.nullable_cast(payload.get("premium_since"), dates.parse_iso_8601_ts)
         self.nick = payload.get("nick")
         self.is_deaf = payload.get("deaf", False)
         self.is_mute = payload.get("mute", False)
 
-    def update_presence_state(self, presence_payload: type_hints.JSONObject = None) -> None:
+    def update_presence_state(self, presence_payload: typing.Dict = None) -> None:
         user_id = presence_payload["user"]["id"]
         assertions.assert_that(
             int(user_id) == self.id, f"Presence object from User `{user_id}` doesn't match Member `{self.id}`."

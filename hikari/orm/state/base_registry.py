@@ -24,31 +24,27 @@ from __future__ import annotations
 __all__ = ["BaseRegistry"]
 
 import abc
+import datetime
 import typing
 
-from hikari.internal_utilities import type_hints
-
-if typing.TYPE_CHECKING:
-    import datetime
-
-    from hikari.orm.models import applications
-    from hikari.orm.models import audit_logs
-    from hikari.orm.models import bases
-    from hikari.orm.models import channels
-    from hikari.orm.models import connections
-    from hikari.orm.models import emojis
-    from hikari.orm.models import gateway_bot
-    from hikari.orm.models import guilds
-    from hikari.orm.models import integrations
-    from hikari.orm.models import invites
-    from hikari.orm.models import members
-    from hikari.orm.models import messages
-    from hikari.orm.models import presences
-    from hikari.orm.models import reactions
-    from hikari.orm.models import roles
-    from hikari.orm.models import users
-    from hikari.orm.models import voices
-    from hikari.orm.models import webhooks
+from hikari.orm.models import applications
+from hikari.orm.models import audit_logs
+from hikari.orm.models import bases
+from hikari.orm.models import channels
+from hikari.orm.models import connections
+from hikari.orm.models import emojis
+from hikari.orm.models import gateway_bot
+from hikari.orm.models import guilds
+from hikari.orm.models import integrations
+from hikari.orm.models import invites
+from hikari.orm.models import members
+from hikari.orm.models import messages
+from hikari.orm.models import presences
+from hikari.orm.models import reactions
+from hikari.orm.models import roles
+from hikari.orm.models import users
+from hikari.orm.models import voices
+from hikari.orm.models import webhooks
 
 
 class BaseRegistry(abc.ABC):
@@ -63,7 +59,7 @@ class BaseRegistry(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def me(self) -> type_hints.Nullable[users.OAuth2User]:
+    def me(self) -> typing.Optional[users.OAuth2User]:
         """
         The user for the bot connection. This user is who the bot will appear as on Discord when in the chat API.
 
@@ -93,7 +89,7 @@ class BaseRegistry(abc.ABC):
     @abc.abstractmethod
     def decrement_reaction_count(
         self, message_obj: messages.Message, emoji_obj: emojis.Emoji
-    ) -> type_hints.Nullable[reactions.Reaction]:
+    ) -> typing.Optional[reactions.Reaction]:
         """
         Subtracts 1 from the count for the reaction.
 
@@ -163,7 +159,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def delete_reaction(
-        self, message_obj: messages.Message, user_obj: type_hints.Nullable[users.User], emoji_obj: emojis.Emoji
+        self, message_obj: messages.Message, user_obj: typing.Optional[users.User], emoji_obj: emojis.Emoji
     ) -> None:
         """
         Attempt to remove the given reaction from the given message by the given user.
@@ -191,7 +187,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_channel_by_id(self, channel_id: int) -> type_hints.Nullable[channels.Channel]:
+    def get_channel_by_id(self, channel_id: int) -> typing.Optional[channels.Channel]:
         """
         Find a channel by a given ID. Guilds are searched first. If no match is found in a guild, then any open DM
         channels are also checked. If nothing is found still, we return `None`.
@@ -208,7 +204,7 @@ class BaseRegistry(abc.ABC):
     def get_mandatory_channel_by_id(
         self,
         channel_id: int,
-        callback_if_unresolved: type_hints.Nullable[typing.Callable[[channels.Channel], typing.Any]] = None,
+        callback_if_unresolved: typing.Optional[typing.Callable[[channels.Channel], typing.Any]] = None,
     ) -> typing.Union[channels.Channel, bases.UnknownObject[channels.Channel]]:
         """
         Find a channel by a given ID. Guilds are searched first. If no match is found in a guild, then any open DM
@@ -228,7 +224,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_guild_emoji_by_id(self, emoji_id: int) -> type_hints.Nullable[emojis.GuildEmoji]:
+    def get_guild_emoji_by_id(self, emoji_id: int) -> typing.Optional[emojis.GuildEmoji]:
         """
         Find a guild emoji by an ID.
 
@@ -245,7 +241,7 @@ class BaseRegistry(abc.ABC):
         self,
         emoji_id: int,
         guild_id: int,
-        callback_if_unresolved: type_hints.Nullable[typing.Callable[[emojis.GuildEmoji], typing.Any]] = None,
+        callback_if_unresolved: typing.Optional[typing.Callable[[emojis.GuildEmoji], typing.Any]] = None,
     ) -> typing.Union[emojis.GuildEmoji, bases.UnknownObject[emojis.GuildEmoji]]:
         """
         Find a guild emoji by a given ID. If nothing is found, we return a
@@ -266,7 +262,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_guild_by_id(self, guild_id: int) -> type_hints.Nullable[guilds.Guild]:
+    def get_guild_by_id(self, guild_id: int) -> typing.Optional[guilds.Guild]:
         """
         Find a guild by an ID.
 
@@ -282,7 +278,7 @@ class BaseRegistry(abc.ABC):
     def get_mandatory_guild_by_id(
         self,
         guild_id: int,
-        callback_if_unresolved: type_hints.Nullable[typing.Callable[[guilds.Guild], typing.Any]] = None,
+        callback_if_unresolved: typing.Optional[typing.Callable[[guilds.Guild], typing.Any]] = None,
     ) -> typing.Union[guilds.Guild, bases.UnknownObject[guilds.Guild]]:
         """
         Find a guild by a given ID. If nothing is found, we return a
@@ -301,7 +297,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_message_by_id(self, message_id: int) -> type_hints.Nullable[messages.Message]:
+    def get_message_by_id(self, message_id: int) -> typing.Optional[messages.Message]:
         """
         Find a message by an ID.
 
@@ -318,7 +314,7 @@ class BaseRegistry(abc.ABC):
         self,
         message_id: int,
         channel_id: int,
-        callback_if_unresolved: type_hints.Nullable[typing.Callable[[messages.Message], typing.Any]] = None,
+        callback_if_unresolved: typing.Optional[typing.Callable[[messages.Message], typing.Any]] = None,
     ) -> typing.Union[messages.Message, bases.UnknownObject[messages.Message]]:
         """
         Find a message by a given ID. If nothing is found, we return a
@@ -340,7 +336,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_role_by_id(self, guild_id: int, role_id: int) -> type_hints.Nullable[roles.Role]:
+    def get_role_by_id(self, guild_id: int, role_id: int) -> typing.Optional[roles.Role]:
         """
         Find a cached role by an ID.
 
@@ -360,7 +356,7 @@ class BaseRegistry(abc.ABC):
         self,
         guild_id: int,
         role_id: int,
-        callback_if_unresolved: type_hints.Nullable[typing.Callable[[roles.Role], typing.Any]] = None,
+        callback_if_unresolved: typing.Optional[typing.Callable[[roles.Role], typing.Any]] = None,
     ) -> typing.Union[roles.Role, bases.UnknownObject[roles.Role]]:
         """
         Find a role by a given guild ID and role ID. If nothing is found, we return a
@@ -381,7 +377,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_user_by_id(self, user_id: int) -> type_hints.Nullable[users.User]:
+    def get_user_by_id(self, user_id: int) -> typing.Optional[users.User]:
         """
         Find a user by an ID.
 
@@ -395,9 +391,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def get_mandatory_user_by_id(
-        self,
-        user_id: int,
-        callback_if_unresolved: type_hints.Nullable[typing.Callable[[users.User], typing.Any]] = None,
+        self, user_id: int, callback_if_unresolved: typing.Optional[typing.Callable[[users.User], typing.Any]] = None,
     ) -> typing.Union[users.User, bases.UnknownObject[users.User]]:
         """
         Find a user by a given ID. If nothing is found, we return a
@@ -416,7 +410,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_member_by_id(self, user_id: int, guild_id: int) -> type_hints.Nullable[members.Member]:
+    def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[members.Member]:
         """
         Find a member in a specific guild by their ID.
 
@@ -435,7 +429,7 @@ class BaseRegistry(abc.ABC):
         self,
         user_id: int,
         guild_id: int,
-        callback_if_unresolved: type_hints.Nullable[typing.Callable[[members.Member], typing.Any]] = None,
+        callback_if_unresolved: typing.Optional[typing.Callable[[members.Member], typing.Any]] = None,
     ) -> typing.Union[members.MemberLikeT, bases.UnknownObject[members.Member]]:
         """
         Find a member by a given user ID and guild ID. If nothing is found, we return a
@@ -456,7 +450,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_application(self, application_payload: type_hints.JSONObject) -> applications.Application:
+    def parse_application(self, application_payload: typing.Dict) -> applications.Application:
         """
         Parses an application payload into a workable object.
 
@@ -469,7 +463,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_application_user(self, application_user_payload: type_hints.JSONObject) -> users.OAuth2User:
+    def parse_application_user(self, application_user_payload: typing.Dict) -> users.OAuth2User:
         """
         Parses an application user payload into a workable object.
 
@@ -482,7 +476,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_audit_log(self, audit_log_payload: type_hints.JSONObject) -> audit_logs.AuditLog:
+    def parse_audit_log(self, audit_log_payload: typing.Dict) -> audit_logs.AuditLog:
         """
         Parses an audit log payload into a workable object.
 
@@ -495,7 +489,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_ban(self, ban_payload: type_hints.JSONObject) -> guilds.Ban:
+    def parse_ban(self, ban_payload: typing.Dict) -> guilds.Ban:
         """
         Parse a guild ban payload into an object.
 
@@ -508,26 +502,26 @@ class BaseRegistry(abc.ABC):
         """
 
     @typing.overload
-    def parse_channel(self, channel_payload: type_hints.JSONObject, guild_obj: None) -> channels.DMChannel:
+    def parse_channel(self, channel_payload: typing.Dict, guild_obj: None) -> channels.DMChannel:
         ...
 
     @typing.overload
-    def parse_channel(self, channel_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> channels.GuildChannel:
-        ...
-
-    @typing.overload
-    @abc.abstractmethod
-    def parse_channel(self, channel_payload: type_hints.JSONObject, guild_obj: None) -> channels.DMChannel:
+    def parse_channel(self, channel_payload: typing.Dict, guild_obj: guilds.Guild) -> channels.GuildChannel:
         ...
 
     @typing.overload
     @abc.abstractmethod
-    def parse_channel(self, channel_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> channels.GuildChannel:
+    def parse_channel(self, channel_payload: typing.Dict, guild_obj: None) -> channels.DMChannel:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def parse_channel(self, channel_payload: typing.Dict, guild_obj: guilds.Guild) -> channels.GuildChannel:
         ...
 
     @abc.abstractmethod
     def parse_channel(
-        self, channel_payload: type_hints.JSONObject, guild_obj: type_hints.Nullable[guilds.Guild],
+        self, channel_payload: typing.Dict, guild_obj: typing.Optional[guilds.Guild],
     ) -> channels.Channel:
         """
         Parses a channel payload into a workable object.
@@ -543,7 +537,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_connection(self, connection_payload: type_hints.JSONObject) -> connections.Connection:
+    def parse_connection(self, connection_payload: typing.Dict) -> connections.Connection:
         """
         Parses a connection payload into a workable object.
 
@@ -557,17 +551,15 @@ class BaseRegistry(abc.ABC):
         ...
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
+    def parse_emoji(self, emoji_payload: typing.Dict, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
         ...
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: type_hints.JSONObject, guild_obj: None) -> emojis.Emoji:
+    def parse_emoji(self, emoji_payload: typing.Dict, guild_obj: None) -> emojis.Emoji:
         ...
 
     @abc.abstractmethod
-    def parse_emoji(
-        self, emoji_payload: type_hints.JSONObject, guild_obj: type_hints.Nullable[guilds.Guild],
-    ) -> emojis.Emoji:
+    def parse_emoji(self, emoji_payload: typing.Dict, guild_obj: typing.Optional[guilds.Guild],) -> emojis.Emoji:
         """
         Parses a emoji payload into a workable object.
 
@@ -582,7 +574,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_gateway_bot(self, gateway_bot_payload: type_hints.JSONObject) -> gateway_bot.GatewayBot:
+    def parse_gateway_bot(self, gateway_bot_payload: typing.Dict) -> gateway_bot.GatewayBot:
         """
         Parses a gateway bot payload into a workable object.
 
@@ -595,7 +587,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_guild(self, guild_payload: type_hints.JSONObject) -> guilds.Guild:
+    def parse_guild(self, guild_payload: typing.Dict) -> guilds.Guild:
         """
         Parses a guild payload into a workable object.
 
@@ -607,7 +599,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_integration(self, integration_payload: type_hints.JSONObject) -> integrations.Integration:
+    def parse_integration(self, integration_payload: typing.Dict) -> integrations.Integration:
         """
         Parse a full integration payload.
 
@@ -620,7 +612,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_invite(self, invite_payload: type_hints.JSONObject) -> invites.Invite:
+    def parse_invite(self, invite_payload: typing.Dict) -> invites.Invite:
         """
         Parse an invite payload and any attached metadata.
 
@@ -633,9 +625,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_voice_state(
-        self, voice_state_payload: type_hints.JSONObject, guild_obj: guilds.Guild
-    ) -> voices.VoiceState:
+    def parse_voice_state(self, voice_state_payload: typing.Dict, guild_obj: guilds.Guild) -> voices.VoiceState:
         """
         Parse a voice state payload into a workable object.
 
@@ -651,10 +641,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def parse_partial_member(
-        self,
-        partial_member_payload: type_hints.JSONObject,
-        user_payload: type_hints.JSONObject,
-        guild_obj: guilds.Guild,
+        self, partial_member_payload: typing.Dict, user_payload: typing.Dict, guild_obj: guilds.Guild,
     ) -> members.Member:
         """
         Parses a partial member payload and the corresponding user payload into a workable object.
@@ -675,7 +662,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_member(self, member_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> members.Member:
+    def parse_member(self, member_payload: typing.Dict, guild_obj: guilds.Guild) -> members.Member:
         """
         Parses a member payload into a workable object.
 
@@ -690,7 +677,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_message(self, message_payload: type_hints.JSONObject) -> messages.Message:
+    def parse_message(self, message_payload: typing.Dict) -> messages.Message:
         """
         Parses a message payload into a workable object.
 
@@ -709,9 +696,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_presence(
-        self, member_obj: members.Member, presence_payload: type_hints.JSONObject
-    ) -> presences.MemberPresence:
+    def parse_presence(self, member_obj: members.Member, presence_payload: typing.Dict) -> presences.MemberPresence:
         """
         Parse a presence for a given guild and user, and attempt to update the member corresponding to the presence
         if it can be found.
@@ -727,9 +712,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_reaction(
-        self, reaction_payload: type_hints.JSONObject, channel_id: int, message_id: int,
-    ) -> reactions.Reaction:
+    def parse_reaction(self, reaction_payload: typing.Dict, channel_id: int, message_id: int,) -> reactions.Reaction:
         """
         Attempt to parse a reaction object and store it on the corresponding message.
 
@@ -746,7 +729,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_role(self, role_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> roles.Role:
+    def parse_role(self, role_payload: typing.Dict, guild_obj: guilds.Guild) -> roles.Role:
         """
         Parses a role payload into a workable object.
 
@@ -761,7 +744,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_user(self, user_payload: type_hints.JSONObject) -> typing.Union[users.User, users.OAuth2User]:
+    def parse_user(self, user_payload: typing.Dict) -> typing.Union[users.User, users.OAuth2User]:
         """
         Parses a user payload into a workable object.
 
@@ -781,7 +764,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_webhook(self, webhook_payload: type_hints.JSONObject) -> webhooks.Webhook:
+    def parse_webhook(self, webhook_payload: typing.Dict) -> webhooks.Webhook:
         """
         Parses a webhook payload into a workable object.
 
@@ -794,7 +777,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def parse_webhook_user(self, webhook_user_payload: type_hints.JSONObject) -> webhooks.WebhookUser:
+    def parse_webhook_user(self, webhook_user_payload: typing.Dict) -> webhooks.WebhookUser:
         """
         Parses a webhook user payload into a workable object.
 
@@ -830,7 +813,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def set_last_pinned_timestamp(
-        self, channel_obj: channels.TextChannel, timestamp: type_hints.Nullable[datetime.datetime]
+        self, channel_obj: channels.TextChannel, timestamp: typing.Optional[datetime.datetime]
     ) -> None:
         """
         Set the last pinned timestamp time for the given channel.
@@ -856,8 +839,8 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_channel(
-        self, channel_payload: type_hints.JSONObject
-    ) -> type_hints.Nullable[typing.Tuple[channels.Channel, channels.Channel]]:
+        self, channel_payload: typing.Dict
+    ) -> typing.Optional[typing.Tuple[channels.Channel, channels.Channel]]:
         """
         Update the given channel represented by the channel payload.
 
@@ -871,9 +854,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def update_guild(
-        self, guild_payload: type_hints.JSONObject
-    ) -> type_hints.Nullable[typing.Tuple[guilds.Guild, guilds.Guild]]:
+    def update_guild(self, guild_payload: typing.Dict) -> typing.Optional[typing.Tuple[guilds.Guild, guilds.Guild]]:
         """
         Update the given guild represented by the guild payload.
 
@@ -888,7 +869,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_guild_emojis(
-        self, emoji_list: typing.List[type_hints.JSONObject], guild_obj: guilds.Guild
+        self, emoji_list: typing.List[typing.Dict], guild_obj: guilds.Guild
     ) -> typing.Tuple[typing.FrozenSet[emojis.GuildEmoji], typing.FrozenSet[emojis.GuildEmoji]]:
         """
         Update the emojis in a given guild.
@@ -906,7 +887,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_member(
-        self, member_obj: members.Member, payload: type_hints.JSONObject,
+        self, member_obj: members.Member, payload: typing.Dict,
     ) -> typing.Tuple[members.Member, members.Member]:
         """
         Update a member in a given guild. If the member is not already registered, nothing is returned.
@@ -924,7 +905,7 @@ class BaseRegistry(abc.ABC):
 
     @abc.abstractmethod
     def update_member_presence(
-        self, member_obj: members.Member, presence_payload: type_hints.JSONObject
+        self, member_obj: members.Member, presence_payload: typing.Dict
     ) -> typing.Tuple[members.Member, presences.MemberPresence, presences.MemberPresence]:
         """
         Update the presence for a given user in a given guild.
@@ -942,9 +923,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def update_message(
-        self, payload: type_hints.JSONObject
-    ) -> type_hints.Nullable[typing.Tuple[messages.Message, messages.Message]]:
+    def update_message(self, payload: typing.Dict) -> typing.Optional[typing.Tuple[messages.Message, messages.Message]]:
         """
         Update a message in the cache.
 
@@ -959,9 +938,7 @@ class BaseRegistry(abc.ABC):
         """
 
     @abc.abstractmethod
-    def update_role(
-        self, guild_obj: guilds.Guild, role_payload: type_hints.JSONObject
-    ) -> typing.Tuple[roles.Role, roles.Role]:
+    def update_role(self, guild_obj: guilds.Guild, role_payload: typing.Dict) -> typing.Tuple[roles.Role, roles.Role]:
         """
         Update the given role in a given guild.
 

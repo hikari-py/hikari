@@ -34,6 +34,7 @@ __all__ = [
     "MessageFlagLikeT",
 ]
 
+import datetime
 import enum
 import typing
 
@@ -42,22 +43,16 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
 from hikari.net import codes
 from hikari.orm.models import bases
+from hikari.orm.models import channels
 from hikari.orm.models import embeds
+from hikari.orm.models import guilds
 from hikari.orm.models import media
 from hikari.orm.models import members
+from hikari.orm.models import reactions
 from hikari.orm.models import users
 from hikari.orm.models import webhooks
-
-if typing.TYPE_CHECKING:
-    import datetime
-
-    from hikari.orm import fabric
-    from hikari.orm.models import channels
-    from hikari.orm.models import guilds
-    from hikari.orm.models import reactions
 
 
 class MessageType(bases.BestEffortEnumMixin, enum.IntEnum):
@@ -172,7 +167,7 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     #: If this is from an HTTP API call, this info will be unavailable.
     #:
     #: :type: :class:`int` or `None`.
-    guild_id: type_hints.Nullable[int]
+    guild_id: typing.Optional[int]
 
     #: The entity that generated this message.
     #:
@@ -187,12 +182,12 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     #: The actual textual content of the message.
     #:
     #: :type: :class:`str`
-    content: type_hints.Nullable[str]
+    content: typing.Optional[str]
 
     #: The timestamp that the message was last edited at, or `None` if not ever edited.
     #:
     #: :type: :class:`datetime.datetime` or `None`
-    edited_at: type_hints.Nullable[datetime.datetime]
+    edited_at: typing.Optional[datetime.datetime]
 
     #: True if this message was a TTS message, False otherwise.
     #:
@@ -232,12 +227,12 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     #: The application associated with this message (applicable for rich presence-related chat embeds only).
     #:
     #: :type: :class:`hikari.orm.models.messages.MessageApplication` or `None`
-    application: type_hints.Nullable[MessageApplication]
+    application: typing.Optional[MessageApplication]
 
     #: The activity associated with this message (applicable for rich presence-related chat embeds only).
     #:
     #: :type: :class:`hikari.orm.models.messages.MessageActivity` or `None`
-    activity: type_hints.Nullable[MessageActivity]
+    activity: typing.Optional[MessageActivity]
 
     #: The type of message.
     #:
@@ -257,11 +252,11 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
     #: Optional crossposting reference. Only valid if the message is a cross post.
     #:
     #: :type: :class:`hikari.orm.models.messages.MessageCrossPost` or `None` if not a cross post.
-    crosspost_of: type_hints.Nullable[MessageCrosspost]
+    crosspost_of: typing.Optional[MessageCrosspost]
 
     __repr__ = reprs.repr_of("id", "author", "type", "is_tts", "created_at", "edited_at")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: typing.Any, payload: typing.Dict) -> None:
         self._fabric = fabric_obj
         self.id = int(payload["id"])
 
@@ -293,7 +288,7 @@ class Message(bases.SnowflakeMixin, bases.BaseModelWithFabric):
 
         self.update_state(payload)
 
-    def update_state(self, payload: type_hints.JSONObject) -> None:
+    def update_state(self, payload: typing.Dict) -> None:
         if "guild_id" in payload:
             self.guild_id = transformations.nullable_cast(payload.get("guild_id"), int)
 
@@ -460,11 +455,11 @@ class MessageActivity:
     #: The optional party ID associated with the message.
     #:
     #: :type: :class:`int` or `None`
-    party_id: type_hints.Nullable[int]
+    party_id: typing.Optional[int]
 
     __repr__ = reprs.repr_of("type", "party_id")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.type = transformations.try_cast(payload.get("type"), MessageActivityType)
         self.party_id = transformations.nullable_cast(payload.get("party_id"), int)
 
@@ -484,7 +479,7 @@ class MessageApplication(bases.BaseModel, bases.SnowflakeMixin):
     #: The optional ID for the cover image of the application.
     #:
     #: :type: :class:`int` or `None`
-    cover_image_id: type_hints.Nullable[int]
+    cover_image_id: typing.Optional[int]
 
     #: The application description
     #:
@@ -494,7 +489,7 @@ class MessageApplication(bases.BaseModel, bases.SnowflakeMixin):
     #: The optional ID of the application's icon
     #:
     #: :type: :class:`str` or `None`
-    icon_image_id: type_hints.Nullable[int]
+    icon_image_id: typing.Optional[int]
 
     #: The application name
     #:
@@ -503,7 +498,7 @@ class MessageApplication(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.id = int(payload["id"])
         self.cover_image_id = transformations.nullable_cast(payload.get("cover_image"), int)
         self.description = payload["description"]
@@ -525,7 +520,7 @@ class MessageCrosspost:
     #:     documentation, but the situations that cause this to occur are not currently documented.
     #:
     #: :type: :class:`int` or `None`.
-    message_id: type_hints.Nullable[int]
+    message_id: typing.Optional[int]
 
     #: The ID of the guild that the message originated from.
     #: :type: :class:`int`.
@@ -538,11 +533,11 @@ class MessageCrosspost:
     #:     documentation, but the situations that cause this to occur are not currently documented.
     #:
     #: :type: :class:`int` or `None`.
-    guild_id: type_hints.Nullable[int]
+    guild_id: typing.Optional[int]
 
     __repr__ = reprs.repr_of("message_id", "guild_id", "channel_id")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         # This is never null for some reason but the other two are... thanks Discord!
         self.channel_id = int(payload["channel_id"])
 

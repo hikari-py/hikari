@@ -42,20 +42,15 @@ import abc
 import asyncio
 import copy
 import dataclasses
+import datetime
 import enum
 import typing
 
+from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import delegate
-from hikari.internal_utilities import type_hints
-
-if typing.TYPE_CHECKING:
-    import datetime
-
-    from hikari.internal_utilities import aio
-    from hikari.orm import fabric
 
 T = typing.TypeVar("T")
 U = typing.TypeVar("U")
@@ -208,7 +203,7 @@ class BaseModel(metaclass=abc.ABCMeta):
 
         return instance
 
-    def update_state(self, payload: type_hints.JSONObject) -> None:
+    def update_state(self, payload: typing.Dict) -> None:
         """
         Updates the internal state of an existing instance of this object from a raw Discord payload.
         """
@@ -296,7 +291,13 @@ class SnowflakeMixin:
         return hash(self.id)
 
     def __eq__(self, other):
-        return type(self) == type(other) and self.id == other.id
+        first = type(self)
+        second = type(other)
+        return (
+            issubclass(second, SnowflakeMixin)
+            and (issubclass(first, second) or issubclass(second, first))
+            and self.id == other.id
+        )
 
     def __ne__(self, other) -> bool:
         return not self == other
@@ -316,9 +317,6 @@ class BaseModelWithFabric(BaseModel):
     #: Since this is a mixin, all slots must be empty. This prevents issues from subclassing other slotted classes
     #: and then mixing in this one later.
     __slots__ = ()
-
-    #: The base fabric for the ORM instance.
-    _fabric: fabric.Fabric
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -362,7 +360,7 @@ class UnknownObject(typing.Generic[T], SnowflakeMixin):
     def __init__(self, id: int, resolver_partial=None) -> None:
         self.id = id
         self._future: typing.Union[aio.PartialCoroutineProtocolT[T], asyncio.Future, None] = resolver_partial
-        self._callbacks: type_hints.Nullable[typing.Sequence[typing.Callable[[T], typing.Any]]] = []
+        self._callbacks: typing.Optional[typing.Sequence[typing.Callable[[T], typing.Any]]] = []
 
     # noinspection PyCallingNonCallable
     def __await__(self) -> typing.Generator[None, None, T]:
@@ -463,7 +461,7 @@ class MarshalMixin:
 
     # noinspection PyArgumentList,PyDataclass
     @classmethod
-    def from_dict(cls, payload: type_hints.JSONObject):
+    def from_dict(cls, payload: typing.Dict):
         """Initialise the current model from a Discord payload."""
         return cls(**{field.name: payload[field.name] for field in dataclasses.fields(cls) if field.name in payload})
 

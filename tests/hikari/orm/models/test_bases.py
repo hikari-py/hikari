@@ -27,7 +27,7 @@ import weakref
 import pytest
 
 from hikari.internal_utilities import delegate
-from hikari.internal_utilities import type_hints
+
 from hikari.orm.models import bases
 from tests.hikari import _helpers
 
@@ -158,6 +158,25 @@ class TestSnowflake:
                 self.id = id_
 
         assert SnowflakeImpl1(1) != SnowflakeImpl2(2)
+
+    def test___eq___when_matching_type_subclass_and_matching_id(self):
+        class Base1(bases.SnowflakeMixin):
+            __slots__ = ("id",)
+
+            def __init__(self, id_):
+                self.id = id_
+
+        class Base2(Base1):
+            pass
+
+        first = Base1(123)
+        second = Base2(123)
+        third = Base2(124)
+
+        assert first == second
+        assert second == first
+        assert first != third
+        assert third != first
 
     def test_cast_snowflake_to_int(self):
         class SnowflakeImpl(bases.BaseModel, bases.SnowflakeMixin):
@@ -536,10 +555,10 @@ class DummyModel2(bases.MarshalMixin):
     name: str
     nekos: typing.List[int]
     model: DummyModel
-    optional: type_hints.Nullable[str]
+    optional: typing.Optional[str]
 
     def __init__(
-        self, id: int, name: str, nekos: typing.List[int], model: type_hints.JSONObject, optional=None,
+        self, id: int, name: str, nekos: typing.List[int], model: typing.Dict, optional=None,
     ):
         self.id = id
         self.name = name
