@@ -28,12 +28,8 @@ import typing
 
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 from hikari.orm.models import users
-
-if typing.TYPE_CHECKING:
-    from hikari.orm import fabric
 
 
 class WebhookType(bases.BestEffortEnumMixin, enum.IntEnum):
@@ -74,7 +70,7 @@ class WebhookUser(users.BaseUser):
     #: :type: :class:`str`
     avatar_hash: str
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.id = int(payload["id"])
         self.username = payload["username"]
         self.discriminator = int(payload["discriminator"])
@@ -118,7 +114,7 @@ class Webhook(bases.BaseModelWithFabric, bases.SnowflakeMixin):
     #: The optional user for the webhook.
     #:
     #: :type: :class:`WebhookUser` or `None`
-    user: type_hints.Nullable[WebhookUser]
+    user: typing.Optional[WebhookUser]
 
     #: The name of the webhook.
     #:
@@ -128,18 +124,16 @@ class Webhook(bases.BaseModelWithFabric, bases.SnowflakeMixin):
     #: The name of the webhook.
     #:
     #: :type: :class:`str` or `None`
-    avatar_hash: type_hints.Nullable[str]
+    avatar_hash: typing.Optional[str]
 
     #: The token of the webhook, if available.
     #:
     #: :type: :class:`str` or `None`
-    token: type_hints.Nullable[str]
+    token: typing.Optional[str]
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(
-        self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject, guild_id: type_hints.Nullable[int] = None,
-    ) -> None:
+    def __init__(self, fabric_obj: typing.Any, payload: typing.Dict, guild_id: typing.Optional[int] = None,) -> None:
         self._fabric = fabric_obj
         self.id = int(payload["id"])
         self.type = transformations.try_cast(payload.get("type"), WebhookType)

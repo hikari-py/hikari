@@ -27,14 +27,11 @@ import typing
 
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import transformations
+from hikari.orm import fabric as _fabric
 from hikari.orm.gateway import chunk_mode
 from hikari.orm.gateway import dispatching_event_adapter
 from hikari.orm.gateway import event_types
 from hikari.orm.models import channels
-
-if typing.TYPE_CHECKING:
-    from hikari.orm import fabric as _fabric
-    from hikari.internal_utilities import type_hints
 
 
 class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEventAdapter):
@@ -144,7 +141,7 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
 
     async def handle_channel_pins_update(self, _, payload):
         channel_id = int(payload["channel_id"])
-        channel_obj: type_hints.Nullable[channels.Channel] = self.fabric.state_registry.get_channel_by_id(channel_id)
+        channel_obj: typing.Optional[channels.Channel] = self.fabric.state_registry.get_channel_by_id(channel_id)
 
         if channel_obj is not None:
             channel_obj: channels.TextChannel

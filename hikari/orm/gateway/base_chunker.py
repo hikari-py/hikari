@@ -30,10 +30,7 @@ __all__ = ["BaseChunker"]
 import abc
 import typing
 
-from hikari.internal_utilities import type_hints
-
-if typing.TYPE_CHECKING:
-    from hikari.orm.models import guilds
+from hikari.orm.models import guilds
 
 
 class BaseChunker(abc.ABC):
@@ -51,7 +48,7 @@ class BaseChunker(abc.ABC):
         limit: int = 0,
         presences: bool = True,
         query: str = "",
-        user_ids: type_hints.Nullable[typing.Sequence[int]] = None,
+        user_ids: typing.Optional[typing.Sequence[int]] = None,
     ) -> None:
         """
         Request chunks for the given guilds.
@@ -80,7 +77,7 @@ class BaseChunker(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def handle_next_chunk(self, chunk_payload: type_hints.JSONObject, shard_id: int) -> None:
+    async def handle_next_chunk(self, chunk_payload: typing.Dict, shard_id: int) -> None:
         """
         Handle a new chunk from the gateway.
 

@@ -46,10 +46,6 @@ import typing
 
 from hikari.internal_utilities import unspecified
 
-if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import type_hints
-    from hikari.orm.models import bases
-
 CastInputT = typing.TypeVar("CastInputT")
 CastOutputT = typing.TypeVar("CastOutputT")
 DefaultT = typing.TypeVar("DefaultT")
@@ -81,7 +77,7 @@ def put_if_specified(
     mapping: typing.Dict[typing.Hashable, typing.Any],
     key: typing.Hashable,
     value: typing.Any,
-    type_after: type_hints.Nullable[TypeCastT] = None,
+    type_after: typing.Optional[TypeCastT] = None,
 ) -> None:
     """
     Add a value to the mapping under the given key as long as the value is not :attr:`UNSPECIFIED`
@@ -103,12 +99,14 @@ def put_if_specified(
             mapping[key] = value
 
 
-def get_id(value: bases.SnowflakeLikeT) -> str:
+def get_id(value: typing.Any) -> str:
     """
-    Used to get the snowflake ID from an object.
+    Used to get the snowflake ID from an object. This will either return the value of
+    the `id` attribute of the object if it has one, or cast the object to an `int` and
+    use that value.
 
     Args:
-        value: The :class:`hikari.orm.model.bases.SnowflakeLikeT` like object to get an ID from.
+        value: The object to get an ID from.
 
     Returns:
         The resultant snowflake ID as a :class:`str`.
@@ -155,7 +153,7 @@ def put_if_not_none(
     mapping: typing.Dict[typing.Hashable, typing.Any],
     key: typing.Hashable,
     value: typing.Any,
-    type_after: type_hints.Nullable[TypeCastT] = None,
+    type_after: typing.Optional[TypeCastT] = None,
 ) -> None:
     """
     Add a value to the mapping under the given key as long as the value is not :attr:`None`
@@ -198,9 +196,7 @@ def format_present_placeholders(string: str, **kwargs) -> str:
     return string.format_map(_SafeFormatDict(**kwargs))
 
 
-def get_parent_id_from_model(
-    obj: typing.Any, parent_object: type_hints.Nullable[bases.SnowflakeLikeT], attribute: str
-) -> str:
+def get_parent_id_from_model(obj: typing.Any, parent_object: typing.Optional[typing.Any], attribute: str) -> str:
     """
     Attempt to get a parent object ID from the parent object or an object that has the parent object as an attribute.
 
@@ -230,9 +226,7 @@ def get_parent_id_from_model(
         ) from None
 
 
-def id_map(
-    snowflake_iterable: typing.Iterable[bases.SnowflakeMixinT],
-) -> typing.MutableMapping[int, bases.SnowflakeMixinT]:
+def id_map(snowflake_iterable: typing.Iterable[typing.Any],) -> typing.MutableMapping[int, typing.Any]:
     """
     Given an iterable of elements with an :class:`int` `id` attribute, produce a mutable mapping
     of the IDs to their underlying values.
@@ -240,7 +234,7 @@ def id_map(
     return {snowflake.id: snowflake for snowflake in snowflake_iterable}
 
 
-def image_bytes_to_image_data(img_bytes: bytes) -> type_hints.Nullable[str]:
+def image_bytes_to_image_data(img_bytes: bytes) -> typing.Optional[str]:
     """
     Encode image bytes into an image data string.
 
