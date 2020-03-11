@@ -296,7 +296,13 @@ class SnowflakeMixin:
         return hash(self.id)
 
     def __eq__(self, other):
-        return type(self) == type(other) and self.id == other.id
+        first = type(self)
+        second = type(other)
+        return (
+            issubclass(second, SnowflakeMixin)
+            and (issubclass(first, second) or issubclass(second, first))
+            and self.id == other.id
+        )
 
     def __ne__(self, other) -> bool:
         return not self == other
