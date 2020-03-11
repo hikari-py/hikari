@@ -36,9 +36,6 @@ __all__ = [
 import inspect
 import typing
 
-if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import type_hints
-
 ValueT = typing.TypeVar("ValueT")
 BaseTypeInstanceT = typing.TypeVar("BaseTypeInstanceT")
 
@@ -49,14 +46,14 @@ def assert_that(condition: bool, message: str = None, error_type: type = ValueEr
         raise error_type(message or "condition must not be False")
 
 
-def assert_not_none(value: ValueT, message: type_hints.Nullable[str] = None) -> ValueT:
+def assert_not_none(value: ValueT, message: typing.Optional[str] = None) -> ValueT:
     """Raises a ValueError with the optional description if the given value is None."""
     if value is None:
         raise ValueError(message or "value must not be None")
     return value
 
 
-def assert_is_natural(value: ValueT, name: type_hints.Nullable[str] = None) -> int:
+def assert_is_natural(value: ValueT, name: typing.Optional[str] = None) -> int:
     """Assert the given value is a natural (>=0) integer, or raise a ValueError."""
     if not isinstance(value, int) or value < 0:
         name = name or "value"
@@ -64,7 +61,7 @@ def assert_is_natural(value: ValueT, name: type_hints.Nullable[str] = None) -> i
     return value
 
 
-def assert_is_slotted(cls: typing.Type[ValueT], message: type_hints.Nullable[str] = None) -> typing.Type[ValueT]:
+def assert_is_slotted(cls: typing.Type[ValueT], message: typing.Optional[str] = None) -> typing.Type[ValueT]:
     """Raises a TypeError if the class is not slotted."""
     message = message or f"Class {cls.__qualname__} is required to be slotted."
     if not hasattr(cls, "__slots__"):
@@ -72,7 +69,7 @@ def assert_is_slotted(cls: typing.Type[ValueT], message: type_hints.Nullable[str
     return cls
 
 
-def assert_not_slotted(cls: typing.Type[ValueT], message: type_hints.Nullable[str] = None) -> typing.Type[ValueT]:
+def assert_not_slotted(cls: typing.Type[ValueT], message: typing.Optional[str] = None) -> typing.Type[ValueT]:
     """Raises a TypeError if the class is not slotted."""
     message = message or f"Class {cls.__qualname__} is required to not be slotted."
     if hasattr(cls, "__slots__"):

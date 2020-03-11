@@ -37,6 +37,7 @@ import contextlib
 import datetime
 import enum
 import json
+import logging
 import math
 import ssl
 import time
@@ -48,15 +49,11 @@ import aiohttp.typedefs
 
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
-from hikari.internal_utilities import type_hints
 from hikari.net import codes
 from hikari.net import errors
 from hikari.net import ratelimits
 from hikari.net import user_agent
 from hikari.net import versions
-
-if typing.TYPE_CHECKING:
-    import logging
 
 
 class GatewayStatus(str, enum.Enum):
@@ -75,7 +72,7 @@ class GatewayStatus(str, enum.Enum):
 
 
 #: The signature for an event dispatch callback.
-DispatchT = typing.Callable[["GatewayClient", str, type_hints.JSONObject], None]
+DispatchT = typing.Callable[["GatewayClient", str, typing.Dict], None]
 
 
 class GatewayClient:
@@ -323,10 +320,10 @@ class GatewayClient:
         connector: typing.Optional[aiohttp.BaseConnector] = None,
         debug: bool = False,
         dispatch: DispatchT = lambda gw, e, p: None,
-        initial_presence: typing.Optional[type_hints.JSONObject] = None,
+        initial_presence: typing.Optional[typing.Dict] = None,
         intents: typing.Optional[codes.GatewayIntent] = None,
-        json_deserialize: typing.Callable[[typing.AnyStr], type_hints.JSONObject] = json.loads,
-        json_serialize: typing.Callable[[type_hints.JSONObject], typing.AnyStr] = json.dumps,
+        json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict] = json.loads,
+        json_serialize: typing.Callable[[typing.Dict], typing.AnyStr] = json.dumps,
         large_threshold: int = 250,
         proxy_auth: typing.Optional[aiohttp.BasicAuth] = None,
         proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders] = None,
@@ -359,9 +356,9 @@ class GatewayClient:
         self._debug: bool = debug
         self._intents: typing.Optional[intents.GatewayIntent] = intents
         self._large_threshold: int = large_threshold
-        self._json_deserialize: typing.Callable[[typing.AnyStr], type_hints.JSONObject] = json_deserialize
-        self._json_serialize: typing.Callable[[type_hints.JSONObject], typing.AnyStr] = json_serialize
-        self._presence: typing.Optional[type_hints.JSONObject] = initial_presence
+        self._json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict] = json_deserialize
+        self._json_serialize: typing.Callable[[typing.Dict], typing.AnyStr] = json_serialize
+        self._presence: typing.Optional[typing.Dict] = initial_presence
         self._proxy_auth: typing.Optional[aiohttp.BasicAuth] = proxy_auth
         self._proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders] = proxy_headers
         self._proxy_url: typing.Optional[str] = proxy_url
@@ -449,7 +446,7 @@ class GatewayClient:
         return max(0, self.disconnect_count - int(not self.is_connected))
 
     @property
-    def current_presence(self) -> type_hints.JSONObject:
+    def current_presence(self) -> typing.Dict:
         """
         Returns
         -------
@@ -519,7 +516,7 @@ class GatewayClient:
 
         await self._send({"op": codes.GatewayOpcode.REQUEST_GUILD_MEMBERS, "d": {"guild_id": guilds, **constraints}})
 
-    async def update_presence(self, presence: type_hints.JSONObject) -> None:
+    async def update_presence(self, presence: typing.Dict) -> None:
         """Change the presence of the bot user for this shard.
 
         Parameters
@@ -598,7 +595,7 @@ class GatewayClient:
             self.dispatch(
                 self,
                 "RECONNECT" if self.disconnect_count else "CONNECT",
-                typing.cast(type_hints.JSONObject, containers.EMPTY_DICT),
+                typing.cast(typing.Dict, containers.EMPTY_DICT),
             )
             self.logger.info("received HELLO, interval is %ss", self.heartbeat_interval)
 
@@ -640,7 +637,7 @@ class GatewayClient:
             self._ws = None
             await self._session.close()
             self._session = None
-            self.dispatch(self, "DISCONNECT", typing.cast(type_hints.JSONObject, containers.EMPTY_DICT))
+            self.dispatch(self, "DISCONNECT", typing.cast(typing.Dict, containers.EMPTY_DICT))
 
     @property
     def _ws_connect_kwargs(self):

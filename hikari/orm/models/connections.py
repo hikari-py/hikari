@@ -28,12 +28,8 @@ import typing
 
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
-from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 from hikari.orm.models import integrations
-
-if typing.TYPE_CHECKING:
-    from hikari.orm import fabric
 
 
 class ConnectionVisibility(bases.BestEffortEnumMixin, enum.IntEnum):
@@ -108,7 +104,7 @@ class Connection(bases.BaseModelWithFabric, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("type", "id", "name")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: typing.Any, payload: typing.Dict) -> None:
         self._fabric = fabric_obj
         self.id = payload["id"]
         self.name = payload["name"]

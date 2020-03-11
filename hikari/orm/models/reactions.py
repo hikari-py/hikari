@@ -27,12 +27,9 @@ import typing
 
 from hikari.internal_utilities import reprs
 from hikari.orm.models import bases
-
-if typing.TYPE_CHECKING:
-    from hikari.orm import _fabric
-    from hikari.orm.models import channels as _channel
-    from hikari.orm.models import messages as _message
-    from hikari.orm.models import emojis as _emoji
+from hikari.orm.models import channels as _channel
+from hikari.orm.models import emojis as _emoji
+from hikari.orm.models import messages as _message
 
 
 class Reaction(bases.BaseModelWithFabric):
@@ -69,7 +66,7 @@ class Reaction(bases.BaseModelWithFabric):
     message_id: int
 
     def __init__(
-        self, fabric_obj: _fabric.Fabric, count: int, emoji: _emoji.Emoji, message_id: int, channel_id: int
+        self, fabric_obj: typing.Any, count: int, emoji: _emoji.Emoji, message_id: int, channel_id: int
     ) -> None:
         self._fabric = fabric_obj
         self.count = count
