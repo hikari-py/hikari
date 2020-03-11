@@ -76,9 +76,9 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
-    "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
+    "sphinx_autodoc_typehints",
 ]
 
 templates_path = ["_templates"]
@@ -171,6 +171,10 @@ intersphinx_mapping = {
     "aiohttp": ("https://aiohttp.readthedocs.io/en/stable/", None),
     "websockets": ("https://websockets.readthedocs.io/en/stable/", None),
 }
+
+# -- Autosummary settings... ---------------------------------------------
+
+autosummary_generate_overwrite = False
 
 # -- Epilog to inject into each page... ---------------------------------------------
 
