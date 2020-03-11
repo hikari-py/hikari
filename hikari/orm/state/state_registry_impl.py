@@ -24,6 +24,7 @@ from __future__ import annotations
 __all__ = ["StateRegistryImpl"]
 
 import contextlib
+import datetime
 import functools
 import typing
 import weakref
@@ -31,7 +32,7 @@ import weakref
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
+from hikari.orm import fabric
 from hikari.orm.models import applications
 from hikari.orm.models import audit_logs
 from hikari.orm.models import bases
@@ -51,11 +52,6 @@ from hikari.orm.models import users
 from hikari.orm.models import voices
 from hikari.orm.models import webhooks
 from hikari.orm.state import base_registry
-
-if typing.TYPE_CHECKING:
-    import datetime
-
-    from hikari.orm import fabric
 
 
 class StateRegistryImpl(base_registry.BaseRegistry):
@@ -105,7 +101,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         self._message_cache: typing.MutableMapping[int, messages.Message] = containers.LRUDict(message_cache_size)
 
         #: The bot user.
-        self._user: type_hints.Nullable[users.OAuth2User] = None
+        self._user: typing.Optional[users.OAuth2User] = None
 
         #: Our logger.
         self.logger = loggers.get_named_logger(self)
@@ -117,7 +113,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return obj
 
     @property
-    def me(self) -> type_hints.Nullable[users.OAuth2User]:
+    def me(self) -> typing.Optional[users.OAuth2User]:
         return self._user
 
     @property
@@ -138,7 +134,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
     def decrement_reaction_count(
         self, message_obj: messages.Message, emoji_obj: emojis.Emoji
-    ) -> type_hints.Nullable[reactions.Reaction]:
+    ) -> typing.Optional[reactions.Reaction]:
         # Ensure the reaction is subscribed on the message.
         for reaction_obj in message_obj.reactions:
             if reaction_obj.emoji == emoji_obj:
@@ -187,7 +183,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
             del member_obj.guild.members[member_obj.id]
 
     def delete_reaction(
-        self, message_obj: messages.Message, user_obj: type_hints.Nullable[users.User], emoji_obj: emojis.Emoji
+        self, message_obj: messages.Message, user_obj: typing.Optional[users.User], emoji_obj: emojis.Emoji
     ) -> None:
         # We do not store info about the user, so just ignore that parameter.
         for reaction_obj in message_obj.reactions:
@@ -220,7 +216,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
     def get_channel_by_id(
         self, channel_id: int
-    ) -> type_hints.Nullable[typing.Union[channels.GuildChannel, channels.DMChannel]]:
+    ) -> typing.Optional[typing.Union[channels.GuildChannel, channels.DMChannel]]:
         # (Doesnt detect "__getitem__" as "get") pylint: disable=no-member
         return self._guild_channels.get(channel_id) or self._dm_channels.get(channel_id)
         # pylint: enable=no-member
@@ -228,7 +224,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
     def get_mandatory_channel_by_id(  # lgtm [py/similar-function]
         self,
         channel_id: int,
-        callback_if_unresolved: type_hints.Nullable[typing.Callable[[channels.Channel], typing.Any]] = None,
+        callback_if_unresolved: typing.Optional[typing.Callable[[channels.Channel], typing.Any]] = None,
     ) -> typing.Union[channels.Channel, bases.UnknownObject[channels.Channel]]:
         obj = self.get_channel_by_id(channel_id)
         if obj is not None:
@@ -238,14 +234,14 @@ class StateRegistryImpl(base_registry.BaseRegistry):
                 channel_id, self.fabric.http_adapter.fetch_channel, callback_if_unresolved, channel_id
             )
 
-    def get_guild_emoji_by_id(self, emoji_id: int) -> type_hints.Nullable[emojis.GuildEmoji]:
+    def get_guild_emoji_by_id(self, emoji_id: int) -> typing.Optional[emojis.GuildEmoji]:
         return self._emojis.get(emoji_id)
 
     def get_mandatory_guild_emoji_by_id(  # lgtm [py/similar-function]
         self,
         emoji_id: int,
         guild_id: int,
-        callback_if_unresolved: type_hints.Nullable[typing.Callable[[emojis.GuildEmoji], typing.Any]] = None,
+        callback_if_unresolved: typing.Optional[typing.Callable[[emojis.GuildEmoji], typing.Any]] = None,
     ) -> typing.Union[emojis.GuildEmoji, bases.UnknownObject[emojis.GuildEmoji]]:
         obj = self.get_guild_emoji_by_id(emoji_id)
         if obj is not None:
@@ -255,13 +251,13 @@ class StateRegistryImpl(base_registry.BaseRegistry):
                 emoji_id, self.fabric.http_adapter.fetch_guild_emoji, callback_if_unresolved, emoji_id, guild=guild_id
             )
 
-    def get_guild_by_id(self, guild_id: int) -> type_hints.Nullable[guilds.Guild]:
+    def get_guild_by_id(self, guild_id: int) -> typing.Optional[guilds.Guild]:
         return self._guilds.get(guild_id)
 
     def get_mandatory_guild_by_id(  # lgtm [py/similar-function]
         self,
         guild_id: int,
-        callback_if_unresolved: type_hints.Nullable[typing.Callable[[guilds.Guild], typing.Any]] = None,
+        callback_if_unresolved: typing.Optional[typing.Callable[[guilds.Guild], typing.Any]] = None,
     ) -> typing.Union[guilds.Guild, bases.UnknownObject[guilds.Guild]]:
         obj = self.get_guild_by_id(guild_id)
         if obj is not None:
@@ -271,14 +267,14 @@ class StateRegistryImpl(base_registry.BaseRegistry):
                 guild_id, self.fabric.http_adapter.fetch_guild, callback_if_unresolved, guild_id
             )
 
-    def get_message_by_id(self, message_id: int) -> type_hints.Nullable[messages.Message]:
+    def get_message_by_id(self, message_id: int) -> typing.Optional[messages.Message]:
         return self._message_cache.get(message_id)  # (Doesnt detect "__getitem__" as "get") pylint: disable=no-member
 
     def get_mandatory_message_by_id(  # lgtm [py/similar-function]
         self,
         message_id: int,
         channel_id: int,
-        callback_if_unresolved: type_hints.Nullable[typing.Callable[[messages.Message], typing.Any]] = None,
+        callback_if_unresolved: typing.Optional[typing.Callable[[messages.Message], typing.Any]] = None,
     ) -> typing.Union[messages.Message, bases.UnknownObject[messages.Message]]:
         obj = self.get_message_by_id(message_id)
         if obj is not None:
@@ -292,7 +288,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
                 channel=channel_id,
             )
 
-    def get_role_by_id(self, guild_id: int, role_id: int) -> type_hints.Nullable[roles.Role]:
+    def get_role_by_id(self, guild_id: int, role_id: int) -> typing.Optional[roles.Role]:
         if guild_id not in self._guilds:
             return None
         return self._guilds[guild_id].roles.get(role_id)
@@ -309,7 +305,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         self,
         guild_id: int,
         role_id: int,
-        callback_if_unresolved: type_hints.Nullable[typing.Callable[[roles.Role], typing.Any]] = None,
+        callback_if_unresolved: typing.Optional[typing.Callable[[roles.Role], typing.Any]] = None,
     ) -> typing.Union[roles.Role, bases.UnknownObject[roles.Role]]:
         obj = self.get_role_by_id(guild_id, role_id)
         if obj is not None:
@@ -319,16 +315,14 @@ class StateRegistryImpl(base_registry.BaseRegistry):
                 role_id, self._role_fetcher, callback_if_unresolved, guild_id, role_id
             )
 
-    def get_user_by_id(self, user_id: int) -> type_hints.Nullable[users.User]:
+    def get_user_by_id(self, user_id: int) -> typing.Optional[users.User]:
         if self._user is not None and self._user.id == user_id:
             return self._user
 
         return self._users.get(user_id)
 
     def get_mandatory_user_by_id(  # lgtm [py/similar-function]
-        self,
-        user_id: int,
-        callback_if_unresolved: type_hints.Nullable[typing.Callable[[users.User], typing.Any]] = None,
+        self, user_id: int, callback_if_unresolved: typing.Optional[typing.Callable[[users.User], typing.Any]] = None,
     ) -> typing.Union[users.User, bases.UnknownObject[users.User]]:
         obj = self.get_user_by_id(user_id)
         if obj is not None:
@@ -338,7 +332,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
                 user_id, self.fabric.http_adapter.fetch_user, callback_if_unresolved, user_id
             )
 
-    def get_member_by_id(self, user_id: int, guild_id: int) -> type_hints.Nullable[members.Member]:
+    def get_member_by_id(self, user_id: int, guild_id: int) -> typing.Optional[members.Member]:
         if guild_id not in self._guilds:
             return None
         return self._guilds[guild_id].members.get(user_id)
@@ -347,7 +341,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         self,
         user_id: int,
         guild_id: int,
-        callback_if_unresolved: type_hints.Nullable[typing.Callable[[members.Member], typing.Any]] = None,
+        callback_if_unresolved: typing.Optional[typing.Callable[[members.Member], typing.Any]] = None,
     ) -> typing.Union[members.MemberLikeT, bases.UnknownObject[members.Member]]:
         obj = self.get_member_by_id(user_id, guild_id)
         if obj is not None:
@@ -357,10 +351,10 @@ class StateRegistryImpl(base_registry.BaseRegistry):
                 user_id, self.fabric.http_adapter.fetch_member, callback_if_unresolved, user_id, guild=guild_id
             )
 
-    def parse_application(self, application_payload: type_hints.JSONObject) -> applications.Application:
+    def parse_application(self, application_payload: typing.Dict) -> applications.Application:
         return applications.Application(self.fabric, application_payload)
 
-    def parse_application_user(self, application_user_payload: type_hints.JSONObject) -> users.OAuth2User:
+    def parse_application_user(self, application_user_payload: typing.Dict) -> users.OAuth2User:
         if self._user is not None:
             self._user.update_state(application_user_payload)
         else:
@@ -368,14 +362,14 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
         return self._user
 
-    def parse_audit_log(self, audit_log_payload: type_hints.JSONObject) -> audit_logs.AuditLog:
+    def parse_audit_log(self, audit_log_payload: typing.Dict) -> audit_logs.AuditLog:
         return audit_logs.AuditLog(self.fabric, audit_log_payload)
 
-    def parse_ban(self, ban_payload: type_hints.JSONObject) -> guilds.Ban:
+    def parse_ban(self, ban_payload: typing.Dict) -> guilds.Ban:
         return guilds.Ban(self.fabric, ban_payload)
 
     def parse_channel(
-        self, channel_payload: type_hints.JSONObject, guild_obj: type_hints.Nullable[guilds.Guild] = None,
+        self, channel_payload: typing.Dict, guild_obj: typing.Optional[guilds.Guild] = None,
     ) -> typing.Union[channels.DMChannel, channels.GuildChannel]:
         channel_id = int(channel_payload["id"])
         channel_obj = self.get_channel_by_id(channel_id)
@@ -397,16 +391,16 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
         return channel_obj
 
-    def parse_connection(self, connection_payload: type_hints.JSONObject) -> connections.Connection:
+    def parse_connection(self, connection_payload: typing.Dict) -> connections.Connection:
         return connections.Connection(self.fabric, connection_payload)
 
     # These fix typing issues in the update_guild_emojis method.
     @typing.overload
-    def parse_emoji(self, emoji_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
+    def parse_emoji(self, emoji_payload: typing.Dict, guild_obj: guilds.Guild) -> emojis.GuildEmoji:
         ...
 
     @typing.overload
-    def parse_emoji(self, emoji_payload: type_hints.JSONObject, guild_obj: None) -> emojis.Emoji:
+    def parse_emoji(self, emoji_payload: typing.Dict, guild_obj: None) -> emojis.Emoji:
         ...
 
     def parse_emoji(self, emoji_payload, guild_obj):
@@ -429,10 +423,10 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
         return new_emoji
 
-    def parse_gateway_bot(self, gateway_bot_payload: type_hints.JSONObject) -> gateway_bot.GatewayBot:
+    def parse_gateway_bot(self, gateway_bot_payload: typing.Dict) -> gateway_bot.GatewayBot:
         return gateway_bot.GatewayBot(gateway_bot_payload)
 
-    def parse_guild(self, guild_payload: type_hints.JSONObject) -> guilds.Guild:
+    def parse_guild(self, guild_payload: typing.Dict) -> guilds.Guild:
         guild_id = int(guild_payload["id"])
         is_unavailable = guild_payload.get("unavailable", False)
 
@@ -450,15 +444,13 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
         return guild_obj
 
-    def parse_integration(self, integration_payload: type_hints.JSONObject) -> integrations.Integration:
+    def parse_integration(self, integration_payload: typing.Dict) -> integrations.Integration:
         return integrations.Integration(self.fabric, integration_payload)
 
-    def parse_invite(self, invite_payload: type_hints.JSONObject) -> invites.Invite:
+    def parse_invite(self, invite_payload: typing.Dict) -> invites.Invite:
         return invites.parse_invite(self.fabric, invite_payload)
 
-    def parse_voice_state(
-        self, voice_state_payload: type_hints.JSONObject, guild_obj: guilds.Guild
-    ) -> voices.VoiceState:
+    def parse_voice_state(self, voice_state_payload: typing.Dict, guild_obj: guilds.Guild) -> voices.VoiceState:
         user_id = int(voice_state_payload["user_id"])
 
         if user_id in guild_obj.voice_states:
@@ -471,16 +463,13 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return voice_state_obj
 
     def parse_partial_member(
-        self,
-        partial_member_payload: type_hints.JSONObject,
-        user_payload: type_hints.JSONObject,
-        guild_obj: guilds.Guild,
+        self, partial_member_payload: typing.Dict, user_payload: typing.Dict, guild_obj: guilds.Guild,
     ) -> members.Member:
         # Cheap workaround for Discord's inconsistency here.
         partial_member_payload["user"] = user_payload
         return self.parse_member(partial_member_payload, guild_obj)
 
-    def parse_member(self, member_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> members.Member:
+    def parse_member(self, member_payload: typing.Dict, guild_obj: guilds.Guild) -> members.Member:
         member_id = int(member_payload["user"]["id"])
 
         if member_id in guild_obj.members:
@@ -493,7 +482,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         guild_obj.members[member_id] = member_obj
         return member_obj
 
-    def parse_message(self, message_payload: type_hints.JSONObject) -> messages.Message:
+    def parse_message(self, message_payload: typing.Dict) -> messages.Message:
         # Always update the cache with the new message.
         message_id = int(message_payload["id"])
 
@@ -503,16 +492,12 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         self._message_cache[message_id] = message_obj
         return message_obj
 
-    def parse_presence(
-        self, member_obj: members.Member, presence_payload: type_hints.JSONObject
-    ) -> presences.MemberPresence:
+    def parse_presence(self, member_obj: members.Member, presence_payload: typing.Dict) -> presences.MemberPresence:
         presence_obj = presences.MemberPresence(presence_payload)
         member_obj.presence = presence_obj
         return presence_obj
 
-    def parse_reaction(
-        self, reaction_payload: type_hints.JSONObject, message_id: int, channel_id: int,
-    ) -> reactions.Reaction:
+    def parse_reaction(self, reaction_payload: typing.Dict, message_id: int, channel_id: int,) -> reactions.Reaction:
         count = int(reaction_payload["count"]) if "count" in reaction_payload else 1
         emoji_obj = self.parse_emoji(reaction_payload["emoji"], None)
 
@@ -529,7 +514,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
             message_obj.reactions.append(new_reaction_obj)
         return new_reaction_obj
 
-    def parse_role(self, role_payload: type_hints.JSONObject, guild_obj: guilds.Guild) -> roles.Role:
+    def parse_role(self, role_payload: typing.Dict, guild_obj: guilds.Guild) -> roles.Role:
         role_id = int(role_payload["id"])
         if role_id in guild_obj.roles:
             role = guild_obj.roles[role_id]
@@ -540,7 +525,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
             guild_obj.roles[role_payload.id] = role_payload
             return role_payload
 
-    def parse_user(self, user_payload: type_hints.JSONObject) -> users.BaseUser:
+    def parse_user(self, user_payload: typing.Dict) -> users.BaseUser:
         # If the user already exists, then just return their existing object. We expect discord to tell us if they
         # get updated if they are a member, and for anything else the object will just be disposed of once we are
         # finished with it anyway.
@@ -561,10 +546,10 @@ class StateRegistryImpl(base_registry.BaseRegistry):
 
         return existing_user
 
-    def parse_webhook(self, webhook_payload: type_hints.JSONObject) -> webhooks.Webhook:
+    def parse_webhook(self, webhook_payload: typing.Dict) -> webhooks.Webhook:
         return webhooks.Webhook(self.fabric, webhook_payload)
 
-    def parse_webhook_user(self, webhook_user_payload: type_hints.JSONObject) -> webhooks.WebhookUser:
+    def parse_webhook_user(self, webhook_user_payload: typing.Dict) -> webhooks.WebhookUser:
         return webhooks.WebhookUser(webhook_user_payload)
 
     def set_guild_unavailability(self, guild_obj: guilds.Guild, is_unavailable: bool) -> None:
@@ -573,7 +558,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         guild_obj.is_unavailable = is_unavailable
 
     def set_last_pinned_timestamp(
-        self, channel_obj: channels.TextChannel, timestamp: type_hints.Nullable[datetime.datetime]
+        self, channel_obj: channels.TextChannel, timestamp: typing.Optional[datetime.datetime]
     ) -> None:
         # We don't persist this information, as it is not overly useful. The user can use the HTTP endpoint if they
         # care what the pins are...
@@ -585,8 +570,8 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         member_obj.role_ids = [role.id for role in role_objs]
 
     def update_channel(
-        self, channel_payload: type_hints.JSONObject
-    ) -> type_hints.Nullable[typing.Tuple[channels.Channel, channels.Channel]]:
+        self, channel_payload: typing.Dict
+    ) -> typing.Optional[typing.Tuple[channels.Channel, channels.Channel]]:
         channel_id = int(channel_payload["id"])
         existing_channel = self.get_channel_by_id(channel_id)
         if existing_channel is not None:
@@ -596,9 +581,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
             return old_channel, new_channel
         return None
 
-    def update_guild(
-        self, guild_payload: type_hints.JSONObject
-    ) -> type_hints.Nullable[typing.Tuple[guilds.Guild, guilds.Guild]]:
+    def update_guild(self, guild_payload: typing.Dict) -> typing.Optional[typing.Tuple[guilds.Guild, guilds.Guild]]:
         guild_id = int(guild_payload["id"])
         guild_obj = self.get_guild_by_id(guild_id)
         if guild_obj is not None:
@@ -609,31 +592,29 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return None
 
     def update_guild_emojis(
-        self, emoji_list: typing.List[type_hints.JSONObject], guild_obj: guilds.Guild
-    ) -> type_hints.Nullable[typing.Tuple[typing.FrozenSet[emojis.GuildEmoji], typing.FrozenSet[emojis.GuildEmoji]]]:
+        self, emoji_list: typing.List[typing.Dict], guild_obj: guilds.Guild
+    ) -> typing.Optional[typing.Tuple[typing.FrozenSet[emojis.GuildEmoji], typing.FrozenSet[emojis.GuildEmoji]]]:
         old_emojis = frozenset(guild_obj.emojis.values())
         new_emojis = frozenset(self.parse_emoji(emoji_obj, guild_obj) for emoji_obj in emoji_list)
         guild_obj.emojis = transformations.id_map(new_emojis)
         return old_emojis, new_emojis
 
     def update_member(
-        self, member_obj: members.Member, payload: type_hints.JSONObject,
-    ) -> type_hints.Nullable[typing.Tuple[members.Member, members.Member]]:
+        self, member_obj: members.Member, payload: typing.Dict,
+    ) -> typing.Optional[typing.Tuple[members.Member, members.Member]]:
         new_member = member_obj
         old_member = new_member.copy()
         new_member.update_state(payload)
         return old_member, new_member
 
     def update_member_presence(
-        self, member_obj: members.Member, presence_payload: type_hints.JSONObject
-    ) -> type_hints.Nullable[typing.Tuple[members.Member, presences.MemberPresence, presences.MemberPresence]]:
+        self, member_obj: members.Member, presence_payload: typing.Dict
+    ) -> typing.Optional[typing.Tuple[members.Member, presences.MemberPresence, presences.MemberPresence]]:
         old_presence = member_obj.presence
         new_presence = self.parse_presence(member_obj, presence_payload)
         return member_obj, old_presence, new_presence
 
-    def update_message(
-        self, payload: type_hints.JSONObject
-    ) -> type_hints.Nullable[typing.Tuple[messages.Message, messages.Message]]:
+    def update_message(self, payload: typing.Dict) -> typing.Optional[typing.Tuple[messages.Message, messages.Message]]:
         message_id = int(payload["id"])
         if message_id in self._message_cache:
             # (Doesnt detect "__getitem__" as "get") pylint: disable=no-member
@@ -645,8 +626,8 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         return None
 
     def update_role(
-        self, guild_obj: guilds.Guild, payload: type_hints.JSONObject
-    ) -> type_hints.Nullable[typing.Tuple[roles.Role, roles.Role]]:
+        self, guild_obj: guilds.Guild, payload: typing.Dict
+    ) -> typing.Optional[typing.Tuple[roles.Role, roles.Role]]:
         role_id = int(payload["id"])
         existing_role = guild_obj.roles.get(role_id)
 

@@ -28,33 +28,30 @@ import abc
 import typing
 
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import storage
 from hikari.internal_utilities import unspecified
-
-if typing.TYPE_CHECKING:
-    from hikari.internal_utilities import storage
-    from hikari.internal_utilities import type_hints
-    from hikari.orm.models import applications as _applications
-    from hikari.orm.models import audit_logs as _audit_logs
-    from hikari.orm.models import bases
-    from hikari.orm.models import channels as _channels
-    from hikari.orm.models import colors as _colors
-    from hikari.orm.models import connections as _connections
-    from hikari.orm.models import embeds as _embeds
-    from hikari.orm.models import emojis as _emojis
-    from hikari.orm.models import gateway_bot as _gateway_bot
-    from hikari.orm.models import guilds as _guilds
-    from hikari.orm.models import integrations as _integrations
-    from hikari.orm.models import invites as _invites
-    from hikari.orm.models import media as _media
-    from hikari.orm.models import members as _members
-    from hikari.orm.models import messages as _messages
-    from hikari.orm.models import overwrites as _overwrites
-    from hikari.orm.models import permissions as _permissions
-    from hikari.orm.models import reactions as _reactions
-    from hikari.orm.models import roles as _roles
-    from hikari.orm.models import users as _users
-    from hikari.orm.models import voices as _voices
-    from hikari.orm.models import webhooks as _webhooks
+from hikari.orm.models import applications as _applications
+from hikari.orm.models import audit_logs as _audit_logs
+from hikari.orm.models import bases
+from hikari.orm.models import channels as _channels
+from hikari.orm.models import colors as _colors
+from hikari.orm.models import connections as _connections
+from hikari.orm.models import embeds as _embeds
+from hikari.orm.models import emojis as _emojis
+from hikari.orm.models import gateway_bot as _gateway_bot
+from hikari.orm.models import guilds as _guilds
+from hikari.orm.models import integrations as _integrations
+from hikari.orm.models import invites as _invites
+from hikari.orm.models import media as _media
+from hikari.orm.models import members as _members
+from hikari.orm.models import messages as _messages
+from hikari.orm.models import overwrites as _overwrites
+from hikari.orm.models import permissions as _permissions
+from hikari.orm.models import reactions as _reactions
+from hikari.orm.models import roles as _roles
+from hikari.orm.models import users as _users
+from hikari.orm.models import voices as _voices
+from hikari.orm.models import webhooks as _webhooks
 
 
 class BaseHTTPAdapter(abc.ABC):
@@ -93,9 +90,9 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         guild: _guilds.GuildLikeT,
         *,
-        user: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
-        action_type: type_hints.NotRequired[_audit_logs.AuditLogEventLikeT] = unspecified.UNSPECIFIED,
-        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        user: typing.Union[unspecified.UNSPECIFIED, _users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        action_type: typing.Union[unspecified.UNSPECIFIED, _audit_logs.AuditLogEventLikeT] = unspecified.UNSPECIFIED,
+        limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
     ) -> _audit_logs.AuditLog:
         """
         Fetch the audit log for a given guild.
@@ -147,17 +144,19 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         channel: _channels.ChannelLikeT,
         *,
-        position: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        topic: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        nsfw: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        rate_limit_per_user: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        bitrate: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        user_limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        permission_overwrites: type_hints.NotRequired[
-            typing.Collection[_overwrites.Overwrite]
+        position: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        topic: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        nsfw: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        rate_limit_per_user: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        bitrate: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        user_limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        permission_overwrites: typing.Union[
+            unspecified.UNSPECIFIED, typing.Collection[_overwrites.Overwrite]
         ] = unspecified.UNSPECIFIED,
-        parent_category: type_hints.NullableNotRequired[_channels.GuildCategoryLikeT] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        parent_category: typing.Union[
+            None, unspecified.UNSPECIFIED, _channels.GuildCategoryLikeT
+        ] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> _channels.Channel:
         """
         Update one or more aspects of a given channel ID.
@@ -230,10 +229,10 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         channel: _channels.TextChannelLikeT,
         *,
-        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        after: type_hints.NotRequired[_messages.MessageLikeT] = unspecified.UNSPECIFIED,
-        before: type_hints.NotRequired[_messages.MessageLikeT] = unspecified.UNSPECIFIED,
-        around: type_hints.NotRequired[_messages.MessageLikeT] = unspecified.UNSPECIFIED,
+        limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        after: typing.Union[unspecified.UNSPECIFIED, _messages.MessageLikeT] = unspecified.UNSPECIFIED,
+        before: typing.Union[unspecified.UNSPECIFIED, _messages.MessageLikeT] = unspecified.UNSPECIFIED,
+        around: typing.Union[unspecified.UNSPECIFIED, _messages.MessageLikeT] = unspecified.UNSPECIFIED,
         in_order: bool = False,
     ) -> typing.AsyncIterator[_messages.Message]:
         ...
@@ -279,13 +278,17 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         channel: _channels.TextChannelLikeT,
         *,
-        content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        content: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
         tts: bool = False,
-        files: type_hints.NotRequired[typing.Collection[_media.AbstractFile]] = unspecified.UNSPECIFIED,
-        embed: type_hints.NotRequired[_embeds.Embed] = unspecified.UNSPECIFIED,
+        files: typing.Union[unspecified.UNSPECIFIED, typing.Collection[_media.AbstractFile]] = unspecified.UNSPECIFIED,
+        embed: typing.Union[unspecified.UNSPECIFIED, _embeds.Embed] = unspecified.UNSPECIFIED,
         mention_everyone: bool = True,
-        user_mentions: type_hints.NotRequired[typing.Iterable[_users.BaseUserLikeT]] = unspecified.UNSPECIFIED,
-        role_mentions: type_hints.NotRequired[typing.Iterable[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
+        user_mentions: typing.Union[
+            unspecified.UNSPECIFIED, typing.Iterable[_users.BaseUserLikeT]
+        ] = unspecified.UNSPECIFIED,
+        role_mentions: typing.Union[
+            unspecified.UNSPECIFIED, typing.Iterable[_roles.RoleLikeT]
+        ] = unspecified.UNSPECIFIED,
     ) -> _messages.Message:
         """
         Create a message in the given channel or DM.
@@ -479,8 +482,8 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         reaction: _reactions.Reaction,
         *,
-        after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
-        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        after: typing.Union[unspecified.UNSPECIFIED, _users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_users.BaseUser]:
         ...
 
@@ -491,8 +494,8 @@ class BaseHTTPAdapter(abc.ABC):
         reaction: _emojis.EmojiLikeT,
         message: _messages.Message,
         *,
-        after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
-        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        after: typing.Union[unspecified.UNSPECIFIED, _users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_users.BaseUser]:
         ...
 
@@ -504,8 +507,8 @@ class BaseHTTPAdapter(abc.ABC):
         message: bases.SnowflakeLikeT,
         channel: _channels.ChannelLikeT,
         *,
-        after: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
-        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        after: typing.Union[unspecified.UNSPECIFIED, _users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_users.BaseUser]:
         ...
 
@@ -528,9 +531,9 @@ class BaseHTTPAdapter(abc.ABC):
         message: bases.SnowflakeLikeT,
         channel: _channels.ChannelLikeT,
         *,
-        content: type_hints.NullableNotRequired[str] = unspecified.UNSPECIFIED,
-        embed: type_hints.NullableNotRequired[_embeds.Embed] = unspecified.UNSPECIFIED,
-        flags: type_hints.NotRequired[_messages.MessageFlagLikeT] = unspecified.UNSPECIFIED,
+        content: typing.Union[None, unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        embed: typing.Union[None, unspecified.UNSPECIFIED, _embeds.Embed] = unspecified.UNSPECIFIED,
+        flags: typing.Union[unspecified.UNSPECIFIED, _messages.MessageFlagLikeT] = unspecified.UNSPECIFIED,
     ) -> _messages.Message:
         ...
 
@@ -540,9 +543,9 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         message: _messages.Message,
         *,
-        content: type_hints.NullableNotRequired[str] = unspecified.UNSPECIFIED,
-        embed: type_hints.NullableNotRequired[_embeds.Embed] = unspecified.UNSPECIFIED,
-        flags: type_hints.NotRequired[_messages.MessageFlagLikeT] = unspecified.UNSPECIFIED,
+        content: typing.Union[None, unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        embed: typing.Union[None, unspecified.UNSPECIFIED, _embeds.Embed] = unspecified.UNSPECIFIED,
+        flags: typing.Union[unspecified.UNSPECIFIED, _messages.MessageFlagLikeT] = unspecified.UNSPECIFIED,
     ) -> _messages.Message:
         ...
 
@@ -590,7 +593,7 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         first_message: _messages.MessageLikeT,
         *additional_messages: _messages.MessageLikeT,
-        channel: type_hints.NotRequired[_channels.ChannelLikeT] = unspecified.UNSPECIFIED,
+        channel: typing.Union[unspecified.UNSPECIFIED, _channels.ChannelLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Delete between 1 and 100 messages in a single request.
@@ -628,10 +631,12 @@ class BaseHTTPAdapter(abc.ABC):
         channel: _channels.GuildChannelLikeT,
         overwrite: _overwrites.OverwriteLikeT,
         *,
-        allow: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        deny: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        overwrite_type: type_hints.NotRequired[_overwrites.OverwriteEntityTypeLikeT] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        allow: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        deny: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        overwrite_type: typing.Union[
+            unspecified.UNSPECIFIED, _overwrites.OverwriteEntityTypeLikeT
+        ] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Edit permissions for a given channel.
@@ -681,13 +686,13 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         channel: _channels.GuildChannelLikeT,
         *,
-        max_age: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        max_uses: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        temporary: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        unique: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        target_user: type_hints.NotRequired[_users.BaseUserLikeT] = unspecified.UNSPECIFIED,
-        target_user_type: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        max_age: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        max_uses: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        temporary: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        unique: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        target_user: typing.Union[unspecified.UNSPECIFIED, _users.BaseUserLikeT] = unspecified.UNSPECIFIED,
+        target_user_type: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> _invites.Invite:
         """
         Create a new invite for the given channel.
@@ -888,7 +893,7 @@ class BaseHTTPAdapter(abc.ABC):
         image_data: storage.FileLikeT,
         *,
         roles: typing.Collection[_roles.RoleLikeT] = containers.EMPTY_COLLECTION,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> _emojis.GuildEmoji:
         """
          Creates a new emoji for a given guild.
@@ -925,9 +930,9 @@ class BaseHTTPAdapter(abc.ABC):
         emoji: bases.SnowflakeLikeT,
         guild: _guilds.GuildLikeT,
         *,
-        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        roles: type_hints.NotRequired[typing.Collection[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        name: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        roles: typing.Union[unspecified.UNSPECIFIED, typing.Collection[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -937,9 +942,9 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         emoji: _emojis.GuildEmoji,
         *,
-        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        roles: type_hints.NotRequired[typing.Collection[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        name: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        roles: typing.Union[unspecified.UNSPECIFIED, typing.Collection[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -1010,17 +1015,21 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         name: str,
         *,
-        region: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        icon_data: type_hints.NotRequired[storage.FileLikeT] = unspecified.UNSPECIFIED,
-        verification_level: type_hints.NotRequired[_guilds.VerificationLevelLikeT] = unspecified.UNSPECIFIED,
-        default_message_notifications: type_hints.NotRequired[
-            _guilds.DefaultMessageNotificationsLevelLikeT
+        region: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        icon_data: typing.Union[unspecified.UNSPECIFIED, storage.FileLikeT] = unspecified.UNSPECIFIED,
+        verification_level: typing.Union[
+            unspecified.UNSPECIFIED, _guilds.VerificationLevelLikeT
         ] = unspecified.UNSPECIFIED,
-        explicit_content_filter: type_hints.NotRequired[
-            _guilds.ExplicitContentFilterLevelLikeT
+        default_message_notifications: typing.Union[
+            unspecified.UNSPECIFIED, _guilds.DefaultMessageNotificationsLevelLikeT
         ] = unspecified.UNSPECIFIED,
-        roles: type_hints.NotRequired[typing.Collection[_roles.Role]] = unspecified.UNSPECIFIED,
-        channels: type_hints.NotRequired[typing.Collection[_channels.GuildChannel]] = unspecified.UNSPECIFIED,
+        explicit_content_filter: typing.Union[
+            unspecified.UNSPECIFIED, _guilds.ExplicitContentFilterLevelLikeT
+        ] = unspecified.UNSPECIFIED,
+        roles: typing.Union[unspecified.UNSPECIFIED, typing.Collection[_roles.Role]] = unspecified.UNSPECIFIED,
+        channels: typing.Union[
+            unspecified.UNSPECIFIED, typing.Collection[_channels.GuildChannel]
+        ] = unspecified.UNSPECIFIED,
     ) -> _guilds.Guild:
         """
         Creates a new guild. Can only be used by bots in less than 10 guilds.
@@ -1078,24 +1087,28 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         guild: _guilds.GuildLikeT,
         *,
-        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        region: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        verification_level: type_hints.NotRequired[_guilds.VerificationLevelLikeT] = unspecified.UNSPECIFIED,
-        default_message_notifications: type_hints.NotRequired[
-            _guilds.DefaultMessageNotificationsLevelLikeT
+        name: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        region: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        verification_level: typing.Union[
+            unspecified.UNSPECIFIED, _guilds.VerificationLevelLikeT
         ] = unspecified.UNSPECIFIED,
-        explicit_content_filter: type_hints.NotRequired[
-            _guilds.ExplicitContentFilterLevelLikeT
+        default_message_notifications: typing.Union[
+            unspecified.UNSPECIFIED, _guilds.DefaultMessageNotificationsLevelLikeT
         ] = unspecified.UNSPECIFIED,
-        afk_channel: type_hints.NotRequired[_channels.GuildVoiceChannelLikeT] = unspecified.UNSPECIFIED,
-        afk_timeout: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        icon_data: type_hints.NotRequired[storage.FileLikeT] = unspecified.UNSPECIFIED,
+        explicit_content_filter: typing.Union[
+            unspecified.UNSPECIFIED, _guilds.ExplicitContentFilterLevelLikeT
+        ] = unspecified.UNSPECIFIED,
+        afk_channel: typing.Union[unspecified.UNSPECIFIED, _channels.GuildVoiceChannelLikeT] = unspecified.UNSPECIFIED,
+        afk_timeout: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        icon_data: typing.Union[unspecified.UNSPECIFIED, storage.FileLikeT] = unspecified.UNSPECIFIED,
         #: TODO: While this will always be a member of the guild for it to work, do I want to allow any user here too?
-        owner: type_hints.NotRequired[_members.MemberLikeT] = unspecified.UNSPECIFIED,
-        splash_data: type_hints.NotRequired[storage.FileLikeT] = unspecified.UNSPECIFIED,
+        owner: typing.Union[unspecified.UNSPECIFIED, _members.MemberLikeT] = unspecified.UNSPECIFIED,
+        splash_data: typing.Union[unspecified.UNSPECIFIED, storage.FileLikeT] = unspecified.UNSPECIFIED,
         #: TODO: Can this be an announcement (news) channel also?
-        system_channel: type_hints.NotRequired[_channels.GuildTextChannelLikeT] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        system_channel: typing.Union[
+            unspecified.UNSPECIFIED, _channels.GuildTextChannelLikeT
+        ] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Edits a given guild.
@@ -1179,17 +1192,19 @@ class BaseHTTPAdapter(abc.ABC):
         name: str,
         channel_type: _channels.ChannelTypeLikeT,
         *,
-        topic: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        bitrate: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        user_limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        rate_limit_per_user: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        position: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        permission_overwrites: type_hints.NotRequired[
-            typing.Collection[_overwrites.Overwrite]
+        topic: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        bitrate: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        user_limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        rate_limit_per_user: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        position: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        permission_overwrites: typing.Union[
+            unspecified.UNSPECIFIED, typing.Collection[_overwrites.Overwrite]
         ] = unspecified.UNSPECIFIED,
-        parent_category: type_hints.NullableNotRequired[_channels.GuildCategoryLikeT] = unspecified.UNSPECIFIED,
-        nsfw: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        parent_category: typing.Union[
+            None, unspecified.UNSPECIFIED, _channels.GuildCategoryLikeT
+        ] = unspecified.UNSPECIFIED,
+        nsfw: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> _channels.GuildChannel:
         """
         Creates a channel in a given guild.
@@ -1314,7 +1329,7 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def fetch_members(
-        self, guild: _guilds.GuildLikeT, *, limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        self, guild: _guilds.GuildLikeT, *, limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_members.Member]:
         ...
 
@@ -1325,14 +1340,14 @@ class BaseHTTPAdapter(abc.ABC):
         member: bases.SnowflakeLikeT,
         guild: _guilds.GuildLikeT,
         *,
-        nick: type_hints.NullableNotRequired[str] = unspecified.UNSPECIFIED,
-        roles: type_hints.NotRequired[typing.Collection[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
-        mute: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        deaf: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        current_voice_channel: type_hints.NullableNotRequired[
-            _channels.GuildVoiceChannelLikeT
+        nick: typing.Union[None, unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        roles: typing.Union[unspecified.UNSPECIFIED, typing.Collection[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
+        mute: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        deaf: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        current_voice_channel: typing.Union[
+            None, unspecified.UNSPECIFIED, _channels.GuildVoiceChannelLikeT
         ] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -1342,14 +1357,14 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         member: _members.Member,
         *,
-        nick: type_hints.NullableNotRequired[str] = unspecified.UNSPECIFIED,
-        roles: type_hints.NotRequired[typing.Collection[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
-        mute: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        deaf: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        current_voice_channel: type_hints.NullableNotRequired[
-            _channels.GuildVoiceChannelLikeT
+        nick: typing.Union[None, unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        roles: typing.Union[unspecified.UNSPECIFIED, typing.Collection[_roles.RoleLikeT]] = unspecified.UNSPECIFIED,
+        mute: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        deaf: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        current_voice_channel: typing.Union[
+            None, unspecified.UNSPECIFIED, _channels.GuildVoiceChannelLikeT
         ] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -1402,10 +1417,10 @@ class BaseHTTPAdapter(abc.ABC):
 
     async def update_my_nickname(
         self,
-        nick: type_hints.Nullable[str],
+        nick: typing.Optional[str],
         guild: _guilds.GuildLikeT,
         *,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Edits the current user's nickname for a given guild.
@@ -1435,7 +1450,7 @@ class BaseHTTPAdapter(abc.ABC):
         member: bases.SnowflakeLikeT,
         guild: _guilds.GuildLikeT,
         *,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -1446,7 +1461,7 @@ class BaseHTTPAdapter(abc.ABC):
         role: _roles.RoleLikeT,
         member: _members.Member,
         *,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -1483,7 +1498,7 @@ class BaseHTTPAdapter(abc.ABC):
         member: bases.SnowflakeLikeT,
         guild: _guilds.GuildLikeT,
         *,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -1494,7 +1509,7 @@ class BaseHTTPAdapter(abc.ABC):
         role: _roles.RoleLikeT,
         member: _members.Member,
         *,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -1530,14 +1545,14 @@ class BaseHTTPAdapter(abc.ABC):
         member: bases.SnowflakeLikeT,
         guild: _guilds.GuildLikeT,
         *,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
     @abc.abstractmethod
     @typing.overload
     async def kick_member(
-        self, member: _members.Member, *, reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        self, member: _members.Member, *, reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -1611,8 +1626,8 @@ class BaseHTTPAdapter(abc.ABC):
         member: bases.SnowflakeLikeT,
         guild: _guilds.GuildLikeT,
         *,
-        delete_message_days: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        delete_message_days: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -1622,8 +1637,8 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         member: _members.Member,
         *,
-        delete_message_days: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        delete_message_days: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -1663,7 +1678,7 @@ class BaseHTTPAdapter(abc.ABC):
         guild: _guilds.GuildLikeT,
         user: _users.BaseUserLikeT,
         *,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Un-bans a user from a given guild.
@@ -1707,12 +1722,12 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         guild: _guilds.GuildLikeT,
         *,
-        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        permissions: type_hints.NotRequired[_permissions.PermissionLikeT] = unspecified.UNSPECIFIED,
-        color: type_hints.NotRequired[_colors.ColorCompatibleT] = unspecified.UNSPECIFIED,
-        hoist: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        mentionable: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        name: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        permissions: typing.Union[unspecified.UNSPECIFIED, _permissions.PermissionLikeT] = unspecified.UNSPECIFIED,
+        color: typing.Union[unspecified.UNSPECIFIED, _colors.ColorCompatibleT] = unspecified.UNSPECIFIED,
+        hoist: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        mentionable: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> _roles.Role:
         """
         Creates a new role for a given guild.
@@ -1796,12 +1811,12 @@ class BaseHTTPAdapter(abc.ABC):
         role: _roles.PartialRoleLikeT,
         guild: _guilds.GuildLikeT,
         *,
-        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        permissions: type_hints.NotRequired[_permissions.PermissionLikeT] = unspecified.UNSPECIFIED,
-        color: type_hints.NotRequired[_colors.ColorCompatibleT] = unspecified.UNSPECIFIED,
-        hoist: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        mentionable: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        name: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        permissions: typing.Union[unspecified.UNSPECIFIED, _permissions.PermissionLikeT] = unspecified.UNSPECIFIED,
+        color: typing.Union[unspecified.UNSPECIFIED, _colors.ColorCompatibleT] = unspecified.UNSPECIFIED,
+        hoist: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        mentionable: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -1811,12 +1826,12 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         role: _roles.Role,
         *,
-        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        permissions: type_hints.NotRequired[_permissions.PermissionLikeT] = unspecified.UNSPECIFIED,
-        color: type_hints.NotRequired[_colors.ColorCompatibleT] = unspecified.UNSPECIFIED,
-        hoist: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        mentionable: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        name: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        permissions: typing.Union[unspecified.UNSPECIFIED, _permissions.PermissionLikeT] = unspecified.UNSPECIFIED,
+        color: typing.Union[unspecified.UNSPECIFIED, _colors.ColorCompatibleT] = unspecified.UNSPECIFIED,
+        hoist: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        mentionable: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         ...
 
@@ -1924,8 +1939,8 @@ class BaseHTTPAdapter(abc.ABC):
         days: int,
         *,
         compute_prune_count: bool = False,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-    ) -> type_hints.Nullable[int]:
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+    ) -> typing.Optional[int]:
         """
         Prunes members of a given guild based on the number of inactive days.
 
@@ -2016,7 +2031,7 @@ class BaseHTTPAdapter(abc.ABC):
         integration_type: str,
         integration_id: bases.RawSnowflakeT,
         *,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> _integrations.Integration:
         """
         Creates an integrations for a given guild.
@@ -2047,10 +2062,14 @@ class BaseHTTPAdapter(abc.ABC):
         guild: _guilds.GuildLikeT,
         integration: _integrations.IntegrationLikeT,
         *,
-        expire_behaviour: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,  # TODO: is this documented?
-        expire_grace_period: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,  #: TODO: is this days or seconds?
-        enable_emojis: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        expire_behaviour: typing.Union[
+            unspecified.UNSPECIFIED, int
+        ] = unspecified.UNSPECIFIED,  # TODO: is this documented?
+        expire_grace_period: typing.Union[
+            unspecified.UNSPECIFIED, int
+        ] = unspecified.UNSPECIFIED,  #: TODO: is this days or seconds?
+        enable_emojis: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Edits an integrations for a given guild.
@@ -2139,7 +2158,7 @@ class BaseHTTPAdapter(abc.ABC):
         guild: _guilds.GuildLikeT,
         embed: _guilds.GuildEmbed,
         *,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Edits the embed for a given guild.
@@ -2183,7 +2202,10 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     def fetch_guild_widget_image(
-        self, guild: _guilds.GuildLikeT, *, style: type_hints.NotRequired[_guilds.WidgetStyle] = unspecified.UNSPECIFIED
+        self,
+        guild: _guilds.GuildLikeT,
+        *,
+        style: typing.Union[unspecified.UNSPECIFIED, _guilds.WidgetStyle] = unspecified.UNSPECIFIED,
     ) -> str:
         """
          Get the URL for a guild widget.
@@ -2207,7 +2229,9 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def fetch_invite(
-        self, invite: _invites.InviteLikeT, with_counts: type_hints.NotRequired[bool] = unspecified.UNSPECIFIED
+        self,
+        invite: _invites.InviteLikeT,
+        with_counts: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
     ) -> _invites.Invite:
         """
         Gets the given invite.
@@ -2283,8 +2307,8 @@ class BaseHTTPAdapter(abc.ABC):
     async def update_me(
         self,
         *,
-        username: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        avatar_data: type_hints.NotRequired[storage.FileLikeT] = unspecified.UNSPECIFIED,
+        username: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        avatar_data: typing.Union[unspecified.UNSPECIFIED, storage.FileLikeT] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Edits the current user. If any arguments are unspecified, then that subject is not changed on Discord.
@@ -2314,9 +2338,9 @@ class BaseHTTPAdapter(abc.ABC):
     @abc.abstractmethod
     async def fetch_my_guilds(
         self,
-        before: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
-        after: type_hints.NotRequired[_guilds.GuildLikeT] = unspecified.UNSPECIFIED,
-        limit: type_hints.NotRequired[int] = unspecified.UNSPECIFIED,
+        before: typing.Union[unspecified.UNSPECIFIED, _guilds.GuildLikeT] = unspecified.UNSPECIFIED,
+        after: typing.Union[unspecified.UNSPECIFIED, _guilds.GuildLikeT] = unspecified.UNSPECIFIED,
+        limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
     ) -> typing.AsyncIterator[_guilds.Guild]:
         ...
 
@@ -2370,8 +2394,8 @@ class BaseHTTPAdapter(abc.ABC):
         channel: _channels.GuildTextChannelLikeT,
         name: str,
         *,
-        avatar_data: type_hints.NotRequired[storage.FileLikeT] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        avatar_data: typing.Union[unspecified.UNSPECIFIED, storage.FileLikeT] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> _webhooks.Webhook:
         """
         Creates a webhook for a given channel.
@@ -2442,7 +2466,10 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def fetch_webhook(
-        self, webhook: _webhooks.WebhookLikeT, *, webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED
+        self,
+        webhook: _webhooks.WebhookLikeT,
+        *,
+        webhook_token: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> _webhooks.Webhook:
         """
         Gets a given webhook.
@@ -2470,12 +2497,12 @@ class BaseHTTPAdapter(abc.ABC):
         self,
         webhook: _webhooks.WebhookLikeT,
         *,
-        webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        name: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        avatar_data: type_hints.NotRequired[storage.FileLikeT] = unspecified.UNSPECIFIED,
+        webhook_token: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        name: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        avatar_data: typing.Union[unspecified.UNSPECIFIED, storage.FileLikeT] = unspecified.UNSPECIFIED,
         #: TODO: Can we make webhooks to announcement channels/store channels?
-        channel: type_hints.NotRequired[_channels.GuildTextChannelLikeT] = unspecified.UNSPECIFIED,
-        reason: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        channel: typing.Union[unspecified.UNSPECIFIED, _channels.GuildTextChannelLikeT] = unspecified.UNSPECIFIED,
+        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Edits a given webhook.
@@ -2506,7 +2533,10 @@ class BaseHTTPAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def delete_webhook(
-        self, webhook: _webhooks.WebhookLikeT, *, webhook_token: type_hints.NotRequired[str] = unspecified.UNSPECIFIED
+        self,
+        webhook: _webhooks.WebhookLikeT,
+        *,
+        webhook_token: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
     ) -> None:
         """
         Deletes a given webhook.
@@ -2532,13 +2562,13 @@ class BaseHTTPAdapter(abc.ABC):
         webhook: _webhooks.WebhookLikeT,
         webhook_token: str,
         *,
-        content: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
-        username: type_hints.NotRequired[str] = unspecified.Unspecified,
-        avatar_url: type_hints.NotRequired[str] = unspecified.UNSPECIFIED,
+        content: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        username: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.Unspecified,
+        avatar_url: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
         tts: bool = False,
         wait: bool = False,
-        file: type_hints.NotRequired[typing.Tuple[str, storage.FileLikeT]] = unspecified.UNSPECIFIED,
-        embeds: type_hints.NotRequired[typing.Sequence[_embeds.Embed]] = unspecified.UNSPECIFIED,
+        file: typing.Union[unspecified.UNSPECIFIED, typing.Tuple[str, storage.FileLikeT]] = unspecified.UNSPECIFIED,
+        embeds: typing.Union[unspecified.UNSPECIFIED, typing.Sequence[_embeds.Embed]] = unspecified.UNSPECIFIED,
     ) -> typing.Optional[_messages.Message]:
         """
         Trigger a wehbhook to create a message.

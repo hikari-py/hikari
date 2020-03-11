@@ -23,18 +23,13 @@ from __future__ import annotations
 
 __all__ = ["Integration", "IntegrationAccount", "PartialIntegration", "PartialIntegrationLikeT", "IntegrationLikeT"]
 
+import datetime
 import typing
 
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
-from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
-
-if typing.TYPE_CHECKING:
-    import datetime
-
-    from hikari.orm import fabric
-    from hikari.orm.models import users
+from hikari.orm.models import users
 
 
 class IntegrationAccount(bases.BaseModel, bases.SnowflakeMixin):
@@ -56,7 +51,7 @@ class IntegrationAccount(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.id = int(payload["id"])
         self.name = payload.get("name")
 
@@ -90,7 +85,7 @@ class PartialIntegration(bases.BaseModel, bases.SnowflakeMixin):
 
     __repr__ = reprs.repr_of("id", "name")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
         self.type = payload["type"]
@@ -142,7 +137,7 @@ class Integration(PartialIntegration, bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("id", "name", "is_enabled")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: typing.Any, payload: typing.Dict) -> None:
         super().__init__(payload)
         self._fabric = fabric_obj
         self.is_enabled = payload["enabled"]

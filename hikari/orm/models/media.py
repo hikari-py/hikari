@@ -24,9 +24,12 @@ from __future__ import annotations
 __all__ = ["AbstractFile", "Attachment", "File", "InMemoryFile", "safe_read_file"]
 
 import abc
+import asyncio
 import dataclasses
+import io
 import re
 import typing
+from concurrent import futures
 
 import aiofiles
 import aiohttp
@@ -34,13 +37,7 @@ import aiohttp
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
-
-if typing.TYPE_CHECKING:
-    import asyncio
-    import io
-    from concurrent import futures
 
 _DATA_URI_SCHEME_REGEX = re.compile(r"^data:([^;]+);base64,(.+)$", re.I | re.U)
 
@@ -80,16 +77,16 @@ class Attachment(bases.BaseModel, bases.SnowflakeMixin):
     #: Width of the attachment (`None` unless the attachment is an image).
     #:
     #: :type: :class:`int` or `None`
-    width: type_hints.Nullable[int]
+    width: typing.Optional[int]
 
     #: Height of the attachment (`None` unless the attachment is an image).
     #:
     #: :type: :class:`int` or `None`
-    height: type_hints.Nullable[int]
+    height: typing.Optional[int]
 
     __repr__ = reprs.repr_of("id", "filename", "size")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.id = int(payload["id"])
         self.filename = payload["filename"]
         self.size = int(payload["size"])
@@ -107,8 +104,8 @@ class Attachment(bases.BaseModel, bases.SnowflakeMixin):
         self,
         path: str,
         *,
-        loop: type_hints.Nullable[asyncio.AbstractEventLoop] = None,
-        executor: type_hints.Nullable[futures.Executor] = None,
+        loop: typing.Optional[asyncio.AbstractEventLoop] = None,
+        executor: typing.Optional[futures.Executor] = None,
     ) -> None:
         async with aiohttp.request("get", self.url) as resp:
             resp.raise_for_status()
@@ -143,13 +140,13 @@ class AbstractFile(bases.BaseModel, abc.ABC):
         self,
         mode: str = "r",
         buffering: int = -1,
-        encoding: type_hints.Nullable[str] = None,
-        errors: type_hints.Nullable[str] = None,
+        encoding: typing.Optional[str] = None,
+        errors: typing.Optional[str] = None,
         newline: str = None,
-        opener: type_hints.Nullable[typing.Callable[[str, int], ...]] = None,
+        opener: typing.Optional[typing.Callable[[str, int], ...]] = None,
         *,
-        loop: type_hints.Nullable[asyncio.AbstractEventLoop] = None,
-        executor: type_hints.Nullable[futures.Executor] = None,
+        loop: typing.Optional[asyncio.AbstractEventLoop] = None,
+        executor: typing.Optional[futures.Executor] = None,
     ) -> io.IOBase:
         """
         Reads the contents of the file safely.

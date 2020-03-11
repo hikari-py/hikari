@@ -28,13 +28,12 @@ __all__ = ["Fabric"]
 import dataclasses
 import typing
 
-if typing.TYPE_CHECKING:
-    from hikari.net import gateway as _gateway
-    from hikari.net import http_client as _http_client
-    from hikari.orm.gateway import base_chunker as _chunker
-    from hikari.orm.gateway import base_event_handler as _event_handler
-    from hikari.orm.http import base_http_adapter as _http_adapter
-    from hikari.orm.state import base_registry as _state_registry
+from hikari.net import gateway as _gateway
+from hikari.net import http_client as _http_client
+from hikari.orm.gateway import base_chunker as _chunker
+from hikari.orm.gateway import base_event_handler as _event_handler
+from hikari.orm.http import base_http_adapter as _http_adapter
+from hikari.orm.state import base_registry as _state_registry
 
 
 @dataclasses.dataclass()
