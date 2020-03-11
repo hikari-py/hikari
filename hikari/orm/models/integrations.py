@@ -21,15 +21,32 @@ Account integrations.
 """
 from __future__ import annotations
 
-__all__ = ["Integration", "IntegrationAccount", "PartialIntegration", "PartialIntegrationLikeT", "IntegrationLikeT"]
+__all__ = [
+    "Integration",
+    "IntegrationAccount",
+    "PartialIntegration",
+    "PartialIntegrationLikeT",
+    "IntegrationLikeT",
+    "ExpireBehavior",
+]
 
 import datetime
+import enum
 import typing
 
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.orm.models import bases
 from hikari.orm.models import users
+
+
+class ExpireBehavior(bases.BestEffortEnumMixin, enum.IntEnum):
+    """Behavior for expiring subscribers."""
+
+    #: Remove the role.
+    REMOVE_ROLE = 0
+    #: Kick the subscriber.
+    KICK = 1
 
 
 class IntegrationAccount(bases.BaseModel, bases.SnowflakeMixin):
@@ -102,6 +119,7 @@ class Integration(PartialIntegration, bases.BaseModelWithFabric):
         "is_enabled",
         "is_syncing",
         "role_id",
+        "expire_behavior",
         "expire_grace_period",
         "user",
         "account",
@@ -119,6 +137,11 @@ class Integration(PartialIntegration, bases.BaseModelWithFabric):
     #:
     #: :type: :class:`bool`
     is_syncing: bool
+
+    #: The expire behavior for any subscribers.
+    #:
+    #: :type: :class:`ExpireBehavior`
+    expire_behavior: ExpireBehavior
 
     #: The grace period for expiring subscribers.
     #:
@@ -143,6 +166,7 @@ class Integration(PartialIntegration, bases.BaseModelWithFabric):
         self.is_enabled = payload["enabled"]
         self.is_syncing = payload["syncing"]
         self.role_id = int(payload["role_id"])
+        self.expire_behavior = ExpireBehavior.get_best_effort_from_value(payload.get("expire_behavior"))
         self.expire_grace_period = int(payload["expire_grace_period"])
         self.user = self._fabric.state_registry.parse_user(payload["user"])
         self.synced_at = dates.parse_iso_8601_ts(payload["synced_at"])
