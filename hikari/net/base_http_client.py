@@ -25,21 +25,17 @@ from __future__ import annotations
 __all__ = ["BaseHTTPClient"]
 
 import abc
+import asyncio
 import contextlib
 import json
+import logging
+import ssl
 import typing
 
 import aiohttp.typedefs
 
 from hikari.internal_utilities import loggers
 from hikari.net import user_agent
-
-if typing.TYPE_CHECKING:
-    import asyncio
-    import logging
-    import ssl
-
-    from hikari.internal_utilities import type_hints
 
 
 class BaseHTTPClient(abc.ABC):
@@ -116,27 +112,27 @@ class BaseHTTPClient(abc.ABC):
     #: Proxy authorization info.
     #:
     #: :type: :class:`aiohttp.BasicAuth` or `None`
-    proxy_auth: type_hints.Nullable[aiohttp.BasicAuth]
+    proxy_auth: typing.Optional[aiohttp.BasicAuth]
 
     #: Proxy headers.
     #:
     #: :type: :class:`aiohttp.typedefs.LooseHeaders` or `None`
-    proxy_headers: type_hints.Nullable[aiohttp.typedefs.LooseHeaders]
+    proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders]
 
     #: Proxy URL to use.
     #:
     #: :type: :class:`str` or `None`
-    proxy_url: type_hints.Nullable[str]
+    proxy_url: typing.Optional[str]
 
     #: SSL context to use.
     #:
     #: :type: :class:`ssl.SSLContext` or `None`
-    ssl_context: type_hints.Nullable[ssl.SSLContext]
+    ssl_context: typing.Optional[ssl.SSLContext]
 
     #: Response timeout.
     #:
     #: :type: :class:`float` or `None` if using the default for `aiohttp`.
-    timeout: type_hints.Nullable[float]
+    timeout: typing.Optional[float]
 
     #: The user agent being used.
     #:

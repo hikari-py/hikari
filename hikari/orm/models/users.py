@@ -28,11 +28,7 @@ import typing
 
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
-
-if typing.TYPE_CHECKING:
-    from hikari.orm import fabric
 
 
 class BaseUser(bases.BaseModel, bases.SnowflakeMixin, interface=True):
@@ -62,7 +58,7 @@ class BaseUser(bases.BaseModel, bases.SnowflakeMixin, interface=True):
     #: The hash of the user's avatar, or None if they do not have one.
     #:
     #: :type: :class:`str` or `None`
-    avatar_hash: type_hints.Nullable[str]
+    avatar_hash: typing.Optional[str]
 
     #: True if the user is a bot, False otherwise
     #:
@@ -88,7 +84,7 @@ class User(BaseUser, bases.BaseModelWithFabric):
     __repr__ = reprs.repr_of("id", "username", "discriminator", "is_bot")
 
     # noinspection PyMissingConstructor
-    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject):
+    def __init__(self, fabric_obj: typing.Any, payload: typing.Dict):
         self._fabric = fabric_obj
         self.id = int(payload["id"])
         # We don't expect these to ever change...
@@ -96,7 +92,7 @@ class User(BaseUser, bases.BaseModelWithFabric):
         self.is_system = payload.get("system", False)
         self.update_state(payload)  # lgtm [py/init-calls-subclass]
 
-    def update_state(self, payload: type_hints.JSONObject) -> None:
+    def update_state(self, payload: typing.Dict) -> None:
         self.username = payload.get("username")
         self.discriminator = payload.get("discriminator")
         self.avatar_hash = payload.get("avatar")
@@ -149,7 +145,7 @@ class OAuth2User(User):
     #: Requires the `identify` OAuth2 scope.
     #:
     #: :type: :class:`bool` or `None` if not available.
-    is_mfa_enabled: type_hints.Nullable[bool]
+    is_mfa_enabled: typing.Optional[bool]
 
     #: The user's chosen language option.
     #:
@@ -178,21 +174,21 @@ class OAuth2User(User):
     #:        >>> # Get the standard locale currency format
     #:        >>> locale.currency_formats['standard']
     #:        <NumberPattern '#,##0.00\xa0¤'>
-    locale: type_hints.Nullable[str]
+    locale: typing.Optional[str]
 
     #: True if the user has verified their email address.
     #:
     #: Requires the `email` OAuth2 scope.
     #:
     #: :type: :class:`bool` or `None` if not available.
-    is_verified: type_hints.Nullable[bool]
+    is_verified: typing.Optional[bool]
 
     #: The user's email address.
     #:
     #: Requires the `email` OAuth2 scope.
     #:
     #: :type: :class:`str` or `None` if not available`
-    email: type_hints.Nullable[str]
+    email: typing.Optional[str]
 
     #: The flags on a user's account. Describes the type of badges the user will have on their
     #: profile, amongst other things.
@@ -200,21 +196,21 @@ class OAuth2User(User):
     #: Requires the `identify` OAuth2 scope.
     #:
     #: :type: :class:`UserFlag` or `None` if not available.
-    flags: type_hints.Nullable[UserFlag]
+    flags: typing.Optional[UserFlag]
 
     #: The type of Nitro subscription that the user has.
     #:
     #: Requires the `identify` OAuth2 scope.
     #:
     #: :type: :class:`PremiumType` or `None` if not available.
-    premium_type: type_hints.Nullable[PremiumType]
+    premium_type: typing.Optional[PremiumType]
 
     __repr__ = reprs.repr_of("id", "username", "discriminator", "is_bot", "is_verified", "is_mfa_enabled")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject):
+    def __init__(self, fabric_obj: typing.Any, payload: typing.Dict):
         super().__init__(fabric_obj, payload)
 
-    def update_state(self, payload: type_hints.JSONObject) -> None:
+    def update_state(self, payload: typing.Dict) -> None:
         super().update_state(payload)
 
         self.is_mfa_enabled = payload.get("mfa_enabled")
@@ -225,7 +221,7 @@ class OAuth2User(User):
         self.premium_type = transformations.nullable_cast(payload.get("premium_type"), PremiumType)
 
 
-def parse_user(fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> BaseUser:
+def parse_user(fabric_obj: typing.Any, payload: typing.Dict) -> BaseUser:
     """
     Consume a fabric object and some type of user payload and try to parse the appropriate type of :class:`IUser`
     for the given payload.

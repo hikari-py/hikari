@@ -26,13 +26,9 @@ __all__ = ["VoiceServer", "VoiceState", "VoiceRegion"]
 import typing
 
 from hikari.internal_utilities import reprs
-from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
-
-if typing.TYPE_CHECKING:
-    from hikari.orm import fabric
-    from hikari.orm.models import guilds
-    from hikari.orm.models import members
+from hikari.orm.models import guilds
+from hikari.orm.models import members
 
 
 class VoiceServer(bases.BaseModelWithFabric):
@@ -59,13 +55,13 @@ class VoiceServer(bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("guild_id", "endpoint")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: typing.Any, payload: typing.Dict) -> None:
         self._fabric = fabric_obj
         self.token = payload["token"]
         self.guild_id = int(payload["guild_id"])
         self.update_state(payload)
 
-    def update_state(self, payload: type_hints.JSONObject) -> None:
+    def update_state(self, payload: typing.Dict) -> None:
         self.endpoint = payload["endpoint"]
 
 
@@ -92,7 +88,7 @@ class VoiceState(bases.BaseModelWithFabric):
     #: The ID of the guild this state is for.
     #:
     #: :type: :class:`int` or `None`
-    guild_id: type_hints.Nullable[int]
+    guild_id: typing.Optional[int]
 
     #: The ID of the channel this state is for.
     #:
@@ -107,7 +103,7 @@ class VoiceState(bases.BaseModelWithFabric):
     #: The guild member this voice state is for.
     #:
     #: :type: :class:`hikari.orm.models.members.Member` or `None`
-    member: type_hints.Nullable[members.Member]
+    member: typing.Optional[members.Member]
 
     #: This voice session's ID.
     #:
@@ -146,7 +142,7 @@ class VoiceState(bases.BaseModelWithFabric):
 
     __repr__ = reprs.repr_of("user_id", "channel_id", "guild_id", "session_id")
 
-    def __init__(self, fabric_obj: fabric.Fabric, guild_obj: guilds.Guild, payload: type_hints.JSONObject,) -> None:
+    def __init__(self, fabric_obj: typing.Any, guild_obj: guilds.Guild, payload: typing.Dict,) -> None:
         self._fabric = fabric_obj
         self.user_id = int(payload["user_id"])
         self.guild_id = guild_obj.id
@@ -160,7 +156,7 @@ class VoiceState(bases.BaseModelWithFabric):
 
         self.update_state(payload)
 
-    def update_state(self, payload: type_hints.JSONObject) -> None:
+    def update_state(self, payload: typing.Dict) -> None:
         self.channel_id = int(payload["channel_id"])
         self.is_deaf = payload.get("deaf", False)
         self.is_mute = payload.get("mute", False)
@@ -209,7 +205,7 @@ class VoiceRegion(bases.BaseModel):
 
     __repr__ = reprs.repr_of("name", "is_vip", "is_deprecated")
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.id = payload["id"]
         self.name = payload["name"]
         self.is_vip = payload["vip"]

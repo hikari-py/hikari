@@ -171,6 +171,8 @@ __all__ = [
 
 import abc
 import asyncio
+import datetime
+import logging
 import random
 import time
 import typing
@@ -178,13 +180,7 @@ import weakref
 
 from hikari.internal_utilities import aio
 from hikari.internal_utilities import loggers
-
-if typing.TYPE_CHECKING:
-    import datetime
-    import logging
-
-    from hikari.internal_utilities import type_hints
-    from hikari.net import routes
+from hikari.net import routes
 
 UNKNOWN_HASH = "UNKNOWN"
 
@@ -241,7 +237,7 @@ class BurstRateLimiter(IRateLimiter, abc.ABC):
     #: The throttling task, or `None` if it isn't running.
     #:
     #: :type: :obj:`asyncio.Task`, optional
-    throttle_task: type_hints.Nullable[asyncio.Task]
+    throttle_task: typing.Optional[asyncio.Task]
 
     #: The queue of any futures under a rate limit.
     #:
@@ -255,7 +251,7 @@ class BurstRateLimiter(IRateLimiter, abc.ABC):
 
     def __init__(self, name):
         self.name = name
-        self.throttle_task: type_hints.Nullable[asyncio.Task] = None
+        self.throttle_task: typing.Optional[asyncio.Task] = None
         self.queue = []
         self.logger: logging.Logger = loggers.get_named_logger(self)
 
@@ -706,7 +702,7 @@ class HTTPBucketRateLimiterManager:
     #: The internal garbage collector task.
     #:
     #: :type: :obj:`asyncio.Task`, optional
-    gc_task: type_hints.Nullable[asyncio.Task]
+    gc_task: typing.Optional[asyncio.Task]
 
     #: The logger to use for this object.
     #:
@@ -717,7 +713,7 @@ class HTTPBucketRateLimiterManager:
         self.routes_to_hashes = weakref.WeakKeyDictionary()
         self.real_hashes_to_buckets = {}
         self.closed_event: asyncio.Event = asyncio.Event()
-        self.gc_task: type_hints.Nullable[asyncio.Task] = None
+        self.gc_task: typing.Optional[asyncio.Task] = None
         self.logger: logging.Logger = loggers.get_named_logger(self)
 
     def __enter__(self):
@@ -866,7 +862,7 @@ class HTTPBucketRateLimiterManager:
     def update_rate_limits(
         self,
         compiled_route: routes.CompiledRoute,
-        bucket_header: type_hints.Nullable[str],
+        bucket_header: typing.Optional[str],
         remaining_header: int,
         limit_header: int,
         date_header: datetime.datetime,
@@ -950,7 +946,7 @@ class ExponentialBackOff:
     #: single iteration before an :class:`asyncio.TimeoutError` is raised.
     #:
     #: :type: :obj:`float`, optional
-    maximum: type_hints.Nullable[float]
+    maximum: typing.Optional[float]
 
     #: The multiplier for the random jitter. Defaults to 1. Set to 0 to disable
     #: jitter.
@@ -958,7 +954,7 @@ class ExponentialBackOff:
     #: :type: :obj:`float`
     jitter_multiplier: float
 
-    def __init__(self, base: float = 2, maximum: type_hints.Nullable[float] = 64, jitter_multiplier: float = 1) -> None:
+    def __init__(self, base: float = 2, maximum: typing.Optional[float] = 64, jitter_multiplier: float = 1) -> None:
         self.base = base
         self.maximum = maximum
         self.increment = 0

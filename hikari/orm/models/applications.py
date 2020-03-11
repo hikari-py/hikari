@@ -28,13 +28,9 @@ import typing
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 from hikari.orm.models import teams
-
-if typing.TYPE_CHECKING:
-    from hikari.orm import fabric
-    from hikari.orm.models import users
+from hikari.orm.models import users
 
 
 class Application(bases.BaseModel, bases.SnowflakeMixin):
@@ -73,7 +69,7 @@ class Application(bases.BaseModel, bases.SnowflakeMixin):
     #: The hash of the application's icon.
     #:
     #: :type: :class:`str` or `None`
-    icon_hash: type_hints.Nullable[str]
+    icon_hash: typing.Optional[str]
 
     #: The application's description
     #:
@@ -103,7 +99,7 @@ class Application(bases.BaseModel, bases.SnowflakeMixin):
     #: The summary field for this application's primary SKU's store page if this is a game sold on Discord.
     #:
     #: :type: :class:`str` or `None`
-    summary: type_hints.Nullable[str]
+    summary: typing.Optional[str]
 
     #: The base64 encoded key used for "GetTicket" in the GameSDK.
     #:
@@ -113,31 +109,31 @@ class Application(bases.BaseModel, bases.SnowflakeMixin):
     #: The team that the application belongs to if applicable.
     #:
     #: :type: :class:`hikari.orm.models.teams.Team` or `None`
-    team: type_hints.Nullable[teams.Team]
+    team: typing.Optional[teams.Team]
 
     #: The ID of the guild the application is linked to if it's a game sold on Discord.
     #:
     #: :type: :class:`int` or `None`
-    guild_id: type_hints.Nullable[int]
+    guild_id: typing.Optional[int]
 
     #: The ID of the application's linked Game SKU if it's a game sold on Discord.
     #:
     #: :type: :class:`int` or `None`
-    primary_sku_id: type_hints.Nullable[int]
+    primary_sku_id: typing.Optional[int]
 
     #: The URL slug that links to the application's store page if it's a game sold on Discord.
     #:
     #: :type: :class:`str` or `None`
-    slug_url: type_hints.Nullable[str]
+    slug_url: typing.Optional[str]
 
     #: The hash of the application's store embed image if it is a game sold on Discord.
     #:
     #: :type: :class:`str` or `None`
-    cover_image_hash: type_hints.Nullable[str]
+    cover_image_hash: typing.Optional[str]
 
     __repr__ = reprs.repr_of("id", "name", "description")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: typing.Any, payload: typing.Dict) -> None:
         self.id = int(payload["id"])
         self.name = payload["name"]
         self.icon_hash = payload.get("icon")

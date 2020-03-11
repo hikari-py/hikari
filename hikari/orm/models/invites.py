@@ -23,23 +23,18 @@ from __future__ import annotations
 
 __all__ = ["Invite", "InviteWithMetadata", "InviteTargetUserType", "InviteLikeT", "VanityURL"]
 
+import datetime
 import enum
 import typing
 
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import type_hints
 from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import guilds
-
-if typing.TYPE_CHECKING:
-    import datetime
-
-    from hikari.orm import fabric
-    from hikari.orm.models import users
-    from hikari.orm.state import base_registry
+from hikari.orm.models import users
+from hikari.orm.state import base_registry
 
 
 class InviteTargetUserType(bases.BestEffortEnumMixin, enum.IntEnum):
@@ -69,7 +64,7 @@ class VanityURL(bases.BaseModel):
     #: :type: :class:`int`
     uses: int
 
-    def __init__(self, payload: type_hints.JSONObject) -> None:
+    def __init__(self, payload: typing.Dict) -> None:
         self.code = payload["code"]
         self.uses = int(payload["uses"])
 
@@ -98,7 +93,7 @@ class Invite(bases.BaseModel):
     #: The guild the invite is for
     #:
     #: :type: :class:`hikari.orm.models.guilds.PartialGuild` or :class:`None`
-    guild: type_hints.Nullable[guilds.PartialGuild]
+    guild: typing.Optional[guilds.PartialGuild]
 
     #: The channel the invite points to
     #:
@@ -108,31 +103,31 @@ class Invite(bases.BaseModel):
     #: The user who created the invite.
     #:
     #: :type: :class:`hikari.orm.models.users.IUser` or `None`
-    inviter: type_hints.Nullable[users.BaseUser]
+    inviter: typing.Optional[users.BaseUser]
 
     #: The user this invite is targeting.
     #:
     #: :type: :class:`hikari.orm.models.users.IUser` or `None`
-    target_user: type_hints.Nullable[users.BaseUser]
+    target_user: typing.Optional[users.BaseUser]
 
     #: The reason this invite targets a user
     #:
     #: :type: :class:`hikari.orm.models.invites.InviteTargetUserType` or `None`
-    target_user_type: type_hints.Nullable[InviteTargetUserType]
+    target_user_type: typing.Optional[InviteTargetUserType]
 
     #: Approximate count of online members.
     #:
     #: :type: :class:`int` or `None`
-    approximate_presence_count: type_hints.Nullable[int]
+    approximate_presence_count: typing.Optional[int]
 
     #: Approximate count of total members.
     #:
     #: :type: :class:`int` or `None`
-    approximate_member_count: type_hints.Nullable[int]
+    approximate_member_count: typing.Optional[int]
 
     __repr__ = reprs.repr_of("code", "inviter.id", "guild", "channel")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: typing.Any, payload: typing.Dict) -> None:
         self.code = payload["code"]
         self.guild = transformations.nullable_cast(payload.get("guild"), guilds.PartialGuild)
         self.channel = channels.PartialChannel(fabric_obj, payload["channel"])
@@ -189,7 +184,7 @@ class InviteWithMetadata(Invite):
 
     __repr__ = reprs.repr_of("code", "guild", "channel", "inviter.id", "uses", "max_uses", "created_at")
 
-    def __init__(self, fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> None:
+    def __init__(self, fabric_obj: typing.Any, payload: typing.Dict) -> None:
         super().__init__(fabric_obj, payload)
         self.uses = int(payload["uses"])
         self.max_uses = int(payload["max_uses"])
@@ -199,7 +194,7 @@ class InviteWithMetadata(Invite):
         self.is_revoked = payload.get("revoked", False)
 
 
-def parse_invite(fabric_obj: fabric.Fabric, payload: type_hints.JSONObject) -> typing.Union[Invite, InviteWithMetadata]:
+def parse_invite(fabric_obj: typing.Any, payload: typing.Dict) -> typing.Union[Invite, InviteWithMetadata]:
     """
     Consume a fabric object and some type of invite payload and try to parse
     whether this invite includes metadata or not for the given payload.
