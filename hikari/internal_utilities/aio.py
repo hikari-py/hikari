@@ -35,7 +35,6 @@ import asyncio
 import contextlib
 import dataclasses
 import functools
-import inspect
 import typing
 import weakref
 
