@@ -22,7 +22,6 @@ import types
 
 import setuptools
 
-
 name = "hikari"
 
 
