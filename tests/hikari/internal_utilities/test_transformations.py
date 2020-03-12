@@ -23,7 +23,6 @@ import cymock as mock
 import pytest
 
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import unspecified
 
 
 @pytest.mark.parametrize(
@@ -62,7 +61,7 @@ def test_put_if_specified_when_specified():
 
 def test_put_if_specified_when_unspecified():
     d = {}
-    transformations.put_if_specified(d, "bar", unspecified.UNSPECIFIED)
+    transformations.put_if_specified(d, "bar", ...)
     assert d == {}
 
 

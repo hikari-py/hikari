@@ -20,8 +20,6 @@
 Assertions of things. These are functions that validate a value, expected to return the value on success but error
 on any failure.
 """
-from __future__ import annotations
-
 __all__ = [
     "assert_that",
     "assert_not_none",

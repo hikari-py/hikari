@@ -19,10 +19,7 @@
 """
 Asyncio extensions and utilities.
 """
-from __future__ import annotations
-
 __all__ = [
-    "optional_await",
     "CoroutineFunctionT",
     "PartialCoroutineProtocolT",
     "EventExceptionContext",
