@@ -59,6 +59,7 @@ from hikari.internal_utilities import reprs
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
 from hikari.internal_utilities import unspecified
+from hikari.net import gateway
 from hikari.orm.models import bases
 from hikari.orm.models import embeds
 from hikari.orm.models import guilds as _guild
@@ -148,6 +149,29 @@ class Channel(abc.ABC, bases.BaseModelWithFabric, bases.SnowflakeMixin):
                 existing_type is None, f"Channel type {cls.type} is already registered to {existing_type}"
             )
             cls._channel_implementations[cls.type] = cls
+
+    @property
+    def shard_id(self) -> int:
+        """The shard ID for the guild this channel is in, or 0 if this is a
+        DM channel.
+
+        If the bot is not connected to the websocket, this will have undefined
+        behaviour.
+        """
+        if hasattr(self, "guild_id"):
+            return transformations.guild_id_to_shard_id(self.guild_id, self._fabric.shard_count)
+        else:
+            return 0
+
+    @property
+    def shard(self) -> gateway.GatewayClient:
+        """The gateway client shard for the guild this channel is in, or shard
+        0 if this is a DM channel.
+
+        If the bot is not connected to the websocket, this will have undefined
+        behaviour.
+        """
+        return self._fabric.gateways[self.shard_id]
 
     @classmethod
     def get_channel_class_from_type(
