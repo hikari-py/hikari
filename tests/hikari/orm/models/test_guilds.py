@@ -18,8 +18,10 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 
+import cymock as mock
 import pytest
 
+from hikari.net import gateway
 from hikari.orm import fabric
 from hikari.orm.models import guilds
 from hikari.orm.models import permissions
@@ -185,6 +187,7 @@ def test_guild_payload(
         "premium_subscription_count": 1,
         "preferred_locale": "en-GB",
         "system_channel_flags": 3,
+        "rules_channel_id": "42042069",
     }
 
 
@@ -236,7 +239,6 @@ class TestGuild:
     ):
         guild_obj = guilds.Guild(fabric_obj, test_guild_payload)
 
-        assert guild_obj.shard_id == 0
         assert guild_obj.id == 265_828_729_970_753_537
         assert guild_obj.afk_channel_id == 99_998_888_777_766
         assert guild_obj.owner_id == 6_969_696
@@ -257,6 +259,7 @@ class TestGuild:
         assert guild_obj.joined_at == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, datetime.timezone.utc)
         assert guild_obj.is_large is False
         assert guild_obj.is_unavailable is False
+        assert guild_obj.rules_channel_id == 42042069
         assert guild_obj.my_permissions == (
             permissions.Permission.USE_VAD
             | permissions.Permission.MOVE_MEMBERS
@@ -302,7 +305,6 @@ class TestGuild:
         assert guild_obj.id == 574_921_006_817_476_608
         assert guild_obj.is_unavailable
 
-    @pytest.mark.model
     def test_Guild___repr__(self):
         assert repr(
             _helpers.mock_model(
@@ -317,6 +319,26 @@ class TestGuild:
             )
         )
 
+    def test_shard_id_property(self, fabric_obj, test_guild_payload):
+        guild_obj = guilds.Guild(fabric_obj, test_guild_payload)
+        guild_obj.id = 893453754395384878384
+        fabric_obj.shard_count = 12
+
+        assert guild_obj.shard_id == (893453754395384878384 >> 22) % 12
+
+    def test_shard_property(self, fabric_obj, test_guild_payload):
+        guild_obj = guilds.Guild(fabric_obj, test_guild_payload)
+        fabric_obj.gateways = {i: None for i in range(12)}
+        shard = mock.create_autospec(gateway.GatewayClient)
+        fabric_obj.gateways[(893453754395384878384 >> 22) % 12] = shard
+        guild_obj.id = 893453754395384878384
+        fabric_obj.shard_count = 12
+
+        assert guild_obj.shard is shard
+
+
+@pytest.mark.model
+class TestBan:
     def test_Ban(self, fabric_obj):
         user = object()
         ban = guilds.Ban(fabric_obj, {"user": user, "reason": "being bad"})
