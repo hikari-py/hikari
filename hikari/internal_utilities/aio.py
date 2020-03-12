@@ -19,66 +19,25 @@
 """
 Asyncio extensions and utilities.
 """
-from __future__ import annotations
-
 __all__ = [
-    "optional_await",
     "CoroutineFunctionT",
     "PartialCoroutineProtocolT",
     "EventExceptionContext",
     "EventDelegate",
     "completed_future",
-    "maybe_timeout",
 ]
 
 import asyncio
-import contextlib
 import dataclasses
 import functools
 import typing
 import weakref
-
-import async_timeout
 
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import loggers
 
 ReturnT = typing.TypeVar("ReturnT", covariant=True)
 CoroutineFunctionT = typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, ReturnT]]
-
-
-def optional_await(
-    description: str = None, shield: bool = False
-) -> typing.Callable[
-    [typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, ReturnT]]],
-    typing.Callable[..., typing.Awaitable[ReturnT]],
-]:
-    """
-    Optional await decorator factory for async functions so that they can be called without await and
-    scheduled on the event loop lazily.
-
-    Args:
-        description:
-            the optional name to give the dispatched task.
-        shield:
-            defaults to False. If `True`, the coroutine will be wrapped in a :func:`asyncio.shield`
-            to prevent it being cancelled.
-
-    Returns:
-        A decorator for a coroutine function.
-    """
-
-    def decorator(
-        coro_fn: typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, ReturnT]]
-    ) -> typing.Callable[..., typing.Awaitable[ReturnT]]:
-        @functools.wraps(coro_fn)
-        def wrapper(*args, **kwargs) -> typing.Awaitable[ReturnT]:
-            coro = asyncio.shield(coro_fn(*args, **kwargs)) if shield else coro_fn(*args, **kwargs)
-            return asyncio.create_task(coro, name=description)
-
-        return wrapper
-
-    return decorator
 
 
 class PartialCoroutineProtocolT(typing.Protocol[ReturnT]):
@@ -347,25 +306,3 @@ def completed_future(result: typing.Any = None) -> asyncio.Future:
     future = asyncio.get_event_loop().create_future()
     future.set_result(result)
     return future
-
-
-@contextlib.asynccontextmanager
-async def maybe_timeout(timeout: typing.Optional[typing.Union[float, int]]):
-    """
-    Wrapper for :mod:`async_timeout` that may or may not actually wait for a timeout, depending on how it is called.
-
-    This is a :class:`contextlib.AbstractAsyncContextManager`, so must be used in an `async with` block:
-
-    >>> async with maybe_timeout(30):
-    ...     await some_slow_task
-
-    Args:
-        timeout:
-            The timeout to wait for before raising an :class:`asyncio.TimeoutError`. If this is `None`, then this
-            will never be raised.
-    """
-    if timeout is not None and timeout > 0:
-        async with async_timeout.timeout(timeout):
-            yield
-    else:
-        yield

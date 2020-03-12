@@ -20,8 +20,6 @@
 Implementation of a basic HTTP client that uses aiohttp to interact with the
 V6 Discord API.
 """
-from __future__ import annotations
-
 __all__ = ["HTTPClient"]
 
 import asyncio
@@ -39,7 +37,6 @@ from hikari.internal_utilities import assertions
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import unspecified
 from hikari.net import base_http_client
 from hikari.net import codes
 from hikari.net import errors
@@ -110,7 +107,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         query=None,
         form_body=None,
         json_body: typing.Optional[typing.Union[typing.Dict, typing.Sequence[typing.Any]]] = None,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        reason: typing.Union[typing.Literal[...], str] = ...,
         re_seekable_resources: typing.Collection[typing.Any] = containers.EMPTY_COLLECTION,
         suppress_authorization_header: bool = False,
         **kwargs,
@@ -121,7 +118,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         if self.token is not None and not suppress_authorization_header:
             request_headers["Authorization"] = self.token
 
-        if reason and reason is not unspecified.UNSPECIFIED:
+        if reason and reason is not ...:
             request_headers["X-Audit-Log-Reason"] = reason
 
         if headers is not None:
@@ -285,9 +282,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         self,
         guild_id: str,
         *,
-        user_id: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        action_type: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        user_id: typing.Union[typing.Literal[...], str] = ...,
+        action_type: typing.Union[typing.Literal[...], int] = ...,
+        limit: typing.Union[typing.Literal[...], int] = ...,
     ) -> typing.Dict:
         """
         Get an audit log object for the given guild.
@@ -342,17 +339,15 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         self,
         channel_id: str,
         *,
-        position: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        topic: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        nsfw: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
-        rate_limit_per_user: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        bitrate: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        user_limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        permission_overwrites: typing.Union[
-            unspecified.UNSPECIFIED, typing.Sequence[typing.Dict]
-        ] = unspecified.UNSPECIFIED,
-        parent_id: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        position: typing.Union[typing.Literal[...], int] = ...,
+        topic: typing.Union[typing.Literal[...], str] = ...,
+        nsfw: typing.Union[typing.Literal[...], bool] = ...,
+        rate_limit_per_user: typing.Union[typing.Literal[...], int] = ...,
+        bitrate: typing.Union[typing.Literal[...], int] = ...,
+        user_limit: typing.Union[typing.Literal[...], int] = ...,
+        permission_overwrites: typing.Union[typing.Literal[...], typing.Sequence[typing.Dict]] = ...,
+        parent_id: typing.Union[typing.Literal[...], str] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Dict:
         """
         Update one or more aspects of a given channel ID.
@@ -436,10 +431,10 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         self,
         channel_id: str,
         *,
-        limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        after: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        before: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        around: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        limit: typing.Union[typing.Literal[...], int] = ...,
+        after: typing.Union[typing.Literal[...], str] = ...,
+        before: typing.Union[typing.Literal[...], str] = ...,
+        around: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Sequence[typing.Dict]:
         """
         Retrieve message history for a given channel. If a user is provided, retrieve the DM history.
@@ -516,14 +511,12 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         self,
         channel_id: str,
         *,
-        content: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        nonce: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        content: typing.Union[typing.Literal[...], str] = ...,
+        nonce: typing.Union[typing.Literal[...], str] = ...,
         tts: bool = False,
-        files: typing.Union[
-            unspecified.UNSPECIFIED, typing.Sequence[typing.Tuple[str, storage.FileLikeT]]
-        ] = unspecified.UNSPECIFIED,
-        embed: typing.Union[unspecified.UNSPECIFIED, typing.Dict] = unspecified.UNSPECIFIED,
-        allowed_mentions: typing.Union[unspecified.UNSPECIFIED, typing.Dict] = unspecified.UNSPECIFIED,
+        files: typing.Union[typing.Literal[...], typing.Sequence[typing.Tuple[str, storage.FileLikeT]]] = ...,
+        embed: typing.Union[typing.Literal[...], typing.Dict] = ...,
+        allowed_mentions: typing.Union[typing.Literal[...], typing.Dict] = ...,
     ) -> typing.Dict:
         """
         Create a message in the given channel or DM.
@@ -572,7 +565,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         form.add_field("payload_json", json.dumps(json_payload), content_type="application/json")
 
         re_seekable_resources = []
-        if files is not unspecified.UNSPECIFIED:
+        if files is not ...:
             for i, (file_name, file) in enumerate(files):
                 file = storage.make_resource_seekable(file)
                 re_seekable_resources.append(file)
@@ -682,8 +675,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         message_id: str,
         emoji: str,
         *,
-        after: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        after: typing.Union[typing.Literal[...], str] = ...,
+        limit: typing.Union[typing.Literal[...], int] = ...,
     ) -> typing.Sequence[typing.Dict]:
         """
         Get a list of users who reacted with the given emoji on the given message in the given channel or user DM.
@@ -742,9 +735,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         channel_id: str,
         message_id: str,
         *,
-        content: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        embed: typing.Union[unspecified.UNSPECIFIED, typing.Dict] = unspecified.UNSPECIFIED,
-        flags: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        content: typing.Union[typing.Literal[...], str] = ...,
+        embed: typing.Union[typing.Literal[...], typing.Dict] = ...,
+        flags: typing.Union[typing.Literal[...], int] = ...,
     ) -> typing.Dict:
         """
         Update the given message.
@@ -836,10 +829,10 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         channel_id: str,
         overwrite_id: str,
         *,
-        allow: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        deny: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        type_: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        allow: typing.Union[typing.Literal[...], int] = ...,
+        deny: typing.Union[typing.Literal[...], int] = ...,
+        type_: typing.Union[typing.Literal[...], str] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> None:
         """
         Edit permissions for a given channel.
@@ -895,13 +888,13 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         self,
         channel_id: str,
         *,
-        max_age: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        max_uses: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        temporary: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
-        unique: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
-        target_user: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        target_user_type: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        max_age: typing.Union[typing.Literal[...], int] = ...,
+        max_uses: typing.Union[typing.Literal[...], int] = ...,
+        temporary: typing.Union[typing.Literal[...], bool] = ...,
+        unique: typing.Union[typing.Literal[...], bool] = ...,
+        target_user: typing.Union[typing.Literal[...], str] = ...,
+        target_user_type: typing.Union[typing.Literal[...], int] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Dict:
         """
         Create a new invite for the given channel.
@@ -1089,8 +1082,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         name: str,
         image: bytes,
         *,
-        roles: typing.Union[unspecified.UNSPECIFIED, typing.Sequence[str]] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        roles: typing.Union[typing.Literal[...], typing.Sequence[str]] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Dict:
         """
         Creates a new emoji for a given guild.
@@ -1121,7 +1114,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         assertions.assert_not_none(image, "image must be a valid image")
         payload = {
             "name": name,
-            "roles": [] if roles is unspecified.UNSPECIFIED else roles,
+            "roles": [] if roles is ... else roles,
             "image": transformations.image_bytes_to_image_data(image),
         }
         route = routes.GUILD_EMOJIS.compile(self.POST, guild_id=guild_id)
@@ -1132,9 +1125,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         guild_id: str,
         emoji_id: str,
         *,
-        name: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        roles: typing.Union[unspecified.UNSPECIFIED, typing.Sequence[str]] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        name: typing.Union[typing.Literal[...], str] = ...,
+        roles: typing.Union[typing.Literal[...], typing.Sequence[str]] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Dict:
         """
         Edits an emoji of a given guild
@@ -1191,13 +1184,13 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         self,
         name: str,
         *,
-        region: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        icon: typing.Union[unspecified.UNSPECIFIED, bytes] = unspecified.UNSPECIFIED,
-        verification_level: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        default_message_notifications: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        explicit_content_filter: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        roles: typing.Union[unspecified.UNSPECIFIED, typing.Sequence[typing.Dict]] = unspecified.UNSPECIFIED,
-        channels: typing.Union[unspecified.UNSPECIFIED, typing.Sequence[typing.Dict]] = unspecified.UNSPECIFIED,
+        region: typing.Union[typing.Literal[...], str] = ...,
+        icon: typing.Union[typing.Literal[...], bytes] = ...,
+        verification_level: typing.Union[typing.Literal[...], int] = ...,
+        default_message_notifications: typing.Union[typing.Literal[...], int] = ...,
+        explicit_content_filter: typing.Union[typing.Literal[...], int] = ...,
+        roles: typing.Union[typing.Literal[...], typing.Sequence[typing.Dict]] = ...,
+        channels: typing.Union[typing.Literal[...], typing.Sequence[typing.Dict]] = ...,
     ) -> typing.Dict:
         """
         Creates a new guild. Can only be used by bots in less than 10 guilds.
@@ -1266,18 +1259,18 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         self,
         guild_id: str,
         *,
-        name: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        region: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        verification_level: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        default_message_notifications: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        explicit_content_filter: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        afk_channel_id: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        afk_timeout: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        icon: typing.Union[unspecified.UNSPECIFIED, bytes] = unspecified.UNSPECIFIED,
-        owner_id: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        splash: typing.Union[unspecified.UNSPECIFIED, bytes] = unspecified.UNSPECIFIED,
-        system_channel_id: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        name: typing.Union[typing.Literal[...], str] = ...,
+        region: typing.Union[typing.Literal[...], str] = ...,
+        verification_level: typing.Union[typing.Literal[...], int] = ...,
+        default_message_notifications: typing.Union[typing.Literal[...], int] = ...,
+        explicit_content_filter: typing.Union[typing.Literal[...], int] = ...,
+        afk_channel_id: typing.Union[typing.Literal[...], str] = ...,
+        afk_timeout: typing.Union[typing.Literal[...], int] = ...,
+        icon: typing.Union[typing.Literal[...], bytes] = ...,
+        owner_id: typing.Union[typing.Literal[...], str] = ...,
+        splash: typing.Union[typing.Literal[...], bytes] = ...,
+        system_channel_id: typing.Union[typing.Literal[...], str] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Dict:
         """
         Edits a given guild.
@@ -1379,18 +1372,16 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         guild_id: str,
         name: str,
         *,
-        type_: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        topic: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        bitrate: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        user_limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        rate_limit_per_user: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        position: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        permission_overwrites: typing.Union[
-            unspecified.UNSPECIFIED, typing.Sequence[typing.Dict]
-        ] = unspecified.UNSPECIFIED,
-        parent_id: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        nsfw: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        type_: typing.Union[typing.Literal[...], int] = ...,
+        topic: typing.Union[typing.Literal[...], str] = ...,
+        bitrate: typing.Union[typing.Literal[...], int] = ...,
+        user_limit: typing.Union[typing.Literal[...], int] = ...,
+        rate_limit_per_user: typing.Union[typing.Literal[...], int] = ...,
+        position: typing.Union[typing.Literal[...], int] = ...,
+        permission_overwrites: typing.Union[typing.Literal[...], typing.Sequence[typing.Dict]] = ...,
+        parent_id: typing.Union[typing.Literal[...], str] = ...,
+        nsfw: typing.Union[typing.Literal[...], bool] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Dict:
         """
         Creates a channel in a given guild.
@@ -1500,8 +1491,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         self,
         guild_id: str,
         *,
-        limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        after: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        limit: typing.Union[typing.Literal[...], int] = ...,
+        after: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Sequence[typing.Dict]:
         """
         Lists all members of a given guild.
@@ -1552,12 +1543,12 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         guild_id: str,
         user_id: str,
         *,
-        nick: typing.Union[None, unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        roles: typing.Union[unspecified.UNSPECIFIED, typing.Sequence[str]] = unspecified.UNSPECIFIED,
-        mute: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
-        deaf: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
-        channel_id: typing.Union[None, unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        nick: typing.Union[None, typing.Literal[...], str] = ...,
+        roles: typing.Union[typing.Literal[...], typing.Sequence[str]] = ...,
+        mute: typing.Union[typing.Literal[...], bool] = ...,
+        deaf: typing.Union[typing.Literal[...], bool] = ...,
+        channel_id: typing.Union[None, typing.Literal[...], str] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> None:
         """
         Edits a member of a given guild.
@@ -1600,11 +1591,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         await self._request(route, json_body=payload, reason=reason)
 
     async def modify_current_user_nick(
-        self,
-        guild_id: str,
-        nick: typing.Optional[str],
-        *,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        self, guild_id: str, nick: typing.Optional[str], *, reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> None:
         """
         Edits the current user's nickname for a given guild.
@@ -1630,12 +1617,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         await self._request(route, json_body=payload, reason=reason)
 
     async def add_guild_member_role(
-        self,
-        guild_id: str,
-        user_id: str,
-        role_id: str,
-        *,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        self, guild_id: str, user_id: str, role_id: str, *, reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> None:
         """
         Adds a role to a given member.
@@ -1660,12 +1642,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         await self._request(route, reason=reason)
 
     async def remove_guild_member_role(
-        self,
-        guild_id: str,
-        user_id: str,
-        role_id: str,
-        *,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        self, guild_id: str, user_id: str, role_id: str, *, reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> None:
         """
         Removed a role from a given member.
@@ -1690,11 +1667,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         await self._request(route, reason=reason)
 
     async def remove_guild_member(
-        self,
-        guild_id: str,
-        user_id: str,
-        *,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        self, guild_id: str, user_id: str, *, reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> None:
         """
         Kicks a user from a given guild.
@@ -1763,8 +1736,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         guild_id: str,
         user_id: str,
         *,
-        delete_message_days: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        delete_message_days: typing.Union[typing.Literal[...], int] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> None:
         """
         Bans a user from a given guild.
@@ -1792,11 +1765,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         await self._request(route, query=query)
 
     async def remove_guild_ban(
-        self,
-        guild_id: str,
-        user_id: str,
-        *,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        self, guild_id: str, user_id: str, *, reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> None:
         """
         Un-bans a user from a given guild.
@@ -1842,12 +1811,12 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         self,
         guild_id: str,
         *,
-        name: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        permissions: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        color: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        hoist: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
-        mentionable: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        name: typing.Union[typing.Literal[...], str] = ...,
+        permissions: typing.Union[typing.Literal[...], int] = ...,
+        color: typing.Union[typing.Literal[...], int] = ...,
+        hoist: typing.Union[typing.Literal[...], bool] = ...,
+        mentionable: typing.Union[typing.Literal[...], bool] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Dict:
         """
         Creates a new role for a given guild.
@@ -1922,12 +1891,12 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         guild_id: str,
         role_id: str,
         *,
-        name: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        permissions: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        color: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        hoist: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
-        mentionable: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        name: typing.Union[typing.Literal[...], str] = ...,
+        permissions: typing.Union[typing.Literal[...], int] = ...,
+        color: typing.Union[typing.Literal[...], int] = ...,
+        hoist: typing.Union[typing.Literal[...], bool] = ...,
+        mentionable: typing.Union[typing.Literal[...], bool] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Dict:
         """
         Edits a role in a given guild.
@@ -2020,8 +1989,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         guild_id: str,
         days: int,
         *,
-        compute_prune_count: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        compute_prune_count: typing.Union[typing.Literal[...], bool] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Optional[int]:
         """
         Prunes members of a given guild based on the number of inactive days.
@@ -2050,7 +2019,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         """
         query = {
             "days": days,
-            "compute_prune_count": compute_prune_count if compute_prune_count is not unspecified.UNSPECIFIED else False,
+            "compute_prune_count": compute_prune_count if compute_prune_count is not ... else False,
         }
         route = routes.GUILD_PRUNE.compile(self.POST, guild_id=guild_id)
         result = await self._request(route, query=query, reason=reason)
@@ -2121,12 +2090,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         return await self._request(route)
 
     async def create_guild_integration(
-        self,
-        guild_id: str,
-        type_: str,
-        integration_id: str,
-        *,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        self, guild_id: str, type_: str, integration_id: str, *, reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Dict:
         """
         Creates an integrations for a given guild.
@@ -2159,10 +2123,10 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         guild_id: str,
         integration_id: str,
         *,
-        expire_behaviour: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        expire_grace_period: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
-        enable_emojis: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        expire_behaviour: typing.Union[typing.Literal[...], int] = ...,
+        expire_grace_period: typing.Union[typing.Literal[...], int] = ...,
+        enable_emojis: typing.Union[typing.Literal[...], bool] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> None:
         """
         Edits an integrations for a given guild.
@@ -2196,11 +2160,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         await self._request(route, json_body=payload, reason=reason)
 
     async def delete_guild_integration(
-        self,
-        guild_id: str,
-        integration_id: str,
-        *,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        self, guild_id: str, integration_id: str, *, reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> None:
         """
         Deletes an integration for the given guild.
@@ -2262,11 +2222,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         return await self._request(route)
 
     async def modify_guild_embed(
-        self,
-        guild_id: str,
-        embed: typing.Dict,
-        *,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        self, guild_id: str, embed: typing.Dict, *, reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Dict:
         """
         Edits the embed for a given guild.
@@ -2311,9 +2267,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         route = routes.GUILD_VANITY_URL.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    def get_guild_widget_image_url(
-        self, guild_id: str, *, style: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED
-    ) -> str:
+    def get_guild_widget_image_url(self, guild_id: str, *, style: typing.Union[typing.Literal[...], str] = ...) -> str:
         """
         Get the URL for a guild widget.
 
@@ -2333,11 +2287,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         Warning:
             The guild must have the widget enabled in the guild settings for this to be valid.
         """
-        query = "" if style is unspecified.UNSPECIFIED else f"?style={style}"
+        query = "" if style is ... else f"?style={style}"
         return f"{self.base_url}/guilds/{guild_id}/widget.png" + query
 
     async def get_invite(
-        self, invite_code: str, *, with_counts: typing.Union[unspecified.UNSPECIFIED, bool] = unspecified.UNSPECIFIED
+        self, invite_code: str, *, with_counts: typing.Union[typing.Literal[...], bool] = ...
     ) -> typing.Dict:
         """
         Gets the given invite.
@@ -2431,8 +2385,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
     async def modify_current_user(
         self,
         *,
-        username: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        avatar: typing.Union[None, unspecified.UNSPECIFIED, bytes] = unspecified.UNSPECIFIED,
+        username: typing.Union[typing.Literal[...], str] = ...,
+        avatar: typing.Union[None, typing.Literal[...], bytes] = ...,
     ) -> typing.Dict:
         """
         Edits the current user. If any arguments are unspecified, then that subject is not changed on Discord.
@@ -2472,9 +2426,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
     async def get_current_user_guilds(
         self,
         *,
-        before: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        after: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        limit: typing.Union[unspecified.UNSPECIFIED, int] = unspecified.UNSPECIFIED,
+        before: typing.Union[typing.Literal[...], str] = ...,
+        after: typing.Union[typing.Literal[...], str] = ...,
+        limit: typing.Union[typing.Literal[...], int] = ...,
     ) -> typing.Sequence[typing.Dict]:
         """
         Gets the guilds the current user is in.
@@ -2545,8 +2499,8 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         channel_id: str,
         name: str,
         *,
-        avatar: typing.Union[unspecified.UNSPECIFIED, bytes] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        avatar: typing.Union[typing.Literal[...], bytes] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Dict:
         """
         Creates a webhook for a given channel.
@@ -2618,7 +2572,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         return await self._request(route)
 
     async def get_webhook(
-        self, webhook_id: str, *, webhook_token: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED
+        self, webhook_id: str, *, webhook_token: typing.Union[typing.Literal[...], str] = ...
     ) -> typing.Dict:
         """
         Gets a given webhook.
@@ -2640,21 +2594,21 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             hikari.net.errors.UnauthorizedHTTPError:
                 If you pass a token that's invalid for the target webhook.
         """
-        if webhook_token is unspecified.UNSPECIFIED:
+        if webhook_token is ...:
             route = routes.WEBHOOK.compile(self.GET, webhook_id=webhook_id)
         else:
             route = routes.WEBHOOK_WITH_TOKEN.compile(self.GET, webhook_id=webhook_id, webhook_token=webhook_token)
-        return await self._request(route, suppress_authorization_header=webhook_token is not unspecified.UNSPECIFIED)
+        return await self._request(route, suppress_authorization_header=webhook_token is not ...)
 
     async def modify_webhook(
         self,
         webhook_id: str,
         *,
-        webhook_token: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        name: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        avatar: typing.Union[None, unspecified.UNSPECIFIED, bytes] = unspecified.UNSPECIFIED,
-        channel_id: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        reason: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        webhook_token: typing.Union[typing.Literal[...], str] = ...,
+        name: typing.Union[typing.Literal[...], str] = ...,
+        avatar: typing.Union[None, typing.Literal[...], bytes] = ...,
+        channel_id: typing.Union[typing.Literal[...], str] = ...,
+        reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> typing.Dict:
         """
         Edits a given webhook.
@@ -2690,19 +2644,16 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         transformations.put_if_specified(payload, "name", name)
         transformations.put_if_specified(payload, "channel_id", channel_id)
         transformations.put_if_specified(payload, "avatar", avatar, transformations.image_bytes_to_image_data)
-        if webhook_token is unspecified.UNSPECIFIED:
+        if webhook_token is ...:
             route = routes.WEBHOOK.compile(self.PATCH, webhook_id=webhook_id)
         else:
             route = routes.WEBHOOK_WITH_TOKEN.compile(self.PATCH, webhook_id=webhook_id, webhook_token=webhook_token)
         return await self._request(
-            route,
-            json_body=payload,
-            reason=reason,
-            suppress_authorization_header=webhook_token is not unspecified.UNSPECIFIED,
+            route, json_body=payload, reason=reason, suppress_authorization_header=webhook_token is not ...,
         )
 
     async def delete_webhook(
-        self, webhook_id: str, *, webhook_token: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED
+        self, webhook_id: str, *, webhook_token: typing.Union[typing.Literal[...], str] = ...
     ) -> None:
         """
         Deletes a given webhook.
@@ -2722,24 +2673,24 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             hikari.net.errors.UnauthorizedHTTPError:
                 If you pass a token that's invalid for the target webhook.
         """
-        if webhook_token is unspecified.UNSPECIFIED:
+        if webhook_token is ...:
             route = routes.WEBHOOK.compile(self.DELETE, webhook_id=webhook_id)
         else:
             route = routes.WEBHOOK_WITH_TOKEN.compile(self.DELETE, webhook_id=webhook_id, webhook_token=webhook_token)
-        await self._request(route, suppress_authorization_header=webhook_token is not unspecified.UNSPECIFIED)
+        await self._request(route, suppress_authorization_header=webhook_token is not ...)
 
     async def execute_webhook(
         self,
         webhook_id: str,
         webhook_token: str,
         *,
-        content: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        username: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
-        avatar_url: typing.Union[unspecified.UNSPECIFIED, str] = unspecified.UNSPECIFIED,
+        content: typing.Union[typing.Literal[...], str] = ...,
+        username: typing.Union[typing.Literal[...], str] = ...,
+        avatar_url: typing.Union[typing.Literal[...], str] = ...,
         tts: bool = False,
         wait: bool = False,
-        file: typing.Union[unspecified.UNSPECIFIED, typing.Tuple[str, storage.FileLikeT]] = unspecified.UNSPECIFIED,
-        embeds: typing.Union[unspecified.UNSPECIFIED, typing.Sequence[typing.Dict]] = unspecified.UNSPECIFIED,
+        file: typing.Union[typing.Literal[...], typing.Tuple[str, storage.FileLikeT]] = ...,
+        embeds: typing.Union[typing.Literal[...], typing.Sequence[typing.Dict]] = ...,
     ) -> typing.Optional[typing.Dict]:
         """
         Create a message in the given channel or DM.
@@ -2796,7 +2747,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
 
         form.add_field("payload_json", json.dumps(json_payload), content_type="application/json")
 
-        if file is not unspecified.UNSPECIFIED:
+        if file is not ...:
             file_name, file = file
             file = storage.make_resource_seekable(file)
             re_seekable_resources = [file]

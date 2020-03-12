@@ -20,8 +20,6 @@
 Provides a base utility class for any component needing an HTTP session that supports
 proxying, SSL configuration, and a standard easy-to-use interface.
 """
-from __future__ import annotations
-
 __all__ = ["BaseHTTPClient"]
 
 import abc
