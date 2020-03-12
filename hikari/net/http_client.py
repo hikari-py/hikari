@@ -219,14 +219,14 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 continue
 
             if status >= codes.HTTPStatusCode.BAD_REQUEST:
-                try:
-                    message = body["message"]
-                    code = int(body["code"])
+                code = None
 
+                if self.version == versions.HTTPAPIVersion.V6:
+                    message = ", ".join(f"{k} - {v}" for k, v in body.items())
+                else:
+                    message = body.get("message")
                     with contextlib.suppress(ValueError):
-                        code = codes.JSONErrorCode(code)
-                except (ValueError, KeyError):
-                    message, code = None, None
+                        code = codes.JSONErrorCode(body.get("code"))
 
                 if status == codes.HTTPStatusCode.BAD_REQUEST:
                     raise errors.BadRequestHTTPError(compiled_route, message, code)

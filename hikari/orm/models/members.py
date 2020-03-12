@@ -40,22 +40,30 @@ from hikari.orm.models import users
 
 @delegate.delegate_to(users.User, "user")
 class Member(users.User, delegate_fabricated=True):
-    """
-    A specialization of a user which provides implementation details for a specific guild.
+    """A specialization of a user which provides implementation details for a
+    specific guild.
 
-    This is a delegate type, meaning it subclasses a :class:`User` and implements it by deferring inherited calls
-    and fields to a wrapped user object which is shared with the corresponding member in every guild the user is in.
+    This is a delegate type, meaning it subclasses a :class:`User` and
+    implements it by deferring inherited calls and fields to a wrapped user
+    object which is shared with the corresponding member in every guild the
+    user is in.
     """
 
     __slots__ = ("user", "guild", "role_ids", "joined_at", "nick", "premium_since", "presence", "is_deaf", "is_mute")
 
     #: The underlying user object.
+    #:
+    #: :type: :class:`hikari.orm.models.users.User`
     user: users.User
 
     #: The guild that the member is in.
+    #:
+    #: :type: :class:`hikari.orm.models.guild.Guild`
     guild: guilds.Guild
 
     #: The IDs of the roles the member has.
+    #:
+    #: :type: :class:`typing.Sequence` [ :class:`int` ]
     role_ids: typing.Sequence[int]
 
     #: The date and time the member joined this guild.
@@ -65,12 +73,12 @@ class Member(users.User, delegate_fabricated=True):
 
     #: The optional nickname of the member.
     #:
-    #: :type: :class:`str` or `None`
+    #: :type: :class:`str`, optional
     nick: typing.Optional[str]
 
     #: The optional date/time that the member Nitro-boosted the guild.
     #:
-    #: :type: :class:`datetime.datetime` or `None`
+    #: :type: :class:`datetime.datetime`, optional
     premium_since: typing.Optional[datetime.datetime]
 
     #: Whether the user is deafened in voice.
@@ -85,7 +93,7 @@ class Member(users.User, delegate_fabricated=True):
 
     #: The user's online presence. This will be `None` until populated by a gateway event.
     #:
-    #: :type: :class:`hikari.orm.models.presences.Presence` or `None`
+    #: :type: :class:`hikari.orm.models.presences.Presence`, optional
     presence: typing.Optional[presences.MemberPresence]
 
     __copy_by_ref__ = ("presence", "guild")
@@ -95,24 +103,31 @@ class Member(users.User, delegate_fabricated=True):
     # noinspection PyMissingConstructor
     def __init__(self, fabric_obj: typing.Any, guild: guilds.Guild, payload: typing.Dict) -> None:
         self.presence = None
+        self.is_deaf = False
+        self.is_mute = False
+        self.nick = None
+        self.premium_since = None
+        self.role_ids = containers.EMPTY_SEQUENCE
         self.user = fabric_obj.state_registry.parse_user(payload["user"])
         self.guild = guild
         self.joined_at = dates.parse_iso_8601_ts(payload["joined_at"])
         self.update_state(payload)
 
     def update_state(self, payload: typing.Dict) -> None:
-        self.role_ids = [int(role_id) for role_id in payload.get("roles", containers.EMPTY_SEQUENCE)]
-        self.premium_since = transformations.nullable_cast(payload.get("premium_since"), dates.parse_iso_8601_ts)
-        self.nick = payload.get("nick")
-        self.is_deaf = payload.get("deaf", False)
-        self.is_mute = payload.get("mute", False)
+        if "roles" in payload:
+            self.role_ids = [int(role_id) for role_id in payload.get("roles", containers.EMPTY_SEQUENCE)]
 
-    def update_presence_state(self, presence_payload: typing.Dict = None) -> None:
-        user_id = presence_payload["user"]["id"]
-        assertions.assert_that(
-            int(user_id) == self.id, f"Presence object from User `{user_id}` doesn't match Member `{self.id}`."
-        )
-        self.presence = self._fabric.state_registry.parse_presence(self, presence_payload)
+        if "premium_since" in payload:
+            self.premium_since = transformations.nullable_cast(payload.get("premium_since"), dates.parse_iso_8601_ts)
+
+        if "nick" in payload:
+            self.nick = payload.get("nick")
+
+        if "deaf" in payload:
+            self.is_deaf = payload.get("deaf", False)
+
+        if "mute" in payload:
+            self.is_mute = payload.get("mute", False)
 
 
 #: A :class:`Member`, or an :class:`int`/:class:`str` ID of one.
