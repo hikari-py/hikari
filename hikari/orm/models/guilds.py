@@ -48,6 +48,7 @@ from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import reprs
 from hikari.internal_utilities import transformations
+from hikari.net import gateway
 from hikari.orm.models import bases
 from hikari.orm.models import channels
 from hikari.orm.models import emojis
@@ -177,7 +178,6 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
         "premium_tier",
         "roles",
         "rules_channel_id",
-        "shard_id",
         "system_channel_flags",
         "system_channel_id",
         "voice_region",
@@ -185,13 +185,6 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     )
 
     __copy_by_ref__ = ("roles", "emojis", "members", "channels")
-
-    #: The shard ID that this guild is being served by.
-    #:
-    #: If the bot is not sharded, this will be 0.
-    #:
-    #: :type: :class:`int`
-    shard_id: int
 
     #: The AFK channel ID.
     #:
@@ -331,7 +324,6 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
         self.roles = {}
         self.voice_states = {}
         super().__init__(payload)
-        self.shard_id = transformations.guild_id_to_shard_id(self.id, self._fabric.shard_count)
 
     def update_state(self, payload: typing.Dict) -> None:
         super().update_state(payload)
@@ -378,6 +370,24 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
         self.premium_subscription_count = payload.get("premium_subscription_count", 0)
         self.system_channel_flags = transformations.try_cast(payload.get("system_channel_flags"), SystemChannelFlag)
         self.rules_channel_id = transformations.try_cast(payload.get("rules_channel_id"), int)
+
+    @property
+    def shard_id(self) -> int:
+        """The shard ID for the guild.
+
+        If the bot is not connected to the websocket, this will have undefined
+        behaviour.
+        """
+        return transformations.guild_id_to_shard_id(self.id, self._fabric.shard_count)
+
+    @property
+    def shard(self) -> gateway.GatewayClient:
+        """The gateway client shard that this guild is updated by.
+
+        If the bot is not connected to the websocket, this will have undefined
+        behaviour.
+        """
+        return self._fabric.gateways[self.shard_id]
 
 
 class SystemChannelFlag(enum.IntFlag):

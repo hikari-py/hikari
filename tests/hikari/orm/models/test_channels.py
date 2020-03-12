@@ -22,6 +22,7 @@ import cymock as mock
 import pytest
 
 from hikari.internal_utilities import unspecified
+from hikari.net import gateway
 from hikari.orm import fabric
 from hikari.orm.http import base_http_adapter
 from hikari.orm.models import bases
@@ -39,7 +40,7 @@ from tests.hikari import _helpers
 @pytest.fixture
 def mock_fabric():
     mock_state = _helpers.create_autospec(base_registry.BaseRegistry)
-    return fabric.Fabric(NotImplemented, mock_state)
+    return fabric.Fabric(NotImplemented, mock_state, gateways={i: None for i in range(20)}, shard_count=20)
 
 
 @pytest.fixture
@@ -108,6 +109,70 @@ class TestChannel:
         assert channels.Channel.get_channel_class_from_type(expected_type.type) is expected_type
         assert channels.Channel.get_channel_class_from_type(expected_type.type.value) is expected_type
 
+    def test_channel_without_guild_id_has_zero_shard_id(self, mock_fabric):
+        class ChannelImpl(channels.Channel):
+            __slots__ = ()
+
+            def __init__(self, fabric, pl):
+                super().__init__(fabric, pl)
+
+        c = ChannelImpl(mock_fabric, {
+            "id": "9876",
+            "type": 3,
+        })
+
+        assert c.shard_id == 0
+
+    def test_channel_with_guild_id_has_non_zero_shard_id(self, mock_fabric):
+        class ChannelImpl(channels.Channel):
+            __slots__ = ()
+            guild_id = 916749179873929723
+
+            def __init__(self, fabric, pl):
+                super().__init__(fabric, pl)
+
+        c = ChannelImpl(mock_fabric, {
+            "id": "9876",
+            "type": 0,
+        })
+
+        assert c.shard_id == (916749179873929723 >> 22) % mock_fabric.shard_count
+        assert c.shard_id != 0
+
+    def test_channel_without_guild_id_has_zero_shard(self, mock_fabric):
+        class ChannelImpl(channels.Channel):
+            __slots__ = ()
+
+            def __init__(self, fabric, pl):
+                super().__init__(fabric, pl)
+
+        c = ChannelImpl(mock_fabric, {
+            "id": "9876",
+            "type": 3,
+        })
+
+        shard = mock.create_autospec(gateway.GatewayClient)
+        mock_fabric.gateways[0] = shard
+
+        assert c.shard is shard
+
+    def test_channel_with_guild_id_has_non_zero_shard(self, mock_fabric):
+        class ChannelImpl(channels.Channel):
+            __slots__ = ()
+            guild_id = 916749179873929723
+
+            def __init__(self, fabric, pl):
+                super().__init__(fabric, pl)
+
+        c = ChannelImpl(mock_fabric, {
+            "id": "9876",
+            "type": 0,
+        })
+
+        shard = mock.create_autospec(gateway.GatewayClient)
+        mock_fabric.gateways[(916749179873929723 >> 22) % mock_fabric.shard_count] = shard
+
+        assert c.shard is shard
 
 @pytest.mark.model
 class TestTextChannel:
