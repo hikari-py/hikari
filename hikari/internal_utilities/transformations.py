@@ -19,8 +19,6 @@
 """
 Basic transformation utilities.
 """
-from __future__ import annotations
-
 __all__ = [
     "CastInputT",
     "CastOutputT",
@@ -36,8 +34,6 @@ __all__ = [
 import base64
 import contextlib
 import typing
-
-from hikari.internal_utilities import unspecified
 
 CastInputT = typing.TypeVar("CastInputT")
 CastOutputT = typing.TypeVar("CastOutputT")
@@ -73,7 +69,7 @@ def put_if_specified(
     type_after: typing.Optional[TypeCastT] = None,
 ) -> None:
     """
-    Add a value to the mapping under the given key as long as the value is not :attr:`UNSPECIFIED`
+    Add a value to the mapping under the given key as long as the value is not :obj:`typing.Literal[...]`
 
     Args:
         mapping:
@@ -85,7 +81,7 @@ def put_if_specified(
         type_after:
             Optional type to apply to the value when added.
     """
-    if value is not unspecified.UNSPECIFIED:
+    if value is not ...:
         if type_after:
             mapping[key] = type_after(value)
         else:

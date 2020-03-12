@@ -19,8 +19,6 @@
 """
 Errors that can be raised by networking components.
 """
-from __future__ import annotations
-
 __all__ = [
     "GatewayError",
     "GatewayClientClosedError",
