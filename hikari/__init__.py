@@ -19,15 +19,14 @@
 """
 Hikari's core framework for writing Discord bots in Python.
 """
+from hikari import errors
+from hikari import net
 from hikari._about import __author__
 from hikari._about import __copyright__
 from hikari._about import __email__
 from hikari._about import __license__
 from hikari._about import __url__
 from hikari._about import __version__
-
-from hikari import errors
-from hikari import net
 from hikari.errors import *
 from hikari.net.codes import *
 from hikari.net.errors import *
