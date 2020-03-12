@@ -35,21 +35,3 @@ from hikari.internal_utilities import storage
 )
 def test_make_resource_seekable(input, expected_result_type):
     assert isinstance(storage.make_resource_seekable(input), expected_result_type)
-
-
-@pytest.mark.parametrize(
-    "input",
-    [
-        b"hello",
-        bytearray("hello", "utf-8"),
-        memoryview(b"hello"),
-        io.BytesIO(b"hello"),
-        mock.MagicMock(io.BufferedRandom, read=mock.MagicMock(return_value=b"hello")),
-        mock.MagicMock(io.BufferedReader, read=mock.MagicMock(return_value=b"hello")),
-        mock.MagicMock(io.BufferedRWPair, read=mock.MagicMock(return_value=b"hello")),
-    ],
-)
-def test_get_bytes_from_resource(input):
-    assert storage.get_bytes_from_resource(input) == b"hello"
-    if isinstance(input, mock.MagicMock):
-        input.read.assert_called_once()
