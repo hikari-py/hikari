@@ -26,7 +26,6 @@ __all__ = ["Member", "MemberLikeT"]
 import datetime
 import typing
 
-from hikari.internal_utilities import assertions
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import delegate
