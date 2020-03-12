@@ -157,8 +157,6 @@ task is stopped, and will also ensure any remaining futures in any bucket queues
 have an :class:`asyncio.CancelledException` set on them to prevent deadlocking
 ratelimited calls that may be waiting to be unlocked.
 """
-from __future__ import annotations
-
 __all__ = [
     "IRateLimiter",
     "BurstRateLimiter",

@@ -18,7 +18,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 
-import async_timeout
 import cymock as mock
 import pytest
 
@@ -57,51 +56,6 @@ class TestCoroutineFunctionStubUsedInTests:
     # POC for the stuff we use in tests
     def test_coro_stub_neq(self):
         assert CoroutineStub(9, 18, x=27) != CoroutineStub(9, 18, x=36)
-
-
-class TestOptionalAwait:
-    @pytest.mark.asyncio
-    async def test_optional_await_gets_run_with_await(self):
-        coro_fn = CoroutineFunctionStub()
-
-        wrapped_coro_fn = aio.optional_await()(coro_fn)
-
-        with mock.patch("asyncio.create_task", new=mock.AsyncMock()) as create_task:
-            await wrapped_coro_fn(9, 18, 27)
-            create_task.assert_called_with(coro_fn(9, 18, 27), name=None)
-
-    @pytest.mark.asyncio
-    async def test_optional_await_gets_run_without_await(self):
-        coro_fn = CoroutineFunctionStub()
-
-        wrapped_coro_fn = aio.optional_await()(coro_fn)
-
-        with mock.patch("asyncio.create_task") as create_task:
-            wrapped_coro_fn(9, 18, 27)
-            create_task.assert_called_with(coro_fn(9, 18, 27), name=None)
-
-    @pytest.mark.asyncio
-    async def test_optional_await_with_description(self):
-        coro_fn = CoroutineFunctionStub()
-
-        wrapped_coro_fn = aio.optional_await("foo")(coro_fn)
-
-        with mock.patch("asyncio.create_task", new=mock.AsyncMock()) as create_task:
-            await wrapped_coro_fn(9, 18, 27)
-            create_task.assert_called_with(coro_fn(9, 18, 27), name="foo")
-
-    @pytest.mark.asyncio
-    async def test_optional_await_shielded(self):
-        coro_fn = CoroutineFunctionStub()
-        wrapped_coro_fn = aio.optional_await(shield=True)(coro_fn)
-
-        shielded_coro = CoroutineStub()
-
-        with mock.patch("asyncio.shield", new=mock.MagicMock(return_value=shielded_coro)) as shield:
-            with mock.patch("asyncio.create_task", new=mock.AsyncMock()) as create_task:
-                await wrapped_coro_fn(9, 18, 27)
-                shield.assert_called_with(coro_fn(9, 18, 27))
-                create_task.assert_called_with(shielded_coro, name=None)
 
 
 class TestEventDelegate:
@@ -444,29 +398,3 @@ class TestCompletedFuture:
     @pytest.mark.asyncio
     async def test_non_default_result(self):
         assert aio.completed_future(...).result() is ...
-
-
-class TestMaybeTimeout:
-    @pytest.mark.asyncio
-    @_helpers.timeout_after(2)
-    @pytest.mark.parametrize("wait_for", (0, -1, -1.5, None))
-    async def test_never_times_out_if_cannot_wait(self, wait_for):
-        try:
-            async with async_timeout.timeout(1):
-                try:
-                    async with aio.maybe_timeout(wait_for):
-                        await asyncio.sleep(100)
-                    assert False, "asyncio.sleep completed, but it should have hit the test timeout"
-                except asyncio.TimeoutError:
-                    assert False, "timed out unexpectedly"
-            # noinspection PyUnreachableCode
-            assert False, "did not time out"
-        except asyncio.TimeoutError:
-            pass
-
-    @pytest.mark.asyncio
-    @_helpers.timeout_after(2)
-    @_helpers.assert_raises(type_=asyncio.TimeoutError)
-    async def test_times_out(self):
-        async with aio.maybe_timeout(1):
-            await asyncio.sleep(100)

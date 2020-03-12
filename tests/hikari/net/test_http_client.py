@@ -28,7 +28,6 @@ import pytest
 
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
-from hikari.internal_utilities import unspecified
 from hikari.net import base_http_client
 from hikari.net import errors
 from hikari.net import http_client
@@ -541,7 +540,7 @@ class TestHTTPClient:
         with mock.patch.object(routes, "CHANNEL", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.modify_channel("6942069420") is mock_response
             routes.CHANNEL.compile.assert_called_once_with(http_client_impl.PATCH, channel_id="6942069420")
-        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_channel_with_optionals(self, http_client_impl):
@@ -826,7 +825,7 @@ class TestHTTPClient:
             routes.CHANNEL_PERMISSIONS.compile.assert_called_once_with(
                 http_client_impl.PATCH, channel_id="101010101010", overwrite_id="100101010"
             )
-        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_edit_channel_permissions_with_optionals(self, http_client_impl):
@@ -863,7 +862,7 @@ class TestHTTPClient:
         with mock.patch.object(routes, "CHANNEL_INVITES", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.create_channel_invite("99992929") is mock_response
             routes.CHANNEL_INVITES.compile.assert_called_once_with(http_client_impl.POST, channel_id="99992929")
-        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_create_channel_invite_with_optionals(self, http_client_impl):
@@ -981,9 +980,7 @@ class TestHTTPClient:
                 transformations.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
                 routes.GUILD_EMOJIS.compile.assert_called_once_with(http_client_impl.POST, guild_id="2222")
         http_client_impl._request.assert_called_once_with(
-            mock_route,
-            json_body={"name": "iEmoji", "roles": [], "image": mock_image_data},
-            reason=unspecified.UNSPECIFIED,
+            mock_route, json_body={"name": "iEmoji", "roles": [], "image": mock_image_data}, reason=...,
         )
 
     @pytest.mark.asyncio
@@ -1016,7 +1013,7 @@ class TestHTTPClient:
             routes.GUILD_EMOJI.compile.assert_called_once_with(
                 http_client_impl.PATCH, guild_id="292929", emoji_id="3484848"
             )
-        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_guild_emoji_with_optionals(self, http_client_impl):
@@ -1032,7 +1029,7 @@ class TestHTTPClient:
                 http_client_impl.PATCH, guild_id="292929", emoji_id="3484848"
             )
         http_client_impl._request.assert_called_once_with(
-            mock_route, json_body={"name": "ok", "roles": ["222", "111"]}, reason=unspecified.UNSPECIFIED
+            mock_route, json_body={"name": "ok", "roles": ["222", "111"]}, reason=...
         )
 
     @pytest.mark.asyncio
@@ -1104,7 +1101,7 @@ class TestHTTPClient:
         with mock.patch.object(routes, "GUILD", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.modify_guild("49949495") is mock_response
             routes.GUILD.compile.assert_called_once_with(http_client_impl.PATCH, guild_id="49949495")
-        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_guild_with_optionals(self, http_client_impl):
@@ -1188,9 +1185,7 @@ class TestHTTPClient:
         with mock.patch.object(routes, "GUILD_CHANNELS", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.create_guild_channel("292929", "I am a channel") is mock_response
             routes.GUILD_CHANNELS.compile.assert_called_once_with(http_client_impl.POST, guild_id="292929")
-        http_client_impl._request.assert_called_once_with(
-            mock_route, json_body={"name": "I am a channel"}, reason=unspecified.UNSPECIFIED
-        )
+        http_client_impl._request.assert_called_once_with(mock_route, json_body={"name": "I am a channel"}, reason=...)
 
     @pytest.mark.asyncio
     async def test_create_guild_channel_with_optionals(self, http_client_impl):
@@ -1288,7 +1283,7 @@ class TestHTTPClient:
             routes.GUILD_MEMBER.compile.assert_called_once_with(
                 http_client_impl.PATCH, guild_id="115590097100865541", user_id="379953393319542784"
             )
-        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_guild_member_with_optionals(self, http_client_impl):
@@ -1321,9 +1316,7 @@ class TestHTTPClient:
         with mock.patch.object(routes, "OWN_GUILD_NICKNAME", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.modify_current_user_nick("202020202", "Nickname me") is None
             routes.OWN_GUILD_NICKNAME.compile.assert_called_once_with(http_client_impl.PATCH, guild_id="202020202")
-        http_client_impl._request.assert_called_once_with(
-            mock_route, json_body={"nick": "Nickname me"}, reason=unspecified.UNSPECIFIED
-        )
+        http_client_impl._request.assert_called_once_with(mock_route, json_body={"nick": "Nickname me"}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_current_user_nick_with_reason(self, http_client_impl):
@@ -1345,7 +1338,7 @@ class TestHTTPClient:
             routes.GUILD_MEMBER_ROLE.compile.assert_called_once_with(
                 http_client_impl.PUT, guild_id="3939393", user_id="2838383", role_id="84384848"
             )
-        http_client_impl._request.assert_called_once_with(mock_route, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(mock_route, reason=...)
 
     @pytest.mark.asyncio
     async def test_add_guild_member_role_with_reason(self, http_client_impl):
@@ -1370,7 +1363,7 @@ class TestHTTPClient:
             routes.GUILD_MEMBER_ROLE.compile.assert_called_once_with(
                 http_client_impl.DELETE, guild_id="22222", user_id="3333", role_id="44444"
             )
-        http_client_impl._request.assert_called_once_with(mock_route, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(mock_route, reason=...)
 
     @pytest.mark.asyncio
     async def test_remove_guild_member_role_with_reason(self, http_client_impl):
@@ -1390,7 +1383,7 @@ class TestHTTPClient:
             routes.GUILD_MEMBER.compile.assert_called_once_with(
                 http_client_impl.DELETE, guild_id="393939", user_id="82828"
             )
-        http_client_impl._request.assert_called_once_with(mock_route, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(mock_route, reason=...)
 
     @pytest.mark.asyncio
     async def test_remove_guild_member_with_reason(self, http_client_impl):
@@ -1446,7 +1439,7 @@ class TestHTTPClient:
         with mock.patch.object(routes, "GUILD_BAN", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.remove_guild_ban("494949", "3737") is None
             routes.GUILD_BAN.compile.assert_called_once_with(http_client_impl.DELETE, guild_id="494949", user_id="3737")
-        http_client_impl._request.assert_called_once_with(mock_route, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(mock_route, reason=...)
 
     @pytest.mark.asyncio
     async def test_remove_guild_ban_with_reason(self, http_client_impl):
@@ -1474,7 +1467,7 @@ class TestHTTPClient:
         with mock.patch.object(routes, "GUILD_ROLES", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.create_guild_role("9494") is mock_response
             routes.GUILD_ROLES.compile.assert_called_once_with(http_client_impl.POST, guild_id="9494")
-        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_create_guild_role_with_optionals(self, http_client_impl):
@@ -1517,7 +1510,7 @@ class TestHTTPClient:
             routes.GUILD_ROLE.compile.assert_called_once_with(
                 http_client_impl.PATCH, guild_id="999999", role_id="54234"
             )
-        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_guild_role_without_optionals(self, http_client_impl):
@@ -1571,7 +1564,7 @@ class TestHTTPClient:
         with mock.patch.object(routes, "GUILD_PRUNE", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.begin_guild_prune("39393", 14) is None
         http_client_impl._request.assert_called_once_with(
-            mock_route, query={"days": 14, "compute_prune_count": False}, reason=unspecified.UNSPECIFIED
+            mock_route, query={"days": 14, "compute_prune_count": False}, reason=...
         )
 
     @pytest.mark.asyncio
@@ -1627,7 +1620,7 @@ class TestHTTPClient:
             assert await http_client_impl.create_guild_integration("2222", "twitch", "443223") is mock_response
             routes.GUILD_INTEGRATIONS.compile.assert_called_once_with(http_client_impl.POST, guild_id="2222")
         http_client_impl._request.assert_called_once_with(
-            mock_route, json_body={"type": "twitch", "id": "443223"}, reason=unspecified.UNSPECIFIED
+            mock_route, json_body={"type": "twitch", "id": "443223"}, reason=...
         )
 
     @pytest.mark.asyncio
@@ -1653,7 +1646,7 @@ class TestHTTPClient:
             routes.GUILD_INTEGRATION.compile.assert_called_once_with(
                 http_client_impl.PATCH, guild_id="292929", integration_id="747474"
             )
-        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_guild_integration_with_optionals(self, http_client_impl):
@@ -1686,7 +1679,7 @@ class TestHTTPClient:
             routes.GUILD_INTEGRATION.compile.assert_called_once_with(
                 http_client_impl.DELETE, guild_id="23992", integration_id="7474"
             )
-        http_client_impl._request.assert_called_once_with(mock_route, reason=unspecified.UNSPECIFIED)
+        http_client_impl._request.assert_called_once_with(mock_route, reason=...)
 
     @pytest.mark.asyncio
     async def test_delete_guild_integration_with_reason(self, http_client_impl):
@@ -1727,9 +1720,7 @@ class TestHTTPClient:
             embed_obj = {"channel_id": "222", "enabled": True}
             assert await http_client_impl.modify_guild_embed("393939", embed_obj) is mock_response
             routes.GUILD_EMBED.compile.assert_called_once_with(http_client_impl.PATCH, guild_id="393939")
-        http_client_impl._request.assert_called_once_with(
-            mock_route, json_body=embed_obj, reason=unspecified.UNSPECIFIED
-        )
+        http_client_impl._request.assert_called_once_with(mock_route, json_body=embed_obj, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_guild_embed_with_reason(self, http_client_impl):
@@ -1918,9 +1909,7 @@ class TestHTTPClient:
         with mock.patch.object(routes, "CHANNEL_WEBHOOKS", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.create_webhook("39393939", "I am a webhook") is mock_response
             routes.CHANNEL_WEBHOOKS.compile.assert_called_once_with(http_client_impl.POST, channel_id="39393939")
-        http_client_impl._request.assert_called_once_with(
-            mock_route, json_body={"name": "I am a webhook"}, reason=unspecified.UNSPECIFIED
-        )
+        http_client_impl._request.assert_called_once_with(mock_route, json_body={"name": "I am a webhook"}, reason=...)
 
     @pytest.mark.asyncio
     async def test_create_webhook_with_optionals(self, http_client_impl):
@@ -1991,7 +1980,7 @@ class TestHTTPClient:
             assert await http_client_impl.modify_webhook("929292") is mock_response
             routes.WEBHOOK.compile.assert_called_once_with(http_client_impl.PATCH, webhook_id="929292")
         http_client_impl._request.assert_called_once_with(
-            mock_route, json_body={}, reason=unspecified.UNSPECIFIED, suppress_authorization_header=False
+            mock_route, json_body={}, reason=..., suppress_authorization_header=False
         )
 
     @pytest.mark.asyncio
@@ -2025,7 +2014,7 @@ class TestHTTPClient:
                 http_client_impl.PATCH, webhook_id="929292", webhook_token="a_webhook_token"
             )
         http_client_impl._request.assert_called_once_with(
-            mock_route, json_body={}, reason=unspecified.UNSPECIFIED, suppress_authorization_header=True
+            mock_route, json_body={}, reason=..., suppress_authorization_header=True
         )
 
     @pytest.mark.asyncio
