@@ -25,10 +25,7 @@ from hikari.internal_utilities import assertions
 from hikari.internal_utilities import cache
 from hikari.internal_utilities import containers
 from hikari.internal_utilities import dates
-from hikari.internal_utilities import delegate
 from hikari.internal_utilities import loggers
-from hikari.internal_utilities import meta
-from hikari.internal_utilities import reprs
 from hikari.internal_utilities import singleton_meta
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations

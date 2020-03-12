@@ -21,7 +21,7 @@ Provides mechanisms to cache results of calls lazily.
 """
 from __future__ import annotations
 
-__all__ = ["cached_property", "cached_function"]
+__all__ = ["cached_function"]
 
 import asyncio
 import functools
