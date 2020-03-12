@@ -497,7 +497,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         member_obj.presence = presence_obj
         return presence_obj
 
-    def parse_reaction(self, reaction_payload: typing.Dict, message_id: int, channel_id: int, ) -> reactions.Reaction:
+    def parse_reaction(self, reaction_payload: typing.Dict, message_id: int, channel_id: int,) -> reactions.Reaction:
         count = int(reaction_payload["count"]) if "count" in reaction_payload else 1
         emoji_obj = self.parse_emoji(reaction_payload["emoji"], None)
 
