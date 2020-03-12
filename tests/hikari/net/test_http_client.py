@@ -388,6 +388,7 @@ class TestHTTPClient:
                 http_client_impl.global_ratelimiter.throttle.assert_not_called()
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("api_version", [versions.HTTPAPIVersion.V6, versions.HTTPAPIVersion.V7])
     @pytest.mark.parametrize(
         ["status_code", "error"],
         [
@@ -398,11 +399,11 @@ class TestHTTPClient:
             (405, errors.ClientHTTPError),
         ],
     )
-    async def test__request_raises_appropiate_error_for_status_code(
-        self, status_code, error, compiled_route, discord_response
+    async def test__request_raises_appropriate_error_for_status_code(
+        self, status_code, error, compiled_route, discord_response, api_version
     ):
         discord_response.status = status_code
-        http_client_impl = http_client.HTTPClient(token="Bot token")
+        http_client_impl = http_client.HTTPClient(token="Bot token", version=api_version)
         http_client_impl.ratelimiter = mock.MagicMock()
         http_client_impl.global_ratelimiter = mock.MagicMock()
 

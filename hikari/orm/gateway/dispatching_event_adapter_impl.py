@@ -544,18 +544,27 @@ class DispatchingEventAdapterImpl(dispatching_event_adapter.BaseDispatchingEvent
 
     async def handle_typing_start(self, gateway, payload):
         channel_id = int(payload["channel_id"])
-        user_id = int(payload["user_id"])
         channel_obj = self.fabric.state_registry.get_channel_by_id(channel_id)
+        user_id = int(payload["user_id"])
+
+        if "member" in payload and "guild_id" in payload:
+            guild_id = int(payload["guild_id"])
+            guild_obj = self.fabric.state_registry.get_guild_by_id(guild_id)
+
+            if guild_obj is None:
+                self.logger.debug(
+                    "ignoring TYPING_START by user %s in channel %s in unknown guild %s", user_id, channel_id, guild_id
+                )
+                return
+
+            member_payload = payload["member"]
+            user_obj = self.fabric.state_registry.parse_member(member_payload, guild_obj)
+        else:
+            user_obj = self.fabric.state_registry.get_user_by_id(user_id)
 
         if channel_obj is None:
             self.logger.debug("ignoring TYPING_START by user %s in unknown channel %s", user_id, channel_id)
             return
-
-        if channel_obj.is_dm:
-            user_obj = self.fabric.state_registry.get_user_by_id(user_id)
-        else:
-            channel_obj = typing.cast(channels.GuildChannel, channel_obj)
-            user_obj = channel_obj.guild.members.get(user_id)
 
         if user_obj is None:
             self.logger.debug("ignoring TYPING_START by unknown user %s in channel %s", user_id, channel_id)

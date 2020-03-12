@@ -185,6 +185,7 @@ def test_guild_payload(
         "premium_subscription_count": 1,
         "preferred_locale": "en-GB",
         "system_channel_flags": 3,
+        "rules_channel_id": "42042069",
     }
 
 
@@ -257,6 +258,7 @@ class TestGuild:
         assert guild_obj.joined_at == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, datetime.timezone.utc)
         assert guild_obj.is_large is False
         assert guild_obj.is_unavailable is False
+        assert guild_obj.rules_channel_id == 42042069
         assert guild_obj.my_permissions == (
             permissions.Permission.USE_VAD
             | permissions.Permission.MOVE_MEMBERS
