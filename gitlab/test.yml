@@ -17,15 +17,14 @@
 
 include:
   - template: "Dependency-Scanning.gitlab-ci.yml"
-  - template: "SAST.gitlab-ci.yml"
   - template: "License-Scanning.gitlab-ci.yml"
 
-sast:
-  interruptible: true
-  retry: 2
-  variables:
-    SAST_BANDIT_EXCLUDED_PATHS: tests/*,docs/*,gitlab/*,insomnia/*,public/*,tasks/*,noxfile.py
-    SAST_EXCLUDED_PATHS: tests/*,docs/*,gitlab/*,insomnia/*,public/*,tasks/*,noxfile.py
+#sast:
+#  interruptible: true
+#  retry: 2
+#  variables:
+#    SAST_BANDIT_EXCLUDED_PATHS: tests/*,docs/*,gitlab/*,insomnia/*,public/*,tasks/*,noxfile.py
+#    SAST_EXCLUDED_PATHS: tests/*,docs/*,gitlab/*,insomnia/*,public/*,tasks/*,noxfile.py
 
 license_scanning:
   # Overly slow to run and not very important, so skip normally to get 5 minutes back on

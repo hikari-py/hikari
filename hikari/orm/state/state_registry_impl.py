@@ -610,8 +610,13 @@ class StateRegistryImpl(base_registry.BaseRegistry):
     def update_member_presence(
         self, member_obj: members.Member, presence_payload: typing.Dict
     ) -> typing.Optional[typing.Tuple[members.Member, presences.MemberPresence, presences.MemberPresence]]:
+
+        # We get premium_since and nick updates in this presence payload too.
+        member_obj.update_state(presence_payload)
+
         old_presence = member_obj.presence
         new_presence = self.parse_presence(member_obj, presence_payload)
+
         return member_obj, old_presence, new_presence
 
     def update_message(self, payload: typing.Dict) -> typing.Optional[typing.Tuple[messages.Message, messages.Message]]:
