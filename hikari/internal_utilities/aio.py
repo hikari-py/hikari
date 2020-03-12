@@ -29,7 +29,6 @@ __all__ = [
 
 import asyncio
 import dataclasses
-import functools
 import typing
 import weakref
 

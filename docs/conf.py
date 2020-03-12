@@ -27,14 +27,12 @@ Sphinx documentation configuration.
 import datetime
 import os
 import re
-import shutil
+import sys
+import textwrap
 import traceback
 import types
 
 import requests
-import sys
-import textwrap
-
 import sphinx_bootstrap_theme
 
 sys.path.insert(0, os.path.abspath(".."))
