@@ -1706,6 +1706,24 @@ class TestDispatchingEventAdapterImpl:
         dispatch_impl.assert_called_with(event_types.EventType.PRESENCE_UPDATE)
 
     @pytest.mark.asyncio
+    async def test_handle_typing_start_in_uncached_guild_does_not_dispatch_anything(
+        self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
+    ):
+        timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=None)
+        payload = {
+            "channel_id": "123",
+            "user_id": "456",
+            "timestamp": timestamp.isoformat(),
+            "guild_id": "10987",
+            "member": {...},
+        }
+
+        await adapter_impl.handle_typing_start(gateway_impl, payload)
+
+        dispatch_impl.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_handle_typing_start_in_uncached_channel_does_not_dispatch_anything(
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
@@ -1736,13 +1754,24 @@ class TestDispatchingEventAdapterImpl:
         self, adapter_impl, gateway_impl, dispatch_impl, fabric_impl
     ):
         timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
-        channel_obj = _helpers.mock_model(channels.GuildChannel, id=123, is_dm=False)
+        guild_obj = _helpers.mock_model(guilds.Guild, id=12345)
+        member_obj = _helpers.mock_model(members.Member, id=456)
+        channel_obj = _helpers.mock_model(channels.GuildChannel, id=123, guild_id=guild_obj.id)
         fabric_impl.state_registry.get_channel_by_id = mock.MagicMock(return_value=channel_obj)
-        payload = {"channel_id": str(channel_obj.id), "user_id": "456", "timestamp": timestamp.isoformat()}
+        fabric_impl.state_registry.get_guild_by_id = mock.MagicMock(return_value=guild_obj)
+        fabric_impl.state_registry.parse_member = mock.MagicMock(return_value=member_obj)
+        payload = {
+            "channel_id": str(channel_obj.id),
+            "user_id": "456",
+            "timestamp": timestamp.isoformat(),
+            "guild_id": "12345",
+            "member": {"nick": "blah"},
+        }
 
         await adapter_impl.handle_typing_start(gateway_impl, payload)
-
-        channel_obj.guild.members.get.assert_called_with(456)
+        fabric_impl.state_registry.get_channel_by_id.assert_called_once()
+        fabric_impl.state_registry.get_guild_by_id.assert_called_once()
+        fabric_impl.state_registry.parse_member.assert_called_once_with({"nick": "blah"}, guild_obj)
 
     @pytest.mark.asyncio
     async def test_handle_typing_start_in_non_guild_resolves_user(

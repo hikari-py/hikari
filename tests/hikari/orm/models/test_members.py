@@ -117,7 +117,9 @@ def test_Member_update_state(fabric_obj):
         },
     )
 
-    member_obj.update_state({"nick": "potato", "deaf": True, "mute": True, "roles": ["31123123", "5434534", "76654"], "premium_since": None})
+    member_obj.update_state(
+        {"nick": "potato", "deaf": True, "mute": True, "roles": ["31123123", "5434534", "76654"], "premium_since": None}
+    )
     assert member_obj.nick == "potato"
     assert member_obj.is_deaf is True
     assert member_obj.is_mute is True
