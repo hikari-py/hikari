@@ -64,8 +64,9 @@ class Status(bases.NamedEnumMixin, enum.Enum):
 
 
 class MemberPresence(bases.BaseModel):
-    """
-    The presence of a member. This includes their status and info on what they are doing currently.
+    """The presence of a member.
+
+    This includes their status and info on what they are doing currently.
     """
 
     __slots__ = ("activities", "status", "web_status", "desktop_status", "mobile_status")

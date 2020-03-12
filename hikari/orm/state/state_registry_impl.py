@@ -497,7 +497,7 @@ class StateRegistryImpl(base_registry.BaseRegistry):
         member_obj.presence = presence_obj
         return presence_obj
 
-    def parse_reaction(self, reaction_payload: typing.Dict, message_id: int, channel_id: int,) -> reactions.Reaction:
+    def parse_reaction(self, reaction_payload: typing.Dict, message_id: int, channel_id: int, ) -> reactions.Reaction:
         count = int(reaction_payload["count"]) if "count" in reaction_payload else 1
         emoji_obj = self.parse_emoji(reaction_payload["emoji"], None)
 
@@ -610,8 +610,13 @@ class StateRegistryImpl(base_registry.BaseRegistry):
     def update_member_presence(
         self, member_obj: members.Member, presence_payload: typing.Dict
     ) -> typing.Optional[typing.Tuple[members.Member, presences.MemberPresence, presences.MemberPresence]]:
+
+        # We get premium_since and nick updates in this presence payload too.
+        member_obj.update_state(presence_payload)
+
         old_presence = member_obj.presence
         new_presence = self.parse_presence(member_obj, presence_payload)
+
         return member_obj, old_presence, new_presence
 
     def update_message(self, payload: typing.Dict) -> typing.Optional[typing.Tuple[messages.Message, messages.Message]]:
