@@ -28,9 +28,9 @@
     - merge_requests
     - tags
 
-.generate-pages:
+.generate-pages-from-specific-branch:
   extends: .deploy-pages-activation
-  image: python:3.8.1
+  image: python:3.8.2
   stage: test
   script:
     - pip install requests
@@ -41,16 +41,30 @@
     - bash tasks/retry_aborts.sh nox -s documentation
     - rm ../public -rf && mkdir ../public
     - mv public "../public/${TARGET_BRANCH}"
+  only:
+    - master
+    - staging
+
 
 master-pages:
-  extends: .generate-pages
+  extends: .generate-pages-from-specific-branch
   variables:
     TARGET_BRANCH: master
 
 staging-pages:
-  extends: .generate-pages
+  extends: .generate-pages-from-specific-branch
   variables:
     TARGET_BRANCH: staging
+
+test-pages:
+  extends: .deploy-pages-activation
+  image: python:3.8.2
+  script:
+    - pip install requests nox
+    - bash tasks/retry_aborts.sh nox -s documentation
+  except:
+    - master
+    - staging
 
 pages:  # deploys the generated artifacts as pages
   extends: .deploy-pages-activation
