@@ -156,31 +156,32 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
 
     __slots__ = (
         "_fabric",
-        "shard_id",
         "afk_channel_id",
-        "owner_id",
-        "voice_region",
-        "system_channel_id",
-        "creator_application_id",
         "afk_timeout",
-        "preferred_locale",
-        "message_notification_level",
-        "explicit_content_filter_level",
-        "roles",
+        "channels",
+        "creator_application_id",
         "emojis",
-        "member_count",
-        "voice_states",
-        "mfa_level",
-        "my_permissions",
-        "joined_at",
+        "explicit_content_filter_level",
         "is_large",
         "is_unavailable",
-        "members",
-        "channels",
+        "joined_at",
         "max_members",
-        "premium_tier",
+        "member_count",
+        "members",
+        "message_notification_level",
+        "mfa_level",
+        "my_permissions",
+        "owner_id",
+        "preferred_locale",
         "premium_subscription_count",
+        "premium_tier",
+        "roles",
+        "rules_channel_id",
+        "shard_id",
         "system_channel_flags",
+        "system_channel_id",
+        "voice_region",
+        "voice_states",
     )
 
     __copy_by_ref__ = ("roles", "emojis", "members", "channels")
@@ -206,6 +207,12 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
     #:
     #: :type: :class:`int`
     system_channel_id: typing.Optional[int]
+
+    #: The channel ID for rules. This is only able to be specified for discoverable guilds.
+    #: If unset, or in a non-discoverable guild, this is `None`.
+    #:
+    #: :type: :class:`int`, optional
+    rules_channel_id: typing.Optional[int]
 
     #: The voice region.
     #:
@@ -370,6 +377,7 @@ class Guild(PartialGuild, bases.BaseModelWithFabric):
         self.premium_tier = transformations.try_cast(payload.get("premium_tier"), PremiumTier)
         self.premium_subscription_count = payload.get("premium_subscription_count", 0)
         self.system_channel_flags = transformations.try_cast(payload.get("system_channel_flags"), SystemChannelFlag)
+        self.rules_channel_id = transformations.try_cast(payload.get("rules_channel_id"), int)
 
 
 class SystemChannelFlag(enum.IntFlag):
