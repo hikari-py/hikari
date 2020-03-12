@@ -19,7 +19,7 @@
 """
 IO utilities.
 """
-__all__ = ["make_resource_seekable", "get_bytes_from_resource", "FileLikeT", "BytesLikeT"]
+__all__ = ["make_resource_seekable", "FileLikeT", "BytesLikeT"]
 
 import io
 import typing
@@ -42,29 +42,6 @@ def make_resource_seekable(resource) -> typing.Union[io.BytesIO, io.StringIO]:
         resource = io.BytesIO(resource.tobytes())
     elif isinstance(resource, str):
         resource = io.StringIO(resource)
-
-    return resource
-
-
-def get_bytes_from_resource(resource) -> bytes:
-    """
-    Take in any object that can be considered file-like and return the raw bytes data from it.
-    Supports any :class:`FileLikeT` type that isn't string based. Anything else is just returned.
-
-    Args:
-        resource:
-            The resource to get bytes from.
-
-    Returns:
-        The resulting :class:`bytes`.
-    """
-    if isinstance(resource, bytearray):
-        resource = bytes(resource)
-    elif isinstance(resource, memoryview):
-        resource = resource.tobytes()
-    #  Targets the io types found in FileLikeT and BytesLikeT
-    elif hasattr(resource, "read"):
-        resource = resource.read()
 
     return resource
 
