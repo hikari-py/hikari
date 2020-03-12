@@ -98,7 +98,7 @@ class ClientOptions:
     #: The gateway API version to use. This defaults to the most recent documented stable API version.
     gateway_version: versions.GatewayVersion = versions.GatewayVersion.STABLE
     #: The REST API version to use. This defaults to the most recent documented stable API version.
-    http_api_version: versions.HTTPAPIVersion = versions.HTTPAPIVersion.STABLE
+    http_api_version: versions.HTTPAPIVersion = versions.HTTPAPIVersion.V7
     #: The timeout to apply to individual HTTP requests. Any request that takes longer than this time period
     #: will be cancelled with an :class:`asyncio.TimeoutError`
     http_timeout: typing.Optional[float] = None
