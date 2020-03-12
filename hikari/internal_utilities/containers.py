@@ -20,107 +20,19 @@
 Custom data structures and constant values.
 """
 __all__ = [
-    "ObjectProxy",
-    "LRUDict",
     "EMPTY_SEQUENCE",
     "EMPTY_SET",
     "EMPTY_COLLECTION",
     "EMPTY_DICT",
-    "empty_generator",
 ]
 
 import types
 import typing
 
-from hikari.internal_utilities import assertions
-
 # If more than one empty-definition is used in the same context, the type checker will probably whinge, so we have
 # to keep separate types...
 HashableT = typing.TypeVar("HashableT", bound=typing.Hashable)
 ValueT = typing.TypeVar("ValueT")
-
-
-class ObjectProxy(typing.Generic[ValueT], typing.Dict[str, ValueT]):
-    """
-    A wrapper for a dict that enables accession, mutation, and deletion of valid key names as if they were attributes.
-
-    Example:
-        >>> o = ObjectProxy({"foo": 10, "bar": 20})
-        >>> print(o["foo"], o.bar)  # 10 20
-        >>> del o["foo"]
-        >>> o["bar"] = 69
-        >>> print(o)  # {"bar": 69}
-    """
-
-    __slots__ = ()
-
-    def __getattr__(self, key: str) -> ValueT:
-        return self[key]
-
-    def __setattr__(self, key: str, value: ValueT) -> None:
-        self[key] = value
-
-    def __delattr__(self, key: str) -> None:
-        del self[key]
-
-
-class LRUDict(typing.MutableMapping[HashableT, ValueT]):
-    """
-    A dict that stores a maximum number of items before the oldest is purged.
-    """
-
-    # This will not function correctly on non-CPython implementations of Python3.6, and any implementation of
-    # Python3.5 or older, as it makes the assumption that all dictionaries are ordered by default.
-
-    __slots__ = ("_lru_size", "_data")
-
-    def __init__(self, lru_size: int, dict_factory=dict) -> None:
-        assertions.assert_is_natural(lru_size)
-        self._data = dict_factory()
-        self._lru_size = lru_size
-
-    def __getitem__(self, key: HashableT) -> ValueT:
-        return self._data[key]
-
-    def __setitem__(self, key: HashableT, value: ValueT) -> None:
-        while len(self._data) >= self._lru_size:
-            self._data.popitem()
-        self._data[key] = value
-
-    def __delitem__(self, key: HashableT) -> None:
-        del self._data[key]
-
-    def __len__(self) -> int:
-        return len(self._data)
-
-    def __iter__(self) -> typing.Iterator[str]:
-        yield from self._data
-
-
-class DefaultImmutableMapping(typing.Mapping[HashableT, ValueT]):
-    """
-    A special type of immutable mapping that wraps a mapping of some sort and provides
-    an interface allowing either a stored or default value to be returned depending on
-    whether the query exists as a key or not.
-    """
-
-    __slots__ = ("_data", "_default")
-
-    def __init__(self, data: typing.Mapping[HashableT, ValueT], default: typing.Any):
-        self._data = types.MappingProxyType(data)
-        self._default = default
-
-    def __getitem__(self, item):
-        try:
-            return self._data[item]
-        except KeyError:
-            return self._default
-
-    def __len__(self) -> int:
-        return len(self._data)
-
-    def __iter__(self) -> typing.Iterator[HashableT]:
-        return iter(self._data)
 
 
 #: An immutable indexable container of elements with zero size.
@@ -131,7 +43,3 @@ EMPTY_SET: typing.AbstractSet = frozenset()
 EMPTY_COLLECTION: typing.Collection = tuple()
 #: An immutable ordered mapping of key elements to value elements with zero size.
 EMPTY_DICT: typing.Mapping = types.MappingProxyType({})
-
-
-#: A generator expression that is always exhausted and can never yield anything.
-empty_generator = (_ for _ in EMPTY_COLLECTION)
