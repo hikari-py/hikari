@@ -101,18 +101,20 @@ class Member(users.User, delegate_fabricated=True):
         self.update_state(payload)
 
     def update_state(self, payload: typing.Dict) -> None:
-        self.role_ids = [int(role_id) for role_id in payload.get("roles", containers.EMPTY_SEQUENCE)]
-        self.premium_since = transformations.nullable_cast(payload.get("premium_since"), dates.parse_iso_8601_ts)
-        self.nick = payload.get("nick")
-        self.is_deaf = payload.get("deaf", False)
-        self.is_mute = payload.get("mute", False)
+        if "roles" in payload:
+            self.role_ids = [int(role_id) for role_id in payload.get("roles", containers.EMPTY_SEQUENCE)]
 
-    def update_presence_state(self, presence_payload: typing.Dict = None) -> None:
-        user_id = presence_payload["user"]["id"]
-        assertions.assert_that(
-            int(user_id) == self.id, f"Presence object from User `{user_id}` doesn't match Member `{self.id}`."
-        )
-        self.presence = self._fabric.state_registry.parse_presence(self, presence_payload)
+        if "premium_since" in payload:
+            self.premium_since = transformations.nullable_cast(payload.get("premium_since"), dates.parse_iso_8601_ts)
+
+        if "nick" in payload:
+            self.nick = payload.get("nick")
+
+        if "deaf" in payload:
+            self.is_deaf = payload.get("deaf", False)
+
+        if "mute" in payload:
+            self.is_mute = payload.get("mute", False)
 
 
 #: A :class:`Member`, or an :class:`int`/:class:`str` ID of one.
