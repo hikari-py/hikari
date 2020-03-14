@@ -78,6 +78,9 @@ class Snowflake(HikariEntity, typing.SupportsInt):
         """The increment of Discord's system when this object was made."""
         return self.value & 0xFFF
 
+    def __hash__(self):
+        return self.value
+
     def __int__(self):
         return self.value
 
@@ -88,7 +91,7 @@ class Snowflake(HikariEntity, typing.SupportsInt):
         return str(self.value)
 
     def __eq__(self, other):
-        return isinstance(other, (int, typing.SupportsInt)) and int(other) == self.value
+        return isinstance(other, typing.SupportsInt) and int(other) == self.value
 
     def __lt__(self, other):
         return self.value < int(other)
@@ -97,7 +100,7 @@ class Snowflake(HikariEntity, typing.SupportsInt):
         return str(self.value)
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, hash=True)
 class UniqueEntity(HikariEntity):
     """An entity that has an integer ID of some sort."""
 
