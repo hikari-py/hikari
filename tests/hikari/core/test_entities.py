@@ -18,36 +18,9 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 
-import attr
-import cymock
 import pytest
 
 from hikari.core import entities
-
-
-class TestEntity:
-    def test_init_subclass_invokes_init_class(self):
-        class SubEntity(entities.Entity):
-            __init_class__ = cymock.MagicMock()
-
-        SubEntity.__init_class__.assert_called_once_with(entities.Entity._converter)
-
-    def test_serialize_unstructures_instance(self):
-        @attr.s(slots=True)
-        class SubEntity(entities.Entity):
-            a_number: int = attr.ib()
-            a_string: str = attr.ib()
-
-        instance = SubEntity(9, "18")
-        assert instance.serialize() == {"a_number": 9, "a_string": "18"}
-
-    def test_deserialize_structures_new_instance(self):
-        @attr.s(slots=True)
-        class SubEntity(entities.Entity):
-            a_number: int = attr.ib()
-            a_string: str = attr.ib()
-
-        assert SubEntity.deserialize({"a_number": 9, "a_string": "18"}) == SubEntity(9, "18")
 
 
 class TestSnowflake:
@@ -89,11 +62,3 @@ class TestSnowflake:
 
     def test_lt(self, neko_snowflake, raw_id):
         assert neko_snowflake < raw_id + 1
-
-
-class TestHashable:
-    def test_hashable_serializes_id_to_int(self):
-        assert entities.Hashable(entities.Snowflake(12)).serialize() == {"id": "12"}
-
-    def test_hashable_deserializes_id_to_int(self):
-        assert entities.Hashable.deserialize({"id": "12"}) == entities.Hashable(entities.Snowflake(12))

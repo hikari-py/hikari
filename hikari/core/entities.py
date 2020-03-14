@@ -19,59 +19,35 @@
 """Datastructure bases."""
 import datetime
 import functools
-
-import cattr
+import typing
 
 import attr
-import typing
 
 from hikari.internal_utilities import dates
 
+RawEntityT = typing.Union[
+    None, bool, int, float, str, bytes, typing.Sequence[typing.Any], typing.Mapping[str, typing.Any]
+]
 
-class HikariConverter(cattr.Converter):
-    pass
+T_conta = typing.TypeVar("T_contra", contravariant=True)
 
 
-class Entity:
-    """A model entity."""
-
+# DO NOT ADD ATTRIBUTES TO THIS CLASS.
+@attr.s(slots=True)
+class HikariEntity:
     __slots__ = ()
-    _converter = HikariConverter()
 
+
+# DO NOT ADD ATTRIBUTES TO THIS CLASS.
+@attr.s(slots=True)
+class Deserializable:
     @classmethod
-    def __init_class__(cls, converter: cattr.Converter):
-        ...
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__()
-        cls.__init_class__(cls._converter)
-
-    def serialize(self):
-        """
-        Returns
-        -------
-
-        A JSON-compatible representation of this object.
-        """
-        return self._converter.unstructure(self)
-
-    @classmethod
-    def deserialize(cls, payload):
-        """
-        Parameters
-        ----------
-        payload:
-            The payload to deserialize.
-
-        Returns
-        -------
-        The structured object.
-        """
-        return cls._converter.structure(payload, cls)
+    def deserialize(cls: typing.Type[T_conta], payload: RawEntityT) -> T_conta:
+        raise NotImplementedError()
 
 
 @functools.total_ordering
-class Snowflake(Entity, typing.SupportsInt):
+class Snowflake(HikariEntity, typing.SupportsInt):
     """A concrete representation of a unique identifier for an object on
     Discord.
     """
@@ -80,12 +56,6 @@ class Snowflake(Entity, typing.SupportsInt):
 
     def __init__(self, value: typing.Union[int, str]) -> None:
         self.value = int(value)
-
-    @classmethod
-    def __init_class__(cls, converter):
-        converter.register_structure_hook(cls, lambda data, t: t(data))
-        converter.register_unstructure_hook(cls, str)
-        ...
 
     @property
     def created_at(self) -> datetime.datetime:
@@ -123,9 +93,12 @@ class Snowflake(Entity, typing.SupportsInt):
     def __lt__(self, other):
         return self.value < int(other)
 
+    def serialize(self) -> str:
+        return str(self.value)
+
 
 @attr.s(slots=True)
-class Hashable(Entity):
+class UniqueEntity(HikariEntity):
     """An entity that has an integer ID of some sort."""
 
     id: Snowflake = attr.ib(hash=True, eq=True, repr=True)

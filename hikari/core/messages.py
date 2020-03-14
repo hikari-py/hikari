@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright © Nekoka.tt 2019-2020
+#
+# This file is part of Hikari.
+#
+# Hikari is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Hikari is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import attr
+
+from hikari.core import entities
+
+
+@attr.s(slots=True)
+class Message(entities.UniqueEntity, entities.Deserializable):
+    ...
+
+
+@attr.s(slots=True)
+class Attachment(entities.UniqueEntity, entities.Deserializable):
+    ...
+
+
+@attr.s(slots=True)
+class Embed(entities.HikariEntity, entities.Deserializable):
+    ...
+
+
+@attr.s(slots=True)
+class Emoji(entities.HikariEntity, entities.Deserializable):
+    ...
+
+
+@attr.s(slots=True)
+class UnicodeEmoji(Emoji, entities.Deserializable):
+    ...
+
+
+@attr.s(slots=False)
+class CustomEmoji(entities.UniqueEntity, Emoji, entities.Deserializable):
+    ...
+
+
+@attr.s(slots=True)
+class Reaction(entities.HikariEntity, entities.Deserializable):
+    ...
