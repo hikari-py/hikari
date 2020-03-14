@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,12 +16,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""The core API for interacting with Discord directly."""
-from . import channels
-from . import entities
-from . import events
-from . import gateway_bot
-from . import guilds
-from . import invites
-from . import messages
-from . import users
+import attr
+
+from hikari.core import entities
+
+
+@attr.s(slots=True)
+class User(entities.UniqueEntity, entities.Deserializable):
+    ...
+
+
+@attr.s(slots=True)
+class MyUser(User):
+    ...
