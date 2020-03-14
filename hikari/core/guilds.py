@@ -23,7 +23,7 @@ from hikari.core import users
 
 
 @attr.s(slots=True)
-class Guild(entities.UniqueEntity,entities.Deserializable):
+class Guild(entities.UniqueEntity, entities.Deserializable):
     ...
 
 
