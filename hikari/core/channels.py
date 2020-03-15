@@ -16,18 +16,15 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+__all__ = ["Channel", "DMChannel", "GroupDMChannel"]
+
 import attr
 
-from hikari.core import entities
+from hikari.core import snowflakes
 
 
 @attr.s(slots=True)
-class Channel(entities.UniqueEntity):
-    ...
-
-
-@attr.s(slots=False)
-class TextChannel(Channel):
+class Channel(snowflakes.UniqueEntity):
     ...
 
 
@@ -38,34 +35,4 @@ class DMChannel(Channel):
 
 @attr.s(slots=False)
 class GroupDMChannel(DMChannel):
-    ...
-
-
-@attr.s(slots=False)
-class GuildChannel(Channel):
-    ...
-
-
-@attr.s(slots=False)
-class GuildTextChannel(GuildChannel, TextChannel):
-    ...
-
-
-@attr.s(slots=False)
-class GuildVoiceChannel(GuildChannel):
-    ...
-
-
-@attr.s(slots=False)
-class GuildCategory(GuildChannel):
-    ...
-
-
-@attr.s(slots=False)
-class GuildStoreChannel(GuildChannel):
-    ...
-
-
-@attr.s(slots=False)
-class GuildNewsChannel(GuildChannel, TextChannel):
     ...

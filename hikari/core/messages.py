@@ -16,41 +16,40 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+
+__all__ = ["Message", "Attachment", "Embed", "Emoji", "UnicodeEmoji", "Reaction"]
+
 import attr
 
 from hikari.core import entities
+from hikari.core import snowflakes
 
 
 @attr.s(slots=True)
-class Message(entities.UniqueEntity, entities.Deserializable):
+class Message(snowflakes.UniqueEntity):
     ...
 
 
 @attr.s(slots=True)
-class Attachment(entities.UniqueEntity, entities.Deserializable):
+class Attachment(snowflakes.UniqueEntity):
     ...
 
 
 @attr.s(slots=True)
-class Embed(entities.HikariEntity, entities.Deserializable):
+class Embed(entities.HikariEntity):
     ...
 
 
 @attr.s(slots=True)
-class Emoji(entities.HikariEntity, entities.Deserializable):
+class Emoji(entities.HikariEntity):
     ...
 
 
 @attr.s(slots=True)
-class UnicodeEmoji(Emoji, entities.Deserializable):
-    ...
-
-
-@attr.s(slots=False)
-class CustomEmoji(entities.UniqueEntity, Emoji, entities.Deserializable):
+class UnicodeEmoji(Emoji):
     ...
 
 
 @attr.s(slots=True)
-class Reaction(entities.HikariEntity, entities.Deserializable):
+class Reaction(entities.HikariEntity):
     ...

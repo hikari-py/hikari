@@ -17,6 +17,52 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
+__all__ = [
+    "HikariEvent",
+    "ConnectedEvent",
+    "DisconnectedEvent",
+    "ReconnectedEvent",
+    "StartedEvent",
+    "StoppingEvent",
+    "StoppedEvent",
+    "ReadyEvent",
+    "ResumedEvent",
+    "ChannelCreateEvent",
+    "ChannelUpdateEvent",
+    "ChannelDeleteEvent",
+    "ChannelPinAddEvent",
+    "ChannelPinRemoveEvent",
+    "GuildCreateEvent",
+    "GuildUpdateEvent",
+    "GuildDeleteEvent",
+    "GuildBanAddEvent",
+    "GuildBanRemoveEvent",
+    "GuildEmojisUpdateEvent",
+    "GuildIntegrationsUpdateEvent",
+    "GuildMemberAddEvent",
+    "GuildMemberUpdateEvent",
+    "GuildMemberRemoveEvent",
+    "GuildRoleCreateEvent",
+    "GuildRoleUpdateEvent",
+    "GuildRoleDeleteEvent",
+    "InviteCreateEvent",
+    "InviteDeleteEvent",
+    "MessageCreateEvent",
+    "MessageUpdateEvent",
+    "MessageDeleteEvent",
+    "MessageDeleteBulkEvent",
+    "MessageReactionAddEvent",
+    "MessageReactionRemoveEvent",
+    "MessageReactionRemoveAllEvent",
+    "MessageReactionRemoveEmojiEvent",
+    "PresenceUpdateEvent",
+    "TypingStartEvent",
+    "UserUpdateEvent",
+    "VoiceStateUpdateEvent",
+    "VoiceServerUpdateEvent",
+    "WebhookUpdate",
+]
+
 import typing
 
 import attr
@@ -70,7 +116,7 @@ class StoppedEvent(HikariEvent):
 
 
 @attr.s(slots=True, auto_attribs=True)
-class ReadyEvent(HikariEvent, entities.Deserializable):
+class ReadyEvent(HikariEvent):
     v: int
     user: users.User
     guilds: guilds_.Guild
@@ -80,175 +126,175 @@ class ReadyEvent(HikariEvent, entities.Deserializable):
 
 
 @attr.s(slots=True, auto_attribs=True)
-class ResumedEvent(HikariEvent, entities.Deserializable):
+class ResumedEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class ChannelCreateEvent(HikariEvent, entities.Deserializable):
+class ChannelCreateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class ChannelUpdateEvent(HikariEvent, entities.Deserializable):
+class ChannelUpdateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class ChannelDeleteEvent(HikariEvent, entities.Deserializable):
+class ChannelDeleteEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class ChannelPinAddEvent(HikariEvent, entities.Deserializable):
+class ChannelPinAddEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class ChannelPinRemoveEvent(HikariEvent, entities.Deserializable):
+class ChannelPinRemoveEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class GuildCreateEvent(HikariEvent, entities.Deserializable):
+class GuildCreateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class GuildUpdateEvent(HikariEvent, entities.Deserializable):
+class GuildUpdateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class GuildDeleteEvent(HikariEvent, entities.Deserializable):
+class GuildDeleteEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class GuildBanAddEvent(HikariEvent, entities.Deserializable):
+class GuildBanAddEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class GuildBanRemoveEvent(HikariEvent, entities.Deserializable):
+class GuildBanRemoveEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class GuildEmojisUpdateEvent(HikariEvent, entities.Deserializable):
+class GuildEmojisUpdateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class GuildIntegrationsUpdateEvent(HikariEvent, entities.Deserializable):
+class GuildIntegrationsUpdateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class GuildMemberAddEvent(HikariEvent, entities.Deserializable):
+class GuildMemberAddEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class GuildMemberRemoveEvent(HikariEvent, entities.Deserializable):
+class GuildMemberRemoveEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class GuildMemberUpdateEvent(HikariEvent, entities.Deserializable):
+class GuildMemberUpdateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class GuildRoleCreateEvent(HikariEvent, entities.Deserializable):
+class GuildRoleCreateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class GuildRoleUpdateEvent(HikariEvent, entities.Deserializable):
+class GuildRoleUpdateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class GuildRoleDeleteEvent(HikariEvent, entities.Deserializable):
+class GuildRoleDeleteEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class InviteCreateEvent(HikariEvent, entities.Deserializable):
+class InviteCreateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class InviteDeleteEvent(HikariEvent, entities.Deserializable):
+class InviteDeleteEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class MessageCreateEvent(HikariEvent, entities.Deserializable):
+class MessageCreateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class MessageUpdateEvent(HikariEvent, entities.Deserializable):
+class MessageUpdateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class MessageDeleteEvent(HikariEvent, entities.Deserializable):
+class MessageDeleteEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class MessageDeleteBulkEvent(HikariEvent, entities.Deserializable):
+class MessageDeleteBulkEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class MessageReactionAddEvent(HikariEvent, entities.Deserializable):
+class MessageReactionAddEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class MessageReactionRemoveEvent(HikariEvent, entities.Deserializable):
+class MessageReactionRemoveEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class MessageReactionRemoveAllEvent(HikariEvent, entities.Deserializable):
+class MessageReactionRemoveAllEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class MessageReactionRemoveEmojiEvent(HikariEvent, entities.Deserializable):
+class MessageReactionRemoveEmojiEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class PresenceUpdateEvent(HikariEvent, entities.Deserializable):
+class PresenceUpdateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class TypingStartEvent(HikariEvent, entities.Deserializable):
+class TypingStartEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class UserUpdateEvent(HikariEvent, entities.Deserializable):
+class UserUpdateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class VoiceStateUpdateEvent(HikariEvent, entities.Deserializable):
+class VoiceStateUpdateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class VoiceServerUpdateEvent(HikariEvent, entities.Deserializable):
+class VoiceServerUpdateEvent(HikariEvent):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class WebhookUpdate(HikariEvent, entities.Deserializable):
+class WebhookUpdate(HikariEvent):
     ...

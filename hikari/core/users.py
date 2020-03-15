@@ -16,13 +16,15 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+__all__ = ["User", "MyUser"]
+
 import attr
 
-from hikari.core import entities
+from hikari.core import snowflakes
 
 
 @attr.s(slots=True)
-class User(entities.UniqueEntity, entities.Deserializable):
+class User(snowflakes.UniqueEntity):
     ...
 
 

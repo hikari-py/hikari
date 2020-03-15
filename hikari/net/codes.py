@@ -23,6 +23,7 @@ __all__ = ["HTTPStatusCode", "GatewayCloseCode", "GatewayOpcode", "JSONErrorCode
 
 import enum
 
+
 # Doesnt work correctly with enums, so since this file is all enums, ignore
 # pylint: disable=no-member
 class HTTPStatusCode(enum.IntEnum):

@@ -24,4 +24,19 @@ from . import gateway_bot
 from . import guilds
 from . import invites
 from . import messages
+from . import oauth2
+from . import permissions
+from . import snowflakes
 from . import users
+
+from .channels import *
+from .entities import *
+from .events import *
+from .gateway_bot import *
+from .guilds import *
+from .invites import *
+from .messages import *
+from .oauth2 import *
+from .permissions import *
+from .snowflakes import *
+from .users import *
