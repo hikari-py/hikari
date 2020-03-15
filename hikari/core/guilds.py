@@ -18,9 +18,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe guilds on Discord.
 """
-from __future__ import annotations
-
-
 __all__ = [
     "GuildEmoji",
     "GuildChannel",
