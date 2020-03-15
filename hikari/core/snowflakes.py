@@ -26,8 +26,6 @@ import datetime
 import functools
 import typing
 
-import attr
-
 from hikari.core import entities
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import marshaller

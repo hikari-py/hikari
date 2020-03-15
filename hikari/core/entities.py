@@ -43,6 +43,7 @@ class Deserializable:
     """A mixin for any type that allows deserialization from a raw value
     into a Hikari entity.
     """
+
     __slots__ = ()
 
     @classmethod
@@ -54,6 +55,7 @@ class Serializable:
     """A mixin for any type that allows serialization from a Hikari entity
     into a raw value.
     """
+
     __slots__ = ()
 
     def serialize(self: T_co) -> RawEntityT:
