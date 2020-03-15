@@ -20,8 +20,6 @@ from __future__ import annotations
 
 from timeit import timeit
 
-from hikari.core import guilds
-
 import pytest
 
 
@@ -184,11 +182,3 @@ def test_guild_payload(
         "system_channel_flags": 3,
         "rules_channel_id": "42042069",
     }
-
-
-class TestGuildMarshalling:
-    def test_deserialize_guild(self, test_guild_payload):
-        # TODO: this
-        scope = {**globals()}
-        scope.update(locals())
-        print(timeit("guilds.Guild.deserialize(test_guild_payload)", globals=scope, number=100_000) / 100_000)
