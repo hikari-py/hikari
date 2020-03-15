@@ -35,12 +35,16 @@ class TestAttribPep563:
         deserializer = lambda _: _
         serializer = lambda _: _
 
+        mock_default_factory_1 = mock.MagicMock
+        mock_default_factory_2 = mock.MagicMock
+
         with mock.patch("attr.ib") as attrib:
             marshaller.attrib(
                 deserializer=deserializer,
                 raw_name="foo",
+                if_none=mock_default_factory_1,
+                if_undefined=mock_default_factory_2,
                 transient=False,
-                optional=True,
                 serializer=serializer,
                 foo=12,
                 bar="hello, world",
@@ -54,7 +58,8 @@ class TestAttribPep563:
                     marshaller._SERIALIZER_ATTR: serializer,
                     marshaller._DESERIALIZER_ATTR: deserializer,
                     marshaller._TRANSIENT_ATTR: False,
-                    marshaller._OPTIONAL_ATTR: True,
+                    marshaller._IF_UNDEFINED: mock_default_factory_2,
+                    marshaller._IF_NONE: mock_default_factory_1,
                 },
             )
 
@@ -100,33 +105,89 @@ class TestMarshallerPep563:
         assert result.id == deserialized_id
         assert result.some_list == ["True", "False", "foo", "12", "3.4"]
 
-    def test_deserialize_optional_success_if_specified(self, marshaller_impl):
+    def test_deserialize_not_required_success_if_specified(self, marshaller_impl):
         @marshaller.attrs(marshaller=marshaller_impl)
         class User:
-            id: int = marshaller.attrib(optional=True, deserializer=str)
+            id: int = marshaller.attrib(if_undefined=None, deserializer=str)
 
-        result = marshaller_impl.deserialize({"id": 12345,}, User)
+        result = marshaller_impl.deserialize({"id": 12345}, User)
 
         assert isinstance(result, User)
         assert result.id == "12345"
 
-    def test_deserialize_optional_success_if_not_specified(self, marshaller_impl):
+    def test_deserialize_not_required_success_if_not_specified(self, marshaller_impl):
         @marshaller.attrs(marshaller=marshaller_impl)
         class User:
-            id: int = marshaller.attrib(optional=True, deserializer=str)
+            id: int = marshaller.attrib(if_undefined=None, deserializer=str)
 
-        result = marshaller_impl.deserialize({"id": None,}, User)
+        result = marshaller_impl.deserialize({}, User)
 
         assert isinstance(result, User)
         assert result.id is None
 
-    @_helpers.assert_raises(type_=AttributeError)
-    def test_deserialize_fail_on_None_if_not_optional(self, marshaller_impl):
+    def test_deserialize_calls_if_undefined_if_not_none_and_field_not_present(self, marshaller_impl):
+        mock_result = mock.MagicMock()
+        mock_callable = mock.MagicMock(return_value=mock_result)
+
         @marshaller.attrs(marshaller=marshaller_impl)
         class User:
-            id: int = marshaller.attrib(optional=False, deserializer=str)
+            id: int = marshaller.attrib(if_undefined=mock_callable, deserializer=str)
 
-        marshaller_impl.deserialize({"id": None,}, User)
+        result = marshaller_impl.deserialize({}, User)
+
+        assert isinstance(result, User)
+        assert result.id is mock_result
+        mock_callable.assert_called_once()
+
+    @_helpers.assert_raises(type_=AttributeError)
+    def test_deserialize_fail_on_unspecified_if_required(self, marshaller_impl):
+        @marshaller.attrs(marshaller=marshaller_impl)
+        class User:
+            id: int = marshaller.attrib(deserializer=str)
+
+        marshaller_impl.deserialize({}, User)
+
+    def test_deserialize_nullable_success_if_not_null(self, marshaller_impl):
+        @marshaller.attrs(marshaller=marshaller_impl)
+        class User:
+            id: int = marshaller.attrib(if_none=None, deserializer=str)
+
+        result = marshaller_impl.deserialize({"id": 12345}, User)
+
+        assert isinstance(result, User)
+        assert result.id == "12345"
+
+    def test_deserialize_nullable_success_if_null(self, marshaller_impl):
+        @marshaller.attrs(marshaller=marshaller_impl)
+        class User:
+            id: int = marshaller.attrib(if_none=None, deserializer=str)
+
+        result = marshaller_impl.deserialize({"id": None}, User)
+
+        assert isinstance(result, User)
+        assert result.id is None
+
+    def test_deserialize_calls_if_none_if_not_none_and_data_is_none(self, marshaller_impl):
+        mock_result = mock.MagicMock()
+        mock_callable = mock.MagicMock(return_value=mock_result)
+
+        @marshaller.attrs(marshaller=marshaller_impl)
+        class User:
+            id: int = marshaller.attrib(if_none=mock_callable, deserializer=str)
+
+        result = marshaller_impl.deserialize({"id": None}, User)
+
+        assert isinstance(result, User)
+        assert result.id is mock_result
+        mock_callable.assert_called_once()
+
+    @_helpers.assert_raises(type_=AttributeError)
+    def test_deserialize_fail_on_None_if_not_nullable(self, marshaller_impl):
+        @marshaller.attrs(marshaller=marshaller_impl)
+        class User:
+            id: int = marshaller.attrib(deserializer=str)
+
+        marshaller_impl.deserialize({"id": None}, User)
 
     @_helpers.assert_raises(type_=TypeError)
     def test_deserialize_fail_on_Error(self, marshaller_impl):

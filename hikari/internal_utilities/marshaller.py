@@ -34,9 +34,12 @@ _RAW_NAME_ATTR = __name__ + "_RAW_NAME"
 _SERIALIZER_ATTR = __name__ + "_SERIALIZER"
 _DESERIALIZER_ATTR = __name__ + "_DESERIALIZER"
 _TRANSIENT_ATTR = __name__ + "_TRANSIENT"
-_OPTIONAL_ATTR = __name__ + "_OPTIONAL"
+_IF_UNDEFINED = __name__ + "IF_UNDEFINED"
+_IF_NONE = __name__ + "_IF_NONE"
 
 MARSHALLER_META_ATTR = "__hikari_marshaller_meta_attr__"
+
+RAISE = object()
 
 EntityT = typing.TypeVar("EntityT", contravariant=True)
 
@@ -50,9 +53,10 @@ def attrib(
     # type hints, the library loses the ability to be type checked properly
     # anymore, so we have to pass this explicitly regardless.
     deserializer: typing.Callable[[typing.Any], typing.Any],
+    if_none: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)] = RAISE,
+    if_undefined: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)] = RAISE,
     raw_name: typing.Optional[str] = None,
     transient: bool = False,
-    optional: bool = False,
     serializer: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
     **kwargs,
 ) -> typing.Any:
@@ -68,10 +72,16 @@ def attrib(
     transient : :obj:`bool`
         If True, the field is marked as transient, meaning it will not be
         serialized. Defaults to False.
-    optional : :obj:`bool`
-        If True, the field is marked as being allowed to be `None`. If a field
-        is not optional, and a `None` value is passed to it later on, then
-        an exception will be raised.
+    if_none : :obj:`typing.Union` [ :obj:`typing.Callable` [ ... , :obj:`typing.Any` ], :obj:`None` ], optional
+        Either a default factory function called to get the default for when
+        this field is `None` or `None` to specify that this should default
+        to `None`. Will raise an exception when `None` is received for this
+        field later if this isn't specified.
+    if_undefined : :obj:`typing.Union` [ :obj:`typing.Callable` [  ... , :obj:`typing.Any` ], :obj:`None` ], optional
+        Either a default factory function called to get the default for when
+        this field isn't defined or `None` to specify that this should default
+        to `None`. Will raise an exception when this field is undefined later
+        on if this isn't specified.
     serializer : :obj:`typing.Callable` [ [ :obj:`typing.Any` ], :obj:`typing.Any` ], optional
         The serializer to use. If not specified, then serializing the entire
         class that this attribute is in will trigger a :class:`TypeError`
@@ -89,8 +99,9 @@ def attrib(
     metadata[_RAW_NAME_ATTR] = raw_name
     metadata[_SERIALIZER_ATTR] = serializer
     metadata[_DESERIALIZER_ATTR] = deserializer
+    metadata[_IF_NONE] = if_none
+    metadata[_IF_UNDEFINED] = if_undefined
     metadata[_TRANSIENT_ATTR] = transient
-    metadata[_OPTIONAL_ATTR] = optional
     return attr.ib(**kwargs)
 
 
@@ -102,20 +113,22 @@ def _no_serialize(name):
 
 
 class _AttributeDescriptor:
-    __slots__ = ("raw_name", "field_name", "is_optional", "is_transient", "deserializer", "serializer")
+    __slots__ = ("raw_name", "field_name", "if_none", "if_undefined", "is_transient", "deserializer", "serializer")
 
     def __init__(
         self,
         raw_name: str,
         field_name: str,
-        is_optional: bool,
+        if_none: typing.Callable[..., typing.Any],
+        if_undefined: typing.Callable[..., typing.Any],
         is_transient: bool,
         deserializer: typing.Callable[[typing.Any], typing.Any],
         serializer: typing.Callable[[typing.Any], typing.Any],
     ) -> None:
         self.raw_name = raw_name
         self.field_name = field_name
-        self.is_optional = is_optional
+        self.if_none = if_none
+        self.if_undefined = if_undefined
         self.is_transient = is_transient  # Do not serialize
         self.deserializer = deserializer
         self.serializer = serializer
@@ -136,7 +149,8 @@ def _construct_attribute_descriptor(field: attr.Attribute) -> _AttributeDescript
     return _AttributeDescriptor(
         raw_name=raw_name,
         field_name=field_name,
-        is_optional=field.metadata[_OPTIONAL_ATTR],
+        if_none=field.metadata[_IF_NONE],
+        if_undefined=field.metadata[_IF_UNDEFINED],
         is_transient=field.metadata[_TRANSIENT_ATTR],
         deserializer=field.metadata[_DESERIALIZER_ATTR],
         serializer=field.metadata[_SERIALIZER_ATTR] or _no_serialize(field_name),
@@ -219,17 +233,30 @@ class HikariEntityMarshaller:
         kwargs = {}
 
         for a in descriptor.attribs:
-            if a.raw_name not in raw_data or raw_data[a.raw_name] is None:
-                if not a.is_optional:
+            if a.raw_name not in raw_data:
+                if a.if_undefined is RAISE:
                     raise AttributeError(
-                        f"Non-optional field {a.field_name} (from raw {a.raw_name}) is not specified in the input "
+                        f"Required field {a.field_name} (from raw {a.raw_name}) is not specified in the input "
                         f"payload\n\n{raw_data}"
                     )
-                kwargs[a.field_name] = None
+                elif a.if_undefined:
+                    kwargs[a.field_name] = a.if_undefined()
+                else:
+                    kwargs[a.field_name] = None
+                continue
+            elif (data := raw_data[a.raw_name]) is None:
+                if a.if_none is RAISE:
+                    raise AttributeError(
+                        f"Non-nullable field {a.field_name} (from raw {a.raw_name}) is `None` in the input "
+                        f"payload\n\n{raw_data}"
+                    )
+                elif a.if_none:
+                    kwargs[a.field_name] = a.if_none()
+                else:
+                    kwargs[a.field_name] = None
                 continue
 
             try:
-                data = raw_data[a.raw_name]
                 # Use the deserializer if it is there, otherwise use the constructor of the type of the field.
                 kwargs[a.field_name] = a.deserializer(data) if a.deserializer else data
             except Exception:
