@@ -17,12 +17,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Datastructure bases."""
-__all__ = ["HikariEntity", "ISerializable", "IDeserializable", "RawEntityT"]
+__all__ = ["HikariEntity", "Serializable", "Deserializable", "RawEntityT"]
 
 import abc
 import typing
 
-import attr
+from hikari.internal_utilities import marshaller
 
 RawEntityT = typing.Union[
     None, bool, int, float, str, bytes, typing.Sequence[typing.Any], typing.Mapping[str, typing.Any]
@@ -32,27 +32,29 @@ T_contra = typing.TypeVar("T_contra", contravariant=True)
 T_co = typing.TypeVar("T_co", covariant=True)
 
 
-@attr.s(slots=True)
+@marshaller.attrs(slots=True)
 class HikariEntity(metaclass=abc.ABCMeta):
     """The base for any entity used in this API."""
 
     __slots__ = ()
 
 
-class IDeserializable(typing.Protocol):
-    """An interface for any type that allows deserialization from a raw value
+class Deserializable:
+    """A mixin for any type that allows deserialization from a raw value
     into a Hikari entity.
     """
+    __slots__ = ()
 
     @classmethod
     def deserialize(cls: typing.Type[T_contra], payload: RawEntityT) -> T_contra:
-        ...
+        return marshaller.HIKARI_ENTITY_MARSHALLER.deserialize(payload, cls)
 
 
-class ISerializable(typing.Protocol):
-    """An interface for any type that allows serialization from a Hikari entity
+class Serializable:
+    """A mixin for any type that allows serialization from a Hikari entity
     into a raw value.
     """
+    __slots__ = ()
 
     def serialize(self: T_co) -> RawEntityT:
-        ...
+        return marshaller.HIKARI_ENTITY_MARSHALLER.serialize(self)

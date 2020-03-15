@@ -29,8 +29,8 @@ import typing
 import attr
 
 from hikari.core import entities
-from hikari.core.entities import HikariEntity
 from hikari.internal_utilities import dates
+from hikari.internal_utilities import marshaller
 
 
 @functools.total_ordering
@@ -99,11 +99,11 @@ class Snowflake(entities.HikariEntity, typing.SupportsInt):
         return cls(value)
 
 
-@attr.s(slots=True)
-class UniqueEntity(HikariEntity):
+@marshaller.attrs(slots=True)
+class UniqueEntity(entities.HikariEntity):
     """An entity that has an integer ID of some sort."""
 
     #: The ID of this entity.
     #:
     #: :type: :class:`Snowflake`
-    id: Snowflake = attr.ib(hash=True, eq=True, repr=True)
+    id: Snowflake = marshaller.attrib(hash=True, eq=True, repr=True, deserializer=Snowflake, serializer=str)

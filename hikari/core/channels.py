@@ -28,11 +28,11 @@ class Channel(snowflakes.UniqueEntity):
     ...
 
 
-@attr.s(slots=False)
+@attr.s(slots=True)
 class DMChannel(Channel):
     ...
 
 
-@attr.s(slots=False)
+@attr.s(slots=True)
 class GroupDMChannel(DMChannel):
     ...
