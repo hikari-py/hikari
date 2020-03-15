@@ -34,7 +34,6 @@ import typing
 HashableT = typing.TypeVar("HashableT", bound=typing.Hashable)
 ValueT = typing.TypeVar("ValueT")
 
-
 #: An immutable indexable container of elements with zero size.
 EMPTY_SEQUENCE: typing.Sequence = tuple()
 #: An immutable unordered container of elements with zero size.

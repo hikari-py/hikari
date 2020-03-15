@@ -16,11 +16,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+__all__ = ["Invite"]
+
 import attr
 
 from hikari.core import entities
 
 
 @attr.s(slots=True)
-class Invite(entities.HikariEntity, entities.Deserializable):
+class Invite(entities.HikariEntity):
     ...

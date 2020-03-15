@@ -16,16 +16,18 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+__all__ = ["GatewayBot"]
+
 import attr
 
 from hikari.core import entities
 
 
 @attr.s(slots=True, auto_attribs=True)
-class GatewayBot(entities.HikariEntity, entities.Deserializable):
+class GatewayBot(entities.HikariEntity):
     ...
 
 
 @attr.s(slots=True, auto_attribs=True)
-class SessionStartLimit(entities.HikariEntity, entities.Deserializable):
+class SessionStartLimit(entities.HikariEntity):
     ...

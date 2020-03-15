@@ -27,13 +27,11 @@ import inspect
 import os
 import typing
 
-
 ReturnT = typing.TypeVar("ReturnT")
 ClassT = typing.TypeVar("ClassT")
 CallT = typing.Callable[..., ReturnT]
 CachedFunctionT = typing.Callable[..., ReturnT]
 CachedPropertyFunctionT = typing.Callable[[ClassT], ReturnT]
-
 
 # Hacky workaround to Sphinx being unable to document cached properties. We simply make the
 # decorators return their inputs when this is True.

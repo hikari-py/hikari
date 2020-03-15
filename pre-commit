@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Put this in .git/hooks to make sure 'black' runs every time you commit.
+
+nox -sformat
