@@ -20,11 +20,13 @@ __all__ = ["User", "MyUser"]
 
 import attr
 
+from hikari.core import entities
 from hikari.core import snowflakes
+from hikari.internal_utilities import marshaller
 
 
-@attr.s(slots=True)
-class User(snowflakes.UniqueEntity):
+@marshaller.attrs()
+class User(snowflakes.UniqueEntity, entities.Deserializable):
     ...
 
 

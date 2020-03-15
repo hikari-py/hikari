@@ -123,3 +123,7 @@ def image_bytes_to_image_data(img_bytes: bytes) -> typing.Optional[str]:
     image_data = base64.b64encode(img_bytes).decode()
 
     return f"data:{img_type};base64,{image_data}"
+
+
+def try_cast_or_defer_unary_operator(type_):
+    return lambda data: try_cast(data, type_, data)
