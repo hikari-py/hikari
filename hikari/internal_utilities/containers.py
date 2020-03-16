@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Custom data structures and constant values.
-"""
+"""Custom data structures and constant values."""
 __all__ = [
     "EMPTY_SEQUENCE",
     "EMPTY_SET",

@@ -16,10 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Provides a base utility class for any component needing an HTTP session that supports
-proxying, SSL configuration, and a standard easy-to-use interface.
-"""
+"""Provides a base utility class for any component needing an HTTP session 
+that supports proxying, SSL configuration, and a standard easy-to-use interface."""
 __all__ = ["BaseHTTPClient"]
 
 import abc
@@ -37,27 +35,32 @@ from hikari.net import user_agent
 
 
 class BaseHTTPClient(abc.ABC):
-    """
-    Base utility class for any component which uses an HTTP session. Each instance represents a
-    session. This class handles consuming and managing optional settings such as retries, proxies,
-    and SSL customisation if desired.
+    """Base utility class for any component which uses an HTTP session.
+    
+    Each instance represents a session. This class handles consuming and managing 
+    optional settings such as retries, proxies, and SSL customisation if desired.
 
+    Examples
+    --------
     This can be used in a context manager:
 
-    >>> class HTTPClientImpl(BaseHTTPClient):
-    ...     def __init__(self, *args, **kwargs):
-    ...         super().__init__(*args, **kwargs)
-    ...    def request(self, *args, **kwargs):
-    ...         return super()._request(*args, **kwargs)
+    .. code-block:: python
 
-    >>> async with HTTPClientImpl() as client:
-    ...     async with client.request("GET", "https://some-websi.te") as resp:
-    ...         resp.raise_for_status()
-    ...         body = await resp.read()
+        >>> class HTTPClientImpl(BaseHTTPClient):
+        ...     def __init__(self, *args, **kwargs):
+        ...         super().__init__(*args, **kwargs)
+        ...    def request(self, *args, **kwargs):
+        ...         return super()._request(*args, **kwargs)
 
-    Warning:
-        This must be initialized within a coroutine while an event loop is active
-        and registered to the current thread.
+        >>> async with HTTPClientImpl() as client:
+        ...     async with client.request("GET", "https://some-websi.te") as resp:
+        ...         resp.raise_for_status()
+        ...         body = await resp.read()
+
+    Warning
+    -------
+    This must be initialized within a coroutine while an event loop is active
+    and registered to the current thread.
     """
 
     DELETE = "delete"
@@ -71,7 +74,6 @@ class BaseHTTPClient(abc.ABC):
         "client_session",
         "in_count",
         "logger",
-        "max_retries",
         "proxy_auth",
         "proxy_headers",
         "proxy_url",
@@ -81,66 +83,68 @@ class BaseHTTPClient(abc.ABC):
         "verify_ssl",
     )
 
-    #: Whether to allow following of redirects or not. Generally you do not want this.
+    #: Whether to allow following of redirects or not. Generally you do not want this
     #: as it poses a security risk.
     #:
-    #: :type: :class:`bool`
+    #: :type: :obj:`bool`
     allow_redirects: bool
 
     #: The underlying client session used to make low level HTTP requests.
     #:
-    #: :type: :class:`aiohttp.ClientSession`
+    #: :type: :obj:`aiohttp.ClientSession`
     client_session: aiohttp.ClientSession
 
     #: The number of requests that have been made. This acts as a unique ID for each request.
     #:
-    #: :type: :class:`int`
+    #: :type: :obj:`int`
     in_count: int
 
     #: The logger used to write log messages.
     #:
-    #: :type: :class:`logging.Logger`
+    #: :type: :obj:`logging.Logger`
     logger: logging.Logger
 
     #: The asyncio event loop being used.
     #:
-    #: :type: :class:`asyncio.AbstractEventLoop`
+    #: :type: :obj:`asyncio.AbstractEventLoop`
     loop: asyncio.AbstractEventLoop
 
     #: Proxy authorization info.
     #:
-    #: :type: :class:`aiohttp.BasicAuth` or `None`
+    #: :type: :obj:`aiohttp.BasicAuth`, optional
     proxy_auth: typing.Optional[aiohttp.BasicAuth]
 
     #: Proxy headers.
     #:
-    #: :type: :class:`aiohttp.typedefs.LooseHeaders` or `None`
+    #: :type: :obj:`aiohttp.typedefs.LooseHeaders`, optional
     proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders]
 
     #: Proxy URL to use.
     #:
-    #: :type: :class:`str` or `None`
+    #: :type: :obj:`str`, optional
     proxy_url: typing.Optional[str]
 
     #: SSL context to use.
     #:
-    #: :type: :class:`ssl.SSLContext` or `None`
+    #: :type: :obj:`ssl.SSLContext`, optional
     ssl_context: typing.Optional[ssl.SSLContext]
 
-    #: Response timeout.
+    #: Response timeout or``None`` if you are using the
+    #: default for :mod:`aiohttp`.
     #:
-    #: :type: :class:`float` or `None` if using the default for `aiohttp`.
+    #: :type: :obj:`float`, optional
     timeout: typing.Optional[float]
 
     #: The user agent being used.
     #:
-    #: Warning:
-    #:     Certain areas of the Discord API may enforce specific user agents
-    #:     to be used for requests. You should not overwrite this generated value
-    #:     unless you know what you are doing. Invalid useragents may lead to
-    #:     bot account deauthorization.
+    #: Warning
+    #: -------
+    #: Certain areas of the Discord API may enforce specific user agents
+    #: to be used for requests. You should not overwrite this generated value
+    #: unless you know what you are doing. Invalid useragents may lead to
+    #: bot account deauthorization.
     #:
-    #: :type: :class:`str`
+    #: :type: :obj:`str`
     user_agent: str
 
     #: Whether to verify SSL certificates or not. Generally you want this turned on
@@ -149,7 +153,7 @@ class BaseHTTPClient(abc.ABC):
     #: stuck behind a proxy that cannot verify the certificates correctly, or are
     #: having other SSL-related issues, you may wish to turn this off.
     #:
-    #: :type: :class:`bool`
+    #: :type: :obj:`bool`
     verify_ssl: bool
 
     @abc.abstractmethod
@@ -157,109 +161,111 @@ class BaseHTTPClient(abc.ABC):
         self,
         *,
         allow_redirects: bool = False,
-        json_serialize: typing.Callable = None,
-        connector: aiohttp.BaseConnector = None,
-        proxy_headers: aiohttp.typedefs.LooseHeaders = None,
-        proxy_auth: aiohttp.BasicAuth = None,
-        proxy_url: str = None,
-        ssl_context: ssl.SSLContext = None,
+        json_serialize: typing.Optional[typing.Callable] = None,
+        connector: typing.Optional[aiohttp.BaseConnector] = None,
+        proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders] = None,
+        proxy_auth: typing.Optional[aiohttp.BasicAuth] = None,
+        proxy_url: typing.Optional[str] = None,
+        ssl_context: typing.Optional[ssl.SSLContext] = None,
         verify_ssl: bool = True,
-        timeout: float = None,
+        timeout: typing.Optional[float] = None,
     ) -> None:
         """
-        Args:
-            allow_redirects:
-                defaults to False for security reasons. If you find you are receiving multiple redirection responses
-                causing requests to fail, it is probably worth enabling this.
-            connector:
-                the :class:`aiohttp.BaseConnector` to use for the client session, or `None` if you wish to use the
-                default instead.
-            json_serialize:
-                a callable that consumes a Python object and returns a JSON-encoded string.
-                This defaults to :func:`json.dumps`.
-            proxy_auth:
-                optional proxy authentication to use.
-            proxy_headers:
-                optional proxy headers to pass.
-            proxy_url:
-                optional proxy URL to use.
-            ssl_context:
-                optional SSL context to use.
-            verify_ssl:
-                defaulting to True, setting this to false will disable SSL verification.
-            timeout:
-                optional timeout to apply to individual HTTP requests.
+        Parameters
+        ----------
+        allow_redirects : :obj:`bool`
+            If you find you are receiving multiple redirection responses causing 
+            requests to fail, it is probably worth enabling this. Defaults to ``False`` 
+            for security reasons. 
+        json_serialize : :obj:`typing.Callable`, optional
+            A callable that consumes a Python object and returns a JSON-encoded string.
+            This defaults to :func:`json.dumps`.
+        connector : :obj:`aiohttp.BaseConnector`, optional
+            The :obj:`aiohttp.BaseConnector` to use for the client session, or ``None`` 
+            if you wish to use the default instead.
+        proxy_headers : :obj:`aiohttp.typedefs.LooseHeaders`, optional
+            Proxy headers to pass.
+        proxy_auth : :obj:`aiohttp.BasicAuth`, optional
+            Proxy authentication to use.
+        proxy_url : :obj:`str`, optional
+            Proxy URL to use.
+        ssl_context : :obj:`ssl.SSLContext`, optional
+            SSL context to use.
+        verify_ssl : :obj:`bool`
+            Wheather to verify SSL.
+        timeout : :obj:`float`, optional
+            Timeout to apply to individual HTTP requests.
         """
 
         #: Whether to allow redirects or not.
         #:
-        #: :type: :class:`bool`
+        #: :type: :obj:`bool`
         self.allow_redirects = allow_redirects
 
         #: The HTTP client session to use.
         #:
-        #: :type: :class:`aiohttp.ClientSession`
+        #: :type: :obj:`aiohttp.ClientSession`
         self.client_session = aiohttp.ClientSession(
             connector=connector, version=aiohttp.HttpVersion11, json_serialize=json_serialize or json.dumps,
         )
 
         #: The logger to use for this object.
         #:
-        #: :type: :class:`logging.Logger`
-
+        #: :type: :obj:`logging.Logger`
         self.logger = loggers.get_named_logger(self)
+
         #: User agent to use.
         #:
-        #: :type: :class:`str`
+        #: :type: :obj:`str`
         self.user_agent = user_agent.user_agent()
 
-        #: If `true`, this will enforce SSL signed certificate verification, otherwise it will
+        #: If ``True``, this will enforce SSL signed certificate verification, otherwise it will
         #: ignore potentially malicious SSL certificates.
         #:
-        #: :type: :class:`bool`
+        #: :type: :obj:`bool`
         self.verify_ssl = verify_ssl
 
         #: Optional proxy URL to use for HTTP requests.
         #:
-        #: :type: :class:`str`
+        #: :type: :obj:`str`
         self.proxy_url = proxy_url
 
         #: Optional authorization to use if using a proxy.
         #:
-        #: :type: :class:`aiohttp.BasicAuth`
+        #: :type: :obj:`aiohttp.BasicAuth`
         self.proxy_auth = proxy_auth
 
         #: Optional proxy headers to pass.
         #:
-        #: :type: :class:`aiohttp.typedefs.LooseHeaders`
+        #: :type: :obj:`aiohttp.typedefs.LooseHeaders`
         self.proxy_headers = proxy_headers
 
         #: Optional SSL context to use.
         #:
-        #: :type: :class:`ssl.SSLContext`
+        #: :type: :obj:`ssl.SSLContext`
         self.ssl_context: ssl.SSLContext = ssl_context
 
         #: Optional timeout for HTTP requests.
         #:
-        #: :type: :class:`float`
+        #: :type: :obj:`float`
         self.timeout = timeout
 
         #: How many responses have been received.
         #:
-        #: :type: :class:`int`
+        #: :type: :obj:`int`
         self.in_count = 0
 
     def _request(self, method, uri, **kwargs):
-        """
-        Calls :meth:`aiohttp.ClientSession.request` and returns the context manager result.
+        """Calls :func:`aiohttp.ClientSession.request` and returns the context manager result.
 
-        Args:
-            method:
-                The HTTP method to use.
-            uri:
-                The URI to send to.
-            **kwargs:
-                Any other parameters to pass to the `request` method when invoking it.
+        Parameters
+        ----------
+        method
+            The HTTP method to use.
+        uri
+            The URI to send to.
+        **kwargs
+            Any other parameters to pass to :func:`aiohttp.ClientSession.request` when invoking it.
         """
         return self.client_session.request(
             method,

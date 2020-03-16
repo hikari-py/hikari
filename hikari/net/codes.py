@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Enumerations for opcodes and status codes.
-"""
+"""Enumerations for opcodes and status codes."""
 __all__ = ["HTTPStatusCode", "GatewayCloseCode", "GatewayOpcode", "JSONErrorCode", "GatewayIntent"]
 
 import enum
@@ -27,9 +25,7 @@ import enum
 # Doesnt work correctly with enums, so since this file is all enums, ignore
 # pylint: disable=no-member
 class HTTPStatusCode(enum.IntEnum):
-    """HTTP status codes that a conforming HTTP server should give us on
-    Discord.
-    """
+    """HTTP status codes that a conforming HTTP server should give us on Discord."""
 
     CONTINUE = 100
 
@@ -70,7 +66,6 @@ class GatewayCloseCode(enum.IntEnum):
 
     Notes
     -----
-
     Any codes greater than or equal to `4000` are server-side codes. Any codes
     between `1000` and `1999` inclusive are generally client-side codes.
     """
@@ -211,28 +206,32 @@ class JSONErrorCode(enum.IntEnum):
 
     #: Bots cannot use this endpoint
     #:
-    #: Note:
-    #:     You should never expect to receive this in normal API usage.
+    #: Note
+    #: ----
+    #: You should never expect to receive this in normal API usage.
     USERS_ONLY = 20_001
 
     #: Only bots can use this endpoint.
     #:
-    #: Note:
-    #:     You should never expect to receive this in normal API usage.
+    #: Note
+    #: ----
+    #: You should never expect to receive this in normal API usage.
     BOTS_ONLY = 20_002
 
     #: Maximum number of guilds reached (100)
     #:
-    #: Note:
-    #:     You should never expect to receive this in normal API usage as this only applies to user accounts.
-    #:     This is unlimited for bot accounts.
+    #: Note
+    #: ----
+    #: You should never expect to receive this in normal API usage as this only applies to user accounts.
+    #: This is unlimited for bot accounts.
     MAX_GUILDS_REACHED = 30_001
 
     #: Maximum number of friends reached (1000)
     #:
-    #: Note:
-    #:     You should never expect to receive this in normal API usage as this only applies to user accounts.
-    #:     Bots cannot have friends.
+    #: Note
+    #: ----
+    #: You should never expect to receive this in normal API usage as this only applies to user accounts.
+    #: Bots cannot have friends :( .
     MAX_FRIENDS_REACHED = 30_002
 
     #: Maximum number of pins reached (50)
@@ -349,11 +348,11 @@ class GatewayIntent(enum.IntFlag):
     Notes
     -----
     Discord now places limits on certain events you can receive without whitelisting your bot first. On the
-    `Bot` tab in the developer's portal for your bot, you should now have the option to enable functionality
+    ``Bot`` tab in the developer's portal for your bot, you should now have the option to enable functionality
     for receiving these events.
 
     If you attempt to request an intent type that you have not whitelisted your bot for, you will be
-    disconnected on startup with a `4014` closure code.
+    disconnected on startup with a ``4014`` closure code.
     """
 
     #: Subscribes to the following events:

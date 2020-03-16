@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Basic transformation utilities.
-"""
+"""Basic transformation utilities."""
 __all__ = [
     "CastInputT",
     "CastOutputT",
@@ -44,8 +42,8 @@ ResultT = typing.Union[CastOutputT, DefaultT]
 
 def nullable_cast(value: CastInputT, cast: TypeCastT) -> ResultT:
     """
-    Attempts to cast the given `value` with the given `cast`, but only if the `value` is
-    not `None`. If it is `None`, then `None` is returned instead.
+    Attempts to cast the given ``value`` with the given ``cast``, but only if the 
+    ``value`` is not ``None``. If it is ``None``, then ``None`` is returned instead.
     """
     if value is None:
         return None
@@ -53,9 +51,10 @@ def nullable_cast(value: CastInputT, cast: TypeCastT) -> ResultT:
 
 
 def try_cast(value: CastInputT, cast: TypeCastT, default: DefaultT = None) -> ResultT:
-    """
-    Try to cast the given value to the given cast. If it throws a :class:`Exception` or derivative, it will
-    return `default` instead of the cast value instead.
+    """Try to cast the given value to the given cast.
+    
+    If it throws a :obj:`Exception` or derivative, it will return ``default`` instead 
+    of the cast value instead.
     """
     with contextlib.suppress(Exception):
         return cast(value)
@@ -68,18 +67,18 @@ def put_if_specified(
     value: typing.Any,
     type_after: typing.Optional[TypeCastT] = None,
 ) -> None:
-    """
-    Add a value to the mapping under the given key as long as the value is not :obj:`typing.Literal[...]`
+    """Add a value to the mapping under the given key as long as the value is not :obj:`typing.Literal`
 
-    Args:
-        mapping:
-            The mapping to add to.
-        key:
-            The key to add the value under.
-        value:
-            The value to add.
-        type_after:
-            Optional type to apply to the value when added.
+    Parameters
+    ----------
+    mapping : :obj:`typing.Dict` [ :obj:`typing.Hashable`, :obj:`typing.Any` ]
+        The mapping to add to.
+    key : :obj:`typing.Hashable`
+        The key to add the value under.
+    value : :obj:`typing.Any`
+        The value to add.
+    type_after : :obj:`TypeCastT`, optional
+        Type to apply to the value when added.
     """
     if value is not ...:
         if type_after:
@@ -88,23 +87,27 @@ def put_if_specified(
             mapping[key] = value
 
 
-def image_bytes_to_image_data(img_bytes: bytes) -> typing.Optional[str]:
-    """
-    Encode image bytes into an image data string.
+def image_bytes_to_image_data(img_bytes: typing.Optional[bytes] = None) -> typing.Optional[str]:
+    """Encode image bytes into an image data string.
 
-    Args:
-        img_bytes:
-            The image bytes or `None`.
+    Parameters
+    ----------
+    img_bytes : :obj:`bytes`, optional
+        The image bytes.
 
-    Raises:
-        ValueError:
-            If the image type passed is not supported.
+    Raises
+    ------
+    :obj:`ValueError`
+        If the image type passed is not supported.
 
-    Returns:
-        The image_bytes given encoded into an image data string or `None`.
+    Returns
+    -------
+    :obj:`str`, optional
+        The ``image_bytes`` given encoded into an image data string or ``None``.
 
-    Note:
-        Supported image types: .png, .jpeg, .jfif, .gif, .webp
+    Note
+    ----
+    Supported image types: ``.png``, ``.jpeg``, ``.jfif``, ``.gif``, ``.webp``
     """
     if img_bytes is None:
         return None

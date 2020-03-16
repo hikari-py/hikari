@@ -16,24 +16,32 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Singleton metaclass"""
 __all__ = ["SingletonMeta"]
 
 
 class SingletonMeta(type):
-    """
-    Metaclass that makes the class a singleton. Once an instance has been defined at runtime, it will
-    exist until the interpreter that created it is terminated.
+    """Metaclass that makes the class a singleton. 
+    
+    Once an instance has been defined at runtime, it will exist until the interpreter 
+    that created it is terminated.
 
-    >>> class Unknown(metaclass=SingletonMeta):
-    ...     def __init__(self):
-    ...         print("Initialized an Unknown!")
-    >>> Unknown() is Unknown()    # True
+    Example
+    --------
+    .. code-block:: python
 
-    Note:
-        the constructors of these classes must not take any arguments other than `self`.
+        >>> class Unknown(metaclass=SingletonMeta):
+        ...     def __init__(self):
+        ...         print("Initialized an Unknown!")
+        >>> Unknown() is Unknown()    # True
 
-    Warning:
-        this is not thread safe.
+    Note
+    ----
+    The constructors of these classes must not take any arguments other than ``self``.
+
+    Warning
+    -------
+    This is not thread safe.
     """
 
     ___instances___ = {}

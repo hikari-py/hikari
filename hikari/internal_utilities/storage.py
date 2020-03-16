@@ -16,24 +16,27 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-IO utilities.
-"""
+"""IO utilities."""
 __all__ = ["make_resource_seekable", "FileLikeT", "BytesLikeT"]
 
 import io
 import typing
 
 
-def make_resource_seekable(resource) -> typing.Union[io.BytesIO, io.StringIO]:
-    """
-    Given some representation of data, make a seekable resource to use. This supports bytes, bytearray, memoryview,
-    and strings. Anything else is just returned.
+def make_resource_seekable(resource: typing.Any) -> typing.Union[io.BytesIO, io.StringIO]:
+    """Given some representation of data, make a seekable resource to use. 
+    
+    This supports :obj:`bytes`, :obj:`bytearray`, :obj:`memoryview`, and :obj:`str`. 
+    Anything else is just returned.
 
-    Args:
-        resource:
-            the resource to check.
-    Returns:
+    Parameters
+    ----------
+    resource : :obj:`typing.Any`
+        The resource to check.
+
+    Returns
+    -------
+    :obj:`typing.Union` [ :obj:`io.BytesIO`, :obj:`io.StringIO` ]
         An stream-compatible resource where possible.
     """
     if isinstance(resource, (bytes, bytearray)):
@@ -46,7 +49,7 @@ def make_resource_seekable(resource) -> typing.Union[io.BytesIO, io.StringIO]:
     return resource
 
 
-#: A bytes-like object, such as a :class:`str`, raw :class:`bytes`, or view across a bytes-like object.
+#: A bytes-like object, such as a :obj:`str`, raw :obj:`bytes`, or view across a bytes-like object.
 BytesLikeT = typing.Union[bytes, bytearray, memoryview, str, io.StringIO, io.BytesIO]
 
 #: Type description for any object that can be considered to be file-like.
