@@ -635,7 +635,7 @@ class TestHTTPClient:
                 assert await http_client_impl.create_message("22222222") is mock_response
                 routes.CHANNEL_MESSAGES.compile.assert_called_once_with(http_client_impl.POST, channel_id="22222222")
                 mock_form.add_field.assert_called_once_with(
-                    "payload_json", json.dumps({"tts": False}), content_type="application/json"
+                    "payload_json", json.dumps({}), content_type="application/json"
                 )
         http_client_impl._request.assert_called_once_with(mock_route, form_body=mock_form, re_seekable_resources=[])
 
@@ -1563,9 +1563,7 @@ class TestHTTPClient:
         mock_route = mock.MagicMock(routes.GUILD_PRUNE)
         with mock.patch.object(routes, "GUILD_PRUNE", compile=mock.MagicMock(return_value=mock_route)):
             assert await http_client_impl.begin_guild_prune("39393", 14) is None
-        http_client_impl._request.assert_called_once_with(
-            mock_route, query={"days": 14, "compute_prune_count": False}, reason=...
-        )
+        http_client_impl._request.assert_called_once_with(mock_route, query={"days": 14}, reason=...)
 
     @pytest.mark.asyncio
     async def test_begin_guild_prune_with_optionals(self, http_client_impl):
@@ -1576,7 +1574,7 @@ class TestHTTPClient:
                 await http_client_impl.begin_guild_prune("39393", 14, compute_prune_count=True, reason="BYEBYE") == 32
             )
         http_client_impl._request.assert_called_once_with(
-            mock_route, query={"days": 14, "compute_prune_count": True}, reason="BYEBYE"
+            mock_route, query={"days": 14, "compute_prune_count": "True"}, reason="BYEBYE"
         )
 
     @pytest.mark.asyncio
@@ -2040,7 +2038,7 @@ class TestHTTPClient:
         mock_form = mock.MagicMock(spec_set=aiohttp.FormData, add_field=mock.MagicMock())
         mock_route = mock.MagicMock(routes.WEBHOOK_WITH_TOKEN)
         http_client_impl._request.return_value = None
-        mock_json = '{"tts": "False"}'
+        mock_json = "{}"
         with mock.patch.object(aiohttp, "FormData", autospec=True, return_value=mock_form):
             with mock.patch.object(routes, "WEBHOOK_WITH_TOKEN", compile=mock.MagicMock(return_value=mock_route)):
                 with mock.patch.object(json, "dumps", return_value=mock_json):
@@ -2048,14 +2046,10 @@ class TestHTTPClient:
                     routes.WEBHOOK_WITH_TOKEN.compile.assert_called_once_with(
                         http_client_impl.POST, webhook_id="9393939", webhook_token="a_webhook_token"
                     )
-                    json.dumps.assert_called_once_with({"tts": False})
+                    json.dumps.assert_called_once_with({})
         mock_form.add_field.assert_called_once_with("payload_json", mock_json, content_type="application/json")
         http_client_impl._request.assert_called_once_with(
-            mock_route,
-            form_body=mock_form,
-            re_seekable_resources=[],
-            query={"wait": "False"},
-            suppress_authorization_header=True,
+            mock_route, form_body=mock_form, re_seekable_resources=[], query={}, suppress_authorization_header=True,
         )
 
     # cymock doesn't work right with the patch
@@ -2087,6 +2081,7 @@ class TestHTTPClient:
             wait=True,
             file=("file.txt", b"4444ididid"),
             embeds=[{"type": "rich", "description": "A DESCRIPTION"}],
+            allowed_mentions={"users": ["123"], "roles": ["456"]},
         )
         assert response is mock_response
         make_resource_seekable.assert_called_once_with(b"4444ididid")
@@ -2100,6 +2095,7 @@ class TestHTTPClient:
                 "username": "agent 42",
                 "avatar_url": "https://localhost.bump",
                 "embeds": [{"type": "rich", "description": "A DESCRIPTION"}],
+                "allowed_mentions": {"users": ["123"], "roles": ["456"]},
             }
         )
 

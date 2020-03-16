@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Errors that can be raised by networking components.
-"""
+"""Errors that can be raised by networking components."""
 __all__ = [
     "GatewayError",
     "GatewayClientClosedError",
@@ -75,7 +73,7 @@ class GatewayClientClosedError(GatewayError):
         A string explaining the issue.
     """
 
-    def __init__(self, reason="The gateway client has been closed") -> None:
+    def __init__(self, reason: str = "The gateway client has been closed") -> None:
         super().__init__(reason)
 
 
@@ -84,16 +82,18 @@ class GatewayServerClosedConnectionError(GatewayError):
 
     Parameters
     ----------
-    close_code : :obj:`hikari.net.codes.GatewayCloseCode` or :obj:`int` or :obj:`None`
+    close_code : :obj:`hikari.net.codes.GatewayCloseCode`, :obj:`int`, optional
         The close code provided by the server, if there was one.
-    reason : :obj:`str`
+    reason : :obj:`str`, optional
         A string explaining the issue.
     """
 
     close_code: typing.Union[codes.GatewayCloseCode, int, None]
 
     def __init__(
-        self, close_code: typing.Union[codes.GatewayCloseCode, int, None] = None, reason: typing.Optional[str] = None
+        self,
+        close_code: typing.Optional[typing.Union[codes.GatewayCloseCode, int]] = None,
+        reason: typing.Optional[str] = None,
     ) -> None:
         if reason is None:
             try:
@@ -169,7 +169,7 @@ class GatewayZombiedError(GatewayClientClosedError):
     """An exception raised if a shard becomes zombied.
 
     This means that Discord is no longer responding to us, and we have
-    disconnected due to a timeout
+    disconnected due to a timeout.
     """
 
     def __init__(self) -> None:
@@ -208,13 +208,13 @@ class CodedHTTPError(HTTPError):
         The HTTP route that was being invoked when this exception occurred.
     message : :obj:`str`, optional
         An optional message if provided in the response payload.
-    json_code : :obj:`hikari.net.codes.JSONErrorCode` or :obj:`int`, optional
+    json_code : :obj:`hikari.net.codes.JSONErrorCode`, :obj:`int`, optional
         An optional error code the server provided us.
     """
 
     #: The HTTP status code that was returned by the server.
     #:
-    #: :type: :obj:`int` or :obj:`int` or :obj:`hikari.net.codes.HTTPStatusCode`
+    #: :type: :obj:`int` or :obj:`hikari.net.codes.HTTPStatusCode`
     status: typing.Union[int, codes.HTTPStatusCode]
 
     #: The HTTP route that was being invoked when this exception occurred.
@@ -225,14 +225,14 @@ class CodedHTTPError(HTTPError):
     #: An optional contextual message the server provided us with in the
     #: response body.
     #
-    #: :type: :obj: `str`, optional
+    #: :type: :obj:`str`, optional
     message: typing.Optional[str]
 
     #: An optional contextual error code the server provided us with in the
     #: response body.
     #
     #: :type: :obj:`hikari.net.codes.JSONErrorCode` or :obj:`int`, optional
-    json_code: typing.Union[codes.JSONErrorCode, int, None]
+    json_code: typing.Optional[typing.Union[codes.JSONErrorCode, int]]
 
     def __init__(
         self,
@@ -286,7 +286,7 @@ class BadRequestHTTPError(CodedHTTPError):
         The HTTP route that was being invoked when this exception occurred.
     message : :obj:`str`, optional
         An optional message if provided in the response payload.
-    json_code : :obj:`hikari.net.codes.JSONErrorCode` or :obj:`int`, optional
+    json_code : :obj:`hikari.net.codes.JSONErrorCode`, :obj:`int`, optional
         An optional error code the server provided us.
     """
 
@@ -294,7 +294,7 @@ class BadRequestHTTPError(CodedHTTPError):
         self,
         route: routes.CompiledRoute,
         message: typing.Optional[str],
-        json_code: typing.Union[codes.JSONErrorCode, int, None],
+        json_code: typing.Optional[typing.Union[codes.JSONErrorCode, int]],
     ) -> None:
         super().__init__(codes.HTTPStatusCode.BAD_REQUEST, route, message, json_code)
 
@@ -311,7 +311,7 @@ class UnauthorizedHTTPError(ClientHTTPError):
         The HTTP route that was being invoked when this exception occurred.
     message : :obj:`str`, optional
         An optional message if provided in the response payload.
-    json_code : :obj:`hikari.net.codes.JSONErrorCode` or :obj:`int`, optional
+    json_code : :obj:`hikari.net.codes.JSONErrorCode`, :obj:`int`, optional
         An optional error code the server provided us.
     """
 
@@ -319,7 +319,7 @@ class UnauthorizedHTTPError(ClientHTTPError):
         self,
         route: routes.CompiledRoute,
         message: typing.Optional[str],
-        json_code: typing.Union[codes.JSONErrorCode, int, None],
+        json_code: typing.Optional[typing.Union[codes.JSONErrorCode, int]],
     ) -> None:
         super().__init__(codes.HTTPStatusCode.UNAUTHORIZED, route, message, json_code)
 
@@ -339,7 +339,7 @@ class ForbiddenHTTPError(ClientHTTPError):
         The HTTP route that was being invoked when this exception occurred.
     message : :obj:`str`, optional
         An optional message if provided in the response payload.
-    json_code : :obj:`hikari.net.codes.JSONErrorCode` or :obj:`int`, optional
+    json_code : :obj:`hikari.net.codes.JSONErrorCode`, :obj:`int`, optional
         An optional error code the server provided us.
     """
 
@@ -347,7 +347,7 @@ class ForbiddenHTTPError(ClientHTTPError):
         self,
         route: routes.CompiledRoute,
         message: typing.Optional[str],
-        json_code: typing.Union[codes.JSONErrorCode, int, None],
+        json_code: typing.Optional[typing.Union[codes.JSONErrorCode, int]],
     ) -> None:
         super().__init__(codes.HTTPStatusCode.FORBIDDEN, route, message, json_code)
 
@@ -366,7 +366,7 @@ class NotFoundHTTPError(ClientHTTPError):
         The HTTP route that was being invoked when this exception occurred.
     message : :obj:`str`, optional
         An optional message if provided in the response payload.
-    json_code : :obj:`hikari.net.codes.JSONErrorCode` or :obj:`int`, optional
+    json_code : :obj:`hikari.net.codes.JSONErrorCode`, :obj:`int`, optional
         An optional error code the server provided us.
     """
 
@@ -374,6 +374,6 @@ class NotFoundHTTPError(ClientHTTPError):
         self,
         route: routes.CompiledRoute,
         message: typing.Optional[str],
-        json_code: typing.Union[codes.JSONErrorCode, int, None],
+        json_code: typing.Optional[typing.Union[codes.JSONErrorCode, int]],
     ) -> None:
         super().__init__(codes.HTTPStatusCode.NOT_FOUND, route, message, json_code)

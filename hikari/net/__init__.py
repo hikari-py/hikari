@@ -19,8 +19,7 @@
 """Network components for the Hikari Discord API.
 
 These components describe the low level parts of Hikari. No model classes exist
-for these; the majority of communication is done via JSON arrays and objects
-(:class:`dict` and :class:`list` objects).
+for these; the majority of communication is done via JSON arrays and objects.
 """
 from hikari.net import base_http_client
 from hikari.net import codes

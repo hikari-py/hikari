@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Utilities for creating and naming loggers in this library in a consistent way.
-"""
+"""Utilities for creating and naming loggers in this library in a consistent way."""
 __all__ = ["get_named_logger"]
 
 import logging
@@ -26,8 +24,7 @@ import typing
 
 
 def get_named_logger(obj: typing.Any, *extra_objs: typing.Any) -> logging.Logger:
-    """
-    Builds an appropriately named logger.
+    """Builds an appropriately named logger.
 
     If the passed object is an instance of a class, the class is used instead.
 
@@ -35,14 +32,17 @@ def get_named_logger(obj: typing.Any, *extra_objs: typing.Any) -> logging.Logger
 
     If a string is provided, then the string is used as the name. This is not recommended.
 
-    Args:
-        obj:
-            the object to study to produce a logger for.
-        extra_objs:
-            optional extra components to add to the end of the logger name.
+    Parameters
+    ----------
+    obj
+        The object to study to produce a logger for.
+    extra_objs
+        optional extra components to add to the end of the logger name.
 
-    Returns:
-        a created logger.
+    Returns
+    -------
+    :obj:`logging.Logger`
+        A created logger.
     """
     if not isinstance(obj, str):
         if not isinstance(obj, type):
