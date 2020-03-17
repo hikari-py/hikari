@@ -259,12 +259,12 @@ class HikariEntityMarshaller:
             try:
                 # Use the deserializer if it is there, otherwise use the constructor of the type of the field.
                 kwargs[a.field_name] = a.deserializer(data) if a.deserializer else data
-            except Exception:
+            except Exception as exc:
                 raise TypeError(
                     "Failed to deserialize data to instance of "
                     f"{target_type.__module__}.{target_type.__qualname__} because marshalling failed on "
                     f"attribute {a.field_name}"
-                )
+                ) from exc
 
         return target_type(**kwargs)
 

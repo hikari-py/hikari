@@ -85,6 +85,7 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
 
         if not self.avatar_hash:
             return f"https://cdn.discordapp.com/embed/avatars/{self.default_avatar}.png"
+        # pylint: disable=E1101:
         if fmt is None and self.avatar_hash.startswith("a_"):
             fmt = "gif"
         elif fmt is None:
