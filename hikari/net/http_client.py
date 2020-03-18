@@ -573,7 +573,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         tts : :obj:`bool`
             If specified, whether the message will be sent as a TTS message.
         files : :obj:`typing.Sequence` [ :obj:`typing.Tuple` [ :obj:`str`, :obj:`storage.FileLikeT` ] ]
-            If specified, this should be a list of between 1 and 5 tuples. 
+            If specified, this should be a list of between ``1`` and ``5`` tuples. 
             Each tuple should consist of the file name, and either 
             raw :obj:`bytes` or an :obj:`io.IOBase` derived object with 
             a seek that points to a buffer containing said file.
@@ -595,7 +595,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         :obj:`hikari.net.errors.BadRequestHTTPError`
             This can be raised if the file is too large; if the embed exceeds 
             the defined limits; if the message content is specified only and 
-            empty or greater than 2000 characters; if neither content, file 
+            empty or greater than ``2000`` characters; if neither content, file 
             or embed are specified; if there is a duplicate id in only of the
             fields in ``allowed_mentions``; if you specify to parse all 
             users/roles mentions but also specify which users/roles to 
@@ -832,9 +832,11 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         :obj:`hikari.net.errors.NotFoundHTTPError`
             If the channel or message is not found.
         :obj:`hikari.net.errors.BadRequestHTTPError`
-            If the embed exceeds any of the embed limits if specified, or the content is specified and consists
-            only of whitespace, is empty, or is more than 2,000 characters in length. This can also be caused
-            by trying to send an empty message (no content and no embed).
+            This can be raised if the embed exceeds the defined limits; 
+            if the message content is specified only and empty or greater 
+            than ``2000`` characters; if neither content, file or embed 
+            are specified.
+            parse only.
         :obj:`hikari.net.errors.ForbiddenHTTPError`
             If you try to edit content or embed on a message you did not author or try to edit the flags
             on a message you did not author without the ``MANAGE_MESSAGES`` permission.
@@ -875,7 +877,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         channel_id : :obj:`str`
             The ID of the channel to get the message from.
         messages : :obj:`typing.Sequence` [ :obj:`str` ]
-            A list of 2-100 message IDs to remove in the channel.
+            A list of ``2-100`` message IDs to remove in the channel.
 
         Raises
         ------
@@ -884,13 +886,13 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         :obj:`hikari.net.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission in the channel.
         :obj:`hikari.net.errors.BadRequestHTTPError`
-            If any of the messages passed are older than 2 weeks in age or any duplicate message IDs are passed.
+            If any of the messages passed are older than ``2`` weeks in age or any duplicate message IDs are passed.
 
         Note
         ----
         This can only be used on guild text channels.
-        Any message IDs that do not exist or are invalid still add towards the total 100 max messages to remove.
-        This can only delete messages that are newer than 2 weeks in age. If any of the messages are older than 2 weeks
+        Any message IDs that do not exist or are invalid still add towards the total ``100`` max messages to remove.
+        This can only delete messages that are newer than ``2`` weeks in age. If any of the messages are older than ``2`` weeks
         then this call will fail.
         """
         payload = {"messages": messages}
@@ -904,7 +906,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         *,
         allow: typing.Union[typing.Literal[...], int] = ...,
         deny: typing.Union[typing.Literal[...], int] = ...,
-        type_: typing.Literal[..., "member", "role"] = ...,
+        type_: typing.Union[typing.Literal[...], str] = ...,
         reason: typing.Union[typing.Literal[...], str] = ...,
     ) -> None:
         """Edit permissions for a given channel.
@@ -919,9 +921,9 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             If specified, the bitwise value of all permissions to set to be allowed.
         deny : :obj:`int`
             If specified, the bitwise value of all permissions to set to be denied.
-        type_ : :obj:`typing.Literal` [ ``"member"``, ``"role"``]
-            If specified, the type of overwrite. "member" if it is for a member, 
-            or "role" if it is for a role.
+        type_ : :obj:`str`]
+            If specified, the type of overwrite. ``"member"`` if it is for a member, 
+            or ``"role"`` if it is for a role.
         reason : :obj:`str`
             If specified, the audit log reason explaining why the operation 
             was performed.
@@ -983,7 +985,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             The ID of the channel to create the invite for.
         max_age : :obj:`int`
             If specified, the max age of the invite in seconds, defaults to 
-            ``86400`` (24 hours). 
+            ``86400`` (``24`` hours). 
             Set to ``0`` to never expire.
         max_uses : :obj:`int`
             If specified, the max number of uses this invite can have, or ``0`` for 
@@ -1046,7 +1048,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         await self._request(route)
 
     async def trigger_typing_indicator(self, channel_id: str) -> None:
-        """Trigger the account to appear to be typing for the next 10 seconds in the given channel.
+        """Trigger the account to appear to be typing for the next ``10`` seconds in the given channel.
 
         Parameters
         ----------
@@ -1200,7 +1202,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         name : :obj:`str`
             The new emoji's name.
         image : :obj:`bytes`
-            The 128x128 image in bytes form.
+            The ``128x128`` image in bytes form.
         roles : :obj:`typing.Sequence` [ :obj:`str` ]
             If specified, a list of roles for which the emoji will be whitelisted. 
             If empty, all roles are whitelisted.
@@ -1222,7 +1224,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         :obj:`hikari.net.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_EMOJIS`` permission or aren't a member of said guild.
         :obj:`hikari.net.errors.BadRequestHTTPError`
-            If you attempt to upload an image larger than 256kb, an empty image or an invalid image format.
+            If you attempt to upload an image larger than ``256kb``, an empty image or an invalid image format.
         """
         assertions.assert_not_none(image, "image must be a valid image")
         payload = {
@@ -1310,23 +1312,23 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         roles: typing.Union[typing.Literal[...], typing.Sequence[typing.Dict]] = ...,
         channels: typing.Union[typing.Literal[...], typing.Sequence[typing.Dict]] = ...,
     ) -> typing.Dict:
-        """Creates a new guild. Can only be used by bots in less than 10 guilds.
+        """Creates a new guild. Can only be used by bots in less than ``10`` guilds.
 
         Parameters
         ----------
         name : :obj:`str`
-            The name string for the new guild (2-100 characters).
+            The name string for the new guild (``2-100`` characters).
         region : :obj:`str`
             If specified, the voice region ID for new guild. You can use 
             :meth:`list_voice_regions` to see which region IDs are available.
         icon : :obj:`bytes`
             If specified, the guild icon image in bytes form.
         verification_level : :obj:`int`
-            If specified, the verification level integer (0-5).
+            If specified, the verification level integer (``0-5``).
         default_message_notifications : :obj:`int`
-            If specified, the default notification level integer (0-1).
+            If specified, the default notification level integer (``0-1``).
         explicit_content_filter : :obj:`int`
-            If specified, the explicit content filter integer (0-2).
+            If specified, the explicit content filter integer (``0-2``).
         roles : :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
             If specified, an array of role objects to be created alongside the 
             guild. First element changes the ``@everyone`` role.
@@ -1404,16 +1406,16 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         guild_id : :obj:`str`
             The ID of the guild to be edited.
         name : :obj:`str`
-            If specified, the new name string for the guild (2-100 characters).
+            If specified, the new name string for the guild (``2-100`` characters).
         region : :obj:`str`
             If specified, the new voice region ID for guild. You can use 
             :meth:`list_voice_regions` to see which region IDs are available.
         verification_level : :obj:`int`
-            If specified, the new verification level integer (0-5).
+            If specified, the new verification level integer (``0-5``).
         default_message_notifications : :obj:`int`
-            If specified, the new default notification level integer (0-1).
+            If specified, the new default notification level integer (``0-1``).
         explicit_content_filter : :obj:`int`
-            If specified, the new explicit content filter integer (0-2).
+            If specified, the new explicit content filter integer (``0-2``).
         afk_channel_id : :obj:`str`
             If specified, the new ID for the AFK voice channel.
         afk_timeout : :obj:`int`
@@ -1528,7 +1530,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             If specified, the name for the channel.This must be 
             between ``2`` and ``100`` characters in length.
         type_: :obj:`int`
-            If specified, the channel type integer (0-6).
+            If specified, the channel type integer (``0-6``).
         position : :obj:`int`
             If specified, the position to change the channel to.
         topic : :obj:`str`
@@ -2167,7 +2169,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         guild_id : :obj:`str`
             The ID of the guild you want to get the count for.
         days : :obj:`int`
-            The number of days to count prune for (at least 1).
+            The number of days to count prune for (at least ``1``).
 
         Returns
         -------
@@ -2505,16 +2507,14 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         route = routes.GUILD_VANITY_URL.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    def get_guild_widget_image_url(
-        self, guild_id: str, *, style: typing.Literal[..., "shield", "banner1", "banner2", "banner3", "banner4"] = ...,
-    ) -> str:
+    def get_guild_widget_image_url(self, guild_id: str, *, style: typing.Union[typing.Literal[...], str] = ...,) -> str:
         """Get the URL for a guild widget.
 
         Parameters
         ----------
         guild_id : :obj:`str`
             The guild ID to use for the widget.
-        style : :obj:`typing.Literal` [ ``"shield"``, ``"banner1"``, ``"banner2"``, ``"banner3"``, ``"banner4"`` ]
+        style : :obj:`str`
             If specified, the syle of the widget.
 
         Returns
@@ -2643,7 +2643,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         Raises
         ------
         :obj:`hikari.net.errors.BadRequestHTTPError`
-            If you pass username longer than the limit (2-32) or an invalid image.
+            If you pass username longer than the limit (``2-32``) or an invalid image.
         """
         payload = {}
         transformations.put_if_specified(payload, "username", username)
@@ -3021,7 +3021,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         :obj:`hikari.net.errors.BadRequestHTTPError`
             This can be raised if the file is too large; if the embed exceeds 
             the defined limits; if the message content is specified only and 
-            empty or greater than 2000 characters; if neither content, file 
+            empty or greater than ``2000`` characters; if neither content, file 
             or embed are specified; if there is a duplicate id in only of the
             fields in ``allowed_mentions``; if you specify to parse all 
             users/roles mentions but also specify which users/roles to 

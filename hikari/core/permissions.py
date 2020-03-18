@@ -27,7 +27,7 @@ class Permission(enum.IntFlag):
     """Represents the permissions available in a given channel or guild.
 
     This is an int-flag enum. This means that you can **combine multiple
-    permissions together** into one value using the bitwise-OR "`|`" operator.
+    permissions together** into one value using the bitwise-OR operator (``|``).
 
     .. code-block:: python
 
@@ -41,8 +41,8 @@ class Permission(enum.IntFlag):
         )
 
     You can **check if a permission is present** in a set of combined
-    permissions by using the bitwise-AND "`&`" operator. This will return
-    the int-value of the permission if it is present, or `0` if not present.
+    permissions by using the bitwise-AND operator (``&``). This will return
+    the int-value of the permission if it is present, or ``0`` if not present.
 
     .. code-block:: python
 
@@ -66,8 +66,8 @@ class Permission(enum.IntFlag):
             print("I don't have the permission to manage channels!")
 
     If you need to **check that a permission is not present**, you can use the
-    bitwise-XOR "`^`" operator to check. If the permission is not present, it
-    will return a non-zero value, otherwise if it is present, it will return 0.
+    bitwise-XOR operator (``^``) to check. If the permission is not present, it
+    will return a non-zero value, otherwise if it is present, it will return ``0``.
 
     .. code-block:: python
 
@@ -77,7 +77,7 @@ class Permission(enum.IntFlag):
             print("Please give me the MANAGE_CHANNELS permission!")
 
     Lastly, if you need all the permissions set except the permission you want,
-    you can use the inversion operator "`~`" to do that.
+    you can use the inversion operator (``~``) to do that.
 
     .. code-block:: python
 
@@ -112,7 +112,7 @@ class Permission(enum.IntFlag):
     VIEW_CHANNEL = 0x4_00
     #: Allows for sending messages in a channel.
     SEND_MESSAGES = 0x8_00
-    #: Allows for sending of `/tts` messages.
+    #: Allows for sending of ``/tts`` messages.
     SEND_TTS_MESSAGES = 0x10_00
     #: Allows for deletion of other users messages.
     MANAGE_MESSAGES = 0x20_00
@@ -122,8 +122,9 @@ class Permission(enum.IntFlag):
     ATTACH_FILES = 0x80_00
     #: Allows for reading of message history.
     READ_MESSAGE_HISTORY = 0x1_00_00
-    #: Allows for using the `@everyone` tag to notify all users in a channel, and the
-    #: `@here` tag to notify all online users in a channel.
+    #: Allows for using the ``@everyone`` tag to notify all users in a channel, and the
+    #: ``@here`` tag to notify all online users in a channel, and the ``@role`` tag (even
+    #: if the role is not mentionable) to notify all users with that role in a channel.
     MENTION_EVERYONE = 0x2_00_00
     #: Allows the usage of custom emojis from other servers.
     USE_EXTERNAL_EMOJIS = 0x4_00_00

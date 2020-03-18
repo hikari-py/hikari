@@ -243,9 +243,8 @@ class GuildRole(snowflakes.UniqueEntity, entities.Deserializable):
 class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     """A representation of a guild on Discord.
 
-    Notes
-    -----
-
+    Note
+    ----
     If a guild object is considered to be unavailable, then the state of any
     other fields other than the :attr:`is_unavailable` and :attr:`id` members
     may be ``None``, outdated, or incorrect. If a guild is unavailable, then
@@ -254,53 +253,53 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
 
     #: The name of the guild.
     #:
-    #: :type: :class:`str`
+    #: :type: :obj`str`
     name: str = marshaller.attrib(deserializer=str)
 
     #: The hash for the guild icon, if there is one.
     #:
-    #: :type: :class:`str`, optional
+    #: :type: :obj`str`, optional
     icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str, if_none=None)
 
     #: The hash of the splash for the guild, if there is one.
     #:
-    #: :type: :class:`str`, optional
+    #: :type: :obj`str`, optional
     splash_hash: typing.Optional[str] = marshaller.attrib(raw_name="splash", deserializer=str, if_none=None)
 
     #: The hash of the discovery splash for the guild, if there is one.
     #:
-    #: :type: :class:`str`, optional
+    #: :type: :obj`str`, optional
     discovery_splash_hash: typing.Optional[str] = marshaller.attrib(
         raw_name="discovery_splash", deserializer=str, if_none=None
     )
 
     #: The ID of the owner of this guild.
     #:
-    #: :type: :class:`snowflakes.Snowflake`
+    #: :type: :obj`snowflakes.Snowflake`
     owner_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake)
 
     #: The guild level permissions that apply to the bot user.
     #:
-    #: :type: :class:`hikari.core.permissions.Permission`
+    #: :type: :obj`hikari.core.permissions.Permission`
     my_permissions: permissions_.Permission = marshaller.attrib(
         raw_name="permissions", deserializer=permissions_.Permission
     )
 
     #: The voice region for the guild.
     #:
-    #: :type: :class:`str`
+    #: :type: :obj`str`
     region: str = marshaller.attrib(deserializer=str)
 
     #: The ID for the channel that AFK voice users get sent to, if set for the
     #: guild.
     #:
-    #: :type: :class:`snowflakes.Snowflake`, optional
+    #: :type: :obj`snowflakes.Snowflake`, optional
     afk_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(deserializer=str, if_none=None)
 
     #: How long a voice user has to be AFK for before they are classed as being
     #: AFK and are moved to the AFK channel (:attr:`afk_channel_id`).
     #:
-    #: :type: :class:`datetime.timedelta`
+    #: :type: :obj`datetime.timedelta`
     afk_timeout: datetime.timedelta = marshaller.attrib(
         raw_name="afk_timeout", deserializer=lambda seconds: datetime.timedelta(seconds=seconds)
     )
@@ -310,7 +309,7 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: Defines if the guild embed is enabled or not. This information may not
     #: be present, in which case, it will be ``None`` instead.
     #:
-    #: :type: :class:`bool`, optional
+    #: :type: :obj`bool`, optional
     is_embed_enabled: typing.Optional[bool] = marshaller.attrib(
         raw_name="embed_enabled", if_undefined=lambda: False, deserializer=bool
     )
@@ -318,33 +317,33 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: The channel ID that the guild embed will generate an invite to, if
     #: enabled for this guild. If not enabled, it will be ``None``.
     #:
-    #: :type: :class:`snowflakes.Snowflake`, optional
+    #: :type: :obj`snowflakes.Snowflake`, optional
     embed_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake, if_none=None, if_undefined=None
     )
 
     #: The verification level required for a user to participate in this guild.
     #:
-    #: :type: :class:`GuildVerificationLevel`
+    #: :type: :obj`GuildVerificationLevel`
     verification_level: GuildVerificationLevel = marshaller.attrib(deserializer=GuildVerificationLevel)
 
     #: The default setting for message notifications in this guild.
     #:
-    #: :type: :class:`GuildMessageNotificationsLevel`
+    #: :type: :obj`GuildMessageNotificationsLevel`
     default_message_notifications: GuildMessageNotificationsLevel = marshaller.attrib(
         deserializer=GuildMessageNotificationsLevel
     )
 
     #: The setting for the explicit content filter in this guild.
     #:
-    #: :type: :class:`GuildExplicitContentFilterLevel`
+    #: :type: :obj`GuildExplicitContentFilterLevel`
     explicit_content_filter: GuildExplicitContentFilterLevel = marshaller.attrib(
         deserializer=GuildExplicitContentFilterLevel
     )
 
     #: The roles in this guild, represented as a mapping of ID to role object.
     #:
-    #: :type: :class:`typing.Mapping` [ :class:`snowflakes.Snowflake`, :class:`GuildRole` ]
+    #: :type: :obj`typing.Mapping` [ :obj`snowflakes.Snowflake`, :obj`GuildRole` ]
     roles: typing.Mapping[snowflakes.Snowflake, GuildRole] = marshaller.attrib(
         deserializer=lambda roles: {r.id: r for r in map(GuildRole.deserialize, roles)},
     )
@@ -352,27 +351,27 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: The emojis that this guild provides, represented as a mapping of ID to
     #: emoji object.
     #:
-    #: :type: :class:`typing.Mapping` [ :class:`snowflakes.Snowflake`, :class:`GuildEmoji` ]
+    #: :type: :obj`typing.Mapping` [ :obj`snowflakes.Snowflake`, :obj`GuildEmoji` ]
     emojis: typing.Mapping[snowflakes.Snowflake, GuildEmoji] = marshaller.attrib(
         deserializer=lambda emojis: {e.id: e for e in map(GuildEmoji.deserialize, emojis)},
     )
 
     #: A set of the features in this guild.
     #:
-    #: :type: :class:`typing.Set` [ :class:`GuildFeature` ]
+    #: :type: :obj`typing.Set` [ :obj`GuildFeature` ]
     features: typing.Set[GuildFeature] = marshaller.attrib(
         deserializer=lambda features: {transformations.try_cast(f, GuildFeature, f) for f in features},
     )
 
     #: The required MFA level for users wishing to participate in this guild.
     #:
-    #: :type: :class:`GuildMFALevel`
+    #: :type: :obj`GuildMFALevel`
     mfa_level: GuildMFALevel = marshaller.attrib(deserializer=GuildMFALevel)
 
     #: The ID of the application that created this guild, if it was created by
     #: a bot. If not, this is always ``None``.
     #:
-    #: :type: :class:`snowflakes.Snowflake`, optional
+    #: :type: :obj`snowflakes.Snowflake`, optional
     application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake, if_none=None
     )
@@ -381,7 +380,7 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: Describes whether the guild widget is enabled or not. If this information
     #: is not present, this will be ``None``.
     #:
-    #: :type: :class:`bool`, optional
+    #: :type: :obj`bool`, optional
     is_widget_enabled: typing.Optional[bool] = marshaller.attrib(
         raw_name="widget_enabled", if_undefined=None, deserializer=bool
     )
@@ -389,14 +388,15 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: The channel ID that the widget's generated invite will send the user to,
     #: if enabled. If this information is unavailable, this will be ``None``.
     #:
-    #: :type: :class:`snowflakes.Snowflake`, optional
+    #: :type: :obj`snowflakes.Snowflake`, optional
     widget_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         if_undefined=None, if_none=None, deserializer=snowflakes.Snowflake
     )
 
     #: The ID of the system channel (where welcome messages and Nitro boost
     #: messages are sent), or ``None`` if it is not enabled.
-    #: :type: :class:`snowflakes.Snowflake`, optional
+    #:
+    #: :type: :obj`snowflakes.Snowflake`, optional
     system_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         if_none=None, deserializer=snowflakes.Snowflake
     )
@@ -404,14 +404,14 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: Flags for the guild system channel to describe which notification
     #: features are suppressed.
     #:
-    #: :type: :class:`GuildSystemChannelFlag`
+    #: :type: :obj`GuildSystemChannelFlag`
     system_channel_flags: GuildSystemChannelFlag = marshaller.attrib(deserializer=GuildSystemChannelFlag)
 
     #: The ID of the channel where guilds with the :obj:`GuildFeature.PUBLIC`
     #: :attr:`features` display rules and guidelines. If the
     #: :obj:`GuildFeature.PUBLIC` feature is not defined, then this is ``None``.
     #:
-    #: :type: :class:`snowflakes.Snowflake`, optional
+    #: :type: :obj`snowflakes.Snowflake`, optional
     rules_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         if_none=None, deserializer=snowflakes.Snowflake
     )
@@ -419,10 +419,10 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: The date and time that the bot user joined this guild.
     #:
     #: This information is only available if the guild was sent via a
-    #: `GUILD_CREATE` event. If the guild is received from any other place,
+    #: ``GUILD_CREATE`` event. If the guild is received from any other place,
     #: this will always be ``None``.
     #:
-    #: :type: :class:`datetime.datetime`, optional
+    #: :type: :obj`datetime.datetime`, optional
     joined_at: typing.Optional[datetime.datetime] = marshaller.attrib(
         raw_name="joined_at", deserializer=dates.parse_iso_8601_ts,
     )
@@ -430,19 +430,19 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: Whether the guild is considered to be large or not.
     #:
     #: This information is only available if the guild was sent via a
-    #: `GUILD_CREATE` event. If the guild is received from any other place,
+    #: ``GUILD_CREATE`` event. If the guild is received from any other place,
     #: this will always be ``None``.
     #:
     #: The implications of a large guild are that presence information will
     #: not be sent about members who are offline or invisible.
     #:
-    #: :type: :class:`bool`, optional
+    #: :type: :obj`bool`, optional
     is_large: typing.Optional[bool] = marshaller.attrib(raw_name="large", if_undefined=None, deserializer=bool)
 
     #: Whether the guild is unavailable or not.
     #:
     #: This information is only available if the guild was sent via a
-    #: `GUILD_CREATE` event. If the guild is received from any other place,
+    #: ``GUILD_CREATE`` event. If the guild is received from any other place,
     #: this will always be ``None``.
     #:
     #: An unavailable guild cannot be interacted with, and most information may
@@ -457,13 +457,13 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: `GUILD_CREATE` event. If the guild is received from any other place,
     #: this will always be ``None``.
     #:
-    #: :type: :class:`int`, optional
+    #: :type: :obj`int`, optional
     member_count: typing.Optional[int] = marshaller.attrib(if_undefined=None, deserializer=int)
 
     #: A mapping of ID to the corresponding guild members in this guild.
     #:
     #: This information is only available if the guild was sent via a
-    #: `GUILD_CREATE` event. If the guild is received from any other place,
+    #: ``GUILD_CREATE`` event. If the guild is received from any other place,
     #: this will always be ``None``.
     #:
     #: Additionally, any offline members may not be included here, especially
@@ -477,7 +477,7 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: representation. If you need complete accurate information, you should
     #: query the members using the appropriate API call instead.
     #:
-    #: :type: :class:`typing.Mapping` [ :class:`snowflakes.Snowflake`, :class:`GuildMember` ], optional
+    #: :type: :obj`typing.Mapping` [ :obj`snowflakes.Snowflake`, :obj`GuildMember` ], optional
     members: typing.Optional[typing.Mapping[snowflakes.Snowflake, GuildMember]] = marshaller.attrib(
         deserializer=lambda members: {m.user.id: m for m in map(GuildMember.deserialize, members)}, if_undefined=None,
     )
@@ -485,7 +485,7 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: A mapping of ID to the corresponding guild channels in this guild.
     #:
     #: This information is only available if the guild was sent via a
-    #: `GUILD_CREATE` event. If the guild is received from any other place,
+    #: ``GUILD_CREATE`` event. If the guild is received from any other place,
     #: this will always be ``None``.
     #:
     #: Additionally, any channels that you lack permissions to see will not be
@@ -497,7 +497,7 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: To retrieve a list of channels in any other case, you should make an
     #: appropriate API call to retrieve this information.
     #:
-    #: :type: :class:`typing.Mapping` [ :class:`snowflakes.Snowflake`, :class:`GuildChannel` ], optional
+    #: :type: :obj`typing.Mapping` [ :obj`snowflakes.Snowflake`, :obj`GuildChannel` ], optional
     channels: typing.Optional[typing.Mapping[snowflakes.Snowflake, GuildChannel]] = marshaller.attrib(
         deserializer=lambda guild_channels: {c.id: c for c in map(parse_guild_channel, guild_channels)},
         if_undefined=None,
@@ -507,7 +507,7 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: the given member, if available.
     #:
     #: This information is only available if the guild was sent via a
-    #: `GUILD_CREATE` event. If the guild is received from any other place,
+    #: ``GUILD_CREATE`` event. If the guild is received from any other place,
     #: this will always be ``None``.
     #:
     #: Additionally, any channels that you lack permissions to see will not be
@@ -519,7 +519,7 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: To retrieve a list of presences in any other case, you should make an
     #: appropriate API call to retrieve this information.
     #:
-    #: :type: :class:`typing.Mapping` [ :class:`snowflakes.Snowflake`, :class:`GuildMemberPresence` ], optional
+    #: :type: :obj`typing.Mapping` [ :obj`snowflakes.Snowflake`, :obj`GuildMemberPresence` ], optional
     presences: typing.Optional[typing.Mapping[snowflakes.Snowflake, GuildMemberPresence]] = marshaller.attrib(
         deserializer=lambda presences: {p.user.id: p for p in map(GuildMemberPresence.deserialize, presences)},
         if_undefined=None,
@@ -528,21 +528,21 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: The maximum number of presences for the guild. If this is ``None``, then
     #: the default value is used (currently 5000).
     #:
-    #: :type: :class:`int`, optional
+    #: :type: :obj`int`, optional
     max_presences: typing.Optional[int] = marshaller.attrib(if_none=None, if_undefined=None, deserializer=int)
 
     #: The maximum number of members allowed in this guild.
     #:
     #: This information may not be present, in which case, it will be ``None``.
     #:
-    #: :type: :class:`int`, optional
+    #: :type: :obj`int`, optional
     max_members: typing.Optional[int] = marshaller.attrib(if_undefined=None, deserializer=int)
 
     #: The vanity URL code for the guild's vanity URL.
     #: This is only present if :obj:`GuildFeatures.VANITY_URL` is in the
     #: :attr:`features` for this guild. If not, this will always be ``None``.
     #:
-    #: :type: :class:`str`, optional
+    #: :type: :obj`str`, optional
     vanity_url_code: typing.Optional[str] = marshaller.attrib(if_none=None, deserializer=str)
 
     #: The guild's description.
@@ -551,33 +551,33 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: Otherwise, this will always be ``None``. For all other purposes, it is
     #: ``None``.
     #:
-    #: :type: :class:`str`, optional
+    #: :type: :obj`str`, optional
     description: typing.Optional[str] = marshaller.attrib(if_none=None, deserializer=str)
 
     #: The hash for the guild's banner.
     #: This is only present if the guild has :obj:`GuildFeatures.BANNER` in the
     #: :attr:`features` for this guild. For all other purposes, it is ``None``.
     #:
-    #: :type: :class:`str`, optional
+    #: :type: :obj`str`, optional
     banner_hash: typing.Optional[str] = marshaller.attrib(raw_name="banner", if_none=None, deserializer=str)
 
     #: The premium tier for this guild.
     #:
-    #: :type: :class:`GuildPremiumTier`
+    #: :type: :obj`GuildPremiumTier`
     premium_tier: GuildPremiumTier = marshaller.attrib(deserializer=GuildPremiumTier)
 
     #: The number of nitro boosts that the server currently has. This
     #: information may not be present, in which case, it will be ``None``.
     #:
-    #: :type: :class:`int`, optional
+    #: :type: :obj`int`, optional
     premium_subscription_count: typing.Optional[int] = marshaller.attrib(if_undefined=None, deserializer=int)
 
     #: The preferred locale to use for this guild.
     #:
     #: This can only be change if :obj:`GuildFeatures.PUBLIC` is in the
-    #: :attr:`features` for this guild and will otherwise default to `en-US`.
+    #: :attr:`features` for this guild and will otherwise default to ``en-US```.
     #:
-    #: :type: :class:`str`
+    #: :type: :obj`str`
     preferred_locale: str = marshaller.attrib(deserializer=str)
 
     #: The channel ID of the channel where admins and moderators receive notices
@@ -587,7 +587,7 @@ class Guild(snowflakes.UniqueEntity, entities.Deserializable):
     #: :attr:`features` for this guild. For all other purposes, it should be
     #: considered to be ``None``.
     #:
-    #: :type: :class:`snowflakes.Snowflake`, optional
+    #: :type: :obj`snowflakes.Snowflake`, optional
     public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         if_none=None, deserializer=snowflakes.Snowflake
     )
