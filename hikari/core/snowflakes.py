@@ -103,5 +103,5 @@ class UniqueEntity(entities.HikariEntity):
 
     #: The ID of this entity.
     #:
-    #: :type: :class:`Snowflake`
+    #: :type: :obj:`Snowflake`
     id: Snowflake = marshaller.attrib(hash=True, eq=True, repr=True, deserializer=Snowflake, serializer=str)
