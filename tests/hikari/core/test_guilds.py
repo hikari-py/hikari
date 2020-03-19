@@ -16,11 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
-from __future__ import annotations
-
-from timeit import timeit
-
+import cymock as mock
 import pytest
+
+from hikari.core import guilds
+from hikari.internal_utilities import cdn
 
 
 @pytest.fixture
@@ -142,6 +142,16 @@ def test_voice_state_payload():
     }
 
 
+@pytest.fixture()
+def test_partial_guild_payload():
+    return {
+        "id": "152559372126519269",
+        "name": "Isopropyl",
+        "icon": "d4a983885dsaa7691ce8bcaaf945a",
+        "features": ["DISCOVERABLE"],
+    }
+
+
 @pytest.fixture
 def test_guild_payload(
     test_emoji_payload, test_roles_payloads, test_channel_payloads, test_member_payload, test_voice_state_payload
@@ -182,3 +192,58 @@ def test_guild_payload(
         "system_channel_flags": 3,
         "rules_channel_id": "42042069",
     }
+
+
+class TestPartialGuild:
+    @pytest.fixture()
+    def partial_guild_obj(self, test_partial_guild_payload):
+        return guilds.PartialGuild.deserialize(test_partial_guild_payload)
+
+    def test_deserialize(self, partial_guild_obj):
+        assert partial_guild_obj.id == 152559372126519269
+        assert partial_guild_obj.name == "Isopropyl"
+        assert partial_guild_obj.icon_hash == "d4a983885dsaa7691ce8bcaaf945a"
+        assert partial_guild_obj.features == {guilds.GuildFeature.DISCOVERABLE}
+
+    def test_format_icon_url(self, partial_guild_obj):
+        mock_url = "https://cdn.discordapp.com/icons/152559372126519269/d4a983885dsaa7691ce8bcaaf945a.png?size=20"
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+            url = partial_guild_obj.format_icon_url(fmt="nyaapeg", size=42)
+            cdn.generate_cdn_url.assert_called_once_with(
+                "icons", "152559372126519269", "d4a983885dsaa7691ce8bcaaf945a", fmt="nyaapeg", size=42
+            )
+        assert url == mock_url
+
+    def test_format_icon_url_animated_default(self, partial_guild_obj):
+        partial_guild_obj.icon_hash = "a_d4a983885dsaa7691ce8bcaaf945a"
+        mock_url = "https://cdn.discordapp.com/icons/152559372126519269/a_d4a983885dsaa7691ce8bcaaf945a.gif?size=20"
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+            url = partial_guild_obj.format_icon_url()
+            cdn.generate_cdn_url.assert_called_once_with(
+                "icons", "152559372126519269", "a_d4a983885dsaa7691ce8bcaaf945a", fmt="gif", size=2048
+            )
+        assert url == mock_url
+
+    def test_format_icon_url_none_animated_default(self, partial_guild_obj):
+        partial_guild_obj.icon_hash = "d4a983885dsaa7691ce8bcaaf945a"
+        mock_url = "https://cdn.discordapp.com/icons/152559372126519269/d4a983885dsaa7691ce8bcaaf945a.png?size=20"
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+            url = partial_guild_obj.format_icon_url()
+            cdn.generate_cdn_url.assert_called_once_with(
+                "icons", "152559372126519269", "d4a983885dsaa7691ce8bcaaf945a", fmt="png", size=2048
+            )
+        assert url == mock_url
+
+    def test_format_icon_url_returns_none(self, partial_guild_obj):
+        partial_guild_obj.icon_hash = None
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=...):
+            url = partial_guild_obj.format_icon_url(fmt="nyaapeg", size=42)
+            cdn.generate_cdn_url.assert_not_called()
+        assert url is None
+
+    def test_format_icon_url(self, partial_guild_obj):
+        mock_url = "https://cdn.discordapp.com/icons/152559372126519269/d4a983885dsaa7691ce8bcaaf945a.png?size=20"
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+            url = partial_guild_obj.icon_url
+            cdn.generate_cdn_url.assert_called_once()
+        assert url == mock_url

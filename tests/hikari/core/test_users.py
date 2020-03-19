@@ -16,11 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
-from __future__ import annotations
-
+import cymock as mock
 import pytest
 
 from hikari.core import users
+from hikari.internal_utilities import cdn
 
 
 @pytest.fixture()
@@ -61,33 +61,41 @@ class TestUser:
         assert user_obj.discriminator == "6127"
 
     def test_avatar_url(self, user_obj):
-        url = user_obj.avatar_url
-        assert (
-            url == "https://cdn.discordapp.com/avatars/115590097100865541"
-            "/b3b24c6d7cbcdec129d5d537067061a8.png?size=2048"
-        )
+        mock_url = "https://cdn.discordapp.com/avatars/115590097100865541"
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+            url = user_obj.avatar_url
+            cdn.generate_cdn_url.assert_called_once()
+        assert url == mock_url
 
     def test_default_avatar(self, user_obj):
         assert user_obj.default_avatar == 2
 
     def test_format_avatar_url_when_animated(self, user_obj):
+        mock_url = "https://cdn.discordapp.com/avatars/115590097100865541/a_820d0e50543216e812ad94e6ab7.gif?size=3232"
         user_obj.avatar_hash = "a_820d0e50543216e812ad94e6ab7"
-        url = user_obj.format_avatar_url(size=3232)
-        assert (
-            url == "https://cdn.discordapp.com/avatars/115590097100865541/a_820d0e50543216e812ad94e6ab7.gif?size=3232"
-        )
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+            url = user_obj.format_avatar_url(size=3232)
+            cdn.generate_cdn_url.assert_called_once_with(
+                "avatars", "115590097100865541", "a_820d0e50543216e812ad94e6ab7", fmt="gif", size=3232
+            )
+        assert url == mock_url
 
     def test_format_avatar_url_default(self, user_obj):
         user_obj.avatar_hash = None
-        url = user_obj.format_avatar_url(size=3232)
-        assert url == "https://cdn.discordapp.com/embed/avatars/2.png"
+        mock_url = "https://cdn.discordapp.com/embed/avatars/2.png"
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+            url = user_obj.format_avatar_url(size=3232)
+            cdn.generate_cdn_url("embed/avatars", "115590097100865541", fmt="png", size=None)
+        assert url == mock_url
 
     def test_format_avatar_url_when_format_specified(self, user_obj):
-        url = user_obj.format_avatar_url(fmt="nyaapeg", size=1024)
-        assert (
-            url == "https://cdn.discordapp.com/avatars/115590097100865541"
-            "/b3b24c6d7cbcdec129d5d537067061a8.nyaapeg?size=1024"
-        )
+        mock_url = "https://cdn.discordapp.com/avatars/115590097100865541/b3b24c6d7c37067061a8.nyaapeg?size=1024"
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+            url = user_obj.format_avatar_url(fmt="nyaapeg", size=1024)
+            cdn.generate_cdn_url.assert_called_once_with(
+                "avatars", "115590097100865541", "b3b24c6d7cbcdec129d5d537067061a8", fmt="nyaapeg", size=1024
+            )
+        assert url == mock_url
 
 
 class TestMyUser:

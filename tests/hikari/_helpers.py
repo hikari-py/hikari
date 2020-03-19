@@ -453,7 +453,10 @@ def patch_marshal_attr(target_entity, field_name, *args, deserializer=None, **kw
             target = attr
             break
         elif attr.field_name == field_name:
-            raise TypeError(f"Deserializer mismatch found on `{target_entity.__name__}.{attr.field_name}`")
+            raise TypeError(
+                f"Deserializer mismatch found on `{target_entity.__name__}.{attr.field_name}`; "
+                f"expected `{deserializer}` but got `{attr.deserializer}`."
+            )
     else:
         raise LookupError(f"Failed to find a `{field_name}` field on `{target_entity.__name__}`.")
     return mock.patch.object(target, "deserializer", *args, **kwargs)

@@ -20,11 +20,11 @@
 __all__ = ["User", "MyUser", "UserFlag"]
 
 import enum
-import urllib
 import typing
 
 from hikari.core import entities
 from hikari.core import snowflakes
+from hikari.internal_utilities import cdn
 from hikari.internal_utilities import marshaller
 
 
@@ -69,9 +69,10 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
         Parameters
         ----------
         fmt : :obj:`str`
-            The format to use for this url, defaults to ``png``.
-            Supports ``png``, ``jpeg``, ``webp`` and ``gif`` (when animated).
-            Will be ignored for default avatars which can only be ``png``.
+            The format to use for this url, defaults to ``png`` or ``gif``.
+            Supports ``png``, ``jpeg``, ``jpg``, ``webp`` and ``gif`` (when
+            animated). Will be ignored for default avatars which can only be
+            ``png``.
         size : :obj:`int`
             The size to set for the url, defaults to ``2048``.
             Can be any power of two between 16 and 2048.
@@ -84,20 +85,17 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
         """
 
         if not self.avatar_hash:
-            return f"https://cdn.discordapp.com/embed/avatars/{self.default_avatar}.png"
+            return cdn.generate_cdn_url("embed/avatars", str(self.default_avatar), fmt="png", size=None)
         # pylint: disable=E1101:
         if fmt is None and self.avatar_hash.startswith("a_"):
             fmt = "gif"
         elif fmt is None:
             fmt = "png"
-        return (
-            f"https://cdn.discordapp.com/avatars/{self.id}/{self.avatar_hash}."
-            f"{urllib.parse.quote_plus(fmt)}?{urllib.parse.urlencode({'size': size})}"
-        )
+        return cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, fmt=fmt, size=size)
 
     @property
     def default_avatar(self) -> int:
-        """Returns the number for this user's default avatar."""
+        """The number representation of this user's default avatar."""
         return int(self.discriminator) % 5
 
 
