@@ -17,16 +17,37 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities related to discord's Oauth2 flow."""
-__all__ = ["Application", "Owner", "Team", "TeamMember", "TeamMembershipState"]
+__all__ = ["Application", "Owner", "OwnGuild", "Team", "TeamMember", "TeamMembershipState"]
 
 import enum
 import typing
-import urllib
 
 from hikari.core import entities
+from hikari.core import guilds
+from hikari.core import permissions
 from hikari.core import snowflakes
 from hikari.core import users
+from hikari.internal_utilities import cdn
 from hikari.internal_utilities import marshaller
+
+
+@marshaller.attrs(slots=True)
+class OwnGuild(guilds.PartialGuild):
+    """Represents a user bound partial guild object,
+    returned by GET Current User Guilds.
+    """
+
+    #: Whether the current user owns this guild.
+    #:
+    #: :class: :obj:`bool`
+    is_owner: bool = marshaller.attrib(raw_name="owner", deserializer=bool)
+
+    #: The guild level permissions that apply to the current user or bot.
+    #:
+    #: :type: :obj:`hikari.core.permissions.Permission`
+    my_permissions: permissions.Permission = marshaller.attrib(
+        raw_name="permissions", deserializer=permissions.Permission
+    )
 
 
 @enum.unique
@@ -109,14 +130,11 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
 
         Returns
         -------
-        :obj`str`, optional
+        :obj:`str`, optional
             The string url.
         """
         if self.icon_hash:
-            return (
-                f"https://cdn.discordapp.com/team-icons/{self.id}/{self.icon_hash}."
-                f"{urllib.parse.quote_plus(fmt)}?{urllib.parse.urlencode({'size': size})}"
-            )
+            return cdn.generate_cdn_url("team-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
         return None
 
 
@@ -247,14 +265,11 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
 
         Returns
         -------
-        :obj`str`, optional
+        :obj:`str`, optional
             The string url.
         """
         if self.icon_hash:
-            return (
-                f"https://cdn.discordapp.com/app-icons/{self.id}/{self.icon_hash}."
-                f"{urllib.parse.quote_plus(fmt)}?{urllib.parse.urlencode({'size': size})}"
-            )
+            return cdn.generate_cdn_url("app-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
         return None
 
     @property
@@ -277,12 +292,9 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
 
         Returns
         -------
-        :obj`str`, optional
+        :obj:`str`, optional
             The string url.
         """
         if self.cover_image_hash:
-            return (
-                f"https://cdn.discordapp.com/app-assets/{self.id}/{self.cover_image_hash}"
-                f".{urllib.parse.quote_plus(fmt)}?{urllib.parse.urlencode({'size': size})}"
-            )
+            return cdn.generate_cdn_url("app-assets", str(self.id), self.cover_image_hash, fmt=fmt, size=size)
         return None

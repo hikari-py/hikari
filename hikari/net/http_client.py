@@ -921,7 +921,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             If specified, the bitwise value of all permissions to set to be allowed.
         deny : :obj:`int`
             If specified, the bitwise value of all permissions to set to be denied.
-        type_ : :obj:`str`]
+        type_ : :obj:`str`
             If specified, the type of overwrite. ``"member"`` if it is for a member, 
             or ``"role"`` if it is for a role.
         reason : :obj:`str`
