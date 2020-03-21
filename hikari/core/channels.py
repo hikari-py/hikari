@@ -46,12 +46,12 @@ class PartialChannel(snowflakes.UniqueEntity, entities.Deserializable):
 
     #: This channel's name.
     #:
-    #: :class: :obj:`str`
+    #: :type: :obj:`str`
     name: str = marshaller.attrib(deserializer=str)
 
     #: This channel's type.
     #:
-    #: :class: :obj:`ChannelType`
+    #: :type: :obj:`ChannelType`
     type: ChannelType = marshaller.attrib(deserializer=ChannelType)
 
 

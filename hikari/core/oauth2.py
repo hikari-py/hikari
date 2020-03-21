@@ -39,12 +39,12 @@ class OwnGuild(guilds.PartialGuild):
 
     #: Whether the current user owns this guild.
     #:
-    #: :class: :obj:`bool`
+    #: :type: :obj:`bool`
     is_owner: bool = marshaller.attrib(raw_name="owner", deserializer=bool)
 
     #: The guild level permissions that apply to the current user or bot.
     #:
-    #: :type: :obj:`hikari.core.permissions.Permission`
+    #: :type: :obj:`permissions.Permission`
     my_permissions: permissions.Permission = marshaller.attrib(
         raw_name="permissions", deserializer=permissions.Permission
     )
@@ -73,17 +73,13 @@ class TeamMember(entities.HikariEntity, entities.Deserializable):
     #: This member's permissions within a team.
     #: Will always be ``["*"]`` until Discord starts using this.
     #:
-    #: :type: :obj:`typing.Set` [ `str` ]
-    permissions: typing.Set[str] = marshaller.attrib(
-        deserializer=lambda permissions: {str(permission) for permission in permissions}
-    )
+    #: :type: :obj:`typing.Set` [ :obj:`str` ]
+    permissions: typing.Set[str] = marshaller.attrib(deserializer=lambda permissions: {p for p in permissions})
 
     #: The ID of the team this member belongs to.
     #:
-    #: :type: :obj:`hikari.core.snowflakes.Snowflake`
-    team_id: snowflakes.Snowflake = marshaller.attrib(
-        hash=True, eq=True, repr=True, deserializer=snowflakes.Snowflake, serializer=str,
-    )
+    #: :type: :obj:`snowflakes.Snowflake`
+    team_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake)
 
     #: The user object of this team member.
     #:
@@ -101,15 +97,15 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
     icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str)
     #: The member's that belong to this team.
     #:
-    #: :type: :obj:`typing.Sequence` [ :obj:`TeamMember` ]
-    members: typing.Sequence[TeamMember] = marshaller.attrib(
-        deserializer=lambda members: {int(member["user"]["id"]): TeamMember.deserialize(member) for member in members}
+    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`TeamMember` ]
+    members: typing.Mapping[snowflakes.Snowflake, TeamMember] = marshaller.attrib(
+        deserializer=lambda members: {m.user.id: m for m in map(TeamMember.deserialize, members)}
     )
 
     #: The snowflake ID of this team's owner.
     #:
-    #: :type: :obj:`hikari.core.snowflakes.Snowflake`
-    owner_user_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake, serializer=str)
+    #: :type: :obj:`snowflakes.Snowflake`
+    owner_user_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake)
 
     @property
     def icon_url(self) -> typing.Optional[str]:
@@ -117,7 +113,7 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
         return self.format_icon_url()
 
     def format_icon_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
-        """"Generate the icon url for this team if set.
+        """Generate the icon url for this team if set.
 
         Parameters
         ----------
@@ -126,7 +122,7 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
         size : :obj:`int`
             The size to set for the url, defaults to ``2048``.
-            Can be any power of 2 in the range :math:`\left[16, 2048\right]`.
+            Can be any power of two between 16 and 2048.
 
         Returns
         -------
@@ -193,9 +189,7 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
     #: A collection of this application's rpc origin urls, if rpc is enabled.
     #:
     #: :type: :obj:`typing.Set` [ :obj:`str` ], optional
-    rpc_origins: typing.Optional[typing.Set[str]] = marshaller.attrib(
-        deserializer=lambda origins: {str(origin) for origin in origins}, if_undefined=None
-    )
+    rpc_origins: typing.Optional[typing.Set[str]] = marshaller.attrib(deserializer=set, if_undefined=None)
 
     #: This summary for this application's primary SKU if it's sold on Discord.
     #: Will be an empty string if unset.
@@ -221,14 +215,14 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
     #: The ID of the guild this application is linked to
     #: if it's sold on Discord.
     #:
-    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
+    #: :type: :obj:`snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake, if_undefined=None
     )
 
     #: The ID of the primary "Game SKU" of a game that's sold on Discord.
     #:
-    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
+    #: :type: :obj:`snowflakes.Snowflake`, optional
     primary_sku_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake, if_undefined=None
     )
@@ -252,7 +246,7 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
         return self.format_icon_url()
 
     def format_icon_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
-        """"Generate the icon url for this application if set.
+        """Generate the icon url for this application if set.
 
         Parameters
         ----------
@@ -278,7 +272,7 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
         return self.format_cover_image_url()
 
     def format_cover_image_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
-        """"Generate the url for this application's store page's cover image is
+        """Generate the url for this application's store page's cover image is
         set and applicable.
 
         Parameters

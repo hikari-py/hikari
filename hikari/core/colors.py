@@ -28,75 +28,81 @@ from hikari.internal_utilities import assertions
 
 
 class Color(int, typing.SupportsInt):
-    """
-    Representation of a color. This value is immutable.
+    """Representation of a color.
+    
+    This value is immutable.
 
-    This is a specialization of :class:`int` which provides alternative overrides for common methods and color system
+    This is a specialization of :obj:`int` which provides alternative overrides for common methods and color system
     conversions.
 
     This currently supports:
 
-    - RGB
-    - RGB (float)
-    - 3-digit hex codes (e.g. 0xF1A -- web safe)
-    - 6-digit hex codes (e.g. 0xFF11AA)
-    - 3-digit RGB strings (e.g. #1A2 -- web safe)
-    - 6-digit RGB hash strings (e.g. #1A2B3C)
+    * RGB
+    * RGB (float)
+    * 3-digit hex codes (e.g. 0xF1A -- web safe)
+    * 6-digit hex codes (e.g. 0xFF11AA)
+    * 3-digit RGB strings (e.g. #1A2 -- web safe)
+    * 6-digit RGB hash strings (e.g. #1A2B3C)
 
-    Examples of conversions to given formats include
+    Examples
+    --------
+    Examples of conversions to given formats include:
+    .. code-block::python
 
-    >>> c = Color(0xFF051A)
-    Color(r=0xff, g=0x5, b=0x1a)
-    >>> hex(c)
-    0xff051a
-    >>> c.hex_code
-    #FF051A
-    >>> str(c)
-    #FF051A
-    >>> int(c)
-    16712986
-    >>> c.rgb
-    (255, 5, 26)
-    >>> c.rgb_float
-    (1.0, 0.0196078431372549, 0.10196078431372549)
+        >>> c = Color(0xFF051A)
+        Color(r=0xff, g=0x5, b=0x1a)
+        >>> hex(c)
+        0xff051a
+        >>> c.hex_code
+        #FF051A
+        >>> str(c)
+        #FF051A
+        >>> int(c)
+        16712986
+        >>> c.rgb
+        (255, 5, 26)
+        >>> c.rgb_float
+        (1.0, 0.0196078431372549, 0.10196078431372549)
 
     Alternatively, if you have an arbitrary input in one of the above formats that you wish to become a color, you can
-    use the get-attribute operator on the class itself to automatically attempt to resolve the color
+    use the get-attribute operator on the class itself to automatically attempt to resolve the color:
+    .. code-block::python
 
-    >>> Color[0xFF051A]
-    Color(r=0xff, g=0x5, b=0x1a)
-    >>> Color[16712986]
-    Color(r=0xff, g=0x5, b=0x1a)
-    >>> c = Color[(255, 5, 26)]
-    Color(r=0xff, g=0x5, b=1xa)
-    >>> c = Color[[0xFF, 0x5, 0x1a]]
-    Color(r=0xff, g=0x5, b=1xa)
-    >>> c = Color["#1a2b3c"]
-    Color(r=0x1a, g=0x2b, b=0x3c)
-    >>> c = Color["#1AB"]
-    Color(r=0x11, g=0xaa, b=0xbb)
-    >>> c = Color[(1.0, 0.0196078431372549, 0.10196078431372549)]
-    Color(r=0xff, g=0x5, b=0x1a)
-    >>> c = Color[[1.0, 0.0196078431372549, 0.10196078431372549]]
-    Color(r=0xff, g=0x5, b=0x1a)
+        >>> Color[0xFF051A]
+        Color(r=0xff, g=0x5, b=0x1a)
+        >>> Color[16712986]
+        Color(r=0xff, g=0x5, b=0x1a)
+        >>> c = Color[(255, 5, 26)]
+        Color(r=0xff, g=0x5, b=1xa)
+        >>> c = Color[[0xFF, 0x5, 0x1a]]
+        Color(r=0xff, g=0x5, b=1xa)
+        >>> c = Color["#1a2b3c"]
+        Color(r=0x1a, g=0x2b, b=0x3c)
+        >>> c = Color["#1AB"]
+        Color(r=0x11, g=0xaa, b=0xbb)
+        >>> c = Color[(1.0, 0.0196078431372549, 0.10196078431372549)]
+        Color(r=0xff, g=0x5, b=0x1a)
+        >>> c = Color[[1.0, 0.0196078431372549, 0.10196078431372549]]
+        Color(r=0xff, g=0x5, b=0x1a)
 
-    Examples of initialization of Color objects from given formats include
+    Examples of initialization of Color objects from given formats include:
+    .. code-block::python
 
-    >>> c = Color(16712986)
-    Color(r=0xff, g=0x5, b=0x1a)
-    >>> c = Color.from_rgb(255, 5, 26)
-    Color(r=0xff, g=0x5, b=1xa)
-    >>> c = Color.from_hex_code("#1a2b3c")
-    Color(r=0x1a, g=0x2b, b=0x3c)
-    >>> c = Color.from_hex_code("#1AB")
-    Color(r=0x11, g=0xaa, b=0xbb)
-    >>> c = Color.from_rgb_float(1.0, 0.0196078431372549, 0.10196078431372549)
-    Color(r=0xff, g=0x5, b=0x1a)
+        >>> c = Color(16712986)
+        Color(r=0xff, g=0x5, b=0x1a)
+        >>> c = Color.from_rgb(255, 5, 26)
+        Color(r=0xff, g=0x5, b=1xa)
+        >>> c = Color.from_hex_code("#1a2b3c")
+        Color(r=0x1a, g=0x2b, b=0x3c)
+        >>> c = Color.from_hex_code("#1AB")
+        Color(r=0x11, g=0xaa, b=0xbb)
+        >>> c = Color.from_rgb_float(1.0, 0.0196078431372549, 0.10196078431372549)
+        Color(r=0xff, g=0x5, b=0x1a)
     """
 
     __slots__ = ()
 
-    def __new__(cls: typing.Type["Color"], raw_rgb: typing.SupportsInt) -> "Color":
+    def __new__(cls, raw_rgb: typing.SupportsInt) -> "Color":
         assertions.assert_in_range(raw_rgb, 0, 0xFF_FF_FF, "integer value")
         return super(Color, cls).__new__(cls, raw_rgb)
 
@@ -113,69 +119,68 @@ class Color(int, typing.SupportsInt):
 
     @property
     def rgb(self) -> typing.Tuple[int, int, int]:
-        """
-        The RGB representation of this Color. Represented a tuple of R, G, B. Each value is in the range [0, 0xFF].
-        """
+        """The RGB representation of this Color. Represented a tuple of R, G, B. Each value is in the 
+        range [0, 0xFF]."""
         return (self >> 16) & 0xFF, (self >> 8) & 0xFF, self & 0xFF
 
     @property
     def rgb_float(self) -> typing.Tuple[float, float, float]:
-        """
-        Return the floating-point RGB representation of this Color. Represented as a tuple of R, G, B. Each value is in
-        the range [0, 1].
-        """
+        """Return the floating-point RGB representation of this Color. Represented as a tuple of R, G, B. 
+        Each value is in the range [0, 1]."""
         r, g, b = self.rgb
         return r / 0xFF, g / 0xFF, b / 0xFF
 
     @property
     def hex_code(self) -> str:
-        """
-        The six-digit hexadecimal color code for this Color. This is prepended with a `#` symbol, and will be
-        in upper case.
+        """The six-digit hexadecimal color code for this Color. This is prepended with a ``#`` symbol, 
+        and will bein upper case.
 
-        Example:
-            #1A2B3C
+        Example
+        -------
+        ``#1A2B3C``
         """
         return "#" + self.raw_hex_code
 
     @property
     def raw_hex_code(self) -> str:
-        """
-        The raw hex code.
+        """The raw hex code.
 
-        Example:
-             1A2B3C
+        Example
+        -------
+        ``1A2B3C``
         """
         components = self.rgb
         return "".join(hex(c)[2:].zfill(2) for c in components).upper()
 
     @property
     def is_web_safe(self) -> bool:
-        """
-        True if this color is a web-safe color, False otherwise.
-        """
+        """``True`` if this color is a web-safe color, ``False`` otherwise."""
         hex_code = self.raw_hex_code
         return all(_all_same(*c) for c in (hex_code[:2], hex_code[2:4], hex_code[4:]))
 
     @classmethod
-    def from_rgb(cls: typing.Type["Color"], red: int, green: int, blue: int) -> "Color":
-        """
-        Convert the given RGB colorspace represented in values within the range [0, 255]: [0x0, 0xFF], to a Color
-        object.
+    def from_rgb(cls, red: int, green: int, blue: int) -> "Color":
+        """Convert the given RGB colorspace represented in values within the range [0, 255]: [0x0, 0xFF], 
+        to a :obj:`Color` object.
 
-        Args:
-            red:
-                Red channel.
-            green:
-                Green channel.
-            blue:
-                Blue channel.
+        Parameters
+        ----------
+        red : :obj:`int`
+            Red channel.
+        green : :obj:`int`
+            Green channel.
+        blue : :obj:`int`
+            Blue channel.
 
-        Returns:
+        Returns
+        -------
+        :obj:`Color`
             A Color object.
 
-        Raises:
-              ValueError: if red, green, or blue are outside the range [0x0, 0xFF]
+        Raises
+        ------
+        :obj:`ValueError`
+            If red, green, or blue are outside the range [0x0, 0xFF].
         """
         assertions.assert_in_range(red, 0, 0xFF, "red")
         assertions.assert_in_range(green, 0, 0xFF, "green")
@@ -184,23 +189,28 @@ class Color(int, typing.SupportsInt):
         return cls((red << 16) | (green << 8) | blue)
 
     @classmethod
-    def from_rgb_float(cls: typing.Type["Color"], red_f: float, green_f: float, blue_f: float) -> "Color":
-        """
-        Convert the given RGB colorspace represented using floats in the range [0, 1] to a Color object.
+    def from_rgb_float(cls, red_f: float, green_f: float, blue_f: float) -> "Color":
+        """Convert the given RGB colorspace represented using floats in 
+        the range [0, 1] to a :obj:`Color` object.
 
-        Args:
-            red_f:
-                Red channel.
-            green_f:
-                Green channel.
-            blue_f:
-                Blue channel.
+        Parameters
+        ----------
+        red_f : :obj:`float`
+            Red channel.
+        green_f : :obj:`float`
+            Green channel.
+        blue_f : :obj:`float`
+            Blue channel.
 
-        Returns:
+        Returns
+        -------
+        :obj:`Color`
             A Color object.
 
-        Raises:
-            ValueError: if red, green or blue are outside the range [0, 1]
+        Raises
+        ------
+        :obj:`ValueError`
+            If red, green or blue are outside the range [0, 1].
         """
         assertions.assert_in_range(red_f, 0, 1, "red")
         assertions.assert_in_range(green_f, 0, 1, "green")
@@ -209,23 +219,27 @@ class Color(int, typing.SupportsInt):
         return cls.from_rgb(int(red_f * 0xFF), int(green_f * 0xFF), int(blue_f * 0xFF))
 
     @classmethod
-    def from_hex_code(cls: typing.Type["Color"], hex_code: str) -> "Color":
-        """
-        Consumes a string hexadecimal color code and produces a Color.
+    def from_hex_code(cls, hex_code: str) -> "Color":
+        """Consumes a string hexadecimal color code and produces a :obj:`Color`.
 
         The inputs may be of the following format (case insensitive):
-            `1a2`, `#1a2`, `0x1a2` (for websafe colors), or
-            `1a2b3c`, `#1a2b3c` `0x1a2b3c` (for regular 3-byte color-codes).
+        ``1a2``, ``#1a2``, ``0x1a2`` (for websafe colors), or
+        ``1a2b3c``, ``#1a2b3c``, ``0x1a2b3c`` (for regular 3-byte color-codes).
 
-        Args:
-            hex_code:
-                A hexadecimal color code to parse.
+        Parameters
+        ----------
+        hex_code : :obj:`str`
+            A hexadecimal color code to parse.
 
-        Returns:
+        Returns
+        -------
+        :obj:`Color`
             A corresponding Color object.
 
-        Raises:
-            Value error if the Color
+        Raises
+        ------
+        :obj:`ValueError`
+            If ``hex_code`` is not a hexadecimal or is a inalid length.
         """
         if hex_code.startswith("#"):
             hex_code = hex_code[1:]
@@ -247,15 +261,17 @@ class Color(int, typing.SupportsInt):
         raise ValueError("Color code is invalid length. Must be 3 or 6 digits")
 
     @classmethod
-    def from_int(cls: typing.Type["Color"], i: typing.SupportsInt) -> "Color":
-        """
-        Create a color from a raw integer that Discord can understand.
+    def from_int(cls, i: typing.SupportsInt) -> "Color":
+        """Create a color from a raw integer that Discord can understand.
 
-        Args:
-            i:
-                The raw color integer.
+        Parameters
+        ----------
+        i : :obj:`typing.SupportsInt`
+            The raw color integer.
 
-        Returns:
+        Returns
+        -------
+        :obj:`Color`
             The Color object.
         """
         return cls(i)

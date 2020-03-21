@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-__all__ = ["GatewayBot"]
+__all__ = ["GatewayBot", "SessionStartLimit"]
 
 import attr
 
