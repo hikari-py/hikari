@@ -95,14 +95,15 @@ def attrib(
         The result of :func:`attr.ib` internally being called with additional
         metadata.
     """
-    metadata = kwargs.setdefault("metadata", {})
+    metadata = kwargs.pop("metadata", {})
     metadata[_RAW_NAME_ATTR] = raw_name
     metadata[_SERIALIZER_ATTR] = serializer
     metadata[_DESERIALIZER_ATTR] = deserializer
     metadata[_IF_NONE] = if_none
     metadata[_IF_UNDEFINED] = if_undefined
     metadata[_TRANSIENT_ATTR] = transient
-    return attr.ib(**kwargs)
+
+    return attr.ib(**kwargs, metadata=metadata)
 
 
 def _no_serialize(name):
