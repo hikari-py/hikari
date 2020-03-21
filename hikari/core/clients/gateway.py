@@ -25,18 +25,18 @@ from hikari.internal_utilities import marshaller
 class GatewayActivity:
     #: The activity name.
     #:
-    #: :type: :class:`str`
+    #: :type: :obj:`str`
     name: str = marshaller.attrib(deserializer=str, serializer=str)
 
     #: The activity url. Only valid for ``STREAMING`` activities.
     #:
-    #: :type: :class:`str`, optional
+    #: :type: :obj:`str`, optional
     url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_none=None, if_undefined=None)
 
     # TODO: implement enum for this.
     #: The activity type.
     #:
-    #: :type: :class:`int`
+    #: :type: :obj:`int`
     type: int = marshaller.attrib(deserializer=int, serializer=int, if_undefined=0)
 
 
@@ -45,13 +45,13 @@ class GatewayConfig:
     #: Whether to enable debugging mode for the generated shards. Usually you
     #: don't want to enable this.
     #:
-    #: :type: :class:`bool`
+    #: :type: :obj:`bool`
     debug: bool = marshaller.attrib(deserializer=bool, if_undefined=False)
 
     #: The initial activity to set all shards to when starting the gateway. If
     #: ``None``, then no activity will be set.
     #:
-    #: :type: :class:`GatewayActivity`
+    #: :type: :obj:`GatewayActivity`
     initial_activity: typing.Optional[GatewayActivity] = marshaller.attrib(
         deserializer=bool, if_none=None, if_undefined=None
     )
@@ -59,13 +59,13 @@ class GatewayConfig:
     # TODO: implement enum for this
     #: The initial status to set the shards to when starting the gateway.
     #:
-    #: :type: :class:`str`
+    #: :type: :obj:`str`
     initial_status: str = marshaller.attrib(deserializer=str, if_undefined="online")
 
     #: Whether to use zlib compression on the gateway for inbound messages or
     #: not. Usually you want this turned on.
     #:
-    #: :type: :class:`bool`
+    #: :type: :obj:`bool`
     use_compression: bool = marshaller.attrib(deserializer=bool, if_undefined=True)
 
 

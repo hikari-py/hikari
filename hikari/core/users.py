@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe Users on Discord."""
-__all__ = ["User", "MyUser", "UserFlag"]
+__all__ = ["User", "MyUser", "UserFlag", "PremiumType"]
 
 import enum
 import typing
@@ -63,7 +63,7 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
         return self.format_avatar_url()
 
     def format_avatar_url(self, fmt: typing.Optional[str] = None, size: int = 2048) -> str:
-        """"Generate the avatar url for this user's custom avatar if set,
+        """Generate the avatar url for this user's custom avatar if set,
         else their default avatar.
 
         Parameters

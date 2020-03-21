@@ -70,21 +70,21 @@ def attrib(
         The raw name of the element in its raw serialized form. If not provided,
         then this will use the field's default name later.
     transient : :obj:`bool`
-        If True, the field is marked as transient, meaning it will not be
-        serialized. Defaults to False.
+        If ``True``, the field is marked as transient, meaning it will not be
+        serialized. Defaults to ``False``.
     if_none : :obj:`typing.Union` [ :obj:`typing.Callable` [ ... , :obj:`typing.Any` ], :obj:`None` ], optional
         Either a default factory function called to get the default for when
-        this field is `None` or `None` to specify that this should default
-        to `None`. Will raise an exception when `None` is received for this
+        this field is ``None`` or ``None`` to specify that this should default
+        to ``None``. Will raise an exception when ``None`` is received for this
         field later if this isn't specified.
     if_undefined : :obj:`typing.Union` [ :obj:`typing.Callable` [  ... , :obj:`typing.Any` ], :obj:`None` ], optional
         Either a default factory function called to get the default for when
-        this field isn't defined or `None` to specify that this should default
-        to `None`. Will raise an exception when this field is undefined later
+        this field isn't defined or ``None`` to specify that this should default
+        to ``None``. Will raise an exception when this field is undefined later
         on if this isn't specified.
     serializer : :obj:`typing.Callable` [ [ :obj:`typing.Any` ], :obj:`typing.Any` ], optional
         The serializer to use. If not specified, then serializing the entire
-        class that this attribute is in will trigger a :class:`TypeError`
+        class that this attribute is in will trigger a :obj:`TypeError`
         later.
     **kwargs :
         Any kwargs to pass to :func:`attr.ib`.
@@ -274,17 +274,17 @@ class HikariEntityMarshaller:
 
         Parameters
         ----------
-        obj : :class:`typing.Any`, optional
+        obj : :obj:`typing.Any`, optional
             The entity to serialize.
 
         Returns
         -------
-        :class:`typing.Mapping` [ :class:`str`, :class:`typing.Any` ], optional
+        :obj:`typing.Mapping` [ :obj:`str`, :obj:`typing.Any` ], optional
             The serialized raw data item.
 
         Raises
         ------
-        :class:`LookupError`
+        :obj:`LookupError`
             If the entity is not registered.
         """
         if obj is None:
@@ -324,7 +324,7 @@ def attrs(**kwargs):
     Other Parameters
     ----------------
     auto_attribs : :obj:`bool`
-        This must always be ``False`` if specified, or a :class:`ValueError`
+        This must always be ``False`` if specified, or a :obj:`ValueError`
         will be raised, as this feature is not compatible with this marshaller
         implementation. If not specified, it will default to ``False``.
     marshaller : :obj:`HikariEntityMarshaller`
@@ -339,7 +339,7 @@ def attrs(**kwargs):
 
     Raises
     ------
-    :class:`ValueError`
+    :obj:`ValueError`
         If you attempt to use the `auto_attribs` feature provided by
         :mod:`attr`.
 

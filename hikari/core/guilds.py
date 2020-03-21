@@ -101,6 +101,7 @@ def parse_guild_channel(payload) -> GuildChannel:
     return Duff()
 
 
+@enum.unique
 class GuildExplicitContentFilterLevel(enum.IntEnum):
     """Represents the explicit content filter setting for a guild."""
 
@@ -114,6 +115,7 @@ class GuildExplicitContentFilterLevel(enum.IntEnum):
     ALL_MEMBERS = 2
 
 
+@enum.unique
 class GuildFeature(str, enum.Enum):
     """Features that a guild can provide."""
 
@@ -150,6 +152,7 @@ class GuildFeature(str, enum.Enum):
     VIP_REGIONS = "VIP_REGIONS"
 
 
+@enum.unique
 class GuildMessageNotificationsLevel(enum.IntEnum):
     """Represents the default notification level for new messages in a guild."""
 
@@ -160,6 +163,7 @@ class GuildMessageNotificationsLevel(enum.IntEnum):
     ONLY_MENTIONS = 1
 
 
+@enum.unique
 class GuildMFALevel(enum.IntEnum):
     """Represents the multi-factor authorization requirement for a guild."""
 
@@ -170,6 +174,7 @@ class GuildMFALevel(enum.IntEnum):
     ELEVATED = 1
 
 
+@enum.unique
 class GuildPremiumTier(enum.IntEnum):
     """Tier for Discord Nitro boosting in a guild."""
 
@@ -195,6 +200,7 @@ class GuildSystemChannelFlag(enum.IntFlag):
     SUPPRESS_PREMIUM_SUBSCRIPTION = 2
 
 
+@enum.unique
 class GuildVerificationLevel(enum.IntEnum):
     """Represents the level of verification a user needs to provide for their
     account before being allowed to participate in a guild."""
@@ -244,8 +250,7 @@ class GuildRole(snowflakes.UniqueEntity, entities.Deserializable):
 @marshaller.attrs(slots=True)
 class PartialGuild(snowflakes.UniqueEntity, entities.Deserializable):
     """This is a base object for any partial guild objects returned by the api
-    where we are only given limited information.
-    """
+    where we are only given limited information."""
 
     #: The name of the guild.
     #:
@@ -265,7 +270,7 @@ class PartialGuild(snowflakes.UniqueEntity, entities.Deserializable):
     )
 
     def format_icon_url(self, fmt: typing.Optional[str] = None, size: int = 2048) -> typing.Optional[str]:
-        """"Generate the url for this guild's custom icon, if set.
+        """Generate the url for this guild's custom icon, if set.
 
         Parameters
         ----------
@@ -342,14 +347,16 @@ class Guild(PartialGuild):
     #: guild.
     #:
     #: :type: :obj:`snowflakes.Snowflake`, optional
-    afk_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(deserializer=str, if_none=None)
+    afk_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
+        deserializer=snowflakes.Snowflake, if_none=None
+    )
 
     #: How long a voice user has to be AFK for before they are classed as being
     #: AFK and are moved to the AFK channel (:attr:`afk_channel_id`).
     #:
     #: :type: :obj:`datetime.timedelta`
     afk_timeout: datetime.timedelta = marshaller.attrib(
-        raw_name="afk_timeout", deserializer=lambda seconds: datetime.timedelta(seconds=seconds)
+        deserializer=lambda seconds: datetime.timedelta(seconds=seconds)
     )
 
     # TODO: document when this is not specified.
@@ -463,10 +470,8 @@ class Guild(PartialGuild):
     #: ``GUILD_CREATE`` event. If the guild is received from any other place,
     #: this will always be ``None``.
     #:
-    #: :type: :obj:`datetime.datetime`, optional
-    joined_at: typing.Optional[datetime.datetime] = marshaller.attrib(
-        raw_name="joined_at", deserializer=dates.parse_iso_8601_ts,
-    )
+    #: :type: :obj`datetime.datetime`, optional
+    joined_at: typing.Optional[datetime.datetime] = marshaller.attrib(deserializer=dates.parse_iso_8601_ts)
 
     #: Whether the guild is considered to be large or not.
     #:
@@ -495,7 +500,7 @@ class Guild(PartialGuild):
     #: The number of members in this guild.
     #:
     #: This information is only available if the guild was sent via a
-    #: `GUILD_CREATE` event. If the guild is received from any other place,
+    #: ``GUILD_CREATE`` event. If the guild is received from any other place,
     #: this will always be ``None``.
     #:
     #: :type: :obj:`int`, optional

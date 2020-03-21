@@ -36,14 +36,14 @@ class Snowflake(entities.HikariEntity, typing.SupportsInt):
     """A concrete representation of a unique identifier for an object on
     Discord.
 
-    This object can be treated as a regular :class:`int` for most purposes.
+    This object can be treated as a regular :obj:`int` for most purposes.
     """
 
     __slots__ = ("_value",)
 
     #: The integer value of this ID.
     #:
-    #: :type: :class:`int`
+    #: :type: :obj:`int`
     _value: int
 
     def __init__(self, value: typing.Union[int, str]) -> None:

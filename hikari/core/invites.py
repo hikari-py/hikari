@@ -47,12 +47,12 @@ class VanityUrl(entities.HikariEntity, entities.Deserializable):
 
     #: The code for this invite.
     #:
-    #: :class: :obj:`hikari.core.snowflakes.Snowflake`
+    #: :type: :obj:`str`
     code: str = marshaller.attrib(deserializer=str)
 
     #: The amount of times this invite has been used.
     #:
-    #: :class: :obj:`int`
+    #: :type: :obj:`int`
     uses: int = marshaller.attrib(deserializer=int)
 
 
@@ -94,7 +94,7 @@ class InviteGuild(guilds.PartialGuild):
     vanity_url_code: typing.Optional[str] = marshaller.attrib(if_none=None, deserializer=str)
 
     def format_splash_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
-        """"Generate the url for this guild's splash, if set.
+        """Generate the url for this guild's splash, if set.
 
         Parameters
         ----------
@@ -120,7 +120,7 @@ class InviteGuild(guilds.PartialGuild):
         return self.format_splash_url()
 
     def format_banner_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
-        """"Generate the url for this guild's banner, if set.
+        """Generate the url for this guild's banner, if set.
 
         Parameters
         ----------
@@ -152,32 +152,32 @@ class Invite(entities.HikariEntity, entities.Deserializable):
 
     #: The code for this invite.
     #:
-    #: :class: :obj:`hikari.core.snowflakes.Snowflake`
+    #: :type: :obj:`str`
     code: str = marshaller.attrib(deserializer=str)
 
     #: The partial object of the guild this dm belongs to.
     #: Will be ``None`` for group dm invites.
     #:
-    #: :class: :obj:`InviteGuild`, optional
+    #: :type: :obj:`InviteGuild`, optional
     guild: typing.Optional[InviteGuild] = marshaller.attrib(deserializer=InviteGuild.deserialize, if_undefined=None)
     #: The partial object of the channel this invite targets.
     #:
-    #: :class: :obj:`hikari.core.channels.PartialChannel`
+    #: :type: :obj:`channels.PartialChannel`
     channel: channels.PartialChannel = marshaller.attrib(deserializer=channels.PartialChannel.deserialize)
 
     #: The object of the user who created this invite.
     #:
-    #: :class: :obj:`hikari.core.users.User`, optional
+    #: :type: :obj:`users.User`, optional
     inviter: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User.deserialize, if_undefined=None)
 
     #: The object of the user who this invite targets, if set.
     #:
-    #: :class: :obj:`hikari.core.users.User`, optional
+    #: :type: :obj:`users.User`, optional
     target_user: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User.deserialize, if_undefined=None)
 
     #: The type of user target this invite is, if applicable.
     #:
-    #: :class: :obj:`TargetUserType`, optional
+    #: :type: :obj:`TargetUserType`, optional
     target_user_type: typing.Optional[TargetUserType] = marshaller.attrib(
         deserializer=TargetUserType, if_undefined=None
     )
@@ -185,47 +185,47 @@ class Invite(entities.HikariEntity, entities.Deserializable):
     #: The approximate amount of presences in this invite's guild, only present
     #: when ``with_counts`` is passed as ``True`` to the GET invites endpoint.
     #:
-    #: :class: :obj:`int`
+    #: :type: :obj:`int`
     approximate_presence_count: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
 
     #: The approximate amount of members in this invite's guild, only present
     #: when ``with_counts`` is passed as ``True`` to the GET invites endpoint.
     #:
-    #: :class: :obj:`int`
+    #: :type: :obj:`int`
     approximate_member_count: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
 
 
 @marshaller.attrs(slots=True)
 class InviteWithMetadata(Invite):
-    """Extends the base ``Invite`` object with metadata that's only returned
+    """Extends the base :obj:`Invite` object with metadata that's only returned
     when getting an invite with guild permissions, rather than it's code.
     """
 
     #: The amount of times this invite has been used.
     #:
-    #: :class: :obj:`int`
+    #: :type: :obj:`int`
     uses: int = marshaller.attrib(deserializer=int)
 
     #: The limit for how many times this invite can be used before it expires.
     #: If set to ``0`` then this is unlimited.
     #:
-    #: :class: :obj:`int`
+    #: :type: :obj:`int`
     max_uses: int = marshaller.attrib(deserializer=int)
 
     #: The amount of time (in seconds) this invite will be valid for.
     #: If set to ``0`` then this is unlimited.
     #:
-    #: :class: :obj:`int`
+    #: :type: :obj:`int`
     max_age: int = marshaller.attrib(deserializer=int)
 
     #: Whether this invite grants temporary membership.
     #:
-    #: :class: :obj:`bool`
+    #: :type: :obj:`bool`
     is_temporary: bool = marshaller.attrib(raw_name="temporary", deserializer=bool)
 
     #: When this invite was created.
     #:
-    #: :class: :obj:`datetime.datetime`
+    #: :type: :obj:`datetime.datetime`
     created_at: datetime.datetime = marshaller.attrib(deserializer=dates.parse_iso_8601_ts)
 
     @property
