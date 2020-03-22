@@ -24,16 +24,14 @@ Sphinx documentation configuration.
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
-import datetime
 import os
 import re
 import sys
 import textwrap
-import traceback
 import types
 
-import requests
 import sphinx_bootstrap_theme
+
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -76,7 +74,6 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
-    "sphinx_autodoc_typehints",
 ]
 
 templates_path = ["_templates"]
@@ -163,6 +160,9 @@ autodoc_default_options = {
     "members": True,
 }
 
+autodoc_typehints = "none"
+autodoc_mock_imports = ["aiohttp"]
+
 # -- Intersphinx options -----------------------------------------------------
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
@@ -172,7 +172,8 @@ intersphinx_mapping = {
 
 # -- Autosummary settings... ---------------------------------------------
 
-autosummary_generate_overwrite = False
+autosummary_generate = True
+autosummary_generate_overwrite = True
 
 # -- Epilog to inject into each page... ---------------------------------------------
 
@@ -201,14 +202,3 @@ else:
 
 def setup(app):
     app.add_stylesheet("style.css")
-
-    # Little easteregg.
-    try:
-        if datetime.datetime.now().month == 12:
-            with requests.get("http://www.schillmania.com/projects/snowstorm/snowstorm.js") as resp:
-                resp.raise_for_status()
-                with open("docs/_static/snowstorm.js", "w") as fp:
-                    fp.write(resp.text)
-            app.add_javascript("snowstorm.js")
-    except Exception:
-        traceback.print_exc()

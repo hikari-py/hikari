@@ -95,6 +95,7 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`str`, optional
     icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str)
+
     #: The member's that belong to this team.
     #:
     #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`TeamMember` ]
@@ -121,8 +122,8 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
             The format to use for this url, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
         size : :obj:`int`
-            The size to set for the url, defaults to ``2048``.
-            Can be any power of two between 16 and 2048.
+            The size to set for the url, defaults to ``2048``. Can be any power
+            of two between 16 and 2048 inclusive.
 
         Returns
         -------

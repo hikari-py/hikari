@@ -23,8 +23,18 @@ Warnings
 You should not change anything in this file, if you do, you will likely get
 unexpected behaviour elsewhere.
 """
+__all__ = [
+    "RAISE",
+    "dereference_handle",
+    "attrib",
+    "attrs",
+    "HIKARI_ENTITY_MARSHALLER",
+    "HikariEntityMarshaller",
+]
 
+import importlib
 import typing
+import weakref
 
 import attr
 
@@ -42,6 +52,46 @@ MARSHALLER_META_ATTR = "__hikari_marshaller_meta_attr__"
 RAISE = object()
 
 EntityT = typing.TypeVar("EntityT", contravariant=True)
+
+
+def dereference_handle(handle_string: str) -> typing.Any:
+    """Parse a given handle string into an object reference.
+
+    Parameters
+    ----------
+    handle_string : :obj:`str`
+        The handle to the object to refer to. This is in the format
+        ``fully.qualified.module.name#object.attribute``. If no ``#`` is
+        input, then the reference will be made to the module itself.
+
+    Returns
+    -------
+    :obj:`typing.Any`
+        The thing that is referred to from this reference.
+
+    Examples
+    --------
+    ``"collections#deque"``:
+        Refers to :obj:`collections.deque`
+    ``"asyncio.tasks#Task"``:
+        Refers to :obj:`asyncio.tasks.Task`
+    ``"hikari.net"``:
+        Refers to :obj:`hikari.net`
+    ``"foo.bar#baz.bork.qux"``:
+        Would refer to a theoretical ``qux`` attribute on a ``bork``
+        attribute on a ``baz`` object in the ``foo.bar`` module.
+    """
+    if "#" not in handle_string:
+        module, attribute_names = handle_string, ()
+    else:
+        module, _, attribute_string = handle_string.partition("#")
+        attribute_names = attribute_string.split(".")
+
+    obj = importlib.import_module(module)
+    for attr_name in attribute_names:
+        obj = getattr(obj, attr_name)
+
+    return weakref.proxy(obj)
 
 
 def attrib(
@@ -95,6 +145,14 @@ def attrib(
         The result of :func:`attr.ib` internally being called with additional
         metadata.
     """
+    # Sphinx decides to be really awkward and inject the wrong default values
+    # by default. Not helpful when it documents non-optional shit as defaulting
+    # to None. Hack to fix this seems to be to turn on autodoc's
+    # typing.TYPE_CHECKING mode, and then if that is enabled, always return
+    # some dummy class that has a repr that returns a literal "..." string.
+    if typing.TYPE_CHECKING:
+        return type("Literal", (), {"__repr__": lambda *_: "..."})()
+
     metadata = kwargs.pop("metadata", {})
     metadata[_RAW_NAME_ATTR] = raw_name
     metadata[_SERIALIZER_ATTR] = serializer

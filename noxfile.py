@@ -81,20 +81,22 @@ def documentation(session) -> None:
     session.install("-r", "requirements.txt")
     session.install("-r", "dev-requirements.txt")
     session.install("-r", "doc-requirements.txt")
+
     session.env["SPHINXOPTS"] = SPHINX_OPTS
+
     tech_dir = pathify(DOCUMENTATION_DIR, TECHNICAL_DIR)
     shutil.rmtree(tech_dir, ignore_errors=True, onerror=lambda *_: None)
     os.mkdir(tech_dir)
-    session.env["SPHINX_IS_GENERATING_DOCUMENTATION"] = "true"
-    session.run(
-        "python",
-        GENDOC_PATH,
-        ".",
-        MAIN_PACKAGE,
-        pathify(DOCUMENTATION_DIR, "_templates", "gendoc"),
-        pathify(DOCUMENTATION_DIR, "index.rst"),
-        pathify(DOCUMENTATION_DIR, TECHNICAL_DIR),
-    )
+    # session.run(
+    #     "python",
+    #     GENDOC_PATH,
+    #     ".",
+    #     MAIN_PACKAGE,
+    #     pathify(DOCUMENTATION_DIR, "_templates", "gendoc"),
+    #     pathify(DOCUMENTATION_DIR, "index.rst"),
+    #     pathify(DOCUMENTATION_DIR, TECHNICAL_DIR),
+    # )
+    session.run("sphinx-apidoc", "-e", "-o", tech_dir, MAIN_PACKAGE)
     session.run("python", "-m", "sphinx.cmd.build", DOCUMENTATION_DIR, ARTIFACT_DIR, "-b", "html")
 
 

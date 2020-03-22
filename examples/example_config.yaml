@@ -1,0 +1,28 @@
+# You would want to use a library such as PyYAML to deserialize this file into 
+# a Python dict first in the same way you'd use the `json` library to do it if
+# you were using JSON config files.
+
+gateway:
+  allow_redirects: false
+
+  protocol:
+    proxy_auth: Basic 1a2b3c4d==
+    proxy_url: http://my.first.proxy.net:8080
+    request_timeout: 30.0
+    verify_ssl: true
+
+  version: 6
+  
+http:
+  allow_redirects: true
+
+  protocol:
+    proxy_auth: Basic 4d3c2b1a==
+    proxy_url: http://my.other.proxy.net:8080
+    request_timeout: 30.0
+    ssl_context: mybot.utils.ssl#MySSLContext
+    verify_ssl: true
+
+  version: 7
+  
+token: ashjkdfkasjdhfajkhfdkajghak==
