@@ -18,11 +18,12 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import typing
 
+from hikari.core import entities
 from hikari.internal_utilities import marshaller
 
 
 @marshaller.attrs()
-class GatewayActivity:
+class GatewayActivity(entities.Deserializable):
     #: The activity name.
     #:
     #: :type: :obj:`str`
@@ -38,37 +39,3 @@ class GatewayActivity:
     #:
     #: :type: :obj:`int`
     type: int = marshaller.attrib(deserializer=int, serializer=int, if_undefined=0)
-
-
-@marshaller.attrs()
-class GatewayConfig:
-    #: Whether to enable debugging mode for the generated shards. Usually you
-    #: don't want to enable this.
-    #:
-    #: :type: :obj:`bool`
-    debug: bool = marshaller.attrib(deserializer=bool, if_undefined=False)
-
-    #: The initial activity to set all shards to when starting the gateway. If
-    #: ``None``, then no activity will be set.
-    #:
-    #: :type: :obj:`GatewayActivity`
-    initial_activity: typing.Optional[GatewayActivity] = marshaller.attrib(
-        deserializer=bool, if_none=None, if_undefined=None
-    )
-
-    # TODO: implement enum for this
-    #: The initial status to set the shards to when starting the gateway.
-    #:
-    #: :type: :obj:`str`
-    initial_status: str = marshaller.attrib(deserializer=str, if_undefined="online")
-
-    #: Whether to use zlib compression on the gateway for inbound messages or
-    #: not. Usually you want this turned on.
-    #:
-    #: :type: :obj:`bool`
-    use_compression: bool = marshaller.attrib(deserializer=bool, if_undefined=True)
-
-
-class Gateway:
-    def __init__(self, gateway_config: GatewayConfig):
-        pass

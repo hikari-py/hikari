@@ -1,22 +1,3 @@
-[![](https://img.shields.io/discord/574921006817476608.svg?logo=Discord&logoColor=white&label=discord)](https://discord.gg/HMnGbsv)
-[![](https://img.shields.io/lgtm/alerts/gitlab/nekokatt/hikari)](https://lgtm.com/projects/gl/nekokatt/hikari)
-[![](https://img.shields.io/lgtm/grade/python/gitlab/nekokatt/hikari)](https://lgtm.com/projects/gl/nekokatt/hikari?mode=tree)
-[![](https://gitlab.com/nekokatt/hikari/badges/master/coverage.svg)](https://gitlab.com/nekokatt/hikari/pipelines)
-[![](https://img.shields.io/gitlab/pipeline/nekokatt/hikari/master?label=ci%20(master)&logo=gitlab)](https://gitlab.com/nekokatt/hikari/pipelines)
-[![](https://img.shields.io/gitlab/pipeline/nekokatt/hikari/staging?label=ci%20(staging)&logo=gitlab)](https://gitlab.com/nekokatt/hikari/pipelines)
-[![](https://img.shields.io/website/https/nekokatt.gitlab.io/hikari.svg?down_color=red&down_message=not%20building&label=docs%20(master)&logo=gitlab&logoColor=white&up_message=up-to-date)](https://nekokatt.gitlab.io/hikari)
-[![](https://img.shields.io/website/https/nekokatt.gitlab.io/hikari/staging.svg?down_color=red&down_message=not%20building&label=docs%20(staging)&logo=gitlab&logoColor=white&up_message=up-to-date)](https://nekokatt.gitlab.io/hikari/staging/)
-[![](https://badgen.net/pypi/v/hikari)](https://pypi.org/project/hikari)
-[![](https://badgen.net/pypi/license/hikari)](?)
-[![](https://img.shields.io/pypi/implementation/hikari.svg)](?)
-[![](https://img.shields.io/pypi/format/hikari.svg)](?)
-[![](https://img.shields.io/pypi/dm/hikari)](?)
-[![](https://img.shields.io/pypi/status/hikari)](?)
-[![](https://img.shields.io/pypi/pyversions/hikari)](?)
-[![](https://img.shields.io/badge/code%20style-black-000000.svg)](?)
-[![](https://img.shields.io/sourcegraph/rrc/gitlab.com/nekokatt/hikari)](https://sourcegraph.com/gitlab.com/nekokatt/hikari)
-[![](https://img.shields.io/static/v1?label=sourcegraph&message=view%20now!&color=blueviolet&logo=sourcegraph)](https://sourcegraph.com/gitlab.com/nekokatt/hikari)
-
 # hikari
 
 An opinionated Discord API for Python 3 and asyncio.

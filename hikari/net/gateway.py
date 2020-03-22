@@ -308,8 +308,8 @@ class GatewayClient:
 
     #: The API version to use on Discord.
     #:
-    #: :type: :obj:`hikari.net.versions.GatewayVersion`
-    version: versions.GatewayVersion
+    #: :type: :obj:`int`
+    version: int
 
     def __init__(
         self,
@@ -334,7 +334,7 @@ class GatewayClient:
         token: str,
         url: str,
         verify_ssl: bool = True,
-        version: versions.GatewayVersion = versions.GatewayVersion.STABLE,
+        version: typing.Union[int, versions.GatewayVersion] = versions.GatewayVersion.STABLE,
     ) -> None:
         # Sanitise the URL...
         scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url, allow_fragments=True)
@@ -386,7 +386,7 @@ class GatewayClient:
         self.shard_id: int = shard_id
         self.shard_count: int = shard_count
         self.status: GatewayStatus = GatewayStatus.OFFLINE
-        self.version: versions.GatewayVersion = version
+        self.version: int = int(version)
         self.logger.debug("using Gateway version %s", int(version))
 
     @property

@@ -62,7 +62,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         json_deserialize=json.loads,
         json_serialize=json.dumps,
         token,
-        version: versions.HTTPAPIVersion = versions.HTTPAPIVersion.STABLE,
+        version: typing.Union[int, versions.HTTPAPIVersion] = versions.HTTPAPIVersion.STABLE,
     ):
         super().__init__(
             allow_redirects=allow_redirects,
@@ -75,7 +75,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             timeout=timeout,
             json_serialize=json_serialize,
         )
-        self.version = version
+        self.version = int(version)
         self.base_url = base_url.format(self)
         self.global_ratelimiter = ratelimits.ManualRateLimiter()
         self.json_serialize = json_serialize
@@ -87,6 +87,7 @@ class HTTPClient(base_http_client.BaseHTTPClient):
             this_type = type(self).__name__
             auth_schemes = " or ".join(self._AUTHENTICATION_SCHEMES)
             raise RuntimeError(f"Any token passed to {this_type} should begin with {auth_schemes}")
+
         self.token = token
 
     async def close(self):

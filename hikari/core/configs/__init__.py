@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,17 +16,18 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""The core API for interacting with Discord directly."""
-from hikari.core.configs import *
-from hikari.core.clients import *
-from hikari.core.channels import *
-from hikari.core.entities import *
-from hikari.core.events import *
-from hikari.core.gateway_bot import *
-from hikari.core.guilds import *
-from hikari.core.invites import *
-from hikari.core.messages import *
-from hikari.core.oauth2 import *
-from hikari.core.permissions import *
-from hikari.core.snowflakes import *
-from hikari.core.users import *
+"""Configuration data objects. These structure the settings a user can
+initialise their application with, and optionally support being read
+in from an external source, such as a JSON file, using the marshalling
+functionality included in this library.
+"""
+
+from hikari.core.configs import app
+from hikari.core.configs import gateway
+from hikari.core.configs import http
+from hikari.core.configs import protocol
+
+from hikari.core.configs.app import *
+from hikari.core.configs.gateway import *
+from hikari.core.configs.http import *
+from hikari.core.configs.protocol import *
