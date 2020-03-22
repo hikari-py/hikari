@@ -17,3 +17,16 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The core API for interacting with Discord directly."""
+from hikari.core.configs import *
+from hikari.core.clients import *
+from hikari.core.channels import *
+from hikari.core.entities import *
+from hikari.core.events import *
+from hikari.core.gateway_bot import *
+from hikari.core.guilds import *
+from hikari.core.invites import *
+from hikari.core.messages import *
+from hikari.core.oauth2 import *
+from hikari.core.permissions import *
+from hikari.core.snowflakes import *
+from hikari.core.users import *

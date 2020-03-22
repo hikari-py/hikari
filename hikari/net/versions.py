@@ -16,18 +16,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-API version enumeration.
-"""
+"""API version enumeration."""
 __all__ = ["HTTPAPIVersion", "GatewayVersion"]
 
 import enum
 
 
 class HTTPAPIVersion(enum.IntEnum):
-    """
-    Supported versions for the REST API.
-    """
+    """Supported versions for the REST API."""
 
     #: The V6 API. This is currently the stable release that should be used unless you have a reason
     #: to use V7 otherwise.
@@ -42,9 +38,7 @@ class HTTPAPIVersion(enum.IntEnum):
 
 
 class GatewayVersion(enum.IntEnum):
-    """
-    Supported versions for the Gateway.
-    """
+    """Supported versions for the Gateway."""
 
     #: The V6 API. This is currently the stable release that should be used unless you have a reason
     #: to use V7 otherwise.

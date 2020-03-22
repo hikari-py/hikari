@@ -16,41 +16,45 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Provides the valid routes that can be used on the API, as well as mechanisms to aid
-with rate limit bucketing.
-"""
+"""Provides the valid routes that can be used on the API, as well as mechanisms to aid
+with rate limit bucketing."""
 __all__ = ["CompiledRoute", "RouteTemplate"]
 
-from typing import Any
-from typing import Collection
-from typing import FrozenSet
+import typing
 
 DEFAULT_MAJOR_PARAMS = {"channel_id", "guild_id", "webhook_id"}
 
 
 class CompiledRoute:
-    """
-    A compiled representation of a route ready to be made into a full URL and to be used for a request.
+    """A compiled representation of a route ready to be made into a full URL and to be used for a request.
 
-    Args:
-        method:
-            The HTTP method to use.
-        path:
-            The path with any major parameters interpolated in.
-        major_params_hash:
-            The part of the hash identifier to use for the compiled set of major parameters.
+    Parameters
+    ----------
+    method : :obj:`str`
+        The HTTP method to use.
+    path : :obj:`str`
+        The path with any major parameters interpolated in.
+    major_params_hash : :obj:`str`
+        The part of the hash identifier to use for the compiled set of major parameters.
     """
 
     __slots__ = ("method", "major_params_hash", "compiled_path", "hash_code", "__weakref__")
 
     #: The method to use on the route.
+    #:
+    #: :type: :obj:`str`
     method: str
     #: The major parameters in a bucket hash-compatible representation.
+    #:
+    #: :type: :obj:`str`
     major_params_hash: str
     #: The compiled route path to use
+    #:
+    #: :type: :obj:`str`
     compiled_path: str
     #: The hash code
+    #:
+    #: :type: :obj:`int`
     hash_code: int
 
     def __init__(self, method: str, path_template: str, path: str, major_params_hash: str) -> None:
@@ -60,12 +64,16 @@ class CompiledRoute:
         self.hash_code = hash((path_template, major_params_hash))
 
     def create_url(self, base_url: str) -> str:
-        """
-        Args:
-            base_url:
-                The base of the URL to prepend to the compiled path.
+        """Creates the full URL with which you can make a request.
 
-        Returns:
+        Parameters
+        ----------
+        base_url : :obj:`str`
+            The base of the URL to prepend to the compiled path.
+
+        Returns
+        -------
+        :obj:`str`
             The full URL for the route.
         """
 
@@ -96,50 +104,56 @@ class CompiledRoute:
 
 
 class RouteTemplate:
-    """
-    A template used to create compiled routes for specific parameters. These compiled routes are used to identify
-    rate limit buckets.
+    """A template used to create compiled routes for specific parameters.
+    
+    These compiled routes are used to identify rate limit buckets.
 
-    Args:
-        path_template:
-            The template string for the path to use.
-        major_params:
-            A collection of major parameter names that appear in the template path. 
-            If not specified, the default major parameter names are extracted and used in-place.
+    Parameters
+    ----------
+    path_template : :obj:`str`
+        The template string for the path to use.
+    major_params : :obj:`str`
+        A collection of major parameter names that appear in the template path. 
+        If not specified, the default major parameter names are extracted and used in-place.
     """
 
     __slots__ = ("path_template", "major_params")
 
     #: The template string used for the path.
+    #:
+    #: :type: :obj:`str`
     path_template: str
     #: Major parameter names that appear in the template path.
-    major_params: FrozenSet[str]
+    #:
+    #: :type: :obj:`typing.FrozenSet` [ :obj:`str` ]
+    major_params: typing.FrozenSet[str]
 
-    def __init__(self, path_template: str, major_params: Collection[str] = None) -> None:
-
+    def __init__(self, path_template: str, major_params: typing.Collection[str] = None) -> None:
         self.path_template = path_template
         if major_params is None:
             self.major_params = frozenset(p for p in DEFAULT_MAJOR_PARAMS if f"{{{p}}}" in path_template)
         else:
             self.major_params = frozenset(major_params)
 
-    def compile(self, method, /, **params: Any) -> CompiledRoute:
-        """
-        Generate a formatted :class:`CompiledRoute` for this route, taking into account any URL parameters that have
-        been passed, and extracting the major params for bucket hash operations accordingly.
+    def compile(self, method: str, /, **kwargs: typing.Any) -> CompiledRoute:
+        """Generate a formatted :obj:`CompiledRoute` for this route, taking into account any URL parameters that have
+        been passed, and extracting the :attr:major_params" for bucket hash operations accordingly.
 
-        Args:
-            method:
-                The method to use.
-            **params:
-                any parameters to interpolate into the route path.
+        Parameters
+        ----------
+        method : :obj:`str`
+            The method to use.
+        **kwargs : :obj:`typing.Any`
+            Any parameters to interpolate into the route path.
 
-        Returns:
+        Returns
+        -------
+        :obj:`CompiledRoute`
             The compiled route.
         """
-        major_hash_part = "-".join((str(params[p]) for p in self.major_params))
+        major_hash_part = "-".join((str(kwargs[p]) for p in self.major_params))
 
-        return CompiledRoute(method, self.path_template, self.path_template.format_map(params), major_hash_part)
+        return CompiledRoute(method, self.path_template, self.path_template.format_map(kwargs), major_hash_part)
 
     def __repr__(self) -> str:
         this_type = type(self).__name__

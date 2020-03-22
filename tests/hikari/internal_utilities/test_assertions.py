@@ -41,3 +41,35 @@ def test_assert_not_none_when_none():
 @_helpers.assert_does_not_raise(type_=ValueError)
 def test_assert_not_none_when_not_none(arg):
     assertions.assert_not_none(arg)
+
+
+@pytest.mark.parametrize(
+    ["min_r", "max_r", "test"],
+    [
+        (0, 10, 5),
+        (0, 10, 0),
+        (0, 10, 10),
+        (0, 0, 0),
+        (0.0, 10.0, 5.0),
+        (0.0, 10.0, 0.0),
+        (0.0, 10.0, 10.0),
+        (0.0, 0.0, 0.0),
+        (float("-inf"), 10, 10),
+        (10, float("inf"), 10),
+    ],
+)
+def test_in_range_when_in_range(min_r, max_r, test):
+    try:
+        assertions.assert_in_range(test, min_r, max_r, "blah")
+    except ValueError:
+        assert False, "should not have failed."
+
+
+@pytest.mark.parametrize(["min_r", "max_r", "test"], [(0, 0, -1), (0, 10, 11), (10, 0, 5),])
+def test_in_range_when_not_in_range(min_r, max_r, test):
+    try:
+        assertions.assert_in_range(test, min_r, max_r, "blah")
+    except ValueError:
+        pass
+    else:
+        assert False, "should have failed."

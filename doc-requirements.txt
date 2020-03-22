@@ -1,5 +1,4 @@
-requests
 Jinja2==2.11.1
 sphinx==2.4.4
-sphinx-autodoc-typehints==1.10.3
-sphinx-bootstrap-theme==0.7.1
+# sphinx-bootstrap-theme==0.7.1
+https://github.com/ryan-roemer/sphinx-bootstrap-theme/zipball/v0.8.0

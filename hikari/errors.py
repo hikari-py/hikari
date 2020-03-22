@@ -16,18 +16,18 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Core errors that may be raised by this API implementation.
-"""
+"""Core errors that may be raised by this API implementation."""
 __all__ = ["HikariError"]
 
 
 class HikariError(RuntimeError):
-    """
-    Base for an error raised by this API. Any errors should derive from this.
+    """Base for an error raised by this API.
 
-    Note:
-        You should never initialize this exception directly.
+    Any errors should derive from this.
+
+    Note
+    ----
+    You should never initialize this exception directly.
     """
 
     __slots__ = ()

@@ -16,10 +16,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Provides mechanisms to cache results of calls lazily.
-"""
-__all__ = ["cached_function"]
+"""Provides mechanisms to cache results of calls lazily."""
+__all__ = [
+    "CachedFunctionT",
+    "CachedPropertyFunctionT",
+    "CachedFunction",
+    "CachedProperty",
+    "AsyncCachedProperty",
+    "cached_function",
+    "cached_property",
+]
 
 import asyncio
 import functools
@@ -27,13 +33,11 @@ import inspect
 import os
 import typing
 
-
 ReturnT = typing.TypeVar("ReturnT")
 ClassT = typing.TypeVar("ClassT")
 CallT = typing.Callable[..., ReturnT]
 CachedFunctionT = typing.Callable[..., ReturnT]
 CachedPropertyFunctionT = typing.Callable[[ClassT], ReturnT]
-
 
 # Hacky workaround to Sphinx being unable to document cached properties. We simply make the
 # decorators return their inputs when this is True.
@@ -45,12 +49,12 @@ def __noop_decorator(func):  # pragma: no cover
 
 
 class CachedFunction:
-    """
-    Wraps a call, some arguments, and some keyword arguments in a partial and stores the
+    """Wraps a call, some arguments, and some keyword arguments in a partial and stores the
     result of the call for later invocations.
 
-    Warning:
-         This is not thread safe!
+    Warning
+    -------
+    This is not thread safe!
     """
 
     _sentinel = object()
@@ -90,12 +94,11 @@ class CachedFunction:
 
 
 class CachedProperty:
-    """
-    A get/delete descriptor to wrap a no-args method which can cache the result of the
-    call for future retrieval. Calling `del` on the property will flush the cache.
+    """A get/delete descriptor to wrap a no-args method which can cache the result of the
+    call for future retrieval. Calling :func:`del` on the property will flush the cache.
 
     This will misbehave on class methods and static methods, and will not work on
-    non-instance functions. For general functions, you should consider :class:`CachedFunction`
+    non-instance functions. For general functions, you should consider :obj:`CachedFunction`
     instead.
     """
 
@@ -127,9 +130,7 @@ class CachedProperty:
 
 
 class AsyncCachedProperty(CachedProperty):
-    """
-    Cached property implementation that supports awaitable coroutines.
-    """
+    """Cached property implementation that supports awaitable coroutines."""
 
     __slots__ = ()
 
@@ -147,21 +148,23 @@ class AsyncCachedProperty(CachedProperty):
 
 
 def cached_function(*args, **kwargs) -> typing.Callable[[CachedFunctionT], typing.Callable[[], ReturnT]]:
-    """
-    Create a wrapped cached call decorator. This remembers the last result
-    of the given call forever until cleared.
+    """Create a wrapped cached call decorator. 
+    
+    This remembers the last result of the given call forever until cleared.
 
-    Note:
-        This is not useful for instance methods on classes, you should use
-        a :class:`CachedProperty` instead for those. You should also not expect
-        thread safety here. Coroutines will be detected and dealt with as futures.
-        This is lazily evaluated.
+    Parameters
+    -----------
+    *args
+        Any arguments to call the call with.
+    **kwargs
+        Any kwargs to call the call with.
 
-    Args:
-        *args:
-            Any arguments to call the call with.
-        **kwargs:
-            Any kwargs to call the call with.
+    Note
+    ----
+    This is not useful for instance methods on classes, you should use
+    a :obj:`CachedProperty` instead for those. You should also not expect
+    thread safety here. Coroutines will be detected and dealt with as futures.
+    This is lazily evaluated.
     """
 
     def decorator(func):
@@ -173,9 +176,9 @@ def cached_function(*args, **kwargs) -> typing.Callable[[CachedFunctionT], typin
 def cached_property(
     *, cache_name=None
 ) -> typing.Callable[[CachedPropertyFunctionT], typing.Union[CachedProperty, AsyncCachedProperty]]:
-    """
-    Makes a slots-compatible cached property. If using slots, you should specify the `cache_name`
-    directly.
+    """Makes a slots-compatible cached property.
+
+    If using slots, you should specify the ``cache_name`` directly.
     """
 
     def decorator(func: CachedPropertyFunctionT) -> typing.Union[CachedProperty, AsyncCachedProperty]:

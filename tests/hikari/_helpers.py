@@ -35,6 +35,8 @@ import async_timeout
 import cymock as mock
 import pytest
 
+from hikari.internal_utilities import marshaller
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -442,3 +444,19 @@ def stupid_windows_please_stop_breaking_my_tests(test):
 
 def create_autospec(spec, *args, **kwargs):
     return mock.create_autospec(spec, spec_set=True, *args, **kwargs)
+
+
+def patch_marshal_attr(target_entity, field_name, *args, deserializer=None, **kwargs):
+    # noinspection PyProtectedMember
+    for attr in marshaller.HIKARI_ENTITY_MARSHALLER._registered_entities[target_entity].attribs:
+        if attr.field_name == field_name and (deserializer is None or attr.deserializer == deserializer):
+            target = attr
+            break
+        elif attr.field_name == field_name:
+            raise TypeError(
+                f"Deserializer mismatch found on `{target_entity.__name__}.{attr.field_name}`; "
+                f"expected `{deserializer}` but got `{attr.deserializer}`."
+            )
+    else:
+        raise LookupError(f"Failed to find a `{field_name}` field on `{target_entity.__name__}`.")
+    return mock.patch.object(target, "deserializer", *args, **kwargs)
