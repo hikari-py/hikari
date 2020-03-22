@@ -16,8 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Anonymous system information that we have to provide to Discord when using their API.
+"""Anonymous system information that we have to provide to Discord when using their API.
 
 This information contains details such as the version of Python you are using, and
 the version of this library, the OS you are making requests from, etc.
@@ -34,11 +33,17 @@ from hikari.internal_utilities import cache
 
 @cache.cached_function()
 def library_version() -> str:
-    """
-    Returns:
+    """The version of the library being used.
+
+    Returns
+    -------
+    :obj:`str`
         A string representing the version of this library.
 
-    Example:
+    Example
+    -------
+    .. code-block:: python
+    
         >>> from hikari.net import user_agent
         >>> print(user_agent.library_version())
         hikari 0.0.71
@@ -50,11 +55,17 @@ def library_version() -> str:
 
 @cache.cached_function()
 def python_version() -> str:
-    """
-    Returns:
+    """The python version being used.
+
+    Returns
+    -------
+    :obj:`str`
         A string representing the version of this release of Python.
 
-    Example:
+    Example
+    -------
+    .. code-block:: python
+
         >>> from hikari.net import user_agent
         >>> print(user_agent.python_version())
         CPython 3.8.1 GCC 9.2.0
@@ -70,16 +81,20 @@ def python_version() -> str:
 
 @cache.cached_function()
 def system_type() -> str:
-    """
-    Returns:
+    """The operating system being used.
+
+    Returns
+    -------
+    :obj:`str`
         A string representing the system being used.
 
-    Example:
+    Example
+    -------
+    .. code-block:: python
+
         >>> from hikari.net import user_agent
         >>> print(user_agent.system_type())
         Linux-5.4.15-2-MANJARO-x86_64-with-glibc2.2.5
-
-    I use arch btw.
     """
     # Might change this eventually to be more detailed, who knows.
     return platform.platform()
@@ -87,12 +102,18 @@ def system_type() -> str:
 
 @cache.cached_function()
 def user_agent() -> str:
-    """
-    Returns:
-        The string to use for the library `User-Agent` HTTP header that is required
+    """The user agent of the bot
+
+    Returns
+    -------
+    :obj:`str`
+        The string to use for the library ``User-Agent`` HTTP header that is required
         to be sent with every HTTP request.
 
-    Example:
+    Example
+    -------
+    .. code-block:: python
+
         >>> from hikari.net import user_agent
         >>> print(user_agent.user_agent())
         DiscordBot (https://gitlab.com/nekokatt/hikari, 0.0.71) CPython 3.8.1 GCC 9.2.0 Linux

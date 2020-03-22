@@ -18,7 +18,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 
-
 _real_new_event_loop = asyncio.new_event_loop
 
 

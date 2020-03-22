@@ -62,6 +62,9 @@ test-pages:
   script:
     - pip install requests nox
     - bash tasks/retry_aborts.sh nox -s documentation
+  only:
+    - merge_requests
+    - branches
   except:
     - master
     - staging

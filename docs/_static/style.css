@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Bangers|Montserrat:300|Lato&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Baloo+2|Roboto&display=swap');
 @import url('https://cdn.jsdelivr.net/gh/tonsky/FiraCode@1.207/distr/fira_code.css');
 
 /*
@@ -27,7 +27,7 @@ body {
     background-color: #222;
     color: #f8f9fa;
     padding-top: 0 !important;
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: 'Roboto', sans-serif;
 }
 
 /* whyyyyy */
@@ -60,32 +60,41 @@ dt:target, span.highlighted {
 
 /* syntax highlighting: https://tmtheme-editor.herokuapp.com/#!/editor/theme/Monokai */
 /* yes, i hate myself for spending this much time deciphering this. */
+.bp { color: #D6D2BC !important; font-style: italic; font-weight: bold; text-decoration: underline; }  /* base parameter (self, cls, etc) */
 .c1, .c2, .c3 { color: #8F8C7E !important; }  /* single line comment */
+.fm { color: #D6D2BC !important; font-style: italic; font-weight: bold; }  /* magic attribute? */
 .gp { color: #F92672 !important; }  /* >>> symbol */
-.nb { color: #FD971F !important; font-style: italic; }  /* builtin name */
-.nn { color: #FD971F !important; font-style: italic; }  /* namespace name */
-.nc { color: #A6E22E !important; text-decoration: underline; } /* class name */
-.ne { color: #FD971F !important; font-style: italic; } /* exception name */
-.nd { color: #FD971F !important; } /* decorator name */
-.nf { color: #A6E22E !important; } /* function name */
+.go { color: #FFFFFF !important; }  /* output text */
 .k { color: #F92672 !important; }   /* keyword */
 .kn { color: #F92672 !important; }   /* keyword for start of import declaration? */
 .kc { color: #FD971F !important; font-style: italic; font-weight: bold;}  /* singleton literal (False, True, None, etc) */
-.bp { color: #D6D2BC !important; font-style: italic; font-weight: bold; text-decoration: underline; }  /* base parameter (self, cls, etc) */
-.n { color: #D6D2BC !important; font-style: italic; }   /* name */
-.o { color: #F92672 !important; }   /* operator */
-.p { color: #75715E !important; }   /* parenthesis */
-.go { color: #FFFFFF !important; }  /* output text */
 .mi { color: #AE81FF !important; }  /* int literal */
 .mf { color: #AE81FF !important; }  /* float literal */
 .mh { color: #AE81FF !important; }  /* hex literal */
 .mn { color: #AE81FF !important; }  /* no clue, but it fixes MathJAX LaTeX rendering... */
 .mo { color: #AE81FF !important; }  /* octal literal */
 .mb { color: #AE81FF !important; }  /* bool literal */
+.n { color: #D6D2BC !important; font-style: italic; }   /* name */
+.nb { color: #FD971F !important; font-style: italic; }  /* builtin name */
+.nn { color: #FD971F !important; font-style: italic; }  /* namespace name */
+.nc { color: #A6E22E !important; text-decoration: underline; } /* class name */
+.ne { color: #FD971F !important; font-style: italic; } /* exception name */
+.nd { color: #FD971F !important; } /* decorator name */
+.nf { color: #A6E22E !important; } /* function name */
+.nt { color: #A6E22E !important; } /* json key or something */
+.o { color: #F92672 !important; }   /* operator */
+.p { color: #75715E !important; }   /* parenthesis */
+.s1, .s2 { color: #E6DB74 !important; }  /* string literal */
 .sd { color: #8F8C7E !important; }  /* multiple line docstring */
 .vm { color: #D6D2BC !important; font-style: italic; font-weight: bold; }  /* magic attribute? */
-.fm { color: #D6D2BC !important; font-style: italic; font-weight: bold; }  /* magic attribute? */
-.s1, .s2 { color: #E6DB74 !important; }  /* string literal */
+
+input[type="text"] {
+    background-color: #555;
+    color: #fff;
+
+    border-color: #777;
+    border-radius: 3px;
+}
 
 .alert {
     border-color: transparent !important;
@@ -106,7 +115,7 @@ dt:target, span.highlighted {
 }
 
 .reference {
-    color: #a6e22e !important;
+    color: #F92672 !important;
 }
 
 .external {
@@ -128,7 +137,7 @@ nav, .alert, .admonition {
 
 h1, h2, h3, h4, h5, h6, .navbar-brand, .navbar-text .navbar-version {
     word-wrap: break-word;
-    font-family: 'Lato', sans-serif !important;
+    font-family: 'Baloo 2', cursive;
 }
 
 h1 {
@@ -170,9 +179,19 @@ html {
  */
 body {
     position: relative;
+    font-size: 1.7em;
     min-height: 100vh;
     height: 100%;
 }
+
+.body {
+    width: 100% !important;
+}
+
+div.body {
+    max-width: 100% !important;
+}
+
 
 body > div.container {
     min-height: -webkit-fill-available;
@@ -271,7 +290,7 @@ code {
 }
 
 .navbar-brand, h1, h2, h3, h4, h5, h6, .navbar-text .navbar-version {
-    font-family: 'Indie Flower', cursive;
+    font-family: 'Baloo 2', cursive;
 }
 
 dl {
@@ -287,7 +306,6 @@ dl.class {
 
 dl > dd {
     margin-left: 4em;
-    line-height: 2em;
 }
 
 .sig-name.descname {
@@ -296,4 +314,24 @@ dl > dd {
 
 p {
     line-height: 2em;
+}
+
+a {
+    color: #F92672 !important;
+}
+
+/*
+ * I cant get this to hide, Sphinx is a pain in the arse, so might as well just hide the element...
+ * this hides an erroneous default value for attrs usage.
+ */
+dl.attribute > dt > em.property {
+    display: none;
+}
+
+/*
+ * Fixes alignment voodoo for type names.
+ */
+a.reference > code {
+    padding-top: 0;
+    padding-bottom: 0;
 }

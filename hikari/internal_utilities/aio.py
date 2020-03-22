@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Asyncio extensions and utilities.
-"""
+"""Asyncio extensions and utilities."""
 __all__ = [
     "CoroutineFunctionT",
     "PartialCoroutineProtocolT",
@@ -30,6 +28,7 @@ __all__ = [
 import asyncio
 import dataclasses
 import typing
+import logging
 import weakref
 
 from hikari.internal_utilities import assertions
@@ -40,7 +39,7 @@ CoroutineFunctionT = typing.Callable[..., typing.Coroutine[typing.Any, typing.An
 
 
 class PartialCoroutineProtocolT(typing.Protocol[ReturnT]):
-    """Represents the type of a :class:`functools.partial` wrapping an :mod:`asyncio` coroutine."""
+    """Represents the type of a :obj:`functools.partial` wrapping an :mod:`asyncio` coroutine."""
 
     def __call__(self, *args, **kwargs) -> typing.Coroutine[None, None, ReturnT]:
         ...
@@ -93,9 +92,19 @@ class EventDelegate:
 
     Parameters
     ----------
-    exception_event: :obj:`str`
+    exception_event : :obj:`str`
         The event to invoke if an exception is caught.
     """
+
+    #: The event to invoke if an exception is caught.
+    #:
+    #: :type: :obj:`str`
+    exception_event: str
+
+    #: The logger used to write log messages.
+    #:
+    #: :type: :obj:`logging.Logger`
+    logger: logging.Logger
 
     __slots__ = ("exception_event", "logger", "_listeners", "_waiters")
 
@@ -106,14 +115,19 @@ class EventDelegate:
         self.exception_event = exception_event
 
     def add(self, name: str, coroutine_function: CoroutineFunctionT) -> None:
-        """
-        Register a new event callback to a given event name.
+        """Register a new event callback to a given event name.
 
-        Args:
-            name:
-                The name of the event to register to.
-            coroutine_function:
-                The event callback to invoke when this event is fired.
+        Parameters
+        ----------
+        name : :obj:`str`
+            The name of the event to register to.
+        coroutine_function
+            The event callback to invoke when this event is fired.
+
+        Raises
+        ------
+        :obj:`TypeError`
+            If ``coroutine_function`` is not a coroutine.
         """
         assertions.assert_that(
             asyncio.iscoroutinefunction(coroutine_function), "You must subscribe a coroutine function only", TypeError
@@ -123,15 +137,16 @@ class EventDelegate:
         self._listeners[name].append(coroutine_function)
 
     def remove(self, name: str, coroutine_function: CoroutineFunctionT) -> None:
-        """
-        Remove the given coroutine function from the handlers for the given event. The name is mandatory to enable
-        supporting registering the same event callback for multiple event types.
+        """Remove the given coroutine function from the handlers for the given event. 
+        
+        The name is mandatory to enable supporting registering the same event callback for multiple event types.
 
-        Args:
-            name:
-                The event to remove from.
-            coroutine_function:
-                The event callback to remove.
+        Parameters
+        ----------
+        name : :obj:`str`
+            The event to remove from.
+        coroutine_function
+            The event callback to remove.
         """
         if name in self._listeners and coroutine_function in self._listeners[name]:
             if len(self._listeners[name]) - 1 == 0:
@@ -149,12 +164,12 @@ class EventDelegate:
         ----------
         name: :obj:`str`
             The name of the event to dispatch.
-        *args: zero or more :obj:`typing.Any`
+        *args
             The parameters to pass to the event callback.
 
         Returns
         -------
-        :obj:`asyncio.Future`:
+        :obj:`asyncio.Future`
             This may be a gathering future of the callbacks to invoke, or it may
             be a completed future object. Regardless, this result will be
             scheduled on the event loop automatically, and does not need to be
@@ -211,10 +226,10 @@ class EventDelegate:
 
         This implementation will check to see if the event that triggered the
         exception is an exception event. If this exceptino was caused by the
-        :attr:`exception_event`, then nothing is dispatched (thus preventing
+        ``exception_event``, then nothing is dispatched (thus preventing
         an exception handler recursively re-triggering itself). Otherwise, an
-        :attr:`exception_event` is dispatched with a
-        :class:`EventExceptionContext` as the sole parameter.
+        ``exception_event`` is dispatched with a
+        :obj:`EventExceptionContext` as the sole parameter.
 
         Parameters
         ----------
@@ -224,7 +239,7 @@ class EventDelegate:
             The name of the event that triggered the exception.
         args: :obj:`typing.Sequence` [ :obj:`typing.Any` ]
             The arguments passed to the event that threw an exception.
-        callback: :obj:`CoroutineFunctionT`
+        callback
             The callback that threw the exception.
         """
         # Do not recurse if a dodgy exception handler is added.
@@ -264,22 +279,25 @@ class EventDelegate:
             leak memory if you do this from an event listener that gets
             repeatedly called. If you want to do this, you should consider
             using an event listener instead of this function.
-        predicate :
+        predicate : :obj:`typing.Callable` [ ..., :obj:`bool` ]
             A function that takes the arguments for the event and returns True
             if it is a match, or False if it should be ignored.
             This cannot be a coroutine function.
 
         Returns
         -------
-        A future that when awaited will provide a the arguments passed to the
-        first matching event. If no arguments are passed to the event, then
-        `None` is the result. If one argument is passed to the event, then
-        that argument is the result, otherwise a tuple of arguments is the
-        result instead.
+        :obj:`asyncio.Future`
+            A future that when awaited will provide a the arguments passed to the
+            first matching event. If no arguments are passed to the event, then
+            `None` is the result. If one argument is passed to the event, then
+            that argument is the result, otherwise a tuple of arguments is the
+            result instead.
 
-        Note that awaiting this result will raise an :obj:`asyncio.TimeoutError`
-        if the timeout is hit and no match is found. If the predicate throws
-        any exception, this is raised immediately.
+        Note
+        ----
+        Awaiting this result will raise an :obj:`asyncio.TimeoutError` if the timeout 
+        is hit and no match is found. If the predicate throws any exception, 
+        this is raised immediately.
         """
         future = asyncio.get_event_loop().create_future()
         if name not in self._waiters:
@@ -292,14 +310,16 @@ class EventDelegate:
 
 
 def completed_future(result: typing.Any = None) -> asyncio.Future:
-    """
-    Create a future on the current running loop that is completed, then return it.
+    """Create a future on the current running loop that is completed, then return it.
 
-    Args:
-        result:
-            The value to set for the result of the future.
+    Parameters
+    ---------
+    result : :obj:`typing.Any`
+        The value to set for the result of the future.
 
-    Returns:
+    Returns
+    -------
+    :obj:`asyncio.Future`
         The completed future.
     """
     future = asyncio.get_event_loop().create_future()

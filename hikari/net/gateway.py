@@ -16,17 +16,19 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Single-threaded asyncio V6 Gateway implementation. Handles regular heartbeating in a background task
+"""Single-threaded asyncio Gateway implementation.
+
+Handles regular heartbeating in a background task
 on the same event loop. Implements zlib transport compression only.
 
 Can be used as the main gateway connection for a single-sharded bot, or the gateway connection for a
 specific shard in a swarm of shards making up a larger bot.
 
-References:
-    - IANA WS closure code standards: https://www.iana.org/assignments/websocket/websocket.xhtml
-    - Gateway documentation: https://discordapp.com/developers/docs/topics/gateway
-    - Opcode documentation: https://discordapp.com/developers/docs/topics/opcodes-and-status-codes
+See also
+--------
+* IANA WS closure code standards: https://www.iana.org/assignments/websocket/websocket.xhtml
+* Gateway documentation: https://discordapp.com/developers/docs/topics/gateway
+* Opcode documentation: https://discordapp.com/developers/docs/topics/opcodes-and-status-codes
 """
 __all__ = ["GatewayStatus", "GatewayClient"]
 
@@ -55,9 +57,7 @@ from hikari.net import versions
 
 
 class GatewayStatus(str, enum.Enum):
-    """
-    Various states that a gateway connection can be in.
-    """
+    """Various states that a gateway connection can be in."""
 
     OFFLINE = "offline"
     CONNECTING = "connecting"
@@ -79,18 +79,18 @@ class GatewayClient:
     application of events that occur, and to allow you to change your presence,
     amongst other real-time applications.
 
-    Each :class:`GatewayClient` represents a single shard.
+    Each :obj:`GatewayClient` represents a single shard.
 
     Expected events that may be passed to the event dispatcher are documented in the
     `gateway event reference <https://discordapp.com/developers/docs/topics/gateway#commands-and-events>`_.
     No normalization of the gateway event names occurs. In addition to this,
     a few internal events can also be triggered to notify you of changes to
     the connection state.
-    * `CONNECT` - fired on initial connection to Discord.
-    * `RECONNECT` - fired if we have previously been connected to Discord
-        but are making a new
-        connection on an existing :class:`GatewayClient` instance.
-    * `DISCONNECT` - fired when the connection is closed for any reason.
+
+    * ``CONNECT`` - fired on initial connection to Discord.
+    * ``RECONNECT`` - fired if we have previously been connected to Discord
+      but are making a new connection on an existing :obj:`GatewayClient` instance.
+    * ``DISCONNECT`` - fired when the connection is closed for any reason.
 
     Parameters
     ----------
@@ -99,7 +99,7 @@ class GatewayClient:
         If False, no payloads are compressed. You usually want to keep this
         enabled.
     connector: :obj:`aiohttp.BaseConnector`, optional
-        The :class:`aiohttp.BaseConnector` to use for the HTTP session that
+        The :obj:`aiohttp.BaseConnector` to use for the HTTP session that
         gets upgraded to a websocket connection. You can use this to customise
         connection pooling, etc.
     debug: :obj:`bool`
@@ -110,11 +110,11 @@ class GatewayClient:
     dispatch: dispatch function
         The function to invoke with any dispatched events. This must not be a
         coroutine function, and must take three arguments only. The first is
-        the reference to this :class:`GatewayClient` The second is the
+        the reference to this :obj:`GatewayClient` The second is the
         event name.
-    initial_presence: :obj:`dict`, optional
-        A raw JSON object as a :class:`dict` that should be set as the initial
-        presence of the bot user once online. If `None`, then it will be set to
+    initial_presence: :obj:`typing.Dict`, optional
+        A raw JSON object as a :obj:`typing.Dict` that should be set as the initial
+        presence of the bot user once online. If ``None``, then it will be set to
         the default, which is showing up as online without a custom status
         message.
     intents: :obj:`hikari.net.codes.GatewayIntent`, optional
@@ -132,31 +132,31 @@ class GatewayClient:
         sent automatically, and must manually request that member chunks be
         sent using :meth:`request_member_chunks`.
     proxy_auth: :obj:`aiohttp.BasicAuth`, optional
-        Optional :class:`aiohttp.BasicAuth` object that can be provided to
-        allow authenticating with a proxy if you use one. Leave `None` to
+        Optional :obj:`aiohttp.BasicAuth` object that can be provided to
+        allow authenticating with a proxy if you use one. Leave ``None`` to
         ignore.
     proxy_headers: :obj:`aiohttp.typedefs.LooseHeaders`, optional
-        Optional :class:`aiohttp.typedefs.LooseHeaders` to provide as headers
-        to allow the connection through a proxy if you use one. Leave `None`
+        Optional :obj:`aiohttp.typedefs.LooseHeaders` to provide as headers
+        to allow the connection through a proxy if you use one. Leave ``None``
         to ignore.
     proxy_url: :obj:`str`, optional
-        Optional :class:`str` to use for a proxy server. If `None`, then it
+        Optional :obj:`str` to use for a proxy server. If ``None``, then it
         is ignored.
     session_id: :obj:`str`, optional
-        The session ID to use. If specified along with a `seq`, then the
-        gateway client will attempt to RESUME an existing session rather than
-        re-IDENTIFY. Otherwise, it will be ignored.
+        The session ID to use. If specified along with ``seq``, then the
+        gateway client will attempt to ``RESUME`` an existing session rather than
+        re-``IDENTIFY``. Otherwise, it will be ignored.
     seq: :obj:`int`, optional
-        The sequence number to use. If specified along with a `session_id`, then
-        the gateway client will attempt to RESUME an existing session rather
-        than re-IDENTIFY. Otherwise, it will be ignored.
+        The sequence number to use. If specified along with ``session_id``, then
+        the gateway client will attempt to ``RESUME`` an existing session rather
+        than re-``IDENTIFY``. Otherwise, it will be ignored.
     shard_id: :obj:`int`
-        The shard ID of this gateway client. Defaults to 0.
+        The shard ID of this gateway client. Defaults to ``0``.
     shard_count: :obj:`int`
-        The number of shards on this gateway. Defaults to 1, which implies no
+        The number of shards on this gateway. Defaults to ``1``, which implies no
         sharding is taking place.
     ssl_context: :obj:`ssl.SSLContext`, optional
-        An optional custom :class:`ssl.SSLContext` to provide to customise how
+        An optional custom :obj:`ssl.SSLContext` to provide to customise how
         SSL works.
     token: :obj:`str`
         The mandatory bot token for the bot account to use, minus the "Bot"
@@ -164,7 +164,7 @@ class GatewayClient:
     url: :obj:`str`
         The websocket URL to use.
     verify_ssl: :obj:`bool`
-        If True, SSL verification is enabled, which is generally what you want.
+        If ``True``, SSL verification is enabled, which is generally what you want.
         If you get SSL issues, you can try turning this off at your own risk.
     version: :obj:`hikari.net.versions.GatewayVersion`
         The version of the gateway API to use. Defaults to the most recent
@@ -213,13 +213,13 @@ class GatewayClient:
 
     #: An event that is set when the connection closes.
     #:
-    #: :type: :class:`asyncio.Event`
+    #: :type: :obj:`asyncio.Event`
     closed_event: asyncio.Event
 
     #: The number of times we have disconnected from the gateway on this
     #: client instance.
     #:
-    #: :type: :class:`int`
+    #: :type: :obj:`int`
     disconnect_count: int
 
     #: The dispatch method to call when dispatching a new event. This is
@@ -227,89 +227,89 @@ class GatewayClient:
     dispatch: DispatchT
 
     #: The heartbeat interval Discord instructed the client to beat at.
-    #: This is `nan` until this information is received.
+    #: This is ``nan`` until this information is received.
     #:
-    #: :type: :class:`float`
+    #: :type: :obj:`float`
     heartbeat_interval: float
 
     #: The most recent heartbeat latency measurement in seconds. This is
-    #: `nan` until this information is available. The latency is calculated
-    #: as the time between sending a `HEARTBEAT` payload and receiving a
-    #: `HEARTBEAT_ACK` response.
+    #: ``nan`` until this information is available. The latency is calculated
+    #: as the time between sending a ``HEARTBEAT`` payload and receiving a
+    #: ``HEARTBEAT_ACK`` response.
     #:
-    #: :type: :class:`float`
+    #: :type: :obj:`float`
     heartbeat_latency: float
 
-    #: An event that is set when Discord sends a `HELLO` payload. This
+    #: An event that is set when Discord sends a ``HELLO`` payload. This
     #: indicates some sort of connection has successfully been made.
     #:
-    #: :type: :class:`asyncio.Event`
+    #: :type: :obj:`asyncio.Event`
     hello_event: asyncio.Event
 
-    #: An event that is set when the client has successfully `IDENTIFY`ed
-    #: or `RESUMED` with the gateway. This indicates regular communication
+    #: An event that is set when the client has successfully ``IDENTIFY``ed
+    #: or ``RESUMED`` with the gateway. This indicates regular communication
     #: can now take place on the connection and events can be expected to
     #: be received.
     #:
-    #: :type: :class:`asyncio.Event`
+    #: :type: :obj:`asyncio.Event`
     identify_event: asyncio.Event
 
-    #: The monotonic timestamp that the last `HEARTBEAT` was sent at, or
-    #: `nan` if no `HEARTBEAT` has yet been sent.
+    #: The monotonic timestamp that the last ``HEARTBEAT`` was sent at, or
+    #: ``nan`` if no ``HEARTBEAT`` has yet been sent.
     #:
-    #: :type: :class:`float`
+    #: :type: :obj:`float`
     last_heartbeat_sent: float
 
     #: The monotonic timestamp at which the last payload was received from
-    #: Discord. If this was more than the :attr:`heartbeat_interval` from
+    #: Discord. If this was more than the ``heartbeat_interval`` from
     #: the current time, then the connection is assumed to be zombied and
-    #: is shut down. If no messages have been received yet, this is `nan`.
+    #: is shut down. If no messages have been received yet, this is ``nan``.
     #:
-    #: :type: :class:`float`
+    #: :type: :obj:`float`
     last_message_received: float
 
     #: The logger used for dumping information about what this client is doing.
     #:
-    #: :type: :class:`logging.Logger`
+    #: :type: :obj:`logging.Logger`
     logger: logging.Logger
 
     #: An event that is set when something requests that the connection
     #: should close somewhere.
     #:
-    #: :type: :class:`asyncio.Event`
+    #: :type: :obj:`asyncio.Event`
     requesting_close_event: asyncio.Event
 
     #: The current session ID, if known.
     #:
-    #: :type: :class:`str` or `None`
+    #: :type: :obj:`str`, optional
     session_id: typing.Optional[str]
 
     #: The current sequence number for state synchronization with the API,
     #: if known.
     #:
-    #: :type: :class:`int` or `None`.
+    #: :type: :obj:`int`, optional.
     seq: typing.Optional[int]
 
     #: The shard ID.
     #:
-    #: :type: :class:`int`
+    #: :type: :obj:`int`
     shard_id: int
 
     #: The number of shards in use for the bot.
     #:
-    #: :type: :class:`int`
+    #: :type: :obj:`int`
     shard_count: int
 
     #: The current status of the gateway. This can be used to print out
     #: informative context for large sharded bots.
     #:
-    #: :type: :class:`GatewayStatus`
+    #: :type: :obj:`GatewayStatus`
     status: GatewayStatus
 
     #: The API version to use on Discord.
     #:
-    #: :type: :class:`hikari.net.versions.GatewayVersion`
-    version: versions.GatewayVersion
+    #: :type: :obj:`int`
+    version: int
 
     def __init__(
         self,
@@ -334,7 +334,7 @@ class GatewayClient:
         token: str,
         url: str,
         verify_ssl: bool = True,
-        version: versions.GatewayVersion = versions.GatewayVersion.STABLE,
+        version: typing.Union[int, versions.GatewayVersion] = versions.GatewayVersion.STABLE,
     ) -> None:
         # Sanitise the URL...
         scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url, allow_fragments=True)
@@ -386,24 +386,26 @@ class GatewayClient:
         self.shard_id: int = shard_id
         self.shard_count: int = shard_count
         self.status: GatewayStatus = GatewayStatus.OFFLINE
-        self.version: versions.GatewayVersion = version
+        self.version: int = int(version)
         self.logger.debug("using Gateway version %s", int(version))
 
     @property
     def uptime(self) -> datetime.timedelta:
-        """
+        """The amount of time the connection has been running for.
+
         Returns
         -------
         :obj:`datetime.timedelta`
             The amount of time the connection has been running for. If it isn't
-            running, this will always return 0 seconds.
+            running, this will always return ``0`` seconds.
         """
         delta = time.perf_counter() - self._connected_at
         return datetime.timedelta(seconds=0 if math.isnan(delta) else delta)
 
     @property
     def is_connected(self) -> bool:
-        """
+        """Wether the gateway is connecter or not.
+
         Returns
         -------
         :obj:`bool`
@@ -414,26 +416,31 @@ class GatewayClient:
 
     @property
     def intents(self) -> typing.Optional[codes.GatewayIntent]:
-        """
+        """The intents being used.
+
+        If this is ``None``, no intent usage was being
+        used on this shard. On V6 this would be regular usage as prior to
+        the intents change in January 2020. If on V7, you just won't be
+        able to connect at all to the gateway.
+
         Returns
         -------
         :obj:`hikari.net.codes.GatewayIntent`, optional
-            The intents being used. If this is None, no intent usage was being
-            used on this shard. On V6 this would be regular usage as prior to
-            the intents change in January 2020. If on V7, you just won't be
-            able to connect at all to the gateway.
+            The intents being used.
         """
         return self._intents
 
     @property
     def reconnect_count(self) -> int:
-        """
+        """The ammount of times the gateway has reconnected since initialization.
+
+        This can be used as a debugging context, but is also used internally 
+        for exception management.
+
         Returns
         -------
         :obj:`int`
-            The number of times this client has been reconnected since it was
-            initialized. This can be used as a debugging context, but is also
-            used internally for exception management.
+            The ammount of times the gateway has reconnected since initialization.
         """
         # 0 disconnects + not is_connected => 0
         # 0 disconnects + is_connected => 0
@@ -445,10 +452,12 @@ class GatewayClient:
 
     @property
     def current_presence(self) -> typing.Dict:
-        """
+        """The current presence of the gateway.
+
         Returns
         -------
-        The current presence for the shard.
+        :obj:`typing.Dict`
+            The current presence for the gateway.
         """
         # Make a shallow copy to prevent mutation.
         return dict(self._presence or {})
@@ -465,7 +474,7 @@ class GatewayClient:
         """Requests the guild members for a guild or set of guilds.
 
         These guilds must be being served by this shard, and the results will be
-        provided to the dispatcher with `GUILD_MEMBER_CHUNK` events.
+        provided to the dispatcher with ``GUILD_MEMBER_CHUNK`` events.
 
         Parameters
         ----------
@@ -479,22 +488,22 @@ class GatewayClient:
         Keyword Args
         ------------
         limit : :obj:`int`
-            Limit for the number of members to respond with. Set to 0 to be
+            Limit for the number of members to respond with. Set to ``0`` to be
             unlimited.
         query : :obj:`str`
             An optional string to filter members with. If specified, only
             members who have a username starting with this string will be
             returned.
-        user_ids : `list` [ `str` ]
+        user_ids : :obj:`typing.Itinerable` [ :obj:`str` ]
              An optional list of user IDs to return member info about.
 
-        Notes
-        -----
-        You may not specify `user_ids` at the same time as `limit` and
-        `query`. Likewise, if you specify one of `limit` or `query`, the
-        other must also be included. The default if no optional arguments
-        are specified is to use a `limit` of `0` and a `query` of
-        `""` (empty-string).
+        Note
+        ----
+        You may not specify ``user_ids`` at the same time as ``limit`` and
+        ``query``. Likewise, if you specify one of ``limit`` or ``query``, 
+        the other must also be included. The default, if no optional arguments
+        are specified, is to use a ``limit`` of ``0`` and a ``query`` of
+        ``""`` (empty-string).
         """
         guilds = [guild_id, *guild_ids]
         constraints = {}
@@ -519,7 +528,7 @@ class GatewayClient:
 
         Parameters
         ----------
-        presence : :obj:`dict`
+        presence : :obj:`typing.Dict`
             The new presence payload to set.
         """
         presence.setdefault("since", None)
@@ -537,7 +546,7 @@ class GatewayClient:
         Parameters
         ----------
         close_code : :obj:`int`
-            The close code to use. Defaults to `1000` (normal closure).
+            The close code to use. Defaults to ``1000`` (normal closure).
         """
         if not self.requesting_close_event.is_set():
             self.status = GatewayStatus.SHUTTING_DOWN
@@ -550,16 +559,14 @@ class GatewayClient:
             self.closed_event.set()
 
     async def connect(self, client_session_type=aiohttp.ClientSession) -> None:
-        """
-        Connect to the gateway and return when it closes (usually with some
-        form of exception documented in :mod:`hikari.net.errors`.
+        """Connect to the gateway and return when it closes (usually with some
+        form of exception documented in :mod:`hikari.net.errors`).
 
         Parameters
         ----------
-        client_session_type : :obj:`type`
+        client_session_type
             The client session implementation to use. You generally do not want
-            to change this from the default, which is
-            :obj:`aiohttp.ClientSession`.
+            to change this from the default, which is :obj:`aiohttp.ClientSession`.
         """
         if self.is_connected:
             raise RuntimeError("Already connected")

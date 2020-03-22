@@ -1,21 +1,29 @@
 :orphan:
 
-{{ module }}
-{{ rule }}
+.. currentmodule:: {{ module }}
 
-Documentation
--------------
-
-.. automodule:: {{ module }}
-    :inherited-members:
+{{ module | underline }}
 
 {% if submodules %}
-
-Submodules
-----------
 
 .. autosummary::
     {% for m in submodules %}{{ m }}
     {% endfor %}
 {% endif %}
+
+Overview
+--------
+
+.. autosummary::
+    {{ module }}
+    :members:
+
+
+Details
+-------
+
+.. automodule:: {{ module }}
+   :show-inheritance:
+   :inherited-members:
+
 

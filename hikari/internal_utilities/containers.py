@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Custom data structures and constant values.
-"""
+"""Custom data structures and constant values."""
 __all__ = [
     "EMPTY_SEQUENCE",
     "EMPTY_SET",
@@ -33,7 +31,6 @@ import typing
 # to keep separate types...
 HashableT = typing.TypeVar("HashableT", bound=typing.Hashable)
 ValueT = typing.TypeVar("ValueT")
-
 
 #: An immutable indexable container of elements with zero size.
 EMPTY_SEQUENCE: typing.Sequence = tuple()

@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Date/Time utilities.
-"""
+"""Date/Time utilities."""
 __all__ = ["parse_http_date", "parse_iso_8601_ts", "discord_epoch_to_datetime", "unix_epoch_to_ts"]
 
 import datetime
@@ -27,15 +25,16 @@ import re
 
 
 def parse_http_date(date_str: str) -> datetime.datetime:
-    """
-    Return the HTTP date as a datetime object.
+    """Return the HTTP date as a datetime object.
 
-    Args:
-        date_str:
-            The RFC-2822 (section 3.3) compliant date string to parse.
+    Parameters
+    ----------
+    date_str : :obj:`str`
+        The RFC-2822 (section 3.3) compliant date string to parse.
 
-    See:
-        https://www.ietf.org/rfc/rfc2822.txt
+    See also
+    --------
+    `<https://www.ietf.org/rfc/rfc2822.txt>`_
     """
     return email.utils.parsedate_to_datetime(date_str)
 
@@ -48,11 +47,16 @@ ISO_8601_TZ_PART = re.compile(r"([+-])(\d{2}):(\d{2})$")
 
 
 def parse_iso_8601_ts(date_string: str) -> datetime.datetime:
-    """
-    Parses an ISO 8601 date string into a datetime object
+    """Parses an ISO 8601 date string into a datetime object
 
-    See:
-        https://en.wikipedia.org/wiki/ISO_8601
+    Parameters
+    ----------
+    date_string : :obj:`str`
+        The ISO 8601 compliant date string to parse.
+
+    See also
+    --------
+    `<https://en.wikipedia.org/wiki/ISO_8601>`_
     """
     year, month, day = map(int, ISO_8601_DATE_PART.findall(date_string)[0])
 
@@ -79,25 +83,33 @@ def parse_iso_8601_ts(date_string: str) -> datetime.datetime:
 DISCORD_EPOCH = 1_420_070_400
 
 
-def discord_epoch_to_datetime(epoch) -> datetime.datetime:
-    """
-    Args:
-        epoch:
-            Number of milliseconds since 1/1/2015 (UTC)
+def discord_epoch_to_datetime(epoch: int) -> datetime.datetime:
+    """Parses a discord epoch into a datetime object
 
-    Returns:
+    Parameters
+    ----------
+    epoch : :obj:`int`
+        Number of milliseconds since 1/1/2015 (UTC)
+
+    Returns
+    -------
+    :obj:`datetime.datetime`
         Number of seconds since 1/1/1970 within a datetime object (UTC).
     """
     return datetime.datetime.fromtimestamp(epoch / 1000 + DISCORD_EPOCH, datetime.timezone.utc)
 
 
-def unix_epoch_to_ts(epoch) -> datetime.datetime:
-    """
-    Args:
-        epoch:
-            Number of milliseconds since 1/1/1970 (UTC)
+def unix_epoch_to_ts(epoch: int) -> datetime.datetime:
+    """Parses a unix epoch to a datetime object
 
-    Returns:
+    Parameters
+    ----------
+    epoch : :obj:`int`
+        Number of milliseconds since 1/1/1970 (UTC)
+
+    Returns
+    -------
+    :obj:`datetime.datetime`
         Number of seconds since 1/1/1970 within a datetime object (UTC).
     """
     return datetime.datetime.fromtimestamp(epoch / 1000, datetime.timezone.utc)
