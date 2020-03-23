@@ -216,7 +216,7 @@ class TestInviteWithMetadata:
     def test_deserialize(self, *deserializers, test_invite_with_metadata_payload):
         mock_datetime = mock.MagicMock(datetime.datetime)
         with _helpers.patch_marshal_attr(
-            invites.InviteWithMetadata, "created_at", deserializers=dates.parse_iso_8601_ts, return_value=mock_datetime
+            invites.InviteWithMetadata, "created_at", deserializer=dates.parse_iso_8601_ts, return_value=mock_datetime
         ) as mock_created_at_deserializer:
             invite_with_metadata_obj = invites.InviteWithMetadata.deserialize(test_invite_with_metadata_payload)
             mock_created_at_deserializer.assert_called_once_with("2015-04-26T06:26:56.936000+00:00")

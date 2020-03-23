@@ -20,6 +20,10 @@
 from hikari.core.configs import *
 from hikari.core.clients import *
 from hikari.core.channels import *
+from hikari.core.colors import *
+from hikari.core.colours import *
+from hikari.core.embeds import *
+from hikari.core.emojis import *
 from hikari.core.entities import *
 from hikari.core.events import *
 from hikari.core.gateway_bot import *
@@ -30,3 +34,4 @@ from hikari.core.oauth2 import *
 from hikari.core.permissions import *
 from hikari.core.snowflakes import *
 from hikari.core.users import *
+from hikari.core.webhooks import *

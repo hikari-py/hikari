@@ -16,9 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Model that represents a common RGB color and provides 
+simple conversions to other common color systems.
 """
-Model that represents a common RGB color and provides simple conversions to other common color systems.
-"""
+
 __all__ = ["Color", "ColorCompatibleT"]
 
 import string

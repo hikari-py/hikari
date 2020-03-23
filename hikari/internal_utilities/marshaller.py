@@ -374,7 +374,8 @@ class HikariEntityMarshaller:
             if a.is_transient:
                 continue
             value = getattr(obj, a.field_name)
-            raw_data[a.raw_name] = a.serializer(value) or repr(value)
+            if value is not None:
+                raw_data[a.raw_name] = a.serializer(value)
 
         return raw_data
 

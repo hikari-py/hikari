@@ -74,7 +74,7 @@ class TeamMember(entities.HikariEntity, entities.Deserializable):
     #: Will always be ``["*"]`` until Discord starts using this.
     #:
     #: :type: :obj:`typing.Set` [ :obj:`str` ]
-    permissions: typing.Set[str] = marshaller.attrib(deserializer=lambda permissions: {p for p in permissions})
+    permissions: typing.Set[str] = marshaller.attrib(deserializer=set)
 
     #: The ID of the team this member belongs to.
     #:
@@ -200,8 +200,10 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
 
     #: The base64 encoded key used for the GameSDK's ``GetTicket``.
     #:
-    #: :type: :obj:`str`
-    verify_key: bytes = marshaller.attrib(deserializer=lambda key: bytes(key, "utf-8"))
+    #: :type: :obj:`bytes`, optional
+    verify_key: typing.Optional[bytes] = marshaller.attrib(
+        deserializer=lambda key: bytes(key, "utf-8"), if_undefined=None
+    )
 
     #: The hash of this application's icon if set.
     #:
