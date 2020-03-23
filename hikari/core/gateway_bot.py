@@ -16,18 +16,55 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-__all__ = ["GatewayBot", "SessionStartLimit"]
+"""
+Components and entities that are used to describe Discord gateway information.
+"""
+__all__ = ["GatewayBot"]
 
-import attr
+import datetime
 
 from hikari.core import entities
+from hikari.internal_utilities import marshaller
 
 
-@attr.s(slots=True, auto_attribs=True)
-class GatewayBot(entities.HikariEntity):
-    ...
+@marshaller.attrs(slots=True)
+class SessionStartLimit(entities.HikariEntity, entities.Deserializable):
+    """Used to represent information about the current session start limits."""
+
+    #: The total number of session starts the current bot is allowed.
+    #:
+    #: :type: :obj:`int`
+    total: int = marshaller.attrib(deserializer=int)
+
+    #: The remaining number of session starts this bot has.
+    #:
+    #: :type: :obj:`int`
+    remaining: int = marshaller.attrib(deserializer=int)
+
+    #: The timedelta of when :attr:`remaining` will reset back to :attr:`total`
+    #: for the current bot.
+    #:
+    #: :type: :obj:`datetime.timedelta`
+    reset_after: datetime.timedelta = marshaller.attrib(
+        deserializer=lambda after: datetime.timedelta(milliseconds=after),
+    )
 
 
-@attr.s(slots=True, auto_attribs=True)
-class SessionStartLimit(entities.HikariEntity):
-    ...
+@marshaller.attrs(slots=True)
+class GatewayBot(entities.HikariEntity, entities.Deserializable):
+    """Used to represent gateway information for the connected bot."""
+
+    #: The WSS URL that can be used for connecting to the gateway.
+    #:
+    #: :type: :obj:`str`
+    url: str = marshaller.attrib(deserializer=str)
+
+    #: The recommended number of shards to use when connecting to the gateway.
+    #:
+    #: :type: :obj:`int`
+    shard_count: int = marshaller.attrib(raw_name="shards", deserializer=int)
+
+    #: Information about the bot's current session start limit.
+    #:
+    #: :type: :obj:`SessionStartLimit`
+    session_start_limit: int = marshaller.attrib(deserializer=SessionStartLimit.deserialize)
