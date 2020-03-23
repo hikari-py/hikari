@@ -26,8 +26,4 @@ from hikari._about import __license__
 from hikari._about import __url__
 from hikari._about import __version__
 from hikari.errors import *
-from hikari.net.codes import *
-from hikari.net.errors import *
-from hikari.net.gateway import *
-from hikari.net.http_client import *
-from hikari.net.versions import *
+from hikari.net import *

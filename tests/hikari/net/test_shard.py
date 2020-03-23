@@ -30,7 +30,7 @@ import pytest
 
 from hikari.internal_utilities import containers
 from hikari.net import errors
-from hikari.net import gateway
+from hikari.net import shard
 from hikari.net import user_agent
 from hikari.net import versions
 from tests.hikari import _helpers
@@ -86,12 +86,12 @@ class MockClientSession:
 class TestGatewayClientConstructor:
     async def test_init_sets_shard_numbers_correctly(self,):
         input_shard_id, input_shard_count, expected_shard_id, expected_shard_count = 1, 2, 1, 2
-        client = gateway.GatewayClient(shard_id=input_shard_id, shard_count=input_shard_count, token="xxx", url="yyy")
+        client = shard.ShardConnection(shard_id=input_shard_id, shard_count=input_shard_count, token="xxx", url="yyy")
         assert client.shard_id == expected_shard_id
         assert client.shard_count == expected_shard_count
 
     async def test_dispatch_is_callable(self):
-        client = gateway.GatewayClient(token="xxx", url="yyy")
+        client = shard.ShardConnection(token="xxx", url="yyy")
         client.dispatch(client, "ping", "pong")
 
     @pytest.mark.parametrize(
@@ -103,7 +103,7 @@ class TestGatewayClientConstructor:
     )
     async def test_compression(self, compression, expected_url_query):
         url = "ws://baka-im-not-a-http-url:49620/locate/the/bloody/websocket?ayyyyy=lmao"
-        client = gateway.GatewayClient(token="xxx", url=url, compression=compression)
+        client = shard.ShardConnection(token="xxx", url=url, compression=compression)
         scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(client._url)
         assert scheme == "ws"
         assert netloc == "baka-im-not-a-http-url:49620"
@@ -114,13 +114,13 @@ class TestGatewayClientConstructor:
         assert fragment == ""
 
     async def test_init_hearbeat_defaults_before_startup(self):
-        client = gateway.GatewayClient(token="xxx", url="yyy")
+        client = shard.ShardConnection(token="xxx", url="yyy")
         assert math.isnan(client.last_heartbeat_sent)
         assert math.isnan(client.heartbeat_latency)
         assert math.isnan(client.last_message_received)
 
     async def test_init_connected_at_is_nan(self):
-        client = gateway.GatewayClient(token="xxx", url="yyy")
+        client = shard.ShardConnection(token="xxx", url="yyy")
         assert math.isnan(client._connected_at)
 
 
@@ -132,7 +132,7 @@ class TestGatewayClientUptimeProperty:
     )
     async def test_uptime(self, connected_at, now, expected_uptime):
         with mock.patch("time.perf_counter", return_value=now):
-            client = gateway.GatewayClient(token="xxx", url="yyy")
+            client = shard.ShardConnection(token="xxx", url="yyy")
             client._connected_at = connected_at
             assert client.uptime == expected_uptime
 
@@ -141,7 +141,7 @@ class TestGatewayClientUptimeProperty:
 class TestGatewayClientIsConnectedProperty:
     @pytest.mark.parametrize(["connected_at", "is_connected"], [(float("nan"), False), (15, True), (2500.0, True),])
     async def test_is_connected(self, connected_at, is_connected):
-        client = gateway.GatewayClient(token="xxx", url="yyy")
+        client = shard.ShardConnection(token="xxx", url="yyy")
         client._connected_at = connected_at
         assert client.is_connected is is_connected
 
@@ -162,7 +162,7 @@ class TestGatewayReconnectCountProperty:
         ],
     )
     async def test_value(self, disconnect_count, is_connected, expected_reconnect_count):
-        client = gateway.GatewayClient(token="xxx", url="yyy")
+        client = shard.ShardConnection(token="xxx", url="yyy")
         client.disconnect_count = disconnect_count
         client._connected_at = 420 if is_connected else float("nan")
         assert client.reconnect_count == expected_reconnect_count
@@ -171,12 +171,12 @@ class TestGatewayReconnectCountProperty:
 @pytest.mark.asyncio
 class TestGatewayCurrentPresenceProperty:
     async def test_returns_presence(self):
-        client = gateway.GatewayClient(token="xxx", url="yyy")
+        client = shard.ShardConnection(token="xxx", url="yyy")
         client._presence = {"foo": "bar"}
         assert client.current_presence == {"foo": "bar"}
 
     async def test_returns_copy(self):
-        client = gateway.GatewayClient(token="xxx", url="yyy")
+        client = shard.ShardConnection(token="xxx", url="yyy")
         client._presence = {"foo": "bar"}
         assert client.current_presence is not client._presence
 
@@ -186,7 +186,7 @@ class TestGatewayClientAiohttpClientSessionKwargsProperty:
     async def test_right_stuff_is_included(self):
         connector = mock.MagicMock()
 
-        client = gateway.GatewayClient(url="...", token="...", connector=connector,)
+        client = shard.ShardConnection(url="...", token="...", connector=connector, )
 
         assert client._cs_init_kwargs == dict(connector=connector)
 
@@ -201,7 +201,7 @@ class TestGatewayClientWebSocketKwargsProperty:
         verify_ssl = True
         ssl_context = mock.MagicMock()
 
-        client = gateway.GatewayClient(
+        client = shard.ShardConnection(
             url=url,
             token="...",
             proxy_url=proxy_url,
@@ -248,7 +248,7 @@ class TestGatewayConnect:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(gateway.GatewayClient)(url="ws://localhost", token="xxx")
+        client = _helpers.unslot_class(shard.ShardConnection)(url="ws://localhost", token="xxx")
         client = _helpers.mock_methods_on(client, except_=("connect",))
         client._receive = mock.AsyncMock(return_value=self.hello_payload)
         return client
@@ -504,7 +504,7 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
+        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("_identify_or_resume_then_poll_events",))
 
         def send(_):
@@ -514,7 +514,7 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
             client.poll_events_time = time.perf_counter()
 
         client._send = mock.AsyncMock(wraps=send)
-        client._poll_events = mock.AsyncMock(spec=gateway.GatewayClient._send, wraps=poll_events)
+        client._poll_events = mock.AsyncMock(spec=shard.ShardConnection._send, wraps=poll_events)
         return client
 
     async def test_no_session_id_sends_identify_then_polls_events(self, client):
@@ -678,7 +678,7 @@ class TestHeartbeatKeepAlive:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
+        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("_heartbeat_keep_alive",))
         client._send = mock.AsyncMock()
         # This won't get set on the right event loop if we are not careful
@@ -738,7 +738,7 @@ class TestClose:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
+        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("close",))
         client.ws = _helpers.create_autospec(aiohttp.ClientWebSocketResponse)
         client.session = _helpers.create_autospec(aiohttp.ClientSession)
@@ -809,7 +809,7 @@ class TestPollEvents:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
+        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("_poll_events",))
         return client
 
@@ -831,7 +831,7 @@ class TestRequestGuildMembers:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
+        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("request_guild_members",))
         return client
 
@@ -868,7 +868,7 @@ class TestUpdatePresence:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(gateway.GatewayClient)(token="1234", url="xxx")
+        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("update_presence",))
         return client
 

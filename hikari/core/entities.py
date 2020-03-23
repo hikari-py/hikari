@@ -55,6 +55,11 @@ class HikariEntity(metaclass=abc.ABCMeta):
 
     __slots__ = ()
 
+    if typing.TYPE_CHECKING:
+
+        def __init__(self, *args, **kwargs) -> None:
+            ...
+
 
 class Deserializable:
     """A mixin for any type that allows deserialization from a raw value
