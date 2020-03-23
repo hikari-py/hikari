@@ -16,24 +16,28 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-__all__ = ["ShardState", "Shard", "GatewayClient"]
+__all__ = ["ShardState", "ShardClient", "GatewayClient"]
 
+import abc
 import asyncio
+import contextlib
 import datetime
 import enum
+import logging
+import signal
 import time
 import typing
 
 import aiohttp
 
 from hikari.core import events
-from hikari.core import gateway_entities
 from hikari.core import gateway_config
+from hikari.core import gateway_entities
 from hikari.internal_utilities import aio
 from hikari.internal_utilities import loggers
 from hikari.net import errors
-from hikari.net import shard
 from hikari.net import ratelimits
+from hikari.net import shard
 
 _EventT = typing.TypeVar("_EventT", bound=events.HikariEvent)
 
@@ -49,7 +53,61 @@ class ShardState(enum.IntEnum):
     STOPPED = enum.auto()
 
 
-class Shard:
+class Startable(abc.ABC):
+    """Base for any socket-based communication medium to provide functionality
+    for more automated control given certain method constraints.
+    """
+
+    logger: logging.Logger
+
+    @abc.abstractmethod
+    async def start(self):
+        ...
+
+    @abc.abstractmethod
+    async def shutdown(self, wait: bool = True):
+        ...
+
+    @abc.abstractmethod
+    async def join(self):
+        ...
+
+    def run(self):
+        loop = asyncio.get_event_loop()
+
+        def sigterm_handler(*_):
+            raise KeyboardInterrupt()
+
+        ex = None
+
+        try:
+            with contextlib.suppress(NotImplementedError):
+                # Not implemented on Windows
+                loop.add_signal_handler(signal.SIGTERM, sigterm_handler)
+
+            loop.run_until_complete(self.start())
+            try:
+                loop.run_until_complete(self.join())
+            except errors.GatewayClientClosedError:
+                self.logger.info("client has shut down")
+
+        except KeyboardInterrupt as _ex:
+            self.logger.info("received signal to shut down client")
+            loop.run_until_complete(self.shutdown())
+            # Apparently you have to alias except clauses or you get an
+            # UnboundLocalError.
+            ex = _ex
+        finally:
+            loop.run_until_complete(self.shutdown(True))
+            with contextlib.suppress(NotImplementedError):
+                # Not implemented on Windows
+                loop.remove_signal_handler(signal.SIGTERM)
+
+        if ex:
+            raise ex from ex
+
+
+class ShardClient(Startable):
     """The primary interface for a single shard connection. This contains
     several abstractions to enable usage of the low level gateway network
     interface with the higher level constructs in :mod:`hikari.core`.
@@ -94,9 +152,8 @@ class Shard:
     def __init__(
         self,
         shard_id: int,
-        shard_count: int,
         config: gateway_config.GatewayConfig,
-        low_level_dispatch: typing.Callable[["Shard", str, typing.Any], None],
+        low_level_dispatch: typing.Callable[["ShardClient", str, typing.Any], None],
         url: str,
     ) -> None:
         self.logger = loggers.get_named_logger(self, shard_id)
@@ -126,7 +183,7 @@ class Shard:
             session_id=None,
             seq=None,
             shard_id=shard_id,
-            shard_count=shard_count,
+            shard_count=config.shard_config.shard_count,
             ssl_context=config.protocol.ssl_context if config.protocol is not None else None,
             token=config.token,
             url=url,
@@ -209,7 +266,7 @@ class Shard:
         """Wait for the shard to shut down fully."""
         await self._task if self._task is not None else aio.completed_future()
 
-    async def stop(self, wait: bool = True) -> None:
+    async def shutdown(self, wait: bool = True) -> None:
         """Request that the shard shuts down.
 
         Parameters
@@ -225,6 +282,8 @@ class Shard:
             await self._client.close()
             if wait:
                 await self._task
+            with contextlib.suppress():
+                self._task.result()
 
     async def _keep_alive(self):
         back_off = ratelimits.ExponentialBackOff(maximum=None)
@@ -274,7 +333,7 @@ class Shard:
             except errors.GatewayServerClosedConnectionError:
                 self.logger.warning("disconnected by Discord, will attempt to reconnect")
             except errors.GatewayClientClosedError:
-                self.logger.warning("shut down because the client is closing")
+                self.logger.warning("shutting down")
                 return
             except Exception as ex:
                 self.logger.debug("propagating unexpected exception %s", exc_info=ex)
@@ -339,30 +398,50 @@ class Shard:
         }
 
 
-ShardT = typing.TypeVar("ShardT", bound=Shard)
+ShardT = typing.TypeVar("ShardT", bound=ShardClient)
 
 
-class GatewayClient(typing.Generic[ShardT]):
+class GatewayClient(typing.Generic[ShardT], Startable):
     def __init__(
-        self, config: gateway_config.GatewayConfig, url: str, shard_type: typing.Type[ShardT] = Shard,
+        self, config: gateway_config.GatewayConfig, url: str, shard_type: typing.Type[ShardT] = ShardClient,
     ) -> None:
+        self.logger = loggers.get_named_logger(self)
         self.config = config
-        self.shards = {
+        self.shards: typing.Dict[int, ShardT] = {
             shard_id: shard_type(shard_id, config, self._low_level_dispatch, url)
             for shard_id in config.shard_config.shard_ids
         }
 
     async def start(self) -> None:
-        raise NotImplementedError()
+        """Start all shards.
+
+        This safely starts all shards at the correct rate to prevent invalid
+        session spam. This involves starting each shard sequentially with a
+        5 second pause between each.
+        """
+        self.logger.info("starting %s shard(s)", len(self.shards))
+        start_time = time.perf_counter()
+        for i, shard_id in enumerate(self.config.shard_config.shard_ids):
+            if i > 0:
+                await asyncio.sleep(5)
+
+            shard_obj = self.shards[shard_id]
+            await shard_obj.start()
+        finish_time = time.perf_counter()
+
+        self.logger.info("started %s shard(s) in approx %.2fs", len(self.shards), finish_time - start_time)
 
     async def join(self) -> None:
-        raise NotImplementedError()
+        await asyncio.gather(*(shard_obj.join() for shard_obj in self.shards.values()))
 
-    async def shutdown(self) -> None:
-        raise NotImplementedError()
-
-    async def destroy(self) -> None:
-        raise NotImplementedError()
+    async def shutdown(self, wait: bool = True) -> None:
+        self.logger.info("stopping %s shard(s)", len(self.shards))
+        start_time = time.perf_counter()
+        try:
+            await asyncio.gather(*(shard_obj.shutdown(wait) for shard_obj in self.shards.values()))
+        finally:
+            finish_time = time.perf_counter()
+            self.logger.info("stopped %s shard(s) in approx %.2fs", len(self.shards), finish_time - start_time)
 
     @typing.overload
     async def wait_for(self, event: _EventT, predicate: typing.Callable[[_EventT], bool], timeout: float) -> _EventT:

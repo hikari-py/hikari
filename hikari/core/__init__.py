@@ -21,9 +21,9 @@ from hikari.core import app_config
 from hikari.core import channels
 from hikari.core import entities
 from hikari.core import events
-from hikari.core import gateway
-from hikari.core import gateway_entities
+from hikari.core import gateway_client
 from hikari.core import gateway_config
+from hikari.core import gateway_entities
 from hikari.core import guilds
 from hikari.core import http_config
 from hikari.core import invites
@@ -34,7 +34,6 @@ from hikari.core import protocol_config
 from hikari.core import snowflakes
 from hikari.core import users
 from hikari.core import webhooks
-
 from hikari.core.app_config import *
 from hikari.core.channels import *
 from hikari.core.colors import *
@@ -43,9 +42,9 @@ from hikari.core.embeds import *
 from hikari.core.emojis import *
 from hikari.core.entities import *
 from hikari.core.events import *
-from hikari.core.gateway import *
-from hikari.core.gateway_entities import *
+from hikari.core.gateway_client import *
 from hikari.core.gateway_config import *
+from hikari.core.gateway_entities import *
 from hikari.core.guilds import *
 from hikari.core.http_config import *
 from hikari.core.invites import *
@@ -63,7 +62,7 @@ __all__ = [
     *channels.__all__,
     *entities.__all__,
     *events.__all__,
-    *gateway.__all__,
+    *gateway_client.__all__,
     *gateway_entities.__all__,
     *gateway_config.__all__,
     *guilds.__all__,

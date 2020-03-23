@@ -186,7 +186,7 @@ class TestGatewayClientAiohttpClientSessionKwargsProperty:
     async def test_right_stuff_is_included(self):
         connector = mock.MagicMock()
 
-        client = shard.ShardConnection(url="...", token="...", connector=connector, )
+        client = shard.ShardConnection(url="...", token="...", connector=connector,)
 
         assert client._cs_init_kwargs == dict(connector=connector)
 

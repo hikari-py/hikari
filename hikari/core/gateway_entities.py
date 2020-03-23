@@ -19,6 +19,7 @@
 __all__ = ["GatewayBot", "GatewayActivity"]
 
 import datetime
+import typing
 
 from hikari.core import entities
 from hikari.internal_utilities import marshaller

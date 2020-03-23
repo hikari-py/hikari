@@ -22,8 +22,8 @@ __all__ = ["AppConfig"]
 import typing
 
 from hikari.core import entities
-from hikari.core import http_config
 from hikari.core import gateway_config
+from hikari.core import http_config
 from hikari.internal_utilities import marshaller
 
 

@@ -21,7 +21,7 @@ import datetime
 import cymock as mock
 import pytest
 
-from hikari.core import gateway_bot
+from hikari.core import gateway_entities
 from tests.hikari import _helpers
 
 
@@ -32,7 +32,7 @@ def test_session_start_limit_payload():
 
 class TestSessionStartLimit:
     def test_deserialize(self, test_session_start_limit_payload):
-        session_start_limit_obj = gateway_bot.SessionStartLimit.deserialize(test_session_start_limit_payload)
+        session_start_limit_obj = gateway_entities.SessionStartLimit.deserialize(test_session_start_limit_payload)
         assert session_start_limit_obj.total == 1000
         assert session_start_limit_obj.remaining == 991
         assert session_start_limit_obj.reset_after == datetime.timedelta(milliseconds=14170186)
@@ -44,14 +44,14 @@ class TestGatewayBot:
         return {"url": "wss://gateway.discord.gg", "shards": 1, "session_start_limit": test_session_start_limit_payload}
 
     def test_deserialize(self, test_gateway_bot_payload, test_session_start_limit_payload):
-        mock_session_start_limit = mock.MagicMock(gateway_bot.SessionStartLimit)
+        mock_session_start_limit = mock.MagicMock(gateway_entities.SessionStartLimit)
         with _helpers.patch_marshal_attr(
-            gateway_bot.GatewayBot,
+            gateway_entities.GatewayBot,
             "session_start_limit",
-            deserializer=gateway_bot.SessionStartLimit.deserialize,
+            deserializer=gateway_entities.SessionStartLimit.deserialize,
             return_value=mock_session_start_limit,
         ) as patched_start_limit_deserializer:
-            gateway_bot_obj = gateway_bot.GatewayBot.deserialize(test_gateway_bot_payload)
+            gateway_bot_obj = gateway_entities.GatewayBot.deserialize(test_gateway_bot_payload)
             patched_start_limit_deserializer.assert_called_once_with(test_session_start_limit_payload)
         assert gateway_bot_obj.session_start_limit is mock_session_start_limit
         assert gateway_bot_obj.url == "wss://gateway.discord.gg"

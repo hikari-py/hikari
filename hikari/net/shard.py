@@ -630,6 +630,9 @@ class ShardConnection:
             # Kill other running tasks now.
             for pending_task in pending_tasks:
                 pending_task.cancel()
+                with contextlib.suppress(Exception):
+                    # Clear any pending exception to prevent a nasty console message.
+                    pending_task.result()
 
             ex = completed.pop().exception()
 
