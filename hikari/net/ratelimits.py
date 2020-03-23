@@ -75,7 +75,7 @@ Unknown buckets have a hardcoded initial hash code internally.
 Initially acquiring time on a bucket
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Each time you :meth:`hikari.net.ratelimits.RateLimiter.acquire` a request
+Each time you :meth:`IRateLimiter.acquire` a request
 timeslice for a given :obj:`hikari.net.ratelimits.CompiledRoute`, several
 things happen. The first is that we attempt to find the existing bucket for
 that route, if there is one, or get an unknown bucket otherwise. This is done
@@ -87,14 +87,13 @@ initial hash is processed by the :class`hikari.net.ratelimits.CompiledRoute` to
 provide the :obj:`RealBucketHash` we need to get the route's bucket object
 internally.
 
-The :meth:`hikari.net.ratelimits.RateLimiter.acquire` method will take the
-bucket and acquire a new timeslice on it. This takes the form of a
-:obj:`asyncio.Future` which should be awaited by the caller and will complete
-once the caller is allowed to make a request. Most of the time, this is done
-instantly, but if the bucket has an active rate limit preventing requests being
-sent, then the future will be paused until the rate limit is over. This may be
-longer than the rate limit period if you have queued a large number of requests
-during this limit, as it is first-come-first-served.
+The :meth:`acquire` method will take the bucket and acquire a new timeslice on 
+it. This takes the form of a :obj:`asyncio.Future` which should be awaited by 
+the caller and will complete once the caller is allowed to make a request. Most
+of the time, this is done instantly, but if the bucket has an active rate limit 
+preventing requests being sent, then the future will be paused until the rate 
+limit is over. This may be longer than the rate limit period if you have queued 
+a large number of requests during this limit, as it is first-come-first-served.
 
 Acquiring a rate limited bucket will start a bucket-wide task (if not already
 running) that will wait until the rate limit has completed before allowing more
@@ -120,24 +119,28 @@ Once you have received your response, you are expected to extract the values of
 the vital rate limit headers manually and parse them to the correct data types.
 These headers are:
 
-* ``Date``: the response date on the server. This should be parsed to a
+* ``Date``: 
+    the response date on the server. This should be parsed to a
     :obj:`datetime.datetime` using :func:`email.utils.parsedate_to_datetime`.
-* ``X-RateLimit-Limit``: an :obj:`int` describing the max requests in the bucket
+* ``X-RateLimit-Limit``: 
+    an :obj:`int` describing the max requests in the bucket
     from empty to being rate limited.
-* ``X-RateLimit-Remaining``: an :obj:`int` describing the remaining number of
+* ``X-RateLimit-Remaining``: 
+    an :obj:`int` describing the remaining number of
     requests before rate limiting occurs in the current window.
-* ``X-RateLimit-Bucket``: a :obj:`str` containing the initial bucket hash.
-* ``X-RateLimit-Reset``: a :obj:`float` containing the number of seconds since
+* ``X-RateLimit-Bucket``: 
+    a :obj:`str` containing the initial bucket hash.
+* ``X-RateLimit-Reset``: 
+    a :obj:`float` containing the number of seconds since
     1st January 1970 at 0:00:00 UTC at which the current ratelimit window
     resets. This should be parsed to a :obj:`datetime` using
     :func:`datetime.datetime.fromtimestamp`, passing
     :obj:`datetime.timezone.utc` as a second parameter.
 
 Each of the above values should be passed to the
-:meth:`hikari.net.ratelimits.RateLimiter.update_rate_limits` method
-to ensure that the bucket you acquired time from is correctly updated should
-Discord decide to alter their ratelimits on the fly without warning (including
-timings and the bucket).
+:meth:`update_rate_limits` method to ensure that the bucket you acquired time 
+from is correctly updated should Discord decide to alter their ratelimits on the 
+fly without warning (including timings and the bucket).
 
 This method will manage creating new buckets as needed and resetting vital
 information in each bucket you use.
@@ -145,14 +148,14 @@ information in each bucket you use.
 Tidying up
 ~~~~~~~~~~
 
-To prevent unused buckets cluttering up memory, each :obj:`RateLimiter`
+To prevent unused buckets cluttering up memory, each :obj:`IRateLimiter`
 instance spins up a :obj:`asyncio.Task` that periodically locks the bucket
 list (not threadsafe, only using the concept of asyncio not yielding in regular
 functions) and disposes of any clearly stale buckets that are no longer needed.
 These will be recreated again in the future if they are needed.
 
-When shutting down an application, one must remember to :meth:`close` the
-:obj:`RateLimiter` that has been used. This will ensure the garbage collection
+When shutting down an application, one must remember to :meth`close` the
+:obj:`IRateLimiter` that has been used. This will ensure the garbage collection
 task is stopped, and will also ensure any remaining futures in any bucket queues
 have an :obj:`asyncio.CancelledError` set on them to prevent deadlocking
 ratelimited calls that may be waiting to be unlocked.
