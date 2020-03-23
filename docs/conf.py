@@ -106,7 +106,7 @@ html_theme_options = {
     # Render the next and previous page links in navbar. (Default: true)
     "navbar_sidebarrel": True,
     # Render the current pages TOC in the navbar. (Default: true)
-    "navbar_pagenav": False,
+    "navbar_pagenav": True,
     # Tab name for the current pages TOC. (Default: "Page")
     "navbar_pagenav_name": "This page",
     # Global TOC depth for "site" navbar tab. (Default: 1)
@@ -125,7 +125,7 @@ html_theme_options = {
     "navbar_class": "navbar navbar-inverse",
     # Fix navigation bar to top of page?
     # Values: "true" (default) or "false"
-    "navbar_fixed_top": "true",
+    "navbar_fixed_top": "false",
     # Location of link to source.
     # Options are "nav" (default), "footer" or anything else to exclude.
     "source_link_position": "footer",

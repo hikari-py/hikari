@@ -91,9 +91,12 @@ dt:target, span.highlighted {
 input[type="text"] {
     background-color: #555;
     color: #fff;
-
-    border-color: #777;
+    border-color: #333 !important;
     border-radius: 3px;
+}
+
+form.navbar-form {
+    padding: 0 !important;
 }
 
 .alert {
@@ -247,6 +250,19 @@ html {
 
 .navbar a:hover, .footer a:active {
     color: #fff !important;
+}
+
+.dropdown-menu {
+    background-color: #555 !important;
+}
+
+.dropdown-menu>li>a:focus, .dropdown-menu>li>a:hover {
+    background-color: #666 !important;
+    background-image: none !important;
+}
+
+.divider {
+    background-color: #333 !important;
 }
 
 .dropdown-menu .caption {
