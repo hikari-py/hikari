@@ -19,7 +19,6 @@
 """Components and entities that are used to describe guilds on Discord.
 """
 __all__ = [
-    "GuildEmoji",
     "GuildChannel",
     "GuildTextChannel",
     "GuildNewsChannel",
@@ -48,19 +47,14 @@ import typing
 
 from hikari.core import channels
 from hikari.core import entities
-from hikari.core import messages
-from hikari.core import permissions as permissions_
+from hikari.core import emojis as _emojis
+from hikari.core import permissions
 from hikari.core import snowflakes
 from hikari.core import users
 from hikari.internal_utilities import cdn
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import marshaller
 from hikari.internal_utilities import transformations
-
-
-@marshaller.attrs(slots=True)
-class GuildEmoji(snowflakes.UniqueEntity, messages.Emoji, entities.Deserializable):
-    ...
 
 
 @marshaller.attrs(slots=True)
@@ -333,9 +327,9 @@ class Guild(PartialGuild):
 
     #: The guild level permissions that apply to the bot user.
     #:
-    #: :type: :obj:`hikari.core.permissions.Permission`
-    my_permissions: permissions_.Permission = marshaller.attrib(
-        raw_name="permissions", deserializer=permissions_.Permission
+    #: :type: :obj:`permissions.Permission`
+    my_permissions: permissions.Permission = marshaller.attrib(
+        raw_name="permissions", deserializer=permissions.Permission
     )
 
     #: The voice region for the guild.
@@ -406,9 +400,9 @@ class Guild(PartialGuild):
     #: The emojis that this guild provides, represented as a mapping of ID to
     #: emoji object.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`GuildEmoji` ]
-    emojis: typing.Mapping[snowflakes.Snowflake, GuildEmoji] = marshaller.attrib(
-        deserializer=lambda emojis: {e.id: e for e in map(GuildEmoji.deserialize, emojis)},
+    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`_emojis.GuildEmoji` ]
+    emojis: typing.Mapping[snowflakes.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
+        deserializer=lambda emojis: {e.id: e for e in map(_emojis.GuildEmoji.deserialize, emojis)},
     )
 
     #: The required MFA level for users wishing to participate in this guild.
