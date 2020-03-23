@@ -32,7 +32,9 @@ __all__ = [
     "HikariEntityMarshaller",
 ]
 
+import functools
 import importlib
+import operator
 import typing
 import weakref
 
@@ -94,6 +96,16 @@ def dereference_handle(handle_string: str) -> typing.Any:
         obj = getattr(obj, attr_name)
 
     return weakref.proxy(obj)
+
+
+def dereference_int_flag(int_flag_type, raw_value) -> None:
+    if isinstance(raw_value, str) and raw_value.isdigit():
+        raw_value = int(raw_value)
+
+    if not isinstance(raw_value, int):
+        raw_value = functools.reduce(operator.or_, (int_flag_type[name.upper()] for name in raw_value))
+
+    return int_flag_type(raw_value)
 
 
 def attrib(

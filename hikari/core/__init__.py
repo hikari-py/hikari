@@ -17,8 +17,25 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The core API for interacting with Discord directly."""
-from hikari.core.configs import *
-from hikari.core.clients import *
+from hikari.core import app_config
+from hikari.core import channels
+from hikari.core import entities
+from hikari.core import events
+from hikari.core import gateway
+from hikari.core import gateway_entities
+from hikari.core import gateway_config
+from hikari.core import guilds
+from hikari.core import http_config
+from hikari.core import invites
+from hikari.core import messages
+from hikari.core import oauth2
+from hikari.core import permissions
+from hikari.core import protocol_config
+from hikari.core import snowflakes
+from hikari.core import users
+from hikari.core import webhooks
+
+from hikari.core.app_config import *
 from hikari.core.channels import *
 from hikari.core.colors import *
 from hikari.core.colours import *
@@ -26,13 +43,37 @@ from hikari.core.embeds import *
 from hikari.core.emojis import *
 from hikari.core.entities import *
 from hikari.core.events import *
-from hikari.core.gateway_bot import *
+from hikari.core.gateway import *
+from hikari.core.gateway_entities import *
+from hikari.core.gateway_config import *
 from hikari.core.guilds import *
+from hikari.core.http_config import *
 from hikari.core.invites import *
 from hikari.core.messages import *
 from hikari.core.oauth2 import *
 from hikari.core.permissions import *
+from hikari.core.protocol_config import *
 from hikari.core.snowflakes import *
 from hikari.core.users import *
 from hikari.core.voices import *
 from hikari.core.webhooks import *
+
+__all__ = [
+    *app_config.__all__,
+    *channels.__all__,
+    *entities.__all__,
+    *events.__all__,
+    *gateway.__all__,
+    *gateway_entities.__all__,
+    *gateway_config.__all__,
+    *guilds.__all__,
+    *http_config.__all__,
+    *invites.__all__,
+    *messages.__all__,
+    *oauth2.__all__,
+    *permissions.__all__,
+    *protocol_config.__all__,
+    *snowflakes.__all__,
+    *users.__all__,
+    *webhooks.__all__,
+]

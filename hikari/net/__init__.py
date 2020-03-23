@@ -23,9 +23,17 @@ for these; the majority of communication is done via JSON arrays and objects.
 """
 from hikari.net import base_http_client
 from hikari.net import codes
-from hikari.net import gateway
 from hikari.net import http_client
 from hikari.net import ratelimits
 from hikari.net import routes
+from hikari.net import shard
 from hikari.net import user_agent
 from hikari.net import versions
+
+from hikari.net.codes import *
+from hikari.net.errors import *
+from hikari.net.shard import *
+from hikari.net.http_client import *
+from hikari.net.versions import *
+
+__all__ = (codes.__all__ + errors.__all__ + shard.__all__ + http_client.__all__ + versions.__all__)
