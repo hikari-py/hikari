@@ -918,8 +918,8 @@ class ExponentialBackOff:
         single iteration before an :obj:`asyncio.TimeoutError` is raised.
         Defaults to ``64`` seconds.
     jitter_multiplier : :obj:`float`
-        The multiplier for the random jitter. Defaults to ``1``. Set to ``0`` to disable
-        jitter.
+        The multiplier for the random jitter. Defaults to ``1``. 
+        Set to ``0`` to disable jitter.
     """
 
     __slots__ = ("base", "increment", "maximum", "jitter_multiplier")
@@ -940,8 +940,8 @@ class ExponentialBackOff:
     #: :type: :obj:`float`, optional
     maximum: typing.Optional[float]
 
-    #: The multiplier for the random jitter. Defaults to ``1`. Set to ``0``` to disable
-    #: jitter.
+    #: The multiplier for the random jitter. Defaults to ``1``. 
+    #: Set to ``0`` to disable jitter.
     #:
     #: :type: :obj:`float`
     jitter_multiplier: float
