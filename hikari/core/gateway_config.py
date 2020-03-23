@@ -94,8 +94,8 @@ class ShardConfig(entities.HikariEntity, entities.Deserializable):
     def __init__(self, *, shard_ids: typing.Optional[typing.Iterable[int]] = None, shard_count: int) -> None:
         self.shard_ids = [*shard_ids] if shard_ids else [*range(shard_count)]
 
-        for shard_id in self.shard_ids:
-            assertions.assert_that(shard_id < self.shard_count, "shard_count must be greater than any shard ids")
+        for shard_id in shard_ids:
+            assertions.assert_that(shard_id < shard_count, "shard_count must be greater than any shard ids")
 
         self.shard_count = shard_count
 

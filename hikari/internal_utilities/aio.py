@@ -27,8 +27,8 @@ __all__ = [
 
 import asyncio
 import dataclasses
-import typing
 import logging
+import typing
 import weakref
 
 from hikari.internal_utilities import assertions
