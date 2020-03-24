@@ -38,4 +38,4 @@ class GatewayActivity(entities.Deserializable):
     #: The activity type.
     #:
     #: :type: :obj:`int`
-    type: int = marshaller.attrib(deserializer=int, serializer=int, if_undefined=0)
+    type: int = marshaller.attrib(deserializer=int, serializer=int, if_undefined=lambda: 0)
