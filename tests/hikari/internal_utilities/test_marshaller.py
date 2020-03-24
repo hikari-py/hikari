@@ -57,6 +57,21 @@ class TestAttrib:
             )
 
 
+@pytest.mark.parametrize("data", [2, "d", bytes("ok", "utf-8"), [], {}, set()])
+@_helpers.assert_raises(type_=RuntimeError)
+def test_default_validator_raises_runtime_error(data):
+    marshaller._default_validator(data)
+
+
+def method_stub(value):
+    ...
+
+
+@pytest.mark.parametrize("data", [lambda x: "ok", None, marshaller.RAISE, dict, method_stub])
+def test_default_validator(data):
+    marshaller._default_validator(data)
+
+
 class TestAttrs:
     def test_invokes_attrs(self):
         marshaller_mock = mock.create_autospec(marshaller.HikariEntityMarshaller, spec_set=True)

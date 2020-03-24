@@ -65,7 +65,9 @@ class GuildEmoji(UnknownEmoji):
     #:
     #: :type: :obj:`typing.Set` [ :obj:`snowflakes.Snowflake` ]
     role_ids: typing.Set[snowflakes.Snowflake] = marshaller.attrib(
-        raw_name="roles", deserializer=lambda roles: {r for r in map(snowflakes.Snowflake, roles)}, if_undefined={}
+        raw_name="roles",
+        deserializer=lambda roles: {snowflakes.Snowflake.deserialize(r) for r in roles},
+        if_undefined=dict,
     )
 
     #: The user that created the emoji.

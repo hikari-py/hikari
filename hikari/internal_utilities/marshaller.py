@@ -171,6 +171,17 @@ def _not_implemented(op, name):
     return error
 
 
+def _default_validator(value: typing.Any):
+    assertions.assert_that(
+        value is RAISE or value is None or callable(value),
+        message=(
+            "Invalid default factory passed for `if_undefined` or `if_none`; "
+            f"expected a callable or `None` but got {value}."
+        ),
+        error_type=RuntimeError,
+    )
+
+
 class _AttributeDescriptor:
     __slots__ = (
         "raw_name", "field_name", "constructor_name", "if_none", "if_undefined", "is_transient", "deserializer",
@@ -181,12 +192,14 @@ class _AttributeDescriptor:
         raw_name: str,
         field_name: str,
         constructor_name: str,
-        if_none: typing.Callable[..., typing.Any],
-        if_undefined: typing.Callable[..., typing.Any],
+        if_none: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)],
+        if_undefined: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)],
         is_transient: bool,
         deserializer: typing.Callable[[typing.Any], typing.Any],
         serializer: typing.Callable[[typing.Any], typing.Any],
     ) -> None:
+        _default_validator(if_undefined)
+        _default_validator(if_none)
         self.raw_name = raw_name
         self.field_name = field_name
         self.constructor_name = constructor_name

@@ -85,6 +85,21 @@ class TestAttrsPep563:
             marshaller_mock.register.assert_called_once_with(Foo)
 
 
+@pytest.mark.parametrize("data", [2, "d", bytes("ok", "utf-8"), [], {}, set()])
+@_helpers.assert_raises(type_=RuntimeError)
+def test_default_validator_raises_runtime_error(data):
+    marshaller._default_validator(data)
+
+
+def method_stub(value):
+    ...
+
+
+@pytest.mark.parametrize("data", [lambda x: "ok", None, marshaller.RAISE, dict, method_stub])
+def test_default_validator(data):
+    marshaller._default_validator(data)
+
+
 class TestMarshallerPep563:
     @pytest.fixture()
     def marshaller_impl(self):
