@@ -21,6 +21,7 @@
 
 __all__ = [
     "HikariEvent",
+    "ExceptionEvent",
     "ConnectedEvent",
     "DisconnectedEvent",
     "ReconnectedEvent",
@@ -81,6 +82,7 @@ from hikari.core import oauth2
 from hikari.core import snowflakes
 from hikari.core import users
 from hikari.core import voices
+from hikari.internal_utilities import aio
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import marshaller
 
@@ -91,6 +93,27 @@ T_contra = typing.TypeVar("T_contra", contravariant=True)
 @attr.s(slots=True, auto_attribs=True)
 class HikariEvent(entities.HikariEntity):
     """The base class that all events inherit from."""
+
+
+# Synthetic event, is not deserialized, and is produced by the dispatcher.
+@attr.attrs(slots=True, auto_attribs=True)
+class ExceptionEvent(HikariEvent):
+    """Descriptor for an exception thrown while processing an event."""
+
+    #: The exception that was raised.
+    #:
+    #: :type: :obj:`Exception`
+    exception: Exception
+
+    #: The event that was being invoked when the exception occurred.
+    #:
+    #: :type: :obj:`HikariEvent`
+    event: HikariEvent
+
+    #: The event that was being invoked when the exception occurred.
+    #:
+    #: :type: :obj`typing.Callable` [ [ :obj:`HikariEvent` ], ``None`` ]
+    callback: aio.CoroutineFunctionT
 
 
 # Synthetic event, is not deserialized

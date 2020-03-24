@@ -407,6 +407,7 @@ class GatewayClient(typing.Generic[ShardT], Startable):
     ) -> None:
         self.logger = loggers.get_named_logger(self)
         self.config = config
+        self.event_dispatcher = aio.EventDelegate()
         self.shards: typing.Dict[int, ShardT] = {
             shard_id: shard_type(shard_id, config, self._low_level_dispatch, url)
             for shard_id in config.shard_config.shard_ids
