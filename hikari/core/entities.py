@@ -17,12 +17,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Datastructure bases."""
-__all__ = ["HikariEntity", "Serializable", "Deserializable", "RawEntityT"]
+__all__ = ["HikariEntity", "Serializable", "Deserializable", "RawEntityT", "UNSET"]
 
 import abc
 import typing
 
 from hikari.internal_utilities import marshaller
+from hikari.internal_utilities import singleton_meta
+
 
 RawEntityT = typing.Union[
     None, bool, int, float, str, bytes, typing.Sequence[typing.Any], typing.Mapping[str, typing.Any]
@@ -30,6 +32,21 @@ RawEntityT = typing.Union[
 
 T_contra = typing.TypeVar("T_contra", contravariant=True)
 T_co = typing.TypeVar("T_co", covariant=True)
+
+
+class Unset(metaclass=singleton_meta.SingletonMeta):
+    def __bool__(self):
+        return False
+
+    def __repr__(self):
+        return type(self).__name__.upper()
+
+    __str__ = __repr__
+
+
+#: A variable used for certain update events where a field being unset will
+#: mean that it's not being acted on, mostly just seen attached to event models.
+UNSET = Unset()
 
 
 @marshaller.attrs(slots=True)
