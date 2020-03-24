@@ -49,7 +49,7 @@ class HTTPProtocolConfig(entities.Deserializable):
     #: Defaults to ``False`` if unspecified during deserialization.
     #:
     #: :type: :obj:`bool`
-    allow_redirects: bool = marshaller.attrib(deserializer=bool, if_undefined=lambda: False, default=False)
+    allow_redirects: bool = marshaller.attrib(deserializer=bool, if_undefined=False, default=False)
 
     #: Either an implementation of :obj:`aiohttp.BaseConnector`.
     #:
@@ -129,4 +129,4 @@ class HTTPProtocolConfig(entities.Deserializable):
     #: Defaults to ``True`` if unspecified during deserialization.
     #:
     #: :type: :obj:`bool`
-    verify_ssl: bool = marshaller.attrib(deserializer=bool, if_undefined=lambda: True, default=True)
+    verify_ssl: bool = marshaller.attrib(deserializer=bool, if_undefined=True, default=True)

@@ -16,7 +16,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-
+"""
+Components and entities that are used to describe messages on Discord.
+"""
 __all__ = [
     "MessageType",
     "Message",
@@ -71,8 +73,7 @@ class MessageType(enum.IntEnum):
     CHANNEL_FOLLOW_ADD = 12
 
 
-@enum.unique
-class MessageFlag(enum.IntEnum):
+class MessageFlag(enum.IntFlag):
     """Additional flags for message options."""
 
     NONE = 0x0
@@ -276,7 +277,7 @@ class Message(snowflakes.UniqueEntity, entities.Deserializable):
     #: :type: :obj:`typing.Set` [ :obj:`snowflakes.Snowflake` ]
     role_mentions: typing.Set[snowflakes.Snowflake] = marshaller.attrib(
         raw_name="mention_roles",
-        deserializer=lambda role_mentions: {r for r in map(snowflakes.Snowflake, role_mentions)},
+        deserializer=lambda role_mentions: {snowflakes.Snowflake.deserialize(mention) for mention in role_mentions},
     )
 
     #: The channels the message mentions.
@@ -292,14 +293,14 @@ class Message(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`typing.Sequence` [ :obj:`Attachment` ]
     attachments: typing.Sequence[Attachment] = marshaller.attrib(
-        deserializer=lambda attachments: [a for a in map(Attachment.deserialize, attachments)]
+        deserializer=lambda attachments: [Attachment.deserialize(a) for a in attachments]
     )
 
     #: The message embeds.
     #:
     #: :type: :obj:`typing.Sequence` [ :obj:`_embeds.Embed` ]
     embeds: typing.Sequence[_embeds.Embed] = marshaller.attrib(
-        deserializer=lambda embeds: [e for e in map(_embeds.Embed.deserialize, embeds)]
+        deserializer=lambda embeds: [_embeds.Embed.deserialize(e) for e in embeds]
     )
 
     #: The message reactions.

@@ -16,11 +16,19 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
+import datetime
+
 import cymock as mock
 import pytest
 
+from hikari.core import emojis
+from hikari.core import entities
 from hikari.core import guilds
+from hikari.core import users
 from hikari.internal_utilities import cdn
+from hikari.internal_utilities import dates
+
+from tests.hikari import _helpers
 
 
 @pytest.fixture
@@ -105,7 +113,21 @@ def test_channel_payloads():
 
 
 @pytest.fixture
-def test_member_payload():
+def test_user_payload():
+    return {
+        "id": "123456",
+        "username": "Boris Johnson",
+        "discriminator": "6969",
+        "avatar": "1a2b3c4d",
+        "mfa_enabled": True,
+        "locale": "gb",
+        "flags": 0b00101101,
+        "premium_type": 0b1101101,
+    }
+
+
+@pytest.fixture
+def test_member_payload(test_user_payload):
     return {
         "nick": "foobarbaz",
         "roles": ["11111", "22222", "33333", "44444"],
@@ -114,16 +136,7 @@ def test_member_payload():
         # These should be completely ignored.
         "deaf": False,
         "mute": True,
-        "user": {
-            "id": "123456",
-            "username": "Boris Johnson",
-            "discriminator": "6969",
-            "avatar": "1a2b3c4d",
-            "mfa_enabled": True,
-            "locale": "gb",
-            "flags": 0b00101101,
-            "premium_type": 0b1101101,
-        },
+        "user": test_user_payload,
     }
 
 
@@ -192,6 +205,265 @@ def test_guild_payload(
         "system_channel_flags": 3,
         "rules_channel_id": "42042069",
     }
+
+
+@pytest.fixture()
+def test_activity_party_payload():
+    return {"id": "spotify:3234234234", "size": [2, 5]}
+
+
+@pytest.fixture()
+def test_activity_timestamps_payload():
+    return {
+        "start": 1584996792798,
+        "end": 1999999792798,
+    }
+
+
+@pytest.fixture()
+def test_activity_assets_payload():
+    return {
+        "large_image": "34234234234243",
+        "large_text": "LARGE TEXT",
+        "small_image": "3939393",
+        "small_text": "small text",
+    }
+
+
+@pytest.fixture()
+def test_activity_secrets_payload():
+    return {"join": "who's a good secret?", "spectate": "I'm a good secret", "match": "No."}
+
+
+@pytest.fixture()
+def test_presence_activity_payload(
+    test_activity_timestamps_payload,
+    test_emoji_payload,
+    test_activity_party_payload,
+    test_activity_assets_payload,
+    test_activity_secrets_payload,
+):
+    return {
+        "name": "an activity",
+        "type": 1,
+        "url": "https://69.420.owouwunyaa",
+        "created_at": 1584996792798,
+        "timestamps": test_activity_timestamps_payload,
+        "application_id": "40404040404040",
+        "details": "They are doing stuff",
+        "state": "STATED",
+        "emoji": test_emoji_payload,
+        "party": test_activity_party_payload,
+        "assets": test_activity_assets_payload,
+        "secrets": test_activity_secrets_payload,
+        "instance": True,
+        "flags": 3,
+    }
+
+
+class TestGuildMember:
+    def test_deserialize(self, test_member_payload, test_user_payload):
+        mock_user = mock.MagicMock(users.User)
+        mock_datetime_1 = mock.MagicMock(dates)
+        mock_datetime_2 = mock.MagicMock(dates)
+        with _helpers.patch_marshal_attr(
+            guilds.GuildMember, "user", deserializer=users.User.deserialize, return_value=mock_user
+        ) as patched_user_deserializer:
+            with _helpers.patch_marshal_attr(
+                guilds.GuildMember, "joined_at", deserializer=dates.parse_iso_8601_ts, return_value=mock_datetime_1
+            ) as patched_joined_at_deserializer:
+                with _helpers.patch_marshal_attr(
+                    guilds.GuildMember,
+                    "premium_since",
+                    deserializer=dates.parse_iso_8601_ts,
+                    return_value=mock_datetime_2,
+                ) as patched_premium_since_deserializer:
+                    guild_member_obj = guilds.GuildMember.deserialize(test_member_payload)
+                    patched_premium_since_deserializer.assert_called_once_with("2019-05-17T06:26:56.936000+00:00")
+                patched_joined_at_deserializer.assert_called_once_with("2015-04-26T06:26:56.936000+00:00")
+            patched_user_deserializer.assert_called_once_with(test_user_payload)
+        assert guild_member_obj.user is mock_user
+        assert guild_member_obj.nickname == "foobarbaz"
+        assert guild_member_obj.role_ids == [11111, 22222, 33333, 44444]
+        assert guild_member_obj.joined_at is mock_datetime_1
+        assert guild_member_obj.premium_since is mock_datetime_2
+        assert guild_member_obj.is_deaf is False
+        assert guild_member_obj.is_mute is True
+
+
+class TestActivityTimestamps:
+    def test_deserialize(self, test_activity_timestamps_payload):
+        mock_start_date = mock.MagicMock(datetime.datetime)
+        mock_end_date = mock.MagicMock(datetime.datetime)
+        with _helpers.patch_marshal_attr(
+            guilds.ActivityTimestamps, "start", deserializer=dates.unix_epoch_to_ts, return_value=mock_start_date
+        ) as patched_start_deserializer:
+            with _helpers.patch_marshal_attr(
+                guilds.ActivityTimestamps, "end", deserializer=dates.unix_epoch_to_ts, return_value=mock_end_date
+            ) as patched_end_deserializer:
+                activity_timestamps_obj = guilds.ActivityTimestamps.deserialize(test_activity_timestamps_payload)
+                patched_end_deserializer.assert_called_once_with(1999999792798)
+            patched_start_deserializer.assert_called_once_with(1584996792798)
+        assert activity_timestamps_obj.start is mock_start_date
+        assert activity_timestamps_obj.end is mock_end_date
+
+
+class TestActivityParty:
+    @pytest.fixture()
+    def test_activity_party_obj(self, test_activity_party_payload):
+        return guilds.ActivityParty.deserialize(test_activity_party_payload)
+
+    def test_deserialize(self, test_activity_party_obj):
+        assert test_activity_party_obj.id == "spotify:3234234234"
+        assert test_activity_party_obj._size_information == (2, 5)
+
+    def test_current_size(self, test_activity_party_obj):
+        assert test_activity_party_obj.current_size == 2
+
+    def test_current_size_when_null(self, test_activity_party_obj):
+        test_activity_party_obj._size_information = None
+        assert test_activity_party_obj.current_size is None
+
+    def test_max_size(self, test_activity_party_obj):
+        assert test_activity_party_obj.max_size == 5
+
+    def test_max_size_when_null(self, test_activity_party_obj):
+        test_activity_party_obj._size_information = None
+        assert test_activity_party_obj.max_size is None
+
+
+class TestActivityAssets:
+    def test_deserialize(self, test_activity_assets_payload):
+        activity_assets_obj = guilds.ActivityAssets.deserialize(test_activity_assets_payload)
+        assert activity_assets_obj.large_image == "34234234234243"
+        assert activity_assets_obj.large_text == "LARGE TEXT"
+        assert activity_assets_obj.small_image == "3939393"
+        assert activity_assets_obj.small_text == "small text"
+
+
+class TestActivitySecret:
+    def test_deserialize(self, test_activity_secrets_payload):
+        activity_secret_obj = guilds.ActivitySecret.deserialize(test_activity_secrets_payload)
+        assert activity_secret_obj.join == "who's a good secret?"
+        assert activity_secret_obj.spectate == "I'm a good secret"
+        assert activity_secret_obj.match == "No."
+
+
+class TestPresenceActivity:
+    def test_deserialize(
+        self,
+        test_presence_activity_payload,
+        test_activity_secrets_payload,
+        test_activity_assets_payload,
+        test_activity_party_payload,
+        test_emoji_payload,
+        test_activity_timestamps_payload,
+    ):
+        mock_created_at = mock.MagicMock(datetime.datetime)
+        mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
+        with _helpers.patch_marshal_attr(
+            guilds.PresenceActivity, "created_at", deserializer=dates.unix_epoch_to_ts, return_value=mock_created_at
+        ) as patched_created_at_deserializer:
+            with _helpers.patch_marshal_attr(
+                guilds.PresenceActivity,
+                "emoji",
+                deserializer=emojis.deserialize_reaction_emoji,
+                return_value=mock_emoji,
+            ) as patched_emoji_deserializer:
+                presence_activity_obj = guilds.PresenceActivity.deserialize(test_presence_activity_payload)
+                patched_emoji_deserializer.assert_called_once_with(test_emoji_payload)
+            patched_created_at_deserializer.assert_called_once_with(1584996792798)
+        assert presence_activity_obj.name == "an activity"
+        assert presence_activity_obj.type is guilds.ActivityType.STREAMING
+        assert presence_activity_obj.url == "https://69.420.owouwunyaa"
+        assert presence_activity_obj.created_at is mock_created_at
+        assert presence_activity_obj.timestamps == guilds.ActivityTimestamps.deserialize(
+            test_activity_timestamps_payload
+        )
+        assert presence_activity_obj.application_id == 40404040404040
+        assert presence_activity_obj.details == "They are doing stuff"
+        assert presence_activity_obj.state == "STATED"
+        assert presence_activity_obj.emoji is mock_emoji
+        assert presence_activity_obj.party == guilds.ActivityParty.deserialize(test_activity_party_payload)
+        assert presence_activity_obj.assets == guilds.ActivityAssets.deserialize(test_activity_assets_payload)
+        assert presence_activity_obj.secrets == guilds.ActivitySecret.deserialize(test_activity_secrets_payload)
+        assert presence_activity_obj.is_instance is True
+        assert presence_activity_obj.flags == guilds.ActivityFlag.INSTANCE | guilds.ActivityFlag.JOIN
+
+
+@pytest.fixture()
+def test_client_status_payload():
+    return {"desktop": "online", "mobile": "idle"}
+
+
+class TestClientStatus:
+    def test_deserialize(self, test_client_status_payload):
+        client_status_obj = guilds.ClientStatus.deserialize(test_client_status_payload)
+        assert client_status_obj.desktop is guilds.PresenceStatus.ONLINE
+        assert client_status_obj.mobile is guilds.PresenceStatus.IDLE
+        assert client_status_obj.web is guilds.PresenceStatus.OFFLINE
+
+
+class TestPresenceUser:
+    def test_deserialize_filled_presence_user(self, test_user_payload):
+        presence_user_obj = guilds.PresenceUser.deserialize(test_user_payload)
+        assert presence_user_obj.username == "Boris Johnson"
+        assert presence_user_obj.discriminator == "6969"
+        assert presence_user_obj.avatar_hash == "1a2b3c4d"
+
+    def test_deserialize_partial_presence_user(self):
+        presence_user_obj = guilds.PresenceUser.deserialize({"id": "115590097100865541"})
+        assert presence_user_obj.id == 115590097100865541
+        for attr in presence_user_obj.__slots__:
+            if attr != "id":
+                assert getattr(presence_user_obj, attr) is entities.UNSET
+
+
+@pytest.fixture()
+def test_guild_member_presence(test_user_payload, test_presence_activity_payload, test_client_status_payload):
+    return {
+        "user": test_user_payload,
+        "roles": ["49494949"],
+        "game": test_presence_activity_payload,
+        "guild_id": "44004040",
+        "status": "dnd",
+        "activities": [test_presence_activity_payload],
+        "client_status": test_client_status_payload,
+        "premium_since": "2015-04-26T06:26:56.936000+00:00",
+        "nick": "Nick",
+    }
+
+
+class TestGuildMemberPresence:
+    def test_deserialize(
+        self, test_guild_member_presence, test_user_payload, test_presence_activity_payload, test_client_status_payload
+    ):
+        mock_since = mock.MagicMock(datetime.datetime)
+        with _helpers.patch_marshal_attr(
+            guilds.GuildMemberPresence, "premium_since", deserializer=dates.parse_iso_8601_ts, return_value=mock_since,
+        ) as patched_since_deserializer:
+            guild_member_presence_obj = guilds.GuildMemberPresence.deserialize(test_guild_member_presence)
+            patched_since_deserializer.assert_called_once_with("2015-04-26T06:26:56.936000+00:00")
+        assert guild_member_presence_obj.user == guilds.PresenceUser.deserialize(test_user_payload)
+        assert guild_member_presence_obj.role_ids == [49494949]
+        assert guild_member_presence_obj.guild_id == 44004040
+        assert guild_member_presence_obj.visible_status is guilds.PresenceStatus.DND
+        assert guild_member_presence_obj.activities == [
+            guilds.PresenceActivity.deserialize(test_presence_activity_payload)
+        ]
+        assert guild_member_presence_obj.client_status == guilds.ClientStatus.deserialize(test_client_status_payload)
+        assert guild_member_presence_obj.premium_since is mock_since
+        assert guild_member_presence_obj.nick == "Nick"
+
+
+class TestUnavailableGuild:
+    def test_deserialize_when_unavailable_is_defined(self):
+        guild_delete_event_obj = guilds.UnavailableGuild.deserialize({"id": "293293939", "unavailable": True})
+        assert guild_delete_event_obj.is_unavailable is True
+
+    def test_deserialize_when_unavailable_is_undefined(self):
+        guild_delete_event_obj = guilds.UnavailableGuild.deserialize({"id": "293293939"})
+        assert guild_delete_event_obj.is_unavailable is True
 
 
 class TestPartialGuild:
