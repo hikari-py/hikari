@@ -21,13 +21,12 @@ import datetime
 import cymock as mock
 import pytest
 
-from hikari.core import messages
-from hikari.core import users
-from hikari.core import guilds
-from hikari.core import emojis
 from hikari.core import embeds
+from hikari.core import emojis
+from hikari.core import guilds
+from hikari.core import messages
 from hikari.core import oauth2
-from hikari.internal_utilities import dates
+from hikari.core import users
 from tests.hikari import _helpers
 
 
