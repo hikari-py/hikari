@@ -179,7 +179,8 @@ class EventDelegate:
         # Do not recurse if a dodgy exception handler is added.
         if not isinstance(event, events.ExceptionEvent):
             self.logger.exception(
-                'Exception occurred in handler for event "%s"', type(event).__name__, exc_info=exception)
+                'Exception occurred in handler for event "%s"', type(event).__name__, exc_info=exception
+            )
             self.dispatch(events.ExceptionEvent(exception=exception, event=event, callback=callback))
         else:
             self.logger.exception(
