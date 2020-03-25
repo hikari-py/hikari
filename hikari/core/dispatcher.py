@@ -17,20 +17,20 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Event dispatcher implementation."""
+__all__ = ["EventDispatcher"]
+
 import asyncio
 import logging
-
 import typing
 import weakref
 
+from hikari.core import events
 from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import loggers
 
-from hikari.core import events
 
-
-class EventDelegate:
+class EventDispatcher:
     """Handles storing and dispatching to event listeners and one-time event
     waiters.
 
@@ -120,30 +120,49 @@ class EventDelegate:
         """
         event_t = type(event)
 
-        if event_t in self._waiters:
-            for future, predicate in tuple(self._waiters[event_t].items()):
-                try:
-                    if predicate(event):
-                        future.set_result(event)
-                        del self._waiters[event_t][future]
-                except Exception as ex:
-                    future.set_exception(ex)
-                    del self._waiters[event_t][future]
-
-            if not self._waiters[event_t]:
-                del self._waiters[event_t]
-
-        # Hack to stop PyCharm saying you need to await this function when you do not need to await
-        # it.
-        future: typing.Any
+        awaitables = []
 
         if event_t in self._listeners:
-            coros = (self._catch(callback, event) for callback in self._listeners[event_t])
-            future = asyncio.gather(*coros)
-        else:
-            future = aio.completed_future()
+            for callback in self._listeners[event_t]:
+                awaitables.append(self._catch(callback, event))
 
-        return future
+        # Only try to awaken waiters when the waiter is registered as a valid
+        # event type and there is more than 0 waiters in that dict.
+        if waiters := self._waiters.get(event_t):
+            # Run this in the background as a coroutine so that any async predicates
+            # can be awaited concurrently.
+            awaitables.append(asyncio.create_task(self._awaken_waiters(waiters, event)))
+
+        result = asyncio.gather(*awaitables) if awaitables else aio.completed_future()
+
+        # Stop false positives from linters that now assume this is a coroutine function
+        result: typing.Any
+
+        return result
+
+    async def _awaken_waiters(self, waiters, event):
+        await asyncio.gather(
+            *(self._maybe_awaken_waiter(event, future, predicate) for future, predicate in tuple(waiters.items()))
+        )
+
+    async def _maybe_awaken_waiter(self, event, future, predicate):
+        delete_waiter = True
+        try:
+            result = predicate(event)
+            if result or asyncio.iscoroutine(result) and await result:
+                future.set_result(event)
+            else:
+                delete_waiter = False
+        except Exception as ex:
+            delete_waiter = True
+            future.set_exception(ex)
+
+        event_t = type(event)
+
+        if delete_waiter:
+            del self._waiters[event_t][future]
+        if not self._waiters[event_t]:
+            del self._waiters[event_t]
 
     async def _catch(self, callback, event):
         try:
@@ -218,25 +237,26 @@ class EventDelegate:
             leak memory if you do this from an event listener that gets
             repeatedly called. If you want to do this, you should consider
             using an event listener instead of this function.
-        predicate : :obj:`typing.Callable` [ ..., :obj:`bool` ]
+        predicate : ``def predicate(event) -> bool`` or ``async def predicate(event) -> bool``
             A function that takes the arguments for the event and returns True
             if it is a match, or False if it should be ignored.
-            This cannot be a coroutine function.
+            This can be a coroutine function that returns a boolean, or a
+            regular function.
 
         Returns
         -------
         :obj:`asyncio.Future`
-            A future that when awaited will provide a the arguments passed to the
-            first matching event. If no arguments are passed to the event, then
-            `None` is the result. If one argument is passed to the event, then
-            that argument is the result, otherwise a tuple of arguments is the
-            result instead.
+            A future that when awaited will provide a the arguments passed to
+            the first matching event. If no arguments are passed to the event,
+            then `None` is the result. If one argument is passed to the event,
+            then that argument is the result, otherwise a tuple of arguments is
+            the result instead.
 
-        Note
-        ----
-        Awaiting this result will raise an :obj:`asyncio.TimeoutError` if the timeout
-        is hit and no match is found. If the predicate throws any exception,
-        this is raised immediately.
+        Notes
+        -----
+        Awaiting this result will raise an :obj:`asyncio.TimeoutError` if the
+        timeout is hit and no match is found. If the predicate throws any
+        exception, this is raised immediately.
         """
         future = asyncio.get_event_loop().create_future()
         if event_type not in self._waiters:
