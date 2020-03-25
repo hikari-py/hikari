@@ -30,6 +30,7 @@ import typing
 
 import aiohttp
 
+from hikari.core import dispatcher
 from hikari.core import events
 from hikari.core import gateway_config
 from hikari.core import gateway_entities
@@ -403,11 +404,16 @@ ShardT = typing.TypeVar("ShardT", bound=ShardClient)
 
 class GatewayClient(typing.Generic[ShardT], Startable):
     def __init__(
-        self, config: gateway_config.GatewayConfig, url: str, shard_type: typing.Type[ShardT] = ShardClient,
+        self,
+        config: gateway_config.GatewayConfig,
+        url: str,
+        shard_type: typing.Type[ShardT] = ShardClient,
+
     ) -> None:
         self.logger = loggers.get_named_logger(self)
         self.config = config
-        self.event_dispatcher = aio.EventDelegate()
+        self.event_dispatcher = dispatcher.EventDispatcher()
+        self.state
         self.shards: typing.Dict[int, ShardT] = {
             shard_id: shard_type(shard_id, config, self._low_level_dispatch, url)
             for shard_id in config.shard_config.shard_ids
