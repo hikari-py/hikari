@@ -63,10 +63,11 @@ __all__ = [
     "UserUpdateEvent",
     "VoiceStateUpdateEvent",
     "VoiceServerUpdateEvent",
-    "WebhookUpdate",
+    "WebhookUpdateEvent",
 ]
 
 import datetime
+import re
 import typing
 
 import attr
@@ -83,6 +84,7 @@ from hikari.core import snowflakes
 from hikari.core import users
 from hikari.core import voices
 from hikari.internal_utilities import aio
+from hikari.internal_utilities import assertions
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import marshaller
 
@@ -90,7 +92,7 @@ T_contra = typing.TypeVar("T_contra", contravariant=True)
 
 
 # Base event, is not deserialized
-@attr.s(slots=True, auto_attribs=True)
+@marshaller.attrs(slots=True)
 class HikariEvent(entities.HikariEntity):
     """The base class that all events inherit from."""
 
@@ -117,41 +119,54 @@ class ExceptionEvent(HikariEvent):
 
 
 # Synthetic event, is not deserialized
-@attr.s(slots=True, auto_attribs=True)
-class ConnectedEvent(HikariEvent):
-    ...
-
-
-# Synthetic event, is not deserialized
-@attr.s(slots=True, auto_attribs=True)
-class DisconnectedEvent(HikariEvent):
-    ...
-
-
-# Synthetic event, is not deserialized
-@attr.s(slots=True, auto_attribs=True)
-class ReconnectedEvent(HikariEvent):
-    ...
-
-
-# Synthetic event, is not deserialized
-@attr.s(slots=True, auto_attribs=True)
+@attr.attrs(slots=True, auto_attribs=True)
 class StartedEvent(HikariEvent):
     ...
 
 
 # Synthetic event, is not deserialized
-@attr.s(slots=True, auto_attribs=True)
+@attr.attrs(slots=True, auto_attribs=True)
 class StoppingEvent(HikariEvent):
     ...
 
 
 # Synthetic event, is not deserialized
-@attr.s(slots=True, auto_attribs=True)
+@attr.attrs(slots=True, auto_attribs=True)
 class StoppedEvent(HikariEvent):
     ...
 
 
+_websocket_name_break = re.compile(r"(?<=[a-z])(?=[A-Z])")
+
+
+def mark_as_websocket_event(cls):
+    name = cls.__name__
+    assertions.assert_that(name.endswith("Event"), "expected name to be <blah>Event")
+    name = name[: -len("Event")]
+    raw_name = _websocket_name_break.sub("_", name).upper()
+    cls.___raw_ws_event_name___ = raw_name
+    return cls
+
+
+@mark_as_websocket_event
+@marshaller.attrs(slots=True)
+class ConnectedEvent(HikariEvent, entities.Deserializable):
+    ...
+
+
+@mark_as_websocket_event
+@marshaller.attrs(slots=True)
+class DisconnectedEvent(HikariEvent, entities.Deserializable):
+    ...
+
+
+@mark_as_websocket_event
+@marshaller.attrs(slots=True)
+class ReconnectedEvent(HikariEvent, entities.Deserializable):
+    ...
+
+
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class ReadyEvent(HikariEvent, entities.Deserializable):
     """Used to represent the gateway ready event, received when identifying
@@ -204,6 +219,7 @@ class ReadyEvent(HikariEvent, entities.Deserializable):
         return self._shard_information and self._shard_information[1] or None
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class ResumedEvent(HikariEvent):
     """Represents a gateway Resume event."""
@@ -324,6 +340,7 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializ
     )
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class ChannelCreateEvent(BaseChannelEvent):
     """Represents Channel Create gateway events.
@@ -333,16 +350,19 @@ class ChannelCreateEvent(BaseChannelEvent):
     """
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class ChannelUpdateEvent(BaseChannelEvent):
     """Represents Channel Update gateway events."""
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class ChannelDeleteEvent(BaseChannelEvent):
     """Represents Channel Delete gateway events."""
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class ChannelPinUpdateEvent(HikariEvent, entities.Deserializable):
     """Used to represent the Channel Pins Update gateway event.
@@ -372,6 +392,7 @@ class ChannelPinUpdateEvent(HikariEvent, entities.Deserializable):
     )
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class GuildCreateEvent(HikariEvent, guilds.Guild):
     """Used to represent Guild Create gateway events.
@@ -381,11 +402,13 @@ class GuildCreateEvent(HikariEvent, guilds.Guild):
     """
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class GuildUpdateEvent(HikariEvent, guilds.Guild):
     """Used to represent Guild Update gateway events."""
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class GuildLeaveEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializable):
     """Fired when the current user leaves the guild or is kicked/banned from it.
@@ -396,6 +419,7 @@ class GuildLeaveEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializa
     """
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class GuildUnavailableEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializable):
     """Fired when a guild becomes temporarily unavailable due to an outage.
@@ -421,16 +445,19 @@ class BaseGuildBanEvent(HikariEvent, entities.Deserializable):
     user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class GuildBanAddEvent(BaseGuildBanEvent):
     """Used to represent a Guild Ban Add gateway event."""
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class GuildBanRemoveEvent(BaseGuildBanEvent):
     """Used to represent a Guild Ban Remove gateway event."""
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class GuildEmojisUpdateEvent(HikariEvent, entities.Deserializable):
     """Represents a Guild Emoji Update gateway event."""
@@ -448,6 +475,7 @@ class GuildEmojisUpdateEvent(HikariEvent, entities.Deserializable):
     )
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class GuildIntegrationsUpdateEvent(HikariEvent, entities.Deserializable):
     """Used to represent Guild Integration Update gateway events."""
@@ -458,6 +486,7 @@ class GuildIntegrationsUpdateEvent(HikariEvent, entities.Deserializable):
     guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class GuildMemberAddEvent(HikariEvent, guilds.GuildMember):
     """Used to represent a Guild Member Add gateway event."""
@@ -468,6 +497,7 @@ class GuildMemberAddEvent(HikariEvent, guilds.GuildMember):
     guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class GuildMemberRemoveEvent(HikariEvent, entities.Deserializable):
     """Used to represent Guild Member Remove gateway events.
@@ -485,6 +515,7 @@ class GuildMemberRemoveEvent(HikariEvent, entities.Deserializable):
     user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class GuildMemberUpdateEvent(HikariEvent, entities.Deserializable):
     """Used to represent a Guild Member Update gateway event.
@@ -525,6 +556,7 @@ class GuildMemberUpdateEvent(HikariEvent, entities.Deserializable):
     )
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class GuildRoleCreateEvent(HikariEvent, entities.Deserializable):
     """Used to represent a Guild Role Create gateway event."""
@@ -540,6 +572,7 @@ class GuildRoleCreateEvent(HikariEvent, entities.Deserializable):
     role: guilds.GuildRole = marshaller.attrib(deserializer=guilds.GuildRole.deserialize)
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class GuildRoleUpdateEvent(HikariEvent, entities.Deserializable):
     """Used to represent a Guild Role Create gateway event."""
@@ -555,6 +588,7 @@ class GuildRoleUpdateEvent(HikariEvent, entities.Deserializable):
     role: guilds.GuildRole = marshaller.attrib(deserializer=guilds.GuildRole.deserialize)
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class GuildRoleDeleteEvent(HikariEvent, entities.Deserializable):
     """Represents a gateway Guild Role Delete Event."""
@@ -570,9 +604,10 @@ class GuildRoleDeleteEvent(HikariEvent, entities.Deserializable):
     role_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class InviteCreateEvent(HikariEvent, entities.Deserializable):
-    """"""
+    """Represents a gateway Invite Create event."""
 
     #: The ID of the channel this invite targets.
     #:
@@ -637,6 +672,7 @@ class InviteCreateEvent(HikariEvent, entities.Deserializable):
     uses: int = marshaller.attrib(deserializer=int)
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class InviteDeleteEvent(HikariEvent, entities.Deserializable):
     """Used to represent Invite Delete gateway events.
@@ -662,12 +698,14 @@ class InviteDeleteEvent(HikariEvent, entities.Deserializable):
     )
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class MessageCreateEvent(HikariEvent, messages.Message):
     """Used to represent Message Create gateway events."""
 
 
 # This is an arbitrarily partial version of `messages.Message`
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializable):
     """
@@ -841,6 +879,7 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserial
     )
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class MessageDeleteEvent(HikariEvent, entities.Deserializable):
     """Used to represent Message Delete gateway events.
@@ -865,6 +904,7 @@ class MessageDeleteEvent(HikariEvent, entities.Deserializable):
     message_id: snowflakes.Snowflake = marshaller.attrib(raw_name="id", deserializer=snowflakes.Snowflake.deserialize)
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class MessageDeleteBulkEvent(HikariEvent, entities.Deserializable):
     """Used to represent Message Bulk Delete gateway events.
@@ -892,6 +932,7 @@ class MessageDeleteBulkEvent(HikariEvent, entities.Deserializable):
     )
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class MessageReactionAddEvent(HikariEvent, entities.Deserializable):
     """Used to represent Message Reaction Add gateway events."""
@@ -935,6 +976,7 @@ class MessageReactionAddEvent(HikariEvent, entities.Deserializable):
     )
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class MessageReactionRemoveEvent(HikariEvent, entities.Deserializable):
     """Used to represent Message Reaction Remove gateway events."""
@@ -970,6 +1012,7 @@ class MessageReactionRemoveEvent(HikariEvent, entities.Deserializable):
     )
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class MessageReactionRemoveAllEvent(HikariEvent, entities.Deserializable):
     """Used to represent Message Reaction Remove All gateway events.
@@ -994,6 +1037,7 @@ class MessageReactionRemoveAllEvent(HikariEvent, entities.Deserializable):
     )
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class MessageReactionRemoveEmojiEvent(HikariEvent, entities.Deserializable):
     """Represents Message Reaction Remove Emoji events.
@@ -1025,6 +1069,7 @@ class MessageReactionRemoveEmojiEvent(HikariEvent, entities.Deserializable):
     )
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class PresenceUpdateEvent(HikariEvent, guilds.GuildMemberPresence):
     """Used to represent Presence Update gateway events.
@@ -1032,6 +1077,7 @@ class PresenceUpdateEvent(HikariEvent, guilds.GuildMemberPresence):
     """
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class TypingStartEvent(HikariEvent, entities.Deserializable):
     """Used to represent typing start gateway events.
@@ -1072,6 +1118,7 @@ class TypingStartEvent(HikariEvent, entities.Deserializable):
     )
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class UserUpdateEvent(HikariEvent, users.MyUser):
     """Used to represent User Update gateway events.
@@ -1079,6 +1126,7 @@ class UserUpdateEvent(HikariEvent, users.MyUser):
     """
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class VoiceStateUpdateEvent(HikariEvent, voices.VoiceState):
     """Used to represent voice state update gateway events.
@@ -1086,6 +1134,7 @@ class VoiceStateUpdateEvent(HikariEvent, voices.VoiceState):
     """
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class VoiceServerUpdateEvent(HikariEvent, entities.Deserializable):
     """Used to represent voice server update gateway events.
@@ -1109,8 +1158,9 @@ class VoiceServerUpdateEvent(HikariEvent, entities.Deserializable):
     endpoint: str = marshaller.attrib(deserializer=str)
 
 
+@mark_as_websocket_event
 @marshaller.attrs(slots=True)
-class WebhookUpdate(HikariEvent, entities.Deserializable):
+class WebhookUpdateEvent(HikariEvent, entities.Deserializable):
     """Used to represent webhook update gateway events.
     Sent when a webhook is updated, created or deleted in a guild.
     """

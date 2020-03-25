@@ -18,8 +18,12 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Custom data structures and constant values."""
 __all__ = [
-    "EMPTY_SEQUENCE", "EMPTY_SET", "EMPTY_COLLECTION", "EMPTY_DICT", "EMPTY_GENERATOR_EXPRESSION",
-    "WeakKeyDictionary"
+    "EMPTY_SEQUENCE",
+    "EMPTY_SET",
+    "EMPTY_COLLECTION",
+    "EMPTY_DICT",
+    "EMPTY_GENERATOR_EXPRESSION",
+    "WeakKeyDictionary",
 ]
 
 import types
