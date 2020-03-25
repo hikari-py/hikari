@@ -17,8 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Event dispatcher implementation."""
-__all__ = ["EventDispatcher"]
+__all__ = ["EventDispatcher", "EventDispatcherImpl"]
 
+import abc
 import asyncio
 import logging
 import typing
@@ -27,10 +28,129 @@ import weakref
 from hikari.core import events
 from hikari.internal_utilities import aio
 from hikari.internal_utilities import assertions
+from hikari.internal_utilities import containers
 from hikari.internal_utilities import loggers
 
 
-class EventDispatcher:
+EventT = typing.TypeVar("EventT", bound=events.HikariEvent)
+PredicateT = typing.Callable[[EventT], typing.Union[bool, typing.Coroutine[None, None, bool]]]
+EventCallbackT = typing.Callable[[EventT], typing.Coroutine[None, None, typing.Any]]
+
+
+class EventDispatcher(abc.ABC):
+    """Base definition for a conforming event dispatcher implementation.
+
+    This enables users to implement their own event dispatching strategies
+    if the base implementation is not suitable. This could be used to write
+    a distributed bot dispatcher, for example, or could handle dispatching
+    to a set of micro-interpreter instances to achieve greater concurrency.
+    """
+    @abc.abstractmethod
+    def close(self):
+        """Cancel anything that is waiting for an event to be dispatched."""
+
+    @abc.abstractmethod
+    def add_listener(
+        self,
+        event_type: typing.Type[EventT],
+        callback: EventCallbackT
+    ) -> EventCallbackT:
+        """Register a new event callback to a given event name.
+
+        Parameters
+        ----------
+        event_type : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
+            The event to register to.
+        callback : ``async def callback(event: HikariEvent) -> ...``
+            The event callback to invoke when this event is fired.
+
+        Raises
+        ------
+        :obj:`TypeError`
+            If ``coroutine_function`` is not a coroutine.
+        """
+
+    @abc.abstractmethod
+    def remove_listener(
+        self,
+        event_type: typing.Type[EventT],
+        callback: EventCallbackT,
+    ) -> EventCallbackT:
+        """Remove the given coroutine function from the handlers for the given event.
+
+        The name is mandatory to enable supporting registering the same event callback for multiple event types.
+
+        Parameters
+        ----------
+        event_type : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
+            The type of event to remove the callback from.
+        callback : ``async def callback(event: HikariEvent) -> ...``
+            The event callback to invoke when this event is fired.
+        """
+
+    @abc.abstractmethod
+    def wait_for(
+        self,
+        event_type: typing.Type[EventT],
+        *,
+        timeout: typing.Optional[float],
+        predicate: PredicateT
+    ) -> asyncio.Future:
+        """Wait for the given event type to occur.
+
+        Parameters
+        ----------
+        event_type : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
+            The name of the event to wait for.
+        timeout : :obj:`float`, optional
+            The timeout to wait for before cancelling and raising an
+            :obj:`asyncio.TimeoutError` instead. If this is `None`, this will
+            wait forever. Care must be taken if you use `None` as this may
+            leak memory if you do this from an event listener that gets
+            repeatedly called. If you want to do this, you should consider
+            using an event listener instead of this function.
+        predicate : ``def predicate(event) -> bool`` or ``async def predicate(event) -> bool``
+            A function that takes the arguments for the event and returns True
+            if it is a match, or False if it should be ignored.
+            This can be a coroutine function that returns a boolean, or a
+            regular function.
+
+        Returns
+        -------
+        :obj:`asyncio.Future`:
+            A future to await. When the given event is matched, this will be
+            completed with the corresponding event body.
+
+            If the predicate throws an exception, or the timeout is reached,
+            then this will be set as an exception on the returned future.
+
+        Notes
+        -----
+        The event type is not expected to be considered in a polymorphic
+        lookup, but can be implemented this way optionally if documented.
+        """
+
+    # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
+    # confusing telepathy comments to the user.
+    @abc.abstractmethod
+    def dispatch_event(self, event: events.HikariEvent) -> ...:
+        """Dispatch a given event to any listeners and waiters.
+
+        Parameters
+        ----------
+        event : :obj:`events.HikariEvent`
+            The event to dispatch.
+
+        Returns
+        -------
+        :obj:`asyncio.Future`:
+            a future that can be optionally awaited if you need to wait for all
+            listener callbacks and waiters to be processed. If this is not
+            awaited, the invocation is invoked soon on the current event loop.
+        """
+
+
+class EventDispatcherImpl(EventDispatcher):
     """Handles storing and dispatching to event listeners and one-time event
     waiters.
 
@@ -54,18 +174,26 @@ class EventDispatcher:
     __slots__ = ("exception_event", "logger", "_listeners", "_waiters")
 
     def __init__(self) -> None:
-        self._listeners = {}
-        self._waiters = {}
+        self._listeners: typing.Dict[typing.Type[EventT], typing.List[EventCallbackT]] = {}
+        self._waiters: typing.Dict[typing.Type[EventT], containers.WeakKeyDictionary[asyncio.Future, PredicateT]] = {}
         self.logger = loggers.get_named_logger(self)
 
-    def add(self, event: typing.Type[events.HikariEvent], coroutine_function: aio.CoroutineFunctionT) -> None:
+    def close(self) -> None:
+        """Cancel anything that is waiting for an event to be dispatched."""
+        self._listeners.clear()
+        for waiter in self._waiters.values():
+            for future in waiter.keys():
+                future.cancel()
+        self._waiters.clear()
+
+    def add_listener(self, event_type: typing.Type[events.HikariEvent], callback: EventCallbackT) -> None:
         """Register a new event callback to a given event name.
 
         Parameters
         ----------
-        event : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
+        event_type : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
             The event to register to.
-        coroutine_function
+        callback : ``async def callback(event: HikariEvent) -> ...``
             The event callback to invoke when this event is fired.
 
         Raises
@@ -74,33 +202,33 @@ class EventDispatcher:
             If ``coroutine_function`` is not a coroutine.
         """
         assertions.assert_that(
-            asyncio.iscoroutinefunction(coroutine_function), "You must subscribe a coroutine function only", TypeError
+            asyncio.iscoroutinefunction(callback), "You must subscribe a coroutine function only", TypeError
         )
-        if event not in self._listeners:
-            self._listeners[event] = []
-        self._listeners[event].append(coroutine_function)
+        if event_type not in self._listeners:
+            self._listeners[event_type] = []
+        self._listeners[event_type].append(callback)
 
-    def remove(self, name: str, coroutine_function: aio.CoroutineFunctionT) -> None:
+    def remove_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT) -> None:
         """Remove the given coroutine function from the handlers for the given event.
 
         The name is mandatory to enable supporting registering the same event callback for multiple event types.
 
         Parameters
         ----------
-        name : :obj:`str`
-            The event to remove from.
-        coroutine_function
+        event_type : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
+            The type of event to remove the callback from.
+        callback : ``async def callback(event: HikariEvent) -> ...``
             The event callback to remove.
         """
-        if name in self._listeners and coroutine_function in self._listeners[name]:
-            if len(self._listeners[name]) - 1 == 0:
-                del self._listeners[name]
+        if event_type in self._listeners and callback in self._listeners[event_type]:
+            if len(self._listeners[event_type]) - 1 == 0:
+                del self._listeners[event_type]
             else:
-                self._listeners[name].remove(coroutine_function)
+                self._listeners[event_type].remove(callback)
 
     # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
     # confusing telepathy comments to the user.
-    def dispatch(self, event: events.HikariEvent):
+    def dispatch_event(self, event: events.HikariEvent):
         """Dispatch a given event to all listeners and waiters that are
         applicable.
 
@@ -120,20 +248,20 @@ class EventDispatcher:
         """
         event_t = type(event)
 
-        awaitables = []
+        futs = []
 
         if event_t in self._listeners:
             for callback in self._listeners[event_t]:
-                awaitables.append(self._catch(callback, event))
+                futs.append(self._catch(callback, event))
 
         # Only try to awaken waiters when the waiter is registered as a valid
         # event type and there is more than 0 waiters in that dict.
         if waiters := self._waiters.get(event_t):
             # Run this in the background as a coroutine so that any async predicates
             # can be awaited concurrently.
-            awaitables.append(asyncio.create_task(self._awaken_waiters(waiters, event)))
+            futs.append(asyncio.create_task(self._awaken_waiters(waiters, event)))
 
-        result = asyncio.gather(*awaitables) if awaitables else aio.completed_future()
+        result = asyncio.gather(*futs) if futs else aio.completed_future()  # lgtm [py/unused-local-variable]
 
         # Stop false positives from linters that now assume this is a coroutine function
         result: typing.Any
@@ -160,9 +288,10 @@ class EventDispatcher:
         event_t = type(event)
 
         if delete_waiter:
-            del self._waiters[event_t][future]
-        if not self._waiters[event_t]:
-            del self._waiters[event_t]
+            if not len(self._waiters[event_t]) - 1:
+                del self._waiters[event_t]
+            else:
+                del self._waiters[event_t][future]
 
     async def _catch(self, callback, event):
         try:
@@ -200,7 +329,7 @@ class EventDispatcher:
             self.logger.exception(
                 'Exception occurred in handler for event "%s"', type(event).__name__, exc_info=exception
             )
-            self.dispatch(events.ExceptionEvent(exception=exception, event=event, callback=callback))
+            self.dispatch_event(events.ExceptionEvent(exception=exception, event=event, callback=callback))
         else:
             self.logger.exception(
                 'Exception occurred in handler for event "%s", and the exception has been dropped',
@@ -210,10 +339,10 @@ class EventDispatcher:
 
     def wait_for(
         self,
-        event_type: typing.Type[events.HikariEvent],
+        event_type: typing.Type[EventT],
         *,
         timeout: typing.Optional[float],
-        predicate: typing.Callable[..., bool],
+        predicate: PredicateT,
     ) -> asyncio.Future:
         """Given an event name, wait for the event to occur once, then return
         the arguments that accompanied the event as the result.

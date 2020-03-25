@@ -38,118 +38,172 @@ class TestEvent3(events.HikariEvent):
     ...
 
 
-class TestEventDispatcher:
-    EXCEPTION_EVENT = "exception"
-
+class TestEventDispatcherImpl:
     @pytest.fixture
-    def delegate(self):
-        return _helpers.unslot_class(dispatcher.EventDispatcher)()
+    def dispatcher_inst(self):
+        return _helpers.unslot_class(dispatcher.EventDispatcherImpl)()
 
     # noinspection PyTypeChecker
     @_helpers.assert_raises(type_=TypeError)
-    def test_add_not_coroutine_function(self, delegate):
-        delegate.add("foo", lambda: None)
+    def test_add_not_coroutine_function(self, dispatcher_inst):
+        dispatcher_inst.add_listener("foo", lambda: None)
 
-    def test_add_coroutine_function_when_no_others_with_name(self, delegate):
+    def _coro_fn(self, lambda_ex):
+        async def wrap(*args, **kwargs):
+            return lambda_ex(*args, **kwargs)
+
+        return wrap
+
+    def test_close(self, dispatcher_inst, event_loop):
+        futures = []
+
+        def fut():
+            futures.append(event_loop.create_future())
+            return futures[-1]
+
+        test_event_1_waiters = {
+            fut(): lambda _: False,
+            fut(): lambda _: False,
+            fut(): lambda _: False,
+            fut(): lambda _: False
+        }
+
+        test_event_2_waiters = {
+            fut(): lambda _: False,
+            fut(): lambda _: False,
+            fut(): lambda _: False,
+            fut(): lambda _: False
+        }
+
+        test_event_1_listeners = [
+            self._coro_fn(lambda xxx: None)
+        ]
+
+        test_event_2_listeners = [
+            self._coro_fn(lambda xxx: None),
+            self._coro_fn(lambda xxx: None),
+            self._coro_fn(lambda xxx: None),
+            self._coro_fn(lambda xxx: None)
+        ]
+
+        dispatcher_inst._waiters = (waiters := {
+            TestEvent1: test_event_1_waiters,
+            TestEvent2: test_event_2_waiters,
+        })
+
+        dispatcher_inst._listeners = (listeners := {
+            TestEvent1: test_event_1_listeners,
+            TestEvent2: test_event_2_listeners,
+        })
+
+        dispatcher_inst.close()
+
+        assert not waiters
+        assert not listeners
+
+        for i, f in enumerate(futures):
+            assert f.cancelled(), str(i)
+
+    def test_add_coroutine_function_when_no_others_with_name(self, dispatcher_inst):
         async def coro_fn():
             pass
 
-        delegate.add("foo", coro_fn)
-        assert coro_fn in delegate._listeners["foo"]
+        dispatcher_inst.add_listener("foo", coro_fn)
+        assert coro_fn in dispatcher_inst._listeners["foo"]
 
-    def test_add_coroutine_function_when_list_exists(self, delegate):
+    def test_add_coroutine_function_when_list_exists(self, dispatcher_inst):
         async def coro_fn1():
             pass
 
         async def coro_fn2():
             pass
 
-        delegate.add("foo", coro_fn1)
-        delegate.add("foo", coro_fn2)
-        assert coro_fn1 in delegate._listeners["foo"]
-        assert coro_fn2 in delegate._listeners["foo"]
+        dispatcher_inst.add_listener("foo", coro_fn1)
+        dispatcher_inst.add_listener("foo", coro_fn2)
+        assert coro_fn1 in dispatcher_inst._listeners["foo"]
+        assert coro_fn2 in dispatcher_inst._listeners["foo"]
 
-    def test_remove_non_existing_mux_list(self, delegate):
+    def test_remove_non_existing_mux_list(self, dispatcher_inst):
         async def remove_this():
             pass
 
         # should not raise
-        delegate.remove("foo", remove_this)
+        dispatcher_inst.remove_listener("foo", remove_this)
 
-    def test_remove_non_existing_mux(self, delegate):
-        delegate._listeners["foo"] = []
+    def test_remove_non_existing_mux(self, dispatcher_inst):
+        dispatcher_inst._listeners["foo"] = []
 
         async def remove_this():
             pass
 
         # should not raise
-        delegate.remove("foo", remove_this)
+        dispatcher_inst.remove_listener("foo", remove_this)
 
-    def test_remove_when_list_left_empty_removes_key(self, delegate):
+    def test_remove_when_list_left_empty_removes_key(self, dispatcher_inst):
         async def remove_this():
             pass
 
-        delegate._listeners["foo"] = [remove_this]
+        dispatcher_inst._listeners["foo"] = [remove_this]
 
-        delegate.remove("foo", remove_this)
+        dispatcher_inst.remove_listener("foo", remove_this)
 
-        assert "foo" not in delegate._listeners
+        assert "foo" not in dispatcher_inst._listeners
 
-    def test_remove_when_list_not_left_empty_removes_coroutine_function(self, delegate):
+    def test_remove_when_list_not_left_empty_removes_coroutine_function(self, dispatcher_inst):
         async def remove_this():
             pass
 
-        delegate._listeners["foo"] = [remove_this, remove_this]
+        dispatcher_inst._listeners["foo"] = [remove_this, remove_this]
 
-        delegate.remove("foo", remove_this)
+        dispatcher_inst.remove_listener("foo", remove_this)
 
-        assert delegate._listeners["foo"] == [remove_this]
+        assert dispatcher_inst._listeners["foo"] == [remove_this]
 
-    def test_dispatch_to_existing_muxes(self, delegate):
-        delegate._catch = mock.MagicMock()
+    def test_dispatch_to_existing_muxes(self, dispatcher_inst):
+        dispatcher_inst._catch = mock.MagicMock()
         mock_coro_fn1 = mock.MagicMock()
         mock_coro_fn2 = mock.MagicMock()
         mock_coro_fn3 = mock.MagicMock()
 
         ctx = TestEvent1()
 
-        delegate._listeners[TestEvent1] = [mock_coro_fn1, mock_coro_fn2]
-        delegate._listeners[TestEvent2] = [mock_coro_fn3]
+        dispatcher_inst._listeners[TestEvent1] = [mock_coro_fn1, mock_coro_fn2]
+        dispatcher_inst._listeners[TestEvent2] = [mock_coro_fn3]
 
         with mock.patch("asyncio.gather") as gather:
-            delegate.dispatch(ctx)
-            gather.assert_called_once_with(delegate._catch(mock_coro_fn1, ctx), delegate._catch(mock_coro_fn2, ctx))
+            dispatcher_inst.dispatch_event(ctx)
+            gather.assert_called_once_with(dispatcher_inst._catch(mock_coro_fn1, ctx), dispatcher_inst._catch(mock_coro_fn2, ctx))
 
-    def test_dispatch_to_non_existant_muxes(self, delegate):
+    def test_dispatch_to_non_existant_muxes(self, dispatcher_inst):
         # Should not throw.
-        delegate._waiters = {}
-        delegate._listeners = {}
-        delegate.dispatch(TestEvent1())
-        assert delegate._waiters == {}
-        assert delegate._listeners == {}
+        dispatcher_inst._waiters = {}
+        dispatcher_inst._listeners = {}
+        dispatcher_inst.dispatch_event(TestEvent1())
+        assert dispatcher_inst._waiters == {}
+        assert dispatcher_inst._listeners == {}
 
     @pytest.mark.asyncio
-    async def test_dispatch_is_awaitable_if_nothing_is_invoked(self, delegate):
+    async def test_dispatch_is_awaitable_if_nothing_is_invoked(self, dispatcher_inst):
         coro_fn = mock.AsyncMock()
 
-        delegate.add("foo", coro_fn)
-        await delegate.dispatch("bar")
+        dispatcher_inst.add_listener("foo", coro_fn)
+        await dispatcher_inst.dispatch_event("bar")
 
     @pytest.mark.asyncio
-    async def test_dispatch_is_awaitable_if_something_is_invoked(self, delegate):
+    async def test_dispatch_is_awaitable_if_something_is_invoked(self, dispatcher_inst):
         coro_fn = mock.AsyncMock()
 
-        delegate.add("foo", coro_fn)
-        await delegate.dispatch("foo")
+        dispatcher_inst.add_listener("foo", coro_fn)
+        await dispatcher_inst.dispatch_event("foo")
 
     @pytest.mark.asyncio
     @_helpers.timeout_after(1)
-    async def test_dispatch_invokes_future_waker_if_registered_with_futures(self, delegate, event_loop):
-        delegate._waiters[TestEvent1] = {event_loop.create_future(): lambda _: False}
+    async def test_dispatch_invokes_future_waker_if_registered_with_futures(self, dispatcher_inst, event_loop):
+        dispatcher_inst._waiters[TestEvent1] = {event_loop.create_future(): lambda _: False}
 
     @pytest.mark.asyncio
     @_helpers.timeout_after(1)
-    async def test_dispatch_returns_exception_to_caller(self, delegate, event_loop):
+    async def test_dispatch_returns_exception_to_caller(self, dispatcher_inst, event_loop):
         predicate1 = mock.MagicMock(side_effect=RuntimeError())
         predicate2 = mock.MagicMock(return_value=False)
 
@@ -158,11 +212,11 @@ class TestEventDispatcher:
 
         ctx = TestEvent3()
 
-        delegate._waiters[TestEvent3] = {}
-        delegate._waiters[TestEvent3][future1] = predicate1
-        delegate._waiters[TestEvent3][future2] = predicate2
+        dispatcher_inst._waiters[TestEvent3] = {}
+        dispatcher_inst._waiters[TestEvent3][future1] = predicate1
+        dispatcher_inst._waiters[TestEvent3][future2] = predicate2
 
-        await delegate.dispatch(ctx)
+        await dispatcher_inst.dispatch_event(ctx)
 
         try:
             await future1
@@ -179,28 +233,28 @@ class TestEventDispatcher:
 
     @pytest.mark.asyncio
     @_helpers.timeout_after(1)
-    async def test_waiter_map_deleted_if_made_empty_during_this_dispatch(self, delegate):
-        delegate._waiters[TestEvent1] = {mock.MagicMock(): mock.MagicMock(return_value=True)}
-        delegate.dispatch(TestEvent1())
+    async def test_waiter_map_deleted_if_made_empty_during_this_dispatch(self, dispatcher_inst):
+        dispatcher_inst._waiters[TestEvent1] = {mock.MagicMock(): mock.MagicMock(return_value=True)}
+        dispatcher_inst.dispatch_event(TestEvent1())
         await asyncio.sleep(0.1)
-        assert TestEvent1 not in delegate._waiters
+        assert TestEvent1 not in dispatcher_inst._waiters
 
     @pytest.mark.asyncio
     @_helpers.timeout_after(1)
-    async def test_waiter_map_not_deleted_if_not_empty(self, delegate):
-        delegate._waiters["foobar"] = {mock.MagicMock(): mock.MagicMock(return_value=False)}
-        delegate.dispatch("foobar")
+    async def test_waiter_map_not_deleted_if_not_empty(self, dispatcher_inst):
+        dispatcher_inst._waiters[TestEvent1] = {mock.MagicMock(): mock.MagicMock(return_value=False)}
+        dispatcher_inst.dispatch_event(TestEvent1())
         await asyncio.sleep(0.1)
-        assert "foobar" in delegate._waiters
+        assert TestEvent1 in dispatcher_inst._waiters
 
     @pytest.mark.asyncio
     @_helpers.timeout_after(2)
-    async def test_wait_for_returns_event(self, delegate):
+    async def test_wait_for_returns_event(self, dispatcher_inst):
         predicate = mock.MagicMock(return_value=True)
-        future = delegate.wait_for(TestEvent1, timeout=5, predicate=predicate)
+        future = dispatcher_inst.wait_for(TestEvent1, timeout=5, predicate=predicate)
 
         ctx = TestEvent1()
-        await delegate.dispatch(ctx)
+        await dispatcher_inst.dispatch_event(ctx)
 
         await asyncio.sleep(0.1)
 
@@ -211,11 +265,11 @@ class TestEventDispatcher:
 
     @pytest.mark.asyncio
     @_helpers.timeout_after(2)
-    async def test_wait_for_returns_matching_event_args_when_invoked_but_no_predicate_match(self, delegate):
+    async def test_wait_for_returns_matching_event_args_when_invoked_but_no_predicate_match(self, dispatcher_inst):
         predicate = mock.MagicMock(return_value=False)
         ctx = TestEvent3()
-        future = delegate.wait_for(TestEvent3, timeout=5, predicate=predicate)
-        await delegate.dispatch(ctx)
+        future = dispatcher_inst.wait_for(TestEvent3, timeout=5, predicate=predicate)
+        await dispatcher_inst.dispatch_event(ctx)
 
         await asyncio.sleep(0.1)
 
@@ -224,19 +278,19 @@ class TestEventDispatcher:
 
     @pytest.mark.asyncio
     @_helpers.assert_raises(type_=asyncio.TimeoutError)
-    async def test_wait_for_hits_timeout_and_raises(self, delegate):
+    async def test_wait_for_hits_timeout_and_raises(self, dispatcher_inst):
         predicate = mock.MagicMock(return_value=False)
-        await delegate.wait_for("foobar", timeout=1, predicate=predicate)
+        await dispatcher_inst.wait_for("foobar", timeout=1, predicate=predicate)
         assert False, "event was marked as succeeded when it shouldn't have been"
 
     @pytest.mark.asyncio
     @_helpers.timeout_after(2)
     @_helpers.assert_raises(type_=RuntimeError)
-    async def test_wait_for_raises_predicate_errors(self, delegate):
+    async def test_wait_for_raises_predicate_errors(self, dispatcher_inst):
         predicate = mock.MagicMock(side_effect=RuntimeError)
         ctx = TestEvent1()
-        future = delegate.wait_for(TestEvent1, timeout=1, predicate=predicate)
-        await delegate.dispatch(ctx)
+        future = dispatcher_inst.wait_for(TestEvent1, timeout=1, predicate=predicate)
+        await dispatcher_inst.dispatch_event(ctx)
         await future
 
     @pytest.mark.asyncio
@@ -244,45 +298,45 @@ class TestEventDispatcher:
     @_helpers.timeout_after(5)
     @_helpers.assert_raises(type_=asyncio.TimeoutError)
     async def test_other_events_in_same_waiter_event_name_do_not_awaken_us(
-        self, delegate, predicate_side_effect, event_loop
+        self, dispatcher_inst, predicate_side_effect, event_loop
     ):
-        delegate._waiters["foobar"] = {event_loop.create_future(): mock.MagicMock(side_effect=predicate_side_effect)}
+        dispatcher_inst._waiters["foobar"] = {event_loop.create_future(): mock.MagicMock(side_effect=predicate_side_effect)}
 
-        future = delegate.wait_for("foobar", timeout=1, predicate=mock.MagicMock(return_value=False))
+        future = dispatcher_inst.wait_for("foobar", timeout=1, predicate=mock.MagicMock(return_value=False))
 
-        await asyncio.gather(future, *(delegate.dispatch("foobar") for _ in range(5)))
+        await asyncio.gather(future, *(dispatcher_inst.dispatch_event("foobar") for _ in range(5)))
 
     @pytest.mark.asyncio
-    async def test_catch_happy_path(self, delegate):
+    async def test_catch_happy_path(self, dispatcher_inst):
         callback = mock.AsyncMock()
         event = TestEvent1()
-        delegate.handle_exception = mock.MagicMock()
-        await delegate._catch(callback, event)
+        dispatcher_inst.handle_exception = mock.MagicMock()
+        await dispatcher_inst._catch(callback, event)
         callback.assert_awaited_once_with(event)
-        delegate.handle_exception.assert_not_called()
+        dispatcher_inst.handle_exception.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_catch_sad_path(self, delegate):
+    async def test_catch_sad_path(self, dispatcher_inst):
         ex = RuntimeError()
         callback = mock.AsyncMock(side_effect=ex)
-        delegate.handle_exception = mock.MagicMock()
+        dispatcher_inst.handle_exception = mock.MagicMock()
         ctx = TestEvent3()
-        await delegate._catch(callback, ctx)
-        delegate.handle_exception.assert_called_once_with(ex, ctx, callback)
+        await dispatcher_inst._catch(callback, ctx)
+        dispatcher_inst.handle_exception.assert_called_once_with(ex, ctx, callback)
 
-    def test_handle_exception_dispatches_exception_event_with_context(self, delegate):
-        delegate.dispatch = mock.MagicMock()
+    def test_handle_exception_dispatches_exception_event_with_context(self, dispatcher_inst):
+        dispatcher_inst.dispatch_event = mock.MagicMock()
 
         ex = RuntimeError()
         event = TestEvent1()
         callback = mock.AsyncMock()
 
-        delegate.handle_exception(ex, event, callback)
+        dispatcher_inst.handle_exception(ex, event, callback)
 
         expected_ctx = events.ExceptionEvent(ex, event, callback)
-        delegate.dispatch.assert_called_once_with(expected_ctx)
+        dispatcher_inst.dispatch_event.assert_called_once_with(expected_ctx)
 
-    def test_handle_exception_will_not_recursively_invoke_exception_handler_event(self, delegate):
-        delegate.dispatch = mock.MagicMock()
-        delegate.handle_exception(RuntimeError(), events.ExceptionEvent(..., ..., ...), mock.AsyncMock())
-        delegate.dispatch.assert_not_called()
+    def test_handle_exception_will_not_recursively_invoke_exception_handler_event(self, dispatcher_inst):
+        dispatcher_inst.dispatch_event = mock.MagicMock()
+        dispatcher_inst.handle_exception(RuntimeError(), events.ExceptionEvent(..., ..., ...), mock.AsyncMock())
+        dispatcher_inst.dispatch_event.assert_not_called()
