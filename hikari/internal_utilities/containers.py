@@ -17,20 +17,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Custom data structures and constant values."""
-__all__ = [
-    "EMPTY_SEQUENCE",
-    "EMPTY_SET",
-    "EMPTY_COLLECTION",
-    "EMPTY_DICT",
-]
+__all__ = ["EMPTY_SEQUENCE", "EMPTY_SET", "EMPTY_COLLECTION", "EMPTY_DICT", "EMPTY_GENERATOR_EXPRESSION"]
 
 import types
 import typing
-
-# If more than one empty-definition is used in the same context, the type checker will probably whinge, so we have
-# to keep separate types...
-HashableT = typing.TypeVar("HashableT", bound=typing.Hashable)
-ValueT = typing.TypeVar("ValueT")
 
 #: An immutable indexable container of elements with zero size.
 EMPTY_SEQUENCE: typing.Sequence = tuple()
@@ -40,3 +30,6 @@ EMPTY_SET: typing.AbstractSet = frozenset()
 EMPTY_COLLECTION: typing.Collection = tuple()
 #: An immutable ordered mapping of key elements to value elements with zero size.
 EMPTY_DICT: typing.Mapping = types.MappingProxyType({})
+#: An empty generator expression that can be used as a placeholder, but never
+#: yields anything.
+EMPTY_GENERATOR_EXPRESSION = (_ for _ in EMPTY_COLLECTION)
