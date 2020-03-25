@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Implementation of a basic HTTP client that uses aiohttp to interact with the Discord API."""
-__all__ = ["HTTPClient"]
+__all__ = ["RestfulClient"]
 
 import asyncio
 import contextlib
@@ -32,18 +32,27 @@ import aiohttp.typedefs
 
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import containers
+from hikari.internal_utilities import loggers
 from hikari.internal_utilities import storage
 from hikari.internal_utilities import transformations
-from hikari.net import base_http_client
 from hikari.net import codes
 from hikari.net import errors
 from hikari.net import ratelimits
 from hikari.net import routes
+from hikari.net import user_agent
 from hikari.net import versions
 
 
-class HTTPClient(base_http_client.BaseHTTPClient):
+class RestfulClient:
     """A RESTful client to allow you to interact with the Discord API."""
+
+    GET = "get"
+    POST = "post"
+    PATCH = "patch"
+    PUT = "put"
+    HEAD = "head"
+    DELETE = "delete"
+    OPTIONS = "options"
 
     _AUTHENTICATION_SCHEMES = ("Bearer", "Bot")
 
@@ -64,17 +73,64 @@ class HTTPClient(base_http_client.BaseHTTPClient):
         token,
         version: typing.Union[int, versions.HTTPAPIVersion] = versions.HTTPAPIVersion.STABLE,
     ):
-        super().__init__(
-            allow_redirects=allow_redirects,
-            connector=connector,
-            proxy_headers=proxy_headers,
-            proxy_auth=proxy_auth,
-            proxy_url=proxy_url,
-            ssl_context=ssl_context,
-            verify_ssl=verify_ssl,
-            timeout=timeout,
-            json_serialize=json_serialize,
+        #: Whether to allow redirects or not.
+        #:
+        #: :type: :obj:`bool`
+        self.allow_redirects = allow_redirects
+
+        #: The HTTP client session to use.
+        #:
+        #: :type: :obj:`aiohttp.ClientSession`
+        self.client_session = aiohttp.ClientSession(
+            connector=connector, version=aiohttp.HttpVersion11, json_serialize=json_serialize or json.dumps,
         )
+
+        #: The logger to use for this object.
+        #:
+        #: :type: :obj:`logging.Logger`
+        self.logger = loggers.get_named_logger(self)
+
+        #: User agent to use.
+        #:
+        #: :type: :obj:`str`
+        self.user_agent = user_agent.user_agent()
+
+        #: If ``True``, this will enforce SSL signed certificate verification, otherwise it will
+        #: ignore potentially malicious SSL certificates.
+        #:
+        #: :type: :obj:`bool`
+        self.verify_ssl = verify_ssl
+
+        #: Optional proxy URL to use for HTTP requests.
+        #:
+        #: :type: :obj:`str`
+        self.proxy_url = proxy_url
+
+        #: Optional authorization to use if using a proxy.
+        #:
+        #: :type: :obj:`aiohttp.BasicAuth`
+        self.proxy_auth = proxy_auth
+
+        #: Optional proxy headers to pass.
+        #:
+        #: :type: :obj:`aiohttp.typedefs.LooseHeaders`
+        self.proxy_headers = proxy_headers
+
+        #: Optional SSL context to use.
+        #:
+        #: :type: :obj:`ssl.SSLContext`
+        self.ssl_context: ssl.SSLContext = ssl_context
+
+        #: Optional timeout for HTTP requests.
+        #:
+        #: :type: :obj:`float`
+        self.timeout = timeout
+
+        #: How many responses have been received.
+        #:
+        #: :type: :obj:`int`
+        self.in_count = 0
+
         self.version = int(version)
         self.base_url = base_url.format(self)
         self.global_ratelimiter = ratelimits.ManualRateLimiter()
@@ -93,7 +149,18 @@ class HTTPClient(base_http_client.BaseHTTPClient):
     async def close(self):
         with contextlib.suppress(Exception):
             self.ratelimiter.close()
-        await super().close()
+        with contextlib.suppress(Exception):
+            self.logger.debug("Closing HTTPClient")
+            await self.client_session.close()
+
+    def __enter__(self) -> typing.NoReturn:
+        raise RuntimeError(f"Please use 'async with' instead of 'with' for {type(self).__name__}")
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
 
     async def _request(
         self,
@@ -151,13 +218,20 @@ class HTTPClient(base_http_client.BaseHTTPClient):
                 json_body if json_body is not None else form_body,
             )
 
-            async with super()._request(
+            async with self.client_session.request(
                 compiled_route.method,
                 compiled_route.create_url(self.base_url),
                 headers=request_headers,
                 json=json_body,
                 params=query,
                 data=form_body,
+                allow_redirects=self.allow_redirects,
+                proxy=self.proxy_url,
+                proxy_auth=self.proxy_auth,
+                proxy_headers=self.proxy_headers,
+                verify_ssl=self.verify_ssl,
+                ssl_context=self.ssl_context,
+                timeout=self.timeout,
                 **kwargs,
             ) as resp:
                 raw_body = await resp.read()
