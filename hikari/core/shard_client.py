@@ -65,7 +65,7 @@ class WebsocketClientBase(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def shutdown(self, wait: bool = True):
+    async def close(self, wait: bool = True):
         ...
 
     @abc.abstractmethod
@@ -92,12 +92,12 @@ class WebsocketClientBase(abc.ABC):
 
         except KeyboardInterrupt as _ex:
             self.logger.info("received signal to shut down client")
-            loop.run_until_complete(self.shutdown())
+            loop.run_until_complete(self.close())
             # Apparently you have to alias except clauses or you get an
             # UnboundLocalError.
             ex = _ex
         finally:
-            loop.run_until_complete(self.shutdown(True))
+            loop.run_until_complete(self.close(True))
             with contextlib.suppress(NotImplementedError):
                 # Not implemented on Windows
                 loop.remove_signal_handler(signal.SIGTERM)
@@ -265,7 +265,7 @@ class ShardClient(WebsocketClientBase):
         """Wait for the shard to shut down fully."""
         await self._task if self._task is not None else aio.completed_future()
 
-    async def shutdown(self, wait: bool = True) -> None:
+    async def close(self, wait: bool = True) -> None:
         """Request that the shard shuts down.
 
         Parameters

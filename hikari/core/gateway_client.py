@@ -28,6 +28,9 @@ from hikari.core import events
 from hikari.core import gateway_config
 from hikari.core import shard_client
 from hikari.core import state
+from hikari.core.dispatcher import EventCallbackT
+from hikari.core.dispatcher import EventCallbackT
+from hikari.core.dispatcher import EventT
 from hikari.internal_utilities import loggers
 from hikari.net import shard
 
@@ -35,7 +38,7 @@ from hikari.net import shard
 ShardT = typing.TypeVar("ShardT", bound=shard_client.ShardClient)
 
 
-class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase):
+class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase, dispatcher.EventDispatcher):
     def __init__(
         self,
         config: gateway_config.GatewayConfig,
@@ -78,12 +81,12 @@ class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase):
     async def join(self) -> None:
         await asyncio.gather(*(shard_obj.join() for shard_obj in self.shards.values()))
 
-    async def shutdown(self, wait: bool = True) -> None:
+    async def close(self, wait: bool = True) -> None:
         if self._is_running:
             self.logger.info("stopping %s shard(s)", len(self.shards))
             start_time = time.perf_counter()
             try:
-                await asyncio.gather(*(shard_obj.shutdown(wait) for shard_obj in self.shards.values()))
+                await asyncio.gather(*(shard_obj.close(wait) for shard_obj in self.shards.values()))
             finally:
                 finish_time = time.perf_counter()
                 self.logger.info("stopped %s shard(s) in approx %.2fs", len(self.shards), finish_time - start_time)
@@ -159,3 +162,12 @@ class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase):
         self.logger.debug("detected %s web socket events to register from %s", len(types), events.__name__)
 
         return types
+
+    def add_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT) -> EventCallbackT:
+        return self.event_dispatcher.add_listener(event_type, callback)
+
+    def remove_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT) -> EventCallbackT:
+        return self.event_dispatcher.remove_listener(event_type, callback)
+
+    def dispatch_event(self, event: events.HikariEvent) -> ...:
+        return self.event_dispatcher.dispatch_event(event)
