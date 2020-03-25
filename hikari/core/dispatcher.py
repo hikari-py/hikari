@@ -119,6 +119,23 @@ class EventDispatcher(abc.ABC):
         lookup, but can be implemented this way optionally if documented.
         """
 
+    def on(self, event_type: typing.Type[EventT]) -> typing.Callable[[EventCallbackT], EventCallbackT]:
+        """A decorator that is equivalent to invoking :meth:`add_listener`.
+
+        Parameters
+        ----------
+        event_type : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
+            The event type to register the produced decorator to.
+
+        Returns
+        -------
+        coroutine function decorator:
+            A decorator for a coroutine function that registers the given event.
+        """
+        def decorator(callback: EventCallbackT) -> EventCallbackT:
+            return self.add_listener(event_type, callback)
+        return decorator
+
     # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
     # confusing telepathy comments to the user.
     @abc.abstractmethod
