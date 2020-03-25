@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The core API for interacting with Discord directly."""
+
+# Do I need this? It still resolves without adding these in...?
 from hikari.core import app_config
 from hikari.core import channels
 from hikari.core import entities
@@ -31,9 +33,12 @@ from hikari.core import messages
 from hikari.core import oauth2
 from hikari.core import permissions
 from hikari.core import protocol_config
+from hikari.core import shard_client
 from hikari.core import snowflakes
 from hikari.core import users
 from hikari.core import webhooks
+
+# Import everything into this namespace.
 from hikari.core.app_config import *
 from hikari.core.channels import *
 from hikari.core.colors import *
@@ -52,6 +57,7 @@ from hikari.core.messages import *
 from hikari.core.oauth2 import *
 from hikari.core.permissions import *
 from hikari.core.protocol_config import *
+from hikari.core.shard_client import *
 from hikari.core.snowflakes import *
 from hikari.core.users import *
 from hikari.core.voices import *
@@ -72,6 +78,7 @@ __all__ = [
     *oauth2.__all__,
     *permissions.__all__,
     *protocol_config.__all__,
+    *shard_client.__all__,
     *snowflakes.__all__,
     *users.__all__,
     *webhooks.__all__,
