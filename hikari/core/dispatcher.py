@@ -45,16 +45,13 @@ class EventDispatcher(abc.ABC):
     a distributed bot dispatcher, for example, or could handle dispatching
     to a set of micro-interpreter instances to achieve greater concurrency.
     """
+
     @abc.abstractmethod
     def close(self):
         """Cancel anything that is waiting for an event to be dispatched."""
 
     @abc.abstractmethod
-    def add_listener(
-        self,
-        event_type: typing.Type[EventT],
-        callback: EventCallbackT
-    ) -> EventCallbackT:
+    def add_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT) -> EventCallbackT:
         """Register a new event callback to a given event name.
 
         Parameters
@@ -71,11 +68,7 @@ class EventDispatcher(abc.ABC):
         """
 
     @abc.abstractmethod
-    def remove_listener(
-        self,
-        event_type: typing.Type[EventT],
-        callback: EventCallbackT,
-    ) -> EventCallbackT:
+    def remove_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT,) -> EventCallbackT:
         """Remove the given coroutine function from the handlers for the given event.
 
         The name is mandatory to enable supporting registering the same event callback for multiple event types.
@@ -90,11 +83,7 @@ class EventDispatcher(abc.ABC):
 
     @abc.abstractmethod
     def wait_for(
-        self,
-        event_type: typing.Type[EventT],
-        *,
-        timeout: typing.Optional[float],
-        predicate: PredicateT
+        self, event_type: typing.Type[EventT], *, timeout: typing.Optional[float], predicate: PredicateT
     ) -> asyncio.Future:
         """Wait for the given event type to occur.
 
@@ -338,11 +327,7 @@ class EventDispatcherImpl(EventDispatcher):
             )
 
     def wait_for(
-        self,
-        event_type: typing.Type[EventT],
-        *,
-        timeout: typing.Optional[float],
-        predicate: PredicateT,
+        self, event_type: typing.Type[EventT], *, timeout: typing.Optional[float], predicate: PredicateT,
     ) -> asyncio.Future:
         """Given an event name, wait for the event to occur once, then return
         the arguments that accompanied the event as the result.

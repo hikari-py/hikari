@@ -634,7 +634,14 @@ class ShardConnection:
                     # Clear any pending exception to prevent a nasty console message.
                     pending_task.result()
 
-            ex = completed.pop().exception()
+            # If the heartbeat call closes normally, then we want to get the exception
+            # raised by the identify call if it raises anything. This prevents spammy
+            # exceptions being thrown if the client shuts down during the handshake,
+            # which becomes more and more likely when we consider bots may have many
+            # shards running, each taking min of 5s to start up after the first.
+            ex = None
+            while len(completed) > 0 and ex is None:
+                ex = completed.pop().exception()
 
             if ex is None:
                 # If no exception occurred, we must have exited non-exceptionally, indicating

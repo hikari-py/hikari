@@ -65,36 +65,32 @@ class TestEventDispatcherImpl:
             fut(): lambda _: False,
             fut(): lambda _: False,
             fut(): lambda _: False,
-            fut(): lambda _: False
+            fut(): lambda _: False,
         }
 
         test_event_2_waiters = {
             fut(): lambda _: False,
             fut(): lambda _: False,
             fut(): lambda _: False,
-            fut(): lambda _: False
+            fut(): lambda _: False,
         }
 
-        test_event_1_listeners = [
-            self._coro_fn(lambda xxx: None)
-        ]
+        test_event_1_listeners = [self._coro_fn(lambda xxx: None)]
 
         test_event_2_listeners = [
             self._coro_fn(lambda xxx: None),
             self._coro_fn(lambda xxx: None),
             self._coro_fn(lambda xxx: None),
-            self._coro_fn(lambda xxx: None)
+            self._coro_fn(lambda xxx: None),
         ]
 
-        dispatcher_inst._waiters = (waiters := {
-            TestEvent1: test_event_1_waiters,
-            TestEvent2: test_event_2_waiters,
-        })
+        dispatcher_inst._waiters = (
+            waiters := {TestEvent1: test_event_1_waiters, TestEvent2: test_event_2_waiters,}
+        )
 
-        dispatcher_inst._listeners = (listeners := {
-            TestEvent1: test_event_1_listeners,
-            TestEvent2: test_event_2_listeners,
-        })
+        dispatcher_inst._listeners = (
+            listeners := {TestEvent1: test_event_1_listeners, TestEvent2: test_event_2_listeners,}
+        )
 
         dispatcher_inst.close()
 
@@ -172,7 +168,9 @@ class TestEventDispatcherImpl:
 
         with mock.patch("asyncio.gather") as gather:
             dispatcher_inst.dispatch_event(ctx)
-            gather.assert_called_once_with(dispatcher_inst._catch(mock_coro_fn1, ctx), dispatcher_inst._catch(mock_coro_fn2, ctx))
+            gather.assert_called_once_with(
+                dispatcher_inst._catch(mock_coro_fn1, ctx), dispatcher_inst._catch(mock_coro_fn2, ctx)
+            )
 
     def test_dispatch_to_non_existant_muxes(self, dispatcher_inst):
         # Should not throw.
@@ -300,7 +298,9 @@ class TestEventDispatcherImpl:
     async def test_other_events_in_same_waiter_event_name_do_not_awaken_us(
         self, dispatcher_inst, predicate_side_effect, event_loop
     ):
-        dispatcher_inst._waiters["foobar"] = {event_loop.create_future(): mock.MagicMock(side_effect=predicate_side_effect)}
+        dispatcher_inst._waiters["foobar"] = {
+            event_loop.create_future(): mock.MagicMock(side_effect=predicate_side_effect)
+        }
 
         future = dispatcher_inst.wait_for("foobar", timeout=1, predicate=mock.MagicMock(return_value=False))
 
