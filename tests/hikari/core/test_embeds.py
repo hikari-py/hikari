@@ -97,7 +97,6 @@ def test_embed_payload(
 ):
     return {
         "title": "embed title",
-        "type": "article",
         "description": "embed description",
         "url": "https://somewhere.com",
         "timestamp": "2020-03-22T16:40:39.218000+00:00",
@@ -238,7 +237,6 @@ class TestEmbed:
             embed_obj = embeds.Embed.deserialize(test_embed_payload)
 
         assert embed_obj.title == "embed title"
-        assert embed_obj.type == embeds.EmbedType.ARTICLE
         assert embed_obj.description == "embed description"
         assert embed_obj.url == "https://somewhere.com"
         assert embed_obj.timestamp == mock_datetime

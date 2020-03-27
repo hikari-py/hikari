@@ -19,7 +19,6 @@
 
 __all__ = [
     "Embed",
-    "EmbedType",
     "EmbedThumbnail",
     "EmbedVideo",
     "EmbedImage",
@@ -30,31 +29,12 @@ __all__ = [
 ]
 
 import typing
-import enum
 import datetime
 
 from hikari.core import entities
 from hikari.core import colors
 from hikari.internal_utilities import marshaller
 from hikari.internal_utilities import dates
-
-
-@enum.unique
-class EmbedType(str, enum.Enum):
-    """The type of a embed."""
-
-    #: Generic embed rendered from embed attributes.
-    RICH = "rich"
-    #: Image embed.
-    IMAGE = "image"
-    #: Video embed.
-    VIDEO = "video"
-    #: Animated gif image embed renderered as a video embed.
-    GFV = "gfv"
-    #: Article embed.
-    ARTICLE = "article"
-    #: Link embed.
-    LINK = "link"
 
 
 @marshaller.attrs(slots=True)
@@ -217,13 +197,6 @@ class Embed(entities.HikariEntity, entities.Deserializable, entities.Serializabl
     #:
     #: :type: :obj:`str`, optional
     title: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
-
-    #: The type of the embed.
-    #:
-    #: :type: :obj:`EmbedType`
-    type: EmbedType = marshaller.attrib(
-        deserializer=EmbedType, serializer=str.lower, if_undefined=lambda: EmbedType.RICH
-    )
 
     #: The description of the embed.
     #:
