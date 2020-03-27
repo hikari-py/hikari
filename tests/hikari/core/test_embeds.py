@@ -233,8 +233,11 @@ class TestEmbed:
     ):
         mock_datetime = mock.MagicMock(datetime.datetime)
 
-        with _helpers.patch_marshal_attr(embeds.Embed, "timestamp", return_value=mock_datetime):
+        with _helpers.patch_marshal_attr(
+            embeds.Embed, "timestamp", deserializer=dates.parse_iso_8601_ts, return_value=mock_datetime
+        ) as patched_timestamp_deserializer:
             embed_obj = embeds.Embed.deserialize(test_embed_payload)
+            patched_timestamp_deserializer.assert_called_once_with("2020-03-22T16:40:39.218000+00:00")
 
         assert embed_obj.title == "embed title"
         assert embed_obj.description == "embed description"

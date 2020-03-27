@@ -64,7 +64,7 @@ class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
     #: This will be ``None`` when getting a webhook with a token
     #:
     #: :type: :obj:`users.User`, optional
-    user: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User, if_undefined=None)
+    user: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User.deserialize, if_undefined=None)
 
     #: The default name of the webhook.
     #:
