@@ -124,11 +124,11 @@ class TestTeam:
         return oauth2.Team.deserialize(team_payload)
 
     def test_deserialize(self, team_payload, member_payload):
-        mock_members = {123: mock.MagicMock(oauth2.Team)}
-        with _helpers.patch_marshal_attr(oauth2.Team, "members", return_value=mock_members) as patched_deserializer:
+        mock_member = mock.MagicMock(oauth2.Team, user=mock.MagicMock(id=123))
+        with mock.patch.object(oauth2.TeamMember, "deserialize", return_value=mock_member):
             team_obj = oauth2.Team.deserialize(team_payload)
-            patched_deserializer.assert_called_once_with([member_payload])
-        assert team_obj.members is mock_members
+            oauth2.TeamMember.deserialize.assert_called_once_with(member_payload)
+        assert team_obj.members == {123: mock_member}
         assert team_obj.icon_hash == "hashtag"
         assert team_obj.id == 202020202
         assert team_obj.owner_user_id == 393030292

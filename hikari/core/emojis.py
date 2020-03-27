@@ -79,7 +79,9 @@ class GuildEmoji(UnknownEmoji):
     #: (<https://github.com/discordapp/discord-api-docs/issues/593#issuecomment-386477863>)
     #:
     #: :type: :obj:`users.User`, optional
-    user: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User, if_none=None, if_undefined=None)
+    user: typing.Optional[users.User] = marshaller.attrib(
+        deserializer=users.User.deserialize, if_none=None, if_undefined=None
+    )
 
     #: Whether this emoji must be wrapped in colons.
     #:

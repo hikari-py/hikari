@@ -44,18 +44,22 @@ class TestGuildEmoji:
     def test_deserialize(self):
         mock_user = mock.MagicMock(users.User)
 
-        with _helpers.patch_marshal_attr(emojis.GuildEmoji, "user", return_value=mock_user):
+        test_user_payload = {"id": "123456", "username": "hikari", "discriminator": "0000", "avatar": None}
+        with _helpers.patch_marshal_attr(
+            emojis.GuildEmoji, "user", deserializer=users.User.deserialize, return_value=mock_user
+        ) as patched_user_deserializer:
             emoji_obj = emojis.GuildEmoji.deserialize(
                 {
                     "id": "12345",
                     "name": "testing",
                     "animated": False,
                     "roles": ["123", "456"],
-                    "user": {"id": "123456", "username": "hikari", "discriminator": "0000", "avatar": None},
+                    "user": test_user_payload,
                     "require_colons": True,
                     "managed": False,
                 }
             )
+            patched_user_deserializer.assert_called_once_with(test_user_payload)
 
         assert emoji_obj.id == 12345
         assert emoji_obj.name == "testing"

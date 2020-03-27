@@ -446,17 +446,25 @@ def create_autospec(spec, *args, **kwargs):
     return mock.create_autospec(spec, spec_set=True, *args, **kwargs)
 
 
-def patch_marshal_attr(target_entity, field_name, *args, deserializer=None, **kwargs):
+def patch_marshal_attr(target_entity, field_name, *args, deserializer=None, serializer=None, **kwargs):
+    if not (deserializer or serializer):
+        raise TypeError("patch_marshal_attr() Missing required keyword-only argument: 'deserializer' or 'serializer'")
+    if deserializer and serializer:
+        raise TypeError(
+            "patch_marshal_attr() Expected one of either keyword-arguments 'deserializer' or 'serializer', not both."
+        )
+
+    target_type = "deserializer" if deserializer else "serializer"
     # noinspection PyProtectedMember
     for attr in marshaller.HIKARI_ENTITY_MARSHALLER._registered_entities[target_entity].attribs:
-        if attr.field_name == field_name and (deserializer is None or attr.deserializer == deserializer):
+        if attr.field_name == field_name and (serializer or deserializer) == getattr(attr, target_type):
             target = attr
             break
         elif attr.field_name == field_name:
             raise TypeError(
-                f"Deserializer mismatch found on `{target_entity.__name__}.{attr.field_name}`; "
-                f"expected `{deserializer}` but got `{attr.deserializer}`."
+                f"{target_type.capitalize()} mismatch found on `{target_entity.__name__}"
+                f".{attr.field_name}`; expected `{deserializer or serializer}` but got `{getattr(attr, target_type)}`."
             )
     else:
         raise LookupError(f"Failed to find a `{field_name}` field on `{target_entity.__name__}`.")
-    return mock.patch.object(target, "deserializer", *args, **kwargs)
+    return mock.patch.object(target, target_type, *args, **kwargs)

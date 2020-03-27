@@ -26,20 +26,24 @@ from tests.hikari import _helpers
 
 class TestWebhook:
     def test_deserialize(self):
+        test_user_payload = {"id": "123456", "username": "hikari", "discriminator": "0000", "avatar": None}
         payload = {
             "id": "1234",
             "type": 1,
             "guild_id": "123",
             "channel_id": "456",
-            "user": {"id": "123456", "username": "hikari", "discriminator": "0000", "avatar": None},
+            "user": test_user_payload,
             "name": "hikari webhook",
             "avatar": "bb71f469c158984e265093a81b3397fb",
             "token": "ueoqrialsdfaKJLKfajslkdf",
         }
         mock_user = mock.MagicMock(users.User)
 
-        with _helpers.patch_marshal_attr(webhooks.Webhook, "user", return_value=mock_user):
+        with _helpers.patch_marshal_attr(
+            webhooks.Webhook, "user", deserializer=users.User.deserialize, return_value=mock_user
+        ) as mock_user_deserializer:
             webhook_obj = webhooks.Webhook.deserialize(payload)
+            mock_user_deserializer.assert_called_once_with(test_user_payload)
 
         assert webhook_obj.id == 1234
         assert webhook_obj.type == webhooks.WebhookType.INCOMING

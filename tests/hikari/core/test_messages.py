@@ -59,22 +59,49 @@ def test_message_crosspost_payload():
     return {"channel_id": "278325129692446722", "guild_id": "278325129692446720", "message_id": "306588351130107906"}
 
 
+@pytest.fixture()
+def test_application_payload():
+    return {
+        "id": "456",
+        "name": "hikari",
+        "description": "The best app",
+        "icon": "2658b3029e775a931ffb49380073fa63",
+        "cover_image": "58982a23790c4f22787b05d3be38a026",
+    }
+
+
+@pytest.fixture()
+def test_user_payload():
+    return {
+        "bot": True,
+        "id": "1234",
+        "username": "cool username",
+        "avatar": "6608709a3274e1812beb4e8de6631111",
+        "discriminator": "0000",
+    }
+
+
+@pytest.fixture()
+def test_member_payload(test_user_payload):
+    return {"user": test_user_payload}
+
+
 @pytest.fixture
 def test_message_payload(
-    test_attachment_payload, test_reaction_payload, test_message_activity_payload, test_message_crosspost_payload,
+    test_application_payload,
+    test_attachment_payload,
+    test_reaction_payload,
+    test_user_payload,
+    test_member_payload,
+    test_message_activity_payload,
+    test_message_crosspost_payload,
 ):
     return {
         "id": "123",
         "channel_id": "456",
         "guild_id": "678",
-        "author": {
-            "bot": True,
-            "id": "1234",
-            "username": "cool username",
-            "avatar": "6608709a3274e1812beb4e8de6631111",
-            "discriminator": "0000",
-        },
-        "member": {"user": {}},
+        "author": test_user_payload,
+        "member": test_member_payload,
         "content": "some info",
         "timestamp": "2020-03-21T21:20:16.510000+00:00",
         "edited_timestamp": "2020-04-21T21:20:16.510000+00:00",
@@ -92,13 +119,7 @@ def test_message_payload(
         "webhook_id": "1234",
         "type": 0,
         "activity": test_message_activity_payload,
-        "application": {
-            "id": "456",
-            "name": "hikari",
-            "description": "The best app",
-            "icon": "2658b3029e775a931ffb49380073fa63",
-            "cover_image": "58982a23790c4f22787b05d3be38a026",
-        },
+        "application": test_application_payload,
         "message_reference": test_message_crosspost_payload,
         "flags": 2,
     }
@@ -121,7 +142,9 @@ class TestReaction:
     def test_deserialize(self, test_reaction_payload):
         mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
 
-        with _helpers.patch_marshal_attr(messages.Reaction, "emoji", return_value=mock_emoji):
+        with _helpers.patch_marshal_attr(
+            messages.Reaction, "emoji", return_value=mock_emoji, deserializer=emojis.deserialize_reaction_emoji
+        ):
             reaction_obj = messages.Reaction.deserialize(test_reaction_payload)
 
         assert reaction_obj.count == 100
@@ -150,8 +173,11 @@ class TestMessage:
     def test_deserialize(
         self,
         test_message_payload,
+        test_application_payload,
         test_attachment_payload,
         test_reaction_payload,
+        test_user_payload,
+        test_member_payload,
         test_message_activity_payload,
         test_message_crosspost_payload,
     ):
@@ -159,18 +185,46 @@ class TestMessage:
         mock_member = mock.MagicMock(guilds.GuildMember)
         mock_datetime = mock.MagicMock(datetime.datetime)
         mock_datetime2 = mock.MagicMock(datetime.datetime)
-        mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
+        mock_emoji = mock.MagicMock(messages._emojis)
         mock_app = mock.MagicMock(oauth2.Application)
 
-        with _helpers.patch_marshal_attr(messages.Message, "author", return_value=mock_user):
-            with _helpers.patch_marshal_attr(messages.Message, "member", return_value=mock_member):
-                with _helpers.patch_marshal_attr(messages.Message, "timestamp", return_value=mock_datetime):
-                    with _helpers.patch_marshal_attr(messages.Message, "edited_timestamp", return_value=mock_datetime2):
-                        with _helpers.patch_marshal_attr(messages.Reaction, "emoji", return_value=mock_emoji):
-                            with _helpers.patch_marshal_attr(messages.Message, "application", return_value=mock_app):
+        with _helpers.patch_marshal_attr(
+            messages.Message, "author", deserializer=users.User.deserialize, return_value=mock_user
+        ) as patched_author_deserializer:
+            with _helpers.patch_marshal_attr(
+                messages.Message, "member", deserializer=guilds.GuildMember.deserialize, return_value=mock_member
+            ) as patched_member_deserializer:
+                with _helpers.patch_marshal_attr(
+                    messages.Message, "timestamp", deserializer=dates.parse_iso_8601_ts, return_value=mock_datetime
+                ) as patched_timestamp_deserializer:
+                    with _helpers.patch_marshal_attr(
+                        messages.Message,
+                        "edited_timestamp",
+                        deserializer=dates.parse_iso_8601_ts,
+                        return_value=mock_datetime2,
+                    ) as patched_edited_timestamp_deserializer:
+                        with _helpers.patch_marshal_attr(
+                            messages.Message,
+                            "application",
+                            deserializer=oauth2.Application.deserialize,
+                            return_value=mock_app,
+                        ) as patched_application_deserializer:
+                            with _helpers.patch_marshal_attr(
+                                messages.Reaction,
+                                "emoji",
+                                deserializer=emojis.deserialize_reaction_emoji,
+                                return_value=mock_emoji,
+                            ) as patched_emoji_deserializer:
                                 message_obj = messages.Message.deserialize(test_message_payload)
-
+                                patched_emoji_deserializer.assert_called_once_with(test_reaction_payload["emoji"])
                                 assert message_obj.reactions == [messages.Reaction.deserialize(test_reaction_payload)]
+                            patched_application_deserializer.assert_called_once_with(test_application_payload)
+                        patched_edited_timestamp_deserializer.assert_called_once_with(
+                            "2020-04-21T21:20:16.510000+00:00"
+                        )
+                    patched_timestamp_deserializer.assert_called_once_with("2020-03-21T21:20:16.510000+00:00")
+                patched_member_deserializer.assert_called_once_with(test_member_payload)
+            patched_author_deserializer.assert_called_once_with(test_user_payload)
 
         assert message_obj.id == 123
         assert message_obj.channel_id == 456
