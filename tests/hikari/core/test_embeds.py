@@ -23,6 +23,7 @@ import pytest
 
 from hikari.core import colors
 from hikari.core import embeds
+from hikari.internal_utilities import dates
 from tests.hikari import _helpers
 
 

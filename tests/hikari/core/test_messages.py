@@ -27,6 +27,7 @@ from hikari.core import guilds
 from hikari.core import messages
 from hikari.core import oauth2
 from hikari.core import users
+from hikari.internal_utilities import dates
 from tests.hikari import _helpers
 
 
