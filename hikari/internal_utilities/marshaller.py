@@ -184,8 +184,15 @@ def _default_validator(value: typing.Any):
 
 class _AttributeDescriptor:
     __slots__ = (
-        "raw_name", "field_name", "constructor_name", "if_none", "if_undefined", "is_transient", "deserializer",
-        "serializer")
+        "raw_name",
+        "field_name",
+        "constructor_name",
+        "if_none",
+        "if_undefined",
+        "is_transient",
+        "deserializer",
+        "serializer",
+    )
 
     def __init__(
         self,
@@ -213,7 +220,7 @@ class _AttributeDescriptor:
 class _EntityDescriptor:
     __slots__ = ("entity_type", "attribs")
 
-    def __init__(self, entity_type: typing.Type, attribs: typing.Collection[_AttributeDescriptor], ) -> None:
+    def __init__(self, entity_type: typing.Type, attribs: typing.Collection[_AttributeDescriptor],) -> None:
         self.entity_type = entity_type
         self.attribs = tuple(attribs)
 
