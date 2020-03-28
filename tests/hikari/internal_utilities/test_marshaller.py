@@ -231,3 +231,21 @@ class TestMarshaller:
         f = Foo()
 
         marshaller_impl.serialize(f)
+
+    def test_handling_underscores_correctly_during_deserialization(self, marshaller_impl):
+        @marshaller.attrs(marshaller=marshaller_impl)
+        class ClassWithUnderscores:
+            _foo = marshaller.attrib(deserializer=str)
+
+        impl = marshaller_impl.deserialize({"_foo": 1234}, ClassWithUnderscores)
+
+        assert impl._foo == "1234"
+
+    def test_handling_underscores_correctly_during_serialization(self, marshaller_impl):
+        @marshaller.attrs(marshaller=marshaller_impl)
+        class ClassWithUnderscores:
+            _foo = marshaller.attrib(serializer=int)
+
+        impl = ClassWithUnderscores(foo="1234")
+
+        assert marshaller_impl.serialize(impl) == {"_foo": 1234}
