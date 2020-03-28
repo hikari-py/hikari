@@ -57,6 +57,23 @@ class TestAttrib:
             )
 
 
+@pytest.mark.parametrize("data", [2, "d", bytes("ok", "utf-8"), [], {}, set()])
+@_helpers.assert_raises(type_=RuntimeError)
+def test_default_validator_raises_runtime_error(data):
+    marshaller._default_validator(data)
+
+
+def method_stub(value):
+    ...
+
+
+@pytest.mark.parametrize(
+    "data", [lambda x: "ok", *marshaller.PASSED_THROUGH_SINGLETONS, marshaller.RAISE, dict, method_stub]
+)
+def test_default_validator(data):
+    marshaller._default_validator(data)
+
+
 class TestAttrs:
     def test_invokes_attrs(self):
         marshaller_mock = mock.create_autospec(marshaller.HikariEntityMarshaller, spec_set=True)
@@ -108,15 +125,16 @@ class TestMarshaller:
         assert isinstance(result, User)
         assert result.id == "12345"
 
-    def test_deserialize_not_required_success_if_not_specified(self, marshaller_impl):
+    @pytest.mark.parametrize("singleton", marshaller.PASSED_THROUGH_SINGLETONS)
+    def test_deserialize_not_required_success_if_not_specified(self, marshaller_impl, singleton):
         @marshaller.attrs(marshaller=marshaller_impl)
         class User:
-            id: int = marshaller.attrib(if_undefined=None, deserializer=str)
+            id: int = marshaller.attrib(if_undefined=singleton, deserializer=str)
 
         result = marshaller_impl.deserialize({}, User)
 
         assert isinstance(result, User)
-        assert result.id is None
+        assert result.id is singleton
 
     def test_deserialize_calls_if_undefined_if_not_none_and_field_not_present(self, marshaller_impl):
         mock_result = mock.MagicMock()
@@ -150,15 +168,16 @@ class TestMarshaller:
         assert isinstance(result, User)
         assert result.id == "12345"
 
-    def test_deserialize_nullable_success_if_null(self, marshaller_impl):
+    @pytest.mark.parametrize("singleton", marshaller.PASSED_THROUGH_SINGLETONS)
+    def test_deserialize_nullable_success_if_null(self, marshaller_impl, singleton):
         @marshaller.attrs(marshaller=marshaller_impl)
         class User:
-            id: int = marshaller.attrib(if_none=None, deserializer=str)
+            id: int = marshaller.attrib(if_none=singleton, deserializer=str)
 
         result = marshaller_impl.deserialize({"id": None}, User)
 
         assert isinstance(result, User)
-        assert result.id is None
+        assert result.id is singleton
 
     def test_deserialize_calls_if_none_if_not_none_and_data_is_none(self, marshaller_impl):
         mock_result = mock.MagicMock()
