@@ -185,13 +185,13 @@ class Invite(entities.HikariEntity, entities.Deserializable):
     #: The approximate amount of presences in this invite's guild, only present
     #: when ``with_counts`` is passed as ``True`` to the GET invites endpoint.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`int`, optional
     approximate_presence_count: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
 
     #: The approximate amount of members in this invite's guild, only present
     #: when ``with_counts`` is passed as ``True`` to the GET invites endpoint.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`int`, optional
     approximate_member_count: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
 
 
@@ -212,11 +212,13 @@ class InviteWithMetadata(Invite):
     #: :type: :obj:`int`
     max_uses: int = marshaller.attrib(deserializer=int)
 
-    #: The amount of time (in seconds) this invite will be valid for.
-    #: If set to ``0`` then this is unlimited.
+    #: The timedelta of how long this invite will be valid for.
+    #: If set to :obj:`None` then this is unlimited.
     #:
-    #: :type: :obj:`int`
-    max_age: int = marshaller.attrib(deserializer=int)
+    #: :type: :obj:`datetime.timedelta`, optional
+    max_age: typing.Optional[datetime.timedelta] = marshaller.attrib(
+        deserializer=lambda age: datetime.timedelta(seconds=age) if age > 0 else None
+    )
 
     #: Whether this invite grants temporary membership.
     #:
@@ -232,5 +234,5 @@ class InviteWithMetadata(Invite):
     def expires_at(self) -> typing.Optional[datetime.datetime]:
         """The :obj:`datetime` of when this invite should expire, if ``max_age`` is set."""
         if self.max_age:
-            return self.created_at + datetime.timedelta(seconds=self.max_age)
+            return self.created_at + self.max_age
         return None

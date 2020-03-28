@@ -50,12 +50,12 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
     #: Whether this user is a bot account.
     #:
     #: :type: :obj:`bool`
-    is_bot: bool = marshaller.attrib(raw_name="bot", deserializer=bool, if_undefined=lambda: False)
+    is_bot: bool = marshaller.attrib(raw_name="bot", deserializer=bool, if_undefined=False)
 
     #: Whether this user is a system account.
     #:
     #: :type: :obj:`bool`
-    is_system: bool = marshaller.attrib(raw_name="system", deserializer=bool, if_undefined=lambda: False)
+    is_system: bool = marshaller.attrib(raw_name="system", deserializer=bool, if_undefined=False)
 
     @property
     def avatar_url(self) -> str:

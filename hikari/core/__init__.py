@@ -34,4 +34,5 @@ from hikari.core.oauth2 import *
 from hikari.core.permissions import *
 from hikari.core.snowflakes import *
 from hikari.core.users import *
+from hikari.core.voices import *
 from hikari.core.webhooks import *
