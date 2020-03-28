@@ -113,7 +113,7 @@ class GatewayConfig(entities.Deserializable):
     #: don't want to enable this.
     #:
     #: :type: :obj:`bool`
-    debug: bool = marshaller.attrib(deserializer=bool, if_undefined=lambda: False, default=False)
+    debug: bool = marshaller.attrib(deserializer=bool, if_undefined=False, default=False)
 
     #: The initial activity to set all shards to when starting the gateway. If
     #: ``None``, then no activity will be set.
@@ -132,7 +132,7 @@ class GatewayConfig(entities.Deserializable):
     #: Whether to show up as AFK or not on sign-in.
     #:
     #: :type: :obj:`bool`
-    initial_afk: bool = marshaller.attrib(deserializer=bool, if_undefined=lambda: False, default=False)
+    initial_afk: bool = marshaller.attrib(deserializer=bool, if_undefined=False, default=False)
 
     #: The idle time to show on signing in, or ``None`` to not show an idle
     #: time.
@@ -179,7 +179,7 @@ class GatewayConfig(entities.Deserializable):
     #: not. Usually you want this turned on.
     #:
     #: :type: :obj:`bool`
-    use_compression: bool = marshaller.attrib(deserializer=bool, if_undefined=lambda: True, default=True)
+    use_compression: bool = marshaller.attrib(deserializer=bool, if_undefined=True, default=True)
 
     #: The gateway API version to use.
     #:

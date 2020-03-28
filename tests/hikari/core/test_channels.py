@@ -19,16 +19,32 @@
 import pytest
 
 from hikari.core import channels
-
-
-@pytest.fixture()
-def test_partial_channel_payload():
-    return {"id": "561884984214814750", "name": "general", "type": 0}
+from hikari.core import permissions
 
 
 class TestPartialChannel:
+    @pytest.fixture()
+    def test_partial_channel_payload(self):
+        return {"id": "561884984214814750", "name": "general", "type": 0}
+
     def test_deserialize(self, test_partial_channel_payload):
         partial_channel_obj = channels.PartialChannel.deserialize(test_partial_channel_payload)
         assert partial_channel_obj.id == 561884984214814750
         assert partial_channel_obj.name == "general"
         assert partial_channel_obj.type is channels.ChannelType.GUILD_TEXT
+
+
+class TestPermissionOverwrite:
+    @pytest.fixture()
+    def test_permission_overwrite_payload(self):
+        return {"id": "4242", "type": "member", "allow": 65, "deny": 49152}
+
+    def test_deserialize(self, test_permission_overwrite_payload):
+        permission_overwrite_obj = channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
+        assert (
+            permission_overwrite_obj.allow
+            == permissions.Permission.CREATE_INSTANT_INVITE | permissions.Permission.ADD_REACTIONS
+        )
+        assert permission_overwrite_obj.deny == permissions.Permission.EMBED_LINKS | permissions.Permission.ATTACH_FILES
+        assert permission_overwrite_obj.unset == permissions.Permission(49217)
+        assert isinstance(permission_overwrite_obj.unset, permissions.Permission)

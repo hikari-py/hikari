@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -15,10 +15,20 @@
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Alias for the :mod:`hikari.core.colors` module.
-"""
-__all__ = ["Colour"]
+# along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
+from hikari.core import entities
 
-from hikari.core.colors import Color as Colour
+
+class TestUnset:
+    def test_repr(self):
+        assert repr(entities.UNSET) == "UNSET"
+
+    def test_str(self):
+        assert str(entities.UNSET) == "UNSET"
+
+    def test_bool(self):
+        assert bool(entities.UNSET) is False
+
+    def test_singleton_behaviour(self):
+        assert entities.Unset() is entities.Unset()
+        assert entities.UNSET is entities.Unset()

@@ -19,7 +19,8 @@
 """Components and entities that are used to describe guilds on Discord.
 """
 __all__ = [
-    "GuildEmoji",
+    "ActivityFlag",
+    "ActivityType",
     "GuildChannel",
     "GuildTextChannel",
     "GuildNewsChannel",
@@ -40,6 +41,7 @@ __all__ = [
     "GuildIntegration",
     "GuildMemberBan",
     "PartialGuild",
+    "PresenceStatus",
 ]
 
 import datetime
@@ -48,19 +50,14 @@ import typing
 
 from hikari.core import channels
 from hikari.core import entities
-from hikari.core import messages
-from hikari.core import permissions as permissions_
+from hikari.core import emojis as _emojis
+from hikari.core import permissions
 from hikari.core import snowflakes
 from hikari.core import users
 from hikari.internal_utilities import cdn
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import marshaller
 from hikari.internal_utilities import transformations
-
-
-@marshaller.attrs(slots=True)
-class GuildEmoji(snowflakes.UniqueEntity, messages.Emoji, entities.Deserializable):
-    ...
 
 
 @marshaller.attrs(slots=True)
@@ -223,13 +220,403 @@ class GuildVerificationLevel(enum.IntEnum):
 
 @marshaller.attrs(slots=True)
 class GuildMember(entities.HikariEntity, entities.Deserializable):
+    """Used to represent a guild bound member."""
+
+    #: This member's user object.
+    #:
+    #: :type: :obj:`users.User`
     user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
 
+    #: This member's nickname, if set.
+    #:
+    #: :type: :obj:`str`, optional
+    nickname: typing.Optional[str] = marshaller.attrib(raw_name="nick", deserializer=str, if_none=None)
 
-# Wait, so is Presence just an extension of Member? Should we subclass it?
+    #: A sequence of the IDs of the member's current roles.
+    #:
+    #: :type: :obj:`typing.Sequence` [ :obj:`snowflakes.Snowflake` ]
+    role_ids: typing.Sequence[snowflakes.Snowflake] = marshaller.attrib(
+        raw_name="roles", deserializer=lambda role_ids: [snowflakes.Snowflake.deserialize(rid) for rid in role_ids],
+    )
+
+    #: The datetime of when this member joined the guild they belong to.
+    #:
+    #: :type: :obj:`datetime.datetime`
+    joined_at: datetime.datetime = marshaller.attrib(deserializer=dates.parse_iso_8601_ts)
+
+    #: The datetime of when this member started "boosting" this guild.
+    #: Will be ``None`` if they aren't boosting.
+    #:
+    #: :type: :obj:`datetime.datetime`, optional
+    premium_since: typing.Optional[datetime.datetime] = marshaller.attrib(
+        deserializer=dates.parse_iso_8601_ts, if_none=None, if_undefined=None,
+    )
+
+    #: Whether this member is deafened by this guild in it's voice channels.
+    #:
+    #: :type: :obj:`bool`
+    is_deaf: bool = marshaller.attrib(raw_name="deaf", deserializer=bool)
+
+    #: Whether this member is muted by this guild in it's voice channels.
+    #:
+    #: :type: :obj:`bool`
+    is_mute: bool = marshaller.attrib(raw_name="mute", deserializer=bool)
+
+
 @marshaller.attrs(slots=True)
-class GuildMemberPresence(entities.HikariEntity):
-    user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
+class GuildRole(snowflakes.UniqueEntity, entities.Deserializable):
+    ...
+
+
+@enum.unique
+class ActivityType(enum.IntEnum):
+    """
+    The activity state.
+    """
+
+    #: Shows up as ``Playing <name>``
+    PLAYING = 0
+    #: Shows up as ``Streaming <name>``.
+    #:
+    #: Warnings
+    #: --------
+    #: Corresponding presences must be associated with VALID Twitch or YouTube
+    #: stream URLS!
+    STREAMING = 1
+    #: Shows up as ``Listening to <name>``.
+    LISTENING = 2
+    #: Shows up as ``Watching <name>``. Note that this is not officially
+    #: documented, so will be likely removed in the near future.
+    WATCHING = 3
+    #: A custom status.
+    #:
+    #: To set an emoji with the status, place a unicode emoji or Discord emoji
+    #: (``:smiley:``) as the first part of the status activity name.
+    CUSTOM = 4
+
+
+@marshaller.attrs(slots=True)
+class ActivityTimestamps(entities.HikariEntity, entities.Deserializable):
+    """The datetimes for the start and/or end of an activity session."""
+
+    #: When this activity's session was started, if applicable.
+    #:
+    #: :type: :obj:`datetime.datetime`, optional
+    start: typing.Optional[datetime.datetime] = marshaller.attrib(
+        deserializer=dates.unix_epoch_to_ts, if_undefined=None
+    )
+
+    #: When this activity's session will end, if applicable.
+    #:
+    #: :type: :obj:`datetime.datetime`, optional
+    end: typing.Optional[datetime.datetime] = marshaller.attrib(deserializer=dates.unix_epoch_to_ts, if_undefined=None)
+
+
+@marshaller.attrs(slots=True)
+class ActivityParty(entities.HikariEntity, entities.Deserializable):
+    """Used to represent activity groups of users."""
+
+    #: The string id of this party instance, if set.
+    #:
+    #: :type: :obj:`str`, optional
+    id: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+
+    #: The size metadata of this party, if applicable.
+    #:
+    #: :type: :obj:`typing.Tuple` [ :obj:`int`, :obj:`int` ], optional
+    _size_information: typing.Optional[typing.Tuple[int, int]] = marshaller.attrib(
+        raw_name="size", deserializer=tuple, if_undefined=None,
+    )
+
+    @property
+    def current_size(self) -> typing.Optional[int]:
+        """The current size of this party, if applicable."""
+        return self._size_information and self._size_information[0] or None
+
+    @property
+    def max_size(self) -> typing.Optional[int]:
+        """The maximum size of this party, if applicable"""
+        return self._size_information and self._size_information[1] or None
+
+
+@marshaller.attrs(slots=True)
+class ActivityAssets(entities.HikariEntity, entities.Deserializable):
+    """Used to represent possible assets for an activity."""
+
+    #: The ID of the asset's large image, if set.
+    #:
+    #: :type: :obj:`str`, optional
+    large_image: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+
+    #: The text that'll appear when hovering over the large image, if set.
+    #:
+    #: :type: :obj:`str`, optional
+    large_text: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+
+    #: The ID of the asset's small image, if set.
+    #:
+    #: :type: :obj:`str`, optional
+    small_image: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+
+    #: The text that'll appear when hovering over the small image, if set.
+    #:
+    #: :type: :obj:`str`, optional
+    small_text: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+
+
+@marshaller.attrs(slots=True)
+class ActivitySecret(entities.HikariEntity, entities.Deserializable):
+    """The secrets used for interacting with an activity party."""
+
+    #: The secret used for joining a party, if applicable.
+    #:
+    #: :type: :obj:`str`, optional
+    join: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+
+    #: The secret used for spectating a party, if applicable.
+    #:
+    #: :type: :obj:`str`, optional
+    spectate: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+
+    #: The secret used for joining a party, if applicable.
+    #:
+    #: :type: :obj:`str`, optional
+    match: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+
+
+class ActivityFlag(enum.IntFlag):
+    """
+    Flags that describe what an activity includes,
+    can be more than one using bitwise-combinations.
+    """
+
+    INSTANCE = 1 << 0
+    JOIN = 1 << 1
+    SPECTATE = 1 << 2
+    JOIN_REQUEST = 1 << 3
+    SYNC = 1 << 4
+    PLAY = 1 << 5
+
+
+@marshaller.attrs(slots=True)
+class PresenceActivity(entities.HikariEntity, entities.Deserializable):
+    """Represents an activity that'll be attached to a member's presence."""
+
+    #: The activity's name.
+    #:
+    #: :type: :obj:`str`
+    name: str = marshaller.attrib(deserializer=str)
+
+    #: The activity's type.
+    #:
+    #: :type: :obj:`ActivityType`
+    type: ActivityType = marshaller.attrib(deserializer=ActivityType)
+
+    #: The url for a ``STREAM` type activity, if applicable
+    #:
+    #: :type: :obj:`url`, optional
+    url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None)
+
+    #: When this activity was added to the user's session.
+    #:
+    #: :type: :obj:`datetime.datetime`
+    created_at: datetime.datetime = marshaller.attrib(deserializer=dates.unix_epoch_to_ts)
+
+    #: The timestamps for when this activity's current state will start and
+    #: end, if applicable.
+    #:
+    #: :type: :obj:`ActivityTimestamps`, optional
+    timestamps: ActivityTimestamps = marshaller.attrib(deserializer=ActivityTimestamps.deserialize)
+
+    #: The ID of the application this activity is for, if applicable.
+    #:
+    #: :type: :obj:`snowflakes.Snowflake`, optional
+    application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+    )
+
+    #: The text that describes what the activity's target is doing, if set.
+    #:
+    #: :type: :obj:`str`, optional
+    details: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None)
+
+    #: The current status of this activity's target, if set.
+    #:
+    #: :type: :obj:`str`, optional
+    state: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None)
+
+    #: The emoji of this activity, if it is a custom status and set.
+    #:
+    #: :type: :obj:`typing.Union` [ :obj:`_emojis.UnicodeEmoji`, :obj:`_emojis.UnknownEmoji` ], optional
+    emoji: typing.Union[None, _emojis.UnicodeEmoji, _emojis.UnknownEmoji] = marshaller.attrib(
+        deserializer=_emojis.deserialize_reaction_emoji, if_undefined=None
+    )
+
+    #: Information about the party associated with this activity, if set.
+    #:
+    #: :type: :obj:`ActivityParty`, optional
+    party: typing.Optional[ActivityParty] = marshaller.attrib(deserializer=ActivityParty.deserialize, if_undefined=None)
+
+    #: Images and their hover over text for the activity.
+    #:
+    #: :type: :obj:`ActivityAssets`, optional
+    assets: typing.Optional[ActivityAssets] = marshaller.attrib(
+        deserializer=ActivityAssets.deserialize, if_undefined=None
+    )
+
+    #: Secrets for Rich Presence joining and spectating.
+    #:
+    #: :type: :obj:`ActivitySecret`, optional
+    secrets: typing.Optional[ActivitySecret] = marshaller.attrib(
+        deserializer=ActivitySecret.deserialize, if_undefined=None
+    )
+
+    #: Whether this activity is an instanced game session.
+    #:
+    #: :type: :obj:`bool`, optional
+    is_instance: typing.Optional[bool] = marshaller.attrib(raw_name="instance", deserializer=bool, if_undefined=None)
+
+    #: Flags that describe what the activity includes.
+    #:
+    #: :type: :obj:`ActivityFlag`
+    flags: ActivityFlag = marshaller.attrib(deserializer=ActivityFlag, if_undefined=None)
+
+
+class PresenceStatus(enum.Enum):
+    """
+    The status of a member.
+    """
+
+    #: Online/green.
+    ONLINE = "online"
+    #: Idle/yellow.
+    IDLE = "idle"
+    #: Do not disturb/red.
+    DND = "dnd"
+    #: An alias for :attr:`DND`
+    DO_NOT_DISTURB = DND
+    #: Offline or invisible/grey.
+    OFFLINE = "offline"
+
+
+@marshaller.attrs(slots=True)
+class ClientStatus(entities.HikariEntity, entities.Deserializable):
+    """The client statuses for this member."""
+
+    #: The status of the target user's desktop session.
+    #:
+    #: :type: :obj:`PresenceStatus`
+    desktop: PresenceStatus = marshaller.attrib(
+        deserializer=PresenceStatus, if_undefined=lambda: PresenceStatus.OFFLINE,
+    )
+
+    #: The status of the target user's mobile session.
+    #:
+    #: :type: :obj:`PresenceStatus`
+    mobile: PresenceStatus = marshaller.attrib(deserializer=PresenceStatus, if_undefined=lambda: PresenceStatus.OFFLINE)
+
+    #: The status of the target user's web session.
+    #:
+    #: :type: :obj:`PresenceStatus`
+    web: PresenceStatus = marshaller.attrib(deserializer=PresenceStatus, if_undefined=lambda: PresenceStatus.OFFLINE)
+
+
+@marshaller.attrs(slots=True)
+class PresenceUser(users.User):
+    """A user representation specifically used for presence updates.
+
+    Warnings
+    --------
+    Every attribute except :attr:`id` may be received as :obj:`entities.UNSET`
+    unless it is specifically being modified for this update.
+    """
+
+    #: This user's discriminator.
+    #:
+    #: :type: :obj:`typing.Union` [ :obj:`str`, `entities.UNSET` ]
+    discriminator: typing.Union[str, entities.Unset] = marshaller.attrib(deserializer=str, if_undefined=entities.Unset)
+
+    #: This user's username.
+    #:
+    #: :type: :obj:`typing.Union` [ :obj:`str`, `entities.UNSET` ]
+    username: typing.Union[str, entities.Unset] = marshaller.attrib(deserializer=str, if_undefined=entities.Unset)
+
+    #: This user's avatar hash, if set.
+    #:
+    #: :type: :obj:`typing.Union` [ :obj:`str`, `entities.UNSET` ], optional
+    avatar_hash: typing.Union[None, str, entities.Unset] = marshaller.attrib(
+        raw_name="avatar", deserializer=str, if_none=None, if_undefined=entities.Unset
+    )
+
+    #: Whether this user is a bot account.
+    #:
+    #: :type:  :obj:`typing.Union` [ :obj:`bool`, `entities.UNSET` ]
+    is_bot: typing.Union[bool, entities.Unset] = marshaller.attrib(
+        raw_name="bot", deserializer=bool, if_undefined=entities.Unset
+    )
+
+    #: Whether this user is a system account.
+    #:
+    #: :type:  :obj:`typing.Union` [ :obj:`bool`, `entities.UNSET` ]
+    is_system: typing.Union[bool, entities.Unset] = marshaller.attrib(
+        raw_name="system", deserializer=bool, if_undefined=entities.Unset,
+    )
+
+
+@marshaller.attrs(slots=True)
+class GuildMemberPresence(entities.HikariEntity, entities.Deserializable):
+    """Used to represent a guild member's presence."""
+
+    #: The object of the user who this presence is for, only `id` is guaranteed
+    #: for this partial object, with other attributes only being included when
+    #: when they are being changed in an event.
+    #:
+    #: :type: :obj:`PresenceUser`
+    user: PresenceUser = marshaller.attrib(deserializer=PresenceUser.deserialize)
+
+    #: A sequence of the ids of the user's current roles in the guild this
+    #: presence belongs to.
+    #:
+    #: :type: :obj:`typing.Sequence` [ :obj:`snowflakes.Snowflake` ]
+    role_ids: typing.Sequence[snowflakes.Snowflake] = marshaller.attrib(
+        raw_name="roles", deserializer=lambda roles: [snowflakes.Snowflake.deserialize(rid) for rid in roles],
+    )
+
+    #: The ID of the guild this presence belongs to.
+    #:
+    #: :type: :obj:`snowflakes.Snowflake`
+    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+
+    #: This user's current status being displayed by the client.
+    #:
+    #: :type: :obj:`PresenceStatus`
+    visible_status: PresenceStatus = marshaller.attrib(raw_name="status", deserializer=PresenceStatus)
+
+    #: An array of the user's activities, with the top one will being
+    #: prioritised by the client.
+    #:
+    #: :type: :obj:`typing.Sequence` [ :obj:`PresenceActivity` ]
+    activities: typing.Sequence[PresenceActivity] = marshaller.attrib(
+        deserializer=lambda activities: [PresenceActivity.deserialize(a) for a in activities]
+    )
+
+    #: An object of the target user's client statuses.
+    #:
+    #: :type: :obj:`ClientStatus`
+    client_status: ClientStatus = marshaller.attrib(deserializer=ClientStatus.deserialize)
+
+    #: The datetime of when this member started "boosting" this guild.
+    #: Will be ``None`` if they aren't boosting.
+    #:
+    #: :type: :obj:`datetime.datetime`, optional
+    premium_since: typing.Optional[datetime.datetime] = marshaller.attrib(
+        deserializer=dates.parse_iso_8601_ts, if_none=None, if_undefined=None,
+    )
+
+    #: This member's nickname, if set.
+    #:
+    #: :type: :obj:`str`, optional
+    nick: typing.Optional[str] = marshaller.attrib(raw_name="nick", deserializer=str, if_undefined=None, if_none=None)
 
 
 @marshaller.attrs(slots=True)
@@ -243,8 +630,19 @@ class GuildMemberBan(entities.HikariEntity):
 
 
 @marshaller.attrs(slots=True)
-class GuildRole(snowflakes.UniqueEntity, entities.Deserializable):
-    ...
+class UnavailableGuild(snowflakes.UniqueEntity, entities.Deserializable):
+    """An unavailable guild object, received during gateway events such as
+    the "Ready".
+    An unavailable guild cannot be interacted with, and most information may
+    be outdated if that is the case.
+    """
+
+    @property
+    def is_unavailable(self) -> bool:
+        """
+        Whether this guild is unavailable or not, should always be :obj:`True`.
+        """
+        return True
 
 
 @marshaller.attrs(slots=True)
@@ -310,8 +708,8 @@ class Guild(PartialGuild):
     ----
     If a guild object is considered to be unavailable, then the state of any
     other fields other than the :attr:`is_unavailable` and :attr:`id` members
-    may be ``None``, outdated, or incorrect. If a guild is unavailable, then
-    the contents of any other fields should be ignored.
+    outdated, or incorrect. If a guild is unavailable, then the contents of any
+    other fields should be ignored.
     """
 
     #: The hash of the splash for the guild, if there is one.
@@ -333,9 +731,9 @@ class Guild(PartialGuild):
 
     #: The guild level permissions that apply to the bot user.
     #:
-    #: :type: :obj:`hikari.core.permissions.Permission`
-    my_permissions: permissions_.Permission = marshaller.attrib(
-        raw_name="permissions", deserializer=permissions_.Permission
+    #: :type: :obj:`permissions.Permission`
+    my_permissions: permissions.Permission = marshaller.attrib(
+        raw_name="permissions", deserializer=permissions.Permission
     )
 
     #: The voice region for the guild.
@@ -366,7 +764,7 @@ class Guild(PartialGuild):
     #:
     #: :type: :obj:`bool`, optional
     is_embed_enabled: typing.Optional[bool] = marshaller.attrib(
-        raw_name="embed_enabled", if_undefined=lambda: False, deserializer=bool
+        raw_name="embed_enabled", if_undefined=False, deserializer=bool
     )
 
     #: The channel ID that the guild embed will generate an invite to, if
@@ -406,9 +804,9 @@ class Guild(PartialGuild):
     #: The emojis that this guild provides, represented as a mapping of ID to
     #: emoji object.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`GuildEmoji` ]
-    emojis: typing.Mapping[snowflakes.Snowflake, GuildEmoji] = marshaller.attrib(
-        deserializer=lambda emojis: {e.id: e for e in map(GuildEmoji.deserialize, emojis)},
+    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`_emojis.GuildEmoji` ]
+    emojis: typing.Mapping[snowflakes.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
+        deserializer=lambda emojis: {e.id: e for e in map(_emojis.GuildEmoji.deserialize, emojis)},
     )
 
     #: The required MFA level for users wishing to participate in this guild.
@@ -422,6 +820,18 @@ class Guild(PartialGuild):
     #: :type: :obj:`snowflakes.Snowflake`, optional
     application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake, if_none=None
+    )
+
+    #: Whether the guild is unavailable or not.
+    #:
+    #: This information is only available if the guild was sent via a
+    #: ``GUILD_CREATE`` event. If the guild is received from any other place,
+    #: this will always be ``None``.
+    #:
+    #: An unavailable guild cannot be interacted with, and most information may
+    #: be outdated if that is the case.
+    is_unavailable: typing.Optional[bool] = marshaller.attrib(
+        raw_name="unavailable", if_undefined=None, deserializer=bool
     )
 
     # TODO: document in which cases this information is not available.
@@ -484,18 +894,6 @@ class Guild(PartialGuild):
     #:
     #: :type: :obj:`bool`, optional
     is_large: typing.Optional[bool] = marshaller.attrib(raw_name="large", if_undefined=None, deserializer=bool)
-
-    #: Whether the guild is unavailable or not.
-    #:
-    #: This information is only available if the guild was sent via a
-    #: ``GUILD_CREATE`` event. If the guild is received from any other place,
-    #: this will always be ``None``.
-    #:
-    #: An unavailable guild cannot be interacted with, and most information may
-    #: be outdated or missing if that is the case.
-    is_unavailable: typing.Optional[bool] = marshaller.attrib(
-        raw_name="unavailable", if_undefined=None, deserializer=bool
-    )
 
     #: The number of members in this guild.
     #:
