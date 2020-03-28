@@ -76,40 +76,19 @@ def test_roles_payloads():
 
 
 @pytest.fixture
-def test_channel_payloads():
-    return [
-        {
-            "type": 0,
-            "id": "1234567",
-            "guild_id": "696969",
-            "position": 100,
-            "permission_overwrites": [],
-            "nsfw": True,
-            "parent_id": None,
-            "rate_limit_per_user": 420,
-            "topic": "nsfw stuff",
-            "name": "shh!",
-        },
-        {
-            "type": 4,
-            "id": "123456",
-            "guild_id": "54321",
-            "position": 69,
-            "permission_overwrites": [],
-            "name": "dank category",
-        },
-        {
-            "type": 2,
-            "id": "9292929",
-            "guild_id": "929",
-            "position": 66,
-            "permission_overwrites": [],
-            "name": "roy rodgers mc freely",
-            "bitrate": 999,
-            "user_limit": 0,
-            "parent_id": "42",
-        },
-    ]
+def test_channel_payload():
+    return {
+        "type": 0,
+        "id": "1234567",
+        "guild_id": "696969",
+        "position": 100,
+        "permission_overwrites": [],
+        "nsfw": True,
+        "parent_id": None,
+        "rate_limit_per_user": 420,
+        "topic": "nsfw stuff",
+        "name": "shh!",
+    }
 
 
 @pytest.fixture
@@ -152,58 +131,6 @@ def test_voice_state_payload():
         "self_mute": False,
         "self_stream": True,
         "suppress": False,
-    }
-
-
-@pytest.fixture()
-def test_partial_guild_payload():
-    return {
-        "id": "152559372126519269",
-        "name": "Isopropyl",
-        "icon": "d4a983885dsaa7691ce8bcaaf945a",
-        "features": ["DISCOVERABLE"],
-    }
-
-
-@pytest.fixture
-def test_guild_payload(
-    test_emoji_payload, test_roles_payloads, test_channel_payloads, test_member_payload, test_voice_state_payload
-):
-    return {
-        "id": "265828729970753537",
-        "afk_channel_id": "99998888777766",
-        "owner_id": "6969696",
-        "region": "eu-central",
-        "system_channel_id": "19216801",
-        "application_id": "10987654321",
-        "name": "L33t guild",
-        "icon": "1a2b3c4d",
-        "splash": "0ff0ff0ff",
-        "afk_timeout": 1200,
-        "verification_level": 4,
-        "default_message_notifications": 1,
-        "explicit_content_filter": 2,
-        "roles": test_roles_payloads,
-        "emojis": [test_emoji_payload],
-        "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
-        "voice_states": [test_voice_state_payload],
-        "member_count": 14,
-        "mfa_level": 1,
-        "joined_at": "2019-05-17T06:26:56.936000+00:00",
-        "large": False,
-        "unavailable": False,
-        "permissions": 66_321_471,
-        "members": [test_member_payload],
-        "channels": test_channel_payloads,
-        "max_members": 25000,
-        "vanity_url_code": "loool",
-        "description": "This is a server I guess, its a bit crap though",
-        "banner": "1a2b3c",
-        "premium_tier": 2,
-        "premium_subscription_count": 1,
-        "preferred_locale": "en-GB",
-        "system_channel_flags": 3,
-        "rules_channel_id": "42042069",
     }
 
 
@@ -261,6 +188,71 @@ def test_presence_activity_payload(
     }
 
 
+@pytest.fixture()
+def test_partial_guild_payload():
+    return {
+        "id": "152559372126519269",
+        "name": "Isopropyl",
+        "icon": "d4a983885dsaa7691ce8bcaaf945a",
+        "features": ["DISCOVERABLE"],
+    }
+
+
+@pytest.fixture
+def test_guild_payload(
+    test_emoji_payload,
+    test_roles_payloads,
+    test_channel_payload,
+    test_member_payload,
+    test_voice_state_payload,
+    test_guild_member_presence,
+):
+    return {
+        "id": "265828729970753537",
+        "afk_channel_id": "99998888777766",
+        "owner_id": "6969696",
+        "region": "eu-central",
+        "system_channel_id": "19216801",
+        "application_id": "39494949",
+        "name": "L33t guild",
+        "icon": "1a2b3c4d",
+        "splash": "0ff0ff0ff",
+        "afk_timeout": 1200,
+        "verification_level": 4,
+        "default_message_notifications": 1,
+        "explicit_content_filter": 2,
+        "roles": test_roles_payloads,
+        "emojis": [test_emoji_payload],
+        "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
+        "voice_states": [test_voice_state_payload],
+        "member_count": 14,
+        "mfa_level": 1,
+        "joined_at": "2019-05-17T06:26:56.936000+00:00",
+        "large": False,
+        "unavailable": False,
+        "permissions": 66_321_471,
+        "members": [test_member_payload],
+        "channels": [test_channel_payload],
+        "max_members": 25000,
+        "vanity_url_code": "loool",
+        "description": "This is a server I guess, its a bit crap though",
+        "banner": "1a2b3c",
+        "premium_tier": 2,
+        "premium_subscription_count": 1,
+        "preferred_locale": "en-GB",
+        "system_channel_flags": 3,
+        "rules_channel_id": "42042069",
+        "discovery_splash": "famfamFAMFAMfam",
+        "embed_enabled": True,
+        "embed_channel_id": "9439394949",
+        "widget_enabled": True,
+        "widget_channel_id": "9439394949",
+        "public_updates_channel_id": "33333333",
+        "presences": [test_guild_member_presence],
+        "max_presences": 250,
+    }
+
+
 class TestGuildMember:
     def test_deserialize(self, test_member_payload, test_user_payload):
         mock_user = mock.MagicMock(users.User)
@@ -289,6 +281,31 @@ class TestGuildMember:
         assert guild_member_obj.premium_since is mock_datetime_2
         assert guild_member_obj.is_deaf is False
         assert guild_member_obj.is_mute is True
+
+
+class TestGuildRole:
+    @pytest.fixture()
+    def test_guild_role_payload(self):
+        return {
+            "id": "41771983423143936",
+            "name": "WE DEM BOYZZ!!!!!!",
+            "color": 3_447_003,
+            "hoist": True,
+            "position": 0,
+            "permissions": 66_321_471,
+            "managed": False,
+            "mentionable": False,
+        }
+
+    def test_deserialize(self, test_guild_role_payload):
+        guild_role_obj = guilds.GuildRole.deserialize(test_guild_role_payload)
+        assert guild_role_obj.name == "WE DEM BOYZZ!!!!!!"
+        assert guild_role_obj.color == 3_447_003
+        assert guild_role_obj.is_hoisted is True
+        assert guild_role_obj.position == 0
+        assert guild_role_obj.permissions == 66_321_471
+        assert guild_role_obj.is_managed is False
+        assert guild_role_obj.is_mentionable is False
 
 
 class TestActivityTimestamps:
@@ -456,6 +473,97 @@ class TestGuildMemberPresence:
         assert guild_member_presence_obj.nick == "Nick"
 
 
+class TestGuildMemberBan:
+    @pytest.fixture()
+    def test_guild_member_ban_payload(self, test_user_payload):
+        return {"reason": "Get Nyaa'ed", "user": test_user_payload}
+
+    def test_deserializer(self, test_guild_member_ban_payload, test_user_payload):
+        mock_user = mock.MagicMock(users.User)
+        with _helpers.patch_marshal_attr(
+            guilds.GuildMemberBan, "user", deserializer=users.User.deserialize, return_value=mock_user
+        ) as patched_user_deserializer:
+            guild_member_ban_obj = guilds.GuildMemberBan.deserialize(test_guild_member_ban_payload)
+            patched_user_deserializer.assert_called_once_with(test_user_payload)
+        assert guild_member_ban_obj.reason == "Get Nyaa'ed"
+        assert guild_member_ban_obj.user is mock_user
+
+
+@pytest.fixture()
+def test_integration_account_payload():
+    return {"id": "543453", "name": "Blah Blah"}
+
+
+class TestIntegrationAccount:
+    def test_deserializer(self, test_integration_account_payload):
+        integration_account_obj = guilds.IntegrationAccount.deserialize(test_integration_account_payload)
+        assert integration_account_obj.id == "543453"
+        assert integration_account_obj.name == "Blah Blah"
+
+
+@pytest.fixture()
+def test_partial_guild_integration_payload(test_integration_account_payload):
+    return {
+        "id": "4949494949",
+        "name": "Blah blah",
+        "type": "twitch",
+        "account": test_integration_account_payload,
+    }
+
+
+class TestPartialGuildIntegration:
+    def test_deserialise(self, test_partial_guild_integration_payload, test_integration_account_payload):
+        partial_guild_integration_obj = guilds.PartialGuildIntegration.deserialize(
+            test_partial_guild_integration_payload
+        )
+        assert partial_guild_integration_obj.name == "Blah blah"
+        assert partial_guild_integration_obj.type == "twitch"
+        assert partial_guild_integration_obj.account == guilds.IntegrationAccount.deserialize(
+            test_integration_account_payload
+        )
+
+
+class TestGuildIntegration:
+    @pytest.fixture()
+    def test_guild_integration_payload(self, test_user_payload, test_partial_guild_integration_payload):
+        return {
+            **test_partial_guild_integration_payload,
+            "enabled": True,
+            "syncing": False,
+            "role_id": "98494949",
+            "enable_emoticons": False,
+            "expire_behavior": 1,
+            "expire_grace_period": 7,
+            "user": test_user_payload,
+            "synced_at": "2015-04-26T06:26:56.936000+00:00",
+        }
+
+    def test_deserialize(self, test_guild_integration_payload, test_user_payload, test_integration_account_payload):
+        mock_user = mock.MagicMock(users.User)
+        mock_sync_date = mock.MagicMock(datetime.datetime)
+        with _helpers.patch_marshal_attr(
+            guilds.GuildIntegration,
+            "last_synced_at",
+            deserializer=dates.parse_iso_8601_ts,
+            return_value=mock_sync_date,
+        ) as patched_sync_at_deserializer:
+            with _helpers.patch_marshal_attr(
+                guilds.GuildIntegration, "user", deserializer=users.User.deserialize, return_value=mock_user
+            ) as patched_user_deserializer:
+                guild_integration_obj = guilds.GuildIntegration.deserialize(test_guild_integration_payload)
+                patched_user_deserializer.assert_called_once_with(test_user_payload)
+            patched_sync_at_deserializer.assert_called_once_with("2015-04-26T06:26:56.936000+00:00")
+
+        assert guild_integration_obj.is_enabled is True
+        assert guild_integration_obj.is_syncing is False
+        assert guild_integration_obj.role_id == 98494949
+        assert guild_integration_obj.is_emojis_enabled is False
+        assert guild_integration_obj.expire_behavior is guilds.IntegrationExpireBehaviour.KICK
+        assert guild_integration_obj.expire_grace_period == datetime.timedelta(days=7)
+        assert guild_integration_obj.user is mock_user
+        assert guild_integration_obj.last_synced_at is mock_sync_date
+
+
 class TestUnavailableGuild:
     def test_deserialize_when_unavailable_is_defined(self):
         guild_delete_event_obj = guilds.UnavailableGuild.deserialize({"id": "293293939", "unavailable": True})
@@ -519,3 +627,146 @@ class TestPartialGuild:
             url = partial_guild_obj.icon_url
             cdn.generate_cdn_url.assert_called_once()
         assert url == mock_url
+
+
+class TestGuild:
+    def test_deserialize(
+        self,
+        test_guild_payload,
+        test_roles_payloads,
+        test_emoji_payload,
+        test_member_payload,
+        test_channel_payload,
+        test_guild_member_presence,
+    ):
+        mock_emoji = mock.MagicMock(emojis.GuildEmoji, id=42)
+        mock_user = mock.MagicMock(users.User, id=84)
+        mock_guild_channel = mock.MagicMock(guilds.GuildChannel, id=6969)
+        with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji):
+            with _helpers.patch_marshal_attr(
+                guilds.GuildMemberPresence, "user", deserializer=guilds.PresenceUser.deserialize, return_value=mock_user
+            ) as patched_user_deserializer:
+                with _helpers.patch_marshal_attr(
+                    guilds.GuildMember, "user", deserializer=users.User.deserialize, return_value=mock_user
+                ) as patched_member_user_deserializer:
+                    with mock.patch.object(guilds, "parse_guild_channel", return_value=mock_guild_channel):
+                        guild_obj = guilds.Guild.deserialize(test_guild_payload)
+                        guilds.parse_guild_channel.assert_called_once_with(test_channel_payload)
+                    patched_member_user_deserializer.assert_called_once_with(test_member_payload["user"])
+                    assert guild_obj.members == {84: guilds.GuildMember.deserialize(test_member_payload)}
+                patched_user_deserializer.assert_called_once_with(test_member_payload["user"])
+                assert guild_obj.presences == {84: guilds.GuildMemberPresence.deserialize(test_guild_member_presence)}
+            emojis.GuildEmoji.deserialize.assert_called_once_with(test_emoji_payload)
+        assert guild_obj.splash_hash == "0ff0ff0ff"
+        assert guild_obj.discovery_splash_hash == "famfamFAMFAMfam"
+        assert guild_obj.owner_id == 6969696
+        assert guild_obj.my_permissions == 66_321_471
+        assert guild_obj.region == "eu-central"
+        assert guild_obj.afk_channel_id == 99998888777766
+        assert guild_obj.afk_timeout == datetime.timedelta(minutes=20)
+        assert guild_obj.is_embed_enabled is True
+        assert guild_obj.embed_channel_id == 9439394949
+        assert guild_obj.is_widget_enabled is True
+        assert guild_obj.widget_channel_id == 9439394949
+        assert guild_obj.verification_level is guilds.GuildVerificationLevel.VERY_HIGH
+        assert guild_obj.default_message_notifications is guilds.GuildMessageNotificationsLevel.ONLY_MENTIONS
+        assert guild_obj.explicit_content_filter is guilds.GuildExplicitContentFilterLevel.ALL_MEMBERS
+        assert guild_obj.roles == {r.id: r for r in map(guilds.GuildRole.deserialize, test_roles_payloads)}
+        assert guild_obj.emojis == {42: mock_emoji}
+        assert guild_obj.mfa_level is guilds.GuildMFALevel.ELEVATED
+        assert guild_obj.application_id == 39494949
+        assert guild_obj.is_unavailable is False
+        assert guild_obj.system_channel_id == 19216801
+        assert (
+            guild_obj.system_channel_flags
+            == guilds.GuildSystemChannelFlag.SUPPRESS_PREMIUM_SUBSCRIPTION
+            | guilds.GuildSystemChannelFlag.SUPPRESS_USER_JOIN
+        )
+        assert guild_obj.rules_channel_id == 42042069
+        assert guild_obj.joined_at == dates.parse_iso_8601_ts("2019-05-17T06:26:56.936000+00:00")
+        assert guild_obj.is_large is False
+        assert guild_obj.member_count == 14
+        assert guild_obj.channels == {6969: mock_guild_channel}
+        assert guild_obj.max_presences == 250
+        assert guild_obj.max_members == 25000
+        assert guild_obj.vanity_url_code == "loool"
+        assert guild_obj.description == "This is a server I guess, its a bit crap though"
+        assert guild_obj.banner_hash == "1a2b3c"
+        assert guild_obj.premium_tier is guilds.GuildPremiumTier.TIER_2
+        assert guild_obj.premium_subscription_count == 1
+        assert guild_obj.preferred_locale == "en-GB"
+        assert guild_obj.public_updates_channel_id == 33333333
+
+    @pytest.fixture()
+    @mock.patch.object(emojis.GuildEmoji, "deserialize")
+    def test_guild_obj(self, *patched_objs, test_guild_payload):
+        return guilds.Guild.deserialize(test_guild_payload)
+
+    def test_format_banner_url(self, test_guild_obj):
+        mock_url = "https://not-al"
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+            url = test_guild_obj.format_banner_url(fmt="nyaapeg", size=4000)
+            cdn.generate_cdn_url.assert_called_once_with(
+                "banners", "265828729970753537", "1a2b3c", fmt="nyaapeg", size=4000
+            )
+        assert url is mock_url
+
+    def test_format_banner_url_returns_none(self, test_guild_obj):
+        test_guild_obj.banner_hash = None
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=...):
+            url = test_guild_obj.format_banner_url()
+            cdn.generate_cdn_url.assert_not_called()
+        assert url is None
+
+    def test_banner_url(self, test_guild_obj):
+        mock_url = "https://not-al"
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+            url = test_guild_obj.banner_url
+            cdn.generate_cdn_url.assert_called_once()
+        assert url is mock_url
+
+    def test_format_discovery_splash_url(self, test_guild_obj):
+        mock_url = "https://not-al"
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+            url = test_guild_obj.format_discovery_splash_url(fmt="nyaapeg", size=4000)
+            cdn.generate_cdn_url.assert_called_once_with(
+                "discovery-splashes", "265828729970753537", "famfamFAMFAMfam", fmt="nyaapeg", size=4000
+            )
+        assert url is mock_url
+
+    def test_format_discovery_splash_returns_none(self, test_guild_obj):
+        test_guild_obj.discovery_splash_hash = None
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=...):
+            url = test_guild_obj.format_discovery_splash_url()
+            cdn.generate_cdn_url.assert_not_called()
+        assert url is None
+
+    def test_discover_splash_url(self, test_guild_obj):
+        mock_url = "https://not-al"
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+            url = test_guild_obj.discovery_splash_url
+            cdn.generate_cdn_url.assert_called_once()
+        assert url is mock_url
+
+    def test_format_splash_url(self, test_guild_obj):
+        mock_url = "https://not-al"
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+            url = test_guild_obj.format_splash_url(fmt="nyaapeg", size=4000)
+            cdn.generate_cdn_url.assert_called_once_with(
+                "splashes", "265828729970753537", "0ff0ff0ff", fmt="nyaapeg", size=4000
+            )
+        assert url is mock_url
+
+    def test_format_splash_returns_none(self, test_guild_obj):
+        test_guild_obj.splash_hash = None
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=...):
+            url = test_guild_obj.format_splash_url()
+            cdn.generate_cdn_url.assert_not_called()
+        assert url is None
+
+    def test_splash_url(self, test_guild_obj):
+        mock_url = "https://not-al"
+        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+            url = test_guild_obj.splash_url
+            cdn.generate_cdn_url.assert_called_once()
+        assert url is mock_url
