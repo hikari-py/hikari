@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-
+"""Components and entities that are used to describe webhooks on Discord."""
 __all__ = ["WebhookType", "Webhook"]
 
 import enum

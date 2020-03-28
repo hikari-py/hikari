@@ -16,7 +16,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-
+"""
+Components and entities that are used to describe message embeds on Discord.
+"""
 __all__ = [
     "Embed",
     "EmbedThumbnail",
@@ -184,9 +186,7 @@ class EmbedField(entities.HikariEntity, entities.Deserializable, entities.Serial
     #: Whether the field should display inline. Defaults to ``False``.
     #:
     #: :type: :obj:`bool`
-    is_inline: bool = marshaller.attrib(
-        raw_name="inline", deserializer=bool, serializer=bool, if_undefined=lambda: False
-    )
+    is_inline: bool = marshaller.attrib(raw_name="inline", deserializer=bool, serializer=bool, if_undefined=False)
 
 
 @marshaller.attrs(slots=True)

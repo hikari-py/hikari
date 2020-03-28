@@ -49,6 +49,8 @@ _IF_NONE = __name__ + "_IF_NONE"
 
 MARSHALLER_META_ATTR = "__hikari_marshaller_meta_attr__"
 
+PASSED_THROUGH_SINGLETONS = (False, True, None)
+
 RAISE = object()
 
 EntityT = typing.TypeVar("EntityT", contravariant=True)
@@ -122,16 +124,18 @@ def attrib(
     transient : :obj:`bool`
         If ``True``, the field is marked as transient, meaning it will not be
         serialized. Defaults to ``False``.
-    if_none : :obj:`typing.Union` [ :obj:`typing.Callable` [ ... , :obj:`typing.Any` ], :obj:`None` ], optional
+    if_none
         Either a default factory function called to get the default for when
-        this field is ``None`` or ``None`` to specify that this should default
-        to ``None``. Will raise an exception when ``None`` is received for this
-        field later if this isn't specified.
-    if_undefined : :obj:`typing.Union` [ :obj:`typing.Callable` [  ... , :obj:`typing.Any` ], :obj:`None` ], optional
+        this field is ``None`` or one of ``None``, ``False`` or ``True`` to
+        specify that this should default to the given singleton.
+        Will raise an exception when ``None`` is received for this field later
+        if this isn't specified.
+    if_undefined
         Either a default factory function called to get the default for when
-        this field isn't defined or ``None`` to specify that this should default
-        to ``None``. Will raise an exception when this field is undefined later
-        on if this isn't specified.
+        this field isn't defined or one of ``None``, ``False`` or ``True`` to
+        specify that this should default to the given singleton.
+        Will raise an exception when this field is undefined later on if this
+        isn't specified.
     serializer : :obj:`typing.Callable` [ [ :obj:`typing.Any` ], :obj:`typing.Any` ], optional
         The serializer to use. If not specified, then serializing the entire
         class that this attribute is in will trigger a :obj:`TypeError`
@@ -173,10 +177,10 @@ def _not_implemented(op, name):
 
 def _default_validator(value: typing.Any):
     assertions.assert_that(
-        value is RAISE or value is None or callable(value),
+        value is RAISE or value in PASSED_THROUGH_SINGLETONS or callable(value),
         message=(
             "Invalid default factory passed for `if_undefined` or `if_none`; "
-            f"expected a callable or `None` but got {value}."
+            f"expected a callable or one of the 'passed through singletons' but got {value}."
         ),
         error_type=RuntimeError,
     )
@@ -331,10 +335,10 @@ class HikariEntityMarshaller:
                         f"Required field {a.field_name} (from raw {a.raw_name}) is not specified in the input "
                         f"payload\n\n{raw_data}"
                     )
-                elif a.if_undefined:
-                    kwargs[kwarg_name] = a.if_undefined()
+                if a.if_undefined in PASSED_THROUGH_SINGLETONS:
+                    kwargs[kwarg_name] = a.if_undefined
                 else:
-                    kwargs[kwarg_name] = None
+                    kwargs[kwarg_name] = a.if_undefined()
                 continue
             elif (data := raw_data[a.raw_name]) is None:
                 if a.if_none is RAISE:
@@ -342,10 +346,10 @@ class HikariEntityMarshaller:
                         f"Non-nullable field {a.field_name} (from raw {a.raw_name}) is `None` in the input "
                         f"payload\n\n{raw_data}"
                     )
-                elif a.if_none:
-                    kwargs[kwarg_name] = a.if_none()
+                if a.if_none in PASSED_THROUGH_SINGLETONS:
+                    kwargs[kwarg_name] = a.if_none
                 else:
-                    kwargs[kwarg_name] = None
+                    kwargs[kwarg_name] = a.if_none()
                 continue
 
             try:
