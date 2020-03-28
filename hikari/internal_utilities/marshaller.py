@@ -102,7 +102,7 @@ def attrib(
     # as an attr.ib() kwargs AND use type hints at the same time, and without
     # type hints, the library loses the ability to be type checked properly
     # anymore, so we have to pass this explicitly regardless.
-    deserializer: typing.Callable[[typing.Any], typing.Any],
+    deserializer: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
     if_none: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)] = RAISE,
     if_undefined: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)] = RAISE,
     raw_name: typing.Optional[str] = None,
@@ -114,7 +114,7 @@ def attrib(
 
     Parameters
     ----------
-    deserializer : :obj:`typing.Callable` [ [ :obj:`typing.Any` ], :obj:`typing.Any` ]
+    deserializer : :obj:`typing.Callable` [ [ :obj:`typing.Any` ], :obj:`typing.Any` ], optional
         The deserializer to use to deserialize raw elements.
     raw_name : :obj:`str`, optional
         The raw name of the element in its raw serialized form. If not provided,
@@ -164,20 +164,23 @@ def attrib(
     return attr.ib(**kwargs, metadata=metadata)
 
 
-def _no_serialize(name):
+def _not_implemented(op, name):
     def error(*_, **__) -> typing.NoReturn:
-        raise TypeError(f"Field {name} does not support serialization")
+        raise NotImplementedError(f"Field {name} does not support operation {op}")
 
     return error
 
 
 class _AttributeDescriptor:
-    __slots__ = ("raw_name", "field_name", "if_none", "if_undefined", "is_transient", "deserializer", "serializer")
+    __slots__ = (
+        "raw_name", "field_name", "constructor_name", "if_none", "if_undefined", "is_transient", "deserializer",
+        "serializer")
 
     def __init__(
         self,
         raw_name: str,
         field_name: str,
+        constructor_name: str,
         if_none: typing.Callable[..., typing.Any],
         if_undefined: typing.Callable[..., typing.Any],
         is_transient: bool,
@@ -186,6 +189,7 @@ class _AttributeDescriptor:
     ) -> None:
         self.raw_name = raw_name
         self.field_name = field_name
+        self.constructor_name = constructor_name
         self.if_none = if_none
         self.if_undefined = if_undefined
         self.is_transient = is_transient  # Do not serialize
@@ -196,7 +200,7 @@ class _AttributeDescriptor:
 class _EntityDescriptor:
     __slots__ = ("entity_type", "attribs")
 
-    def __init__(self, entity_type: typing.Type, attribs: typing.Collection[_AttributeDescriptor],) -> None:
+    def __init__(self, entity_type: typing.Type, attribs: typing.Collection[_AttributeDescriptor], ) -> None:
         self.entity_type = entity_type
         self.attribs = tuple(attribs)
 
@@ -205,14 +209,21 @@ def _construct_attribute_descriptor(field: attr.Attribute) -> _AttributeDescript
     raw_name = typing.cast(str, field.metadata.get(_RAW_NAME_ATTR) or field.name)
     field_name = typing.cast(str, field.name)
 
+    constructor_name = field_name
+
+    # Attrs strips leading underscores for generated __init__ methods.
+    while constructor_name.startswith("_"):
+        constructor_name = constructor_name[1:]
+
     return _AttributeDescriptor(
         raw_name=raw_name,
         field_name=field_name,
+        constructor_name=constructor_name,
         if_none=field.metadata[_IF_NONE],
         if_undefined=field.metadata[_IF_UNDEFINED],
         is_transient=field.metadata[_TRANSIENT_ATTR],
-        deserializer=field.metadata[_DESERIALIZER_ATTR],
-        serializer=field.metadata[_SERIALIZER_ATTR] or _no_serialize(field_name),
+        deserializer=field.metadata[_DESERIALIZER_ATTR] or _not_implemented("deserialize", field_name),
+        serializer=field.metadata[_SERIALIZER_ATTR] or _not_implemented("serialize", field_name),
     )
 
 
@@ -292,6 +303,8 @@ class HikariEntityMarshaller:
         kwargs = {}
 
         for a in descriptor.attribs:
+            kwarg_name = a.constructor_name
+
             if a.raw_name not in raw_data:
                 if a.if_undefined is RAISE:
                     raise AttributeError(
@@ -299,9 +312,9 @@ class HikariEntityMarshaller:
                         f"payload\n\n{raw_data}"
                     )
                 elif a.if_undefined:
-                    kwargs[a.field_name] = a.if_undefined()
+                    kwargs[kwarg_name] = a.if_undefined()
                 else:
-                    kwargs[a.field_name] = None
+                    kwargs[kwarg_name] = None
                 continue
             elif (data := raw_data[a.raw_name]) is None:
                 if a.if_none is RAISE:
@@ -310,19 +323,19 @@ class HikariEntityMarshaller:
                         f"payload\n\n{raw_data}"
                     )
                 elif a.if_none:
-                    kwargs[a.field_name] = a.if_none()
+                    kwargs[kwarg_name] = a.if_none()
                 else:
-                    kwargs[a.field_name] = None
+                    kwargs[kwarg_name] = None
                 continue
 
             try:
                 # Use the deserializer if it is there, otherwise use the constructor of the type of the field.
-                kwargs[a.field_name] = a.deserializer(data) if a.deserializer else data
+                kwargs[kwarg_name] = a.deserializer(data) if a.deserializer else data
             except Exception as exc:
                 raise TypeError(
                     "Failed to deserialize data to instance of "
                     f"{target_type.__module__}.{target_type.__qualname__} because marshalling failed on "
-                    f"attribute {a.field_name}"
+                    f"attribute {a.field_name} (passed to constructor as {kwarg_name}"
                 ) from exc
 
         return target_type(**kwargs)
