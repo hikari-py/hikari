@@ -943,7 +943,7 @@ class ExponentialBackOff:
     #: :type: :obj:`float`, optional
     maximum: typing.Optional[float]
 
-    #: The multiplier for the random jitter. Defaults to ``1``. 
+    #: The multiplier for the random jitter. Defaults to ``1``.
     #: Set to ``0`` to disable jitter.
     #:
     #: :type: :obj:`float`

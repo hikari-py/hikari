@@ -429,8 +429,10 @@ class TestHTTPBucketRateLimiterManager:
     @pytest.mark.asyncio
     async def test_exit_closes(self):
         with mock.patch("hikari.net.ratelimits.HTTPBucketRateLimiterManager.close") as close:
-            with ratelimits.HTTPBucketRateLimiterManager() as mgr:
-                mgr.start(0.01)
+            with mock.patch("hikari.net.ratelimits.HTTPBucketRateLimiterManager.gc") as gc:
+                with ratelimits.HTTPBucketRateLimiterManager() as mgr:
+                    mgr.start(0.01)
+                gc.assert_called_once_with(0.01)
             close.assert_called()
 
     @pytest.mark.asyncio
@@ -455,10 +457,13 @@ class TestHTTPBucketRateLimiterManager:
     @pytest.mark.asyncio
     async def test_gc_calls_do_pass(self):
         with _helpers.unslot_class(ratelimits.HTTPBucketRateLimiterManager)() as mgr:
-            mgr.do_gc_pass = mock.AsyncMock()
+            mgr.do_gc_pass = mock.MagicMock()
             mgr.start(0.01)
-            await asyncio.sleep(0.1)
-            mgr.do_gc_pass.assert_called()
+            try:
+                await asyncio.sleep(0.1)
+                mgr.do_gc_pass.assert_called()
+            finally:
+                mgr.gc_task.cancel()
 
     @pytest.mark.asyncio
     async def test_gc_calls_do_pass_and_ignores_exception(self):
@@ -472,6 +477,8 @@ class TestHTTPBucketRateLimiterManager:
                 assert False
             except asyncio.InvalidStateError:
                 pass
+            finally:
+                mgr.gc_task.cancel()
 
     @pytest.mark.asyncio
     async def test_do_gc_pass_any_buckets_that_are_empty_and_unknown_get_closed(self):

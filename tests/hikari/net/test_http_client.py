@@ -181,32 +181,38 @@ class TestHTTPClient:
             mock_close.assert_called_once_with()
         http_client_impl.ratelimiter.close.assert_called_once_with()
 
-    @pytest.mark.asyncio
-    async def test__request_acquires_ratelimiter(self, compiled_route, exit_error):
+    @pytest.fixture()
+    @mock.patch.object(base_http_client.BaseHTTPClient, "__init__")
+    @mock.patch.object(ratelimits, "ManualRateLimiter")
+    @mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager")
+    async def mock_http_client(self, *args):
         http_client_impl = http_client.HTTPClient(token="Bot token")
-        http_client_impl.logger = mock.MagicMock(debug=mock.MagicMock(side_effect=exit_error))
+        http_client_impl.logger = mock.MagicMock(debug=mock.MagicMock())
         http_client_impl.ratelimiter = mock.MagicMock()
         http_client_impl.global_ratelimiter = mock.MagicMock()
+        return http_client_impl
+
+    @pytest.mark.asyncio
+    async def test__request_acquires_ratelimiter(self, compiled_route, exit_error, mock_http_client):
+        mock_http_client = await mock_http_client
+        mock_http_client.logger.debug.side_effect = exit_error
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             try:
-                await http_client_impl._request(compiled_route)
+                await mock_http_client._request(compiled_route)
             except exit_error:
                 pass
 
-            http_client_impl.ratelimiter.acquire.asset_called_once_with(compiled_route)
+            mock_http_client.ratelimiter.acquire.asset_called_once_with(compiled_route)
 
     @pytest.mark.asyncio
-    async def test__request_sets_Authentication_if_token(self, compiled_route, exit_error):
-        http_client_impl = http_client.HTTPClient(token="Bot token")
-        http_client_impl.logger = mock.MagicMock(debug=mock.MagicMock(side_effect=[None, exit_error]))
-        http_client_impl.ratelimiter = mock.MagicMock()
-        http_client_impl.global_ratelimiter = mock.MagicMock()
-
+    async def test__request_sets_Authentication_if_token(self, compiled_route, exit_error, mock_http_client):
+        mock_http_client = await mock_http_client
+        mock_http_client.logger.debug.side_effect = [None, exit_error]
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             with mock.patch.object(base_http_client.BaseHTTPClient, "_request") as mock_request:
                 try:
-                    await http_client_impl._request(compiled_route)
+                    await mock_http_client._request(compiled_route)
                 except exit_error:
                     pass
 
@@ -221,17 +227,15 @@ class TestHTTPClient:
 
     @pytest.mark.asyncio
     async def test__request_doesnt_set_Authentication_if_suppress_authorization_header(
-        self, compiled_route, exit_error
+        self, compiled_route, exit_error, mock_http_client
     ):
-        http_client_impl = http_client.HTTPClient(token="Bot token")
-        http_client_impl.logger = mock.MagicMock(debug=mock.MagicMock(side_effect=[None, exit_error]))
-        http_client_impl.ratelimiter = mock.MagicMock()
-        http_client_impl.global_ratelimiter = mock.MagicMock()
+        mock_http_client = await mock_http_client
+        mock_http_client.logger.debug.side_effect = [None, exit_error]
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             with mock.patch.object(base_http_client.BaseHTTPClient, "_request") as mock_request:
                 try:
-                    await http_client_impl._request(compiled_route, suppress_authorization_header=True)
+                    await mock_http_client._request(compiled_route, suppress_authorization_header=True)
                 except exit_error:
                     pass
 
@@ -245,39 +249,39 @@ class TestHTTPClient:
                 )
 
     @pytest.mark.asyncio
-    async def test__request_sets_X_Audit_Log_Reason_if_reason(self, compiled_route, exit_error):
-        http_client_impl = http_client.HTTPClient(token=None)
-        http_client_impl.logger = mock.MagicMock(debug=mock.MagicMock(side_effect=[None, exit_error]))
-        http_client_impl.ratelimiter = mock.MagicMock()
-        http_client_impl.global_ratelimiter = mock.MagicMock()
+    async def test__request_sets_X_Audit_Log_Reason_if_reason(self, compiled_route, exit_error, mock_http_client):
+        mock_http_client = await mock_http_client
+        mock_http_client.logger.debug.side_effect = [None, exit_error]
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             with mock.patch.object(base_http_client.BaseHTTPClient, "_request") as mock_request:
                 try:
-                    await http_client_impl._request(compiled_route, reason="test reason")
+                    await mock_http_client._request(compiled_route, reason="test reason")
                 except exit_error:
                     pass
 
                 mock_request.assert_called_with(
                     "get",
                     "https://discordapp.com/api/v6/somewhere",
-                    headers={"X-RateLimit-Precision": "millisecond", "X-Audit-Log-Reason": "test reason"},
+                    headers={
+                        "X-RateLimit-Precision": "millisecond",
+                        "Authorization": "Bot token",
+                        "X-Audit-Log-Reason": "test reason",
+                    },
                     json=None,
                     params=None,
                     data=None,
                 )
 
     @pytest.mark.asyncio
-    async def test__request_updates_headers_with_provided_headers(self, compiled_route, exit_error):
-        http_client_impl = http_client.HTTPClient(token="Bot token")
-        http_client_impl.logger = mock.MagicMock(debug=mock.MagicMock(side_effect=[None, exit_error]))
-        http_client_impl.ratelimiter = mock.MagicMock()
-        http_client_impl.global_ratelimiter = mock.MagicMock()
+    async def test__request_updates_headers_with_provided_headers(self, compiled_route, exit_error, mock_http_client):
+        mock_http_client = await mock_http_client
+        mock_http_client.logger.debug.side_effect = [None, exit_error]
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             with mock.patch.object(base_http_client.BaseHTTPClient, "_request") as mock_request:
                 try:
-                    await http_client_impl._request(
+                    await mock_http_client._request(
                         compiled_route, headers={"X-RateLimit-Precision": "nanosecond", "Authorization": "Bearer token"}
                     )
                 except exit_error:
@@ -293,7 +297,7 @@ class TestHTTPClient:
                 )
 
     @pytest.mark.asyncio
-    async def test__request_resets_seek_on_seekable_resources(self, compiled_route, exit_error):
+    async def test__request_resets_seek_on_seekable_resources(self, compiled_route, exit_error, mock_http_client):
         class SeekableResource:
             seeked: bool = False
 
@@ -303,15 +307,13 @@ class TestHTTPClient:
             def assert_seek_called(self):
                 assert self.seeked
 
-        http_client_impl = http_client.HTTPClient(token=None)
-        http_client_impl.logger = mock.MagicMock(debug=mock.MagicMock(side_effect=exit_error))
-        http_client_impl.ratelimiter = mock.MagicMock()
-        http_client_impl.global_ratelimiter = mock.MagicMock()
+        mock_http_client = await mock_http_client
+        mock_http_client.logger.debug.side_effect = exit_error
         seekable_resources = [SeekableResource(), SeekableResource(), SeekableResource()]
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             try:
-                await http_client_impl._request(compiled_route, re_seekable_resources=seekable_resources)
+                await mock_http_client._request(compiled_route, re_seekable_resources=seekable_resources)
             except exit_error:
                 pass
 
@@ -323,68 +325,65 @@ class TestHTTPClient:
         "content_type", ["text/plain", "text/html"],
     )
     async def test__request_handles_bad_response_when_content_type_is_plain_or_htlm(
-        self, content_type, exit_error, compiled_route, discord_response
+        self, content_type, exit_error, compiled_route, discord_response, mock_http_client
     ):
         discord_response.headers["Content-Type"] = content_type
-        http_client_impl = http_client.HTTPClient(token="Bot token")
-        http_client_impl.ratelimiter = mock.MagicMock()
-        http_client_impl.global_ratelimiter = mock.MagicMock()
-        http_client_impl._handle_bad_response = mock.AsyncMock(side_effect=[None, exit_error])
+        mock_http_client = await mock_http_client
+        mock_http_client._handle_bad_response = mock.AsyncMock(side_effect=[None, exit_error])
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             with mock.patch.object(base_http_client.BaseHTTPClient, "_request", return_value=discord_response):
                 try:
-                    await http_client_impl._request(compiled_route)
+                    await mock_http_client._request(compiled_route)
                 except exit_error:
                     pass
 
-                http_client_impl._handle_bad_response.assert_called()
+                mock_http_client._handle_bad_response.assert_called()
 
     @pytest.mark.asyncio
-    async def test__request_when_invalid_content_type(self, compiled_route, discord_response):
+    async def test__request_when_invalid_content_type(self, compiled_route, discord_response, mock_http_client):
         discord_response.headers["Content-Type"] = "something/invalid"
-        http_client_impl = http_client.HTTPClient(token="Bot token")
-        http_client_impl.ratelimiter = mock.MagicMock()
-        http_client_impl.global_ratelimiter = mock.MagicMock()
+        mock_http_client = await mock_http_client
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             with mock.patch.object(base_http_client.BaseHTTPClient, "_request", return_value=discord_response):
-                assert await http_client_impl._request(compiled_route, json_body={}) is None
+                assert await mock_http_client._request(compiled_route, json_body={}) is None
 
     @pytest.mark.asyncio
-    async def test__request_when_TOO_MANY_REQUESTS_when_global(self, compiled_route, exit_error, discord_response):
+    async def test__request_when_TOO_MANY_REQUESTS_when_global(
+        self, compiled_route, exit_error, discord_response, mock_http_client
+    ):
         discord_response.status = 429
         discord_response.raw_body = '{"retry_after": 1, "global": true}'
-        http_client_impl = http_client.HTTPClient(token="Bot token")
-        http_client_impl.ratelimiter = mock.MagicMock()
-        http_client_impl.global_ratelimiter = mock.MagicMock(throttle=mock.MagicMock(side_effect=[None, exit_error]))
+        mock_http_client = await mock_http_client
+        mock_http_client.global_ratelimiter.throttle = mock.MagicMock(side_effect=[None, exit_error])
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             with mock.patch.object(base_http_client.BaseHTTPClient, "_request", return_value=discord_response):
                 try:
-                    await http_client_impl._request(compiled_route)
+                    await mock_http_client._request(compiled_route)
                 except exit_error:
                     pass
 
-                http_client_impl.global_ratelimiter.throttle.assert_called_with(0.001)
+                mock_http_client.global_ratelimiter.throttle.assert_called_with(0.001)
 
     @pytest.mark.asyncio
-    async def test__request_when_TOO_MANY_REQUESTS_when_not_global(self, compiled_route, exit_error, discord_response):
+    async def test__request_when_TOO_MANY_REQUESTS_when_not_global(
+        self, compiled_route, exit_error, discord_response, mock_http_client
+    ):
         discord_response.status = 429
         discord_response.raw_body = '{"retry_after": 1, "global": false}'
-        http_client_impl = http_client.HTTPClient(token="Bot token")
-        http_client_impl.ratelimiter = mock.MagicMock()
-        http_client_impl.global_ratelimiter = mock.MagicMock(throttle=mock.MagicMock())
-        http_client_impl.logger = mock.MagicMock(debug=mock.MagicMock(side_effect=[None, exit_error]))
+        mock_http_client = await mock_http_client
+        mock_http_client.logger.debug.side_effect = [None, exit_error]
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             with mock.patch.object(base_http_client.BaseHTTPClient, "_request", return_value=discord_response):
                 try:
-                    await http_client_impl._request(compiled_route)
+                    await mock_http_client._request(compiled_route)
                 except exit_error:
                     pass
 
-                http_client_impl.global_ratelimiter.throttle.assert_not_called()
+                mock_http_client.global_ratelimiter.throttle.assert_not_called()
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("api_version", [versions.HTTPAPIVersion.V6, versions.HTTPAPIVersion.V7])
@@ -398,13 +397,17 @@ class TestHTTPClient:
             (405, errors.ClientHTTPError),
         ],
     )
+    @mock.patch.object(base_http_client.BaseHTTPClient, "__init__")
+    @mock.patch.object(ratelimits, "ManualRateLimiter")
+    @mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager")
     async def test__request_raises_appropriate_error_for_status_code(
-        self, status_code, error, compiled_route, discord_response, api_version
+        self, *patches, status_code, error, compiled_route, discord_response, api_version
     ):
         discord_response.status = status_code
         http_client_impl = http_client.HTTPClient(token="Bot token", version=api_version)
         http_client_impl.ratelimiter = mock.MagicMock()
         http_client_impl.global_ratelimiter = mock.MagicMock()
+        http_client_impl.logger = mock.MagicMock()
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             with mock.patch.object(base_http_client.BaseHTTPClient, "_request", return_value=discord_response):
@@ -415,35 +418,31 @@ class TestHTTPClient:
                     assert True
 
     @pytest.mark.asyncio
-    async def test__request_when_NO_CONTENT(self, compiled_route, discord_response):
+    async def test__request_when_NO_CONTENT(self, compiled_route, discord_response, mock_http_client):
         discord_response.status = 204
-        http_client_impl = http_client.HTTPClient(token="Bot token")
-        http_client_impl.ratelimiter = mock.MagicMock()
-        http_client_impl.global_ratelimiter = mock.MagicMock()
+        mock_http_client = await mock_http_client
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             with mock.patch.object(base_http_client.BaseHTTPClient, "_request", return_value=discord_response):
-                assert await http_client_impl._request(compiled_route, form_body=aiohttp.FormData()) is None
+                assert await mock_http_client._request(compiled_route, form_body=aiohttp.FormData()) is None
 
     @pytest.mark.asyncio
     async def test__request_handles_bad_response_when_status_error_not_catched(
-        self, exit_error, compiled_route, discord_response
+        self, exit_error, compiled_route, discord_response, mock_http_client
     ):
         discord_response.raw_body = "{}"
         discord_response.status = 1000
-        http_client_impl = http_client.HTTPClient(token="Bot token")
-        http_client_impl.ratelimiter = mock.MagicMock()
-        http_client_impl.global_ratelimiter = mock.MagicMock()
-        http_client_impl._handle_bad_response = mock.AsyncMock(side_effect=[None, exit_error])
+        mock_http_client = await mock_http_client
+        mock_http_client._handle_bad_response = mock.AsyncMock(side_effect=[None, exit_error])
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             with mock.patch.object(base_http_client.BaseHTTPClient, "_request", return_value=discord_response):
                 try:
-                    await http_client_impl._request(compiled_route)
+                    await mock_http_client._request(compiled_route)
                 except exit_error:
                     pass
 
-                http_client_impl._handle_bad_response.assert_called()
+                mock_http_client._handle_bad_response.assert_called()
 
     @pytest.mark.asyncio
     async def test_handle_bad_response(self, http_client_impl):
