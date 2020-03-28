@@ -132,8 +132,10 @@ class EventDispatcher(abc.ABC):
         coroutine function decorator:
             A decorator for a coroutine function that registers the given event.
         """
+
         def decorator(callback: EventCallbackT) -> EventCallbackT:
             return self.add_listener(event_type, callback)
+
         return decorator
 
     # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
@@ -181,7 +183,9 @@ class EventDispatcherImpl(EventDispatcher):
 
     def __init__(self) -> None:
         self._listeners: typing.Dict[typing.Type[EventT], typing.List[EventCallbackT]] = {}
+        # pylint: disable=E1136
         self._waiters: typing.Dict[typing.Type[EventT], containers.WeakKeyDictionary[asyncio.Future, PredicateT]] = {}
+        # pylint: enable=E1136
         self.logger = loggers.get_named_logger(self)
 
     def close(self) -> None:

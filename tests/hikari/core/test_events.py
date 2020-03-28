@@ -896,12 +896,12 @@ class TestVoiceServerUpdateEvent:
         assert voice_server_update_obj.endpoint == "smart.loyal.discord.gg"
 
 
-class TestWebhookUpdate:
+class TestWebhookUpdateEvent:
     @pytest.fixture()
     def test_webhook_update_payload(self):
         return {"guild_id": "2929292", "channel_id": "94949494"}
 
     def test_deserialize(self, test_webhook_update_payload):
-        webhook_update_obj = events.WebhookUpdate.deserialize(test_webhook_update_payload)
+        webhook_update_obj = events.WebhookUpdateEvent.deserialize(test_webhook_update_payload)
         assert webhook_update_obj.guild_id == 2929292
         assert webhook_update_obj.channel_id == 94949494

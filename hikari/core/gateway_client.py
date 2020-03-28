@@ -29,7 +29,6 @@ from hikari.core import gateway_config
 from hikari.core import shard_client
 from hikari.core import state
 from hikari.core.dispatcher import EventCallbackT
-from hikari.core.dispatcher import EventCallbackT
 from hikari.core.dispatcher import EventT
 from hikari.internal_utilities import loggers
 from hikari.net import shard
