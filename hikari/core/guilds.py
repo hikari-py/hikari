@@ -49,9 +49,10 @@ import enum
 import typing
 
 from hikari.core import channels
+from hikari.core import colors
 from hikari.core import emojis as _emojis
 from hikari.core import entities
-from hikari.core import permissions
+from hikari.core import permissions as _permissions
 from hikari.core import snowflakes
 from hikari.core import users
 from hikari.internal_utilities import cdn
@@ -265,7 +266,47 @@ class GuildMember(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.attrs(slots=True)
 class GuildRole(snowflakes.UniqueEntity, entities.Deserializable):
-    ...
+    """Represents a guild bound Role object."""
+
+    #: The role's name
+    #:
+    #: :type: :obj:`str`
+    name: str = marshaller.attrib(deserializer=str)
+
+    #: The colour of this role, will be applied to a member's name in chat
+    #: if it's their top coloured role.
+    #:
+    #: :type: :obj:`colors.Color`
+    color: colors.Color = marshaller.attrib(deserializer=colors.Color)
+
+    #: Whether this role is hoisting the members it's attached to in the member
+    #: list, members will be hoisted under their highest role where
+    #: :attr:`hoisted` is true.
+    #:
+    #: :type: :obj:`bool`
+    is_hoisted: bool = marshaller.attrib(raw_name="hoist", deserializer=bool)
+
+    #: The position of this role in the role hierarchy.
+    #:
+    #: :type: :obj:`int`
+    position: int = marshaller.attrib(deserializer=int)
+
+    #: The guild wide permissions this role gives to the members it's attached
+    #: to, may be overridden by channel overwrites.
+    #:
+    #: :type: :obj:`_permissions.Permission`
+    permissions: _permissions.Permission = marshaller.attrib(deserializer=_permissions.Permission)
+
+    #: Whether this role is managed by an integration.
+    #:
+    #: :type: :obj:`bool`
+    is_managed: bool = marshaller.attrib(raw_name="managed", deserializer=bool)
+
+    #: Whether this role can be mentioned by all, regardless of the
+    #: ``MENTION_EVERYONE`` permission.
+    #:
+    #: :type: :obj:`bool`
+    is_mentionable: bool = marshaller.attrib(raw_name="mentionable", deserializer=bool)
 
 
 @enum.unique
@@ -619,14 +660,118 @@ class GuildMemberPresence(entities.HikariEntity, entities.Deserializable):
     nick: typing.Optional[str] = marshaller.attrib(raw_name="nick", deserializer=str, if_undefined=None, if_none=None)
 
 
-@marshaller.attrs(slots=True)
-class GuildIntegration(snowflakes.UniqueEntity):
-    ...
+@enum.unique
+class IntegrationExpireBehaviour(enum.IntEnum):
+    """Behavior for expiring integration subscribers."""
+
+    #: Remove the role.
+    REMOVE_ROLE = 0
+    #: Kick the subscriber.
+    KICK = 1
 
 
 @marshaller.attrs(slots=True)
-class GuildMemberBan(entities.HikariEntity):
-    ...
+class IntegrationAccount(entities.HikariEntity, entities.Deserializable):
+    """An account that's linked to an integration."""
+
+    #: The string ID of this (likely) third party account.
+    #:
+    #: :type: :obj:`str`
+    id: str = marshaller.attrib(deserializer=str)
+
+    #: The name of this account.
+    #:
+    #: :type: :obj:`str`
+    name: str = marshaller.attrib(deserializer=str)
+
+
+@marshaller.attrs(slots=True)
+class PartialGuildIntegration(snowflakes.UniqueEntity, entities.Deserializable):
+    """A partial representation of an integration, found in audit logs."""
+
+    #: The name of this integration.
+    #:
+    #: :type: :obj:`str`
+    name: str = marshaller.attrib(deserializer=str)
+
+    #: The type of this integration.
+    #:
+    #: :type: :obj:`str`
+    type: str = marshaller.attrib(deserializer=str)
+
+    #: The account connected to this integration.
+    #:
+    #: :type: :obj:`IntegrationAccount`
+    account: IntegrationAccount = marshaller.attrib(deserializer=IntegrationAccount.deserialize)
+
+
+@marshaller.attrs(slots=True)
+class GuildIntegration(snowflakes.UniqueEntity, entities.Deserializable):
+    """Represents a guild integration object."""
+
+    #: Whether this integration is enabled.
+    #:
+    #: :type: :obj:`bool`
+    is_enabled: bool = marshaller.attrib(raw_name="enabled", deserializer=bool)
+
+    #: Whether this integration is syncing subscribers/emojis.
+    #:
+    #: :type: :obj:`bool`
+    is_syncing: bool = marshaller.attrib(raw_name="syncing", deserializer=bool)
+
+    #: The ID of the managed role used for this integration's subscribers.
+    #:
+    #: :type: :obj:`snowflakes.Snowflake`
+    role_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+
+    #: Whether users under this integration are allowed to use it's custom
+    #: emojis.
+    #:
+    #:
+    is_emojis_enabled: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
+        raw_name="enable_emoticons", deserializer=bool, if_undefined=None,
+    )
+
+    #: How members should be treated after their connected subscription expires
+    #: This won't be enacted until after :attr:`expire_grace_period` passes.
+    #:
+    #: :type: :obj:`IntegrationExpireBehaviour`
+    expire_behavior: IntegrationExpireBehaviour = marshaller.attrib(deserializer=IntegrationExpireBehaviour)
+
+    #: The time delta for how many days users with expired subscriptions are
+    #: given until :attr:`expire_behavior` is enacted out on them
+    #:
+    #: :type: :obj:`datetime.timedelta`
+    expire_grace_period: datetime.timedelta = marshaller.attrib(
+        deserializer=lambda delta: datetime.timedelta(days=delta),
+    )
+
+    #: The user this integration belongs to.
+    #:
+    #: :type: :obj:`users.User`
+    user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
+
+    #: The datetime of when this integration's subscribers were last synced.
+    #:
+    #: :type: :obj:`datetime.datetime`
+    last_synced_at: datetime.datetime = marshaller.attrib(
+        raw_name="synced_at", deserializer=dates.parse_iso_8601_ts, if_none=None
+    )
+
+
+@marshaller.attrs(slots=True)
+class GuildMemberBan(entities.HikariEntity, entities.Deserializable):
+    """Used to represent guild bans."""
+
+    #: The reason for this ban, will be :obj:`None` if no reason was given.
+    #:
+    #: :type: :obj:`str`, optional
+    reason: str = marshaller.attrib(deserializer=str, if_none=None)
+
+    #: The object of the user this ban targets.
+    #:
+    #: :type: :obj:`users.User`
+    user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
 
 
 @marshaller.attrs(slots=True)
@@ -729,11 +874,13 @@ class Guild(PartialGuild):
     #: :type: :obj:`snowflakes.Snowflake`
     owner_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake)
 
-    #: The guild level permissions that apply to the bot user.
+    #: The guild level permissions that apply to the bot user,
+    #: Will be ``None`` when this object is retrieved through a REST request
+    #: rather than from the gateway.
     #:
-    #: :type: :obj:`permissions.Permission`
-    my_permissions: permissions.Permission = marshaller.attrib(
-        raw_name="permissions", deserializer=permissions.Permission
+    #: :type: :obj:`_permissions.Permission`
+    my_permissions: _permissions.Permission = marshaller.attrib(
+        raw_name="permissions", deserializer=_permissions.Permission, if_undefined=None
     )
 
     #: The voice region for the guild.
@@ -758,7 +905,6 @@ class Guild(PartialGuild):
     )
 
     # TODO: document when this is not specified.
-    # FIXME: do we need a field for this, or can we infer it from the `embed_channel_id`?
     #: Defines if the guild embed is enabled or not. This information may not
     #: be present, in which case, it will be ``None`` instead.
     #:
@@ -768,7 +914,8 @@ class Guild(PartialGuild):
     )
 
     #: The channel ID that the guild embed will generate an invite to, if
-    #: enabled for this guild. If not enabled, it will be ``None``.
+    #: enabled for this guild. Will be ``None`` if invites are disable for this
+    #: guild's embed.
     #:
     #: :type: :obj:`snowflakes.Snowflake`, optional
     embed_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
@@ -881,7 +1028,9 @@ class Guild(PartialGuild):
     #: this will always be ``None``.
     #:
     #: :type: :obj`datetime.datetime`, optional
-    joined_at: typing.Optional[datetime.datetime] = marshaller.attrib(deserializer=dates.parse_iso_8601_ts)
+    joined_at: typing.Optional[datetime.datetime] = marshaller.attrib(
+        deserializer=dates.parse_iso_8601_ts, if_undefined=None
+    )
 
     #: Whether the guild is considered to be large or not.
     #:
@@ -1035,3 +1184,83 @@ class Guild(PartialGuild):
     public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         if_none=None, deserializer=snowflakes.Snowflake
     )
+
+    def format_splash_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
+        """Generate the url for this guild's splash image, if set.
+
+        Parameters
+        ----------
+        fmt : :obj:`str`
+            The format to use for this url, defaults to ``png``.
+            Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
+        size : :obj:`int`
+            The size to set for the url, defaults to ``2048``.
+            Can be any power of two between 16 and 2048.
+
+        Returns
+        -------
+        :obj:`str`, optional
+            The string url.
+        """
+        if self.splash_hash:
+            return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, fmt=fmt, size=size)
+        return None
+
+    @property
+    def splash_url(self) -> typing.Optional[str]:
+        """The url for this guild's splash, if set."""
+        return self.format_splash_url()
+
+    def format_discovery_splash_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
+        """Generate the url for this guild's discovery splash image, if set.
+
+        Parameters
+        ----------
+        fmt : :obj:`str`
+            The format to use for this url, defaults to ``png``.
+            Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
+        size : :obj:`int`
+            The size to set for the url, defaults to ``2048``.
+            Can be any power of two between 16 and 2048.
+
+        Returns
+        -------
+        :obj:`str`, optional
+            The string url.
+        """
+        if self.discovery_splash_hash:
+            return cdn.generate_cdn_url(
+                "discovery-splashes", str(self.id), self.discovery_splash_hash, fmt=fmt, size=size
+            )
+        return None
+
+    @property
+    def discovery_splash_url(self) -> typing.Optional[str]:
+        """The url for this guild's discovery splash, if set."""
+        return self.format_discovery_splash_url()
+
+    def format_banner_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
+        """Generate the url for this guild's banner image, if set.
+
+        Parameters
+        ----------
+        fmt : :obj:`str`
+            The format to use for this url, defaults to ``png``.
+            Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
+        size : :obj:`int`
+            The size to set for the url, defaults to ``2048``.
+            Can be any power of two between 16 and 2048.
+
+        Returns
+        -------
+        :obj:`str`, optional
+            The string url.
+        """
+        if self.banner_hash:
+            return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, fmt=fmt, size=size)
+        return None
+
+    @property
+    def banner_url(self) -> typing.Optional[str]:
+        """The url for this guild's banner, if set."""
+        return self.format_banner_url()
