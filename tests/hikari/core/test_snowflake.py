@@ -30,7 +30,7 @@ class TestSnowflake:
 
     @pytest.fixture()
     def neko_snowflake(self, raw_id):
-        return snowflakes.Snowflake(raw_id)
+        return snowflakes.Snowflake.deserialize(raw_id)
 
     def test_created_at(self, neko_snowflake):
         assert neko_snowflake.created_at == datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000).replace(
@@ -60,7 +60,7 @@ class TestSnowflake:
 
     def test_eq(self, neko_snowflake, raw_id):
         assert neko_snowflake == raw_id
-        assert neko_snowflake == snowflakes.Snowflake(raw_id)
+        assert neko_snowflake == snowflakes.Snowflake.deserialize(raw_id)
         assert str(raw_id) != neko_snowflake
 
     def test_lt(self, neko_snowflake, raw_id):
