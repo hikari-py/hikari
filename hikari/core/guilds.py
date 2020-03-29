@@ -729,8 +729,8 @@ class GuildIntegration(snowflakes.UniqueEntity, entities.Deserializable):
     #: Whether users under this integration are allowed to use it's custom
     #: emojis.
     #:
-    #:
-    is_emojis_enabled: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
+    #: :type: :obj:`bool`, optional
+    is_emojis_enabled: typing.Optional[bool] = marshaller.attrib(
         raw_name="enable_emoticons", deserializer=bool, if_undefined=None,
     )
 
@@ -874,7 +874,7 @@ class Guild(PartialGuild):
     #: The ID of the owner of this guild.
     #:
     #: :type: :obj:`snowflakes.Snowflake`
-    owner_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake)
+    owner_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: The guild level permissions that apply to the bot user,
     #: Will be ``None`` when this object is retrieved through a REST request
@@ -895,7 +895,7 @@ class Guild(PartialGuild):
     #:
     #: :type: :obj:`snowflakes.Snowflake`, optional
     afk_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake, if_none=None
+        deserializer=snowflakes.Snowflake.deserialize, if_none=None
     )
 
     #: How long a voice user has to be AFK for before they are classed as being
@@ -921,7 +921,7 @@ class Guild(PartialGuild):
     #:
     #: :type: :obj:`snowflakes.Snowflake`, optional
     embed_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake, if_none=None, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_none=None, if_undefined=None
     )
 
     #: The verification level required for a user to participate in this guild.
@@ -968,7 +968,7 @@ class Guild(PartialGuild):
     #:
     #: :type: :obj:`snowflakes.Snowflake`, optional
     application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake, if_none=None
+        deserializer=snowflakes.Snowflake.deserialize, if_none=None
     )
 
     #: Whether the guild is unavailable or not.
@@ -997,7 +997,7 @@ class Guild(PartialGuild):
     #:
     #: :type: :obj:`snowflakes.Snowflake`, optional
     widget_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        if_undefined=None, if_none=None, deserializer=snowflakes.Snowflake
+        if_undefined=None, if_none=None, deserializer=snowflakes.Snowflake.deserialize
     )
 
     #: The ID of the system channel (where welcome messages and Nitro boost
@@ -1005,7 +1005,7 @@ class Guild(PartialGuild):
     #:
     #: :type: :obj:`snowflakes.Snowflake`, optional
     system_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        if_none=None, deserializer=snowflakes.Snowflake
+        if_none=None, deserializer=snowflakes.Snowflake.deserialize
     )
 
     #: Flags for the guild system channel to describe which notification
@@ -1020,7 +1020,7 @@ class Guild(PartialGuild):
     #:
     #: :type: :obj:`snowflakes.Snowflake`, optional
     rules_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        if_none=None, deserializer=snowflakes.Snowflake
+        if_none=None, deserializer=snowflakes.Snowflake.deserialize
     )
 
     #: The date and time that the bot user joined this guild.
@@ -1184,7 +1184,7 @@ class Guild(PartialGuild):
     #:
     #: :type: :obj:`snowflakes.Snowflake`, optional
     public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        if_none=None, deserializer=snowflakes.Snowflake
+        if_none=None, deserializer=snowflakes.Snowflake.deserialize
     )
 
     def format_splash_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:

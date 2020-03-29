@@ -49,13 +49,13 @@ class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
     )
 
     #: The channel ID this webhook is for.
     #:
     #: :type: :obj:`snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake)
+    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: The user that created the webhook
     #:
