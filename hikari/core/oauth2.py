@@ -79,7 +79,7 @@ class TeamMember(entities.HikariEntity, entities.Deserializable):
     #: The ID of the team this member belongs to.
     #:
     #: :type: :obj:`snowflakes.Snowflake`
-    team_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake)
+    team_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: The user object of this team member.
     #:
@@ -106,7 +106,7 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
     #: The snowflake ID of this team's owner.
     #:
     #: :type: :obj:`snowflakes.Snowflake`
-    owner_user_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake)
+    owner_user_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     @property
     def icon_url(self) -> typing.Optional[str]:
@@ -220,14 +220,14 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
     )
 
     #: The ID of the primary "Game SKU" of a game that's sold on Discord.
     #:
     #: :type: :obj:`snowflakes.Snowflake`, optional
     primary_sku_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
     )
 
     #: The url slug that links to this application's store page
