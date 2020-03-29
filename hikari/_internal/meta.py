@@ -16,14 +16,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Singleton metaclass"""
+"""Various functional types and metatypes."""
 __all__ = ["SingletonMeta"]
 
 
 class SingletonMeta(type):
-    """Metaclass that makes the class a singleton. 
-    
-    Once an instance has been defined at runtime, it will exist until the interpreter 
+    """Metaclass that makes the class a singleton.
+
+    Once an instance has been defined at runtime, it will exist until the interpreter
     that created it is terminated.
 
     Example

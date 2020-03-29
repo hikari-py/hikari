@@ -33,10 +33,10 @@ __all__ = [
 import datetime
 import typing
 
+import hikari._internal.conversions
+from hikari._internal import marshaller
 from hikari.core import colors
 from hikari.core import entities
-from hikari.internal_utilities import dates
-from hikari.internal_utilities import marshaller
 
 
 @marshaller.attrs(slots=True)
@@ -212,7 +212,7 @@ class Embed(entities.HikariEntity, entities.Deserializable, entities.Serializabl
     #:
     #: :type: :obj:`datetime.datetime`, optional
     timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=dates.parse_iso_8601_ts,
+        deserializer=hikari._internal.conversions.parse_iso_8601_ts,
         serializer=lambda timestamp: timestamp.replace(tzinfo=datetime.timezone.utc).isoformat(),
         if_undefined=None,
     )
@@ -267,7 +267,7 @@ class Embed(entities.HikariEntity, entities.Deserializable, entities.Serializabl
     #:
     #: :type: :obj:`typing.Sequence` [ :obj:`EmbedField` ], optional
     fields: typing.Optional[typing.Sequence[EmbedField]] = marshaller.attrib(
-        deserializer=lambda fields: [f for f in map(EmbedField.deserialize, fields)],
-        serializer=lambda fields: [f for f in map(EmbedField.serialize, fields)],
+        deserializer=lambda fields: [EmbedField.deserialize(f) for f in fields],
+        serializer=lambda fields: [f.serialize() for f in fields],
         if_undefined=None,
     )

@@ -72,10 +72,13 @@ import typing
 
 import attr
 
+import hikari._internal.conversions
+from hikari._internal import assertions
+from hikari._internal import marshaller
 from hikari.core import channels
-from hikari.core import entities
 from hikari.core import embeds as _embeds
 from hikari.core import emojis as _emojis
+from hikari.core import entities
 from hikari.core import guilds
 from hikari.core import invites
 from hikari.core import messages
@@ -83,10 +86,6 @@ from hikari.core import oauth2
 from hikari.core import snowflakes
 from hikari.core import users
 from hikari.core import voices
-from hikari.internal_utilities import aio
-from hikari.internal_utilities import assertions
-from hikari.internal_utilities import dates
-from hikari.internal_utilities import marshaller
 
 T_contra = typing.TypeVar("T_contra", contravariant=True)
 
@@ -114,32 +113,37 @@ class ExceptionEvent(HikariEvent):
 
     #: The event that was being invoked when the exception occurred.
     #:
-    #: :type: :obj`typing.Callable` [ [ :obj:`HikariEvent` ], ``None`` ]
-    callback: aio.CoroutineFunctionT
+    #: :type: ``async def`` [ [ :obj:`HikariEvent` ], ``None`` ]
+    callback: typing.Callable[[HikariEvent], typing.Awaitable[None]]
 
 
 # Synthetic event, is not deserialized
 @attr.attrs(slots=True, auto_attribs=True)
 class StartedEvent(HikariEvent):
-    ...
+    """Event that is fired when the gateway client starts all shards."""
 
 
 # Synthetic event, is not deserialized
 @attr.attrs(slots=True, auto_attribs=True)
 class StoppingEvent(HikariEvent):
-    ...
+    """Event that is fired when the gateway client is instructed to disconnect
+    all shards.
+    """
 
 
 # Synthetic event, is not deserialized
 @attr.attrs(slots=True, auto_attribs=True)
 class StoppedEvent(HikariEvent):
-    ...
+    """Event that is fired when the gateway client has finished disconnecting
+    all shards.
+    """
 
 
 _websocket_name_break = re.compile(r"(?<=[a-z])(?=[A-Z])")
 
 
 def mark_as_websocket_event(cls):
+    """Marks the event as being a websocket one. I'll probably delete this."""
     name = cls.__name__
     assertions.assert_that(name.endswith("Event"), "expected name to be <blah>Event")
     name = name[: -len("Event")]
@@ -151,19 +155,19 @@ def mark_as_websocket_event(cls):
 @mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class ConnectedEvent(HikariEvent, entities.Deserializable):
-    ...
+    """Event invoked each time a shard connects."""
 
 
 @mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class DisconnectedEvent(HikariEvent, entities.Deserializable):
-    ...
+    """Event invoked each time a shard disconnects."""
 
 
 @mark_as_websocket_event
 @marshaller.attrs(slots=True)
 class ReconnectedEvent(HikariEvent, entities.Deserializable):
-    ...
+    """Event invoked each time a shard successfully reconnects."""
 
 
 @mark_as_websocket_event
@@ -209,14 +213,14 @@ class ReadyEvent(HikariEvent, entities.Deserializable):
         """The zero-indexed id of the current shard, only available if this
         ready event was received while identifying.
         ."""
-        return self._shard_information and self._shard_information[0] or None
+        return self._shard_information[0] if self._shard_information else None
 
     @property
     def shard_count(self) -> typing.Optional[int]:
         """The total shard count for this bot, only available if this
         ready event was received while identifying.
         """
-        return self._shard_information and self._shard_information[1] or None
+        return self._shard_information[1] if self._shard_information else None
 
 
 @mark_as_websocket_event
@@ -339,7 +343,7 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializ
     #:
     #: :type: :obj:`datetime.datetime`, optional
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=dates.parse_iso_8601_ts, if_undefined=None
+        deserializer=hikari._internal.conversions.parse_iso_8601_ts, if_undefined=None
     )
 
 
@@ -391,7 +395,7 @@ class ChannelPinUpdateEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`datetime.datetime`, optional
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=dates.parse_iso_8601_ts, if_undefined=None
+        deserializer=hikari._internal.conversions.parse_iso_8601_ts, if_undefined=None
     )
 
 
@@ -555,7 +559,7 @@ class GuildMemberUpdateEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`entities.UNSET` ], optional
     premium_since: typing.Union[None, datetime.datetime, entities.Unset] = marshaller.attrib(
-        deserializer=dates.parse_iso_8601_ts, if_none=None, if_undefined=entities.Unset
+        deserializer=hikari._internal.conversions.parse_iso_8601_ts, if_none=None, if_undefined=entities.Unset
     )
 
 
@@ -625,7 +629,7 @@ class InviteCreateEvent(HikariEvent, entities.Deserializable):
     #: The datetime of when this invite was created.
     #:
     #: :type: :obj:`datetime.datetime`
-    created_at: datetime.datetime = marshaller.attrib(deserializer=dates.parse_iso_8601_ts)
+    created_at: datetime.datetime = marshaller.attrib(deserializer=hikari._internal.conversions.parse_iso_8601_ts)
 
     #: The ID of the guild this invite was created in, if applicable.
     #: Will be ``None`` for group DM invites.
@@ -760,14 +764,14 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserial
     #:
     #: :type: :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`entities.UNSET` ]
     timestamp: typing.Union[datetime.datetime, entities.Unset] = marshaller.attrib(
-        deserializer=dates.parse_iso_8601_ts, if_undefined=entities.Unset
+        deserializer=hikari._internal.conversions.parse_iso_8601_ts, if_undefined=entities.Unset
     )
 
     #: The timestamp that the message was last edited at, or ``None`` if not ever edited.
     #:
     #: :type: :obj:`typing.Union` [  :obj:`datetime.datetime`, :obj:`entities.UNSET` ], optional
     edited_timestamp: typing.Union[datetime.datetime, entities.Unset, None] = marshaller.attrib(
-        deserializer=dates.parse_iso_8601_ts, if_none=None, if_undefined=entities.Unset
+        deserializer=hikari._internal.conversions.parse_iso_8601_ts, if_none=None, if_undefined=entities.Unset
     )
 
     #: Whether the message is a TTS message.

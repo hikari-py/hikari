@@ -23,12 +23,13 @@ import datetime
 import re
 import typing
 
+import hikari._internal.conversions
+from hikari._internal import assertions
+from hikari._internal import marshaller
 from hikari.core import entities
 from hikari.core import gateway_entities
+from hikari.core import guilds
 from hikari.core.clients import protocol_config
-from hikari.internal_utilities import assertions
-from hikari.internal_utilities import dates
-from hikari.internal_utilities import marshaller
 from hikari.net import codes as net_codes
 
 
@@ -91,6 +92,7 @@ class ShardConfig(entities.HikariEntity, entities.Deserializable):
     #: :type: :obj:`int`
     shard_count: int = marshaller.attrib(deserializer=int)
 
+    # noinspection PyMissingConstructor
     def __init__(self, *, shard_ids: typing.Optional[typing.Iterable[int]] = None, shard_count: int) -> None:
         self.shard_ids = [*shard_ids] if shard_ids else [*range(shard_count)]
 
@@ -124,11 +126,12 @@ class GatewayConfig(entities.HikariEntity, entities.Deserializable):
         deserializer=gateway_entities.GatewayActivity.deserialize, if_none=None, if_undefined=None, default=None
     )
 
-    # TODO: implement enum for this
     #: The initial status to set the shards to when starting the gateway.
     #:
     #: :type: :obj:`str`
-    initial_status: str = marshaller.attrib(deserializer=str, if_undefined=lambda: "online", default="online")
+    initial_status: guilds.PresenceStatus = marshaller.attrib(
+        deserializer=guilds.PresenceStatus.__getitem__, if_undefined=lambda: "online", default="online",
+    )
 
     #: Whether to show up as AFK or not on sign-in.
     #:
@@ -140,7 +143,7 @@ class GatewayConfig(entities.HikariEntity, entities.Deserializable):
     #:
     #: :type: :obj:`datetime.datetime`, optional
     initial_idle_since: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=dates.unix_epoch_to_ts, if_none=None, if_undefined=None, default=None
+        deserializer=hikari._internal.conversions.unix_epoch_to_ts, if_none=None, if_undefined=None, default=None
     )
 
     #: The intents to use for the connection.

@@ -28,20 +28,19 @@ class StateManager(abc.ABC):
     """Base type for a state management implementation."""
 
     @abc.abstractmethod
-    async def on_event(self, event_obj: events.HikariEvent) -> None:
-        ...
+    async def handle_new_event(self, event_obj: events.HikariEvent) -> None:
+        """This is abstract and this is a dummy string."""
 
 
 class StatelessStateManagerImpl(StateManager):
     """Stubbed stateless event manager for implementing stateless bots."""
 
-    async def on_event(self, event_obj: events.HikariEvent) -> None:
-        pass
+    async def handle_new_event(self, event_obj: events.HikariEvent) -> None:
+        """Gluten free."""
 
 
 class StatefulStateManagerImpl(StateManager):
     """A basic state event manager implementation."""
 
-    async def on_event(self, event_obj: events.HikariEvent) -> None:
-        # TODO: implement state management
-        pass
+    async def handle_new_event(self, event_obj: events.HikariEvent) -> None:
+        """Sourced from sustainable agricultural plots in Sweden."""

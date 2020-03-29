@@ -16,6 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Defines a facade around :obj:`hikari.core.clients.shard_client.ShardClient`
+which provides functionality such as keeping multiple shards alive
+simultaneously.
+"""
 __all__ = ["GatewayClient"]
 
 import asyncio
@@ -23,18 +27,24 @@ import inspect
 import time
 import typing
 
+from hikari._internal import more_logging
 from hikari.core import dispatcher
 from hikari.core import events
+from hikari.core import state
 from hikari.core.clients import gateway_config
 from hikari.core.clients import shard_client
-from hikari.core import state
-from hikari.internal_utilities import loggers
 from hikari.net import shard
 
 ShardT = typing.TypeVar("ShardT", bound=shard_client.ShardClient)
 
 
 class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase, dispatcher.EventDispatcher):
+    """Facades :obj:`shard_client.ShardClient` implementations to provide a
+    management layer for multiple-sharded bots. This also provides additional
+    conduit used to connect up shards to the rest of this framework to enable
+    management of dispatched events, etc.
+    """
+
     def __init__(
         self,
         config: gateway_config.GatewayConfig,
@@ -43,7 +53,7 @@ class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase, di
         dispatcher_impl: typing.Optional[dispatcher.EventDispatcher] = None,
         shard_type: typing.Type[ShardT] = shard_client.ShardClient,
     ) -> None:
-        self.logger = loggers.get_named_logger(self)
+        self.logger = more_logging.get_named_logger(self)
         self.config = config
         self.event_dispatcher = dispatcher_impl if dispatcher_impl is not None else dispatcher.EventDispatcherImpl()
         self._websocket_event_types = self._websocket_events()
@@ -75,9 +85,19 @@ class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase, di
         self.logger.info("started %s shard(s) in approx %.2fs", len(self.shards), finish_time - start_time)
 
     async def join(self) -> None:
+        """Wait for all shards to finish executing, then return."""
         await asyncio.gather(*(shard_obj.join() for shard_obj in self.shards.values()))
 
     async def close(self, wait: bool = True) -> None:
+        """Close all shards.
+
+        Parameters
+        ----------
+        wait : :obj:`bool`
+            If ``True`` (the default), then once called, this will wait until
+            all shards have shut down before returning. If ``False``, it will
+            only send the signal to shut down, but will return immediately.
+        """
         if self._is_running:
             self.logger.info("stopping %s shard(s)", len(self.shards))
             start_time = time.perf_counter()
@@ -136,8 +156,7 @@ class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase, di
             pass
         else:
             event_payload = event_type.deserialize(payload)
-            await self.state.on_event(event_payload)
-            await self.event_dispatcher.dispatch_event(event_payload)
+            await self.state.handle_new_event(event_payload)
 
     def _websocket_events(self):
         # Look for anything that has the ___raw_ws_event_name___ class attribute
@@ -158,16 +177,3 @@ class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase, di
         self.logger.debug("detected %s web socket events to register from %s", len(types), events.__name__)
 
         return types
-
-    def add_listener(
-        self, event_type: typing.Type[dispatcher.EventT], callback: dispatcher.EventCallbackT
-    ) -> dispatcher.EventCallbackT:
-        return self.event_dispatcher.add_listener(event_type, callback)
-
-    def remove_listener(
-        self, event_type: typing.Type[dispatcher.EventT], callback: dispatcher.EventCallbackT
-    ) -> dispatcher.EventCallbackT:
-        return self.event_dispatcher.remove_listener(event_type, callback)
-
-    def dispatch_event(self, event: events.HikariEvent) -> ...:
-        return self.event_dispatcher.dispatch_event(event)

@@ -19,9 +19,9 @@
 import cymock as mock
 import pytest
 
+from hikari._internal import cdn
 from hikari.core import oauth2
 from hikari.core import users
-from hikari.internal_utilities import cdn
 from tests.hikari import _helpers
 
 

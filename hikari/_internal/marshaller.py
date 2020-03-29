@@ -40,7 +40,7 @@ import weakref
 
 import attr
 
-from hikari.internal_utilities import assertions
+from hikari._internal import assertions
 
 _RAW_NAME_ATTR = __name__ + "_RAW_NAME"
 _SERIALIZER_ATTR = __name__ + "_SERIALIZER"
@@ -98,7 +98,20 @@ def dereference_handle(handle_string: str) -> typing.Any:
     return weakref.proxy(obj)
 
 
-def dereference_int_flag(int_flag_type, raw_value) -> None:
+def dereference_int_flag(int_flag_type, raw_value) -> typing.SupportsInt:
+    """Given a type of :obj:`enum.IntFlag`, and a raw value, cast the raw value
+    to the int flag.
+
+    This will support resolving bitfield integers as well as decoding a sequence
+    of case insensitive flag names into one combined value.
+
+    Parameters
+    ----------
+    int_flag_type:
+        The type of the int flag to check.
+    raw_value:
+        The raw value to convert.
+    """
     if isinstance(raw_value, str) and raw_value.isdigit():
         raw_value = int(raw_value)
 
@@ -117,8 +130,8 @@ def attrib(
     # type hints, the library loses the ability to be type checked properly
     # anymore, so we have to pass this explicitly regardless.
     deserializer: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
-    if_none: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)] = RAISE,
-    if_undefined: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)] = RAISE,
+    if_none: typing.Union[typing.Callable[[], typing.Any], None, type(RAISE)] = RAISE,
+    if_undefined: typing.Union[typing.Callable[[], typing.Any], None, type(RAISE)] = RAISE,
     raw_name: typing.Optional[str] = None,
     transient: bool = False,
     serializer: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
@@ -177,7 +190,9 @@ def attrib(
     metadata[_IF_UNDEFINED] = if_undefined
     metadata[_TRANSIENT_ATTR] = transient
 
-    return attr.ib(**kwargs, metadata=metadata)
+    attribute = attr.ib(**kwargs, metadata=metadata)
+    # Fool pylint into thinking this is any type.
+    return typing.cast(typing.Any, attribute)
 
 
 def _not_implemented(op, name):
@@ -353,7 +368,8 @@ class HikariEntityMarshaller:
                 else:
                     kwargs[kwarg_name] = a.if_undefined()
                 continue
-            elif (data := raw_data[a.raw_name]) is None:
+
+            if (data := raw_data[a.raw_name]) is None:
                 if a.if_none is RAISE:
                     raise AttributeError(
                         "Failed to deserialize data to instance of "

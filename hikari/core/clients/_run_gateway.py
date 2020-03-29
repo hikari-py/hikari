@@ -23,7 +23,6 @@ to use this.
 """
 import logging
 
-
 import click
 
 from hikari.core.clients import gateway_client
@@ -43,6 +42,7 @@ logger_levels = ("DEBUG", "INFO", "WARNING", "ERROR", "NOTSET")
 @click.option("--verify-ssl", default=True, type=click.BOOL, help="Enable or disable SSL verification.")
 @click.option("--version", default=7, type=click.IntRange(min=6), help="Version of the gateway to use.")
 def run_gateway(compression, debug, logger, shards, token, url, verify_ssl, version):
+    """Run the client."""
     logging.basicConfig(level=logger)
 
     client = gateway_client.GatewayClient(
@@ -60,4 +60,4 @@ def run_gateway(compression, debug, logger, shards, token, url, verify_ssl, vers
     client.run()
 
 
-run_gateway()
+run_gateway()  # pylint:disable=no-value-for-parameter

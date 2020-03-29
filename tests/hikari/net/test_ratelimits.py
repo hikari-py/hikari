@@ -34,7 +34,7 @@ from tests.hikari import _helpers
 
 class TestBaseRateLimiter:
     def test_context_management(self):
-        class MockedBaseRateLimiter(ratelimits.IRateLimiter):
+        class MockedBaseRateLimiter(ratelimits.BaseRateLimiter):
             close = mock.MagicMock()
             acquire = NotImplemented
 
@@ -462,21 +462,6 @@ class TestHTTPBucketRateLimiterManager:
             try:
                 await asyncio.sleep(0.1)
                 mgr.do_gc_pass.assert_called()
-            finally:
-                mgr.gc_task.cancel()
-
-    @pytest.mark.asyncio
-    async def test_gc_calls_do_pass_and_ignores_exception(self):
-        with _helpers.unslot_class(ratelimits.HTTPBucketRateLimiterManager)() as mgr:
-            mgr.do_gc_pass = mock.MagicMock(side_effect=RuntimeError)
-            mgr.start(0.01)
-            await asyncio.sleep(0.1)
-            mgr.do_gc_pass.assert_called()
-            try:
-                mgr.gc_task.exception()
-                assert False
-            except asyncio.InvalidStateError:
-                pass
             finally:
                 mgr.gc_task.cancel()
 

@@ -26,7 +26,7 @@ from __future__ import annotations
 import cymock as mock
 import pytest
 
-from hikari.internal_utilities import marshaller
+from hikari._internal import marshaller
 from tests.hikari import _helpers
 
 

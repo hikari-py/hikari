@@ -24,102 +24,73 @@ the version of this library, the OS you are making requests from, etc.
 This information is provided to enable Discord to detect that you are using a
 valid bot and not attempting to abuse the API.
 """
-__all__ = ["library_version", "python_version", "system_type", "user_agent"]
+__all__ = ["UserAgent"]
 
-import platform
+import typing
 
-from hikari.internal_utilities import cache
+from hikari._internal import meta
 
 
-@cache.cached_function()
-def library_version() -> str:
-    """The version of the library being used.
+class UserAgent(metaclass=meta.SingletonMeta):
+    """Platform version info.
 
-    Returns
-    -------
-    :obj:`str`
-        A string representing the version of this library.
-
-    Example
-    -------
-    .. code-block:: python
-    
-        >>> from hikari.net import user_agent
-        >>> print(user_agent.library_version())
-        hikari 0.0.71
+    Notes
+    -----
+    This is a singleton.
     """
-    from hikari._about import __version__
 
-    return f"hikari {__version__}"
+    #: The version of the library.
+    #:
+    #: ``"hikari 1.0.1"``
+    library_version: typing.Final[str]
 
+    #: The platform version.
+    #:
+    #: ``"CPython 3.8.2 GCC 9.2.0"``
+    platform_version: typing.Final[str]
 
-@cache.cached_function()
-def python_version() -> str:
-    """The python version being used.
+    #: The operating system type.
+    #:
+    #: ``"Linux-5.4.15-2-MANJARO-x86_64-with-glibc2.2.5"``
+    system_type: typing.Final[str]
 
-    Returns
-    -------
-    :obj:`str`
-        A string representing the version of this release of Python.
+    #: The Hikari-specific user-agent to use in HTTP connections to Discord.
+    #:
+    #: ``"DiscordBot (https://gitlab.com/nekokatt/hikari; 1.0.1; Nekokatt) CPython 3.8.2 GCC 9.2.0 Linux"``
+    user_agent: typing.Final[str]
 
-    Example
-    -------
-    .. code-block:: python
+    def __init__(self):
+        from hikari._about import __author__, __url__, __version__
+        from platform import python_implementation, python_version, python_branch, python_compiler, platform
 
-        >>> from hikari.net import user_agent
-        >>> print(user_agent.python_version())
-        CPython 3.8.1 GCC 9.2.0
-    """
-    attrs = [
-        platform.python_implementation(),
-        platform.python_version(),
-        platform.python_branch(),
-        platform.python_compiler(),
-    ]
-    return " ".join(a.strip() for a in attrs if a.strip())
+        self.library_version = f"hikari {__version__}"
+        self.platform_version = self._join_strip(
+            python_implementation(), python_version(), python_branch(), python_compiler()
+        )
+        self.system_type = platform()
+        self.user_agent = f"DiscordBot ({__url__}; {__version__}; {__author__}) {python_version()} {self.system_type}"
 
+        def __attr__(_):
+            raise TypeError("cannot change attributes once set")
 
-@cache.cached_function()
-def system_type() -> str:
-    """The operating system being used.
+        self.__delattr__ = __attr__
+        self.__setattr__ = __attr__
 
-    Returns
-    -------
-    :obj:`str`
-        A string representing the system being used.
+    @staticmethod
+    def _join_strip(*args):
+        return " ".join((arg.strip() for arg in args if arg.strip()))
 
-    Example
-    -------
-    .. code-block:: python
-
-        >>> from hikari.net import user_agent
-        >>> print(user_agent.system_type())
-        Linux-5.4.15-2-MANJARO-x86_64-with-glibc2.2.5
-    """
-    # Might change this eventually to be more detailed, who knows.
-    return platform.platform()
-
-
-@cache.cached_function()
-def user_agent() -> str:
-    """The user agent of the bot
-
-    Returns
-    -------
-    :obj:`str`
-        The string to use for the library ``User-Agent`` HTTP header that is required
-        to be sent with every HTTP request.
-
-    Example
-    -------
-    .. code-block:: python
-
-        >>> from hikari.net import user_agent
-        >>> print(user_agent.user_agent())
-        DiscordBot (https://gitlab.com/nekokatt/hikari, 0.0.71) CPython 3.8.1 GCC 9.2.0 Linux
-    """
-    from hikari._about import __version__, __url__
-
-    system = system_type()
-    python = python_version()
-    return f"DiscordBot ({__url__}, {__version__}) {python} {system}"
+    @property
+    def websocket_triplet(self) -> typing.Dict[str, str]:
+        """
+        Returns
+        -------
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`str` ]:
+            The object to send to Discord representing device info when
+            IDENTIFYing with the gateway.
+        """
+        return {
+            "$os": self.system_type,
+            "$browser": self.library_version,
+            "$device": self.platform_version,
+        }
