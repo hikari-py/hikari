@@ -19,8 +19,8 @@
 import cymock as mock
 import pytest
 
+from hikari._internal import cdn
 from hikari.core import users
-from hikari.internal_utilities import cdn
 
 
 @pytest.fixture()

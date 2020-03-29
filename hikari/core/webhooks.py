@@ -22,14 +22,16 @@ __all__ = ["WebhookType", "Webhook"]
 import enum
 import typing
 
+from hikari._internal import marshaller
 from hikari.core import entities
 from hikari.core import snowflakes
 from hikari.core import users
-from hikari.internal_utilities import marshaller
 
 
 @enum.unique
 class WebhookType(enum.IntEnum):
+    """Types of webhook."""
+
     #: Incoming webhook.
     INCOMING = 1
     #: Channel Follower webhook.
@@ -38,7 +40,11 @@ class WebhookType(enum.IntEnum):
 
 @marshaller.attrs(slots=True)
 class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
-    """Represents a webhook"""
+    """Represents a webhook object on Discord. This is an endpoint that can have
+    messages sent to it using standard HTTP requests, which enables external
+    services that are not bots to send informational messages to specific
+    channels.
+    """
 
     #: The type of the webhook.
     #:

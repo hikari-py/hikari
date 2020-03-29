@@ -25,12 +25,11 @@ import logging
 import typing
 import weakref
 
+from hikari._internal import assertions
+from hikari._internal import more_asyncio
+from hikari._internal import more_collections
+from hikari._internal import more_logging
 from hikari.core import events
-from hikari.internal_utilities import aio
-from hikari.internal_utilities import assertions
-from hikari.internal_utilities import containers
-from hikari.internal_utilities import loggers
-
 
 EventT = typing.TypeVar("EventT", bound=events.HikariEvent)
 PredicateT = typing.Callable[[EventT], typing.Union[bool, typing.Coroutine[None, None, bool]]]
@@ -84,7 +83,7 @@ class EventDispatcher(abc.ABC):
     @abc.abstractmethod
     def wait_for(
         self, event_type: typing.Type[EventT], *, timeout: typing.Optional[float], predicate: PredicateT
-    ) -> asyncio.Future:
+    ) -> more_asyncio.Future:
         """Wait for the given event type to occur.
 
         Parameters
@@ -184,9 +183,11 @@ class EventDispatcherImpl(EventDispatcher):
     def __init__(self) -> None:
         self._listeners: typing.Dict[typing.Type[EventT], typing.List[EventCallbackT]] = {}
         # pylint: disable=E1136
-        self._waiters: typing.Dict[typing.Type[EventT], containers.WeakKeyDictionary[asyncio.Future, PredicateT]] = {}
+        self._waiters: typing.Dict[
+            typing.Type[EventT], more_collections.WeakKeyDictionary[asyncio.Future, PredicateT]
+        ] = {}
         # pylint: enable=E1136
-        self.logger = loggers.get_named_logger(self)
+        self.logger = more_logging.get_named_logger(self)
 
     def close(self) -> None:
         """Cancel anything that is waiting for an event to be dispatched."""
@@ -271,7 +272,7 @@ class EventDispatcherImpl(EventDispatcher):
             # can be awaited concurrently.
             futs.append(asyncio.create_task(self._awaken_waiters(waiters, event)))
 
-        result = asyncio.gather(*futs) if futs else aio.completed_future()  # lgtm [py/unused-local-variable]
+        result = asyncio.gather(*futs) if futs else more_asyncio.completed_future()  # lgtm [py/unused-local-variable]
 
         # Stop false positives from linters that now assume this is a coroutine function
         result: typing.Any
@@ -291,7 +292,7 @@ class EventDispatcherImpl(EventDispatcher):
                 future.set_result(event)
             else:
                 delete_waiter = False
-        except Exception as ex:
+        except Exception as ex:  # pylint:disable=broad-except
             delete_waiter = True
             future.set_exception(ex)
 
@@ -306,14 +307,14 @@ class EventDispatcherImpl(EventDispatcher):
     async def _catch(self, callback, event):
         try:
             return await callback(event)
-        except Exception as ex:
+        except Exception as ex:  # pylint:disable=broad-except
             # Pop the top-most frame to remove this _catch call.
             # The user doesn't need it in their traceback.
             ex.__traceback__ = ex.__traceback__.tb_next
             self.handle_exception(ex, event, callback)
 
     def handle_exception(
-        self, exception: Exception, event: events.HikariEvent, callback: aio.CoroutineFunctionT
+        self, exception: Exception, event: events.HikariEvent, callback: typing.Callable[..., typing.Awaitable[None]]
     ) -> None:
         """Function that is passed any exception. This allows users to override
         this with a custom implementation if desired.
@@ -349,7 +350,7 @@ class EventDispatcherImpl(EventDispatcher):
 
     def wait_for(
         self, event_type: typing.Type[EventT], *, timeout: typing.Optional[float], predicate: PredicateT,
-    ) -> asyncio.Future:
+    ) -> more_asyncio.Future:
         """Given an event name, wait for the event to occur once, then return
         the arguments that accompanied the event as the result.
 

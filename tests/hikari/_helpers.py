@@ -35,7 +35,7 @@ import async_timeout
 import cymock as mock
 import pytest
 
-from hikari.internal_utilities import marshaller
+from hikari._internal import marshaller
 
 _LOGGER = logging.getLogger(__name__)
 

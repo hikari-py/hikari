@@ -16,6 +16,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Provides a command-line entry point that shows the library version and then
+exits.
+"""
 import platform
 
 import click
@@ -25,6 +28,7 @@ import hikari
 
 @click.command()
 def main():
+    """Show the application version, then exit."""
     print(f"{hikari.__name__} {hikari.__version__} from {hikari.__path__[0]} (python {platform.python_version()})")
 
 

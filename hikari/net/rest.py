@@ -30,11 +30,10 @@ import uuid
 
 import aiohttp.typedefs
 
-from hikari.internal_utilities import assertions
-from hikari.internal_utilities import containers
-from hikari.internal_utilities import loggers
-from hikari.internal_utilities import storage
-from hikari.internal_utilities import transformations
+from hikari._internal import assertions
+from hikari._internal import conversions
+from hikari._internal import more_collections
+from hikari._internal import more_logging
 from hikari.net import codes
 from hikari.net import errors
 from hikari.net import ratelimits
@@ -88,12 +87,12 @@ class RestfulClient:
         #: The logger to use for this object.
         #:
         #: :type: :obj:`logging.Logger`
-        self.logger = loggers.get_named_logger(self)
+        self.logger = more_logging.get_named_logger(self)
 
         #: User agent to use.
         #:
         #: :type: :obj:`str`
-        self.user_agent = user_agent.user_agent()
+        self.user_agent = user_agent.UserAgent().user_agent
 
         #: If ``True``, this will enforce SSL signed certificate verification, otherwise it will
         #: ignore potentially malicious SSL certificates.
@@ -147,10 +146,13 @@ class RestfulClient:
         self.token = token
 
     async def close(self):
+        """Shut down the REST client safely, and terminate any rate limiters
+        executing in the background.
+        """
         with contextlib.suppress(Exception):
             self.ratelimiter.close()
         with contextlib.suppress(Exception):
-            self.logger.debug("Closing HTTPClient")
+            self.logger.debug("Closing %s", type(self).__qualname__)
             await self.client_session.close()
 
     def __enter__(self) -> typing.NoReturn:
@@ -169,12 +171,12 @@ class RestfulClient:
         headers=None,
         query=None,
         form_body=None,
-        json_body: typing.Optional[typing.Union[typing.Dict, typing.Sequence[typing.Any]]] = None,
-        reason: typing.Union[typing.Literal[...], str] = ...,
-        re_seekable_resources: typing.Collection[typing.Any] = containers.EMPTY_COLLECTION,
+        json_body: typing.Optional[typing.Union[typing.Dict[str, typing.Any], typing.Sequence[typing.Any]]] = None,
+        reason: str = ...,
+        re_seekable_resources: typing.Collection[typing.Any] = more_collections.EMPTY_COLLECTION,
         suppress_authorization_header: bool = False,
         **kwargs,
-    ) -> typing.Union[typing.Dict, typing.Sequence[typing.Any], None]:
+    ) -> typing.Union[typing.Dict[str, typing.Any], typing.Sequence[typing.Any], None]:
         bucket_ratelimit_future = self.ratelimiter.acquire(compiled_route)
         request_headers = {"X-RateLimit-Precision": "millisecond"}
 
@@ -264,7 +266,7 @@ class RestfulClient:
                     body = None
                 elif content_type == "application/json":
                     body = self.json_deserialize(raw_body)
-                elif content_type == "text/plain" or content_type == "text/html":
+                elif content_type in ("text/plain", "text/html"):
                     await self._handle_bad_response(
                         backoff,
                         status,
@@ -297,13 +299,13 @@ class RestfulClient:
 
                 if status == codes.HTTPStatusCode.BAD_REQUEST:
                     raise errors.BadRequestHTTPError(compiled_route, message, code)
-                elif status == codes.HTTPStatusCode.UNAUTHORIZED:
+                if status == codes.HTTPStatusCode.UNAUTHORIZED:
                     raise errors.UnauthorizedHTTPError(compiled_route, message, code)
-                elif status == codes.HTTPStatusCode.FORBIDDEN:
+                if status == codes.HTTPStatusCode.FORBIDDEN:
                     raise errors.ForbiddenHTTPError(compiled_route, message, code)
-                elif status == codes.HTTPStatusCode.NOT_FOUND:
+                if status == codes.HTTPStatusCode.NOT_FOUND:
                     raise errors.NotFoundHTTPError(compiled_route, message, code)
-                elif status < codes.HTTPStatusCode.INTERNAL_SERVER_ERROR:
+                if status < codes.HTTPStatusCode.INTERNAL_SERVER_ERROR:
                     raise errors.ClientHTTPError(status, compiled_route, message, code)
 
                 await self._handle_bad_response(backoff, status, compiled_route, message, code)
@@ -340,11 +342,11 @@ class RestfulClient:
         result = await self._request(routes.GATEWAY.compile(self.GET))
         return result["url"]
 
-    async def get_gateway_bot(self) -> typing.Dict:
+    async def get_gateway_bot(self) -> typing.Dict[str, typing.Any]:
         """
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             An object containing a ``url`` to connect to, an :obj:`int` number of shards recommended to use
             for connecting, and a ``session_start_limit`` object.
 
@@ -355,12 +357,7 @@ class RestfulClient:
         return await self._request(routes.GATEWAY_BOT.compile(self.GET))
 
     async def get_guild_audit_log(
-        self,
-        guild_id: str,
-        *,
-        user_id: typing.Union[typing.Literal[...], str] = ...,
-        action_type: typing.Union[typing.Literal[...], int] = ...,
-        limit: typing.Union[typing.Literal[...], int] = ...,
+        self, guild_id: str, *, user_id: str = ..., action_type: int = ..., limit: int = ...,
     ) -> typing.Dict:
         """Get an audit log object for the given guild.
 
@@ -373,12 +370,12 @@ class RestfulClient:
         action_type : :obj:`int`
             If specified, the action type to look up.
         limit : :obj:`int`
-            If specified, the limit to apply to the number of records. 
+            If specified, the limit to apply to the number of records.
             Defaults to ``50``. Must be between ``1`` and ``100`` inclusive.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             An audit log object.
 
         Raises
@@ -389,13 +386,13 @@ class RestfulClient:
             If the guild does not exist.
         """
         query = {}
-        transformations.put_if_specified(query, "user_id", user_id)
-        transformations.put_if_specified(query, "action_type", action_type)
-        transformations.put_if_specified(query, "limit", limit)
+        conversions.put_if_specified(query, "user_id", user_id)
+        conversions.put_if_specified(query, "action_type", action_type)
+        conversions.put_if_specified(query, "limit", limit)
         route = routes.GUILD_AUDIT_LOGS.compile(self.GET, guild_id=guild_id)
         return await self._request(route, query=query)
 
-    async def get_channel(self, channel_id: str) -> typing.Dict:
+    async def get_channel(self, channel_id: str) -> typing.Dict[str, typing.Any]:
         """Get a channel object from a given channel ID.
 
         Parameters
@@ -405,7 +402,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The channel object that has been found.
 
         Raises
@@ -422,17 +419,17 @@ class RestfulClient:
         self,
         channel_id: str,
         *,
-        name: typing.Union[typing.Literal[...], str] = ...,
-        position: typing.Union[typing.Literal[...], int] = ...,
-        topic: typing.Union[typing.Literal[...], str] = ...,
-        nsfw: typing.Union[typing.Literal[...], bool] = ...,
-        rate_limit_per_user: typing.Union[typing.Literal[...], int] = ...,
-        bitrate: typing.Union[typing.Literal[...], int] = ...,
-        user_limit: typing.Union[typing.Literal[...], int] = ...,
-        permission_overwrites: typing.Union[typing.Literal[...], typing.Sequence[typing.Dict]] = ...,
-        parent_id: typing.Union[typing.Literal[...], str] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> typing.Dict:
+        name: str = ...,
+        position: int = ...,
+        topic: str = ...,
+        nsfw: bool = ...,
+        rate_limit_per_user: int = ...,
+        bitrate: int = ...,
+        user_limit: int = ...,
+        permission_overwrites: typing.Sequence[typing.Dict[str, typing.Any]] = ...,
+        parent_id: str = ...,
+        reason: str = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Update one or more aspects of a given channel ID.
 
         Parameters
@@ -440,43 +437,43 @@ class RestfulClient:
         channel_id : :obj:`str`
             The channel ID to update.
         name : :obj:`str`
-            If specified, the new name for the channel.This must be 
+            If specified, the new name for the channel.This must be
             between ``2`` and ``100`` characters in length.
         position : :obj:`int`
             If specified, the position to change the channel to.
         topic : :obj:`str`
-            If specified, the topic to set. This is only applicable to 
-            text channels. This must be between ``0`` and ``1024`` 
+            If specified, the topic to set. This is only applicable to
+            text channels. This must be between ``0`` and ``1024``
             characters in length.
         nsfw : :obj:`bool`
-            If specified, wheather the  channel will be marked as NSFW. 
+            If specified, wheather the  channel will be marked as NSFW.
             Only applicable to text channels.
         rate_limit_per_user : :obj:`int`
-            If specified, the number of seconds the user has to wait before sending 
-            another message.  This will not apply to bots, or to members with 
-            ``MANAGE_MESSAGES`` or ``MANAGE_CHANNEL`` permissions. This must 
+            If specified, the number of seconds the user has to wait before sending
+            another message.  This will not apply to bots, or to members with
+            ``MANAGE_MESSAGES`` or ``MANAGE_CHANNEL`` permissions. This must
             be between ``0`` and ``21600`` seconds.
         bitrate : :obj:`int`
-            If specified, the bitrate in bits per second allowable for the channel. 
-            This only applies to voice channels and must be between ``8000`` 
-            and ``96000`` for normal servers or ``8000`` and ``128000`` for 
+            If specified, the bitrate in bits per second allowable for the channel.
+            This only applies to voice channels and must be between ``8000``
+            and ``96000`` for normal servers or ``8000`` and ``128000`` for
             VIP servers.
         user_limit : :obj:`int`
-            If specified, the new max number of users to allow in a voice channel. 
-            This must be between ``0`` and ``99`` inclusive, where 
+            If specified, the new max number of users to allow in a voice channel.
+            This must be between ``0`` and ``99`` inclusive, where
             ``0`` implies no limit.
-        permission_overwrites : :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
-            If specified, the new list of permission overwrites that are category 
+        permission_overwrites : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+            If specified, the new list of permission overwrites that are category
             specific to replace the existing overwrites with.
         parent_id : :obj:`str`
             If specified, the new parent category ID to set for the channel.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
-        
+
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The channel object that has been modified.
 
         Raises
@@ -486,19 +483,19 @@ class RestfulClient:
         :obj:`hikari.net.errors.ForbiddenHTTPError`
             If you lack the permission to make the change.
         :obj:`hikari.net.errors.BadRequestHTTPError`
-            If you provide incorrect options for the corresponding channel type 
+            If you provide incorrect options for the corresponding channel type
             (e.g. a ``bitrate`` for a text channel).
         """
         payload = {}
-        transformations.put_if_specified(payload, "name", name)
-        transformations.put_if_specified(payload, "position", position)
-        transformations.put_if_specified(payload, "topic", topic)
-        transformations.put_if_specified(payload, "nsfw", nsfw)
-        transformations.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user)
-        transformations.put_if_specified(payload, "bitrate", bitrate)
-        transformations.put_if_specified(payload, "user_limit", user_limit)
-        transformations.put_if_specified(payload, "permission_overwrites", permission_overwrites)
-        transformations.put_if_specified(payload, "parent_id", parent_id)
+        conversions.put_if_specified(payload, "name", name)
+        conversions.put_if_specified(payload, "position", position)
+        conversions.put_if_specified(payload, "topic", topic)
+        conversions.put_if_specified(payload, "nsfw", nsfw)
+        conversions.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user)
+        conversions.put_if_specified(payload, "bitrate", bitrate)
+        conversions.put_if_specified(payload, "user_limit", user_limit)
+        conversions.put_if_specified(payload, "permission_overwrites", permission_overwrites)
+        conversions.put_if_specified(payload, "parent_id", parent_id)
         route = routes.CHANNEL.compile(self.PATCH, channel_id=channel_id)
         return await self._request(route, json_body=payload, reason=reason)
 
@@ -513,7 +510,7 @@ class RestfulClient:
         Returns
         -------
         ``None``
-            Nothing, unlike what the API specifies. This is done to maintain 
+            Nothing, unlike what the API specifies. This is done to maintain
             consistency with other calls of a similar nature in this API wrapper.
 
         Raises
@@ -531,15 +528,9 @@ class RestfulClient:
         await self._request(route)
 
     async def get_channel_messages(
-        self,
-        channel_id: str,
-        *,
-        limit: typing.Union[typing.Literal[...], int] = ...,
-        after: typing.Union[typing.Literal[...], str] = ...,
-        before: typing.Union[typing.Literal[...], str] = ...,
-        around: typing.Union[typing.Literal[...], str] = ...,
-    ) -> typing.Sequence[typing.Dict]:
-        """Retrieve message history for a given channel. 
+        self, channel_id: str, *, limit: int = ..., after: str = ..., before: str = ..., around: str = ...,
+    ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+        """Retrieve message history for a given channel.
         If a user is provided, retrieve the DM history.
 
         Parameters
@@ -547,8 +538,8 @@ class RestfulClient:
         channel_id : :obj:`str`
             The ID of the channel to retrieve the messages from.
         limit : :obj:`int`
-            If specified, the number of messages to return. Must be 
-            between ``1`` and ``100`` inclusive.Defaults to ``50`` 
+            If specified, the number of messages to return. Must be
+            between ``1`` and ``100`` inclusive.Defaults to ``50``
             if unspecified.
         after : :obj:`str`
             A message ID. If specified, only return messages sent AFTER this message.
@@ -556,10 +547,10 @@ class RestfulClient:
             A message ID. If specified, only return messages sent BEFORE this message.
         around : :obj:`str`
             A message ID. If specified, only return messages sent AROUND this message.
-      
+
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of message objects.
 
         Raises
@@ -567,17 +558,17 @@ class RestfulClient:
         :obj:`hikari.net.errors.ForbiddenHTTPError`
             If you lack permission to read the channel.
         :obj:`hikari.net.errors.BadRequestHTTPError`
-            If your query is malformed, has an invalid value for ``limit``, 
+            If your query is malformed, has an invalid value for ``limit``,
             or contains more than one of ``after``, ``before`` and ``around``.
         :obj:`hikari.net.errors.NotFoundHTTPError`
-            If the channel is not found, or the message 
+            If the channel is not found, or the message
             provided for one of the filter arguments is not found.
-        
+
         Note
         ----
-        If you are missing the ``VIEW_CHANNEL`` permission, you will receive a 
-        :obj:`hikari.net.errors.ForbiddenHTTPError`. If you are instead missing 
-        the ``READ_MESSAGE_HISTORY`` permission, you will always receive 
+        If you are missing the ``VIEW_CHANNEL`` permission, you will receive a
+        :obj:`hikari.net.errors.ForbiddenHTTPError`. If you are instead missing
+        the ``READ_MESSAGE_HISTORY`` permission, you will always receive
         zero results, and thus an empty list will be returned instead.
 
         Warning
@@ -586,14 +577,14 @@ class RestfulClient:
         Specifying more than one will cause a :obj:`hikari.net.errors.BadRequestHTTPError` to be raised.
         """
         query = {}
-        transformations.put_if_specified(query, "limit", limit)
-        transformations.put_if_specified(query, "before", before)
-        transformations.put_if_specified(query, "after", after)
-        transformations.put_if_specified(query, "around", around)
+        conversions.put_if_specified(query, "limit", limit)
+        conversions.put_if_specified(query, "before", before)
+        conversions.put_if_specified(query, "after", after)
+        conversions.put_if_specified(query, "around", around)
         route = routes.CHANNEL_MESSAGES.compile(self.GET, channel_id=channel_id)
         return await self._request(route, query=query)
 
-    async def get_channel_message(self, channel_id: str, message_id: str) -> typing.Dict:
+    async def get_channel_message(self, channel_id: str, message_id: str) -> typing.Dict[str, typing.Any]:
         """Get the message with the given message ID from the channel with the given channel ID.
 
         Parameters
@@ -605,7 +596,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             A message object.
 
         Note
@@ -626,13 +617,13 @@ class RestfulClient:
         self,
         channel_id: str,
         *,
-        content: typing.Union[typing.Literal[...], str] = ...,
-        nonce: typing.Union[typing.Literal[...], str] = ...,
-        tts: typing.Union[typing.Literal[...], bool] = ...,
-        files: typing.Union[typing.Literal[...], typing.Sequence[typing.Tuple[str, storage.FileLikeT]]] = ...,
-        embed: typing.Union[typing.Literal[...], typing.Dict] = ...,
-        allowed_mentions: typing.Union[typing.Literal[...], typing.Dict] = ...,
-    ) -> typing.Dict:
+        content: str = ...,
+        nonce: str = ...,
+        tts: bool = ...,
+        files: typing.Sequence[typing.Tuple[str, conversions.FileLikeT]] = ...,
+        embed: typing.Dict[str, typing.Any] = ...,
+        allowed_mentions: typing.Dict[str, typing.Any] = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Create a message in the given channel or DM.
 
         Parameters
@@ -642,25 +633,25 @@ class RestfulClient:
         content : :obj:`str`
             If specified, the message content to send with the message.
         nonce : :obj:`str`
-            If specified, an optional ID to send for opportunistic message 
-            creation. This doesn't serve any real purpose for general use, 
+            If specified, an optional ID to send for opportunistic message
+            creation. This doesn't serve any real purpose for general use,
             and can usually be ignored.
         tts : :obj:`bool`
             If specified, whether the message will be sent as a TTS message.
         files : :obj:`typing.Sequence` [ :obj:`typing.Tuple` [ :obj:`str`, :obj:`storage.FileLikeT` ] ]
-            If specified, this should be a list of between ``1`` and ``5`` tuples. 
-            Each tuple should consist of the file name, and either 
-            raw :obj:`bytes` or an :obj:`io.IOBase` derived object with 
+            If specified, this should be a list of between ``1`` and ``5`` tuples.
+            Each tuple should consist of the file name, and either
+            raw :obj:`bytes` or an :obj:`io.IOBase` derived object with
             a seek that points to a buffer containing said file.
-        embed : :obj:`typing.Dict`
+        embed : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             If specified, the embed to send with the message.
-        allowed_mentions : :obj:`typing.Dict`
-            If specified, the mentions to parse from the ``content``. 
+        allowed_mentions : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+            If specified, the mentions to parse from the ``content``.
             If not specified, will parse all mentions from the ``content``.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The created message object.
 
         Raises
@@ -668,12 +659,12 @@ class RestfulClient:
         :obj:`hikari.net.errors.NotFoundHTTPError`
             If the channel is not found.
         :obj:`hikari.net.errors.BadRequestHTTPError`
-            This can be raised if the file is too large; if the embed exceeds 
-            the defined limits; if the message content is specified only and 
-            empty or greater than ``2000`` characters; if neither content, file 
+            This can be raised if the file is too large; if the embed exceeds
+            the defined limits; if the message content is specified only and
+            empty or greater than ``2000`` characters; if neither content, file
             or embed are specified; if there is a duplicate id in only of the
-            fields in ``allowed_mentions``; if you specify to parse all 
-            users/roles mentions but also specify which users/roles to 
+            fields in ``allowed_mentions``; if you specify to parse all
+            users/roles mentions but also specify which users/roles to
             parse only.
         :obj:`hikari.net.errors.ForbiddenHTTPError`
             If you lack permissions to send to this channel.
@@ -681,18 +672,18 @@ class RestfulClient:
         form = aiohttp.FormData()
 
         json_payload = {}
-        transformations.put_if_specified(json_payload, "content", content)
-        transformations.put_if_specified(json_payload, "nonce", nonce)
-        transformations.put_if_specified(json_payload, "tts", tts)
-        transformations.put_if_specified(json_payload, "embed", embed)
-        transformations.put_if_specified(json_payload, "allowed_mentions", allowed_mentions)
+        conversions.put_if_specified(json_payload, "content", content)
+        conversions.put_if_specified(json_payload, "nonce", nonce)
+        conversions.put_if_specified(json_payload, "tts", tts)
+        conversions.put_if_specified(json_payload, "embed", embed)
+        conversions.put_if_specified(json_payload, "allowed_mentions", allowed_mentions)
 
         form.add_field("payload_json", json.dumps(json_payload), content_type="application/json")
 
         re_seekable_resources = []
         if files is not ...:
             for i, (file_name, file) in enumerate(files):
-                file = storage.make_resource_seekable(file)
+                file = conversions.make_resource_seekable(file)
                 re_seekable_resources.append(file)
                 form.add_field(f"file{i}", file, filename=file_name, content_type="application/octet-stream")
 
@@ -709,15 +700,15 @@ class RestfulClient:
         message_id : :obj:`str`
             The ID of the message to add the reaction in.
         emoji : :obj:`str`
-            The emoji to add. This can either be a series of unicode 
-            characters making up a valid Discord emoji, or it can be a 
+            The emoji to add. This can either be a series of unicode
+            characters making up a valid Discord emoji, or it can be a
             snowflake ID for a custom emoji.
 
         Raises
         ------
         :obj:`hikari.net.errors.ForbiddenHTTPError`
-            If this is the first reaction using this specific emoji on this 
-            message and you lack the ``ADD_REACTIONS`` permission. If you lack 
+            If this is the first reaction using this specific emoji on this
+            message and you lack the ``ADD_REACTIONS`` permission. If you lack
             ``READ_MESSAGE_HISTORY``, this may also raise this error.
         :obj:`hikari.net.errors.NotFoundHTTPError`
             If the channel or message is not found, or if the emoji is not found.
@@ -737,8 +728,8 @@ class RestfulClient:
         message_id : :obj:`str`
             The ID of the message to delete the reaction from.
         emoji : :obj:`str`
-            The emoji to delete. This can either be a series of unicode 
-            characters making up a valid Discord emoji, or it can be a 
+            The emoji to delete. This can either be a series of unicode
+            characters making up a valid Discord emoji, or it can be a
             snowflake ID for a custom emoji.
 
         Raises
@@ -761,8 +752,8 @@ class RestfulClient:
         message_id : :obj:`str`
             The ID of the message to delete the reactions from.
         emoji : :obj:`str`
-            The emoji to delete. This can either be a series of unicode 
-            characters making up a valid Discord emoji, or it can be a 
+            The emoji to delete. This can either be a series of unicode
+            characters making up a valid Discord emoji, or it can be a
             snowflake ID for a custom emoji.
 
         Raises
@@ -785,8 +776,8 @@ class RestfulClient:
         message_id : :obj:`str`
             The ID of the message to remove the reaction from.
         emoji : :obj:`str`
-            The emoji to delete. This can either be a series of unicode 
-            characters making up a valid Discord emoji, or it can be a 
+            The emoji to delete. This can either be a series of unicode
+            characters making up a valid Discord emoji, or it can be a
             snowflake ID for a custom emoji.
         user_id : :obj:`str`
             The ID of the user who made the reaction that you wish to remove.
@@ -804,15 +795,9 @@ class RestfulClient:
         await self._request(route)
 
     async def get_reactions(
-        self,
-        channel_id: str,
-        message_id: str,
-        emoji: str,
-        *,
-        after: typing.Union[typing.Literal[...], str] = ...,
-        limit: typing.Union[typing.Literal[...], int] = ...,
-    ) -> typing.Sequence[typing.Dict]:
-        """Get a list of users who reacted with the given emoji on 
+        self, channel_id: str, message_id: str, emoji: str, *, after: str = ..., limit: int = ...,
+    ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+        """Get a list of users who reacted with the given emoji on
         the given message in the given channel or user DM.
 
         Parameters
@@ -822,20 +807,20 @@ class RestfulClient:
         message_id : :obj:`str`
             The ID of the message to get the reactions from.
         emoji : :obj:`str`
-            The emoji to get. This can either be a series of unicode 
-            characters making up a valid Discord emoji, or it can be a 
+            The emoji to get. This can either be a series of unicode
+            characters making up a valid Discord emoji, or it can be a
             snowflake ID for a custom emoji.
         after : :obj:`str`
-            If specified, the user ID. If specified, only users with a snowflake 
+            If specified, the user ID. If specified, only users with a snowflake
             that is lexicographically greater thanthe value will be returned.
         limit : :obj:`str`
-            If specified, the limit of the number of values to return. Must be 
-            between ``1`` and ``100`` inclusive. If unspecified, 
+            If specified, the limit of the number of values to return. Must be
+            between ``1`` and ``100`` inclusive. If unspecified,
             defaults to ``25``.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of user objects.
 
         Raises
@@ -846,8 +831,8 @@ class RestfulClient:
             If the channel or message is not found.
         """
         query = {}
-        transformations.put_if_specified(query, "after", after)
-        transformations.put_if_specified(query, "limit", limit)
+        conversions.put_if_specified(query, "after", after)
+        conversions.put_if_specified(query, "limit", limit)
         route = routes.REACTIONS.compile(self.GET, channel_id=channel_id, message_id=message_id, emoji=emoji)
         return await self._request(route, query=query)
 
@@ -876,22 +861,22 @@ class RestfulClient:
         channel_id: str,
         message_id: str,
         *,
-        content: typing.Optional[typing.Union[typing.Literal[...], str]] = ...,
-        embed: typing.Optional[typing.Union[typing.Literal[...], typing.Dict]] = ...,
-        flags: typing.Union[typing.Literal[...], int] = ...,
-    ) -> typing.Dict:
+        content: typing.Optional[str] = ...,
+        embed: typing.Optional[typing.Dict[str, typing.Any]] = ...,
+        flags: int = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Update the given message.
 
         Parameters
         ----------
         channel_id : :obj:`str`
             The ID of the channel to get the message from.
-        message_id : :obj:`str` 
+        message_id : :obj:`str`
             The ID of the message to edit.
         content : :obj:`str`, optional
             If specified, the string content to replace with in the message.
             If ``None``, the content will be removed from the message.
-        embed : :obj:`typing.Dict`, optional
+        embed : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`, optional
             If specified, the embed to replace with in the message.
             If ``None``, the embed will be removed from the message.
         flags : :obj:`int`
@@ -899,7 +884,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The edited message object.
 
         Raises
@@ -907,9 +892,9 @@ class RestfulClient:
         :obj:`hikari.net.errors.NotFoundHTTPError`
             If the channel or message is not found.
         :obj:`hikari.net.errors.BadRequestHTTPError`
-            This can be raised if the embed exceeds the defined limits; 
-            if the message content is specified only and empty or greater 
-            than ``2000`` characters; if neither content, file or embed 
+            This can be raised if the embed exceeds the defined limits;
+            if the message content is specified only and empty or greater
+            than ``2000`` characters; if neither content, file or embed
             are specified.
             parse only.
         :obj:`hikari.net.errors.ForbiddenHTTPError`
@@ -917,9 +902,9 @@ class RestfulClient:
             on a message you did not author without the ``MANAGE_MESSAGES`` permission.
         """
         payload = {}
-        transformations.put_if_specified(payload, "content", content)
-        transformations.put_if_specified(payload, "embed", embed)
-        transformations.put_if_specified(payload, "flags", flags)
+        conversions.put_if_specified(payload, "content", content)
+        conversions.put_if_specified(payload, "embed", embed)
+        conversions.put_if_specified(payload, "flags", flags)
         route = routes.CHANNEL_MESSAGE.compile(self.PATCH, channel_id=channel_id, message_id=message_id)
         return await self._request(route, json_body=payload)
 
@@ -961,14 +946,16 @@ class RestfulClient:
         :obj:`hikari.net.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission in the channel.
         :obj:`hikari.net.errors.BadRequestHTTPError`
-            If any of the messages passed are older than ``2`` weeks in age or any duplicate message IDs are passed.
+            If any of the messages passed are older than ``2`` weeks in age or
+            any duplicate message IDs are passed.
 
         Note
         ----
         This can only be used on guild text channels.
-        Any message IDs that do not exist or are invalid still add towards the total ``100`` max messages to remove.
-        This can only delete messages that are newer than ``2`` weeks in age. If any of the messages are older than ``2`` weeks
-        then this call will fail.
+        Any message IDs that do not exist or are invalid still add towards the
+        total ``100`` max messages to remove. This can only delete messages that
+        are newer than ``2`` weeks in age. If any of the messages are older than
+        ``2`` weeks then this call will fail.
         """
         payload = {"messages": messages}
         route = routes.CHANNEL_MESSAGES_BULK_DELETE.compile(self.POST, channel_id=channel_id)
@@ -979,10 +966,10 @@ class RestfulClient:
         channel_id: str,
         overwrite_id: str,
         *,
-        allow: typing.Union[typing.Literal[...], int] = ...,
-        deny: typing.Union[typing.Literal[...], int] = ...,
-        type_: typing.Union[typing.Literal[...], str] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
+        allow: int = ...,
+        deny: int = ...,
+        type_: str = ...,
+        reason: str = ...,
     ) -> None:
         """Edit permissions for a given channel.
 
@@ -997,10 +984,10 @@ class RestfulClient:
         deny : :obj:`int`
             If specified, the bitwise value of all permissions to set to be denied.
         type_ : :obj:`str`
-            If specified, the type of overwrite. ``"member"`` if it is for a member, 
+            If specified, the type of overwrite. ``"member"`` if it is for a member,
             or ``"role"`` if it is for a role.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
@@ -1011,13 +998,13 @@ class RestfulClient:
             If you lack permission to do this.
         """
         payload = {}
-        transformations.put_if_specified(payload, "allow", allow)
-        transformations.put_if_specified(payload, "deny", deny)
-        transformations.put_if_specified(payload, "type", type_)
+        conversions.put_if_specified(payload, "allow", allow)
+        conversions.put_if_specified(payload, "deny", deny)
+        conversions.put_if_specified(payload, "type", type_)
         route = routes.CHANNEL_PERMISSIONS.compile(self.PATCH, channel_id=channel_id, overwrite_id=overwrite_id)
         await self._request(route, json_body=payload, reason=reason)
 
-    async def get_channel_invites(self, channel_id: str) -> typing.Sequence[typing.Dict]:
+    async def get_channel_invites(self, channel_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Get invites for a given channel.
 
         Parameters
@@ -1027,7 +1014,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of invite objects.
 
         Raises
@@ -1044,14 +1031,14 @@ class RestfulClient:
         self,
         channel_id: str,
         *,
-        max_age: typing.Union[typing.Literal[...], int] = ...,
-        max_uses: typing.Union[typing.Literal[...], int] = ...,
-        temporary: typing.Union[typing.Literal[...], bool] = ...,
-        unique: typing.Union[typing.Literal[...], bool] = ...,
-        target_user: typing.Union[typing.Literal[...], str] = ...,
-        target_user_type: typing.Union[typing.Literal[...], int] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> typing.Dict:
+        max_age: int = ...,
+        max_uses: int = ...,
+        temporary: bool = ...,
+        unique: bool = ...,
+        target_user: str = ...,
+        target_user_type: int = ...,
+        reason: str = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Create a new invite for the given channel.
 
         Parameters
@@ -1059,14 +1046,14 @@ class RestfulClient:
         channel_id : :obj:`str`
             The ID of the channel to create the invite for.
         max_age : :obj:`int`
-            If specified, the max age of the invite in seconds, defaults to 
-            ``86400`` (``24`` hours). 
+            If specified, the max age of the invite in seconds, defaults to
+            ``86400`` (``24`` hours).
             Set to ``0`` to never expire.
         max_uses : :obj:`int`
-            If specified, the max number of uses this invite can have, or ``0`` for 
+            If specified, the max number of uses this invite can have, or ``0`` for
             unlimited (as per the default).
         temporary : :obj:`bool`
-            If specified, whether to grant temporary membership, meaning the user 
+            If specified, whether to grant temporary membership, meaning the user
             is kicked when their session ends unless they are given a role.
         unique : :obj:`bool`
             If specified, whether to try to reuse a similar invite.
@@ -1075,12 +1062,12 @@ class RestfulClient:
         target_user_type : :obj:`int`
             If specified, the type of target for this invite.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             An invite object.
 
         Raises
@@ -1093,12 +1080,12 @@ class RestfulClient:
             If the arguments provided are not valid (e.g. negative age, etc).
         """
         payload = {}
-        transformations.put_if_specified(payload, "max_age", max_age)
-        transformations.put_if_specified(payload, "max_uses", max_uses)
-        transformations.put_if_specified(payload, "temporary", temporary)
-        transformations.put_if_specified(payload, "unique", unique)
-        transformations.put_if_specified(payload, "target_user", target_user)
-        transformations.put_if_specified(payload, "target_user_type", target_user_type)
+        conversions.put_if_specified(payload, "max_age", max_age)
+        conversions.put_if_specified(payload, "max_uses", max_uses)
+        conversions.put_if_specified(payload, "temporary", temporary)
+        conversions.put_if_specified(payload, "unique", unique)
+        conversions.put_if_specified(payload, "target_user", target_user)
+        conversions.put_if_specified(payload, "target_user_type", target_user_type)
         route = routes.CHANNEL_INVITES.compile(self.POST, channel_id=channel_id)
         return await self._request(route, json_body=payload, reason=reason)
 
@@ -1128,7 +1115,7 @@ class RestfulClient:
         Parameters
         ----------
         channel_id : :obj:`str`
-            The ID of the channel to appear to be typing in. This may be 
+            The ID of the channel to appear to be typing in. This may be
             a user ID if you wish to appear to be typing in DMs.
 
         Raises
@@ -1141,7 +1128,7 @@ class RestfulClient:
         route = routes.CHANNEL_TYPING.compile(self.POST, channel_id=channel_id)
         await self._request(route)
 
-    async def get_pinned_messages(self, channel_id: str) -> typing.Sequence[typing.Dict]:
+    async def get_pinned_messages(self, channel_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Get pinned messages for a given channel.
 
         Parameters
@@ -1151,7 +1138,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of messages.
 
         Raises
@@ -1163,7 +1150,7 @@ class RestfulClient:
 
         Note
         ----
-        If you are not able to see the pinned message (eg. you are missing ``READ_MESSAGE_HISTORY`` 
+        If you are not able to see the pinned message (eg. you are missing ``READ_MESSAGE_HISTORY``
         and the pinned message is an old message), it will not be returned.
         """
         route = routes.CHANNEL_PINS.compile(self.GET, channel_id=channel_id)
@@ -1190,8 +1177,8 @@ class RestfulClient:
         await self._request(route)
 
     async def delete_pinned_channel_message(self, channel_id: str, message_id: str) -> None:
-        """Remove a pinned message from the channel. 
-        
+        """Remove a pinned message from the channel.
+
         This will only unpin the message, not delete it.
 
         Parameters
@@ -1211,7 +1198,7 @@ class RestfulClient:
         route = routes.CHANNEL_PIN.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
         await self._request(route)
 
-    async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[typing.Dict]:
+    async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Gets emojis for a given guild ID.
 
         Parameters
@@ -1221,7 +1208,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of emoji objects.
 
         Raises
@@ -1234,7 +1221,7 @@ class RestfulClient:
         route = routes.GUILD_EMOJIS.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> typing.Dict:
+    async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> typing.Dict[str, typing.Any]:
         """Gets an emoji from a given guild and emoji IDs.
 
         Parameters
@@ -1246,7 +1233,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             An emoji object.
 
         Raises
@@ -1260,14 +1247,8 @@ class RestfulClient:
         return await self._request(route)
 
     async def create_guild_emoji(
-        self,
-        guild_id: str,
-        name: str,
-        image: bytes,
-        *,
-        roles: typing.Union[typing.Literal[...], typing.Sequence[str]] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> typing.Dict:
+        self, guild_id: str, name: str, image: bytes, *, roles: typing.Sequence[str] = ..., reason: str = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Creates a new emoji for a given guild.
 
         Parameters
@@ -1279,15 +1260,15 @@ class RestfulClient:
         image : :obj:`bytes`
             The ``128x128`` image in bytes form.
         roles : :obj:`typing.Sequence` [ :obj:`str` ]
-            If specified, a list of roles for which the emoji will be whitelisted. 
+            If specified, a list of roles for which the emoji will be whitelisted.
             If empty, all roles are whitelisted.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The newly created emoji object.
 
         Raises
@@ -1305,20 +1286,14 @@ class RestfulClient:
         payload = {
             "name": name,
             "roles": [] if roles is ... else roles,
-            "image": transformations.image_bytes_to_image_data(image),
+            "image": conversions.image_bytes_to_image_data(image),
         }
         route = routes.GUILD_EMOJIS.compile(self.POST, guild_id=guild_id)
         return await self._request(route, json_body=payload, reason=reason)
 
     async def modify_guild_emoji(
-        self,
-        guild_id: str,
-        emoji_id: str,
-        *,
-        name: typing.Union[typing.Literal[...], str] = ...,
-        roles: typing.Union[typing.Literal[...], typing.Sequence[str]] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> typing.Dict:
+        self, guild_id: str, emoji_id: str, *, name: str = ..., roles: typing.Sequence[str] = ..., reason: str = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Edits an emoji of a given guild
 
         Parameters
@@ -1334,12 +1309,12 @@ class RestfulClient:
             Set to an empty list to whitelist all roles.
             Keep unspecified to leave the same roles already set.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The updated emoji object.
 
         Raises
@@ -1350,8 +1325,8 @@ class RestfulClient:
             If you either lack the ``MANAGE_EMOJIS`` permission or are not a member of the given guild.
         """
         payload = {}
-        transformations.put_if_specified(payload, "name", name)
-        transformations.put_if_specified(payload, "roles", roles)
+        conversions.put_if_specified(payload, "name", name)
+        conversions.put_if_specified(payload, "roles", roles)
         route = routes.GUILD_EMOJI.compile(self.PATCH, guild_id=guild_id, emoji_id=emoji_id)
         return await self._request(route, json_body=payload, reason=reason)
 
@@ -1379,14 +1354,14 @@ class RestfulClient:
         self,
         name: str,
         *,
-        region: typing.Union[typing.Literal[...], str] = ...,
-        icon: typing.Union[typing.Literal[...], bytes] = ...,
-        verification_level: typing.Union[typing.Literal[...], int] = ...,
-        default_message_notifications: typing.Union[typing.Literal[...], int] = ...,
-        explicit_content_filter: typing.Union[typing.Literal[...], int] = ...,
-        roles: typing.Union[typing.Literal[...], typing.Sequence[typing.Dict]] = ...,
-        channels: typing.Union[typing.Literal[...], typing.Sequence[typing.Dict]] = ...,
-    ) -> typing.Dict:
+        region: str = ...,
+        icon: bytes = ...,
+        verification_level: int = ...,
+        default_message_notifications: int = ...,
+        explicit_content_filter: int = ...,
+        roles: typing.Sequence[typing.Dict[str, typing.Any]] = ...,
+        channels: typing.Sequence[typing.Dict[str, typing.Any]] = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Creates a new guild. Can only be used by bots in less than ``10`` guilds.
 
         Parameters
@@ -1394,7 +1369,7 @@ class RestfulClient:
         name : :obj:`str`
             The name string for the new guild (``2-100`` characters).
         region : :obj:`str`
-            If specified, the voice region ID for new guild. You can use 
+            If specified, the voice region ID for new guild. You can use
             :meth:`list_voice_regions` to see which region IDs are available.
         icon : :obj:`bytes`
             If specified, the guild icon image in bytes form.
@@ -1404,15 +1379,15 @@ class RestfulClient:
             If specified, the default notification level integer (``0-1``).
         explicit_content_filter : :obj:`int`
             If specified, the explicit content filter integer (``0-2``).
-        roles : :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
-            If specified, an array of role objects to be created alongside the 
+        roles : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+            If specified, an array of role objects to be created alongside the
             guild. First element changes the ``@everyone`` role.
-        channels : :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        channels : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             If specified, an array of channel objects to be created alongside the guild.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The newly created guild object.
 
         Raises
@@ -1423,17 +1398,17 @@ class RestfulClient:
             If you provide unsupported fields like ``parent_id`` in channel objects.
         """
         payload = {"name": name}
-        transformations.put_if_specified(payload, "region", region)
-        transformations.put_if_specified(payload, "verification_level", verification_level)
-        transformations.put_if_specified(payload, "default_message_notifications", default_message_notifications)
-        transformations.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
-        transformations.put_if_specified(payload, "roles", roles)
-        transformations.put_if_specified(payload, "channels", channels)
-        transformations.put_if_specified(payload, "icon", icon, transformations.image_bytes_to_image_data)
+        conversions.put_if_specified(payload, "region", region)
+        conversions.put_if_specified(payload, "verification_level", verification_level)
+        conversions.put_if_specified(payload, "default_message_notifications", default_message_notifications)
+        conversions.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
+        conversions.put_if_specified(payload, "roles", roles)
+        conversions.put_if_specified(payload, "channels", channels)
+        conversions.put_if_specified(payload, "icon", icon, conversions.image_bytes_to_image_data)
         route = routes.GUILDS.compile(self.POST)
         return await self._request(route, json_body=payload)
 
-    async def get_guild(self, guild_id: str) -> typing.Dict:
+    async def get_guild(self, guild_id: str) -> typing.Dict[str, typing.Any]:
         """Gets a given guild's object.
 
         Parameters
@@ -1443,7 +1418,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The requested guild object.
 
         Raises
@@ -1461,19 +1436,19 @@ class RestfulClient:
         self,
         guild_id: str,
         *,
-        name: typing.Union[typing.Literal[...], str] = ...,
-        region: typing.Union[typing.Literal[...], str] = ...,
-        verification_level: typing.Union[typing.Literal[...], int] = ...,
-        default_message_notifications: typing.Union[typing.Literal[...], int] = ...,
-        explicit_content_filter: typing.Union[typing.Literal[...], int] = ...,
-        afk_channel_id: typing.Union[typing.Literal[...], str] = ...,
-        afk_timeout: typing.Union[typing.Literal[...], int] = ...,
-        icon: typing.Union[typing.Literal[...], bytes] = ...,
-        owner_id: typing.Union[typing.Literal[...], str] = ...,
-        splash: typing.Union[typing.Literal[...], bytes] = ...,
-        system_channel_id: typing.Union[typing.Literal[...], str] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> typing.Dict:
+        name: str = ...,
+        region: str = ...,
+        verification_level: int = ...,
+        default_message_notifications: int = ...,
+        explicit_content_filter: int = ...,
+        afk_channel_id: str = ...,
+        afk_timeout: int = ...,
+        icon: bytes = ...,
+        owner_id: str = ...,
+        splash: bytes = ...,
+        system_channel_id: str = ...,
+        reason: str = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Edits a given guild.
 
         Parameters
@@ -1483,7 +1458,7 @@ class RestfulClient:
         name : :obj:`str`
             If specified, the new name string for the guild (``2-100`` characters).
         region : :obj:`str`
-            If specified, the new voice region ID for guild. You can use 
+            If specified, the new voice region ID for guild. You can use
             :meth:`list_voice_regions` to see which region IDs are available.
         verification_level : :obj:`int`
             If specified, the new verification level integer (``0-5``).
@@ -1504,12 +1479,12 @@ class RestfulClient:
         system_channel_id : :obj:`str`
             If specified, the new ID of the new system channel.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The edited guild object.
 
         Raises
@@ -1520,25 +1495,25 @@ class RestfulClient:
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         payload = {}
-        transformations.put_if_specified(payload, "name", name)
-        transformations.put_if_specified(payload, "region", region)
-        transformations.put_if_specified(payload, "verification_level", verification_level)
-        transformations.put_if_specified(payload, "default_message_notifications", default_message_notifications)
-        transformations.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
-        transformations.put_if_specified(payload, "afk_channel_id", afk_channel_id)
-        transformations.put_if_specified(payload, "afk_timeout", afk_timeout)
-        transformations.put_if_specified(payload, "icon", icon, transformations.image_bytes_to_image_data)
-        transformations.put_if_specified(payload, "owner_id", owner_id)
-        transformations.put_if_specified(payload, "splash", splash, transformations.image_bytes_to_image_data)
-        transformations.put_if_specified(payload, "system_channel_id", system_channel_id)
+        conversions.put_if_specified(payload, "name", name)
+        conversions.put_if_specified(payload, "region", region)
+        conversions.put_if_specified(payload, "verification_level", verification_level)
+        conversions.put_if_specified(payload, "default_message_notifications", default_message_notifications)
+        conversions.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
+        conversions.put_if_specified(payload, "afk_channel_id", afk_channel_id)
+        conversions.put_if_specified(payload, "afk_timeout", afk_timeout)
+        conversions.put_if_specified(payload, "icon", icon, conversions.image_bytes_to_image_data)
+        conversions.put_if_specified(payload, "owner_id", owner_id)
+        conversions.put_if_specified(payload, "splash", splash, conversions.image_bytes_to_image_data)
+        conversions.put_if_specified(payload, "system_channel_id", system_channel_id)
         route = routes.GUILD.compile(self.PATCH, guild_id=guild_id)
         return await self._request(route, json_body=payload, reason=reason)
 
     # pylint: enable=too-many-locals
 
     async def delete_guild(self, guild_id: str) -> None:
-        """Permanently deletes the given guild. 
-        
+        """Permanently deletes the given guild.
+
         You must be owner of the guild to perform this action.
 
         Parameters
@@ -1556,7 +1531,7 @@ class RestfulClient:
         route = routes.GUILD.compile(self.DELETE, guild_id=guild_id)
         await self._request(route)
 
-    async def get_guild_channels(self, guild_id: str) -> typing.Sequence[typing.Dict]:
+    async def get_guild_channels(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Gets all the channels for a given guild.
 
         Parameters
@@ -1566,7 +1541,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of channel objects.
 
         Raises
@@ -1584,17 +1559,17 @@ class RestfulClient:
         guild_id: str,
         name: str,
         *,
-        type_: typing.Union[typing.Literal[...], int] = ...,
-        position: typing.Union[typing.Literal[...], int] = ...,
-        topic: typing.Union[typing.Literal[...], str] = ...,
-        nsfw: typing.Union[typing.Literal[...], bool] = ...,
-        rate_limit_per_user: typing.Union[typing.Literal[...], int] = ...,
-        bitrate: typing.Union[typing.Literal[...], int] = ...,
-        user_limit: typing.Union[typing.Literal[...], int] = ...,
-        permission_overwrites: typing.Union[typing.Literal[...], typing.Sequence[typing.Dict]] = ...,
-        parent_id: typing.Union[typing.Literal[...], str] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> typing.Dict:
+        type_: int = ...,
+        position: int = ...,
+        topic: str = ...,
+        nsfw: bool = ...,
+        rate_limit_per_user: int = ...,
+        bitrate: int = ...,
+        user_limit: int = ...,
+        permission_overwrites: typing.Sequence[typing.Dict[str, typing.Any]] = ...,
+        parent_id: str = ...,
+        reason: str = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Creates a channel in a given guild.
 
         Parameters
@@ -1602,45 +1577,45 @@ class RestfulClient:
         guild_id:
             The ID of the guild to create the channel in.
         name : :obj:`str`
-            If specified, the name for the channel.This must be 
+            If specified, the name for the channel.This must be
             between ``2`` and ``100`` characters in length.
         type_: :obj:`int`
             If specified, the channel type integer (``0-6``).
         position : :obj:`int`
             If specified, the position to change the channel to.
         topic : :obj:`str`
-            If specified, the topic to set. This is only applicable to 
-            text channels. This must be between ``0`` and ``1024`` 
+            If specified, the topic to set. This is only applicable to
+            text channels. This must be between ``0`` and ``1024``
             characters in length.
         nsfw : :obj:`bool`
-            If specified, whether the channel will be marked as NSFW. 
+            If specified, whether the channel will be marked as NSFW.
             Only applicable to text channels.
         rate_limit_per_user : :obj:`int`
-            If specified, the number of seconds the user has to wait before sending 
-            another message.  This will not apply to bots, or to members with 
-            ``MANAGE_MESSAGES`` or ``MANAGE_CHANNEL`` permissions. This must 
+            If specified, the number of seconds the user has to wait before sending
+            another message.  This will not apply to bots, or to members with
+            ``MANAGE_MESSAGES`` or ``MANAGE_CHANNEL`` permissions. This must
             be between ``0`` and ``21600`` seconds.
         bitrate : :obj:`int`
-            If specified, the bitrate in bits per second allowable for the channel. 
-            This only applies to voice channels and must be between ``8000`` 
-            and ``96000`` for normal servers or ``8000`` and ``128000`` for 
+            If specified, the bitrate in bits per second allowable for the channel.
+            This only applies to voice channels and must be between ``8000``
+            and ``96000`` for normal servers or ``8000`` and ``128000`` for
             VIP servers.
         user_limit : :obj:`int`
-            If specified, the max number of users to allow in a voice channel. 
-            This must be between ``0`` and ``99`` inclusive, where 
+            If specified, the max number of users to allow in a voice channel.
+            This must be between ``0`` and ``99`` inclusive, where
             ``0`` implies no limit.
-        permission_overwrites : :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
-            If specified, the list of permission overwrites that are category 
+        permission_overwrites : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+            If specified, the list of permission overwrites that are category
             specific to replace the existing overwrites with.
         parent_id : :obj:`str`
             If specified, the parent category ID to set for the channel.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The newly created channel object.
 
         Raises
@@ -1650,20 +1625,20 @@ class RestfulClient:
         :obj:`hikari.net.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_CHANNEL`` permission or are not in the guild.
         :obj:`hikari.net.errors.BadRequestHTTPError`
-            If you provide incorrect options for the corresponding channel type 
+            If you provide incorrect options for the corresponding channel type
             (e.g. a ``bitrate`` for a text channel).
         """
         payload = {}
-        transformations.put_if_specified(payload, "name", name)
-        transformations.put_if_specified(payload, "type", type_)
-        transformations.put_if_specified(payload, "position", position)
-        transformations.put_if_specified(payload, "topic", topic)
-        transformations.put_if_specified(payload, "nsfw", nsfw)
-        transformations.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user)
-        transformations.put_if_specified(payload, "bitrate", bitrate)
-        transformations.put_if_specified(payload, "user_limit", user_limit)
-        transformations.put_if_specified(payload, "permission_overwrites", permission_overwrites)
-        transformations.put_if_specified(payload, "parent_id", parent_id)
+        conversions.put_if_specified(payload, "name", name)
+        conversions.put_if_specified(payload, "type", type_)
+        conversions.put_if_specified(payload, "position", position)
+        conversions.put_if_specified(payload, "topic", topic)
+        conversions.put_if_specified(payload, "nsfw", nsfw)
+        conversions.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user)
+        conversions.put_if_specified(payload, "bitrate", bitrate)
+        conversions.put_if_specified(payload, "user_limit", user_limit)
+        conversions.put_if_specified(payload, "permission_overwrites", permission_overwrites)
+        conversions.put_if_specified(payload, "parent_id", parent_id)
         route = routes.GUILD_CHANNELS.compile(self.POST, guild_id=guild_id)
         return await self._request(route, json_body=payload, reason=reason)
 
@@ -1696,7 +1671,7 @@ class RestfulClient:
         route = routes.GUILD_CHANNELS.compile(self.PATCH, guild_id=guild_id)
         await self._request(route, json_body=payload)
 
-    async def get_guild_member(self, guild_id: str, user_id: str) -> typing.Dict:
+    async def get_guild_member(self, guild_id: str, user_id: str) -> typing.Dict[str, typing.Any]:
         """Gets a given guild member.
 
         Parameters
@@ -1705,10 +1680,10 @@ class RestfulClient:
             The ID of the guild to get the member from.
         user_id : :obj:`str`
             The ID of the member to get.
-    
+
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The requested member object.
 
         Raises
@@ -1722,12 +1697,8 @@ class RestfulClient:
         return await self._request(route)
 
     async def list_guild_members(
-        self,
-        guild_id: str,
-        *,
-        limit: typing.Union[typing.Literal[...], int] = ...,
-        after: typing.Union[typing.Literal[...], str] = ...,
-    ) -> typing.Sequence[typing.Dict]:
+        self, guild_id: str, *, limit: int = ..., after: str = ...,
+    ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Lists all members of a given guild.
 
         Parameters
@@ -1735,31 +1706,31 @@ class RestfulClient:
             guild_id : :obj:`str`
                 The ID of the guild to get the members from.
             limit : :obj:`int`
-                If specified, the maximum number of members to return. This has to be between 
+                If specified, the maximum number of members to return. This has to be between
                 ``1`` and ``1000`` inclusive.
             after : :obj:`str`
-                If specified, the highest ID in the previous page. This is used for retrieving more 
+                If specified, the highest ID in the previous page. This is used for retrieving more
                 than ``1000`` members in a server using consecutive requests.
-                
+
         Example
         -------
             .. code-block:: python
-                
+
                 members = []
                 last_id = 0
-                
+
                 while True:
                     next_members = await client.list_guild_members(1234567890, limit=1000, after=last_id)
                     members += next_members
-                    
+
                     if len(next_members) == 1000:
                         last_id = next_members[-1]
                     else:
-                        break                  
+                        break
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             A list of member objects.
 
         Raises
@@ -1772,8 +1743,8 @@ class RestfulClient:
             If you provide invalid values for the ``limit`` or `after`` fields.
         """
         query = {}
-        transformations.put_if_specified(query, "limit", limit)
-        transformations.put_if_specified(query, "after", after)
+        conversions.put_if_specified(query, "limit", limit)
+        conversions.put_if_specified(query, "after", after)
         route = routes.GUILD_MEMBERS.compile(self.GET, guild_id=guild_id)
         return await self._request(route, query=query)
 
@@ -1782,12 +1753,12 @@ class RestfulClient:
         guild_id: str,
         user_id: str,
         *,
-        nick: typing.Optional[typing.Union[typing.Literal[...], str]] = ...,
-        roles: typing.Union[typing.Literal[...], typing.Sequence[str]] = ...,
-        mute: typing.Union[typing.Literal[...], bool] = ...,
-        deaf: typing.Union[typing.Literal[...], bool] = ...,
-        channel_id: typing.Optional[typing.Union[typing.Literal[...], str]] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
+        nick: typing.Optional[str] = ...,
+        roles: typing.Sequence[str] = ...,
+        mute: bool = ...,
+        deaf: bool = ...,
+        channel_id: typing.Optional[str] = ...,
+        reason: str = ...,
     ) -> None:
         """Edits a member of a given guild.
 
@@ -1798,7 +1769,7 @@ class RestfulClient:
         user_id : :obj:`str`
             The ID of the member to edit.
         nick : :obj:`str`
-            If specified, the new nickname string. Setting it to ``None`` explicitly 
+            If specified, the new nickname string. Setting it to ``None`` explicitly
             will clear the nickname.
         roles : :obj:`str`
             If specified, a list of role IDs the member should have.
@@ -1810,9 +1781,9 @@ class RestfulClient:
             If specified, the ID of the channel to move the member to. Setting it to
             ``None`` explicitly will disconnect the user.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
-    
+
         Raises
         ------
         :obj:`hikari.net.errors.NotFoundHTTPError`
@@ -1826,17 +1797,15 @@ class RestfulClient:
             If you pass ```mute``, ``deaf`` or ``channel_id`` while the member is not connected to a voice channel.
         """
         payload = {}
-        transformations.put_if_specified(payload, "nick", nick)
-        transformations.put_if_specified(payload, "roles", roles)
-        transformations.put_if_specified(payload, "mute", mute)
-        transformations.put_if_specified(payload, "deaf", deaf)
-        transformations.put_if_specified(payload, "channel_id", channel_id)
+        conversions.put_if_specified(payload, "nick", nick)
+        conversions.put_if_specified(payload, "roles", roles)
+        conversions.put_if_specified(payload, "mute", mute)
+        conversions.put_if_specified(payload, "deaf", deaf)
+        conversions.put_if_specified(payload, "channel_id", channel_id)
         route = routes.GUILD_MEMBER.compile(self.PATCH, guild_id=guild_id, user_id=user_id)
         await self._request(route, json_body=payload, reason=reason)
 
-    async def modify_current_user_nick(
-        self, guild_id: str, nick: typing.Optional[str], *, reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> None:
+    async def modify_current_user_nick(self, guild_id: str, nick: typing.Optional[str], *, reason: str = ...,) -> None:
         """Edits the current user's nickname for a given guild.
 
         Parameters
@@ -1846,9 +1815,9 @@ class RestfulClient:
         nick : :obj:`str`, optional
             The new nick string. Setting this to `None` clears the nickname.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
-                
+
         Raises
         ------
         :obj:`hikari.net.errors.NotFoundHTTPError`
@@ -1862,9 +1831,7 @@ class RestfulClient:
         route = routes.OWN_GUILD_NICKNAME.compile(self.PATCH, guild_id=guild_id)
         await self._request(route, json_body=payload, reason=reason)
 
-    async def add_guild_member_role(
-        self, guild_id: str, user_id: str, role_id: str, *, reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> None:
+    async def add_guild_member_role(self, guild_id: str, user_id: str, role_id: str, *, reason: str = ...,) -> None:
         """Adds a role to a given member.
 
         Parameters
@@ -1876,7 +1843,7 @@ class RestfulClient:
         role_id : :obj:`str`
             The ID of the role you want to add.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
@@ -1889,9 +1856,7 @@ class RestfulClient:
         route = routes.GUILD_MEMBER_ROLE.compile(self.PUT, guild_id=guild_id, user_id=user_id, role_id=role_id)
         await self._request(route, reason=reason)
 
-    async def remove_guild_member_role(
-        self, guild_id: str, user_id: str, role_id: str, *, reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> None:
+    async def remove_guild_member_role(self, guild_id: str, user_id: str, role_id: str, *, reason: str = ...,) -> None:
         """Removed a role from a given member.
 
         Parameters
@@ -1903,7 +1868,7 @@ class RestfulClient:
         role_id : :obj:`str`
             The ID of the role you want to remove.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
@@ -1916,9 +1881,7 @@ class RestfulClient:
         route = routes.GUILD_MEMBER_ROLE.compile(self.DELETE, guild_id=guild_id, user_id=user_id, role_id=role_id)
         await self._request(route, reason=reason)
 
-    async def remove_guild_member(
-        self, guild_id: str, user_id: str, *, reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> None:
+    async def remove_guild_member(self, guild_id: str, user_id: str, *, reason: str = ...,) -> None:
         """Kicks a user from a given guild.
 
         Parameters
@@ -1928,7 +1891,7 @@ class RestfulClient:
         user_id: :obj:`str`
             The ID of the member you want to kick.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
@@ -1941,7 +1904,7 @@ class RestfulClient:
         route = routes.GUILD_MEMBER.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
         await self._request(route, reason=reason)
 
-    async def get_guild_bans(self, guild_id: str) -> typing.Sequence[typing.Dict]:
+    async def get_guild_bans(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Gets the bans for a given guild.
 
         Parameters
@@ -1951,7 +1914,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of ban objects.
 
         Raises
@@ -1964,7 +1927,7 @@ class RestfulClient:
         route = routes.GUILD_BANS.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    async def get_guild_ban(self, guild_id: str, user_id: str) -> typing.Dict:
+    async def get_guild_ban(self, guild_id: str, user_id: str) -> typing.Dict[str, typing.Any]:
         """Gets a ban from a given guild.
 
         Parameters
@@ -1976,7 +1939,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             A ban object for the requested user.
 
         Raises
@@ -1990,12 +1953,7 @@ class RestfulClient:
         return await self._request(route)
 
     async def create_guild_ban(
-        self,
-        guild_id: str,
-        user_id: str,
-        *,
-        delete_message_days: typing.Union[typing.Literal[...], int] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
+        self, guild_id: str, user_id: str, *, delete_message_days: int = ..., reason: str = ...,
     ) -> None:
         """Bans a user from a given guild.
 
@@ -2006,10 +1964,10 @@ class RestfulClient:
         user_id : :obj:`str`
             The ID of the member you want to ban.
         delete_message_days : :obj:`str`
-            If specified, how many days of messages from the user should 
+            If specified, how many days of messages from the user should
             be removed.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
@@ -2020,14 +1978,12 @@ class RestfulClient:
             If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
         """
         query = {}
-        transformations.put_if_specified(query, "delete-message-days", delete_message_days)
-        transformations.put_if_specified(query, "reason", reason)
+        conversions.put_if_specified(query, "delete-message-days", delete_message_days)
+        conversions.put_if_specified(query, "reason", reason)
         route = routes.GUILD_BAN.compile(self.PUT, guild_id=guild_id, user_id=user_id)
         await self._request(route, query=query)
 
-    async def remove_guild_ban(
-        self, guild_id: str, user_id: str, *, reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> None:
+    async def remove_guild_ban(self, guild_id: str, user_id: str, *, reason: str = ...,) -> None:
         """Un-bans a user from a given guild.
 
         Parameters
@@ -2037,7 +1993,7 @@ class RestfulClient:
         user_id : :obj:`str`
             The ID of the user you want to un-ban.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
@@ -2050,7 +2006,7 @@ class RestfulClient:
         route = routes.GUILD_BAN.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
         await self._request(route, reason=reason)
 
-    async def get_guild_roles(self, guild_id: str) -> typing.Sequence[typing.Dict]:
+    async def get_guild_roles(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Gets the roles for a given guild.
 
         Parameters
@@ -2060,7 +2016,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of role objects.
 
         Raises
@@ -2077,13 +2033,13 @@ class RestfulClient:
         self,
         guild_id: str,
         *,
-        name: typing.Union[typing.Literal[...], str] = ...,
-        permissions: typing.Union[typing.Literal[...], int] = ...,
-        color: typing.Union[typing.Literal[...], int] = ...,
-        hoist: typing.Union[typing.Literal[...], bool] = ...,
-        mentionable: typing.Union[typing.Literal[...], bool] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> typing.Dict:
+        name: str = ...,
+        permissions: int = ...,
+        color: int = ...,
+        hoist: bool = ...,
+        mentionable: bool = ...,
+        reason: str = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Creates a new role for a given guild.
 
         Parameters
@@ -2101,12 +2057,12 @@ class RestfulClient:
         mentionable : :obj:`bool`
            If specified, whether the role will be able to be mentioned by any user.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The newly created role object.
 
         Raises
@@ -2119,17 +2075,17 @@ class RestfulClient:
             If you provide invalid values for the role attributes.
         """
         payload = {}
-        transformations.put_if_specified(payload, "name", name)
-        transformations.put_if_specified(payload, "permissions", permissions)
-        transformations.put_if_specified(payload, "color", color)
-        transformations.put_if_specified(payload, "hoist", hoist)
-        transformations.put_if_specified(payload, "mentionable", mentionable)
+        conversions.put_if_specified(payload, "name", name)
+        conversions.put_if_specified(payload, "permissions", permissions)
+        conversions.put_if_specified(payload, "color", color)
+        conversions.put_if_specified(payload, "hoist", hoist)
+        conversions.put_if_specified(payload, "mentionable", mentionable)
         route = routes.GUILD_ROLES.compile(self.POST, guild_id=guild_id)
         return await self._request(route, json_body=payload, reason=reason)
 
     async def modify_guild_role_positions(
         self, guild_id: str, role: typing.Tuple[str, int], *roles: typing.Tuple[str, int]
-    ) -> typing.Sequence[typing.Dict]:
+    ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Edits the position of two or more roles in a given guild.
 
         Parameters
@@ -2143,7 +2099,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of all the guild roles.
 
         Raises
@@ -2164,13 +2120,13 @@ class RestfulClient:
         guild_id: str,
         role_id: str,
         *,
-        name: typing.Union[typing.Literal[...], str] = ...,
-        permissions: typing.Union[typing.Literal[...], int] = ...,
-        color: typing.Union[typing.Literal[...], int] = ...,
-        hoist: typing.Union[typing.Literal[...], bool] = ...,
-        mentionable: typing.Union[typing.Literal[...], bool] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> typing.Dict:
+        name: str = ...,
+        permissions: int = ...,
+        color: int = ...,
+        hoist: bool = ...,
+        mentionable: bool = ...,
+        reason: str = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Edits a role in a given guild.
 
         Parameters
@@ -2190,12 +2146,12 @@ class RestfulClient:
         mentionable : :obj:`bool`
             If specified, whether the role should be mentionable or not.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
-                
+
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The edited role object.
 
         Raises
@@ -2208,11 +2164,11 @@ class RestfulClient:
             If you provide invalid values for the role attributes.
         """
         payload = {}
-        transformations.put_if_specified(payload, "name", name)
-        transformations.put_if_specified(payload, "permissions", permissions)
-        transformations.put_if_specified(payload, "color", color)
-        transformations.put_if_specified(payload, "hoist", hoist)
-        transformations.put_if_specified(payload, "mentionable", mentionable)
+        conversions.put_if_specified(payload, "name", name)
+        conversions.put_if_specified(payload, "permissions", permissions)
+        conversions.put_if_specified(payload, "color", color)
+        conversions.put_if_specified(payload, "hoist", hoist)
+        conversions.put_if_specified(payload, "mentionable", mentionable)
         route = routes.GUILD_ROLE.compile(self.PATCH, guild_id=guild_id, role_id=role_id)
         return await self._request(route, json_body=payload, reason=reason)
 
@@ -2266,12 +2222,7 @@ class RestfulClient:
         return int(result["pruned"])
 
     async def begin_guild_prune(
-        self,
-        guild_id: str,
-        days: int,
-        *,
-        compute_prune_count: typing.Union[typing.Literal[...], bool] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
+        self, guild_id: str, days: int, *, compute_prune_count: bool = ..., reason: str = ...,
     ) -> typing.Optional[int]:
         """Prunes members of a given guild based on the number of inactive days.
 
@@ -2282,16 +2233,16 @@ class RestfulClient:
         days : :obj:`int`
             The number of inactivity days you want to use as filter.
         compute_prune_count : :obj:`bool`
-            Whether a count of pruned members is returned or not. 
+            Whether a count of pruned members is returned or not.
             Discouraged for large guilds out of politeness.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
         :obj:`int`, optional
-            The number of members who were kicked if ``compute_prune_count`` 
+            The number of members who were kicked if ``compute_prune_count``
             is ``True``, else ``None``.
 
         Raises
@@ -2304,7 +2255,7 @@ class RestfulClient:
             If you provide invalid values for the ``days`` or ``compute_prune_count`` fields.
         """
         query = {"days": days}
-        transformations.put_if_specified(query, "compute_prune_count", compute_prune_count, str)
+        conversions.put_if_specified(query, "compute_prune_count", compute_prune_count, str)
         route = routes.GUILD_PRUNE.compile(self.POST, guild_id=guild_id)
         result = await self._request(route, query=query, reason=reason)
 
@@ -2313,7 +2264,7 @@ class RestfulClient:
         except (TypeError, KeyError):
             return None
 
-    async def get_guild_voice_regions(self, guild_id: str) -> typing.Sequence[typing.Dict]:
+    async def get_guild_voice_regions(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Gets the voice regions for a given guild.
 
         Parameters
@@ -2323,7 +2274,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of voice region objects.
 
         Raises
@@ -2336,7 +2287,7 @@ class RestfulClient:
         route = routes.GUILD_VOICE_REGIONS.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    async def get_guild_invites(self, guild_id: str) -> typing.Sequence[typing.Dict]:
+    async def get_guild_invites(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Gets the invites for a given guild.
 
         Parameters
@@ -2346,7 +2297,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of invite objects (with metadata).
 
         Raises
@@ -2359,7 +2310,7 @@ class RestfulClient:
         route = routes.GUILD_INVITES.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[typing.Dict]:
+    async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Gets the integrations for a given guild.
 
         Parameters
@@ -2369,7 +2320,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of integration objects.
 
         Raises
@@ -2383,8 +2334,8 @@ class RestfulClient:
         return await self._request(route)
 
     async def create_guild_integration(
-        self, guild_id: str, type_: str, integration_id: str, *, reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> typing.Dict:
+        self, guild_id: str, type_: str, integration_id: str, *, reason: str = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Creates an integrations for a given guild.
 
         Parameters
@@ -2396,12 +2347,12 @@ class RestfulClient:
         integration_id : :obj:`str`
             The ID for the new integration.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The newly created integration object.
 
         Raises
@@ -2420,10 +2371,10 @@ class RestfulClient:
         guild_id: str,
         integration_id: str,
         *,
-        expire_behaviour: typing.Union[typing.Literal[...], int] = ...,
-        expire_grace_period: typing.Union[typing.Literal[...], int] = ...,
-        enable_emojis: typing.Union[typing.Literal[...], bool] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
+        expire_behaviour: int = ...,
+        expire_grace_period: int = ...,
+        enable_emojis: bool = ...,
+        reason: str = ...,
     ) -> None:
         """Edits an integrations for a given guild.
 
@@ -2434,15 +2385,15 @@ class RestfulClient:
         integration_id : :obj:`str`
             The ID of the integration.
         expire_behaviour : :obj:`int`
-            If specified, the behaviour for when an integration subscription 
+            If specified, the behaviour for when an integration subscription
             lapses.
         expire_grace_period : :obj:`int`
-            If specified, time interval in seconds in which the integration 
+            If specified, time interval in seconds in which the integration
             will ignore lapsed subscriptions.
         enable_emojis : :obj:`bool`
             If specified, whether emojis should be synced for this integration.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
@@ -2453,16 +2404,14 @@ class RestfulClient:
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         payload = {}
-        transformations.put_if_specified(payload, "expire_behaviour", expire_behaviour)
-        transformations.put_if_specified(payload, "expire_grace_period", expire_grace_period)
+        conversions.put_if_specified(payload, "expire_behaviour", expire_behaviour)
+        conversions.put_if_specified(payload, "expire_grace_period", expire_grace_period)
         # This is inconsistently named in their API.
-        transformations.put_if_specified(payload, "enable_emoticons", enable_emojis)
+        conversions.put_if_specified(payload, "enable_emoticons", enable_emojis)
         route = routes.GUILD_INTEGRATION.compile(self.PATCH, guild_id=guild_id, integration_id=integration_id)
         await self._request(route, json_body=payload, reason=reason)
 
-    async def delete_guild_integration(
-        self, guild_id: str, integration_id: str, *, reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> None:
+    async def delete_guild_integration(self, guild_id: str, integration_id: str, *, reason: str = ...,) -> None:
         """Deletes an integration for the given guild.
 
         Parameters
@@ -2472,7 +2421,7 @@ class RestfulClient:
         integration_id : :obj:`str`
             The ID of the integration to delete.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
@@ -2505,7 +2454,7 @@ class RestfulClient:
         route = routes.GUILD_INTEGRATION_SYNC.compile(self.POST, guild_id=guild_id, integration_id=integration_id)
         await self._request(route)
 
-    async def get_guild_embed(self, guild_id: str) -> typing.Dict:
+    async def get_guild_embed(self, guild_id: str) -> typing.Dict[str, typing.Any]:
         """Gets the embed for a given guild.
 
         Parameters
@@ -2515,7 +2464,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             A guild embed object.
 
         Raises
@@ -2529,23 +2478,23 @@ class RestfulClient:
         return await self._request(route)
 
     async def modify_guild_embed(
-        self, guild_id: str, embed: typing.Dict, *, reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> typing.Dict:
+        self, guild_id: str, embed: typing.Dict[str, typing.Any], *, reason: str = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Edits the embed for a given guild.
 
         Parameters
         ----------
         guild_id : :obj:`str`
             The ID of the guild to edit the embed for.
-        embed : :obj:`typing.Dict`
+        embed : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The new embed object to be set.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The updated embed object.
 
         Raises
@@ -2558,7 +2507,7 @@ class RestfulClient:
         route = routes.GUILD_EMBED.compile(self.PATCH, guild_id=guild_id)
         return await self._request(route, json_body=embed, reason=reason)
 
-    async def get_guild_vanity_url(self, guild_id: str) -> typing.Dict:
+    async def get_guild_vanity_url(self, guild_id: str) -> typing.Dict[str, typing.Any]:
         """
         Gets the vanity URL for a given guild.
 
@@ -2569,7 +2518,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             A partial invite object containing the vanity URL in the ``code`` field.
 
         Raises
@@ -2582,7 +2531,7 @@ class RestfulClient:
         route = routes.GUILD_VANITY_URL.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    def get_guild_widget_image_url(self, guild_id: str, *, style: typing.Union[typing.Literal[...], str] = ...,) -> str:
+    def get_guild_widget_image_url(self, guild_id: str, *, style: str = ...,) -> str:
         """Get the URL for a guild widget.
 
         Parameters
@@ -2599,7 +2548,7 @@ class RestfulClient:
 
         Note
         ----
-        This does not actually make any form of request, and shouldn't be awaited. 
+        This does not actually make any form of request, and shouldn't be awaited.
         Thus, it doesn't have rate limits either.
 
         Warning
@@ -2609,9 +2558,7 @@ class RestfulClient:
         query = "" if style is ... else f"?style={style}"
         return f"{self.base_url}/guilds/{guild_id}/widget.png" + query
 
-    async def get_invite(
-        self, invite_code: str, *, with_counts: typing.Union[typing.Literal[...], bool] = ...
-    ) -> typing.Dict:
+    async def get_invite(self, invite_code: str, *, with_counts: bool = ...) -> typing.Dict[str, typing.Any]:
         """Gets the given invite.
 
         Parameters
@@ -2619,12 +2566,12 @@ class RestfulClient:
         invite_code : :str:
             The ID for wanted invite.
         with_counts : :bool:
-            If specified, wheter to attempt to count the number of 
+            If specified, wheter to attempt to count the number of
             times the invite has been used.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The requested invite object.
 
         Raises
@@ -2633,7 +2580,7 @@ class RestfulClient:
             If the invite is not found.
         """
         query = {}
-        transformations.put_if_specified(query, "with_counts", with_counts, str)
+        conversions.put_if_specified(query, "with_counts", with_counts, str)
         route = routes.INVITE.compile(self.GET, invite_code=invite_code)
         return await self._request(route, query=query)
 
@@ -2648,7 +2595,7 @@ class RestfulClient:
         Returns
         -------
         ``None`` # Marker
-            Nothing, unlike what the API specifies. This is done to maintain 
+            Nothing, unlike what the API specifies. This is done to maintain
             consistency with other calls of a similar nature in this API wrapper.
 
         Raises
@@ -2656,24 +2603,24 @@ class RestfulClient:
         :obj:`hikari.net.errors.NotFoundHTTPError`
             If the invite is not found.
         :obj:`hikari.net.errors.ForbiddenHTTPError`
-            If you lack either ``MANAGE_CHANNELS`` on the channel the invite 
+            If you lack either ``MANAGE_CHANNELS`` on the channel the invite
             belongs to or ``MANAGE_GUILD`` for guild-global delete.
         """
         route = routes.INVITE.compile(self.DELETE, invite_code=invite_code)
         return await self._request(route)
 
-    async def get_current_user(self) -> typing.Dict:
+    async def get_current_user(self) -> typing.Dict[str, typing.Any]:
         """Gets the current user that is represented by token given to the client.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The current user object.
         """
         route = routes.OWN_USER.compile(self.GET)
         return await self._request(route)
 
-    async def get_user(self, user_id: str) -> typing.Dict:
+    async def get_user(self, user_id: str) -> typing.Dict[str, typing.Any]:
         """Gets a given user.
 
         Parameters
@@ -2683,7 +2630,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The requested user object.
 
         Raises
@@ -2695,11 +2642,8 @@ class RestfulClient:
         return await self._request(route)
 
     async def modify_current_user(
-        self,
-        *,
-        username: typing.Union[typing.Literal[...], str] = ...,
-        avatar: typing.Optional[typing.Union[typing.Literal[...], bytes]] = ...,
-    ) -> typing.Dict:
+        self, *, username: str = ..., avatar: typing.Optional[bytes] = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Edits the current user.
 
         Parameters
@@ -2707,12 +2651,12 @@ class RestfulClient:
         username : :obj:`str`
             If specified, the new username string.
         avatar : :obj:`bytes`
-            If specified, the new avatar image in bytes form. 
+            If specified, the new avatar image in bytes form.
             If it is ``None``, the avatar is removed.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The updated user object.
 
         Raises
@@ -2721,33 +2665,29 @@ class RestfulClient:
             If you pass username longer than the limit (``2-32``) or an invalid image.
         """
         payload = {}
-        transformations.put_if_specified(payload, "username", username)
-        transformations.put_if_specified(payload, "avatar", avatar, transformations.image_bytes_to_image_data)
+        conversions.put_if_specified(payload, "username", username)
+        conversions.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
         route = routes.OWN_USER.compile(self.PATCH)
         return await self._request(route, json_body=payload)
 
-    async def get_current_user_connections(self) -> typing.Sequence[typing.Dict]:
+    async def get_current_user_connections(self) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """
-        Gets the current user's connections. This endpoint can be 
-        used with both ``Bearer`` and ``Bot`` tokens but will usually return an 
-        empty list for bots (with there being some exceptions to this, like 
+        Gets the current user's connections. This endpoint can be
+        used with both ``Bearer`` and ``Bot`` tokens but will usually return an
+        empty list for bots (with there being some exceptions to this, like
         user accounts that have been converted to bots).
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of connection objects.
         """
         route = routes.OWN_CONNECTIONS.compile(self.GET)
         return await self._request(route)
 
     async def get_current_user_guilds(
-        self,
-        *,
-        before: typing.Union[typing.Literal[...], str] = ...,
-        after: typing.Union[typing.Literal[...], str] = ...,
-        limit: typing.Union[typing.Literal[...], int] = ...,
-    ) -> typing.Sequence[typing.Dict]:
+        self, *, before: str = ..., after: str = ..., limit: int = ...,
+    ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Gets the guilds the current user is in.
 
         Parameters
@@ -2764,19 +2704,19 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of partial guild objects.
 
         Raises
         ------
         :obj:`hikari.net.errors.BadRequestHTTPError`
-            If you pass both ``before`` and ``after`` or an 
+            If you pass both ``before`` and ``after`` or an
             invalid value for ``limit``.
         """
         query = {}
-        transformations.put_if_specified(query, "before", before)
-        transformations.put_if_specified(query, "after", after)
-        transformations.put_if_specified(query, "limit", limit)
+        conversions.put_if_specified(query, "before", before)
+        conversions.put_if_specified(query, "after", after)
+        conversions.put_if_specified(query, "limit", limit)
         route = routes.OWN_GUILDS.compile(self.GET)
         return await self._request(route, query=query)
 
@@ -2796,7 +2736,7 @@ class RestfulClient:
         route = routes.LEAVE_GUILD.compile(self.DELETE, guild_id=guild_id)
         await self._request(route)
 
-    async def create_dm(self, recipient_id: str) -> typing.Dict:
+    async def create_dm(self, recipient_id: str) -> typing.Dict[str, typing.Any]:
         """Creates a new DM channel with a given user.
 
         Parameters
@@ -2806,7 +2746,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The newly created DM channel object.
 
         Raises
@@ -2818,12 +2758,12 @@ class RestfulClient:
         route = routes.OWN_DMS.compile(self.POST)
         return await self._request(route, json_body=payload)
 
-    async def list_voice_regions(self) -> typing.Sequence[typing.Dict]:
+    async def list_voice_regions(self) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Get the voice regions that are available.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of voice regions available
 
         Note
@@ -2834,13 +2774,8 @@ class RestfulClient:
         return await self._request(route)
 
     async def create_webhook(
-        self,
-        channel_id: str,
-        name: str,
-        *,
-        avatar: typing.Union[typing.Literal[...], bytes] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> typing.Dict:
+        self, channel_id: str, name: str, *, avatar: bytes = ..., reason: str = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """
         Creates a webhook for a given channel.
 
@@ -2853,12 +2788,12 @@ class RestfulClient:
         avatar : :obj:`bytes`
             If specified, the avatar image in bytes form.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The newly created webhook object.
 
         Raises
@@ -2866,17 +2801,17 @@ class RestfulClient:
         :obj:`hikari.net.errors.NotFoundHTTPError`
             If the channel is not found.
         :obj:`hikari.net.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_WEBHOOKS`` permission or 
+            If you either lack the ``MANAGE_WEBHOOKS`` permission or
             can not see the given channel.
         :obj:`hikari.net.errors.BadRequestHTTPError`
             If the avatar image is too big or the format is invalid.
         """
         payload = {"name": name}
-        transformations.put_if_specified(payload, "avatar", avatar, transformations.image_bytes_to_image_data)
+        conversions.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
         route = routes.CHANNEL_WEBHOOKS.compile(self.POST, channel_id=channel_id)
         return await self._request(route, json_body=payload, reason=reason)
 
-    async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[typing.Dict]:
+    async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Gets all webhooks from a given channel.
 
         Parameters
@@ -2886,7 +2821,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of webhook objects for the give channel.
 
         Raises
@@ -2894,13 +2829,13 @@ class RestfulClient:
         :obj:`hikari.net.errors.NotFoundHTTPError`
             If the channel is not found.
         :obj:`hikari.net.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_WEBHOOKS`` permission or 
+            If you either lack the ``MANAGE_WEBHOOKS`` permission or
             can not see the given channel.
         """
         route = routes.CHANNEL_WEBHOOKS.compile(self.GET, channel_id=channel_id)
         return await self._request(route)
 
-    async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[typing.Dict]:
+    async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Gets all webhooks for a given guild.
 
         Parameters
@@ -2910,7 +2845,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
             A list of webhook objects for the given guild.
 
         Raises
@@ -2918,15 +2853,13 @@ class RestfulClient:
         :obj:`hikari.net.errors.NotFoundHTTPError`
             If the guild is not found.
         :obj:`hikari.net.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_WEBHOOKS`` permission or 
+            If you either lack the ``MANAGE_WEBHOOKS`` permission or
             aren't a member of the given guild.
         """
         route = routes.GUILD_WEBHOOKS.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    async def get_webhook(
-        self, webhook_id: str, *, webhook_token: typing.Union[typing.Literal[...], str] = ...
-    ) -> typing.Dict:
+    async def get_webhook(self, webhook_id: str, *, webhook_token: str = ...) -> typing.Dict[str, typing.Any]:
         """Gets a given webhook.
 
         Parameters
@@ -2938,7 +2871,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The requested webhook object.
 
         Raises
@@ -2946,7 +2879,7 @@ class RestfulClient:
         :obj:`hikari.net.errors.NotFoundHTTPError`
             If the webhook is not found.
         :obj:`hikari.net.errors.ForbiddenHTTPError`
-            If you're not in the guild that owns this webhook or 
+            If you're not in the guild that owns this webhook or
             lack the ``MANAGE_WEBHOOKS`` permission.
         :obj:`hikari.net.errors.UnauthorizedHTTPError`
             If you pass a token that's invalid for the target webhook.
@@ -2961,12 +2894,12 @@ class RestfulClient:
         self,
         webhook_id: str,
         *,
-        webhook_token: typing.Union[typing.Literal[...], str] = ...,
-        name: typing.Union[typing.Literal[...], str] = ...,
-        avatar: typing.Optional[typing.Union[typing.Literal[...], bytes]] = ...,
-        channel_id: typing.Union[typing.Literal[...], str] = ...,
-        reason: typing.Union[typing.Literal[...], str] = ...,
-    ) -> typing.Dict:
+        webhook_token: str = ...,
+        name: str = ...,
+        avatar: typing.Optional[bytes] = ...,
+        channel_id: str = ...,
+        reason: str = ...,
+    ) -> typing.Dict[str, typing.Any]:
         """Edits a given webhook.
 
         Parameters
@@ -2981,15 +2914,15 @@ class RestfulClient:
             If specified, the new avatar image in bytes form. If None, then
             it is removed.
         channel_id : :obj:`str`
-            If specified, the ID of the new channel the given 
+            If specified, the ID of the new channel the given
             webhook should be moved to.
         reason : :obj:`str`
-            If specified, the audit log reason explaining why the operation 
+            If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             The updated webhook object.
 
         Raises
@@ -2997,15 +2930,15 @@ class RestfulClient:
         :obj:`hikari.net.errors.NotFoundHTTPError`
             If either the webhook or the channel aren't found.
         :obj:`hikari.net.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_WEBHOOKS`` permission or 
+            If you either lack the ``MANAGE_WEBHOOKS`` permission or
             aren't a member of the guild this webhook belongs to.
         :obj:`hikari.net.errors.UnauthorizedHTTPError`
             If you pass a token that's invalid for the target webhook.
         """
         payload = {}
-        transformations.put_if_specified(payload, "name", name)
-        transformations.put_if_specified(payload, "channel_id", channel_id)
-        transformations.put_if_specified(payload, "avatar", avatar, transformations.image_bytes_to_image_data)
+        conversions.put_if_specified(payload, "name", name)
+        conversions.put_if_specified(payload, "channel_id", channel_id)
+        conversions.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
         if webhook_token is ...:
             route = routes.WEBHOOK.compile(self.PATCH, webhook_id=webhook_id)
         else:
@@ -3014,9 +2947,7 @@ class RestfulClient:
             route, json_body=payload, reason=reason, suppress_authorization_header=webhook_token is not ...,
         )
 
-    async def delete_webhook(
-        self, webhook_id: str, *, webhook_token: typing.Union[typing.Literal[...], str] = ...
-    ) -> None:
+    async def delete_webhook(self, webhook_id: str, *, webhook_token: str = ...) -> None:
         """Deletes a given webhook.
 
         Parameters
@@ -3024,7 +2955,7 @@ class RestfulClient:
         webhook_id : :obj:`str`
             The ID of the webhook to delete
         webhook_token : :obj:`str`
-            If specified, the webhook token to use to 
+            If specified, the webhook token to use to
             delete it (bypassing bot authorization).
 
         Raises
@@ -3032,7 +2963,7 @@ class RestfulClient:
         :obj:`hikari.net.errors.NotFoundHTTPError`
             If the webhook is not found.
         :obj:`hikari.net.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_WEBHOOKS`` permission or 
+            If you either lack the ``MANAGE_WEBHOOKS`` permission or
             aren't a member of the guild this webhook belongs to.
         :obj:`hikari.net.errors.UnauthorizedHTTPError`
                 If you pass a token that's invalid for the target webhook.
@@ -3048,15 +2979,15 @@ class RestfulClient:
         webhook_id: str,
         webhook_token: str,
         *,
-        content: typing.Union[typing.Literal[...], str] = ...,
-        username: typing.Union[typing.Literal[...], str] = ...,
-        avatar_url: typing.Union[typing.Literal[...], str] = ...,
-        tts: typing.Union[typing.Literal[...], bool] = ...,
-        wait: typing.Union[typing.Literal[...], bool] = ...,
-        file: typing.Union[typing.Literal[...], typing.Tuple[str, storage.FileLikeT]] = ...,
-        embeds: typing.Union[typing.Literal[...], typing.Sequence[typing.Dict]] = ...,
-        allowed_mentions: typing.Union[typing.Literal[...], typing.Dict] = ...,
-    ) -> typing.Optional[typing.Dict]:
+        content: str = ...,
+        username: str = ...,
+        avatar_url: str = ...,
+        tts: bool = ...,
+        wait: bool = ...,
+        file: typing.Tuple[str, conversions.FileLikeT] = ...,
+        embeds: typing.Sequence[typing.Dict[str, typing.Any]] = ...,
+        allowed_mentions: typing.Dict[str, typing.Any] = ...,
+    ) -> typing.Optional[typing.Dict[str, typing.Any]]:
         """Create a message in the given channel or DM.
 
         Parameters
@@ -3068,25 +2999,25 @@ class RestfulClient:
         content : :obj:`str`
             If specified, the webhook message content to send.
         username : :obj:`str`
-            If specified, the username to override the webhook's username 
+            If specified, the username to override the webhook's username
             for this request.
         avatar_url : :obj:`str`
-            If specified, the url of an image to override the webhook's 
+            If specified, the url of an image to override the webhook's
             avatar with for this request.
         tts : :obj:`bool`
             If specified, whether this webhook should create a TTS message.
         wait : :obj:`bool`
-            If specified, whether this request should wait for the webhook 
+            If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
         file : :obj:`typing.Tuple` [ :obj:`str`, :obj:`storage.FileLikeT` ]
-            If specified, a tuple of the file name and either raw :obj:`bytes` 
-            or a :obj:`io.IOBase` derived object that points to a buffer 
+            If specified, a tuple of the file name and either raw :obj:`bytes`
+            or a :obj:`io.IOBase` derived object that points to a buffer
             containing said file.
-        embeds : :obj:`typing.Sequence` [:obj:`typing.Dict`]
-            If specified, the sequence of embed objects that will be sent 
+        embeds : :obj:`typing.Sequence` [:obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`]
+            If specified, the sequence of embed objects that will be sent
             with this message.
-        allowed_mentions : :obj:`typing.Dict`
-            If specified, the mentions to parse from the ``content``. 
+        allowed_mentions : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+            If specified, the mentions to parse from the ``content``.
             If not specified, will parse all mentions from the ``content``.
 
         Raises
@@ -3094,13 +3025,13 @@ class RestfulClient:
         :obj:`hikari.net.errors.NotFoundHTTPError`
             If the channel ID or webhook ID is not found.
         :obj:`hikari.net.errors.BadRequestHTTPError`
-            This can be raised if the file is too large; if the embed exceeds 
-            the defined limits; if the message content is specified only and 
-            empty or greater than ``2000`` characters; if neither content, file 
+            This can be raised if the file is too large; if the embed exceeds
+            the defined limits; if the message content is specified only and
+            empty or greater than ``2000`` characters; if neither content, file
             or embed are specified; if there is a duplicate id in only of the
-            fields in ``allowed_mentions``; if you specify to parse all 
-            users/roles mentions but also specify which users/roles to 
-            parse only.
+            fields in ``allowed_mentions``; if you specify to parse all
+            users/roles mentions but also specify which users/roles to parse
+            only.
         :obj:`hikari.net.errors.ForbiddenHTTPError`
             If you lack permissions to send to this channel.
         :obj:`hikari.net.errors.UnauthorizedHTTPError`
@@ -3108,31 +3039,31 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`hikari.internal_utilities.typing.Dict`, optional
+        :obj:`hikari._internal.typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`, optional
             The created message object if ``wait`` is ``True``, else ``None``.
         """
         form = aiohttp.FormData()
 
         json_payload = {}
-        transformations.put_if_specified(json_payload, "content", content)
-        transformations.put_if_specified(json_payload, "username", username)
-        transformations.put_if_specified(json_payload, "avatar_url", avatar_url)
-        transformations.put_if_specified(json_payload, "tts", tts)
-        transformations.put_if_specified(json_payload, "embeds", embeds)
-        transformations.put_if_specified(json_payload, "allowed_mentions", allowed_mentions)
+        conversions.put_if_specified(json_payload, "content", content)
+        conversions.put_if_specified(json_payload, "username", username)
+        conversions.put_if_specified(json_payload, "avatar_url", avatar_url)
+        conversions.put_if_specified(json_payload, "tts", tts)
+        conversions.put_if_specified(json_payload, "embeds", embeds)
+        conversions.put_if_specified(json_payload, "allowed_mentions", allowed_mentions)
 
         form.add_field("payload_json", json.dumps(json_payload), content_type="application/json")
 
         if file is not ...:
             file_name, file = file
-            file = storage.make_resource_seekable(file)
+            file = conversions.make_resource_seekable(file)
             re_seekable_resources = [file]
             form.add_field("file", file, filename=file_name, content_type="application/octet-stream")
         else:
             re_seekable_resources = []
 
         query = {}
-        transformations.put_if_specified(query, "wait", wait, str)
+        conversions.put_if_specified(query, "wait", wait, str)
 
         route = routes.WEBHOOK_WITH_TOKEN.compile(self.POST, webhook_id=webhook_id, webhook_token=webhook_token)
         return await self._request(
@@ -3147,12 +3078,12 @@ class RestfulClient:
     # OAUTH2 #
     ##########
 
-    async def get_current_application_info(self) -> typing.Dict:
+    async def get_current_application_info(self) -> typing.Dict[str, typing.Any]:
         """Get the current application information.
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
             An application info object.
         """
         route = routes.OAUTH2_APPLICATIONS_ME.compile(self.GET)

@@ -22,9 +22,9 @@ __all__ = ["HTTPConfig"]
 
 import typing
 
+from hikari._internal import marshaller
 from hikari.core import entities
 from hikari.core.clients import protocol_config
-from hikari.internal_utilities import marshaller
 
 
 @marshaller.attrs(kw_only=True)

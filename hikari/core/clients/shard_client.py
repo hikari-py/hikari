@@ -16,6 +16,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Provides a facade around the :obj:`hikari.net.shard.ShardConnection`
+implementation which handles parsing and initializing the object from a
+configuration, as well as restarting it if it disconnects.
+
+Additional functions and coroutines are provided to update the presence on the
+shard using models defined in :mod:`hikari.core`.
+"""
 __all__ = ["ShardState", "ShardClient"]
 
 import abc
@@ -30,11 +37,12 @@ import typing
 
 import aiohttp
 
+from hikari._internal import more_asyncio
+from hikari._internal import more_logging
 from hikari.core import events
-from hikari.core.clients import gateway_config
 from hikari.core import gateway_entities
-from hikari.internal_utilities import aio
-from hikari.internal_utilities import loggers
+from hikari.core import guilds
+from hikari.core.clients import gateway_config
 from hikari.net import codes
 from hikari.net import errors
 from hikari.net import ratelimits
@@ -45,12 +53,23 @@ _EventT = typing.TypeVar("_EventT", bound=events.HikariEvent)
 
 @enum.unique
 class ShardState(enum.IntEnum):
+    """Describes the state of a shard."""
+
+    #: The shard is not running.
     NOT_RUNNING = 0
-    INITIALIZING = enum.auto()
+    #: The shard is undergoing the initial connection handshake.
+    HANDSHAKE = enum.auto()
+    #: The initialization handshake has completed. We are waiting for the shard
+    #: to receive the ``READY`` event.
     WAITING_FOR_READY = enum.auto()
+    #: The shard is ``READY``.
     READY = enum.auto()
+    #: The shard has disconnected and is currently attempting to reconnect
+    #: again.
     RECONNECTING = enum.auto()
+    #: The shard is currently shutting down permanently.
     STOPPING = enum.auto()
+    #: The shard has shut down and is no longer connected.
     STOPPED = enum.auto()
 
 
@@ -63,17 +82,24 @@ class WebsocketClientBase(abc.ABC):
 
     @abc.abstractmethod
     async def start(self):
-        ...
+        """Starts the component."""
 
     @abc.abstractmethod
     async def close(self, wait: bool = True):
-        ...
+        """Shuts down the component."""
 
     @abc.abstractmethod
     async def join(self):
-        ...
+        """Waits for the component to terminate."""
 
     def run(self):
+        """Performs the same job as :meth:`start`, but provides additional
+        preparation such as registering OS signal handlers for interrupts,
+        and preparing the initial event loop.
+
+        This enables the client to be run immediately without having to
+        set up the :mod:`asyncio` event loop manually first.
+        """
         loop = asyncio.get_event_loop()
 
         def sigterm_handler(*_):
@@ -156,7 +182,7 @@ class ShardClient(WebsocketClientBase):
         low_level_dispatch: typing.Callable[["ShardClient", str, typing.Any], None],
         url: str,
     ) -> None:
-        self.logger = loggers.get_named_logger(self, shard_id)
+        self.logger = more_logging.get_named_logger(self, shard_id)
         self._dispatch = low_level_dispatch
         self._activity = config.initial_activity
         self._idle_since = config.initial_idle_since
@@ -203,11 +229,11 @@ class ShardClient(WebsocketClientBase):
 
     #: TODO: use enum
     @property
-    def status(self) -> str:
+    def status(self) -> guilds.PresenceStatus:
         """
         Returns
         -------
-        :obj:`str`
+        :obj:`guilds.PresenceStatus`
             The current user status for this shard.
         """
         return self._status
@@ -253,7 +279,7 @@ class ShardClient(WebsocketClientBase):
             raise RuntimeError("Cannot start a shard twice")
 
         self.logger.debug("starting shard")
-        self._shard_state = ShardState.INITIALIZING
+        self._shard_state = ShardState.HANDSHAKE
         self._task = asyncio.create_task(self._keep_alive())
         self.logger.info("waiting for READY")
         completed, _ = await asyncio.wait(
@@ -277,7 +303,7 @@ class ShardClient(WebsocketClientBase):
 
     async def join(self) -> None:
         """Wait for the shard to shut down fully."""
-        await self._task if self._task is not None else aio.completed_future()
+        await self._task if self._task is not None else more_asyncio.completed_future()
 
     async def close(self, wait: bool = True) -> None:
         """Request that the shard shuts down.
@@ -365,7 +391,7 @@ class ShardClient(WebsocketClientBase):
 
     async def update_presence(
         self,
-        status: str = ...,  # TODO: use enum for status
+        status: guilds.PresenceStatus = ...,
         activity: typing.Optional[gateway_entities.GatewayActivity] = ...,
         idle_since: typing.Optional[datetime.datetime] = ...,
         is_afk: bool = ...,
@@ -382,7 +408,7 @@ class ShardClient(WebsocketClientBase):
 
         Parameters
         ----------
-        status : :obj:`str`
+        status : :obj:`guilds.PresenceStatus`
             The new status to set.
         activity : :obj:`hikari.core.gateway_entities.GatewayActivity`, optional
             The new activity to set.
@@ -409,7 +435,7 @@ class ShardClient(WebsocketClientBase):
 
     @staticmethod
     def _create_presence_pl(
-        status: str,  # TODO: use enum for status
+        status: guilds.PresenceStatus,
         activity: typing.Optional[gateway_entities.GatewayActivity],
         idle_since: typing.Optional[datetime.datetime],
         is_afk: bool,

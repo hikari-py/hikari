@@ -35,36 +35,18 @@ MAIN_PACKAGE = "hikari"
 OWNER = "nekokatt"
 TECHNICAL_DIR = "technical"
 TEST_PATH = "tests/hikari"
-PYLINT_VERSION = "2.4.4"
-PYLINT_THRESHOLD = 8
-COVERAGE_RC = ".coveragerc"
 ARTIFACT_DIR = "public"
 DOCUMENTATION_DIR = "docs"
 CI_SCRIPT_DIR = "tasks"
-SPHINX_OPTS = "-WTvvn"
 BLACK_PACKAGES = [MAIN_PACKAGE, TEST_PATH]
-BLACK_PATHS = [m.replace(".", "/") for m in BLACK_PACKAGES] + [__file__, pathify(DOCUMENTATION_DIR, "conf.py")]
+BLACK_PATHS = [m.replace(".", "/") for m in BLACK_PACKAGES] + [
+    __file__,
+    pathify(DOCUMENTATION_DIR, "conf.py"),
+    "noxfile.py",
+]
 BLACK_SHIM_PATH = pathify(CI_SCRIPT_DIR, "black.py")
-GENDOC_PATH = pathify(CI_SCRIPT_DIR, "gendoc.py")
 MAIN_PACKAGE_PATH = MAIN_PACKAGE.replace(".", "/")
 REPOSITORY = f"https://gitlab.com/{OWNER}/{MAIN_PACKAGE}"
-PYTEST_ARGS = [
-    "-n",
-    "auto",
-    "--cov",
-    MAIN_PACKAGE,
-    "--cov-config",
-    COVERAGE_RC,
-    "--cov-report",
-    "term",
-    "--cov-report",
-    f"html:{ARTIFACT_DIR}/coverage/html",
-    "--cov-branch",
-    f"--junitxml={ARTIFACT_DIR}/tests.xml",
-    "--showlocals",
-    # "--testdox",
-    # "--force-testdox",
-]
 
 
 @nox.session(reuse_venv=True)
@@ -72,7 +54,34 @@ def test(session) -> None:
     """Run unit tests in Pytest."""
     session.install("-r", "requirements.txt")
     session.install("-r", "dev-requirements.txt")
-    session.run("python", "-m", "pytest", *PYTEST_ARGS, *session.posargs, TEST_PATH)
+
+    additional_opts = ["--pastebin=all"] if os.getenv("CI") else []
+
+    session.run(
+        "python",
+        "-m",
+        "pytest",
+        "-c",
+        "pytest.ini",
+        "-r",
+        "a",
+        *additional_opts,
+        "--full-trace",
+        "-n",
+        "auto",
+        "--cov",
+        MAIN_PACKAGE,
+        "--cov-config=coverage.ini",
+        "--cov-report",
+        "term",
+        "--cov-report",
+        f"html:{ARTIFACT_DIR}/coverage/html",
+        "--cov-branch",
+        f"--junitxml={ARTIFACT_DIR}/tests.xml",
+        "--showlocals",
+        *session.posargs,
+        TEST_PATH,
+    )
 
 
 @nox.session(reuse_venv=True)
@@ -82,20 +91,11 @@ def documentation(session) -> None:
     session.install("-r", "dev-requirements.txt")
     session.install("-r", "doc-requirements.txt")
 
-    session.env["SPHINXOPTS"] = SPHINX_OPTS
+    session.env["SPHINXOPTS"] = "-WTvvn"
 
     tech_dir = pathify(DOCUMENTATION_DIR, TECHNICAL_DIR)
     shutil.rmtree(tech_dir, ignore_errors=True, onerror=lambda *_: None)
     os.mkdir(tech_dir)
-    # session.run(
-    #     "python",
-    #     GENDOC_PATH,
-    #     ".",
-    #     MAIN_PACKAGE,
-    #     pathify(DOCUMENTATION_DIR, "_templates", "gendoc"),
-    #     pathify(DOCUMENTATION_DIR, "index.rst"),
-    #     pathify(DOCUMENTATION_DIR, TECHNICAL_DIR),
-    # )
     session.run("sphinx-apidoc", "-e", "-o", tech_dir, MAIN_PACKAGE)
     session.run("python", "-m", "sphinx.cmd.build", DOCUMENTATION_DIR, ARTIFACT_DIR, "-b", "html")
 
@@ -124,20 +124,33 @@ def format(session) -> None:
 
 
 @nox.session(reuse_venv=True)
+def docstyle(session) -> None:
+    """Reformat code with Black. Pass the '--check' flag to check formatting only."""
+    session.install("pydocstyle")
+    session.chdir(MAIN_PACKAGE_PATH)
+    # add -e flag for explainations.
+    with contextlib.suppress(Exception):  # TODO: remove this once these are being fixed.
+        session.run("pydocstyle", "--config=../pydocstyle.ini")
+
+
+@nox.session(reuse_venv=True,)
 def lint(session) -> None:
     """Check formating with pylint"""
     session.install("-r", "requirements.txt")
     session.install("-r", "dev-requirements.txt")
     session.install("-r", "doc-requirements.txt")
     session.install("pylint-junit==0.2.0")
-    # TODO: Change code under this comment to the commented code when we update to pylint 2.5
-    # session.run("pip", "install", f"pylint=={PYLINT_VERSION}" if PYLINT_VERSION else "pylint")
-    # frozen version of pylint 2.5 pre-release to make sure that nothing will break
-    session.install("git+https://github.com/davfsa/pylint")
+    session.install("pylint")
     pkg = MAIN_PACKAGE.split(".")[0]
 
     try:
-        session.run("pylint", pkg, "--rcfile=pylintrc", f"--fail-under={PYLINT_THRESHOLD}")
+        session.run(
+            "pylint",
+            pkg,
+            "--rcfile=pylint.ini",
+            "--spelling-private-dict-file=dict.txt",
+            success_codes=list(range(0, 256))
+        )
     finally:
         os.makedirs(ARTIFACT_DIR, exist_ok=True)
 
@@ -145,10 +158,10 @@ def lint(session) -> None:
             session.run(
                 "pylint",
                 pkg,
-                "--rcfile=pylintrc",
-                f"--fail-under={PYLINT_THRESHOLD}",
+                "--rcfile=pylint.ini",
                 "--output-format=pylint_junit.JUnitReporter",
                 stdout=fp,
+                success_codes=list(range(0, 256))
             )
 
 

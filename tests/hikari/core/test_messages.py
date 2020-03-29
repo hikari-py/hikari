@@ -21,13 +21,13 @@ import datetime
 import cymock as mock
 import pytest
 
+import hikari._internal.conversions
 from hikari.core import embeds
 from hikari.core import emojis
 from hikari.core import guilds
 from hikari.core import messages
 from hikari.core import oauth2
 from hikari.core import users
-from hikari.internal_utilities import dates
 from tests.hikari import _helpers
 
 
@@ -195,12 +195,15 @@ class TestMessage:
                 messages.Message, "member", deserializer=guilds.GuildMember.deserialize, return_value=mock_member
             ) as patched_member_deserializer:
                 with _helpers.patch_marshal_attr(
-                    messages.Message, "timestamp", deserializer=dates.parse_iso_8601_ts, return_value=mock_datetime
+                    messages.Message,
+                    "timestamp",
+                    deserializer=hikari._internal.conversions.parse_iso_8601_ts,
+                    return_value=mock_datetime,
                 ) as patched_timestamp_deserializer:
                     with _helpers.patch_marshal_attr(
                         messages.Message,
                         "edited_timestamp",
-                        deserializer=dates.parse_iso_8601_ts,
+                        deserializer=hikari._internal.conversions.parse_iso_8601_ts,
                         return_value=mock_datetime2,
                     ) as patched_edited_timestamp_deserializer:
                         with _helpers.patch_marshal_attr(

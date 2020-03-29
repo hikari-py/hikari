@@ -25,8 +25,8 @@ import typing
 
 import aiohttp.typedefs
 
+from hikari._internal import marshaller
 from hikari.core import entities
-from hikari.internal_utilities import marshaller
 
 
 @marshaller.attrs(kw_only=True)

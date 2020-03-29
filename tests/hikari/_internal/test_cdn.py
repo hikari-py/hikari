@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -15,12 +15,15 @@
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-from hikari.internal_utilities import singleton_meta
+# along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
+from hikari._internal import cdn
 
 
-def test_SingletonMeta():
-    class Test(metaclass=singleton_meta.SingletonMeta):
-        pass
+def test_generate_cdn_url():
+    url = cdn.generate_cdn_url("not", "a", "path", fmt="neko", size=42)
+    assert url == "https://cdn.discordapp.com/not/a/path.neko?size=42"
 
-    assert Test() is Test()
+
+def test_generate_cdn_url_with_size_set_to_none():
+    url = cdn.generate_cdn_url("not", "a", "path", fmt="neko", size=None)
+    assert url == "https://cdn.discordapp.com/not/a/path.neko"
