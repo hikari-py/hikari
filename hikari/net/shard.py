@@ -30,7 +30,7 @@ See also
 * Gateway documentation: https://discordapp.com/developers/docs/topics/gateway
 * Opcode documentation: https://discordapp.com/developers/docs/topics/opcodes-and-status-codes
 """
-__all__ = ["GatewayStatus", "GatewayClient"]
+__all__ = ["GatewayStatus", "ShardConnection"]
 
 import asyncio
 import contextlib
@@ -73,7 +73,7 @@ class GatewayStatus(str, enum.Enum):
 DispatchT = typing.Callable[["GatewayClient", str, typing.Dict], None]
 
 
-class GatewayClient:
+class ShardConnection:
     """Implementation of a client for the Discord Gateway.
     This is a websocket connection to Discord that is used to inform your
     application of events that occur, and to allow you to change your presence,
@@ -195,6 +195,7 @@ class GatewayClient:
         "_proxy_headers",
         "_proxy_url",
         "_ratelimiter",
+        "ready_event",
         "requesting_close_event",
         "_session",
         "session_id",
@@ -272,6 +273,21 @@ class GatewayClient:
     #:
     #: :type: :obj:`logging.Logger`
     logger: logging.Logger
+
+    #: An event that is triggered when a ``READY`` payload is received for the
+    #: shard. This indicates that it successfully started up and had a correct
+    #: sharding configuration. This is more appropriate to wait for than
+    #: :attr:`identify_event` since the former will still fire if starting
+    #: shards too closely together, for example. This would still lead to an
+    #: immediate invalid session being fired afterwards.
+    #
+    #: It is worth noting that this event is only set for the first ``READY``
+    #: event after connecting with a fresh connection. For all other purposes,
+    #: you should wait for the event to be fired in the ``dispatch`` function
+    #: you provide.
+    #:
+    #: :type: :obj:`asyncio.Event`
+    ready_event: asyncio.Event
 
     #: An event that is set when something requests that the connection
     #: should close somewhere.
@@ -381,6 +397,7 @@ class GatewayClient:
         self.last_message_received: float = float("nan")
         self.logger: logging.Logger = loggers.get_named_logger(self, shard_id)
         self.requesting_close_event: asyncio.Event = asyncio.Event()
+        self.ready_event: asyncio.Event = asyncio.Event()
         self.session_id: typing.Optional[str] = session_id
         self.seq: typing.Optional[int] = seq
         self.shard_id: int = shard_id
@@ -574,6 +591,7 @@ class GatewayClient:
         self.closed_event.clear()
         self.hello_event.clear()
         self.identify_event.clear()
+        self.ready_event.clear()
         self.requesting_close_event.clear()
 
         self._session = client_session_type(**self._cs_init_kwargs)
@@ -612,8 +630,18 @@ class GatewayClient:
             # Kill other running tasks now.
             for pending_task in pending_tasks:
                 pending_task.cancel()
+                with contextlib.suppress(Exception):
+                    # Clear any pending exception to prevent a nasty console message.
+                    pending_task.result()
 
-            ex = completed.pop().exception()
+            # If the heartbeat call closes normally, then we want to get the exception
+            # raised by the identify call if it raises anything. This prevents spammy
+            # exceptions being thrown if the client shuts down during the handshake,
+            # which becomes more and more likely when we consider bots may have many
+            # shards running, each taking min of 5s to start up after the first.
+            ex = None
+            while len(completed) > 0 and ex is None:
+                ex = completed.pop().exception()
 
             if ex is None:
                 # If no exception occurred, we must have exited non-exceptionally, indicating
@@ -692,7 +720,7 @@ class GatewayClient:
                 # noinspection PyTypeChecker
                 pl["d"]["presence"] = self._presence
             await self._send(pl)
-            self.logger.info("sent IDENTIFY, ready to listen to incoming events")
+            self.logger.info("sent IDENTIFY, now listening to incoming events")
         else:
             self.status = GatewayStatus.RESUMING
             self.logger.debug("sending RESUME")
@@ -701,7 +729,7 @@ class GatewayClient:
                 "d": {"token": self._token, "seq": self.seq, "session_id": self.session_id},
             }
             await self._send(pl)
-            self.logger.info("sent RESUME, ready to listen to incoming events")
+            self.logger.info("sent RESUME, now listening to incoming events")
 
         self.identify_event.set()
         await self._poll_events()
@@ -732,6 +760,10 @@ class GatewayClient:
             if op == codes.GatewayOpcode.DISPATCH:
                 self.seq = next_pl["s"]
                 event_name = next_pl["t"]
+
+                if event_name == "READY":
+                    self.ready_event.set()
+
                 self.dispatch(self, event_name, d)
             elif op == codes.GatewayOpcode.HEARTBEAT:
                 await self._send({"op": codes.GatewayOpcode.HEARTBEAT_ACK})

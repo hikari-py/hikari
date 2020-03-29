@@ -23,12 +23,12 @@ __all__ = ["HTTPConfig"]
 import typing
 
 from hikari.core import entities
-from hikari.core.configs import protocol as protocol_
+from hikari.core import protocol_config
 from hikari.internal_utilities import marshaller
 
 
 @marshaller.attrs(kw_only=True)
-class HTTPConfig(entities.Deserializable):
+class HTTPConfig(entities.HikariEntity, entities.Deserializable):
     """HTTP API configuration.
 
     All fields are optional kwargs that can be passed to the constructor.
@@ -41,9 +41,9 @@ class HTTPConfig(entities.Deserializable):
     #:
     #: If unspecified, defaults are used.
     #:
-    #: :type: :obj:`hikari.core.configs.protocol.HTTPProtocolConfig`
-    protocol: typing.Optional[protocol_.HTTPProtocolConfig] = marshaller.attrib(
-        deserializer=protocol_.HTTPProtocolConfig.deserialize, if_undefined=None, default=None,
+    #: :type: :obj:`hikari.core.protocol_config.HTTPProtocolConfig`
+    protocol: typing.Optional[protocol_config.HTTPProtocolConfig] = marshaller.attrib(
+        deserializer=protocol_config.HTTPProtocolConfig.deserialize, if_undefined=None, default=None,
     )
 
     #: The token to use, if applicable.

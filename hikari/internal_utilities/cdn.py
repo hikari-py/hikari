@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 import typing
-import urllib
+import urllib.parse
 
 
 BASE_CDN_URL = "https://cdn.discordapp.com"

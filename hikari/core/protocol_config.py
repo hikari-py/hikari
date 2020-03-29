@@ -23,14 +23,14 @@ __all__ = ["HTTPProtocolConfig"]
 import ssl
 import typing
 
-import aiohttp
+import aiohttp.typedefs
 
 from hikari.core import entities
 from hikari.internal_utilities import marshaller
 
 
 @marshaller.attrs(kw_only=True)
-class HTTPProtocolConfig(entities.Deserializable):
+class HTTPProtocolConfig(entities.HikariEntity, entities.Deserializable):
     """A configuration class that can be deserialized from a :obj:`dict`. This
     represents any HTTP-specific implementation and protocol details such as
     how to manage redirects, how to manage SSL, and how to use a proxy if
@@ -71,8 +71,8 @@ class HTTPProtocolConfig(entities.Deserializable):
     #:
     #: Defaults to ``None`` if unspecified during deserialization.
     #:
-    #: :type: :obj:`typing.Dict` [ :obj:`str`, :obj:`str` ], optional
-    proxy_headers: typing.Optional[typing.Dict[str, str]] = marshaller.attrib(
+    #: :type: :obj:`aiohttp.typedefs.LooseHeaders`, optional
+    proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders] = marshaller.attrib(
         deserializer=dict, if_none=None, if_undefined=None, default=None
     )
 

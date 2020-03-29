@@ -17,10 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import cymock as mock
-import pytest
 
-from hikari.core import webhooks
 from hikari.core import users
+from hikari.core import webhooks
 from tests.hikari import _helpers
 
 

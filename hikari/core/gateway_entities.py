@@ -16,12 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Components and entities that are used to describe Discord gateway information.
-"""
-__all__ = ["GatewayBot"]
+__all__ = ["GatewayBot", "GatewayActivity"]
 
 import datetime
+import typing
 
 from hikari.core import entities
 from hikari.internal_utilities import marshaller
@@ -68,3 +66,22 @@ class GatewayBot(entities.HikariEntity, entities.Deserializable):
     #:
     #: :type: :obj:`SessionStartLimit`
     session_start_limit: int = marshaller.attrib(deserializer=SessionStartLimit.deserialize)
+
+
+@marshaller.attrs()
+class GatewayActivity(entities.Deserializable, entities.Serializable):
+    #: The activity name.
+    #:
+    #: :type: :obj:`str`
+    name: str = marshaller.attrib(deserializer=str, serializer=str)
+
+    #: The activity url. Only valid for ``STREAMING`` activities.
+    #:
+    #: :type: :obj:`str`, optional
+    url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_none=None, if_undefined=None)
+
+    # TODO: implement enum for this.
+    #: The activity type.
+    #:
+    #: :type: :obj:`int`
+    type: int = marshaller.attrib(deserializer=int, serializer=int, if_undefined=0)

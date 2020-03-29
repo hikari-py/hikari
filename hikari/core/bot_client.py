@@ -16,18 +16,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Configuration data objects. These structure the settings a user can
-initialise their application with, and optionally support being read
-in from an external source, such as a JSON file, using the marshalling
-functionality included in this library.
+"""Application client.
+
 """
-
-from hikari.core.configs import app
-from hikari.core.configs import gateway
-from hikari.core.configs import http
-from hikari.core.configs import protocol
-
-from hikari.core.configs.app import *
-from hikari.core.configs.gateway import *
-from hikari.core.configs.http import *
-from hikari.core.configs.protocol import *
