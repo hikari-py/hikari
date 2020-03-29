@@ -223,15 +223,18 @@ class GuildVerificationLevel(enum.IntEnum):
 class GuildMember(entities.HikariEntity, entities.Deserializable):
     """Used to represent a guild bound member."""
 
-    #: This member's user object.
+    #: This member's user object, will be :obj:`None` when attached to Message
+    #: Create and Update gateway events.
     #:
-    #: :type: :obj:`users.User`
-    user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
+    #: :type: :obj:`users.User`, optional
+    user: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User.deserialize, if_undefined=None)
 
     #: This member's nickname, if set.
     #:
     #: :type: :obj:`str`, optional
-    nickname: typing.Optional[str] = marshaller.attrib(raw_name="nick", deserializer=str, if_none=None)
+    nickname: typing.Optional[str] = marshaller.attrib(
+        raw_name="nick", deserializer=str, if_none=None, if_undefined=None,
+    )
 
     #: A sequence of the IDs of the member's current roles.
     #:

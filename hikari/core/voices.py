@@ -42,7 +42,7 @@ class VoiceState(entities.HikariEntity, entities.Deserializable):
     #: The ID of the channel this user is connected to.
     #:
     #: :type: :obj:`.core.snowflakes.Snowflake`, optional
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize, if_none=None)
 
     #: The ID of the user this voice state is for.
     #:

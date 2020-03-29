@@ -344,8 +344,9 @@ class HikariEntityMarshaller:
             if a.raw_name not in raw_data:
                 if a.if_undefined is RAISE:
                     raise AttributeError(
-                        f"Required field {a.field_name} (from raw {a.raw_name}) is not specified in the input "
-                        f"payload\n\n{raw_data}"
+                        "Failed to deserialize data to instance of "
+                        f"{target_type.__module__}.{target_type.__qualname__} due to required field {a.field_name} "
+                        f"(from raw key {a.raw_name}) not being included in the input payload\n\n{raw_data}"
                     )
                 if a.if_undefined in PASSED_THROUGH_SINGLETONS:
                     kwargs[kwarg_name] = a.if_undefined
@@ -355,8 +356,9 @@ class HikariEntityMarshaller:
             elif (data := raw_data[a.raw_name]) is None:
                 if a.if_none is RAISE:
                     raise AttributeError(
-                        f"Non-nullable field {a.field_name} (from raw {a.raw_name}) is `None` in the input "
-                        f"payload\n\n{raw_data}"
+                        "Failed to deserialize data to instance of "
+                        f"{target_type.__module__}.{target_type.__qualname__} due to non-nullable field {a.field_name}"
+                        f" (from raw key {a.raw_name}) being `None` in the input payload\n\n{raw_data}"
                     )
                 if a.if_none in PASSED_THROUGH_SINGLETONS:
                     kwargs[kwarg_name] = a.if_none
@@ -371,7 +373,7 @@ class HikariEntityMarshaller:
                 raise TypeError(
                     "Failed to deserialize data to instance of "
                     f"{target_type.__module__}.{target_type.__qualname__} because marshalling failed on "
-                    f"attribute {a.field_name} (passed to constructor as {kwarg_name}"
+                    f"attribute {a.field_name} (passed to constructor as {kwarg_name})"
                 ) from exc
 
         return target_type(**kwargs)

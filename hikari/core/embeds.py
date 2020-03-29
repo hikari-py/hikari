@@ -141,7 +141,7 @@ class EmbedProvider(entities.HikariEntity, entities.Deserializable, entities.Ser
     #: The url of the provider.
     #:
     #: :type: :obj:`str`, optional
-    url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
+    url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None, if_none=None)
 
 
 @marshaller.attrs(slots=True)
