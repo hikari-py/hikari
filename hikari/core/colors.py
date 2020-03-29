@@ -16,8 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Model that represents a common RGB color and provides 
-simple conversions to other common color systems.
+"""Model that represents a common RGB color and provides simple conversions to
+other common color systems.
 """
 
 __all__ = ["Color", "ColorCompatibleT"]
@@ -25,12 +25,12 @@ __all__ = ["Color", "ColorCompatibleT"]
 import string
 import typing
 
-from hikari.internal_utilities import assertions
+from hikari._internal import assertions
 
 
 class Color(int, typing.SupportsInt):
     """Representation of a color.
-    
+
     This value is immutable.
 
     This is a specialization of :obj:`int` which provides alternative overrides for common methods and color system
@@ -120,21 +120,23 @@ class Color(int, typing.SupportsInt):
 
     @property
     def rgb(self) -> typing.Tuple[int, int, int]:
-        """The RGB representation of this Color. Represented a tuple of R, G, B. Each value is in the 
-        range [0, 0xFF]."""
+        """The RGB representation of this Color. Represented a tuple of R, G, B.
+        Each value is in the range [0, 0xFF].
+        """
         return (self >> 16) & 0xFF, (self >> 8) & 0xFF, self & 0xFF
 
     @property
     def rgb_float(self) -> typing.Tuple[float, float, float]:
-        """Return the floating-point RGB representation of this Color. Represented as a tuple of R, G, B. 
-        Each value is in the range [0, 1]."""
+        """Return the floating-point RGB representation of this Color.
+        Represented as a tuple of R, G, B. Each value is in the range [0, 1].
+        """
         r, g, b = self.rgb
         return r / 0xFF, g / 0xFF, b / 0xFF
 
     @property
     def hex_code(self) -> str:
-        """The six-digit hexadecimal color code for this Color. This is prepended with a ``#`` symbol, 
-        and will bein upper case.
+        """The six-digit hexadecimal color code for this Color. This is
+        prepended with a ``#`` symbol, and will be in upper case.
 
         Example
         -------
@@ -161,8 +163,8 @@ class Color(int, typing.SupportsInt):
 
     @classmethod
     def from_rgb(cls, red: int, green: int, blue: int) -> "Color":
-        """Convert the given RGB colorspace represented in values within the range [0, 255]: [0x0, 0xFF], 
-        to a :obj:`Color` object.
+        """Convert the given RGB colorspace represented in values within the
+        range [0, 255]: [0x0, 0xFF], to a :obj:`Color` object.
 
         Parameters
         ----------
@@ -191,8 +193,8 @@ class Color(int, typing.SupportsInt):
 
     @classmethod
     def from_rgb_float(cls, red_f: float, green_f: float, blue_f: float) -> "Color":
-        """Convert the given RGB colorspace represented using floats in 
-        the range [0, 1] to a :obj:`Color` object.
+        """Convert the given RGB colorspace represented using floats in the
+        range [0, 1] to a :obj:`Color` object.
 
         Parameters
         ----------
@@ -281,14 +283,14 @@ class Color(int, typing.SupportsInt):
     @classmethod
     def from_bytes(cls, bytes_: typing.Sequence[int], byteorder: str, *, signed: bool = True) -> "Color":
         """Converts the color from bytes."""
-        return Color(super().from_bytes(bytes_, byteorder, signed=signed))
+        return Color(int.from_bytes(bytes_, byteorder, signed=signed))
 
     def to_bytes(self, length: int, byteorder: str, *, signed: bool = True) -> bytes:
         """Converts the color code to bytes."""
-        return super().to_bytes(length, byteorder, signed=signed)
+        return int(self).to_bytes(length, byteorder, signed=signed)
 
     @classmethod
-    def __class_getitem__(cls, color: "ColorCompatibleT") -> "Color":
+    def __class_getitem__(cls, color: "ColorCompatibleT") -> "Color":  # pylint:disable=arguments-differ
         if isinstance(color, cls):
             return color
         elif isinstance(color, int):

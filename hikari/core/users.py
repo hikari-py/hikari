@@ -22,10 +22,10 @@ __all__ = ["User", "MyUser", "UserFlag", "PremiumType"]
 import enum
 import typing
 
+from hikari._internal import cdn
+from hikari._internal import marshaller
 from hikari.core import entities
 from hikari.core import snowflakes
-from hikari.internal_utilities import cdn
-from hikari.internal_utilities import marshaller
 
 
 @marshaller.attrs(slots=True)
@@ -86,7 +86,6 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
 
         if not self.avatar_hash:
             return cdn.generate_cdn_url("embed/avatars", str(self.default_avatar), fmt="png", size=None)
-        # pylint: disable=E1101:
         if fmt is None and self.avatar_hash.startswith("a_"):
             fmt = "gif"
         elif fmt is None:

@@ -26,9 +26,9 @@ import datetime
 import functools
 import typing
 
+import hikari._internal.conversions
+from hikari._internal import marshaller
 from hikari.core import entities
-from hikari.internal_utilities import dates
-from hikari.internal_utilities import marshaller
 
 
 @functools.total_ordering
@@ -46,14 +46,15 @@ class Snowflake(entities.HikariEntity, typing.SupportsInt):
     #: :type: :obj:`int`
     _value: int
 
-    def __init__(self, value: typing.Union[int, str]) -> None:
+    # noinspection PyMissingConstructor
+    def __init__(self, value: typing.Union[int, str]) -> None:  # pylint:disable=super-init-not-called
         self._value = int(value)
 
     @property
     def created_at(self) -> datetime.datetime:
         """When the object was created."""
         epoch = self._value >> 22
-        return dates.discord_epoch_to_datetime(epoch)
+        return hikari._internal.conversions.discord_epoch_to_datetime(epoch)
 
     @property
     def internal_worker_id(self) -> int:
@@ -94,6 +95,9 @@ class Snowflake(entities.HikariEntity, typing.SupportsInt):
 
     @classmethod
     def deserialize(cls, value: str) -> "Snowflake":
+        """Take a serialized string ID and convert it into a Snowflake
+        object.
+        """
         return cls(value)
 
 

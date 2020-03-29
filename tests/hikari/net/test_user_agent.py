@@ -16,19 +16,24 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import hikari.net.user_agent
+from hikari.net import user_agent
 
 
 def test_library_version_is_callable_and_produces_string():
-    result = hikari.net.user_agent.library_version()
-    assert result.startswith("hikari ")
+    assert isinstance(user_agent.UserAgent().library_version, str)
 
 
-def test_python_version_is_callable_and_produces_string():
-    result = hikari.net.user_agent.python_version()
-    assert isinstance(result, str) and len(result.strip()) > 0
+def test_platform_version_is_callable_and_produces_string():
+    assert isinstance(user_agent.UserAgent().platform_version, str)
 
 
 def test_system_type_produces_string():
-    result = hikari.net.user_agent.system_type()
-    assert isinstance(result, str) and len(result.strip()) > 0
+    assert isinstance(user_agent.UserAgent().system_type, str)
+
+
+def test_websocket_triplet_produces_trio():
+    assert user_agent.UserAgent().websocket_triplet == {
+        "$os": user_agent.UserAgent().system_type,
+        "$browser": user_agent.UserAgent().library_version,
+        "$device": user_agent.UserAgent().platform_version,
+    }

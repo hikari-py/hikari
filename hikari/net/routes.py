@@ -80,6 +80,23 @@ class CompiledRoute:
         return base_url + self.compiled_path
 
     def create_real_bucket_hash(self, initial_bucket_hash: str) -> str:
+        """Create a full bucket hash from a given initial hash.
+
+        The result of this hash will be decided by the value of the major
+        parameters passed to the route during the compilation phase.
+
+        Parameters
+        ----------
+        initial_bucket_hash: :obj:`str`
+            The initial bucket hash provided by Discord in the HTTP headers
+            for a given response.
+
+        Returns
+        -------
+        :obj:`str`
+            The input hash amalgamated with a hash code produced by the
+            major parameters in this compiled route instance.
+        """
         return initial_bucket_hash + ";" + self.major_params_hash
 
     def __hash__(self) -> int:
@@ -105,7 +122,7 @@ class CompiledRoute:
 
 class RouteTemplate:
     """A template used to create compiled routes for specific parameters.
-    
+
     These compiled routes are used to identify rate limit buckets.
 
     Parameters
@@ -113,8 +130,9 @@ class RouteTemplate:
     path_template : :obj:`str`
         The template string for the path to use.
     major_params : :obj:`str`
-        A collection of major parameter names that appear in the template path. 
-        If not specified, the default major parameter names are extracted and used in-place.
+        A collection of major parameter names that appear in the template path.
+        If not specified, the default major parameter names are extracted and
+        used in-place.
     """
 
     __slots__ = ("path_template", "major_params")

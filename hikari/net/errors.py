@@ -57,6 +57,7 @@ class GatewayError(errors.HikariError):
     reason: str
 
     def __init__(self, reason: str) -> None:
+        super().__init__()
         self.reason = reason
 
     def __str__(self) -> str:
@@ -191,6 +192,7 @@ class HTTPError(errors.HikariError):
     reason: str
 
     def __init__(self, reason: str) -> None:
+        super().__init__()
         self.reason = reason
 
     def __str__(self) -> str:

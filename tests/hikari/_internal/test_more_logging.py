@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-from hikari.internal_utilities import loggers
+from hikari._internal import more_logging
 
 package_name = __name__
 
@@ -28,30 +28,30 @@ class Dummy:
 
 
 def test_get_named_logger_with_global_class():
-    logger = loggers.get_named_logger(Dummy)
+    logger = more_logging.get_named_logger(Dummy)
     assert logger.name == package_name + ".Dummy"
 
 
 def test_get_named_logger_with_nested_class():
-    logger = loggers.get_named_logger(Dummy.NestedDummy)
+    logger = more_logging.get_named_logger(Dummy.NestedDummy)
     assert logger.name == package_name + ".Dummy.NestedDummy"
 
 
 def test_get_named_logger_with_global_class_instance():
-    logger = loggers.get_named_logger(Dummy())
+    logger = more_logging.get_named_logger(Dummy())
     assert logger.name == package_name + ".Dummy"
 
 
 def test_get_named_logger_with_nested_class_instance():
-    logger = loggers.get_named_logger(Dummy.NestedDummy())
+    logger = more_logging.get_named_logger(Dummy.NestedDummy())
     assert logger.name == package_name + ".Dummy.NestedDummy"
 
 
 def test_get_named_logger_with_string():
-    logger = loggers.get_named_logger("potato")
+    logger = more_logging.get_named_logger("potato")
     assert logger.name == "potato"
 
 
 def test_get_named_logger_with_extras():
-    logger = loggers.get_named_logger("potato", "foo", "bar", "baz")
+    logger = more_logging.get_named_logger("potato", "foo", "bar", "baz")
     assert logger.name == "potato[foo, bar, baz]"

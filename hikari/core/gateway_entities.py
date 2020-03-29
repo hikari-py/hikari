@@ -16,13 +16,15 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Entities directly related to creating and managing gateway shards."""
 __all__ = ["GatewayBot", "GatewayActivity"]
 
 import datetime
 import typing
 
+from hikari._internal import marshaller
 from hikari.core import entities
-from hikari.internal_utilities import marshaller
+from hikari.core import guilds
 
 
 @marshaller.attrs(slots=True)
@@ -68,8 +70,13 @@ class GatewayBot(entities.HikariEntity, entities.Deserializable):
     session_start_limit: int = marshaller.attrib(deserializer=SessionStartLimit.deserialize)
 
 
-@marshaller.attrs()
+@marshaller.attrs(slots=True)
 class GatewayActivity(entities.Deserializable, entities.Serializable):
+    """An activity that the bot can set for one or more shards.
+
+    This will show the activity as the bot's presence.
+    """
+
     #: The activity name.
     #:
     #: :type: :obj:`str`
@@ -80,8 +87,9 @@ class GatewayActivity(entities.Deserializable, entities.Serializable):
     #: :type: :obj:`str`, optional
     url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_none=None, if_undefined=None)
 
-    # TODO: implement enum for this.
     #: The activity type.
     #:
-    #: :type: :obj:`int`
-    type: int = marshaller.attrib(deserializer=int, serializer=int, if_undefined=0)
+    #: :type: :obj:`guilds.ActivityType`
+    type: guilds.ActivityType = marshaller.attrib(
+        deserializer=guilds.ActivityType, serializer=int, if_undefined=lambda: guilds.ActivityType.PLAYING
+    )

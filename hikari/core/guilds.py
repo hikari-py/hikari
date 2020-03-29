@@ -42,6 +42,9 @@ import datetime
 import enum
 import typing
 
+from hikari._internal import cdn
+from hikari._internal import conversions
+from hikari._internal import marshaller
 from hikari.core import colors
 from hikari.core import channels as _channels
 from hikari.core import emojis as _emojis
@@ -49,10 +52,6 @@ from hikari.core import entities
 from hikari.core import permissions as _permissions
 from hikari.core import snowflakes
 from hikari.core import users
-from hikari.internal_utilities import cdn
-from hikari.internal_utilities import dates
-from hikari.internal_utilities import marshaller
-from hikari.internal_utilities import transformations
 
 
 @enum.unique
@@ -202,14 +201,14 @@ class GuildMember(entities.HikariEntity, entities.Deserializable):
     #: The datetime of when this member joined the guild they belong to.
     #:
     #: :type: :obj:`datetime.datetime`
-    joined_at: datetime.datetime = marshaller.attrib(deserializer=dates.parse_iso_8601_ts)
+    joined_at: datetime.datetime = marshaller.attrib(deserializer=conversions.parse_iso_8601_ts)
 
     #: The datetime of when this member started "boosting" this guild.
     #: Will be ``None`` if they aren't boosting.
     #:
     #: :type: :obj:`datetime.datetime`, optional
     premium_since: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=dates.parse_iso_8601_ts, if_none=None, if_undefined=None,
+        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None,
     )
 
     #: Whether this member is deafened by this guild in it's voice channels.
@@ -303,13 +302,15 @@ class ActivityTimestamps(entities.HikariEntity, entities.Deserializable):
     #:
     #: :type: :obj:`datetime.datetime`, optional
     start: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=dates.unix_epoch_to_ts, if_undefined=None
+        deserializer=conversions.unix_epoch_to_ts, if_undefined=None
     )
 
     #: When this activity's session will end, if applicable.
     #:
     #: :type: :obj:`datetime.datetime`, optional
-    end: typing.Optional[datetime.datetime] = marshaller.attrib(deserializer=dates.unix_epoch_to_ts, if_undefined=None)
+    end: typing.Optional[datetime.datetime] = marshaller.attrib(
+        deserializer=conversions.unix_epoch_to_ts, if_undefined=None
+    )
 
 
 @marshaller.attrs(slots=True)
@@ -331,12 +332,12 @@ class ActivityParty(entities.HikariEntity, entities.Deserializable):
     @property
     def current_size(self) -> typing.Optional[int]:
         """The current size of this party, if applicable."""
-        return self._size_information and self._size_information[0] or None
+        return self._size_information[0] if self._size_information else None
 
     @property
     def max_size(self) -> typing.Optional[int]:
         """The maximum size of this party, if applicable"""
-        return self._size_information and self._size_information[1] or None
+        return self._size_information[1] if self._size_information else None
 
 
 @marshaller.attrs(slots=True)
@@ -420,7 +421,7 @@ class PresenceActivity(entities.HikariEntity, entities.Deserializable):
     #: When this activity was added to the user's session.
     #:
     #: :type: :obj:`datetime.datetime`
-    created_at: datetime.datetime = marshaller.attrib(deserializer=dates.unix_epoch_to_ts)
+    created_at: datetime.datetime = marshaller.attrib(deserializer=conversions.unix_epoch_to_ts)
 
     #: The timestamps for when this activity's current state will start and
     #: end, if applicable.
@@ -485,9 +486,7 @@ class PresenceActivity(entities.HikariEntity, entities.Deserializable):
 
 
 class PresenceStatus(enum.Enum):
-    """
-    The status of a member.
-    """
+    """The status of a member."""
 
     #: Online/green.
     ONLINE = "online"
@@ -612,7 +611,7 @@ class GuildMemberPresence(entities.HikariEntity, entities.Deserializable):
     #:
     #: :type: :obj:`datetime.datetime`, optional
     premium_since: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=dates.parse_iso_8601_ts, if_none=None, if_undefined=None,
+        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None,
     )
 
     #: This member's nickname, if set.
@@ -716,7 +715,7 @@ class GuildIntegration(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`datetime.datetime`
     last_synced_at: datetime.datetime = marshaller.attrib(
-        raw_name="synced_at", deserializer=dates.parse_iso_8601_ts, if_none=None
+        raw_name="synced_at", deserializer=conversions.parse_iso_8601_ts, if_none=None
     )
 
 
@@ -770,7 +769,7 @@ class PartialGuild(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`typing.Set` [ :obj:`GuildFeature` ]
     features: typing.Set[GuildFeature] = marshaller.attrib(
-        deserializer=lambda features: {transformations.try_cast(f, GuildFeature, f) for f in features},
+        deserializer=lambda features: {conversions.try_cast(f, GuildFeature, f) for f in features},
     )
 
     def format_icon_url(self, fmt: typing.Optional[str] = None, size: int = 2048) -> typing.Optional[str]:
@@ -792,7 +791,6 @@ class PartialGuild(snowflakes.UniqueEntity, entities.Deserializable):
             The string url.
         """
         if self.icon_hash:
-            # pylint: disable=E1101:
             if fmt is None and self.icon_hash.startswith("a_"):
                 fmt = "gif"
             elif fmt is None:
@@ -990,7 +988,7 @@ class Guild(PartialGuild):
     #:
     #: :type: :obj`datetime.datetime`, optional
     joined_at: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=dates.parse_iso_8601_ts, if_undefined=None
+        deserializer=conversions.parse_iso_8601_ts, if_undefined=None
     )
 
     #: Whether the guild is considered to be large or not.

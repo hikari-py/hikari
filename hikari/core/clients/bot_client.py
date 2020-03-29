@@ -16,4 +16,5 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""A bot client might go here... eventually..."""
 __all__ = []

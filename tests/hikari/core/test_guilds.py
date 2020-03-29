@@ -21,13 +21,13 @@ import datetime
 import cymock as mock
 import pytest
 
+import hikari._internal.conversions
+from hikari._internal import cdn
 from hikari.core import emojis
 from hikari.core import entities
 from hikari.core import guilds
 from hikari.core import users
 from hikari.core import channels
-from hikari.internal_utilities import cdn
-from hikari.internal_utilities import dates
 
 from tests.hikari import _helpers
 
@@ -257,19 +257,22 @@ def test_guild_payload(
 
 class TestGuildMember:
     def test_deserialize(self, test_member_payload, test_user_payload):
-        mock_user = mock.MagicMock(users.User)
-        mock_datetime_1 = mock.MagicMock(dates)
-        mock_datetime_2 = mock.MagicMock(dates)
+        mock_user = mock.create_autospec(users.User)
+        mock_datetime_1 = mock.create_autospec(datetime.datetime)
+        mock_datetime_2 = mock.create_autospec(datetime.datetime)
         with _helpers.patch_marshal_attr(
             guilds.GuildMember, "user", deserializer=users.User.deserialize, return_value=mock_user
         ) as patched_user_deserializer:
             with _helpers.patch_marshal_attr(
-                guilds.GuildMember, "joined_at", deserializer=dates.parse_iso_8601_ts, return_value=mock_datetime_1
+                guilds.GuildMember,
+                "joined_at",
+                deserializer=hikari._internal.conversions.parse_iso_8601_ts,
+                return_value=mock_datetime_1,
             ) as patched_joined_at_deserializer:
                 with _helpers.patch_marshal_attr(
                     guilds.GuildMember,
                     "premium_since",
-                    deserializer=dates.parse_iso_8601_ts,
+                    deserializer=hikari._internal.conversions.parse_iso_8601_ts,
                     return_value=mock_datetime_2,
                 ) as patched_premium_since_deserializer:
                     guild_member_obj = guilds.GuildMember.deserialize(test_member_payload)
@@ -312,13 +315,19 @@ class TestGuildRole:
 
 class TestActivityTimestamps:
     def test_deserialize(self, test_activity_timestamps_payload):
-        mock_start_date = mock.MagicMock(datetime.datetime)
-        mock_end_date = mock.MagicMock(datetime.datetime)
+        mock_start_date = mock.create_autospec(datetime.datetime)
+        mock_end_date = mock.create_autospec(datetime.datetime)
         with _helpers.patch_marshal_attr(
-            guilds.ActivityTimestamps, "start", deserializer=dates.unix_epoch_to_ts, return_value=mock_start_date
+            guilds.ActivityTimestamps,
+            "start",
+            deserializer=hikari._internal.conversions.unix_epoch_to_ts,
+            return_value=mock_start_date,
         ) as patched_start_deserializer:
             with _helpers.patch_marshal_attr(
-                guilds.ActivityTimestamps, "end", deserializer=dates.unix_epoch_to_ts, return_value=mock_end_date
+                guilds.ActivityTimestamps,
+                "end",
+                deserializer=hikari._internal.conversions.unix_epoch_to_ts,
+                return_value=mock_end_date,
             ) as patched_end_deserializer:
                 activity_timestamps_obj = guilds.ActivityTimestamps.deserialize(test_activity_timestamps_payload)
                 patched_end_deserializer.assert_called_once_with(1999999792798)
@@ -378,10 +387,13 @@ class TestPresenceActivity:
         test_emoji_payload,
         test_activity_timestamps_payload,
     ):
-        mock_created_at = mock.MagicMock(datetime.datetime)
-        mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
+        mock_created_at = mock.create_autospec(datetime.datetime)
+        mock_emoji = mock.create_autospec(emojis.UnknownEmoji)
         with _helpers.patch_marshal_attr(
-            guilds.PresenceActivity, "created_at", deserializer=dates.unix_epoch_to_ts, return_value=mock_created_at
+            guilds.PresenceActivity,
+            "created_at",
+            deserializer=hikari._internal.conversions.unix_epoch_to_ts,
+            return_value=mock_created_at,
         ) as patched_created_at_deserializer:
             with _helpers.patch_marshal_attr(
                 guilds.PresenceActivity,
@@ -457,9 +469,12 @@ class TestGuildMemberPresence:
     def test_deserialize(
         self, test_guild_member_presence, test_user_payload, test_presence_activity_payload, test_client_status_payload
     ):
-        mock_since = mock.MagicMock(datetime.datetime)
+        mock_since = mock.create_autospec(datetime.datetime)
         with _helpers.patch_marshal_attr(
-            guilds.GuildMemberPresence, "premium_since", deserializer=dates.parse_iso_8601_ts, return_value=mock_since,
+            guilds.GuildMemberPresence,
+            "premium_since",
+            deserializer=hikari._internal.conversions.parse_iso_8601_ts,
+            return_value=mock_since,
         ) as patched_since_deserializer:
             guild_member_presence_obj = guilds.GuildMemberPresence.deserialize(test_guild_member_presence)
             patched_since_deserializer.assert_called_once_with("2015-04-26T06:26:56.936000+00:00")
@@ -481,7 +496,7 @@ class TestGuildMemberBan:
         return {"reason": "Get Nyaa'ed", "user": test_user_payload}
 
     def test_deserializer(self, test_guild_member_ban_payload, test_user_payload):
-        mock_user = mock.MagicMock(users.User)
+        mock_user = mock.create_autospec(users.User)
         with _helpers.patch_marshal_attr(
             guilds.GuildMemberBan, "user", deserializer=users.User.deserialize, return_value=mock_user
         ) as patched_user_deserializer:
@@ -541,12 +556,12 @@ class TestGuildIntegration:
         }
 
     def test_deserialize(self, test_guild_integration_payload, test_user_payload, test_integration_account_payload):
-        mock_user = mock.MagicMock(users.User)
-        mock_sync_date = mock.MagicMock(datetime.datetime)
+        mock_user = mock.create_autospec(users.User)
+        mock_sync_date = mock.create_autospec(datetime.datetime)
         with _helpers.patch_marshal_attr(
             guilds.GuildIntegration,
             "last_synced_at",
-            deserializer=dates.parse_iso_8601_ts,
+            deserializer=hikari._internal.conversions.parse_iso_8601_ts,
             return_value=mock_sync_date,
         ) as patched_sync_at_deserializer:
             with _helpers.patch_marshal_attr(
@@ -641,9 +656,9 @@ class TestGuild:
         test_channel_payload,
         test_guild_member_presence,
     ):
-        mock_emoji = mock.MagicMock(emojis.GuildEmoji, id=42)
-        mock_user = mock.MagicMock(users.User, id=84)
-        mock_guild_channel = mock.MagicMock(channels.GuildChannel, id=6969)
+        mock_emoji = mock.create_autospec(emojis.GuildEmoji, id=42)
+        mock_user = mock.create_autospec(users.User, id=84)
+        mock_guild_channel = mock.create_autospec(channels.GuildChannel, id=6969)
         with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji):
             with _helpers.patch_marshal_attr(
                 guilds.GuildMemberPresence, "user", deserializer=guilds.PresenceUser.deserialize, return_value=mock_user
@@ -685,7 +700,7 @@ class TestGuild:
             | guilds.GuildSystemChannelFlag.SUPPRESS_USER_JOIN
         )
         assert guild_obj.rules_channel_id == 42042069
-        assert guild_obj.joined_at == dates.parse_iso_8601_ts("2019-05-17T06:26:56.936000+00:00")
+        assert guild_obj.joined_at == hikari._internal.conversions.parse_iso_8601_ts("2019-05-17T06:26:56.936000+00:00")
         assert guild_obj.is_large is False
         assert guild_obj.member_count == 14
         assert guild_obj.channels == {6969: mock_guild_channel}
