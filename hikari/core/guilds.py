@@ -467,7 +467,9 @@ class PresenceActivity(entities.HikariEntity, entities.Deserializable):
     #: end, if applicable.
     #:
     #: :type: :obj:`ActivityTimestamps`, optional
-    timestamps: ActivityTimestamps = marshaller.attrib(deserializer=ActivityTimestamps.deserialize)
+    timestamps: typing.Optional[ActivityTimestamps] = marshaller.attrib(
+        deserializer=ActivityTimestamps.deserialize, if_undefined=None
+    )
 
     #: The ID of the application this activity is for, if applicable.
     #:

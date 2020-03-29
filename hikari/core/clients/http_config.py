@@ -23,7 +23,7 @@ __all__ = ["HTTPConfig"]
 import typing
 
 from hikari.core import entities
-from hikari.core import protocol_config
+from hikari.core.clients import protocol_config
 from hikari.internal_utilities import marshaller
 
 

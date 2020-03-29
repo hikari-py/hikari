@@ -31,10 +31,11 @@ import typing
 import aiohttp
 
 from hikari.core import events
-from hikari.core import gateway_config
+from hikari.core.clients import gateway_config
 from hikari.core import gateway_entities
 from hikari.internal_utilities import aio
 from hikari.internal_utilities import loggers
+from hikari.net import codes
 from hikari.net import errors
 from hikari.net import ratelimits
 from hikari.net import shard
@@ -255,9 +256,22 @@ class ShardClient(WebsocketClientBase):
         self._shard_state = ShardState.INITIALIZING
         self._task = asyncio.create_task(self._keep_alive())
         self.logger.info("waiting for READY")
-        await self._client.identify_event.wait()
+        completed, _ = await asyncio.wait(
+            [self._task, self._client.identify_event.wait()], return_when=asyncio.FIRST_COMPLETED
+        )
+
+        if self._task in completed:
+            raise self._task.exception()
+
         self._shard_state = ShardState.WAITING_FOR_READY
-        await self._client.ready_event.wait()
+
+        completed, _ = await asyncio.wait(
+            [self._task, self._client.ready_event.wait()], return_when=asyncio.FIRST_COMPLETED
+        )
+
+        if self._task in completed:
+            raise self._task.exception()
+
         self.logger.info("now READY")
         self._shard_state = ShardState.READY
 
@@ -329,8 +343,19 @@ class ShardClient(WebsocketClientBase):
                 self._client.session_id = None
                 do_not_back_off = True
                 await asyncio.sleep(5)
-            except errors.GatewayServerClosedConnectionError:
-                self.logger.warning("disconnected by Discord, will attempt to reconnect")
+            except errors.GatewayServerClosedConnectionError as ex:
+                if ex.close_code in (
+                    codes.GatewayCloseCode.RATE_LIMITED,
+                    codes.GatewayCloseCode.SESSION_TIMEOUT,
+                    codes.GatewayCloseCode.INVALID_SEQ,
+                    codes.GatewayCloseCode.UNKNOWN_ERROR,
+                    codes.GatewayCloseCode.SESSION_TIMEOUT,
+                    codes.GatewayCloseCode.NORMAL_CLOSURE,
+                ):
+                    self.logger.warning("disconnected by Discord, will attempt to reconnect")
+                else:
+                    self.logger.error("disconnected by Discord, %s: %s", type(ex).__name__, ex.reason)
+                    raise ex
             except errors.GatewayClientClosedError:
                 self.logger.warning("shutting down")
                 return

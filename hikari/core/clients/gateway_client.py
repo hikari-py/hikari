@@ -25,14 +25,11 @@ import typing
 
 from hikari.core import dispatcher
 from hikari.core import events
-from hikari.core import gateway_config
-from hikari.core import shard_client
+from hikari.core.clients import gateway_config
+from hikari.core.clients import shard_client
 from hikari.core import state
-from hikari.core.dispatcher import EventCallbackT
-from hikari.core.dispatcher import EventT
 from hikari.internal_utilities import loggers
 from hikari.net import shard
-
 
 ShardT = typing.TypeVar("ShardT", bound=shard_client.ShardClient)
 
@@ -162,10 +159,14 @@ class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase, di
 
         return types
 
-    def add_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT) -> EventCallbackT:
+    def add_listener(
+        self, event_type: typing.Type[dispatcher.EventT], callback: dispatcher.EventCallbackT
+    ) -> dispatcher.EventCallbackT:
         return self.event_dispatcher.add_listener(event_type, callback)
 
-    def remove_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT) -> EventCallbackT:
+    def remove_listener(
+        self, event_type: typing.Type[dispatcher.EventT], callback: dispatcher.EventCallbackT
+    ) -> dispatcher.EventCallbackT:
         return self.event_dispatcher.remove_listener(event_type, callback)
 
     def dispatch_event(self, event: events.HikariEvent) -> ...:
