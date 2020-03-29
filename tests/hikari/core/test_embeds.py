@@ -213,13 +213,6 @@ class TestEmbedField:
 
 
 class TestEmbed:
-    @pytest.fixture
-    def embed_deserialized(self, test_embed_payload):
-        mock_datetime = mock.MagicMock(datetime.datetime)
-
-        with _helpers.patch_marshal_attr(embeds.Embed, "timestamp", return_value=mock_datetime):
-            return embeds.Embed.deserialize(test_embed_payload), mock_datetime
-
     def test_deserialize(
         self,
         test_embed_payload,
