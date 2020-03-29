@@ -186,7 +186,7 @@ def pip_bdist_wheel(session: nox.sessions.Session):
             print(f"copying newest wheel found at {newest_wheel} and installing it in temp dir")
             shutil.copyfile(newest_wheel, newest_wheel_name)
             session.run("pip", "install", newest_wheel_name)
-            session.run("python", "-m", MAIN_PACKAGE, "-V")
+            session.run("python", "-m", MAIN_PACKAGE)
 
     print("Installed as wheel in temporary environment successfully!")
 
@@ -223,7 +223,7 @@ def pip_sdist(session: nox.sessions.Session):
             print("installing sdist")
             with temp_chdir(session, newest_tarball_dir):
                 session.run("python", "setup.py", "install")
-                session.run("python", "-m", MAIN_PACKAGE, "-V")
+                session.run("python", "-m", MAIN_PACKAGE)
 
     print("Installed as wheel in temporary environment successfully!")
 
@@ -246,7 +246,7 @@ def pip_git(session: nox.sessions.Session):
         with temp_chdir(session, temp_dir) as project_dir:
             session.install(f"git+file://{project_dir}")
             session.install(MAIN_PACKAGE)
-            session.run("python", "-m", MAIN_PACKAGE, "-V")
+            session.run("python", "-m", MAIN_PACKAGE)
 
     print("Installed as git dir in temporary environment successfully!")
 
