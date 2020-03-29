@@ -21,12 +21,6 @@
 __all__ = [
     "ActivityFlag",
     "ActivityType",
-    "GuildChannel",
-    "GuildTextChannel",
-    "GuildNewsChannel",
-    "GuildStoreChannel",
-    "GuildVoiceChannel",
-    "GuildCategory",
     "GuildRole",
     "GuildFeature",
     "GuildSystemChannelFlag",
@@ -48,8 +42,8 @@ import datetime
 import enum
 import typing
 
-from hikari.core import channels
 from hikari.core import colors
+from hikari.core import channels as _channels
 from hikari.core import emojis as _emojis
 from hikari.core import entities
 from hikari.core import permissions as _permissions
@@ -59,44 +53,6 @@ from hikari.internal_utilities import cdn
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import marshaller
 from hikari.internal_utilities import transformations
-
-
-@marshaller.attrs(slots=True)
-class GuildChannel(channels.Channel, entities.Deserializable):
-    """The base for anything that is a guild channel."""
-
-
-@marshaller.attrs(slots=True)
-class GuildTextChannel(GuildChannel):
-    ...
-
-
-@marshaller.attrs(slots=True)
-class GuildVoiceChannel(GuildChannel):
-    ...
-
-
-@marshaller.attrs(slots=True)
-class GuildCategory(GuildChannel):
-    ...
-
-
-@marshaller.attrs(slots=True)
-class GuildStoreChannel(GuildChannel):
-    ...
-
-
-@marshaller.attrs(slots=True)
-class GuildNewsChannel(GuildChannel):
-    ...
-
-
-def parse_guild_channel(payload) -> GuildChannel:
-    class Duff:
-        id = snowflakes.Snowflake(123)
-
-    # FIXME: implement properly
-    return Duff()
 
 
 @enum.unique
@@ -1095,9 +1051,9 @@ class Guild(PartialGuild):
     #: To retrieve a list of channels in any other case, you should make an
     #: appropriate API call to retrieve this information.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`GuildChannel` ], optional
-    channels: typing.Optional[typing.Mapping[snowflakes.Snowflake, GuildChannel]] = marshaller.attrib(
-        deserializer=lambda guild_channels: {c.id: c for c in map(parse_guild_channel, guild_channels)},
+    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`_channels.GuildChannel` ], optional
+    channels: typing.Optional[typing.Mapping[snowflakes.Snowflake, _channels.GuildChannel]] = marshaller.attrib(
+        deserializer=lambda guild_channels: {c.id: c for c in map(_channels.deserialize_channel, guild_channels)},
         if_undefined=None,
     )
 

@@ -25,6 +25,7 @@ from hikari.core import emojis
 from hikari.core import entities
 from hikari.core import guilds
 from hikari.core import users
+from hikari.core import channels
 from hikari.internal_utilities import cdn
 from hikari.internal_utilities import dates
 
@@ -88,6 +89,7 @@ def test_channel_payload():
         "rate_limit_per_user": 420,
         "topic": "nsfw stuff",
         "name": "shh!",
+        "last_message_id": "1234",
     }
 
 
@@ -641,7 +643,7 @@ class TestGuild:
     ):
         mock_emoji = mock.MagicMock(emojis.GuildEmoji, id=42)
         mock_user = mock.MagicMock(users.User, id=84)
-        mock_guild_channel = mock.MagicMock(guilds.GuildChannel, id=6969)
+        mock_guild_channel = mock.MagicMock(channels.GuildChannel, id=6969)
         with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji):
             with _helpers.patch_marshal_attr(
                 guilds.GuildMemberPresence, "user", deserializer=guilds.PresenceUser.deserialize, return_value=mock_user
@@ -649,9 +651,9 @@ class TestGuild:
                 with _helpers.patch_marshal_attr(
                     guilds.GuildMember, "user", deserializer=users.User.deserialize, return_value=mock_user
                 ) as patched_member_user_deserializer:
-                    with mock.patch.object(guilds, "parse_guild_channel", return_value=mock_guild_channel):
+                    with mock.patch.object(channels, "deserialize_channel", return_value=mock_guild_channel):
                         guild_obj = guilds.Guild.deserialize(test_guild_payload)
-                        guilds.parse_guild_channel.assert_called_once_with(test_channel_payload)
+                        channels.deserialize_channel.assert_called_once_with(test_channel_payload)
                     patched_member_user_deserializer.assert_called_once_with(test_member_payload["user"])
                     assert guild_obj.members == {84: guilds.GuildMember.deserialize(test_member_payload)}
                 patched_user_deserializer.assert_called_once_with(test_member_payload["user"])

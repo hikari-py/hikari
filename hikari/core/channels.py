@@ -23,11 +23,16 @@ channels on Discord.
 __all__ = [
     "Channel",
     "ChannelType",
-    "DMChannel",
-    "PartialChannel",
     "PermissionOverwrite",
     "PermissionOverwriteType",
+    "PartialChannel",
+    "DMChannel",
     "GroupDMChannel",
+    "GuildCategory",
+    "GuildTextChannel",
+    "GuildNewsChannel",
+    "GuildStoreChannel",
+    "GuildVoiceChannel",
 ]
 
 import enum
@@ -36,6 +41,7 @@ import typing
 from hikari.core import entities
 from hikari.core import snowflakes
 from hikari.core import permissions
+from hikari.core import users
 from hikari.internal_utilities import marshaller
 
 
@@ -57,23 +63,6 @@ class ChannelType(enum.IntEnum):
     GUILD_NEWS = 5
     #: A channel that show's a game's store page.
     GUILD_STORE = 6
-
-
-@marshaller.attrs(slots=True)
-class PartialChannel(snowflakes.UniqueEntity, entities.Deserializable):
-    """Represents a channel where we've only received it's basic information,
-    commonly received in rest responses.
-    """
-
-    #: This channel's name.
-    #:
-    #: :type: :obj:`str`
-    name: str = marshaller.attrib(deserializer=str)
-
-    #: This channel's type.
-    #:
-    #: :type: :obj:`ChannelType`
-    type: ChannelType = marshaller.attrib(deserializer=ChannelType)
 
 
 @enum.unique
@@ -112,15 +101,223 @@ class PermissionOverwrite(snowflakes.UniqueEntity, entities.Deserializable, enti
 
 
 @marshaller.attrs(slots=True)
-class Channel(PartialChannel):
-    ...
+class PartialChannel(snowflakes.UniqueEntity, entities.Deserializable):
+    """Represents a channel where we've only received it's basic information,
+    commonly received in rest responses.
+    """
+
+    #: The channel's name.
+    #:
+    #: :type: :obj:`str`
+    name: str = marshaller.attrib(deserializer=str)
+
+    #: The channel's type.
+    #:
+    #: :type: :obj:`ChannelType`
+    type: ChannelType = marshaller.attrib(deserializer=ChannelType)
 
 
+def register_channel_type(type: ChannelType):
+    def decorator(cls):
+        mapping = getattr(register_channel_type, "types", {})
+        mapping[type] = cls
+        setattr(register_channel_type, "types", mapping)
+        return cls
+
+    return decorator
+
+
+@marshaller.attrs(slots=True)
+class Channel(snowflakes.UniqueEntity, entities.Deserializable):
+    """Base class for all channels."""
+
+    #: The channel's type.
+    #:
+    #: :type: :obj:`ChannelType`
+    type: ChannelType = marshaller.attrib(deserializer=ChannelType)
+
+
+@register_channel_type(ChannelType.DM)
 @marshaller.attrs(slots=True)
 class DMChannel(Channel):
-    ...
+    """Represents a DM channel"""
+
+    #: The ID of the last message sent in this channel.
+    #:
+    #: Note
+    #: ----
+    #: This might point to an invalid or deleted message.
+    #:
+    #: :type: :obj:`snowflakes.Snowflake`, optional
+    last_message_id: snowflakes.Snowflake = marshaller.attrib(
+        deserializer=snowflakes.Snowflake.deserialize, if_none=None
+    )
+
+    #: The recipients of the DM.
+    #:
+    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`users.User` ]
+    recipients: typing.Mapping[snowflakes.Snowflake, users.User] = marshaller.attrib(
+        deserializer=lambda recipients: {user.id: user for user in map(users.User.deserialize, recipients)}
+    )
+
+
+@register_channel_type(ChannelType.GROUP_DM)
+@marshaller.attrs(slots=True)
+class GroupDMChannel(DMChannel):
+    """Represents a DM group channel."""
+
+    #: The group's name.
+    #:
+    #: :type: :obj:`str`
+    name: str = marshaller.attrib(deserializer=str)
+
+    #: The ID of the owner of the group.
+    #:
+    #: :type: :obj:`snowflakes.Snowflake`
+    owner_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+
+    #: The hash of the icon of the group.
+    #:
+    #: :type: :obj:`str`, optional
+    icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str, if_none=None)
+
+    #: The ID of the application that created the group DM, if it's a
+    #: bot based group DM.
+    #:
+    #: :type: :obj:`snowflakes.Snowflake`, optional
+    application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+    )
 
 
 @marshaller.attrs(slots=True)
-class GroupDMChannel(DMChannel):
-    ...
+class GuildChannel(Channel):
+    """The base for anything that is a guild channel."""
+
+    #: The ID of the guild the channel belongs to.
+    #:
+    #: :type: :obj:`snowflakes.Snowflake`
+    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+
+    #: The sorting position of the channel.
+    #:
+    #: :type: :obj:`int`
+    position: int = marshaller.attrib(deserializer=int)
+
+    #: The permission overwrites for the channel.
+    #:
+    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`PermissionOverwrite` ]
+    permission_overwrites: PermissionOverwrite = marshaller.attrib(
+        deserializer=lambda overwrites: {o.id: o for o in map(PermissionOverwrite.deserialize, overwrites)}
+    )
+
+    #: The name of the channel.
+    #:
+    #: :type: :obj:`str`
+    name: str = marshaller.attrib(deserializer=str)
+
+    #: Wheter the channel is marked as NSFW.
+    #:
+    #: :type: :obj:`bool`
+    is_nsfw: bool = marshaller.attrib(raw_name="nsfw", deserializer=bool)
+
+    #: The ID of the parent category the channel belongs to.
+    #:
+    #: :type: :obj:`snowflakes.Snowflake`, optional
+    parent_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize, if_none=None)
+
+
+@register_channel_type(ChannelType.GUILD_CATEGORY)
+@marshaller.attrs(slots=True)
+class GuildCategory(GuildChannel):
+    """Represents a guild category."""
+
+
+@register_channel_type(type=ChannelType.GUILD_TEXT)
+@marshaller.attrs(slots=True)
+class GuildTextChannel(GuildChannel):
+    """Represents a guild text channel."""
+
+    #: The topic of the channel.
+    #:
+    #: :type: :obj:`str`, optional
+    topic: str = marshaller.attrib(deserializer=str, if_none=None)
+
+    #: The ID of the last message sent in this channel.
+    #:
+    #: Note
+    #: ----
+    #: This might point to an invalid or deleted message.
+    #:
+    #: :type: :obj:`snowflakes.Snowflake`, optional
+    last_message_id: snowflakes.Snowflake = marshaller.attrib(
+        deserializer=snowflakes.Snowflake.deserialize, if_none=None
+    )
+
+    #: The delay (in seconds) between a user can send a message
+    #: to this channel.
+    #:
+    #: Note
+    #: ----
+    #: Bots, as well as users with ``MANAGE_MESSAGES`` or
+    #: ``MANAGE_CHANNEL``, are not afected by this.
+    #:
+    #: :type: :obj:`int`
+    rate_limit_per_user: int = marshaller.attrib(deserializer=int)
+
+
+@register_channel_type(ChannelType.GUILD_NEWS)
+@marshaller.attrs(slots=True)
+class GuildNewsChannel(GuildChannel):
+    """Represents an news channel."""
+
+    #: The topic of the channel.
+    #:
+    #: :type: :obj:`str`, optional
+    topic: str = marshaller.attrib(deserializer=str, if_none=None)
+
+    #: The ID of the last message sent in this channel.
+    #:
+    #: Note
+    #: ----
+    #: This might point to an invalid or deleted message.
+    #:
+    #: :type: :obj:`snowflakes.Snowflake`, optional
+    last_message_id: snowflakes.Snowflake = marshaller.attrib(
+        deserializer=snowflakes.Snowflake.deserialize, if_none=None
+    )
+
+
+@register_channel_type(ChannelType.GUILD_STORE)
+@marshaller.attrs(slots=True)
+class GuildStoreChannel(GuildChannel):
+    """Represents a store channel."""
+
+
+@register_channel_type(ChannelType.GUILD_VOICE)
+@marshaller.attrs(slots=True)
+class GuildVoiceChannel(GuildChannel):
+    """Represents an voice channel."""
+
+    #: The bitrate for the voice channel (in bits).
+    #:
+    #: :type: :obj:`int`
+    bitrate: int = marshaller.attrib(deserializer=int)
+
+    #: The user limit for the voice channel.
+    #:
+    #: :type: :obj:`int`
+    user_limit: int = marshaller.attrib(deserializer=int)
+
+
+def deserialize_channel(payload: typing.Dict[str, typing.Any]) -> typing.Union[GuildChannel, DMChannel]:
+    """Deserialize a channel object into the corresponding class.
+      
+    Warning
+    -------
+    This can only be used to deserialize full channel objects. To deserialize a 
+    partial object, use :obj:`PartialChannel.deserialize`
+    """
+    type_id = payload["type"]
+    channel_type = register_channel_type.types[type_id]
+    return channel_type.deserialize(payload)

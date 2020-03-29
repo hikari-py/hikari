@@ -299,8 +299,8 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializ
 
     #: A mapping of this channel's recipient users, if it's a DM or group DM.
     #:
-    #: :type: :obj:`Typing.MutableMapping` [ :obj:`snowflakes.Snowflake`, :obj:`users.User` ], optional
-    recipients: typing.Optional[typing.MutableMapping[snowflakes.Snowflake, users.User]] = marshaller.attrib(
+    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`users.User` ], optional
+    recipients: typing.Optional[typing.Mapping[snowflakes.Snowflake, users.User]] = marshaller.attrib(
         deserializer=lambda recipients: {user.id: user for user in map(users.User.deserialize, recipients)},
         if_undefined=None,
     )
@@ -319,7 +319,7 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializ
         deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
     )
 
-    #: The ID of the application id of the group DM creator, if it's a
+    #: The ID of the application that created the group DM, if it's a
     #: bot based group DM.
     #:
     #: :type: :obj:`snowflakes.Snowflake`, optional
