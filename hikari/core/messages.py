@@ -30,13 +30,13 @@ import datetime
 import enum
 import typing
 
-from hikari.core import entities
-from hikari.core import snowflakes
-from hikari.core import guilds
-from hikari.core import users
-from hikari.core import oauth2
 from hikari.core import embeds as _embeds
 from hikari.core import emojis as _emojis
+from hikari.core import entities
+from hikari.core import guilds
+from hikari.core import oauth2
+from hikari.core import snowflakes
+from hikari.core import users
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import marshaller
 

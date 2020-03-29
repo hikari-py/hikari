@@ -30,13 +30,13 @@ __all__ = [
     "EmbedField",
 ]
 
-import typing
 import datetime
+import typing
 
-from hikari.core import entities
 from hikari.core import colors
-from hikari.internal_utilities import marshaller
+from hikari.core import entities
 from hikari.internal_utilities import dates
+from hikari.internal_utilities import marshaller
 
 
 @marshaller.attrs(slots=True)

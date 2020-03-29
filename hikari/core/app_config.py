@@ -21,13 +21,14 @@ __all__ = ["AppConfig"]
 
 import typing
 
-from hikari.core.configs import http as http_
-from hikari.core.configs import gateway as gateway_
+from hikari.core import entities
+from hikari.core import gateway_config
+from hikari.core import http_config
 from hikari.internal_utilities import marshaller
 
 
 @marshaller.attrs(kw_only=True)
-class AppConfig:
+class AppConfig(entities.HikariEntity, entities.Deserializable):
     """Root application configuration object.
 
     All fields are optional kwargs that can be passed to the constructor.
@@ -130,18 +131,18 @@ class AppConfig:
     #:
     #: If unspecified or None, then this will be a set of default values.
     #:
-    #: :type: :obj:`hikari.core.configs.http.HTTPConfig`, optional
-    http: typing.Optional[http_.HTTPConfig] = marshaller.attrib(
-        deserializer=http_.HTTPConfig.deserialize, if_none=None, if_undefined=None, default=None
+    #: :type: :obj:`hikari.core.http_config.HTTPConfig`, optional
+    http: typing.Optional[http_config.HTTPConfig] = marshaller.attrib(
+        deserializer=http_config.HTTPConfig.deserialize, if_none=None, if_undefined=None, default=None
     )
 
     #: The gateway configuration to use.
     #:
     #: If unspecified or None, then this will be a set of default values.
     #:
-    #: :type: :obj:`hikari.core.configs.gateway.GatewayConfig`, optional
-    gateway: typing.Optional[gateway_.GatewayConfig] = marshaller.attrib(
-        deserializer=gateway_.GatewayConfig.deserialize, if_none=None, if_undefined=None, default=None
+    #: :type: :obj:`hikari.core.gateway_config.GatewayConfig`, optional
+    gateway: typing.Optional[gateway_config.GatewayConfig] = marshaller.attrib(
+        deserializer=gateway_config.GatewayConfig.deserialize, if_none=None, if_undefined=None, default=None
     )
 
     #: The global token to use, if applicable. This can be overridden for each

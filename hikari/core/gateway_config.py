@@ -24,11 +24,12 @@ import re
 import typing
 
 from hikari.core import entities
-from hikari.core.clients import gateway
-from hikari.core.configs import protocol as protocol_
+from hikari.core import gateway_entities
+from hikari.core import protocol_config
 from hikari.internal_utilities import assertions
 from hikari.internal_utilities import dates
 from hikari.internal_utilities import marshaller
+from hikari.net import codes as net_codes
 
 
 def _parse_shard_info(payload):
@@ -52,7 +53,7 @@ def _parse_shard_info(payload):
 
 
 @marshaller.attrs(kw_only=True, init=False)
-class ShardConfig(entities.Deserializable):
+class ShardConfig(entities.HikariEntity, entities.Deserializable):
     """Manual sharding configuration.
 
     All fields are optional kwargs that can be passed to the constructor.
@@ -93,14 +94,14 @@ class ShardConfig(entities.Deserializable):
     def __init__(self, *, shard_ids: typing.Optional[typing.Iterable[int]] = None, shard_count: int) -> None:
         self.shard_ids = [*shard_ids] if shard_ids else [*range(shard_count)]
 
-        for shard_id in self.shard_ids:
-            assertions.assert_that(shard_id < self.shard_count, "shard_count must be greater than any shard ids")
+        for shard_id in shard_ids:
+            assertions.assert_that(shard_id < shard_count, "shard_count must be greater than any shard ids")
 
         self.shard_count = shard_count
 
 
 @marshaller.attrs(kw_only=True)
-class GatewayConfig(entities.Deserializable):
+class GatewayConfig(entities.HikariEntity, entities.Deserializable):
     """Gateway and sharding configuration.
 
     All fields are optional kwargs that can be passed to the constructor.
@@ -119,8 +120,8 @@ class GatewayConfig(entities.Deserializable):
     #: ``None``, then no activity will be set.
     #:
     #: :type: :obj:`GatewayActivity`, optional
-    initial_activity: typing.Optional[gateway.GatewayActivity] = marshaller.attrib(
-        deserializer=gateway.GatewayActivity.deserialize, if_none=None, if_undefined=None, default=None
+    initial_activity: typing.Optional[gateway_entities.GatewayActivity] = marshaller.attrib(
+        deserializer=gateway_entities.GatewayActivity.deserialize, if_none=None, if_undefined=None, default=None
     )
 
     # TODO: implement enum for this
@@ -132,7 +133,7 @@ class GatewayConfig(entities.Deserializable):
     #: Whether to show up as AFK or not on sign-in.
     #:
     #: :type: :obj:`bool`
-    initial_afk: bool = marshaller.attrib(deserializer=bool, if_undefined=False, default=False)
+    initial_is_afk: bool = marshaller.attrib(deserializer=bool, if_undefined=False, default=False)
 
     #: The idle time to show on signing in, or ``None`` to not show an idle
     #: time.
@@ -140,6 +141,48 @@ class GatewayConfig(entities.Deserializable):
     #: :type: :obj:`datetime.datetime`, optional
     initial_idle_since: typing.Optional[datetime.datetime] = marshaller.attrib(
         deserializer=dates.unix_epoch_to_ts, if_none=None, if_undefined=None, default=None
+    )
+
+    #: The intents to use for the connection.
+    #:
+    #: If being deserialized, this can be an integer bitfield, or a sequence of
+    #: intent names. If
+    #: unspecified, this will be set to ``None``.
+    #:
+    #: :type: :obj:`hikari.net.codes.GatewayIntent`, optional
+    #:
+    #: Examples
+    #: --------
+    #:
+    #: .. code-block:: python
+    #:
+    #:    # Python example
+    #:    GatewayIntent.GUILDS | GatewayIntent.GUILD_MESSAGES
+    #:
+    #: ..code-block:: js
+    #:
+    #:    // JSON example, using explicit bitfield values
+    #:    513
+    #:    // JSON example, using an array of names
+    #:    [ "GUILDS", "GUILD_MESSAGES" ]
+    #:
+    #: See :obj:`hikari.net.codes.GatewayIntent` for valid names of
+    #: intents you can use. Integer values are as documented on Discord's
+    #: developer portal.
+    #:
+    #: Warnings
+    #: --------
+    #: If you are using the V7 gateway implementation, you will NEED to provide
+    #: explicit intent values for this field in order to get online.
+    #: Additionally, intents that are classed by Discord as being privileged
+    #: will require you to whitelist your application in order to use them.
+    #:
+    #: If you are using the V6 gateway implementation, setting this to ``None``
+    #: will simply opt you into every event you can subscribe to.
+    intents: typing.Optional[net_codes.GatewayIntent] = marshaller.attrib(
+        deserializer=lambda value: marshaller.dereference_int_flag(net_codes.GatewayIntent, value),
+        if_undefined=None,
+        default=None,
     )
 
     #: The large threshold to use.
@@ -152,9 +195,9 @@ class GatewayConfig(entities.Deserializable):
     #:
     #: If unspecified, defaults are used.
     #:
-    #: :type: :obj:`hikari.core.configs.protocol.HTTPProtocolConfig`
-    protocol: typing.Optional[protocol_.HTTPProtocolConfig] = marshaller.attrib(
-        deserializer=protocol_.HTTPProtocolConfig.deserialize, if_undefined=None, default=None,
+    #: :type: :obj:`hikari.core.protocol_config.HTTPProtocolConfig`
+    protocol: typing.Optional[protocol_config.HTTPProtocolConfig] = marshaller.attrib(
+        deserializer=protocol_config.HTTPProtocolConfig.deserialize, if_undefined=None, default=None,
     )
 
     #: Manual sharding configuration to use. If this is ``None``, or

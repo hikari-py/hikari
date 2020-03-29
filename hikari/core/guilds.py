@@ -49,8 +49,8 @@ import enum
 import typing
 
 from hikari.core import channels
-from hikari.core import entities
 from hikari.core import emojis as _emojis
+from hikari.core import entities
 from hikari.core import permissions
 from hikari.core import snowflakes
 from hikari.core import users
