@@ -130,8 +130,8 @@ def attrib(
     # type hints, the library loses the ability to be type checked properly
     # anymore, so we have to pass this explicitly regardless.
     deserializer: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
-    if_none: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)] = RAISE,
-    if_undefined: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)] = RAISE,
+    if_none: typing.Union[typing.Callable[[], typing.Any], None, type(RAISE)] = RAISE,
+    if_undefined: typing.Union[typing.Callable[[], typing.Any], None, type(RAISE)] = RAISE,
     raw_name: typing.Optional[str] = None,
     transient: bool = False,
     serializer: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
