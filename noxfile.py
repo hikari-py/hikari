@@ -149,7 +149,7 @@ def lint(session) -> None:
             pkg,
             "--rcfile=pylint.ini",
             "--spelling-private-dict-file=dict.txt",
-            success_codes=list(range(0, 256))
+            success_codes=list(range(0, 256)),
         )
     finally:
         os.makedirs(ARTIFACT_DIR, exist_ok=True)
@@ -161,7 +161,7 @@ def lint(session) -> None:
                 "--rcfile=pylint.ini",
                 "--output-format=pylint_junit.JUnitReporter",
                 stdout=fp,
-                success_codes=list(range(0, 256))
+                success_codes=list(range(0, 256)),
             )
 
 
