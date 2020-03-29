@@ -228,3 +228,14 @@ pylint:
   artifacts:
     reports:
       junit: public/pylint.xml
+
+
+pydocstyle:
+  extends:
+    - .cpython-tool-buster
+    - .cache
+  script:
+    - bash tasks/retry_aborts.sh nox -s docstyle
+  artifacts:
+    reports:
+      junit: public/pylint.xml

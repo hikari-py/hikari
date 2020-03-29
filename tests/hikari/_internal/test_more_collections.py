@@ -16,21 +16,33 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import io
 
-import pytest
-
-from hikari.internal_utilities import storage
+from hikari._internal import more_collections
 
 
-@pytest.mark.parametrize(
-    ["input", "expected_result_type"],
-    [
-        ("hello", io.StringIO),
-        (b"hello", io.BytesIO),
-        (bytearray("hello", "utf-8"), io.BytesIO),
-        (memoryview(b"hello"), io.BytesIO),
-    ],
-)
-def test_make_resource_seekable(input, expected_result_type):
-    assert isinstance(storage.make_resource_seekable(input), expected_result_type)
+class TestWeakKeyDictionary:
+    def test_is_weak(self):
+        class Key:
+            pass
+
+        class Value:
+            pass
+
+        d: more_collections.WeakKeyDictionary[Key, Value] = more_collections.WeakKeyDictionary()
+
+        key1 = Key()
+        key2 = Key()
+        value1 = Value()
+        value2 = Value()
+
+        d[key1] = value1
+        d[key2] = value2
+
+        assert key1 in d
+        assert key2 in d
+        assert value1 in d.values()
+        assert value2 in d.values()
+        del key2
+        assert len([*d.keys()]) == 1
+        assert value1 in d.values()
+        assert value2 not in d.values()

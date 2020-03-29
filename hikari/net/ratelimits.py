@@ -87,12 +87,12 @@ initial hash is processed by the :class`hikari.net.ratelimits.CompiledRoute` to
 provide the :obj:`RealBucketHash` we need to get the route's bucket object
 internally.
 
-The :meth:`acquire` method will take the bucket and acquire a new timeslice on 
-it. This takes the form of a :obj:`asyncio.Future` which should be awaited by 
+The :meth:`acquire` method will take the bucket and acquire a new timeslice on
+it. This takes the form of a :obj:`asyncio.Future` which should be awaited by
 the caller and will complete once the caller is allowed to make a request. Most
-of the time, this is done instantly, but if the bucket has an active rate limit 
-preventing requests being sent, then the future will be paused until the rate 
-limit is over. This may be longer than the rate limit period if you have queued 
+of the time, this is done instantly, but if the bucket has an active rate limit
+preventing requests being sent, then the future will be paused until the rate
+limit is over. This may be longer than the rate limit period if you have queued
 a large number of requests during this limit, as it is first-come-first-served.
 
 Acquiring a rate limited bucket will start a bucket-wide task (if not already
@@ -119,18 +119,18 @@ Once you have received your response, you are expected to extract the values of
 the vital rate limit headers manually and parse them to the correct data types.
 These headers are:
 
-* ``Date``: 
+* ``Date``:
     the response date on the server. This should be parsed to a
     :obj:`datetime.datetime` using :func:`email.utils.parsedate_to_datetime`.
-* ``X-RateLimit-Limit``: 
+* ``X-RateLimit-Limit``:
     an :obj:`int` describing the max requests in the bucket
     from empty to being rate limited.
-* ``X-RateLimit-Remaining``: 
+* ``X-RateLimit-Remaining``:
     an :obj:`int` describing the remaining number of
     requests before rate limiting occurs in the current window.
-* ``X-RateLimit-Bucket``: 
+* ``X-RateLimit-Bucket``:
     a :obj:`str` containing the initial bucket hash.
-* ``X-RateLimit-Reset``: 
+* ``X-RateLimit-Reset``:
     a :obj:`float` containing the number of seconds since
     1st January 1970 at 0:00:00 UTC at which the current ratelimit window
     resets. This should be parsed to a :obj:`datetime` using
@@ -138,8 +138,8 @@ These headers are:
     :obj:`datetime.timezone.utc` as a second parameter.
 
 Each of the above values should be passed to the
-:meth:`update_rate_limits` method to ensure that the bucket you acquired time 
-from is correctly updated should Discord decide to alter their ratelimits on the 
+:meth:`update_rate_limits` method to ensure that the bucket you acquired time
+from is correctly updated should Discord decide to alter their ratelimits on the
 fly without warning (including timings and the bucket).
 
 This method will manage creating new buckets as needed and resetting vital
@@ -161,7 +161,7 @@ have an :obj:`asyncio.CancelledError` set on them to prevent deadlocking
 ratelimited calls that may be waiting to be unlocked.
 """
 __all__ = [
-    "IRateLimiter",
+    "BaseRateLimiter",
     "BurstRateLimiter",
     "ManualRateLimiter",
     "WindowedBurstRateLimiter",
@@ -176,17 +176,18 @@ import datetime
 import logging
 import random
 import time
+import types
 import typing
 import weakref
 
-from hikari.internal_utilities import aio
-from hikari.internal_utilities import loggers
+from hikari._internal import more_asyncio
+from hikari._internal import more_logging
 from hikari.net import routes
 
 UNKNOWN_HASH = "UNKNOWN"
 
 
-class IRateLimiter(abc.ABC):
+class BaseRateLimiter(abc.ABC):
     """Base for any asyncio-based rate limiter being used.
 
     Supports being used as a synchronous context manager.
@@ -199,7 +200,7 @@ class IRateLimiter(abc.ABC):
     __slots__ = ()
 
     @abc.abstractmethod
-    def acquire(self) -> asyncio.Future:
+    def acquire(self) -> more_asyncio.Future[None]:
         """Acquire permission to perform a task that needs to have rate limit
         management enforced.
 
@@ -221,7 +222,7 @@ class IRateLimiter(abc.ABC):
         self.close()
 
 
-class BurstRateLimiter(IRateLimiter, abc.ABC):
+class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     """Base implementation for a burst-based rate limiter.
 
     This provides an internal queue and throttling placeholder, as well as
@@ -238,26 +239,26 @@ class BurstRateLimiter(IRateLimiter, abc.ABC):
     #: The throttling task, or ``None``` if it isn't running.
     #:
     #: :type: :obj:`asyncio.Task`, optional
-    throttle_task: typing.Optional[asyncio.Task]
+    throttle_task: typing.Optional[more_asyncio.Task[None]]
 
     #: The queue of any futures under a rate limit.
     #:
     #: :type: :obj:`asyncio.Queue` [`asyncio.Future`]
-    queue: asyncio.Queue
+    queue: typing.List[more_asyncio.Future[None]]
 
     #: The logger used by this rate limiter.
     #:
     #: :type: :obj:`logging.Logger`
     logger: logging.Logger
 
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         self.name = name
-        self.throttle_task: typing.Optional[asyncio.Task] = None
+        self.throttle_task = None
         self.queue = []
-        self.logger: logging.Logger = loggers.get_named_logger(self)
+        self.logger: logging.Logger = more_logging.get_named_logger(self)
 
     @abc.abstractmethod
-    def acquire(self) -> asyncio.Future:
+    def acquire(self) -> more_asyncio.Future[None]:
         """Acquire time on this rate limiter.
 
         The implementation should define this.
@@ -321,7 +322,7 @@ class ManualRateLimiter(BurstRateLimiter):
     def __init__(self) -> None:
         super().__init__("global HTTP")
 
-    def acquire(self) -> asyncio.Future:
+    def acquire(self) -> more_asyncio.Future[None]:
         """Acquire time on this rate limiter.
 
         Returns
@@ -454,7 +455,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.limit = limit
         self.period = period
 
-    def acquire(self) -> asyncio.Future:
+    def acquire(self) -> more_asyncio.Future[None]:
         """Acquire time on this rate limiter.
 
         Returns
@@ -535,7 +536,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
         return self.remaining <= 0
 
-    def drip(self):
+    def drip(self) -> None:
         """Decrements the remaining counter."""
         self.remaining -= 1
 
@@ -612,7 +613,7 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
         """Return ``True`` if the bucket represents an ``UNKNOWN`` bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
-    def acquire(self) -> asyncio.Future:
+    def acquire(self) -> more_asyncio.Future[None]:
         """Acquire time on this rate limiter.
 
         Returns
@@ -626,7 +627,7 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
         You should afterwards invoke :meth:`update_rate_limit` to update any
         rate limit information you are made aware of.
         """
-        return aio.completed_future(None) if self.is_unknown else super().acquire()
+        return more_asyncio.completed_future(None) if self.is_unknown else super().acquire()
 
     def update_rate_limit(self, remaining: int, limit: int, reset_at: float) -> None:
         """Amend the rate limit.
@@ -700,7 +701,7 @@ class HTTPBucketRateLimiterManager:
     #: The internal garbage collector task.
     #:
     #: :type: :obj:`asyncio.Task`, optional
-    gc_task: typing.Optional[asyncio.Task]
+    gc_task: typing.Optional[more_asyncio.Task[None]]
 
     #: The logger to use for this object.
     #:
@@ -712,15 +713,15 @@ class HTTPBucketRateLimiterManager:
         self.real_hashes_to_buckets = {}
         self.closed_event: asyncio.Event = asyncio.Event()
         self.gc_task: typing.Optional[asyncio.Task] = None
-        self.logger: logging.Logger = loggers.get_named_logger(self)
+        self.logger: logging.Logger = more_logging.get_named_logger(self)
 
-    def __enter__(self):
+    def __enter__(self) -> "HTTPBucketRateLimiterManager":
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
         self.close()
 
-    def __del__(self):
+    def __del__(self) -> None:
         self.close()
 
     def start(self, poll_period: float = 20) -> None:
@@ -777,14 +778,11 @@ class HTTPBucketRateLimiterManager:
             try:
                 await asyncio.wait_for(self.closed_event.wait(), timeout=poll_period)
             except asyncio.TimeoutError:
-                try:
-                    self.logger.debug("performing rate limit garbage collection pass")
-                    self.do_gc_pass()
-                except Exception as ex:
-                    self.logger.exception("ignoring garbage collection error for rate limits", exc_info=ex)
+                self.logger.debug("performing rate limit garbage collection pass")
+                self.do_gc_pass()
         self.gc_task = None
 
-    def do_gc_pass(self):
+    def do_gc_pass(self) -> None:
         """Perform a single garbage collection pass.
 
         This will assess any routes stored in the internal mappings of this
@@ -814,7 +812,7 @@ class HTTPBucketRateLimiterManager:
 
         self.logger.debug("purged %s stale buckets", len(buckets_to_purge))
 
-    def acquire(self, compiled_route: routes.CompiledRoute) -> asyncio.Future:
+    def acquire(self, compiled_route: routes.CompiledRoute) -> more_asyncio.Future:
         """Acquire a bucket for the given route.
 
         Parameters
@@ -921,7 +919,7 @@ class ExponentialBackOff:
         single iteration before an :obj:`asyncio.TimeoutError` is raised.
         Defaults to ``64`` seconds.
     jitter_multiplier : :obj:`float`
-        The multiplier for the random jitter. Defaults to ``1``. 
+        The multiplier for the random jitter. Defaults to ``1``.
         Set to ``0`` to disable jitter.
     """
 
@@ -967,10 +965,10 @@ class ExponentialBackOff:
         value += random.random() * self.jitter_multiplier  # nosec
         return value
 
-    def __iter__(self):
+    def __iter__(self) -> "ExponentialBackOff":
         """Returns this object, as it is an iterator."""
         return self
 
-    def reset(self):
+    def reset(self) -> None:
         """Resets the exponential back-off."""
         self.increment = 0

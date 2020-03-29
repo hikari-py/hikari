@@ -30,6 +30,8 @@ import datetime
 import enum
 import typing
 
+import hikari._internal.conversions
+from hikari._internal import marshaller
 from hikari.core import embeds as _embeds
 from hikari.core import emojis as _emojis
 from hikari.core import entities
@@ -37,8 +39,6 @@ from hikari.core import guilds
 from hikari.core import oauth2
 from hikari.core import snowflakes
 from hikari.core import users
-from hikari.internal_utilities import dates
-from hikari.internal_utilities import marshaller
 
 
 @enum.unique
@@ -246,13 +246,13 @@ class Message(snowflakes.UniqueEntity, entities.Deserializable):
     #: The timestamp that the message was sent at.
     #:
     #: :type: :obj:`datetime.datetime`
-    timestamp: datetime.datetime = marshaller.attrib(deserializer=dates.parse_iso_8601_ts)
+    timestamp: datetime.datetime = marshaller.attrib(deserializer=hikari._internal.conversions.parse_iso_8601_ts)
 
     #: The timestamp that the message was last edited at, or ``None`` if not ever edited.
     #:
     #: :type: :obj:`datetime.datetime`, optional
     edited_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=dates.parse_iso_8601_ts, if_none=None
+        deserializer=hikari._internal.conversions.parse_iso_8601_ts, if_none=None
     )
 
     #: Whether the message is a TTS message.

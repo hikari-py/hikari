@@ -47,8 +47,8 @@ import zlib
 
 import aiohttp.typedefs
 
-from hikari.internal_utilities import containers
-from hikari.internal_utilities import loggers
+from hikari._internal import more_collections
+from hikari._internal import more_logging
 from hikari.net import codes
 from hikari.net import errors
 from hikari.net import ratelimits
@@ -353,7 +353,7 @@ class ShardConnection:
         version: typing.Union[int, versions.GatewayVersion] = versions.GatewayVersion.STABLE,
     ) -> None:
         # Sanitise the URL...
-        scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url, allow_fragments=True)
+        scheme, netloc, path, params, _, _ = urllib.parse.urlparse(url, allow_fragments=True)
 
         new_query = dict(v=int(version), encoding="json")
         if compression:
@@ -395,7 +395,7 @@ class ShardConnection:
         self.identify_event: asyncio.Event = asyncio.Event()
         self.last_heartbeat_sent: float = float("nan")
         self.last_message_received: float = float("nan")
-        self.logger: logging.Logger = loggers.get_named_logger(self, shard_id)
+        self.logger: logging.Logger = more_logging.get_named_logger(self, shard_id)
         self.requesting_close_event: asyncio.Event = asyncio.Event()
         self.ready_event: asyncio.Event = asyncio.Event()
         self.session_id: typing.Optional[str] = session_id
@@ -451,7 +451,7 @@ class ShardConnection:
     def reconnect_count(self) -> int:
         """The ammount of times the gateway has reconnected since initialization.
 
-        This can be used as a debugging context, but is also used internally 
+        This can be used as a debugging context, but is also used internally
         for exception management.
 
         Returns
@@ -481,11 +481,15 @@ class ShardConnection:
 
     @typing.overload
     async def request_guild_members(self, guild_id: str, *guild_ids: str, limit: int = 0, query: str = "") -> None:
-        ...
+        """Request guild members in the given guilds using a query string and
+        an optional limit.
+        """
 
     @typing.overload
     async def request_guild_members(self, guild_id: str, *guild_ids: str, user_ids: typing.Collection[str]) -> None:
-        ...
+        """Request guild members in the given guilds using a set of user IDs
+        to resolve.
+        """
 
     async def request_guild_members(self, guild_id, *guild_ids, **kwargs):
         """Requests the guild members for a guild or set of guilds.
@@ -517,7 +521,7 @@ class ShardConnection:
         Note
         ----
         You may not specify ``user_ids`` at the same time as ``limit`` and
-        ``query``. Likewise, if you specify one of ``limit`` or ``query``, 
+        ``query``. Likewise, if you specify one of ``limit`` or ``query``,
         the other must also be included. The default, if no optional arguments
         are specified, is to use a ``limit`` of ``0`` and a ``query`` of
         ``""`` (empty-string).
@@ -618,7 +622,7 @@ class ShardConnection:
             self.dispatch(
                 self,
                 "RECONNECT" if self.disconnect_count else "CONNECT",
-                typing.cast(typing.Dict, containers.EMPTY_DICT),
+                typing.cast(typing.Dict, more_collections.EMPTY_DICT),
             )
             self.logger.info("received HELLO, interval is %ss", self.heartbeat_interval)
 
@@ -670,7 +674,7 @@ class ShardConnection:
             self._ws = None
             await self._session.close()
             self._session = None
-            self.dispatch(self, "DISCONNECT", typing.cast(typing.Dict, containers.EMPTY_DICT))
+            self.dispatch(self, "DISCONNECT", typing.cast(typing.Dict, more_collections.EMPTY_DICT))
 
     @property
     def _ws_connect_kwargs(self):
@@ -694,17 +698,14 @@ class ShardConnection:
         if self.session_id is None:
             self.status = GatewayStatus.IDENTIFYING
             self.logger.debug("sending IDENTIFY")
+
             pl = {
                 "op": codes.GatewayOpcode.IDENTIFY,
                 "d": {
                     "token": self._token,
                     "compress": False,
                     "large_threshold": self._large_threshold,
-                    "properties": {
-                        "$os": user_agent.system_type(),
-                        "$browser": user_agent.library_version(),
-                        "$device": user_agent.python_version(),
-                    },
+                    "properties": user_agent.UserAgent().websocket_triplet,
                     "shard": [self.shard_id, self.shard_count],
                 },
             }
@@ -825,7 +826,8 @@ class ShardConnection:
                         packets,
                     )
                 return obj
-            elif message.type == aiohttp.WSMsgType.CLOSE:
+
+            if message.type == aiohttp.WSMsgType.CLOSE:
                 close_code = self._ws.close_code
                 try:
                     meaning = codes.GatewayCloseCode(close_code)
@@ -835,16 +837,18 @@ class ShardConnection:
                 self.logger.debug("connection closed with code %s (%s)", close_code, meaning)
                 if close_code == codes.GatewayCloseCode.AUTHENTICATION_FAILED:
                     raise errors.GatewayInvalidTokenError()
-                elif close_code in (codes.GatewayCloseCode.SESSION_TIMEOUT, codes.GatewayCloseCode.INVALID_SEQ):
+                if close_code in (codes.GatewayCloseCode.SESSION_TIMEOUT, codes.GatewayCloseCode.INVALID_SEQ):
                     raise errors.GatewayInvalidSessionError(False)
-                elif close_code == codes.GatewayCloseCode.SHARDING_REQUIRED:
+                if close_code == codes.GatewayCloseCode.SHARDING_REQUIRED:
                     raise errors.GatewayNeedsShardingError()
-                else:
-                    raise errors.GatewayServerClosedConnectionError(close_code)
-            elif message.type in (aiohttp.WSMsgType.CLOSING, aiohttp.WSMsgType.CLOSED):
+
+                raise errors.GatewayServerClosedConnectionError(close_code)
+
+            if message.type in (aiohttp.WSMsgType.CLOSING, aiohttp.WSMsgType.CLOSED):
                 self.logger.debug("connection has been marked as closed")
                 raise errors.GatewayClientClosedError()
-            elif message.type == aiohttp.WSMsgType.ERROR:
+
+            if message.type == aiohttp.WSMsgType.ERROR:
                 ex = self._ws.exception()
                 self.logger.debug("connection encountered some error", exc_info=ex)
                 raise errors.GatewayError("Unexpected exception occurred") from ex

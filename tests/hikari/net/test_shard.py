@@ -28,7 +28,7 @@ import async_timeout
 import cymock as mock
 import pytest
 
-from hikari.internal_utilities import containers
+from hikari._internal import more_collections
 from hikari.net import errors
 from hikari.net import shard
 from hikari.net import user_agent
@@ -350,7 +350,7 @@ class TestGatewayConnect:
         client.dispatch = mock.MagicMock()
         with self.suppress_closure():
             await client.connect(client_session_t)
-        client.dispatch.assert_called_with(client, "DISCONNECT", containers.EMPTY_DICT)
+        client.dispatch.assert_called_with(client, "DISCONNECT", more_collections.EMPTY_DICT)
 
     @_helpers.timeout_after(10.0)
     async def test_new_zlib_each_time(self, client, client_session_t):
@@ -374,7 +374,7 @@ class TestGatewayConnect:
 
     @_helpers.timeout_after(10.0)
     @_helpers.assert_raises(type_=errors.GatewayError)
-    async def test_no_hello_throws_RuntimeError(self, client, client_session_t):
+    async def test_no_hello_throws_GatewayError(self, client, client_session_t):
         client._receive = mock.AsyncMock(return_value=self.non_hello_payload)
         await client.connect(client_session_t)
 
@@ -559,11 +559,7 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
                     "token": "aaaa",
                     "compress": False,
                     "large_threshold": 420,
-                    "properties": {
-                        "$os": user_agent.system_type(),
-                        "$browser": user_agent.library_version(),
-                        "$device": user_agent.python_version(),
-                    },
+                    "properties": user_agent.UserAgent().websocket_triplet,
                     "shard": [69, 96],
                 },
             }
@@ -588,11 +584,7 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
                     "token": "aaaa",
                     "compress": False,
                     "large_threshold": 420,
-                    "properties": {
-                        "$os": user_agent.system_type(),
-                        "$browser": user_agent.library_version(),
-                        "$device": user_agent.python_version(),
-                    },
+                    "properties": user_agent.UserAgent().websocket_triplet,
                     "shard": [69, 96],
                     "presence": presence,
                 },
@@ -618,11 +610,7 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
                     "token": "aaaa",
                     "compress": False,
                     "large_threshold": 420,
-                    "properties": {
-                        "$os": user_agent.system_type(),
-                        "$browser": user_agent.library_version(),
-                        "$device": user_agent.python_version(),
-                    },
+                    "properties": user_agent.UserAgent().websocket_triplet,
                     "shard": [69, 96],
                     "intents": intents,
                 },
@@ -649,11 +637,7 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
                     "token": "aaaa",
                     "compress": False,
                     "large_threshold": 420,
-                    "properties": {
-                        "$os": user_agent.system_type(),
-                        "$browser": user_agent.library_version(),
-                        "$device": user_agent.python_version(),
-                    },
+                    "properties": user_agent.UserAgent().websocket_triplet,
                     "shard": [69, 96],
                     "intents": intents,
                     "presence": presence,

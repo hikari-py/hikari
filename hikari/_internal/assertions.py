@@ -16,9 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Assertions of things. 
-These are functions that validate a value, expected to return the value on success but error
-on any failure.
+"""Assertions of things.
+
+These are functions that validate a value, and are expected to return the value
+on success but error on any failure. This allows for quick checking of
+conditions that might break the function or cause it to misbehave.
 """
 __all__ = [
     "assert_that",

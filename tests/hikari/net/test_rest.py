@@ -28,8 +28,7 @@ import aiohttp
 import cymock as mock
 import pytest
 
-from hikari.internal_utilities import storage
-from hikari.internal_utilities import transformations
+from hikari._internal import conversions
 from hikari.net import errors
 from hikari.net import ratelimits
 from hikari.net import rest
@@ -699,7 +698,7 @@ class TestRestfulClient:
     @pytest.mark.asyncio
     @unittest.mock.patch.object(routes, "CHANNEL_MESSAGES")
     @unittest.mock.patch.object(aiohttp, "FormData", autospec=True)
-    @unittest.mock.patch.object(storage, "make_resource_seekable")
+    @unittest.mock.patch.object(conversions, "make_resource_seekable")
     @unittest.mock.patch.object(json, "dumps")
     async def test_create_message_with_optionals(
         self, dumps, make_resource_seekable, FormData, CHANNEL_MESSAGES, rest_impl
@@ -1027,10 +1026,10 @@ class TestRestfulClient:
         mock_route = mock.MagicMock(routes.GUILD_EMOJI)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "GUILD_EMOJIS", compile=mock.MagicMock(return_value=mock_route)):
-            with mock.patch.object(transformations, "image_bytes_to_image_data", return_value=mock_image_data):
+            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
                 result = await rest_impl.create_guild_emoji("2222", "iEmoji", b"\211PNG\r\n\032\nblah")
                 assert result is mock_response
-                transformations.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
+                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
                 routes.GUILD_EMOJIS.compile.assert_called_once_with(rest_impl.POST, guild_id="2222")
         rest_impl._request.assert_called_once_with(
             mock_route, json_body={"name": "iEmoji", "roles": [], "image": mock_image_data}, reason=...,
@@ -1043,12 +1042,12 @@ class TestRestfulClient:
         mock_route = mock.MagicMock(routes.GUILD_EMOJI)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "GUILD_EMOJIS", compile=mock.MagicMock(return_value=mock_route)):
-            with mock.patch.object(transformations, "image_bytes_to_image_data", return_value=mock_image_data):
+            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
                 result = await rest_impl.create_guild_emoji(
                     "2222", "iEmoji", b"\211PNG\r\n\032\nblah", roles=["292929", "484884"], reason="uwu owo"
                 )
                 assert result is mock_response
-                transformations.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
+                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
                 routes.GUILD_EMOJIS.compile.assert_called_once_with(rest_impl.POST, guild_id="2222")
         rest_impl._request.assert_called_once_with(
             mock_route,
@@ -1106,7 +1105,7 @@ class TestRestfulClient:
         mock_route = mock.MagicMock(routes.GUILD)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "GUILDS", compile=mock.MagicMock(return_value=mock_route)):
-            with mock.patch.object(transformations, "image_bytes_to_image_data", return_value=mock_image_data):
+            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
                 result = await rest_impl.create_guild(
                     "GUILD TIME",
                     region="london",
@@ -1118,7 +1117,7 @@ class TestRestfulClient:
                 )
                 assert result is mock_response
                 routes.GUILDS.compile.assert_called_once_with(rest_impl.POST)
-                transformations.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
+                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
         rest_impl._request.assert_called_once_with(
             mock_route,
             json_body={
@@ -1161,7 +1160,7 @@ class TestRestfulClient:
         mock_splash_data = "data:image/png;base64,iVBORw0KGgpicnVo"
         with mock.patch.object(routes, "GUILD", compile=mock.MagicMock(return_value=mock_route)):
             with mock.patch.object(
-                transformations, "image_bytes_to_image_data", side_effect=(mock_icon_data, mock_splash_data)
+                conversions, "image_bytes_to_image_data", side_effect=(mock_icon_data, mock_splash_data)
             ):
                 result = await rest_impl.modify_guild(
                     "49949495",
@@ -1181,8 +1180,8 @@ class TestRestfulClient:
                 assert result is mock_response
 
                 routes.GUILD.compile.assert_called_once_with(rest_impl.PATCH, guild_id="49949495")
-                assert transformations.image_bytes_to_image_data.call_count == 2
-                transformations.image_bytes_to_image_data.assert_has_calls(
+                assert conversions.image_bytes_to_image_data.call_count == 2
+                conversions.image_bytes_to_image_data.assert_has_calls(
                     (
                         mock.call.__bool__(),
                         mock.call(b"\211PNG\r\n\032\nblah"),
@@ -1852,11 +1851,11 @@ class TestRestfulClient:
         mock_route = mock.MagicMock(routes.OWN_USER)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "OWN_USER", compile=mock.MagicMock(return_value=mock_route)):
-            with mock.patch.object(transformations, "image_bytes_to_image_data", return_value=mock_image_data):
+            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
                 result = await rest_impl.modify_current_user(username="Watashi 2", avatar=b"\211PNG\r\n\032\nblah")
                 assert result is mock_response
                 routes.OWN_USER.compile.assert_called_once_with(rest_impl.PATCH)
-                transformations.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
+                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
         rest_impl._request.assert_called_once_with(
             mock_route, json_body={"username": "Watashi 2", "avatar": mock_image_data}
         )
@@ -1936,13 +1935,13 @@ class TestRestfulClient:
         mock_route = mock.MagicMock(routes.CHANNEL_WEBHOOKS)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "CHANNEL_WEBHOOKS", compile=mock.MagicMock(return_value=mock_route)):
-            with mock.patch.object(transformations, "image_bytes_to_image_data", return_value=mock_image_data):
+            with mock.patch.object(conversions, "image_bytes_to_image_data", return_value=mock_image_data):
                 result = await rest_impl.create_webhook(
                     "39393939", "I am a webhook", avatar=b"\211PNG\r\n\032\nblah", reason="get reasoned"
                 )
                 assert result is mock_response
                 routes.CHANNEL_WEBHOOKS.compile.assert_called_once_with(rest_impl.POST, channel_id="39393939")
-                transformations.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
+                conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
         rest_impl._request.assert_called_once_with(
             mock_route, json_body={"name": "I am a webhook", "avatar": mock_image_data}, reason="get reasoned",
         )
@@ -2077,7 +2076,7 @@ class TestRestfulClient:
     @unittest.mock.patch.object(aiohttp, "FormData", autospec=True)
     @unittest.mock.patch.object(routes, "WEBHOOK_WITH_TOKEN")
     @unittest.mock.patch.object(json, "dumps")
-    @unittest.mock.patch.object(storage, "make_resource_seekable")
+    @unittest.mock.patch.object(conversions, "make_resource_seekable")
     async def test_execute_webhook_with_optionals(
         self, make_resource_seekable, dumps, WEBHOOK_WITH_TOKEN, FormData, rest_impl
     ):

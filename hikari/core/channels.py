@@ -38,11 +38,11 @@ __all__ = [
 import enum
 import typing
 
+from hikari._internal import marshaller
 from hikari.core import entities
-from hikari.core import snowflakes
 from hikari.core import permissions
 from hikari.core import users
-from hikari.internal_utilities import marshaller
+from hikari.core import snowflakes
 
 
 @enum.unique
@@ -97,6 +97,9 @@ class PermissionOverwrite(snowflakes.UniqueEntity, entities.Deserializable, enti
 
     @property
     def unset(self) -> permissions.Permission:
+        """Return a bitfield of all permissions not explicitly allowed or
+        denied by this overwrite.
+        """
         return typing.cast(permissions.Permission, (self.allow | self.deny))
 
 
@@ -117,10 +120,24 @@ class PartialChannel(snowflakes.UniqueEntity, entities.Deserializable):
     type: ChannelType = marshaller.attrib(deserializer=ChannelType)
 
 
-def register_channel_type(type: ChannelType):
+def register_channel_type(type_: ChannelType) -> typing.Callable[[typing.Type["Channel"]], typing.Type["Channel"]]:
+    """Generates a decorator for channel classes defined in this library to use
+    to associate themselves with a given channel type.
+
+    Parameters
+    ----------
+    type_ : :obj:`ChannelType`
+        The channel type to associate with.
+
+    Returns
+    -------
+    ``decorator(cls: T) -> T``
+        The decorator to decorate the class with.
+    """
+
     def decorator(cls):
         mapping = getattr(register_channel_type, "types", {})
-        mapping[type] = cls
+        mapping[type_] = cls
         setattr(register_channel_type, "types", mapping)
         return cls
 
@@ -233,7 +250,7 @@ class GuildCategory(GuildChannel):
     """Represents a guild category."""
 
 
-@register_channel_type(type=ChannelType.GUILD_TEXT)
+@register_channel_type(ChannelType.GUILD_TEXT)
 @marshaller.attrs(slots=True)
 class GuildTextChannel(GuildChannel):
     """Represents a guild text channel."""
@@ -312,10 +329,10 @@ class GuildVoiceChannel(GuildChannel):
 
 def deserialize_channel(payload: typing.Dict[str, typing.Any]) -> typing.Union[GuildChannel, DMChannel]:
     """Deserialize a channel object into the corresponding class.
-      
+
     Warning
     -------
-    This can only be used to deserialize full channel objects. To deserialize a 
+    This can only be used to deserialize full channel objects. To deserialize a
     partial object, use :obj:`PartialChannel.deserialize`
     """
     type_id = payload["type"]

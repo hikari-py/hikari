@@ -22,9 +22,8 @@ __all__ = ["HikariEntity", "Serializable", "Deserializable", "RawEntityT", "UNSE
 import abc
 import typing
 
-from hikari.internal_utilities import marshaller
-from hikari.internal_utilities import singleton_meta
-
+from hikari._internal import marshaller
+from hikari._internal import meta
 
 RawEntityT = typing.Union[
     None, bool, int, float, str, bytes, typing.Sequence[typing.Any], typing.Mapping[str, typing.Any]
@@ -34,7 +33,9 @@ T_contra = typing.TypeVar("T_contra", contravariant=True)
 T_co = typing.TypeVar("T_co", covariant=True)
 
 
-class Unset(metaclass=singleton_meta.SingletonMeta):
+class Unset(metaclass=meta.SingletonMeta):
+    """A singleton value that represents an unset field."""
+
     def __bool__(self):
         return False
 
@@ -57,7 +58,7 @@ class HikariEntity(metaclass=abc.ABCMeta):
 
     if typing.TYPE_CHECKING:
 
-        def __init__(self, *args, **kwargs) -> None:
+        def __init__(self, *_, **__) -> None:
             ...
 
 
@@ -70,6 +71,9 @@ class Deserializable:
 
     @classmethod
     def deserialize(cls: typing.Type[T_contra], payload: RawEntityT) -> T_contra:
+        """Deserialize the given payload into this type and return the
+        constructed object.
+        """
         return marshaller.HIKARI_ENTITY_MARSHALLER.deserialize(payload, cls)
 
 
@@ -81,4 +85,7 @@ class Serializable:
     __slots__ = ()
 
     def serialize(self: T_co) -> RawEntityT:
+        """Serialize this instance into a naive value such as a
+        :obj:`dict` and return it.
+        """
         return marshaller.HIKARI_ENTITY_MARSHALLER.serialize(self)

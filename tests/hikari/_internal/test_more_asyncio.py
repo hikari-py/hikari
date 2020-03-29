@@ -20,7 +20,7 @@ import asyncio
 
 import pytest
 
-from hikari.internal_utilities import aio
+from hikari._internal import more_asyncio
 
 
 class CoroutineStub:
@@ -60,18 +60,18 @@ class TestCompletedFuture:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("args", [(), (12,)])
     async def test_is_awaitable(self, args):
-        await aio.completed_future(*args)
+        await more_asyncio.completed_future(*args)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("args", [(), (12,)])
     async def test_is_completed(self, args):
-        future = aio.completed_future(*args)
+        future = more_asyncio.completed_future(*args)
         assert future.done()
 
     @pytest.mark.asyncio
     async def test_default_result_is_none(self):
-        assert aio.completed_future().result() is None
+        assert more_asyncio.completed_future().result() is None
 
     @pytest.mark.asyncio
     async def test_non_default_result(self):
-        assert aio.completed_future(...).result() is ...
+        assert more_asyncio.completed_future(...).result() is ...

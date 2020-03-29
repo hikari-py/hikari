@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Core errors that may be raised by this API implementation."""
-__all__ = ["HikariError"]
 
 
 class HikariError(RuntimeError):
