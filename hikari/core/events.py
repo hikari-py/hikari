@@ -301,7 +301,8 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializ
     #:
     #: :type: :obj:`Typing.MutableMapping` [ :obj:`snowflakes.Snowflake`, :obj:`users.User` ], optional
     recipients: typing.Optional[typing.MutableMapping[snowflakes.Snowflake, users.User]] = marshaller.attrib(
-        deserializer=lambda recipients: {user.id: user for user in map(users.User.deserialize, recipients)}
+        deserializer=lambda recipients: {user.id: user for user in map(users.User.deserialize, recipients)},
+        if_undefined=None,
     )
 
     #: The hash of this channel's icon, if it's a group DM channel and is set.
@@ -396,7 +397,7 @@ class ChannelPinUpdateEvent(HikariEvent, entities.Deserializable):
 
 @mark_as_websocket_event
 @marshaller.attrs(slots=True)
-class GuildCreateEvent(HikariEvent, entities.Deserializable):  # fixme
+class GuildCreateEvent(HikariEvent, entities.Deserializable):
     """Used to represent Guild Create gateway events.
 
     Will be received when the bot joins a guild, and when a guild becomes
@@ -406,7 +407,7 @@ class GuildCreateEvent(HikariEvent, entities.Deserializable):  # fixme
 
 @mark_as_websocket_event
 @marshaller.attrs(slots=True)
-class GuildUpdateEvent(HikariEvent, entities.Deserializable):  # fixme
+class GuildUpdateEvent(HikariEvent, entities.Deserializable):
     """Used to represent Guild Update gateway events."""
 
 
@@ -656,12 +657,14 @@ class InviteCreateEvent(HikariEvent, entities.Deserializable):
     #: The object of the user who this invite targets, if set.
     #:
     #: :type: :obj:`users.User`, optional
-    target_user: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User.deserialize)
+    target_user: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User.deserialize, if_undefined=None)
 
     #: The type of user target this invite is, if applicable.
     #:
     #: :type: :obj:`invites.TargetUserType`, optional
-    target_user_type: typing.Optional[invites.TargetUserType] = marshaller.attrib(deserializer=invites.TargetUserType)
+    target_user_type: typing.Optional[invites.TargetUserType] = marshaller.attrib(
+        deserializer=invites.TargetUserType, if_undefined=None
+    )
 
     #: Whether this invite grants temporary membership.
     #:
