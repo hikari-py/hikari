@@ -6,6 +6,7 @@ branch = true
 # timid  = true
 omit =
     hikari/__main__.py
+    hikari/core/clients/_run_gateway.py
 
 [report]
 precision = 2

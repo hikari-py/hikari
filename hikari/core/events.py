@@ -394,7 +394,7 @@ class ChannelPinUpdateEvent(HikariEvent, entities.Deserializable):
 
 @mark_as_websocket_event
 @marshaller.attrs(slots=True)
-class GuildCreateEvent(HikariEvent, guilds.Guild):
+class GuildCreateEvent(HikariEvent, entities.Deserializable):  # fixme
     """Used to represent Guild Create gateway events.
 
     Will be received when the bot joins a guild, and when a guild becomes
@@ -404,7 +404,7 @@ class GuildCreateEvent(HikariEvent, guilds.Guild):
 
 @mark_as_websocket_event
 @marshaller.attrs(slots=True)
-class GuildUpdateEvent(HikariEvent, guilds.Guild):
+class GuildUpdateEvent(HikariEvent, entities.Deserializable):  # fixme
     """Used to represent Guild Update gateway events."""
 
 
