@@ -23,9 +23,9 @@ import datetime
 import re
 import typing
 
-import hikari._internal.conversions
-from hikari._internal import assertions
-from hikari._internal import marshaller
+import hikari.internal.conversions
+from hikari.internal import assertions
+from hikari.internal import marshaller
 from hikari.core import entities
 from hikari.core import gateway_entities
 from hikari.core import guilds
@@ -143,7 +143,7 @@ class GatewayConfig(entities.HikariEntity, entities.Deserializable):
     #:
     #: :type: :obj:`datetime.datetime`, optional
     initial_idle_since: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=hikari._internal.conversions.unix_epoch_to_ts, if_none=None, if_undefined=None, default=None
+        deserializer=hikari.internal.conversions.unix_epoch_to_ts, if_none=None, if_undefined=None, default=None
     )
 
     #: The intents to use for the connection.

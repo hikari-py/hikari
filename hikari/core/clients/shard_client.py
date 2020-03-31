@@ -37,8 +37,8 @@ import typing
 
 import aiohttp
 
-from hikari._internal import more_asyncio
-from hikari._internal import more_logging
+from hikari.internal import more_asyncio
+from hikari.internal import more_logging
 from hikari.core import events
 from hikari.core import gateway_entities
 from hikari.core import guilds

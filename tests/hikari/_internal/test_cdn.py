@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
-from hikari._internal import cdn
+from hikari.internal import cdn
 
 
 def test_generate_cdn_url():

@@ -22,8 +22,8 @@ __all__ = ["HikariEntity", "Serializable", "Deserializable", "RawEntityT", "UNSE
 import abc
 import typing
 
-from hikari._internal import marshaller
-from hikari._internal import meta
+from hikari.internal import marshaller
+from hikari.internal import meta
 
 RawEntityT = typing.Union[
     None, bool, int, float, str, bytes, typing.Sequence[typing.Any], typing.Mapping[str, typing.Any]

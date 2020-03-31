@@ -21,6 +21,8 @@
 These are functions that validate a value, and are expected to return the value
 on success but error on any failure. This allows for quick checking of
 conditions that might break the function or cause it to misbehave.
+
+|internal|
 """
 __all__ = [
     "assert_that",

@@ -21,8 +21,8 @@ import datetime
 import cymock as mock
 import pytest
 
-import hikari._internal.conversions
-from hikari._internal import cdn
+import hikari.internal.conversions
+from hikari.internal import cdn
 from hikari.core import channels
 from hikari.core import guilds
 from hikari.core import invites
@@ -218,7 +218,7 @@ class TestInviteWithMetadata:
         with _helpers.patch_marshal_attr(
             invites.InviteWithMetadata,
             "created_at",
-            deserializer=hikari._internal.conversions.parse_iso_8601_ts,
+            deserializer=hikari.internal.conversions.parse_iso_8601_ts,
             return_value=mock_datetime,
         ) as mock_created_at_deserializer:
             invite_with_metadata_obj = invites.InviteWithMetadata.deserialize(test_invite_with_metadata_payload)

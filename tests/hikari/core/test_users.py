@@ -19,7 +19,7 @@
 import cymock as mock
 import pytest
 
-from hikari._internal import cdn
+from hikari.internal import cdn
 from hikari.core import users
 
 

@@ -16,8 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Alias for the :mod:`hikari.core.colors` module.
+"""Alias for the :mod:`hikari.core.colors` module.
+
+.. inheritance-diagram::
+    builtins.int
+    hikari.core.colours
+    :parts: 1
 """
 __all__ = ["Colour"]
 

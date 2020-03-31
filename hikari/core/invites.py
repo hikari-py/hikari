@@ -24,9 +24,9 @@ import datetime
 import enum
 import typing
 
-import hikari._internal.conversions
-from hikari._internal import cdn
-from hikari._internal import marshaller
+import hikari.internal.conversions
+from hikari.internal import cdn
+from hikari.internal import marshaller
 from hikari.core import channels
 from hikari.core import entities
 from hikari.core import guilds
@@ -228,7 +228,7 @@ class InviteWithMetadata(Invite):
     #: When this invite was created.
     #:
     #: :type: :obj:`datetime.datetime`
-    created_at: datetime.datetime = marshaller.attrib(deserializer=hikari._internal.conversions.parse_iso_8601_ts)
+    created_at: datetime.datetime = marshaller.attrib(deserializer=hikari.internal.conversions.parse_iso_8601_ts)
 
     @property
     def expires_at(self) -> typing.Optional[datetime.datetime]:
