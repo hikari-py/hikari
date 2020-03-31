@@ -28,7 +28,7 @@ import aiohttp
 import cymock as mock
 import pytest
 
-from hikari._internal import conversions
+from hikari.internal import conversions
 from hikari.net import errors
 from hikari.net import ratelimits
 from hikari.net import rest

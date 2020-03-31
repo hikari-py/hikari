@@ -18,6 +18,15 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe both DMs and guild
 channels on Discord.
+
+
+.. inheritance-diagram::
+    hikari.core.channels
+    enum.IntEnum
+    hikari.core.entities.HikariEntity
+    hikari.core.entities.Deserializable
+    hikari.core.entities.Serializable
+    :parts: 1
 """
 
 __all__ = [
@@ -38,7 +47,7 @@ __all__ = [
 import enum
 import typing
 
-from hikari._internal import marshaller
+from hikari.internal import marshaller
 from hikari.core import entities
 from hikari.core import permissions
 from hikari.core import users
@@ -103,23 +112,6 @@ class PermissionOverwrite(snowflakes.UniqueEntity, entities.Deserializable, enti
         return typing.cast(permissions.Permission, (self.allow | self.deny))
 
 
-@marshaller.attrs(slots=True)
-class PartialChannel(snowflakes.UniqueEntity, entities.Deserializable):
-    """Represents a channel where we've only received it's basic information,
-    commonly received in rest responses.
-    """
-
-    #: The channel's name.
-    #:
-    #: :type: :obj:`str`
-    name: str = marshaller.attrib(deserializer=str)
-
-    #: The channel's type.
-    #:
-    #: :type: :obj:`ChannelType`
-    type: ChannelType = marshaller.attrib(deserializer=ChannelType)
-
-
 def register_channel_type(type_: ChannelType) -> typing.Callable[[typing.Type["Channel"]], typing.Type["Channel"]]:
     """Generates a decorator for channel classes defined in this library to use
     to associate themselves with a given channel type.
@@ -152,6 +144,18 @@ class Channel(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`ChannelType`
     type: ChannelType = marshaller.attrib(deserializer=ChannelType)
+
+
+@marshaller.attrs(slots=True)
+class PartialChannel(Channel):
+    """Represents a channel where we've only received it's basic information,
+    commonly received in rest responses.
+    """
+
+    #: The channel's name.
+    #:
+    #: :type: :obj:`str`
+    name: str = marshaller.attrib(deserializer=str)
 
 
 @register_channel_type(ChannelType.DM)

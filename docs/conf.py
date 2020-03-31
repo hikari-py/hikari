@@ -26,6 +26,7 @@ Sphinx documentation configuration.
 # http://www.sphinx-doc.org/en/master/config
 import os
 import re
+import shutil
 import sys
 import textwrap
 import types
@@ -76,8 +77,16 @@ extensions = [
     "sphinx.ext.mathjax",
 ]
 
+if shutil.which("dot"):
+    print("Inheritance diagram enabled")
+    extensions += ["sphinx.ext.graphviz", "sphinx.ext.inheritance_diagram"]
+
 templates_path = ["_templates"]
 exclude_patterns = []
+
+# -- Pygments style ----------------------------------------------------------
+pygments_style = "fruity"
+
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = "bootstrap"
@@ -99,14 +108,13 @@ html_theme_options = {
     # Note the "1" or "True" value above as the third argument to indicate
     # an arbitrary url.
     "navbar_links": [
-        ("Repository", "http://gitlab.com/nekokatt/hikari", True),
-        ("Wiki", "http://gitlab.com/nekokatt/hikari/wikis", True),
-        ("CI", "http://gitlab.com/nekokatt/hikari/pipelines", True),
+        ("Source", "http://gitlab.com/nekokatt/hikari", True),
+        ("Builds", "http://gitlab.com/nekokatt/hikari/pipelines", True),
     ],
     # Render the next and previous page links in navbar. (Default: true)
-    "navbar_sidebarrel": True,
+    "navbar_sidebarrel": False,
     # Render the current pages TOC in the navbar. (Default: true)
-    "navbar_pagenav": True,
+    "navbar_pagenav": False,
     # Tab name for the current pages TOC. (Default: "Page")
     "navbar_pagenav_name": "This page",
     # Global TOC depth for "site" navbar tab. (Default: 1)
@@ -119,7 +127,7 @@ html_theme_options = {
     # will break.
     #
     # Values: "true" (default) or "false"
-    "globaltoc_includehidden": "true",
+    "globaltoc_includehidden": "false",
     # HTML navbar class (Default: "navbar") to attach to <div> element.
     # For black navbar, do "navbar navbar-inverse"
     "navbar_class": "navbar navbar-inverse",
@@ -156,6 +164,8 @@ autodoc_default_options = {
     "undoc-members": False,
     "exclude-members": "__weakref__",
     "show_inheritance": True,
+    "imported_members": False,
+    "ignore-module-all": True,
     "inherited_members": True,
     "members": True,
 }
@@ -170,33 +180,50 @@ intersphinx_mapping = {
     "websockets": ("https://websockets.readthedocs.io/en/stable/", None),
 }
 
-# -- Autosummary settings... ---------------------------------------------
+# -- Inheritance diagram options... -------------------------------------------------
 
-autosummary_generate = True
-autosummary_generate_overwrite = True
+inheritance_graph_attrs = dict(
+    bgcolor="transparent", rankdir="TD", ratio="auto", fontsize=10, splines="line", size='"20 50"',
+)
+
+inheritance_node_attrs = dict(
+    fontsize=10, fontname='"monospace"', color='"#505050"', style='"filled,rounded"', fontcolor='"#FFFFFF"'
+)
+inheritance_edge_attrs = dict(
+    color='"#505050"',
+    arrowtail="oempty",
+    arrowhead="none",
+    arrowsize=1,
+    dir="both",
+    fontcolor='"#FFFFFF"',
+    style='"filled"',
+)
+graphviz_output_format = "svg"
 
 # -- Epilog to inject into each page... ---------------------------------------------
 
 
 rst_epilog = """
-.. |rawEvent| replace:: This is is a raw event. This means that it is fired with the raw data sent by Discord's gateway
-                        without any form of pre-processing or validation. Corresponding information may be incorrect, 
-                        sent multiple times, or refer to information that is not cached. The implementation specifics
-                        of this are documented on the developer portal for Discord at 
-                        https://discordapp.com/developers/docs/topics/gateway#commands-and-events
-
-.. |selfHealing| replace:: You do not have to do anything in this situation. The gateway client in Hikari will attempt 
-                           to resolve these issues for you.
+.. |internal| replace::  
+        These components are part of the hikari.internal module. 
+        This means that anything located here is designed **only to be used internally by Hikari**, 
+        and **you should not use it directly in your applications**. Changes to these files will occur 
+        **without** warning or a deprecation period. It is only documented to ensure a complete reference 
+        for application developers wishing to either contribute to or extend this library. 
 """
 
 if not is_staging:
     rst_epilog += textwrap.dedent(
         """.. |staging_link| replace:: If you want the latest staging documentation instead, please visit 
-            `this page <staging/index.html>`__."""
+            `this page <staging/index.html>`__.
+        
+        """
     )
 else:
     rst_epilog += textwrap.dedent(
-        """.. |staging_link| replace:: This is the documentation for the development release"""
+        """.. |staging_link| replace:: This is the documentation for the development release.
+        
+        """
     )
 
 

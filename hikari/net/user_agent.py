@@ -28,7 +28,7 @@ __all__ = ["UserAgent"]
 
 import typing
 
-from hikari._internal import meta
+from hikari.internal import meta
 
 
 class UserAgent(metaclass=meta.SingletonMeta):

@@ -22,6 +22,8 @@ Warnings
 --------
 You should not change anything in this file, if you do, you will likely get
 unexpected behaviour elsewhere.
+
+|internal|
 """
 __all__ = [
     "RAISE",
@@ -40,7 +42,7 @@ import weakref
 
 import attr
 
-from hikari._internal import assertions
+from hikari.internal import assertions
 
 _RAW_NAME_ATTR = __name__ + "_RAW_NAME"
 _SERIALIZER_ATTR = __name__ + "_SERIALIZER"

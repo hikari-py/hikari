@@ -72,9 +72,9 @@ import typing
 
 import attr
 
-import hikari._internal.conversions
-from hikari._internal import assertions
-from hikari._internal import marshaller
+import hikari.internal.conversions
+from hikari.internal import assertions
+from hikari.internal import marshaller
 from hikari.core import channels
 from hikari.core import embeds as _embeds
 from hikari.core import emojis as _emojis
@@ -343,7 +343,7 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializ
     #:
     #: :type: :obj:`datetime.datetime`, optional
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=hikari._internal.conversions.parse_iso_8601_ts, if_undefined=None
+        deserializer=hikari.internal.conversions.parse_iso_8601_ts, if_undefined=None
     )
 
 
@@ -395,7 +395,7 @@ class ChannelPinUpdateEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`datetime.datetime`, optional
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=hikari._internal.conversions.parse_iso_8601_ts, if_undefined=None
+        deserializer=hikari.internal.conversions.parse_iso_8601_ts, if_undefined=None
     )
 
 
@@ -559,7 +559,7 @@ class GuildMemberUpdateEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`entities.UNSET` ], optional
     premium_since: typing.Union[None, datetime.datetime, entities.Unset] = marshaller.attrib(
-        deserializer=hikari._internal.conversions.parse_iso_8601_ts, if_none=None, if_undefined=entities.Unset
+        deserializer=hikari.internal.conversions.parse_iso_8601_ts, if_none=None, if_undefined=entities.Unset
     )
 
 
@@ -629,7 +629,7 @@ class InviteCreateEvent(HikariEvent, entities.Deserializable):
     #: The datetime of when this invite was created.
     #:
     #: :type: :obj:`datetime.datetime`
-    created_at: datetime.datetime = marshaller.attrib(deserializer=hikari._internal.conversions.parse_iso_8601_ts)
+    created_at: datetime.datetime = marshaller.attrib(deserializer=hikari.internal.conversions.parse_iso_8601_ts)
 
     #: The ID of the guild this invite was created in, if applicable.
     #: Will be ``None`` for group DM invites.
@@ -764,14 +764,14 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserial
     #:
     #: :type: :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`entities.UNSET` ]
     timestamp: typing.Union[datetime.datetime, entities.Unset] = marshaller.attrib(
-        deserializer=hikari._internal.conversions.parse_iso_8601_ts, if_undefined=entities.Unset
+        deserializer=hikari.internal.conversions.parse_iso_8601_ts, if_undefined=entities.Unset
     )
 
     #: The timestamp that the message was last edited at, or ``None`` if not ever edited.
     #:
     #: :type: :obj:`typing.Union` [  :obj:`datetime.datetime`, :obj:`entities.UNSET` ], optional
     edited_timestamp: typing.Union[datetime.datetime, entities.Unset, None] = marshaller.attrib(
-        deserializer=hikari._internal.conversions.parse_iso_8601_ts, if_none=None, if_undefined=entities.Unset
+        deserializer=hikari.internal.conversions.parse_iso_8601_ts, if_none=None, if_undefined=entities.Unset
     )
 
     #: Whether the message is a TTS message.

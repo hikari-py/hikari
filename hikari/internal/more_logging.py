@@ -16,7 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Utilities for creating and naming loggers in this library in a consistent way."""
+"""Utilities for creating and naming loggers with consistent names.
+
+|internal|
+"""
+
 __all__ = ["get_named_logger"]
 
 import logging

@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import pytest
 
-from hikari._internal import assertions
+from hikari.internal import assertions
 from tests.hikari import _helpers
 
 

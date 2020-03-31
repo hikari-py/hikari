@@ -33,8 +33,8 @@ __all__ = [
 import datetime
 import typing
 
-import hikari._internal.conversions
-from hikari._internal import marshaller
+import hikari.internal.conversions
+from hikari.internal import marshaller
 from hikari.core import colors
 from hikari.core import entities
 
@@ -212,7 +212,7 @@ class Embed(entities.HikariEntity, entities.Deserializable, entities.Serializabl
     #:
     #: :type: :obj:`datetime.datetime`, optional
     timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=hikari._internal.conversions.parse_iso_8601_ts,
+        deserializer=hikari.internal.conversions.parse_iso_8601_ts,
         serializer=lambda timestamp: timestamp.replace(tzinfo=datetime.timezone.utc).isoformat(),
         if_undefined=None,
     )

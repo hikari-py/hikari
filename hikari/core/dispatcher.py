@@ -25,10 +25,10 @@ import logging
 import typing
 import weakref
 
-from hikari._internal import assertions
-from hikari._internal import more_asyncio
-from hikari._internal import more_collections
-from hikari._internal import more_logging
+from hikari.internal import assertions
+from hikari.internal import more_asyncio
+from hikari.internal import more_collections
+from hikari.internal import more_logging
 from hikari.core import events
 
 EventT = typing.TypeVar("EventT", bound=events.HikariEvent)

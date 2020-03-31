@@ -25,7 +25,7 @@ import typing
 
 import aiohttp.typedefs
 
-from hikari._internal import marshaller
+from hikari.internal import marshaller
 from hikari.core import entities
 
 

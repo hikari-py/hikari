@@ -22,8 +22,8 @@ __all__ = ["Application", "Owner", "OwnGuild", "Team", "TeamMember", "TeamMember
 import enum
 import typing
 
-from hikari._internal import cdn
-from hikari._internal import marshaller
+from hikari.internal import cdn
+from hikari.internal import marshaller
 from hikari.core import entities
 from hikari.core import guilds
 from hikari.core import permissions
