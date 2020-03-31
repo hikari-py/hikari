@@ -21,7 +21,7 @@ import io
 
 import pytest
 
-from hikari._internal import conversions
+from hikari.internal import conversions
 
 
 @pytest.mark.parametrize(

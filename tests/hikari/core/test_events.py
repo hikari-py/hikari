@@ -21,7 +21,7 @@ import datetime
 import cymock as mock
 import pytest
 
-import hikari._internal.conversions
+import hikari.internal.conversions
 from hikari.core import channels
 from hikari.core import embeds
 from hikari.core import emojis
@@ -206,7 +206,7 @@ class TestBaseChannelEvent:
         with _helpers.patch_marshal_attr(
             events.BaseChannelEvent,
             "last_pin_timestamp",
-            deserializer=hikari._internal.conversions.parse_iso_8601_ts,
+            deserializer=hikari.internal.conversions.parse_iso_8601_ts,
             return_value=mock_timestamp,
         ) as patched_timestamp_deserializer:
             with mock.patch.object(users.User, "deserialize", return_value=mock_user):
@@ -263,7 +263,7 @@ class TestChannelPinUpdateEvent:
         with _helpers.patch_marshal_attr(
             events.ChannelPinUpdateEvent,
             "last_pin_timestamp",
-            deserializer=hikari._internal.conversions.parse_iso_8601_ts,
+            deserializer=hikari.internal.conversions.parse_iso_8601_ts,
             return_value=mock_timestamp,
         ) as patched_iso_parser:
             channel_pin_add_obj = events.ChannelPinUpdateEvent.deserialize(test_chanel_pin_update_payload)
@@ -384,7 +384,7 @@ class TestGuildMemberUpdateEvent:
             with _helpers.patch_marshal_attr(
                 events.GuildMemberUpdateEvent,
                 "premium_since",
-                deserializer=hikari._internal.conversions.parse_iso_8601_ts,
+                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
                 return_value=mock_premium_since,
             ) as patched_premium_since_deserializer:
                 guild_member_update_obj = events.GuildMemberUpdateEvent.deserialize(guild_member_update_payload)
@@ -479,7 +479,7 @@ class TestInviteCreateEvent:
                 with _helpers.patch_marshal_attr(
                     events.InviteCreateEvent,
                     "created_at",
-                    deserializer=hikari._internal.conversions.parse_iso_8601_ts,
+                    deserializer=hikari.internal.conversions.parse_iso_8601_ts,
                     return_value=mock_created_at,
                 ) as patched_created_at_deserializer:
                     invite_create_obj = events.InviteCreateEvent.deserialize(test_invite_create_payload)
@@ -629,13 +629,13 @@ class TestMessageUpdateEvent:
                 with _helpers.patch_marshal_attr(
                     events.MessageUpdateEvent,
                     "timestamp",
-                    deserializer=hikari._internal.conversions.parse_iso_8601_ts,
+                    deserializer=hikari.internal.conversions.parse_iso_8601_ts,
                     return_value=mock_timestamp,
                 ) as patched_timestamp_deserializer:
                     with _helpers.patch_marshal_attr(
                         events.MessageUpdateEvent,
                         "edited_timestamp",
-                        deserializer=hikari._internal.conversions.parse_iso_8601_ts,
+                        deserializer=hikari.internal.conversions.parse_iso_8601_ts,
                         return_value=mock_edited_timestamp,
                     ) as patched_edit_deserializer:
                         with _helpers.patch_marshal_attr(

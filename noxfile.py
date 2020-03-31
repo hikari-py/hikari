@@ -17,7 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
+import fnmatch
 import os
+import re
 import shutil
 import subprocess
 import tarfile
@@ -92,12 +94,13 @@ def documentation(session) -> None:
     session.install("-r", "doc-requirements.txt")
 
     session.env["SPHINXOPTS"] = "-WTvvn"
-
-    tech_dir = pathify(DOCUMENTATION_DIR, TECHNICAL_DIR)
-    shutil.rmtree(tech_dir, ignore_errors=True, onerror=lambda *_: None)
-    os.mkdir(tech_dir)
-    session.run("sphinx-apidoc", "-e", "-o", tech_dir, MAIN_PACKAGE)
-    session.run("python", "-m", "sphinx.cmd.build", DOCUMENTATION_DIR, ARTIFACT_DIR, "-b", "html")
+    session.run("sphinx-apidoc", "-e", "-o", DOCUMENTATION_DIR, MAIN_PACKAGE)
+    session.run(
+        "python", "-m", "sphinx.cmd.build", "-a", "-b", "html", "-j", "auto", "-n", DOCUMENTATION_DIR, ARTIFACT_DIR
+    )
+    for f in os.listdir(DOCUMENTATION_DIR):
+        if f in ("hikari.rst", "modules.rst") or re.match(r"hikari\.(\w|\.)+\.rst", f):
+            os.unlink(pathify(DOCUMENTATION_DIR, f))
 
 
 @nox.session(reuse_venv=True)

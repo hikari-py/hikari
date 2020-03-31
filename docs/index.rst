@@ -20,11 +20,33 @@ Hikari is licensed under the GNU LGPLv3 https://www.gnu.org/licenses/lgpl-3.0.en
 Technical documentation
 -----------------------
 
-.. autosummary::
+.. toctree::
+    :titlesonly:
+
     hikari
-    hikari.core
-    hikari.net
-    hikari.errors
+
+
+Internal components
+...................
+
+|internal|
+
+.. toctree::
+    :maxdepth: 2
+    :titlesonly:
+
+    hikari.internal
+
+Other resources
+---------------
+
+* `Our Discord server <https://discord.gg/HMnGbsv>`_
+* `Source code <https://gitlab.com/nekokatt/hikari>`_
+* `Pipelines and builds <https://gitlab.com/nekokatt/hikari/pipelines>`_
+* `CI success statistics for nerds <https://gitlab.com/nekokatt/hikari/pipelines/charts>`_
+
+Search for a topic
+------------------
 
 * :ref:`genindex`
 * :ref:`search`

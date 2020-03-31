@@ -180,8 +180,8 @@ import types
 import typing
 import weakref
 
-from hikari._internal import more_asyncio
-from hikari._internal import more_logging
+from hikari.internal import more_asyncio
+from hikari.internal import more_logging
 from hikari.net import routes
 
 UNKNOWN_HASH = "UNKNOWN"

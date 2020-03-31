@@ -18,15 +18,13 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Various utilities used internally within this API.
 
-These are not bound to the versioning contact, and are considered to be
-implementation detail that could change at any time, so should not be
-used outside this library.
+|internal|
 """
-from hikari._internal import assertions
-from hikari._internal import cdn
-from hikari._internal import conversions
-from hikari._internal import marshaller
-from hikari._internal import meta
-from hikari._internal import more_asyncio
-from hikari._internal import more_collections
-from hikari._internal import more_logging
+from hikari.internal import assertions
+from hikari.internal import cdn
+from hikari.internal import conversions
+from hikari.internal import marshaller
+from hikari.internal import meta
+from hikari.internal import more_asyncio
+from hikari.internal import more_collections
+from hikari.internal import more_logging

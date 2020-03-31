@@ -30,10 +30,24 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 
+.xref {
+    background-color: #272822 !important;
+    font-weight: lighter;
+}
+
+.go {
+    color: #999 !important;
+}
+
+.c1 {
+    color: #aa3344 !important;
+    background-color: transparent !important;
+}
+
 /* whyyyyy */
 code, .literal, .literal > span.pre, .highlight {
     color: #F92672 !important;
-    background-color: #272822 !important;
+    background-color: #272822;
     border-color: transparent !important;
 }
 
@@ -58,36 +72,6 @@ dt:target, span.highlighted {
     text-decoration-color: #F92672;
 }
 
-/* syntax highlighting: https://tmtheme-editor.herokuapp.com/#!/editor/theme/Monokai */
-/* yes, i hate myself for spending this much time deciphering this. */
-.bp { color: #D6D2BC !important; font-style: italic; font-weight: bold; text-decoration: underline; }  /* base parameter (self, cls, etc) */
-.c1, .c2, .c3 { color: #8F8C7E !important; }  /* single line comment */
-.fm { color: #D6D2BC !important; font-style: italic; font-weight: bold; }  /* magic attribute? */
-.gp { color: #F92672 !important; }  /* >>> symbol */
-.go { color: #FFFFFF !important; }  /* output text */
-.k { color: #F92672 !important; }   /* keyword */
-.kn { color: #F92672 !important; }   /* keyword for start of import declaration? */
-.kc { color: #FD971F !important; font-style: italic; font-weight: bold;}  /* singleton literal (False, True, None, etc) */
-.mi { color: #AE81FF !important; }  /* int literal */
-.mf { color: #AE81FF !important; }  /* float literal */
-.mh { color: #AE81FF !important; }  /* hex literal */
-.mn { color: #AE81FF !important; }  /* no clue, but it fixes MathJAX LaTeX rendering... */
-.mo { color: #AE81FF !important; }  /* octal literal */
-.mb { color: #AE81FF !important; }  /* bool literal */
-.n { color: #D6D2BC !important; font-style: italic; }   /* name */
-.nb { color: #FD971F !important; font-style: italic; }  /* builtin name */
-.nn { color: #FD971F !important; font-style: italic; }  /* namespace name */
-.nc { color: #A6E22E !important; text-decoration: underline; } /* class name */
-.ne { color: #FD971F !important; font-style: italic; } /* exception name */
-.nd { color: #FD971F !important; } /* decorator name */
-.nf { color: #A6E22E !important; } /* function name */
-.nt { color: #A6E22E !important; } /* json key or something */
-.o { color: #F92672 !important; }   /* operator */
-.p { color: #75715E !important; }   /* parenthesis */
-.s1, .s2 { color: #E6DB74 !important; }  /* string literal */
-.sd { color: #8F8C7E !important; }  /* multiple line docstring */
-.vm { color: #D6D2BC !important; font-style: italic; font-weight: bold; }  /* magic attribute? */
-
 input[type="text"] {
     background-color: #555;
     color: #fff;
@@ -104,13 +88,13 @@ form.navbar-form {
 }
 
 .alert-info {
-    background-color: #31708f;
+    background-color: #505050;
     color: #d9edf7;
 }
 
 .alert-warning {
-    background-color: #8a6d3b;
-    color: #fcf8e3;
+    background-color: #f8d7da;
+    color: #721c24;
 }
 
 .viewcode-link, .headerlink {
@@ -122,7 +106,7 @@ form.navbar-form {
 }
 
 .external {
-    color: #fd971f !important;
+    color: #F92672 !important
 }
 
 nav, .alert, .admonition {

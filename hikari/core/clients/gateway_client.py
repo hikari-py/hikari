@@ -27,7 +27,7 @@ import inspect
 import time
 import typing
 
-from hikari._internal import more_logging
+from hikari.internal import more_logging
 from hikari.core import dispatcher
 from hikari.core import events
 from hikari.core import state

@@ -42,9 +42,9 @@ import datetime
 import enum
 import typing
 
-from hikari._internal import cdn
-from hikari._internal import conversions
-from hikari._internal import marshaller
+from hikari.internal import cdn
+from hikari.internal import conversions
+from hikari.internal import marshaller
 from hikari.core import colors
 from hikari.core import channels as _channels
 from hikari.core import emojis as _emojis
