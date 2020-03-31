@@ -20,7 +20,7 @@ import asyncio
 
 import pytest
 
-from hikari._internal import more_asyncio
+from hikari.internal import more_asyncio
 
 
 class CoroutineStub:

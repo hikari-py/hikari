@@ -21,7 +21,7 @@ import datetime
 import cymock as mock
 import pytest
 
-import hikari._internal.conversions
+import hikari.internal.conversions
 from hikari.core import embeds
 from hikari.core import emojis
 from hikari.core import guilds
@@ -197,13 +197,13 @@ class TestMessage:
                 with _helpers.patch_marshal_attr(
                     messages.Message,
                     "timestamp",
-                    deserializer=hikari._internal.conversions.parse_iso_8601_ts,
+                    deserializer=hikari.internal.conversions.parse_iso_8601_ts,
                     return_value=mock_datetime,
                 ) as patched_timestamp_deserializer:
                     with _helpers.patch_marshal_attr(
                         messages.Message,
                         "edited_timestamp",
-                        deserializer=hikari._internal.conversions.parse_iso_8601_ts,
+                        deserializer=hikari.internal.conversions.parse_iso_8601_ts,
                         return_value=mock_datetime2,
                     ) as patched_edited_timestamp_deserializer:
                         with _helpers.patch_marshal_attr(

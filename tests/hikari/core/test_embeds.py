@@ -21,7 +21,7 @@ import datetime
 import cymock as mock
 import pytest
 
-import hikari._internal.conversions
+import hikari.internal.conversions
 from hikari.core import colors
 from hikari.core import embeds
 from tests.hikari import _helpers
@@ -229,7 +229,7 @@ class TestEmbed:
         with _helpers.patch_marshal_attr(
             embeds.Embed,
             "timestamp",
-            deserializer=hikari._internal.conversions.parse_iso_8601_ts,
+            deserializer=hikari.internal.conversions.parse_iso_8601_ts,
             return_value=mock_datetime,
         ) as patched_timestamp_deserializer:
             embed_obj = embeds.Embed.deserialize(test_embed_payload)

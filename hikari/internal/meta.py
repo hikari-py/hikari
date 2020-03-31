@@ -16,15 +16,18 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Various functional types and metatypes."""
-__all__ = ["SingletonMeta"]
+"""Various functional types and metatypes.
+
+|internal|
+"""
+__all__ = ["SingletonMeta", "Singleton"]
 
 
 class SingletonMeta(type):
     """Metaclass that makes the class a singleton.
 
-    Once an instance has been defined at runtime, it will exist until the interpreter
-    that created it is terminated.
+    Once an instance has been defined at runtime, it will exist until the
+    interpreter that created it is terminated.
 
     Example
     --------
@@ -33,15 +36,18 @@ class SingletonMeta(type):
         >>> class Unknown(metaclass=SingletonMeta):
         ...     def __init__(self):
         ...         print("Initialized an Unknown!")
+
         >>> Unknown() is Unknown()    # True
 
     Note
     ----
-    The constructors of these classes must not take any arguments other than ``self``.
+    The constructors of instances of this metaclass must not take any arguments
+    other than ``self``.
 
     Warning
     -------
-    This is not thread safe.
+    Constructing instances of class instances of this metaclass may not be
+    thread safe.
     """
 
     ___instances___ = {}
@@ -51,3 +57,31 @@ class SingletonMeta(type):
         if cls not in SingletonMeta.___instances___:
             SingletonMeta.___instances___[cls] = super().__call__()
         return SingletonMeta.___instances___[cls]
+
+
+class Singleton(metaclass=SingletonMeta):
+    """Base type for anything implementing the :obj:`SingletonMeta` metaclass.
+
+    Once an instance has been defined at runtime, it will exist until the
+    interpreter that created it is terminated.
+
+    Example
+    -------
+
+    .. code-block:: python
+
+        >>> class MySingleton(Singleton):
+        ...    pass
+
+        >>> assert MySingleton() is MySingleton()
+
+    Note
+    ----
+    The constructors of child classes must not take any arguments other than
+    ``self``.
+
+    Warning
+    -------
+    Constructing instances of this class or derived classes may not be thread
+    safe.
+    """

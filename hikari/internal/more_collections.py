@@ -16,7 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Special data structures and utilities."""
+"""Special data structures and utilities.
+
+|internal|
+"""
+
 __all__ = [
     "EMPTY_SEQUENCE",
     "EMPTY_SET",

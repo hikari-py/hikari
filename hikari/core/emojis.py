@@ -21,7 +21,7 @@ emojis on Discord.
 """
 import typing
 
-from hikari._internal import marshaller
+from hikari.internal import marshaller
 from hikari.core import entities
 from hikari.core import snowflakes
 from hikari.core import users

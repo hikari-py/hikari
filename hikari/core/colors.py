@@ -18,6 +18,11 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Model that represents a common RGB color and provides simple conversions to
 other common color systems.
+
+.. inheritance-diagram::
+    builtins.int
+    hikari.core.colors
+    :parts: 1
 """
 
 __all__ = ["Color", "ColorCompatibleT"]
@@ -25,7 +30,7 @@ __all__ = ["Color", "ColorCompatibleT"]
 import string
 import typing
 
-from hikari._internal import assertions
+from hikari.internal import assertions
 
 
 class Color(int, typing.SupportsInt):
