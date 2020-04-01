@@ -288,6 +288,19 @@ class TestGuildMember:
         assert guild_member_obj.is_mute is True
 
 
+class TestPartialGuildRole:
+    @pytest.fixture()
+    def test_partial_guild_role_payload(self):
+        return {
+            "id": "41771983423143936",
+            "name": "WE DEM BOYZZ!!!!!!",
+        }
+
+    def test_deserialize(self, test_partial_guild_role_payload):
+        partial_guild_role_obj = guilds.PartialGuildRole.deserialize(test_partial_guild_role_payload)
+        assert partial_guild_role_obj.name == "WE DEM BOYZZ!!!!!!"
+
+
 class TestGuildRole:
     @pytest.fixture()
     def test_guild_role_payload(self):
@@ -304,7 +317,6 @@ class TestGuildRole:
 
     def test_deserialize(self, test_guild_role_payload):
         guild_role_obj = guilds.GuildRole.deserialize(test_guild_role_payload)
-        assert guild_role_obj.name == "WE DEM BOYZZ!!!!!!"
         assert guild_role_obj.color == 3_447_003
         assert guild_role_obj.is_hoisted is True
         assert guild_role_obj.position == 0
