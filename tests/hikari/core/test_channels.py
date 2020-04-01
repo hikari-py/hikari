@@ -16,13 +16,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
+import datetime
+
 import cymock as mock
 import pytest
 
 from hikari.core import channels
 from hikari.core import permissions
 from hikari.core import users
-from tests.hikari import _helpers
 
 
 @pytest.fixture()
@@ -224,7 +225,7 @@ class TestGuildTextChannel:
         assert channel_obj.parent_id == 987
         assert channel_obj.type == channels.ChannelType.GUILD_TEXT
         assert channel_obj.last_message_id == 123456
-        assert channel_obj.rate_limit_per_user == 2
+        assert channel_obj.rate_limit_per_user == datetime.timedelta(seconds=2)
 
 
 class TestGuildNewsChannel:
