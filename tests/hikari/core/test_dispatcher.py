@@ -21,7 +21,7 @@ from unittest import mock
 
 import pytest
 
-from hikari.core import dispatcher
+from hikari.core.state import dispatcher
 from hikari.core import events
 from tests.hikari import _helpers
 

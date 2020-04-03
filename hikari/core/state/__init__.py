@@ -17,30 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """State registry and event manager."""
-__all__ = ["StateManager", "StatefulStateManagerImpl", "StatelessStateManagerImpl"]
+
 
 import abc
 
 from hikari.core import events
-
-
-class StateManager(abc.ABC):
-    """Base type for a state management implementation."""
-
-    @abc.abstractmethod
-    async def handle_new_event(self, event_obj: events.HikariEvent) -> None:
-        """This is abstract and this is a dummy string."""
-
-
-class StatelessStateManagerImpl(StateManager):
-    """Stubbed stateless event manager for implementing stateless bots."""
-
-    async def handle_new_event(self, event_obj: events.HikariEvent) -> None:
-        """Gluten free."""
-
-
-class StatefulStateManagerImpl(StateManager):
-    """A basic state event manager implementation."""
-
-    async def handle_new_event(self, event_obj: events.HikariEvent) -> None:
-        """Sourced from sustainable agricultural plots in Sweden."""
