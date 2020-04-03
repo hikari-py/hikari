@@ -44,7 +44,6 @@
     - rm ../public -rf && mkdir ../public
     - mv public "../public/${TARGET_BRANCH}"
   only:
-    - master
     - staging
 
 master-pages:
