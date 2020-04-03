@@ -23,14 +23,12 @@ simultaneously.
 __all__ = ["GatewayClient"]
 
 import asyncio
-import inspect
 import time
 import typing
 
+from hikari.core.state import base_state
 from hikari.internal import more_logging
-from hikari.core import dispatcher
-from hikari.core import events
-from hikari.core import state
+from hikari.core.state import dispatcher
 from hikari.core.clients import gateway_config
 from hikari.core.clients import shard_client
 from hikari.net import shard
@@ -38,7 +36,7 @@ from hikari.net import shard
 ShardT = typing.TypeVar("ShardT", bound=shard_client.ShardClient)
 
 
-class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase, dispatcher.EventDispatcher):
+class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase):
     """Facades :obj:`shard_client.ShardClient` implementations to provide a
     management layer for multiple-sharded bots. This also provides additional
     conduit used to connect up shards to the rest of this framework to enable
@@ -50,14 +48,12 @@ class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase, di
         config: gateway_config.GatewayConfig,
         url: str,
         *,
-        dispatcher_impl: typing.Optional[dispatcher.EventDispatcher] = None,
+        state_impl: base_state.BaseState,
         shard_type: typing.Type[ShardT] = shard_client.ShardClient,
     ) -> None:
         self.logger = more_logging.get_named_logger(self)
         self.config = config
-        self.event_dispatcher = dispatcher_impl if dispatcher_impl is not None else dispatcher.EventDispatcherImpl()
-        self._websocket_event_types = self._websocket_events()
-        self.state = state.StatefulStateManagerImpl()
+        self._state = state_impl
         self._is_running = False
         self.shards: typing.Dict[int, ShardT] = {
             shard_id: shard_type(shard_id, config, self._handle_websocket_event_later, url)
@@ -149,31 +145,8 @@ class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase, di
         # Run this asynchronously so that we can allow awaiting stuff like state management.
         asyncio.get_event_loop().create_task(self._handle_websocket_event(conn, event_name, payload))
 
-    async def _handle_websocket_event(self, _: shard.ShardConnection, event_name: str, payload: typing.Any) -> None:
-        try:
-            event_type = self._websocket_event_types[event_name]
-        except KeyError:
-            pass
-        else:
-            event_payload = event_type.deserialize(payload)
-            await self.state.handle_new_event(event_payload)
-
-    def _websocket_events(self):
-        # Look for anything that has the ___raw_ws_event_name___ class attribute
-        # to each corresponding class where appropriate to do so. This provides
-        # a quick and dirty event lookup mechanism that can be extended quickly
-        # and has O(k) lookup time.
-
-        types = {}
-
-        def predicate(member):
-            return inspect.isclass(member) and hasattr(member, "___raw_ws_event_name___")
-
-        for name, cls in inspect.getmembers(events, predicate):
-            raw_name = cls.___raw_ws_event_name___
-            types[raw_name] = cls
-            self.logger.debug("detected %s as a web socket event to listen for", name)
-
-        self.logger.debug("detected %s web socket events to register from %s", len(types), events.__name__)
-
-        return types
+    async def _handle_websocket_event(
+        self, shard_obj: shard.ShardConnection, event_name: str, payload: typing.Any
+    ) -> None:
+        shard_client_obj = self.shards[shard_obj.shard_id]
+        await self._state.process_raw_event(shard_client_obj, event_name, payload)
