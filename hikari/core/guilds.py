@@ -35,6 +35,8 @@ __all__ = [
     "GuildIntegration",
     "GuildMemberBan",
     "PartialGuild",
+    "PartialGuildIntegration",
+    "PartialGuildRole",
     "PresenceStatus",
 ]
 
@@ -223,13 +225,18 @@ class GuildMember(entities.HikariEntity, entities.Deserializable):
 
 
 @marshaller.attrs(slots=True)
-class GuildRole(snowflakes.UniqueEntity, entities.Deserializable):
-    """Represents a guild bound Role object."""
+class PartialGuildRole(snowflakes.UniqueEntity, entities.Deserializable):
+    """Represents a partial guild bound Role object."""
 
-    #: The role's name
+    #: The role's name.
     #:
     #: :type: :obj:`str`
     name: str = marshaller.attrib(deserializer=str)
+
+
+@marshaller.attrs(slots=True)
+class GuildRole(PartialGuildRole):
+    """Represents a guild bound Role object."""
 
     #: The colour of this role, will be applied to a member's name in chat
     #: if it's their top coloured role.

@@ -20,9 +20,35 @@ import cymock as mock
 import pytest
 
 from hikari.internal import cdn
+from hikari.core import guilds
 from hikari.core import oauth2
 from hikari.core import users
 from tests.hikari import _helpers
+
+
+@pytest.fixture()
+def test_partial_integration():
+    return {
+        "id": "123123123123123",
+        "name": "A Name",
+        "type": "twitch",
+        "account": {"name": "twitchUsername", "id": "123123"},
+    }
+
+
+@pytest.fixture()
+def own_connection_payload(test_partial_integration):
+    return {
+        "friend_sync": False,
+        "id": "2513849648",
+        "integrations": [test_partial_integration],
+        "name": "FS",
+        "revoked": False,
+        "show_activity": True,
+        "type": "twitter",
+        "verified": True,
+        "visibility": 0,
+    }
 
 
 @pytest.fixture()
@@ -76,6 +102,23 @@ def application_information_payload(owner_payload, team_payload):
         "slug": "192.168.1.254",
         "cover_image": "hashmebaby",
     }
+
+
+class TestOwnConnection:
+    def test_deserialize(self, own_connection_payload, test_partial_integration):
+        mock_integration_obj = mock.MagicMock(guilds.PartialGuildIntegration)
+        with mock.patch.object(guilds.PartialGuildIntegration, "deserialize", return_value=mock_integration_obj):
+            connection_obj = oauth2.OwnConnection.deserialize(own_connection_payload)
+            guilds.PartialGuildIntegration.deserialize.assert_called_once_with(test_partial_integration)
+        assert connection_obj.id == "2513849648"
+        assert connection_obj.name == "FS"
+        assert connection_obj.type == "twitter"
+        assert connection_obj.is_revoked is False
+        assert connection_obj.integrations == [mock_integration_obj]
+        assert connection_obj.is_verified is True
+        assert connection_obj.is_friend_syncing is False
+        assert connection_obj.is_showing_activity is True
+        assert connection_obj.visibility is oauth2.ConnectionVisibility.NONE
 
 
 class TestOwnGuild:

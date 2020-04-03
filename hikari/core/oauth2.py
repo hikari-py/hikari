@@ -17,7 +17,16 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities related to discord's Oauth2 flow."""
-__all__ = ["Application", "Owner", "OwnGuild", "Team", "TeamMember", "TeamMembershipState"]
+__all__ = [
+    "Application",
+    "ConnectionVisibility",
+    "Owner",
+    "OwnConnection",
+    "OwnGuild",
+    "Team",
+    "TeamMember",
+    "TeamMembershipState",
+]
 
 import enum
 import typing
@@ -31,10 +40,81 @@ from hikari.core import snowflakes
 from hikari.core import users
 
 
+@enum.unique
+class ConnectionVisibility(enum.IntEnum):
+    NONE = 0
+    EVERYONE = 1
+
+
+@marshaller.attrs(slots=True)
+class OwnConnection(entities.HikariEntity, entities.Deserializable):
+    """Represents a user's connection with a third party account.
+
+    Returned by the ``GET Current User Connections`` endpoint.
+    """
+
+    #: The string ID of the third party connected account.
+    #:
+    #: Warning
+    #: -------
+    #: Seeing as this is a third party ID, it will not be a snowflake.
+    #:
+    #:
+    #: :type: :obj:`str`
+    id: str = marshaller.attrib(deserializer=str)
+
+    #: The username of the connected account.
+    #:
+    #: :type: :obj:`str`
+    name: str = marshaller.attrib(deserializer=str)
+
+    #: The type of service this connection is for.
+    #:
+    #: :type: :obj:`str`
+    type: str = marshaller.attrib(deserializer=str)
+
+    #: Whether the connection has been revoked.
+    #:
+    #: :type: :obj:`bool`
+    is_revoked: bool = marshaller.attrib(raw_name="revoked", deserializer=bool, if_undefined=False)
+
+    #: A sequence of the partial guild integration objects this connection has.
+    #:
+    #: :type: :obj:`typing.Sequence` [ :obj:`guilds.PartialGuildIntegration` ]
+    integrations: typing.Sequence[guilds.PartialGuildIntegration] = marshaller.attrib(
+        deserializer=lambda payload: [
+            guilds.PartialGuildIntegration.deserialize(integration) for integration in payload
+        ],
+        if_undefined=list,
+    )
+
+    #: Whether the connection has been verified.
+    #:
+    #: :type: :obj:`bool`
+    is_verified: bool = marshaller.attrib(raw_name="verified", deserializer=bool)
+
+    #: Whether friends should be added based on this connection.
+    #:
+    #: :type: :obj:`bool`
+    is_friend_syncing: bool = marshaller.attrib(raw_name="friend_sync", deserializer=bool)
+
+    #: Whether activities related to this connection will be shown in the
+    #: user's presence updates.
+    #:
+    #: :type: :obj:`bool`
+    is_showing_activity: bool = marshaller.attrib(raw_name="show_activity", deserializer=bool)
+
+    #: The visibility of the connection.
+    #:
+    #: :type: :obj:`ConnectionVisibility`
+    visibility: ConnectionVisibility = marshaller.attrib(deserializer=ConnectionVisibility)
+
+
 @marshaller.attrs(slots=True)
 class OwnGuild(guilds.PartialGuild):
-    """Represents a user bound partial guild object,
-    returned by GET Current User Guilds.
+    """Represents a user bound partial guild object.
+
+    Returned by the ``GET Current User Guilds`` endpoint.
     """
 
     #: Whether the current user owns this guild.
@@ -128,7 +208,7 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
         Returns
         -------
         :obj:`str`, optional
-            The string url.
+            The string url, will be :obj:`None` if not set.
         """
         if self.icon_hash:
             return cdn.generate_cdn_url("team-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
@@ -141,12 +221,14 @@ class Owner(users.User):
 
     #: This user's flags.
     #:
-    #: :type: :obj:`int`
-    flags: int = marshaller.attrib(deserializer=int)
+    #: :type: :obj:`hikari.core.users.UserFlag`
+    flags: int = marshaller.attrib(deserializer=users.UserFlag)
 
     @property
     def is_team_user(self) -> bool:
-        """If this user is a Team user (the owner of an application that's owned by a team)."""
+        """If this user is a Team user (the owner of an application that's
+        owned by a team).
+        """
         return bool((self.flags >> 10) & 1)
 
 
@@ -205,7 +287,7 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
         deserializer=lambda key: bytes(key, "utf-8"), if_undefined=None
     )
 
-    #: The hash of this application's icon if set.
+    #: The hash of this application's icon, if set.
     #:
     #: :type: :obj:`str`, optional
     icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str, if_undefined=None)

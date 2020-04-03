@@ -44,6 +44,7 @@ __all__ = [
     "GuildVoiceChannel",
 ]
 
+import datetime
 import enum
 import typing
 
@@ -283,8 +284,10 @@ class GuildTextChannel(GuildChannel):
     #: Bots, as well as users with ``MANAGE_MESSAGES`` or
     #: ``MANAGE_CHANNEL``, are not afected by this.
     #:
-    #: :type: :obj:`int`
-    rate_limit_per_user: int = marshaller.attrib(deserializer=int)
+    #: :type: :obj:`datetime.timedelta`
+    rate_limit_per_user: datetime.timedelta = marshaller.attrib(
+        deserializer=lambda payload: datetime.timedelta(seconds=payload)
+    )
 
 
 @register_channel_type(ChannelType.GUILD_NEWS)
