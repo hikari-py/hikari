@@ -131,7 +131,8 @@ def lint(session) -> None:
     # TODO: Change code under this comment to the commented code when we update to pylint 2.5
     # session.run("pip", "install", f"pylint=={PYLINT_VERSION}" if PYLINT_VERSION else "pylint")
     # frozen version of pylint 2.5 pre-release to make sure that nothing will break
-    session.install("git+https://github.com/davfsa/pylint")
+    # session.install("git+https://github.com/davfsa/pylint")
+    session.install("pylint")
     pkg = MAIN_PACKAGE.split(".")[0]
 
     try:
