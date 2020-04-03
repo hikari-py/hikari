@@ -43,7 +43,41 @@ from hikari.net import versions
 
 
 class RestfulClient:
-    """A RESTful client to allow you to interact with the Discord API."""
+    """A RESTful client to allow you to interact with the Discord API.
+
+    Parameters
+    ----------
+    base_url: :obj:`str`
+        The base URL and route for the discord API
+    allow_redirects: :obj:`bool`
+        Whether to allow redirects or not.
+    connector: :obj:`aiohttp.BaseConnector`, optional
+        Optional aiohttp connector info for making an HTTP connection
+    proxy_headers: :obj:`aiohttp.typedefs.LooseHeaders`, optional
+        Optional proxy headers to pass to HTTP requests.
+    proxy_auth: :obj:`aiohttp.BasicAuth`, optional
+        Optional authorization to be used if using a proxy.
+    proxy_url: :obj:`str`, optional
+        Optional proxy URL to use for HTTP requests.
+    ssl_context: :obj:`ssl.SSLContext`, optional
+        The optional SSL context to be used.
+    verify_ssl: :obj:`bool`
+        Whether or not the client should enforce SSL signed certificate
+        verification. If ``False`` it will ignore potentially malicious
+        SSL certificates.
+    timeout: :obj:`float`, optional
+        The optional timeout for all HTTP requests.
+    json_deserialize: deserialization function
+        A custom JSON deserializer function to use. Defaults to
+        :func:`json.loads`.
+    json_serialize: serialization function
+        A custom JSON serializer function to use. Defaults to
+        :func:`json.dumps`.
+    token: :obj:`string`, optional
+        The bot token for the client to use.
+    version: :obj:`typing.Union` [ :obj:`int`, :obj:`hikari.net.versions.HTTPAPIVersion` ]
+        The version of the API to use. Defaults to the most recent stable version.
+    """
 
     GET = "get"
     POST = "post"
@@ -60,16 +94,16 @@ class RestfulClient:
         *,
         base_url="https://discordapp.com/api/v{0.version}",
         allow_redirects: bool = False,
-        connector: aiohttp.BaseConnector = None,
-        proxy_headers: aiohttp.typedefs.LooseHeaders = None,
-        proxy_auth: aiohttp.BasicAuth = None,
-        proxy_url: str = None,
-        ssl_context: ssl.SSLContext = None,
+        connector: typing.Optional[aiohttp.BaseConnector] = None,
+        proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders] = None,
+        proxy_auth: typing.Optional[aiohttp.BasicAuth] = None,
+        proxy_url: typing.Optional[str] = None,
+        ssl_context: typing.Optional[ssl.SSLContext] = None,
         verify_ssl: bool = True,
-        timeout: float = None,
-        json_deserialize=json.loads,
-        json_serialize=json.dumps,
-        token,
+        timeout: typing.Optional[float] = None,
+        json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict] = json.loads,
+        json_serialize: typing.Callable[[typing.Dict], typing.AnyStr] = json.dumps,
+        token: typing.Optional[str],
         version: typing.Union[int, versions.HTTPAPIVersion] = versions.HTTPAPIVersion.STABLE,
     ):
         #: Whether to allow redirects or not.
