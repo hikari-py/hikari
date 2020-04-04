@@ -47,3 +47,6 @@ poetry.lock
 
 # Container logs
 **.container.log
+
+# Docker secrets
+credentials.env
