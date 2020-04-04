@@ -16,8 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""A representation of the Discord Snowflake datatype, which is a 64-bit integer
-used to uniquely identify entities on the server.
+"""A representation of the Discord Snowflake datatype.
+
+Each Snowflake integer used to uniquely identify entities
+on the server.
 """
 
 __all__ = ["Snowflake", "UniqueEntity"]
@@ -33,8 +35,7 @@ from hikari.core import entities
 
 @functools.total_ordering
 class Snowflake(entities.HikariEntity, typing.SupportsInt):
-    """A concrete representation of a unique identifier for an object on
-    Discord.
+    """A concrete representation of a unique identifier for an object on Discord.
 
     This object can be treated as a regular :obj:`int` for most purposes.
     """
@@ -58,17 +59,17 @@ class Snowflake(entities.HikariEntity, typing.SupportsInt):
 
     @property
     def internal_worker_id(self) -> int:
-        """The internal worker ID that created this object on Discord."""
+        """ID of the worker that created this snowflake on Discord's systems."""
         return (self._value & 0x3E0_000) >> 17
 
     @property
     def internal_process_id(self) -> int:
-        """The internal process ID that created this object on Discord."""
+        """ID of the process that created this snowflake on Discord's systems."""
         return (self._value & 0x1F_000) >> 12
 
     @property
     def increment(self) -> int:
-        """The increment of Discord's system when this object was made."""
+        """Increment of Discord's system when this object was made."""
         return self._value & 0xFFF
 
     def __hash__(self):
@@ -95,9 +96,7 @@ class Snowflake(entities.HikariEntity, typing.SupportsInt):
 
     @classmethod
     def deserialize(cls, value: str) -> "Snowflake":
-        """Take a serialized string ID and convert it into a Snowflake
-        object.
-        """
+        """Take a :obj:`str` ID and convert it into a Snowflake object."""
         return cls(value)
 
 

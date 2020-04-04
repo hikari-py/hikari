@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Components and entities that are used to describe message embeds on Discord.
-"""
+"""Components and entities that are used to describe message embeds on Discord."""
 __all__ = [
     "Embed",
     "EmbedThumbnail",
@@ -48,12 +46,12 @@ class EmbedFooter(entities.HikariEntity, entities.Deserializable, entities.Seria
     #: :type: :obj:`str`
     text: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str)
 
-    #: The url of the footer icon.
+    #: The URL of the footer icon.
     #:
     #: :type: :obj:`str`, optional
     icon_url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
 
-    #: The proxied url of the footer icon.
+    #: The proxied URL of the footer icon.
     #:
     #: :type: :obj:`str`, optional
     proxy_icon_url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
@@ -63,12 +61,12 @@ class EmbedFooter(entities.HikariEntity, entities.Deserializable, entities.Seria
 class EmbedImage(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents a embed image."""
 
-    #: The url of the image.
+    #: The URL of the image.
     #:
     #: :type: :obj:`str`, optional
     url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
 
-    #: The proxied url of the image.
+    #: The proxied URL of the image.
     #:
     #: :type: :obj:`str`, optional
     proxy_url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
@@ -88,12 +86,12 @@ class EmbedImage(entities.HikariEntity, entities.Deserializable, entities.Serial
 class EmbedThumbnail(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents a embed thumbnail."""
 
-    #: The url of the thumbnail.
+    #: The URL of the thumbnail.
     #:
     #: :type: :obj:`str`, optional
     url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
 
-    #: The proxied url of the thumbnail.
+    #: The proxied URL of the thumbnail.
     #:
     #: :type: :obj:`str`, optional
     proxy_url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
@@ -113,7 +111,7 @@ class EmbedThumbnail(entities.HikariEntity, entities.Deserializable, entities.Se
 class EmbedVideo(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents a embed video."""
 
-    #: The url of the video.
+    #: The URL of the video.
     #:
     #: :type: :obj:`str`, optional
     url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
@@ -138,7 +136,7 @@ class EmbedProvider(entities.HikariEntity, entities.Deserializable, entities.Ser
     #: :type: :obj:`str`, optional
     name: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
 
-    #: The url of the provider.
+    #: The URL of the provider.
     #:
     #: :type: :obj:`str`, optional
     url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None, if_none=None)
@@ -153,17 +151,17 @@ class EmbedAuthor(entities.HikariEntity, entities.Deserializable, entities.Seria
     #: :type: :obj:`str`, optional
     name: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
 
-    #: The url of the author.
+    #: The URL of the author.
     #:
     #: :type: :obj:`str`, optional
     url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
 
-    #: The url of the author icon.
+    #: The URL of the author icon.
     #:
     #: :type: :obj:`str`, optional
     icon_url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
 
-    #: The proxied url of the author icon.
+    #: The proxied URL of the author icon.
     #:
     #: :type: :obj:`str`, optional
     proxy_icon_url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
@@ -203,7 +201,7 @@ class Embed(entities.HikariEntity, entities.Deserializable, entities.Serializabl
     #: :type: :obj:`str`, optional
     description: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
 
-    #: The url of the embed.
+    #: The URL of the embed.
     #:
     #: :type: :obj:`str`, optional
     url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)

@@ -122,7 +122,7 @@ def completed_future(result=None, /):
     """Create a future on the current running loop that is completed, then return it.
 
     Parameters
-    ---------
+    ----------
     result : :obj:`typing.Any`
         The value to set for the result of the future.
 

@@ -128,15 +128,14 @@ def format(session) -> None:
 
 @nox.session(reuse_venv=True)
 def docstyle(session) -> None:
-    """Reformat code with Black. Pass the '--check' flag to check formatting only."""
+    """Check docstrings with pydocstyle."""
     session.install("pydocstyle")
     session.chdir(MAIN_PACKAGE_PATH)
     # add -e flag for explainations.
-    with contextlib.suppress(Exception):  # TODO: remove this once these are being fixed.
-        session.run("pydocstyle", "--config=../pydocstyle.ini")
+    session.run("pydocstyle", "--config=../pydocstyle.ini")
 
 
-@nox.session(reuse_venv=True,)
+@nox.session(reuse_venv=True)
 def lint(session) -> None:
     """Check formating with pylint"""
     session.install("-r", "requirements.txt")

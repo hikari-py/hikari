@@ -55,7 +55,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
+        event_type : :obj:`typing.Type` [ :obj:`hikari.core.events.HikariEvent` ]
             The event to register to.
         callback : ``async def callback(event: HikariEvent) -> ...``
             The event callback to invoke when this event is fired.
@@ -74,7 +74,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
+        event_type : :obj:`typing.Type` [ :obj:`hikari.core.events.HikariEvent` ]
             The type of event to remove the callback from.
         callback : ``async def callback(event: HikariEvent) -> ...``
             The event callback to invoke when this event is fired.
@@ -88,12 +88,12 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
+        event_type : :obj:`typing.Type` [ :obj:`hikari.core.events.HikariEvent` ]
             The name of the event to wait for.
         timeout : :obj:`float`, optional
             The timeout to wait for before cancelling and raising an
-            :obj:`asyncio.TimeoutError` instead. If this is `None`, this will
-            wait forever. Care must be taken if you use `None` as this may
+            :obj:`asyncio.TimeoutError` instead. If this is ``None``, this will
+            wait forever. Care must be taken if you use ``None`` as this may
             leak memory if you do this from an event listener that gets
             repeatedly called. If you want to do this, you should consider
             using an event listener instead of this function.
@@ -118,12 +118,13 @@ class EventDispatcher(abc.ABC):
         lookup, but can be implemented this way optionally if documented.
         """
 
-    def on(self, event_type: typing.Type[EventT]) -> typing.Callable[[EventCallbackT], EventCallbackT]:
-        """A decorator that is equivalent to invoking :meth:`add_listener`.
+    # Ignore docstring not starting in an imperative mood
+    def on(self, event_type: typing.Type[EventT]) -> typing.Callable[[EventCallbackT], EventCallbackT]:  # noqa: D401
+        """Returns a decorator that is equivalent to invoking :meth:`add_listener`.
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
+        event_type : :obj:`typing.Type` [ :obj:`hikari.core.events.HikariEvent` ]
             The event type to register the produced decorator to.
 
         Returns
@@ -145,7 +146,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event : :obj:`events.HikariEvent`
+        event : :obj:`hikari.core.events.HikariEvent`
             The event to dispatch.
 
         Returns
@@ -158,8 +159,7 @@ class EventDispatcher(abc.ABC):
 
 
 class EventDispatcherImpl(EventDispatcher):
-    """Handles storing and dispatching to event listeners and one-time event
-    waiters.
+    """Handles storing and dispatching to event listeners and one-time event waiters.
 
     Event listeners once registered will be stored until they are manually
     removed. Each time an event is dispatched with a matching name, they will
@@ -202,7 +202,7 @@ class EventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
+        event_type : :obj:`typing.Type` [ :obj:`hikari.core.events.HikariEvent` ]
             The event to register to.
         callback : ``async def callback(event: HikariEvent) -> ...``
             The event callback to invoke when this event is fired.
@@ -226,7 +226,7 @@ class EventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
+        event_type : :obj:`typing.Type` [ :obj:`hikari.core.events.HikariEvent` ]
             The type of event to remove the callback from.
         callback : ``async def callback(event: HikariEvent) -> ...``
             The event callback to remove.
@@ -240,12 +240,11 @@ class EventDispatcherImpl(EventDispatcher):
     # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
     # confusing telepathy comments to the user.
     def dispatch_event(self, event: events.HikariEvent):
-        """Dispatch a given event to all listeners and waiters that are
-        applicable.
+        """Dispatch a given event to all listeners and waiters that are applicable.
 
         Parameters
         ----------
-        event : :obj:`events.HikariEvent`
+        event : :obj:`hikari.core.events.HikariEvent`
             The event to dispatch.
 
         Returns
@@ -316,21 +315,22 @@ class EventDispatcherImpl(EventDispatcher):
     def handle_exception(
         self, exception: Exception, event: events.HikariEvent, callback: typing.Callable[..., typing.Awaitable[None]]
     ) -> None:
-        """Function that is passed any exception. This allows users to override
-        this with a custom implementation if desired.
+        """Handle raised exception.
+
+        This allows users to override this with a custom implementation if desired.
 
         This implementation will check to see if the event that triggered the
-        exception is an exception event. If this exceptino was caused by the
-        ``exception_event``, then nothing is dispatched (thus preventing
-        an exception handler recursively re-triggering itself). Otherwise, an
-        ``exception_event`` is dispatched with a
-        :obj:`EventExceptionContext` as the sole parameter.
+        exception is an :obj:`hikari.core.events.ExceptionEvent`. If this
+        exception was caused by the :obj:`hikari.core.events.ExceptionEvent`,
+        then nothing is dispatched (thus preventing an exception handler recursively
+        re-triggering itself). Otherwise, an :obj:`hikari.core.events.ExceptionEvent`
+        is dispatched.
 
         Parameters
         ----------
         exception: :obj:`Exception`
             The exception that triggered this call.
-        event: :obj:`events.Event`
+        event: :obj:`hikari.core.events.HikariEvent`
             The event that was being dispatched.
         callback
             The callback that threw the exception.
@@ -351,8 +351,7 @@ class EventDispatcherImpl(EventDispatcher):
     def wait_for(
         self, event_type: typing.Type[EventT], *, timeout: typing.Optional[float], predicate: PredicateT,
     ) -> more_asyncio.Future:
-        """Given an event name, wait for the event to occur once, then return
-        the arguments that accompanied the event as the result.
+        """Wait for a event to occur once and then return the arguments the event was called with.
 
         Events can be filtered using a given predicate function. If unspecified,
         the first event of the given name will be a match.
@@ -364,7 +363,7 @@ class EventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
+        event_type : :obj:`typing.Type` [ :obj:`hikari.core.events.HikariEvent` ]
             The name of the event to wait for.
         timeout : :obj:`float`, optional
             The timeout to wait for before cancelling and raising an

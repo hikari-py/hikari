@@ -43,7 +43,7 @@ def generate_cdn_url(*route_parts: str, fmt: str, size: typing.Optional[int]) ->
         The format to use for the wanted cdn entity, will usually be one of
         ``webp``, ``png``, ``jpeg``, ``jpg`` or ``gif`` (which will be invalid
         if the target entity doesn't have an animated version available).
-    size : :obj:`typing.Union` [ :obj:`int`, :obj:`None` ]
+    size : :obj:`int`, optional
         The size to specify for the image in the query string if applicable,
         should be passed through as ``None`` to avoid the param being set.
 

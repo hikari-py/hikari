@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Components and entities that are used to describe both DMs and guild
-channels on Discord.
-
+"""Components and entities that are used to describe both DMs and guild channels on Discord.
 
 .. inheritance-diagram::
     hikari.core.channels
@@ -97,25 +95,24 @@ class PermissionOverwrite(snowflakes.UniqueEntity, entities.Deserializable, enti
 
     #: The permissions this overwrite allows.
     #:
-    #: :type: :obj:`permissions.Permission`
+    #: :type: :obj:`hikari.core.permissions.Permission`
     allow: permissions.Permission = marshaller.attrib(deserializer=permissions.Permission)
 
     #: The permissions this overwrite denies.
     #:
-    #: :type: :obj:`permissions.Permission`
+    #: :type: :obj:`hikari.core.permissions.Permission`
     deny: permissions.Permission = marshaller.attrib(deserializer=permissions.Permission)
 
     @property
     def unset(self) -> permissions.Permission:
-        """Return a bitfield of all permissions not explicitly allowed or
-        denied by this overwrite.
-        """
+        """Bitfield of all permissions not explicitly allowed or denied by this overwrite."""
         return typing.cast(permissions.Permission, (self.allow | self.deny))
 
 
 def register_channel_type(type_: ChannelType) -> typing.Callable[[typing.Type["Channel"]], typing.Type["Channel"]]:
-    """Generates a decorator for channel classes defined in this library to use
-    to associate themselves with a given channel type.
+    """Generate a decorator for channel classes defined in this library.
+
+    This allows them to associate themselves with a given channel type.
 
     Parameters
     ----------
@@ -124,7 +121,7 @@ def register_channel_type(type_: ChannelType) -> typing.Callable[[typing.Type["C
 
     Returns
     -------
-    ``decorator(cls: T) -> T``
+    ``decorator``
         The decorator to decorate the class with.
     """
 
@@ -149,8 +146,9 @@ class Channel(snowflakes.UniqueEntity, entities.Deserializable):
 
 @marshaller.attrs(slots=True)
 class PartialChannel(Channel):
-    """Represents a channel where we've only received it's basic information,
-    commonly received in rest responses.
+    """Represents a channel where we've only received it's basic information.
+
+    This is commonly received in REST responses.
     """
 
     #: The channel's name.
@@ -162,7 +160,7 @@ class PartialChannel(Channel):
 @register_channel_type(ChannelType.DM)
 @marshaller.attrs(slots=True)
 class DMChannel(Channel):
-    """Represents a DM channel"""
+    """Represents a DM channel."""
 
     #: The ID of the last message sent in this channel.
     #:
@@ -170,14 +168,15 @@ class DMChannel(Channel):
     #: ----
     #: This might point to an invalid or deleted message.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #:
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     last_message_id: snowflakes.Snowflake = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_none=None
     )
 
     #: The recipients of the DM.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`users.User` ]
+    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.core.snowflakes.Snowflake`, :obj:`hikari.core.users.User` ]
     recipients: typing.Mapping[snowflakes.Snowflake, users.User] = marshaller.attrib(
         deserializer=lambda recipients: {user.id: user for user in map(users.User.deserialize, recipients)}
     )
@@ -195,7 +194,7 @@ class GroupDMChannel(DMChannel):
 
     #: The ID of the owner of the group.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`
     owner_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: The hash of the icon of the group.
@@ -206,7 +205,7 @@ class GroupDMChannel(DMChannel):
     #: The ID of the application that created the group DM, if it's a
     #: bot based group DM.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
     )
@@ -218,7 +217,7 @@ class GuildChannel(Channel):
 
     #: The ID of the guild the channel belongs to.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`
     guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: The sorting position of the channel.
@@ -228,7 +227,7 @@ class GuildChannel(Channel):
 
     #: The permission overwrites for the channel.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`PermissionOverwrite` ]
+    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.core.snowflakes.Snowflake`, :obj:`PermissionOverwrite` ]
     permission_overwrites: PermissionOverwrite = marshaller.attrib(
         deserializer=lambda overwrites: {o.id: o for o in map(PermissionOverwrite.deserialize, overwrites)}
     )
@@ -245,7 +244,7 @@ class GuildChannel(Channel):
 
     #: The ID of the parent category the channel belongs to.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     parent_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize, if_none=None)
 
 
@@ -271,7 +270,8 @@ class GuildTextChannel(GuildChannel):
     #: ----
     #: This might point to an invalid or deleted message.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #:
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     last_message_id: snowflakes.Snowflake = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_none=None
     )
@@ -306,7 +306,8 @@ class GuildNewsChannel(GuildChannel):
     #: ----
     #: This might point to an invalid or deleted message.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #:
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     last_message_id: snowflakes.Snowflake = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_none=None
     )
@@ -340,7 +341,7 @@ def deserialize_channel(payload: typing.Dict[str, typing.Any]) -> typing.Union[G
     Warning
     -------
     This can only be used to deserialize full channel objects. To deserialize a
-    partial object, use :obj:`PartialChannel.deserialize`
+    partial object, use ``PartialChannel.deserialize()``.
     """
     type_id = payload["type"]
     channel_type = register_channel_type.types[type_id]

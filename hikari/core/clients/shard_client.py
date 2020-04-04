@@ -16,9 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Provides a facade around the :obj:`hikari.net.shard.ShardConnection`
-implementation which handles parsing and initializing the object from a
-configuration, as well as restarting it if it disconnects.
+"""Provides a facade around :obj:`hikari.net.shard.ShardConnection`.
+
+This handles parsing and initializing the object from a configuration, as
+well as restarting it if it disconnects.
 
 Additional functions and coroutines are provided to update the presence on the
 shard using models defined in :mod:`hikari.core`.
@@ -74,27 +75,30 @@ class ShardState(enum.IntEnum):
 
 
 class WebsocketClientBase(abc.ABC):
-    """Base for any socket-based communication medium to provide functionality
-    for more automated control given certain method constraints.
+    """Base for any socket-based communication medium to provide more functionality.
+
+    This includes more automated control given certain method constraints.
     """
 
     logger: logging.Logger
 
+    # Ignore docstring not starting in an imperative mood
     @abc.abstractmethod
-    async def start(self):
+    async def start(self):  # noqa: D401
         """Starts the component."""
 
     @abc.abstractmethod
     async def close(self, wait: bool = True):
-        """Shuts down the component."""
+        """Shut down the component."""
 
     @abc.abstractmethod
     async def join(self):
-        """Waits for the component to terminate."""
+        """Wait for the component to terminate."""
 
     def run(self):
-        """Performs the same job as :meth:`start`, but provides additional
-        preparation such as registering OS signal handlers for interrupts,
+        """Perform the same job as :meth:`start`, but with additional preparation.
+
+        Additional preparation includes: registering OS signal handlers for interrupts
         and preparing the initial event loop.
 
         This enables the client to be run immediately without having to
@@ -134,19 +138,21 @@ class WebsocketClientBase(abc.ABC):
 
 
 class ShardClient(WebsocketClientBase):
-    """The primary interface for a single shard connection. This contains
-    several abstractions to enable usage of the low level gateway network
-    interface with the higher level constructs in :mod:`hikari.core`.
+    """The primary interface for a single shard connection.
+
+    This contains several abstractions to enable usage of the low
+    level gateway network interface with the higher level constructs
+    in :mod:`hikari.core`.
 
     Parameters
     ----------
     shard_id : :obj:`int`
         The ID of this specific shard.
-    config : :obj:`gateway_config.GatewayConfig`
+    config : :obj:`hikari.core.gateway_config.GatewayConfig`
         The gateway configuration to use to initialize this shard.
-    low_level_dispatch : :obj:`typing.Callable` [ [ :obj:`Shard`, :obj:`str`, :obj:`typing.Any` ] ]
+    low_level_dispatch : :obj:`typing.Callable` [ [ :obj:`ShardClient`, :obj:`str`, :obj:`typing.Any` ] ]
         A function that is fed any low-level event payloads. This will consist
-        of three arguments: an :obj:`Shard` which is this shard instance,
+        of three arguments: an :obj:`ShardClient` which is this shard instance,
         a :obj:`str` of the raw event name, and any naive raw payload that was
         passed with the event. The expectation is the function passed here
         will pass the payload onto any event handling and state handling system
@@ -219,28 +225,33 @@ class ShardClient(WebsocketClientBase):
 
     @property
     def client(self) -> shard.ShardConnection:
-        """
+        """Low-level gateway client used for this shard.
+
         Returns
         -------
-        :obj:`hikari.net.gateway.GatewayClient`
+        :obj:`hikari.net.shard.ShardConnection`
             The low-level gateway client used for this shard.
         """
         return self._client
 
     #: TODO: use enum
+    # Ignore docstring not starting in an imperative mood
     @property
-    def status(self) -> guilds.PresenceStatus:
-        """
+    def status(self) -> guilds.PresenceStatus:  # noqa: D401
+        """Current user status for this shard.
+
         Returns
         -------
-        :obj:`guilds.PresenceStatus`
+        :obj:`hikari.core.guilds.PresenceStatus`
             The current user status for this shard.
         """
         return self._status
 
+    # Ignore docstring not starting in an imperative mood
     @property
-    def activity(self) -> typing.Optional[gateway_entities.GatewayActivity]:
-        """
+    def activity(self) -> typing.Optional[gateway_entities.GatewayActivity]:  # noqa: D401
+        """Current activity for the user status for this shard.
+
         Returns
         -------
         :obj:`hikari.core.gateway_entities.GatewayActivity`, optional
@@ -251,7 +262,8 @@ class ShardClient(WebsocketClientBase):
 
     @property
     def idle_since(self) -> typing.Optional[datetime.datetime]:
-        """
+        """Timestamp when the user of this shard appeared to be idle.
+
         Returns
         -------
         :obj:`datetime.datetime`, optional
@@ -260,9 +272,11 @@ class ShardClient(WebsocketClientBase):
         """
         return self._idle_since
 
+    # Ignore docstring not starting in an imperative mood
     @property
-    def is_afk(self) -> bool:
-        """
+    def is_afk(self) -> bool:  # noqa: D401
+        """``True`` if the user is AFK, ``False`` otherwise.
+
         Returns
         -------
         :obj:`bool`
@@ -271,8 +285,9 @@ class ShardClient(WebsocketClientBase):
         return self._is_afk
 
     async def start(self):
-        """Connect to the gateway on this shard and schedule tasks to keep this
-        connection alive. Wait for the shard to dispatch a ``READY`` event, and
+        """Connect to the gateway on this shard and keep the connection alive.
+
+        This will wait for the shard to dispatch a ``READY`` event, and
         then return.
         """
         if self._shard_state not in (ShardState.NOT_RUNNING, ShardState.STOPPED):
@@ -406,7 +421,7 @@ class ShardClient(WebsocketClientBase):
 
         Parameters
         ----------
-        status : :obj:`guilds.PresenceStatus`
+        status : :obj:`hikari.core.guilds.PresenceStatus`
             The new status to set.
         activity : :obj:`hikari.core.gateway_entities.GatewayActivity`, optional
             The new activity to set.
