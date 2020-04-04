@@ -40,10 +40,11 @@ class WebhookType(enum.IntEnum):
 
 @marshaller.attrs(slots=True)
 class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
-    """Represents a webhook object on Discord. This is an endpoint that can have
-    messages sent to it using standard HTTP requests, which enables external
-    services that are not bots to send informational messages to specific
-    channels.
+    """Represents a webhook object on Discord.
+
+    This is an endpoint that can have messages sent to it using standard
+    HTTP requests, which enables external services that are not bots to
+    send informational messages to specific channels.
     """
 
     #: The type of the webhook.
@@ -53,14 +54,14 @@ class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
 
     #: The guild ID of the webhook.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
     )
 
     #: The channel ID this webhook is for.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`
     channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: The user that created the webhook
@@ -69,7 +70,8 @@ class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
     #: ----
     #: This will be ``None`` when getting a webhook with a token
     #:
-    #: :type: :obj:`users.User`, optional
+    #:
+    #: :type: :obj:`hikari.core.users.User`, optional
     user: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User.deserialize, if_undefined=None)
 
     #: The default name of the webhook.
@@ -87,6 +89,7 @@ class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
     #: Note
     #: ----
     #: This is only available for Incoming webhooks.
+    #:
     #:
     #: :type: :obj:`str`, optional
     token: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)

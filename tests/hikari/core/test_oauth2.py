@@ -128,10 +128,10 @@ class TestOwnGuild:
         assert own_guild_obj.my_permissions == 2147483647
 
 
-class TestOwner:
+class TestApplicationOwner:
     @pytest.fixture()
     def owner_obj(self, owner_payload):
-        return oauth2.Owner.deserialize(owner_payload)
+        return oauth2.ApplicationOwner.deserialize(owner_payload)
 
     def test_deserialize(self, owner_obj):
         assert owner_obj.username == "agent 47"
@@ -206,12 +206,12 @@ class TestApplication:
 
     def test_deserialize(self, application_information_payload, team_payload, owner_payload):
         mock_team = mock.MagicMock(oauth2.Team)
-        mock_owner = mock.MagicMock(oauth2.Owner)
+        mock_owner = mock.MagicMock(oauth2.ApplicationOwner)
         with _helpers.patch_marshal_attr(
             oauth2.Application, "team", deserializer=oauth2.Team.deserialize, return_value=mock_team
         ) as patched_team_deserializer:
             with _helpers.patch_marshal_attr(
-                oauth2.Application, "owner", deserializer=oauth2.Owner.deserialize, return_value=mock_owner
+                oauth2.Application, "owner", deserializer=oauth2.ApplicationOwner.deserialize, return_value=mock_owner
             ) as patched_owner_deserializer:
                 application_obj = oauth2.Application.deserialize(application_information_payload)
                 patched_owner_deserializer.assert_called_once_with(owner_payload)

@@ -80,7 +80,7 @@ class GatewayCloseCode(enum.IntEnum):
     UNKNOWN_OPCODE = 4001
     #: You sent an invalid payload to Discord. Don't do that!
     DECODE_ERROR = 4002
-    #: You sent Discord a payload prior to identifying.
+    #: You sent Discord a payload prior to IDENTIFYing.
     NOT_AUTHENTICATED = 4003
     #: The account token sent with your identify payload is incorrect.
     AUTHENTICATION_FAILED = 4004
@@ -92,7 +92,7 @@ class GatewayCloseCode(enum.IntEnum):
     RATE_LIMITED = 4008
     #: Your session timed out. Reconnect and start a new one.
     SESSION_TIMEOUT = 4009
-    #: You sent Discord an invalid shard when identifying.
+    #: You sent Discord an invalid shard when IDENTIFYing.
     INVALID_SHARD = 4010
     #: The session would have handled too many guilds - you are required to shard your connection in order to connect.
     SHARDING_REQUIRED = 4011

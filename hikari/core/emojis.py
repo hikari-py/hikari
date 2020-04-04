@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Components and entities that are used to describe both custom and Unicode
-emojis on Discord.
-"""
+"""Components and entities that are used to describe both custom and Unicode emojis on Discord."""
 import typing
 
 from hikari.internal import marshaller
@@ -65,7 +63,7 @@ class GuildEmoji(UnknownEmoji):
 
     #: The whitelisted role IDs to use this emoji.
     #:
-    #: :type: :obj:`typing.Set` [ :obj:`snowflakes.Snowflake` ]
+    #: :type: :obj:`typing.Set` [ :obj:`hikari.core.snowflakes.Snowflake` ]
     role_ids: typing.Set[snowflakes.Snowflake] = marshaller.attrib(
         raw_name="roles",
         deserializer=lambda roles: {snowflakes.Snowflake.deserialize(r) for r in roles},
@@ -76,11 +74,11 @@ class GuildEmoji(UnknownEmoji):
     #:
     #: Note
     #: ----
-    #: This will be ``None`` if you are missing ``MANAGE_EMOJIS``` permission
-    #: in the server the emoji is from
-    #: (<https://github.com/discordapp/discord-api-docs/issues/593#issuecomment-386477863>)
+    #: This will be ``None`` if you are missing the ``MANAGE_EMOJIS`` permission
+    #: in the server the emoji is from.
     #:
-    #: :type: :obj:`users.User`, optional
+    #:
+    #: :type: :obj:`hikari.core.users.User`, optional
     user: typing.Optional[users.User] = marshaller.attrib(
         deserializer=users.User.deserialize, if_none=None, if_undefined=None
     )

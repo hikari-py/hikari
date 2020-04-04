@@ -180,9 +180,7 @@ class RestfulClient:
         self.token = token
 
     async def close(self):
-        """Shut down the REST client safely, and terminate any rate limiters
-        executing in the background.
-        """
+        """Shut down the REST client safely, and terminate any rate limiters executing in the background."""
         with contextlib.suppress(Exception):
             self.ratelimiter.close()
         with contextlib.suppress(Exception):
@@ -363,7 +361,8 @@ class RestfulClient:
             raise errors.ServerHTTPError(status, route, message, code)
 
     async def get_gateway(self) -> str:
-        """
+        """Get the URL to use to connect to the gateway with.
+
         Returns
         -------
         :obj:`str`
@@ -377,10 +376,11 @@ class RestfulClient:
         return result["url"]
 
     async def get_gateway_bot(self) -> typing.Dict[str, typing.Any]:
-        """
+        """Get the gateway info for the bot.
+
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             An object containing a ``url`` to connect to, an :obj:`int` number of shards recommended to use
             for connecting, and a ``session_start_limit`` object.
 
@@ -409,7 +409,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             An audit log object.
 
         Raises
@@ -436,7 +436,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The channel object that has been found.
 
         Raises
@@ -496,7 +496,7 @@ class RestfulClient:
             If specified, the new max number of users to allow in a voice channel.
             This must be between ``0`` and ``99`` inclusive, where
             ``0`` implies no limit.
-        permission_overwrites : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        permission_overwrites : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             If specified, the new list of permission overwrites that are category
             specific to replace the existing overwrites with.
         parent_id : :obj:`str`
@@ -507,7 +507,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The channel object that has been modified.
 
         Raises
@@ -565,6 +565,7 @@ class RestfulClient:
         self, channel_id: str, *, limit: int = ..., after: str = ..., before: str = ..., around: str = ...,
     ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
         """Retrieve message history for a given channel.
+
         If a user is provided, retrieve the DM history.
 
         Parameters
@@ -584,7 +585,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of message objects.
 
         Raises
@@ -630,7 +631,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             A message object.
 
         Note
@@ -677,15 +678,15 @@ class RestfulClient:
             Each tuple should consist of the file name, and either
             raw :obj:`bytes` or an :obj:`io.IOBase` derived object with
             a seek that points to a buffer containing said file.
-        embed : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        embed : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             If specified, the embed to send with the message.
-        allowed_mentions : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        allowed_mentions : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             If specified, the mentions to parse from the ``content``.
             If not specified, will parse all mentions from the ``content``.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The created message object.
 
         Raises
@@ -831,8 +832,7 @@ class RestfulClient:
     async def get_reactions(
         self, channel_id: str, message_id: str, emoji: str, *, after: str = ..., limit: int = ...,
     ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
-        """Get a list of users who reacted with the given emoji on
-        the given message in the given channel or user DM.
+        """Get a list of users who reacted with the given emoji on the given message.
 
         Parameters
         ----------
@@ -854,7 +854,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of user objects.
 
         Raises
@@ -871,7 +871,7 @@ class RestfulClient:
         return await self._request(route, query=query)
 
     async def delete_all_reactions(self, channel_id: str, message_id: str) -> None:
-        """Deletes all reactions from a given message in a given channel.
+        """Delete all reactions from a given message in a given channel.
 
         Parameters
         ----------
@@ -910,7 +910,7 @@ class RestfulClient:
         content : :obj:`str`, optional
             If specified, the string content to replace with in the message.
             If ``None``, the content will be removed from the message.
-        embed : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`, optional
+        embed : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ], optional
             If specified, the embed to replace with in the message.
             If ``None``, the embed will be removed from the message.
         flags : :obj:`int`
@@ -918,7 +918,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The edited message object.
 
         Raises
@@ -1048,7 +1048,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of invite objects.
 
         Raises
@@ -1101,7 +1101,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             An invite object.
 
         Raises
@@ -1172,7 +1172,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of messages.
 
         Raises
@@ -1233,7 +1233,7 @@ class RestfulClient:
         await self._request(route)
 
     async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
-        """Gets emojis for a given guild ID.
+        """Get a list of the emojis for a given guild ID.
 
         Parameters
         ----------
@@ -1242,7 +1242,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of emoji objects.
 
         Raises
@@ -1256,7 +1256,7 @@ class RestfulClient:
         return await self._request(route)
 
     async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> typing.Dict[str, typing.Any]:
-        """Gets an emoji from a given guild and emoji IDs.
+        """Get an emoji from a given guild and emoji IDs.
 
         Parameters
         ----------
@@ -1267,7 +1267,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             An emoji object.
 
         Raises
@@ -1283,7 +1283,7 @@ class RestfulClient:
     async def create_guild_emoji(
         self, guild_id: str, name: str, image: bytes, *, roles: typing.Sequence[str] = ..., reason: str = ...,
     ) -> typing.Dict[str, typing.Any]:
-        """Creates a new emoji for a given guild.
+        """Create a new emoji for a given guild.
 
         Parameters
         ----------
@@ -1302,7 +1302,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The newly created emoji object.
 
         Raises
@@ -1328,7 +1328,7 @@ class RestfulClient:
     async def modify_guild_emoji(
         self, guild_id: str, emoji_id: str, *, name: str = ..., roles: typing.Sequence[str] = ..., reason: str = ...,
     ) -> typing.Dict[str, typing.Any]:
-        """Edits an emoji of a given guild
+        """Edit an emoji of a given guild.
 
         Parameters
         ----------
@@ -1348,7 +1348,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The updated emoji object.
 
         Raises
@@ -1365,7 +1365,7 @@ class RestfulClient:
         return await self._request(route, json_body=payload, reason=reason)
 
     async def delete_guild_emoji(self, guild_id: str, emoji_id: str) -> None:
-        """Deletes an emoji from a given guild
+        """Delete an emoji from a given guild.
 
         Parameters
         ----------
@@ -1396,7 +1396,11 @@ class RestfulClient:
         roles: typing.Sequence[typing.Dict[str, typing.Any]] = ...,
         channels: typing.Sequence[typing.Dict[str, typing.Any]] = ...,
     ) -> typing.Dict[str, typing.Any]:
-        """Creates a new guild. Can only be used by bots in less than ``10`` guilds.
+        """Create a new guild.
+
+        Warning
+        -------
+        Can only be used by bots in less than ``10`` guilds.
 
         Parameters
         ----------
@@ -1413,15 +1417,15 @@ class RestfulClient:
             If specified, the default notification level integer (``0-1``).
         explicit_content_filter : :obj:`int`
             If specified, the explicit content filter integer (``0-2``).
-        roles : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        roles : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             If specified, an array of role objects to be created alongside the
             guild. First element changes the ``@everyone`` role.
-        channels : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        channels : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             If specified, an array of channel objects to be created alongside the guild.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The newly created guild object.
 
         Raises
@@ -1443,7 +1447,7 @@ class RestfulClient:
         return await self._request(route, json_body=payload)
 
     async def get_guild(self, guild_id: str) -> typing.Dict[str, typing.Any]:
-        """Gets a given guild's object.
+        """Get a given guild's object.
 
         Parameters
         ----------
@@ -1452,7 +1456,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The requested guild object.
 
         Raises
@@ -1483,7 +1487,7 @@ class RestfulClient:
         system_channel_id: str = ...,
         reason: str = ...,
     ) -> typing.Dict[str, typing.Any]:
-        """Edits a given guild.
+        """Edit a given guild.
 
         Parameters
         ----------
@@ -1518,7 +1522,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The edited guild object.
 
         Raises
@@ -1546,7 +1550,7 @@ class RestfulClient:
     # pylint: enable=too-many-locals
 
     async def delete_guild(self, guild_id: str) -> None:
-        """Permanently deletes the given guild.
+        """Permanently delete the given guild.
 
         You must be owner of the guild to perform this action.
 
@@ -1566,7 +1570,7 @@ class RestfulClient:
         await self._request(route)
 
     async def get_guild_channels(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
-        """Gets all the channels for a given guild.
+        """Get all the channels for a given guild.
 
         Parameters
         ----------
@@ -1575,7 +1579,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of channel objects.
 
         Raises
@@ -1604,7 +1608,7 @@ class RestfulClient:
         parent_id: str = ...,
         reason: str = ...,
     ) -> typing.Dict[str, typing.Any]:
-        """Creates a channel in a given guild.
+        """Create a channel in a given guild.
 
         Parameters
         ----------
@@ -1638,7 +1642,7 @@ class RestfulClient:
             If specified, the max number of users to allow in a voice channel.
             This must be between ``0`` and ``99`` inclusive, where
             ``0`` implies no limit.
-        permission_overwrites : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        permission_overwrites : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             If specified, the list of permission overwrites that are category
             specific to replace the existing overwrites with.
         parent_id : :obj:`str`
@@ -1649,7 +1653,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The newly created channel object.
 
         Raises
@@ -1679,7 +1683,7 @@ class RestfulClient:
     async def modify_guild_channel_positions(
         self, guild_id: str, channel: typing.Tuple[str, int], *channels: typing.Tuple[str, int]
     ) -> None:
-        """Edits the position of one or more given channels.
+        """Edit the position of one or more given channels.
 
         Parameters
         ----------
@@ -1706,7 +1710,7 @@ class RestfulClient:
         await self._request(route, json_body=payload)
 
     async def get_guild_member(self, guild_id: str, user_id: str) -> typing.Dict[str, typing.Any]:
-        """Gets a given guild member.
+        """Get a given guild member.
 
         Parameters
         ----------
@@ -1717,7 +1721,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The requested member object.
 
         Raises
@@ -1733,7 +1737,7 @@ class RestfulClient:
     async def list_guild_members(
         self, guild_id: str, *, limit: int = ..., after: str = ...,
     ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
-        """Lists all members of a given guild.
+        """List all members of a given guild.
 
         Parameters
         ----------
@@ -1764,7 +1768,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             A list of member objects.
 
         Raises
@@ -1794,7 +1798,7 @@ class RestfulClient:
         channel_id: typing.Optional[str] = ...,
         reason: str = ...,
     ) -> None:
-        """Edits a member of a given guild.
+        """Edit a member of a given guild.
 
         Parameters
         ----------
@@ -1840,7 +1844,7 @@ class RestfulClient:
         await self._request(route, json_body=payload, reason=reason)
 
     async def modify_current_user_nick(self, guild_id: str, nick: typing.Optional[str], *, reason: str = ...,) -> None:
-        """Edits the current user's nickname for a given guild.
+        """Edit the current user's nickname for a given guild.
 
         Parameters
         ----------
@@ -1866,7 +1870,7 @@ class RestfulClient:
         await self._request(route, json_body=payload, reason=reason)
 
     async def add_guild_member_role(self, guild_id: str, user_id: str, role_id: str, *, reason: str = ...,) -> None:
-        """Adds a role to a given member.
+        """Add a role to a given member.
 
         Parameters
         ----------
@@ -1891,7 +1895,7 @@ class RestfulClient:
         await self._request(route, reason=reason)
 
     async def remove_guild_member_role(self, guild_id: str, user_id: str, role_id: str, *, reason: str = ...,) -> None:
-        """Removed a role from a given member.
+        """Remove a role from a given member.
 
         Parameters
         ----------
@@ -1916,7 +1920,7 @@ class RestfulClient:
         await self._request(route, reason=reason)
 
     async def remove_guild_member(self, guild_id: str, user_id: str, *, reason: str = ...,) -> None:
-        """Kicks a user from a given guild.
+        """Kick a user from a given guild.
 
         Parameters
         ----------
@@ -1939,7 +1943,7 @@ class RestfulClient:
         await self._request(route, reason=reason)
 
     async def get_guild_bans(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
-        """Gets the bans for a given guild.
+        """Get the bans for a given guild.
 
         Parameters
         ----------
@@ -1948,7 +1952,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of ban objects.
 
         Raises
@@ -1962,7 +1966,7 @@ class RestfulClient:
         return await self._request(route)
 
     async def get_guild_ban(self, guild_id: str, user_id: str) -> typing.Dict[str, typing.Any]:
-        """Gets a ban from a given guild.
+        """Get a ban from a given guild.
 
         Parameters
         ----------
@@ -1973,7 +1977,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             A ban object for the requested user.
 
         Raises
@@ -1989,7 +1993,7 @@ class RestfulClient:
     async def create_guild_ban(
         self, guild_id: str, user_id: str, *, delete_message_days: int = ..., reason: str = ...,
     ) -> None:
-        """Bans a user from a given guild.
+        """Ban a user from a given guild.
 
         Parameters
         ----------
@@ -2041,7 +2045,7 @@ class RestfulClient:
         await self._request(route, reason=reason)
 
     async def get_guild_roles(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
-        """Gets the roles for a given guild.
+        """Get the roles for a given guild.
 
         Parameters
         ----------
@@ -2050,7 +2054,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of role objects.
 
         Raises
@@ -2074,7 +2078,7 @@ class RestfulClient:
         mentionable: bool = ...,
         reason: str = ...,
     ) -> typing.Dict[str, typing.Any]:
-        """Creates a new role for a given guild.
+        """Create a new role for a given guild.
 
         Parameters
         ----------
@@ -2096,7 +2100,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The newly created role object.
 
         Raises
@@ -2120,7 +2124,7 @@ class RestfulClient:
     async def modify_guild_role_positions(
         self, guild_id: str, role: typing.Tuple[str, int], *roles: typing.Tuple[str, int]
     ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
-        """Edits the position of two or more roles in a given guild.
+        """Edit the position of two or more roles in a given guild.
 
         Parameters
         ----------
@@ -2133,7 +2137,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of all the guild roles.
 
         Raises
@@ -2185,7 +2189,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The edited role object.
 
         Raises
@@ -2207,7 +2211,7 @@ class RestfulClient:
         return await self._request(route, json_body=payload, reason=reason)
 
     async def delete_guild_role(self, guild_id: str, role_id: str) -> None:
-        """Deletes a role from a given guild.
+        """Delete a role from a given guild.
 
         Parameters
         ----------
@@ -2227,7 +2231,7 @@ class RestfulClient:
         await self._request(route)
 
     async def get_guild_prune_count(self, guild_id: str, days: int) -> int:
-        """Gets the estimated prune count for a given guild.
+        """Get the estimated prune count for a given guild.
 
         Parameters
         ----------
@@ -2258,7 +2262,7 @@ class RestfulClient:
     async def begin_guild_prune(
         self, guild_id: str, days: int, *, compute_prune_count: bool = ..., reason: str = ...,
     ) -> typing.Optional[int]:
-        """Prunes members of a given guild based on the number of inactive days.
+        """Prune members of a given guild based on the number of inactive days.
 
         Parameters
         ----------
@@ -2299,7 +2303,7 @@ class RestfulClient:
             return None
 
     async def get_guild_voice_regions(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
-        """Gets the voice regions for a given guild.
+        """Get the voice regions for a given guild.
 
         Parameters
         ----------
@@ -2308,7 +2312,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of voice region objects.
 
         Raises
@@ -2322,7 +2326,7 @@ class RestfulClient:
         return await self._request(route)
 
     async def get_guild_invites(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
-        """Gets the invites for a given guild.
+        """Get the invites for a given guild.
 
         Parameters
         ----------
@@ -2331,7 +2335,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of invite objects (with metadata).
 
         Raises
@@ -2345,7 +2349,7 @@ class RestfulClient:
         return await self._request(route)
 
     async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
-        """Gets the integrations for a given guild.
+        """Get the integrations for a given guild.
 
         Parameters
         ----------
@@ -2354,7 +2358,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of integration objects.
 
         Raises
@@ -2370,7 +2374,7 @@ class RestfulClient:
     async def create_guild_integration(
         self, guild_id: str, type_: str, integration_id: str, *, reason: str = ...,
     ) -> typing.Dict[str, typing.Any]:
-        """Creates an integrations for a given guild.
+        """Create an integrations for a given guild.
 
         Parameters
         ----------
@@ -2386,7 +2390,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The newly created integration object.
 
         Raises
@@ -2410,7 +2414,7 @@ class RestfulClient:
         enable_emojis: bool = ...,
         reason: str = ...,
     ) -> None:
-        """Edits an integrations for a given guild.
+        """Edit an integrations for a given guild.
 
         Parameters
         ----------
@@ -2446,7 +2450,7 @@ class RestfulClient:
         await self._request(route, json_body=payload, reason=reason)
 
     async def delete_guild_integration(self, guild_id: str, integration_id: str, *, reason: str = ...,) -> None:
-        """Deletes an integration for the given guild.
+        """Delete an integration for the given guild.
 
         Parameters
         ----------
@@ -2469,7 +2473,7 @@ class RestfulClient:
         await self._request(route, reason=reason)
 
     async def sync_guild_integration(self, guild_id: str, integration_id: str) -> None:
-        """Syncs the given integration.
+        """Sync the given integration.
 
         Parameters
         ----------
@@ -2489,7 +2493,7 @@ class RestfulClient:
         await self._request(route)
 
     async def get_guild_embed(self, guild_id: str) -> typing.Dict[str, typing.Any]:
-        """Gets the embed for a given guild.
+        """Get the embed for a given guild.
 
         Parameters
         ----------
@@ -2498,7 +2502,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             A guild embed object.
 
         Raises
@@ -2514,13 +2518,13 @@ class RestfulClient:
     async def modify_guild_embed(
         self, guild_id: str, embed: typing.Dict[str, typing.Any], *, reason: str = ...,
     ) -> typing.Dict[str, typing.Any]:
-        """Edits the embed for a given guild.
+        """Edit the embed for a given guild.
 
         Parameters
         ----------
         guild_id : :obj:`str`
             The ID of the guild to edit the embed for.
-        embed : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        embed : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The new embed object to be set.
         reason : :obj:`str`
             If specified, the audit log reason explaining why the operation
@@ -2528,7 +2532,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The updated embed object.
 
         Raises
@@ -2542,8 +2546,7 @@ class RestfulClient:
         return await self._request(route, json_body=embed, reason=reason)
 
     async def get_guild_vanity_url(self, guild_id: str) -> typing.Dict[str, typing.Any]:
-        """
-        Gets the vanity URL for a given guild.
+        """Get the vanity URL for a given guild.
 
         Parameters
         ----------
@@ -2552,7 +2555,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             A partial invite object containing the vanity URL in the ``code`` field.
 
         Raises
@@ -2593,7 +2596,7 @@ class RestfulClient:
         return f"{self.base_url}/guilds/{guild_id}/widget.png" + query
 
     async def get_invite(self, invite_code: str, *, with_counts: bool = ...) -> typing.Dict[str, typing.Any]:
-        """Gets the given invite.
+        """Getsthe given invite.
 
         Parameters
         ----------
@@ -2605,7 +2608,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The requested invite object.
 
         Raises
@@ -2619,7 +2622,7 @@ class RestfulClient:
         return await self._request(route, query=query)
 
     async def delete_invite(self, invite_code: str) -> None:
-        """Deletes a given invite.
+        """Delete a given invite.
 
         Parameters
         ----------
@@ -2644,18 +2647,18 @@ class RestfulClient:
         return await self._request(route)
 
     async def get_current_user(self) -> typing.Dict[str, typing.Any]:
-        """Gets the current user that is represented by token given to the client.
+        """Get the current user that is represented by token given to the client.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The current user object.
         """
         route = routes.OWN_USER.compile(self.GET)
         return await self._request(route)
 
     async def get_user(self, user_id: str) -> typing.Dict[str, typing.Any]:
-        """Gets a given user.
+        """Get a given user.
 
         Parameters
         ----------
@@ -2664,7 +2667,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The requested user object.
 
         Raises
@@ -2678,7 +2681,7 @@ class RestfulClient:
     async def modify_current_user(
         self, *, username: str = ..., avatar: typing.Optional[bytes] = ...,
     ) -> typing.Dict[str, typing.Any]:
-        """Edits the current user.
+        """Edit the current user.
 
         Parameters
         ----------
@@ -2690,7 +2693,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The updated user object.
 
         Raises
@@ -2705,15 +2708,15 @@ class RestfulClient:
         return await self._request(route, json_body=payload)
 
     async def get_current_user_connections(self) -> typing.Sequence[typing.Dict[str, typing.Any]]:
-        """
-        Gets the current user's connections. This endpoint can be
-        used with both ``Bearer`` and ``Bot`` tokens but will usually return an
-        empty list for bots (with there being some exceptions to this, like
-        user accounts that have been converted to bots).
+        """Get the current user's connections.
+
+        This endpoint can be used with both ``Bearer`` and ``Bot`` tokens but
+        will usually return an empty list for bots (with there being some exceptions
+        to this, like user accounts that have been converted to bots).
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of connection objects.
         """
         route = routes.OWN_CONNECTIONS.compile(self.GET)
@@ -2722,7 +2725,7 @@ class RestfulClient:
     async def get_current_user_guilds(
         self, *, before: str = ..., after: str = ..., limit: int = ...,
     ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
-        """Gets the guilds the current user is in.
+        """Get the guilds the current user is in.
 
         Parameters
         ----------
@@ -2738,7 +2741,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of partial guild objects.
 
         Raises
@@ -2755,7 +2758,7 @@ class RestfulClient:
         return await self._request(route, query=query)
 
     async def leave_guild(self, guild_id: str) -> None:
-        """Makes the current user leave a given guild.
+        """Make the current user leave a given guild.
 
         Parameters
         ----------
@@ -2771,7 +2774,7 @@ class RestfulClient:
         await self._request(route)
 
     async def create_dm(self, recipient_id: str) -> typing.Dict[str, typing.Any]:
-        """Creates a new DM channel with a given user.
+        """Create a new DM channel with a given user.
 
         Parameters
         ----------
@@ -2780,7 +2783,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The newly created DM channel object.
 
         Raises
@@ -2797,7 +2800,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of voice regions available
 
         Note
@@ -2810,8 +2813,7 @@ class RestfulClient:
     async def create_webhook(
         self, channel_id: str, name: str, *, avatar: bytes = ..., reason: str = ...,
     ) -> typing.Dict[str, typing.Any]:
-        """
-        Creates a webhook for a given channel.
+        """Create a webhook for a given channel.
 
         Parameters
         ----------
@@ -2827,7 +2829,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The newly created webhook object.
 
         Raises
@@ -2846,7 +2848,7 @@ class RestfulClient:
         return await self._request(route, json_body=payload, reason=reason)
 
     async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
-        """Gets all webhooks from a given channel.
+        """Get all webhooks from a given channel.
 
         Parameters
         ----------
@@ -2855,7 +2857,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of webhook objects for the give channel.
 
         Raises
@@ -2870,7 +2872,7 @@ class RestfulClient:
         return await self._request(route)
 
     async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
-        """Gets all webhooks for a given guild.
+        """Get all webhooks for a given guild.
 
         Parameters
         ----------
@@ -2879,7 +2881,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]` ]
+        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
             A list of webhook objects for the given guild.
 
         Raises
@@ -2894,7 +2896,7 @@ class RestfulClient:
         return await self._request(route)
 
     async def get_webhook(self, webhook_id: str, *, webhook_token: str = ...) -> typing.Dict[str, typing.Any]:
-        """Gets a given webhook.
+        """Get a given webhook.
 
         Parameters
         ----------
@@ -2905,7 +2907,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The requested webhook object.
 
         Raises
@@ -2934,7 +2936,7 @@ class RestfulClient:
         channel_id: str = ...,
         reason: str = ...,
     ) -> typing.Dict[str, typing.Any]:
-        """Edits a given webhook.
+        """Edit a given webhook.
 
         Parameters
         ----------
@@ -2956,7 +2958,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             The updated webhook object.
 
         Raises
@@ -2982,7 +2984,7 @@ class RestfulClient:
         )
 
     async def delete_webhook(self, webhook_id: str, *, webhook_token: str = ...) -> None:
-        """Deletes a given webhook.
+        """Delete a given webhook.
 
         Parameters
         ----------
@@ -3000,7 +3002,7 @@ class RestfulClient:
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             aren't a member of the guild this webhook belongs to.
         :obj:`hikari.net.errors.UnauthorizedHTTPError`
-                If you pass a token that's invalid for the target webhook.
+            If you pass a token that's invalid for the target webhook.
         """
         if webhook_token is ...:
             route = routes.WEBHOOK.compile(self.DELETE, webhook_id=webhook_id)
@@ -3043,14 +3045,14 @@ class RestfulClient:
         wait : :obj:`bool`
             If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
-        file : :obj:`typing.Tuple` [ :obj:`str`, :obj:`storage.FileLikeT` ]
+        file : :obj:`typing.Tuple` [ :obj:`str`, :obj:`hikari.internal.conversions.FileLikeT` ]
             If specified, a tuple of the file name and either raw :obj:`bytes`
             or a :obj:`io.IOBase` derived object that points to a buffer
             containing said file.
-        embeds : :obj:`typing.Sequence` [:obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`]
+        embeds : :obj:`typing.Sequence` [:obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]]
             If specified, the sequence of embed objects that will be sent
             with this message.
-        allowed_mentions : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        allowed_mentions : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             If specified, the mentions to parse from the ``content``.
             If not specified, will parse all mentions from the ``content``.
 
@@ -3073,7 +3075,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`hikari.internal.typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`, optional
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ], optional
             The created message object if ``wait`` is ``True``, else ``None``.
         """
         form = aiohttp.FormData()
@@ -3117,7 +3119,7 @@ class RestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]`
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
             An application info object.
         """
         route = routes.OAUTH2_APPLICATIONS_ME.compile(self.GET)

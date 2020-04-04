@@ -16,8 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Components and entities that are used to describe guilds on Discord.
-"""
+"""Components and entities that are used to describe guilds on Discord."""
 __all__ = [
     "ActivityFlag",
     "ActivityType",
@@ -157,8 +156,7 @@ class GuildSystemChannelFlag(enum.IntFlag):
 
 @enum.unique
 class GuildVerificationLevel(enum.IntEnum):
-    """Represents the level of verification a user needs to provide for their
-    account before being allowed to participate in a guild."""
+    """Represents the level of verification of a guild."""
 
     #: Unrestricted
     NONE = 0
@@ -180,10 +178,10 @@ class GuildVerificationLevel(enum.IntEnum):
 class GuildMember(entities.HikariEntity, entities.Deserializable):
     """Used to represent a guild bound member."""
 
-    #: This member's user object, will be :obj:`None` when attached to Message
+    #: This member's user object, will be ``None`` when attached to Message
     #: Create and Update gateway events.
     #:
-    #: :type: :obj:`users.User`, optional
+    #: :type: :obj:`hikari.core.users.User`, optional
     user: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User.deserialize, if_undefined=None)
 
     #: This member's nickname, if set.
@@ -195,7 +193,7 @@ class GuildMember(entities.HikariEntity, entities.Deserializable):
 
     #: A sequence of the IDs of the member's current roles.
     #:
-    #: :type: :obj:`typing.Sequence` [ :obj:`snowflakes.Snowflake` ]
+    #: :type: :obj:`typing.Sequence` [ :obj:`hikari.core.snowflakes.Snowflake` ]
     role_ids: typing.Sequence[snowflakes.Snowflake] = marshaller.attrib(
         raw_name="roles", deserializer=lambda role_ids: [snowflakes.Snowflake.deserialize(rid) for rid in role_ids],
     )
@@ -241,7 +239,7 @@ class GuildRole(PartialGuildRole):
     #: The colour of this role, will be applied to a member's name in chat
     #: if it's their top coloured role.
     #:
-    #: :type: :obj:`colors.Color`
+    #: :type: :obj:`hikari.core.colors.Color`
     color: colors.Color = marshaller.attrib(deserializer=colors.Color)
 
     #: Whether this role is hoisting the members it's attached to in the member
@@ -259,7 +257,7 @@ class GuildRole(PartialGuildRole):
     #: The guild wide permissions this role gives to the members it's attached
     #: to, may be overridden by channel overwrites.
     #:
-    #: :type: :obj:`_permissions.Permission`
+    #: :type: :obj:`hikari.core.permissions.Permission`
     permissions: _permissions.Permission = marshaller.attrib(deserializer=_permissions.Permission)
 
     #: Whether this role is managed by an integration.
@@ -276,16 +274,14 @@ class GuildRole(PartialGuildRole):
 
 @enum.unique
 class ActivityType(enum.IntEnum):
-    """
-    The activity state.
-    """
+    """The activity type."""
 
     #: Shows up as ``Playing <name>``
     PLAYING = 0
     #: Shows up as ``Streaming <name>``.
     #:
-    #: Warnings
-    #: --------
+    #: Warning
+    #: -------
     #: Corresponding presences must be associated with VALID Twitch or YouTube
     #: stream URLS!
     STREAMING = 1
@@ -336,14 +332,15 @@ class ActivityParty(entities.HikariEntity, entities.Deserializable):
         raw_name="size", deserializer=tuple, if_undefined=None,
     )
 
+    # Ignore docstring not starting in an imperative mood
     @property
-    def current_size(self) -> typing.Optional[int]:
-        """The current size of this party, if applicable."""
+    def current_size(self) -> typing.Optional[int]:  # noqa: D401
+        """Current size of this party, if applicable."""
         return self._size_information[0] if self._size_information else None
 
     @property
     def max_size(self) -> typing.Optional[int]:
-        """The maximum size of this party, if applicable"""
+        """Maximum size of this party, if applicable."""
         return self._size_information[1] if self._size_information else None
 
 
@@ -393,9 +390,9 @@ class ActivitySecret(entities.HikariEntity, entities.Deserializable):
 
 
 class ActivityFlag(enum.IntFlag):
-    """
-    Flags that describe what an activity includes,
-    can be more than one using bitwise-combinations.
+    """Flags that describe what an activity includes.
+
+    This can be more than one using bitwise-combinations.
     """
 
     INSTANCE = 1 << 0
@@ -420,9 +417,9 @@ class PresenceActivity(entities.HikariEntity, entities.Deserializable):
     #: :type: :obj:`ActivityType`
     type: ActivityType = marshaller.attrib(deserializer=ActivityType)
 
-    #: The url for a ``STREAM` type activity, if applicable
+    #: The URL for a ``STREAM`` type activity, if applicable.
     #:
-    #: :type: :obj:`url`, optional
+    #: :type: :obj:`str`, optional
     url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None)
 
     #: When this activity was added to the user's session.
@@ -440,7 +437,7 @@ class PresenceActivity(entities.HikariEntity, entities.Deserializable):
 
     #: The ID of the application this activity is for, if applicable.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
     )
@@ -457,7 +454,7 @@ class PresenceActivity(entities.HikariEntity, entities.Deserializable):
 
     #: The emoji of this activity, if it is a custom status and set.
     #:
-    #: :type: :obj:`typing.Union` [ :obj:`_emojis.UnicodeEmoji`, :obj:`_emojis.UnknownEmoji` ], optional
+    #: :type: :obj:`typing.Union` [ :obj:`hikari.core.emojis.UnicodeEmoji`, :obj:`hikari.core.emojis.UnknownEmoji` ], optional
     emoji: typing.Union[None, _emojis.UnicodeEmoji, _emojis.UnknownEmoji] = marshaller.attrib(
         deserializer=_emojis.deserialize_reaction_emoji, if_undefined=None
     )
@@ -535,37 +532,37 @@ class PresenceUser(users.User):
 
     Warnings
     --------
-    Every attribute except :attr:`id` may be received as :obj:`entities.UNSET`
+    Every attribute except :attr:`id` may be received as :obj:`hikari.core.entities.UNSET`
     unless it is specifically being modified for this update.
     """
 
     #: This user's discriminator.
     #:
-    #: :type: :obj:`typing.Union` [ :obj:`str`, `entities.UNSET` ]
+    #: :type: :obj:`typing.Union` [ :obj:`str`, :obj:`hikari.core.entities.UNSET` ]
     discriminator: typing.Union[str, entities.Unset] = marshaller.attrib(deserializer=str, if_undefined=entities.Unset)
 
     #: This user's username.
     #:
-    #: :type: :obj:`typing.Union` [ :obj:`str`, `entities.UNSET` ]
+    #: :type: :obj:`typing.Union` [ :obj:`str`, :obj:`hikari.core.entities.UNSET` ]
     username: typing.Union[str, entities.Unset] = marshaller.attrib(deserializer=str, if_undefined=entities.Unset)
 
     #: This user's avatar hash, if set.
     #:
-    #: :type: :obj:`typing.Union` [ :obj:`str`, `entities.UNSET` ], optional
+    #: :type: :obj:`typing.Union` [ :obj:`str`, :obj:`hikari.core.entities.UNSET` ], optional
     avatar_hash: typing.Union[None, str, entities.Unset] = marshaller.attrib(
         raw_name="avatar", deserializer=str, if_none=None, if_undefined=entities.Unset
     )
 
     #: Whether this user is a bot account.
     #:
-    #: :type:  :obj:`typing.Union` [ :obj:`bool`, `entities.UNSET` ]
+    #: :type:  :obj:`typing.Union` [ :obj:`bool`, :obj:`hikari.core.entities.UNSET` ]
     is_bot: typing.Union[bool, entities.Unset] = marshaller.attrib(
         raw_name="bot", deserializer=bool, if_undefined=entities.Unset
     )
 
     #: Whether this user is a system account.
     #:
-    #: :type:  :obj:`typing.Union` [ :obj:`bool`, `entities.UNSET` ]
+    #: :type:  :obj:`typing.Union` [ :obj:`bool`, :obj:`hikari.core.entities.UNSET` ]
     is_system: typing.Union[bool, entities.Unset] = marshaller.attrib(
         raw_name="system", deserializer=bool, if_undefined=entities.Unset,
     )
@@ -585,14 +582,14 @@ class GuildMemberPresence(entities.HikariEntity, entities.Deserializable):
     #: A sequence of the ids of the user's current roles in the guild this
     #: presence belongs to.
     #:
-    #: :type: :obj:`typing.Sequence` [ :obj:`snowflakes.Snowflake` ]
+    #: :type: :obj:`typing.Sequence` [ :obj:`hikari.core.snowflakes.Snowflake` ]
     role_ids: typing.Sequence[snowflakes.Snowflake] = marshaller.attrib(
         raw_name="roles", deserializer=lambda roles: [snowflakes.Snowflake.deserialize(rid) for rid in roles],
     )
 
     #: The ID of the guild this presence belongs to.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`
     guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: This user's current status being displayed by the client.
@@ -688,7 +685,7 @@ class GuildIntegration(snowflakes.UniqueEntity, entities.Deserializable):
 
     #: The ID of the managed role used for this integration's subscribers.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`
     role_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: Whether users under this integration are allowed to use it's custom
@@ -737,30 +734,31 @@ class GuildMemberBan(entities.HikariEntity, entities.Deserializable):
 
     #: The object of the user this ban targets.
     #:
-    #: :type: :obj:`users.User`
+    #: :type: :obj:`hikari.core.users.User`
     user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
 
 
 @marshaller.attrs(slots=True)
 class UnavailableGuild(snowflakes.UniqueEntity, entities.Deserializable):
-    """An unavailable guild object, received during gateway events such as
-    the "Ready".
+    """An unavailable guild object, received during gateway events such as READY.
+
     An unavailable guild cannot be interacted with, and most information may
     be outdated if that is the case.
     """
 
+    # Ignore docstring not starting in an imperative mood
     @property
-    def is_unavailable(self) -> bool:
-        """
-        Whether this guild is unavailable or not, should always be :obj:`True`.
+    def is_unavailable(self) -> bool:  # noqa: D401
+        """``True`` if this guild is unavailable, or ``False`` if it is available.
+
+        This value is always ``True``, and is only provided for consistency.
         """
         return True
 
 
 @marshaller.attrs(slots=True)
 class PartialGuild(snowflakes.UniqueEntity, entities.Deserializable):
-    """This is a base object for any partial guild objects returned by the api
-    where we are only given limited information."""
+    """Base object for any partial guild objects."""
 
     #: The name of the guild.
     #:
@@ -780,22 +778,22 @@ class PartialGuild(snowflakes.UniqueEntity, entities.Deserializable):
     )
 
     def format_icon_url(self, fmt: typing.Optional[str] = None, size: int = 2048) -> typing.Optional[str]:
-        """Generate the url for this guild's custom icon, if set.
+        """Generate the URL for this guild's custom icon, if set.
 
         Parameters
         ----------
         fmt : :obj:`str`
-            The format to use for this url, defaults to ``png`` or ``gif``.
+            The format to use for this URL, defaults to ``png`` or ``gif``.
             Supports ``png``, ``jpeg``, `jpg`, ``webp`` and ``gif`` (when
             animated).
         size : :obj:`int`
-            The size to set for the url, defaults to ``2048``.
+            The size to set for the URL, defaults to ``2048``.
             Can be any power of two between 16 and 2048.
 
         Returns
         -------
         :obj:`str`, optional
-            The string url.
+            The string URL.
         """
         if self.icon_hash:
             if fmt is None and self.icon_hash.startswith("a_"):
@@ -807,7 +805,7 @@ class PartialGuild(snowflakes.UniqueEntity, entities.Deserializable):
 
     @property
     def icon_url(self) -> typing.Optional[str]:
-        """The url for this guild's icon, if set."""
+        """URL for this guild's icon, if set."""
         return self.format_icon_url()
 
 
@@ -837,14 +835,14 @@ class Guild(PartialGuild):
 
     #: The ID of the owner of this guild.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`
     owner_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: The guild level permissions that apply to the bot user,
     #: Will be ``None`` when this object is retrieved through a REST request
     #: rather than from the gateway.
     #:
-    #: :type: :obj:`_permissions.Permission`
+    #: :type: :obj:`hikari.core.permissions.Permission`
     my_permissions: _permissions.Permission = marshaller.attrib(
         raw_name="permissions", deserializer=_permissions.Permission, if_undefined=None
     )
@@ -857,7 +855,7 @@ class Guild(PartialGuild):
     #: The ID for the channel that AFK voice users get sent to, if set for the
     #: guild.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     afk_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_none=None
     )
@@ -883,7 +881,7 @@ class Guild(PartialGuild):
     #: enabled for this guild. Will be ``None`` if invites are disable for this
     #: guild's embed.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     embed_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_none=None, if_undefined=None
     )
@@ -909,7 +907,7 @@ class Guild(PartialGuild):
 
     #: The roles in this guild, represented as a mapping of ID to role object.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`GuildRole` ]
+    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.core.snowflakes.Snowflake`, :obj:`GuildRole` ]
     roles: typing.Mapping[snowflakes.Snowflake, GuildRole] = marshaller.attrib(
         deserializer=lambda roles: {r.id: r for r in map(GuildRole.deserialize, roles)},
     )
@@ -917,7 +915,7 @@ class Guild(PartialGuild):
     #: The emojis that this guild provides, represented as a mapping of ID to
     #: emoji object.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`_emojis.GuildEmoji` ]
+    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.core.snowflakes.Snowflake`, :obj:`hikari.core.emojis.GuildEmoji` ]
     emojis: typing.Mapping[snowflakes.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
         deserializer=lambda emojis: {e.id: e for e in map(_emojis.GuildEmoji.deserialize, emojis)},
     )
@@ -930,7 +928,7 @@ class Guild(PartialGuild):
     #: The ID of the application that created this guild, if it was created by
     #: a bot. If not, this is always ``None``.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_none=None
     )
@@ -959,7 +957,7 @@ class Guild(PartialGuild):
     #: The channel ID that the widget's generated invite will send the user to,
     #: if enabled. If this information is unavailable, this will be ``None``.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     widget_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         if_undefined=None, if_none=None, deserializer=snowflakes.Snowflake.deserialize
     )
@@ -967,7 +965,7 @@ class Guild(PartialGuild):
     #: The ID of the system channel (where welcome messages and Nitro boost
     #: messages are sent), or ``None`` if it is not enabled.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     system_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         if_none=None, deserializer=snowflakes.Snowflake.deserialize
     )
@@ -982,7 +980,7 @@ class Guild(PartialGuild):
     #: :attr:`features` display rules and guidelines. If the
     #: :obj:`GuildFeature.PUBLIC` feature is not defined, then this is ``None``.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     rules_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         if_none=None, deserializer=snowflakes.Snowflake.deserialize
     )
@@ -993,7 +991,7 @@ class Guild(PartialGuild):
     #: ``GUILD_CREATE`` event. If the guild is received from any other place,
     #: this will always be ``None``.
     #:
-    #: :type: :obj`datetime.datetime`, optional
+    #: :type: :obj:`datetime.datetime`, optional
     joined_at: typing.Optional[datetime.datetime] = marshaller.attrib(
         deserializer=conversions.parse_iso_8601_ts, if_undefined=None
     )
@@ -1036,7 +1034,7 @@ class Guild(PartialGuild):
     #: representation. If you need complete accurate information, you should
     #: query the members using the appropriate API call instead.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`GuildMember` ], optional
+    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.core.snowflakes.Snowflake`, :obj:`GuildMember` ], optional
     members: typing.Optional[typing.Mapping[snowflakes.Snowflake, GuildMember]] = marshaller.attrib(
         deserializer=lambda members: {m.user.id: m for m in map(GuildMember.deserialize, members)}, if_undefined=None,
     )
@@ -1056,7 +1054,7 @@ class Guild(PartialGuild):
     #: To retrieve a list of channels in any other case, you should make an
     #: appropriate API call to retrieve this information.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`_channels.GuildChannel` ], optional
+    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.core.snowflakes.Snowflake`, :obj:`hikari.core.channels.GuildChannel` ], optional
     channels: typing.Optional[typing.Mapping[snowflakes.Snowflake, _channels.GuildChannel]] = marshaller.attrib(
         deserializer=lambda guild_channels: {c.id: c for c in map(_channels.deserialize_channel, guild_channels)},
         if_undefined=None,
@@ -1078,7 +1076,7 @@ class Guild(PartialGuild):
     #: To retrieve a list of presences in any other case, you should make an
     #: appropriate API call to retrieve this information.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`GuildMemberPresence` ], optional
+    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.core.snowflakes.Snowflake`, :obj:`GuildMemberPresence` ], optional
     presences: typing.Optional[typing.Mapping[snowflakes.Snowflake, GuildMemberPresence]] = marshaller.attrib(
         deserializer=lambda presences: {p.user.id: p for p in map(GuildMemberPresence.deserialize, presences)},
         if_undefined=None,
@@ -1098,7 +1096,7 @@ class Guild(PartialGuild):
     max_members: typing.Optional[int] = marshaller.attrib(if_undefined=None, deserializer=int)
 
     #: The vanity URL code for the guild's vanity URL.
-    #: This is only present if :obj:`GuildFeatures.VANITY_URL` is in the
+    #: This is only present if :obj:`GuildFeature.VANITY_URL` is in the
     #: :attr:`features` for this guild. If not, this will always be ``None``.
     #:
     #: :type: :obj:`str`, optional
@@ -1114,7 +1112,7 @@ class Guild(PartialGuild):
     description: typing.Optional[str] = marshaller.attrib(if_none=None, deserializer=str)
 
     #: The hash for the guild's banner.
-    #: This is only present if the guild has :obj:`GuildFeatures.BANNER` in the
+    #: This is only present if the guild has :obj:`GuildFeature.BANNER` in the
     #: :attr:`features` for this guild. For all other purposes, it is ``None``.
     #:
     #: :type: :obj:`str`, optional
@@ -1146,27 +1144,27 @@ class Guild(PartialGuild):
     #: :attr:`features` for this guild. For all other purposes, it should be
     #: considered to be ``None``.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         if_none=None, deserializer=snowflakes.Snowflake.deserialize
     )
 
     def format_splash_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
-        """Generate the url for this guild's splash image, if set.
+        """Generate the URL for this guild's splash image, if set.
 
         Parameters
         ----------
         fmt : :obj:`str`
-            The format to use for this url, defaults to ``png``.
+            The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
         size : :obj:`int`
-            The size to set for the url, defaults to ``2048``.
+            The size to set for the URL, defaults to ``2048``.
             Can be any power of two between 16 and 2048.
 
         Returns
         -------
         :obj:`str`, optional
-            The string url.
+            The string URL.
         """
         if self.splash_hash:
             return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, fmt=fmt, size=size)
@@ -1174,25 +1172,25 @@ class Guild(PartialGuild):
 
     @property
     def splash_url(self) -> typing.Optional[str]:
-        """The url for this guild's splash, if set."""
+        """URL for this guild's splash, if set."""
         return self.format_splash_url()
 
     def format_discovery_splash_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
-        """Generate the url for this guild's discovery splash image, if set.
+        """Generate the URL for this guild's discovery splash image, if set.
 
         Parameters
         ----------
         fmt : :obj:`str`
-            The format to use for this url, defaults to ``png``.
+            The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
         size : :obj:`int`
-            The size to set for the url, defaults to ``2048``.
+            The size to set for the URL, defaults to ``2048``.
             Can be any power of two between 16 and 2048.
 
         Returns
         -------
         :obj:`str`, optional
-            The string url.
+            The string URL.
         """
         if self.discovery_splash_hash:
             return cdn.generate_cdn_url(
@@ -1202,25 +1200,25 @@ class Guild(PartialGuild):
 
     @property
     def discovery_splash_url(self) -> typing.Optional[str]:
-        """The url for this guild's discovery splash, if set."""
+        """URL for this guild's discovery splash, if set."""
         return self.format_discovery_splash_url()
 
     def format_banner_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
-        """Generate the url for this guild's banner image, if set.
+        """Generate the URL for this guild's banner image, if set.
 
         Parameters
         ----------
         fmt : :obj:`str`
-            The format to use for this url, defaults to ``png``.
+            The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
         size : :obj:`int`
-            The size to set for the url, defaults to ``2048``.
+            The size to set for the URL, defaults to ``2048``.
             Can be any power of two between 16 and 2048.
 
         Returns
         -------
         :obj:`str`, optional
-            The string url.
+            The string URL.
         """
         if self.banner_hash:
             return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, fmt=fmt, size=size)
@@ -1228,5 +1226,5 @@ class Guild(PartialGuild):
 
     @property
     def banner_url(self) -> typing.Optional[str]:
-        """The url for this guild's banner, if set."""
+        """URL for this guild's banner, if set."""
         return self.format_banner_url()

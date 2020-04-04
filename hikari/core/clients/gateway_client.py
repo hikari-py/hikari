@@ -16,8 +16,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Defines a facade around :obj:`hikari.core.clients.shard_client.ShardClient`
-which provides functionality such as keeping multiple shards alive
+"""Defines a facade around :obj:`hikari.core.clients.shard_client.ShardClient`.
+
+This provides functionality such as keeping multiple shards alive
 simultaneously.
 """
 __all__ = ["GatewayClient"]
@@ -36,11 +37,11 @@ from hikari.net import shard
 ShardT = typing.TypeVar("ShardT", bound=shard_client.ShardClient)
 
 
-class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase):
-    """Facades :obj:`shard_client.ShardClient` implementations to provide a
-    management layer for multiple-sharded bots. This also provides additional
-    conduit used to connect up shards to the rest of this framework to enable
-    management of dispatched events, etc.
+class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase, dispatcher.EventDispatcher):
+    """Provides a management layer for multiple-sharded bots.
+
+    This also provides additional conduit used to connect up shards to the
+    rest of this framework to enable management of dispatched events, etc.
     """
 
     def __init__(
@@ -115,12 +116,12 @@ class GatewayClient(typing.Generic[ShardT], shard_client.WebsocketClientBase):
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`events.HikariEvent` ]
+        event_type : :obj:`typing.Type` [ :obj:`hikari.core.events.HikariEvent` ]
             The name of the event to wait for.
         timeout : :obj:`float`, optional
             The timeout to wait for before cancelling and raising an
-            :obj:`asyncio.TimeoutError` instead. If this is `None`, this will
-            wait forever. Care must be taken if you use `None` as this may
+            :obj:`asyncio.TimeoutError` instead. If this is ``None``, this will
+            wait forever. Care must be taken if you use ``None`` as this may
             leak memory if you do this from an event listener that gets
             repeatedly called. If you want to do this, you should consider
             using an event listener instead of this function.

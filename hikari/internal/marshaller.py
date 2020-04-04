@@ -16,10 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""This is an internal marshalling utility used by internal API components.
+"""An internal marshalling utility used by internal API components.
 
-Warnings
---------
+Warning
+-------
 You should not change anything in this file, if you do, you will likely get
 unexpected behaviour elsewhere.
 
@@ -101,17 +101,16 @@ def dereference_handle(handle_string: str) -> typing.Any:
 
 
 def dereference_int_flag(int_flag_type, raw_value) -> typing.SupportsInt:
-    """Given a type of :obj:`enum.IntFlag`, and a raw value, cast the raw value
-    to the int flag.
+    """Cast to the provided :obj:`enum.IntFlag` type.
 
-    This will support resolving bitfield integers as well as decoding a sequence
+    This supports resolving bitfield integers as well as decoding a sequence
     of case insensitive flag names into one combined value.
 
     Parameters
     ----------
-    int_flag_type:
+    int_flag_type : :obj:`typing.Type` [ :obj:`enum.IntFlag` ]
         The type of the int flag to check.
-    raw_value:
+    raw_value
         The raw value to convert.
     """
     if isinstance(raw_value, str) and raw_value.isdigit():
@@ -291,17 +290,18 @@ def _construct_entity_descriptor(entity: typing.Any):
 
 
 class HikariEntityMarshaller:
-    """This is a global marshaller helper that can help to deserialize and
-    serialize any internal components that are decorated with the
-    :obj:`attrs` decorator, and that are :mod:`attr` classes using fields
-    with the :obj:`attrib` function call descriptor.
+    """A global marshaller helper that helps deserialize and serialize any internal components.
+
+    It can deserialize and serialize any internal componentsthat that are
+    decorated with the :obj:`attrs` decorator, and that are :mod:`attr`
+    classes using fields with the :obj:`attrib` function call descriptor.
     """
 
     def __init__(self) -> None:
         self._registered_entities: typing.MutableMapping[typing.Type, _EntityDescriptor] = {}
 
     def register(self, cls: typing.Type[EntityT]) -> typing.Type[EntityT]:
-        """Registers an attrs type for fast future deserialization.
+        """Register an attrs type for fast future deserialization.
 
         Parameters
         ----------
@@ -440,7 +440,7 @@ HIKARI_ENTITY_MARSHALLER = HikariEntityMarshaller()
 
 
 def attrs(**kwargs):
-    """Creates a decorator for a class to make it into an :mod:`attrs` class.
+    """Create a decorator for a class to make it into an :mod:`attrs` class.
 
     Parameters
     ----------
