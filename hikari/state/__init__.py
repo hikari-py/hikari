@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,22 +16,20 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Network components for the Hikari Discord API.
+"""Provides the internal framework for processing the lifetime of a bot.
 
-These components describe the low level parts of Hikari. No model classes exist
-for these; the majority of communication is done via JSON arrays and objects.
+The API for this part of the framework has been split into groups of
+abstract base classes, and corresponding implementations. This allows
+several key components to be implemented separately, in case you have a
+specific use case you want to provide (such as placing stuff on a message
+queue if you distribute your bot).
+
+The overall structure is as follows:
+
+.. inheritance-diagram::
+    hikari.state.event_dispatcher
+    hikari.state.raw_event_consumer
+    hikari.state.event_manager
+    hikari.state.stateless_event_manager_impl
 """
-from hikari.net import codes
-from hikari.net import ratelimits
-from hikari.net import rest
-from hikari.net import routes
-from hikari.net import shard
-from hikari.net import user_agent
-from hikari.net import versions
-
-from hikari.net.codes import *
-from hikari.net.rest import *
-from hikari.net.shard import *
-from hikari.net.versions import *
-
-__all__ = codes.__all__ + shard.__all__ + rest.__all__ + versions.__all__
+__all__ = []

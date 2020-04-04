@@ -47,8 +47,8 @@ ResultT = typing.Union[CastOutputT, DefaultT]
 def nullable_cast(value: CastInputT, cast: TypeCastT) -> ResultT:
     """Attempt to cast the given ``value`` with the given ``cast``.
 
-    This will only succeed if ``value`` is not ``None``. If it is ``None``,
-    then ``None`` is returned instead.
+    This will only succeed if ``value`` is not ``None``. If it is ``None``, then
+    ``None`` is returned instead.
     """
     if value is None:
         return None
@@ -58,8 +58,8 @@ def nullable_cast(value: CastInputT, cast: TypeCastT) -> ResultT:
 def try_cast(value: CastInputT, cast: TypeCastT, default: DefaultT = None) -> ResultT:
     """Try to cast the given value to the given cast.
 
-    If it throws a :obj:`Exception` or derivative, it will return ``default`` instead
-    of the cast value instead.
+    If it throws a :obj:`Exception` or derivative, it will return ``default``
+    instead of the cast value instead.
     """
     with contextlib.suppress(Exception):
         return cast(value)
@@ -82,7 +82,7 @@ def put_if_specified(
         The key to add the value under.
     value : :obj:`typing.Any`
         The value to add.
-    type_after : :obj:`TypeCastT`, optional
+    type_after : :obj:`typing.Callable` [ [ ``input type`` ], ``output type`` ], optional
         Type to apply to the value when added.
     """
     if value is not ...:
@@ -138,7 +138,7 @@ def try_cast_or_defer_unary_operator(type_):
 
     Parameters
     ----------
-    type_ : :obj:`typing.Callable` [ ..., :obj:`T` ]
+    type_ : :obj:`typing.Callable` [ ..., ``output type`` ]
         The type to cast to.
     """
     return lambda data: try_cast(data, type_, data)
@@ -245,8 +245,8 @@ def unix_epoch_to_ts(epoch: int) -> datetime.datetime:
 def make_resource_seekable(resource: typing.Any) -> typing.Union[io.BytesIO, io.StringIO]:
     """Make a seekable resource to use off some representation of data.
 
-    This supports :obj:`bytes`, :obj:`bytearray`, :obj:`memoryview`, and :obj:`str`.
-    Anything else is just returned.
+    This supports :obj:`bytes`, :obj:`bytearray`, :obj:`memoryview`, and
+    :obj:`str`. Anything else is just returned.
 
     Parameters
     ----------
