@@ -440,12 +440,12 @@ HIKARI_ENTITY_MARSHALLER = HikariEntityMarshaller()
 
 
 def attrs(**kwargs):
-    """Create a decorator for a class to make it into an :mod:`attrs` class.
+    """Create a decorator for a class to make it into an :obj:`attr.s` class.
 
     Parameters
     ----------
     **kwargs
-        Any kwargs to pass to :func:`attr.s`.
+        Any kwargs to pass to :obj:`attr.s`.
 
     Other Parameters
     ----------------
@@ -467,7 +467,7 @@ def attrs(**kwargs):
     ------
     :obj:`ValueError`
         If you attempt to use the `auto_attribs` feature provided by
-        :mod:`attr`.
+        :obj:`attr.s`.
 
     Example
     -------
