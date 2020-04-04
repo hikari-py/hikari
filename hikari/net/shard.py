@@ -47,10 +47,10 @@ import zlib
 
 import aiohttp.typedefs
 
+from hikari import errors
 from hikari.internal import more_collections
 from hikari.internal import more_logging
 from hikari.net import codes
-from hikari.net import errors
 from hikari.net import ratelimits
 from hikari.net import user_agent
 from hikari.net import versions

@@ -26,16 +26,10 @@ Technical documentation
     hikari
 
 
-Internal components
-...................
-
-|internal|
-
 .. toctree::
-    :maxdepth: 2
     :titlesonly:
 
-    hikari.internal
+    modules
 
 Other resources
 ---------------
@@ -50,3 +44,4 @@ Search for a topic
 
 * :ref:`genindex`
 * :ref:`search`
+* :ref:`modindex`

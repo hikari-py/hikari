@@ -1,6 +1,6 @@
 _type: export
 __export_format: 4
-__export_date: 2020-03-22T13:28:17.667Z
+__export_date: 2020-04-04T18:36:08.338Z
 __export_source: insomnia.desktop.app:v7.1.1
 resources:
   - _id: req_3f79be849f9d4a76ad7fc0572894acb4
@@ -32,7 +32,7 @@ resources:
     isPrivate: false
     metaSortKey: -1579446582104
     method: POST
-    modified: 1579888478034
+    modified: 1586025134857
     name: Create Channel Invite
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -42,8 +42,7 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
-      true %}/invites"
+    url: "{{api_url}}/channels/{channel_id}/invites"
     _type: request
   - _id: fld_02ddb24b4e5148469979a2364fcc01dc
     created: 1577108071067
@@ -94,16 +93,19 @@ resources:
     created: 1579446582054
     description: ""
     headers:
-      - name: Authorization
+      - id: pair_6175f5722d6741689ddc2ca3648ec135
+        name: Authorization
         value: "{{authorization}}"
-      - name: Content-Type
+      - id: pair_504b780773ab4b3e96b06b8eb5c9c4c9
+        name: Content-Type
         value: application/json
-      - name: Accept
+      - id: pair_cca685e5ba2c42f182dd68062866d1ca
+        name: Accept
         value: application/json
     isPrivate: false
     metaSortKey: -1579446582054
     method: POST
-    modified: 1584009252159
+    modified: 1586025146155
     name: Create Message (JSON)
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -113,8 +115,7 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
-      true %}/messages"
+    url: "{{api_url}}/channels/{channel_id}/messages"
     _type: request
   - _id: req_25d53074d2cf44b399bddb805ddab89b
     authentication: {}
@@ -124,16 +125,19 @@ resources:
     created: 1579887586462
     description: ""
     headers:
-      - name: Authorization
+      - id: pair_05feeec703f24fb28eb975f3c81d9647
+        name: Authorization
         value: "{{authorization}}"
-      - name: Content-Type
+      - id: pair_91d84368319f46bea7c7897c31abbf9b
+        name: Content-Type
         value: application/json
-      - name: Accept
+      - id: pair_9cd6bd15a20f4b0caa757d7250a08d42
+        name: Accept
         value: application/json
     isPrivate: false
     metaSortKey: -1579446347254.5
     method: PUT
-    modified: 1579888368767
+    modified: 1586025171372
     name: Create Reaction
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -143,9 +147,8 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
-      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
-      %}/reactions/{% prompt 'emoji', 'emoji', '', '', false, true %}/@me"
+    url: "{{api_url}}/channels/{channel_id}/messages/{message_id}/reactions/{emoji\
+      }/@me"
     _type: request
   - _id: req_8ed678ae359d4170b5720081960696db
     authentication: {}
@@ -155,16 +158,19 @@ resources:
     created: 1579888166303
     description: ""
     headers:
-      - name: Authorization
+      - id: pair_38b217632cfc4a99ab70eda0a2b1a3e4
+        name: Authorization
         value: "{{authorization}}"
-      - name: Content-Type
+      - id: pair_8c5c4760590f437aa7fd4537d2e9714d
+        name: Content-Type
         value: application/json
-      - name: Accept
+      - id: pair_60902223d98e4cfbb5afe66c72924daf
+        name: Accept
         value: application/json
     isPrivate: false
     metaSortKey: -1579446288554.625
     method: DELETE
-    modified: 1579888898059
+    modified: 1586025188293
     name: Delete All Reactions
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -174,9 +180,7 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
-      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
-      %}/reactions"
+    url: "{{api_url}}/channels/{channel_id}/messages/{message_id}/reactions"
     _type: request
   - _id: req_ab8e42a9978d411aa290e79897d1bcb6
     authentication: {}
@@ -186,16 +190,19 @@ resources:
     created: 1579888568770
     description: ""
     headers:
-      - name: Authorization
+      - id: pair_081411a07584409dbf42949a9d43b0d0
+        name: Authorization
         value: "{{authorization}}"
-      - name: Content-Type
+      - id: pair_af6051069b814acaa87a433738ce7ec0
+        name: Content-Type
         value: application/json
-      - name: Accept
+      - id: pair_222248024d9e454884c2bf42577451ba
+        name: Accept
         value: application/json
     isPrivate: false
     metaSortKey: -1579446259204.6875
     method: DELETE
-    modified: 1579888899729
+    modified: 1586025275845
     name: Delete All Reactions for Emoji
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -205,9 +212,7 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
-      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
-      %}/reactions/{% prompt 'emoji', 'emoji', '', '', false, true %}"
+    url: "{{api_url}}/channels/{channel_id}/messages/{message_id}/reactions/{emoji}"
     _type: request
   - _id: req_82394bee04d94ea5b171da6239d12700
     authentication: {}
@@ -217,16 +222,19 @@ resources:
     created: 1579887965188
     description: ""
     headers:
-      - name: Authorization
+      - id: pair_6d81d2b754024e71a06a74e5a82d73b9
+        name: Authorization
         value: "{{authorization}}"
-      - name: Content-Type
+      - id: pair_0065e0fd87394fd8a9dfda386301b497
+        name: Content-Type
         value: application/json
-      - name: Accept
+      - id: pair_0ecf8672926340048d4076134ebf68e7
+        name: Accept
         value: application/json
     isPrivate: false
     metaSortKey: -1579446229854.75
     method: DELETE
-    modified: 1579888327919
+    modified: 1586025268656
     name: Delete Own Reaction
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -236,9 +244,8 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
-      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
-      %}/reactions/{% prompt 'emoji', 'emoji', '', '', false, true %}/@me"
+    url: "{{api_url}}/channels/{channel_id}/messages/{message_id}/reactions/{emoji\
+      }/@me"
     _type: request
   - _id: req_e16bac177c144773a63b51f12cb2e76a
     authentication: {}
@@ -248,16 +255,19 @@ resources:
     created: 1579888064162
     description: ""
     headers:
-      - name: Authorization
+      - id: pair_8d99cb13b67f4bf1b5e6dcf801b56c07
+        name: Authorization
         value: "{{authorization}}"
-      - name: Content-Type
+      - id: pair_feb3ec76f5324e54b852e2ec04b5665b
+        name: Content-Type
         value: application/json
-      - name: Accept
+      - id: pair_275a8ebe66ce4cfdb35b0bc31b7fc69c
+        name: Accept
         value: application/json
     isPrivate: false
     metaSortKey: -1579446171154.875
     method: DELETE
-    modified: 1579888320847
+    modified: 1586025304354
     name: Delete User Reaction
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -267,10 +277,8 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
-      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
-      %}/reactions/{% prompt 'emoji', 'emoji', '', '', false, true %}/{% prompt
-      'user_id', 'user_id', '', '', false, true %}"
+    url: "{{api_url}}/gateway{{api_url}}/channels/{channel_id}/messages/{message_i\
+      d}"
     _type: request
   - _id: req_6711d4d8b3754abb99a3134fd709aefa
     authentication: {}
@@ -280,12 +288,13 @@ resources:
     created: 1579886260172
     description: ""
     headers:
-      - name: Authorization
+      - id: pair_6aaa67c400414c78b5f5d65d94db56e5
+        name: Authorization
         value: "{{authorization}}"
     isPrivate: false
     metaSortKey: -1579446112455
     method: DELETE
-    modified: 1579888018462
+    modified: 1586025243516
     name: Delete Message
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -295,9 +304,7 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
-      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
-      %}"
+    url: "{{api_url}}/channels/{channel_id}/messages/{message_id}"
     _type: request
   - _id: req_e545c73cba2d404c8b81eb1b08089ed7
     authentication: {}
@@ -305,16 +312,19 @@ resources:
     created: 1579888209925
     description: ""
     headers:
-      - name: Authorization
+      - id: pair_822a5e5ff7694595b913d77c313e82e3
+        name: Authorization
         value: "{{authorization}}"
-      - name: Content-Type
+      - id: pair_e81f882d39fc4ba29fc17f85f6fe9d89
+        name: Content-Type
         value: application/json
-      - name: Accept
+      - id: pair_3699d419135c4d898353382075ecf141
+        name: Accept
         value: application/json
     isPrivate: false
     metaSortKey: -1578277095877.5
     method: GET
-    modified: 1584567461195
+    modified: 1586025318800
     name: Get Reactions
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -324,9 +334,7 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
-      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
-      %}/reactions/{% prompt 'emoji', 'emoji', '', '', false, true %}"
+    url: "{{api_url}}/channels/{channel_id}/messages/{message_id}/reactions/{emoji}"
     _type: request
   - _id: req_21e8d5a0163648ee8bc7b41ae1cf2d32
     authentication: {}
@@ -334,14 +342,16 @@ resources:
     created: 1584883559070
     description: ""
     headers:
-      - name: Authorization
+      - id: pair_4d84e72871814adc9bd306c3f779bfc9
+        name: Authorization
         value: "{{authorization}}"
-      - name: Accept
+      - id: pair_9e0e687481ac462d99850a70baeb976a
+        name: Accept
         value: application/json
     isPrivate: false
     metaSortKey: -1577692587588.75
     method: GET
-    modified: 1584883585709
+    modified: 1586025300976
     name: Get Message
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -351,9 +361,7 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
-      true %}/messages/{% prompt 'message_id', 'message_id', '', '', false, true
-      %}"
+    url: "{{api_url}}/channels/{channel_id}/messages/{message_id}"
     _type: request
   - _id: req_b7d357e7d7884ab7ad6d775410a9bde0
     authentication: {}
@@ -361,12 +369,13 @@ resources:
     created: 1577108809820
     description: ""
     headers:
-      - name: Authorization
+      - id: pair_3e74098acac2415f84a380d9c5dc07a5
+        name: Authorization
         value: "{{authorization}}"
     isPrivate: false
     metaSortKey: -1577108079300
     method: POST
-    modified: 1580509000696
+    modified: 1586025344109
     name: Trigger Typing
     parameters: []
     parentId: fld_02ddb24b4e5148469979a2364fcc01dc
@@ -376,8 +385,7 @@ resources:
     settingRebuildPath: true
     settingSendCookies: true
     settingStoreCookies: true
-    url: "{{api_url}}/channels/{% prompt 'channel_id', 'channel_id', '', '', false,
-      true %}/typing"
+    url: "{{api_url}}/channels/{channel_id}/typing"
     _type: request
   - _id: req_cec8e07486b345eb976d2f7a3dc7c80c
     authentication: {}
@@ -839,7 +847,7 @@ resources:
         value: identify guilds.join
       - description: ""
         id: pair_596801dda92243f4950c8cba79e8999a
-        name: state
+        name: weaving
         value: "1234"
     parentId: fld_86100ce074544d8d810050ef04f111ee
     settingDisableRenderRequestBody: false
