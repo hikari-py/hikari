@@ -33,6 +33,7 @@ from hikari import entities
 from hikari.clients import gateway_client
 from hikari.clients import gateway_config
 from hikari.clients import protocol_config
+from hikari.clients import shard_config
 from hikari.state import raw_event_consumer
 
 logger_levels = ("DEBUG", "INFO", "WARNING", "ERROR", "NOTSET")
@@ -83,7 +84,7 @@ def run_gateway(compression, color, debug, logger, shards, token, url, verify_ss
         config=gateway_config.GatewayConfig(
             debug=debug,
             protocol=protocol_config.HTTPProtocolConfig(verify_ssl=verify_ssl),
-            shard_config=gateway_config.ShardConfig(shard_count=shards),
+            shard_config=shard_config.ShardConfig(shard_count=shards),
             token=token,
             use_compression=compression,
             version=version,
