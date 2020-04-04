@@ -654,9 +654,9 @@ class InviteCreateEvent(HikariEvent, entities.Deserializable):
     )
 
     #: The limit for how many times this invite can be used before it expires.
-    #: If set to ``0`` then this is unlimited.
+    #: If set to ``0``, or infinity (``float("inf")``) then this is unlimited.
     #:
-    #: :type: :obj:`typing.Union` [ :obj:`int`, :obj:`float(inf)` ]
+    #: :type: :obj:`typing.Union` [ :obj:`int`, :obj:`float` ( ``"inf"`` ) ]
     max_uses: typing.Union[int, float] = marshaller.attrib(deserializer=lambda count: count or float("inf"))
 
     #: The object of the user who this invite targets, if set.
@@ -808,7 +808,7 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserial
 
     #: The channels the message mentions.
     #:
-    #: :type: :obj:`typing.Union` [ :obj:`typing.Set` [ :obj:`hikari.snowflakes.Snowflake` ], :obj:`entities.UNSET` ]
+    #: :type: :obj:`typing.Union` [ :obj:`typing.Set` [ :obj:`hikari.snowflakes.Snowflake` ], :obj:`hikari.entities.UNSET` ]
     channel_mentions: typing.Union[typing.Set[snowflakes.Snowflake], entities.Unset] = marshaller.attrib(
         raw_name="mention_channels",
         deserializer=lambda channel_mentions: {snowflakes.Snowflake.deserialize(c["id"]) for c in channel_mentions},
@@ -1076,7 +1076,7 @@ class MessageReactionRemoveEmojiEvent(HikariEvent, entities.Deserializable):
 
     #: The object of the emoji that's being removed.
     #:
-    #: :type: :obj:`typing.Union` [ :obj:`hikari.emojis.UnknownEmoji`, :obj:`emojis.UnicodeEmoji` ]
+    #: :type: :obj:`typing.Union` [ :obj:`hikari.emojis.UnknownEmoji`, :obj:`hikari.emojis.UnicodeEmoji` ]
     emoji: typing.Union[_emojis.UnicodeEmoji, _emojis.UnknownEmoji] = marshaller.attrib(
         deserializer=_emojis.deserialize_reaction_emoji,
     )

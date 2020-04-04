@@ -64,7 +64,7 @@ _regular_format = "%(levelname)1.1s %(asctime)23.23s %(module)-15.15s #%(lineno)
 @click.option("--verify-ssl", default=True, type=click.BOOL, help="Enable or disable SSL verification.")
 @click.option("--version", default=7, type=click.IntRange(min=6), help="Version of the gateway to use.")
 def run_gateway(compression, color, debug, logger, shards, token, url, verify_ssl, version) -> None:
-    """A :mod:`click` command line client for running a test gateway connection.
+    """:mod:`click` command line client for running a test gateway connection.
 
     This is provided for internal testing purposes for benchmarking API
     stabiltiy, etc.

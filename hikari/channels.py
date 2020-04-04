@@ -24,6 +24,7 @@
     hikari.entities.HikariEntity
     hikari.entities.Deserializable
     hikari.entities.Serializable
+    hikari.snowflakes.UniqueEntity
     :parts: 1
 """
 

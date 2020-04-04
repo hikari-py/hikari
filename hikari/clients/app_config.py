@@ -21,6 +21,7 @@ __all__ = ["AppConfig"]
 
 import typing
 
+from hikari.clients import protocol_config
 from hikari.internal import marshaller
 from hikari import entities
 from hikari.clients import gateway_config
@@ -125,6 +126,17 @@ class AppConfig(entities.HikariEntity, entities.Deserializable):
     Of course, comments are not valid in actual standard JSON; I added them
     simply for reference for this example.
     """
+
+    #: Low level protocol details, such as proxy configuration and SSL settings.
+    #:
+    #: If specified, this will be the default for gateway and HTTP settings,
+    #: unless they also specifically override this. The component-specific
+    #: settings will always take precedence over this setting where specified.
+    #:
+    #: :type: :obj:`hikari.clients.protocol_config.HTTPProtocolConfig`
+    protocol: typing.Optional[protocol_config.HTTPProtocolConfig] = marshaller.attrib(
+        deserializer=protocol_config.HTTPProtocolConfig.deserialize, if_undefined=None, default=None,
+    )
 
     #: The HTTP configuration to use.
     #:

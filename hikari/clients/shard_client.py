@@ -93,7 +93,8 @@ class ShardClient(websocket_client.WebsocketClient):
 
     Notes
     -----
-    Generally, you want to use :class:`GatewayClient` rather than this class
+    Generally, you want to use
+    :obj:`hikari.clients.gateway_client.GatewayClient` rather than this class
     directly, as that will handle sharding where enabled and applicable, and
     provides a few more bits and pieces that may be useful such as state
     management and event dispatcher integration. and If you want to customize
