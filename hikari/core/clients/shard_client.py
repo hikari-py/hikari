@@ -365,8 +365,6 @@ class ShardClient(WebsocketClientBase):
                 await asyncio.sleep(5)
             except errors.GatewayMustReconnectError:
                 self.logger.warning("instructed by Discord to reconnect")
-                self._client.seq = None
-                self._client.session_id = None
                 do_not_back_off = True
                 await asyncio.sleep(5)
             except errors.GatewayServerClosedConnectionError as ex:
