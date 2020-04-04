@@ -23,6 +23,7 @@
     hikari.colors
     :parts: 1
 """
+from __future__ import annotations
 
 __all__ = ["Color", "ColorCompatibleT"]
 
@@ -107,7 +108,7 @@ class Color(int, typing.SupportsInt):
 
     __slots__ = ()
 
-    def __new__(cls, raw_rgb: typing.SupportsInt) -> "Color":
+    def __new__(cls, raw_rgb: typing.SupportsInt) -> Color:
         assertions.assert_in_range(raw_rgb, 0, 0xFF_FF_FF, "integer value")
         return super(Color, cls).__new__(cls, raw_rgb)
 
@@ -172,7 +173,7 @@ class Color(int, typing.SupportsInt):
         return all(_all_same(*c) for c in (hex_code[:2], hex_code[2:4], hex_code[4:]))
 
     @classmethod
-    def from_rgb(cls, red: int, green: int, blue: int) -> "Color":
+    def from_rgb(cls, red: int, green: int, blue: int) -> Color:
         """Convert the given RGB to a :obj:`Color` object.
 
         Each channel must be withing the range [0, 255] (0x0, 0xFF).
@@ -203,7 +204,7 @@ class Color(int, typing.SupportsInt):
         return cls((red << 16) | (green << 8) | blue)
 
     @classmethod
-    def from_rgb_float(cls, red_f: float, green_f: float, blue_f: float) -> "Color":
+    def from_rgb_float(cls, red_f: float, green_f: float, blue_f: float) -> Color:
         """Convert the given RGB to a :obj:`Color` object.
 
         The colorspace represented values have to be within the
@@ -235,7 +236,7 @@ class Color(int, typing.SupportsInt):
         return cls.from_rgb(int(red_f * 0xFF), int(green_f * 0xFF), int(blue_f * 0xFF))
 
     @classmethod
-    def from_hex_code(cls, hex_code: str) -> "Color":
+    def from_hex_code(cls, hex_code: str) -> Color:
         """Convert the given hexadecimal color code to a :obj:`Color`.
 
         The inputs may be of the following format (case insensitive):
@@ -277,7 +278,7 @@ class Color(int, typing.SupportsInt):
         raise ValueError("Color code is invalid length. Must be 3 or 6 digits")
 
     @classmethod
-    def from_int(cls, i: typing.SupportsInt) -> "Color":
+    def from_int(cls, i: typing.SupportsInt) -> Color:
         """Convert the given :obj:`typing.SupportsInt` to a :obj:`Color`.
 
         Parameters
@@ -294,7 +295,7 @@ class Color(int, typing.SupportsInt):
 
     # Partially chose to override these as the docstrings contain typos according to Sphinx.
     @classmethod
-    def from_bytes(cls, bytes_: typing.Iterable[int], byteorder: str, *, signed: bool = True) -> "Color":
+    def from_bytes(cls, bytes_: typing.Sequence[int], byteorder: str, *, signed: bool = True) -> Color:
         """Convert the bytes to a :obj:`Color`.
 
         Parameters
@@ -302,7 +303,7 @@ class Color(int, typing.SupportsInt):
         bytes_ : :obj:`typing.Iterable` [ :obj:`int` ]
             A iterable of :obj:`int` byte values.
 
-        byteorder : :obj:str`
+        byteorder : :obj:`str`
             The endianess of the value represented by the bytes.
             Can be ``"big"`` endian or ``"little"`` endian.
 
@@ -324,7 +325,7 @@ class Color(int, typing.SupportsInt):
         length : :obj:`int`
             The number of bytes to produce. Should be around ``3``, but not less.
 
-        byteorder : :obj:str`
+        byteorder : :obj:`str`
             The endianess of the value represented by the bytes.
             Can be ``"big"`` endian or ``"little"`` endian.
 
@@ -334,12 +335,12 @@ class Color(int, typing.SupportsInt):
         Returns
         -------
         :obj:`bytes`
-            The bytes represntation of the Color.
+            The bytes representation of the Color.
         """
         return int(self).to_bytes(length, byteorder, signed=signed)
 
     @classmethod
-    def __class_getitem__(cls, color: "ColorCompatibleT") -> "Color":  # pylint:disable=arguments-differ
+    def __class_getitem__(cls, color: ColorCompatibleT) -> Color:  # pylint:disable=arguments-differ
         if isinstance(color, cls):
             return color
         elif isinstance(color, int):

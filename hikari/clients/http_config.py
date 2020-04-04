@@ -34,14 +34,14 @@ class HTTPConfig(entities.HikariEntity, entities.Deserializable):
     All fields are optional kwargs that can be passed to the constructor.
 
     "Deserialized" and "unspecified" defaults are only applicable if you
-    create the object using :meth:`deserialize`.
+    create the object using :meth:`hikari.entities.Deserializable.deserialize`.
     """
 
     #: Low level protocol details, such as proxy configuration and SSL settings.
     #:
     #: If unspecified, defaults are used.
     #:
-    #: :type: :obj:`hikari.protocol_config.HTTPProtocolConfig`
+    #: :type: :obj:`hikari.clients.protocol_config.HTTPProtocolConfig`
     protocol: typing.Optional[protocol_config.HTTPProtocolConfig] = marshaller.attrib(
         deserializer=protocol_config.HTTPProtocolConfig.deserialize, if_undefined=None, default=None,
     )

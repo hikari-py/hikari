@@ -55,7 +55,7 @@ class ShardConfig(entities.HikariEntity, entities.Deserializable):
     All fields are optional kwargs that can be passed to the constructor.
 
     "Deserialized" and "unspecified" defaults are only applicable if you
-    create the object using :meth:`deserialize`.
+    create the object using :meth:`hikari.entities.Deserializable.deserialize`.
     """
 
     #: The shard IDs to produce shard connections for.

@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Alias for the :mod:`hikari.colors` module."""
-__all__ = ["Colour"]
+__all__ = ["Colour", "ColourCompatibleT"]
 
 from hikari.colors import Color as Colour
+from hikari.colors import ColorCompatibleT as ColourCompatibleT

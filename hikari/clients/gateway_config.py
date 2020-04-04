@@ -39,7 +39,7 @@ class GatewayConfig(entities.HikariEntity, entities.Deserializable):
     All fields are optional kwargs that can be passed to the constructor.
 
     "Deserialized" and "unspecified" defaults are only applicable if you
-    create the object using :meth:`deserialize`.
+    create the object using :meth:`hikari.entities.Deserializable.deserialize`.
     """
 
     #: Whether to enable debugging mode for the generated shards. Usually you

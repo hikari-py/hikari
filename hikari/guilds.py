@@ -16,7 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Components and entities that are used to describe guilds on Discord."""
+"""Components and entities that are used to describe guilds on Discord.
+
+.. inheritance-diagram::
+    hikari.guilds
+"""
 __all__ = [
     "ActivityFlag",
     "ActivityType",
@@ -816,9 +820,10 @@ class Guild(PartialGuild):
     Note
     ----
     If a guild object is considered to be unavailable, then the state of any
-    other fields other than the :attr:`is_unavailable` and :attr:`id` members
-    outdated, or incorrect. If a guild is unavailable, then the contents of any
-    other fields should be ignored.
+    other fields other than the :attr:`is_unavailable` and
+    :obj:`hikari.entities.UniqueEntity.id` members outdated, or incorrect.
+    If a guild is unavailable, then the contents of any other fields should be
+    ignored.
     """
 
     #: The hash of the splash for the guild, if there is one.
@@ -1104,7 +1109,7 @@ class Guild(PartialGuild):
 
     #: The guild's description.
     #:
-    #: This is only present if certain :attr:`Guild.features` are set in this
+    #: This is only present if certain :obj:`Guild.features` are set in this
     #: guild. Otherwise, this will always be ``None``. For all other purposes,
     #: it is ``None``.
     #:
@@ -1113,7 +1118,8 @@ class Guild(PartialGuild):
 
     #: The hash for the guild's banner.
     #: This is only present if the guild has :obj:`GuildFeature.BANNER` in the
-    #: :attr:`features` for this guild. For all other purposes, it is ``None``.
+    #: :obj:`Guild.features` for this guild. For all other purposes, it is
+    # ``None``.
     #:
     #: :type: :obj:`str`, optional
     banner_hash: typing.Optional[str] = marshaller.attrib(raw_name="banner", if_none=None, deserializer=str)
