@@ -16,22 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Network components for the Hikari Discord API.
+"""Alias for the :mod:`hikari.colors` module."""
+__all__ = ["Colour", "ColourCompatibleT"]
 
-These components describe the low level parts of Hikari. No model classes exist
-for these; the majority of communication is done via JSON arrays and objects.
-"""
-from hikari.net import codes
-from hikari.net import ratelimits
-from hikari.net import rest
-from hikari.net import routes
-from hikari.net import shard
-from hikari.net import user_agent
-from hikari.net import versions
-
-from hikari.net.codes import *
-from hikari.net.rest import *
-from hikari.net.shard import *
-from hikari.net.versions import *
-
-__all__ = codes.__all__ + shard.__all__ + rest.__all__ + versions.__all__
+from hikari.colors import Color as Colour
+from hikari.colors import ColorCompatibleT as ColourCompatibleT

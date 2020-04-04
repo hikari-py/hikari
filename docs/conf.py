@@ -177,7 +177,8 @@ autodoc_mock_imports = ["aiohttp"]
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "aiohttp": ("https://aiohttp.readthedocs.io/en/stable/", None),
-    "websockets": ("https://websockets.readthedocs.io/en/stable/", None),
+    "attrs": ("https://www.attrs.org/en/stable/", None),
+    "click": ("https://click.palletsprojects.com/en/7.x/", None),
 }
 
 # -- Inheritance diagram options... -------------------------------------------------

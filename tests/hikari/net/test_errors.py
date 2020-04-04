@@ -18,8 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import pytest
 
+from hikari import errors
 from hikari.net import codes
-from hikari.net import errors
 from hikari.net import routes
 
 

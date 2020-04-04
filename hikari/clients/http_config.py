@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright © Nekoka.tt 2019-2020
+#
+# This file is part of Hikari.
+#
+# Hikari is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Hikari is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""HTTP (REST) API configuration objects and options."""
+
+__all__ = ["HTTPConfig"]
+
+import typing
+
+from hikari.internal import marshaller
+from hikari import entities
+from hikari.clients import protocol_config
+
+
+@marshaller.attrs(kw_only=True)
+class HTTPConfig(entities.HikariEntity, entities.Deserializable):
+    """HTTP API configuration.
+
+    All fields are optional kwargs that can be passed to the constructor.
+
+    "Deserialized" and "unspecified" defaults are only applicable if you
+    create the object using :meth:`hikari.entities.Deserializable.deserialize`.
+    """
+
+    #: Low level protocol details, such as proxy configuration and SSL settings.
+    #:
+    #: If unspecified, defaults are used.
+    #:
+    #: :type: :obj:`hikari.clients.protocol_config.HTTPProtocolConfig`
+    protocol: typing.Optional[protocol_config.HTTPProtocolConfig] = marshaller.attrib(
+        deserializer=protocol_config.HTTPProtocolConfig.deserialize, if_undefined=None, default=None,
+    )
+
+    #: The token to use, if applicable.
+    #:
+    #: Note that this should not start with ``Bot`` or ``Bearer``. This is
+    #: detected automatically.
+    #:
+    #: If ``None`` or not specified, whatever is in the global token field on
+    #: the config will be used.
+    #:
+    #: :type: :obj:`str`, optional
+    token: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, if_undefined=None, default=None)
+
+    #: The HTTP API version to use.
+    #:
+    #: If unspecified, then V7 is used.
+    #:
+    #: :type: :obj:`int`
+    version: int = marshaller.attrib(deserializer=int, if_undefined=lambda: 7, default=7)

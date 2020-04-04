@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,22 +16,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Network components for the Hikari Discord API.
+"""Provides an implementation of a stateless event manager."""
+__all__ = ["StatelessEventManagerImpl"]
 
-These components describe the low level parts of Hikari. No model classes exist
-for these; the majority of communication is done via JSON arrays and objects.
-"""
-from hikari.net import codes
-from hikari.net import ratelimits
-from hikari.net import rest
-from hikari.net import routes
-from hikari.net import shard
-from hikari.net import user_agent
-from hikari.net import versions
+from hikari.state import event_manager
 
-from hikari.net.codes import *
-from hikari.net.rest import *
-from hikari.net.shard import *
-from hikari.net.versions import *
 
-__all__ = codes.__all__ + shard.__all__ + rest.__all__ + versions.__all__
+class StatelessEventManagerImpl(event_manager.EventManager):
+    """Stateless event manager implementation for stateless bots.
+
+    This is an implementation that does not rely on querying prior information to
+    operate. The implementation details of this are much simpler than a stateful
+    version, and are not immediately affected by the use of intents.
+    """

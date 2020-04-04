@@ -30,12 +30,12 @@ import uuid
 
 import aiohttp.typedefs
 
+from hikari import errors
 from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import more_collections
 from hikari.internal import more_logging
 from hikari.net import codes
-from hikari.net import errors
 from hikari.net import ratelimits
 from hikari.net import routes
 from hikari.net import user_agent
@@ -414,9 +414,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the given permissions to view an audit log.
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild does not exist.
         """
         query = {}
@@ -441,9 +441,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you don't have access to the channel.
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
         """
         route = routes.CHANNEL.compile(self.GET, channel_id=channel_id)
@@ -512,11 +512,11 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the permission to make the change.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you provide incorrect options for the corresponding channel type
             (e.g. a ``bitrate`` for a text channel).
         """
@@ -549,9 +549,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you do not have permission to delete the channel.
 
         Warning
@@ -590,26 +590,26 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack permission to read the channel.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If your query is malformed, has an invalid value for ``limit``,
             or contains more than one of ``after``, ``before`` and ``around``.
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel is not found, or the message
             provided for one of the filter arguments is not found.
 
         Note
         ----
         If you are missing the ``VIEW_CHANNEL`` permission, you will receive a
-        :obj:`hikari.net.errors.ForbiddenHTTPError`. If you are instead missing
+        :obj:`hikari.errors.ForbiddenHTTPError`. If you are instead missing
         the ``READ_MESSAGE_HISTORY`` permission, you will always receive
         zero results, and thus an empty list will be returned instead.
 
         Warning
         -------
         You can only specify a maximum of one from ``before``, ``after``, and ``around``.
-        Specifying more than one will cause a :obj:`hikari.net.errors.BadRequestHTTPError` to be raised.
+        Specifying more than one will cause a :obj:`hikari.errors.BadRequestHTTPError` to be raised.
         """
         query = {}
         conversions.put_if_specified(query, "limit", limit)
@@ -640,9 +640,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack permission to see the message.
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
         """
         route = routes.CHANNEL_MESSAGE.compile(self.GET, channel_id=channel_id, message_id=message_id)
@@ -691,9 +691,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
             empty or greater than ``2000`` characters; if neither content, file
@@ -701,7 +701,7 @@ class RestfulClient:
             fields in ``allowed_mentions``; if you specify to parse all
             users/roles mentions but also specify which users/roles to
             parse only.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack permissions to send to this channel.
         """
         form = aiohttp.FormData()
@@ -741,13 +741,13 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If this is the first reaction using this specific emoji on this
             message and you lack the ``ADD_REACTIONS`` permission. If you lack
             ``READ_MESSAGE_HISTORY``, this may also raise this error.
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel or message is not found, or if the emoji is not found.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If the emoji is not valid, unknown, or formatted incorrectly.
         """
         route = routes.OWN_REACTION.compile(self.PUT, channel_id=channel_id, message_id=message_id, emoji=emoji)
@@ -769,9 +769,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack permission to do this.
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel or message or emoji is not found.
         """
         route = routes.OWN_REACTION.compile(self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji)
@@ -793,9 +793,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundError`
+        :obj:`hikari.errors.NotFoundError`
             If the channel or message or emoji or user is not found.
-        :obj:`hikari.net.errors.ForbiddenError`
+        :obj:`hikari.errors.ForbiddenError`
             If you lack the ``MANAGE_MESSAGES`` permission, or are in DMs.
         """
         route = routes.REACTION_EMOJI.compile(self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji)
@@ -819,9 +819,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel or message or emoji or user is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission, or are in DMs.
         """
         route = routes.REACTION_EMOJI_USER.compile(
@@ -859,9 +859,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack access to the message.
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
         """
         query = {}
@@ -882,9 +882,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission.
         """
         route = routes.ALL_REACTIONS.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
@@ -923,15 +923,15 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             This can be raised if the embed exceeds the defined limits;
             if the message content is specified only and empty or greater
             than ``2000`` characters; if neither content, file or embed
             are specified.
             parse only.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you try to edit content or embed on a message you did not author or try to edit the flags
             on a message you did not author without the ``MANAGE_MESSAGES`` permission.
         """
@@ -954,10 +954,10 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you did not author the message and are in a DM, or if you did not author the message and lack the
             ``MANAGE_MESSAGES`` permission in a guild channel.
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
         """
         route = routes.CHANNEL_MESSAGE.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
@@ -975,11 +975,11 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission in the channel.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If any of the messages passed are older than ``2`` weeks in age or
             any duplicate message IDs are passed.
 
@@ -1026,9 +1026,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the target channel or overwrite doesn't exist.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack permission to do this.
         """
         payload = {}
@@ -1053,9 +1053,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_CHANNELS`` permission.
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
         """
         route = routes.CHANNEL_INVITES.compile(self.GET, channel_id=channel_id)
@@ -1106,11 +1106,11 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``CREATE_INSTANT_MESSAGES`` permission.
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If the arguments provided are not valid (e.g. negative age, etc).
         """
         payload = {}
@@ -1135,9 +1135,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the overwrite or channel do not exist.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission for that channel.
         """
         route = routes.CHANNEL_PERMISSIONS.compile(self.DELETE, channel_id=channel_id, overwrite_id=overwrite_id)
@@ -1154,9 +1154,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you are not able to type in the channel.
         """
         route = routes.CHANNEL_TYPING.compile(self.POST, channel_id=channel_id)
@@ -1177,9 +1177,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you are not able to see the channel.
 
         Note
@@ -1202,9 +1202,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission.
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the message or channel do not exist.
         """
         route = routes.CHANNEL_PINS.compile(self.PUT, channel_id=channel_id, message_id=message_id)
@@ -1224,9 +1224,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission.
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the message or channel do not exist.
         """
         route = routes.CHANNEL_PIN.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
@@ -1247,9 +1247,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you aren't a member of the guild.
         """
         route = routes.GUILD_EMOJIS.compile(self.GET, guild_id=guild_id)
@@ -1272,9 +1272,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the emoji aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you aren't a member of said guild.
         """
         route = routes.GUILD_EMOJI.compile(self.GET, guild_id=guild_id, emoji_id=emoji_id)
@@ -1309,11 +1309,11 @@ class RestfulClient:
         ------
         :obj:`ValueError`
             If ``image`` is ``None``.
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_EMOJIS`` permission or aren't a member of said guild.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you attempt to upload an image larger than ``256kb``, an empty image or an invalid image format.
         """
         assertions.assert_not_none(image, "image must be a valid image")
@@ -1353,9 +1353,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the emoji aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_EMOJIS`` permission or are not a member of the given guild.
         """
         payload = {}
@@ -1376,9 +1376,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the emoji aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_EMOJIS`` permission or aren't a member of said guild.
         """
         route = routes.GUILD_EMOJI.compile(self.DELETE, guild_id=guild_id, emoji_id=emoji_id)
@@ -1430,9 +1430,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you are on ``10`` or more guilds.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you provide unsupported fields like ``parent_id`` in channel objects.
         """
         payload = {"name": name}
@@ -1461,9 +1461,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you don't have access to the guild.
         """
         route = routes.GUILD.compile(self.GET, guild_id=guild_id)
@@ -1527,9 +1527,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         payload = {}
@@ -1561,9 +1561,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you are not the guild owner.
         """
         route = routes.GUILD.compile(self.DELETE, guild_id=guild_id)
@@ -1584,9 +1584,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you are not in the guild.
         """
         route = routes.GUILD_CHANNELS.compile(self.GET, guild_id=guild_id)
@@ -1658,11 +1658,11 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_CHANNEL`` permission or are not in the guild.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you provide incorrect options for the corresponding channel type
             (e.g. a ``bitrate`` for a text channel).
         """
@@ -1697,12 +1697,12 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or any of the channels aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_CHANNELS`` permission or are not a member of said guild or are not in
             the guild.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you provide anything other than the ``id`` and ``position`` fields for the channels.
         """
         payload = [{"id": ch[0], "position": ch[1]} for ch in (channel, *channels)]
@@ -1726,9 +1726,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the member aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you don't have access to the target guild.
         """
         route = routes.GUILD_MEMBER.compile(self.GET, guild_id=guild_id, user_id=user_id)
@@ -1773,11 +1773,11 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you are not in the guild.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the ``limit`` or `after`` fields.
         """
         query = {}
@@ -1824,14 +1824,14 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild, user, channel or any of the roles aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack any of the applicable permissions
             (``MANAGE_NICKNAMES``, ``MANAGE_ROLES``, ``MUTE_MEMBERS``, ``DEAFEN_MEMBERS`` or ``MOVE_MEMBERS``).
             Note that to move a member you must also have permission to connect to the end channel.
             This will also be raised if you're not in the guild.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you pass ```mute``, ``deaf`` or ``channel_id`` while the member is not connected to a voice channel.
         """
         payload = {}
@@ -1858,11 +1858,11 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``CHANGE_NICKNAME`` permission or are not in the guild.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you provide a disallowed nickname, one that is too long, or one that is empty.
         """
         payload = {"nick": nick}
@@ -1886,9 +1886,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild, member or role aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER_ROLE.compile(self.PUT, guild_id=guild_id, user_id=user_id, role_id=role_id)
@@ -1911,9 +1911,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild, member or role aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER_ROLE.compile(self.DELETE, guild_id=guild_id, user_id=user_id, role_id=role_id)
@@ -1934,9 +1934,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or member aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``KICK_MEMBERS`` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
@@ -1957,9 +1957,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
         """
         route = routes.GUILD_BANS.compile(self.GET, guild_id=guild_id)
@@ -1982,9 +1982,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the user aren't found, or if the user is not banned.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
         """
         route = routes.GUILD_BAN.compile(self.GET, guild_id=guild_id, user_id=user_id)
@@ -2010,9 +2010,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or member aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
         """
         query = {}
@@ -2036,9 +2036,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or member aren't found, or the member is not banned.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``BAN_MEMBERS`` permission or are not a in the guild.
         """
         route = routes.GUILD_BAN.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
@@ -2059,9 +2059,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you're not in the guild.
         """
         route = routes.GUILD_ROLES.compile(self.GET, guild_id=guild_id)
@@ -2105,11 +2105,11 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or you're not in the guild.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the role attributes.
         """
         payload = {}
@@ -2142,11 +2142,11 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or any of the roles aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or you're not in the guild.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the `position` fields.
         """
         payload = [{"id": r[0], "position": r[1]} for r in (role, *roles)]
@@ -2194,11 +2194,11 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or role aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or you're not in the guild.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the role attributes.
         """
         payload = {}
@@ -2222,9 +2222,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the role aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
         """
         route = routes.GUILD_ROLE.compile(self.DELETE, guild_id=guild_id, role_id=role_id)
@@ -2247,11 +2247,11 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``KICK_MEMBERS`` or you are not in the guild.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you pass an invalid amount of days.
         """
         payload = {"days": days}
@@ -2285,11 +2285,11 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found:
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``KICK_MEMBER`` permission or are not in the guild.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the ``days`` or ``compute_prune_count`` fields.
         """
         query = {"days": days}
@@ -2317,9 +2317,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you are not in the guild.
         """
         route = routes.GUILD_VOICE_REGIONS.compile(self.GET, guild_id=guild_id)
@@ -2340,9 +2340,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         route = routes.GUILD_INVITES.compile(self.GET, guild_id=guild_id)
@@ -2363,9 +2363,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATIONS.compile(self.GET, guild_id=guild_id)
@@ -2395,9 +2395,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         payload = {"type": type_, "id": integration_id}
@@ -2436,9 +2436,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the integration aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         payload = {}
@@ -2464,9 +2464,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
                 If either the guild or the integration aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATION.compile(self.DELETE, guild_id=guild_id, integration_id=integration_id)
@@ -2484,9 +2484,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the integration aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATION_SYNC.compile(self.POST, guild_id=guild_id, integration_id=integration_id)
@@ -2507,9 +2507,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         route = routes.GUILD_EMBED.compile(self.GET, guild_id=guild_id)
@@ -2537,9 +2537,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         route = routes.GUILD_EMBED.compile(self.PATCH, guild_id=guild_id)
@@ -2560,9 +2560,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         route = routes.GUILD_VANITY_URL.compile(self.GET, guild_id=guild_id)
@@ -2613,7 +2613,7 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the invite is not found.
         """
         query = {}
@@ -2637,9 +2637,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the invite is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack either ``MANAGE_CHANNELS`` on the channel the invite
             belongs to or ``MANAGE_GUILD`` for guild-global delete.
         """
@@ -2672,7 +2672,7 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the user is not found.
         """
         route = routes.USER.compile(self.GET, user_id=user_id)
@@ -2698,7 +2698,7 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you pass username longer than the limit (``2-32``) or an invalid image.
         """
         payload = {}
@@ -2746,7 +2746,7 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If you pass both ``before`` and ``after`` or an
             invalid value for ``limit``.
         """
@@ -2767,7 +2767,7 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         """
         route = routes.LEAVE_GUILD.compile(self.DELETE, guild_id=guild_id)
@@ -2788,7 +2788,7 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the recipient is not found.
         """
         payload = {"recipient_id": recipient_id}
@@ -2834,12 +2834,12 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             can not see the given channel.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             If the avatar image is too big or the format is invalid.
         """
         payload = {"name": name}
@@ -2862,9 +2862,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             can not see the given channel.
         """
@@ -2886,9 +2886,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             aren't a member of the given guild.
         """
@@ -2912,12 +2912,12 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the webhook is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you're not in the guild that owns this webhook or
             lack the ``MANAGE_WEBHOOKS`` permission.
-        :obj:`hikari.net.errors.UnauthorizedHTTPError`
+        :obj:`hikari.errors.UnauthorizedHTTPError`
             If you pass a token that's invalid for the target webhook.
         """
         if webhook_token is ...:
@@ -2963,12 +2963,12 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If either the webhook or the channel aren't found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             aren't a member of the guild this webhook belongs to.
-        :obj:`hikari.net.errors.UnauthorizedHTTPError`
+        :obj:`hikari.errors.UnauthorizedHTTPError`
             If you pass a token that's invalid for the target webhook.
         """
         payload = {}
@@ -2996,12 +2996,12 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the webhook is not found.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             aren't a member of the guild this webhook belongs to.
-        :obj:`hikari.net.errors.UnauthorizedHTTPError`
+        :obj:`hikari.errors.UnauthorizedHTTPError`
             If you pass a token that's invalid for the target webhook.
         """
         if webhook_token is ...:
@@ -3058,9 +3058,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.net.errors.NotFoundHTTPError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel ID or webhook ID is not found.
-        :obj:`hikari.net.errors.BadRequestHTTPError`
+        :obj:`hikari.errors.BadRequestHTTPError`
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
             empty or greater than ``2000`` characters; if neither content, file
@@ -3068,9 +3068,9 @@ class RestfulClient:
             fields in ``allowed_mentions``; if you specify to parse all
             users/roles mentions but also specify which users/roles to parse
             only.
-        :obj:`hikari.net.errors.ForbiddenHTTPError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack permissions to send to this channel.
-        :obj:`hikari.net.errors.UnauthorizedHTTPError`
+        :obj:`hikari.errors.UnauthorizedHTTPError`
             If you pass a token that's invalid for the target webhook.
 
         Returns

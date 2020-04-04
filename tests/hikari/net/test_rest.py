@@ -29,7 +29,7 @@ import cymock as mock
 import pytest
 
 from hikari.internal import conversions
-from hikari.net import errors
+from hikari import errors
 from hikari.net import ratelimits
 from hikari.net import rest
 from hikari.net import routes
