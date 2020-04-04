@@ -24,7 +24,7 @@ on the same event loop. Implements zlib transport compression only.
 Can be used as the main gateway connection for a single-sharded bot, or the gateway connection for a
 specific shard in a swarm of shards making up a larger bot.
 
-See also
+See Also
 --------
 * IANA WS closure code standards: https://www.iana.org/assignments/websocket/websocket.xhtml
 * Gateway documentation: https://discordapp.com/developers/docs/topics/gateway
@@ -70,16 +70,17 @@ class GatewayStatus(str, enum.Enum):
 
 
 #: The signature for an event dispatch callback.
-DispatchT = typing.Callable[["GatewayClient", str, typing.Dict], None]
+DispatchT = typing.Callable[["ShardConnection", str, typing.Dict], None]
 
 
 class ShardConnection:
     """Implementation of a client for the Discord Gateway.
+
     This is a websocket connection to Discord that is used to inform your
     application of events that occur, and to allow you to change your presence,
     amongst other real-time applications.
 
-    Each :obj:`GatewayClient` represents a single shard.
+    Each :obj:`ShardConnection` represents a single shard.
 
     Expected events that may be passed to the event dispatcher are documented in the
     `gateway event reference <https://discordapp.com/developers/docs/topics/gateway#commands-and-events>`_.
@@ -89,7 +90,7 @@ class ShardConnection:
 
     * ``CONNECT`` - fired on initial connection to Discord.
     * ``RECONNECT`` - fired if we have previously been connected to Discord
-      but are making a new connection on an existing :obj:`GatewayClient` instance.
+      but are making a new connection on an existing :obj:`ShardConnection` instance.
     * ``DISCONNECT`` - fired when the connection is closed for any reason.
 
     Parameters
@@ -110,7 +111,7 @@ class ShardConnection:
     dispatch: dispatch function
         The function to invoke with any dispatched events. This must not be a
         coroutine function, and must take three arguments only. The first is
-        the reference to this :obj:`GatewayClient` The second is the
+        the reference to this :obj:`ShardConnection` The second is the
         event name.
     initial_presence: :obj:`typing.Dict`, optional
         A raw JSON object as a :obj:`typing.Dict` that should be set as the initial
@@ -408,7 +409,7 @@ class ShardConnection:
 
     @property
     def uptime(self) -> datetime.timedelta:
-        """The amount of time the connection has been running for.
+        """Amount of time the connection has been running for.
 
         Returns
         -------
@@ -433,7 +434,7 @@ class ShardConnection:
 
     @property
     def intents(self) -> typing.Optional[codes.GatewayIntent]:
-        """The intents being used.
+        """Intents being used.
 
         If this is ``None``, no intent usage was being
         used on this shard. On V6 this would be regular usage as prior to
@@ -449,7 +450,7 @@ class ShardConnection:
 
     @property
     def reconnect_count(self) -> int:
-        """The ammount of times the gateway has reconnected since initialization.
+        """Amount of times the gateway has reconnected since initialization.
 
         This can be used as a debugging context, but is also used internally
         for exception management.
@@ -457,7 +458,7 @@ class ShardConnection:
         Returns
         -------
         :obj:`int`
-            The ammount of times the gateway has reconnected since initialization.
+            The amount of times the gateway has reconnected since initialization.
         """
         # 0 disconnects + not is_connected => 0
         # 0 disconnects + is_connected => 0
@@ -467,9 +468,10 @@ class ShardConnection:
         # 2 disconnects + is_connected = 2
         return max(0, self.disconnect_count - int(not self.is_connected))
 
+    # Ignore docstring not starting in an imperative mood
     @property
-    def current_presence(self) -> typing.Dict:
-        """The current presence of the gateway.
+    def current_presence(self) -> typing.Dict:  # noqa: D401
+        """Current presence for the gateway.
 
         Returns
         -------
@@ -481,18 +483,14 @@ class ShardConnection:
 
     @typing.overload
     async def request_guild_members(self, guild_id: str, *guild_ids: str, limit: int = 0, query: str = "") -> None:
-        """Request guild members in the given guilds using a query string and
-        an optional limit.
-        """
+        """Request guild members in the given guilds using a query string and an optional limit."""
 
     @typing.overload
-    async def request_guild_members(self, guild_id: str, *guild_ids: str, user_ids: typing.Collection[str]) -> None:
-        """Request guild members in the given guilds using a set of user IDs
-        to resolve.
-        """
+    async def request_guild_members(self, guild_id: str, *guild_ids: str, user_ids: typing.Sequence[str]) -> None:
+        """Request guild members in the given guilds using a set of user IDs to resolve."""
 
     async def request_guild_members(self, guild_id, *guild_ids, **kwargs):
-        """Requests the guild members for a guild or set of guilds.
+        """Request the guild members for a guild or set of guilds.
 
         These guilds must be being served by this shard, and the results will be
         provided to the dispatcher with ``GUILD_MEMBER_CHUNK`` events.
@@ -503,7 +501,7 @@ class ShardConnection:
             The first guild to request members for.
         *guild_ids : :obj:`str`
             Additional guilds to request members for.
-        **kwargs :
+        **kwargs
             Optional arguments.
 
         Keyword Args
@@ -515,16 +513,15 @@ class ShardConnection:
             An optional string to filter members with. If specified, only
             members who have a username starting with this string will be
             returned.
-        user_ids : :obj:`typing.Itinerable` [ :obj:`str` ]
-             An optional list of user IDs to return member info about.
+        user_ids : :obj:`typing.Sequence` [ :obj:`str` ]
+            An optional list of user IDs to return member info about.
 
         Note
         ----
         You may not specify ``user_ids`` at the same time as ``limit`` and
         ``query``. Likewise, if you specify one of ``limit`` or ``query``,
         the other must also be included. The default, if no optional arguments
-        are specified, is to use a ``limit`` of ``0`` and a ``query`` of
-        ``""`` (empty-string).
+        are specified, is to use a ``limit = 0`` and a ``query = ""`` (empty-string).
         """
         guilds = [guild_id, *guild_ids]
         constraints = {}
@@ -580,8 +577,7 @@ class ShardConnection:
             self.closed_event.set()
 
     async def connect(self, client_session_type=aiohttp.ClientSession) -> None:
-        """Connect to the gateway and return when it closes (usually with some
-        form of exception documented in :mod:`hikari.net.errors`).
+        """Connect to the gateway and return when it closes.
 
         Parameters
         ----------

@@ -63,29 +63,27 @@ class HikariEntity(metaclass=abc.ABCMeta):
 
 
 class Deserializable:
-    """A mixin for any type that allows deserialization from a raw value
-    into a Hikari entity.
-    """
+    """A mixin for any type that allows deserialization from a raw value into a Hikari entity."""
 
     __slots__ = ()
 
     @classmethod
     def deserialize(cls: typing.Type[T_contra], payload: RawEntityT) -> T_contra:
-        """Deserialize the given payload into this type and return the
-        constructed object.
+        """Deserialize the given payload into the object.
+
+        Parameters
+        ----------
+        payload
+            The payload to deserialize into the object.
         """
         return marshaller.HIKARI_ENTITY_MARSHALLER.deserialize(payload, cls)
 
 
 class Serializable:
-    """A mixin for any type that allows serialization from a Hikari entity
-    into a raw value.
-    """
+    """A mixin for any type that allows serialization from a Hikari entity into a raw value."""
 
     __slots__ = ()
 
     def serialize(self: T_co) -> RawEntityT:
-        """Serialize this instance into a naive value such as a
-        :obj:`dict` and return it.
-        """
+        """Serialize this instance into a naive value."""
         return marshaller.HIKARI_ENTITY_MARSHALLER.serialize(self)

@@ -67,7 +67,7 @@ class GatewayBot(entities.HikariEntity, entities.Deserializable):
     #: Information about the bot's current session start limit.
     #:
     #: :type: :obj:`SessionStartLimit`
-    session_start_limit: int = marshaller.attrib(deserializer=SessionStartLimit.deserialize)
+    session_start_limit: SessionStartLimit = marshaller.attrib(deserializer=SessionStartLimit.deserialize)
 
 
 @marshaller.attrs(slots=True)
@@ -82,14 +82,14 @@ class GatewayActivity(entities.Deserializable, entities.Serializable):
     #: :type: :obj:`str`
     name: str = marshaller.attrib(deserializer=str, serializer=str)
 
-    #: The activity url. Only valid for ``STREAMING`` activities.
+    #: The activity URL. Only valid for ``STREAMING`` activities.
     #:
     #: :type: :obj:`str`, optional
     url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_none=None, if_undefined=None)
 
     #: The activity type.
     #:
-    #: :type: :obj:`guilds.ActivityType`
+    #: :type: :obj:`hikari.core.guilds.ActivityType`
     type: guilds.ActivityType = marshaller.attrib(
         deserializer=guilds.ActivityType, serializer=int, if_undefined=lambda: guilds.ActivityType.PLAYING
     )

@@ -59,31 +59,29 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
 
     @property
     def avatar_url(self) -> str:
-        """The url for this user's custom avatar if set, else default."""
+        """URL for this user's custom avatar if set, else default."""
         return self.format_avatar_url()
 
     def format_avatar_url(self, fmt: typing.Optional[str] = None, size: int = 2048) -> str:
-        """Generate the avatar url for this user's custom avatar if set,
-        else their default avatar.
+        """Generate the avatar URL for this user's custom avatar if set, else their default avatar.
 
         Parameters
         ----------
         fmt : :obj:`str`
-            The format to use for this url, defaults to ``png`` or ``gif``.
+            The format to use for this URL, defaults to ``png`` or ``gif``.
             Supports ``png``, ``jpeg``, ``jpg``, ``webp`` and ``gif`` (when
             animated). Will be ignored for default avatars which can only be
             ``png``.
         size : :obj:`int`
-            The size to set for the url, defaults to ``2048``.
+            The size to set for the URL, defaults to ``2048``.
             Can be any power of two between 16 and 2048.
             Will be ignored for default avatars.
 
         Returns
         -------
         :obj:`str`
-            The string url.
+            The string URL.
         """
-
         if not self.avatar_hash:
             return cdn.generate_cdn_url("embed/avatars", str(self.default_avatar), fmt="png", size=None)
         if fmt is None and self.avatar_hash.startswith("a_"):
@@ -94,7 +92,7 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
 
     @property
     def default_avatar(self) -> int:
-        """The number representation of this user's default avatar."""
+        """Integer representation of this user's default avatar."""
         return int(self.discriminator) % 5
 
 

@@ -18,7 +18,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe audit logs on Discord.
 
-
 .. inheritance-diagram::
     hikari.core.audit_logs
     :parts: 1
@@ -236,9 +235,10 @@ class AuditLogEventType(enum.IntEnum):
     INTEGRATION_DELETE = 82
 
 
+# Ignore docstring not starting in an imperative mood
 def register_audit_log_entry_info(
     type_: AuditLogEventType, *additional_types: AuditLogEventType
-) -> typing.Callable[[typing.Type["BaseAuditLogEntryInfo"]], typing.Type["BaseAuditLogEntryInfo"]]:
+) -> typing.Callable[[typing.Type["BaseAuditLogEntryInfo"]], typing.Type["BaseAuditLogEntryInfo"]]:  # noqa: D401
     """Generates a decorator for defined audit log entry info entities.
 
     Allows them to be associated with given entry type(s).
@@ -343,8 +343,7 @@ class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
 @register_audit_log_entry_info(AuditLogEventType.MESSAGE_BULK_DELETE)
 @marshaller.attrs(slots=True)
 class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
-    """Represents extra information for the message bulk delete audit entry.
-    """
+    """Represents extra information for the message bulk delete audit entry."""
 
     #: The amount of messages that were deleted.
     #:
@@ -355,8 +354,7 @@ class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
 @register_audit_log_entry_info(AuditLogEventType.MESSAGE_DELETE)
 @marshaller.attrs(slots=True)
 class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
-    """Represents extra information attached to the message delete audit entry.
-    """
+    """Represents extra information attached to the message delete audit entry."""
 
     #: The guild text based channel where these message(s) were deleted.
     #:
@@ -367,8 +365,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
 @register_audit_log_entry_info(AuditLogEventType.MEMBER_DISCONNECT)
 @marshaller.attrs(slots=True)
 class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
-    """Represents extra information for the voice chat member disconnect entry.
-    """
+    """Represents extra information for the voice chat member disconnect entry."""
 
     #: The amount of members who were disconnected from voice in this entry.
     #:
@@ -379,8 +376,7 @@ class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
 @register_audit_log_entry_info(AuditLogEventType.MEMBER_MOVE)
 @marshaller.attrs(slots=True)
 class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
-    """Represents extra information for the voice chat based member move entry.
-    """
+    """Represents extra information for the voice chat based member move entry."""
 
     #: The channel these member(s) were moved to.
     #:

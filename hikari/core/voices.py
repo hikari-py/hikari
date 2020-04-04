@@ -16,8 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Components and entities that are used to describe voice states on Discord.
-"""
+"""Components and entities that are used to describe voice states on Discord."""
 __all__ = ["VoiceRegion", "VoiceState"]
 
 import typing
@@ -34,25 +33,25 @@ class VoiceState(entities.HikariEntity, entities.Deserializable):
 
     #: The ID of the guild this voice state is in, if applicable.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
     )
 
     #: The ID of the channel this user is connected to.
     #:
-    #: :type: :obj:`.core.snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize, if_none=None)
 
     #: The ID of the user this voice state is for.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`
     user_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: The guild member this voice state is for if the voice state is in a
     #: guild.
     #:
-    #: :type: :obj:`guilds.GuildMember`, optional
+    #: :type: :obj:`hikari.core.guilds.GuildMember`, optional
     member: typing.Optional[guilds.GuildMember] = marshaller.attrib(
         deserializer=guilds.GuildMember.deserialize, if_undefined=None
     )

@@ -25,7 +25,7 @@ from hikari.core import events
 from hikari.core.state import base_state
 
 
-class DefaultState(base_state.BaseState):
+class DefaultState(base_state.BaseState):  # noqa: D101
     def __init__(self, event_dispatcher: dispatcher.EventDispatcher):
         super().__init__()
         self.event_dispatcher: dispatcher.EventDispatcher = event_dispatcher

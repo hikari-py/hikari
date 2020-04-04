@@ -16,8 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Configuration objects for various low-level protocols such as HTTP
-connections and SSL management, proxies, etc."""
+"""Configuration objects for various low-level protocols.
+
+These include HTTP connections and SSL management, proxies, etc.
+"""
 __all__ = ["HTTPProtocolConfig"]
 
 import ssl
@@ -31,10 +33,11 @@ from hikari.core import entities
 
 @marshaller.attrs(kw_only=True)
 class HTTPProtocolConfig(entities.HikariEntity, entities.Deserializable):
-    """A configuration class that can be deserialized from a :obj:`dict`. This
-    represents any HTTP-specific implementation and protocol details such as
-    how to manage redirects, how to manage SSL, and how to use a proxy if
-    needed.
+    """A configuration class that can be deserialized from a :obj:`typing.Dict`.
+
+    This represents any HTTP-specific implementation and protocol details
+    such as how to manage redirects, how to manage SSL, and how to use a
+    proxy if needed.
 
     All fields are optional kwargs that can be passed to the constructor.
 

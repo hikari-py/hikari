@@ -16,8 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Provides the valid routes that can be used on the API, as well as mechanisms to aid
-with rate limit bucketing."""
+"""Provides the valid routes that can be used on the API, as well as mechanisms to aid with rate limit bucketing."""
 __all__ = ["CompiledRoute", "RouteTemplate"]
 
 import typing
@@ -26,7 +25,7 @@ DEFAULT_MAJOR_PARAMS = {"channel_id", "guild_id", "webhook_id"}
 
 
 class CompiledRoute:
-    """A compiled representation of a route ready to be made into a full URL and to be used for a request.
+    """A compiled representation of a route ready to be made into a full e and to be used for a request.
 
     Parameters
     ----------
@@ -64,7 +63,7 @@ class CompiledRoute:
         self.hash_code = hash((path_template, major_params_hash))
 
     def create_url(self, base_url: str) -> str:
-        """Creates the full URL with which you can make a request.
+        """Create the full URL with which you can make a request.
 
         Parameters
         ----------
@@ -76,7 +75,6 @@ class CompiledRoute:
         :obj:`str`
             The full URL for the route.
         """
-
         return base_url + self.compiled_path
 
     def create_real_bucket_hash(self, initial_bucket_hash: str) -> str:
@@ -154,8 +152,10 @@ class RouteTemplate:
             self.major_params = frozenset(major_params)
 
     def compile(self, method: str, /, **kwargs: typing.Any) -> CompiledRoute:
-        """Generate a formatted :obj:`CompiledRoute` for this route, taking into account any URL parameters that have
-        been passed, and extracting the :attr:major_params" for bucket hash operations accordingly.
+        """Generate a formatted :obj:`CompiledRoute` for this route template.
+
+        This takes into account any URL parameters that have been passed, and extracting
+        the :attr:major_params" for bucket hash operations accordingly.
 
         Parameters
         ----------

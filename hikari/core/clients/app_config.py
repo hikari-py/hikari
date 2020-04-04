@@ -34,11 +34,10 @@ class AppConfig(entities.HikariEntity, entities.Deserializable):
     All fields are optional kwargs that can be passed to the constructor.
 
     "Deserialized" and "unspecified" defaults are only applicable if you
-    create the object using :meth:`deserialize`.
+    create the object using ``deserialize()``.
 
     Examples
     --------
-
     Initializing programatically:
         .. code-block:: python
 
@@ -129,18 +128,18 @@ class AppConfig(entities.HikariEntity, entities.Deserializable):
 
     #: The HTTP configuration to use.
     #:
-    #: If unspecified or None, then this will be a set of default values.
+    #: If unspecified or ``None```, then this will be a set of default values.
     #:
-    #: :type: :obj:`hikari.core.http_config.HTTPConfig`, optional
+    #: :type: :obj:`hikari.core.clients.http_config.HTTPConfig`, optional
     http: typing.Optional[http_config.HTTPConfig] = marshaller.attrib(
         deserializer=http_config.HTTPConfig.deserialize, if_none=None, if_undefined=None, default=None
     )
 
     #: The gateway configuration to use.
     #:
-    #: If unspecified or None, then this will be a set of default values.
+    #: If unspecified or ``None```, then this will be a set of default values.
     #:
-    #: :type: :obj:`hikari.core.gateway_config.GatewayConfig`, optional
+    #: :type: :obj:`hikari.core.clients.gateway_config.GatewayConfig`, optional
     gateway: typing.Optional[gateway_config.GatewayConfig] = marshaller.attrib(
         deserializer=gateway_config.GatewayConfig.deserialize, if_none=None, if_undefined=None, default=None
     )
