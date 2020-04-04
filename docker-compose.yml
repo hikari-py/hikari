@@ -4,6 +4,6 @@ services:
   gateway-test:
     build: .
     restart: always
-    entrypoint: python -m hikari
+    entrypoint: python -m hikari.client.gateway_runner
     env_file:
       - credentials.env
