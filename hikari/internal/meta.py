@@ -30,7 +30,7 @@ class SingletonMeta(type):
     interpreter that created it is terminated.
 
     Example
-    --------
+    -------
     .. code-block:: python
 
         >>> class Unknown(metaclass=SingletonMeta):
@@ -67,7 +67,6 @@ class Singleton(metaclass=SingletonMeta):
 
     Example
     -------
-
     .. code-block:: python
 
         >>> class MySingleton(Singleton):

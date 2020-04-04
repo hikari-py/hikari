@@ -45,8 +45,10 @@ ResultT = typing.Union[CastOutputT, DefaultT]
 
 
 def nullable_cast(value: CastInputT, cast: TypeCastT) -> ResultT:
-    """Attempts to cast the given ``value`` with the given ``cast``, but only if the
-    ``value`` is not ``None``. If it is ``None``, then ``None`` is returned instead.
+    """Attempt to cast the given ``value`` with the given ``cast``.
+
+    This will only succeed if ``value`` is not ``None``. If it is ``None``,
+    then ``None`` is returned instead.
     """
     if value is None:
         return None
@@ -70,7 +72,7 @@ def put_if_specified(
     value: typing.Any,
     type_after: typing.Optional[TypeCastT] = None,
 ) -> None:
-    """Add a value to the mapping under the given key as long as the value is not :obj:`typing.Literal`
+    """Add a value to the mapping under the given key as long as the value is not ``...``.
 
     Parameters
     ----------
@@ -132,12 +134,11 @@ def image_bytes_to_image_data(img_bytes: typing.Optional[bytes] = None) -> typin
 
 
 def try_cast_or_defer_unary_operator(type_):
-    """Returns a unary operator that will try to cast the given input to
-    whatever type is provided.
+    """Return a unary operator that will try to cast the given input to the type provided.
 
     Parameters
     ----------
-    type_:
+    type_ : :obj:`typing.Callable` [ ..., :obj:`T` ]
         The type to cast to.
     """
     return lambda data: try_cast(data, type_, data)
@@ -151,7 +152,12 @@ def parse_http_date(date_str: str) -> datetime.datetime:
     date_str : :obj:`str`
         The RFC-2822 (section 3.3) compliant date string to parse.
 
-    See also
+    Returns
+    -------
+    :obj:`datetime.datetime`
+        The HTTP date as a datetime object.
+
+    See Also
     --------
     `<https://www.ietf.org/rfc/rfc2822.txt>`_
     """
@@ -164,14 +170,19 @@ ISO_8601_TZ_PART = re.compile(r"([+-])(\d{2}):(\d{2})$")
 
 
 def parse_iso_8601_ts(date_string: str) -> datetime.datetime:
-    """Parses an ISO 8601 date string into a datetime object
+    """Parse an ISO 8601 date string into a :obj:`datetime.datetime` object.
 
     Parameters
     ----------
     date_string : :obj:`str`
         The ISO 8601 compliant date string to parse.
 
-    See also
+    Returns
+    -------
+    :obj:`datetime.datetime`
+        The ISO 8601 date string as a datetime object.
+
+    See Also
     --------
     `<https://en.wikipedia.org/wiki/ISO_8601>`_
     """
@@ -200,7 +211,7 @@ DISCORD_EPOCH = 1_420_070_400
 
 
 def discord_epoch_to_datetime(epoch: int) -> datetime.datetime:
-    """Parses a discord epoch into a datetime object
+    """Parse a Discord epoch into a :obj:`datetime.datetime` object.
 
     Parameters
     ----------
@@ -216,7 +227,7 @@ def discord_epoch_to_datetime(epoch: int) -> datetime.datetime:
 
 
 def unix_epoch_to_ts(epoch: int) -> datetime.datetime:
-    """Parses a unix epoch to a datetime object
+    """Parse a UNIX epoch to a :obj:`datetime.datetime` object.
 
     Parameters
     ----------
@@ -232,7 +243,7 @@ def unix_epoch_to_ts(epoch: int) -> datetime.datetime:
 
 
 def make_resource_seekable(resource: typing.Any) -> typing.Union[io.BytesIO, io.StringIO]:
-    """Given some representation of data, make a seekable resource to use.
+    """Make a seekable resource to use off some representation of data.
 
     This supports :obj:`bytes`, :obj:`bytearray`, :obj:`memoryview`, and :obj:`str`.
     Anything else is just returned.

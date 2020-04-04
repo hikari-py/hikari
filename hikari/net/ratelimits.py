@@ -16,7 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
+"""Complex rate limiting mechanisms.
+
 Provides an implementation for the complex rate limiting mechanisms that Discord
 requires for rate limit handling that conforms to the passed bucket headers
 correctly.
@@ -55,8 +56,7 @@ time, so hard coding this logic is not a useful thing to be doing.
 Rate limits, on the other hand, apply to a bucket and are specific to the major
 parameters of the compiled route. This means that ``POST /channels/123/messages``
 and ``POST /channels/456/messages`` do not share the same real bucket, despite
-Discord providing the same bucket hash. A
-:obj:`hikari.net.ratelimits.RealBucketHash`, therefore, is the :obj:`str`
+Discord providing the same bucket hash. A real bucket hash is the :obj:`str`
 hash of the bucket that Discord sends us in a response concatenated to the
 corresponding major parameters. This is used for quick bucket indexing
 internally in this module.
@@ -75,19 +75,18 @@ Unknown buckets have a hardcoded initial hash code internally.
 Initially acquiring time on a bucket
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Each time you :meth:`IRateLimiter.acquire` a request
-timeslice for a given :obj:`hikari.net.ratelimits.CompiledRoute`, several
+Each time you ``BaseRateLimiter.acquire()`` a request
+timeslice for a given :obj:`hikari.net.routes.CompiledRoute`, several
 things happen. The first is that we attempt to find the existing bucket for
 that route, if there is one, or get an unknown bucket otherwise. This is done
-by creating a :obj:`hikari.net.ratelimits.RealBucketHash` from the compiled
-route. The initial hash is calculated using a lookup table that maps
-:obj:`hikari.net.ratelimits.CompiledRoute` objects to their corresponding
-initial hash codes, or to the unknown bucket hash code if not yet known. This
-initial hash is processed by the :class`hikari.net.ratelimits.CompiledRoute` to
-provide the :obj:`RealBucketHash` we need to get the route's bucket object
-internally.
+by creating a real bucket hash` from the compiled route. The initial hash
+is calculated using a lookup table that maps :obj:`hikari.net.routes.CompiledRoute`
+objects to their corresponding initial hash codes, or to the unknown bucket
+hash code if not yet known. This initial hash is processed by the
+:obj:`hikari.net.routes.CompiledRoute` to provide the real bucket hash we
+need to get the route's bucket object internally.
 
-The :meth:`acquire` method will take the bucket and acquire a new timeslice on
+The ``acquire`` method will take the bucket and acquire a new timeslice on
 it. This takes the form of a :obj:`asyncio.Future` which should be awaited by
 the caller and will complete once the caller is allowed to make a request. Most
 of the time, this is done instantly, but if the bucket has an active rate limit
@@ -102,15 +101,15 @@ easily begin to re-ratelimit itself if needed. Once the task is complete, it
 tidies itself up and disposes of itself. This task will complete once the queue
 becomes empty.
 
-The result of :meth:`hikari.net.ratelimits.RateLimiter.acquire` is a tuple of a
+The result of ``RateLimiter.acquire()`` is a tuple of a
 :obj:`asyncio.Future` to await on which completes when you are allowed to
-proceed with making a request, and a :class`RealBucketHash` which should be
+proceed with making a request, and a real bucket hash which should be
 stored temporarily. This will be explained in the next section.
 
 When you make your response, you should be sure to set the
-``X-RateLimit-Precision`` header to `millisecond` to ensure a much greater
+``X-RateLimit-Precision`` header to ``millisecond`` to ensure a much greater
 accuracy against rounding errors for rate limits (reduces the error margin from
-`1` second to `1` millisecond).
+``1`` second to ``1`` millisecond).
 
 Handling the rate limit headers of a response
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -133,7 +132,7 @@ These headers are:
 * ``X-RateLimit-Reset``:
     a :obj:`float` containing the number of seconds since
     1st January 1970 at 0:00:00 UTC at which the current ratelimit window
-    resets. This should be parsed to a :obj:`datetime` using
+    resets. This should be parsed to a :obj:`datetime.datetime` using
     :func:`datetime.datetime.fromtimestamp`, passing
     :obj:`datetime.timezone.utc` as a second parameter.
 
@@ -148,14 +147,14 @@ information in each bucket you use.
 Tidying up
 ~~~~~~~~~~
 
-To prevent unused buckets cluttering up memory, each :obj:`IRateLimiter`
+To prevent unused buckets cluttering up memory, each :obj:`BaseRateLimiter`
 instance spins up a :obj:`asyncio.Task` that periodically locks the bucket
 list (not threadsafe, only using the concept of asyncio not yielding in regular
 functions) and disposes of any clearly stale buckets that are no longer needed.
 These will be recreated again in the future if they are needed.
 
-When shutting down an application, one must remember to :meth`close` the
-:obj:`IRateLimiter` that has been used. This will ensure the garbage collection
+When shutting down an application, one must remember to ``close()`` the
+:obj:`BaseRateLimiter` that has been used. This will ensure the garbage collection
 task is stopped, and will also ensure any remaining futures in any bucket queues
 have an :obj:`asyncio.CancelledError` set on them to prevent deadlocking
 ratelimited calls that may be waiting to be unlocked.
@@ -201,8 +200,7 @@ class BaseRateLimiter(abc.ABC):
 
     @abc.abstractmethod
     def acquire(self) -> more_asyncio.Future[None]:
-        """Acquire permission to perform a task that needs to have rate limit
-        management enforced.
+        """Acquire permission to perform a task that needs to have rate limit management enforced.
 
         Returns
         -------
@@ -388,7 +386,6 @@ class ManualRateLimiter(BurstRateLimiter):
         expected to set the :attr:`throttle_task` to ``None``. This means you can
         check if throttling is occurring by checking if :attr:`throttle_task`
         is not ``None``.
-
         """
         self.logger.warning("you are being globally rate limited for %ss", retry_after)
         await asyncio.sleep(retry_after)
@@ -399,7 +396,9 @@ class ManualRateLimiter(BurstRateLimiter):
 
 
 class WindowedBurstRateLimiter(BurstRateLimiter):
-    """Rate limiter for rate limits that last fixed periods of time with a
+    """Windowed burst rate limiter.
+
+    Rate limiter for rate limits that last fixed periods of time with a
     fixed number of times it can be used in that time frame.
 
     To use this, you should call :meth:`acquire` and await the result
@@ -734,8 +733,8 @@ class HTTPBucketRateLimiterManager:
         Parameters
         ----------
         poll_period : :obj:`float`
-            The period to poll the garbage collector at. This defaults to 20
-            seconds.
+            Period to poll the garbage collector at in seconds. Defaults
+            to ``20`` seconds.
         """
         if not self.gc_task:
             self.gc_task = asyncio.get_running_loop().create_task(self.gc(poll_period))
@@ -752,7 +751,8 @@ class HTTPBucketRateLimiterManager:
         self.real_hashes_to_buckets.clear()
         self.routes_to_hashes.clear()
 
-    async def gc(self, poll_period: float = 20) -> None:
+    # Ignore docstring not starting in an imperative mood
+    async def gc(self, poll_period: float = 20) -> None:  # noqa: D401
         """The garbage collector loop.
 
         This is designed to run in the background and manage removing unused
@@ -865,7 +865,6 @@ class HTTPBucketRateLimiterManager:
 
         Parameters
         ----------
-
         compiled_route : :obj:`hikari.net.routes.CompiledRoute`
             The compiled route to get the bucket for.
         bucket_header : :obj:`str`, optional
@@ -897,8 +896,7 @@ class HTTPBucketRateLimiterManager:
 
 
 class ExponentialBackOff:
-    """Implementation of an asyncio-compatible exponential back-off algorithm
-    with random jitter.
+    r"""Implementation of an asyncio-compatible exponential back-off algorithm with random jitter.
 
     .. math::
 
@@ -911,7 +909,6 @@ class ExponentialBackOff:
 
     Parameters
     ----------
-
     base : :obj:`float`
         The base to use. Defaults to ``2``.
     maximum : :obj:`float`, optional
@@ -966,9 +963,9 @@ class ExponentialBackOff:
         return value
 
     def __iter__(self) -> "ExponentialBackOff":
-        """Returns this object, as it is an iterator."""
+        """Return this object, as it is an iterator."""
         return self
 
     def reset(self) -> None:
-        """Resets the exponential back-off."""
+        """Reset the exponential back-off."""
         self.increment = 0

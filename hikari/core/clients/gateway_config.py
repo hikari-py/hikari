@@ -121,7 +121,7 @@ class GatewayConfig(entities.HikariEntity, entities.Deserializable):
     #: The initial activity to set all shards to when starting the gateway. If
     #: ``None``, then no activity will be set.
     #:
-    #: :type: :obj:`GatewayActivity`, optional
+    #: :type: :obj:`hikari.core.gateway_entities.GatewayActivity`, optional
     initial_activity: typing.Optional[gateway_entities.GatewayActivity] = marshaller.attrib(
         deserializer=gateway_entities.GatewayActivity.deserialize, if_none=None, if_undefined=None, default=None
     )

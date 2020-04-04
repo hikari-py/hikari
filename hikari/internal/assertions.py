@@ -37,20 +37,20 @@ BaseTypeInstanceT = typing.TypeVar("BaseTypeInstanceT")
 
 
 def assert_that(condition: bool, message: str = None, error_type: type = ValueError) -> None:
-    """Raises a :obj:`ValueError` with the optional description if the given condition is falsified."""
+    """If the given condition is falsified, raise a :obj:`ValueError` with the optional description provided."""
     if not condition:
         raise error_type(message or "condition must not be False")
 
 
 def assert_not_none(value: ValueT, message: typing.Optional[str] = None) -> ValueT:
-    """Raises a :obj:`ValueError` with the optional description if the given value is ``None``."""
+    """If the given value is ``None``, raise a :obj:`ValueError` with the optional description provided."""
     if value is None:
         raise ValueError(message or "value must not be None")
     return value
 
 
 def assert_in_range(value, min_inclusive, max_inclusive, name: str = None):
-    """Raise a value error if a value is not in the range [min, max]"""
+    """If a value is not in the range [min, max], raise a :obj:`ValueError`."""
     if not (min_inclusive <= value <= max_inclusive):
         name = name or "The value"
         raise ValueError(f"{name} must be in the inclusive range of {min_inclusive} and {max_inclusive}")

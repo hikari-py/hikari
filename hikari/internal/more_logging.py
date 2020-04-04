@@ -28,7 +28,7 @@ import typing
 
 
 def get_named_logger(obj: typing.Any, *extra_objs: typing.Any) -> logging.Logger:
-    """Builds an appropriately named logger.
+    """Build an appropriately named logger.
 
     If the passed object is an instance of a class, the class is used instead.
 

@@ -17,16 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities related to discord's Oauth2 flow."""
-__all__ = [
-    "Application",
-    "ConnectionVisibility",
-    "Owner",
-    "OwnConnection",
-    "OwnGuild",
-    "Team",
-    "TeamMember",
-    "TeamMembershipState",
-]
+__all__ = ["Application", "ApplicationOwner", "OwnGuild", "Team", "TeamMember", "TeamMembershipState"]
 
 import enum
 import typing
@@ -112,10 +103,7 @@ class OwnConnection(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.attrs(slots=True)
 class OwnGuild(guilds.PartialGuild):
-    """Represents a user bound partial guild object.
-
-    Returned by the ``GET Current User Guilds`` endpoint.
-    """
+    """Represents a user bound partial guild object."""
 
     #: Whether the current user owns this guild.
     #:
@@ -124,7 +112,7 @@ class OwnGuild(guilds.PartialGuild):
 
     #: The guild level permissions that apply to the current user or bot.
     #:
-    #: :type: :obj:`permissions.Permission`
+    #: :type: :obj:`hikari.core.permissions.Permission`
     my_permissions: permissions.Permission = marshaller.attrib(
         raw_name="permissions", deserializer=permissions.Permission
     )
@@ -158,7 +146,7 @@ class TeamMember(entities.HikariEntity, entities.Deserializable):
 
     #: The ID of the team this member belongs to.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`
     team_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: The user object of this team member.
@@ -169,7 +157,7 @@ class TeamMember(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.attrs(slots=True)
 class Team(snowflakes.UniqueEntity, entities.Deserializable):
-    """This represents a Team and it's members."""
+    """Represents a development team, along with all its members."""
 
     #: The hash of this team's icon, if set.
     #:
@@ -178,37 +166,37 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
 
     #: The member's that belong to this team.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`snowflakes.Snowflake`, :obj:`TeamMember` ]
+    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.core.snowflakes.Snowflake`, :obj:`TeamMember` ]
     members: typing.Mapping[snowflakes.Snowflake, TeamMember] = marshaller.attrib(
         deserializer=lambda members: {m.user.id: m for m in map(TeamMember.deserialize, members)}
     )
 
-    #: The snowflake ID of this team's owner.
+    #: The ID of this team's owner.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`
     owner_user_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     @property
     def icon_url(self) -> typing.Optional[str]:
-        """The url of this team's icon, if set."""
+        """URL of this team's icon, if set."""
         return self.format_icon_url()
 
     def format_icon_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
-        """Generate the icon url for this team if set.
+        """Generate the icon URL for this team if set.
 
         Parameters
         ----------
         fmt : :obj:`str`
-            The format to use for this url, defaults to ``png``.
+            The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
         size : :obj:`int`
-            The size to set for the url, defaults to ``2048``. Can be any power
+            The size to set for the URL, defaults to ``2048``. Can be any power
             of two between 16 and 2048 inclusive.
 
         Returns
         -------
         :obj:`str`, optional
-            The string url, will be :obj:`None` if not set.
+            The string URL.
         """
         if self.icon_hash:
             return cdn.generate_cdn_url("team-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
@@ -216,7 +204,7 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
 
 
 @marshaller.attrs(slots=True)
-class Owner(users.User):
+class ApplicationOwner(users.User):
     """Represents the user who owns an application, may be a team user."""
 
     #: This user's flags.
@@ -226,9 +214,7 @@ class Owner(users.User):
 
     @property
     def is_team_user(self) -> bool:
-        """If this user is a Team user (the owner of an application that's
-        owned by a team).
-        """
+        """If this user is a Team user (the owner of an application that's owned by a team)."""
         return bool((self.flags >> 10) & 1)
 
 
@@ -266,10 +252,12 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
     #: This should always be ``None`` in application objects retrieved outside
     #: Discord's oauth2 flow.
     #:
-    #: :type: :obj:`Owner`, optional
-    owner: typing.Optional[Owner] = marshaller.attrib(deserializer=Owner.deserialize, if_undefined=None)
+    #: :type: :obj:`ApplicationOwner`, optional
+    owner: typing.Optional[ApplicationOwner] = marshaller.attrib(
+        deserializer=ApplicationOwner.deserialize, if_undefined=None
+    )
 
-    #: A collection of this application's rpc origin urls, if rpc is enabled.
+    #: A collection of this application's rpc origin URLs, if rpc is enabled.
     #:
     #: :type: :obj:`typing.Set` [ :obj:`str` ], optional
     rpc_origins: typing.Optional[typing.Set[str]] = marshaller.attrib(deserializer=set, if_undefined=None)
@@ -300,19 +288,19 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
     #: The ID of the guild this application is linked to
     #: if it's sold on Discord.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
     )
 
     #: The ID of the primary "Game SKU" of a game that's sold on Discord.
     #:
-    #: :type: :obj:`snowflakes.Snowflake`, optional
+    #: :type: :obj:`hikari.core.snowflakes.Snowflake`, optional
     primary_sku_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
     )
 
-    #: The url slug that links to this application's store page
+    #: The URL slug that links to this application's store page
     #: if it's sold on Discord.
     #:
     #: :type: :obj:`str`, optional
@@ -327,25 +315,25 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
 
     @property
     def icon_url(self) -> typing.Optional[str]:
-        """The url for this team's icon, if set."""
+        """URL for this team's icon, if set."""
         return self.format_icon_url()
 
     def format_icon_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
-        """Generate the icon url for this application if set.
+        """Generate the icon URL for this application if set.
 
         Parameters
         ----------
         fmt : :obj:`str`
-            The format to use for this url, defaults to ``png``.
+            The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ```webp``.
         size : :obj:`int`
-            The size to set for the url, defaults to ``2048``.
+            The size to set for the URL, defaults to ``2048``.
             Can be any power of two between 16 and 2048.
 
         Returns
         -------
         :obj:`str`, optional
-            The string url.
+            The string URL.
         """
         if self.icon_hash:
             return cdn.generate_cdn_url("app-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
@@ -353,26 +341,25 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
 
     @property
     def cover_image_url(self) -> typing.Optional[str]:
-        """The url for this icon's store cover image, if set."""
+        """URL for this icon's store cover image, if set."""
         return self.format_cover_image_url()
 
     def format_cover_image_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
-        """Generate the url for this application's store page's cover image is
-        set and applicable.
+        """Generate the URL for this application's store page's cover image is set and applicable.
 
         Parameters
         ----------
         fmt : :obj:`str`
-            The format to use for this url, defaults to ``png``.
+            The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
         size : :obj:`int`
-            The size to set for the url, defaults to ``2048``.
+            The size to set for the URL, defaults to ``2048``.
             Can be any power of two between 16 and 2048.
 
         Returns
         -------
         :obj:`str`, optional
-            The string url.
+            The string URL.
         """
         if self.cover_image_hash:
             return cdn.generate_cdn_url("app-assets", str(self.id), self.cover_image_hash, fmt=fmt, size=size)

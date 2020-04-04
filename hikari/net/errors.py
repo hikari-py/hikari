@@ -65,8 +65,7 @@ class GatewayError(errors.HikariError):
 
 
 class GatewayClientClosedError(GatewayError):
-    """An exception raised when you programmatically shut down the bot
-    client-side.
+    """An exception raised when you programmatically shut down the bot client-side.
 
     Parameters
     ----------
@@ -109,9 +108,7 @@ class GatewayServerClosedConnectionError(GatewayError):
 
 
 class GatewayInvalidTokenError(GatewayServerClosedConnectionError):
-    """An exception that is raised if you failed to authenticate with a valid
-    token to the Gateway.
-    """
+    """An exception that is raised if you failed to authenticate with a valid token to the Gateway."""
 
     def __init__(self) -> None:
         super().__init__(
@@ -126,11 +123,11 @@ class GatewayInvalidSessionError(GatewayServerClosedConnectionError):
     Parameters
     ----------
     can_resume : :obj:`bool`
-        True if the connection will be able to RESUME next time it starts rather
-        than re-IDENTIFYing, or False if you need to IDENTIFY again instead.
+        ``True`` if the connection will be able to RESUME next time it starts rather
+        than re-IDENTIFYing, or ``False`` if you need to IDENTIFY again instead.
     """
 
-    #: True if the next reconnection can be RESUMED. False if it has to be
+    #: ``True``` if the next reconnection can be RESUMED. ``False``` if it has to be
     #: coordinated by re-IDENFITYing.
     #:
     #: :type: :obj:`bool`
@@ -143,9 +140,9 @@ class GatewayInvalidSessionError(GatewayServerClosedConnectionError):
 
 
 class GatewayMustReconnectError(GatewayServerClosedConnectionError):
-    """An exception raised when the Gateway has to re-connect with a new session
-    (thus re-IDENTIFYing in the process).
+    """An exception raised when the Gateway has to re-connect with a new session.
 
+    This will cause a re-IDENTIFY.
     """
 
     def __init__(self) -> None:
@@ -153,8 +150,7 @@ class GatewayMustReconnectError(GatewayServerClosedConnectionError):
 
 
 class GatewayNeedsShardingError(GatewayServerClosedConnectionError):
-    """An exception raised if you have too many guilds on one of the current
-    Gateway shards.
+    """An exception raised if you have too many guilds on one of the current Gateway shards.
 
     This is a sign you need to increase the number of shards that your bot is
     running with in order to connect to Discord.
@@ -254,8 +250,7 @@ class CodedHTTPError(HTTPError):
 
 
 class ServerHTTPError(CodedHTTPError):
-    """An exception raised if a server-side error occurs when interacting with
-    the HTTP API.
+    """An exception raised if a server-side error occurs when interacting with the REST API.
 
     If you get these, DO NOT PANIC! Your bot is working perfectly fine. Discord
     have probably broken something again.
@@ -263,8 +258,7 @@ class ServerHTTPError(CodedHTTPError):
 
 
 class ClientHTTPError(CodedHTTPError):
-    """An exception raised if a client-side error occurs when interacting with
-    the HTTP API.
+    """An exception raised if a server-side error occurs when interacting with the REST API.
 
     If you get one of these, you most likely have a mistake in your code, or
     have found a bug with this library.
@@ -275,9 +269,10 @@ class ClientHTTPError(CodedHTTPError):
 
 
 class BadRequestHTTPError(CodedHTTPError):
-    """A specific case of :obj:`ClientHTTPError` that occurs when you send
-    Discord information in an unexpected format, miss required information out,
-    or give bad values for stuff.
+    """A specific case of :obj:`CodedHTTPError`.
+
+    This can occur hat occurs when you send Discord information in an unexpected
+    format, miss required information out, or give bad values for stuff.
 
     An example might be sending a message without any content, or an embed with
     more than 6000 characters.
@@ -302,8 +297,10 @@ class BadRequestHTTPError(CodedHTTPError):
 
 
 class UnauthorizedHTTPError(ClientHTTPError):
-    """A specific case of :obj:`ClientHTTPError` that occurs when you have
-    invalid authorization details to access the given resource.
+    """A specific case of :obj:`ClientHTTPError`.
+
+    This occurs when you have invalid authorization details to access
+    the given resource.
 
     This usually means that you have an incorrect token.
 
@@ -327,8 +324,7 @@ class UnauthorizedHTTPError(ClientHTTPError):
 
 
 class ForbiddenHTTPError(ClientHTTPError):
-    """A specific case of :obj:`ClientHTTPError` that occurs when you
-    are not allowed to view a given resource.
+    """A specific case of :obj:`ClientHTTPError`.
 
     This occurs when you are missing permissions, or are using an endpoint that
     your account is not allowed to see without being whitelisted.
@@ -355,9 +351,9 @@ class ForbiddenHTTPError(ClientHTTPError):
 
 
 class NotFoundHTTPError(ClientHTTPError):
-    """A specific case of :obj:`ClientHTTPError` that occurs when you try to
-    refer to something that doesn't exist on Discord.
+    """A specific case of :obj:`ClientHTTPError`.
 
+    This occurs when you try to refer to something that doesn't exist on Discord.
     This might be referring to a user ID, channel ID, guild ID, etc that does
     not exist, or it might be attempting to use an HTTP endpoint that is not
     found.
