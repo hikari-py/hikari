@@ -58,7 +58,7 @@ class GatewayClient(typing.Generic[ShardT], websocket_client.WebsocketClient):
         self.raw_event_consumer = raw_event_consumer_impl
         self._is_running = False
         self.shards: typing.Dict[int, ShardT] = {
-            shard_id: shard_type(shard_id, config, self._handle_websocket_event_later, url)
+            shard_id: shard_type(shard_id, config, raw_event_consumer_impl, url)
             for shard_id in config.shard_config.shard_ids
         }
 
@@ -106,6 +106,3 @@ class GatewayClient(typing.Generic[ShardT], websocket_client.WebsocketClient):
                 self.logger.info("stopped %s shard(s) in approx %.2fs", len(self.shards), finish_time - start_time)
                 self._is_running = False
 
-    def _handle_websocket_event_later(self, conn: shard.ShardConnection, event_name: str, payload: typing.Any) -> None:
-        shard_client_obj = self.shards[conn.shard_id]
-        self.raw_event_consumer.process_raw_event(shard_client_obj, event_name, payload)
