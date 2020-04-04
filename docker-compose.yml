@@ -4,3 +4,6 @@ services:
   gateway-test:
     build: .
     restart: always
+    entrypoint: python -m hikari
+    env_file:
+      - credentials.env
