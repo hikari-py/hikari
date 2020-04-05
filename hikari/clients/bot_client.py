@@ -159,5 +159,6 @@ class StatelessBot(BotBase):
     config : :obj:`hikari.clients.configs.BotConfig`
         The config object to use.
     """
+
     def __init__(self, config: configs.BotConfig) -> None:
         super().__init__(config, event_managers.StatelessEventManagerImpl())

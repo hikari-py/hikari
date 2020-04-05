@@ -47,6 +47,7 @@ from hikari.net import codes
 
 class BaseConfig(entities.Deserializable):
     """Base class for any configuration data class."""
+
     if typing.TYPE_CHECKING:
         # pylint:disable=unused-argument
         # Screws up PyCharm and makes annoying warnings everywhere, so just
@@ -68,6 +69,7 @@ generate_config_attrs = marshaller.attrs(kw_only=True)
 @generate_config_attrs
 class DebugConfig(BaseConfig):
     """Configuration for anything with a debugging mode."""
+
     #: Whether to enable debugging mode. Usually you don't want to enable this.
     #:
     #: :type: :obj:`bool`

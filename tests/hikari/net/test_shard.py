@@ -809,6 +809,24 @@ class TestPollEvents:
 
         client.dispatch.assert_called_with(client, "MESSAGE_CREATE", {"content": "whatever"})
 
+    @_helpers.timeout_after(5.0)
+    async def test_opcode_0_resume_sets_session_id(self, client):
+        client.seq = None
+        client.session_id = None
+
+        def receive():
+            client.requesting_close_event.set()
+            return {"op": 0, "d": {"v": 69, "session_id": "1a2b3c4d"}, "t": "READY", "s": 123}
+
+        client._receive = mock.AsyncMock(wraps=receive)
+
+        await client._poll_events()
+
+        client.dispatch.assert_called_with(client, "READY", {"v": 69, "session_id": "1a2b3c4d"})
+
+        assert client.session_id == "1a2b3c4d"
+        assert client.seq == 123
+
 
 @pytest.mark.asyncio
 class TestRequestGuildMembers:

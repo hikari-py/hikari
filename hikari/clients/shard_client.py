@@ -159,7 +159,7 @@ class ShardClient(runnable.RunnableClient):
         )
 
     @property
-    def client(self) -> shard.ShardConnection:
+    def connection(self) -> shard.ShardConnection:
         """Low-level gateway client used for this shard.
 
         Returns
@@ -337,7 +337,7 @@ class ShardClient(runnable.RunnableClient):
         if connect_task in completed:
             raise connect_task.exception()
 
-        self.logger.info("received HELLO, interval is %ss", self.client.heartbeat_interval)
+        self.logger.info("received HELLO, interval is %ss", self.connection.heartbeat_interval)
 
         completed, _ = await asyncio.wait(
             [connect_task, self._client.identify_event.wait()], return_when=asyncio.FIRST_COMPLETED
@@ -349,12 +349,12 @@ class ShardClient(runnable.RunnableClient):
         self.logger.info("sent %s, waiting for READY event", "RESUME" if is_resume else "IDENTIFY")
         self._shard_state = ShardState.WAITING_FOR_READY
 
-        self.logger.info("now READY")
-        self._shard_state = ShardState.READY
-
         completed, _ = await asyncio.wait(
             [connect_task, self._client.ready_event.wait()], return_when=asyncio.FIRST_COMPLETED
         )
+
+        self.logger.info("now READY")
+        self._shard_state = ShardState.READY
 
         if connect_task in completed:
             raise connect_task.exception()
