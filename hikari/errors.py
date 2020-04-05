@@ -91,12 +91,12 @@ class GatewayServerClosedConnectionError(GatewayError):
         close_code: typing.Optional[typing.Union[codes.GatewayCloseCode, int]] = None,
         reason: typing.Optional[str] = None,
     ) -> None:
-        if reason is None:
-            try:
-                name = close_code.name
-            except AttributeError:
-                name = str(close_code) if close_code is not None else "no reason"
+        try:
+            name = close_code.name
+        except AttributeError:
+            name = str(close_code) if close_code is not None else "no reason"
 
+        if reason is None:
             reason = f"Gateway connection closed by server ({name})"
 
         self.close_code = close_code

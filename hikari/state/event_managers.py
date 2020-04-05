@@ -24,9 +24,9 @@ import inspect
 import typing
 
 from hikari.clients import shard_client
-from hikari.state import event_dispatcher
+from hikari.state import event_dispatchers
 from hikari import entities
-from hikari.state import raw_event_consumer
+from hikari.state import raw_event_consumers
 from hikari.internal import assertions
 from hikari.internal import more_logging
 
@@ -69,7 +69,10 @@ def _get_event_marker(obj: typing.Any) -> typing.Set[str]:
     return getattr(obj, EVENT_MARKER_ATTR)
 
 
-class EventManager(raw_event_consumer.RawEventConsumer):
+EventDispatcherT = typing.TypeVar("EventDispatcherT", bound=event_dispatchers.EventDispatcher)
+
+
+class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEventConsumer):
     """Abstract definition of the components for an event system for a bot.
 
     The class itself inherits from
@@ -83,9 +86,10 @@ class EventManager(raw_event_consumer.RawEventConsumer):
 
     Parameters
     ----------
-    event_dispatcher_impl: :obj:`hikari.state.event_dispatcher.EventDispatcher`
+    event_dispatcher_impl: :obj:`hikari.state.event_dispatcher.EventDispatcher`, optional
         An implementation of event dispatcher that will store individual events
-        and manage dispatching them after this object creates them.
+        and manage dispatching them after this object creates them. If ``None``,
+        then a default implementation is chosen.
 
     Notes
     -----
@@ -132,7 +136,10 @@ class EventManager(raw_event_consumer.RawEventConsumer):
     create your own as needed.
     """
 
-    def __init__(self, event_dispatcher_impl: event_dispatcher.EventDispatcher) -> None:
+    def __init__(self, event_dispatcher_impl: typing.Optional[EventDispatcherT] = None) -> None:
+        if event_dispatcher_impl is None:
+            event_dispatcher_impl = event_dispatchers.EventDispatcherImpl()
+
         self.logger = more_logging.get_named_logger(self)
         self.event_dispatcher = event_dispatcher_impl
         self.raw_event_mappers = {}
@@ -167,3 +174,12 @@ class EventManager(raw_event_consumer.RawEventConsumer):
         else:
             event = handler(shard_client_obj, payload)
             self.event_dispatcher.dispatch_event(event)
+
+
+class StatelessEventManagerImpl(EventManager[event_dispatchers.EventDispatcher]):
+    """Stateless event manager implementation for stateless bots.
+
+    This is an implementation that does not rely on querying prior information to
+    operate. The implementation details of this are much simpler than a stateful
+    version, and are not immediately affected by the use of intents.
+    """

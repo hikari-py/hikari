@@ -32,7 +32,7 @@ def get_named_logger(obj: typing.Any, *extra_objs: typing.Any) -> logging.Logger
 
     If the passed object is an instance of a class, the class is used instead.
 
-    If a class is provided/used, then the fully qualified package and class name is used to name the logger.
+    If a class is provided/used, then the class name is used to name the logger.
 
     If a string is provided, then the string is used as the name. This is not recommended.
 
@@ -52,7 +52,7 @@ def get_named_logger(obj: typing.Any, *extra_objs: typing.Any) -> logging.Logger
         if not isinstance(obj, type):
             obj = type(obj)
 
-        obj = f"{obj.__module__}.{obj.__qualname__}"
+        obj = obj.__qualname__
 
     if extra_objs:
         extras = ", ".join(map(str, extra_objs))

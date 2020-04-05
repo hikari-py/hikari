@@ -620,7 +620,7 @@ class ShardConnection:
                 "RECONNECT" if self.disconnect_count else "CONNECT",
                 typing.cast(typing.Dict, more_collections.EMPTY_DICT),
             )
-            self.logger.info("received HELLO, interval is %ss", self.heartbeat_interval)
+            self.logger.debug("received HELLO, interval is %ss", self.heartbeat_interval)
 
             completed, pending_tasks = await asyncio.wait(
                 [self._heartbeat_keep_alive(self.heartbeat_interval), self._identify_or_resume_then_poll_events()],
@@ -717,7 +717,7 @@ class ShardConnection:
                 # noinspection PyTypeChecker
                 pl["d"]["presence"] = self._presence
             await self._send(pl)
-            self.logger.info("sent IDENTIFY, now listening to incoming events")
+            self.logger.debug("sent IDENTIFY, now listening to incoming events")
         else:
             self.status = GatewayStatus.RESUMING
             self.logger.debug("sending RESUME")
@@ -726,7 +726,7 @@ class ShardConnection:
                 "d": {"token": self._token, "seq": self.seq, "session_id": self.session_id},
             }
             await self._send(pl)
-            self.logger.info("sent RESUME, now listening to incoming events")
+            self.logger.debug("sent RESUME, now listening to incoming events")
 
         self.identify_event.set()
         await self._poll_events()
@@ -769,7 +769,7 @@ class ShardConnection:
                 raise errors.GatewayMustReconnectError()
             elif op == codes.GatewayOpcode.INVALID_SESSION:
                 can_resume = bool(d)
-                self.logger.info(
+                self.logger.debug(
                     "instructed by gateway server to %s session", "resume" if can_resume else "restart",
                 )
                 raise errors.GatewayInvalidSessionError(can_resume)
@@ -826,11 +826,11 @@ class ShardConnection:
             if message.type == aiohttp.WSMsgType.CLOSE:
                 close_code = self._ws.close_code
                 try:
-                    meaning = codes.GatewayCloseCode(close_code)
+                    close_code = codes.GatewayCloseCode(close_code)
                 except ValueError:
-                    meaning = "???"
+                    pass
 
-                self.logger.debug("connection closed with code %s (%s)", close_code, meaning)
+                self.logger.debug("connection closed with code %s", close_code)
                 if close_code == codes.GatewayCloseCode.AUTHENTICATION_FAILED:
                     raise errors.GatewayInvalidTokenError()
                 if close_code in (codes.GatewayCloseCode.SESSION_TIMEOUT, codes.GatewayCloseCode.INVALID_SEQ):

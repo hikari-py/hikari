@@ -19,8 +19,6 @@
 
 from hikari.internal import more_logging
 
-package_name = __name__
-
 
 class Dummy:
     class NestedDummy:
@@ -29,22 +27,22 @@ class Dummy:
 
 def test_get_named_logger_with_global_class():
     logger = more_logging.get_named_logger(Dummy)
-    assert logger.name == package_name + ".Dummy"
+    assert logger.name == "Dummy"
 
 
 def test_get_named_logger_with_nested_class():
     logger = more_logging.get_named_logger(Dummy.NestedDummy)
-    assert logger.name == package_name + ".Dummy.NestedDummy"
+    assert logger.name == "Dummy.NestedDummy"
 
 
 def test_get_named_logger_with_global_class_instance():
     logger = more_logging.get_named_logger(Dummy())
-    assert logger.name == package_name + ".Dummy"
+    assert logger.name == "Dummy"
 
 
 def test_get_named_logger_with_nested_class_instance():
     logger = more_logging.get_named_logger(Dummy.NestedDummy())
-    assert logger.name == package_name + ".Dummy.NestedDummy"
+    assert logger.name == "Dummy.NestedDummy"
 
 
 def test_get_named_logger_with_string():
