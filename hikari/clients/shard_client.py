@@ -35,8 +35,8 @@ import typing
 
 import aiohttp
 
-from hikari.clients import gateway_config
-from hikari.clients import websocket_client
+from hikari.clients import configs
+from hikari.clients import runnable
 from hikari.internal import more_asyncio
 from hikari.internal import more_logging
 from hikari import events
@@ -46,7 +46,7 @@ from hikari.net import codes
 from hikari import errors
 from hikari.net import ratelimits
 from hikari.net import shard
-from hikari.state import raw_event_consumer
+from hikari.state import raw_event_consumers
 
 _EventT = typing.TypeVar("_EventT", bound=events.HikariEvent)
 
@@ -73,7 +73,7 @@ class ShardState(enum.IntEnum):
     STOPPED = enum.auto()
 
 
-class ShardClient(websocket_client.WebsocketClient):
+class ShardClient(runnable.RunnableClient):
     """The primary interface for a single shard connection.
 
     This contains several abstractions to enable usage of the low
@@ -84,7 +84,9 @@ class ShardClient(websocket_client.WebsocketClient):
     ----------
     shard_id : :obj:`int`
         The ID of this specific shard.
-    config : :obj:`hikari.clients.gateway_config.GatewayConfig`
+    shard_id : :obj:`int`
+        The number of shards that make up this distributed application.
+    config : :obj:`hikari.clients.configs.WebsocketConfig`
         The gateway configuration to use to initialize this shard.
     raw_event_consumer_impl : :obj:`hikari.state.raw_event_consumer.RawEventConsumer`
         The consumer of a raw event.
@@ -116,11 +118,12 @@ class ShardClient(websocket_client.WebsocketClient):
     def __init__(
         self,
         shard_id: int,
-        config: gateway_config.GatewayConfig,
-        raw_event_consumer_impl: raw_event_consumer.RawEventConsumer,
+        shard_count: int,
+        config: configs.WebsocketConfig,
+        raw_event_consumer_impl: raw_event_consumers.RawEventConsumer,
         url: str,
     ) -> None:
-        self.logger = more_logging.get_named_logger(self, shard_id)
+        super().__init__(more_logging.get_named_logger(self, f"#{shard_id}"))
         self._raw_event_consumer = raw_event_consumer_impl
         self._activity = config.initial_activity
         self._idle_since = config.initial_idle_since
@@ -129,8 +132,8 @@ class ShardClient(websocket_client.WebsocketClient):
         self._shard_state = ShardState.NOT_RUNNING
         self._task = None
         self._client = shard.ShardConnection(
-            compression=config.use_compression,
-            connector=config.protocol.connector if config.protocol is not None else None,
+            compression=config.gateway_use_compression,
+            connector=config.tcp_connector,
             debug=config.debug,
             dispatch=lambda c, n, pl: raw_event_consumer_impl.process_raw_event(self, n, pl),
             initial_presence=self._create_presence_pl(
@@ -141,18 +144,18 @@ class ShardClient(websocket_client.WebsocketClient):
             ),
             intents=config.intents,
             large_threshold=config.large_threshold,
-            proxy_auth=config.protocol.proxy_auth if config.protocol is not None else None,
-            proxy_headers=config.protocol.proxy_headers if config.protocol is not None else None,
-            proxy_url=config.protocol.proxy_url if config.protocol is not None else None,
+            proxy_auth=config.proxy_auth,
+            proxy_headers=config.proxy_headers,
+            proxy_url=config.proxy_url,
             session_id=None,
             seq=None,
             shard_id=shard_id,
-            shard_count=config.shard_config.shard_count,
-            ssl_context=config.protocol.ssl_context if config.protocol is not None else None,
+            shard_count=shard_count,
+            ssl_context=config.ssl_context,
             token=config.token,
             url=url,
-            verify_ssl=config.protocol.verify_ssl if config.protocol is not None else None,
-            version=config.version,
+            verify_ssl=config.verify_ssl,
+            version=config.gateway_version,
         )
 
     @property
@@ -166,8 +169,6 @@ class ShardClient(websocket_client.WebsocketClient):
         """
         return self._client
 
-    #: TODO: use enum
-    # Ignore docstring not starting in an imperative mood
     @property
     def status(self) -> guilds.PresenceStatus:  # noqa: D401
         """Current user status for this shard.
@@ -225,18 +226,7 @@ class ShardClient(websocket_client.WebsocketClient):
         if self._shard_state not in (ShardState.NOT_RUNNING, ShardState.STOPPED):
             raise RuntimeError("Cannot start a shard twice")
 
-        self.logger.debug("starting shard")
-        self._shard_state = ShardState.HANDSHAKE
-        self._task = asyncio.create_task(self._keep_alive())
-        self.logger.info("waiting for READY")
-        completed, _ = await asyncio.wait(
-            [self._task, self._client.identify_event.wait()], return_when=asyncio.FIRST_COMPLETED
-        )
-
-        if self._task in completed:
-            raise self._task.exception()
-
-        self._shard_state = ShardState.WAITING_FOR_READY
+        self._task = asyncio.create_task(self._keep_alive(), name="ShardClient#keep_alive")
 
         completed, _ = await asyncio.wait(
             [self._task, self._client.ready_event.wait()], return_when=asyncio.FIRST_COMPLETED
@@ -244,9 +234,6 @@ class ShardClient(websocket_client.WebsocketClient):
 
         if self._task in completed:
             raise self._task.exception()
-
-        self.logger.info("now READY")
-        self._shard_state = ShardState.READY
 
     async def join(self) -> None:
         """Wait for the shard to shut down fully."""
@@ -288,9 +275,10 @@ class ShardClient(websocket_client.WebsocketClient):
                     back_off.reset()
 
                 last_start = time.perf_counter()
-
                 do_not_back_off = False
-                await self._client.connect()
+
+                connect_task = await self._spin_up()
+                await connect_task
                 self.logger.critical("shut down silently! this shouldn't happen!")
 
             except aiohttp.ClientConnectorError as ex:
@@ -333,6 +321,45 @@ class ShardClient(websocket_client.WebsocketClient):
             except Exception as ex:
                 self.logger.debug("propagating unexpected exception %s", exc_info=ex)
                 raise ex
+
+    async def _spin_up(self) -> asyncio.Task:
+        self.logger.debug("initializing shard")
+        self._shard_state = ShardState.HANDSHAKE
+
+        is_resume = self._client.seq is not None and self._client.session_id is not None
+
+        connect_task = asyncio.create_task(self._client.connect(), name="ShardConnection#connect")
+
+        completed, _ = await asyncio.wait(
+            [connect_task, self._client.hello_event.wait()], return_when=asyncio.FIRST_COMPLETED
+        )
+
+        if connect_task in completed:
+            raise connect_task.exception()
+
+        self.logger.info("received HELLO, interval is %ss", self.client.heartbeat_interval)
+
+        completed, _ = await asyncio.wait(
+            [connect_task, self._client.identify_event.wait()], return_when=asyncio.FIRST_COMPLETED
+        )
+
+        if connect_task in completed:
+            raise connect_task.exception()
+
+        self.logger.info("sent %s, waiting for READY event", "RESUME" if is_resume else "IDENTIFY")
+        self._shard_state = ShardState.WAITING_FOR_READY
+
+        self.logger.info("now READY")
+        self._shard_state = ShardState.READY
+
+        completed, _ = await asyncio.wait(
+            [connect_task, self._client.ready_event.wait()], return_when=asyncio.FIRST_COMPLETED
+        )
+
+        if connect_task in completed:
+            raise connect_task.exception()
+
+        return connect_task
 
     async def update_presence(
         self,

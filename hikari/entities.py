@@ -57,9 +57,15 @@ class HikariEntity(metaclass=abc.ABCMeta):
     __slots__ = ()
 
     if typing.TYPE_CHECKING:
-
-        def __init__(self, *_, **__) -> None:
+        # pylint:disable=unused-argument
+        # Screws up PyCharm and makes annoying warnings everywhere, so just
+        # mute this. We can always make dummy constructors later, or find
+        # another way around this perhaps.
+        @typing.no_type_check
+        def __init__(self, *args, **kwargs) -> None:
             ...
+
+        # pylint:enable=unused-argument
 
 
 class Deserializable:

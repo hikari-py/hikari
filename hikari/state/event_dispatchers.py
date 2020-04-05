@@ -44,9 +44,7 @@ class EventDispatcher(abc.ABC):
     to a set of micro-interpreter instances to achieve greater concurrency.
     """
 
-    @abc.abstractmethod
-    def close(self):
-        """Cancel anything that is waiting for an event to be dispatched."""
+    __slots__ = ()
 
     @abc.abstractmethod
     def add_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT) -> EventCallbackT:
@@ -140,7 +138,7 @@ class EventDispatcher(abc.ABC):
     # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
     # confusing telepathy comments to the user.
     @abc.abstractmethod
-    def dispatch_event(self, event: events.HikariEvent) -> ...:
+    def dispatch_event(self, event: events.HikariEvent) -> more_asyncio.Future[typing.Any]:
         """Dispatch a given event to any listeners and waiters.
 
         Parameters

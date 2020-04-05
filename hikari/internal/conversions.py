@@ -27,6 +27,7 @@ __all__ = [
     "try_cast",
     "put_if_specified",
     "image_bytes_to_image_data",
+    "pluralize",
 ]
 
 import base64
@@ -266,6 +267,11 @@ def make_resource_seekable(resource: typing.Any) -> typing.Union[io.BytesIO, io.
         resource = io.StringIO(resource)
 
     return resource
+
+
+def pluralize(count: int, name: str, suffix: str = "s") -> str:
+    """Pluralizes a word."""
+    return f"{count} {name + suffix}" if count - 1 else f"{count} {name}"
 
 
 BytesLikeT = typing.Union[bytes, bytearray, memoryview, str, io.StringIO, io.BytesIO]

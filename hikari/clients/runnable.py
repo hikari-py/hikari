@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Provides a base for any type of websocket client."""
 
-__all__ = ["WebsocketClient"]
+__all__ = ["RunnableClient"]
 
 import abc
 import asyncio
@@ -27,24 +27,33 @@ import logging
 import signal
 
 
-class WebsocketClient(abc.ABC):
+class RunnableClient(abc.ABC):
     """Base for any websocket client that must be kept alive."""
 
+    __slots__ = ("logger",)
+
+    #: The logger to use for this client.
+    #:
+    #: :type: :obj:`logging.Logger`
     logger: logging.Logger
 
     @abc.abstractmethod
-    async def start(self):  # noqa: D401
+    def __init__(self, logger: logging.Logger) -> None:
+        self.logger = logger
+
+    @abc.abstractmethod
+    async def start(self) -> None:  # noqa: D401
         """Start the component."""
 
     @abc.abstractmethod
-    async def close(self, wait: bool = True):
+    async def close(self, wait: bool = True) -> None:
         """Shut down the component."""
 
     @abc.abstractmethod
-    async def join(self):
+    async def join(self) -> None:
         """Wait for the component to terminate."""
 
-    def run(self):
+    def run(self) -> None:
         """Execute this component on an event loop.
 
         Performs the same job as :meth:`start`, but provides additional

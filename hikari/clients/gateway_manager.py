@@ -21,46 +21,47 @@
 This provides functionality such as keeping multiple shards alive
 """
 
-__all__ = ["GatewayClient"]
+__all__ = ["GatewayManager"]
 
 import asyncio
 import time
 import typing
 
-from hikari.clients import websocket_client
+from hikari.clients import configs
+from hikari.clients import runnable
+from hikari.internal import conversions
 from hikari.internal import more_logging
-from hikari.clients import gateway_config
 from hikari.clients import shard_client
-from hikari.net import shard
-from hikari.state import raw_event_consumer
+from hikari.state import raw_event_consumers
 
 ShardT = typing.TypeVar("ShardT", bound=shard_client.ShardClient)
 
 
-class GatewayClient(typing.Generic[ShardT], websocket_client.WebsocketClient):
+class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
     """Provides a management layer for multiple-sharded bots.
 
     This also provides additional conduit used to connect up shards to the
     rest of this framework to enable management of dispatched events, etc.
-
     """
 
     def __init__(
         self,
-        config: gateway_config.GatewayConfig,
-        url: str,
         *,
-        raw_event_consumer_impl: raw_event_consumer.RawEventConsumer,
+        shard_ids: typing.Sequence[int],
+        shard_count: int,
+        config: configs.WebsocketConfig,
+        url: str,
+        raw_event_consumer_impl: raw_event_consumers.RawEventConsumer,
         shard_type: typing.Type[ShardT] = shard_client.ShardClient,
     ) -> None:
-        self.logger = more_logging.get_named_logger(self)
+        super().__init__(more_logging.get_named_logger(self, conversions.pluralize(shard_count, "shard")))
+        self._is_running = False
         self.config = config
         self.raw_event_consumer = raw_event_consumer_impl
-        self._is_running = False
         self.shards: typing.Dict[int, ShardT] = {
-            shard_id: shard_type(shard_id, config, raw_event_consumer_impl, url)
-            for shard_id in config.shard_config.shard_ids
+            shard_id: shard_type(shard_id, shard_count, config, raw_event_consumer_impl, url) for shard_id in shard_ids
         }
+        self.shard_ids = shard_ids
 
     async def start(self) -> None:
         """Start all shards.
@@ -72,7 +73,7 @@ class GatewayClient(typing.Generic[ShardT], websocket_client.WebsocketClient):
         self._is_running = True
         self.logger.info("starting %s shard(s)", len(self.shards))
         start_time = time.perf_counter()
-        for i, shard_id in enumerate(self.config.shard_config.shard_ids):
+        for i, shard_id in enumerate(self.shard_ids):
             if i > 0:
                 await asyncio.sleep(5)
 
@@ -105,4 +106,3 @@ class GatewayClient(typing.Generic[ShardT], websocket_client.WebsocketClient):
                 finish_time = time.perf_counter()
                 self.logger.info("stopped %s shard(s) in approx %.2fs", len(self.shards), finish_time - start_time)
                 self._is_running = False
-

@@ -21,7 +21,7 @@ from unittest import mock
 
 import pytest
 
-from hikari.state import event_dispatcher
+from hikari.state import event_dispatchers
 from hikari import events
 from tests.hikari import _helpers
 
@@ -41,7 +41,7 @@ class TestEvent3(events.HikariEvent):
 class TestEventDispatcherImpl:
     @pytest.fixture
     def dispatcher_inst(self):
-        return _helpers.unslot_class(event_dispatcher.EventDispatcherImpl)()
+        return _helpers.unslot_class(event_dispatchers.EventDispatcherImpl)()
 
     # noinspection PyTypeChecker
     @_helpers.assert_raises(type_=TypeError)

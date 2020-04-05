@@ -451,13 +451,14 @@ def attrs(**kwargs):
     ----------------
     auto_attribs : :obj:`bool`
         This must always be ``False`` if specified, or a :obj:`ValueError`
-        will be raised, as this feature is not compatible with this marshaller
-        implementation. If not specified, it will default to ``False``.
+        will be raised, as this feature is not compatible with this
+        marshaller implementation. If not specified, it will default to
+        ``False``.
     marshaller : :obj:`HikariEntityMarshaller`
         If specified, this should be an instance of a marshaller to use. For
         most internal purposes, you want to not specify this, since it will
-        then default to the hikari-global marshaller instead. This is useful,
-        however, for testing and for external usage.
+        then default to the hikari-global marshaller instead. This is
+        useful, however, for testing and for external usage.
 
     Returns
     -------
@@ -484,3 +485,7 @@ def attrs(**kwargs):
     assertions.assert_that(not kwargs.get("auto_attribs"), "Cannot use auto attribs here")
     kwargs["auto_attribs"] = False
     return lambda cls: kwargs.pop("marshaller", HIKARI_ENTITY_MARSHALLER).register(attr.s(**kwargs)(cls))
+
+
+if typing.TYPE_CHECKING:
+    attrs = attr.s
