@@ -231,6 +231,7 @@ pylint:
 
 
 pydocstyle:
+  allow_failure: true
   extends:
     - .cpython-tool-buster
     - .cache

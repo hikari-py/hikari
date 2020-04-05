@@ -396,16 +396,16 @@ class ShardConnection:
         self.identify_event: asyncio.Event = asyncio.Event()
         self.last_heartbeat_sent: float = float("nan")
         self.last_message_received: float = float("nan")
-        self.logger: logging.Logger = more_logging.get_named_logger(self, shard_id)
         self.requesting_close_event: asyncio.Event = asyncio.Event()
         self.ready_event: asyncio.Event = asyncio.Event()
-        self.session_id: typing.Optional[str] = session_id
+        self.session_id = session_id
         self.seq: typing.Optional[int] = seq
         self.shard_id: int = shard_id
         self.shard_count: int = shard_count
         self.status: GatewayStatus = GatewayStatus.OFFLINE
         self.version: int = int(version)
-        self.logger.debug("using Gateway version %s", int(version))
+
+        self.logger: logging.Logger = more_logging.get_named_logger(self, f"#{shard_id}", f"v{self.version}")
 
     @property
     def uptime(self) -> datetime.timedelta:
@@ -422,7 +422,7 @@ class ShardConnection:
 
     @property
     def is_connected(self) -> bool:
-        """Wether the gateway is connecter or not.
+        """Whether the gateway is connecter or not.
 
         Returns
         -------
@@ -450,7 +450,7 @@ class ShardConnection:
 
     @property
     def reconnect_count(self) -> int:
-        """Amount of times the gateway has reconnected since initialization.
+        """Number of times the gateway has reconnected since initialization.
 
         This can be used as a debugging context, but is also used internally
         for exception management.
@@ -620,7 +620,7 @@ class ShardConnection:
                 "RECONNECT" if self.disconnect_count else "CONNECT",
                 typing.cast(typing.Dict, more_collections.EMPTY_DICT),
             )
-            self.logger.debug("received HELLO, interval is %ss", self.heartbeat_interval)
+            self.logger.debug("received HELLO (interval:%ss)", self.heartbeat_interval)
 
             completed, pending_tasks = await asyncio.wait(
                 [self._heartbeat_keep_alive(self.heartbeat_interval), self._identify_or_resume_then_poll_events()],
@@ -693,7 +693,7 @@ class ShardConnection:
     async def _identify_or_resume_then_poll_events(self):
         if self.session_id is None:
             self.status = GatewayStatus.IDENTIFYING
-            self.logger.debug("sending IDENTIFY")
+            self.logger.debug("preparing to send IDENTIFY")
 
             pl = {
                 "op": codes.GatewayOpcode.IDENTIFY,
@@ -719,8 +719,8 @@ class ShardConnection:
             await self._send(pl)
             self.logger.debug("sent IDENTIFY, now listening to incoming events")
         else:
+            self.logger.debug("preparing to send RESUME")
             self.status = GatewayStatus.RESUMING
-            self.logger.debug("sending RESUME")
             pl = {
                 "op": codes.GatewayOpcode.RESUME,
                 "d": {"token": self._token, "seq": self.seq, "session_id": self.session_id},
@@ -737,7 +737,7 @@ class ShardConnection:
                 raise asyncio.TimeoutError(
                     f"{self.shard_id}: connection is a zombie, haven't received HEARTBEAT ACK for too long"
                 )
-            self.logger.debug("sending heartbeat")
+            self.logger.debug("preparing to send HEARTBEAT (s:%s, interval:%ss)", self.seq, self.heartbeat_interval)
             await self._send({"op": codes.GatewayOpcode.HEARTBEAT, "d": self.seq})
             self.last_heartbeat_sent = time.perf_counter()
             try:
@@ -759,10 +759,18 @@ class ShardConnection:
                 event_name = next_pl["t"]
 
                 if event_name == "READY":
+                    self.session_id = d["session_id"]
+                    version = d["v"]
+
+                    self.logger.debug(
+                        "connection is READY (session:%s, version:%s)", self.session_id, version,
+                    )
+
                     self.ready_event.set()
 
                 self.dispatch(self, event_name, d)
             elif op == codes.GatewayOpcode.HEARTBEAT:
+                self.logger.debug("received HEARTBEAT, preparing to send HEARTBEAT ACK to server in response")
                 await self._send({"op": codes.GatewayOpcode.HEARTBEAT_ACK})
             elif op == codes.GatewayOpcode.RECONNECT:
                 self.logger.debug("instructed by gateway server to restart connection")
@@ -776,7 +784,7 @@ class ShardConnection:
             elif op == codes.GatewayOpcode.HEARTBEAT_ACK:
                 now = time.perf_counter()
                 self.heartbeat_latency = now - self.last_heartbeat_sent
-                self.logger.debug("received HEARTBEAT ACK in %ss", self.heartbeat_latency)
+                self.logger.debug("received HEARTBEAT ACK (latency:%ss)", self.heartbeat_latency)
             else:
                 self.logger.debug("ignoring opcode %s with data %r", op, d)
 
