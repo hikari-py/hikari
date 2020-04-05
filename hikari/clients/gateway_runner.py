@@ -21,7 +21,6 @@
 This is only for use by developers of this library, regular users do not need
 to use this.
 """
-import asyncio
 import logging
 import os
 import sys
@@ -91,14 +90,6 @@ def run_gateway(compression, color, debug, logger, shards, token, url, verify_ss
         url=url,
         raw_event_consumer_impl=_DummyConsumer(),
     )
-
-    async def _restart_in_a_bit():
-        conn = client.shards[0].connection
-
-        async def fake_recv():
-            return
-
-        await asyncio.sleep(15)
 
     client.run()
 
