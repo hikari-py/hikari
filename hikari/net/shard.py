@@ -450,7 +450,7 @@ class ShardConnection:
 
     @property
     def reconnect_count(self) -> int:
-        """Number of times the gateway has reconnected since initialization.
+        """Reconnection count for this shard connection instance.
 
         This can be used as a debugging context, but is also used internally
         for exception management.
