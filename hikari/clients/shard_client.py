@@ -346,18 +346,23 @@ class ShardClient(runnable.RunnableClient):
         if connect_task in completed:
             raise connect_task.exception()
 
-        self.logger.info("sent %s, waiting for READY event", "RESUME" if is_resume else "IDENTIFY")
-        self._shard_state = ShardState.WAITING_FOR_READY
+        if is_resume:
+            self.logger.info("sent RESUME")
 
-        completed, _ = await asyncio.wait(
-            [connect_task, self._client.ready_event.wait()], return_when=asyncio.FIRST_COMPLETED
-        )
+        else:
+            self.logger.info("sent IDENTIFY, waiting for READY event")
 
-        self.logger.info("now READY")
-        self._shard_state = ShardState.READY
+            self._shard_state = ShardState.WAITING_FOR_READY
 
-        if connect_task in completed:
-            raise connect_task.exception()
+            completed, _ = await asyncio.wait(
+                [connect_task, self._client.ready_event.wait()], return_when=asyncio.FIRST_COMPLETED
+            )
+
+            self.logger.info("now READY")
+            self._shard_state = ShardState.READY
+
+            if connect_task in completed:
+                raise connect_task.exception()
 
         return connect_task
 
