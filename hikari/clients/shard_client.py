@@ -217,6 +217,54 @@ class ShardClient(runnable.RunnableClient):
         """
         return self._is_afk
 
+    @property
+    def latency(self) -> float:
+        """Latency between sending a HEARTBEAT and receiving an ACK.
+
+        Returns
+        -------
+        :obj:`float`
+            The heartbeat latency in seconds. This will be ``float('nan')``
+            until the first heartbeat is performed.
+        """
+        return self._client.heartbeat_latency
+
+    @property
+    def heartbeat_interval(self) -> float:
+        """Time period to wait between sending HEARTBEAT payloads.
+
+        Returns
+        -------
+        :obj:`float`
+            The heartbeat interval in seconds. This will be ``float('nan')``
+            until the connection has received a ``HELLO`` payload.
+        """
+        return self._client.heartbeat_interval
+
+    @property
+    def reconnect_count(self) -> float:
+        """Count of number of times the internal connection has reconnected.
+
+        This includes RESUME and re-IDENTIFY events.
+
+        Returns
+        -------
+        :obj:`int`
+            The number of reconnects this shard has performed.
+        """
+        return self._client.reconnect_count
+
+    @property
+    def connection_state(self) -> ShardState:
+        """State of this shard.
+
+        Returns
+        -------
+        :obj:`ShardState`
+            The state of this shard.
+        """
+        return self._shard_state
+
     async def start(self):
         """Connect to the gateway on this shard and keep the connection alive.
 
@@ -348,7 +396,6 @@ class ShardClient(runnable.RunnableClient):
 
         if is_resume:
             self.logger.info("sent RESUME")
-
         else:
             self.logger.info("sent IDENTIFY, waiting for READY event")
 
@@ -359,15 +406,17 @@ class ShardClient(runnable.RunnableClient):
             )
 
             self.logger.info("now READY")
-            self._shard_state = ShardState.READY
 
             if connect_task in completed:
                 raise connect_task.exception()
+
+        self._shard_state = ShardState.READY
 
         return connect_task
 
     async def update_presence(
         self,
+        *,
         status: guilds.PresenceStatus = ...,
         activity: typing.Optional[gateway_entities.GatewayActivity] = ...,
         idle_since: typing.Optional[datetime.datetime] = ...,

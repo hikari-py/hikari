@@ -24,9 +24,13 @@ This provides functionality such as keeping multiple shards alive
 __all__ = ["GatewayManager"]
 
 import asyncio
+import datetime
+import math
 import time
 import typing
 
+from hikari import gateway_entities
+from hikari import guilds
 from hikari.clients import configs
 from hikari.clients import runnable
 from hikari.internal import conversions
@@ -62,6 +66,32 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
             shard_id: shard_type(shard_id, shard_count, config, raw_event_consumer_impl, url) for shard_id in shard_ids
         }
         self.shard_ids = shard_ids
+
+    @property
+    def latency(self) -> float:
+        """Average heartbeat latency for all valid shards.
+
+        This will return a mean of all the heartbeat intervals for all shards
+        with a valid heartbeat latency that are in the
+        :obj:`hikari.clients.shard_client.ShardState.READY` state.
+
+        If no shards are in this state, this will return ``float('nan')``
+        instead.
+
+        Returns
+        -------
+        :obj:`float`
+            The mean latency for all ``READY`` shards that have sent at least
+            one acknowledged ``HEARTBEAT`` payload. If there is not at least
+            one shard that meets this criteria, this will instead return
+            ``float('nan')``.
+        """
+        latencies = []
+        for shard in self.shards.values():
+            if shard.connection_state == shard_client.ShardState.READY and not math.isnan(shard.latency):
+                latencies.append(shard.latency)
+
+        return sum(latencies) / len(latencies) if latencies else float("nan")
 
     async def start(self) -> None:
         """Start all shards.
@@ -106,3 +136,48 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
                 finish_time = time.perf_counter()
                 self.logger.info("stopped %s shard(s) in approx %.2fs", len(self.shards), finish_time - start_time)
                 self._is_running = False
+
+    async def update_presence(
+        self,
+        *,
+        status: guilds.PresenceStatus = ...,
+        activity: typing.Optional[gateway_entities.GatewayActivity] = ...,
+        idle_since: typing.Optional[datetime.datetime] = ...,
+        is_afk: bool = ...,
+    ) -> None:
+        """Update the presence of the user for all shards.
+
+        This will only update arguments that you explicitly specify a value for.
+        Any arguments that you do not explicitly provide some value for will
+        not be changed.
+
+        Warnings
+        --------
+        This will only apply to connected shards.
+
+        Notes
+        -----
+        If you wish to update a presence for a specific shard, you can do this
+        by using the :attr:`GatewayManager.shards` :obj:`typing.Mapping` to
+        find the shard you wish to update.
+
+        Parameters
+        ----------
+        status : :obj:`hikari.guilds.PresenceStatus`
+            The new status to set.
+        activity : :obj:`hikari.gateway_entities.GatewayActivity`, optional
+            The new activity to set.
+        idle_since : :obj:`datetime.datetime`, optional
+            The time to show up as being idle since, or ``None`` if not
+            applicable.
+        is_afk : :obj:`bool`
+            ``True`` if the user should be marked as AFK, or ``False``
+            otherwise.
+        """
+        await asyncio.gather(
+            *(
+                shard.update_presence(status=status, activity=activity, idle_since=idle_since, is_afk=is_afk)
+                for shard in self.shards.values()
+                if shard.connection_state in (shard_client.ShardState.WAITING_FOR_READY, shard_client.ShardState.READY)
+            )
+        )
