@@ -182,6 +182,24 @@ class GuildVerificationLevel(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True)
+class GuildEmbed(entities.HikariEntity, entities.Deserializable):
+    """Represents a guild embed."""
+
+    #: The ID of the channel the invite for this embed targets, if enabled
+    #:
+    #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
+    channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
+        deserializer=snowflakes.Snowflake.deserialize, serializer=str, if_none=None
+    )
+
+    #: Whether this embed is enabled.
+    #:
+    #: :type: :obj:`bool`
+    is_enabled: bool = marshaller.attrib(raw_name="enabled", deserializer=bool, serializer=bool)
+
+
+@marshaller.marshallable()
+@attr.s(slots=True)
 class GuildMember(entities.HikariEntity, entities.Deserializable):
     """Used to represent a guild bound member."""
 
@@ -242,7 +260,7 @@ class PartialGuildRole(snowflakes.UniqueEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True)
-class GuildRole(PartialGuildRole):
+class GuildRole(PartialGuildRole, entities.Serializable):
     """Represents a guild bound Role object."""
 
     #: The colour of this role, will be applied to a member's name in chat

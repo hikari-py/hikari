@@ -37,18 +37,26 @@ from hikari.net import versions
 from tests.hikari import _helpers
 
 
-class TestRestfulClient:
+class TestLowLevelRestfulClient:
     @pytest.fixture
     def rest_impl(self):
-        class RestfulClientImpl(rest.RestfulClient):
+        class LowLevelRestfulClientImpl(rest.LowLevelRestfulClient):
             def __init__(self, *args, **kwargs):
                 self.base_url = "https://discordapp.com/api/v6"
                 self.client_session = mock.MagicMock(close=mock.AsyncMock())
                 self.logger = mock.MagicMock()
-                self.ratelimiter = mock.MagicMock(close=mock.MagicMock())
+                self.ratelimiter = mock.create_autospec(
+                    ratelimits.HTTPBucketRateLimiterManager,
+                    auto_spec=True,
+                    acquire=mock.MagicMock(),
+                    update_rate_limits=mock.MagicMock(),
+                )
+                self.global_ratelimiter = mock.create_autospec(
+                    ratelimits.ManualRateLimiter, auto_spec=True, acquire=mock.MagicMock(), throttle=mock.MagicMock()
+                )
                 self._request = mock.AsyncMock(return_value=...)
 
-        return RestfulClientImpl()
+        return LowLevelRestfulClientImpl()
 
     @pytest.fixture
     def compiled_route(self):
@@ -88,13 +96,13 @@ class TestRestfulClient:
 
     @pytest.mark.asyncio
     async def test_rest___aenter___and___aexit__(self):
-        class RestfulClientImpl(rest.RestfulClient):
+        class LowLevelRestfulClientImpl(rest.LowLevelRestfulClient):
             def __init__(self, *args, **kwargs):
                 kwargs.setdefault("token", "Bearer xxx")
                 super().__init__(*args, **kwargs)
                 self.close = mock.AsyncMock()
 
-        inst = RestfulClientImpl()
+        inst = LowLevelRestfulClientImpl()
 
         async with inst as client:
             assert client is inst
@@ -103,13 +111,13 @@ class TestRestfulClient:
 
     @pytest.mark.asyncio
     async def test_rest_close_calls_client_session_close(self):
-        class RestfulClientImpl(rest.RestfulClient):
+        class LowLevelRestfulClientImpl(rest.LowLevelRestfulClient):
             def __init__(self, *args, **kwargs):
                 self.client_session = mock.MagicMock()
                 self.client_session.close = mock.AsyncMock()
                 self.logger = logging.getLogger(__name__)
 
-        inst = RestfulClientImpl()
+        inst = LowLevelRestfulClientImpl()
 
         await inst.close()
 
@@ -125,7 +133,7 @@ class TestRestfulClient:
         stack.enter_context(mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager", return_value=buckets_mock))
 
         with stack:
-            client = rest.RestfulClient(token="Bot token.otacon.a-token")
+            client = rest.LowLevelRestfulClient(token="Bot token.otacon.a-token")
 
         assert client.base_url == f"https://discordapp.com/api/v{int(versions.HTTPAPIVersion.STABLE)}"
         assert client.global_ratelimiter is mock_manual_rate_limiter
@@ -136,7 +144,7 @@ class TestRestfulClient:
 
     @pytest.mark.asyncio
     async def test__init__with_bearer_token_and_without_optionals(self):
-        client = rest.RestfulClient(token="Bearer token.otacon.a-token")
+        client = rest.LowLevelRestfulClient(token="Bearer token.otacon.a-token")
         assert client.token == "Bearer token.otacon.a-token"
 
     @pytest.mark.asyncio
@@ -160,7 +168,7 @@ class TestRestfulClient:
         )
 
         with stack:
-            client = rest.RestfulClient(
+            client = rest.LowLevelRestfulClient(
                 token="Bot token.otacon.a-token",
                 base_url="https://discordapp.com/api/v69420",
                 allow_redirects=True,
@@ -184,7 +192,7 @@ class TestRestfulClient:
     @pytest.mark.asyncio
     @_helpers.assert_raises(type_=RuntimeError)
     async def test__init__raises_runtime_error_with_invalid_token(self, *_):
-        async with rest.RestfulClient(token="An-invalid-TOKEN"):
+        async with rest.LowLevelRestfulClient(token="An-invalid-TOKEN"):
             pass
 
     @pytest.mark.asyncio
@@ -196,16 +204,23 @@ class TestRestfulClient:
     @pytest.fixture()
     @mock.patch.object(ratelimits, "ManualRateLimiter")
     @mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager")
-    async def mock_rest_impl(self, *args):
-        rest_impl = rest.RestfulClient(token="Bot token")
+    async def rest_impl_with__request(self, *args):
+        rest_impl = rest.LowLevelRestfulClient(token="Bot token")
         rest_impl.logger = mock.MagicMock(debug=mock.MagicMock())
-        rest_impl.ratelimiter = mock.MagicMock()
-        rest_impl.global_ratelimiter = mock.MagicMock()
+        rest_impl.ratelimiter = mock.create_autospec(
+            ratelimits.HTTPBucketRateLimiterManager,
+            auto_spec=True,
+            acquire=mock.MagicMock(),
+            update_rate_limits=mock.MagicMock(),
+        )
+        rest_impl.global_ratelimiter = mock.create_autospec(
+            ratelimits.ManualRateLimiter, auto_spec=True, acquire=mock.MagicMock(), throttle=mock.MagicMock()
+        )
         return rest_impl
 
     @pytest.mark.asyncio
-    async def test__request_acquires_ratelimiter(self, compiled_route, exit_error, mock_rest_impl):
-        rest_impl = await mock_rest_impl
+    async def test__request_acquires_ratelimiter(self, compiled_route, exit_error, rest_impl_with__request):
+        rest_impl = await rest_impl_with__request
         rest_impl.logger.debug.side_effect = exit_error
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
@@ -217,8 +232,8 @@ class TestRestfulClient:
             rest_impl.ratelimiter.acquire.asset_called_once_with(compiled_route)
 
     @pytest.mark.asyncio
-    async def test__request_sets_Authentication_if_token(self, compiled_route, exit_error, mock_rest_impl):
-        rest_impl = await mock_rest_impl
+    async def test__request_sets_Authentication_if_token(self, compiled_route, exit_error, rest_impl_with__request):
+        rest_impl = await rest_impl_with__request
         rest_impl.logger.debug.side_effect = [None, exit_error]
 
         stack = contextlib.ExitStack()
@@ -249,9 +264,9 @@ class TestRestfulClient:
 
     @pytest.mark.asyncio
     async def test__request_doesnt_set_Authentication_if_suppress_authorization_header(
-        self, compiled_route, exit_error, mock_rest_impl
+        self, compiled_route, exit_error, rest_impl_with__request
     ):
-        rest_impl = await mock_rest_impl
+        rest_impl = await rest_impl_with__request
         rest_impl.logger.debug.side_effect = [None, exit_error]
 
         stack = contextlib.ExitStack()
@@ -281,8 +296,10 @@ class TestRestfulClient:
             )
 
     @pytest.mark.asyncio
-    async def test__request_sets_X_Audit_Log_Reason_if_reason(self, compiled_route, exit_error, mock_rest_impl):
-        rest_impl = await mock_rest_impl
+    async def test__request_sets_X_Audit_Log_Reason_if_reason(
+        self, compiled_route, exit_error, rest_impl_with__request
+    ):
+        rest_impl = await rest_impl_with__request
         rest_impl.logger.debug.side_effect = [None, exit_error]
 
         stack = contextlib.ExitStack()
@@ -316,8 +333,10 @@ class TestRestfulClient:
             )
 
     @pytest.mark.asyncio
-    async def test__request_updates_headers_with_provided_headers(self, compiled_route, exit_error, mock_rest_impl):
-        rest_impl = await mock_rest_impl
+    async def test__request_updates_headers_with_provided_headers(
+        self, compiled_route, exit_error, rest_impl_with__request
+    ):
+        rest_impl = await rest_impl_with__request
         rest_impl.logger.debug.side_effect = [None, exit_error]
 
         stack = contextlib.ExitStack()
@@ -349,7 +368,9 @@ class TestRestfulClient:
             )
 
     @pytest.mark.asyncio
-    async def test__request_resets_seek_on_seekable_resources(self, compiled_route, exit_error, mock_rest_impl):
+    async def test__request_resets_seek_on_seekable_resources(
+        self, compiled_route, exit_error, rest_impl_with__request
+    ):
         class SeekableResource:
             seeked: bool
             pos: int
@@ -376,7 +397,7 @@ class TestRestfulClient:
             def close(self):
                 ...
 
-        rest_impl = await mock_rest_impl
+        rest_impl = await rest_impl_with__request
         rest_impl.logger.debug.side_effect = exit_error
         seekable_resources = [SeekableResource(5), SeekableResource(37), SeekableResource(16)]
 
@@ -394,11 +415,11 @@ class TestRestfulClient:
     @pytest.mark.parametrize(
         "content_type", ["text/plain", "text/html"],
     )
-    async def test__request_handles_bad_response_when_content_type_is_plain_or_htlm(
-        self, content_type, exit_error, compiled_route, discord_response, mock_rest_impl
+    async def test__request_handles_bad_response_when_content_type_is_plain_or_html(
+        self, content_type, exit_error, compiled_route, discord_response, rest_impl_with__request
     ):
         discord_response.headers["Content-Type"] = content_type
-        rest_impl = await mock_rest_impl
+        rest_impl = await rest_impl_with__request
         rest_impl._handle_bad_response = mock.AsyncMock(side_effect=[None, exit_error])
 
         rest_impl.client_session.request = mock.MagicMock(return_value=discord_response)
@@ -411,9 +432,9 @@ class TestRestfulClient:
             rest_impl._handle_bad_response.assert_called()
 
     @pytest.mark.asyncio
-    async def test__request_when_invalid_content_type(self, compiled_route, discord_response, mock_rest_impl):
+    async def test__request_when_invalid_content_type(self, compiled_route, discord_response, rest_impl_with__request):
         discord_response.headers["Content-Type"] = "something/invalid"
-        rest_impl = await mock_rest_impl
+        rest_impl = await rest_impl_with__request
 
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()))
@@ -424,11 +445,11 @@ class TestRestfulClient:
 
     @pytest.mark.asyncio
     async def test__request_when_TOO_MANY_REQUESTS_when_global(
-        self, compiled_route, exit_error, discord_response, mock_rest_impl
+        self, compiled_route, exit_error, discord_response, rest_impl_with__request
     ):
         discord_response.status = 429
         discord_response.raw_body = '{"retry_after": 1, "global": true}'
-        rest_impl = await mock_rest_impl
+        rest_impl = await rest_impl_with__request
         rest_impl.global_ratelimiter.throttle = mock.MagicMock(side_effect=[None, exit_error])
 
         stack = contextlib.ExitStack()
@@ -445,15 +466,15 @@ class TestRestfulClient:
 
     @pytest.mark.asyncio
     async def test__request_when_TOO_MANY_REQUESTS_when_not_global(
-        self, compiled_route, exit_error, discord_response, mock_rest_impl
+        self, compiled_route, exit_error, discord_response, rest_impl_with__request
     ):
         discord_response.status = 429
         discord_response.raw_body = '{"retry_after": 1, "global": false}'
-        rest_impl = await mock_rest_impl
+        rest_impl = await rest_impl_with__request
         rest_impl.logger.debug.side_effect = [None, exit_error]
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            with mock.patch.object(rest.RestfulClient, "_request", return_value=discord_response):
+            with mock.patch.object(rest.LowLevelRestfulClient, "_request", return_value=discord_response):
                 try:
                     await rest_impl._request(compiled_route)
                 except exit_error:
@@ -479,7 +500,7 @@ class TestRestfulClient:
         self, *patches, status_code, error, compiled_route, discord_response, api_version
     ):
         discord_response.status = status_code
-        rest_impl = rest.RestfulClient(token="Bot token", version=api_version)
+        rest_impl = rest.LowLevelRestfulClient(token="Bot token", version=api_version)
         rest_impl.ratelimiter = mock.MagicMock()
         rest_impl.global_ratelimiter = mock.MagicMock()
         rest_impl.client_session.request = mock.MagicMock(return_value=discord_response)
@@ -492,9 +513,9 @@ class TestRestfulClient:
                 assert True
 
     @pytest.mark.asyncio
-    async def test__request_when_NO_CONTENT(self, compiled_route, discord_response, mock_rest_impl):
+    async def test__request_when_NO_CONTENT(self, compiled_route, discord_response, rest_impl_with__request):
         discord_response.status = 204
-        rest_impl = await mock_rest_impl
+        rest_impl = await rest_impl_with__request
         rest_impl.client_session.request = mock.MagicMock(return_value=discord_response)
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
@@ -502,11 +523,11 @@ class TestRestfulClient:
 
     @pytest.mark.asyncio
     async def test__request_handles_bad_response_when_error_results_in_retry(
-        self, exit_error, compiled_route, discord_response, mock_rest_impl
+        self, exit_error, compiled_route, discord_response, rest_impl_with__request
     ):
         discord_response.raw_body = "{}"
         discord_response.status = 1000
-        rest_impl = await mock_rest_impl
+        rest_impl = await rest_impl_with__request
         rest_impl._handle_bad_response = mock.AsyncMock(side_effect=[None, exit_error])
 
         stack = contextlib.ExitStack()
@@ -587,13 +608,13 @@ class TestRestfulClient:
         with mock.patch.object(routes, "GUILD_AUDIT_LOGS", compile=mock.MagicMock(return_value=mock_route)):
             assert (
                 await rest_impl.get_guild_audit_log(
-                    "2929292929", user_id="115590097100865541", action_type=42, limit=5,
+                    "2929292929", user_id="115590097100865541", action_type=42, limit=5, before="123123123"
                 )
                 is mock_response
             )
             routes.GUILD_AUDIT_LOGS.compile.assert_called_once_with(rest_impl.GET, guild_id="2929292929")
         rest_impl._request.assert_called_once_with(
-            mock_route, query={"user_id": "115590097100865541", "action_type": 42, "limit": 5}
+            mock_route, query={"user_id": "115590097100865541", "action_type": 42, "limit": 5, "before": "123123123"}
         )
 
     @pytest.mark.asyncio
@@ -860,7 +881,12 @@ class TestRestfulClient:
         with mock.patch.object(routes, "CHANNEL_MESSAGE", compile=mock.MagicMock(return_value=mock_route)):
             assert (
                 await rest_impl.edit_message(
-                    "9292929", "484848", content="42", embed={"content": "I AM AN EMBED"}, flags=2
+                    "9292929",
+                    "484848",
+                    content="42",
+                    embed={"content": "I AM AN EMBED"},
+                    flags=2,
+                    allowed_mentions={"parse": ["everyone", "users"]},
                 )
                 is mock_response
             )
@@ -868,7 +894,13 @@ class TestRestfulClient:
                 rest_impl.PATCH, channel_id="9292929", message_id="484848"
             )
         rest_impl._request.assert_called_once_with(
-            mock_route, json_body={"content": "42", "embed": {"content": "I AM AN EMBED"}, "flags": 2}
+            mock_route,
+            json_body={
+                "content": "42",
+                "embed": {"content": "I AM AN EMBED"},
+                "flags": 2,
+                "allowed_mentions": {"parse": ["everyone", "users"]},
+            },
         )
 
     @pytest.mark.asyncio
@@ -893,11 +925,11 @@ class TestRestfulClient:
     async def test_edit_channel_permissions_without_optionals(self, rest_impl):
         mock_route = mock.MagicMock(routes.CHANNEL_PERMISSIONS)
         with mock.patch.object(routes, "CHANNEL_PERMISSIONS", compile=mock.MagicMock(return_value=mock_route)):
-            assert await rest_impl.edit_channel_permissions("101010101010", "100101010") is None
+            assert await rest_impl.edit_channel_permissions("101010101010", "100101010", type_="user") is None
             routes.CHANNEL_PERMISSIONS.compile.assert_called_once_with(
                 rest_impl.PATCH, channel_id="101010101010", overwrite_id="100101010"
             )
-        rest_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
+        rest_impl._request.assert_called_once_with(mock_route, json_body={"type": "user"}, reason=...)
 
     @pytest.mark.asyncio
     async def test_edit_channel_permissions_with_optionals(self, rest_impl):
@@ -1239,7 +1271,7 @@ class TestRestfulClient:
         rest_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_CHANNELS)
         with mock.patch.object(routes, "GUILD_CHANNELS", compile=mock.MagicMock(return_value=mock_route)):
-            assert await rest_impl.get_guild_channels("393939393") is mock_response
+            assert await rest_impl.list_guild_channels("393939393") is mock_response
             routes.GUILD_CHANNELS.compile.assert_called_once_with(rest_impl.GET, guild_id="393939393")
         rest_impl._request.assert_called_once_with(mock_route)
 
@@ -1656,30 +1688,6 @@ class TestRestfulClient:
         rest_impl._request.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
-    async def test_create_guild_integration_without_reason(self, rest_impl):
-        mock_response = {"id": "22222"}
-        rest_impl._request.return_value = mock_response
-        mock_route = mock.MagicMock(routes.GUILD_INTEGRATIONS)
-        with mock.patch.object(routes, "GUILD_INTEGRATIONS", compile=mock.MagicMock(return_value=mock_route)):
-            assert await rest_impl.create_guild_integration("2222", "twitch", "443223") is mock_response
-            routes.GUILD_INTEGRATIONS.compile.assert_called_once_with(rest_impl.POST, guild_id="2222")
-        rest_impl._request.assert_called_once_with(mock_route, json_body={"type": "twitch", "id": "443223"}, reason=...)
-
-    @pytest.mark.asyncio
-    async def test_create_guild_integration_with_reason(self, rest_impl):
-        mock_response = {"id": "22222"}
-        rest_impl._request.return_value = mock_response
-        mock_route = mock.MagicMock(routes.GUILD_INTEGRATIONS)
-        with mock.patch.object(routes, "GUILD_INTEGRATIONS", compile=mock.MagicMock(return_value=mock_route)):
-            assert (
-                await rest_impl.create_guild_integration("2222", "twitch", "443223", reason="NAH m8") is mock_response
-            )
-            routes.GUILD_INTEGRATIONS.compile.assert_called_once_with(rest_impl.POST, guild_id="2222")
-        rest_impl._request.assert_called_once_with(
-            mock_route, json_body={"type": "twitch", "id": "443223"}, reason="NAH m8"
-        )
-
-    @pytest.mark.asyncio
     async def test_modify_guild_integration_without_optionals(self, rest_impl):
         mock_route = mock.MagicMock(routes.GUILD_INTEGRATION)
         with mock.patch.object(routes, "GUILD_INTEGRATION", compile=mock.MagicMock(return_value=mock_route)):
@@ -1758,10 +1766,11 @@ class TestRestfulClient:
         rest_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_EMBED)
         with mock.patch.object(routes, "GUILD_EMBED", compile=mock.MagicMock(return_value=mock_route)):
-            embed_obj = {"channel_id": "222", "enabled": True}
-            assert await rest_impl.modify_guild_embed("393939", embed_obj) is mock_response
+            assert await rest_impl.modify_guild_embed("393939", channel_id="222", enabled=True) is mock_response
             routes.GUILD_EMBED.compile.assert_called_once_with(rest_impl.PATCH, guild_id="393939")
-        rest_impl._request.assert_called_once_with(mock_route, json_body=embed_obj, reason=...)
+        rest_impl._request.assert_called_once_with(
+            mock_route, json_body={"channel_id": "222", "enabled": True}, reason=...
+        )
 
     @pytest.mark.asyncio
     async def test_modify_guild_embed_with_reason(self, rest_impl):
@@ -1769,10 +1778,14 @@ class TestRestfulClient:
         rest_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_EMBED)
         with mock.patch.object(routes, "GUILD_EMBED", compile=mock.MagicMock(return_value=mock_route)):
-            embed_obj = {"channel_id": "222", "enabled": True}
-            assert await rest_impl.modify_guild_embed("393939", embed_obj, reason="OK") is mock_response
+            assert (
+                await rest_impl.modify_guild_embed("393939", channel_id="222", enabled=True, reason="OK")
+                is mock_response
+            )
             routes.GUILD_EMBED.compile.assert_called_once_with(rest_impl.PATCH, guild_id="393939")
-        rest_impl._request.assert_called_once_with(mock_route, json_body=embed_obj, reason="OK")
+        rest_impl._request.assert_called_once_with(
+            mock_route, json_body={"channel_id": "222", "enabled": True}, reason="OK"
+        )
 
     @pytest.mark.asyncio
     async def test_get_guild_vanity_url(self, rest_impl):

@@ -41,10 +41,13 @@ class VoiceState(entities.HikariEntity, entities.Deserializable):
         deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
     )
 
-    #: The ID of the channel this user is connected to.
+    #: The ID of the channel this user is connected to, will be :obj:`None` if
+    #: they are leaving voice.
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize, if_none=None)
+    channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
+        deserializer=snowflakes.Snowflake.deserialize, if_none=None
+    )
 
     #: The ID of the user this voice state is for.
     #:

@@ -419,3 +419,191 @@ class TestAuditLog:
         assert audit_log_obj.webhooks == {123: mock_webhook_obj}
         assert audit_log_obj.users == {345: mock_user_obj}
         assert audit_log_obj.integrations == {234: mock_integration_obj}
+
+
+class TestAuditLogIterator:
+    @pytest.mark.asyncio
+    async def test__fill_when_entities_returned(self):
+        mock_webhook_payload = {"id": "43242", "channel_id": "292393993"}
+        mock_webhook_obj = mock.MagicMock(webhooks.Webhook, id=292393993)
+        mock_user_payload = {"id": "929292", "public_flags": "22222"}
+        mock_user_obj = mock.MagicMock(users.User, id=929292)
+        mock_audit_log_entry_payload = {"target_id": "202020", "id": "222"}
+        mock_integration_payload = {"id": "123123123", "account": {}}
+        mock_integration_obj = mock.MagicMock(guilds.PartialGuildIntegration, id=123123123)
+        mock_request = mock.AsyncMock(
+            return_value={
+                "webhooks": [mock_webhook_payload],
+                "users": [mock_user_payload],
+                "audit_log_entries": [mock_audit_log_entry_payload],
+                "integrations": [mock_integration_payload],
+            }
+        )
+        audit_log_iterator = audit_logs.AuditLogIterator(
+            guild_id="123123", request=mock_request, before=None, user_id="11111", action_type=..., limit=None,
+        )
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(users.User, "deserialize", return_value=mock_user_obj))
+        stack.enter_context(mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj))
+        stack.enter_context(
+            mock.patch.object(guilds.PartialGuildIntegration, "deserialize", return_value=mock_integration_obj)
+        )
+
+        with stack:
+            assert await audit_log_iterator._fill() is None
+            users.User.deserialize.assert_called_once_with(mock_user_payload)
+            webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload)
+            guilds.PartialGuildIntegration.deserialize.assert_called_once_with(mock_integration_payload)
+        assert audit_log_iterator.webhooks == {292393993: mock_webhook_obj}
+        assert audit_log_iterator.users == {929292: mock_user_obj}
+        assert audit_log_iterator.integrations == {123123123: mock_integration_obj}
+        assert audit_log_iterator._buffer == [mock_audit_log_entry_payload]
+        mock_request.assert_called_once_with(
+            guild_id="123123", user_id="11111", action_type=..., before=..., limit=100,
+        )
+
+    @pytest.mark.asyncio
+    async def test__fill_when_resource_exhausted(self):
+        mock_request = mock.AsyncMock(
+            return_value={"webhooks": [], "users": [], "audit_log_entries": [], "integrations": []}
+        )
+        audit_log_iterator = audit_logs.AuditLogIterator(
+            guild_id="123123", request=mock_request, before="222222222", user_id="11111", action_type=..., limit=None,
+        )
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(users.User, "deserialize", return_value=...))
+        stack.enter_context(mock.patch.object(webhooks.Webhook, "deserialize", return_value=...))
+        stack.enter_context(mock.patch.object(guilds.PartialGuildIntegration, "deserialize", return_value=...))
+
+        with stack:
+            assert await audit_log_iterator._fill() is None
+            users.User.deserialize.assert_not_called()
+            webhooks.Webhook.deserialize.assert_not_called()
+            guilds.PartialGuildIntegration.deserialize.assert_not_called()
+        assert audit_log_iterator.webhooks == {}
+        assert audit_log_iterator.users == {}
+        assert audit_log_iterator.integrations == {}
+        assert audit_log_iterator._buffer == []
+        mock_request.assert_called_once_with(
+            guild_id="123123", user_id="11111", action_type=..., before="222222222", limit=100,
+        )
+
+    @pytest.mark.asyncio
+    async def test__fill_when_before_and_limit_not_set(self):
+        mock_request = mock.AsyncMock(
+            return_value={
+                "webhooks": [],
+                "users": [],
+                "audit_log_entries": [{"id": "123123123"}, {"id": "123123123"}],
+                "integrations": [],
+            }
+        )
+        audit_log_iterator = audit_logs.AuditLogIterator(
+            guild_id="123123", request=mock_request, before=None, user_id="11111", action_type=..., limit=None,
+        )
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(users.User, "deserialize", return_value=...))
+        stack.enter_context(mock.patch.object(webhooks.Webhook, "deserialize", return_value=...))
+        stack.enter_context(mock.patch.object(guilds.PartialGuildIntegration, "deserialize", return_value=...))
+
+        with stack:
+            assert await audit_log_iterator._fill() is None
+        mock_request.assert_called_once_with(
+            guild_id="123123", user_id="11111", action_type=..., before=..., limit=100,
+        )
+        assert audit_log_iterator._limit is None
+
+    @pytest.mark.asyncio
+    async def test__fill_when_before_and_limit_set(self):
+        mock_request = mock.AsyncMock(
+            return_value={
+                "webhooks": [],
+                "users": [],
+                "audit_log_entries": [{"id": "123123123"}, {"id": "123123123"}],
+                "integrations": [],
+            }
+        )
+        audit_log_iterator = audit_logs.AuditLogIterator(
+            guild_id="123123",
+            request=mock_request,
+            before="222222222",
+            user_id="11111",
+            action_type=audit_logs.AuditLogEventType.MEMBER_MOVE,
+            limit=44,
+        )
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(users.User, "deserialize", return_value=...))
+        stack.enter_context(mock.patch.object(webhooks.Webhook, "deserialize", return_value=...))
+        stack.enter_context(mock.patch.object(guilds.PartialGuildIntegration, "deserialize", return_value=...))
+
+        with stack:
+            assert await audit_log_iterator._fill() is None
+        mock_request.assert_called_once_with(
+            guild_id="123123", user_id="11111", action_type=26, before="222222222", limit=44,
+        )
+        assert audit_log_iterator._limit == 42
+
+    @pytest.mark.asyncio
+    async def test___anext___when_not_filled_and_resource_is_exhausted(self):
+        mock_request = mock.AsyncMock(
+            return_value={"webhooks": [], "users": [], "audit_log_entries": [], "integrations": []}
+        )
+        iterator = audit_logs.AuditLogIterator(
+            guild_id="123123", request=mock_request, before=None, user_id=..., action_type=..., limit=None
+        )
+        with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", return_value=...):
+            async for _ in iterator:
+                assert False, "Iterator shouldn't have yielded anything."
+            audit_logs.AuditLogEntry.deserialize.assert_not_called()
+        assert iterator._front is None
+
+    @pytest.mark.asyncio
+    async def test___anext___when_not_filled(self):
+        mock_request = mock.AsyncMock(
+            side_effect=[{"webhooks": [], "users": [], "audit_log_entries": [{"id": "666666"}], "integrations": []},]
+        )
+        mock_audit_log_entry = mock.MagicMock(audit_logs.AuditLogEntry, id=666666)
+        iterator = audit_logs.AuditLogIterator(
+            guild_id="123123", request=mock_request, before=None, user_id=..., action_type=..., limit=None
+        )
+        with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", side_effect=[mock_audit_log_entry]):
+            async for result in iterator:
+                assert result is mock_audit_log_entry
+                break
+            audit_logs.AuditLogEntry.deserialize.assert_called_once_with({"id": "666666"})
+        mock_request.assert_called_once_with(
+            guild_id="123123", user_id=..., action_type=..., before=..., limit=100,
+        )
+        assert iterator._front == "666666"
+
+    @pytest.mark.asyncio
+    async def test___anext___when_not_filled_and_limit_exhausted(self):
+        mock_request = mock.AsyncMock(side_effect=[])
+        mock_audit_log_entry = mock.MagicMock(audit_logs.AuditLogEntry, id=666666)
+        iterator = audit_logs.AuditLogIterator(
+            guild_id="123123", request=mock_request, before=None, user_id=..., action_type=..., limit=None
+        )
+        with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", side_effect=[mock_audit_log_entry]):
+            async for _ in iterator:
+                assert False, "Iterator shouldn't have yielded anything."
+            audit_logs.AuditLogEntry.deserialize.assert_not_called()
+        mock_request.assert_called_once_with(
+            guild_id="123123", user_id=..., action_type=..., before=..., limit=100,
+        )
+        assert iterator._front is None
+
+    @pytest.mark.asyncio
+    async def test___anext___when_filled(self):
+        mock_request = mock.AsyncMock(side_effect=[])
+        mock_audit_log_entry = mock.MagicMock(audit_logs.AuditLogEntry, id=4242)
+        iterator = audit_logs.AuditLogIterator(
+            guild_id="123123", request=mock_request, before=None, user_id=..., action_type=..., limit=None
+        )
+        iterator._buffer = [{"id": "123123"}]
+        with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", side_effect=[mock_audit_log_entry]):
+            async for result in iterator:
+                assert result is mock_audit_log_entry
+                break
+            audit_logs.AuditLogEntry.deserialize.assert_called_once_with({"id": "123123"})
+        mock_request.assert_not_called()
+        assert iterator._front == "4242"

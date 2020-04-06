@@ -22,7 +22,7 @@ Each Snowflake integer used to uniquely identify entities
 on the server.
 """
 
-__all__ = ["Snowflake", "UniqueEntity"]
+__all__ = ["Snowflake", "UniqueEntity", "HashableT"]
 
 import datetime
 import functools
@@ -30,9 +30,9 @@ import typing
 
 import attr
 
-from hikari import entities
 from hikari.internal import conversions
 from hikari.internal import marshaller
+from hikari import entities
 
 
 @functools.total_ordering
@@ -101,13 +101,30 @@ class Snowflake(entities.HikariEntity, typing.SupportsInt):
         """Take a :obj:`str` ID and convert it into a Snowflake object."""
         return cls(value)
 
+    @classmethod
+    def from_datetime(cls, date: datetime.datetime) -> "Snowflake":
+        """Get a snowflake object from a datetime object."""
+        return cls.from_timestamp(date.timestamp())
+
+    @classmethod
+    def from_timestamp(cls, timestamp: float) -> "Snowflake":
+        """Get a snowflake object from a seconds timestamp."""
+        return cls(int(timestamp - conversions.DISCORD_EPOCH) * 1000 << 22)
+
 
 @marshaller.marshallable()
 @attr.s(slots=True)
-class UniqueEntity(entities.HikariEntity):
+class UniqueEntity(entities.HikariEntity, typing.SupportsInt):
     """An entity that has an integer ID of some sort."""
 
     #: The ID of this entity.
     #:
     #: :type: :obj:`Snowflake`
     id: Snowflake = marshaller.attrib(hash=True, eq=True, repr=True, deserializer=Snowflake, serializer=str)
+
+    def __int__(self):
+        return int(self.id)
+
+
+T = typing.TypeVar("T", bound=UniqueEntity)
+HashableT = typing.Union[Snowflake, int, T]
