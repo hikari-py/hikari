@@ -26,7 +26,7 @@ def test_str_HTTPStatusCode():
 
 
 def test_str_GatewayCloseCode():
-    assert str(codes.GatewayCloseCode.ABNORMAL_CLOSURE) == "1006 Abnormal Closure"
+    assert str(codes.GatewayCloseCode.UNKNOWN_ERROR) == "4000 Unknown Error"
 
 
 def test_str_GatewayOpcode():
