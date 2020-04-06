@@ -70,10 +70,8 @@ class GatewayCloseCode(enum.IntEnum):
     between `1000` and `1999` inclusive are generally client-side codes.
     """
 
-    #: You closed your bot manually.
+    #: The application running closed.
     NORMAL_CLOSURE = 1000
-    #: Your bot stopped working and shut down.
-    ABNORMAL_CLOSURE = 1006
     #: Discord is not sure what went wrong. Try reconnecting?
     UNKNOWN_ERROR = 4000
     #: You sent an invalid Gateway opcode or an invalid payload for an opcode. Don't do that!

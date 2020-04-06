@@ -577,7 +577,10 @@ class ShardConnection:
         self.resumed_event.clear()
 
         self._session = client_session_type(**self._cs_init_kwargs)
-        close_code = codes.GatewayCloseCode.ABNORMAL_CLOSURE
+
+        # 1000 and 1001 will invalidate sessions, 1006 (used here before)
+        # is a sketchy area as to the intent. 4000 is known to work normally.
+        close_code = codes.GatewayCloseCode.UNKNOWN_ERROR
 
         try:
             self._ws = await self._session.ws_connect(**self._ws_connect_kwargs)
