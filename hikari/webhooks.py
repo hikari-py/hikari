@@ -22,10 +22,10 @@ __all__ = ["WebhookType", "Webhook"]
 import enum
 import typing
 
-from hikari.internal import marshaller
 from hikari import entities
 from hikari import snowflakes
 from hikari import users
+from hikari.internal import marshaller
 
 
 @enum.unique

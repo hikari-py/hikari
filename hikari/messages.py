@@ -33,7 +33,6 @@ import enum
 import typing
 
 import hikari.internal.conversions
-from hikari.internal import marshaller
 from hikari import embeds as _embeds
 from hikari import emojis as _emojis
 from hikari import entities
@@ -41,6 +40,7 @@ from hikari import guilds
 from hikari import oauth2
 from hikari import snowflakes
 from hikari import users
+from hikari.internal import marshaller
 
 
 @enum.unique

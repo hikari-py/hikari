@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,25 +16,20 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""The models API for interacting with Discord directly."""
+"""Event management for stateless bots."""
 
-from hikari.clients import bot_client
-from hikari.clients import configs
-from hikari.clients import gateway_manager
-from hikari.clients import rest_client
-from hikari.clients import runnable
-from hikari.clients.bot_client import *
-from hikari.clients.configs import *
-from hikari.clients.gateway_manager import *
-from hikari.clients.rest_client import *
-from hikari.clients.runnable import *
-from hikari.clients.shard_client import *
+__all__ = ["StatelessEventManagerImpl"]
 
-__all__ = [
-    *bot_client.__all__,
-    *configs.__all__,
-    *gateway_manager.__all__,
-    *rest_client.__all__,
-    *shard_client.__all__,
-    *runnable.__all__,
-]
+from hikari.state import event_dispatchers
+from hikari.state import event_managers
+
+
+class StatelessEventManagerImpl(event_managers.EventManager[event_dispatchers.EventDispatcher]):
+    """Stateless event manager implementation for stateless bots.
+
+    This is an implementation that does not rely on querying prior information to
+    operate. The implementation details of this are much simpler than a stateful
+    version, and are not immediately affected by the use of intents.
+    """
+
+    # @event_managers.raw_event_mapper("CONNECT")

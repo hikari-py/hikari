@@ -22,9 +22,9 @@ __all__ = ["GatewayBot", "GatewayActivity"]
 import datetime
 import typing
 
-from hikari.internal import marshaller
 from hikari import entities
 from hikari import guilds
+from hikari.internal import marshaller
 
 
 @marshaller.attrs(slots=True)

@@ -35,15 +35,15 @@ import typing
 
 import aiohttp
 
+from hikari import errors
+from hikari import events
+from hikari import gateway_entities
+from hikari import guilds
 from hikari.clients import configs
 from hikari.clients import runnable
 from hikari.internal import more_asyncio
 from hikari.internal import more_logging
-from hikari import events
-from hikari import gateway_entities
-from hikari import guilds
 from hikari.net import codes
-from hikari import errors
 from hikari.net import ratelimits
 from hikari.net import shard
 from hikari.state import raw_event_consumers
@@ -58,15 +58,14 @@ class ShardState(enum.IntEnum):
     #: The shard is not running.
     NOT_RUNNING = 0
     #: The shard is undergoing the initial connection handshake.
-    HANDSHAKE = enum.auto()
+    CONNECTING = enum.auto()
     #: The initialization handshake has completed. We are waiting for the shard
     #: to receive the ``READY`` event.
     WAITING_FOR_READY = enum.auto()
     #: The shard is ``READY``.
     READY = enum.auto()
-    #: The shard has disconnected and is currently attempting to reconnect
-    #: again.
-    RECONNECTING = enum.auto()
+    #: The shard has sent a request to ``RESUME`` and is waiting for a response.
+    RESUMING = enum.auto()
     #: The shard is currently shutting down permanently.
     STOPPING = enum.auto()
     #: The shard has shut down and is no longer connected.
@@ -372,7 +371,7 @@ class ShardClient(runnable.RunnableClient):
 
     async def _spin_up(self) -> asyncio.Task:
         self.logger.debug("initializing shard")
-        self._shard_state = ShardState.HANDSHAKE
+        self._shard_state = ShardState.CONNECTING
 
         is_resume = self._client.seq is not None and self._client.session_id is not None
 
@@ -395,7 +394,18 @@ class ShardClient(runnable.RunnableClient):
             raise connect_task.exception()
 
         if is_resume:
-            self.logger.info("sent RESUME")
+            self.logger.info("sent RESUME, waiting for RESUMED event")
+            self._shard_state = ShardState.RESUMING
+
+            completed, _ = await asyncio.wait(
+                [connect_task, self._client.resumed_event.wait()], return_when=asyncio.FIRST_COMPLETED
+            )
+
+            if connect_task in completed:
+                raise connect_task.exception()
+
+            self.logger.info("now RESUMED")
+
         else:
             self.logger.info("sent IDENTIFY, waiting for READY event")
 
@@ -405,10 +415,10 @@ class ShardClient(runnable.RunnableClient):
                 [connect_task, self._client.ready_event.wait()], return_when=asyncio.FIRST_COMPLETED
             )
 
-            self.logger.info("now READY")
-
             if connect_task in completed:
                 raise connect_task.exception()
+
+            self.logger.info("now READY")
 
         self._shard_state = ShardState.READY
 

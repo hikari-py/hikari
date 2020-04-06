@@ -22,13 +22,13 @@ __all__ = ["Application", "ApplicationOwner", "OwnGuild", "Team", "TeamMember", 
 import enum
 import typing
 
-from hikari.internal import cdn
-from hikari.internal import marshaller
 from hikari import entities
 from hikari import guilds
 from hikari import permissions
 from hikari import snowflakes
 from hikari import users
+from hikari.internal import cdn
+from hikari.internal import marshaller
 
 
 @enum.unique

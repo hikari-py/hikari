@@ -30,12 +30,11 @@ See Also
 * Gateway documentation: https://discordapp.com/developers/docs/topics/gateway
 * Opcode documentation: https://discordapp.com/developers/docs/topics/opcodes-and-status-codes
 """
-__all__ = ["GatewayStatus", "ShardConnection"]
+__all__ = ["ShardConnection"]
 
 import asyncio
 import contextlib
 import datetime
-import enum
 import json
 import logging
 import math
@@ -48,26 +47,11 @@ import zlib
 import aiohttp.typedefs
 
 from hikari import errors
-from hikari.internal import more_collections
 from hikari.internal import more_logging
 from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import user_agent
 from hikari.net import versions
-
-
-class GatewayStatus(str, enum.Enum):
-    """Various states that a gateway connection can be in."""
-
-    OFFLINE = "offline"
-    CONNECTING = "connecting"
-    WAITING_FOR_HELLO = "waiting for HELLO"
-    IDENTIFYING = "identifying"
-    RESUMING = "resuming"
-    SHUTTING_DOWN = "shutting down"
-    WAITING_FOR_MESSAGES = "waiting for messages"
-    PROCESSING_NEW_MESSAGE = "processing message"
-
 
 #: The signature for an event dispatch callback.
 DispatchT = typing.Callable[["ShardConnection", str, typing.Dict], None]
@@ -85,13 +69,11 @@ class ShardConnection:
     Expected events that may be passed to the event dispatcher are documented in the
     `gateway event reference <https://discordapp.com/developers/docs/topics/gateway#commands-and-events>`_.
     No normalization of the gateway event names occurs. In addition to this,
-    a few internal events can also be triggered to notify you of changes to
+    some internal events can also be triggered to notify you of changes to
     the connection state.
 
-    * ``CONNECT`` - fired on initial connection to Discord.
-    * ``RECONNECT`` - fired if we have previously been connected to Discord
-      but are making a new connection on an existing :obj:`ShardConnection` instance.
-    * ``DISCONNECT`` - fired when the connection is closed for any reason.
+    * ``CONNECTED`` - fired on initial connection to Discord.
+    * ``DISCONNECTED`` - fired when the connection is closed for any reason.
 
     Parameters
     ----------
@@ -197,6 +179,7 @@ class ShardConnection:
         "_proxy_url",
         "_ratelimiter",
         "ready_event",
+        "resumed_event",
         "requesting_close_event",
         "_session",
         "session_id",
@@ -290,6 +273,11 @@ class ShardConnection:
     #: :type: :obj:`asyncio.Event`
     ready_event: asyncio.Event
 
+    #: An event that is triggered when a resume has succeeded on the gateway.
+    #:
+    #: :type: :obj:`asyncio.Event`
+    resumed_event: asyncio.Event
+
     #: An event that is set when something requests that the connection
     #: should close somewhere.
     #:
@@ -316,12 +304,6 @@ class ShardConnection:
     #:
     #: :type: :obj:`int`
     shard_count: int
-
-    #: The current status of the gateway. This can be used to print out
-    #: informative context for large sharded bots.
-    #:
-    #: :type: :obj:`GatewayStatus`
-    status: GatewayStatus
 
     #: The API version to use on Discord.
     #:
@@ -398,11 +380,11 @@ class ShardConnection:
         self.last_message_received: float = float("nan")
         self.requesting_close_event: asyncio.Event = asyncio.Event()
         self.ready_event: asyncio.Event = asyncio.Event()
+        self.resumed_event: asyncio.Event = asyncio.Event()
         self.session_id = session_id
         self.seq: typing.Optional[int] = seq
         self.shard_id: int = shard_id
         self.shard_count: int = shard_count
-        self.status: GatewayStatus = GatewayStatus.OFFLINE
         self.version: int = int(version)
 
         self.logger: logging.Logger = more_logging.get_named_logger(self, f"#{shard_id}", f"v{self.version}")
@@ -567,7 +549,6 @@ class ShardConnection:
             The close code to use. Defaults to ``1000`` (normal closure).
         """
         if not self.requesting_close_event.is_set():
-            self.status = GatewayStatus.SHUTTING_DOWN
             self.requesting_close_event.set()
             # These will attribute error if they are not set; in this case we don't care, just ignore it.
             with contextlib.suppress(asyncio.TimeoutError, AttributeError):
@@ -593,14 +574,13 @@ class ShardConnection:
         self.identify_event.clear()
         self.ready_event.clear()
         self.requesting_close_event.clear()
+        self.resumed_event.clear()
 
         self._session = client_session_type(**self._cs_init_kwargs)
         close_code = codes.GatewayCloseCode.ABNORMAL_CLOSURE
 
         try:
-            self.status = GatewayStatus.CONNECTING
             self._ws = await self._session.ws_connect(**self._ws_connect_kwargs)
-            self.status = GatewayStatus.WAITING_FOR_HELLO
 
             self._connected_at = time.perf_counter()
             self._zlib = zlib.decompressobj()
@@ -615,11 +595,7 @@ class ShardConnection:
 
             self.hello_event.set()
 
-            self.dispatch(
-                self,
-                "RECONNECT" if self.disconnect_count else "CONNECT",
-                typing.cast(typing.Dict, more_collections.EMPTY_DICT),
-            )
+            self.dispatch(self, "CONNECTED", {})
             self.logger.debug("received HELLO (interval:%ss)", self.heartbeat_interval)
 
             completed, pending_tasks = await asyncio.wait(
@@ -661,7 +637,6 @@ class ShardConnection:
         finally:
             await self.close(close_code)
             self.closed_event.set()
-            self.status = GatewayStatus.OFFLINE
             self._connected_at = float("nan")
             self.last_heartbeat_sent = float("nan")
             self.heartbeat_latency = float("nan")
@@ -670,7 +645,7 @@ class ShardConnection:
             self._ws = None
             await self._session.close()
             self._session = None
-            self.dispatch(self, "DISCONNECT", typing.cast(typing.Dict, more_collections.EMPTY_DICT))
+            self.dispatch(self, "DISCONNECTED", {})
 
     @property
     def _ws_connect_kwargs(self):
@@ -692,7 +667,6 @@ class ShardConnection:
 
     async def _identify_or_resume_then_poll_events(self):
         if self.session_id is None:
-            self.status = GatewayStatus.IDENTIFYING
             self.logger.debug("preparing to send IDENTIFY")
 
             pl = {
@@ -720,7 +694,6 @@ class ShardConnection:
             self.logger.debug("sent IDENTIFY, now listening to incoming events")
         else:
             self.logger.debug("preparing to send RESUME")
-            self.status = GatewayStatus.RESUMING
             pl = {
                 "op": codes.GatewayOpcode.RESUME,
                 "d": {"token": self._token, "seq": self.seq, "session_id": self.session_id},
@@ -747,9 +720,7 @@ class ShardConnection:
 
     async def _poll_events(self):
         while not self.requesting_close_event.is_set():
-            self.status = GatewayStatus.WAITING_FOR_MESSAGES
             next_pl = await self._receive()
-            self.status = GatewayStatus.PROCESSING_NEW_MESSAGE
 
             op = next_pl["op"]
             d = next_pl["d"]
@@ -767,6 +738,11 @@ class ShardConnection:
                     )
 
                     self.ready_event.set()
+
+                elif event_name == "RESUMED":
+                    self.resumed_event.set()
+
+                    self.logger.debug("connection has RESUMED (session:%s, s:%s)", self.session_id, self.seq)
 
                 self.dispatch(self, event_name, d)
             elif op == codes.GatewayOpcode.HEARTBEAT:

@@ -25,7 +25,7 @@ import urllib.parse
 
 import aiohttp
 import async_timeout
-import cymock as mock
+from unittest import mock
 import pytest
 
 from hikari.internal import more_collections
@@ -272,14 +272,35 @@ class TestGatewayConnect:
         client._identify_or_resume_then_poll_events.assert_not_called()
         client._heartbeat_keep_alive.assert_not_called()
 
+    @pytest.mark.parametrize(
+        "event_attr", ["closed_event", "identify_event", "ready_event", "requesting_close_event", "resumed_event"]
+    )
     @_helpers.timeout_after(10.0)
-    async def test_closed_event_unset_on_open(self, client, client_session_t):
-        client.closed_event.set()
+    async def test_events_unset_on_open(self, client, client_session_t, event_attr):
+        getattr(client, event_attr).set()
         with self.suppress_closure():
             task = asyncio.create_task(client.connect(client_session_t))
+            # Wait until the first main event object is set. By then we expect
+            # the event we are testing to have been unset again if it is
+            # working properly.
             await client.hello_event.wait()
-            assert not client.closed_event.is_set()
+            assert not getattr(client, event_attr).is_set()
             await task
+
+    async def test_hello_event_unset_on_open(self, client, client_session_t):
+        client.hello_event = mock.MagicMock()
+
+        with self.suppress_closure():
+            await client.connect(client_session_t)
+
+        client.hello_event.clear.assert_called_once()
+        client.hello_event.set.assert_called_once()
+
+    @_helpers.timeout_after(10.0)
+    async def test_closed_event_set_on_connect_terminate(self, client, client_session_t):
+        with self.suppress_closure():
+            await asyncio.create_task(client.connect(client_session_t))
+
         assert client.closed_event.is_set()
 
     @_helpers.timeout_after(10.0)
@@ -346,11 +367,25 @@ class TestGatewayConnect:
         assert client.disconnect_count == 70
 
     @_helpers.timeout_after(10.0)
-    async def test_disconnecting_dispatches_DISCONNECT(self, client, client_session_t):
+    async def test_connecting_dispatches_CONNECTED(self, client, client_session_t):
         client.dispatch = mock.MagicMock()
         with self.suppress_closure():
-            await client.connect(client_session_t)
-        client.dispatch.assert_called_with(client, "DISCONNECT", more_collections.EMPTY_DICT)
+            task = asyncio.create_task(client.connect(client_session_t))
+            await client.hello_event.wait()
+            # sanity check for the DISCONNECTED test
+            assert mock.call(client, "CONNECTED", more_collections.EMPTY_DICT) in client.dispatch.call_args_list
+            client.dispatch.assert_called_with(client, "CONNECTED", more_collections.EMPTY_DICT)
+            await task
+
+    @_helpers.timeout_after(10.0)
+    async def test_disconnecting_dispatches_DISCONNECTED(self, client, client_session_t):
+        client.dispatch = mock.MagicMock()
+        with self.suppress_closure():
+            task = asyncio.create_task(client.connect(client_session_t))
+            await client.hello_event.wait()
+            assert mock.call(client, "DISCONNECTED", more_collections.EMPTY_DICT) not in client.dispatch.call_args_list
+            await task
+        client.dispatch.assert_called_with(client, "DISCONNECTED", more_collections.EMPTY_DICT)
 
     @_helpers.timeout_after(10.0)
     async def test_new_zlib_each_time(self, client, client_session_t):

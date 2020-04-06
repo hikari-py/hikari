@@ -23,7 +23,6 @@ __all__ = [
     "ExceptionEvent",
     "ConnectedEvent",
     "DisconnectedEvent",
-    "ReconnectedEvent",
     "StartedEvent",
     "StoppingEvent",
     "StoppedEvent",
@@ -72,8 +71,6 @@ import typing
 import attr
 
 import hikari.internal.conversions
-from hikari.internal import assertions
-from hikari.internal import marshaller
 from hikari import channels
 from hikari import embeds as _embeds
 from hikari import emojis as _emojis
@@ -85,6 +82,8 @@ from hikari import oauth2
 from hikari import snowflakes
 from hikari import users
 from hikari import voices
+from hikari.internal import assertions
+from hikari.internal import marshaller
 
 T_contra = typing.TypeVar("T_contra", contravariant=True)
 
@@ -157,12 +156,6 @@ class ConnectedEvent(HikariEvent, entities.Deserializable):
 @marshaller.attrs(slots=True)
 class DisconnectedEvent(HikariEvent, entities.Deserializable):
     """Event invoked each time a shard disconnects."""
-
-
-@mark_as_websocket_event
-@marshaller.attrs(slots=True)
-class ReconnectedEvent(HikariEvent, entities.Deserializable):
-    """Event invoked each time a shard successfully reconnects."""
 
 
 @mark_as_websocket_event

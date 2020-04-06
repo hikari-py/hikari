@@ -33,9 +33,9 @@ from hikari import gateway_entities
 from hikari import guilds
 from hikari.clients import configs
 from hikari.clients import runnable
+from hikari.clients import shard_client
 from hikari.internal import conversions
 from hikari.internal import more_logging
-from hikari.clients import shard_client
 from hikari.state import raw_event_consumers
 
 ShardT = typing.TypeVar("ShardT", bound=shard_client.ShardClient)
