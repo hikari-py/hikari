@@ -18,9 +18,12 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 
+import attr
 import pytest
 
+from hikari import entities
 from hikari import snowflakes
+from hikari.internal import marshaller
 
 
 class TestSnowflake:
@@ -33,8 +36,8 @@ class TestSnowflake:
         return snowflakes.Snowflake.deserialize(raw_id)
 
     def test_created_at(self, neko_snowflake):
-        assert neko_snowflake.created_at == datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000).replace(
-            tzinfo=datetime.timezone.utc
+        assert neko_snowflake.created_at == datetime.datetime(
+            2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc
         )
 
     def test_increment(self, neko_snowflake):
@@ -65,3 +68,40 @@ class TestSnowflake:
 
     def test_lt(self, neko_snowflake, raw_id):
         assert neko_snowflake < raw_id + 1
+
+    def test_deserialize(self, neko_snowflake, raw_id):
+        assert neko_snowflake == snowflakes.Snowflake.deserialize(raw_id)
+
+    def test_from_datetime(self):
+        result = snowflakes.Snowflake.from_datetime(
+            datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
+        )
+        assert result == 537340988620800000
+        assert isinstance(result, snowflakes.Snowflake)
+
+    def test_from_timestamp(self):
+        result = snowflakes.Snowflake.from_timestamp(1548182475.283)
+        assert result == 537340988620800000
+        assert isinstance(result, snowflakes.Snowflake)
+
+
+class TestUniqueEntity:
+    def test_int(self):
+        assert int(snowflakes.UniqueEntity(id=snowflakes.Snowflake.deserialize("2333333"))) == 2333333
+
+    @pytest.fixture()
+    def stud_marshal_entity(self):
+        @marshaller.marshallable()
+        @attr.s(slots=True)
+        class StudEntity(snowflakes.UniqueEntity, entities.Deserializable, entities.Serializable):
+            ...
+
+        return StudEntity
+
+    def test_deserialize(self, stud_marshal_entity):
+        unique_entity = stud_marshal_entity.deserialize({"id": "5445"})
+        assert unique_entity.id == snowflakes.Snowflake("5445")
+        assert isinstance(unique_entity.id, snowflakes.Snowflake)
+
+    def test_serialize(self, stud_marshal_entity):
+        assert stud_marshal_entity(id=snowflakes.Snowflake(5445)).serialize() == {"id": "5445"}

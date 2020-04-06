@@ -31,6 +31,8 @@ __all__ = [
     "make_resource_seekable",
     "pluralize",
     "snoop_typehint_from_scope",
+    "FileLikeT",
+    "BytesLikeT",
 ]
 
 import base64
@@ -309,6 +311,34 @@ def make_resource_seekable(resource: typing.Any, /) -> Seekable:
         resource = io.BytesIO(resource.tobytes())
     elif isinstance(resource, str):
         resource = io.StringIO(resource)
+
+    return resource
+
+
+def get_bytes_from_resource(resource: typing.Any) -> bytes:
+    """
+    Take in any file-like object and return the raw bytes data from it.
+
+    Supports any :obj:`FileLikeT` type that isn't string based.
+    Anything else is just returned.
+
+    Parameters
+    ----------
+    resource : :obj:`FileLikeT`
+        The resource to get bytes from.
+
+    Returns
+    -------
+    :obj:`bytes`
+        The resulting bytes.
+    """
+    if isinstance(resource, bytearray):
+        resource = bytes(resource)
+    elif isinstance(resource, memoryview):
+        resource = resource.tobytes()
+    # Targets the io types found in FileLikeT and BytesLikeT
+    elif hasattr(resource, "read"):
+        resource = resource.read()
 
     return resource
 

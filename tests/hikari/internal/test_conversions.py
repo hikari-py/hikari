@@ -21,6 +21,7 @@ import datetime
 import inspect
 import io
 
+import cymock as mock
 import pytest
 import typing
 
@@ -275,3 +276,21 @@ class TestSnoopTypeHints:
             conversions.snoop_typehint_from_scope(frame, attr)
         finally:
             del frame
+
+
+@pytest.mark.parametrize(
+    "input",
+    [
+        b"hello",
+        bytearray("hello", "utf-8"),
+        memoryview(b"hello"),
+        io.BytesIO(b"hello"),
+        mock.MagicMock(io.BufferedRandom, read=mock.MagicMock(return_value=b"hello")),
+        mock.MagicMock(io.BufferedReader, read=mock.MagicMock(return_value=b"hello")),
+        mock.MagicMock(io.BufferedRWPair, read=mock.MagicMock(return_value=b"hello")),
+    ],
+)
+def test_get_bytes_from_resource(input):
+    assert conversions.get_bytes_from_resource(input) == b"hello"
+    if isinstance(input, mock.MagicMock):
+        input.read.assert_called_once()

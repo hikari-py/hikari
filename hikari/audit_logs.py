@@ -40,6 +40,7 @@ __all__ = [
 ]
 
 import abc
+import copy
 import datetime
 import enum
 import typing
@@ -528,3 +529,116 @@ class AuditLog(entities.HikariEntity, entities.Deserializable):
     webhooks: typing.Mapping[snowflakes.Snowflake, _webhooks.Webhook] = marshaller.attrib(
         deserializer=lambda payload: {webhook.id: webhook for webhook in map(_webhooks.Webhook.deserialize, payload)}
     )
+
+
+class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
+    """An async iterator used for iterating through a guild's audit log entries.
+
+    This returns the audit log entries created before a given entry object/ID or
+    from the newest audit log entry to the oldest.
+
+    Parameters
+    ----------
+    guild_id : :obj:`str`
+        The guild ID to look up.
+    request : :obj:`typing.Callable` [ ``...``, :obj:`typing.Coroutine` [ :obj:`typing.Any`, :obj:`typing.Any`, :obj:`typing.Any` ] ]
+        The session bound function that this iterator should use for making
+        Get Guild Audit Log requests.
+    user_id : :obj:`str`
+        If specified, the user ID to filter by.
+    action_type : :obj:`int`
+        If specified, the action type to look up.
+    limit : :obj:`int`
+        If specified, the limit to how many entries this iterator should return
+        else unlimited.
+    before : :obj:`str`
+        If specified, an entry ID to specify where this iterator's returned
+        audit log entries should start .
+
+    Note
+    ----
+    This iterator's attributes :attr:`integrations`, :attr:`users` and
+    :attr:`webhooks` will be filled up as this iterator makes requests to the
+    Get Guild Audit Log endpoint with the relevant objects for entities
+    referenced by returned entries.
+    """
+
+    __slots__ = (
+        "_buffer",
+        "_front",
+        "_kwargs",
+        "_limit",
+        "_request",
+        "integrations",
+        "users",
+        "webhooks",
+    )
+
+    #: A mapping of the partial objects of integrations found in this audit log
+    #: so far.
+    #:
+    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`hikari.guilds.GuildIntegration` ]
+    integrations: typing.Mapping[snowflakes.Snowflake, guilds.GuildIntegration]
+
+    #: A mapping of the objects of users found in this audit log so far.
+    #:
+    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`hikari.users.User` ]
+    users: typing.Mapping[snowflakes.Snowflake, _users.User]
+
+    #: A mapping of the objects of webhooks found in this audit log so far.
+    #:
+    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`hikari.webhooks.Webhook` ]
+    webhooks: typing.Mapping[snowflakes.Snowflake, _webhooks.Webhook]
+
+    def __init__(
+        self,
+        guild_id: str,
+        request: typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, typing.Any]],
+        before: typing.Optional[str] = None,
+        user_id: str = ...,
+        action_type: int = ...,
+        limit: typing.Optional[int] = None,
+    ) -> None:
+        self._kwargs = {"guild_id": guild_id, "user_id": user_id, "action_type": action_type}
+        self._limit = limit
+        self._buffer = []
+        self._request = request
+        self._front = before
+        self.users = {}
+        self.webhooks = {}
+        self.integrations = {}
+
+    def __aiter__(self) -> "AuditLogIterator":
+        return self
+
+    async def __anext__(self) -> AuditLogEntry:
+        if not self._buffer and self._limit != 0:
+            await self._fill()
+        try:
+            entry = AuditLogEntry.deserialize(self._buffer.pop())
+            self._front = str(entry.id)
+            return entry
+        except IndexError:
+            raise StopAsyncIteration
+
+    async def _fill(self) -> None:
+        """Retrieve entries before :attr:`_front` and add to :attr:`_buffer`."""
+        payload = await self._request(
+            **self._kwargs,
+            before=self._front if self._front is not None else ...,
+            limit=100 if self._limit is None or self._limit > 100 else self._limit,
+        )
+        if self._limit is not None:
+            self._limit -= len(payload["audit_log_entries"])
+
+        payload["audit_log_entries"].reverse()
+        self._buffer.extend(payload["audit_log_entries"])
+        if users := payload.get("users"):
+            self.users = copy.copy(self.users)
+            self.users.update({u.id: u for u in map(_users.User.deserialize, users)})
+        if webhooks := payload.get("webhooks"):
+            self.webhooks = copy.copy(self.webhooks)
+            self.webhooks.update({w.id: w for w in map(_webhooks.Webhook.deserialize, webhooks)})
+        if integrations := payload.get("integrations"):
+            self.integrations = copy.copy(self.integrations)
+            self.integrations.update({i.id: i for i in map(guilds.PartialGuildIntegration.deserialize, integrations)})

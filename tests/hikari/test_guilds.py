@@ -255,6 +255,17 @@ def test_guild_payload(
     }
 
 
+class TestGuildEmbed:
+    @pytest.fixture()
+    def test_guild_embed_payload(self):
+        return {"channel_id": "123123123", "enabled": True}
+
+    def test_deserialize(self, test_guild_embed_payload):
+        guild_embed_obj = guilds.GuildEmbed.deserialize(test_guild_embed_payload)
+        assert guild_embed_obj.channel_id == 123123123
+        assert guild_embed_obj.is_enabled is True
+
+
 class TestGuildMember:
     def test_deserialize(self, test_member_payload, test_user_payload):
         mock_user = mock.create_autospec(users.User)
