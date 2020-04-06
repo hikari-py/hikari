@@ -339,10 +339,9 @@ class ShardClient(runnable.RunnableClient):
                     self.logger.warning("invalid session, so will attempt to resume")
                 else:
                     self.logger.warning("invalid session, so will attempt to reconnect")
-
-                if not ex.can_resume:
                     self._client.seq = None
                     self._client.session_id = None
+
                 do_not_back_off = True
                 await asyncio.sleep(5)
             except errors.GatewayMustReconnectError:
@@ -351,17 +350,19 @@ class ShardClient(runnable.RunnableClient):
                 await asyncio.sleep(5)
             except errors.GatewayServerClosedConnectionError as ex:
                 if ex.close_code in (
-                    codes.GatewayCloseCode.RATE_LIMITED,
-                    codes.GatewayCloseCode.SESSION_TIMEOUT,
-                    codes.GatewayCloseCode.INVALID_SEQ,
-                    codes.GatewayCloseCode.UNKNOWN_ERROR,
-                    codes.GatewayCloseCode.SESSION_TIMEOUT,
-                    codes.GatewayCloseCode.NORMAL_CLOSURE,
+                    codes.GatewayCloseCode.NOT_AUTHENTICATED,
+                    codes.GatewayCloseCode.AUTHENTICATION_FAILED,
+                    codes.GatewayCloseCode.ALREADY_AUTHENTICATED,
+                    codes.GatewayCloseCode.SHARDING_REQUIRED,
+                    codes.GatewayCloseCode.INVALID_VERSION,
+                    codes.GatewayCloseCode.INVALID_INTENT,
+                    codes.GatewayCloseCode.DISALLOWED_INTENT,
                 ):
-                    self.logger.warning("disconnected by Discord, will attempt to reconnect")
-                else:
                     self.logger.error("disconnected by Discord, %s: %s", type(ex).__name__, ex.reason)
-                    raise ex
+                    raise ex from None
+
+                self.logger.warning("disconnected by Discord, will attempt to reconnect")
+
             except errors.GatewayClientClosedError:
                 self.logger.warning("shutting down")
                 return
