@@ -83,22 +83,7 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
         self.rest = rest_client.RESTClient(self.config)
 
     async def start(self):
-        while (gateway_bot := await self.rest.fetch_gateway_bot()).session_start_limit.remaining <= 0:
-            resume_at = datetime.datetime.now() + gateway_bot.session_start_limit.reset_after
-
-            self.logger.critical(
-                "You have reached the max identify limit for this time window (%s). "
-                "To prevent your token being reset, I will wait for %s (until approx %s) "
-                "and then continue signing in. Press CTRL-C to shut down.",
-                gateway_bot.session_start_limit.total,
-                gateway_bot.session_start_limit.reset_after,
-                resume_at,
-            )
-
-            await asyncio.sleep(60)
-            while (now := datetime.datetime.now()) < resume_at:
-                self.logger.info("Still waiting, %s to go...", resume_at - now)
-                await asyncio.sleep(60)
+        gateway_bot = await self.rest.fetch_gateway_bot()
 
         self.logger.info(
             "You have sent an IDENTIFY %s time(s) before now, and have %s remaining. This will reset at %s.",
