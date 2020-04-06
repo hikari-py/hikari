@@ -1,2 +1,3 @@
 FROM       python:3
-RUN        pip install --pre hikari>=1.0.0
+COPY       . .
+RUN        pip install -r requirements.txt
