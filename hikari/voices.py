@@ -21,10 +21,10 @@ __all__ = ["VoiceRegion", "VoiceState"]
 
 import typing
 
-from hikari.internal import marshaller
 from hikari import entities
 from hikari import guilds
 from hikari import snowflakes
+from hikari.internal import marshaller
 
 
 @marshaller.attrs(slots=True)

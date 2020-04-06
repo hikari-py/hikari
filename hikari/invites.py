@@ -24,12 +24,12 @@ import enum
 import typing
 
 import hikari.internal.conversions
-from hikari.internal import cdn
-from hikari.internal import marshaller
 from hikari import channels
 from hikari import entities
 from hikari import guilds
 from hikari import users
+from hikari.internal import cdn
+from hikari.internal import marshaller
 
 
 @enum.unique

@@ -29,8 +29,8 @@ import functools
 import typing
 
 import hikari.internal.conversions
-from hikari.internal import marshaller
 from hikari import entities
+from hikari.internal import marshaller
 
 
 @functools.total_ordering

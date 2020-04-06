@@ -47,16 +47,16 @@ import datetime
 import enum
 import typing
 
-from hikari.internal import cdn
-from hikari.internal import conversions
-from hikari.internal import marshaller
-from hikari import colors
 from hikari import channels as _channels
+from hikari import colors
 from hikari import emojis as _emojis
 from hikari import entities
 from hikari import permissions as _permissions
 from hikari import snowflakes
 from hikari import users
+from hikari.internal import cdn
+from hikari.internal import conversions
+from hikari.internal import marshaller
 
 
 @enum.unique

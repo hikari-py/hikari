@@ -24,11 +24,11 @@ import asyncio
 import logging
 import typing
 
+from hikari import events
 from hikari.internal import assertions
 from hikari.internal import more_asyncio
 from hikari.internal import more_collections
 from hikari.internal import more_logging
-from hikari import events
 
 EventT = typing.TypeVar("EventT", bound=events.HikariEvent)
 PredicateT = typing.Callable[[EventT], typing.Union[bool, typing.Coroutine[None, None, bool]]]

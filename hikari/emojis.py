@@ -19,10 +19,10 @@
 """Components and entities that are used to describe both custom and Unicode emojis on Discord."""
 import typing
 
-from hikari.internal import marshaller
 from hikari import entities
 from hikari import snowflakes
 from hikari import users
+from hikari.internal import marshaller
 
 __all__ = ["Emoji", "UnicodeEmoji", "UnknownEmoji", "GuildEmoji"]
 

@@ -32,9 +32,9 @@ import datetime
 import typing
 
 import hikari.internal.conversions
-from hikari.internal import marshaller
 from hikari import colors
 from hikari import entities
+from hikari.internal import marshaller
 
 
 @marshaller.attrs(slots=True)

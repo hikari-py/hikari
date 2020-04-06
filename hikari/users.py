@@ -22,10 +22,10 @@ __all__ = ["User", "MyUser", "UserFlag", "PremiumType"]
 import enum
 import typing
 
-from hikari.internal import cdn
-from hikari.internal import marshaller
 from hikari import entities
 from hikari import snowflakes
+from hikari.internal import cdn
+from hikari.internal import marshaller
 
 
 @marshaller.attrs(slots=True)

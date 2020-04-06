@@ -20,7 +20,6 @@
 __all__ = ["BotBase", "StatelessBot"]
 
 import abc
-import asyncio
 import datetime
 import logging
 import typing
@@ -35,6 +34,7 @@ from hikari.internal import more_asyncio
 from hikari.internal import more_logging
 from hikari.state import event_dispatchers
 from hikari.state import event_managers
+from hikari.state import stateless_event_managers
 
 
 class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
@@ -146,4 +146,4 @@ class StatelessBot(BotBase):
     """
 
     def __init__(self, config: configs.BotConfig) -> None:
-        super().__init__(config, event_managers.StatelessEventManagerImpl())
+        super().__init__(config, stateless_event_managers.StatelessEventManagerImpl())

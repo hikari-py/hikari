@@ -20,15 +20,14 @@
 __all__ = ["raw_event_mapper", "EventManager"]
 
 import inspect
-
 import typing
 
-from hikari.clients import shard_client
-from hikari.state import event_dispatchers
 from hikari import entities
-from hikari.state import raw_event_consumers
+from hikari.clients import shard_client
 from hikari.internal import assertions
 from hikari.internal import more_logging
+from hikari.state import event_dispatchers
+from hikari.state import raw_event_consumers
 
 EVENT_MARKER_ATTR = "___event_name___"
 
@@ -174,12 +173,3 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
         else:
             event = handler(shard_client_obj, payload)
             self.event_dispatcher.dispatch_event(event)
-
-
-class StatelessEventManagerImpl(EventManager[event_dispatchers.EventDispatcher]):
-    """Stateless event manager implementation for stateless bots.
-
-    This is an implementation that does not rely on querying prior information to
-    operate. The implementation details of this are much simpler than a stateful
-    version, and are not immediately affected by the use of intents.
-    """
