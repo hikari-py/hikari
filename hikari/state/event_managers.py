@@ -45,7 +45,7 @@ def raw_event_mapper(name: str) -> typing.Callable[[EventConsumerT], EventConsum
 
     Returns
     -------
-    ``decorator(callable) -> callable``
+    ``decorator(T) -> T``
         A decorator for a method.
 
     """
@@ -75,7 +75,7 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
     """Abstract definition of the components for an event system for a bot.
 
     The class itself inherits from
-    :obj:`hikari.state.raw_event_consumer.RawEventConsumer` (which allows
+    :obj:`hikari.state.raw_event_consumers.RawEventConsumer` (which allows
     it to provide the ability to transform a raw payload into an event object).
 
     This is designed as a basis to enable transformation of raw incoming events
@@ -85,7 +85,7 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
 
     Parameters
     ----------
-    event_dispatcher_impl: :obj:`hikari.state.event_dispatcher.EventDispatcher`, optional
+    event_dispatcher_impl: :obj:`hikari.state.event_dispatchers.EventDispatcher`, optional
         An implementation of event dispatcher that will store individual events
         and manage dispatching them after this object creates them. If ``None``,
         then a default implementation is chosen.
@@ -97,10 +97,10 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
 
     These methods are expected to have the following parameters:
 
-        shard_obj: :obj:`hikari.clients.shard_client.ShardClient`
-            The shard client that emitted the event.
-        payload: :obj:`typing.Any`
-            The received payload. This is expected to be a JSON-compatible type.
+    shard_obj: :obj:`hikari.clients.shard_client.ShardClient`
+        The shard client that emitted the event.
+    payload: :obj:`typing.Any`
+        The received payload. This is expected to be a JSON-compatible type.
 
     For example, if you want to provide an implementation that can consume
     and handle ``MESSAGE_CREATE`` events, you can do the following.

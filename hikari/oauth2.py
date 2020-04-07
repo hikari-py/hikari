@@ -75,7 +75,7 @@ class OwnConnection(entities.HikariEntity, entities.Deserializable):
 
     #: A sequence of the partial guild integration objects this connection has.
     #:
-    #: :type: :obj:`typing.Sequence` [ :obj:`guilds.PartialGuildIntegration` ]
+    #: :type: :obj:`typing.Sequence` [ :obj:`hikari.guilds.PartialGuildIntegration` ]
     integrations: typing.Sequence[guilds.PartialGuildIntegration] = marshaller.attrib(
         deserializer=lambda payload: [
             guilds.PartialGuildIntegration.deserialize(integration) for integration in payload
@@ -155,7 +155,7 @@ class TeamMember(entities.HikariEntity, entities.Deserializable):
 
     #: The user object of this team member.
     #:
-    #: :type: :obj:`TeamUser`
+    #: :type: :obj:`hikari.users.User`
     user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
 
 

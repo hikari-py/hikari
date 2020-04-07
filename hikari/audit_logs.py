@@ -252,7 +252,7 @@ def register_audit_log_entry_info(
 
     Returns
     -------
-    ``decorator(cls: T) -> T``
+    ``decorator(T) -> T``
         The decorator to decorate the class with.
     """
 

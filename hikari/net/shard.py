@@ -90,7 +90,7 @@ class ShardConnection:
         information to use when debugging this library or extending it. This
         includes logging every payload that is sent or received to the logger
         as debug entries. Generally it is best to keep this disabled.
-    dispatch: dispatch function
+    dispatch: ``dispatch function``
         The function to invoke with any dispatched events. This must not be a
         coroutine function, and must take three arguments only. The first is
         the reference to this :obj:`ShardConnection` The second is the
@@ -103,25 +103,24 @@ class ShardConnection:
     intents: :obj:`hikari.net.codes.GatewayIntent`, optional
         Bitfield of intents to use. If you use the V7 API, this is mandatory.
         This field will determine what events you will receive.
-    json_deserialize: deserialization function
+    json_deserialize: ``deserialization function``
         A custom JSON deserializer function to use. Defaults to
         :func:`json.loads`.
-    json_serialize: serialization function
+    json_serialize: ``serialization function``
         A custom JSON serializer function to use. Defaults to
         :func:`json.dumps`.
     large_threshold: :obj:`int`
         The number of members that have to be in a guild for it to be
         considered to be "large". Large guilds will not have member information
         sent automatically, and must manually request that member chunks be
-        sent using :meth:`request_member_chunks`.
+        sent using :meth:`request_guild_members`.
     proxy_auth: :obj:`aiohttp.BasicAuth`, optional
         Optional :obj:`aiohttp.BasicAuth` object that can be provided to
         allow authenticating with a proxy if you use one. Leave ``None`` to
         ignore.
-    proxy_headers: :obj:`aiohttp.typedefs.LooseHeaders`, optional
-        Optional :obj:`aiohttp.typedefs.LooseHeaders` to provide as headers
-        to allow the connection through a proxy if you use one. Leave ``None``
-        to ignore.
+    proxy_headers: :obj:`typing.Mapping` [ :obj:`str`, :obj:`str` ], optional
+        Optional :obj:`typing.Mapping` to provide as headers to allow the
+        connection through a proxy if you use one. Leave ``None`` to ignore.
     proxy_url: :obj:`str`, optional
         Optional :obj:`str` to use for a proxy server. If ``None``, then it
         is ignored.

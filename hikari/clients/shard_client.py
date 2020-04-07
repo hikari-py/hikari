@@ -87,7 +87,7 @@ class ShardClient(runnable.RunnableClient):
         The number of shards that make up this distributed application.
     config : :obj:`hikari.clients.configs.WebsocketConfig`
         The gateway configuration to use to initialize this shard.
-    raw_event_consumer_impl : :obj:`hikari.state.raw_event_consumer.RawEventConsumer`
+    raw_event_consumer_impl : :obj:`hikari.state.raw_event_consumers.RawEventConsumer`
         The consumer of a raw event.
     url : :obj:`str`
         The URL to connect the gateway to.
@@ -95,7 +95,7 @@ class ShardClient(runnable.RunnableClient):
     Notes
     -----
     Generally, you want to use
-    :obj:`hikari.clients.gateway_client.GatewayClient` rather than this class
+    :obj:`hikari.clients.gateway_manager.GatewayManager` rather than this class
     directly, as that will handle sharding where enabled and applicable, and
     provides a few more bits and pieces that may be useful such as state
     management and event dispatcher integration. and If you want to customize
