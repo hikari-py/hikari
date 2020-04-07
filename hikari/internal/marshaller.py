@@ -80,7 +80,7 @@ def dereference_handle(handle_string: str) -> typing.Any:
     ``"collections#deque"``:
         Refers to :obj:`collections.deque`
     ``"asyncio.tasks#Task"``:
-        Refers to :obj:`asyncio.tasks.Task`
+        Refers to ``asyncio.tasks.Task``
     ``"hikari.net"``:
         Refers to :obj:`hikari.net`
     ``"foo.bar#baz.bork.qux"``:
@@ -293,7 +293,7 @@ class HikariEntityMarshaller:
     """A global marshaller helper that helps deserialize and serialize any internal components.
 
     It can deserialize and serialize any internal componentsthat that are
-    decorated with the :obj:`attrs` decorator, and that are :mod:`attr`
+    decorated with the :obj:`attrs` decorator, and that are :obj:`attr.s`
     classes using fields with the :obj:`attrib` function call descriptor.
     """
 
@@ -317,7 +317,7 @@ class HikariEntityMarshaller:
         Raises
         ------
         :obj:`TypeError`
-            If the class is not an :mod:`attrs` class.
+            If the class is not an :obj:`attr.s` class.
         """
         entity_descriptor = _construct_entity_descriptor(cls)
         self._registered_entities[cls] = entity_descriptor
@@ -344,7 +344,7 @@ class HikariEntityMarshaller:
             If the entity is not registered.
         :obj:`AttributeError`
             If the field is not optional, but the field was not present in the
-            raw payload, or it was present, but it was assigned `None`.
+            raw payload, or it was present, but it was assigned ``None``.
         :obj:`TypeError`
             If the deserialization call failed for some reason.
         """
@@ -462,12 +462,13 @@ def attrs(**kwargs):
 
     Returns
     -------
-    A decorator to decorate a class with.
+    ``decorator(T) -> T``
+        A decorator to decorate a class with.
 
     Raises
     ------
     :obj:`ValueError`
-        If you attempt to use the `auto_attribs` feature provided by
+        If you attempt to use the ``auto_attribs`` feature provided by
         :obj:`attr.s`.
 
     Example

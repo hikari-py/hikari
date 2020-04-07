@@ -53,7 +53,7 @@ class RestfulClient:
         Whether to allow redirects or not.
     connector: :obj:`aiohttp.BaseConnector`, optional
         Optional aiohttp connector info for making an HTTP connection
-    proxy_headers: :obj:`aiohttp.typedefs.LooseHeaders`, optional
+    proxy_headers: :obj:`typing.Mapping` [ :obj:`str`, :obj:`str` ], optional
         Optional proxy headers to pass to HTTP requests.
     proxy_auth: :obj:`aiohttp.BasicAuth`, optional
         Optional authorization to be used if using a proxy.
@@ -67,10 +67,10 @@ class RestfulClient:
         SSL certificates.
     timeout: :obj:`float`, optional
         The optional timeout for all HTTP requests.
-    json_deserialize: deserialization function
+    json_deserialize: ``deserialization function``
         A custom JSON deserializer function to use. Defaults to
         :func:`json.loads`.
-    json_serialize: serialization function
+    json_serialize: ``serialization function``
         A custom JSON serializer function to use. Defaults to
         :func:`json.dumps`.
     token: :obj:`string`, optional
@@ -146,7 +146,7 @@ class RestfulClient:
 
         #: Optional proxy headers to pass.
         #:
-        #: :type: :obj:`aiohttp.typedefs.LooseHeaders`
+        #: :type: :obj:`typing.Mapping` [ :obj:`str`, :obj:`str` ]
         self.proxy_headers = proxy_headers
 
         #: Optional SSL context to use.
@@ -673,7 +673,7 @@ class RestfulClient:
             and can usually be ignored.
         tts : :obj:`bool`
             If specified, whether the message will be sent as a TTS message.
-        files : :obj:`typing.Sequence` [ :obj:`typing.Tuple` [ :obj:`str`, :obj:`storage.FileLikeT` ] ]
+        files : :obj:`typing.Sequence` [ :obj:`typing.Tuple` [ :obj:`str`, :obj:`io.IOBase` ] ]
             If specified, this should be a list of between ``1`` and ``5`` tuples.
             Each tuple should consist of the file name, and either
             raw :obj:`bytes` or an :obj:`io.IOBase` derived object with
@@ -793,9 +793,9 @@ class RestfulClient:
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundError`
+        :obj:`hikari.errors.NotFoundHTTPError`
             If the channel or message or emoji or user is not found.
-        :obj:`hikari.errors.ForbiddenError`
+        :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission, or are in DMs.
         """
         route = routes.REACTION_EMOJI.compile(self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji)
@@ -3045,7 +3045,7 @@ class RestfulClient:
         wait : :obj:`bool`
             If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
-        file : :obj:`typing.Tuple` [ :obj:`str`, :obj:`hikari.internal.conversions.FileLikeT` ]
+        file : :obj:`typing.Tuple` [ :obj:`str`, :obj:`io.IOBase` ]
             If specified, a tuple of the file name and either raw :obj:`bytes`
             or a :obj:`io.IOBase` derived object that points to a buffer
             containing said file.

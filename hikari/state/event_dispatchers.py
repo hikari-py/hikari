@@ -126,7 +126,7 @@ class EventDispatcher(abc.ABC):
 
         Returns
         -------
-        coroutine function decorator:
+        ``decorator(T) -> T``
             A decorator for a coroutine function that registers the given event.
         """
 

@@ -248,7 +248,7 @@ class GuildRole(PartialGuildRole):
 
     #: Whether this role is hoisting the members it's attached to in the member
     #: list, members will be hoisted under their highest role where
-    #: :attr:`hoisted` is true.
+    #: :attr:`is_hoisted` is true.
     #:
     #: :type: :obj:`bool`
     is_hoisted: bool = marshaller.attrib(raw_name="hoist", deserializer=bool)
@@ -536,7 +536,7 @@ class PresenceUser(users.User):
 
     Warnings
     --------
-    Every attribute except :attr:`id` may be received as :obj:`hikari.entities.UNSET`
+    Every attribute except ``id`` may be received as :obj:`hikari.entities.UNSET`
     unless it is specifically being modified for this update.
     """
 
@@ -716,7 +716,7 @@ class GuildIntegration(snowflakes.UniqueEntity, entities.Deserializable):
 
     #: The user this integration belongs to.
     #:
-    #: :type: :obj:`users.User`
+    #: :type: :obj:`hikari.users.User`
     user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
 
     #: The datetime of when this integration's subscribers were last synced.
@@ -820,10 +820,9 @@ class Guild(PartialGuild):
     Note
     ----
     If a guild object is considered to be unavailable, then the state of any
-    other fields other than the :attr:`is_unavailable` and
-    :obj:`hikari.entities.UniqueEntity.id` members outdated, or incorrect.
-    If a guild is unavailable, then the contents of any other fields should be
-    ignored.
+    other fields other than the :attr:`is_unavailable` and ``id`` are outdated
+    or incorrect. If a guild is unavailable, then the contents of any other
+    fields should be ignored.
     """
 
     #: The hash of the splash for the guild, if there is one.
@@ -874,8 +873,10 @@ class Guild(PartialGuild):
     )
 
     # TODO: document when this is not specified.
-    #: Defines if the guild embed is enabled or not. This information may not
-    #: be present, in which case, it will be ``None`` instead.
+    #: Defines if the guild embed is enabled or not.
+    #:
+    #: This information may not be present, in which case,
+    #: it will be ``None`` instead.
     #:
     #: :type: :obj:`bool`, optional
     is_embed_enabled: typing.Optional[bool] = marshaller.attrib(
@@ -883,8 +884,9 @@ class Guild(PartialGuild):
     )
 
     #: The channel ID that the guild embed will generate an invite to, if
-    #: enabled for this guild. Will be ``None`` if invites are disable for this
-    #: guild's embed.
+    #: enabled for this guild.
+    #:
+    #: Will be ``None`` if invites are disabled for this guild's embed.
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     embed_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
@@ -946,6 +948,8 @@ class Guild(PartialGuild):
     #:
     #: An unavailable guild cannot be interacted with, and most information may
     #: be outdated if that is the case.
+    #:
+    #: :type: :obj:`bool`, optional
     is_unavailable: typing.Optional[bool] = marshaller.attrib(
         raw_name="unavailable", if_undefined=None, deserializer=bool
     )
@@ -982,8 +986,9 @@ class Guild(PartialGuild):
     system_channel_flags: GuildSystemChannelFlag = marshaller.attrib(deserializer=GuildSystemChannelFlag)
 
     #: The ID of the channel where guilds with the :obj:`GuildFeature.PUBLIC`
-    #: :attr:`features` display rules and guidelines. If the
-    #: :obj:`GuildFeature.PUBLIC` feature is not defined, then this is ``None``.
+    #: ``features`` display rules and guidelines.
+    #:
+    #: If the :obj:`GuildFeature.PUBLIC` feature is not defined, then this is ``None``.
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     rules_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
@@ -1087,8 +1092,9 @@ class Guild(PartialGuild):
         if_undefined=None,
     )
 
-    #: The maximum number of presences for the guild. If this is ``None``, then
-    #: the default value is used (currently 5000).
+    #: The maximum number of presences for the guild.
+    #:
+    #: If this is ``None``, then the default value is used (currently 5000).
     #:
     #: :type: :obj:`int`, optional
     max_presences: typing.Optional[int] = marshaller.attrib(if_none=None, if_undefined=None, deserializer=int)
@@ -1101,24 +1107,25 @@ class Guild(PartialGuild):
     max_members: typing.Optional[int] = marshaller.attrib(if_undefined=None, deserializer=int)
 
     #: The vanity URL code for the guild's vanity URL.
+    #:
     #: This is only present if :obj:`GuildFeature.VANITY_URL` is in the
-    #: :attr:`features` for this guild. If not, this will always be ``None``.
+    #: ``features`` for this guild. If not, this will always be ``None``.
     #:
     #: :type: :obj:`str`, optional
     vanity_url_code: typing.Optional[str] = marshaller.attrib(if_none=None, deserializer=str)
 
     #: The guild's description.
     #:
-    #: This is only present if certain :obj:`Guild.features` are set in this
-    #: guild. Otherwise, this will always be ``None``. For all other purposes,
-    #: it is ``None``.
+    #: This is only present if certain :obj:`GuildFeature`'s are set  in the
+    #: ``features`` for this guild. Otherwise, this will always be ``None``.
     #:
     #: :type: :obj:`str`, optional
     description: typing.Optional[str] = marshaller.attrib(if_none=None, deserializer=str)
 
     #: The hash for the guild's banner.
+    #:
     #: This is only present if the guild has :obj:`GuildFeature.BANNER` in the
-    #: :obj:`Guild.features` for this guild. For all other purposes, it is
+    #: ``features`` for this guild. For all other purposes, it is
     # ``None``.
     #:
     #: :type: :obj:`str`, optional
@@ -1129,16 +1136,17 @@ class Guild(PartialGuild):
     #: :type: :obj:`GuildPremiumTier`
     premium_tier: GuildPremiumTier = marshaller.attrib(deserializer=GuildPremiumTier)
 
-    #: The number of nitro boosts that the server currently has. This
-    #: information may not be present, in which case, it will be ``None``.
+    #: The number of nitro boosts that the server currently has.
+    #:
+    #: This information may not be present, in which case, it will be ``None``.
     #:
     #: :type: :obj:`int`, optional
     premium_subscription_count: typing.Optional[int] = marshaller.attrib(if_undefined=None, deserializer=int)
 
     #: The preferred locale to use for this guild.
     #:
-    #: This can only be change if :obj:`GuildFeatures.PUBLIC` is in the
-    #: :attr:`features` for this guild and will otherwise default to ``en-US```.
+    #: This can only be change if :obj:`GuildFeature.PUBLIC` is in the
+    #: ``features`` for this guild and will otherwise default to ``en-US```.
     #:
     #: :type: :obj:`str`
     preferred_locale: str = marshaller.attrib(deserializer=str)
@@ -1146,8 +1154,8 @@ class Guild(PartialGuild):
     #: The channel ID of the channel where admins and moderators receive notices
     #: from Discord.
     #:
-    #: This is only present if :obj:`GuildFeatures.PUBLIC` is in the
-    #: :attr:`features` for this guild. For all other purposes, it should be
+    #: This is only present if :obj:`GuildFeature.PUBLIC` is in the
+    #: ``features`` for this guild. For all other purposes, it should be
     #: considered to be ``None``.
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional

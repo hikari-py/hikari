@@ -61,7 +61,7 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
 
     #: The gateway for this bot.
     #:
-    #: :type: :obj:`hikari.clients.gateway_client.GatewayClient`
+    #: :type: :obj:`hikari.clients.gateway_manager.GatewayManager` [ :obj:`hikari.clients.shard_client.ShardClient` ]
     gateway: gateway_manager.GatewayManager[shard_client.ShardClient]
 
     #: The logger to use for this bot.

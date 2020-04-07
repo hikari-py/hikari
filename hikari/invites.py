@@ -66,7 +66,7 @@ class InviteGuild(guilds.PartialGuild):
 
     #: The hash for the guild's banner.
     #:
-    #: This is only present if :obj:`hikari.guild.GuildFeature.BANNER`
+    #: This is only present if :obj:`hikari.guilds.GuildFeature.BANNER`
     #: is in the ``features`` for this guild. For all other purposes, it is ``None``.
     #:
     #: :type: :obj:`str`, optional
