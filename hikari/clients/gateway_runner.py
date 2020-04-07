@@ -72,9 +72,7 @@ def run_gateway(compression, color, debug, logger, shards, token, url, verify_ss
     logging.basicConfig(level=logger, format=_color_format if color else _regular_format, stream=sys.stdout)
 
     class _DummyConsumer(raw_event_consumers.RawEventConsumer):
-        def process_raw_event(
-            self, _client: shard_client.ShardClient, name: str, payload: entities.RawEntityT
-        ) -> None:
+        def process_raw_event(self, _client: shard_client.ShardClient, name: str, payload: entities.RawEntityT) -> None:
             logging.debug("dispatched %s with body [%-100.100s]", name, payload)
 
     client = gateway_manager.GatewayManager(
