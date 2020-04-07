@@ -88,7 +88,7 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
         """
         latencies = []
         for shard in self.shards.values():
-            if shard.connection_state == shard_client.ShardState.READY and not math.isnan(shard.latency):
+            if not math.isnan(shard.latency):
                 latencies.append(shard.latency)
 
         return sum(latencies) / len(latencies) if latencies else float("nan")
@@ -151,28 +151,28 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
         Any arguments that you do not explicitly provide some value for will
         not be changed.
 
-        Warnings
-        --------
+        Warning
+        -------
         This will only apply to connected shards.
 
         Notes
         -----
         If you wish to update a presence for a specific shard, you can do this
-        by using the :attr:`GatewayManager.shards` :obj:`typing.Mapping` to
-        find the shard you wish to update.
+        by using the ``shards`` :obj:`typing.Mapping` to find the shard you
+        wish to update.
 
         Parameters
         ----------
         status : :obj:`hikari.guilds.PresenceStatus`
-            The new status to set.
+            If specified, the new status to set.
         activity : :obj:`hikari.gateway_entities.GatewayActivity`, optional
-            The new activity to set.
+            If specified, the new activity to set.
         idle_since : :obj:`datetime.datetime`, optional
-            The time to show up as being idle since, or ``None`` if not
-            applicable.
+            If specified, the time to show up as being idle since,
+            or ``None`` if not applicable.
         is_afk : :obj:`bool`
-            ``True`` if the user should be marked as AFK, or ``False``
-            otherwise.
+            If specified, ``True`` if the user should be marked as AFK,
+            or ``False`` otherwise.
         """
         await asyncio.gather(
             *(
