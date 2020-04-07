@@ -16,8 +16,25 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Core that may be raised by this API implementation."""
-__all__ = ["HikariError"]
+"""Core errors that may be raised by this API implementation."""
+__all__ = [
+    "HikariError",
+    "NotFoundHTTPError",
+    "UnauthorizedHTTPError",
+    "BadRequestHTTPError",
+    "ClientHTTPError",
+    "ServerHTTPError",
+    "CodedHTTPError",
+    "HTTPError",
+    "GatewayZombiedError",
+    "GatewayNeedsShardingError",
+    "GatewayMustReconnectError",
+    "GatewayInvalidSessionError",
+    "GatewayInvalidTokenError",
+    "GatewayServerClosedConnectionError",
+    "GatewayClientClosedError",
+    "GatewayError",
+]
 
 import typing
 

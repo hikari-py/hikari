@@ -133,11 +133,11 @@ These headers are:
     a :obj:`float` containing the number of seconds since
     1st January 1970 at 0:00:00 UTC at which the current ratelimit window
     resets. This should be parsed to a :obj:`datetime.datetime` using
-    :func:`datetime.datetime.fromtimestamp`, passing
-    :obj:`datetime.timezone.utc` as a second parameter.
+    :meth:`datetime.datetime.fromtimestamp`, passing :obj:`datetime.timezone.utc`
+    as ``tz``.
 
 Each of the above values should be passed to the
-:meth:`update_rate_limits` method to ensure that the bucket you acquired time
+``update_rate_limits`` method to ensure that the bucket you acquired time
 from is correctly updated should Discord decide to alter their ratelimits on the
 fly without warning (including timings and the bucket).
 
@@ -354,8 +354,8 @@ class ManualRateLimiter(BurstRateLimiter):
         (it will not await it to finish)
 
         When the :meth:`unlock_later` coroutine function completes, it should be
-        expected to set the :attr:`throttle_task` to ``None``. This means you can
-        check if throttling is occurring by checking if :attr:`throttle_task`
+        expected to set the `throttle_task`` to ``None``. This means you can
+        check if throttling is occurring by checking if ``throttle_task``
         is not ``None``.
 
         If this is invoked while another throttle is in progress, that one is
@@ -383,8 +383,8 @@ class ManualRateLimiter(BurstRateLimiter):
         instead.
 
         When the :meth:`unlock_later` coroutine function completes, it should be
-        expected to set the :attr:`throttle_task` to ``None``. This means you can
-        check if throttling is occurring by checking if :attr:`throttle_task`
+        expected to set the ``throttle_task`` to ``None``. This means you can
+        check if throttling is occurring by checking if ``throttle_task``
         is not ``None``.
         """
         self.logger.warning("you are being globally rate limited for %ss", retry_after)
@@ -549,11 +549,11 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         ----
         You should usually not need to invoke this directly, but if you do,
         ensure to call it using :func:`asyncio.create_task`, and store the
-        task immediately in :attr:`throttle_task`.
+        task immediately in ``throttle_task``.
 
         When this coroutine function completes, it will set the
-        :attr:`throttle_task` to ``None``. This means you can check if throttling
-        is occurring by checking if :attr:`throttle_task` is not ``None``.
+        ``throttle_task`` to ``None``. This means you can check if throttling
+        is occurring by checking if ``throttle_task`` is not ``None``.
         """
         self.logger.debug(
             "you are being rate limited on bucket %s, backing off for %ss",
@@ -642,7 +642,7 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
 
         Note
         ----
-        The :attr:`reset_at` epoch is expected to be a :func:`time.perf_counter`
+        The ``reset_at`` epoch is expected to be a :func:`time.perf_counter`
         monotonic epoch, rather than a :func:`time.time` date-based epoch.
         """
         self.remaining = remaining

@@ -122,7 +122,7 @@ def register_channel_type(type_: ChannelType) -> typing.Callable[[typing.Type["C
 
     Returns
     -------
-    ``decorator``
+    ``decorator(T) -> T``
         The decorator to decorate the class with.
     """
 
