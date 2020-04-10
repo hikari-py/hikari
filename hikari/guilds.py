@@ -493,7 +493,7 @@ class PresenceActivity(entities.HikariEntity, entities.Deserializable):
     flags: ActivityFlag = marshaller.attrib(deserializer=ActivityFlag, if_undefined=None)
 
 
-class PresenceStatus(enum.Enum):
+class PresenceStatus(str, enum.Enum):
     """The status of a member."""
 
     #: Online/green.
