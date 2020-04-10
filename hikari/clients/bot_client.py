@@ -44,9 +44,8 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
     ----------
     config : :obj:`hikari.clients.configs.BotConfig`
         The config object to use.
-    event_manager : ``EventManagerT``
-        The event manager to use. This must be a subclass of
-        :obj:`hikari.state.event_managers.EventManager`
+    event_manager : ``hikari.state.event_managers.EventManager``
+        The event manager to use.
     """
 
     #: The config for this bot.
