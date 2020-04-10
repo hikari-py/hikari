@@ -21,59 +21,59 @@ import math
 import cymock as mock
 import pytest
 
-from hikari.clients import gateway_manager
-from hikari.clients import shard_client
+from hikari.clients import gateway_managers
+from hikari.clients import shard_clients
 from tests.hikari import _helpers
 
 
 class TestGatewayManager:
     def test_latency(self):
-        shard1 = mock.MagicMock(shard_client.ShardClient, latency=20)
-        shard2 = mock.MagicMock(shard_client.ShardClient, latency=30)
-        shard3 = mock.MagicMock(shard_client.ShardClient, latency=40)
+        shard1 = mock.MagicMock(shard_clients.ShardClient, latency=20)
+        shard2 = mock.MagicMock(shard_clients.ShardClient, latency=30)
+        shard3 = mock.MagicMock(shard_clients.ShardClient, latency=40)
 
-        with mock.patch("hikari.clients.shard_client.ShardClient", side_effect=[shard1, shard2, shard3]):
-            gateway_manager_obj = gateway_manager.GatewayManager(
+        with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
+            gateway_manager_obj = gateway_managers.GatewayManager(
                 shard_ids=[0, 1, 2],
                 shard_count=3,
                 config=None,
                 url="some_url",
                 raw_event_consumer_impl=None,
-                shard_type=shard_client.ShardClient,
+                shard_type=shard_clients.ShardClient,
             )
 
         assert gateway_manager_obj.latency == 30
 
     def test_latency_doesnt_take_into_a_count_shards_with_no_latency(self):
-        shard1 = mock.MagicMock(shard_client.ShardClient, latency=20)
-        shard2 = mock.MagicMock(shard_client.ShardClient, latency=30)
-        shard3 = mock.MagicMock(shard_client.ShardClient, latency=float("nan"))
+        shard1 = mock.MagicMock(shard_clients.ShardClient, latency=20)
+        shard2 = mock.MagicMock(shard_clients.ShardClient, latency=30)
+        shard3 = mock.MagicMock(shard_clients.ShardClient, latency=float("nan"))
 
-        with mock.patch("hikari.clients.shard_client.ShardClient", side_effect=[shard1, shard2, shard3]):
-            gateway_manager_obj = gateway_manager.GatewayManager(
+        with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
+            gateway_manager_obj = gateway_managers.GatewayManager(
                 shard_ids=[0, 1, 2],
                 shard_count=3,
                 config=None,
                 url="some_url",
                 raw_event_consumer_impl=None,
-                shard_type=shard_client.ShardClient,
+                shard_type=shard_clients.ShardClient,
             )
 
         assert gateway_manager_obj.latency == 25
 
     def test_latency_returns_nan_if_all_shards_have_no_latency(self):
-        shard1 = mock.MagicMock(shard_client.ShardClient, latency=float("nan"))
-        shard2 = mock.MagicMock(shard_client.ShardClient, latency=float("nan"))
-        shard3 = mock.MagicMock(shard_client.ShardClient, latency=float("nan"))
+        shard1 = mock.MagicMock(shard_clients.ShardClient, latency=float("nan"))
+        shard2 = mock.MagicMock(shard_clients.ShardClient, latency=float("nan"))
+        shard3 = mock.MagicMock(shard_clients.ShardClient, latency=float("nan"))
 
-        with mock.patch("hikari.clients.shard_client.ShardClient", side_effect=[shard1, shard2, shard3]):
-            gateway_manager_obj = gateway_manager.GatewayManager(
+        with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
+            gateway_manager_obj = gateway_managers.GatewayManager(
                 shard_ids=[0, 1, 2],
                 shard_count=3,
                 config=None,
                 url="some_url",
                 raw_event_consumer_impl=None,
-                shard_type=shard_client.ShardClient,
+                shard_type=shard_clients.ShardClient,
             )
 
         assert math.isnan(gateway_manager_obj.latency)
@@ -96,19 +96,19 @@ class TestGatewayManager:
 
                 return super().__call__()
 
-        shard1 = mock.MagicMock(shard_client.ShardClient, start=MockStart(condition=False))
-        shard2 = mock.MagicMock(shard_client.ShardClient, start=MockStart(condition=True))
-        shard3 = mock.MagicMock(shard_client.ShardClient, start=MockStart(condition=True))
+        shard1 = mock.MagicMock(shard_clients.ShardClient, start=MockStart(condition=False))
+        shard2 = mock.MagicMock(shard_clients.ShardClient, start=MockStart(condition=True))
+        shard3 = mock.MagicMock(shard_clients.ShardClient, start=MockStart(condition=True))
 
-        with mock.patch("hikari.clients.shard_client.ShardClient", side_effect=[shard1, shard2, shard3]):
+        with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
             with mock.patch("asyncio.sleep", wraps=mock_sleep):
-                gateway_manager_obj = gateway_manager.GatewayManager(
+                gateway_manager_obj = gateway_managers.GatewayManager(
                     shard_ids=[0, 1, 2],
                     shard_count=3,
                     config=None,
                     url="some_url",
                     raw_event_consumer_impl=None,
-                    shard_type=shard_client.ShardClient,
+                    shard_type=shard_clients.ShardClient,
                 )
                 await gateway_manager_obj.start()
                 mock_sleep.assert_not_called()
@@ -119,19 +119,19 @@ class TestGatewayManager:
 
     @pytest.mark.asyncio
     async def test_join_calls_join_on_all_shards(self):
-        shard1 = mock.MagicMock(shard_client.ShardClient, join=mock.MagicMock())
-        shard2 = mock.MagicMock(shard_client.ShardClient, join=mock.MagicMock())
-        shard3 = mock.MagicMock(shard_client.ShardClient, join=mock.MagicMock())
+        shard1 = mock.MagicMock(shard_clients.ShardClient, join=mock.MagicMock())
+        shard2 = mock.MagicMock(shard_clients.ShardClient, join=mock.MagicMock())
+        shard3 = mock.MagicMock(shard_clients.ShardClient, join=mock.MagicMock())
 
-        with mock.patch("hikari.clients.shard_client.ShardClient", side_effect=[shard1, shard2, shard3]):
+        with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
             with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-                gateway_manager_obj = gateway_manager.GatewayManager(
+                gateway_manager_obj = gateway_managers.GatewayManager(
                     shard_ids=[0, 1, 2],
                     shard_count=3,
                     config=None,
                     url="some_url",
                     raw_event_consumer_impl=None,
-                    shard_type=shard_client.ShardClient,
+                    shard_type=shard_clients.ShardClient,
                 )
                 await gateway_manager_obj.join()
 
@@ -140,44 +140,43 @@ class TestGatewayManager:
         shard3.join.assert_called_once()
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("wait", [True, False])
-    async def test_close_closes_all_shards(self, wait):
-        shard1 = mock.MagicMock(shard_client.ShardClient, close=mock.MagicMock())
-        shard2 = mock.MagicMock(shard_client.ShardClient, close=mock.MagicMock())
-        shard3 = mock.MagicMock(shard_client.ShardClient, close=mock.MagicMock())
+    async def test_close_closes_all_shards(self):
+        shard1 = mock.MagicMock(shard_clients.ShardClient, close=mock.MagicMock())
+        shard2 = mock.MagicMock(shard_clients.ShardClient, close=mock.MagicMock())
+        shard3 = mock.MagicMock(shard_clients.ShardClient, close=mock.MagicMock())
 
-        with mock.patch("hikari.clients.shard_client.ShardClient", side_effect=[shard1, shard2, shard3]):
+        with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
             with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-                gateway_manager_obj = gateway_manager.GatewayManager(
+                gateway_manager_obj = gateway_managers.GatewayManager(
                     shard_ids=[0, 1, 2],
                     shard_count=3,
                     config=None,
                     url="some_url",
                     raw_event_consumer_impl=None,
-                    shard_type=shard_client.ShardClient,
+                    shard_type=shard_clients.ShardClient,
                 )
                 gateway_manager_obj._is_running = True
-                await gateway_manager_obj.close(wait=wait)
+                await gateway_manager_obj.close()
 
-        shard1.close.assert_called_once_with(wait)
-        shard2.close.assert_called_once_with(wait)
-        shard3.close.assert_called_once_with(wait)
+        shard1.close.assert_called_once_with()
+        shard2.close.assert_called_once_with()
+        shard3.close.assert_called_once_with()
 
     @pytest.mark.asyncio
     async def test_close_does_nothing_if_not_running(self):
-        shard1 = mock.MagicMock(shard_client.ShardClient, close=mock.MagicMock())
-        shard2 = mock.MagicMock(shard_client.ShardClient, close=mock.MagicMock())
-        shard3 = mock.MagicMock(shard_client.ShardClient, close=mock.MagicMock())
+        shard1 = mock.MagicMock(shard_clients.ShardClient, close=mock.MagicMock())
+        shard2 = mock.MagicMock(shard_clients.ShardClient, close=mock.MagicMock())
+        shard3 = mock.MagicMock(shard_clients.ShardClient, close=mock.MagicMock())
 
-        with mock.patch("hikari.clients.shard_client.ShardClient", side_effect=[shard1, shard2, shard3]):
+        with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
             with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-                gateway_manager_obj = gateway_manager.GatewayManager(
+                gateway_manager_obj = gateway_managers.GatewayManager(
                     shard_ids=[0, 1, 2],
                     shard_count=3,
                     config=None,
                     url="some_url",
                     raw_event_consumer_impl=None,
-                    shard_type=shard_client.ShardClient,
+                    shard_type=shard_clients.ShardClient,
                 )
                 gateway_manager_obj._is_running = False
                 await gateway_manager_obj.close()
@@ -189,28 +188,30 @@ class TestGatewayManager:
     @pytest.mark.asyncio
     async def test_update_presence_updates_presence_in_all_ready_or_waiting_for_ready_shards(self):
         shard1 = mock.MagicMock(
-            shard_client.ShardClient, update_presence=mock.MagicMock(), connection_state=shard_client.ShardState.READY,
+            shard_clients.ShardClient,
+            update_presence=mock.MagicMock(),
+            connection_state=shard_clients.ShardState.READY,
         )
         shard2 = mock.MagicMock(
-            shard_client.ShardClient,
+            shard_clients.ShardClient,
             update_presence=mock.MagicMock(),
-            connection_state=shard_client.ShardState.WAITING_FOR_READY,
+            connection_state=shard_clients.ShardState.WAITING_FOR_READY,
         )
         shard3 = mock.MagicMock(
-            shard_client.ShardClient,
+            shard_clients.ShardClient,
             update_presence=mock.MagicMock(),
-            connection_state=shard_client.ShardState.CONNECTING,
+            connection_state=shard_clients.ShardState.CONNECTING,
         )
 
-        with mock.patch("hikari.clients.shard_client.ShardClient", side_effect=[shard1, shard2, shard3]):
+        with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
             with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-                gateway_manager_obj = gateway_manager.GatewayManager(
+                gateway_manager_obj = gateway_managers.GatewayManager(
                     shard_ids=[0, 1, 2],
                     shard_count=3,
                     config=None,
                     url="some_url",
                     raw_event_consumer_impl=None,
-                    shard_type=shard_client.ShardClient,
+                    shard_type=shard_clients.ShardClient,
                 )
                 await gateway_manager_obj.update_presence(status=None, activity=None, idle_since=None, is_afk=True)
 

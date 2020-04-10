@@ -69,7 +69,7 @@ class HikariEntity(metaclass=abc.ABCMeta):
 
 
 class Deserializable:
-    """A mixin for any type that allows deserialization from a raw value into a Hikari entity."""
+    """Mixin that enables the class to be deserialized from a raw entity."""
 
     __slots__ = ()
 
@@ -86,7 +86,7 @@ class Deserializable:
 
 
 class Serializable:
-    """A mixin for any type that allows serialization from a Hikari entity into a raw value."""
+    """Mixin that enables an instance of the class to be serialized."""
 
     __slots__ = ()
 

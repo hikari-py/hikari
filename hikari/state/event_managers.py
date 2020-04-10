@@ -23,7 +23,7 @@ import inspect
 import typing
 
 from hikari import entities
-from hikari.clients import shard_client
+from hikari.clients import shard_clients
 from hikari.internal import assertions
 from hikari.internal import more_logging
 from hikari.state import event_dispatchers
@@ -97,7 +97,7 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
 
     These methods are expected to have the following parameters:
 
-    shard_obj: :obj:`hikari.clients.shard_client.ShardClient`
+    shard_obj: :obj:`hikari.clients.shard_clients.ShardClient`
         The shard client that emitted the event.
     payload: :obj:`typing.Any`
         The received payload. This is expected to be a JSON-compatible type.
@@ -150,7 +150,7 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
                 self.raw_event_mappers[event_name] = member
 
     def process_raw_event(
-        self, shard_client_obj: shard_client.ShardClient, name: str, payload: entities.RawEntityT,
+        self, shard_client_obj: shard_clients.ShardClient, name: str, payload: entities.RawEntityT,
     ) -> None:
         """Process a low level event.
 
@@ -159,7 +159,7 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
 
         Parameters
         ----------
-        shard_client_obj: :obj:`hikari.clients.shard_client.ShardClient`
+        shard_client_obj: :obj:`hikari.clients.shard_clients.ShardClient`
             The shard that triggered this event.
         name : :obj:`str`
             The raw event name.
