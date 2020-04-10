@@ -27,9 +27,9 @@ queue if you distribute your bot).
 The overall structure is as follows:
 
 .. inheritance-diagram::
-    hikari.state.event_dispatcher
-    hikari.state.raw_event_consumer
-    hikari.state.event_manager
-    hikari.state.stateless_event_manager_impl
+    hikari.state.event_dispatchers
+    hikari.state.raw_event_consumers
+    hikari.state.event_managers
+    hikari.state.stateless_event_managers
 """
 __all__ = []

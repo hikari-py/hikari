@@ -25,9 +25,11 @@ __all__ = [
     "ResultT",
     "nullable_cast",
     "try_cast",
+    "try_cast_or_defer_unary_operator",
     "put_if_specified",
     "image_bytes_to_image_data",
     "pluralize",
+    "snoop_typehint_from_scope",
 ]
 
 import base64
@@ -36,6 +38,7 @@ import datetime
 import email.utils
 import io
 import re
+import types
 import typing
 
 CastInputT = typing.TypeVar("CastInputT")
@@ -272,6 +275,69 @@ def make_resource_seekable(resource: typing.Any) -> typing.Union[io.BytesIO, io.
 def pluralize(count: int, name: str, suffix: str = "s") -> str:
     """Pluralizes a word."""
     return f"{count} {name + suffix}" if count - 1 else f"{count} {name}"
+
+
+def snoop_typehint_from_scope(frame: types.FrameType, typehint: typing.Union[str, typing.Any]) -> typing.Any:
+    """Resolve a string type hint from a given stack frame.
+
+    This snoops around the local and global scope for the given frame to find
+    the given attribute name, taking into account nested function calls. The
+    reason to do this is that if a string type hint is used, or the
+    ``from __future__ import annotations`` directive is used, the physical thing
+    that the type hint represents will no longer be evaluated by the
+    interpreter. This is an implementation that does not require the use of
+    :obj:`eval`, and thus reduces the risk of arbitrary code execution as a
+    result.
+
+    Nested parameters such as :obj:`typing.Sequence` should also be able to be
+    resolved correctly.
+
+    Parameters
+    ----------
+    frame : :obj:`types.FrameType`
+        The stack frame that the element with the typehint was defined in.
+        This is retrieved using :obj:`inspect.stack` ``(frame_no)[0][0]``,
+        where ``frame_no`` is the number of frames from this invocation that
+        you want to snoop the scope at.
+    typehint : :obj:`typing.Union` [ :obj:`str`, :obj:`typing.Any` ]
+        The type hint to resolve. If a non-:obj:`str` is passed, then this is
+        returned immediately as the result.
+
+    Returns
+    -------
+    :obj:`typing.Any`
+        The physical representation of the given type hint.
+
+    Raises
+    ------
+    :obj:`NameError`
+        If the attribute was not found.
+
+    Warnings
+    --------
+    The input frame must be manually dereferenced using the ``del`` keyword
+    after use. Any functions that are decorated and wrapped when using this
+    lookup must use :obj:`functools.wraps` to ensure that the correct scope is
+    identified on the stack.
+
+    This is incredibly unpythonic and baremetal, but due to
+    `PEP 563 <https://www.python.org/dev/peps/pep-0563/>` there is no other
+    consistent way of making this work correctly.
+    """
+    if not isinstance(typehint, str):
+        return typehint
+
+    fragments = typehint.split(".")
+
+    for scope in (frame.f_locals, frame.f_globals):
+        try:
+            scope = scope[fragments[0]]
+            for attr in fragments[1:]:
+                scope = getattr(scope, attr)
+            return scope
+        except (AttributeError, KeyError):
+            pass
+    raise NameError(f"No attribute {typehint} was found in enclosing scope")
 
 
 BytesLikeT = typing.Union[bytes, bytearray, memoryview, str, io.StringIO, io.BytesIO]

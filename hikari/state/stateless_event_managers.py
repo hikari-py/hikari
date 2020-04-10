@@ -20,6 +20,7 @@
 
 __all__ = ["StatelessEventManagerImpl"]
 
+from hikari import events
 from hikari.state import event_dispatchers
 from hikari.state import event_managers
 
@@ -32,4 +33,14 @@ class StatelessEventManagerImpl(event_managers.EventManager[event_dispatchers.Ev
     version, and are not immediately affected by the use of intents.
     """
 
-    # @event_managers.raw_event_mapper("CONNECT")
+    @event_managers.raw_event_mapper("CONNECTED")
+    def on_connect(self, shard, _):
+        """Handle CONNECTED events."""
+        event = events.ConnectedEvent(shard=shard)
+        self.event_dispatcher.dispatch_event(event)
+
+    @event_managers.raw_event_mapper("DISCONNECTED")
+    def on_disconnect(self, shard, _):
+        """Handle DISCONNECTED events."""
+        event = events.DisconnectedEvent(shard=shard)
+        self.event_dispatcher.dispatch_event(event)

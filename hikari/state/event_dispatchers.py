@@ -17,22 +17,33 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Event dispatcher implementation."""
+
+from __future__ import annotations
+
 __all__ = ["EventDispatcher", "EventDispatcherImpl"]
 
 import abc
 import asyncio
+import inspect
 import logging
 import typing
 
 from hikari import events
 from hikari.internal import assertions
+from hikari.internal import conversions
 from hikari.internal import more_asyncio
 from hikari.internal import more_collections
 from hikari.internal import more_logging
 
-EventT = typing.TypeVar("EventT", bound=events.HikariEvent)
-PredicateT = typing.Callable[[EventT], typing.Union[bool, typing.Coroutine[None, None, bool]]]
-EventCallbackT = typing.Callable[[EventT], typing.Coroutine[None, None, typing.Any]]
+# Prevents a circular reference that prevents importing correctly.
+if typing.TYPE_CHECKING:
+    EventT = typing.TypeVar("EventT", bound=events.HikariEvent)
+    PredicateT = typing.Callable[[EventT], typing.Union[bool, typing.Coroutine[None, None, bool]]]
+    EventCallbackT = typing.Callable[[EventT], typing.Coroutine[None, None, typing.Any]]
+else:
+    EventT = typing.TypeVar("EventT")
+    PredicateT = typing.TypeVar("PredicateT")
+    EventCallbackT = typing.TypeVar("EventCallbackT")
 
 
 class EventDispatcher(abc.ABC):
@@ -115,14 +126,60 @@ class EventDispatcher(abc.ABC):
         lookup, but can be implemented this way optionally if documented.
         """
 
-    # Ignore docstring not starting in an imperative mood
-    def on(self, event_type: typing.Type[EventT]) -> typing.Callable[[EventCallbackT], EventCallbackT]:  # noqa: D401
-        """Returns a decorator that is equivalent to invoking :meth:`add_listener`.
+    @typing.overload
+    def on(self) -> typing.Callable[[EventCallbackT], EventCallbackT]:
+        """Return a decorator to create an event listener.
+
+        This considers the type hint on the signature to get the event type.
+
+        Example
+        -------
+        .. code-block:: python
+
+            @bot.on()
+            async def on_message(event: hikari.MessageCreatedEvent):
+                print(event.content)
+        """
+
+    @typing.overload
+    def on(self, event_type: typing.Type[EventCallbackT]) -> typing.Callable[[EventCallbackT], EventCallbackT]:
+        """Return a decorator to create an event listener.
+
+        This considers the type given to the decorator.
+
+        Example
+        -------
+        .. code-block:: python
+
+            @bot.on(hikari.MessageCreatedEvent)
+            async def on_message(event):
+                print(event.content)
+        """
+
+    def on(self, event_type=None):
+        """Return a decorator equivalent to invoking :meth:`add_listener`.
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`hikari.events.HikariEvent` ]
-            The event type to register the produced decorator to.
+        event_type : :obj:`typing.Type` [ :obj:`hikari.events.HikariEvent` ], optional
+            The event type to register the produced decorator to. If this is not
+            specified, then the given function is used instead and the type hint
+            of the first argument is considered. If no type hint is present
+            there either, then the call will fail.
+
+        Examples
+        --------
+        .. code-block:: python
+
+            # Type-hinted format.
+            @bot.on()
+            async def on_message(event: hikari.MessageCreatedEvent):
+                print(event.content)
+
+            # Explicit format.
+            @bot.on(hikari.MessageCreatedEvent)
+            async def on_message(event):
+                print(event.content)
 
         Returns
         -------
@@ -131,6 +188,32 @@ class EventDispatcher(abc.ABC):
         """
 
         def decorator(callback: EventCallbackT) -> EventCallbackT:
+            if event_type is None:
+                signature = inspect.signature(callback)
+                parameters = list(signature.parameters.values())
+
+                if len(parameters) == 2 and parameters[0].annotation is inspect.Parameter.empty:
+                    event_param = parameters[1]
+                elif len(parameters) == 1:
+                    event_param = parameters[0]
+
+                    if event_param.annotation is inspect.Parameter.empty:
+                        raise TypeError(f"No typehint given for parameter: async def {callback}({signature}): ...")
+                else:
+                    raise TypeError(f"Invalid signature for event: async def {callback.__name__}({signature}): ...")
+
+                frame, *_, = inspect.stack(2)[0]
+
+                try:
+                    resolved_type = conversions.snoop_typehint_from_scope(frame, event_param.annotation)
+
+                    if not issubclass(resolved_type, events.HikariEvent):
+                        raise TypeError("Event typehints should subclass hikari.events.HikariEvent to be valid")
+
+                    return self.add_listener(typing.cast(typing.Type[events.HikariEvent], resolved_type), callback)
+                finally:
+                    del frame, _
+
             return self.add_listener(event_type, callback)
 
         return decorator

@@ -26,10 +26,10 @@ import typing
 
 from hikari import events
 from hikari.clients import configs
-from hikari.clients import gateway_manager
-from hikari.clients import rest_client
+from hikari.clients import gateway_managers
+from hikari.clients import rest_clients
 from hikari.clients import runnable
-from hikari.clients import shard_client
+from hikari.clients import shard_clients
 from hikari.internal import more_asyncio
 from hikari.internal import more_logging
 from hikari.state import event_dispatchers
@@ -60,8 +60,8 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
 
     #: The gateway for this bot.
     #:
-    #: :type: :obj:`hikari.clients.gateway_manager.GatewayManager` [ :obj:`hikari.clients.shard_client.ShardClient` ]
-    gateway: gateway_manager.GatewayManager[shard_client.ShardClient]
+    #: :type: :obj:`hikari.clients.gateway_managers.GatewayManager` [ :obj:`hikari.clients.shard_clients.ShardClient` ]
+    gateway: gateway_managers.GatewayManager[shard_clients.ShardClient]
 
     #: The logger to use for this bot.
     #:
@@ -70,8 +70,8 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
 
     #: The REST HTTP client to use for this bot.
     #:
-    #: :type: :obj:`hikari.clients.rest_client.RESTClient`
-    rest: rest_client.RESTClient
+    #: :type: :obj:`hikari.clients.rest_clients.RESTClient`
+    rest: rest_clients.RESTClient
 
     @abc.abstractmethod
     def __init__(self, config: configs.BotConfig, event_manager: event_managers.EventManager) -> None:
@@ -79,7 +79,7 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
         self.config = config
         self.event_manager = event_manager
         self.gateway = NotImplemented
-        self.rest = rest_client.RESTClient(self.config)
+        self.rest = rest_clients.RESTClient(self.config)
 
     async def start(self):
         gateway_bot = await self.rest.fetch_gateway_bot()
@@ -94,18 +94,19 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
         shard_count = self.config.shard_count if self.config.shard_count else gateway_bot.shard_count
         shard_ids = self.config.shard_ids if self.config.shard_ids else [*range(shard_count)]
 
-        self.gateway = gateway_manager.GatewayManager(
+        self.gateway = gateway_managers.GatewayManager(
             config=self.config,
             url=gateway_bot.url,
             raw_event_consumer_impl=self.event_manager,
             shard_ids=shard_ids,
             shard_count=shard_count,
+            dispatcher=self.event_manager.event_dispatcher.dispatch_event,
         )
 
         await self.gateway.start()
 
-    async def close(self, wait: bool = True):
-        await self.gateway.close(wait)
+    async def close(self):
+        await self.gateway.close()
         self.event_manager.event_dispatcher.close()
         await self.rest.close()
 
@@ -115,7 +116,7 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
     def add_listener(
         self, event_type: typing.Type[event_dispatchers.EventT], callback: event_dispatchers.EventCallbackT
     ) -> event_dispatchers.EventCallbackT:
-        return self.event_manager.event_dispatcher.remove_listener(event_type, callback)
+        return self.event_manager.event_dispatcher.add_listener(event_type, callback)
 
     def remove_listener(
         self, event_type: typing.Type[event_dispatchers.EventT], callback: event_dispatchers.EventCallbackT

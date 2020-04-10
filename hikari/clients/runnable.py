@@ -46,7 +46,7 @@ class RunnableClient(abc.ABC):
         """Start the component."""
 
     @abc.abstractmethod
-    async def close(self, wait: bool = True) -> None:
+    async def close(self) -> None:
         """Shut down the component."""
 
     @abc.abstractmethod
@@ -87,7 +87,7 @@ class RunnableClient(abc.ABC):
             # UnboundLocalError.
             ex = _ex
         finally:
-            loop.run_until_complete(self.close(True))
+            loop.run_until_complete(self.close())
             with contextlib.suppress(NotImplementedError):
                 # Not implemented on Windows
                 loop.remove_signal_handler(signal.SIGTERM)

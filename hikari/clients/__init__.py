@@ -18,23 +18,23 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The models API for interacting with Discord directly."""
 
-from hikari.clients import bot_client
+from hikari.clients import bot_clients
 from hikari.clients import configs
-from hikari.clients import gateway_manager
-from hikari.clients import rest_client
+from hikari.clients import gateway_managers
+from hikari.clients import rest_clients
 from hikari.clients import runnable
-from hikari.clients.bot_client import *
+from hikari.clients.bot_clients import *
 from hikari.clients.configs import *
-from hikari.clients.gateway_manager import *
-from hikari.clients.rest_client import *
+from hikari.clients.gateway_managers import *
+from hikari.clients.rest_clients import *
 from hikari.clients.runnable import *
-from hikari.clients.shard_client import *
+from hikari.clients.shard_clients import *
 
 __all__ = [
-    *bot_client.__all__,
+    *bot_clients.__all__,
     *configs.__all__,
-    *gateway_manager.__all__,
-    *rest_client.__all__,
-    *shard_client.__all__,
+    *gateway_managers.__all__,
+    *rest_clients.__all__,
+    *shard_clients.__all__,
     *runnable.__all__,
 ]
