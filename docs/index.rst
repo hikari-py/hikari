@@ -38,6 +38,7 @@ Other resources
 * `Source code <https://gitlab.com/nekokatt/hikari>`_
 * `Pipelines and builds <https://gitlab.com/nekokatt/hikari/pipelines>`_
 * `CI success statistics for nerds <https://gitlab.com/nekokatt/hikari/pipelines/charts>`_
+* `Discord API documentation <http://discordapp.com/developers/docs/>`_
 
 Search for a topic
 ------------------

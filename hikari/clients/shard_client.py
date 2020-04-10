@@ -36,7 +36,6 @@ import typing
 import aiohttp
 
 from hikari import errors
-from hikari import events
 from hikari import gateway_entities
 from hikari import guilds
 from hikari.clients import configs
@@ -47,8 +46,6 @@ from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import shard
 from hikari.state import raw_event_consumers
-
-_EventT = typing.TypeVar("_EventT", bound=events.HikariEvent)
 
 
 @enum.unique
