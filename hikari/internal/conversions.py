@@ -329,18 +329,15 @@ def snoop_typehint_from_scope(frame: types.FrameType, typehint: typing.Union[str
 
     fragments = typehint.split(".")
 
-    try:
-        for scope in (frame.f_locals, frame.f_globals):
-            try:
-                scope = scope[fragments[0]]
-                for attr in fragments[1:]:
-                    scope = getattr(scope, attr)
-                return scope
-            except (AttributeError, KeyError):
-                pass
-        raise NameError(f"No attribute {typehint} was found in enclosing scope")
-    finally:
-        del frame, scope  # lgtm [py/unnecessary-delete]
+    for scope in (frame.f_locals, frame.f_globals):
+        try:
+            scope = scope[fragments[0]]
+            for attr in fragments[1:]:
+                scope = getattr(scope, attr)
+            return scope
+        except (AttributeError, KeyError):
+            pass
+    raise NameError(f"No attribute {typehint} was found in enclosing scope")
 
 
 BytesLikeT = typing.Union[bytes, bytearray, memoryview, str, io.StringIO, io.BytesIO]
