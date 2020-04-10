@@ -16,12 +16,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import concurrent.futures
 import datetime
+import inspect
 import io
 
 import pytest
+import typing
 
 from hikari.internal import conversions
+from tests.hikari import _helpers
 
 
 @pytest.mark.parametrize(
@@ -193,3 +197,81 @@ def test_parse_unix_epoch_to_datetime():
 )
 def test_make_resource_seekable(input_arg, expected_result_type):
     assert isinstance(conversions.make_resource_seekable(input_arg), expected_result_type)
+
+
+@pytest.mark.parametrize(
+    ["count", "name", "kwargs", "expect"],
+    [
+        (0, "foo", {}, "0 foos"),
+        (1, "foo", {}, "1 foo"),
+        (2, "foo", {}, "2 foos"),
+        (0, "foo", dict(suffix="es"), "0 fooes"),
+        (1, "foo", dict(suffix="es"), "1 foo"),
+        (2, "foo", dict(suffix="es"), "2 fooes"),
+    ],
+)
+def test_pluralize(count, name, kwargs, expect):
+    assert conversions.pluralize(count, name, **kwargs) == expect
+
+
+class TestSnoopTypeHints:
+    def test_snoop_simple_local_scope(self):
+        x = object()
+
+        frame = inspect.stack(1)[0][0]
+        try:
+            assert conversions.snoop_typehint_from_scope(frame, "x") is x
+        finally:
+            del frame
+
+    def test_snoop_simple_global_scope(self):
+        frame = inspect.stack(1)[0][0]
+        try:
+            assert conversions.snoop_typehint_from_scope(frame, "pytest") is pytest
+        finally:
+            del frame
+
+    # noinspection PyUnusedLocal
+    def test_snoop_nested_local_scope(self):
+        expected = object()
+
+        class Foo:
+            class Bar:
+                class Baz:
+                    class Bork:
+                        qux = expected
+
+        frame = inspect.stack(1)[0][0]
+        try:
+            assert conversions.snoop_typehint_from_scope(frame, "Foo.Bar.Baz.Bork.qux") is expected
+        finally:
+            del frame
+
+    def test_snoop_nested_global_scope(self):
+        frame = inspect.stack(1)[0][0]
+        try:
+            assert (
+                conversions.snoop_typehint_from_scope(frame, "concurrent.futures.as_completed")
+                is concurrent.futures.as_completed
+            )
+        finally:
+            del frame
+
+    def test_snoop_on_resolved_typehint_does_nothing(self):
+        frame = inspect.stack(1)[0][0]
+        try:
+            assert conversions.snoop_typehint_from_scope(frame, typing.Sequence) is typing.Sequence
+        finally:
+            del frame
+
+    @_helpers.assert_raises(type_=NameError)
+    def test_not_resolved_is_failure(self):
+        attr = "this_is_not_an_attribute"
+        assert attr not in locals(), "change this attribute name to something else so the test can run"
+        assert attr not in globals(), "change this attribute name to something else so the test can run"
+
+        frame = inspect.stack(1)[0][0]
+        try:
+            conversions.snoop_typehint_from_scope(frame, attr)
+        finally:
+            del frame

@@ -27,7 +27,7 @@ __all__ = ["RawEventConsumer"]
 import abc
 
 from hikari import entities
-from hikari.clients import shard_client
+from hikari.clients import shard_clients
 
 
 class RawEventConsumer(abc.ABC):
@@ -43,13 +43,13 @@ class RawEventConsumer(abc.ABC):
 
     @abc.abstractmethod
     def process_raw_event(
-        self, shard_client_obj: shard_client.ShardClient, name: str, payload: entities.RawEntityT,
+        self, shard_client_obj: shard_clients.ShardClient, name: str, payload: entities.RawEntityT,
     ) -> None:
         """Consume a raw event that was received from a shard connection.
 
         Parameters
         ----------
-        shard_client_obj : :obj:`hikari.clients.shard_client.ShardClient`
+        shard_client_obj : :obj:`hikari.clients.shard_clients.ShardClient`
             The client for the shard that received the event.
         name : :obj:`str`
             The raw event name.

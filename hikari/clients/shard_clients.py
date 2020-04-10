@@ -24,6 +24,8 @@ well as restarting it if it disconnects.
 Additional functions and coroutines are provided to update the presence on the
 shard using models defined in :mod:`hikari`.
 """
+from __future__ import annotations
+
 __all__ = ["ShardState", "ShardClient"]
 
 import asyncio
@@ -36,6 +38,7 @@ import typing
 import aiohttp
 
 from hikari import errors
+from hikari import events
 from hikari import gateway_entities
 from hikari import guilds
 from hikari.clients import configs
@@ -45,6 +48,7 @@ from hikari.internal import more_logging
 from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import shard
+from hikari.state import event_dispatchers
 from hikari.state import raw_event_consumers
 
 
@@ -88,11 +92,16 @@ class ShardClient(runnable.RunnableClient):
         The consumer of a raw event.
     url : :obj:`str`
         The URL to connect the gateway to.
+    dispatcher : :obj:`hikari.state.event_dispatchers.EventDispatcher`, optional
+        The high level event dispatcher to use for dispatching start and stop
+        events. Set this to ``None`` to disable that functionality (useful if
+        you use a gateway manager to orchestrate multiple shards instead and
+        provide this functionality there). Defaults to ``None`` if unspecified.
 
     Notes
     -----
     Generally, you want to use
-    :obj:`hikari.clients.gateway_manager.GatewayManager` rather than this class
+    :obj:`hikari.clients.gateway_managers.GatewayManager` rather than this class
     directly, as that will handle sharding where enabled and applicable, and
     provides a few more bits and pieces that may be useful such as state
     management and event dispatcher integration. and If you want to customize
@@ -102,13 +111,14 @@ class ShardClient(runnable.RunnableClient):
     __slots__ = (
         "logger",
         "_raw_event_consumer",
-        "_client",
+        "_connection",
         "_status",
         "_activity",
         "_idle_since",
         "_is_afk",
         "_task",
         "_shard_state",
+        "_dispatcher",
     )
 
     def __init__(
@@ -118,6 +128,7 @@ class ShardClient(runnable.RunnableClient):
         config: configs.WebsocketConfig,
         raw_event_consumer_impl: raw_event_consumers.RawEventConsumer,
         url: str,
+        dispatcher: typing.Optional[event_dispatchers.EventDispatcher] = None,
     ) -> None:
         super().__init__(more_logging.get_named_logger(self, f"#{shard_id}"))
         self._raw_event_consumer = raw_event_consumer_impl
@@ -127,7 +138,8 @@ class ShardClient(runnable.RunnableClient):
         self._status = config.initial_status
         self._shard_state = ShardState.NOT_RUNNING
         self._task = None
-        self._client = shard.ShardConnection(
+        self._dispatcher = dispatcher
+        self._connection = shard.ShardConnection(
             compression=config.gateway_use_compression,
             connector=config.tcp_connector,
             debug=config.debug,
@@ -163,7 +175,29 @@ class ShardClient(runnable.RunnableClient):
         :obj:`hikari.net.shard.ShardConnection`
             The low-level gateway client used for this shard.
         """
-        return self._client
+        return self._connection
+
+    @property
+    def shard_id(self) -> int:
+        """Shard ID.
+
+        Returns
+        -------
+        :obj:`int`
+            The 0-indexed shard ID.
+        """
+        return self._connection.shard_id
+
+    @property
+    def shard_count(self) -> int:
+        """Shard count.
+
+        Returns
+        -------
+        :obj:`int`
+            The number of shards that make up this bot.
+        """
+        return self._connection.shard_count
 
     @property
     def status(self) -> guilds.PresenceStatus:  # noqa: D401
@@ -223,7 +257,7 @@ class ShardClient(runnable.RunnableClient):
             The heartbeat latency in seconds. This will be ``float('nan')``
             until the first heartbeat is performed.
         """
-        return self._client.heartbeat_latency
+        return self._connection.heartbeat_latency
 
     @property
     def heartbeat_interval(self) -> float:
@@ -235,7 +269,7 @@ class ShardClient(runnable.RunnableClient):
             The heartbeat interval in seconds. This will be ``float('nan')``
             until the connection has received a ``HELLO`` payload.
         """
-        return self._client.heartbeat_interval
+        return self._connection.heartbeat_interval
 
     @property
     def reconnect_count(self) -> float:
@@ -248,7 +282,7 @@ class ShardClient(runnable.RunnableClient):
         :obj:`int`
             The number of reconnects this shard has performed.
         """
-        return self._client.reconnect_count
+        return self._connection.reconnect_count
 
     @property
     def connection_state(self) -> ShardState:
@@ -273,7 +307,7 @@ class ShardClient(runnable.RunnableClient):
         self._task = asyncio.create_task(self._keep_alive(), name="ShardClient#keep_alive")
 
         completed, _ = await asyncio.wait(
-            [self._task, self._client.ready_event.wait()], return_when=asyncio.FIRST_COMPLETED
+            [self._task, self._connection.ready_event.wait()], return_when=asyncio.FIRST_COMPLETED
         )
 
         if self._task in completed:
@@ -283,29 +317,33 @@ class ShardClient(runnable.RunnableClient):
         """Wait for the shard to shut down fully."""
         await self._task if self._task is not None else more_asyncio.completed_future()
 
-    async def close(self, wait: bool = True) -> None:
+    async def close(self) -> None:
         """Request that the shard shuts down.
 
-        Parameters
-        ----------
-        wait : :obj:`bool`
-            If ``True`` (default), then wait for the client to shut down fully.
-            If ``False``, only send the signal to shut down, but do not wait
-            for it explicitly.
+        This will wait for the client to shut down before returning.
         """
         if self._shard_state != ShardState.STOPPING:
             self._shard_state = ShardState.STOPPING
             self.logger.debug("stopping shard")
-            await self._client.close()
-            if wait:
-                await self._task
+
+            if self._dispatcher is not None:
+                await self._dispatcher.dispatch_event(events.StoppingEvent())
+
+            await self._connection.close()
+
             with contextlib.suppress():
-                self._task.result()
+                await self._task
+
+            if self._dispatcher is not None:
+                await self._dispatcher.dispatch_event(events.StoppedEvent())
 
     async def _keep_alive(self):
         back_off = ratelimits.ExponentialBackOff(maximum=None)
         last_start = time.perf_counter()
         do_not_back_off = True
+
+        if self._dispatcher is not None:
+            await self._dispatcher.dispatch_event(events.StartingEvent())
 
         while True:
             try:
@@ -322,6 +360,11 @@ class ShardClient(runnable.RunnableClient):
                 do_not_back_off = False
 
                 connect_task = await self._spin_up()
+
+                if self._dispatcher is not None and self.reconnect_count == 0:
+                    # Only dispatch this on initial connect, not on reconnect.
+                    await self._dispatcher.dispatch_event(events.StartedEvent())
+
                 await connect_task
                 self.logger.critical("shut down silently! this shouldn't happen!")
 
@@ -336,8 +379,8 @@ class ShardClient(runnable.RunnableClient):
                     self.logger.warning("invalid session, so will attempt to resume")
                 else:
                     self.logger.warning("invalid session, so will attempt to reconnect")
-                    self._client.seq = None
-                    self._client.session_id = None
+                    self._connection.seq = None
+                    self._connection.session_id = None
 
                 do_not_back_off = True
                 await asyncio.sleep(5)
@@ -371,12 +414,12 @@ class ShardClient(runnable.RunnableClient):
         self.logger.debug("initializing shard")
         self._shard_state = ShardState.CONNECTING
 
-        is_resume = self._client.seq is not None and self._client.session_id is not None
+        is_resume = self._connection.seq is not None and self._connection.session_id is not None
 
-        connect_task = asyncio.create_task(self._client.connect(), name="ShardConnection#connect")
+        connect_task = asyncio.create_task(self._connection.connect(), name="ShardConnection#connect")
 
         completed, _ = await asyncio.wait(
-            [connect_task, self._client.hello_event.wait()], return_when=asyncio.FIRST_COMPLETED
+            [connect_task, self._connection.hello_event.wait()], return_when=asyncio.FIRST_COMPLETED
         )
 
         if connect_task in completed:
@@ -385,7 +428,7 @@ class ShardClient(runnable.RunnableClient):
         self.logger.info("received HELLO, interval is %ss", self.connection.heartbeat_interval)
 
         completed, _ = await asyncio.wait(
-            [connect_task, self._client.identify_event.wait()], return_when=asyncio.FIRST_COMPLETED
+            [connect_task, self._connection.identify_event.wait()], return_when=asyncio.FIRST_COMPLETED
         )
 
         if connect_task in completed:
@@ -396,7 +439,7 @@ class ShardClient(runnable.RunnableClient):
             self._shard_state = ShardState.RESUMING
 
             completed, _ = await asyncio.wait(
-                [connect_task, self._client.resumed_event.wait()], return_when=asyncio.FIRST_COMPLETED
+                [connect_task, self._connection.resumed_event.wait()], return_when=asyncio.FIRST_COMPLETED
             )
 
             if connect_task in completed:
@@ -410,7 +453,7 @@ class ShardClient(runnable.RunnableClient):
             self._shard_state = ShardState.WAITING_FOR_READY
 
             completed, _ = await asyncio.wait(
-                [connect_task, self._client.ready_event.wait()], return_when=asyncio.FIRST_COMPLETED
+                [connect_task, self._connection.ready_event.wait()], return_when=asyncio.FIRST_COMPLETED
             )
 
             if connect_task in completed:
@@ -459,7 +502,7 @@ class ShardClient(runnable.RunnableClient):
         is_afk = self._is_afk if is_afk is ... else is_afk
 
         presence = self._create_presence_pl(status=status, activity=activity, idle_since=idle_since, is_afk=is_afk)
-        await self._client.update_presence(presence)
+        await self._connection.update_presence(presence)
 
         # If we get this far, the update succeeded probably, or the gateway just died. Whatever.
         self._status = status
@@ -480,3 +523,16 @@ class ShardClient(runnable.RunnableClient):
             "game": activity.serialize() if activity is not None else None,
             "afk": is_afk,
         }
+
+    def __str__(self) -> str:
+        return f"Shard {self.connection.shard_id} in pool of {self.connection.shard_count} shards"
+
+    def __repr__(self) -> str:
+        return (
+            "ShardClient("
+            + ", ".join(
+                f"{k}={getattr(self, k)!r}"
+                for k in ("shard_id", "shard_count", "connection_state", "heartbeat_interval", "latency")
+            )
+            + ")"
+        )
