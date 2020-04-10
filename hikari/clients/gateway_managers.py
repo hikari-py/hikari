@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Defines a facade around :obj:`hikari.clients.shard_client.ShardClient`.
+"""Defines a facade around :obj:`hikari.clients.shard_clients.ShardClient`.
 
 This provides functionality such as keeping multiple shards alive
 """
@@ -29,16 +29,18 @@ import math
 import time
 import typing
 
+from hikari import events
 from hikari import gateway_entities
 from hikari import guilds
 from hikari.clients import configs
 from hikari.clients import runnable
-from hikari.clients import shard_client
+from hikari.clients import shard_clients
 from hikari.internal import conversions
 from hikari.internal import more_logging
+from hikari.state import event_dispatchers
 from hikari.state import raw_event_consumers
 
-ShardT = typing.TypeVar("ShardT", bound=shard_client.ShardClient)
+ShardT = typing.TypeVar("ShardT", bound=shard_clients.ShardClient)
 
 
 class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
@@ -56,12 +58,14 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
         config: configs.WebsocketConfig,
         url: str,
         raw_event_consumer_impl: raw_event_consumers.RawEventConsumer,
-        shard_type: typing.Type[ShardT] = shard_client.ShardClient,
+        shard_type: typing.Type[ShardT] = shard_clients.ShardClient,
+        dispatcher: typing.Optional[event_dispatchers.EventDispatcher] = None,
     ) -> None:
         super().__init__(more_logging.get_named_logger(self, conversions.pluralize(shard_count, "shard")))
         self._is_running = False
         self.config = config
         self.raw_event_consumer = raw_event_consumer_impl
+        self._dispatcher = dispatcher
         self.shards: typing.Dict[int, ShardT] = {
             shard_id: shard_type(shard_id, shard_count, config, raw_event_consumer_impl, url) for shard_id in shard_ids
         }
@@ -73,7 +77,7 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
 
         This will return a mean of all the heartbeat intervals for all shards
         with a valid heartbeat latency that are in the
-        :obj:`hikari.clients.shard_client.ShardState.READY` state.
+        :obj:`hikari.clients.shard_clients.ShardState.READY` state.
 
         If no shards are in this state, this will return ``float('nan')``
         instead.
@@ -100,6 +104,12 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
         session spam. This involves starting each shard sequentially with a
         5 second pause between each.
         """
+        if self._is_running:
+            raise RuntimeError("Cannot start a client twice.")
+
+        if self._dispatcher is not None:
+            await self._dispatcher.dispatch_event(events.StartingEvent())
+
         self._is_running = True
         self.logger.info("starting %s shard(s)", len(self.shards))
         start_time = time.perf_counter()
@@ -113,29 +123,31 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
 
         self.logger.info("started %s shard(s) in approx %.2fs", len(self.shards), finish_time - start_time)
 
+        if self._dispatcher is not None:
+            await self._dispatcher.dispatch_event(events.StartedEvent())
+
     async def join(self) -> None:
         """Wait for all shards to finish executing, then return."""
         await asyncio.gather(*(shard_obj.join() for shard_obj in self.shards.values()))
 
-    async def close(self, wait: bool = True) -> None:
+    async def close(self) -> None:
         """Close all shards.
 
-        Parameters
-        ----------
-        wait : :obj:`bool`
-            If ``True`` (the default), then once called, this will wait until
-            all shards have shut down before returning. If ``False``, it will
-            only send the signal to shut down, but will return immediately.
+        Waits for all shards to shut down before returning.
         """
         if self._is_running:
             self.logger.info("stopping %s shard(s)", len(self.shards))
             start_time = time.perf_counter()
             try:
-                await asyncio.gather(*(shard_obj.close(wait) for shard_obj in self.shards.values()))
+                if self._dispatcher is not None:
+                    await self._dispatcher.dispatch_event(events.StoppingEvent())
+                await asyncio.gather(*(shard_obj.close() for shard_obj in self.shards.values()))
             finally:
                 finish_time = time.perf_counter()
                 self.logger.info("stopped %s shard(s) in approx %.2fs", len(self.shards), finish_time - start_time)
                 self._is_running = False
+                if self._dispatcher is not None:
+                    await self._dispatcher.dispatch_event(events.StoppedEvent())
 
     async def update_presence(
         self,
@@ -178,6 +190,7 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
             *(
                 shard.update_presence(status=status, activity=activity, idle_since=idle_since, is_afk=is_afk)
                 for shard in self.shards.values()
-                if shard.connection_state in (shard_client.ShardState.WAITING_FOR_READY, shard_client.ShardState.READY)
+                if shard.connection_state
+                in (shard_clients.ShardState.WAITING_FOR_READY, shard_clients.ShardState.READY)
             )
         )

@@ -27,11 +27,9 @@ import sys
 
 import click
 
-from hikari import entities
 from hikari.clients import configs
-from hikari.clients import gateway_manager
-from hikari.clients import shard_client
-from hikari.state import raw_event_consumers
+from hikari.clients import gateway_managers
+from hikari.state import stateless_event_managers
 
 logger_levels = ("DEBUG", "INFO", "WARNING", "ERROR", "NOTSET")
 
@@ -71,11 +69,9 @@ def run_gateway(compression, color, debug, logger, shards, token, url, verify_ss
 
     logging.basicConfig(level=logger, format=_color_format if color else _regular_format, stream=sys.stdout)
 
-    class _DummyConsumer(raw_event_consumers.RawEventConsumer):
-        def process_raw_event(self, _client: shard_client.ShardClient, name: str, payload: entities.RawEntityT) -> None:
-            logging.debug("dispatched %s with body [%-100.100s]", name, payload)
+    manager = stateless_event_managers.StatelessEventManagerImpl()
 
-    client = gateway_manager.GatewayManager(
+    client = gateway_managers.GatewayManager(
         shard_ids=[*range(shards)],
         shard_count=shards,
         config=configs.WebsocketConfig(
@@ -86,7 +82,8 @@ def run_gateway(compression, color, debug, logger, shards, token, url, verify_ss
             verify_ssl=verify_ssl,
         ),
         url=url,
-        raw_event_consumer_impl=_DummyConsumer(),
+        raw_event_consumer_impl=manager,
+        dispatcher=manager.event_dispatcher,
     )
 
     client.run()
