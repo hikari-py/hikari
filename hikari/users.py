@@ -26,7 +26,7 @@ import attr
 
 from hikari import entities
 from hikari import snowflakes
-from hikari.internal import cdn
+from hikari.internal import urls
 from hikari.internal import marshaller
 
 
@@ -86,12 +86,12 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
             The string URL.
         """
         if not self.avatar_hash:
-            return cdn.generate_cdn_url("embed/avatars", str(self.default_avatar), fmt="png", size=None)
+            return urls.generate_cdn_url("embed/avatars", str(self.default_avatar), fmt="png", size=None)
         if fmt is None and self.avatar_hash.startswith("a_"):
             fmt = "gif"
         elif fmt is None:
             fmt = "png"
-        return cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, fmt=fmt, size=size)
+        return urls.generate_cdn_url("avatars", str(self.id), self.avatar_hash, fmt=fmt, size=size)
 
     @property
     def default_avatar(self) -> int:

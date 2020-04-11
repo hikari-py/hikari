@@ -56,7 +56,7 @@ from hikari import entities
 from hikari import permissions as _permissions
 from hikari import snowflakes
 from hikari import users
-from hikari.internal import cdn
+from hikari.internal import urls
 from hikari.internal import conversions
 from hikari.internal import marshaller
 
@@ -823,7 +823,7 @@ class PartialGuild(snowflakes.UniqueEntity, entities.Deserializable):
                 fmt = "gif"
             elif fmt is None:
                 fmt = "png"
-            return cdn.generate_cdn_url("icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
         return None
 
     @property
@@ -1201,7 +1201,7 @@ class Guild(PartialGuild):
             The string URL.
         """
         if self.splash_hash:
-            return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("splashes", str(self.id), self.splash_hash, fmt=fmt, size=size)
         return None
 
     @property
@@ -1227,7 +1227,7 @@ class Guild(PartialGuild):
             The string URL.
         """
         if self.discovery_splash_hash:
-            return cdn.generate_cdn_url(
+            return urls.generate_cdn_url(
                 "discovery-splashes", str(self.id), self.discovery_splash_hash, fmt=fmt, size=size
             )
         return None
@@ -1255,7 +1255,7 @@ class Guild(PartialGuild):
             The string URL.
         """
         if self.banner_hash:
-            return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("banners", str(self.id), self.banner_hash, fmt=fmt, size=size)
         return None
 
     @property

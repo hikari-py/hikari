@@ -29,7 +29,7 @@ from hikari import guilds
 from hikari import permissions
 from hikari import snowflakes
 from hikari import users
-from hikari.internal import cdn
+from hikari.internal import urls
 from hikari.internal import marshaller
 
 
@@ -209,7 +209,7 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
             The string URL.
         """
         if self.icon_hash:
-            return cdn.generate_cdn_url("team-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("team-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
         return None
 
 
@@ -348,7 +348,7 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
             The string URL.
         """
         if self.icon_hash:
-            return cdn.generate_cdn_url("app-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("app-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
         return None
 
     @property
@@ -374,5 +374,5 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
             The string URL.
         """
         if self.cover_image_hash:
-            return cdn.generate_cdn_url("app-assets", str(self.id), self.cover_image_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("app-assets", str(self.id), self.cover_image_hash, fmt=fmt, size=size)
         return None

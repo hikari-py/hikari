@@ -22,7 +22,7 @@ import cymock as mock
 import pytest
 
 import hikari.internal.conversions
-from hikari.internal import cdn
+from hikari.internal import urls
 from hikari import channels
 from hikari import guilds
 from hikari import invites
@@ -100,48 +100,48 @@ class TestInviteGuild:
 
     def test_format_splash_url(self, invite_guild_obj):
         mock_url = "https://not-al"
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = invite_guild_obj.format_splash_url(fmt="nyaapeg", size=4000)
-            cdn.generate_cdn_url.assert_called_once_with(
+            urls.generate_cdn_url.assert_called_once_with(
                 "splashes", "56188492224814744", "aSplashForSure", fmt="nyaapeg", size=4000
             )
         assert url is mock_url
 
     def test_format_splash_url_returns_none(self, invite_guild_obj):
         invite_guild_obj.splash_hash = None
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=...):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=...):
             url = invite_guild_obj.format_splash_url()
-            cdn.generate_cdn_url.assert_not_called()
+            urls.generate_cdn_url.assert_not_called()
         assert url is None
 
     def test_splash_url(self, invite_guild_obj):
         mock_url = "https://not-al"
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = invite_guild_obj.splash_url
-            cdn.generate_cdn_url.assert_called_once()
+            urls.generate_cdn_url.assert_called_once()
         assert url is mock_url
 
     def test_format_banner_url(self, invite_guild_obj):
         mock_url = "https://not-al"
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = invite_guild_obj.format_banner_url(fmt="nyaapeg", size=4000)
-            cdn.generate_cdn_url.assert_called_once_with(
+            urls.generate_cdn_url.assert_called_once_with(
                 "banners", "56188492224814744", "aBannerForSure", fmt="nyaapeg", size=4000
             )
         assert url is mock_url
 
     def test_format_banner_url_returns_none(self, invite_guild_obj):
         invite_guild_obj.banner_hash = None
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=...):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=...):
             url = invite_guild_obj.format_banner_url()
-            cdn.generate_cdn_url.assert_not_called()
+            urls.generate_cdn_url.assert_not_called()
         assert url is None
 
     def test_banner_url(self, invite_guild_obj):
         mock_url = "https://not-al"
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = invite_guild_obj.banner_url
-            cdn.generate_cdn_url.assert_called_once()
+            urls.generate_cdn_url.assert_called_once()
         assert url is mock_url
 
 

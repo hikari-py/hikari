@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Basic utilities for handling the cdn.
+"""Discord-specific URIs that have to be hard-coded.
 
 |internal|
 """
@@ -30,10 +30,15 @@ import urllib.parse
 
 
 BASE_CDN_URL = "https://cdn.discordapp.com"
+#: The URL for the REST API. This contains a version number parameter that
+#: should be interpolated.
+#:
+#: :type: :obj:`str`
+REST_API_URL: typing.Final[str] = "https://discordapp.com/api/v{0.version}"
 
 
 def generate_cdn_url(*route_parts: str, fmt: str, size: typing.Optional[int]) -> str:
-    """Generate a link for a cdn entry.
+    """Generate a link for a Discord CDN media resource.
 
     Parameters
     ----------
@@ -50,7 +55,7 @@ def generate_cdn_url(*route_parts: str, fmt: str, size: typing.Optional[int]) ->
     Returns
     -------
     :obj:`str`
-        The formed cdn url.
+        The URL to the resource on the Discord CDN.
     """
     path = "/".join(urllib.parse.unquote(part) for part in route_parts)
     url = urllib.parse.urljoin(BASE_CDN_URL, "/" + path) + "." + str(fmt)
