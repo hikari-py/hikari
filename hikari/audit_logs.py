@@ -44,6 +44,8 @@ import datetime
 import enum
 import typing
 
+import attr
+
 from hikari import channels
 from hikari import colors
 from hikari import entities
@@ -162,7 +164,8 @@ AUDIT_LOG_ENTRY_CONVERTERS = {
 }
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class AuditLogChange(entities.HikariEntity, entities.Deserializable):
     """Represents a change made to an audit log entry's target entity."""
 
@@ -266,7 +269,8 @@ def register_audit_log_entry_info(
     return decorator
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class BaseAuditLogEntryInfo(abc.ABC, entities.HikariEntity, entities.Deserializable):
     """A base object that all audit log entry info objects will inherit from."""
 
@@ -276,7 +280,8 @@ class BaseAuditLogEntryInfo(abc.ABC, entities.HikariEntity, entities.Deserializa
     AuditLogEventType.CHANNEL_OVERWRITE_UPDATE,
     AuditLogEventType.CHANNEL_OVERWRITE_DELETE,
 )
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo):
     """Represents the extra information for overwrite related audit log entries.
 
@@ -302,7 +307,8 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo):
 
 
 @register_audit_log_entry_info(AuditLogEventType.MESSAGE_PIN, AuditLogEventType.MESSAGE_UNPIN)
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     """The extra information for message pin related audit log entries.
 
@@ -322,7 +328,8 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
 
 
 @register_audit_log_entry_info(AuditLogEventType.MEMBER_PRUNE)
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
     """Represents the extra information attached to guild prune log entries."""
 
@@ -341,7 +348,8 @@ class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
 
 
 @register_audit_log_entry_info(AuditLogEventType.MESSAGE_BULK_DELETE)
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
     """Represents extra information for the message bulk delete audit entry."""
 
@@ -352,7 +360,8 @@ class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
 
 
 @register_audit_log_entry_info(AuditLogEventType.MESSAGE_DELETE)
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     """Represents extra information attached to the message delete audit entry."""
 
@@ -363,7 +372,8 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
 
 
 @register_audit_log_entry_info(AuditLogEventType.MEMBER_DISCONNECT)
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
     """Represents extra information for the voice chat member disconnect entry."""
 
@@ -374,7 +384,8 @@ class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
 
 
 @register_audit_log_entry_info(AuditLogEventType.MEMBER_MOVE)
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
     """Represents extra information for the voice chat based member move entry."""
 
@@ -412,7 +423,8 @@ def get_entry_info_entity(type_: int) -> typing.Type[BaseAuditLogEntryInfo]:
     return register_audit_log_entry_info.types.get(type_) or UnrecognisedAuditLogEntryInfo
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class AuditLogEntry(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents an entry in a guild's audit log."""
 
@@ -477,7 +489,8 @@ class AuditLogEntry(snowflakes.UniqueEntity, entities.Deserializable):
         )
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class AuditLog(entities.HikariEntity, entities.Deserializable):
     """Represents a guilds audit log."""
 

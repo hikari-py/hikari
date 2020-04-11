@@ -47,6 +47,8 @@ import datetime
 import enum
 import typing
 
+import attr
+
 from hikari import channels as _channels
 from hikari import colors
 from hikari import emojis as _emojis
@@ -178,7 +180,8 @@ class GuildVerificationLevel(enum.IntEnum):
     VERY_HIGH = 4
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class GuildMember(entities.HikariEntity, entities.Deserializable):
     """Used to represent a guild bound member."""
 
@@ -226,7 +229,8 @@ class GuildMember(entities.HikariEntity, entities.Deserializable):
     is_mute: bool = marshaller.attrib(raw_name="mute", deserializer=bool)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class PartialGuildRole(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents a partial guild bound Role object."""
 
@@ -236,7 +240,8 @@ class PartialGuildRole(snowflakes.UniqueEntity, entities.Deserializable):
     name: str = marshaller.attrib(deserializer=str)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class GuildRole(PartialGuildRole):
     """Represents a guild bound Role object."""
 
@@ -301,7 +306,8 @@ class ActivityType(enum.IntEnum):
     CUSTOM = 4
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class ActivityTimestamps(entities.HikariEntity, entities.Deserializable):
     """The datetimes for the start and/or end of an activity session."""
 
@@ -320,7 +326,8 @@ class ActivityTimestamps(entities.HikariEntity, entities.Deserializable):
     )
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class ActivityParty(entities.HikariEntity, entities.Deserializable):
     """Used to represent activity groups of users."""
 
@@ -348,7 +355,8 @@ class ActivityParty(entities.HikariEntity, entities.Deserializable):
         return self._size_information[1] if self._size_information else None
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class ActivityAssets(entities.HikariEntity, entities.Deserializable):
     """Used to represent possible assets for an activity."""
 
@@ -373,7 +381,8 @@ class ActivityAssets(entities.HikariEntity, entities.Deserializable):
     small_text: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class ActivitySecret(entities.HikariEntity, entities.Deserializable):
     """The secrets used for interacting with an activity party."""
 
@@ -407,7 +416,8 @@ class ActivityFlag(enum.IntFlag):
     PLAY = 1 << 5
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class PresenceActivity(entities.HikariEntity, entities.Deserializable):
     """Represents an activity that will be attached to a member's presence."""
 
@@ -508,7 +518,8 @@ class PresenceStatus(str, enum.Enum):
     OFFLINE = "offline"
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class ClientStatus(entities.HikariEntity, entities.Deserializable):
     """The client statuses for this member."""
 
@@ -530,7 +541,8 @@ class ClientStatus(entities.HikariEntity, entities.Deserializable):
     web: PresenceStatus = marshaller.attrib(deserializer=PresenceStatus, if_undefined=lambda: PresenceStatus.OFFLINE)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class PresenceUser(users.User):
     """A user representation specifically used for presence updates.
 
@@ -572,7 +584,8 @@ class PresenceUser(users.User):
     )
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class GuildMemberPresence(entities.HikariEntity, entities.Deserializable):
     """Used to represent a guild member's presence."""
 
@@ -638,7 +651,8 @@ class IntegrationExpireBehaviour(enum.IntEnum):
     KICK = 1
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class IntegrationAccount(entities.HikariEntity, entities.Deserializable):
     """An account that's linked to an integration."""
 
@@ -653,7 +667,8 @@ class IntegrationAccount(entities.HikariEntity, entities.Deserializable):
     name: str = marshaller.attrib(deserializer=str)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class PartialGuildIntegration(snowflakes.UniqueEntity, entities.Deserializable):
     """A partial representation of an integration, found in audit logs."""
 
@@ -673,7 +688,8 @@ class PartialGuildIntegration(snowflakes.UniqueEntity, entities.Deserializable):
     account: IntegrationAccount = marshaller.attrib(deserializer=IntegrationAccount.deserialize)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class GuildIntegration(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents a guild integration object."""
 
@@ -727,7 +743,8 @@ class GuildIntegration(snowflakes.UniqueEntity, entities.Deserializable):
     )
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class GuildMemberBan(entities.HikariEntity, entities.Deserializable):
     """Used to represent guild bans."""
 
@@ -742,7 +759,8 @@ class GuildMemberBan(entities.HikariEntity, entities.Deserializable):
     user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class UnavailableGuild(snowflakes.UniqueEntity, entities.Deserializable):
     """An unavailable guild object, received during gateway events such as READY.
 
@@ -760,7 +778,8 @@ class UnavailableGuild(snowflakes.UniqueEntity, entities.Deserializable):
         return True
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class PartialGuild(snowflakes.UniqueEntity, entities.Deserializable):
     """Base object for any partial guild objects."""
 
@@ -813,7 +832,8 @@ class PartialGuild(snowflakes.UniqueEntity, entities.Deserializable):
         return self.format_icon_url()
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class Guild(PartialGuild):
     """A representation of a guild on Discord.
 

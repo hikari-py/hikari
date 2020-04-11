@@ -19,6 +19,8 @@
 """Components and entities that are used to describe both custom and Unicode emojis on Discord."""
 import typing
 
+import attr
+
 from hikari import entities
 from hikari import snowflakes
 from hikari import users
@@ -27,12 +29,14 @@ from hikari.internal import marshaller
 __all__ = ["Emoji", "UnicodeEmoji", "UnknownEmoji", "GuildEmoji"]
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class Emoji(entities.HikariEntity, entities.Deserializable):
     """Base class for all emojis."""
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji."""
 
@@ -42,7 +46,8 @@ class UnicodeEmoji(Emoji):
     name: str = marshaller.attrib(deserializer=str)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class UnknownEmoji(Emoji, snowflakes.UniqueEntity):
     """Represents a unknown emoji."""
 
@@ -57,7 +62,8 @@ class UnknownEmoji(Emoji, snowflakes.UniqueEntity):
     is_animated: bool = marshaller.attrib(raw_name="animated", deserializer=bool, if_undefined=False)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class GuildEmoji(UnknownEmoji):
     """Represents a guild emoji."""
 

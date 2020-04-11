@@ -31,13 +31,16 @@ __all__ = [
 import datetime
 import typing
 
+import attr
+
 import hikari.internal.conversions
 from hikari import colors
 from hikari import entities
 from hikari.internal import marshaller
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class EmbedFooter(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents a embed footer."""
 
@@ -57,7 +60,8 @@ class EmbedFooter(entities.HikariEntity, entities.Deserializable, entities.Seria
     proxy_icon_url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class EmbedImage(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents a embed image."""
 
@@ -82,7 +86,8 @@ class EmbedImage(entities.HikariEntity, entities.Deserializable, entities.Serial
     width: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=int, if_undefined=None)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class EmbedThumbnail(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents a embed thumbnail."""
 
@@ -107,7 +112,8 @@ class EmbedThumbnail(entities.HikariEntity, entities.Deserializable, entities.Se
     width: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=int, if_undefined=None)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class EmbedVideo(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents a embed video."""
 
@@ -127,7 +133,8 @@ class EmbedVideo(entities.HikariEntity, entities.Deserializable, entities.Serial
     width: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=int, if_undefined=None)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class EmbedProvider(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents a embed provider."""
 
@@ -142,7 +149,8 @@ class EmbedProvider(entities.HikariEntity, entities.Deserializable, entities.Ser
     url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None, if_none=None)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class EmbedAuthor(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents a embed author."""
 
@@ -167,7 +175,8 @@ class EmbedAuthor(entities.HikariEntity, entities.Deserializable, entities.Seria
     proxy_icon_url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class EmbedField(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents a field in a embed."""
 
@@ -187,7 +196,8 @@ class EmbedField(entities.HikariEntity, entities.Deserializable, entities.Serial
     is_inline: bool = marshaller.attrib(raw_name="inline", deserializer=bool, serializer=bool, if_undefined=False)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class Embed(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents a embed."""
 
