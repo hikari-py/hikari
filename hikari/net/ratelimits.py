@@ -235,7 +235,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     #: The name of the rate limiter.
     #:
     #: :type: :obj:`str`
-    name: str
+    name: typing.Final[str]
 
     #: The throttling task, or ``None``` if it isn't running.
     #:
@@ -245,12 +245,12 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     #: The queue of any futures under a rate limit.
     #:
     #: :type: :obj:`asyncio.Queue` [`asyncio.Future`]
-    queue: typing.List[more_asyncio.Future[None]]
+    queue: typing.Final[typing.List[more_asyncio.Future[None]]]
 
     #: The logger used by this rate limiter.
     #:
     #: :type: :obj:`logging.Logger`
-    logger: logging.Logger
+    logger: typing.Final[logging.Logger]
 
     def __init__(self, name: str) -> None:
         self.name = name
@@ -602,7 +602,7 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
     #: The compiled route that this rate limit is covering.
     #:
     #: :type: :obj:`hikari.net.routes.CompiledRoute`
-    compiled_route: routes.CompiledRoute
+    compiled_route: typing.Final[routes.CompiledRoute]
 
     def __init__(self, name: str, compiled_route: routes.CompiledRoute) -> None:
         super().__init__(name, 1, 1)
@@ -686,19 +686,19 @@ class HTTPBucketRateLimiterManager:
     #: Maps compiled routes to their ``X-RateLimit-Bucket`` header being used.
     #:
     #: :type: :obj:`typing.MutableMapping` [ :obj:`hikari.net.routes.CompiledRoute`, :obj:`str` ]
-    routes_to_hashes: typing.MutableMapping[routes.CompiledRoute, str]
+    routes_to_hashes: typing.Final[typing.MutableMapping[routes.CompiledRoute, str]]
 
     #: Maps full bucket hashes (``X-RateLimit-Bucket`` appended with a hash of
     #: major parameters used in that compiled route) to their corresponding rate
     #: limiters.
     #:
     #: :type: :obj:`typing.MutableMapping` [ :obj:`str`, :obj:`HTTPBucketRateLimiter` ]
-    real_hashes_to_buckets: typing.MutableMapping[str, HTTPBucketRateLimiter]
+    real_hashes_to_buckets: typing.Final[typing.MutableMapping[str, HTTPBucketRateLimiter]]
 
     #: An internal event that is set when the object is shut down.
     #:
     #: :type: :obj:`asyncio.Event`
-    closed_event: asyncio.Event
+    closed_event: typing.Final[asyncio.Event]
 
     #: The internal garbage collector task.
     #:
@@ -708,7 +708,7 @@ class HTTPBucketRateLimiterManager:
     #: The logger to use for this object.
     #:
     #: :type: :obj:`logging.Logger`
-    logger: logging.Logger
+    logger: typing.Final[logging.Logger]
 
     def __init__(self) -> None:
         self.routes_to_hashes = weakref.WeakKeyDictionary()
@@ -743,7 +743,7 @@ class HTTPBucketRateLimiterManager:
             self.gc_task = asyncio.get_running_loop().create_task(self.gc(poll_period))
 
     def close(self) -> None:
-        """Close the garbage collector and kill any tasks waiting on rate limits.
+        """Close the garbage collector and kill any tasks waiting on ratelimits.
 
         Once this has been called, this object is considered to be effectively
         dead. To reuse it, one should create a new instance.
@@ -928,7 +928,7 @@ class ExponentialBackOff:
     #: The base to use. Defaults to 2.
     #:
     #: :type: :obj:`float`
-    base: float
+    base: typing.Final[float]
 
     #: The current increment.
     #:
@@ -945,7 +945,7 @@ class ExponentialBackOff:
     #: Set to ``0`` to disable jitter.
     #:
     #: :type: :obj:`float`
-    jitter_multiplier: float
+    jitter_multiplier: typing.Final[float]
 
     def __init__(self, base: float = 2, maximum: typing.Optional[float] = 64, jitter_multiplier: float = 1) -> None:
         self.base = base

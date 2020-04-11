@@ -54,6 +54,7 @@ from hikari import permissions
 from hikari import snowflakes
 from hikari import users
 from hikari.internal import marshaller
+from hikari.internal import more_collections
 
 
 @enum.unique
@@ -358,5 +359,6 @@ def deserialize_channel(payload: typing.Dict[str, typing.Any]) -> typing.Union[G
     partial object, use ``PartialChannel.deserialize()``.
     """
     type_id = payload["type"]
-    channel_type = register_channel_type.types[type_id]
+    types = getattr(register_channel_type, "types", more_collections.EMPTY_DICT)
+    channel_type = types[type_id]
     return channel_type.deserialize(payload)

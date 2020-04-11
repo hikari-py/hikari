@@ -29,7 +29,7 @@ from hikari.internal import more_logging
 from hikari.state import event_dispatchers
 from hikari.state import raw_event_consumers
 
-EVENT_MARKER_ATTR = "___event_name___"
+EVENT_MARKER_ATTR: typing.Final[str] = "___event_name___"
 
 EventConsumerT = typing.Callable[[str, entities.RawEntityT], typing.Awaitable[None]]
 
@@ -169,7 +169,7 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
         try:
             handler = self.raw_event_mappers[name]
         except KeyError:
-            self.logger.debug("No handler for event %s is registered", name)
+            self.logger.debug("no handler for event %s is registered", name)
         else:
             event = handler(shard_client_obj, payload)
             self.event_dispatcher.dispatch_event(event)
