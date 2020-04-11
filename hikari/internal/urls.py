@@ -29,7 +29,11 @@ import typing
 import urllib.parse
 
 
-BASE_CDN_URL = "https://cdn.discordapp.com"
+#: The URL for the CDN.
+#:
+#: :type: :obj:`str`
+BASE_CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
+
 #: The URL for the REST API. This contains a version number parameter that
 #: should be interpolated.
 #:

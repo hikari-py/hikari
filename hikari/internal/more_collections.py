@@ -35,14 +35,15 @@ import typing
 
 import weakref
 
-EMPTY_SEQUENCE: typing.Sequence = tuple()
-EMPTY_SET: typing.AbstractSet = frozenset()
-EMPTY_COLLECTION: typing.Collection = tuple()
-EMPTY_DICT: typing.Mapping = types.MappingProxyType({})
-EMPTY_GENERATOR_EXPRESSION = (_ for _ in EMPTY_COLLECTION)
-
-K = typing.TypeVar("K")
+T = typing.TypeVar("T")
+K = typing.TypeVar("K", bound=typing.Hashable)
 V = typing.TypeVar("V")
+
+EMPTY_SEQUENCE: typing.Final[typing.Sequence[T]] = tuple()
+EMPTY_SET: typing.Final[typing.AbstractSet[T]] = frozenset()
+EMPTY_COLLECTION: typing.Final[typing.Collection[T]] = tuple()
+EMPTY_DICT: typing.Final[typing.Mapping[K, V]] = types.MappingProxyType({})
+EMPTY_GENERATOR_EXPRESSION: typing.Final[typing.Iterator[T]] = (_ for _ in EMPTY_COLLECTION)
 
 
 class WeakKeyDictionary(weakref.WeakKeyDictionary, typing.MutableMapping[K, V]):

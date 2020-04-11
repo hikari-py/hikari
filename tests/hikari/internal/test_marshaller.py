@@ -69,7 +69,7 @@ def method_stub(value):
 
 
 @pytest.mark.parametrize(
-    "data", [lambda x: "ok", *marshaller.PASSED_THROUGH_SINGLETONS, marshaller.RAISE, dict, method_stub]
+    "data", [lambda x: "ok", *marshaller._PASSED_THROUGH_SINGLETONS, marshaller.RAISE, dict, method_stub]
 )
 def test_default_validator(data):
     marshaller._default_validator(data)
@@ -126,7 +126,7 @@ class TestMarshaller:
         assert isinstance(result, User)
         assert result.id == "12345"
 
-    @pytest.mark.parametrize("singleton", marshaller.PASSED_THROUGH_SINGLETONS)
+    @pytest.mark.parametrize("singleton", marshaller._PASSED_THROUGH_SINGLETONS)
     def test_deserialize_not_required_success_if_not_specified(self, marshaller_impl, singleton):
         @marshaller.marshallable(marshaller=marshaller_impl)
         @attr.s()
@@ -173,7 +173,7 @@ class TestMarshaller:
         assert isinstance(result, User)
         assert result.id == "12345"
 
-    @pytest.mark.parametrize("singleton", marshaller.PASSED_THROUGH_SINGLETONS)
+    @pytest.mark.parametrize("singleton", marshaller._PASSED_THROUGH_SINGLETONS)
     def test_deserialize_nullable_success_if_null(self, marshaller_impl, singleton):
         @marshaller.marshallable(marshaller=marshaller_impl)
         @attr.s()

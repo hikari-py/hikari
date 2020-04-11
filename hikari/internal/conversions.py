@@ -42,7 +42,6 @@ import re
 import types
 import typing
 
-
 DISCORD_EPOCH: typing.Final[int] = 1_420_070_400
 ISO_8601_DATE_PART: typing.Final[typing.Pattern] = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
 ISO_8601_TIME_PART: typing.Final[typing.Pattern] = re.compile(r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I)
@@ -57,7 +56,7 @@ BytesLikeT = typing.Union[bytes, bytearray, memoryview, str, io.StringIO, io.Byt
 FileLikeT = typing.Union[BytesLikeT, io.BufferedRandom, io.BufferedReader, io.BufferedRWPair]
 
 
-def nullable_cast(value: CastInputT, cast: TypeCastT) -> ResultT:
+def nullable_cast(value: CastInputT, cast: TypeCastT, /) -> ResultT:
     """Attempt to cast the given ``value`` with the given ``cast``.
 
     This will only succeed if ``value`` is not ``None``. If it is ``None``, then
@@ -68,7 +67,7 @@ def nullable_cast(value: CastInputT, cast: TypeCastT) -> ResultT:
     return cast(value)
 
 
-def try_cast(value: CastInputT, cast: TypeCastT, default: DefaultT = None) -> ResultT:
+def try_cast(value: CastInputT, cast: TypeCastT, default: DefaultT = None, /) -> ResultT:
     """Try to cast the given value to the given cast.
 
     If it throws a :obj:`Exception` or derivative, it will return ``default``
@@ -79,7 +78,7 @@ def try_cast(value: CastInputT, cast: TypeCastT, default: DefaultT = None) -> Re
     return default
 
 
-def try_cast_or_defer_unary_operator(type_):
+def try_cast_or_defer_unary_operator(type_: typing.Type, /):
     """Return a unary operator that will try to cast the given input to the type provided.
 
     Parameters
@@ -95,6 +94,7 @@ def put_if_specified(
     key: typing.Hashable,
     value: typing.Any,
     type_after: typing.Optional[TypeCastT] = None,
+    /
 ) -> None:
     """Add a value to the mapping under the given key as long as the value is not ``...``.
 
@@ -116,7 +116,7 @@ def put_if_specified(
             mapping[key] = value
 
 
-def image_bytes_to_image_data(img_bytes: typing.Optional[bytes] = None) -> typing.Optional[str]:
+def image_bytes_to_image_data(img_bytes: typing.Optional[bytes] = None, /) -> typing.Optional[str]:
     """Encode image bytes into an image data string.
 
     Parameters
@@ -157,7 +157,7 @@ def image_bytes_to_image_data(img_bytes: typing.Optional[bytes] = None) -> typin
     return f"data:{img_type};base64,{image_data}"
 
 
-def parse_http_date(date_str: str) -> datetime.datetime:
+def parse_http_date(date_str: str, /) -> datetime.datetime:
     """Return the HTTP date as a datetime object.
 
     Parameters
@@ -177,7 +177,7 @@ def parse_http_date(date_str: str) -> datetime.datetime:
     return email.utils.parsedate_to_datetime(date_str)
 
 
-def parse_iso_8601_ts(date_string: str) -> datetime.datetime:
+def parse_iso_8601_ts(date_string: str, /) -> datetime.datetime:
     """Parse an ISO 8601 date string into a :obj:`datetime.datetime` object.
 
     Parameters
@@ -215,7 +215,7 @@ def parse_iso_8601_ts(date_string: str) -> datetime.datetime:
     return datetime.datetime(year, month, day, hour, minute, second, partial, timezone)
 
 
-def discord_epoch_to_datetime(epoch: int) -> datetime.datetime:
+def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
     """Parse a Discord epoch into a :obj:`datetime.datetime` object.
 
     Parameters
@@ -231,7 +231,7 @@ def discord_epoch_to_datetime(epoch: int) -> datetime.datetime:
     return datetime.datetime.fromtimestamp(epoch / 1000 + DISCORD_EPOCH, datetime.timezone.utc)
 
 
-def unix_epoch_to_ts(epoch: int) -> datetime.datetime:
+def unix_epoch_to_ts(epoch: int, /) -> datetime.datetime:
     """Parse a UNIX epoch to a :obj:`datetime.datetime` object.
 
     Parameters
@@ -250,20 +250,47 @@ def unix_epoch_to_ts(epoch: int) -> datetime.datetime:
 class Seekable(typing.Protocol[typing.AnyStr]):
     """Structural type for an IO object that supports seek operations."""
 
-    def seek(self, pos: int) -> None:
-        ...
+    def seek(
+        self,
+        offset: int,
+        whence: typing.Union[typing.Literal[0], typing.Literal[1], typing.Literal[2]] = 0,
+        /
+    ) -> None:
+        """Seek to the given offset.
+
+        Parameters
+        ----------
+        offset : :obj:`int`
+            The offset to seek to.
+        whence : :obj:`int`
+            If ``0``, as the default, then use absolute file positioning.
+            If ``1``, then seek to the current position.
+            If ``2``, then seek relative to the end of the file.
+        """
 
     def tell(self) -> int:
-        ...
+        """Return the stream position.
+
+        Returns
+        -------
+        :obj:`int`
+            The stream position.
+        """
 
     def read(self) -> typing.AnyStr:
-        ...
+        """Read part of a string.
+
+        Returns
+        -------
+        :obj:`str`
+            The string that was read.
+        """
 
     def close(self) -> None:
-        ...
+        """Close the stream."""
 
 
-def make_resource_seekable(resource: typing.Any) -> Seekable:
+def make_resource_seekable(resource: typing.Any, /) -> Seekable:
     """Make a seekable resource to use off some representation of data.
 
     This supports :obj:`bytes`, :obj:`bytearray`, :obj:`memoryview`, and
