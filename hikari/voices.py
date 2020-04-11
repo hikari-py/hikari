@@ -21,13 +21,16 @@ __all__ = ["VoiceRegion", "VoiceState"]
 
 import typing
 
+import attr
+
 from hikari import entities
 from hikari import guilds
 from hikari import snowflakes
 from hikari.internal import marshaller
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class VoiceState(entities.HikariEntity, entities.Deserializable):
     """Represents a user's voice connection status."""
 
@@ -92,7 +95,8 @@ class VoiceState(entities.HikariEntity, entities.Deserializable):
     is_suppressed: bool = marshaller.attrib(raw_name="suppress", deserializer=bool)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class VoiceRegion(entities.HikariEntity, entities.Deserializable):
     """Represent's a voice region server."""
 

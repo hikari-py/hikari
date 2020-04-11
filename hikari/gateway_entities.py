@@ -22,12 +22,15 @@ __all__ = ["GatewayBot", "GatewayActivity"]
 import datetime
 import typing
 
+import attr
+
 from hikari import entities
 from hikari import guilds
 from hikari.internal import marshaller
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class SessionStartLimit(entities.HikariEntity, entities.Deserializable):
     """Used to represent information about the current session start limits."""
 
@@ -50,7 +53,8 @@ class SessionStartLimit(entities.HikariEntity, entities.Deserializable):
     )
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class GatewayBot(entities.HikariEntity, entities.Deserializable):
     """Used to represent gateway information for the connected bot."""
 
@@ -70,7 +74,8 @@ class GatewayBot(entities.HikariEntity, entities.Deserializable):
     session_start_limit: SessionStartLimit = marshaller.attrib(deserializer=SessionStartLimit.deserialize)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class GatewayActivity(entities.Deserializable, entities.Serializable):
     """An activity that the bot can set for one or more shards.
 

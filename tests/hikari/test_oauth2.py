@@ -19,7 +19,7 @@
 import cymock as mock
 import pytest
 
-from hikari.internal import cdn
+from hikari.internal import urls
 from hikari import guilds
 from hikari import oauth2
 from hikari import users
@@ -179,23 +179,23 @@ class TestTeam:
     def test_format_icon_url(self):
         mock_team = _helpers.create_autospec(oauth2.Team, icon_hash="3o2o32o", id=22323)
         mock_url = "https://cdn.discordapp.com/team-icons/22323/3o2o32o.jpg?size=64"
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = oauth2.Team.format_icon_url(mock_team, fmt="jpg", size=64)
-            cdn.generate_cdn_url.assert_called_once_with("team-icons", "22323", "3o2o32o", fmt="jpg", size=64)
+            urls.generate_cdn_url.assert_called_once_with("team-icons", "22323", "3o2o32o", fmt="jpg", size=64)
         assert url == mock_url
 
     def test_format_icon_url_returns_none(self):
         mock_team = _helpers.create_autospec(oauth2.Team, icon_hash=None, id=22323)
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=...):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=...):
             url = oauth2.Team.format_icon_url(mock_team, fmt="jpg", size=64)
-            cdn.generate_cdn_url.assert_not_called()
+            urls.generate_cdn_url.assert_not_called()
         assert url is None
 
     def test_icon_url(self, team_obj):
         mock_url = "https://cdn.discordapp.com/team-icons/202020202/hashtag.png?size=2048"
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = team_obj.icon_url
-            cdn.generate_cdn_url.assert_called_once()
+            urls.generate_cdn_url.assert_called_once()
         assert url == mock_url
 
 
@@ -238,44 +238,44 @@ class TestApplication:
 
     def test_icon_url(self, application_obj):
         mock_url = "https://cdn.discordapp.com/app-icons/209333111222/iwiwiwiwiw.png?size=2048"
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = application_obj.icon_url
-            cdn.generate_cdn_url.assert_called_once()
+            urls.generate_cdn_url.assert_called_once()
         assert url == "https://cdn.discordapp.com/app-icons/209333111222/iwiwiwiwiw.png?size=2048"
 
     def test_format_icon_url(self, mock_application):
         mock_application.icon_hash = "wosososoos"
         mock_url = "https://cdn.discordapp.com/app-icons/22222/wosososoos.jpg?size=4"
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = oauth2.Application.format_icon_url(mock_application, fmt="jpg", size=4)
-            cdn.generate_cdn_url.assert_called_once_with("app-icons", "22222", "wosososoos", fmt="jpg", size=4)
+            urls.generate_cdn_url.assert_called_once_with("app-icons", "22222", "wosososoos", fmt="jpg", size=4)
         assert url == mock_url
 
     def test_format_icon_url_returns_none(self, mock_application):
         mock_application.icon_hash = None
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=...):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=...):
             url = oauth2.Application.format_icon_url(mock_application, fmt="jpg", size=4)
-            cdn.generate_cdn_url.assert_not_called()
+            urls.generate_cdn_url.assert_not_called()
         assert url is None
 
     def test_cover_image_url(self, application_obj):
         mock_url = "https://cdn.discordapp.com/app-assets/209333111222/hashmebaby.png?size=2048"
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = application_obj.cover_image_url
-            cdn.generate_cdn_url.assert_called_once()
+            urls.generate_cdn_url.assert_called_once()
         assert url == mock_url
 
     def test_format_cover_image_url(self, mock_application):
         mock_application.cover_image_hash = "wowowowowo"
         mock_url = "https://cdn.discordapp.com/app-assets/22222/wowowowowo.jpg?size=42"
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=mock_url):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = oauth2.Application.format_cover_image_url(mock_application, fmt="jpg", size=42)
-            cdn.generate_cdn_url.assert_called_once_with("app-assets", "22222", "wowowowowo", fmt="jpg", size=42)
+            urls.generate_cdn_url.assert_called_once_with("app-assets", "22222", "wowowowowo", fmt="jpg", size=42)
         assert url == mock_url
 
     def test_format_cover_image_url_returns_none(self, mock_application):
         mock_application.cover_image_hash = None
-        with mock.patch.object(cdn, "generate_cdn_url", return_value=...):
+        with mock.patch.object(urls, "generate_cdn_url", return_value=...):
             url = oauth2.Application.format_cover_image_url(mock_application, fmt="jpg", size=42)
-            cdn.generate_cdn_url.assert_not_called()
+            urls.generate_cdn_url.assert_not_called()
         assert url is None

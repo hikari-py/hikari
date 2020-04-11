@@ -16,14 +16,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
-from hikari.internal import cdn
+from hikari.internal import urls
 
 
 def test_generate_cdn_url():
-    url = cdn.generate_cdn_url("not", "a", "path", fmt="neko", size=42)
+    url = urls.generate_cdn_url("not", "a", "path", fmt="neko", size=42)
     assert url == "https://cdn.discordapp.com/not/a/path.neko?size=42"
 
 
 def test_generate_cdn_url_with_size_set_to_none():
-    url = cdn.generate_cdn_url("not", "a", "path", fmt="neko", size=None)
+    url = urls.generate_cdn_url("not", "a", "path", fmt="neko", size=None)
     assert url == "https://cdn.discordapp.com/not/a/path.neko"

@@ -22,6 +22,8 @@ __all__ = ["WebhookType", "Webhook"]
 import enum
 import typing
 
+import attr
+
 from hikari import entities
 from hikari import snowflakes
 from hikari import users
@@ -38,7 +40,8 @@ class WebhookType(enum.IntEnum):
     CHANNEL_FOLLOWER = 2
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents a webhook object on Discord.
 
