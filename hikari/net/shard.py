@@ -198,7 +198,7 @@ class ShardConnection:
     #: An event that is set when the connection closes.
     #:
     #: :type: :obj:`asyncio.Event`
-    closed_event: asyncio.Event
+    closed_event: typing.Final[asyncio.Event]
 
     #: The number of times we have disconnected from the gateway on this
     #: client instance.
@@ -228,7 +228,7 @@ class ShardConnection:
     #: indicates some sort of connection has successfully been made.
     #:
     #: :type: :obj:`asyncio.Event`
-    hello_event: asyncio.Event
+    hello_event: typing.Final[asyncio.Event]
 
     #: An event that is set when the client has successfully ``IDENTIFY``ed
     #: or ``RESUMED`` with the gateway. This indicates regular communication
@@ -236,7 +236,7 @@ class ShardConnection:
     #: be received.
     #:
     #: :type: :obj:`asyncio.Event`
-    identify_event: asyncio.Event
+    identify_event: typing.Final[asyncio.Event]
 
     #: The monotonic timestamp that the last ``HEARTBEAT`` was sent at, or
     #: ``nan`` if no ``HEARTBEAT`` has yet been sent.
@@ -255,7 +255,7 @@ class ShardConnection:
     #: The logger used for dumping information about what this client is doing.
     #:
     #: :type: :obj:`logging.Logger`
-    logger: logging.Logger
+    logger: typing.Final[logging.Logger]
 
     #: An event that is triggered when a ``READY`` payload is received for the
     #: shard. This indicates that it successfully started up and had a correct
@@ -270,18 +270,18 @@ class ShardConnection:
     #: you provide.
     #:
     #: :type: :obj:`asyncio.Event`
-    ready_event: asyncio.Event
+    ready_event: typing.Final[asyncio.Event]
 
     #: An event that is triggered when a resume has succeeded on the gateway.
     #:
     #: :type: :obj:`asyncio.Event`
-    resumed_event: asyncio.Event
+    resumed_event: typing.Final[asyncio.Event]
 
     #: An event that is set when something requests that the connection
     #: should close somewhere.
     #:
     #: :type: :obj:`asyncio.Event`
-    requesting_close_event: asyncio.Event
+    requesting_close_event: typing.Final[asyncio.Event]
 
     #: The current session ID, if known.
     #:
@@ -297,17 +297,17 @@ class ShardConnection:
     #: The shard ID.
     #:
     #: :type: :obj:`int`
-    shard_id: int
+    shard_id: typing.Final[int]
 
     #: The number of shards in use for the bot.
     #:
     #: :type: :obj:`int`
-    shard_count: int
+    shard_count: typing.Final[int]
 
     #: The API version to use on Discord.
     #:
     #: :type: :obj:`int`
-    version: int
+    version: typing.Final[int]
 
     def __init__(
         self,

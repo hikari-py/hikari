@@ -19,7 +19,6 @@
 """Configuration data classes."""
 
 __all__ = [
-    "generate_config_attrs",
     "BaseConfig",
     "DebugConfig",
     "AIOHTTPConfig",
@@ -36,6 +35,7 @@ import ssl
 import typing
 
 import aiohttp
+import attr
 
 from hikari import entities
 from hikari import gateway_entities
@@ -45,28 +45,14 @@ from hikari.internal import marshaller
 from hikari.net import codes
 
 
+@marshaller.marshallable()
+@attr.s(kw_only=True)
 class BaseConfig(entities.Deserializable):
     """Base class for any configuration data class."""
 
-    if typing.TYPE_CHECKING:
-        # pylint:disable=unused-argument
-        # Screws up PyCharm and makes annoying warnings everywhere, so just
-        # mute this. We can always make dummy constructors later, or find
-        # another way around this perhaps.
-        # This only ever takes kwargs.
-        @typing.no_type_check
-        def __init__(self, **kwargs) -> None:
-            ...
 
-        # pylint:enable=unused-argument
-
-
-#: Decorator for :obj:`attr.s` classes that use the
-#: :obj:`hikari.internal.marshaller` protocol.
-generate_config_attrs = marshaller.attrs(kw_only=True)
-
-
-@generate_config_attrs
+@marshaller.marshallable()
+@attr.s(kw_only=True)
 class DebugConfig(BaseConfig):
     """Configuration for anything with a debugging mode."""
 
@@ -76,7 +62,8 @@ class DebugConfig(BaseConfig):
     debug: bool = marshaller.attrib(deserializer=bool, if_undefined=False, default=False)
 
 
-@generate_config_attrs
+@marshaller.marshallable()
+@attr.s(kw_only=True)
 class AIOHTTPConfig(BaseConfig):
     """Config for components that use AIOHTTP somewhere."""
 
@@ -170,7 +157,8 @@ class AIOHTTPConfig(BaseConfig):
     verify_ssl: bool = marshaller.attrib(deserializer=bool, if_undefined=True, default=True)
 
 
-@generate_config_attrs
+@marshaller.marshallable()
+@attr.s(kw_only=True)
 class TokenConfig(BaseConfig):
     """Token config options."""
 
@@ -180,7 +168,8 @@ class TokenConfig(BaseConfig):
     token: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, if_undefined=None, default=None)
 
 
-@generate_config_attrs
+@marshaller.marshallable()
+@attr.s(kw_only=True)
 class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     """Single-websocket specific configuration options."""
 
@@ -293,7 +282,8 @@ def _parse_shard_info(payload):
     return [*range(minimum, maximum)]
 
 
-@generate_config_attrs
+@marshaller.marshallable()
+@attr.s(kw_only=True)
 class ShardConfig(BaseConfig):
     """Definition of shard management configuration settings."""
 
@@ -330,7 +320,8 @@ class ShardConfig(BaseConfig):
     shard_count: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
 
 
-@generate_config_attrs
+@marshaller.marshallable()
+@attr.s(kw_only=True)
 class RESTConfig(AIOHTTPConfig, TokenConfig):
     """REST-specific configuration details."""
 
@@ -342,6 +333,7 @@ class RESTConfig(AIOHTTPConfig, TokenConfig):
     rest_version: int = marshaller.attrib(deserializer=int, if_undefined=lambda: 7, default=7)
 
 
-@generate_config_attrs
+@marshaller.marshallable()
+@attr.s(kw_only=True)
 class BotConfig(RESTConfig, ShardConfig, WebsocketConfig):
     """Configuration for a standard bot."""

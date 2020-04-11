@@ -22,6 +22,8 @@ __all__ = ["HikariEntity", "Serializable", "Deserializable", "RawEntityT", "UNSE
 import abc
 import typing
 
+import attr
+
 from hikari.internal import marshaller
 from hikari.internal import meta
 
@@ -50,22 +52,10 @@ class Unset(metaclass=meta.SingletonMeta):
 UNSET = Unset()
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class HikariEntity(metaclass=abc.ABCMeta):
     """The base for any entity used in this API."""
-
-    __slots__ = ()
-
-    if typing.TYPE_CHECKING:
-        # pylint:disable=unused-argument
-        # Screws up PyCharm and makes annoying warnings everywhere, so just
-        # mute this. We can always make dummy constructors later, or find
-        # another way around this perhaps.
-        @typing.no_type_check
-        def __init__(self, *args, **kwargs) -> None:
-            ...
-
-        # pylint:enable=unused-argument
 
 
 class Deserializable:

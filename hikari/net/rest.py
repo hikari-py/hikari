@@ -24,6 +24,7 @@ import contextlib
 import datetime
 import email.utils
 import json
+import logging
 import ssl
 import typing
 import uuid
@@ -35,6 +36,7 @@ from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import more_collections
 from hikari.internal import more_logging
+from hikari.internal import urls
 from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import routes
@@ -74,9 +76,15 @@ class RestfulClient:
         A custom JSON serializer function to use. Defaults to
         :func:`json.dumps`.
     token: :obj:`string`, optional
-        The bot token for the client to use.
+        The bot token for the client to use. You may start this with
+        a prefix of either ``Bot`` or ``Bearer`` to force the token type, or
+        not provide this information if you want to have it auto-detected.
+        If this is passed as :obj:`None`, then no token is used.
+        This will be passed as the ``Authorization`` header if not :obj:`None`
+        for each request.
     version: :obj:`typing.Union` [ :obj:`int`, :obj:`hikari.net.versions.HTTPAPIVersion` ]
-        The version of the API to use. Defaults to the most recent stable version.
+        The version of the API to use. Defaults to the most recent stable
+        version.
     """
 
     GET = "get"
@@ -89,10 +97,125 @@ class RestfulClient:
 
     _AUTHENTICATION_SCHEMES = ("Bearer", "Bot")
 
+    #: ``True`` if HTTP redirects are enabled, or ``False`` otherwise.
+    #:
+    #: :type: :obj:`bool`
+    allow_redirects: bool
+
+    #: The base URL to send requests to.
+    #:
+    #: :type: :obj:`str`
+    base_url: str
+
+    #: The :mod:`aiohttp` client session to make requests with.
+    #:
+    #: :type: :obj:`aiohttp.ClientSession`
+    client_session: aiohttp.ClientSession
+
+    #: The internal correlation ID for the number of requests sent. This will
+    #: increase each time a REST request is sent.
+    #:
+    #: :type: :obj:`int`
+    in_count: int
+
+    #: The global ratelimiter. This is used if Discord declares a ratelimit
+    #: across the entire API, regardless of the endpoint. If this is set, then
+    #: any HTTP operation using this session will be paused.
+    #:
+    #: :type: :obj:`hikari.net.ratelimits.ManualRateLimiter`
+    global_ratelimiter: ratelimits.ManualRateLimiter
+
+    #: The logger to use for this object.
+    #:
+    #: :type: :obj:`logging.Logger`
+    logger: logging.Logger
+
+    #: The JSON deserialization function. This consumes a JSON string and
+    #: produces some object.
+    json_deserialize: typing.Callable[[typing.AnyStr], typing.Any]
+
+    #: The JSON deserialization function. This consumes an object and
+    #: produces some JSON string.
+    json_serialize: typing.Callable[[typing.Any], typing.AnyStr]
+
+    #: Proxy authorization to use.
+    #:
+    #: :type: :obj:`aiohttp.BasicAuth`, optional
+    proxy_auth: typing.Optional[aiohttp.BasicAuth]
+
+    #: A set of headers to provide to a proxy server.
+    #:
+    #: :type: :obj:`typing.Mapping` [ :obj:`str`, :obj:`str` ], optional
+    proxy_headers: typing.Optional[typing.Mapping[str, str]]
+
+    #: An optional proxy URL to send requests to.
+    #:
+    #: :type: :obj:`str`, optional
+    proxy_url: typing.Optional[str]
+
+    #: The per-route ratelimit manager. This handles tracking any ratelimits
+    #: for routes that have recently been used or are in active use, as well
+    #: as keeping memory usage to a minimum where possible for large numbers
+    #: of varying requests. This encapsulates a lot of complex rate limiting
+    #: rules to reduce the number of active ``429`` responses this client gets,
+    #: and thus reducing your chances of an API ban by Discord.
+    #:
+    #: You should not ever need to touch this implementation.
+    #:
+    #: :type: :obj:`hikari.net.ratelimits.HTTPBucketRateLimiterManager`
+    ratelimiter: ratelimits.HTTPBucketRateLimiterManager
+
+    #: The custom SSL context to use.
+    #:
+    #: :type: :obj:`ssl.SSLContext`
+    ssl_context: typing.Optional[ssl.SSLContext]
+
+    #: The HTTP request timeout to abort requests after.
+    #:
+    #: :type: :obj:`float`
+    timeout: typing.Optional[float]
+
+    #: The bot token. This will be prefixed with either ``"Bearer "`` or
+    #: ``"Bot"`` depending on the format of the token passed to the constructor.
+    #:
+    #: This value will be used for the ``Authorization`` HTTP header on each
+    #: API request.
+    #:
+    #: If no token is set, then the value will be :obj:`None`. In this case,
+    #: no ``Authorization`` header will be sent.
+    #:
+    #: :type: :obj:`str`, optional
+    token: typing.Optional[str]
+
+    #: The ``User-Agent`` header to send to Discord.
+    #:
+    #: Warning
+    #: -------
+    #: Changing this value may lead to undesirable results, as Discord document
+    #: that they can actively IP ban any client that does not have a valid
+    #: ``User-Agent`` header that conforms to specific requirements.
+    #: Your mileage may vary (YMMV).
+    #:
+    #: :type: :obj:`str`
+    user_agent: str
+
+    #: If ``True``, SSL certificates are verified for each request, and
+    #: invalid SSL certificates are rejected, causing an exception. If
+    #: ``False``, then unrecognised certificates that may be illegitimate
+    #: are accepted and ignored.
+    #:
+    #: :type: :obj:`bool`
+    verify_ssl: bool
+
+    #: The API version number that is being used.
+    #:
+    #: :type: :obj:`int`
+    version: int
+
     def __init__(
         self,
         *,
-        base_url="https://discordapp.com/api/v{0.version}",
+        base_url: str = urls.REST_API_URL,
         allow_redirects: bool = False,
         connector: typing.Optional[aiohttp.BaseConnector] = None,
         proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders] = None,
@@ -106,64 +229,19 @@ class RestfulClient:
         token: typing.Optional[str],
         version: typing.Union[int, versions.HTTPAPIVersion] = versions.HTTPAPIVersion.STABLE,
     ):
-        #: Whether to allow redirects or not.
-        #:
-        #: :type: :obj:`bool`
         self.allow_redirects = allow_redirects
-
-        #: The HTTP client session to use.
-        #:
-        #: :type: :obj:`aiohttp.ClientSession`
         self.client_session = aiohttp.ClientSession(
             connector=connector, version=aiohttp.HttpVersion11, json_serialize=json_serialize or json.dumps,
         )
-
-        #: The logger to use for this object.
-        #:
-        #: :type: :obj:`logging.Logger`
         self.logger = more_logging.get_named_logger(self)
-
-        #: User agent to use.
-        #:
-        #: :type: :obj:`str`
         self.user_agent = user_agent.UserAgent().user_agent
-
-        #: If ``True``, this will enforce SSL signed certificate verification, otherwise it will
-        #: ignore potentially malicious SSL certificates.
-        #:
-        #: :type: :obj:`bool`
         self.verify_ssl = verify_ssl
-
-        #: Optional proxy URL to use for HTTP requests.
-        #:
-        #: :type: :obj:`str`
         self.proxy_url = proxy_url
-
-        #: Optional authorization to use if using a proxy.
-        #:
-        #: :type: :obj:`aiohttp.BasicAuth`
         self.proxy_auth = proxy_auth
-
-        #: Optional proxy headers to pass.
-        #:
-        #: :type: :obj:`typing.Mapping` [ :obj:`str`, :obj:`str` ]
         self.proxy_headers = proxy_headers
-
-        #: Optional SSL context to use.
-        #:
-        #: :type: :obj:`ssl.SSLContext`
         self.ssl_context: ssl.SSLContext = ssl_context
-
-        #: Optional timeout for HTTP requests.
-        #:
-        #: :type: :obj:`float`
         self.timeout = timeout
-
-        #: How many responses have been received.
-        #:
-        #: :type: :obj:`int`
         self.in_count = 0
-
         self.version = int(version)
         self.base_url = base_url.format(self)
         self.global_ratelimiter = ratelimits.ManualRateLimiter()
@@ -198,14 +276,14 @@ class RestfulClient:
 
     async def _request(
         self,
-        compiled_route,
+        compiled_route: routes.CompiledRoute,
         *,
-        headers=None,
-        query=None,
-        form_body=None,
+        headers: typing.Optional[typing.Dict[str, str]] = None,
+        query: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        form_body: typing.Optional[aiohttp.FormData] = None,
         json_body: typing.Optional[typing.Union[typing.Dict[str, typing.Any], typing.Sequence[typing.Any]]] = None,
         reason: str = ...,
-        re_seekable_resources: typing.Collection[typing.Any] = more_collections.EMPTY_COLLECTION,
+        re_seekable_resources: typing.Collection[conversions.Seekable] = more_collections.EMPTY_COLLECTION,
         suppress_authorization_header: bool = False,
         **kwargs,
     ) -> typing.Union[typing.Dict[str, typing.Any], typing.Sequence[typing.Any], None]:
@@ -223,11 +301,13 @@ class RestfulClient:
 
         backoff = ratelimits.ExponentialBackOff()
 
+        seeks = {r.tell(): r for r in re_seekable_resources}
+
         while True:
             # If we are uploading files with io objects in a form body, we need to reset the seeks to 0 to ensure
             # we can re-read the buffer.
-            for resource in re_seekable_resources:
-                resource.seek(0)
+            for pos, r in seeks.items():
+                r.seek(pos)
 
             # Aids logging when lots of entries are being logged at once by matching a unique UUID
             # between the request and response

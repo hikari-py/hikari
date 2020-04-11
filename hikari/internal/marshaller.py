@@ -29,11 +29,12 @@ __all__ = [
     "RAISE",
     "dereference_handle",
     "attrib",
-    "attrs",
+    "marshallable",
     "HIKARI_ENTITY_MARSHALLER",
     "HikariEntityMarshaller",
 ]
 
+import enum
 import functools
 import importlib
 import operator
@@ -44,19 +45,17 @@ import attr
 
 from hikari.internal import assertions
 
-_RAW_NAME_ATTR = __name__ + "_RAW_NAME"
-_SERIALIZER_ATTR = __name__ + "_SERIALIZER"
-_DESERIALIZER_ATTR = __name__ + "_DESERIALIZER"
-_TRANSIENT_ATTR = __name__ + "_TRANSIENT"
-_IF_UNDEFINED = __name__ + "IF_UNDEFINED"
-_IF_NONE = __name__ + "_IF_NONE"
+_RAW_NAME_ATTR: typing.Final[str] = __name__ + "_RAW_NAME"
+_SERIALIZER_ATTR: typing.Final[str] = __name__ + "_SERIALIZER"
+_DESERIALIZER_ATTR: typing.Final[str] = __name__ + "_DESERIALIZER"
+_TRANSIENT_ATTR: typing.Final[str] = __name__ + "_TRANSIENT"
+_IF_UNDEFINED: typing.Final[str] = __name__ + "IF_UNDEFINED"
+_IF_NONE: typing.Final[str] = __name__ + "_IF_NONE"
+_PASSED_THROUGH_SINGLETONS: typing.Final[typing.Sequence[bool]] = [False, True, None]
+RAISE: typing.Final[typing.Any] = object()
 
-MARSHALLER_META_ATTR = "__hikari_marshaller_meta_attr__"
-
-PASSED_THROUGH_SINGLETONS = (False, True, None)
-
-RAISE = object()
-
+IntFlagT = typing.TypeVar("IntFlagT", bound=enum.IntFlag)
+RawIntFlagValueT = typing.Union[typing.AnyStr, typing.SupportsInt, int]
 EntityT = typing.TypeVar("EntityT", contravariant=True)
 
 
@@ -100,7 +99,10 @@ def dereference_handle(handle_string: str) -> typing.Any:
     return weakref.proxy(obj)
 
 
-def dereference_int_flag(int_flag_type, raw_value) -> typing.SupportsInt:
+def dereference_int_flag(
+    int_flag_type: typing.Type[IntFlagT],
+    raw_value: typing.Union[RawIntFlagValueT, typing.Collection[RawIntFlagValueT]],
+) -> IntFlagT:
     """Cast to the provided :obj:`enum.IntFlag` type.
 
     This supports resolving bitfield integers as well as decoding a sequence
@@ -110,8 +112,24 @@ def dereference_int_flag(int_flag_type, raw_value) -> typing.SupportsInt:
     ----------
     int_flag_type : :obj:`typing.Type` [ :obj:`enum.IntFlag` ]
         The type of the int flag to check.
-    raw_value
+    raw_value : ``Castable Value``
         The raw value to convert.
+
+    Returns
+    -------
+    :obj:`enum.IntFlag`
+        The cast value as a flag.
+
+    Notes
+    -----
+    Types that are a ``Castable Value`` include:
+    - :obj:`str`
+    - :obj:`int`
+    - :obj:`typing.SupportsInt`
+    - :obj:`typing.Collection` [ ``Castable Value`` ]
+
+    When a collection is passed, values will be combined using functional
+    reduction via the :obj:operator.or_` operator.
     """
     if isinstance(raw_value, str) and raw_value.isdigit():
         raw_value = int(raw_value)
@@ -137,7 +155,7 @@ def attrib(
     transient: bool = False,
     serializer: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
     **kwargs,
-) -> typing.Any:
+) -> attr.Attribute:
     """Create an :func:`attr.ib` with marshaller metadata attached.
 
     Parameters
@@ -205,7 +223,7 @@ def _not_implemented(op, name):
 
 def _default_validator(value: typing.Any):
     assertions.assert_that(
-        value is RAISE or value in PASSED_THROUGH_SINGLETONS or callable(value),
+        value is RAISE or value in _PASSED_THROUGH_SINGLETONS or callable(value),
         message=(
             "Invalid default factory passed for `if_undefined` or `if_none`; "
             f"expected a callable or one of the 'passed through singletons' but got {value}."
@@ -290,11 +308,12 @@ def _construct_entity_descriptor(entity: typing.Any):
 
 
 class HikariEntityMarshaller:
-    """A global marshaller helper that helps deserialize and serialize any internal components.
+    """Hikari's utility to manage automated serialization and deserialization.
 
-    It can deserialize and serialize any internal componentsthat that are
-    decorated with the :obj:`attrs` decorator, and that are :obj:`attr.s`
-    classes using fields with the :obj:`attrib` function call descriptor.
+    It can deserialize and serialize any internal components that that are
+    decorated with the :obj:`marshallable` decorator, and that are
+    :func:`attr.s` classes using fields with the :obj:`attrib` function call
+    descriptor.
     """
 
     def __init__(self) -> None:
@@ -365,7 +384,7 @@ class HikariEntityMarshaller:
                         f"{target_type.__module__}.{target_type.__qualname__} due to required field {a.field_name} "
                         f"(from raw key {a.raw_name}) not being included in the input payload\n\n{raw_data}"
                     )
-                if a.if_undefined in PASSED_THROUGH_SINGLETONS:
+                if a.if_undefined in _PASSED_THROUGH_SINGLETONS:
                     kwargs[kwarg_name] = a.if_undefined
                 else:
                     kwargs[kwarg_name] = a.if_undefined()
@@ -378,7 +397,7 @@ class HikariEntityMarshaller:
                         f"{target_type.__module__}.{target_type.__qualname__} due to non-nullable field {a.field_name}"
                         f" (from raw key {a.raw_name}) being `None` in the input payload\n\n{raw_data}"
                     )
-                if a.if_none in PASSED_THROUGH_SINGLETONS:
+                if a.if_none in _PASSED_THROUGH_SINGLETONS:
                     kwargs[kwarg_name] = a.if_none
                 else:
                     kwargs[kwarg_name] = a.if_none()
@@ -439,21 +458,11 @@ class HikariEntityMarshaller:
 HIKARI_ENTITY_MARSHALLER = HikariEntityMarshaller()
 
 
-def attrs(**kwargs):
+def marshallable(*, marshaller: HikariEntityMarshaller = HIKARI_ENTITY_MARSHALLER):
     """Create a decorator for a class to make it into an :obj:`attr.s` class.
 
     Parameters
     ----------
-    **kwargs
-        Any kwargs to pass to :obj:`attr.s`.
-
-    Other Parameters
-    ----------------
-    auto_attribs : :obj:`bool`
-        This must always be ``False`` if specified, or a :obj:`ValueError`
-        will be raised, as this feature is not compatible with this
-        marshaller implementation. If not specified, it will default to
-        ``False``.
     marshaller : :obj:`HikariEntityMarshaller`
         If specified, this should be an instance of a marshaller to use. For
         most internal purposes, you want to not specify this, since it will
@@ -465,11 +474,10 @@ def attrs(**kwargs):
     ``decorator(T) -> T``
         A decorator to decorate a class with.
 
-    Raises
-    ------
-    :obj:`ValueError`
-        If you attempt to use the ``auto_attribs`` feature provided by
-        :obj:`attr.s`.
+    Notes
+    -----
+    The ``auto_attribs`` functionality provided by :obj:`attr.s` is not
+    supported by this marshaller utility. Do not attempt to use it!
 
     Example
     -------
@@ -483,10 +491,8 @@ def attrs(**kwargs):
             ...
 
     """
-    assertions.assert_that(not kwargs.get("auto_attribs"), "Cannot use auto attribs here")
-    kwargs["auto_attribs"] = False
-    return lambda cls: kwargs.pop("marshaller", HIKARI_ENTITY_MARSHALLER).register(attr.s(**kwargs)(cls))
 
+    def decorator(cls):
+        return marshaller.register(cls)
 
-if typing.TYPE_CHECKING:
-    attrs = attr.s
+    return decorator

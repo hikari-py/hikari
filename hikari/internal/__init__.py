@@ -21,7 +21,7 @@
 |internal|
 """
 from hikari.internal import assertions
-from hikari.internal import cdn
+from hikari.internal import urls
 from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import meta

@@ -22,12 +22,14 @@ __all__ = ["Application", "ApplicationOwner", "OwnGuild", "Team", "TeamMember", 
 import enum
 import typing
 
+import attr
+
 from hikari import entities
 from hikari import guilds
 from hikari import permissions
 from hikari import snowflakes
 from hikari import users
-from hikari.internal import cdn
+from hikari.internal import urls
 from hikari.internal import marshaller
 
 
@@ -41,7 +43,8 @@ class ConnectionVisibility(enum.IntEnum):
     EVERYONE = 1
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class OwnConnection(entities.HikariEntity, entities.Deserializable):
     """Represents a user's connection with a third party account.
 
@@ -105,7 +108,8 @@ class OwnConnection(entities.HikariEntity, entities.Deserializable):
     visibility: ConnectionVisibility = marshaller.attrib(deserializer=ConnectionVisibility)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class OwnGuild(guilds.PartialGuild):
     """Represents a user bound partial guild object."""
 
@@ -133,7 +137,8 @@ class TeamMembershipState(enum.IntEnum):
     ACCEPTED = 2
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class TeamMember(entities.HikariEntity, entities.Deserializable):
     """Represents a member of a Team."""
 
@@ -159,7 +164,8 @@ class TeamMember(entities.HikariEntity, entities.Deserializable):
     user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class Team(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents a development team, along with all its members."""
 
@@ -203,11 +209,12 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
             The string URL.
         """
         if self.icon_hash:
-            return cdn.generate_cdn_url("team-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("team-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
         return None
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class ApplicationOwner(users.User):
     """Represents the user who owns an application, may be a team user."""
 
@@ -222,7 +229,8 @@ class ApplicationOwner(users.User):
         return bool((self.flags >> 10) & 1)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class Application(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents the information of an Oauth2 Application."""
 
@@ -340,7 +348,7 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
             The string URL.
         """
         if self.icon_hash:
-            return cdn.generate_cdn_url("app-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("app-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
         return None
 
     @property
@@ -366,5 +374,5 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
             The string URL.
         """
         if self.cover_image_hash:
-            return cdn.generate_cdn_url("app-assets", str(self.id), self.cover_image_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("app-assets", str(self.id), self.cover_image_hash, fmt=fmt, size=size)
         return None

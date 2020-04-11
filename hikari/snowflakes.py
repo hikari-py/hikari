@@ -28,8 +28,10 @@ import datetime
 import functools
 import typing
 
-import hikari.internal.conversions
+import attr
+
 from hikari import entities
+from hikari.internal import conversions
 from hikari.internal import marshaller
 
 
@@ -55,7 +57,7 @@ class Snowflake(entities.HikariEntity, typing.SupportsInt):
     def created_at(self) -> datetime.datetime:
         """When the object was created."""
         epoch = self._value >> 22
-        return hikari.internal.conversions.discord_epoch_to_datetime(epoch)
+        return conversions.discord_epoch_to_datetime(epoch)
 
     @property
     def internal_worker_id(self) -> int:
@@ -100,7 +102,8 @@ class Snowflake(entities.HikariEntity, typing.SupportsInt):
         return cls(value)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class UniqueEntity(entities.HikariEntity):
     """An entity that has an integer ID of some sort."""
 

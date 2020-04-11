@@ -23,6 +23,7 @@ mechanism if they are postponed and evaluated as string literals.
 """
 from __future__ import annotations
 
+import attr
 import cymock as mock
 import pytest
 
@@ -68,21 +69,19 @@ class TestAttrsPep563:
     def test_invokes_attrs(self):
         marshaller_mock = mock.create_autospec(marshaller.HikariEntityMarshaller, spec_set=True)
 
-        kwargs = {"foo": 9, "bar": "lol", "marshaller": marshaller_mock}
+        kwargs = {"marshaller": marshaller_mock}
 
         marshaller_mock.register = mock.MagicMock(wraps=lambda c: c)
 
-        with mock.patch("attr.s", return_value=lambda c: c) as attrs:
+        @marshaller.marshallable(**kwargs)
+        @attr.s()
+        class Foo:
+            bar = 69
 
-            @marshaller.attrs(**kwargs)
-            class Foo:
-                bar = 69
+        assert Foo is not None
+        assert Foo.bar == 69
 
-            assert Foo is not None
-            assert Foo.bar == 69
-
-            attrs.assert_called_once_with(foo=9, bar="lol", auto_attribs=False)
-            marshaller_mock.register.assert_called_once_with(Foo)
+        marshaller_mock.register.assert_called_once_with(Foo)
 
 
 @pytest.mark.parametrize("data", [2, "d", bytes("ok", "utf-8"), [], {}, set()])
@@ -96,7 +95,7 @@ def method_stub(value):
 
 
 @pytest.mark.parametrize(
-    "data", [lambda x: "ok", *marshaller.PASSED_THROUGH_SINGLETONS, marshaller.RAISE, dict, method_stub]
+    "data", [lambda x: "ok", *marshaller._PASSED_THROUGH_SINGLETONS, marshaller.RAISE, dict, method_stub]
 )
 def test_default_validator(data):
     marshaller._default_validator(data)
@@ -111,7 +110,8 @@ class TestMarshallerPep563:
         deserialized_id = mock.MagicMock()
         id_deserializer = mock.MagicMock(return_value=deserialized_id)
 
-        @marshaller.attrs(marshaller=marshaller_impl)
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
         class User:
             id: int = marshaller.attrib(deserializer=id_deserializer)
             some_list: list = marshaller.attrib(deserializer=lambda items: [str(i) for i in items])
@@ -123,7 +123,8 @@ class TestMarshallerPep563:
         assert result.some_list == ["True", "False", "foo", "12", "3.4"]
 
     def test_deserialize_not_required_success_if_specified(self, marshaller_impl):
-        @marshaller.attrs(marshaller=marshaller_impl)
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
         class User:
             id: int = marshaller.attrib(if_undefined=None, deserializer=str)
 
@@ -132,9 +133,10 @@ class TestMarshallerPep563:
         assert isinstance(result, User)
         assert result.id == "12345"
 
-    @pytest.mark.parametrize("singleton", marshaller.PASSED_THROUGH_SINGLETONS)
+    @pytest.mark.parametrize("singleton", marshaller._PASSED_THROUGH_SINGLETONS)
     def test_deserialize_not_required_success_if_not_specified(self, marshaller_impl, singleton):
-        @marshaller.attrs(marshaller=marshaller_impl)
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
         class User:
             id: int = marshaller.attrib(if_undefined=singleton, deserializer=str)
 
@@ -147,7 +149,8 @@ class TestMarshallerPep563:
         mock_result = mock.MagicMock()
         mock_callable = mock.MagicMock(return_value=mock_result)
 
-        @marshaller.attrs(marshaller=marshaller_impl)
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
         class User:
             id: int = marshaller.attrib(if_undefined=mock_callable, deserializer=str)
 
@@ -159,14 +162,16 @@ class TestMarshallerPep563:
 
     @_helpers.assert_raises(type_=AttributeError)
     def test_deserialize_fail_on_unspecified_if_required(self, marshaller_impl):
-        @marshaller.attrs(marshaller=marshaller_impl)
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
         class User:
             id: int = marshaller.attrib(deserializer=str)
 
         marshaller_impl.deserialize({}, User)
 
     def test_deserialize_nullable_success_if_not_null(self, marshaller_impl):
-        @marshaller.attrs(marshaller=marshaller_impl)
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
         class User:
             id: int = marshaller.attrib(if_none=None, deserializer=str)
 
@@ -175,9 +180,10 @@ class TestMarshallerPep563:
         assert isinstance(result, User)
         assert result.id == "12345"
 
-    @pytest.mark.parametrize("singleton", marshaller.PASSED_THROUGH_SINGLETONS)
+    @pytest.mark.parametrize("singleton", marshaller._PASSED_THROUGH_SINGLETONS)
     def test_deserialize_nullable_success_if_null(self, marshaller_impl, singleton):
-        @marshaller.attrs(marshaller=marshaller_impl)
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
         class User:
             id: int = marshaller.attrib(if_none=singleton, deserializer=str)
 
@@ -190,7 +196,8 @@ class TestMarshallerPep563:
         mock_result = mock.MagicMock()
         mock_callable = mock.MagicMock(return_value=mock_result)
 
-        @marshaller.attrs(marshaller=marshaller_impl)
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
         class User:
             id: int = marshaller.attrib(if_none=mock_callable, deserializer=str)
 
@@ -202,7 +209,8 @@ class TestMarshallerPep563:
 
     @_helpers.assert_raises(type_=AttributeError)
     def test_deserialize_fail_on_None_if_not_nullable(self, marshaller_impl):
-        @marshaller.attrs(marshaller=marshaller_impl)
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
         class User:
             id: int = marshaller.attrib(deserializer=str)
 
@@ -212,14 +220,16 @@ class TestMarshallerPep563:
     def test_deserialize_fail_on_Error(self, marshaller_impl):
         die = mock.MagicMock(side_effect=RuntimeError)
 
-        @marshaller.attrs(marshaller=marshaller_impl)
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
         class User:
             id: int = marshaller.attrib(deserializer=die)
 
         marshaller_impl.deserialize({"id": 123,}, User)
 
     def test_serialize(self, marshaller_impl):
-        @marshaller.attrs(marshaller=marshaller_impl)
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
         class User:
             id: int = marshaller.attrib(deserializer=..., serializer=str)
             some_list: list = marshaller.attrib(deserializer=..., serializer=lambda i: list(map(int, i)))
@@ -229,7 +239,8 @@ class TestMarshallerPep563:
         assert marshaller_impl.serialize(u) == {"id": "12", "some_list": [9, 18, 27, 36]}
 
     def test_serialize_transient(self, marshaller_impl):
-        @marshaller.attrs(marshaller=marshaller_impl)
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
         class User:
             id: int = marshaller.attrib(deserializer=..., serializer=str)
             some_list: list = marshaller.attrib(
@@ -259,7 +270,8 @@ class TestMarshallerPep563:
         marshaller_impl.serialize(f)
 
     def test_handling_underscores_correctly_during_deserialization(self, marshaller_impl):
-        @marshaller.attrs(marshaller=marshaller_impl)
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
         class ClassWithUnderscores:
             _foo = marshaller.attrib(deserializer=str)
 
@@ -268,7 +280,8 @@ class TestMarshallerPep563:
         assert impl._foo == "1234"
 
     def test_handling_underscores_correctly_during_serialization(self, marshaller_impl):
-        @marshaller.attrs(marshaller=marshaller_impl)
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
         class ClassWithUnderscores:
             _foo = marshaller.attrib(serializer=int)
 
