@@ -34,6 +34,7 @@ __all__ = [
     "HikariEntityMarshaller",
 ]
 
+import enum
 import functools
 import importlib
 import operator
@@ -44,19 +45,17 @@ import attr
 
 from hikari.internal import assertions
 
-_RAW_NAME_ATTR = __name__ + "_RAW_NAME"
-_SERIALIZER_ATTR = __name__ + "_SERIALIZER"
-_DESERIALIZER_ATTR = __name__ + "_DESERIALIZER"
-_TRANSIENT_ATTR = __name__ + "_TRANSIENT"
-_IF_UNDEFINED = __name__ + "IF_UNDEFINED"
-_IF_NONE = __name__ + "_IF_NONE"
+_RAW_NAME_ATTR: typing.Final[str] = __name__ + "_RAW_NAME"
+_SERIALIZER_ATTR: typing.Final[str] = __name__ + "_SERIALIZER"
+_DESERIALIZER_ATTR: typing.Final[str] = __name__ + "_DESERIALIZER"
+_TRANSIENT_ATTR: typing.Final[str] = __name__ + "_TRANSIENT"
+_IF_UNDEFINED: typing.Final[str] = __name__ + "IF_UNDEFINED"
+_IF_NONE: typing.Final[str] = __name__ + "_IF_NONE"
+_PASSED_THROUGH_SINGLETONS: typing.Final[typing.Sequence[bool]] = [False, True, None]
+RAISE: typing.Final[typing.Any] = object()
 
-MARSHALLER_META_ATTR = "__hikari_marshaller_meta_attr__"
-
-PASSED_THROUGH_SINGLETONS = (False, True, None)
-
-RAISE = object()
-
+IntFlagT = typing.TypeVar("IntFlagT", bound=enum.IntFlag)
+RawIntFlagValueT = typing.Union[typing.AnyStr, typing.SupportsInt, int]
 EntityT = typing.TypeVar("EntityT", contravariant=True)
 
 
@@ -100,7 +99,10 @@ def dereference_handle(handle_string: str) -> typing.Any:
     return weakref.proxy(obj)
 
 
-def dereference_int_flag(int_flag_type, raw_value) -> typing.SupportsInt:
+def dereference_int_flag(
+    int_flag_type: typing.Type[IntFlagT],
+    raw_value: typing.Union[RawIntFlagValueT, typing.Collection[RawIntFlagValueT]],
+) -> IntFlagT:
     """Cast to the provided :obj:`enum.IntFlag` type.
 
     This supports resolving bitfield integers as well as decoding a sequence
@@ -110,8 +112,21 @@ def dereference_int_flag(int_flag_type, raw_value) -> typing.SupportsInt:
     ----------
     int_flag_type : :obj:`typing.Type` [ :obj:`enum.IntFlag` ]
         The type of the int flag to check.
-    raw_value
+    raw_value : ``Castable Value``
         The raw value to convert.
+
+    Returns
+    -------
+    The cast value as a flag.
+
+    Notes
+    -----
+    Types that are a ``Castable Value`` include:
+    - :obj:`str`
+    - :obj:`int`
+    - :obj:`typing.SupportsInt`
+    - :obj:`typing.Collection` [ ``Castable Value`` ] - values will be combined
+      using functional reduction via the :obj:operator.or_` operator.
     """
     if isinstance(raw_value, str) and raw_value.isdigit():
         raw_value = int(raw_value)
@@ -137,7 +152,7 @@ def attrib(
     transient: bool = False,
     serializer: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
     **kwargs,
-) -> typing.Any:
+) -> attr.Attribute:
     """Create an :func:`attr.ib` with marshaller metadata attached.
 
     Parameters
@@ -205,7 +220,7 @@ def _not_implemented(op, name):
 
 def _default_validator(value: typing.Any):
     assertions.assert_that(
-        value is RAISE or value in PASSED_THROUGH_SINGLETONS or callable(value),
+        value is RAISE or value in _PASSED_THROUGH_SINGLETONS or callable(value),
         message=(
             "Invalid default factory passed for `if_undefined` or `if_none`; "
             f"expected a callable or one of the 'passed through singletons' but got {value}."
@@ -365,7 +380,7 @@ class HikariEntityMarshaller:
                         f"{target_type.__module__}.{target_type.__qualname__} due to required field {a.field_name} "
                         f"(from raw key {a.raw_name}) not being included in the input payload\n\n{raw_data}"
                     )
-                if a.if_undefined in PASSED_THROUGH_SINGLETONS:
+                if a.if_undefined in _PASSED_THROUGH_SINGLETONS:
                     kwargs[kwarg_name] = a.if_undefined
                 else:
                     kwargs[kwarg_name] = a.if_undefined()
@@ -378,7 +393,7 @@ class HikariEntityMarshaller:
                         f"{target_type.__module__}.{target_type.__qualname__} due to non-nullable field {a.field_name}"
                         f" (from raw key {a.raw_name}) being `None` in the input payload\n\n{raw_data}"
                     )
-                if a.if_none in PASSED_THROUGH_SINGLETONS:
+                if a.if_none in _PASSED_THROUGH_SINGLETONS:
                     kwargs[kwarg_name] = a.if_none
                 else:
                     kwargs[kwarg_name] = a.if_none()
@@ -473,6 +488,8 @@ def marshallable(*, marshaller: HikariEntityMarshaller = HIKARI_ENTITY_MARSHALLE
             ...
 
     """
+
     def decorator(cls):
         return marshaller.register(cls)
+
     return decorator

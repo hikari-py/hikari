@@ -24,6 +24,7 @@ to use this.
 import logging
 import os
 import sys
+import typing
 
 import click
 
@@ -31,7 +32,8 @@ from hikari.clients import configs
 from hikari.clients import gateway_managers
 from hikari.state import stateless_event_managers
 
-logger_levels = ("DEBUG", "INFO", "WARNING", "ERROR", "NOTSET")
+
+_LOGGER_LEVELS: typing.Final[typing.Sequence[str]] = ["DEBUG", "INFO", "WARNING", "ERROR", "NOTSET"]
 
 
 def _supports_color():
@@ -42,23 +44,26 @@ def _supports_color():
     return supported_platform and is_a_tty
 
 
-_color_format = (
+_COLOR_FORMAT: typing.Final[str] = (
     "\033[1;35m%(levelname)1.1s \033[0;37m%(name)25.25s \033[0;31m%(asctime)23.23s \033[1;34m%(module)-15.15s "
     "\033[1;32m#%(lineno)-4d \033[0m:: \033[0;33m%(message)s\033[0m"
 )
-_regular_format = "%(levelname)1.1s %(name)25.25s %(asctime)23.23s %(module)-15.15s #%(lineno)-4d :: %(message)s"
+
+_REGULAR_FORMAT: typing.Final[str] = (
+    "%(levelname)1.1s %(name)25.25s %(asctime)23.23s %(module)-15.15s #%(lineno)-4d :: %(message)s"
+)
 
 
 @click.command()
 @click.option("--compression", default=True, type=click.BOOL, help="Enable or disable gateway compression.")
 @click.option("--color", default=_supports_color(), type=click.BOOL, help="Whether to enable or disable color.")
 @click.option("--debug", default=False, type=click.BOOL, help="Enable or disable debug mode.")
-@click.option("--logger", envvar="LOGGER", default="INFO", type=click.Choice(logger_levels), help="Logger verbosity.")
+@click.option("--logger", envvar="LOGGER", default="INFO", type=click.Choice(_LOGGER_LEVELS), help="Logger verbosity.")
 @click.option("--shards", default=1, type=click.IntRange(min=1), help="The number of shards to explicitly use.")
 @click.option("--token", required=True, envvar="TOKEN", help="The token to use to authenticate with Discord.")
 @click.option("--url", default="wss://gateway.discord.gg/", help="The websocket URL to connect to.")
 @click.option("--verify-ssl", default=True, type=click.BOOL, help="Enable or disable SSL verification.")
-@click.option("--version", default=7, type=click.IntRange(min=6), help="Version of the gateway to use.")
+@click.option("--version", default=6, type=click.IntRange(min=6), help="Version of the gateway to use.")
 def run_gateway(compression, color, debug, logger, shards, token, url, verify_ssl, version) -> None:
     """:mod:`click` command line client for running a test gateway connection.
 
@@ -67,7 +72,7 @@ def run_gateway(compression, color, debug, logger, shards, token, url, verify_ss
     """
     logging.captureWarnings(True)
 
-    logging.basicConfig(level=logger, format=_color_format if color else _regular_format, stream=sys.stdout)
+    logging.basicConfig(level=logger, format=_COLOR_FORMAT if color else _REGULAR_FORMAT, stream=sys.stdout)
 
     manager = stateless_event_managers.StatelessEventManagerImpl()
 
