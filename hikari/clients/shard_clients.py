@@ -43,7 +43,6 @@ from hikari import gateway_entities
 from hikari import guilds
 from hikari.clients import configs
 from hikari.clients import runnable
-from hikari.internal import more_asyncio
 from hikari.internal import more_logging
 from hikari.net import codes
 from hikari.net import ratelimits
@@ -199,6 +198,7 @@ class ShardClient(runnable.RunnableClient):
         """
         return self._connection.shard_count
 
+    # Ignore docstring not starting in an imperative mood
     @property
     def status(self) -> guilds.PresenceStatus:  # noqa: D401
         """Current user status for this shard.
@@ -272,7 +272,7 @@ class ShardClient(runnable.RunnableClient):
         return self._connection.heartbeat_interval
 
     @property
-    def reconnect_count(self) -> float:
+    def reconnect_count(self) -> int:
         """Count of number of times the internal connection has reconnected.
 
         This includes RESUME and re-IDENTIFY events.
@@ -315,7 +315,8 @@ class ShardClient(runnable.RunnableClient):
 
     async def join(self) -> None:
         """Wait for the shard to shut down fully."""
-        await self._task if self._task is not None else more_asyncio.completed_future()
+        if self._task:
+            await self._task
 
     async def close(self) -> None:
         """Request that the shard shuts down.
@@ -486,15 +487,14 @@ class ShardClient(runnable.RunnableClient):
         Parameters
         ----------
         status : :obj:`hikari.guilds.PresenceStatus`
-            The new status to set.
+            If specified, the new status to set.
         activity : :obj:`hikari.gateway_entities.GatewayActivity`, optional
-            The new activity to set.
+            If specified, the new activity to set.
         idle_since : :obj:`datetime.datetime`, optional
-            The time to show up as being idle since, or ``None`` if not
-            applicable.
+            If specified, the time to show up as being idle since, or
+            ``None`` if not applicable.
         is_afk : :obj:`bool`
-            ``True`` if the user should be marked as AFK, or ``False``
-            otherwise.
+            If specified, whether the user should be marked as AFK.
         """
         status = self._status if status is ... else status
         activity = self._activity if activity is ... else activity
