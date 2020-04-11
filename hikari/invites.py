@@ -23,12 +23,14 @@ import datetime
 import enum
 import typing
 
-import hikari.internal.conversions
+import attr
+
 from hikari import channels
 from hikari import entities
 from hikari import guilds
 from hikari import users
 from hikari.internal import cdn
+from hikari.internal import conversions
 from hikari.internal import marshaller
 
 
@@ -40,7 +42,8 @@ class TargetUserType(enum.IntEnum):
     STREAM = 1
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class VanityUrl(entities.HikariEntity, entities.Deserializable):
     """A special case invite object, that represents a guild's vanity url."""
 
@@ -55,7 +58,8 @@ class VanityUrl(entities.HikariEntity, entities.Deserializable):
     uses: int = marshaller.attrib(deserializer=int)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class InviteGuild(guilds.PartialGuild):
     """Represents the partial data of a guild that'll be attached to invites."""
 
@@ -147,7 +151,8 @@ class InviteGuild(guilds.PartialGuild):
         return self.format_banner_url()
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class Invite(entities.HikariEntity, entities.Deserializable):
     """Represents an invite that's used to add users to a guild or group dm."""
 
@@ -196,7 +201,8 @@ class Invite(entities.HikariEntity, entities.Deserializable):
     approximate_member_count: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class InviteWithMetadata(Invite):
     """Extends the base :obj:`Invite` object with metadata.
 
@@ -231,7 +237,7 @@ class InviteWithMetadata(Invite):
     #: When this invite was created.
     #:
     #: :type: :obj:`datetime.datetime`
-    created_at: datetime.datetime = marshaller.attrib(deserializer=hikari.internal.conversions.parse_iso_8601_ts)
+    created_at: datetime.datetime = marshaller.attrib(deserializer=conversions.parse_iso_8601_ts)
 
     @property
     def expires_at(self) -> typing.Optional[datetime.datetime]:

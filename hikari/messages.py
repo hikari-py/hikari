@@ -32,7 +32,8 @@ import datetime
 import enum
 import typing
 
-import hikari.internal.conversions
+import attr
+
 from hikari import embeds as _embeds
 from hikari import emojis as _emojis
 from hikari import entities
@@ -40,6 +41,7 @@ from hikari import guilds
 from hikari import oauth2
 from hikari import snowflakes
 from hikari import users
+from hikari.internal import conversions
 from hikari.internal import marshaller
 
 
@@ -106,7 +108,8 @@ class MessageActivityType(enum.IntEnum):
     JOIN_REQUEST = 5
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class Attachment(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents a file attached to a message."""
 
@@ -141,7 +144,8 @@ class Attachment(snowflakes.UniqueEntity, entities.Deserializable):
     width: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class Reaction(entities.HikariEntity, entities.Deserializable):
     """Represents a reaction in a message."""
 
@@ -163,7 +167,8 @@ class Reaction(entities.HikariEntity, entities.Deserializable):
     is_reacted_by_me: bool = marshaller.attrib(raw_name="me", deserializer=bool)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class MessageActivity(entities.HikariEntity, entities.Deserializable):
     """Represents the activity of a rich presence-enabled message."""
 
@@ -178,7 +183,8 @@ class MessageActivity(entities.HikariEntity, entities.Deserializable):
     party_id: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class MessageCrosspost(entities.HikariEntity, entities.Deserializable):
     """Represents information about a cross-posted message and the origin of the original message."""
 
@@ -213,7 +219,8 @@ class MessageCrosspost(entities.HikariEntity, entities.Deserializable):
     )
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class Message(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents a message."""
 
@@ -249,13 +256,13 @@ class Message(snowflakes.UniqueEntity, entities.Deserializable):
     #: The timestamp that the message was sent at.
     #:
     #: :type: :obj:`datetime.datetime`
-    timestamp: datetime.datetime = marshaller.attrib(deserializer=hikari.internal.conversions.parse_iso_8601_ts)
+    timestamp: datetime.datetime = marshaller.attrib(deserializer=conversions.parse_iso_8601_ts)
 
     #: The timestamp that the message was last edited at, or ``None`` if not ever edited.
     #:
     #: :type: :obj:`datetime.datetime`, optional
     edited_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=hikari.internal.conversions.parse_iso_8601_ts, if_none=None
+        deserializer=conversions.parse_iso_8601_ts, if_none=None
     )
 
     #: Whether the message is a TTS message.

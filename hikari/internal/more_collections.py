@@ -50,3 +50,4 @@ class WeakKeyDictionary(weakref.WeakKeyDictionary, typing.MutableMapping[K, V]):
 
     This is a type-safe version of :obj:`weakref.WeakKeyDictionary`.
     """
+    __slots__ = ()

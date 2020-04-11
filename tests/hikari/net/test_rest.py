@@ -351,17 +351,28 @@ class TestRestfulClient:
     @pytest.mark.asyncio
     async def test__request_resets_seek_on_seekable_resources(self, compiled_route, exit_error, mock_rest_impl):
         class SeekableResource:
-            seeked: bool = False
+            seeked: bool
+            pos: int
+            initial_pos: int
 
-            def seek(self, _):
+            def __init__(self, pos):
+                self.pos = pos
+                self.initial_pos = pos
+                self.seeked = False
+
+            def seek(self, pos):
                 self.seeked = True
+                self.pos = pos
+
+            def tellg(self):
+                return self.pos
 
             def assert_seek_called(self):
                 assert self.seeked
 
         rest_impl = await mock_rest_impl
         rest_impl.logger.debug.side_effect = exit_error
-        seekable_resources = [SeekableResource(), SeekableResource(), SeekableResource()]
+        seekable_resources = [SeekableResource(5), SeekableResource(37), SeekableResource(16)]
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             try:
@@ -371,6 +382,7 @@ class TestRestfulClient:
 
             for resource in seekable_resources:
                 resource.assert_seek_called()
+                assert resource.pos == resource.initial_pos
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(

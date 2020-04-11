@@ -29,7 +29,7 @@ __all__ = [
     "RAISE",
     "dereference_handle",
     "attrib",
-    "attrs",
+    "marshallable",
     "HIKARI_ENTITY_MARSHALLER",
     "HikariEntityMarshaller",
 ]
@@ -439,21 +439,11 @@ class HikariEntityMarshaller:
 HIKARI_ENTITY_MARSHALLER = HikariEntityMarshaller()
 
 
-def attrs(**kwargs):
+def marshallable(*, marshaller: HikariEntityMarshaller = HIKARI_ENTITY_MARSHALLER):
     """Create a decorator for a class to make it into an :obj:`attr.s` class.
 
     Parameters
     ----------
-    **kwargs
-        Any kwargs to pass to :obj:`attr.s`.
-
-    Other Parameters
-    ----------------
-    auto_attribs : :obj:`bool`
-        This must always be ``False`` if specified, or a :obj:`ValueError`
-        will be raised, as this feature is not compatible with this
-        marshaller implementation. If not specified, it will default to
-        ``False``.
     marshaller : :obj:`HikariEntityMarshaller`
         If specified, this should be an instance of a marshaller to use. For
         most internal purposes, you want to not specify this, since it will
@@ -483,10 +473,6 @@ def attrs(**kwargs):
             ...
 
     """
-    assertions.assert_that(not kwargs.get("auto_attribs"), "Cannot use auto attribs here")
-    kwargs["auto_attribs"] = False
-    return lambda cls: kwargs.pop("marshaller", HIKARI_ENTITY_MARSHALLER).register(attr.s(**kwargs)(cls))
-
-
-if typing.TYPE_CHECKING:
-    attrs = attr.s
+    def decorator(cls):
+        return marshaller.register(cls)
+    return decorator

@@ -22,13 +22,16 @@ __all__ = ["User", "MyUser", "UserFlag", "PremiumType"]
 import enum
 import typing
 
+import attr
+
 from hikari import entities
 from hikari import snowflakes
 from hikari.internal import cdn
 from hikari.internal import marshaller
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class User(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents a user."""
 
@@ -126,7 +129,8 @@ class PremiumType(enum.IntEnum):
     NITRO = 2
 
 
-@marshaller.attrs(slots=True)
+@marshaller.marshallable()
+@attr.s(slots=True)
 class MyUser(User):
     """Represents a user with extended oauth2 information."""
 
