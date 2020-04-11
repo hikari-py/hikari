@@ -42,19 +42,22 @@ class CompiledRoute:
     #: The method to use on the route.
     #:
     #: :type: :obj:`str`
-    method: str
+    method: typing.Final[str]
+
     #: The major parameters in a bucket hash-compatible representation.
     #:
     #: :type: :obj:`str`
-    major_params_hash: str
+    major_params_hash: typing.Final[str]
+
     #: The compiled route path to use
     #:
     #: :type: :obj:`str`
-    compiled_path: str
+    compiled_path: typing.Final[str]
+
     #: The hash code
     #:
     #: :type: :obj:`int`
-    hash_code: int
+    hash_code: typing.Final[int]
 
     def __init__(self, method: str, path_template: str, path: str, major_params_hash: str) -> None:
         self.method = method
@@ -138,11 +141,12 @@ class RouteTemplate:
     #: The template string used for the path.
     #:
     #: :type: :obj:`str`
-    path_template: str
+    path_template: typing.Final[str]
+
     #: Major parameter names that appear in the template path.
     #:
     #: :type: :obj:`typing.FrozenSet` [ :obj:`str` ]
-    major_params: typing.FrozenSet[str]
+    major_params: typing.Final[typing.FrozenSet[str]]
 
     def __init__(self, path_template: str, major_params: typing.Collection[str] = None) -> None:
         self.path_template = path_template
@@ -182,81 +186,83 @@ class RouteTemplate:
         return self.path_template
 
 
+_RT = typing.Final[RouteTemplate]
+
 # Channels
-CHANNEL = RouteTemplate("/channels/{channel_id}")
-CHANNEL_DM_RECIPIENTS = RouteTemplate("/channels/{channel_id}/recipients/{user_id}")
-CHANNEL_INVITES = RouteTemplate("/channels/{channel_id}/invites")
-CHANNEL_MESSAGE = RouteTemplate("/channels/{channel_id}/messages/{message_id}")
-CHANNEL_MESSAGES = RouteTemplate("/channels/{channel_id}/messages")
-CHANNEL_MESSAGES_BULK_DELETE = RouteTemplate("/channels/{channel_id}/messages")
-CHANNEL_PERMISSIONS = RouteTemplate("/channels/{channel_id}/permissions/{overwrite_id}")
-CHANNEL_PIN = RouteTemplate("/channels/{channel_id}/pins/{message_id}")
-CHANNEL_PINS = RouteTemplate("/channels/{channel_id}/pins")
-CHANNEL_TYPING = RouteTemplate("/channels/{channel_id}/typing")
-CHANNEL_WEBHOOKS = RouteTemplate("/channels/{channel_id}/webhooks")
+CHANNEL: _RT = RouteTemplate("/channels/{channel_id}")
+CHANNEL_DM_RECIPIENTS: _RT = RouteTemplate("/channels/{channel_id}/recipients/{user_id}")
+CHANNEL_INVITES: _RT = RouteTemplate("/channels/{channel_id}/invites")
+CHANNEL_MESSAGE: _RT = RouteTemplate("/channels/{channel_id}/messages/{message_id}")
+CHANNEL_MESSAGES: _RT = RouteTemplate("/channels/{channel_id}/messages")
+CHANNEL_MESSAGES_BULK_DELETE: _RT = RouteTemplate("/channels/{channel_id}/messages")
+CHANNEL_PERMISSIONS: _RT = RouteTemplate("/channels/{channel_id}/permissions/{overwrite_id}")
+CHANNEL_PIN: _RT = RouteTemplate("/channels/{channel_id}/pins/{message_id}")
+CHANNEL_PINS: _RT = RouteTemplate("/channels/{channel_id}/pins")
+CHANNEL_TYPING: _RT = RouteTemplate("/channels/{channel_id}/typing")
+CHANNEL_WEBHOOKS: _RT = RouteTemplate("/channels/{channel_id}/webhooks")
 
 # Reactions
-ALL_REACTIONS = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions")
-REACTION_EMOJI = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions/{emoji}")
-REACTION_EMOJI_USER = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{used_id}")
-REACTIONS = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions/{emoji}")
+ALL_REACTIONS: _RT = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions")
+REACTION_EMOJI: _RT = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions/{emoji}")
+REACTION_EMOJI_USER: _RT = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{used_id}")
+REACTIONS: _RT = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions/{emoji}")
 
 # Guilds
-GUILD = RouteTemplate("/guilds/{guild_id}")
-GUILDS = RouteTemplate("/guilds")
-GUILD_AUDIT_LOGS = RouteTemplate("/guilds/{guild_id}/audit-logs")
-GUILD_BAN = RouteTemplate("/guilds/{guild_id}/bans/{user_id}")
-GUILD_BANS = RouteTemplate("/guilds/{guild_id}/bans")
-GUILD_CHANNELS = RouteTemplate("/guilds/{guild_id}/channels")
-GUILD_EMBED = RouteTemplate("/guilds/{guild_id}/embed")
-GUILD_EMOJI = RouteTemplate("/guilds/{guild_id}/emojis/{emoji_id}")
-GUILD_EMOJIS = RouteTemplate("/guilds/{guild_id}/emojis")
-GUILD_INTEGRATION = RouteTemplate("/guilds/{guild_id}/integrations/{integration_id}")
-GUILD_INTEGRATIONS = RouteTemplate("/guilds/{guild_id}/integrations")
-GUILD_INTEGRATION_SYNC = RouteTemplate("/guilds/{guild_id}/integrations/{integration_id}")
-GUILD_INVITES = RouteTemplate("/guilds/{guild_id}/invites")
-GUILD_MEMBERS = RouteTemplate("/guilds/{guild_id}/members")
-GUILD_MEMBER = RouteTemplate("/guilds/{guild_id}/members/{user_id}")
-GUILD_MEMBER_ROLE = RouteTemplate("/guilds/{guild_id}/members/{user_id}/roles/{role_id}")
-GUILD_PRUNE = RouteTemplate("/guilds/{guild_id}/prune")
-GUILD_ROLE = RouteTemplate("/guilds/{guild_id}/roles/{role_id}")
-GUILD_ROLES = RouteTemplate("/guilds/{guild_id}/roles")
-GUILD_VANITY_URL = RouteTemplate("/guilds/{guild_id}/vanity-url")
-GUILD_VOICE_REGIONS = RouteTemplate("/guilds/{guild_id}/regions")
-GUILD_WIDGET_IMAGE = RouteTemplate("/guilds/{guild_id}/widget.png")
-GUILD_WEBHOOKS = RouteTemplate("/guilds/{guild_id}/webhooks")
+GUILD: _RT = RouteTemplate("/guilds/{guild_id}")
+GUILDS: _RT = RouteTemplate("/guilds")
+GUILD_AUDIT_LOGS: _RT = RouteTemplate("/guilds/{guild_id}/audit-logs")
+GUILD_BAN: _RT = RouteTemplate("/guilds/{guild_id}/bans/{user_id}")
+GUILD_BANS: _RT = RouteTemplate("/guilds/{guild_id}/bans")
+GUILD_CHANNELS: _RT = RouteTemplate("/guilds/{guild_id}/channels")
+GUILD_EMBED: _RT = RouteTemplate("/guilds/{guild_id}/embed")
+GUILD_EMOJI: _RT = RouteTemplate("/guilds/{guild_id}/emojis/{emoji_id}")
+GUILD_EMOJIS: _RT = RouteTemplate("/guilds/{guild_id}/emojis")
+GUILD_INTEGRATION: _RT = RouteTemplate("/guilds/{guild_id}/integrations/{integration_id}")
+GUILD_INTEGRATIONS: _RT = RouteTemplate("/guilds/{guild_id}/integrations")
+GUILD_INTEGRATION_SYNC: _RT = RouteTemplate("/guilds/{guild_id}/integrations/{integration_id}")
+GUILD_INVITES: _RT = RouteTemplate("/guilds/{guild_id}/invites")
+GUILD_MEMBERS: _RT = RouteTemplate("/guilds/{guild_id}/members")
+GUILD_MEMBER: _RT = RouteTemplate("/guilds/{guild_id}/members/{user_id}")
+GUILD_MEMBER_ROLE: _RT = RouteTemplate("/guilds/{guild_id}/members/{user_id}/roles/{role_id}")
+GUILD_PRUNE: _RT = RouteTemplate("/guilds/{guild_id}/prune")
+GUILD_ROLE: _RT = RouteTemplate("/guilds/{guild_id}/roles/{role_id}")
+GUILD_ROLES: _RT = RouteTemplate("/guilds/{guild_id}/roles")
+GUILD_VANITY_URL: _RT = RouteTemplate("/guilds/{guild_id}/vanity-url")
+GUILD_VOICE_REGIONS: _RT = RouteTemplate("/guilds/{guild_id}/regions")
+GUILD_WIDGET_IMAGE: _RT = RouteTemplate("/guilds/{guild_id}/widget.png")
+GUILD_WEBHOOKS: _RT = RouteTemplate("/guilds/{guild_id}/webhooks")
 
 # Invites
-INVITE = RouteTemplate("/invites/{invite_code}")
+INVITE: _RT = RouteTemplate("/invites/{invite_code}")
 
 # Users
-USER = RouteTemplate("/users/{user_id}")
+USER: _RT = RouteTemplate("/users/{user_id}")
 
 # @me
-LEAVE_GUILD = RouteTemplate("/users/@me/guilds/{guild_id}")
-OWN_CONNECTIONS = RouteTemplate("/users/@me/connections")  # OAuth2 only
-OWN_DMS = RouteTemplate("/users/@me/channels")
-OWN_GUILDS = RouteTemplate("/users/@me/guilds")
-OWN_GUILD_NICKNAME = RouteTemplate("/guilds/{guild_id}/members/@me/nick")
-OWN_USER = RouteTemplate("/users/@me")
-OWN_REACTION = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me")
+LEAVE_GUILD: _RT = RouteTemplate("/users/@me/guilds/{guild_id}")
+OWN_CONNECTIONS: _RT = RouteTemplate("/users/@me/connections")  # OAuth2 only
+OWN_DMS: _RT = RouteTemplate("/users/@me/channels")
+OWN_GUILDS: _RT = RouteTemplate("/users/@me/guilds")
+OWN_GUILD_NICKNAME: _RT = RouteTemplate("/guilds/{guild_id}/members/@me/nick")
+OWN_USER: _RT = RouteTemplate("/users/@me")
+OWN_REACTION: _RT = RouteTemplate("/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me")
 
 # Voice
-VOICE_REGIONS = RouteTemplate("/voice/regions")
+VOICE_REGIONS: _RT = RouteTemplate("/voice/regions")
 
 # Webhooks
-WEBHOOK = RouteTemplate("/webhooks/{webhook_id}")
-WEBHOOK_WITH_TOKEN = RouteTemplate("/webhooks/{webhook_id}/{webhook_token}")
-WEBHOOK_WITH_TOKEN_GITHUB = RouteTemplate("/webhooks/{webhook_id}/{webhook_token}/github")
-WEBHOOK_WITH_TOKEN_SLACK = RouteTemplate("/webhooks/{webhook_id}/{webhook_token}/slack")
+WEBHOOK: _RT = RouteTemplate("/webhooks/{webhook_id}")
+WEBHOOK_WITH_TOKEN: _RT = RouteTemplate("/webhooks/{webhook_id}/{webhook_token}")
+WEBHOOK_WITH_TOKEN_GITHUB: _RT = RouteTemplate("/webhooks/{webhook_id}/{webhook_token}/github")
+WEBHOOK_WITH_TOKEN_SLACK: _RT = RouteTemplate("/webhooks/{webhook_id}/{webhook_token}/slack")
 
 # OAuth2 API
-OAUTH2_APPLICATIONS = RouteTemplate("/oauth2/applications")
-OAUTH2_APPLICATIONS_ME = RouteTemplate("/oauth2/applications/@me")
-OAUTH2_AUTHORIZE = RouteTemplate("/oauth2/authorize")
-OAUTH2_TOKEN = RouteTemplate("/oauth2/token")
-OAUTH2_TOKEN_REVOKE = RouteTemplate("/oauth2/token/revoke")
+OAUTH2_APPLICATIONS: _RT = RouteTemplate("/oauth2/applications")
+OAUTH2_APPLICATIONS_ME: _RT = RouteTemplate("/oauth2/applications/@me")
+OAUTH2_AUTHORIZE: _RT = RouteTemplate("/oauth2/authorize")
+OAUTH2_TOKEN: _RT = RouteTemplate("/oauth2/token")
+OAUTH2_TOKEN_REVOKE: _RT = RouteTemplate("/oauth2/token/revoke")
 
 # Gateway
-GATEWAY = RouteTemplate("/gateway")
-GATEWAY_BOT = RouteTemplate("/gateway/bot")
+GATEWAY: _RT = RouteTemplate("/gateway")
+GATEWAY_BOT: _RT = RouteTemplate("/gateway/bot")

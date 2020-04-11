@@ -117,7 +117,8 @@ def dereference_int_flag(
 
     Returns
     -------
-    The cast value as a flag.
+    :obj:`enum.IntFlag`
+        The cast value as a flag.
 
     Notes
     -----
@@ -125,8 +126,10 @@ def dereference_int_flag(
     - :obj:`str`
     - :obj:`int`
     - :obj:`typing.SupportsInt`
-    - :obj:`typing.Collection` [ ``Castable Value`` ] - values will be combined
-      using functional reduction via the :obj:operator.or_` operator.
+    - :obj:`typing.Collection` [ ``Castable Value`` ]
+
+    When a collection is passed, values will be combined using functional
+    reduction via the :obj:operator.or_` operator.
     """
     if isinstance(raw_value, str) and raw_value.isdigit():
         raw_value = int(raw_value)
@@ -305,11 +308,12 @@ def _construct_entity_descriptor(entity: typing.Any):
 
 
 class HikariEntityMarshaller:
-    """A global marshaller helper that helps deserialize and serialize any internal components.
+    """Hikari's utility to manage automated serialization and deserialization.
 
-    It can deserialize and serialize any internal componentsthat that are
-    decorated with the :obj:`attrs` decorator, and that are :obj:`attr.s`
-    classes using fields with the :obj:`attrib` function call descriptor.
+    It can deserialize and serialize any internal components that that are
+    decorated with the :obj:`marshallable` decorator, and that are
+    :func:`attr.s` classes using fields with the :obj:`attrib` function call
+    descriptor.
     """
 
     def __init__(self) -> None:
@@ -470,11 +474,10 @@ def marshallable(*, marshaller: HikariEntityMarshaller = HIKARI_ENTITY_MARSHALLE
     ``decorator(T) -> T``
         A decorator to decorate a class with.
 
-    Raises
-    ------
-    :obj:`ValueError`
-        If you attempt to use the ``auto_attribs`` feature provided by
-        :obj:`attr.s`.
+    Notes
+    -----
+    The ``auto_attribs`` functionality provided by :obj:`attr.s` is not
+    supported by this marshaller utility. Do not attempt to use it!
 
     Example
     -------

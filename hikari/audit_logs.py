@@ -194,6 +194,7 @@ class AuditLogChange(entities.HikariEntity, entities.Deserializable):
             new_value = value_converter(new_value) if new_value is not None else None
             old_value = value_converter(old_value) if old_value is not None else None
 
+        # noinspection PyArgumentList
         return cls(key=key, new_value=new_value, old_value=old_value)
 
 
@@ -420,7 +421,9 @@ def get_entry_info_entity(type_: int) -> typing.Type[BaseAuditLogEntryInfo]:
         The associated options entity. If not implemented then this will be
         :obj:`UnrecognisedAuditLogEntryInfo`
     """
-    return register_audit_log_entry_info.types.get(type_) or UnrecognisedAuditLogEntryInfo
+    types = getattr(register_audit_log_entry_info, "types", more_collections.EMPTY_DICT)
+    entry_type = types.get(type_)
+    return entry_type if entry_type is not None else UnrecognisedAuditLogEntryInfo
 
 
 @marshaller.marshallable()
@@ -475,6 +478,7 @@ class AuditLogEntry(snowflakes.UniqueEntity, entities.Deserializable):
             if option_converter := get_entry_info_entity(action_type):
                 options = option_converter.deserialize(options)
 
+        # noinspection PyArgumentList
         return cls(
             target_id=target_id,
             changes=[
