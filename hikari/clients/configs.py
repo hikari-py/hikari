@@ -207,9 +207,11 @@ class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
 
     #: The initial status to set the shards to when starting the gateway.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`hikari.guilds.PresenceStatus`
     initial_status: guilds.PresenceStatus = marshaller.attrib(
-        deserializer=guilds.PresenceStatus.__getitem__, if_undefined=lambda: "online", default="online",
+        deserializer=guilds.PresenceStatus.__getitem__,
+        if_undefined=lambda: guilds.PresenceStatus.ONLINE,
+        default=guilds.PresenceStatus.ONLINE,
     )
 
     #: Whether to show up as AFK or not on sign-in.

@@ -353,10 +353,15 @@ class AwaitableMock:
         self.await_count = 0
         self.return_value = return_value
 
+    def _is_exception(self, obj):
+        return isinstance(obj, BaseException) or isinstance(obj, type) and issubclass(obj, BaseException)
+
     def __await__(self):
         if False:
             yield
         self.await_count += 1
+        if self._is_exception(self.return_value):
+            raise self.return_value
         return self.return_value
 
     def assert_awaited_once(self):
