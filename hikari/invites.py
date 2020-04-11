@@ -29,7 +29,7 @@ from hikari import channels
 from hikari import entities
 from hikari import guilds
 from hikari import users
-from hikari.internal import cdn
+from hikari.internal import urls
 from hikari.internal import conversions
 from hikari.internal import marshaller
 
@@ -116,7 +116,7 @@ class InviteGuild(guilds.PartialGuild):
             The string URL.
         """
         if self.splash_hash:
-            return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("splashes", str(self.id), self.splash_hash, fmt=fmt, size=size)
         return None
 
     @property
@@ -142,7 +142,7 @@ class InviteGuild(guilds.PartialGuild):
             The string URL.
         """
         if self.banner_hash:
-            return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("banners", str(self.id), self.banner_hash, fmt=fmt, size=size)
         return None
 
     @property

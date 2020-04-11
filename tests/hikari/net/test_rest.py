@@ -364,11 +364,17 @@ class TestRestfulClient:
                 self.seeked = True
                 self.pos = pos
 
-            def tellg(self):
+            def tell(self):
                 return self.pos
 
             def assert_seek_called(self):
                 assert self.seeked
+
+            def read(self):
+                ...
+
+            def close(self):
+                ...
 
         rest_impl = await mock_rest_impl
         rest_impl.logger.debug.side_effect = exit_error
