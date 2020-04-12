@@ -40,7 +40,6 @@ import attr
 from hikari import entities
 from hikari import gateway_entities
 from hikari import guilds
-from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.net import codes
 
@@ -198,7 +197,7 @@ class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     #:
     #: :type: :obj:`hikari.guilds.PresenceStatus`
     initial_status: guilds.PresenceStatus = marshaller.attrib(
-        deserializer=guilds.PresenceStatus.__getitem__,
+        deserializer=guilds.PresenceStatus,
         if_undefined=lambda: guilds.PresenceStatus.ONLINE,
         default=guilds.PresenceStatus.ONLINE,
     )
@@ -213,7 +212,7 @@ class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     #:
     #: :type: :obj:`datetime.datetime`, optional
     initial_idle_since: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.unix_epoch_to_ts, if_none=None, if_undefined=None, default=None
+        deserializer=datetime.datetime.fromtimestamp, if_none=None, if_undefined=None, default=None
     )
 
     #: The intents to use for the connection.
@@ -221,8 +220,6 @@ class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     #: If being deserialized, this can be an integer bitfield, or a sequence of
     #: intent names. If
     #: unspecified, this will be set to ``None``.
-    #:
-    #: :type: :obj:`hikari.net.codes.GatewayIntent`, optional
     #:
     #: Examples
     #: --------
@@ -232,7 +229,7 @@ class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     #:    # Python example
     #:    GatewayIntent.GUILDS | GatewayIntent.GUILD_MESSAGES
     #:
-    #: ..code-block:: js
+    #: .. code-block:: js
     #:
     #:    // JSON example, using explicit bitfield values
     #:    513
@@ -252,6 +249,9 @@ class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     #:
     #: If you are using the V6 gateway implementation, setting this to ``None``
     #: will simply opt you into every event you can subscribe to.
+    #:
+    #:
+    #: :type: :obj:`hikari.net.codes.GatewayIntent`, optional
     intents: typing.Optional[codes.GatewayIntent] = marshaller.attrib(
         deserializer=lambda value: marshaller.dereference_int_flag(codes.GatewayIntent, value),
         if_undefined=None,
@@ -259,20 +259,22 @@ class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     )
 
     #: The large threshold to use.
+    #:
+    #: :type: :obj:`int`
     large_threshold: int = marshaller.attrib(deserializer=int, if_undefined=lambda: 250, default=True)
 
 
 def _parse_shard_info(payload):
-    range_matcher = re.search(r"(\d+)\s*(\.{2,3})\s*(\d+)", payload)
+    range_matcher = re.search(r"(\d+)\s*(\.{2,3})\s*(\d+)", payload) if isinstance(payload, str) else None
 
     if not range_matcher:
-        if isinstance(payload, str):
-            payload = int(payload)
-
         if isinstance(payload, int):
             return [payload]
 
-        raise ValueError('expected shard_ids to be one of int, list of int, or range string ("x..y")')
+        if isinstance(payload, list):
+            return payload
+
+        raise ValueError('expected shard_ids to be one of int, list of int, or range string ("x..y" or "x...y")')
 
     minimum, range_mod, maximum = range_matcher.groups()
     minimum, maximum = int(minimum), int(maximum)
@@ -290,9 +292,9 @@ class ShardConfig(BaseConfig):
     #: The shard IDs to produce shard connections for.
     #:
     #: If being deserialized, this can be several formats.
-    #:     ``12``, ``"12"``:
+    #:     ``12``:
     #:         A specific shard ID.
-    #:     ``[0, 1, 2, 3, 8, 9, 10]``, ``["0", "1", "2", "3", "8", "9", "10"]``:
+    #:     ``[0, 1, 2, 3, 8, 9, 10]``:
     #:         A sequence of shard IDs.
     #:     ``"5..16"``:
     #:         A range string. Two periods indicate a range of ``[5, 16)``
@@ -306,7 +308,7 @@ class ShardConfig(BaseConfig):
     #:         auto-sharding will be performed for you.
     #:
     #: :type: :obj:`typing.Sequence` [ :obj:`int` ], optional
-    shard_ids: typing.Sequence[int] = marshaller.attrib(
+    shard_ids: typing.Optional[typing.Sequence[int]] = marshaller.attrib(
         deserializer=_parse_shard_info, if_none=None, if_undefined=None, default=None
     )
 
