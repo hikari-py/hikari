@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
-import fnmatch
 import os
 import re
 import shutil
@@ -26,6 +25,13 @@ import tarfile
 import tempfile
 
 import nox.sessions
+
+nox.options.sessions = []
+
+
+def default_session(func):
+    nox.options.sessions.append(func.__name__)
+    return func
 
 
 def pathify(arg, *args, root=False):
@@ -51,6 +57,15 @@ MAIN_PACKAGE_PATH = MAIN_PACKAGE.replace(".", "/")
 REPOSITORY = f"https://gitlab.com/{OWNER}/{MAIN_PACKAGE}"
 
 
+@default_session
+@nox.session(reuse_venv=True)
+def format(session) -> None:
+    """Reformat code with Black. Pass the '--check' flag to check formatting only."""
+    session.install("black")
+    session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *session.posargs)
+
+
+@default_session
 @nox.session(reuse_venv=True)
 def test(session) -> None:
     """Run unit tests in Pytest."""
@@ -86,46 +101,7 @@ def test(session) -> None:
     )
 
 
-@nox.session(reuse_venv=True)
-def documentation(session) -> None:
-    """Generate documentation using Sphinx for the current branch."""
-    session.install("-r", "requirements.txt")
-    session.install("-r", "dev-requirements.txt")
-    session.install("-r", "doc-requirements.txt")
-
-    session.env["SPHINXOPTS"] = "-WTvvn"
-    session.run("sphinx-apidoc", "-e", "-o", DOCUMENTATION_DIR, MAIN_PACKAGE)
-    session.run(
-        "python", "-m", "sphinx.cmd.build", "-a", "-b", "html", "-j", "auto", "-n", DOCUMENTATION_DIR, ARTIFACT_DIR
-    )
-    for f in os.listdir(DOCUMENTATION_DIR):
-        if f in ("hikari.rst", "modules.rst") or re.match(r"hikari\.(\w|\.)+\.rst", f):
-            os.unlink(pathify(DOCUMENTATION_DIR, f))
-
-
-@nox.session(reuse_venv=True)
-def sast(session) -> None:
-    """Run static application security testing with Bandit."""
-    session.install("bandit")
-    pkg = MAIN_PACKAGE.split(".")[0]
-    session.run("bandit", pkg, "-r")
-
-
-@nox.session(reuse_venv=True)
-def safety(session) -> None:
-    """Run safety checks against a vulnerability database using Safety."""
-    session.install("-r", "requirements.txt")
-    session.install("safety")
-    session.run("safety", "check")
-
-
-@nox.session(reuse_venv=True)
-def format(session) -> None:
-    """Reformat code with Black. Pass the '--check' flag to check formatting only."""
-    session.install("black")
-    session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *session.posargs)
-
-
+@default_session
 @nox.session(reuse_venv=True)
 def docstyle(session) -> None:
     """Check docstrings with pydocstyle."""
@@ -135,6 +111,7 @@ def docstyle(session) -> None:
     session.run("pydocstyle", "--config=../pydocstyle.ini")
 
 
+@default_session
 @nox.session(reuse_venv=True)
 def lint(session) -> None:
     """Check formating with pylint"""
@@ -165,6 +142,42 @@ def lint(session) -> None:
                 stdout=fp,
                 success_codes=list(range(0, 256)),
             )
+
+
+@default_session
+@nox.session(reuse_venv=True)
+def sast(session) -> None:
+    """Run static application security testing with Bandit."""
+    session.install("bandit")
+    pkg = MAIN_PACKAGE.split(".")[0]
+    session.run("bandit", pkg, "-r")
+
+
+@default_session
+@nox.session(reuse_venv=True)
+def safety(session) -> None:
+    """Run safety checks against a vulnerability database using Safety."""
+    session.install("-r", "requirements.txt")
+    session.install("safety")
+    session.run("safety", "check")
+
+
+@default_session
+@nox.session(reuse_venv=True)
+def documentation(session) -> None:
+    """Generate documentation using Sphinx for the current branch."""
+    session.install("-r", "requirements.txt")
+    session.install("-r", "dev-requirements.txt")
+    session.install("-r", "doc-requirements.txt")
+
+    session.env["SPHINXOPTS"] = "-WTvvn"
+    session.run("sphinx-apidoc", "-e", "-o", DOCUMENTATION_DIR, MAIN_PACKAGE)
+    session.run(
+        "python", "-m", "sphinx.cmd.build", "-a", "-b", "html", "-j", "auto", "-n", DOCUMENTATION_DIR, ARTIFACT_DIR
+    )
+    for f in os.listdir(DOCUMENTATION_DIR):
+        if f in ("hikari.rst", "modules.rst") or re.match(r"hikari\.(\w|\.)+\.rst", f):
+            os.unlink(pathify(DOCUMENTATION_DIR, f))
 
 
 if os.getenv("CI"):
