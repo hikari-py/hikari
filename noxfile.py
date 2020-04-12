@@ -58,8 +58,8 @@ REPOSITORY = f"https://gitlab.com/{OWNER}/{MAIN_PACKAGE}"
 
 
 @default_session
-@nox.session(reuse_venv=True, name="format")
-def format_(session) -> None:
+@nox.session(reuse_venv=True)
+def format(session) -> None:
     """Reformat code with Black. Pass the '--check' flag to check formatting only."""
     session.install("black")
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *session.posargs)
