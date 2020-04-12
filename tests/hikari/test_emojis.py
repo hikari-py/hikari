@@ -30,6 +30,12 @@ class TestUnicodeEmoji:
 
         assert emoji_obj.name == "🤷"
 
+    def test_url_name(self):
+        assert emojis.UnicodeEmoji(name="🤷").url_name == "🤷"
+
+    def test_mention(self):
+        assert emojis.UnicodeEmoji(name="🤷").mention == "🤷"
+
 
 class TestUnknownEmoji:
     def test_deserialize(self):
@@ -38,6 +44,10 @@ class TestUnknownEmoji:
         assert emoji_obj.id == 1234
         assert emoji_obj.name == "test"
         assert emoji_obj.is_animated is True
+
+    def test_url_name(self):
+        name = emojis.UnknownEmoji(is_animated=True, id=650573534627758100, name="nyaa").url_name
+        assert name == "nyaa:650573534627758100"
 
 
 class TestGuildEmoji:
@@ -68,6 +78,26 @@ class TestGuildEmoji:
         assert emoji_obj.user == mock_user
         assert emoji_obj.is_colons_required is True
         assert emoji_obj.is_managed is False
+
+    @pytest.fixture()
+    def mock_guild_emoji_obj(self):
+        return emojis.GuildEmoji(
+            is_animated=False,
+            id=650573534627758100,
+            name="nyaa",
+            role_ids=[],
+            is_colons_required=True,
+            is_managed=False,
+            user=mock.MagicMock(users.User),
+        )
+
+    def test_mention_when_animated(self, mock_guild_emoji_obj):
+        mock_guild_emoji_obj.is_animated = True
+        assert mock_guild_emoji_obj.mention == "<a:nyaa:650573534627758100>"
+
+    def test_mention_when_not_animated(self, mock_guild_emoji_obj):
+        mock_guild_emoji_obj.is_animated = False
+        assert mock_guild_emoji_obj.mention == "<:nyaa:650573534627758100>"
 
 
 @pytest.mark.parametrize(

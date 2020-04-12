@@ -45,6 +45,16 @@ class UnicodeEmoji(Emoji):
     #: :type: :obj:`str`
     name: str = marshaller.attrib(deserializer=str)
 
+    @property
+    def url_name(self) -> str:
+        """Get the format of this emoji used in request routes."""
+        return self.name
+
+    @property
+    def mention(self) -> str:
+        """Get the format of this emoji used for sending it in a channel."""
+        return self.name
+
 
 @marshaller.marshallable()
 @attr.s(slots=True)
@@ -56,10 +66,15 @@ class UnknownEmoji(Emoji, snowflakes.UniqueEntity):
     #: :type: :obj:`str`, optional
     name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None)
 
-    #: Wheter the emoji is animated.
+    #: Whether the emoji is animated.
     #:
     #: :type: :obj:`bool`
     is_animated: bool = marshaller.attrib(raw_name="animated", deserializer=bool, if_undefined=False)
+
+    @property
+    def url_name(self) -> str:
+        """Get the format of this emoji used in request routes."""
+        return f"{self.name}:{self.id}"
 
 
 @marshaller.marshallable()
@@ -96,10 +111,15 @@ class GuildEmoji(UnknownEmoji):
         raw_name="require_colons", deserializer=bool, if_undefined=None
     )
 
-    #: Wheter the emoji is managed by an integration.
+    #: Whether the emoji is managed by an integration.
     #:
     #: :type: :obj:`bool`, optional
     is_managed: typing.Optional[bool] = marshaller.attrib(raw_name="managed", deserializer=bool, if_undefined=None)
+
+    @property
+    def mention(self) -> str:
+        """Get the format of this emoji used for sending it in a channel."""
+        return f"<{'a' if self.is_animated else ''}:{self.url_name}>"
 
 
 def deserialize_reaction_emoji(payload: typing.Dict) -> typing.Union[UnicodeEmoji, UnknownEmoji]:

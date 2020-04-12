@@ -222,7 +222,7 @@ class GroupDMChannel(DMChannel):
 
 @marshaller.marshallable()
 @attr.s(slots=True)
-class GuildChannel(Channel):
+class GuildChannel(Channel, entities.Serializable):
     """The base for anything that is a guild channel."""
 
     #: The ID of the guild the channel belongs to.
