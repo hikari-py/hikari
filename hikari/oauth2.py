@@ -191,7 +191,7 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
         """URL of this team's icon, if set."""
         return self.format_icon_url()
 
-    def format_icon_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
+    def format_icon_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the icon URL for this team if set.
 
         Parameters
@@ -200,13 +200,18 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
             The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
         size : :obj:`int`
-            The size to set for the URL, defaults to ``2048``. Can be any power
-            of two between 16 and 2048 inclusive.
+            The size to set for the URL, defaults to ``4096``. Can be any power
+            of two between 16 and 4096 inclusive.
 
         Returns
         -------
         :obj:`str`, optional
             The string URL.
+
+        Raises
+        ------
+        :obj:`ValueError`
+            If ``size`` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash:
             return urls.generate_cdn_url("team-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
@@ -330,7 +335,7 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
         """URL for this team's icon, if set."""
         return self.format_icon_url()
 
-    def format_icon_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
+    def format_icon_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the icon URL for this application if set.
 
         Parameters
@@ -339,13 +344,18 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
             The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ```webp``.
         size : :obj:`int`
-            The size to set for the URL, defaults to ``2048``.
-            Can be any power of two between 16 and 2048.
+            The size to set for the URL, defaults to ``4096``.
+            Can be any power of two between 16 and 4096.
 
         Returns
         -------
         :obj:`str`, optional
             The string URL.
+
+        Raises
+        ------
+        :obj:`ValueError`
+            If ``size`` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash:
             return urls.generate_cdn_url("app-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
@@ -356,7 +366,7 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
         """URL for this icon's store cover image, if set."""
         return self.format_cover_image_url()
 
-    def format_cover_image_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
+    def format_cover_image_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this application's store page's cover image is set and applicable.
 
         Parameters
@@ -365,13 +375,18 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
             The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
         size : :obj:`int`
-            The size to set for the URL, defaults to ``2048``.
-            Can be any power of two between 16 and 2048.
+            The size to set for the URL, defaults to ``4096``.
+            Can be any power of two between 16 and 4096.
 
         Returns
         -------
         :obj:`str`, optional
             The string URL.
+
+        Raises
+        ------
+        :obj:`ValueError`
+            If ``size`` is not a power of two or not between 16 and 4096.
         """
         if self.cover_image_hash:
             return urls.generate_cdn_url("app-assets", str(self.id), self.cover_image_hash, fmt=fmt, size=size)

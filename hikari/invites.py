@@ -98,7 +98,7 @@ class InviteGuild(guilds.PartialGuild):
     #: :type: :obj:`str`, optional
     vanity_url_code: typing.Optional[str] = marshaller.attrib(if_none=None, deserializer=str)
 
-    def format_splash_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
+    def format_splash_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this guild's splash, if set.
 
         Parameters
@@ -107,13 +107,18 @@ class InviteGuild(guilds.PartialGuild):
             The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg` and ``webp``.
         size : :obj:`int`
-            The size to set for the URL, defaults to ``2048``.
-            Can be any power of two between 16 and 2048.
+            The size to set for the URL, defaults to ``4096``.
+            Can be any power of two between 16 and 4096.
 
         Returns
         -------
         :obj:`str`, optional
             The string URL.
+
+        Raises
+        ------
+        :obj:`ValueError`
+            If ``size`` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash:
             return urls.generate_cdn_url("splashes", str(self.id), self.splash_hash, fmt=fmt, size=size)
@@ -124,7 +129,7 @@ class InviteGuild(guilds.PartialGuild):
         """URL for this guild's splash, if set."""
         return self.format_splash_url()
 
-    def format_banner_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
+    def format_banner_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this guild's banner, if set.
 
         Parameters
@@ -133,13 +138,18 @@ class InviteGuild(guilds.PartialGuild):
             The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
         size : :obj:`int`
-            The size to set for the URL, defaults to ``2048``.
-            Can be any power of two between 16 and 2048.
+            The size to set for the URL, defaults to ``4096``.
+            Can be any power of two between 16 and 4096.
 
         Returns
         -------
         :obj:`str`, optional
             The string URL.
+
+        Raises
+        ------
+        :obj:`ValueError`
+            If ``size`` is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash:
             return urls.generate_cdn_url("banners", str(self.id), self.banner_hash, fmt=fmt, size=size)
