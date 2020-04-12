@@ -315,14 +315,14 @@ class ActivityTimestamps(entities.HikariEntity, entities.Deserializable):
     #:
     #: :type: :obj:`datetime.datetime`, optional
     start: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.unix_epoch_to_ts, if_undefined=None
+        deserializer=conversions.unix_epoch_to_datetime, if_undefined=None
     )
 
     #: When this activity's session will end, if applicable.
     #:
     #: :type: :obj:`datetime.datetime`, optional
     end: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.unix_epoch_to_ts, if_undefined=None
+        deserializer=conversions.unix_epoch_to_datetime, if_undefined=None
     )
 
 
@@ -439,7 +439,7 @@ class PresenceActivity(entities.HikariEntity, entities.Deserializable):
     #: When this activity was added to the user's session.
     #:
     #: :type: :obj:`datetime.datetime`
-    created_at: datetime.datetime = marshaller.attrib(deserializer=conversions.unix_epoch_to_ts)
+    created_at: datetime.datetime = marshaller.attrib(deserializer=conversions.unix_epoch_to_datetime)
 
     #: The timestamps for when this activity's current state will start and
     #: end, if applicable.

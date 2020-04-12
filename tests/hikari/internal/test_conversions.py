@@ -183,7 +183,7 @@ def test_parse_discord_epoch_to_datetime():
 def test_parse_unix_epoch_to_datetime():
     unix_timestamp = 1457991678956
     expected_timestamp = datetime.datetime(2016, 3, 14, 21, 41, 18, 956000, tzinfo=datetime.timezone.utc)
-    assert conversions.unix_epoch_to_ts(unix_timestamp) == expected_timestamp
+    assert conversions.unix_epoch_to_datetime(unix_timestamp) == expected_timestamp
 
 
 @pytest.mark.parametrize(

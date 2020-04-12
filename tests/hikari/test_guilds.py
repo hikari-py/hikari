@@ -332,13 +332,13 @@ class TestActivityTimestamps:
         with _helpers.patch_marshal_attr(
             guilds.ActivityTimestamps,
             "start",
-            deserializer=hikari.internal.conversions.unix_epoch_to_ts,
+            deserializer=hikari.internal.conversions.unix_epoch_to_datetime,
             return_value=mock_start_date,
         ) as patched_start_deserializer:
             with _helpers.patch_marshal_attr(
                 guilds.ActivityTimestamps,
                 "end",
-                deserializer=hikari.internal.conversions.unix_epoch_to_ts,
+                deserializer=hikari.internal.conversions.unix_epoch_to_datetime,
                 return_value=mock_end_date,
             ) as patched_end_deserializer:
                 activity_timestamps_obj = guilds.ActivityTimestamps.deserialize(test_activity_timestamps_payload)
@@ -404,7 +404,7 @@ class TestPresenceActivity:
         with _helpers.patch_marshal_attr(
             guilds.PresenceActivity,
             "created_at",
-            deserializer=hikari.internal.conversions.unix_epoch_to_ts,
+            deserializer=hikari.internal.conversions.unix_epoch_to_datetime,
             return_value=mock_created_at,
         ) as patched_created_at_deserializer:
             with _helpers.patch_marshal_attr(
