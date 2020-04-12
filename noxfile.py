@@ -74,6 +74,11 @@ def test(session) -> None:
 
     additional_opts = ["--pastebin=all"] if os.getenv("CI") else []
 
+    # Apparently coverage doesn't replace this, leading to "no coverage was
+    # detected" which is helpful.
+    with contextlib.suppress(Exception):
+        shutil.move(".coverage", ".coverage.old")
+
     session.run(
         "python",
         "-m",
@@ -99,11 +104,6 @@ def test(session) -> None:
         *session.posargs,
         TEST_PATH,
     )
-
-    # Apparently coverage doesn't replace this, leading to "no coverage was
-    # detected" which is helpful.
-    with contextlib.suppress(Exception):
-        shutil.move(".coverage", ".coverage.old")
 
 
 @default_session
