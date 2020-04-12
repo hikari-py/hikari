@@ -818,7 +818,7 @@ class PartialGuild(snowflakes.UniqueEntity, entities.Deserializable):
         deserializer=lambda features: {conversions.try_cast(f, GuildFeature, f) for f in features},
     )
 
-    def format_icon_url(self, fmt: typing.Optional[str] = None, size: int = 2048) -> typing.Optional[str]:
+    def format_icon_url(self, fmt: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this guild's custom icon, if set.
 
         Parameters
@@ -828,13 +828,18 @@ class PartialGuild(snowflakes.UniqueEntity, entities.Deserializable):
             Supports ``png``, ``jpeg``, `jpg`, ``webp`` and ``gif`` (when
             animated).
         size : :obj:`int`
-            The size to set for the URL, defaults to ``2048``.
-            Can be any power of two between 16 and 2048.
+            The size to set for the URL, defaults to ``4096``.
+            Can be any power of two between 16 and 4096.
 
         Returns
         -------
         :obj:`str`, optional
             The string URL.
+
+        Raises
+        ------
+        :obj:`ValueError`
+            If ``size`` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash:
             if fmt is None and self.icon_hash.startswith("a_"):
@@ -1201,7 +1206,7 @@ class Guild(PartialGuild):
         if_none=None, deserializer=snowflakes.Snowflake.deserialize
     )
 
-    def format_splash_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
+    def format_splash_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this guild's splash image, if set.
 
         Parameters
@@ -1210,13 +1215,18 @@ class Guild(PartialGuild):
             The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
         size : :obj:`int`
-            The size to set for the URL, defaults to ``2048``.
-            Can be any power of two between 16 and 2048.
+            The size to set for the URL, defaults to ``4096``.
+            Can be any power of two between 16 and 4096.
 
         Returns
         -------
         :obj:`str`, optional
             The string URL.
+
+        Raises
+        ------
+        :obj:`ValueError`
+            If ``size`` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash:
             return urls.generate_cdn_url("splashes", str(self.id), self.splash_hash, fmt=fmt, size=size)
@@ -1227,7 +1237,7 @@ class Guild(PartialGuild):
         """URL for this guild's splash, if set."""
         return self.format_splash_url()
 
-    def format_discovery_splash_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
+    def format_discovery_splash_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this guild's discovery splash image, if set.
 
         Parameters
@@ -1236,13 +1246,18 @@ class Guild(PartialGuild):
             The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
         size : :obj:`int`
-            The size to set for the URL, defaults to ``2048``.
-            Can be any power of two between 16 and 2048.
+            The size to set for the URL, defaults to ``4096``.
+            Can be any power of two between 16 and 4096.
 
         Returns
         -------
         :obj:`str`, optional
             The string URL.
+
+        Raises
+        ------
+        :obj:`ValueError`
+            If ``size`` is not a power of two or not between 16 and 4096.
         """
         if self.discovery_splash_hash:
             return urls.generate_cdn_url(
@@ -1255,7 +1270,7 @@ class Guild(PartialGuild):
         """URL for this guild's discovery splash, if set."""
         return self.format_discovery_splash_url()
 
-    def format_banner_url(self, fmt: str = "png", size: int = 2048) -> typing.Optional[str]:
+    def format_banner_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this guild's banner image, if set.
 
         Parameters
@@ -1264,13 +1279,18 @@ class Guild(PartialGuild):
             The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
         size : :obj:`int`
-            The size to set for the URL, defaults to ``2048``.
-            Can be any power of two between 16 and 2048.
+            The size to set for the URL, defaults to ``4096``.
+            Can be any power of two between 16 and 4096.
 
         Returns
         -------
         :obj:`str`, optional
             The string URL.
+
+        Raises
+        ------
+        :obj:`ValueError`
+            If ``size`` is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash:
             return urls.generate_cdn_url("banners", str(self.id), self.banner_hash, fmt=fmt, size=size)
