@@ -26,7 +26,7 @@ __all__ = [
     "parse_http_date",
     "parse_iso_8601_ts",
     "discord_epoch_to_datetime",
-    "unix_epoch_to_ts",
+    "unix_epoch_to_datetime",
     "Seekable",
     "make_resource_seekable",
     "pluralize",
@@ -94,7 +94,7 @@ def put_if_specified(
     key: typing.Hashable,
     value: typing.Any,
     type_after: typing.Optional[TypeCastT] = None,
-    /
+    /,
 ) -> None:
     """Add a value to the mapping under the given key as long as the value is not ``...``.
 
@@ -231,7 +231,7 @@ def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
     return datetime.datetime.fromtimestamp(epoch / 1000 + DISCORD_EPOCH, datetime.timezone.utc)
 
 
-def unix_epoch_to_ts(epoch: int, /) -> datetime.datetime:
+def unix_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
     """Parse a UNIX epoch to a :obj:`datetime.datetime` object.
 
     Parameters
@@ -251,10 +251,7 @@ class Seekable(typing.Protocol[typing.AnyStr]):
     """Structural type for an IO object that supports seek operations."""
 
     def seek(
-        self,
-        offset: int,
-        whence: typing.Union[typing.Literal[0], typing.Literal[1], typing.Literal[2]] = 0,
-        /
+        self, offset: int, whence: typing.Union[typing.Literal[0], typing.Literal[1], typing.Literal[2]] = 0, /
     ) -> None:
         """Seek to the given offset.
 
