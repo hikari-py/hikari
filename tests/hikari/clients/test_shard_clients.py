@@ -316,7 +316,7 @@ class TestShardClient:
         )
 
         shard_client_obj._connection.update_presence.assert_called_once_with(
-            {"status": "dnd", "game": None, "idle_since": datetime_obj.timestamp(), "afk": True}
+            {"status": "dnd", "game": None, "idle_since": datetime_obj.timestamp() * 1000, "afk": True}
         )
 
         assert shard_client_obj._status == guilds.PresenceStatus.DND
@@ -331,6 +331,6 @@ class TestShardClient:
         assert returned == {
             "status": "dnd",
             "game": None,
-            "idle_since": datetime_obj.timestamp(),
+            "idle_since": datetime_obj.timestamp() * 1000,
             "afk": True,
         }

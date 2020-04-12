@@ -519,7 +519,7 @@ class ShardClient(runnable.RunnableClient):
     ) -> typing.Dict[str, typing.Any]:
         return {
             "status": status,
-            "idle_since": idle_since.timestamp() if idle_since is not None else None,
+            "idle_since": idle_since.timestamp() * 1000 if idle_since is not None else None,
             "game": activity.serialize() if activity is not None else None,
             "afk": is_afk,
         }
