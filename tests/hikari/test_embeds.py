@@ -17,12 +17,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
+from unittest import mock
 
-import cymock as mock
 import pytest
 
 import hikari.internal.conversions
-from hikari import embeds, colors
+from hikari import colors
+from hikari import embeds
 from tests.hikari import _helpers
 
 

@@ -18,16 +18,10 @@
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 import io
+from unittest import mock
 
-import cymock as mock
-import datetime
 import pytest
 
-
-from hikari.internal import conversions
-from hikari.clients import configs
-from hikari.clients import rest_clients
-from hikari.net import rest
 from hikari import audit_logs
 from hikari import channels
 from hikari import colors
@@ -44,7 +38,10 @@ from hikari import snowflakes
 from hikari import users
 from hikari import voices
 from hikari import webhooks
-
+from hikari.clients import configs
+from hikari.clients import rest_clients
+from hikari.internal import conversions
+from hikari.net import rest
 from tests.hikari import _helpers
 
 

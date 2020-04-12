@@ -23,13 +23,13 @@ import json
 import logging
 import ssl
 import unittest.mock
+from unittest import mock
 
 import aiohttp
-import cymock as mock
 import pytest
 
-from hikari.internal import conversions
 from hikari import errors
+from hikari.internal import conversions
 from hikari.net import ratelimits
 from hikari.net import rest
 from hikari.net import routes
