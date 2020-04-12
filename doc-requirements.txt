@@ -1,4 +1,4 @@
 Jinja2==2.11.1
-sphinx==2.4.4
+sphinx==3.0.1
 # sphinx-bootstrap-theme==0.7.1
 https://github.com/ryan-roemer/sphinx-bootstrap-theme/zipball/v0.8.0
