@@ -43,6 +43,7 @@ def test_assert_not_none_when_not_none(arg):
     assertions.assert_not_none(arg)
 
 
+@_helpers.assert_does_not_raise(type_=ValueError)
 @pytest.mark.parametrize(
     ["min_r", "max_r", "test"],
     [
@@ -59,17 +60,22 @@ def test_assert_not_none_when_not_none(arg):
     ],
 )
 def test_in_range_when_in_range(min_r, max_r, test):
-    try:
-        assertions.assert_in_range(test, min_r, max_r, "blah")
-    except ValueError:
-        assert False, "should not have failed."
+    assertions.assert_in_range(test, min_r, max_r, "blah")
 
 
+@_helpers.assert_raises(type_=ValueError)
 @pytest.mark.parametrize(["min_r", "max_r", "test"], [(0, 0, -1), (0, 10, 11), (10, 0, 5),])
 def test_in_range_when_not_in_range(min_r, max_r, test):
-    try:
-        assertions.assert_in_range(test, min_r, max_r, "blah")
-    except ValueError:
-        pass
-    else:
-        assert False, "should have failed."
+    assertions.assert_in_range(test, min_r, max_r, "blah")
+
+
+@_helpers.assert_does_not_raise(type_=ValueError)
+@pytest.mark.parametrize(["value", "power"], [(16, 2), (9, 3), (16, 4)])
+def test_assert_is_int_power_when_is_power(value, power):
+    assertions.assert_is_int_power(value, power)
+
+
+@_helpers.assert_raises(type_=ValueError)
+@pytest.mark.parametrize(["value", "power"], [(11, 2), (10, 3), (101, 4)])
+def test_assert_is_int_power_when_is_not_power(value, power):
+    assertions.assert_is_int_power(value, power)

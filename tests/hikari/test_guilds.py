@@ -640,7 +640,7 @@ class TestPartialGuild:
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = partial_guild_obj.format_icon_url()
             urls.generate_cdn_url.assert_called_once_with(
-                "icons", "152559372126519269", "a_d4a983885dsaa7691ce8bcaaf945a", fmt="gif", size=2048
+                "icons", "152559372126519269", "a_d4a983885dsaa7691ce8bcaaf945a", fmt="gif", size=4096
             )
         assert url == mock_url
 
@@ -650,7 +650,7 @@ class TestPartialGuild:
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = partial_guild_obj.format_icon_url()
             urls.generate_cdn_url.assert_called_once_with(
-                "icons", "152559372126519269", "d4a983885dsaa7691ce8bcaaf945a", fmt="png", size=2048
+                "icons", "152559372126519269", "d4a983885dsaa7691ce8bcaaf945a", fmt="png", size=4096
             )
         assert url == mock_url
 

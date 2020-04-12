@@ -28,8 +28,10 @@ __all__ = [
     "assert_that",
     "assert_not_none",
     "assert_in_range",
+    "assert_is_int_power",
 ]
 
+import math
 import typing
 
 ValueT = typing.TypeVar("ValueT")
@@ -54,3 +56,9 @@ def assert_in_range(value, min_inclusive, max_inclusive, name: str = None):
     if not (min_inclusive <= value <= max_inclusive):
         name = name or "The value"
         raise ValueError(f"{name} must be in the inclusive range of {min_inclusive} and {max_inclusive}")
+
+
+def assert_is_int_power(value: int, power: int) -> bool:
+    """If a value is not a power the given int, raise :obj:`ValueError`."""
+    logarithm = math.log(value, power)
+    assert_that(logarithm.is_integer(), f"value must be an integer power of {power}")

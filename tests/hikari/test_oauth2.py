@@ -192,7 +192,7 @@ class TestTeam:
         assert url is None
 
     def test_icon_url(self, team_obj):
-        mock_url = "https://cdn.discordapp.com/team-icons/202020202/hashtag.png?size=2048"
+        mock_url = "https://cdn.discordapp.com/team-icons/202020202/hashtag.png?size=4096"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = team_obj.icon_url
             urls.generate_cdn_url.assert_called_once()
@@ -237,11 +237,11 @@ class TestApplication:
         return _helpers.create_autospec(oauth2.Application, id=22222)
 
     def test_icon_url(self, application_obj):
-        mock_url = "https://cdn.discordapp.com/app-icons/209333111222/iwiwiwiwiw.png?size=2048"
+        mock_url = "https://cdn.discordapp.com/app-icons/209333111222/iwiwiwiwiw.png?size=4096"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = application_obj.icon_url
             urls.generate_cdn_url.assert_called_once()
-        assert url == "https://cdn.discordapp.com/app-icons/209333111222/iwiwiwiwiw.png?size=2048"
+        assert url == "https://cdn.discordapp.com/app-icons/209333111222/iwiwiwiwiw.png?size=4096"
 
     def test_format_icon_url(self, mock_application):
         mock_application.icon_hash = "wosososoos"
@@ -259,7 +259,7 @@ class TestApplication:
         assert url is None
 
     def test_cover_image_url(self, application_obj):
-        mock_url = "https://cdn.discordapp.com/app-assets/209333111222/hashmebaby.png?size=2048"
+        mock_url = "https://cdn.discordapp.com/app-assets/209333111222/hashmebaby.png?size=4096"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = application_obj.cover_image_url
             urls.generate_cdn_url.assert_called_once()

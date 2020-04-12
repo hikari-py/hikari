@@ -28,6 +28,7 @@ __all__ = [
 import typing
 import urllib.parse
 
+from hikari.internal import assertions
 
 #: The URL for the CDN.
 #:
@@ -55,12 +56,22 @@ def generate_cdn_url(*route_parts: str, fmt: str, size: typing.Optional[int]) ->
     size : :obj:`int`, optional
         The size to specify for the image in the query string if applicable,
         should be passed through as ``None`` to avoid the param being set.
+        Must be any power of two between 16 and 4096.
 
     Returns
     -------
     :obj:`str`
         The URL to the resource on the Discord CDN.
+
+    Raises
+    ------
+    :obj:`ValueError`
+        If ``size`` is not a power of two or not between 16 and 4096.
     """
+    if size:
+        assertions.assert_in_range(size, 16, 4096)
+        assertions.assert_is_int_power(size, 2)
+
     path = "/".join(urllib.parse.unquote(part) for part in route_parts)
     url = urllib.parse.urljoin(BASE_CDN_URL, "/" + path) + "." + str(fmt)
     query = urllib.parse.urlencode({"size": size}) if size is not None else None
