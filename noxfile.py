@@ -58,8 +58,8 @@ REPOSITORY = f"https://gitlab.com/{OWNER}/{MAIN_PACKAGE}"
 
 
 @default_session
-@nox.session(reuse_venv=True)
-def format(session) -> None:
+@nox.session(reuse_venv=True, name="format")
+def format_(session) -> None:
     """Reformat code with Black. Pass the '--check' flag to check formatting only."""
     session.install("black")
     session.run("python", BLACK_SHIM_PATH, *BLACK_PATHS, *session.posargs)
@@ -99,6 +99,11 @@ def test(session) -> None:
         *session.posargs,
         TEST_PATH,
     )
+
+    # Apparently coverage doesn't replace this, leading to "no coverage was
+    # detected" which is helpful.
+    with contextlib.suppress(Exception):
+        shutil.move(".coverage", ".coverage.old")
 
 
 @default_session

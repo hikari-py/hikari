@@ -39,9 +39,6 @@ pip-wheel-metadata/
 .pytest/
 .pytest_cache/
 
-# Pip stuff
-pip-wheel-metadata/
-
 # Poetry lockfile
 poetry.lock
 
