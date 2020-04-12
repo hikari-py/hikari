@@ -65,7 +65,7 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
         """URL for this user's custom avatar if set, else default."""
         return self.format_avatar_url()
 
-    def format_avatar_url(self, fmt: typing.Optional[str] = None, size: int = 2048) -> str:
+    def format_avatar_url(self, fmt: typing.Optional[str] = None, size: int = 4096) -> str:
         """Generate the avatar URL for this user's custom avatar if set, else their default avatar.
 
         Parameters
@@ -76,14 +76,19 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
             animated). Will be ignored for default avatars which can only be
             ``png``.
         size : :obj:`int`
-            The size to set for the URL, defaults to ``2048``.
-            Can be any power of two between 16 and 2048.
+            The size to set for the URL, defaults to ``4096``.
+            Can be any power of two between 16 and 4096.
             Will be ignored for default avatars.
 
         Returns
         -------
         :obj:`str`
             The string URL.
+
+        Raises
+        ------
+        :obj:`ValueError`
+            If ``size`` is not a power of two or not between 16 and 4096.
         """
         if not self.avatar_hash:
             return urls.generate_cdn_url("embed/avatars", str(self.default_avatar), fmt="png", size=None)
