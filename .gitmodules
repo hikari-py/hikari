@@ -1,0 +1,3 @@
+[submodule "wiki"]
+	path = wiki
+	url = https://gitlab.com/nekokatt/hikari.wiki.git
