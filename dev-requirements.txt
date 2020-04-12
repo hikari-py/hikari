@@ -1,14 +1,12 @@
 async-timeout==3.0.1
-coverage==5.0.3
+coverage==5.0.4
 nox
-pytest==5.3.5
+pytest==5.4.1
 pytest-asyncio==0.10.0
 pytest-cov==2.8.1
-pytest-html==2.0.1
+pytest-html==2.1.1
 pytest-xdist==1.31.0
 
 # My Cythonized mock module
 cymock==2020.2.26.2
 
-# We use this to get pretty output, but for now I have disabled it to see how it impacts test execution speed.
-# pytest-testdox==1.2.1
