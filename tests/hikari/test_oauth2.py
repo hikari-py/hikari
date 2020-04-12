@@ -163,10 +163,6 @@ class TestTeamMember:
 
 
 class TestTeam:
-    @pytest.fixture()
-    def team_obj(self, team_payload):
-        return oauth2.Team.deserialize(team_payload)
-
     def test_deserialize(self, team_payload, member_payload):
         mock_member = mock.MagicMock(oauth2.Team, user=mock.MagicMock(id=123))
         with mock.patch.object(oauth2.TeamMember, "deserialize", return_value=mock_member):
@@ -176,6 +172,10 @@ class TestTeam:
         assert team_obj.icon_hash == "hashtag"
         assert team_obj.id == 202020202
         assert team_obj.owner_user_id == 393030292
+
+    @pytest.fixture()
+    def team_obj(self, team_payload):
+        return oauth2.Team(id=None, icon_hash="3o2o32o", members=None, owner_user_id=None,)
 
     def test_format_icon_url(self):
         mock_team = _helpers.create_autospec(oauth2.Team, icon_hash="3o2o32o", id=22323)
@@ -201,24 +201,10 @@ class TestTeam:
 
 
 class TestApplication:
-    @pytest.fixture()
-    def application_obj(self, application_information_payload):
-        return oauth2.Application.deserialize(application_information_payload)
-
     def test_deserialize(self, application_information_payload, team_payload, owner_payload):
-        mock_team = mock.MagicMock(oauth2.Team)
-        mock_owner = mock.MagicMock(oauth2.ApplicationOwner)
-        with _helpers.patch_marshal_attr(
-            oauth2.Application, "team", deserializer=oauth2.Team.deserialize, return_value=mock_team
-        ) as patched_team_deserializer:
-            with _helpers.patch_marshal_attr(
-                oauth2.Application, "owner", deserializer=oauth2.ApplicationOwner.deserialize, return_value=mock_owner
-            ) as patched_owner_deserializer:
-                application_obj = oauth2.Application.deserialize(application_information_payload)
-                patched_owner_deserializer.assert_called_once_with(owner_payload)
-            patched_team_deserializer.assert_called_once_with(team_payload)
-        assert application_obj.team is mock_team
-        assert application_obj.owner is mock_owner
+        application_obj = oauth2.Application.deserialize(application_information_payload)
+        assert application_obj.team == oauth2.Team.deserialize(team_payload)
+        assert application_obj.owner == oauth2.ApplicationOwner.deserialize(owner_payload)
         assert application_obj.id == 209333111222
         assert application_obj.name == "Dream Sweet in Sea Major"
         assert application_obj.icon_hash == "iwiwiwiwiw"
@@ -232,6 +218,26 @@ class TestApplication:
         assert application_obj.primary_sku_id == 2020202002
         assert application_obj.slug == "192.168.1.254"
         assert application_obj.cover_image_hash == "hashmebaby"
+
+    @pytest.fixture()
+    def application_obj(self, application_information_payload):
+        return oauth2.Application(
+            team=None,
+            owner=None,
+            id=209333111222,
+            name=None,
+            icon_hash="iwiwiwiwiw",
+            description=None,
+            rpc_origins=None,
+            is_bot_public=None,
+            is_bot_code_grant_required=None,
+            summary=None,
+            verify_key=None,
+            guild_id=None,
+            primary_sku_id=None,
+            slug=None,
+            cover_image_hash="hashmebaby",
+        )
 
     @pytest.fixture()
     def mock_application(self):

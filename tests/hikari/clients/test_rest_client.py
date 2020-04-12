@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
+import contextlib
 import datetime
 import io
 from unittest import mock
@@ -229,9 +230,8 @@ class TestRESTClient:
         mock_payload = {"name": "Qts", "type": 2}
         mock_channel_obj = mock.MagicMock(channels.Channel)
         mock_overwrite_payload = {"type": "user", "id": 543543543}
-        mock_overwrite_obj = mock.create_autospec(
-            channels.PermissionOverwrite, serialize=mock.MagicMock(return_value=mock_overwrite_payload)
-        )
+        mock_overwrite_obj = mock.create_autospec(channels.PermissionOverwrite)
+        mock_overwrite_obj.serialize = mock.MagicMock(return_value=mock_overwrite_payload)
         rest_clients_impl._session.modify_channel.return_value = mock_payload
         with mock.patch.object(channels, "deserialize_channel", return_value=mock_channel_obj):
             result = await rest_clients_impl.update_channel(
@@ -756,27 +756,28 @@ class TestRESTClient:
         mock_allowed_mentions_payload = {"parse": ["everyone", "users", "roles"]}
         rest_clients_impl._generate_allowed_mentions = mock.MagicMock(return_value=mock_allowed_mentions_payload)
         mock_embed_payload = {"description": "424242"}
-        mock_embed_obj = mock.create_autospec(
-            embeds.Embed, auto_spec=True, serialize=mock.MagicMock(return_value=mock_embed_payload)
-        )
+        mock_embed_obj = mock.create_autospec(embeds.Embed, auto_spec=True)
+        mock_embed_obj.serialize = mock.MagicMock(return_value=mock_embed_payload)
         mock_media_obj = mock.MagicMock()
         mock_media_payload = ("aName.png", mock.MagicMock())
-        with mock.patch.object(messages.Message, "deserialize", return_value=mock_message_obj):
-            with mock.patch.object(media, "safe_read_file", return_value=mock_media_payload):
-                result = await rest_clients_impl.create_message(
-                    channel,
-                    content="A CONTENT",
-                    nonce="69696969696969",
-                    tts=True,
-                    files=[mock_media_obj],
-                    embed=mock_embed_obj,
-                    mentions_everyone=False,
-                    user_mentions=False,
-                    role_mentions=False,
-                )
-                assert result is mock_message_obj
-                media.safe_read_file.assert_called_once_with(mock_media_obj)
-                messages.Message.deserialize.assert_called_once_with(mock_message_payload)
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(messages.Message, "deserialize", return_value=mock_message_obj))
+        stack.enter_context(mock.patch.object(media, "safe_read_file", return_value=mock_media_payload))
+        with stack:
+            result = await rest_clients_impl.create_message(
+                channel,
+                content="A CONTENT",
+                nonce="69696969696969",
+                tts=True,
+                files=[mock_media_obj],
+                embed=mock_embed_obj,
+                mentions_everyone=False,
+                user_mentions=False,
+                role_mentions=False,
+            )
+            assert result is mock_message_obj
+            media.safe_read_file.assert_called_once_with(mock_media_obj)
+            messages.Message.deserialize.assert_called_once_with(mock_message_payload)
         rest_clients_impl._session.create_message.assert_called_once_with(
             channel_id="694463529998352394",
             content="A CONTENT",
@@ -980,9 +981,8 @@ class TestRESTClient:
         mock_payload = {"id": "4242", "content": "I HAVE BEEN UPDATED!"}
         mock_message_obj = mock.MagicMock(messages.Message)
         mock_embed_payload = {"description": "blahblah"}
-        mock_embed = mock.create_autospec(
-            embeds.Embed, auto_spec=True, serialize=mock.MagicMock(return_value=mock_embed_payload)
-        )
+        mock_embed = mock.create_autospec(embeds.Embed, auto_spec=True)
+        mock_embed.serialize = mock.MagicMock(return_value=mock_embed_payload)
         mock_allowed_mentions_payload = {"parse": [], "users": ["123"]}
         rest_clients_impl._generate_allowed_mentions = mock.MagicMock(return_value=mock_allowed_mentions_payload)
         rest_clients_impl._session.edit_message.return_value = mock_payload
@@ -1336,13 +1336,15 @@ class TestRESTClient:
         rest_clients_impl._session.create_guild_emoji.return_value = mock_emoji_payload
         mock_image_obj = mock.MagicMock(io.BytesIO)
         mock_image_data = mock.MagicMock(bytes)
-        with mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data):
-            with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj):
-                result = await rest_clients_impl.create_guild_emoji(
-                    guild=guild, name="fairEmoji", image_data=mock_image_obj, roles=[role], reason="hello",
-                )
-                assert result is mock_emoji_obj
-                emojis.GuildEmoji.deserialize.assert_called_once_with(mock_emoji_payload)
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data))
+        stack.enter_context(mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj))
+        with stack:
+            result = await rest_clients_impl.create_guild_emoji(
+                guild=guild, name="fairEmoji", image_data=mock_image_obj, roles=[role], reason="hello",
+            )
+            assert result is mock_emoji_obj
+            emojis.GuildEmoji.deserialize.assert_called_once_with(mock_emoji_payload)
             conversions.get_bytes_from_resource.assert_called_once_with(mock_image_obj)
         rest_clients_impl._session.create_guild_emoji.assert_called_once_with(
             guild_id="93443949", name="fairEmoji", image=mock_image_data, roles=["537340989808050216"], reason="hello",
@@ -1356,13 +1358,15 @@ class TestRESTClient:
         rest_clients_impl._session.create_guild_emoji.return_value = mock_emoji_payload
         mock_image_obj = mock.MagicMock(io.BytesIO)
         mock_image_data = mock.MagicMock(bytes)
-        with mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data):
-            with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj):
-                result = await rest_clients_impl.create_guild_emoji(
-                    guild=guild, name="fairEmoji", image_data=mock_image_obj,
-                )
-                assert result is mock_emoji_obj
-                emojis.GuildEmoji.deserialize.assert_called_once_with(mock_emoji_payload)
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data))
+        stack.enter_context(mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj))
+        with stack:
+            result = await rest_clients_impl.create_guild_emoji(
+                guild=guild, name="fairEmoji", image_data=mock_image_obj,
+            )
+            assert result is mock_emoji_obj
+            emojis.GuildEmoji.deserialize.assert_called_once_with(mock_emoji_payload)
             conversions.get_bytes_from_resource.assert_called_once_with(mock_image_obj)
         rest_clients_impl._session.create_guild_emoji.assert_called_once_with(
             guild_id="93443949", name="fairEmoji", image=mock_image_data, roles=..., reason=...,
@@ -1417,27 +1421,27 @@ class TestRESTClient:
         mock_image_obj = mock.MagicMock(io.BytesIO)
         mock_image_data = mock.MagicMock(bytes)
         mock_role_payload = {"permissions": 123123}
-        mock_role_obj = mock.create_autospec(
-            guilds.GuildRole, spec_set=True, serialize=mock.MagicMock(return_value=mock_role_payload)
-        )
+        mock_role_obj = mock.create_autospec(guilds.GuildRole, spec_set=True)
+        mock_role_obj.serialize = mock.MagicMock(return_value=mock_role_payload)
         mock_channel_payload = {"type": 2, "name": "aChannel"}
-        mock_channel_obj = mock.create_autospec(
-            channels.GuildChannel, spec_set=True, serialize=mock.MagicMock(return_value=mock_channel_payload)
-        )
-        with mock.patch.object(guilds.Guild, "deserialize", return_value=mock_guild_obj):
-            with mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data):
-                result = await rest_clients_impl.create_guild(
-                    name="OK",
-                    region=region,
-                    icon_data=mock_image_obj,
-                    verification_level=guilds.GuildVerificationLevel.NONE,
-                    default_message_notifications=guilds.GuildMessageNotificationsLevel.ONLY_MENTIONS,
-                    explicit_content_filter=guilds.GuildExplicitContentFilterLevel.MEMBERS_WITHOUT_ROLES,
-                    roles=[mock_role_obj],
-                    channels=[mock_channel_obj],
-                )
-                assert result is mock_guild_obj
-                conversions.get_bytes_from_resource.assert_called_once_with(mock_image_obj)
+        mock_channel_obj = mock.create_autospec(channels.GuildChannel, spec_set=True)
+        mock_channel_obj.serialize = mock.MagicMock(return_value=mock_channel_payload)
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(guilds.Guild, "deserialize", return_value=mock_guild_obj))
+        stack.enter_context(mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data))
+        with stack:
+            result = await rest_clients_impl.create_guild(
+                name="OK",
+                region=region,
+                icon_data=mock_image_obj,
+                verification_level=guilds.GuildVerificationLevel.NONE,
+                default_message_notifications=guilds.GuildMessageNotificationsLevel.ONLY_MENTIONS,
+                explicit_content_filter=guilds.GuildExplicitContentFilterLevel.MEMBERS_WITHOUT_ROLES,
+                roles=[mock_role_obj],
+                channels=[mock_channel_obj],
+            )
+            assert result is mock_guild_obj
+            conversions.get_bytes_from_resource.assert_called_once_with(mock_image_obj)
             guilds.Guild.deserialize.assert_called_once_with(mock_guild_payload)
         mock_channel_obj.serialize.assert_called_once()
         mock_role_obj.serialize.assert_called_once()
@@ -1499,41 +1503,45 @@ class TestRESTClient:
         mock_icon_obj = mock.MagicMock(io.BytesIO)
         mock_splash_data = mock.MagicMock(bytes)
         mock_splash_obj = mock.MagicMock(io.BytesIO)
-        with mock.patch.object(guilds.Guild, "deserialize", return_value=mock_guild_obj):
-            with mock.patch.object(
-                conversions, "get_bytes_from_resource", side_effect=[mock_icon_data, mock_splash_data]
-            ):
-                result = await rest_clients_impl.update_guild(
-                    guild,
-                    name="aNewName",
-                    region=region,
-                    verification_level=guilds.GuildVerificationLevel.LOW,
-                    default_message_notifications=guilds.GuildMessageNotificationsLevel.ONLY_MENTIONS,
-                    explicit_content_filter=guilds.GuildExplicitContentFilterLevel.ALL_MEMBERS,
-                    afk_channel=afk_channel,
-                    afk_timeout=afk_timeout,
-                    icon_data=mock_icon_obj,
-                    owner=owner,
-                    splash_data=mock_splash_obj,
-                    system_channel=system_channel,
-                    reason="A good reason",
-                )
-                assert result is mock_guild_obj
-            rest_clients_impl._session.modify_guild.assert_called_once_with(
-                guild_id="379953393319542784",
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(guilds.Guild, "deserialize", return_value=mock_guild_obj))
+        stack.enter_context(
+            mock.patch.object(conversions, "get_bytes_from_resource", side_effect=[mock_icon_data, mock_splash_data])
+        )
+        with stack:
+            result = await rest_clients_impl.update_guild(
+                guild,
                 name="aNewName",
-                region="LONDON",
-                verification_level=1,
-                default_message_notifications=1,
-                explicit_content_filter=2,
-                afk_channel_id="669517187031105607",
-                afk_timeout=300,
-                icon=mock_icon_data,
-                owner_id="379953393319542784",
-                splash=mock_splash_data,
-                system_channel_id="537340989808050216",
+                region=region,
+                verification_level=guilds.GuildVerificationLevel.LOW,
+                default_message_notifications=guilds.GuildMessageNotificationsLevel.ONLY_MENTIONS,
+                explicit_content_filter=guilds.GuildExplicitContentFilterLevel.ALL_MEMBERS,
+                afk_channel=afk_channel,
+                afk_timeout=afk_timeout,
+                icon_data=mock_icon_obj,
+                owner=owner,
+                splash_data=mock_splash_obj,
+                system_channel=system_channel,
                 reason="A good reason",
             )
+            assert result is mock_guild_obj
+            guilds.Guild.deserialize.assert_called_once_with(mock_guild_payload)
+            conversions.get_bytes_from_resource.has_calls(mock.call(mock_icon_obj), mock.call(mock_splash_obj))
+        rest_clients_impl._session.modify_guild.assert_called_once_with(
+            guild_id="379953393319542784",
+            name="aNewName",
+            region="LONDON",
+            verification_level=1,
+            default_message_notifications=1,
+            explicit_content_filter=2,
+            afk_channel_id="669517187031105607",
+            afk_timeout=300,
+            icon=mock_icon_data,
+            owner_id="379953393319542784",
+            splash=mock_splash_data,
+            system_channel_id="537340989808050216",
+            reason="A good reason",
+        )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
@@ -2319,15 +2327,15 @@ class TestRESTClient:
         rest_clients_impl._session.modify_current_user.return_value = mock_user_payload
         mock_avatar_obj = mock.MagicMock(io.BytesIO)
         mock_avatar_data = mock.MagicMock(bytes)
-        with mock.patch.object(users.MyUser, "deserialize", return_value=mock_user_obj):
-            with mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_avatar_data):
-                assert (
-                    await rest_clients_impl.update_me(username="aNewName", avatar_data=mock_avatar_obj) is mock_user_obj
-                )
-                rest_clients_impl._session.modify_current_user.assert_called_once_with(
-                    username="aNewName", avatar=mock_avatar_data
-                )
-                conversions.get_bytes_from_resource.assert_called_once_with(mock_avatar_obj)
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(users.MyUser, "deserialize", return_value=mock_user_obj))
+        stack.enter_context(mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_avatar_data))
+        with stack:
+            assert await rest_clients_impl.update_me(username="aNewName", avatar_data=mock_avatar_obj) is mock_user_obj
+            rest_clients_impl._session.modify_current_user.assert_called_once_with(
+                username="aNewName", avatar=mock_avatar_data
+            )
+            conversions.get_bytes_from_resource.assert_called_once_with(mock_avatar_obj)
             users.MyUser.deserialize.assert_called_once_with(mock_user_payload)
 
     @pytest.mark.asyncio
@@ -2468,13 +2476,15 @@ class TestRESTClient:
         rest_clients_impl._session.create_webhook.return_value = mock_webhook_payload
         mock_image_obj = mock.MagicMock(io.BytesIO)
         mock_image_data = mock.MagicMock(bytes)
-        with mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj):
-            with mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data):
-                result = await rest_clients_impl.create_webhook(
-                    channel=channel, name="aWebhook", avatar_data=mock_image_obj, reason="And a webhook is born."
-                )
-                assert result is mock_webhook_obj
-                conversions.get_bytes_from_resource.assert_called_once_with(mock_image_obj)
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj))
+        stack.enter_context(mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data))
+        with stack:
+            result = await rest_clients_impl.create_webhook(
+                channel=channel, name="aWebhook", avatar_data=mock_image_obj, reason="And a webhook is born."
+            )
+            assert result is mock_webhook_obj
+            conversions.get_bytes_from_resource.assert_called_once_with(mock_image_obj)
             webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload)
         rest_clients_impl._session.create_webhook.assert_called_once_with(
             channel_id="115590097100865541", name="aWebhook", avatar=mock_image_data, reason="And a webhook is born."
@@ -2550,26 +2560,29 @@ class TestRESTClient:
         rest_clients_impl._session.modify_webhook.return_value = mock_webhook_payload
         mock_image_obj = mock.MagicMock(io.BytesIO)
         mock_image_data = mock.MagicMock(bytes)
-        with mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj):
-            with mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data):
-                result = await rest_clients_impl.update_webhook(
-                    webhook,
-                    webhook_token="a.wEbHoOk.ToKeN",
-                    name="blah_blah_blah",
-                    avatar_data=mock_image_obj,
-                    channel=channel,
-                    reason="A reason",
-                )
-                assert result is mock_webhook_obj
-                rest_clients_impl._session.modify_webhook.assert_called_once_with(
-                    webhook_id="379953393319542784",
-                    webhook_token="a.wEbHoOk.ToKeN",
-                    name="blah_blah_blah",
-                    avatar=mock_image_data,
-                    channel_id="115590097100865541",
-                    reason="A reason",
-                )
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj))
+        stack.enter_context(mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data))
+        with stack:
+            result = await rest_clients_impl.update_webhook(
+                webhook,
+                webhook_token="a.wEbHoOk.ToKeN",
+                name="blah_blah_blah",
+                avatar_data=mock_image_obj,
+                channel=channel,
+                reason="A reason",
+            )
+            assert result is mock_webhook_obj
+            rest_clients_impl._session.modify_webhook.assert_called_once_with(
+                webhook_id="379953393319542784",
+                webhook_token="a.wEbHoOk.ToKeN",
+                name="blah_blah_blah",
+                avatar=mock_image_data,
+                channel_id="115590097100865541",
+                reason="A reason",
+            )
             webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload)
+            conversions.get_bytes_from_resource.assert_called_once_with(mock_image_obj)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("webhook", 379953393319542784, webhooks.Webhook)
@@ -2629,27 +2642,28 @@ class TestRESTClient:
         mock_allowed_mentions_payload = {"parse": ["everyone", "users", "roles"]}
         rest_clients_impl._generate_allowed_mentions = mock.MagicMock(return_value=mock_allowed_mentions_payload)
         mock_embed_payload = {"description": "424242"}
-        mock_embed_obj = mock.create_autospec(
-            embeds.Embed, auto_spec=True, serialize=mock.MagicMock(return_value=mock_embed_payload)
-        )
+        mock_embed_obj = mock.create_autospec(embeds.Embed, auto_spec=True)
+        mock_embed_obj.serialize = mock.MagicMock(return_value=mock_embed_payload)
         mock_media_obj = mock.MagicMock()
         mock_media_payload = ("aName.png", mock.MagicMock())
-        with mock.patch.object(media, "safe_read_file", return_value=mock_media_payload):
-            with mock.patch.object(messages.Message, "deserialize"):
-                await rest_clients_impl.execute_webhook(
-                    webhook,
-                    "a.webhook.token",
-                    content="THE TRUTH",
-                    username="User 97",
-                    avatar_url="httttttt/L//",
-                    tts=True,
-                    wait=True,
-                    file=mock_media_obj,
-                    embeds=[mock_embed_obj],
-                    mentions_everyone=False,
-                    role_mentions=False,
-                    user_mentions=False,
-                )
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(media, "safe_read_file", return_value=mock_media_payload))
+        stack.enter_context(mock.patch.object(messages.Message, "deserialize"))
+        with stack:
+            await rest_clients_impl.execute_webhook(
+                webhook,
+                "a.webhook.token",
+                content="THE TRUTH",
+                username="User 97",
+                avatar_url="httttttt/L//",
+                tts=True,
+                wait=True,
+                file=mock_media_obj,
+                embeds=[mock_embed_obj],
+                mentions_everyone=False,
+                role_mentions=False,
+                user_mentions=False,
+            )
             media.safe_read_file.assert_called_once_with(mock_media_obj)
         rest_clients_impl._session.execute_webhook.assert_called_once_with(
             webhook_id="379953393319542784",
