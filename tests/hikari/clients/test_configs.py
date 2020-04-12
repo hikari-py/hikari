@@ -16,17 +16,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
-import aiohttp
-import ssl
 import datetime
+import ssl
 
-import cymock as mock
+import aiohttp
 import pytest
 
 from hikari import gateway_entities
 from hikari import guilds
-from hikari.net import codes
 from hikari.clients import configs
+from hikari.net import codes
 from tests.hikari import _helpers
 
 

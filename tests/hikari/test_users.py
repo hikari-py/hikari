@@ -16,11 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
-import cymock as mock
+from unittest import mock
+
 import pytest
 
-from hikari.internal import urls
 from hikari import users
+from hikari.internal import urls
 
 
 @pytest.fixture()

@@ -16,13 +16,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
-import cymock as mock
+from unittest import mock
+
 import pytest
 
-from hikari.internal import urls
 from hikari import guilds
 from hikari import oauth2
 from hikari import users
+from hikari.internal import urls
 from tests.hikari import _helpers
 
 

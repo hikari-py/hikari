@@ -17,13 +17,16 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
+from unittest import mock
 
-import cymock as mock
 import pytest
 
 import hikari.internal.conversions
+from hikari import embeds
+from hikari import emojis
 from hikari import guilds
-from hikari import oauth2, emojis, embeds, messages
+from hikari import messages
+from hikari import oauth2
 from hikari import users
 from tests.hikari import _helpers
 

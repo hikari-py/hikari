@@ -6,7 +6,3 @@ pytest-asyncio==0.10.0
 pytest-cov==2.8.1
 pytest-html==2.1.1
 pytest-xdist==1.31.0
-
-# My Cythonized mock module
-cymock==2020.2.26.2
-

@@ -18,19 +18,18 @@
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 import math
-import asyncio
-import aiohttp
+from unittest import mock
 
-import cymock as mock
+import aiohttp
 import pytest
 
-from hikari import guilds
 from hikari import errors
-from hikari.net import shard
-from hikari.net import codes
-from hikari.state import raw_event_consumers
-from hikari.clients import shard_clients
+from hikari import guilds
 from hikari.clients import configs
+from hikari.clients import shard_clients
+from hikari.net import codes
+from hikari.net import shard
+from hikari.state import raw_event_consumers
 from tests.hikari import _helpers
 
 

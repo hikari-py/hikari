@@ -16,8 +16,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+from unittest import mock
+
 import attr
-import cymock as mock
 import pytest
 
 from hikari.internal import marshaller

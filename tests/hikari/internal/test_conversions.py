@@ -20,10 +20,10 @@ import concurrent.futures
 import datetime
 import inspect
 import io
-
-import cymock as mock
-import pytest
 import typing
+from unittest import mock
+
+import pytest
 
 from hikari.internal import conversions
 from tests.hikari import _helpers
