@@ -35,6 +35,7 @@ import async_timeout
 import cymock as mock
 import pytest
 
+from hikari import snowflakes
 from hikari.internal import marshaller
 
 _LOGGER = logging.getLogger(__name__)
@@ -253,8 +254,8 @@ def parametrize_valid_id_formats_for_models(param_name, id, model_type1, *model_
     ...     "guild",
     ...     [
     ...         1234,
-    ...         "1234",
-    ...         mock_model(guilds.Guild, id=1234, unavailable=False)
+    ...         snowflakes.Snowflake(1234),
+    ...         mock_model(guilds.Guild, id=snowflakes.Snowflake(1234), unavailable=False)
     ...     ],
     ...     id=lambda ...: ...
     ... )
@@ -266,13 +267,13 @@ def parametrize_valid_id_formats_for_models(param_name, id, model_type1, *model_
     def decorator(func):
         mock_models = []
         for model_type in model_types:
-            assert "SnowflakeMixin" in map(
+            assert "UniqueEntity" in map(
                 lambda mro: mro.__name__, model_type.mro()
-            ), "model must be an SnowflakeMixin derivative"
-            mock_models.append(mock_model(model_type, id=int(id), **kwargs))
+            ), "model must be an UniqueEntity derivative"
+            mock_models.append(mock_model(model_type, id=snowflakes.Snowflake(id), **kwargs))
 
         return pytest.mark.parametrize(
-            param_name, [str(id), int(id), *mock_models], ids=_parameterize_ids_id(param_name)
+            param_name, [int(id), snowflakes.Snowflake(id), *mock_models], ids=_parameterize_ids_id(param_name)
         )(func)
 
     return decorator
