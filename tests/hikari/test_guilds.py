@@ -268,9 +268,9 @@ class TestGuildEmbed:
 
 class TestGuildMember:
     def test_deserialize(self, test_member_payload, test_user_payload):
-        mock_user = mock.create_autospec(users.User)
-        mock_datetime_1 = mock.create_autospec(datetime.datetime)
-        mock_datetime_2 = mock.create_autospec(datetime.datetime)
+        mock_user = mock.MagicMock(users.User)
+        mock_datetime_1 = mock.MagicMock(datetime.datetime)
+        mock_datetime_2 = mock.MagicMock(datetime.datetime)
         stack = contextlib.ExitStack()
         patched_user_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
@@ -346,8 +346,8 @@ class TestGuildRole:
 
 class TestActivityTimestamps:
     def test_deserialize(self, test_activity_timestamps_payload):
-        mock_start_date = mock.create_autospec(datetime.datetime)
-        mock_end_date = mock.create_autospec(datetime.datetime)
+        mock_start_date = mock.MagicMock(datetime.datetime)
+        mock_end_date = mock.MagicMock(datetime.datetime)
         stack = contextlib.ExitStack()
         patched_start_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
@@ -424,8 +424,8 @@ class TestPresenceActivity:
         test_emoji_payload,
         test_activity_timestamps_payload,
     ):
-        mock_created_at = mock.create_autospec(datetime.datetime)
-        mock_emoji = mock.create_autospec(emojis.UnknownEmoji)
+        mock_created_at = mock.MagicMock(datetime.datetime)
+        mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
         stack = contextlib.ExitStack()
         patched_created_at_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
@@ -512,7 +512,7 @@ class TestGuildMemberPresence:
     def test_deserialize(
         self, test_guild_member_presence, test_user_payload, test_presence_activity_payload, test_client_status_payload
     ):
-        mock_since = mock.create_autospec(datetime.datetime)
+        mock_since = mock.MagicMock(datetime.datetime)
         with _helpers.patch_marshal_attr(
             guilds.GuildMemberPresence,
             "premium_since",
@@ -539,7 +539,7 @@ class TestGuildMemberBan:
         return {"reason": "Get Nyaa'ed", "user": test_user_payload}
 
     def test_deserializer(self, test_guild_member_ban_payload, test_user_payload):
-        mock_user = mock.create_autospec(users.User)
+        mock_user = mock.MagicMock(users.User)
         with _helpers.patch_marshal_attr(
             guilds.GuildMemberBan, "user", deserializer=users.User.deserialize, return_value=mock_user
         ) as patched_user_deserializer:
@@ -599,8 +599,8 @@ class TestGuildIntegration:
         }
 
     def test_deserialize(self, test_guild_integration_payload, test_user_payload, test_integration_account_payload):
-        mock_user = mock.create_autospec(users.User)
-        mock_sync_date = mock.create_autospec(datetime.datetime)
+        mock_user = mock.MagicMock(users.User)
+        mock_sync_date = mock.MagicMock(datetime.datetime)
         stack = contextlib.ExitStack()
         patched_sync_at_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
@@ -708,9 +708,9 @@ class TestGuild:
         test_channel_payload,
         test_guild_member_presence,
     ):
-        mock_emoji = mock.create_autospec(emojis.GuildEmoji, id=42)
-        mock_user = mock.create_autospec(users.User, id=84)
-        mock_guild_channel = mock.create_autospec(channels.GuildChannel, id=6969)
+        mock_emoji = mock.MagicMock(emojis.GuildEmoji, id=42)
+        mock_user = mock.MagicMock(users.User, id=84)
+        mock_guild_channel = mock.MagicMock(channels.GuildChannel, id=6969)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji))
         patched_user_deserializer = stack.enter_context(

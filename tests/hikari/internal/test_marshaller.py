@@ -78,7 +78,7 @@ def test_default_validator(data):
 
 class TestAttrs:
     def test_invokes_attrs(self):
-        marshaller_mock = mock.create_autospec(marshaller.HikariEntityMarshaller, spec_set=True)
+        marshaller_mock = mock.MagicMock(marshaller.HikariEntityMarshaller)
 
         kwargs = {"marshaller": marshaller_mock}
 

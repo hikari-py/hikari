@@ -169,7 +169,7 @@ def _can_weakref(spec_set):
 
 def mock_model(spec_set: typing.Type[T] = object, hash_code_provider=None, **kwargs) -> T:
     # Enables type hinting for my own reference, and quick attribute setting.
-    obj = create_autospec(spec_set)
+    obj = mock.MagicMock(spec_set)
     for name, value in kwargs.items():
         setattr(obj, name, value)
 
@@ -293,7 +293,7 @@ class AssertWarns:
 
     def __enter__(self):
         self.old_warning = warnings.warn_explicit
-        self.mocked_warning = create_autospec(warnings.warn)
+        self.mocked_warning = mock.MagicMock(warnings.warn)
         self.context = mock.patch("warnings.warn", new=self.mocked_warning)
         self.context.__enter__()
         return self
@@ -446,10 +446,6 @@ def timeout_after(time_period):
 
 def stupid_windows_please_stop_breaking_my_tests(test):
     return pytest.mark.skipif(os.name == "nt", reason="This test will not pass on Windows :(")(test)
-
-
-def create_autospec(spec, *args, **kwargs):
-    return mock.create_autospec(spec, spec_set=True, *args, **kwargs)
 
 
 def patch_marshal_attr(target_entity, field_name, *args, deserializer=None, serializer=None, **kwargs):
