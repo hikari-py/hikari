@@ -16,9 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
+import contextlib
 import datetime
+from unittest import mock
 
-import cymock as mock
 import pytest
 
 import hikari.internal.conversions
@@ -136,12 +137,16 @@ class TestReadyEvent:
     def test_deserialize(self, test_read_event_payload, test_guild_payload, test_user_payload):
         mock_guild = mock.MagicMock(guilds.Guild, id=40404040)
         mock_user = mock.MagicMock(users.MyUser)
-        with mock.patch.object(guilds.UnavailableGuild, "deserialize", return_value=mock_guild):
-            with _helpers.patch_marshal_attr(
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(guilds.UnavailableGuild, "deserialize", return_value=mock_guild))
+        patched_user_deserialize = stack.enter_context(
+            _helpers.patch_marshal_attr(
                 events.ReadyEvent, "my_user", deserializer=users.MyUser.deserialize, return_value=mock_user
-            ) as patched_user_deserialize:
-                ready_obj = events.ReadyEvent.deserialize(test_read_event_payload)
-                patched_user_deserialize.assert_called_once_with(test_user_payload)
+            )
+        )
+        with stack:
+            ready_obj = events.ReadyEvent.deserialize(test_read_event_payload)
+            patched_user_deserialize.assert_called_once_with(test_user_payload)
             guilds.UnavailableGuild.deserialize.assert_called_once_with(test_guild_payload)
         assert ready_obj.gateway_version == 69420
         assert ready_obj.my_user is mock_user
@@ -150,10 +155,10 @@ class TestReadyEvent:
         assert ready_obj._shard_information == (42, 80)
 
     @pytest.fixture()
-    @mock.patch.object(guilds.UnavailableGuild, "deserialize")
-    @_helpers.patch_marshal_attr(events.ReadyEvent, "my_user", deserializer=users.MyUser.deserialize)
-    def mock_ready_event_obj(self, *args, test_read_event_payload):
-        return events.ReadyEvent.deserialize(test_read_event_payload)
+    def mock_ready_event_obj(self):
+        return events.ReadyEvent(
+            gateway_version=None, my_user=None, unavailable_guilds=None, session_id=None, shard_information=(42, 80)
+        )
 
     def test_shard_id_when_information_set(self, mock_ready_event_obj):
         assert mock_ready_event_obj.shard_id == 42
@@ -203,17 +208,21 @@ class TestBaseChannelEvent:
         mock_timestamp = mock.MagicMock(datetime.datetime)
         mock_user = mock.MagicMock(users.User, id=42)
         mock_overwrite = mock.MagicMock(channels.PermissionOverwrite, id=64)
-        with _helpers.patch_marshal_attr(
-            events.BaseChannelEvent,
-            "last_pin_timestamp",
-            deserializer=hikari.internal.conversions.parse_iso_8601_ts,
-            return_value=mock_timestamp,
-        ) as patched_timestamp_deserializer:
-            with mock.patch.object(users.User, "deserialize", return_value=mock_user):
-                with mock.patch.object(channels.PermissionOverwrite, "deserialize", return_value=mock_overwrite):
-                    base_channel_payload = events.BaseChannelEvent.deserialize(test_base_channel_payload)
-                    channels.PermissionOverwrite.deserialize.assert_called_once_with(test_overwrite_payload)
-                users.User.deserialize.assert_called_once_with(test_user_payload)
+        stack = contextlib.ExitStack()
+        patched_timestamp_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                events.BaseChannelEvent,
+                "last_pin_timestamp",
+                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                return_value=mock_timestamp,
+            )
+        )
+        stack.enter_context(mock.patch.object(users.User, "deserialize", return_value=mock_user))
+        stack.enter_context(mock.patch.object(channels.PermissionOverwrite, "deserialize", return_value=mock_overwrite))
+        with stack:
+            base_channel_payload = events.BaseChannelEvent.deserialize(test_base_channel_payload)
+            channels.PermissionOverwrite.deserialize.assert_called_once_with(test_overwrite_payload)
+            users.User.deserialize.assert_called_once_with(test_user_payload)
             patched_timestamp_deserializer.assert_called_once_with("2019-05-17T06:26:56.936000+00:00")
         assert base_channel_payload.type is channels.ChannelType.GUILD_VOICE
         assert base_channel_payload.guild_id == 69240
@@ -378,17 +387,23 @@ class TestGuildMemberUpdateEvent:
     def test_deserialize(self, guild_member_update_payload, test_user_payload):
         mock_user = mock.MagicMock(users.User)
         mock_premium_since = mock.MagicMock(datetime.datetime)
-        with _helpers.patch_marshal_attr(
-            events.GuildMemberUpdateEvent, "user", deserializer=users.User.deserialize, return_value=mock_user
-        ) as patched_user_deserializer:
-            with _helpers.patch_marshal_attr(
+        stack = contextlib.ExitStack()
+        patched_user_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                events.GuildMemberUpdateEvent, "user", deserializer=users.User.deserialize, return_value=mock_user
+            )
+        )
+        patched_premium_since_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
                 events.GuildMemberUpdateEvent,
                 "premium_since",
                 deserializer=hikari.internal.conversions.parse_iso_8601_ts,
                 return_value=mock_premium_since,
-            ) as patched_premium_since_deserializer:
-                guild_member_update_obj = events.GuildMemberUpdateEvent.deserialize(guild_member_update_payload)
-                patched_premium_since_deserializer.assert_called_once_with("2019-05-17T06:26:56.936000+00:00")
+            )
+        )
+        with stack:
+            guild_member_update_obj = events.GuildMemberUpdateEvent.deserialize(guild_member_update_payload)
+            patched_premium_since_deserializer.assert_called_once_with("2019-05-17T06:26:56.936000+00:00")
             patched_user_deserializer.assert_called_once_with(test_user_payload)
         assert guild_member_update_obj.guild_id == 292929
         assert guild_member_update_obj.role_ids == [213, 412]
@@ -470,23 +485,31 @@ class TestInviteCreateEvent:
         mock_inviter = mock.MagicMock(users.User)
         mock_target = mock.MagicMock(users.User)
         mock_created_at = mock.MagicMock(datetime.datetime)
-        with _helpers.patch_marshal_attr(
-            events.InviteCreateEvent, "inviter", deserializer=users.User.deserialize, return_value=mock_inviter
-        ) as patched_inviter_deserializer:
-            with _helpers.patch_marshal_attr(
+        stack = contextlib.ExitStack()
+        patched_inviter_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                events.InviteCreateEvent, "inviter", deserializer=users.User.deserialize, return_value=mock_inviter
+            )
+        )
+        patched_target_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
                 events.InviteCreateEvent, "target_user", deserializer=users.User.deserialize, return_value=mock_target
-            ) as patched_target_deserializer:
-                with _helpers.patch_marshal_attr(
-                    events.InviteCreateEvent,
-                    "created_at",
-                    deserializer=hikari.internal.conversions.parse_iso_8601_ts,
-                    return_value=mock_created_at,
-                ) as patched_created_at_deserializer:
-                    invite_create_obj = events.InviteCreateEvent.deserialize(test_invite_create_payload)
-                    patched_created_at_deserializer.assert_called_once_with("2019-05-17T06:26:56.936000+00:00")
-                patched_target_deserializer.assert_called_once_with(
-                    {"id": "420", "username": "blah", "discriminator": "4242", "avatar": "ha"}
-                )
+            )
+        )
+        patched_created_at_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                events.InviteCreateEvent,
+                "created_at",
+                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                return_value=mock_created_at,
+            )
+        )
+        with stack:
+            invite_create_obj = events.InviteCreateEvent.deserialize(test_invite_create_payload)
+            patched_created_at_deserializer.assert_called_once_with("2019-05-17T06:26:56.936000+00:00")
+            patched_target_deserializer.assert_called_once_with(
+                {"id": "420", "username": "blah", "discriminator": "4242", "avatar": "ha"}
+            )
             patched_inviter_deserializer.assert_called_once_with(test_user_payload)
         assert invite_create_obj.channel_id == 939393
         assert invite_create_obj.code == "owouwuowouwu"
@@ -617,66 +640,74 @@ class TestMessageUpdateEvent:
         mock_activity = mock.MagicMock(messages.MessageActivity)
         mock_application = mock.MagicMock(oauth2.Application)
         mock_reference = mock.MagicMock(messages.MessageCrosspost)
-        with _helpers.patch_marshal_attr(
-            events.MessageUpdateEvent, "author", deserializer=users.User.deserialize, return_value=mock_author
-        ) as patched_author_deserializer:
-            with _helpers.patch_marshal_attr(
+        stack = contextlib.ExitStack()
+        patched_author_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                events.MessageUpdateEvent, "author", deserializer=users.User.deserialize, return_value=mock_author
+            )
+        )
+        patched_member_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
                 events.MessageUpdateEvent,
                 "member",
                 deserializer=guilds.GuildMember.deserialize,
                 return_value=mock_member,
-            ) as patched_member_deserializer:
-                with _helpers.patch_marshal_attr(
-                    events.MessageUpdateEvent,
-                    "timestamp",
-                    deserializer=hikari.internal.conversions.parse_iso_8601_ts,
-                    return_value=mock_timestamp,
-                ) as patched_timestamp_deserializer:
-                    with _helpers.patch_marshal_attr(
-                        events.MessageUpdateEvent,
-                        "edited_timestamp",
-                        deserializer=hikari.internal.conversions.parse_iso_8601_ts,
-                        return_value=mock_edited_timestamp,
-                    ) as patched_edit_deserializer:
-                        with _helpers.patch_marshal_attr(
-                            events.MessageUpdateEvent,
-                            "activity",
-                            deserializer=messages.MessageActivity.deserialize,
-                            return_value=mock_activity,
-                        ) as patched_activity_deserializer:
-                            with _helpers.patch_marshal_attr(
-                                events.MessageUpdateEvent,
-                                "application",
-                                deserializer=oauth2.Application.deserialize,
-                                return_value=mock_application,
-                            ) as patched_application_deserializer:
-                                with _helpers.patch_marshal_attr(
-                                    events.MessageUpdateEvent,
-                                    "message_reference",
-                                    deserializer=messages.MessageCrosspost.deserialize,
-                                    return_value=mock_reference,
-                                ) as patched_reference_deserializer:
-                                    with mock.patch.object(
-                                        messages.Attachment, "deserialize", return_value=mock_attachment
-                                    ):
-                                        with mock.patch.object(embeds.Embed, "deserialize", return_value=mock_embed):
-                                            with mock.patch.object(
-                                                messages.Reaction, "deserialize", return_value=mock_reaction
-                                            ):
-                                                message_update_payload = events.MessageUpdateEvent.deserialize(
-                                                    test_message_update_payload
-                                                )
-                                                messages.Reaction.deserialize.assert_called_once_with(
-                                                    test_reaction_payload
-                                                )
-                                            embeds.Embed.deserialize.assert_called_once_with(test_embed_payload)
-                                        messages.Attachment.deserialize.assert_called_once_with(test_attachment_payload)
-                                patched_reference_deserializer.assert_called_once_with(test_reference_payload)
-                                patched_application_deserializer.assert_called_once_with(test_application_payload)
-                            patched_activity_deserializer.assert_called_once_with(test_activity_payload)
-                        patched_edit_deserializer.assert_called_once_with("2019-05-17T06:58:56.936000+00:00")
-                    patched_timestamp_deserializer.assert_called_once_with("2019-05-17T06:26:56.936000+00:00")
-                patched_member_deserializer.assert_called_once_with(test_member_payload)
+            )
+        )
+        patched_timestamp_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                events.MessageUpdateEvent,
+                "timestamp",
+                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                return_value=mock_timestamp,
+            )
+        )
+        patched_edit_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                events.MessageUpdateEvent,
+                "edited_timestamp",
+                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                return_value=mock_edited_timestamp,
+            )
+        )
+        patched_activity_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                events.MessageUpdateEvent,
+                "activity",
+                deserializer=messages.MessageActivity.deserialize,
+                return_value=mock_activity,
+            )
+        )
+        patched_application_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                events.MessageUpdateEvent,
+                "application",
+                deserializer=oauth2.Application.deserialize,
+                return_value=mock_application,
+            )
+        )
+        patched_reference_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                events.MessageUpdateEvent,
+                "message_reference",
+                deserializer=messages.MessageCrosspost.deserialize,
+                return_value=mock_reference,
+            )
+        )
+        stack.enter_context(mock.patch.object(messages.Attachment, "deserialize", return_value=mock_attachment))
+        stack.enter_context(mock.patch.object(embeds.Embed, "deserialize", return_value=mock_embed))
+        stack.enter_context(mock.patch.object(messages.Reaction, "deserialize", return_value=mock_reaction))
+        with stack:
+            message_update_payload = events.MessageUpdateEvent.deserialize(test_message_update_payload)
+            messages.Reaction.deserialize.assert_called_once_with(test_reaction_payload)
+            embeds.Embed.deserialize.assert_called_once_with(test_embed_payload)
+            messages.Attachment.deserialize.assert_called_once_with(test_attachment_payload)
+            patched_reference_deserializer.assert_called_once_with(test_reference_payload)
+            patched_application_deserializer.assert_called_once_with(test_application_payload)
+            patched_activity_deserializer.assert_called_once_with(test_activity_payload)
+            patched_edit_deserializer.assert_called_once_with("2019-05-17T06:58:56.936000+00:00")
+            patched_timestamp_deserializer.assert_called_once_with("2019-05-17T06:26:56.936000+00:00")
+            patched_member_deserializer.assert_called_once_with(test_member_payload)
             patched_author_deserializer.assert_called_once_with(test_user_payload)
         assert message_update_payload.channel_id == 93939393939
         assert message_update_payload.guild_id == 66557744883399
@@ -750,20 +781,26 @@ class TestMessageReactionAddEvent:
     def test_deserialize(self, test_message_reaction_add_payload, test_member_payload, test_emoji_payload):
         mock_member = mock.MagicMock(guilds.GuildMember)
         mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
-        with _helpers.patch_marshal_attr(
-            events.MessageReactionAddEvent,
-            "member",
-            deserializer=guilds.GuildMember.deserialize,
-            return_value=mock_member,
-        ) as patched_member_deserializer:
-            with _helpers.patch_marshal_attr(
+        stack = contextlib.ExitStack()
+        patched_member_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                events.MessageReactionAddEvent,
+                "member",
+                deserializer=guilds.GuildMember.deserialize,
+                return_value=mock_member,
+            )
+        )
+        patched_emoji_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
                 events.MessageReactionAddEvent,
                 "emoji",
                 deserializer=emojis.deserialize_reaction_emoji,
                 return_value=mock_emoji,
-            ) as patched_emoji_deserializer:
-                message_reaction_add_obj = events.MessageReactionAddEvent.deserialize(test_message_reaction_add_payload)
-                patched_emoji_deserializer.assert_called_once_with(test_emoji_payload)
+            )
+        )
+        with stack:
+            message_reaction_add_obj = events.MessageReactionAddEvent.deserialize(test_message_reaction_add_payload)
+            patched_emoji_deserializer.assert_called_once_with(test_emoji_payload)
             patched_member_deserializer.assert_called_once_with(test_member_payload)
         assert message_reaction_add_obj.user_id == 9494949
         assert message_reaction_add_obj.channel_id == 4393939
@@ -859,12 +896,18 @@ class TestTypingStartEvent:
     def test_deserialize(self, test_typing_start_event_payload, test_member_payload):
         mock_member = mock.MagicMock(guilds.GuildMember)
         mock_datetime = mock.MagicMock(datetime.datetime)
-        with _helpers.patch_marshal_attr(
-            events.TypingStartEvent, "member", deserializer=guilds.GuildMember.deserialize, return_value=mock_member
-        ) as mock_member_deserialize:
-            with mock.patch.object(datetime, "datetime", fromtimestamp=mock.MagicMock(return_value=mock_datetime)):
-                typing_start_event_obj = events.TypingStartEvent.deserialize(test_typing_start_event_payload)
-                datetime.datetime.fromtimestamp.assert_called_once_with(1231231231, datetime.timezone.utc)
+        stack = contextlib.ExitStack()
+        mock_member_deserialize = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                events.TypingStartEvent, "member", deserializer=guilds.GuildMember.deserialize, return_value=mock_member
+            )
+        )
+        stack.enter_context(
+            mock.patch.object(datetime, "datetime", fromtimestamp=mock.MagicMock(return_value=mock_datetime))
+        )
+        with stack:
+            typing_start_event_obj = events.TypingStartEvent.deserialize(test_typing_start_event_payload)
+            datetime.datetime.fromtimestamp.assert_called_once_with(1231231231, datetime.timezone.utc)
             mock_member_deserialize.assert_called_once_with(test_member_payload)
         assert typing_start_event_obj.channel_id == 123123123
         assert typing_start_event_obj.guild_id == 33333333

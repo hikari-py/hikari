@@ -16,10 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
-import datetime
 import contextlib
+import datetime
+from unittest import mock
 
-import cymock as mock
 import pytest
 
 from hikari import audit_logs
@@ -560,7 +560,7 @@ class TestAuditLogIterator:
     @pytest.mark.asyncio
     async def test___anext___when_not_filled(self):
         mock_request = mock.AsyncMock(
-            side_effect=[{"webhooks": [], "users": [], "audit_log_entries": [{"id": "666666"}], "integrations": []},]
+            side_effect=[{"webhooks": [], "users": [], "audit_log_entries": [{"id": "666666"}], "integrations": []}]
         )
         mock_audit_log_entry = mock.MagicMock(audit_logs.AuditLogEntry, id=666666)
         iterator = audit_logs.AuditLogIterator(
@@ -578,7 +578,9 @@ class TestAuditLogIterator:
 
     @pytest.mark.asyncio
     async def test___anext___when_not_filled_and_limit_exhausted(self):
-        mock_request = mock.AsyncMock(side_effect=[])
+        mock_request = mock.AsyncMock(
+            side_effect=[{"webhooks": [], "users": [], "audit_log_entries": [], "integrations": []}]
+        )
         mock_audit_log_entry = mock.MagicMock(audit_logs.AuditLogEntry, id=666666)
         iterator = audit_logs.AuditLogIterator(
             guild_id="123123", request=mock_request, before=None, user_id=..., action_type=..., limit=None

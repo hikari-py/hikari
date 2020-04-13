@@ -16,17 +16,18 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
+import contextlib
 import datetime
+from unittest import mock
 
-import cymock as mock
 import pytest
 
-import hikari.internal.conversions
-from hikari.internal import urls
 from hikari import channels
 from hikari import guilds
 from hikari import invites
 from hikari import users
+from hikari.internal import conversions
+from hikari.internal import urls
 from tests.hikari import _helpers
 
 
@@ -87,16 +88,27 @@ def test_invite_with_metadata_payload(test_invite_payload):
 
 
 class TestInviteGuild:
-    @pytest.fixture()
-    def invite_guild_obj(self, test_invite_guild_payload):
-        return invites.InviteGuild.deserialize(test_invite_guild_payload)
-
-    def test_deserialize(self, invite_guild_obj):
+    def test_deserialize(self, test_invite_guild_payload):
+        invite_guild_obj = invites.InviteGuild.deserialize(test_invite_guild_payload)
         assert invite_guild_obj.splash_hash == "aSplashForSure"
         assert invite_guild_obj.banner_hash == "aBannerForSure"
         assert invite_guild_obj.description == "Describe me cute kitty."
         assert invite_guild_obj.verification_level is guilds.GuildVerificationLevel.MEDIUM
         assert invite_guild_obj.vanity_url_code == "I-am-very-vain"
+
+    @pytest.fixture()
+    def invite_guild_obj(self):
+        return invites.InviteGuild(
+            id="56188492224814744",
+            name=None,
+            icon_hash=None,
+            features=None,
+            splash_hash="aSplashForSure",
+            banner_hash="aBannerForSure",
+            description=None,
+            verification_level=None,
+            vanity_url_code=None,
+        )
 
     def test_format_splash_url(self, invite_guild_obj):
         mock_url = "https://not-al"
@@ -169,22 +181,32 @@ class TestInvite:
         mock_channel = mock.MagicMock(channels.PartialChannel)
         mock_user_1 = mock.MagicMock(users.User)
         mock_user_2 = mock.MagicMock(users.User)
-        with _helpers.patch_marshal_attr(
-            invites.Invite, "guild", deserializer=invites.InviteGuild.deserialize, return_value=mock_guild
-        ) as mock_guld_deseralize:
-            with _helpers.patch_marshal_attr(
+        stack = contextlib.ExitStack()
+        mock_guld_deseralize = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                invites.Invite, "guild", deserializer=invites.InviteGuild.deserialize, return_value=mock_guild
+            )
+        )
+        mock_channel_deseralize = stack.enter_context(
+            _helpers.patch_marshal_attr(
                 invites.Invite, "channel", deserializer=channels.PartialChannel.deserialize, return_value=mock_channel
-            ) as mock_channel_deseralize:
-                with _helpers.patch_marshal_attr(
-                    invites.Invite, "inviter", deserializer=users.User.deserialize, return_value=mock_user_1
-                ) as mock_inviter_deseralize:
-                    with _helpers.patch_marshal_attr(
-                        invites.Invite, "target_user", deserializer=users.User.deserialize, return_value=mock_user_2
-                    ) as mock_target_user_deseralize:
-                        invite_obj = invites.Invite.deserialize(test_invite_payload)
-                        mock_target_user_deseralize.assert_called_once_with(test_2nd_user_payload)
-                    mock_inviter_deseralize.assert_called_once_with(test_user_payload)
-                mock_channel_deseralize.assert_called_once_with(test_partial_channel)
+            )
+        )
+        mock_inviter_deseralize = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                invites.Invite, "inviter", deserializer=users.User.deserialize, return_value=mock_user_1
+            )
+        )
+        mock_target_user_deseralize = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                invites.Invite, "target_user", deserializer=users.User.deserialize, return_value=mock_user_2
+            )
+        )
+        with stack:
+            invite_obj = invites.Invite.deserialize(test_invite_payload)
+            mock_target_user_deseralize.assert_called_once_with(test_2nd_user_payload)
+            mock_inviter_deseralize.assert_called_once_with(test_user_payload)
+            mock_channel_deseralize.assert_called_once_with(test_partial_channel)
             mock_guld_deseralize.assert_called_once_with(test_invite_guild_payload)
         assert invite_obj.code == "aCode"
         assert invite_obj.guild is mock_guild
@@ -197,30 +219,34 @@ class TestInvite:
 
 
 class TestInviteWithMetadata:
-    @pytest.fixture()
-    @_helpers.patch_marshal_attr(invites.InviteWithMetadata, "guild", deserializer=invites.InviteGuild.deserialize)
-    @_helpers.patch_marshal_attr(
-        invites.InviteWithMetadata, "channel", deserializer=channels.PartialChannel.deserialize
-    )
-    @_helpers.patch_marshal_attr(invites.InviteWithMetadata, "inviter", deserializer=users.User.deserialize)
-    @_helpers.patch_marshal_attr(invites.InviteWithMetadata, "target_user", deserializer=users.User.deserialize)
-    def mock_invite_with_metadata(self, *args, test_invite_with_metadata_payload):
-        return invites.InviteWithMetadata.deserialize(test_invite_with_metadata_payload)
-
-    @_helpers.patch_marshal_attr(invites.InviteWithMetadata, "guild", deserializer=invites.InviteGuild.deserialize)
-    @_helpers.patch_marshal_attr(
-        invites.InviteWithMetadata, "channel", deserializer=channels.PartialChannel.deserialize
-    )
-    @_helpers.patch_marshal_attr(invites.InviteWithMetadata, "inviter", deserializer=users.User.deserialize)
-    @_helpers.patch_marshal_attr(invites.InviteWithMetadata, "target_user", deserializer=users.User.deserialize)
-    def test_deserialize(self, *deserializers, test_invite_with_metadata_payload):
+    def test_deserialize(self, test_invite_with_metadata_payload):
         mock_datetime = mock.MagicMock(datetime.datetime)
-        with _helpers.patch_marshal_attr(
-            invites.InviteWithMetadata,
-            "created_at",
-            deserializer=hikari.internal.conversions.parse_iso_8601_ts,
-            return_value=mock_datetime,
-        ) as mock_created_at_deserializer:
+        stack = contextlib.ExitStack()
+        stack.enter_context(
+            _helpers.patch_marshal_attr(
+                invites.InviteWithMetadata, "guild", deserializer=invites.InviteGuild.deserialize
+            )
+        )
+        stack.enter_context(
+            _helpers.patch_marshal_attr(
+                invites.InviteWithMetadata, "channel", deserializer=channels.PartialChannel.deserialize
+            )
+        )
+        stack.enter_context(
+            _helpers.patch_marshal_attr(invites.InviteWithMetadata, "inviter", deserializer=users.User.deserialize)
+        )
+        stack.enter_context(
+            _helpers.patch_marshal_attr(invites.InviteWithMetadata, "target_user", deserializer=users.User.deserialize)
+        )
+        mock_created_at_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                invites.InviteWithMetadata,
+                "created_at",
+                deserializer=conversions.parse_iso_8601_ts,
+                return_value=mock_datetime,
+            )
+        )
+        with stack:
             invite_with_metadata_obj = invites.InviteWithMetadata.deserialize(test_invite_with_metadata_payload)
             mock_created_at_deserializer.assert_called_once_with("2015-04-26T06:26:56.936000+00:00")
         assert invite_with_metadata_obj.uses == 3
@@ -228,6 +254,24 @@ class TestInviteWithMetadata:
         assert invite_with_metadata_obj.max_age == datetime.timedelta(seconds=239349393)
         assert invite_with_metadata_obj.is_temporary is True
         assert invite_with_metadata_obj.created_at is mock_datetime
+
+    @pytest.fixture()
+    def mock_invite_with_metadata(self, test_invite_with_metadata_payload):
+        return invites.InviteWithMetadata(
+            code=None,
+            guild=None,
+            channel=None,
+            inviter=None,
+            target_user=None,
+            target_user_type=None,
+            approximate_presence_count=None,
+            approximate_member_count=None,
+            uses=None,
+            max_uses=None,
+            max_age=datetime.timedelta(seconds=239349393),
+            is_temporary=None,
+            created_at=conversions.parse_iso_8601_ts("2015-04-26T06:26:56.936000+00:00"),
+        )
 
     def test_max_age_when_zero(self, test_invite_with_metadata_payload):
         test_invite_with_metadata_payload["max_age"] = 0
@@ -238,6 +282,6 @@ class TestInviteWithMetadata:
             "2022-11-25 12:23:29.936000+00:00"
         )
 
-    def test_expires_at_returns_None(self, mock_invite_with_metadata):
+    def test_expires_at_returns_none(self, mock_invite_with_metadata):
         mock_invite_with_metadata.max_age = None
         assert mock_invite_with_metadata.expires_at is None
