@@ -1,0 +1,89 @@
+# Copyright © Nekoka.tt 2019-2020
+#
+# This file is part of Hikari.
+#
+# Hikari is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Hikari is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+
+###
+### Base for a generic linting pipeline that is invoked via Nox.
+###
+.lint:
+  allow_failure: false
+  before_script:
+    - pip install nox
+  extends:
+    - .cpython-stable
+    - .reactive-job
+  interruptible: true
+  retry: 2
+  stage: lint
+
+###
+### Code linting.
+###
+### Looks for code style problems, code smells, and general bad things.
+### Failures are added as warnings to the pipeline.
+###
+"pylint":
+  allow_failure: true
+  artifacts:
+    reports:
+      junit: public/pylint.xml
+  extends: .lint
+  script:
+   - nox -s lint
+
+###
+### Documentation linting.
+###
+### If the documentation is clear and formatted correctly. Any failures
+### become warnings on the pipeline.
+###
+"pydocstyle":
+  allow_failure: true
+  extends: .lint
+  script:
+    - nox -s docstyle
+
+###
+### Code formatting.
+###
+### If the code style is not the Black code style, fail the pipeline.
+###
+"black":
+  extends: .lint
+  script:
+   - nox -s format -- --check --diff
+
+###
+### Security checks #1
+###
+### This runs static application security tests in addition to those that
+### GitLab provides. Any issues are reported and the pipeline is aborted.
+###
+"safety":
+  extends: .lint
+  script:
+   - nox -s safety
+
+###
+### Security checks #2.
+###
+### This runs static application security tests in addition to those that
+### GitLab provides. Any issues are reported and the pipeline is aborted.
+###
+"bandit":
+  extends: .lint
+  script:
+   - nox -s sast

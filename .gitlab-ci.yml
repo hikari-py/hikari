@@ -17,14 +17,20 @@
 
 stages:
   - test
-  - results
+  - install
+  - lint
+  - report
   - deploy
-  - post-deploy
+  - verify
 
 variables:
   DOCKER_DRIVER: "overlay2"
  
 include:
-  - local: "/gitlab/test.yml"
-  - local: "/gitlab/pages.yml"
-  - local: "/gitlab/deploy.yml"
+  - local: "/ci/bases.gitlab-ci.yml"
+  - local: "/ci/installations.gitlab-ci.yml"
+  - local: "/ci/integrations.gitlab-ci.yml"
+  - local: "/ci/linting.gitlab-ci.yml"
+  - local: "/ci/pages.gitlab-ci.yml"
+  - local: "/ci/releases.gitlab-ci.yml"
+  - local: "/ci/tests.gitlab-ci.yml"

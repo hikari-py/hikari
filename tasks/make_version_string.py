@@ -34,7 +34,7 @@ is_pages = len(sys.argv) > 1 and "pages" in sys.argv[1:]
 
 log_message("will use", "staging" if is_staging else "prod", "configuration for this next version")
 if is_pages:
-    log_message("will not bump versions up, this is just for gitlab pages")
+    log_message("will not bump versions up, this is just for ci pages")
 
 pypi_server = "pypi.org"
 api_name = os.getenv("API_NAME", "hikari")
