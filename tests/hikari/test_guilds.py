@@ -24,9 +24,11 @@ import pytest
 
 import hikari.internal.conversions
 from hikari import channels
+from hikari import colors
 from hikari import emojis
 from hikari import entities
 from hikari import guilds
+from hikari import permissions
 from hikari import users
 from hikari.internal import urls
 from tests.hikari import _helpers
@@ -358,6 +360,37 @@ class TestGuildRole:
         assert guild_role_obj.permissions == 66_321_471
         assert guild_role_obj.is_managed is False
         assert guild_role_obj.is_mentionable is False
+
+    def test_serialize_full_role(self):
+        guild_role_obj = guilds.GuildRole(
+            name="aRole",
+            color=colors.Color(444),
+            is_hoisted=True,
+            position=42,
+            permissions=permissions.Permission(69),
+            is_mentionable=True,
+            id=123,
+        )
+        assert guild_role_obj.serialize() == {
+            "name": "aRole",
+            "color": 444,
+            "hoist": True,
+            "position": 42,
+            "permissions": 69,
+            "mentionable": True,
+            "id": "123",
+        }
+
+    def test_serialize_partial_role(self):
+        guild_role_obj = guilds.GuildRole(name="aRole", id=123)
+        assert guild_role_obj.serialize() == {
+            "name": "aRole",
+            "color": 0,
+            "hoist": False,
+            "permissions": 0,
+            "mentionable": False,
+            "id": "123",
+        }
 
 
 class TestActivityTimestamps:

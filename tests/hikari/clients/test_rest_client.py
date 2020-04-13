@@ -1424,7 +1424,7 @@ class TestRESTClient:
         mock_role_obj = mock.MagicMock(guilds.GuildRole)
         mock_role_obj.serialize = mock.MagicMock(return_value=mock_role_payload)
         mock_channel_payload = {"type": 2, "name": "aChannel"}
-        mock_channel_obj = mock.MagicMock(channels.GuildNewsChannel)
+        mock_channel_obj = mock.MagicMock(channels.GuildChannelBuilder)
         mock_channel_obj.serialize = mock.MagicMock(return_value=mock_channel_payload)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(guilds.Guild, "deserialize", return_value=mock_guild_obj))

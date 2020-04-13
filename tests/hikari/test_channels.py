@@ -23,6 +23,7 @@ import pytest
 
 from hikari import channels
 from hikari import permissions
+from hikari import snowflakes
 from hikari import users
 
 
@@ -149,6 +150,11 @@ class TestPartialChannel:
         assert partial_channel_obj.type is channels.ChannelType.GUILD_TEXT
 
 
+class TestPermissionOverwriteType:
+    def test___int__(self):
+        assert str(channels.PermissionOverwriteType.ROLE) == "role"
+
+
 class TestPermissionOverwrite:
     def test_deserialize(self, test_permission_overwrite_payload):
         permission_overwrite_obj = channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
@@ -157,6 +163,21 @@ class TestPermissionOverwrite:
             == permissions.Permission.CREATE_INSTANT_INVITE | permissions.Permission.ADD_REACTIONS
         )
         assert permission_overwrite_obj.deny == permissions.Permission.EMBED_LINKS | permissions.Permission.ATTACH_FILES
+
+    def test_serialize_full_overwrite(self):
+        permission_overwrite_obj = channels.PermissionOverwrite(
+            id=snowflakes.Snowflake(11111111),
+            type=channels.PermissionOverwriteType.ROLE,
+            allow=permissions.Permission(1321),
+            deny=permissions.Permission(39939),
+        )
+        assert permission_overwrite_obj.serialize() == {"id": "11111111", "type": "role", "allow": 1321, "deny": 39939}
+
+    def test_serialize_partial_overwrite(self):
+        permission_overwrite_obj = channels.PermissionOverwrite(
+            id=snowflakes.Snowflake(11111111), type=channels.PermissionOverwriteType.ROLE,
+        )
+        assert permission_overwrite_obj.serialize() == {"id": "11111111", "type": "role", "allow": 0, "deny": 0}
 
     def test_unset(self):
         permission_overwrite_obj = channels.PermissionOverwrite(
@@ -283,6 +304,77 @@ class TestGuildVoiceChannell:
         assert channel_obj.type == channels.ChannelType.GUILD_VOICE
         assert channel_obj.bitrate == 64000
         assert channel_obj.user_limit == 3
+
+
+class TestGuildChannelBuilder:
+    def test___init__(self):
+        channel_builder_obj = channels.GuildChannelBuilder(
+            channel_name="A channel", channel_type=channels.ChannelType.GUILD_TEXT
+        )
+        assert channel_builder_obj._payload == {"type": 0, "name": "A channel"}
+
+    def test_is_sfw(self):
+        channel_builder_obj = channels.GuildChannelBuilder("A channel", channels.ChannelType.GUILD_TEXT).is_nsfw()
+        assert channel_builder_obj._payload == {"type": 0, "name": "A channel", "nsfw": True}
+
+    def test_with_permission_overwrites(self):
+        channel_builder_obj = channels.GuildChannelBuilder(
+            "A channel", channels.ChannelType.GUILD_TEXT
+        ).with_permission_overwrites(
+            [channels.PermissionOverwrite(id=1231, type=channels.PermissionOverwriteType.MEMBER)]
+        )
+        assert channel_builder_obj._payload == {
+            "type": 0,
+            "name": "A channel",
+            "permission_overwrites": [{"type": "member", "id": "1231", "allow": 0, "deny": 0}],
+        }
+
+    def test_with_topic(self):
+        channel_builder_obj = channels.GuildChannelBuilder("A channel", channels.ChannelType.GUILD_TEXT).with_topic(
+            "A TOPIC"
+        )
+        assert channel_builder_obj._payload == {"type": 0, "name": "A channel", "topic": "A TOPIC"}
+
+    def test_with_bitrate(self):
+        channel_builder_obj = channels.GuildChannelBuilder("A channel", channels.ChannelType.GUILD_TEXT).with_bitrate(
+            123123
+        )
+        assert channel_builder_obj._payload == {"type": 0, "name": "A channel", "bitrate": 123123}
+
+    def test_with_user_limit(self):
+        channel_builder_obj = channels.GuildChannelBuilder(
+            "A channel", channels.ChannelType.GUILD_TEXT
+        ).with_user_limit(123123)
+        assert channel_builder_obj._payload == {"type": 0, "name": "A channel", "user_limit": 123123}
+
+    @pytest.mark.parametrize("rate_limit", [3232, datetime.timedelta(seconds=3232)])
+    def test_with_rate_limit_per_user(self, rate_limit):
+        channel_builder_obj = channels.GuildChannelBuilder(
+            "A channel", channels.ChannelType.GUILD_TEXT
+        ).with_rate_limit_per_user(rate_limit)
+        assert channel_builder_obj._payload == {"type": 0, "name": "A channel", "rate_limit_per_user": 3232}
+
+    @pytest.mark.parametrize(
+        "category", [54321, snowflakes.Snowflake(54321)],
+    )
+    def test_with_parent_category(self, category):
+        channel_builder_obj = channels.GuildChannelBuilder(
+            "A channel", channels.ChannelType.GUILD_TEXT
+        ).with_parent_category(category)
+        assert channel_builder_obj._payload == {"type": 0, "name": "A channel", "parent_id": "54321"}
+
+    @pytest.mark.parametrize("placeholder_id", [444444, snowflakes.Snowflake(444444)])
+    def test_with_user_limit(self, placeholder_id):
+        channel_builder_obj = channels.GuildChannelBuilder("A channel", channels.ChannelType.GUILD_TEXT).with_id(
+            placeholder_id
+        )
+        assert channel_builder_obj._payload == {"type": 0, "name": "A channel", "id": "444444"}
+
+    def test_serialize(self):
+        mock_payload = {"id": "424242", "name": "aChannel", "type": 4, "nsfw": True}
+        channel_builder_obj = channels.GuildChannelBuilder("A channel", channels.ChannelType.GUILD_TEXT)
+        channel_builder_obj._payload = mock_payload
+        assert channel_builder_obj.serialize() == mock_payload
 
 
 def test_deserialize_channel_returns_correct_type(
