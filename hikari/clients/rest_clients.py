@@ -827,7 +827,7 @@ class RESTClient:
             and can usually be ignored.
         tts : :obj:`bool`
             If specified, whether the message will be sent as a TTS message.
-        files : :obj:`typing.Collection` [ :obj:`hikari.media.IO` ]
+        files : :obj:`typing.Collection` [ ``hikari.media.IO`` ]
             If specified, this should be a list of inclusively between ``1`` and
             ``5`` IO like media objects, as defined in :mod:`hikari.media`.
         embed : :obj:`hikari.embeds.Embed`
@@ -1664,7 +1664,7 @@ class RESTClient:
             The object or ID of the guild to create the emoji in.
         name : :obj:`str`
             The new emoji's name.
-        image_data : :obj:`hikari.internal.conversions.FileLikeT`
+        image_data : ``hikari.internal.conversions.FileLikeT``
             The ``128x128`` image data.
         roles : :obj:`typing.Sequence` [ :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ]
             If specified, a list of role objects or IDs for which the emoji
@@ -1813,7 +1813,7 @@ class RESTClient:
             If specified, the voice region ID for new guild. You can use
             :meth:`fetch_guild_voice_regions` to see which region IDs are
             available.
-        icon_data : :obj:`hikari.internal.conversions.FileLikeT`
+        icon_data : ``hikari.internal.conversions.FileLikeT``
             If specified, the guild icon image data.
         verification_level : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildVerificationLevel`, :obj:`int` ]
             If specified, the verification level. Passing a raw int for this
@@ -1928,11 +1928,11 @@ class RESTClient:
             If specified, the object or ID for the new AFK voice channel.
         afk_timeout : :obj:`typing.Union` [ :obj:`datetime.timedelta`, :obj:`int` ]
             If specified, the new AFK timeout seconds timedelta.
-        icon_data : :obj:`hikari.internal.conversions.FileLikeT`
+        icon_data : ``hikari.internal.conversions.FileLikeT``
             If specified, the new guild icon image file data.
         owner : :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
             If specified, the object or ID of the new guild owner.
-        splash_data : :obj:`hikari.internal.conversions.FileLikeT`
+        splash_data : ``hikari.internal.conversions.FileLikeT``
             If specified, the new new splash image file data.
         system_channel : :obj:`typing.Union` [ :obj:`hikari.channels.GuildVoiceChannel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
             If specified, the object or ID of the new system channel.
@@ -3396,7 +3396,7 @@ class RESTClient:
         ----------
         username : :obj:`str`
             If specified, the new username string.
-        avatar_data : :obj:`hikari.internal.conversions.FileLikeT`, optional
+        avatar_data : ``hikari.internal.conversions.FileLikeT``, optional
             If specified, the new avatar image data.
             If it is :obj:`None`, the avatar is removed.
 
@@ -3610,7 +3610,7 @@ class RESTClient:
             The object or ID of the channel for webhook to be created in.
         name : :obj:`str`
             The webhook's name string.
-        avatar_data : :obj:`hikari.internal.conversions.FileLikeT`
+        avatar_data : ``hikari.internal.conversions.FileLikeT``
             If specified, the avatar image data.
         reason : :obj:`str`
             If specified, the audit log reason explaining why the operation
@@ -3761,7 +3761,7 @@ class RESTClient:
             session's provided authorization ``token``).
         name : :obj:`str`
             If specified, the new name string.
-        avatar_data : :obj:`hikari.internal.conversions.FileLikeT`, optional
+        avatar_data : ``hikari.internal.conversions.FileLikeT``, optional
             If specified, the new avatar image file object. If :obj:`None`, then
             it is removed.
         channel : :obj:`typing.Union` [ :obj:`hikari.channels.GuildChannel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
@@ -3875,7 +3875,7 @@ class RESTClient:
         wait : :obj:`bool`
             If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
-        file : :obj:`hikari.media.IO`
+        file : ``hikari.media.IO``
             If specified, this is a file object to send along with the webhook
             as defined in :mod:`hikari.media`.
         embeds : :obj:`typing.Sequence` [ :obj:`hikari.embeds.Embed` ]
