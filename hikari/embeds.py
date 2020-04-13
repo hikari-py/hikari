@@ -190,7 +190,7 @@ class EmbedField(entities.HikariEntity, entities.Deserializable, entities.Serial
     #: :type: :obj:`str`
     value: str = marshaller.attrib(deserializer=str, serializer=str)
 
-    #: Whether the field should display inline. Defaults to ``False``.
+    #: Whether the field should display inline. Defaults to :obj:`False`.
     #:
     #: :type: :obj:`bool`
     is_inline: bool = marshaller.attrib(raw_name="inline", deserializer=bool, serializer=bool, if_undefined=False)

@@ -66,25 +66,25 @@ class DebugConfig(BaseConfig):
 class AIOHTTPConfig(BaseConfig):
     """Config for components that use AIOHTTP somewhere."""
 
-    #: If ``True``, allow following redirects from ``3xx`` HTTP responses.
+    #: If :obj:`True`, allow following redirects from ``3xx`` HTTP responses.
     #: Generally you do not want to enable this unless you have a good reason
     #: to.
     #:
-    #: Defaults to ``False`` if unspecified during deserialization.
+    #: Defaults to :obj:`False` if unspecified during deserialization.
     #:
     #: :type: :obj:`bool`
     allow_redirects: bool = marshaller.attrib(deserializer=bool, if_undefined=False, default=False)
 
     #: Either an implementation of :obj:`aiohttp.TCPConnector`.
     #:
-    #: This may otherwise be ``None`` to use the default settings provided
+    #: This may otherwise be :obj:`None` to use the default settings provided
     #: by :mod:`aiohttp`.
     #:
     #: This is deserialized as an object reference in the format
     #: ``package.module#object.attribute`` that is expected to point to the
     #: desired value.
     #:
-    #: Defaults to ``None`` if unspecified during deserialization.
+    #: Defaults to :obj:`None` if unspecified during deserialization.
     #:
     #: :type: :obj:`aiohttp.TCPConnector`, optional
     tcp_connector: typing.Optional[aiohttp.TCPConnector] = marshaller.attrib(
@@ -93,7 +93,7 @@ class AIOHTTPConfig(BaseConfig):
 
     #: Optional proxy headers to provide in any HTTP requests.
     #:
-    #: Defaults to ``None`` if unspecified during deserialization.
+    #: Defaults to :obj:`None` if unspecified during deserialization.
     #:
     #: :type: :obj:`typing.Mapping` [ :obj:`str`, :obj:`str` ], optional
     proxy_headers: typing.Optional[typing.Mapping[str, str]] = marshaller.attrib(
@@ -104,7 +104,7 @@ class AIOHTTPConfig(BaseConfig):
     #:
     #: This is deserialized using the format ``"basic {{base 64 string here}}"``.
     #:
-    #: Defaults to ``None`` if unspecified during deserialization.
+    #: Defaults to :obj:`None` if unspecified during deserialization.
     #:
     #: :type: :obj:`aiohttp.BasicAuth`, optional
     proxy_auth: typing.Optional[aiohttp.BasicAuth] = marshaller.attrib(
@@ -113,7 +113,7 @@ class AIOHTTPConfig(BaseConfig):
 
     #: The optional URL of the proxy to send requests via.
     #:
-    #: Defaults to ``None`` if unspecified during deserialization.
+    #: Defaults to :obj:`None` if unspecified during deserialization.
     #:
     #: :type: :obj:`str`, optional
     proxy_url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None, default=None)
@@ -121,10 +121,10 @@ class AIOHTTPConfig(BaseConfig):
     #: Optional request timeout to use. If an HTTP request takes longer than
     #: this, it will be aborted.
     #:
-    #: If not ``None``, the value represents a number of seconds as a floating
-    #: point number.
+    #: If not :obj:`None`, the value represents a number of seconds as a
+    #: floating point number.
     #:
-    #: Defaults to ``None`` if unspecified during deserialization.
+    #: Defaults to :obj:`None` if unspecified during deserialization.
     #:
     #: :type: :obj:`float`, optional
     request_timeout: typing.Optional[float] = marshaller.attrib(
@@ -137,20 +137,20 @@ class AIOHTTPConfig(BaseConfig):
     #: ``package.module#object.attribute`` that is expected to point to the
     #: desired value.
     #:
-    #: Defaults to ``None`` if unspecified during deserialization.
+    #: Defaults to :obj:`None` if unspecified during deserialization.
     #:
     #: :type: :obj:`ssl.SSLContext`, optional
     ssl_context: typing.Optional[ssl.SSLContext] = marshaller.attrib(
         deserializer=marshaller.dereference_handle, if_none=None, if_undefined=None, default=None
     )
 
-    #: If ``True``, then responses with invalid SSL certificates will be
+    #: If :obj:`True`, then responses with invalid SSL certificates will be
     #: rejected. Generally you want to keep this enabled unless you have a
     #: problem with SSL and you know exactly what you are doing by disabling
     #: this. Disabling SSL verification can have major security implications.
     #: You turn this off at your own risk.
     #:
-    #: Defaults to ``True`` if unspecified during deserialization.
+    #: Defaults to :obj:`True` if unspecified during deserialization.
     #:
     #: :type: :obj:`bool`
     verify_ssl: bool = marshaller.attrib(deserializer=bool, if_undefined=True, default=True)
@@ -186,7 +186,7 @@ class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     gateway_version: int = marshaller.attrib(deserializer=int, if_undefined=lambda: 6, default=6)
 
     #: The initial activity to set all shards to when starting the gateway. If
-    #: ``None``, then no activity will be set.
+    #: :obj:`None`, then no activity will be set.
     #:
     #: :type: :obj:`hikari.gateway_entities.GatewayActivity`, optional
     initial_activity: typing.Optional[gateway_entities.GatewayActivity] = marshaller.attrib(
@@ -207,7 +207,7 @@ class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     #: :type: :obj:`bool`
     initial_is_afk: bool = marshaller.attrib(deserializer=bool, if_undefined=False, default=False)
 
-    #: The idle time to show on signing in, or ``None`` to not show an idle
+    #: The idle time to show on signing in, or :obj:`None` to not show an idle
     #: time.
     #:
     #: :type: :obj:`datetime.datetime`, optional
@@ -219,7 +219,7 @@ class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     #:
     #: If being deserialized, this can be an integer bitfield, or a sequence of
     #: intent names. If
-    #: unspecified, this will be set to ``None``.
+    #: unspecified, this will be set to :obj:`None`.
     #:
     #: Examples
     #: --------
@@ -247,8 +247,8 @@ class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     #: Additionally, intents that are classed by Discord as being privileged
     #: will require you to whitelist your application in order to use them.
     #:
-    #: If you are using the V6 gateway implementation, setting this to ``None``
-    #: will simply opt you into every event you can subscribe to.
+    #: If you are using the V6 gateway implementation, setting this to
+    #: :obj:`None` will simply opt you into every event you can subscribe to.
     #:
     #:
     #: :type: :obj:`hikari.net.codes.GatewayIntent`, optional
@@ -302,10 +302,10 @@ class ShardConfig(BaseConfig):
     #:     ``"5...16"``:
     #:         A range string. Three periods indicate a range of
     #:         ``[5, 17]`` (inclusive beginning, inclusive end).
-    #:     ``None``:
+    #:     :obj:`None`:
     #:         The ``shard_count`` will be considered and that many shards will
-    #:         be created for you. If the ``shard_count`` is also ``None``, then
-    #:         auto-sharding will be performed for you.
+    #:         be created for you. If the ``shard_count`` is also :obj:`None`,
+    #:         then auto-sharding will be performed for you.
     #:
     #: :type: :obj:`typing.Sequence` [ :obj:`int` ], optional
     shard_ids: typing.Optional[typing.Sequence[int]] = marshaller.attrib(
