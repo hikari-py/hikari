@@ -178,7 +178,7 @@ class TestTeam:
         return oauth2.Team(id=None, icon_hash="3o2o32o", members=None, owner_user_id=None,)
 
     def test_format_icon_url(self):
-        mock_team = _helpers.create_autospec(oauth2.Team, icon_hash="3o2o32o", id=22323)
+        mock_team = mock.MagicMock(oauth2.Team, icon_hash="3o2o32o", id=22323)
         mock_url = "https://cdn.discordapp.com/team-icons/22323/3o2o32o.jpg?size=64"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = oauth2.Team.format_icon_url(mock_team, fmt="jpg", size=64)
@@ -186,7 +186,7 @@ class TestTeam:
         assert url == mock_url
 
     def test_format_icon_url_returns_none(self):
-        mock_team = _helpers.create_autospec(oauth2.Team, icon_hash=None, id=22323)
+        mock_team = mock.MagicMock(oauth2.Team, icon_hash=None, id=22323)
         with mock.patch.object(urls, "generate_cdn_url", return_value=...):
             url = oauth2.Team.format_icon_url(mock_team, fmt="jpg", size=64)
             urls.generate_cdn_url.assert_not_called()
@@ -241,7 +241,7 @@ class TestApplication:
 
     @pytest.fixture()
     def mock_application(self):
-        return _helpers.create_autospec(oauth2.Application, id=22222)
+        return mock.MagicMock(oauth2.Application, id=22222)
 
     def test_icon_url(self, application_obj):
         mock_url = "https://cdn.discordapp.com/app-icons/209333111222/iwiwiwiwiw.png?size=4096"

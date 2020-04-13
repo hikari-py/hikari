@@ -759,8 +759,8 @@ class TestClose:
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("close",))
-        client.ws = _helpers.create_autospec(aiohttp.ClientWebSocketResponse)
-        client.session = _helpers.create_autospec(aiohttp.ClientSession)
+        client.ws = mock.MagicMock(aiohttp.ClientWebSocketResponse)
+        client.session = mock.MagicMock(aiohttp.ClientSession)
         client.closed_event = asyncio.Event()
         client._presence = {}
         return client

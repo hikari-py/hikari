@@ -45,14 +45,13 @@ class TestLowLevelRestfulClient:
                 self.base_url = "https://discordapp.com/api/v6"
                 self.client_session = mock.MagicMock(close=mock.AsyncMock())
                 self.logger = mock.MagicMock()
-                self.ratelimiter = mock.create_autospec(
+                self.ratelimiter = mock.MagicMock(
                     ratelimits.HTTPBucketRateLimiterManager,
-                    auto_spec=True,
                     acquire=mock.MagicMock(),
                     update_rate_limits=mock.MagicMock(),
                 )
-                self.global_ratelimiter = mock.create_autospec(
-                    ratelimits.ManualRateLimiter, auto_spec=True, acquire=mock.MagicMock(), throttle=mock.MagicMock()
+                self.global_ratelimiter = mock.MagicMock(
+                    ratelimits.ManualRateLimiter, acquire=mock.MagicMock(), throttle=mock.MagicMock()
                 )
                 self._request = mock.AsyncMock(return_value=...)
 
@@ -221,14 +220,13 @@ class TestLowLevelRestfulClient:
     def rest_impl_with__request(self, *args):
         rest_impl = rest.LowLevelRestfulClient(token="Bot token")
         rest_impl.logger = mock.MagicMock(debug=mock.MagicMock())
-        rest_impl.ratelimiter = mock.create_autospec(
+        rest_impl.ratelimiter = mock.MagicMock(
             ratelimits.HTTPBucketRateLimiterManager,
-            auto_spec=True,
             acquire=mock.MagicMock(),
             update_rate_limits=mock.MagicMock(),
         )
-        rest_impl.global_ratelimiter = mock.create_autospec(
-            ratelimits.ManualRateLimiter, auto_spec=True, acquire=mock.MagicMock(), throttle=mock.MagicMock()
+        rest_impl.global_ratelimiter = mock.MagicMock(
+            ratelimits.ManualRateLimiter, acquire=mock.MagicMock(), throttle=mock.MagicMock()
         )
         return rest_impl
 
@@ -524,7 +522,7 @@ class TestLowLevelRestfulClient:
 
     @pytest.mark.asyncio
     async def test_handle_bad_response(self, rest_impl):
-        backoff = _helpers.create_autospec(ratelimits.ExponentialBackOff, __next__=mock.MagicMock(return_value=4))
+        backoff = mock.MagicMock(ratelimits.ExponentialBackOff, __next__=mock.MagicMock(return_value=4))
         mock_route = mock.MagicMock(routes.CompiledRoute)
         with mock.patch.object(asyncio, "sleep"):
             await rest_impl._handle_bad_response(backoff, "Being spammy", mock_route, "You are being rate limited", 429)
@@ -532,7 +530,7 @@ class TestLowLevelRestfulClient:
 
     @pytest.mark.asyncio
     async def test_handle_bad_response_raises_server_http_error_on_timeout(self, rest_impl):
-        backoff = _helpers.create_autospec(
+        backoff = mock.MagicMock(
             ratelimits.ExponentialBackOff, __next__=mock.MagicMock(side_effect=asyncio.TimeoutError())
         )
         mock_route = mock.MagicMock(routes.CompiledRoute)
@@ -704,7 +702,7 @@ class TestLowLevelRestfulClient:
         mock_response = {"content": "nyaa, nyaa, nyaa."}
         rest_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_MESSAGE)
-        mock_form = mock.MagicMock(spec_set=aiohttp.FormData, add_field=mock.MagicMock())
+        mock_form = mock.MagicMock(aiohttp.FormData, add_field=mock.MagicMock())
         with mock.patch.object(routes, "CHANNEL_MESSAGES", compile=mock.MagicMock(return_value=mock_route)):
             with mock.patch.object(aiohttp, "FormData", autospec=True, return_value=mock_form):
                 assert await rest_impl.create_message("22222222") is mock_response
@@ -726,7 +724,7 @@ class TestLowLevelRestfulClient:
         rest_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_MESSAGE)
         CHANNEL_MESSAGES.compile.return_value = mock_route
-        mock_form = mock.MagicMock(spec_set=aiohttp.FormData, add_field=mock.MagicMock())
+        mock_form = mock.MagicMock(aiohttp.FormData, add_field=mock.MagicMock())
         FormData.return_value = mock_form
         mock_file = mock.MagicMock(io.BytesIO)
         make_resource_seekable.return_value = mock_file
@@ -2065,7 +2063,7 @@ class TestLowLevelRestfulClient:
 
     @pytest.mark.asyncio
     async def test_execute_webhook_without_optionals(self, rest_impl):
-        mock_form = mock.MagicMock(spec_set=aiohttp.FormData, add_field=mock.MagicMock())
+        mock_form = mock.MagicMock(aiohttp.FormData, add_field=mock.MagicMock())
         mock_route = mock.MagicMock(routes.WEBHOOK_WITH_TOKEN)
         rest_impl._request.return_value = None
         mock_json = "{}"
@@ -2091,7 +2089,7 @@ class TestLowLevelRestfulClient:
     async def test_execute_webhook_with_optionals(
         self, make_resource_seekable, dumps, WEBHOOK_WITH_TOKEN, FormData, rest_impl
     ):
-        mock_form = mock.MagicMock(spec_set=aiohttp.FormData, add_field=mock.MagicMock())
+        mock_form = mock.MagicMock(aiohttp.FormData, add_field=mock.MagicMock())
         FormData.return_value = mock_form
         mock_route = mock.MagicMock(routes.WEBHOOK_WITH_TOKEN)
         WEBHOOK_WITH_TOKEN.compile.return_value = mock_route
