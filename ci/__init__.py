@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,12 +16,3 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Package metadata."""
-__all__ = ["__author__", "__copyright__", "__email__", "__license__", "__version__", "__url__"]
-
-__author__ = "Nekokatt"
-__copyright__ = "© 2019-2020 Nekokatt"
-__email__ = "3903853-nekokatt@users.noreply.ci.com"
-__license__ = "LGPL-3.0-ONLY"
-__version__ = "1.0.1.dev"
-__url__ = "https://gitlab.com/nekokatt/hikari"
