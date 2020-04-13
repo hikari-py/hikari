@@ -85,7 +85,7 @@ def test_guild_text_channel_payload(test_permission_overwrite_payload):
         "permission_overwrites": [test_permission_overwrite_payload],
         "rate_limit_per_user": 2,
         "nsfw": True,
-        "topic": "¯\_(ツ)_/¯",
+        "topic": "¯\\_(ツ)_/¯",
         "last_message_id": "123456",
         "parent_id": "987",
     }
@@ -157,6 +157,11 @@ class TestPermissionOverwrite:
             == permissions.Permission.CREATE_INSTANT_INVITE | permissions.Permission.ADD_REACTIONS
         )
         assert permission_overwrite_obj.deny == permissions.Permission.EMBED_LINKS | permissions.Permission.ATTACH_FILES
+
+    def test_unset(self):
+        permission_overwrite_obj = channels.PermissionOverwrite(
+            id=None, type=None, allow=permissions.Permission(65), deny=permissions.Permission(49152)
+        )
         assert permission_overwrite_obj.unset == permissions.Permission(49217)
         assert isinstance(permission_overwrite_obj.unset, permissions.Permission)
 
@@ -220,7 +225,7 @@ class TestGuildTextChannel:
         assert channel_obj.guild_id == 567
         assert channel_obj.position == 6
         assert channel_obj.name == "general"
-        assert channel_obj.topic == "¯\_(ツ)_/¯"
+        assert channel_obj.topic == "¯\\_(ツ)_/¯"
         assert channel_obj.is_nsfw is True
         assert channel_obj.parent_id == 987
         assert channel_obj.type == channels.ChannelType.GUILD_TEXT
