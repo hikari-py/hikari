@@ -2,7 +2,9 @@ path_classifiers:
   test:
     - exclude: /
     - tests/
+    - noxfile.old.py
     - noxfile.py
+    - ci/
     - docs/
     - tasks/
 queries:

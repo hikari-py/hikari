@@ -16,3 +16,25 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Additional utilities for Nox."""
+import shutil
+
+from ci import nox
+
+
+TRASH = [
+    ".nox",
+    "build",
+    "dist",
+    "hikari.egg-info",
+    "public",
+    ".coverage",
+]
+
+
+@nox.session(reuse_venv=False)
+def purge(_: nox.Session) -> None:
+    """Delete any nox-generated files."""
+    for trash in TRASH:
+        print("Removing", trash)
+        shutil.rmtree(trash, ignore_errors=True)

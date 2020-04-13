@@ -126,8 +126,8 @@ sast:
   retry: 1
   stage: lint
   variables:
-    SAST_BANDIT_EXCLUDED_PATHS: tests/*,docs/*,ci/*,insomnia/*,public/*,tasks/*,noxfile.py
+    SAST_BANDIT_EXCLUDED_PATHS: tests/*,docs/*,ci/*,insomnia/*,public/*,tasks/*,noxfile.old.py
     SAST_DEFAULT_ANALYZERS: "bandit, flawfinder, secrets, kubesec, gitleaks, trufflehog"
-    SAST_EXCLUDED_PATHS: tests/*,docs/*,ci/*,insomnia/*,public/*,tasks/*,noxfile.py
+    SAST_EXCLUDED_PATHS: tests/*,docs/*,ci/*,insomnia/*,public/*,tasks/*,noxfile.old.py
 
 

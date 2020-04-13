@@ -16,3 +16,29 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Black code-style jobs."""
+from ci import nox
+
+
+PATHS = [
+    "hikari",
+    "tests",
+    "docs",
+    "setup.py",
+    "noxfile.py",
+    "ci",
+]
+
+
+@nox.session(default=True, reuse_venv=True)
+def reformat_code(session: nox.Session) -> None:
+    """Run black code formatter."""
+    session.install("black")
+    session.run("black", *PATHS)
+
+
+@nox.session(reuse_venv=True)
+def check_formatting(session: nox.Session) -> None:
+    """Check that the code matches the black code style."""
+    session.install("black")
+    session.run("black", *PATHS, "--check")
