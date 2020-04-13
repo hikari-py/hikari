@@ -47,8 +47,8 @@ from tests.hikari import _helpers
 
 
 def test__get_member_id():
-    member = mock.create_autospec(
-        guilds.GuildMember, user=mock.create_autospec(users.User, id=123123123, __int__=users.User.__int__)
+    member = mock.MagicMock(
+        guilds.GuildMember, user=mock.MagicMock(users.User, id=123123123, __int__=users.User.__int__)
     )
     assert rest_clients._get_member_id(member) == "123123123"
 
@@ -78,7 +78,7 @@ class TestRESTClient:
 
     @pytest.fixture()
     def low_level_rest_impl(self) -> rest.LowLevelRestfulClient:
-        return mock.create_autospec(rest.LowLevelRestfulClient, auto_spec=True)
+        return mock.MagicMock(rest.LowLevelRestfulClient)
 
     @pytest.fixture()
     def rest_clients_impl(self, low_level_rest_impl) -> rest_clients.RESTClient:
@@ -230,7 +230,7 @@ class TestRESTClient:
         mock_payload = {"name": "Qts", "type": 2}
         mock_channel_obj = mock.MagicMock(channels.Channel)
         mock_overwrite_payload = {"type": "user", "id": 543543543}
-        mock_overwrite_obj = mock.create_autospec(channels.PermissionOverwrite)
+        mock_overwrite_obj = mock.MagicMock(channels.PermissionOverwrite)
         mock_overwrite_obj.serialize = mock.MagicMock(return_value=mock_overwrite_payload)
         rest_clients_impl._session.modify_channel.return_value = mock_payload
         with mock.patch.object(channels, "deserialize_channel", return_value=mock_channel_obj):
@@ -756,7 +756,7 @@ class TestRESTClient:
         mock_allowed_mentions_payload = {"parse": ["everyone", "users", "roles"]}
         rest_clients_impl._generate_allowed_mentions = mock.MagicMock(return_value=mock_allowed_mentions_payload)
         mock_embed_payload = {"description": "424242"}
-        mock_embed_obj = mock.create_autospec(embeds.Embed, auto_spec=True)
+        mock_embed_obj = mock.MagicMock(embeds.Embed)
         mock_embed_obj.serialize = mock.MagicMock(return_value=mock_embed_payload)
         mock_media_obj = mock.MagicMock()
         mock_media_payload = ("aName.png", mock.MagicMock())
@@ -838,7 +838,7 @@ class TestRESTClient:
     @pytest.mark.asyncio
     async def test_safe_create_message_with_optionals(self, rest_clients_impl):
         channel = mock.MagicMock(channels.Channel)
-        mock_embed_obj = mock.create_autospec(embeds.Embed)
+        mock_embed_obj = mock.MagicMock(embeds.Embed)
         mock_message_obj = mock.MagicMock(messages.Message)
         mock_media_obj = mock.MagicMock(bytes)
         rest_clients_impl.create_message = mock.AsyncMock(return_value=mock_message_obj)
@@ -981,7 +981,7 @@ class TestRESTClient:
         mock_payload = {"id": "4242", "content": "I HAVE BEEN UPDATED!"}
         mock_message_obj = mock.MagicMock(messages.Message)
         mock_embed_payload = {"description": "blahblah"}
-        mock_embed = mock.create_autospec(embeds.Embed, auto_spec=True)
+        mock_embed = mock.MagicMock(embeds.Embed)
         mock_embed.serialize = mock.MagicMock(return_value=mock_embed_payload)
         mock_allowed_mentions_payload = {"parse": [], "users": ["123"]}
         rest_clients_impl._generate_allowed_mentions = mock.MagicMock(return_value=mock_allowed_mentions_payload)
@@ -1421,10 +1421,10 @@ class TestRESTClient:
         mock_image_obj = mock.MagicMock(io.BytesIO)
         mock_image_data = mock.MagicMock(bytes)
         mock_role_payload = {"permissions": 123123}
-        mock_role_obj = mock.create_autospec(guilds.GuildRole, spec_set=True)
+        mock_role_obj = mock.MagicMock(guilds.GuildRole)
         mock_role_obj.serialize = mock.MagicMock(return_value=mock_role_payload)
         mock_channel_payload = {"type": 2, "name": "aChannel"}
-        mock_channel_obj = mock.create_autospec(channels.GuildChannel, spec_set=True)
+        mock_channel_obj = mock.MagicMock(channels.GuildNewsChannel)
         mock_channel_obj.serialize = mock.MagicMock(return_value=mock_channel_payload)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(guilds.Guild, "deserialize", return_value=mock_guild_obj))
@@ -2642,7 +2642,7 @@ class TestRESTClient:
         mock_allowed_mentions_payload = {"parse": ["everyone", "users", "roles"]}
         rest_clients_impl._generate_allowed_mentions = mock.MagicMock(return_value=mock_allowed_mentions_payload)
         mock_embed_payload = {"description": "424242"}
-        mock_embed_obj = mock.create_autospec(embeds.Embed, auto_spec=True)
+        mock_embed_obj = mock.MagicMock(embeds.Embed)
         mock_embed_obj.serialize = mock.MagicMock(return_value=mock_embed_payload)
         mock_media_obj = mock.MagicMock()
         mock_media_payload = ("aName.png", mock.MagicMock())
