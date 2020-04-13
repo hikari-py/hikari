@@ -1886,6 +1886,37 @@ class RESTClient:
         )
         return guilds.Guild.deserialize(payload)
 
+    async def fetch_guild_preview(self, guild: snowflakes.HashableT[guilds.Guild]) -> guilds.GuildPreview:
+        """Get a given guild's object.
+
+        Parameters
+        ----------
+        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+            The object or ID of the guild to get the preview object for.
+
+        Returns
+        -------
+        :obj:`hikari.guilds.GuildPreview`
+            The requested guild preview object.
+
+        Note
+        ----
+        Unlike other guild endpoints, the bot doesn't have to be in the target
+        guild to get it's preview.
+
+        Raises
+        ------
+        :obj:`hikari.errors.BadRequestHTTPError`
+            If any invalid snowflake IDs are passed; a snowflake may be invalid
+            due to it being outside of the range of UINT64.
+        :obj:`hikari.errors.NotFoundHTTPError`
+            If the guild is not found or it isn't ``PUBLIC``.
+        """
+        payload = await self._session.get_guild_preview(
+            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
+        )
+        return guilds.GuildPreview.deserialize(payload)
+
     async def update_guild(
         self,
         guild: snowflakes.HashableT[guilds.Guild],

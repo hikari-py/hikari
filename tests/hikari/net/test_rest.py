@@ -1172,6 +1172,16 @@ class TestLowLevelRestfulClient:
         rest_impl._request.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
+    async def test_get_guild_preview(self, rest_impl):
+        mock_response = {"id": "42", "name": "Hikari"}
+        rest_impl._request.return_value = mock_response
+        mock_route = mock.MagicMock(routes.GUILD)
+        with mock.patch.object(routes, "GUILD_PREVIEW", compile=mock.MagicMock(return_value=mock_route)):
+            assert await rest_impl.get_guild_preview("3939393993939") is mock_response
+            routes.GUILD_PREVIEW.compile.assert_called_once_with(rest_impl.GET, guild_id="3939393993939")
+        rest_impl._request.assert_called_once_with(mock_route)
+
+    @pytest.mark.asyncio
     async def test_modify_guild_without_optionals(self, rest_impl):
         mock_response = {"id": "42", "name": "Hikari"}
         rest_impl._request.return_value = mock_response
