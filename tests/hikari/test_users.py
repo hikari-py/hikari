@@ -16,11 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
-import cymock as mock
+from unittest import mock
+
 import pytest
 
-from hikari.internal import urls
 from hikari import users
+from hikari.internal import urls
 
 
 @pytest.fixture()
@@ -30,6 +31,8 @@ def test_user_payload():
         "username": "nyaa",
         "avatar": "b3b24c6d7cbcdec129d5d537067061a8",
         "discriminator": "6127",
+        "bot": True,
+        "system": True,
     }
 
 
@@ -50,15 +53,25 @@ def test_oauth_user_payload():
 
 
 class TestUser:
-    @pytest.fixture()
-    def user_obj(self, test_user_payload):
-        return users.User.deserialize(test_user_payload)
-
-    def test_deserialize(self, user_obj):
+    def test_deserialize(self, test_user_payload):
+        user_obj = users.User.deserialize(test_user_payload)
         assert user_obj.id == 115590097100865541
         assert user_obj.username == "nyaa"
         assert user_obj.avatar_hash == "b3b24c6d7cbcdec129d5d537067061a8"
         assert user_obj.discriminator == "6127"
+        assert user_obj.is_bot is True
+        assert user_obj.is_system is True
+
+    @pytest.fixture()
+    def user_obj(self, test_user_payload):
+        return users.User(
+            id="115590097100865541",
+            username=None,
+            avatar_hash="b3b24c6d7cbcdec129d5d537067061a8",
+            discriminator="6127",
+            is_bot=None,
+            is_system=None,
+        )
 
     def test_avatar_url(self, user_obj):
         mock_url = "https://cdn.discordapp.com/avatars/115590097100865541"

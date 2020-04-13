@@ -16,14 +16,18 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
+import contextlib
 import datetime
+from unittest import mock
 
-import cymock as mock
 import pytest
 
 import hikari.internal.conversions
+from hikari import embeds
+from hikari import emojis
 from hikari import guilds
-from hikari import oauth2, emojis, embeds, messages
+from hikari import messages
+from hikari import oauth2
 from hikari import users
 from tests.hikari import _helpers
 
@@ -185,45 +189,51 @@ class TestMessage:
         mock_emoji = mock.MagicMock(messages._emojis)
         mock_app = mock.MagicMock(oauth2.Application)
 
-        with _helpers.patch_marshal_attr(
-            messages.Message, "author", deserializer=users.User.deserialize, return_value=mock_user
-        ) as patched_author_deserializer:
-            with _helpers.patch_marshal_attr(
+        stack = contextlib.ExitStack()
+        patched_author_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                messages.Message, "author", deserializer=users.User.deserialize, return_value=mock_user
+            )
+        )
+        patched_member_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
                 messages.Message, "member", deserializer=guilds.GuildMember.deserialize, return_value=mock_member
-            ) as patched_member_deserializer:
-                with _helpers.patch_marshal_attr(
-                    messages.Message,
-                    "timestamp",
-                    deserializer=hikari.internal.conversions.parse_iso_8601_ts,
-                    return_value=mock_datetime,
-                ) as patched_timestamp_deserializer:
-                    with _helpers.patch_marshal_attr(
-                        messages.Message,
-                        "edited_timestamp",
-                        deserializer=hikari.internal.conversions.parse_iso_8601_ts,
-                        return_value=mock_datetime2,
-                    ) as patched_edited_timestamp_deserializer:
-                        with _helpers.patch_marshal_attr(
-                            messages.Message,
-                            "application",
-                            deserializer=oauth2.Application.deserialize,
-                            return_value=mock_app,
-                        ) as patched_application_deserializer:
-                            with _helpers.patch_marshal_attr(
-                                messages.Reaction,
-                                "emoji",
-                                deserializer=emojis.deserialize_reaction_emoji,
-                                return_value=mock_emoji,
-                            ) as patched_emoji_deserializer:
-                                message_obj = messages.Message.deserialize(test_message_payload)
-                                patched_emoji_deserializer.assert_called_once_with(test_reaction_payload["emoji"])
-                                assert message_obj.reactions == [messages.Reaction.deserialize(test_reaction_payload)]
-                            patched_application_deserializer.assert_called_once_with(test_application_payload)
-                        patched_edited_timestamp_deserializer.assert_called_once_with(
-                            "2020-04-21T21:20:16.510000+00:00"
-                        )
-                    patched_timestamp_deserializer.assert_called_once_with("2020-03-21T21:20:16.510000+00:00")
-                patched_member_deserializer.assert_called_once_with(test_member_payload)
+            )
+        )
+        patched_timestamp_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                messages.Message,
+                "timestamp",
+                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                return_value=mock_datetime,
+            )
+        )
+        patched_edited_timestamp_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                messages.Message,
+                "edited_timestamp",
+                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                return_value=mock_datetime2,
+            )
+        )
+        patched_application_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                messages.Message, "application", deserializer=oauth2.Application.deserialize, return_value=mock_app,
+            )
+        )
+        patched_emoji_deserializer = stack.enter_context(
+            _helpers.patch_marshal_attr(
+                messages.Reaction, "emoji", deserializer=emojis.deserialize_reaction_emoji, return_value=mock_emoji,
+            )
+        )
+        with stack:
+            message_obj = messages.Message.deserialize(test_message_payload)
+            patched_emoji_deserializer.assert_called_once_with(test_reaction_payload["emoji"])
+            assert message_obj.reactions == [messages.Reaction.deserialize(test_reaction_payload)]
+            patched_application_deserializer.assert_called_once_with(test_application_payload)
+            patched_edited_timestamp_deserializer.assert_called_once_with("2020-04-21T21:20:16.510000+00:00")
+            patched_timestamp_deserializer.assert_called_once_with("2020-03-21T21:20:16.510000+00:00")
+            patched_member_deserializer.assert_called_once_with(test_member_payload)
             patched_author_deserializer.assert_called_once_with(test_user_payload)
 
         assert message_obj.id == 123

@@ -23,13 +23,13 @@ import json
 import logging
 import ssl
 import unittest.mock
+from unittest import mock
 
 import aiohttp
-import cymock as mock
 import pytest
 
-from hikari.internal import conversions
 from hikari import errors
+from hikari.internal import conversions
 from hikari.net import ratelimits
 from hikari.net import rest
 from hikari.net import routes
@@ -127,15 +127,18 @@ class TestLowLevelRestfulClient:
     async def test__init__with_bot_token_and_without_optionals(self):
         mock_manual_rate_limiter = mock.MagicMock()
         buckets_mock = mock.MagicMock()
+        mock_client_session = mock.MagicMock(aiohttp.ClientSession)
 
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=mock_manual_rate_limiter))
         stack.enter_context(mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager", return_value=buckets_mock))
+        stack.enter_context(mock.patch.object(aiohttp, "ClientSession", return_value=mock_client_session))
 
         with stack:
             client = rest.LowLevelRestfulClient(token="Bot token.otacon.a-token")
 
         assert client.base_url == f"https://discordapp.com/api/v{int(versions.HTTPAPIVersion.STABLE)}"
+        assert client.client_session is mock_client_session
         assert client.global_ratelimiter is mock_manual_rate_limiter
         assert client.json_serialize is json.dumps
         assert client.json_deserialize is json.loads
@@ -144,8 +147,13 @@ class TestLowLevelRestfulClient:
 
     @pytest.mark.asyncio
     async def test__init__with_bearer_token_and_without_optionals(self):
-        client = rest.LowLevelRestfulClient(token="Bearer token.otacon.a-token")
-        assert client.token == "Bearer token.otacon.a-token"
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
+        stack.enter_context(mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager"))
+        stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
+        with stack:
+            client = rest.LowLevelRestfulClient(token="Bearer token.otacon.a-token")
+            assert client.token == "Bearer token.otacon.a-token"
 
     @pytest.mark.asyncio
     async def test__init__with_optionals(self):
@@ -192,8 +200,13 @@ class TestLowLevelRestfulClient:
     @pytest.mark.asyncio
     @_helpers.assert_raises(type_=RuntimeError)
     async def test__init__raises_runtime_error_with_invalid_token(self, *_):
-        async with rest.LowLevelRestfulClient(token="An-invalid-TOKEN"):
-            pass
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
+        stack.enter_context(mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager"))
+        stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
+        with stack:
+            async with rest.LowLevelRestfulClient(token="An-invalid-TOKEN"):
+                pass
 
     @pytest.mark.asyncio
     async def test_close(self, rest_impl):
@@ -204,7 +217,8 @@ class TestLowLevelRestfulClient:
     @pytest.fixture()
     @mock.patch.object(ratelimits, "ManualRateLimiter")
     @mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager")
-    async def rest_impl_with__request(self, *args):
+    @mock.patch.object(aiohttp, "ClientSession")
+    def rest_impl_with__request(self, *args):
         rest_impl = rest.LowLevelRestfulClient(token="Bot token")
         rest_impl.logger = mock.MagicMock(debug=mock.MagicMock())
         rest_impl.ratelimiter = mock.create_autospec(
@@ -220,33 +234,27 @@ class TestLowLevelRestfulClient:
 
     @pytest.mark.asyncio
     async def test__request_acquires_ratelimiter(self, compiled_route, exit_error, rest_impl_with__request):
-        rest_impl = await rest_impl_with__request
-        rest_impl.logger.debug.side_effect = exit_error
+        rest_impl_with__request.logger.debug.side_effect = exit_error
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             try:
-                await rest_impl._request(compiled_route)
+                await rest_impl_with__request._request(compiled_route)
             except exit_error:
                 pass
 
-            rest_impl.ratelimiter.acquire.asset_called_once_with(compiled_route)
+            rest_impl_with__request.ratelimiter.acquire.asset_called_once_with(compiled_route)
 
     @pytest.mark.asyncio
     async def test__request_sets_Authentication_if_token(self, compiled_route, exit_error, rest_impl_with__request):
-        rest_impl = await rest_impl_with__request
-        rest_impl.logger.debug.side_effect = [None, exit_error]
+        rest_impl_with__request.logger.debug.side_effect = [None, exit_error]
 
-        stack = contextlib.ExitStack()
-        mock_request = stack.enter_context(mock.patch.object(aiohttp.ClientSession, "request"))
-        stack.enter_context(mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()))
-
-        with stack:
+        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             try:
-                await rest_impl._request(compiled_route)
+                await rest_impl_with__request._request(compiled_route)
             except exit_error:
                 pass
 
-            mock_request.assert_called_with(
+            rest_impl_with__request.client_session.request.assert_called_with(
                 "get",
                 "https://discordapp.com/api/v6/somewhere",
                 headers={"X-RateLimit-Precision": "millisecond", "Authorization": "Bot token"},
@@ -266,20 +274,15 @@ class TestLowLevelRestfulClient:
     async def test__request_doesnt_set_Authentication_if_suppress_authorization_header(
         self, compiled_route, exit_error, rest_impl_with__request
     ):
-        rest_impl = await rest_impl_with__request
-        rest_impl.logger.debug.side_effect = [None, exit_error]
+        rest_impl_with__request.logger.debug.side_effect = [None, exit_error]
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()))
-        mock_request = stack.enter_context(mock.patch.object(aiohttp.ClientSession, "request"))
-
-        with stack:
+        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             try:
-                await rest_impl._request(compiled_route, suppress_authorization_header=True)
+                await rest_impl_with__request._request(compiled_route, suppress_authorization_header=True)
             except exit_error:
                 pass
 
-            mock_request.assert_called_with(
+            rest_impl_with__request.client_session.request.assert_called_with(
                 "get",
                 "https://discordapp.com/api/v6/somewhere",
                 headers={"X-RateLimit-Precision": "millisecond"},
@@ -299,20 +302,15 @@ class TestLowLevelRestfulClient:
     async def test__request_sets_X_Audit_Log_Reason_if_reason(
         self, compiled_route, exit_error, rest_impl_with__request
     ):
-        rest_impl = await rest_impl_with__request
-        rest_impl.logger.debug.side_effect = [None, exit_error]
+        rest_impl_with__request.logger.debug.side_effect = [None, exit_error]
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()))
-        mock_request = stack.enter_context(mock.patch.object(aiohttp.ClientSession, "request"))
-
-        with stack:
+        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             try:
-                await rest_impl._request(compiled_route, reason="test reason")
+                await rest_impl_with__request._request(compiled_route, reason="test reason")
             except exit_error:
                 pass
 
-            mock_request.assert_called_with(
+            rest_impl_with__request.client_session.request.assert_called_with(
                 "get",
                 "https://discordapp.com/api/v6/somewhere",
                 headers={
@@ -336,22 +334,17 @@ class TestLowLevelRestfulClient:
     async def test__request_updates_headers_with_provided_headers(
         self, compiled_route, exit_error, rest_impl_with__request
     ):
-        rest_impl = await rest_impl_with__request
-        rest_impl.logger.debug.side_effect = [None, exit_error]
+        rest_impl_with__request.logger.debug.side_effect = [None, exit_error]
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()))
-        mock_request = stack.enter_context(mock.patch.object(aiohttp.ClientSession, "request"))
-
-        with stack:
+        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             try:
-                await rest_impl._request(
+                await rest_impl_with__request._request(
                     compiled_route, headers={"X-RateLimit-Precision": "nanosecond", "Authorization": "Bearer token"}
                 )
             except exit_error:
                 pass
 
-            mock_request.assert_called_with(
+            rest_impl_with__request.client_session.request.assert_called_with(
                 "get",
                 "https://discordapp.com/api/v6/somewhere",
                 headers={"X-RateLimit-Precision": "nanosecond", "Authorization": "Bearer token"},
@@ -397,13 +390,12 @@ class TestLowLevelRestfulClient:
             def close(self):
                 ...
 
-        rest_impl = await rest_impl_with__request
-        rest_impl.logger.debug.side_effect = exit_error
+        rest_impl_with__request.logger.debug.side_effect = exit_error
         seekable_resources = [SeekableResource(5), SeekableResource(37), SeekableResource(16)]
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             try:
-                await rest_impl._request(compiled_route, re_seekable_resources=seekable_resources)
+                await rest_impl_with__request._request(compiled_route, re_seekable_resources=seekable_resources)
             except exit_error:
                 pass
 
@@ -419,29 +411,24 @@ class TestLowLevelRestfulClient:
         self, content_type, exit_error, compiled_route, discord_response, rest_impl_with__request
     ):
         discord_response.headers["Content-Type"] = content_type
-        rest_impl = await rest_impl_with__request
-        rest_impl._handle_bad_response = mock.AsyncMock(side_effect=[None, exit_error])
+        rest_impl_with__request._handle_bad_response = mock.AsyncMock(side_effect=[None, exit_error])
 
-        rest_impl.client_session.request = mock.MagicMock(return_value=discord_response)
+        rest_impl_with__request.client_session.request = mock.MagicMock(return_value=discord_response)
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             try:
-                await rest_impl._request(compiled_route)
+                await rest_impl_with__request._request(compiled_route)
             except exit_error:
                 pass
 
-            rest_impl._handle_bad_response.assert_called()
+            rest_impl_with__request._handle_bad_response.assert_called()
 
     @pytest.mark.asyncio
     async def test__request_when_invalid_content_type(self, compiled_route, discord_response, rest_impl_with__request):
         discord_response.headers["Content-Type"] = "something/invalid"
-        rest_impl = await rest_impl_with__request
+        rest_impl_with__request.client_session.request.return_value = discord_response
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()))
-        stack.enter_context(mock.patch.object(aiohttp.ClientSession, "request", return_value=discord_response))
-
-        with stack:
-            assert await rest_impl._request(compiled_route, json_body={}) is None
+        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
+            assert await rest_impl_with__request._request(compiled_route, json_body={}) is None
 
     @pytest.mark.asyncio
     async def test__request_when_TOO_MANY_REQUESTS_when_global(
@@ -449,20 +436,16 @@ class TestLowLevelRestfulClient:
     ):
         discord_response.status = 429
         discord_response.raw_body = '{"retry_after": 1, "global": true}'
-        rest_impl = await rest_impl_with__request
-        rest_impl.global_ratelimiter.throttle = mock.MagicMock(side_effect=[None, exit_error])
+        rest_impl_with__request.global_ratelimiter.throttle = mock.MagicMock(side_effect=[None, exit_error])
+        rest_impl_with__request.client_session.request.return_value = discord_response
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()))
-        stack.enter_context(mock.patch.object(aiohttp.ClientSession, "request", return_value=discord_response))
-
-        with stack:
+        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             try:
-                await rest_impl._request(compiled_route)
+                await rest_impl_with__request._request(compiled_route)
             except exit_error:
                 pass
 
-            rest_impl.global_ratelimiter.throttle.assert_called_with(0.001)
+            rest_impl_with__request.global_ratelimiter.throttle.assert_called_with(0.001)
 
     @pytest.mark.asyncio
     async def test__request_when_TOO_MANY_REQUESTS_when_not_global(
@@ -470,17 +453,16 @@ class TestLowLevelRestfulClient:
     ):
         discord_response.status = 429
         discord_response.raw_body = '{"retry_after": 1, "global": false}'
-        rest_impl = await rest_impl_with__request
-        rest_impl.logger.debug.side_effect = [None, exit_error]
+        rest_impl_with__request.logger.debug.side_effect = [None, exit_error]
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             with mock.patch.object(rest.LowLevelRestfulClient, "_request", return_value=discord_response):
                 try:
-                    await rest_impl._request(compiled_route)
+                    await rest_impl_with__request._request(compiled_route)
                 except exit_error:
                     pass
 
-                rest_impl.global_ratelimiter.throttle.assert_not_called()
+                rest_impl_with__request.global_ratelimiter.throttle.assert_not_called()
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("api_version", [versions.HTTPAPIVersion.V6, versions.HTTPAPIVersion.V7])
@@ -494,13 +476,16 @@ class TestLowLevelRestfulClient:
             (405, errors.ClientHTTPError),
         ],
     )
-    @mock.patch.object(ratelimits, "ManualRateLimiter")
-    @mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager")
     async def test__request_raises_appropriate_error_for_status_code(
-        self, *patches, status_code, error, compiled_route, discord_response, api_version
+        self, status_code, error, compiled_route, discord_response, api_version
     ):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
+        stack.enter_context(mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager"))
+        stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
         discord_response.status = status_code
-        rest_impl = rest.LowLevelRestfulClient(token="Bot token", version=api_version)
+        with stack:
+            rest_impl = rest.LowLevelRestfulClient(token="Bot token", version=api_version)
         rest_impl.ratelimiter = mock.MagicMock()
         rest_impl.global_ratelimiter = mock.MagicMock()
         rest_impl.client_session.request = mock.MagicMock(return_value=discord_response)
@@ -515,11 +500,10 @@ class TestLowLevelRestfulClient:
     @pytest.mark.asyncio
     async def test__request_when_NO_CONTENT(self, compiled_route, discord_response, rest_impl_with__request):
         discord_response.status = 204
-        rest_impl = await rest_impl_with__request
-        rest_impl.client_session.request = mock.MagicMock(return_value=discord_response)
+        rest_impl_with__request.client_session.request = mock.MagicMock(return_value=discord_response)
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            assert await rest_impl._request(compiled_route, form_body=aiohttp.FormData()) is None
+            assert await rest_impl_with__request._request(compiled_route, form_body=aiohttp.FormData()) is None
 
     @pytest.mark.asyncio
     async def test__request_handles_bad_response_when_error_results_in_retry(
@@ -527,20 +511,16 @@ class TestLowLevelRestfulClient:
     ):
         discord_response.raw_body = "{}"
         discord_response.status = 1000
-        rest_impl = await rest_impl_with__request
-        rest_impl._handle_bad_response = mock.AsyncMock(side_effect=[None, exit_error])
+        rest_impl_with__request._handle_bad_response = mock.AsyncMock(side_effect=[None, exit_error])
+        rest_impl_with__request.client_session.request.return_value = discord_response
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(aiohttp.ClientSession, "request", return_value=discord_response))
-        stack.enter_context(mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()))
-
-        with stack:
+        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
             try:
-                await rest_impl._request(compiled_route)
+                await rest_impl_with__request._request(compiled_route)
             except exit_error:
                 pass
 
-            assert rest_impl._handle_bad_response.call_count == 2
+            assert rest_impl_with__request._handle_bad_response.call_count == 2
 
     @pytest.mark.asyncio
     async def test_handle_bad_response(self, rest_impl):

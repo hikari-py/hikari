@@ -22,14 +22,14 @@ import datetime
 import math
 import time
 import urllib.parse
+from unittest import mock
 
 import aiohttp
 import async_timeout
-from unittest import mock
 import pytest
 
-from hikari.internal import more_collections
 from hikari import errors
+from hikari.internal import more_collections
 from hikari.net import shard
 from hikari.net import user_agent
 from hikari.net import versions

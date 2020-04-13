@@ -631,6 +631,7 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
         if self._limit is not None:
             self._limit -= len(payload["audit_log_entries"])
 
+        # Once the resources has been exhausted, discord will return empty lists.
         payload["audit_log_entries"].reverse()
         self._buffer.extend(payload["audit_log_entries"])
         if users := payload.get("users"):
