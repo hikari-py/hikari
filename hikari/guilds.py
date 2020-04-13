@@ -255,7 +255,7 @@ class PartialGuildRole(snowflakes.UniqueEntity, entities.Deserializable):
     #: The role's name.
     #:
     #: :type: :obj:`str`
-    name: str = marshaller.attrib(deserializer=str)
+    name: str = marshaller.attrib(deserializer=str, serializer=str)
 
 
 @marshaller.marshallable()
@@ -267,36 +267,38 @@ class GuildRole(PartialGuildRole, entities.Serializable):
     #: if it's their top coloured role.
     #:
     #: :type: :obj:`hikari.colors.Color`
-    color: colors.Color = marshaller.attrib(deserializer=colors.Color)
+    color: colors.Color = marshaller.attrib(deserializer=colors.Color, serializer=int, default=colors.Color(0))
 
     #: Whether this role is hoisting the members it's attached to in the member
     #: list, members will be hoisted under their highest role where
     #: :attr:`is_hoisted` is true.
     #:
     #: :type: :obj:`bool`
-    is_hoisted: bool = marshaller.attrib(raw_name="hoist", deserializer=bool)
+    is_hoisted: bool = marshaller.attrib(raw_name="hoist", deserializer=bool, serializer=bool, default=False)
 
     #: The position of this role in the role hierarchy.
     #:
     #: :type: :obj:`int`
-    position: int = marshaller.attrib(deserializer=int)
+    position: int = marshaller.attrib(deserializer=int, serializer=int, default=None)
 
     #: The guild wide permissions this role gives to the members it's attached
     #: to, may be overridden by channel overwrites.
     #:
     #: :type: :obj:`hikari.permissions.Permission`
-    permissions: _permissions.Permission = marshaller.attrib(deserializer=_permissions.Permission)
+    permissions: _permissions.Permission = marshaller.attrib(
+        deserializer=_permissions.Permission, serializer=int, default=_permissions.Permission(0)
+    )
 
     #: Whether this role is managed by an integration.
     #:
     #: :type: :obj:`bool`
-    is_managed: bool = marshaller.attrib(raw_name="managed", deserializer=bool)
+    is_managed: bool = marshaller.attrib(raw_name="managed", deserializer=bool, transient=True, default=None)
 
     #: Whether this role can be mentioned by all, regardless of the
     #: ``MENTION_EVERYONE`` permission.
     #:
     #: :type: :obj:`bool`
-    is_mentionable: bool = marshaller.attrib(raw_name="mentionable", deserializer=bool)
+    is_mentionable: bool = marshaller.attrib(raw_name="mentionable", deserializer=bool, serializer=bool, default=False)
 
 
 @enum.unique
