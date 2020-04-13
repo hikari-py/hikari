@@ -237,7 +237,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     #: :type: :obj:`str`
     name: typing.Final[str]
 
-    #: The throttling task, or ``None``` if it isn't running.
+    #: The throttling task, or :obj:`None` if it isn't running.
     #:
     #: :type: :obj:`asyncio.Task`, optional
     throttle_task: typing.Optional[more_asyncio.Task[None]]
@@ -294,7 +294,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
     @property
     def is_empty(self) -> bool:
-        """Return ``True`` if no futures are on the queue being rate limited."""
+        """Return :obj:`True` if no futures are on the queue being rate limited."""
         return len(self.queue) == 0
 
 
@@ -357,9 +357,9 @@ class ManualRateLimiter(BurstRateLimiter):
         (it will not await it to finish)
 
         When the :meth:`unlock_later` coroutine function completes, it should be
-        expected to set the `throttle_task`` to ``None``. This means you can
+        expected to set the `throttle_task`` to :obj:`None`. This means you can
         check if throttling is occurring by checking if ``throttle_task``
-        is not ``None``.
+        is not :obj:`None`.
 
         If this is invoked while another throttle is in progress, that one is
         cancelled and a new one is started. This enables new rate limits to
@@ -386,9 +386,9 @@ class ManualRateLimiter(BurstRateLimiter):
         instead.
 
         When the :meth:`unlock_later` coroutine function completes, it should be
-        expected to set the ``throttle_task`` to ``None``. This means you can
+        expected to set the ``throttle_task`` to :obj:`None`. This means you can
         check if throttling is occurring by checking if ``throttle_task``
-        is not ``None``.
+        is not :obj:`None`.
         """
         self.logger.warning("you are being globally rate limited for %ss", retry_after)
         await asyncio.sleep(retry_after)
@@ -521,7 +521,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         Returns
         -------
         :obj:`bool`
-            ``True`` if we are being rate limited. ``False`` if we are not.
+            :obj:`True` if we are being rate limited. :obj:`False` if we are not.
 
         Warning
         -------
@@ -555,8 +555,8 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         task immediately in ``throttle_task``.
 
         When this coroutine function completes, it will set the
-        ``throttle_task`` to ``None``. This means you can check if throttling
-        is occurring by checking if ``throttle_task`` is not ``None``.
+        ``throttle_task`` to :obj:`None`. This means you can check if throttling
+        is occurring by checking if ``throttle_task`` is not :obj:`None`.
         """
         self.logger.debug(
             "you are being rate limited on bucket %s, backing off for %ss",
@@ -612,7 +612,7 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
 
     @property
     def is_unknown(self) -> bool:
-        """Return ``True`` if the bucket represents an ``UNKNOWN`` bucket."""
+        """Return :obj:`True` if the bucket represents an ``UNKNOWN`` bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
     def acquire(self) -> more_asyncio.Future[None]:
@@ -872,7 +872,7 @@ class HTTPBucketRateLimiterManager:
             The compiled route to get the bucket for.
         bucket_header : :obj:`str`, optional
             The ``X-RateLimit-Bucket`` header that was provided in the response,
-            or ``None`` if not present.
+            or :obj:`None` if not present.
         remaining_header : :obj:`int`
             The ``X-RateLimit-Remaining`` header cast to an :obj:`int`.
         limit_header : :obj:`int`
@@ -915,7 +915,7 @@ class ExponentialBackOff:
     base : :obj:`float`
         The base to use. Defaults to ``2``.
     maximum : :obj:`float`, optional
-        If not ``None``, then this is the max value the backoff can be in a
+        If not :obj:`None`, then this is the max value the backoff can be in a
         single iteration before an :obj:`asyncio.TimeoutError` is raised.
         Defaults to ``64`` seconds.
     jitter_multiplier : :obj:`float`
@@ -935,7 +935,7 @@ class ExponentialBackOff:
     #: :type: :obj:`int`
     increment: int
 
-    #: If not ``None```, then this is the max value the backoff can be in a
+    #: If not :obj:`None`, then this is the max value the backoff can be in a
     #: single iteration before an :obj:`asyncio.TimeoutError` is raised.
     #:
     #: :type: :obj:`float`, optional

@@ -95,8 +95,8 @@ class GuildEmoji(UnknownEmoji):
     #:
     #: Note
     #: ----
-    #: This will be ``None`` if you are missing the ``MANAGE_EMOJIS`` permission
-    #: in the server the emoji is from.
+    #: This will be :obj:`None` if you are missing the ``MANAGE_EMOJIS``
+    #: permission in the server the emoji is from.
     #:
     #:
     #: :type: :obj:`hikari.users.User`, optional

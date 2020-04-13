@@ -136,12 +136,13 @@ class GatewayInvalidSessionError(GatewayServerClosedConnectionError):
     Parameters
     ----------
     can_resume : :obj:`bool`
-        ``True`` if the connection will be able to RESUME next time it starts rather
-        than re-IDENTIFYing, or ``False`` if you need to IDENTIFY again instead.
+        :obj:`True` if the connection will be able to RESUME next time it starts
+        rather than re-IDENTIFYing, or :obj:`False` if you need to IDENTIFY
+        again instead.
     """
 
-    #: ``True``` if the next reconnection can be RESUMED. ``False``` if it has to be
-    #: coordinated by re-IDENFITYing.
+    #: :obj:`True` if the next reconnection can be RESUMED. :obj:`False` if it
+    #: has to be coordinated by re-IDENFITYing.
     #:
     #: :type: :obj:`bool`
     can_resume: bool

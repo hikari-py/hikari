@@ -100,9 +100,9 @@ class EventDispatcher(abc.ABC):
             The name of the event to wait for.
         timeout : :obj:`float`, optional
             The timeout to wait for before cancelling and raising an
-            :obj:`asyncio.TimeoutError` instead. If this is ``None``, this will
-            wait forever. Care must be taken if you use ``None`` as this may
-            leak memory if you do this from an event listener that gets
+            :obj:`asyncio.TimeoutError` instead. If this is :obj:`None`, this
+            will wait forever. Care must be taken if you use :obj:`None` as this
+            may leak memory if you do this from an event listener that gets
             repeatedly called. If you want to do this, you should consider
             using an event listener instead of this function.
         predicate : ``def predicate(event) -> bool`` or ``async def predicate(event) -> bool``

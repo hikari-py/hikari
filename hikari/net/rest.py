@@ -66,7 +66,7 @@ class LowLevelRestfulClient:
         The optional SSL context to be used.
     verify_ssl: :obj:`bool`
         Whether or not the client should enforce SSL signed certificate
-        verification. If ``False`` it will ignore potentially malicious
+        verification. If :obj:`False` it will ignore potentially malicious
         SSL certificates.
     timeout: :obj:`float`, optional
         The optional timeout for all HTTP requests.
@@ -98,7 +98,7 @@ class LowLevelRestfulClient:
 
     _AUTHENTICATION_SCHEMES = ("Bearer", "Bot")
 
-    #: ``True`` if HTTP redirects are enabled, or ``False`` otherwise.
+    #: :obj:`True` if HTTP redirects are enabled, or :obj:`False` otherwise.
     #:
     #: :type: :obj:`bool`
     allow_redirects: bool
@@ -200,9 +200,9 @@ class LowLevelRestfulClient:
     #: :type: :obj:`str`
     user_agent: str
 
-    #: If ``True``, SSL certificates are verified for each request, and
+    #: If :obj:`True`, SSL certificates are verified for each request, and
     #: invalid SSL certificates are rejected, causing an exception. If
-    #: ``False``, then unrecognised certificates that may be illegitimate
+    #: :obj:`False`, then unrecognised certificates that may be illegitimate
     #: are accepted and ignored.
     #:
     #: :type: :obj:`bool`
@@ -628,7 +628,7 @@ class LowLevelRestfulClient:
 
         Returns
         -------
-        ``None``
+        :obj:`None`
             Nothing, unlike what the API specifies. This is done to maintain
             consistency with other calls of a similar nature in this API wrapper.
 
@@ -994,10 +994,10 @@ class LowLevelRestfulClient:
             The ID of the message to edit.
         content : :obj:`str`, optional
             If specified, the string content to replace with in the message.
-            If ``None``, the content will be removed from the message.
+            If :obj:`None`, the content will be removed from the message.
         embed : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ], optional
             If specified, the embed to replace with in the message.
-            If ``None``, the embed will be removed from the message.
+            If :obj:`None`, the embed will be removed from the message.
         flags : :obj:`int`
             If specified, the integer to replace the message's current flags.
         allowed_mentions : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
@@ -1390,7 +1390,7 @@ class LowLevelRestfulClient:
         Raises
         ------
         :obj:`ValueError`
-            If ``image`` is ``None``.
+            If ``image`` is :obj:`None`.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -1915,17 +1915,19 @@ class LowLevelRestfulClient:
         user_id : :obj:`str`
             The ID of the member to edit.
         nick : :obj:`str`, optional
-            If specified, the new nickname string. Setting it to ``None`` explicitly
-            will clear the nickname.
+            If specified, the new nickname string. Setting it to :obj:`None`
+            explicitly will clear the nickname.
         roles : :obj:`typing.Sequence` [ :obj:`str` ]
             If specified, a list of role IDs the member should have.
         mute : :obj:`bool`
-            If specified, whether the user should be muted in the voice channel or not.
+            If specified, whether the user should be muted in the voice channel
+            or not.
         deaf : :obj:`bool`
-            If specified, whether the user should be deafen in the voice channel or not.
+            If specified, whether the user should be deafen in the voice channel
+            or not.
         channel_id : :obj:`str`
-            If specified, the ID of the channel to move the member to. Setting it to
-            ``None`` explicitly will disconnect the user.
+            If specified, the ID of the channel to move the member to. Setting
+            it to :obj:`None` explicitly will disconnect the user.
         reason : :obj:`str`
             If specified, the audit log reason explaining why the operation
             was performed.
@@ -2391,7 +2393,7 @@ class LowLevelRestfulClient:
         -------
         :obj:`int`, optional
             The number of members who were kicked if ``compute_prune_count``
-            is ``True``, else ``None``.
+            is :obj:`True`, else :obj:`None`.
 
         Raises
         ------
@@ -2603,7 +2605,7 @@ class LowLevelRestfulClient:
             The ID of the guild to edit the embed for.
         channel_id : :obj:`str`, optional
             If specified, the channel that this embed's invite should target.
-            Set to ``None`` to disable invites for this embed.
+            Set to :obj:`None` to disable invites for this embed.
         enabled : :obj:`bool`
             If specified, whether this embed should be enabled.
         reason : :obj:`str`
@@ -2714,7 +2716,7 @@ class LowLevelRestfulClient:
 
         Returns
         -------
-        ``None`` # Marker
+        :obj:`None` # Marker
             Nothing, unlike what the API specifies. This is done to maintain
             consistency with other calls of a similar nature in this API wrapper.
 
@@ -3142,7 +3144,8 @@ class LowLevelRestfulClient:
         Returns
         -------
         :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ], optional
-            The created message object if ``wait`` is ``True``, else ``None``.
+            The created message object if ``wait`` is :obj:`True`, else
+            :obj:`None`.
 
         Raises
         ------

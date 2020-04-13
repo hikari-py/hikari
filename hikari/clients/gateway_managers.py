@@ -181,10 +181,10 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
             If specified, the new activity to set.
         idle_since : :obj:`datetime.datetime`, optional
             If specified, the time to show up as being idle since,
-            or ``None`` if not applicable.
+            or :obj:`None` if not applicable.
         is_afk : :obj:`bool`
-            If specified, ``True`` if the user should be marked as AFK,
-            or ``False`` otherwise.
+            If specified, :obj:`True` if the user should be marked as AFK,
+            or :obj:`False` otherwise.
         """
         await asyncio.gather(
             *(

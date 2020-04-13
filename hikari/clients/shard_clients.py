@@ -93,9 +93,10 @@ class ShardClient(runnable.RunnableClient):
         The URL to connect the gateway to.
     dispatcher : :obj:`hikari.state.event_dispatchers.EventDispatcher`, optional
         The high level event dispatcher to use for dispatching start and stop
-        events. Set this to ``None`` to disable that functionality (useful if
+        events. Set this to :obj:`None` to disable that functionality (useful if
         you use a gateway manager to orchestrate multiple shards instead and
-        provide this functionality there). Defaults to ``None`` if unspecified.
+        provide this functionality there). Defaults to :obj:`None` if
+        unspecified.
 
     Notes
     -----
@@ -218,7 +219,7 @@ class ShardClient(runnable.RunnableClient):
         Returns
         -------
         :obj:`hikari.gateway_entities.GatewayActivity`, optional
-            The current activity for the user on this shard, or ``None`` if
+            The current activity for the user on this shard, or :obj:`None` if
             there is no activity.
         """
         return self._activity
@@ -231,19 +232,19 @@ class ShardClient(runnable.RunnableClient):
         -------
         :obj:`datetime.datetime`, optional
             The timestamp when the user of this shard appeared to be idle, or
-            ``None`` if not applicable.
+            :obj:`None` if not applicable.
         """
         return self._idle_since
 
     # Ignore docstring not starting in an imperative mood
     @property
     def is_afk(self) -> bool:  # noqa: D401
-        """``True`` if the user is AFK, ``False`` otherwise.
+        """:obj:`True` if the user is AFK, :obj:`False` otherwise.
 
         Returns
         -------
         :obj:`bool`
-            ``True`` if the user is AFK, ``False`` otherwise.
+            :obj:`True` if the user is AFK, :obj:`False` otherwise.
         """
         return self._is_afk
 
@@ -492,7 +493,7 @@ class ShardClient(runnable.RunnableClient):
             If specified, the new activity to set.
         idle_since : :obj:`datetime.datetime`, optional
             If specified, the time to show up as being idle since, or
-            ``None`` if not applicable.
+            :obj:`None` if not applicable.
         is_afk : :obj:`bool`
             If specified, whether the user should be marked as AFK.
         """
