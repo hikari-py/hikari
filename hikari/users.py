@@ -118,8 +118,10 @@ class UserFlag(enum.IntFlag):
     HOUSE_BALANCE = 1 << 8
     EARLY_SUPPORTER = 1 << 9
     TEAM_USER = 1 << 10
-    SYSTEM = 1 << 11
-    BUG_HUNTER_LEVEL_2 = 1 << 12
+    SYSTEM = 1 << 12
+    BUG_HUNTER_LEVEL_2 = 1 << 14
+    VERIFIED_BOT = 1 << 16
+    VERIFIED_BOT_DEVELOPER = 1 << 17
 
 
 @enum.unique
