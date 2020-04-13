@@ -39,13 +39,19 @@ BaseTypeInstanceT = typing.TypeVar("BaseTypeInstanceT")
 
 
 def assert_that(condition: bool, message: str = None, error_type: type = ValueError) -> None:
-    """If the given condition is falsified, raise a :obj:`ValueError` with the optional description provided."""
+    """If the given condition is falsified, raise a :obj:`ValueError`.
+
+    Will be raised with the optional description if provided.
+    """
     if not condition:
         raise error_type(message or "condition must not be False")
 
 
 def assert_not_none(value: ValueT, message: typing.Optional[str] = None) -> ValueT:
-    """If the given value is ``None``, raise a :obj:`ValueError` with the optional description provided."""
+    """If the given value is :obj:`None`, raise a :obj:`ValueError`.
+
+    Will be raised with the optional description if provided.
+    """
     if value is None:
         raise ValueError(message or "value must not be None")
     return value

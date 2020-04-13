@@ -159,7 +159,7 @@ class MyUser(User):
     is_verified: typing.Optional[bool] = marshaller.attrib(raw_name="verified", deserializer=bool, if_undefined=None)
 
     #: The user's set email, requires the ``email`` scope.
-    #: This will always be ``None`` for bots.
+    #: This will always be :obj:`None` for bots.
     #:
     #: :type: :obj:`str`, optional
     email: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None)
@@ -170,7 +170,7 @@ class MyUser(User):
     flags: typing.Optional[UserFlag] = marshaller.attrib(deserializer=UserFlag, if_undefined=None)
 
     #: The type of Nitro Subscription this user account had.
-    #: Requires the ``identify`` scope and will always be ``None`` for bots.
+    #: Requires the ``identify`` scope and will always be :obj:`None` for bots.
     #:
     #: :type: :obj:`PremiumType`, optional
     premium_type: typing.Optional[PremiumType] = marshaller.attrib(deserializer=PremiumType, if_undefined=None)

@@ -55,7 +55,7 @@ def generate_cdn_url(*route_parts: str, fmt: str, size: typing.Optional[int]) ->
         if the target entity doesn't have an animated version available).
     size : :obj:`int`, optional
         The size to specify for the image in the query string if applicable,
-        should be passed through as ``None`` to avoid the param being set.
+        should be passed through as :obj:`None` to avoid the param being set.
         Must be any power of two between 16 and 4096.
 
     Returns

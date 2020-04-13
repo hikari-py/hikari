@@ -96,10 +96,10 @@ class ShardConnection:
         the reference to this :obj:`ShardConnection` The second is the
         event name.
     initial_presence: :obj:`typing.Dict`, optional
-        A raw JSON object as a :obj:`typing.Dict` that should be set as the initial
-        presence of the bot user once online. If ``None``, then it will be set to
-        the default, which is showing up as online without a custom status
-        message.
+        A raw JSON object as a :obj:`typing.Dict` that should be set as the
+        initial presence of the bot user once online. If :obj:`None`, then it
+        will be set to the default, which is showing up as online without a
+        custom status message.
     intents: :obj:`hikari.net.codes.GatewayIntent`, optional
         Bitfield of intents to use. If you use the V7 API, this is mandatory.
         This field will determine what events you will receive.
@@ -116,13 +116,13 @@ class ShardConnection:
         sent using :meth:`request_guild_members`.
     proxy_auth: :obj:`aiohttp.BasicAuth`, optional
         Optional :obj:`aiohttp.BasicAuth` object that can be provided to
-        allow authenticating with a proxy if you use one. Leave ``None`` to
+        allow authenticating with a proxy if you use one. Leave :obj:`None` to
         ignore.
     proxy_headers: :obj:`typing.Mapping` [ :obj:`str`, :obj:`str` ], optional
         Optional :obj:`typing.Mapping` to provide as headers to allow the
-        connection through a proxy if you use one. Leave ``None`` to ignore.
+        connection through a proxy if you use one. Leave :obj:`None` to ignore.
     proxy_url: :obj:`str`, optional
-        Optional :obj:`str` to use for a proxy server. If ``None``, then it
+        Optional :obj:`str` to use for a proxy server. If :obj:`None`, then it
         is ignored.
     session_id: :obj:`str`, optional
         The session ID to use. If specified along with ``seq``, then the
@@ -146,8 +146,9 @@ class ShardConnection:
     url: :obj:`str`
         The websocket URL to use.
     verify_ssl: :obj:`bool`
-        If ``True``, SSL verification is enabled, which is generally what you want.
-        If you get SSL issues, you can try turning this off at your own risk.
+        If :obj:`True`, SSL verification is enabled, which is generally what you
+        want. If you get SSL issues, you can try turning this off at your own
+        risk.
     version: :obj:`hikari.net.versions.GatewayVersion`
         The version of the gateway API to use. Defaults to the most recent
         stable documented version.
@@ -417,7 +418,7 @@ class ShardConnection:
     def intents(self) -> typing.Optional[codes.GatewayIntent]:
         """Intents being used.
 
-        If this is ``None``, no intent usage was being
+        If this is :obj:`None`, no intent usage was being
         used on this shard. On V6 this would be regular usage as prior to
         the intents change in January 2020. If on V7, you just won't be
         able to connect at all to the gateway.

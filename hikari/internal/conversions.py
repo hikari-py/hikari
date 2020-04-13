@@ -61,8 +61,8 @@ FileLikeT = typing.Union[BytesLikeT, io.BufferedRandom, io.BufferedReader, io.Bu
 def nullable_cast(value: CastInputT, cast: TypeCastT, /) -> ResultT:
     """Attempt to cast the given ``value`` with the given ``cast``.
 
-    This will only succeed if ``value`` is not ``None``. If it is ``None``, then
-    ``None`` is returned instead.
+    This will only succeed if ``value`` is not :obj:`None`. If it is
+    :obj:`None`, then :obj:`None` is returned instead.
     """
     if value is None:
         return None
@@ -134,7 +134,8 @@ def image_bytes_to_image_data(img_bytes: typing.Optional[bytes] = None, /) -> ty
     Returns
     -------
     :obj:`str`, optional
-        The ``image_bytes`` given encoded into an image data string or ``None``.
+        The ``image_bytes`` given encoded into an image data string or
+        :obj:`None`.
 
     Note
     ----

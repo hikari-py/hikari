@@ -71,7 +71,8 @@ class InviteGuild(guilds.PartialGuild):
     #: The hash for the guild's banner.
     #:
     #: This is only present if :obj:`hikari.guilds.GuildFeature.BANNER`
-    #: is in the ``features`` for this guild. For all other purposes, it is ``None``.
+    #: is in the ``features`` for this guild. For all other purposes, it is
+    #: :obj:`None`.
     #:
     #: :type: :obj:`str`, optional
     banner_hash: typing.Optional[str] = marshaller.attrib(raw_name="banner", if_none=None, deserializer=str)
@@ -79,8 +80,8 @@ class InviteGuild(guilds.PartialGuild):
     #: The guild's description.
     #:
     #: This is only present if certain ``features`` are set in this guild.
-    #: Otherwise, this will always be ``None``. For all other purposes, it is
-    #: ``None``.
+    #: Otherwise, this will always be :obj:`None`. For all other purposes, it is
+    #: :obj:`None`.
     #:
     #: :type: :obj:`str`, optional
     description: typing.Optional[str] = marshaller.attrib(if_none=None, deserializer=str)
@@ -93,7 +94,8 @@ class InviteGuild(guilds.PartialGuild):
     #: The vanity URL code for the guild's vanity URL.
     #:
     #: This is only present if :obj:`hikari.guilds.GuildFeature.VANITY_URL`
-    #: is in the ``features`` for this guild. If not, this will always be ``None``.
+    #: is in the ``features`` for this guild. If not, this will always be
+    #: :obj:`None`.
     #:
     #: :type: :obj:`str`, optional
     vanity_url_code: typing.Optional[str] = marshaller.attrib(if_none=None, deserializer=str)
@@ -172,7 +174,7 @@ class Invite(entities.HikariEntity, entities.Deserializable):
     code: str = marshaller.attrib(deserializer=str)
 
     #: The partial object of the guild this dm belongs to.
-    #: Will be ``None`` for group dm invites.
+    #: Will be :obj:`None` for group dm invites.
     #:
     #: :type: :obj:`InviteGuild`, optional
     guild: typing.Optional[InviteGuild] = marshaller.attrib(deserializer=InviteGuild.deserialize, if_undefined=None)
@@ -199,13 +201,13 @@ class Invite(entities.HikariEntity, entities.Deserializable):
     )
 
     #: The approximate amount of presences in this invite's guild, only present
-    #: when ``with_counts`` is passed as ``True`` to the GET Invites endpoint.
+    #: when ``with_counts`` is passed as :obj:`True` to the GET Invites endpoint.
     #:
     #: :type: :obj:`int`, optional
     approximate_presence_count: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
 
     #: The approximate amount of members in this invite's guild, only present
-    #: when ``with_counts`` is passed as ``True`` to the GET Invites endpoint.
+    #: when ``with_counts`` is passed as :obj:`True` to the GET Invites endpoint.
     #:
     #: :type: :obj:`int`, optional
     approximate_member_count: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
@@ -232,7 +234,7 @@ class InviteWithMetadata(Invite):
     max_uses: int = marshaller.attrib(deserializer=int)
 
     #: The timedelta of how long this invite will be valid for.
-    #: If set to ``None`` then this is unlimited.
+    #: If set to :obj:`None` then this is unlimited.
     #:
     #: :type: :obj:`datetime.timedelta`, optional
     max_age: typing.Optional[datetime.timedelta] = marshaller.attrib(
@@ -251,7 +253,10 @@ class InviteWithMetadata(Invite):
 
     @property
     def expires_at(self) -> typing.Optional[datetime.datetime]:
-        """When this invite should expire, if ``max_age`` is set. Else ``None``."""
+        """When this invite should expire, if ``max_age`` is set.
+
+        If this invite doesn't have a set expiry then this will be :obj:`None`.
+        """
         if self.max_age:
             return self.created_at + self.max_age
         return None

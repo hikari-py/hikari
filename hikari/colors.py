@@ -168,7 +168,7 @@ class Color(int, typing.SupportsInt):
     # Ignore docstring not starting in an imperative mood
     @property
     def is_web_safe(self) -> bool:  # noqa: D401
-        """``True`` if the color is web safe, ``False`` otherwise."""
+        """:obj:`True` if the color is web safe, :obj:`False` otherwise."""
         hex_code = self.raw_hex_code
         return all(_all_same(*c) for c in (hex_code[:2], hex_code[2:4], hex_code[4:]))
 

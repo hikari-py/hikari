@@ -71,7 +71,8 @@ class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: Note
     #: ----
-    #: This will be ``None`` when getting a webhook with a token
+    #: This will be :obj:`None` when getting a webhook with bot authorization
+    #: rather than the webhook's token.
     #:
     #:
     #: :type: :obj:`hikari.users.User`, optional

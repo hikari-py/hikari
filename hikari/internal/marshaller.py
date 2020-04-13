@@ -166,18 +166,18 @@ def attrib(
         The raw name of the element in its raw serialized form. If not provided,
         then this will use the field's default name later.
     transient : :obj:`bool`
-        If ``True``, the field is marked as transient, meaning it will not be
-        serialized. Defaults to ``False``.
+        If :obj:`True`, the field is marked as transient, meaning it will not be
+        serialized. Defaults to :obj:`False`.
     if_none
         Either a default factory function called to get the default for when
-        this field is ``None`` or one of ``None``, ``False`` or ``True`` to
-        specify that this should default to the given singleton.
-        Will raise an exception when ``None`` is received for this field later
-        if this isn't specified.
+        this field is :obj:`None` or one of :obj:`None`, :obj:`False` or
+        :obj:`True` to specify that this should default to the given singleton.
+        Will raise an exception when :obj:`None` is received for this field
+        later if this isn't specified.
     if_undefined
         Either a default factory function called to get the default for when
-        this field isn't defined or one of ``None``, ``False`` or ``True`` to
-        specify that this should default to the given singleton.
+        this field isn't defined or one of :obj:`None`, :obj:`False` or
+        :obj:`True` to specify that this should default to the given singleton.
         Will raise an exception when this field is undefined later on if this
         isn't specified.
     serializer : :obj:`typing.Callable` [ [ :obj:`typing.Any` ], :obj:`typing.Any` ], optional
@@ -363,7 +363,7 @@ class HikariEntityMarshaller:
             If the entity is not registered.
         :obj:`AttributeError`
             If the field is not optional, but the field was not present in the
-            raw payload, or it was present, but it was assigned ``None``.
+            raw payload, or it was present, but it was assigned :obj:`None`.
         :obj:`TypeError`
             If the deserialization call failed for some reason.
         """
