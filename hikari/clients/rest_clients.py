@@ -167,7 +167,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the given permissions to view an audit log.
         :obj:`hikari.errors.NotFoundHTTPError`
@@ -240,7 +240,7 @@ class RESTClient:
         -------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.audit_logs.AuditLogIterator`
             An async iterator of the audit log entries in a guild (from newest
             to oldest).
@@ -277,7 +277,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.ForbiddenHTTPError`
             If you don't have access to the channel.
         :obj:`hikari.errors.NotFoundHTTPError`
@@ -320,8 +320,8 @@ class RESTClient:
             characters in length.
         nsfw : :obj:`bool`
             Mark the channel as being not safe for work (NSFW) if :obj:`True`.
-            If ``False`` or unspecified, then the channel is not marked as NSFW.
-            Will have no visiable effect for non-text guild channels.
+            If :obj:`False` or unspecified, then the channel is not marked as
+            NSFW. Will have no visible effect for non-text guild channels.
         rate_limit_per_user : :obj:`typing.Union` [ :obj:`int`, :obj:`datetime.timedelta` ]
             If specified, the time delta of seconds  the user has to wait
             before sending another message. This will not apply to bots, or to
@@ -361,7 +361,7 @@ class RESTClient:
             If you provide incorrect options for the corresponding channel type
             (e.g. a ``bitrate`` for a text channel).
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.modify_channel(
             channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
@@ -409,7 +409,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -470,7 +470,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack permission to read the channel.
         :obj:`hikari.errors.NotFoundHTTPError`
@@ -540,7 +540,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack permission to read the channel.
         :obj:`hikari.errors.NotFoundHTTPError`
@@ -611,7 +611,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack permission to read the channel.
         :obj:`hikari.errors.NotFoundHTTPError`
@@ -726,7 +726,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack permission to see the message.
         :obj:`hikari.errors.NotFoundHTTPError`
@@ -753,11 +753,11 @@ class RESTClient:
             discord and lead to actual pings.
         user_mentions : :obj:`typing.Union` [ :obj:`typing.Collection` [ :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ], :obj:`bool` ]
             Either an array of user objects/IDs to allow mentions for,
-            :obj:`True` to allow all user mentions or ``False`` to block all
+            :obj:`True` to allow all user mentions or :obj:`False` to block all
             user mentions from resolving.
         role_mentions : :obj:`typing.Union` [ :obj:`typing.Collection` [ :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ], :obj:`bool` ]
             Either an array of guild role objects/IDs to allow mentions for,
-            :obj:`True` to allow all role mentions or ``False`` to block all
+            :obj:`True` to allow all role mentions or :obj:`False` to block all
             role mentions from resolving.
 
         Returns
@@ -837,11 +837,11 @@ class RESTClient:
             discord and lead to actual pings, defaults to :obj:`True`.
         user_mentions : :obj:`typing.Union` [ :obj:`typing.Collection` [ :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ], :obj:`bool` ]
             Either an array of user objects/IDs to allow mentions for,
-            :obj:`True` to allow all user mentions or ``False`` to block all
+            :obj:`True` to allow all user mentions or :obj:`False` to block all
             user mentions from resolving, defaults to :obj:`True`.
         role_mentions : :obj:`typing.Union` [ :obj:`typing.Collection` [ :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ], :obj:`bool` ]
             Either an array of guild role objects/IDs to allow mentions for,
-            :obj:`True` to allow all role mentions or ``False`` to block all
+            :obj:`True` to allow all role mentions or :obj:`False` to block all
             role mentions from resolving, defaults to :obj:`True`.
 
         Returns
@@ -859,7 +859,7 @@ class RESTClient:
             empty or greater than ``2000`` characters; if neither content, files
             or embed are specified.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack permissions to send to this channel.
         """
@@ -893,7 +893,7 @@ class RESTClient:
 
         This endpoint has the same signature as :attr:`create_message` with
         the only difference being that ``mentions_everyone``,
-        ``user_mentions`` and ``role_mentions`` default to ``False``.
+        ``user_mentions`` and ``role_mentions`` default to :obj:`False`.
         """
         return self.create_message(
             channel=channel,
@@ -938,7 +938,7 @@ class RESTClient:
         :obj:`hikari.errors.BadRequestHTTPError`
             If the emoji is not valid, unknown, or formatted incorrectly.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         await self._session.create_reaction(
             channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
@@ -978,7 +978,7 @@ class RESTClient:
         :obj:`hikari.errors.BadRequestHTTPError`
             If the emoji is not valid, unknown, or formatted incorrectly.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         await self._session.delete_own_reaction(
             channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
@@ -1002,7 +1002,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -1036,7 +1036,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the channel or message or emoji or user is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -1099,7 +1099,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack access to the message.
         :obj:`hikari.errors.NotFoundHTTPError`
@@ -1156,11 +1156,11 @@ class RESTClient:
             discord and lead to actual pings, defaults to :obj:`True`.
         user_mentions : :obj:`typing.Union` [ :obj:`typing.Collection` [ :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ], :obj:`bool` ]
             Either an array of user objects/IDs to allow mentions for,
-            :obj:`True` to allow all user mentions or ``False`` to block all
+            :obj:`True` to allow all user mentions or :obj:`False` to block all
             user mentions from resolving, defaults to :obj:`True`.
         role_mentions : :obj:`typing.Union` [ :obj:`typing.Collection` [ :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ], :obj:`bool` ]
             Either an array of guild role objects/IDs to allow mentions for,
-            :obj:`True` to allow all role mentions or ``False`` to block all
+            :obj:`True` to allow all role mentions or :obj:`False` to block all
             role mentions from resolving, defaults to :obj:`True`.
 
         Returns
@@ -1178,7 +1178,7 @@ class RESTClient:
             than ``2000`` characters; if neither content, file or embed
             are specified.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.ForbiddenHTTPError`
             If you try to edit ``content`` or ``embed`` or ``allowed_mentions`
             on a message you did not author.
@@ -1213,7 +1213,7 @@ class RESTClient:
 
         This endpoint has the same signature as :attr:`execute_webhook` with
         the only difference being that ``mentions_everyone``,
-        ``user_mentions`` and ``role_mentions`` default to ``False``.
+        ``user_mentions`` and ``role_mentions`` default to :obj:`False`.
         """
         return self.update_message(
             message=message,
@@ -1248,7 +1248,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.ForbiddenHTTPError`
             If you did not author the message and are in a DM, or if you did
             not author the message and lack the ``MANAGE_MESSAGES``
@@ -1326,7 +1326,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the target channel or overwrite doesn't exist.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -1360,7 +1360,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_CHANNELS`` permission.
         :obj:`hikari.errors.NotFoundHTTPError`
@@ -1425,7 +1425,7 @@ class RESTClient:
         :obj:`hikari.errors.BadRequestHTTPError`
             If the arguments provided are not valid (e.g. negative age, etc).
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_channel_invite(
             channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
@@ -1461,7 +1461,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the overwrite or channel do not exist.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -1484,7 +1484,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the channel is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -1513,7 +1513,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the channel is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -1546,7 +1546,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission.
         :obj:`hikari.errors.NotFoundHTTPError`
@@ -1575,7 +1575,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission.
         :obj:`hikari.errors.NotFoundHTTPError`
@@ -1607,7 +1607,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the emoji aren't found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -1636,7 +1636,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -1691,7 +1691,7 @@ class RESTClient:
             If you attempt to upload an image larger than ``256kb``, an empty
             image or an invalid image format.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_guild_emoji(
             guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
@@ -1741,7 +1741,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the emoji aren't found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -1775,7 +1775,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the emoji aren't found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -1844,7 +1844,7 @@ class RESTClient:
             If you provide unsupported fields like ``parent_id`` in channel
             objects.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_guild(
             name=name,
@@ -1875,7 +1875,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -1949,7 +1949,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -1996,7 +1996,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -2025,7 +2025,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -2112,7 +2112,7 @@ class RESTClient:
             If you provide incorrect options for the corresponding channel type
             (e.g. a ``bitrate`` for a text channel).
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_guild_channel(
             guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
@@ -2173,7 +2173,7 @@ class RESTClient:
             If you provide anything other than the ``id`` and ``position``
             fields for the channels.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         await self._session.modify_guild_channel_positions(
             str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
@@ -2204,7 +2204,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the member aren't found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -2257,7 +2257,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -2329,7 +2329,7 @@ class RESTClient:
             If you pass ``mute``, ``deaf`` or ``channel_id`` while the member
             is not connected to a voice channel.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         await self._session.modify_guild_member(
             guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
@@ -2376,7 +2376,7 @@ class RESTClient:
             If you provide a disallowed nickname, one that is too long, or one
             that is empty.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         await self._session.modify_current_user_nick(
             guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
@@ -2410,7 +2410,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild, member or role aren't found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -2449,7 +2449,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild, member or role aren't found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -2481,7 +2481,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or member aren't found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -2514,7 +2514,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the user aren't found, or if the user is not
             banned.
@@ -2544,7 +2544,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -2582,7 +2582,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or member aren't found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -2614,7 +2614,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or member aren't found, or the member is not
             banned.
@@ -2647,7 +2647,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -2706,7 +2706,7 @@ class RESTClient:
         :obj:`hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the role attributes.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_guild_role(
             guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
@@ -2753,7 +2753,7 @@ class RESTClient:
         :obj:`hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the `position` fields.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.modify_guild_role_positions(
             str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
@@ -2815,7 +2815,7 @@ class RESTClient:
         :obj:`hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the role attributes.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.modify_guild_role(
             guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
@@ -2845,7 +2845,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the role aren't found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -2882,7 +2882,7 @@ class RESTClient:
         :obj:`hikari.errors.BadRequestHTTPError`
             If you pass an invalid amount of days.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         return await self._session.get_guild_prune_count(
             guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
@@ -2928,7 +2928,7 @@ class RESTClient:
             If you provide invalid values for the ``days`` or
             ``compute_prune_count`` fields.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         """
         return await self._session.begin_guild_prune(
             guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
@@ -2956,7 +2956,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -2986,7 +2986,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -3016,7 +3016,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -3062,7 +3062,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the integration aren't found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -3102,7 +3102,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the integration aren't found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -3132,7 +3132,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If either the guild or the integration aren't found.
         :obj:`hikari.errors.ForbiddenHTTPError`
@@ -3162,7 +3162,7 @@ class RESTClient:
         ------
         :obj:`hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of UINT64.
+            due to it being outside of the range of a 64 bit integer.
         :obj:`hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         :obj:`hikari.errors.ForbiddenHTTPError`

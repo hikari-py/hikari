@@ -250,7 +250,7 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
     description: str = marshaller.attrib(deserializer=str)
 
     #: Whether the bot associated with this application is public.
-    #: Will be ``None`` if this application doesn't have an associated bot.
+    #: Will be :obj:`None` if this application doesn't have an associated bot.
     #:
     #: :type: :obj:`bool`, optional
     is_bot_public: typing.Optional[bool] = marshaller.attrib(
@@ -258,7 +258,7 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
     )
 
     #: Whether the bot associated with this application is requiring code grant
-    #: for invites. Will be ``None`` if this application doesn't have a bot.
+    #: for invites. Will be :obj:`None` if this application doesn't have a bot.
     #:
     #: :type: :obj:`bool`, optional
     is_bot_code_grant_required: typing.Optional[bool] = marshaller.attrib(
@@ -266,8 +266,8 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
     )
 
     #: The object of this application's owner.
-    #: This should always be ``None`` in application objects retrieved outside
-    #: Discord's oauth2 flow.
+    #: This should always be :obj:`None` in application objects retrieved
+    #: outside Discord's oauth2 flow.
     #:
     #: :type: :obj:`ApplicationOwner`, optional
     owner: typing.Optional[ApplicationOwner] = marshaller.attrib(

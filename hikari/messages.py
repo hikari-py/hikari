@@ -192,8 +192,9 @@ class MessageCrosspost(entities.HikariEntity, entities.Deserializable):
     #:
     #: Warning
     #: -------
-    #: This may be ``None`` in some cases according to the Discord API
-    #: documentation, but the situations that cause this to occur are not currently documented.
+    #: This may be :obj:`None` in some cases according to the Discord API
+    #: documentation, but the situations that cause this to occur are not
+    #: currently documented.
     #:
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
@@ -210,8 +211,9 @@ class MessageCrosspost(entities.HikariEntity, entities.Deserializable):
     #:
     #: Warning
     #: -------
-    #: This may be ``None`` in some cases according to the Discord API
-    #: documentation, but the situations that cause this to occur are not currently documented.
+    #: This may be :obj:`None` in some cases according to the Discord API
+    #: documentation, but the situations that cause this to occur are not
+    #: currently documented.
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
@@ -258,7 +260,8 @@ class Message(snowflakes.UniqueEntity, entities.Deserializable):
     #: :type: :obj:`datetime.datetime`
     timestamp: datetime.datetime = marshaller.attrib(deserializer=conversions.parse_iso_8601_ts)
 
-    #: The timestamp that the message was last edited at, or ``None`` if not ever edited.
+    #: The timestamp that the message was last edited at, or :obj:`None` if it
+    #: wasn't ever edited.
     #:
     #: :type: :obj:`datetime.datetime`, optional
     edited_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(

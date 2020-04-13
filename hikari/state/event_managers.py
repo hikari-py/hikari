@@ -87,8 +87,8 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
     ----------
     event_dispatcher_impl: :obj:`hikari.state.event_dispatchers.EventDispatcher`, optional
         An implementation of event dispatcher that will store individual events
-        and manage dispatching them after this object creates them. If ``None``,
-        then a default implementation is chosen.
+        and manage dispatching them after this object creates them. If
+        :obj:`None`, then a default implementation is chosen.
 
     Notes
     -----
