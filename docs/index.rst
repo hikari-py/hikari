@@ -23,12 +23,6 @@ Technical documentation
 .. toctree::
     :titlesonly:
 
-    hikari
-
-
-.. toctree::
-    :titlesonly:
-
     modules
 
 Other resources
