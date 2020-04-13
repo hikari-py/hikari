@@ -25,7 +25,7 @@ import enum
 # Doesnt work correctly with enums, so since this file is all enums, ignore
 # pylint: disable=no-member
 class HTTPStatusCode(enum.IntEnum):
-    """HTTP status codes that a conforming HTTP server should give us on Discord."""
+    """HTTP response codes expected from RESTful components."""
 
     CONTINUE = 100
 
@@ -74,7 +74,8 @@ class GatewayCloseCode(enum.IntEnum):
     NORMAL_CLOSURE = 1000
     #: Discord is not sure what went wrong. Try reconnecting?
     UNKNOWN_ERROR = 4000
-    #: You sent an invalid Gateway opcode or an invalid payload for an opcode. Don't do that!
+    #: You sent an invalid Gateway opcode or an invalid payload for an opcode.
+    #: Don't do that!
     UNKNOWN_OPCODE = 4001
     #: You sent an invalid payload to Discord. Don't do that!
     DECODE_ERROR = 4002
@@ -84,7 +85,8 @@ class GatewayCloseCode(enum.IntEnum):
     AUTHENTICATION_FAILED = 4004
     #: You sent more than one identify payload. Don't do that!
     ALREADY_AUTHENTICATED = 4005
-    #: The sequence sent when resuming the session was invalid. Reconnect and start a new session.
+    #: The sequence sent when resuming the session was invalid. Reconnect and
+    #: start a new session.
     INVALID_SEQ = 4007
     #: Woah nelly! You're sending payloads to Discord too quickly. Slow it down!
     RATE_LIMITED = 4008
@@ -92,14 +94,16 @@ class GatewayCloseCode(enum.IntEnum):
     SESSION_TIMEOUT = 4009
     #: You sent Discord an invalid shard when IDENTIFYing.
     INVALID_SHARD = 4010
-    #: The session would have handled too many guilds - you are required to shard your connection in order to connect.
+    #: The session would have handled too many guilds - you are required to
+    #: shard your connection in order to connect.
     SHARDING_REQUIRED = 4011
     #: You sent an invalid version for the gateway.
     INVALID_VERSION = 4012
-    #: You sent an invalid intent for a Gateway Intent. You may have incorrectly calculated the bitwise value.
+    #: You sent an invalid intent for a Gateway Intent. You may have incorrectly
+    #: calculated the bitwise value.
     INVALID_INTENT = 4013
-    #: You sent a disallowed intent for a Gateway Intent. You may have tried to specify an intent that you
-    #: have not enabled or are not whitelisted for.
+    #: You sent a disallowed intent for a Gateway Intent. You may have tried to
+    #: specify an intent that you have not enabled or are not whitelisted for.
     DISALLOWED_INTENT = 4014
 
     def __str__(self) -> str:
@@ -137,7 +141,8 @@ class GatewayOpcode(enum.IntEnum):
     #: Used to notify client they have an invalid session id.
     INVALID_SESSION = 9
 
-    #: Sent immediately after connecting, contains heartbeat and server debug information.
+    #: Sent immediately after connecting, contains heartbeat and server debug
+    #: information.
     HELLO = 10
 
     #: Sent immediately following a client heartbeat that was received.
@@ -220,7 +225,9 @@ class JSONErrorCode(enum.IntEnum):
     #:
     #: Note
     #: ----
-    #: You should never expect to receive this in normal API usage as this only applies to user accounts.
+    #: You should never expect to receive this in normal API usage as this only
+    #: applies to user accounts.
+    #:
     #: This is unlimited for bot accounts.
     MAX_GUILDS_REACHED = 30_001
 
@@ -228,7 +235,9 @@ class JSONErrorCode(enum.IntEnum):
     #:
     #: Note
     #: ----
-    #: You should never expect to receive this in normal API usage as this only applies to user accounts.
+    #: You should never expect to receive this in normal API usage as this only
+    #: applies to user accounts.
+    #:
     #: Bots cannot have friends :( .
     MAX_FRIENDS_REACHED = 30_002
 
@@ -292,7 +301,8 @@ class JSONErrorCode(enum.IntEnum):
     #: Note is too long
     NOTE_IS_TOO_LONG = 50_015
 
-    #: Provided too few or too many messages to delete. Must provide at least 2 and fewer than 100 messages to delete.
+    #: Provided too few or too many messages to delete. Must provide at least 2
+    #: and fewer than 100 messages to delete.
     INVALID_NUMBER_OF_MESSAGES_TO_DELETE = 50_016
 
     #: A message can only be pinned to the channel it was sent in
@@ -336,25 +346,30 @@ class GatewayIntent(enum.IntFlag):
     This is a bitfield representation of all the categories of event
     that you wish to receive.
 
-    Any events not in an intent category will be fired regardless of what intents you provide.
+    Any events not in an intent category will be fired regardless of what
+    intents you provide.
 
     Warnings
     --------
-    If you are using the V7 Gateway, you will be REQUIRED to provide some form of intent value when
-    you connect. Failure to do so may result in immediate termination of the session server-side.
+    If you are using the V7 Gateway, you will be REQUIRED to provide some form
+    of intent value when you connect. Failure to do so may result in immediate
+    termination of the session server-side.
 
     Notes
     -----
-    Discord now places limits on certain events you can receive without whitelisting your bot first. On the
-    ``Bot`` tab in the developer's portal for your bot, you should now have the option to enable functionality
+    Discord now places limits on certain events you can receive without
+    whitelisting your bot first. On the ``Bot`` tab in the developer's portal
+    for your bot, you should now have the option to enable functionality
     for receiving these events.
 
-    If you attempt to request an intent type that you have not whitelisted your bot for, you will be
-    disconnected on startup with a ``4014`` closure code.
+    If you attempt to request an intent type that you have not whitelisted
+    your bot for, you will be disconnected on startup with a ``4014`` closure
+    code.
     """
 
     #: Subscribes to the following events:
     #: * GUILD_CREATE
+    #: * GUILD_UPDATE
     #: * GUILD_DELETE
     #: * GUILD_ROLE_CREATE
     #: * GUILD_ROLE_UPDATE
@@ -413,6 +428,7 @@ class GatewayIntent(enum.IntFlag):
     #: * MESSAGE_CREATE
     #: * MESSAGE_UPDATE
     #: * MESSAGE_DELETE
+    #: * MESSAGE_BULK
     GUILD_MESSAGES = 1 << 9
 
     #: Subscribes to the following events:
