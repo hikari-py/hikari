@@ -316,15 +316,14 @@ def make_resource_seekable(resource: typing.Any, /) -> Seekable:
 
 
 def get_bytes_from_resource(resource: typing.Any) -> bytes:
-    """
-    Take in any file-like object and return the raw bytes data from it.
+    """Take in any file-like object and return the raw bytes data from it.
 
-    Supports any :obj:`FileLikeT` type that isn't string based.
+    Supports any ``FileLikeT`` type that isn't string based.
     Anything else is just returned.
 
     Parameters
     ----------
-    resource : :obj:`FileLikeT`
+    resource : ``FileLikeT``
         The resource to get bytes from.
 
     Returns
