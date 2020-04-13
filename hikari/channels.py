@@ -41,6 +41,8 @@ __all__ = [
     "GuildNewsChannel",
     "GuildStoreChannel",
     "GuildVoiceChannel",
+    "GuildChannelBuilder",
+    "deserialize_channel",
 ]
 
 import datetime
@@ -87,6 +89,9 @@ class PermissionOverwriteType(str, enum.Enum):
     #: A permission overwrite that targets a specific guild member.
     MEMBER = "member"
 
+    def __str__(self) -> str:
+        return self.value
+
 
 @marshaller.marshallable()
 @attr.s(slots=True)
@@ -96,17 +101,21 @@ class PermissionOverwrite(snowflakes.UniqueEntity, entities.Deserializable, enti
     #: The type of entity this overwrite targets.
     #:
     #: :type: :obj:`PermissionOverwriteType`
-    type: PermissionOverwriteType = marshaller.attrib(deserializer=PermissionOverwriteType)
+    type: PermissionOverwriteType = marshaller.attrib(deserializer=PermissionOverwriteType, serializer=str)
 
     #: The permissions this overwrite allows.
     #:
     #: :type: :obj:`hikari.permissions.Permission`
-    allow: permissions.Permission = marshaller.attrib(deserializer=permissions.Permission)
+    allow: permissions.Permission = marshaller.attrib(
+        deserializer=permissions.Permission, serializer=int, default=permissions.Permission(0)
+    )
 
     #: The permissions this overwrite denies.
     #:
     #: :type: :obj:`hikari.permissions.Permission`
-    deny: permissions.Permission = marshaller.attrib(deserializer=permissions.Permission)
+    deny: permissions.Permission = marshaller.attrib(
+        deserializer=permissions.Permission, serializer=int, default=permissions.Permission(0)
+    )
 
     @property
     def unset(self) -> permissions.Permission:
@@ -222,7 +231,7 @@ class GroupDMChannel(DMChannel):
 
 @marshaller.marshallable()
 @attr.s(slots=True)
-class GuildChannel(Channel, entities.Serializable):
+class GuildChannel(Channel):
     """The base for anything that is a guild channel."""
 
     #: The ID of the guild the channel belongs to.
@@ -348,6 +357,144 @@ class GuildVoiceChannel(GuildChannel):
     #:
     #: :type: :obj:`int`
     user_limit: int = marshaller.attrib(deserializer=int)
+
+
+class GuildChannelBuilder(entities.Serializable):
+    """Used to create channel objects to send in guild create requests.
+
+    Parameters
+    ----------
+    channel_name : str
+        The name to set for the channel.
+    channel_type : :obj:`ChannelType`
+        The type of channel this should build.
+
+    Example
+    -------
+    .. code-block:: python
+
+        channel_obj = (
+            channels.GuildChannelBuilder("Catgirl-appreciation", channels.ChannelType.GUILD_TEXT)
+            .is_nsfw(True)
+            .with_topic("Here we men of culture appreciate the way of the neko.")
+            .with_rate_limit_per_user(datetime.timedelta(seconds=5))
+            .with_permission_overwrites([overwrite_obj])
+            .with_id(1)
+        )
+    """
+
+    __slots__ = ("_payload",)
+
+    def __init__(self, channel_name: str, channel_type: ChannelType) -> None:
+        self._payload: entities.RawEntityT = {
+            "type": channel_type,
+            "name": channel_name,
+        }
+
+    def serialize(self: entities.T_co) -> entities.RawEntityT:
+        """Serialize this instance into a naive value."""
+        return self._payload
+
+    def is_nsfw(self) -> "GuildChannelBuilder":
+        """Mark this channel as NSFW."""
+        self._payload["nsfw"] = True
+        return self
+
+    def with_permission_overwrites(self, overwrites: typing.Sequence[PermissionOverwrite]) -> "GuildChannelBuilder":
+        """Set the permission overwrites for this channel.
+
+        Note
+        ----
+        Calling this multiple times will overwrite any previously added
+        overwrites.
+
+        Parameters
+        ----------
+        overwrites : :obj:`typing.Sequence` [ :obj:`PermissionOverwrite` ]
+            A sequence of overwrite objects to add, where the first overwrite
+            object
+        """
+        self._payload["permission_overwrites"] = [o.serialize() for o in overwrites]
+        return self
+
+    def with_topic(self, topic: str) -> "GuildChannelBuilder":
+        """Set the topic for this channel.
+
+        Parameters
+        ----------
+        topic : :obj:`str`
+            The string topic to set.
+        """
+        self._payload["topic"] = topic
+        return self
+
+    def with_bitrate(self, bitrate: int) -> "GuildChannelBuilder":
+        """Set the bitrate for this channel.
+
+        Parameters
+        ----------
+        bitrate : :obj:`int`
+            The bitrate to set in bits.
+        """
+        self._payload["bitrate"] = int(bitrate)
+        return self
+
+    def with_user_limit(self, user_limit: int) -> "GuildChannelBuilder":
+        """Set the limit for how many users can be in this channel at once.
+
+        Parameters
+        ----------
+        user_limit : :obj:`int`
+            The user limit to set.
+        """
+        self._payload["user_limit"] = int(user_limit)
+        return self
+
+    def with_rate_limit_per_user(
+        self, rate_limit_per_user: typing.Union[datetime.timedelta, int]
+    ) -> "GuildChannelBuilder":
+        """Set the rate limit for users sending messages in this channel.
+
+        Parameters
+        ----------
+        rate_limit_per_user : :obj:`typing.Union` [ :obj:`datetime.timedelta`, :obj:`int` ]
+            The amount of seconds users will have to wait before sending another
+            message in the channel to set.
+        """
+        self._payload["rate_limit_per_user"] = int(
+            rate_limit_per_user.total_seconds()
+            if isinstance(rate_limit_per_user, datetime.timedelta)
+            else rate_limit_per_user
+        )
+        return self
+
+    def with_parent_category(self, category: typing.Union[snowflakes.Snowflake, int]) -> "GuildChannelBuilder":
+        """Set the parent category for this channel.
+
+        Parameters
+        ----------
+        category : :obj:`typing.Union` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+            The placeholder ID of the category channel that should be this
+            channel's parent.
+        """
+        self._payload["parent_id"] = str(int(category))
+        return self
+
+    def with_id(self, channel_id: typing.Union[snowflakes.Snowflake, int]) -> "GuildChannelBuilder":
+        """Set the placeholder ID for this channel.
+
+        Notes
+        -----
+        This ID is purely a place holder used for setting parent category
+        channels and will have no effect on the created channel's ID.
+
+        Parameters
+        ----------
+        channel_id : :obj:`typing.Union` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+            The placeholder ID to use.
+        """
+        self._payload["id"] = str(int(channel_id))
+        return self
 
 
 def deserialize_channel(payload: typing.Dict[str, typing.Any]) -> typing.Union[GuildChannel, DMChannel]:
