@@ -200,6 +200,22 @@ def test_partial_guild_payload():
     }
 
 
+@pytest.fixture()
+def test_guild_preview_payload(test_emoji_payload):
+    return {
+        "id": "152559372126519269",
+        "name": "Isopropyl",
+        "icon": "d4a983885dsaa7691ce8bcaaf945a",
+        "splash": "dsa345tfcdg54b",
+        "discovery_splash": "lkodwaidi09239uid",
+        "emojis": [test_emoji_payload],
+        "features": ["DISCOVERABLE"],
+        "approximate_member_count": 69,
+        "approximate_presence_count": 42,
+        "description": "A DESCRIPTION.",
+    }
+
+
 @pytest.fixture
 def test_guild_payload(
     test_emoji_payload,
@@ -698,6 +714,81 @@ class TestPartialGuild:
         assert url == mock_url
 
 
+class TestGuildPreview:
+    def test_deserialize(self, test_guild_preview_payload, test_emoji_payload):
+        mock_emoji = mock.MagicMock(emojis.GuildEmoji, id=76767676)
+        with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji):
+            guild_preview_obj = guilds.GuildPreview.deserialize(test_guild_preview_payload)
+            emojis.GuildEmoji.deserialize.assert_called_once_with(test_emoji_payload)
+        assert guild_preview_obj.splash_hash == "dsa345tfcdg54b"
+        assert guild_preview_obj.discovery_splash_hash == "lkodwaidi09239uid"
+        assert guild_preview_obj.emojis == {76767676: mock_emoji}
+        assert guild_preview_obj.approximate_presence_count == 42
+        assert guild_preview_obj.approximate_member_count == 69
+        assert guild_preview_obj.description == "A DESCRIPTION."
+
+    @pytest.fixture()
+    def test_guild_preview_obj(self):
+        return guilds.GuildPreview(
+            id="23123123123",
+            name=None,
+            icon_hash=None,
+            features=None,
+            splash_hash="dsa345tfcdg54b",
+            discovery_splash_hash="lkodwaidi09239uid",
+            emojis=None,
+            approximate_presence_count=None,
+            approximate_member_count=None,
+            description=None,
+        )
+
+    def test_format_discovery_splash_url(self, test_guild_preview_obj):
+        mock_url = "https://not-al"
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
+            url = test_guild_preview_obj.format_discovery_splash_url(fmt="nyaapeg", size=4000)
+            urls.generate_cdn_url.assert_called_once_with(
+                "discovery-splashes", "23123123123", "lkodwaidi09239uid", fmt="nyaapeg", size=4000
+            )
+        assert url == mock_url
+
+    def test_format_discovery_splash_returns_none(self, test_guild_preview_obj):
+        test_guild_preview_obj.discovery_splash_hash = None
+        with mock.patch.object(urls, "generate_cdn_url", return_value=...):
+            url = test_guild_preview_obj.format_discovery_splash_url()
+            urls.generate_cdn_url.assert_not_called()
+        assert url is None
+
+    def test_discover_splash_url(self, test_guild_preview_obj):
+        mock_url = "https://not-al"
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
+            url = test_guild_preview_obj.discovery_splash_url
+            urls.generate_cdn_url.assert_called_once()
+        assert url == mock_url
+
+    def test_format_splash_url(self, test_guild_preview_obj):
+        mock_url = "https://not-al"
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
+            url = test_guild_preview_obj.format_splash_url(fmt="nyaapeg", size=4000)
+            urls.generate_cdn_url.assert_called_once_with(
+                "splashes", "23123123123", "dsa345tfcdg54b", fmt="nyaapeg", size=4000
+            )
+        assert url == mock_url
+
+    def test_format_splash_returns_none(self, test_guild_preview_obj):
+        test_guild_preview_obj.splash_hash = None
+        with mock.patch.object(urls, "generate_cdn_url", return_value=...):
+            url = test_guild_preview_obj.format_splash_url()
+            urls.generate_cdn_url.assert_not_called()
+        assert url is None
+
+    def test_splash_url(self, test_guild_preview_obj):
+        mock_url = "https://not-al"
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
+            url = test_guild_preview_obj.splash_url
+            urls.generate_cdn_url.assert_called_once()
+        assert url == mock_url
+
+
 class TestGuild:
     def test_deserialize(
         self,
@@ -825,7 +916,7 @@ class TestGuild:
             urls.generate_cdn_url.assert_called_once_with(
                 "banners", "265828729970753537", "1a2b3c", fmt="nyaapeg", size=4000
             )
-        assert url is mock_url
+        assert url == mock_url
 
     def test_format_banner_url_returns_none(self, test_guild_obj):
         test_guild_obj.banner_hash = None
@@ -839,7 +930,7 @@ class TestGuild:
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = test_guild_obj.banner_url
             urls.generate_cdn_url.assert_called_once()
-        assert url is mock_url
+        assert url == mock_url
 
     def test_format_discovery_splash_url(self, test_guild_obj):
         mock_url = "https://not-al"
@@ -848,7 +939,7 @@ class TestGuild:
             urls.generate_cdn_url.assert_called_once_with(
                 "discovery-splashes", "265828729970753537", "famfamFAMFAMfam", fmt="nyaapeg", size=4000
             )
-        assert url is mock_url
+        assert url == mock_url
 
     def test_format_discovery_splash_returns_none(self, test_guild_obj):
         test_guild_obj.discovery_splash_hash = None
@@ -862,7 +953,7 @@ class TestGuild:
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = test_guild_obj.discovery_splash_url
             urls.generate_cdn_url.assert_called_once()
-        assert url is mock_url
+        assert url == mock_url
 
     def test_format_splash_url(self, test_guild_obj):
         mock_url = "https://not-al"
@@ -871,7 +962,7 @@ class TestGuild:
             urls.generate_cdn_url.assert_called_once_with(
                 "splashes", "265828729970753537", "0ff0ff0ff", fmt="nyaapeg", size=4000
             )
-        assert url is mock_url
+        assert url == mock_url
 
     def test_format_splash_returns_none(self, test_guild_obj):
         test_guild_obj.splash_hash = None
@@ -885,4 +976,4 @@ class TestGuild:
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = test_guild_obj.splash_url
             urls.generate_cdn_url.assert_called_once()
-        assert url is mock_url
+        assert url == mock_url
