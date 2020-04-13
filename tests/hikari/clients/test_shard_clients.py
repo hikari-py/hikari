@@ -161,7 +161,6 @@ class TestShardClient:
     @pytest.mark.parametrize(
         "error",
         [
-            None,
             aiohttp.ClientConnectorError(mock.MagicMock(), mock.MagicMock()),
             errors.GatewayZombiedError,
             errors.GatewayInvalidSessionError(False),
