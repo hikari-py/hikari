@@ -117,7 +117,7 @@ class TestInviteGuild:
             urls.generate_cdn_url.assert_called_once_with(
                 "splashes", "56188492224814744", "aSplashForSure", fmt="nyaapeg", size=4000
             )
-        assert url is mock_url
+        assert url == mock_url
 
     def test_format_splash_url_returns_none(self, invite_guild_obj):
         invite_guild_obj.splash_hash = None
@@ -131,7 +131,7 @@ class TestInviteGuild:
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = invite_guild_obj.splash_url
             urls.generate_cdn_url.assert_called_once()
-        assert url is mock_url
+        assert url == mock_url
 
     def test_format_banner_url(self, invite_guild_obj):
         mock_url = "https://not-al"
@@ -140,7 +140,7 @@ class TestInviteGuild:
             urls.generate_cdn_url.assert_called_once_with(
                 "banners", "56188492224814744", "aBannerForSure", fmt="nyaapeg", size=4000
             )
-        assert url is mock_url
+        assert url == mock_url
 
     def test_format_banner_url_returns_none(self, invite_guild_obj):
         invite_guild_obj.banner_hash = None
@@ -154,7 +154,7 @@ class TestInviteGuild:
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = invite_guild_obj.banner_url
             urls.generate_cdn_url.assert_called_once()
-        assert url is mock_url
+        assert url == mock_url
 
 
 class TestVanityUrl:

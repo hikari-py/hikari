@@ -1551,6 +1551,32 @@ class LowLevelRestfulClient:
         route = routes.GUILD.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
+    async def get_guild_preview(self, guild_id: str) -> typing.Dict[str, typing.Any]:
+        """Get a public guild's preview object.
+
+        Parameters
+        ----------
+        guild_id : :obj:`str`
+            The ID of the guild to get the preview object of.
+
+        Returns
+        -------
+        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+            The requested guild preview object.
+
+        Note
+        ----
+        Unlike other guild endpoints, the bot doesn't have to be in the target
+        guild to get it's preview.
+
+        Raises
+        ------
+        :obj:`hikari.errors.NotFoundHTTPError`
+            If the guild is not found or it isn't ``PUBLIC``.
+        """
+        route = routes.GUILD_PREVIEW.compile(self.GET, guild_id=guild_id)
+        return await self._request(route)
+
     # pylint: disable=too-many-locals
     async def modify_guild(  # lgtm [py/similar-function]
         self,

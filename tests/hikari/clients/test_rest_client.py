@@ -1488,6 +1488,17 @@ class TestRESTClient:
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
+    async def test_fetch_guild_preview(self, rest_clients_impl, guild):
+        mock_guild_preview_payload = {"id": "94949494", "name": "A guild", "emojis": []}
+        mock_guild_preview_obj = mock.MagicMock(guilds.GuildPreview)
+        rest_clients_impl._session.get_guild_preview.return_value = mock_guild_preview_payload
+        with mock.patch.object(guilds.GuildPreview, "deserialize", return_value=mock_guild_preview_obj):
+            assert await rest_clients_impl.fetch_guild_preview(guild) is mock_guild_preview_obj
+            rest_clients_impl._session.get_guild_preview.assert_called_once_with(guild_id="379953393319542784")
+            guilds.GuildPreview.deserialize.assert_called_once_with(mock_guild_preview_payload)
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("afk_channel", 669517187031105607, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("owner", 379953393319542784, users.User)
     @_helpers.parametrize_valid_id_formats_for_models("system_channel", 537340989808050216, users.User)

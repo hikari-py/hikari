@@ -857,6 +857,113 @@ class PartialGuild(snowflakes.UniqueEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True)
+class GuildPreview(PartialGuild):
+    """A preview of a guild with the :obj:`GuildFeature.PUBLIC` feature."""
+
+    #: The hash of the splash for the guild, if there is one.
+    #:
+    #: :type: :obj:`str`, optional
+    splash_hash: typing.Optional[str] = marshaller.attrib(raw_name="splash", deserializer=str, if_none=None)
+
+    #: The hash of the discovery splash for the guild, if there is one.
+    #:
+    #: :type: :obj:`str`, optional
+    discovery_splash_hash: typing.Optional[str] = marshaller.attrib(
+        raw_name="discovery_splash", deserializer=str, if_none=None
+    )
+
+    #: The emojis that this guild provides, represented as a mapping of ID to
+    #: emoji object.
+    #:
+    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`hikari.emojis.GuildEmoji` ]
+    emojis: typing.Mapping[snowflakes.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
+        deserializer=lambda emojis: {e.id: e for e in map(_emojis.GuildEmoji.deserialize, emojis)},
+    )
+
+    #: The approximate amount of presences in this invite's guild, only present
+    #: when ``with_counts`` is passed as ``True`` to the GET Invites endpoint.
+    #:
+    #: :type: :obj:`int`, optional
+    approximate_presence_count: typing.Optional[int] = marshaller.attrib(deserializer=int)
+
+    #: The approximate amount of members in this invite's guild, only present
+    #: when ``with_counts`` is passed as ``True`` to the GET Invites endpoint.
+    #:
+    #: :type: :obj:`int`, optional
+    approximate_member_count: typing.Optional[int] = marshaller.attrib(deserializer=int)
+
+    #: The guild's description, if set.
+    #:
+    #: :type: :obj:`str`, optional
+    description: typing.Optional[str] = marshaller.attrib(if_none=None, deserializer=str)
+
+    def format_splash_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
+        """Generate the URL for this guild's splash image, if set.
+
+        Parameters
+        ----------
+        fmt : :obj:`str`
+            The format to use for this URL, defaults to ``png``.
+            Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
+        size : :obj:`int`
+            The size to set for the URL, defaults to ``4096``.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        :obj:`str`, optional
+            The string URL.
+
+        Raises
+        ------
+        :obj:`ValueError`
+            If ``size`` is not a power of two or not between 16 and 4096.
+        """
+        if self.splash_hash:
+            return urls.generate_cdn_url("splashes", str(self.id), self.splash_hash, fmt=fmt, size=size)
+        return None
+
+    @property
+    def splash_url(self) -> typing.Optional[str]:
+        """URL for this guild's splash, if set."""
+        return self.format_splash_url()
+
+    def format_discovery_splash_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
+        """Generate the URL for this guild's discovery splash image, if set.
+
+        Parameters
+        ----------
+        fmt : :obj:`str`
+            The format to use for this URL, defaults to ``png``.
+            Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
+        size : :obj:`int`
+            The size to set for the URL, defaults to ``4096``.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        :obj:`str`, optional
+            The string URL.
+
+        Raises
+        ------
+        :obj:`ValueError`
+            If ``size`` is not a power of two or not between 16 and 4096.
+        """
+        if self.discovery_splash_hash:
+            return urls.generate_cdn_url(
+                "discovery-splashes", str(self.id), self.discovery_splash_hash, fmt=fmt, size=size
+            )
+        return None
+
+    @property
+    def discovery_splash_url(self) -> typing.Optional[str]:
+        """URL for this guild's discovery splash, if set."""
+        return self.format_discovery_splash_url()
+
+
+@marshaller.marshallable()
+@attr.s(slots=True)
 class Guild(PartialGuild):
     """A representation of a guild on Discord.
 
