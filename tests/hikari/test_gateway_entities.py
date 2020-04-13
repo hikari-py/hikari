@@ -22,6 +22,7 @@ from unittest import mock
 import pytest
 
 from hikari import gateway_entities
+from hikari import guilds
 from tests.hikari import _helpers
 
 
@@ -56,3 +57,38 @@ class TestGatewayBot:
         assert gateway_bot_obj.session_start_limit is mock_session_start_limit
         assert gateway_bot_obj.url == "wss://gateway.discord.gg"
         assert gateway_bot_obj.shard_count == 1
+
+
+class TestGatewayActivity:
+    @pytest.fixture()
+    def test_gateway_activity_config(self):
+        return {"name": "Presence me baby", "url": "http://a-url-name", "type": 1}
+
+    def test_deserialize_full_config(self, test_gateway_activity_config):
+        gateway_activity_obj = gateway_entities.GatewayActivity.deserialize(test_gateway_activity_config)
+        assert gateway_activity_obj.name == "Presence me baby"
+        assert gateway_activity_obj.url == "http://a-url-name"
+        assert gateway_activity_obj.type is guilds.ActivityType.STREAMING
+
+    def test_deserialize_partial_config(self):
+        gateway_activity_obj = gateway_entities.GatewayActivity.deserialize({"name": "Presence me baby"})
+        assert gateway_activity_obj.name == "Presence me baby"
+        assert gateway_activity_obj.url == None
+        assert gateway_activity_obj.type is guilds.ActivityType.PLAYING
+
+    def test_serialize_full_activity(self):
+        gateway_activity_obj = gateway_entities.GatewayActivity(
+            name="Presence me baby", url="http://a-url-name", type=guilds.ActivityType.STREAMING
+        )
+        assert gateway_activity_obj.serialize() == {
+            "name": "Presence me baby",
+            "url": "http://a-url-name",
+            "type": 1,
+        }
+
+    def test_serialize_partial_activity(self):
+        gateway_activity_obj = gateway_entities.GatewayActivity(name="Presence me baby",)
+        assert gateway_activity_obj.serialize() == {
+            "name": "Presence me baby",
+            "type": 0,
+        }

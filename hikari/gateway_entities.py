@@ -90,11 +90,16 @@ class GatewayActivity(entities.Deserializable, entities.Serializable):
     #: The activity URL. Only valid for ``STREAMING`` activities.
     #:
     #: :type: :obj:`str`, optional
-    url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_none=None, if_undefined=None)
+    url: typing.Optional[str] = marshaller.attrib(
+        deserializer=str, serializer=str, if_none=None, if_undefined=None, default=None
+    )
 
     #: The activity type.
     #:
     #: :type: :obj:`hikari.guilds.ActivityType`
     type: guilds.ActivityType = marshaller.attrib(
-        deserializer=guilds.ActivityType, serializer=int, if_undefined=lambda: guilds.ActivityType.PLAYING
+        deserializer=guilds.ActivityType,
+        serializer=int,
+        if_undefined=lambda: guilds.ActivityType.PLAYING,
+        default=guilds.ActivityType.PLAYING,
     )

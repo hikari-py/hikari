@@ -1797,7 +1797,7 @@ class RESTClient:
         default_message_notifications: typing.Union[guilds.GuildMessageNotificationsLevel, int] = ...,
         explicit_content_filter: typing.Union[guilds.GuildExplicitContentFilterLevel, int] = ...,
         roles: typing.Sequence[guilds.GuildRole] = ...,
-        channels: typing.Sequence[_channels.GuildChannel] = ...,
+        channels: typing.Sequence[_channels.GuildChannelBuilder] = ...,
     ) -> guilds.Guild:
         """Create a new guild.
 
@@ -1827,8 +1827,8 @@ class RESTClient:
         roles : :obj:`typing.Sequence` [ :obj:`hikari.guilds.GuildRole` ]
             If specified, an array of role objects to be created alongside the
             guild. First element changes the ``@everyone`` role.
-        channels : :obj:`typing.Sequence` [ :obj:`hikari.channels.GuildChannel` ]
-            If specified, an array of guild channel derived objects to be
+        channels : :obj:`typing.Sequence` [ :obj:`hikari.channels.GuildChannelBuilder` ]
+            If specified, an array of guild channel builder objects to be
             created within the guild.
 
         Returns

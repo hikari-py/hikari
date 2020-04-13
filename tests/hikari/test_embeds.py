@@ -120,10 +120,15 @@ class TestEmbedFooter:
         assert footer_obj.icon_url == "https://somewhere.com/footer.png"
         assert footer_obj.proxy_icon_url == "https://media.somewhere.com/footer.png"
 
-    def test_serialize(self, test_footer_payload):
-        footer_obj = embeds.EmbedFooter.deserialize(test_footer_payload)
+    def test_serialize_full_footer(self):
+        footer_obj = embeds.EmbedFooter(text="OK", icon_url="https:////////////",)
 
-        assert footer_obj.serialize() == test_footer_payload
+        assert footer_obj.serialize() == {"text": "OK", "icon_url": "https:////////////"}
+
+    def test_serialize_partial_footer(self):
+        footer_obj = embeds.EmbedFooter(text="OK",)
+
+        assert footer_obj.serialize() == {"text": "OK"}
 
 
 class TestEmbedImage:
@@ -135,10 +140,13 @@ class TestEmbedImage:
         assert image_obj.height == 122
         assert image_obj.width == 133
 
-    def test_serialize(self, test_image_payload):
-        image_obj = embeds.EmbedImage.deserialize(test_image_payload)
+    def test_serialize_full_image(self):
+        image_obj = embeds.EmbedImage(url="https://///////",)
 
-        assert image_obj.serialize() == test_image_payload
+        assert image_obj.serialize() == {"url": "https://///////"}
+
+    def test_serialize_empty_image(self):
+        assert embeds.EmbedImage().serialize() == {}
 
 
 class TestEmbedThumbnail:
@@ -150,10 +158,13 @@ class TestEmbedThumbnail:
         assert thumbnail_obj.height == 123
         assert thumbnail_obj.width == 456
 
-    def test_serialize(self, test_thumbnail_payload):
-        thumbnail_obj = embeds.EmbedThumbnail.deserialize(test_thumbnail_payload)
+    def test_serialize_full_thumbnail(self):
+        thumbnail_obj = embeds.EmbedThumbnail(url="https://somewhere.com/thumbnail.png")
 
-        assert thumbnail_obj.serialize() == test_thumbnail_payload
+        assert thumbnail_obj.serialize() == {"url": "https://somewhere.com/thumbnail.png"}
+
+    def test_serialize_empty_thumbnail(self):
+        assert embeds.EmbedThumbnail().serialize() == {}
 
 
 class TestEmbedVideo:
@@ -164,11 +175,6 @@ class TestEmbedVideo:
         assert video_obj.height == 1234
         assert video_obj.width == 4567
 
-    def test_serialize(self, test_video_payload):
-        video_obj = embeds.EmbedVideo.deserialize(test_video_payload)
-
-        assert video_obj.serialize() == test_video_payload
-
 
 class TestEmbedProvider:
     def test_deserialize(self, test_provider_payload):
@@ -176,11 +182,6 @@ class TestEmbedProvider:
 
         assert provider_obj.name == "some name"
         assert provider_obj.url == "https://somewhere.com/provider"
-
-    def test_serialize(self, test_provider_payload):
-        provider_obj = embeds.EmbedProvider.deserialize(test_provider_payload)
-
-        assert provider_obj.serialize() == test_provider_payload
 
 
 class TestEmbedAuthor:
@@ -192,10 +193,19 @@ class TestEmbedAuthor:
         assert author_obj.icon_url == "https://somewhere.com/author.png"
         assert author_obj.proxy_icon_url == "https://media.somewhere.com/author.png"
 
-    def test_serialize(self, test_author_payload):
-        author_obj = embeds.EmbedAuthor.deserialize(test_author_payload)
+    def test_serialize_full_author(self):
+        author_obj = embeds.EmbedAuthor(
+            name="Author 187", url="https://nyaanyaanyaa", icon_url="https://a-proper-domain"
+        )
 
-        assert author_obj.serialize() == test_author_payload
+        assert author_obj.serialize() == {
+            "name": "Author 187",
+            "url": "https://nyaanyaanyaa",
+            "icon_url": "https://a-proper-domain",
+        }
+
+    def test_serialize_empty_author(self):
+        assert embeds.EmbedAuthor().serialize() == {}
 
 
 class TestEmbedField:
@@ -207,9 +217,9 @@ class TestEmbedField:
         assert field_obj.is_inline is False
 
     def test_serialize(self, test_field_payload):
-        field_obj = embeds.EmbedField.deserialize(test_field_payload)
+        field_obj = embeds.EmbedField(name="NAME", value="nyaa nyaa nyaa", is_inline=True)
 
-        assert field_obj.serialize() == test_field_payload
+        assert field_obj.serialize() == {"name": "NAME", "value": "nyaa nyaa nyaa", "inline": True}
 
 
 class TestEmbed:
@@ -248,7 +258,29 @@ class TestEmbed:
         assert embed_obj.author == embeds.EmbedAuthor.deserialize(test_author_payload)
         assert embed_obj.fields == [embeds.EmbedField.deserialize(test_field_payload)]
 
-    def test_serialize(self, test_embed_payload):
-        embed_obj = embeds.Embed.deserialize(test_embed_payload)
+    def test_serialize(self):
+        embed_obj = embeds.Embed(
+            title="Nyaa me pls >////<",
+            description="Nyan >////<",
+            url="https://a-url-now",
+            timestamp=datetime.datetime.fromisoformat("2020-03-22T16:40:39.218000+00:00"),
+            color=colors.Color(123123),
+            footer=embeds.EmbedFooter(text="HI"),
+            image=embeds.EmbedImage(url="https://not-a-url"),
+            thumbnail=embeds.EmbedThumbnail(url="https://url-a-not"),
+            author=embeds.EmbedAuthor(name="a name", url="https://a-man"),
+            fields=[embeds.EmbedField(name="aField", value="agent69", is_inline=True)],
+        )
 
-        assert embed_obj.serialize() == test_embed_payload
+        assert embed_obj.serialize() == {
+            "title": "Nyaa me pls >////<",
+            "description": "Nyan >////<",
+            "url": "https://a-url-now",
+            "timestamp": "2020-03-22T16:40:39.218000+00:00",
+            "color": 123123,
+            "footer": {"text": "HI"},
+            "image": {"url": "https://not-a-url"},
+            "thumbnail": {"url": "https://url-a-not"},
+            "author": {"name": "a name", "url": "https://a-man"},
+            "fields": [{"name": "aField", "value": "agent69", "inline": True}],
+        }
