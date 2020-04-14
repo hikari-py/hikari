@@ -1,0 +1,135 @@
+# Copyright © Nekoka.tt 2019-2020
+#
+# This file is part of Hikari.
+#
+# Hikari is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Hikari is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+
+include:
+  - template: "Dependency-Scanning.gitlab-ci.yml"
+  - template: "License-Scanning.gitlab-ci.yml"
+  - template: "SAST.gitlab-ci.yml"
+
+###
+### Detect overall test coverage across all test jobs.
+###
+### Collect unit test coverage results and coalesce them, outputting the
+### format so that GitLab can display it on the badge, on the pipeline stats,
+### and on any active merge requests.
+###
+"coverage results":
+  coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
+  extends:
+    - .cpython-stable
+    - .reactive-job
+  script:
+    - |+
+      set -e
+      set -x
+      pip install nox
+      nox -s coalesce-coverage
+  stage: report
+
+###
+### GitLab's dependency scanning template.
+###
+### This gives dependency statistics on any MRs, and beefs out the security
+### dashboard.
+###
+### This must use a specific name. Do not rename it for consistency.
+###
+dependency_scanning:
+  interruptible: true
+  only:
+    # Overly slow to run and not very important, so skip normally to get 5
+    # minutes back on
+    # each pipeline.
+    - merge_requests
+    - schedules
+  retry: 1
+  stage: lint
+  variables:
+    DS_DEFAULT_ANALYZERS: "gemnasium-python"
+
+
+###
+### GitLab's license scanning template.
+###
+### This checks for license conflicts on any MRs and periodically, and beefs out
+### the security dashboard.
+###
+### This must use a specific name. Do not rename it for consistency.
+###
+license_scanning:
+  interruptible: true
+  only:
+    # Overly slow to run and not very important, so skip normally to get 5
+    # minutes back on
+    # each pipeline.
+    - merge_requests
+    - schedules
+  retry: 1
+  stage: lint
+
+###
+### Deploy the pages to GitLab.
+###
+### This pulls the results of generate-master-pages and generate-stating-pages
+### and places them in the correct
+###
+### This must use a specific name. Do not rename it for consistency.
+###
+pages:
+  dependencies:
+    - master pages
+    - staging pages
+  extends: .busybox-musl
+  only:
+    - master
+    - staging
+  script:
+    - |+
+      set -e
+      set -x
+      git log -n 1 "${CI_COMMIT_SHA}" --format="%B" \
+          | grep -iqE "\[\s*(skip|no|don'?t|do\s+not)\s+pages?\s*\]" \
+        && echo "SKIPPING ${CI_JOB_STAGE} STAGE JOB" \
+        && exit 0
+      mkdir public || true
+      cd public/master
+      find . -maxdepth 1 -exec mv {} .. \;
+      cd ../..
+      rm public/master -Rvf
+  stage: deploy
+
+###
+### GitLab's Static Application Security Testing suite.
+###
+### This checks for security issues on every commit and MR. This is reported
+### to the security dashboard.
+###
+### This must use a specific name. Do not rename it for consistency.
+###
+sast:
+  interruptible: true
+  only:
+    # Overly slow to run and not very important, so skip normally to get 5
+    # minutes back on
+    # each pipeline.
+    - merge_requests
+    - schedules
+  retry: 1
+  stage: lint
+  variables:
+    SAST_BANDIT_EXCLUDED_PATHS: tests/*,docs/*,ci/*,insomnia/*,public/*,tasks/*,noxfile.old.py
+    SAST_EXCLUDED_PATHS: tests/*,docs/*,ci/*,insomnia/*,public/*,tasks/*,noxfile.old.py

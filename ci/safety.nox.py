@@ -16,15 +16,15 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import os
-import runpy
-import sys
+"""Dependency scanning."""
 
-CI_PATH = "ci"
-
-sys.path.append(os.getcwd())
+from ci import config
+from ci import nox
 
 
-for f in os.listdir(CI_PATH):
-    if f.endswith(".nox.py"):
-        runpy.run_path(os.path.join(CI_PATH, f))
+# Do not reuse venv, download new definitions each run.
+@nox.session(reuse_venv=False, default=True)
+def safety(session: nox.Session) -> None:
+    """Perform dependency scanning."""
+    session.install("safety", "-r", config.REQUIREMENTS)
+    session.run("safety", "check")

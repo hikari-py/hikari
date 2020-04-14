@@ -221,9 +221,7 @@ class TestLowLevelRestfulClient:
         rest_impl = rest.LowLevelRestfulClient(token="Bot token")
         rest_impl.logger = mock.MagicMock(debug=mock.MagicMock())
         rest_impl.ratelimiter = mock.MagicMock(
-            ratelimits.HTTPBucketRateLimiterManager,
-            acquire=mock.MagicMock(),
-            update_rate_limits=mock.MagicMock(),
+            ratelimits.HTTPBucketRateLimiterManager, acquire=mock.MagicMock(), update_rate_limits=mock.MagicMock(),
         )
         rest_impl.global_ratelimiter = mock.MagicMock(
             ratelimits.ManualRateLimiter, acquire=mock.MagicMock(), throttle=mock.MagicMock()
