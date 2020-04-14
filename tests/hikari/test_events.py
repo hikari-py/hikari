@@ -175,7 +175,7 @@ class TestReadyEvent:
         assert mock_ready_event_obj.shard_count is None
 
 
-# Doesn't have any fields.
+# Synthetic event, is not deserialized
 class TestResumedEvent:
     ...
 
