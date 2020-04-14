@@ -28,11 +28,9 @@
           | grep -iqE "\[\s*(skip|no|don'?t|do\s+not)\s+deploy(ments?)?\s*\]" \
         && echo "SKIPPING ${CI_JOB_STAGE} STAGE JOB" \
         && exit 0
-      source tasks/config.sh
       apt-get update
       apt-get install curl openssh-client -qy
-      pip install twine wheel
-      pip install -e .
+      pip install twine wheel nox
   extends: .cpython-stable
   interruptible: false
   resource_group: deploy
@@ -60,11 +58,7 @@
     - |+
       set -e
       set -x
-      source tasks/deploy.sh
-      do-deployment
-  variables:
-    RELEASE_WEBHOOK_NAME: "New development snapshot of the next release has been published"
-    RELEASE_WEBHOOK_COLOUR: "0x2C2F33"
+      nox -s deploy
 
 ###
 ### Make a production release.
@@ -87,8 +81,4 @@
     - |+
       set -e
       set -x
-      source tasks/deploy.sh
-      do-deployment
-  variables:
-    RELEASE_WEBHOOK_NAME: "NEW VERSION OF HIKARI HAS BEEN RELEASED!"
-    RELEASE_WEBHOOK_COLOUR: "0x7289DA"
+      nox -s deploy

@@ -36,9 +36,8 @@ include:
     - |+
       set -e
       set -x
-      pip install coverage
-      coverage combine "public/*.coverage"
-      coverage report -i
+      pip install nox
+      nox -s coalesce-coverage
   stage: report
 
 ###
@@ -123,11 +122,14 @@ pages:
 ###
 sast:
   interruptible: true
+  only:
+    # Overly slow to run and not very important, so skip normally to get 5
+    # minutes back on
+    # each pipeline.
+    - merge_requests
+    - schedules
   retry: 1
   stage: lint
   variables:
     SAST_BANDIT_EXCLUDED_PATHS: tests/*,docs/*,ci/*,insomnia/*,public/*,tasks/*,noxfile.old.py
-    SAST_DEFAULT_ANALYZERS: "bandit, flawfinder, secrets, kubesec, gitleaks, trufflehog"
     SAST_EXCLUDED_PATHS: tests/*,docs/*,ci/*,insomnia/*,public/*,tasks/*,noxfile.old.py
-
-

@@ -18,19 +18,20 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Wrapper around nox to give default job kwargs."""
 from typing import Callable
+
 from nox.sessions import Session
-from nox import *
-
-_session = session
-
-options.sessions = []
+from nox import session as _session
+from nox import options as _options
 
 
-def session(default: bool = False, reuse_venv: bool = False, **kwargs):
+_options.sessions = []
+
+
+def session(*, only_if=lambda: True, default: bool = False, reuse_venv: bool = False, **kwargs):
     def decorator(func: Callable[[Session], None]):
         func.__name__ = func.__name__.replace("_", "-")
         if default:
-            options.sessions.append(func.__name__)
-        return _session(reuse_venv=reuse_venv, **kwargs)(func)
+            _options.sessions.append(func.__name__)
 
+        return _session(reuse_venv=reuse_venv, **kwargs)(func) if only_if() else func
     return decorator

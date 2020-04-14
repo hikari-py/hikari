@@ -42,7 +42,7 @@
       junit: public/pylint.xml
   extends: .lint
   script:
-   - nox -s lint
+   - nox -s pylint
 
 ###
 ### Documentation linting.
@@ -54,7 +54,7 @@
   allow_failure: true
   extends: .lint
   script:
-    - nox -s docstyle
+    - nox -s pydocstyle
 
 ###
 ### Code formatting.
@@ -64,7 +64,7 @@
 "black":
   extends: .lint
   script:
-   - nox -s format -- --check --diff
+   - nox -s check-formatting -- --check --diff
 
 ###
 ### Security checks #1
@@ -86,4 +86,4 @@
 "bandit":
   extends: .lint
   script:
-   - nox -s sast
+   - nox -s bandit

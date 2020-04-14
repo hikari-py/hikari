@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -16,20 +16,15 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""
-Black uses a multiprocessing Lock, which is fine until the
-platform doesn't support sem_open syscalls, then all hell
-breaks loose. This should allow it to fail silently :-)
-"""
-import multiprocessing
-import os
-import sys
+"""Static application security testing."""
 
-try:
-    multiprocessing.Lock()
-except ImportError as ex:
-    print("Will not run black because", str(ex).lower())
-    print("Exiting with success code anyway")
-    exit(0)
-else:
-    os.system(f'black {" ".join(sys.argv[1:])}')
+from ci import config
+from ci import nox
+
+
+# Do not reuse venv, download new definitions each run.
+@nox.session(reuse_venv=False, default=True)
+def bandit(session: nox.Session) -> None:
+    """Run static application security tests."""
+    session.install("bandit")
+    session.run("bandit", config.MAIN_PACKAGE, "-r")
