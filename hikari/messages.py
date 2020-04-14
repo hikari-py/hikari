@@ -388,3 +388,9 @@ class Message(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`MessageFlag`, optional
     flags: typing.Optional[MessageFlag] = marshaller.attrib(deserializer=MessageFlag, if_undefined=None)
+
+    #: The message nonce. This is a string used for validating
+    #: a message was sent.
+    #:
+    #: :type: :obj:`str`, optional
+    nonce: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
