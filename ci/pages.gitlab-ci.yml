@@ -36,7 +36,7 @@
     pip install nox
     git clone ${CI_REPOSITORY_URL} -b ${TARGET_BRANCH} hikari_docs_${TARGET_BRANCH} --depth=1
     cd "hikari_docs_${TARGET_BRANCH}"
-    nox -s sphinx
+    nox -s sphinx || nox -s pages  # FIXME: remove once in master.
     rm ../public -rf && mkdir ../public
     mv public "../public/${TARGET_BRANCH}"
 
