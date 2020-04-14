@@ -449,11 +449,22 @@ class ActivityFlag(enum.IntFlag):
     This can be more than one using bitwise-combinations.
     """
 
+    #: Instance
     INSTANCE = 1 << 0
+
+    #: Join
     JOIN = 1 << 1
+
+    #: Spectate
     SPECTATE = 1 << 2
+
+    #: Join Request
     JOIN_REQUEST = 1 << 3
+
+    #: Sync
     SYNC = 1 << 4
+
+    #: Play
     PLAY = 1 << 5
 
 

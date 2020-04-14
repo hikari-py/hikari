@@ -30,6 +30,67 @@ from hikari.internal import urls
 from hikari.internal import marshaller
 
 
+@enum.unique
+class UserFlag(enum.IntFlag):
+    """The known user flags that represent account badges."""
+
+    #: None
+    NONE = 0
+
+    #: Discord Empoloyee
+    DISCORD_EMPLOYEE = 1 << 0
+
+    #: Discord Partner
+    DISCORD_PARTNER = 1 << 1
+
+    #: HypeSquad Events
+    HYPESQUAD_EVENTS = 1 << 2
+
+    #: Bug Hunter Level 1
+    BUG_HUNTER_LEVEL_1 = 1 << 3
+
+    #: House of Bravery
+    HOUSE_BRAVERY = 1 << 6
+
+    #: House of Brilliance
+    HOUSE_BRILLIANCE = 1 << 7
+
+    #: House of Balance
+    HOUSE_BALANCE = 1 << 8
+
+    #: Early Supporter
+    EARLY_SUPPORTER = 1 << 9
+
+    #: Team user
+    TEAM_USER = 1 << 10
+
+    #: System
+    SYSTEM = 1 << 12
+
+    #: Bug Hunter Level 2
+    BUG_HUNTER_LEVEL_2 = 1 << 14
+
+    #: Verified Bot
+    VERIFIED_BOT = 1 << 16
+
+    #: Verified Bot Developer
+    VERIFIED_BOT_DEVELOPER = 1 << 17
+
+
+@enum.unique
+class PremiumType(enum.IntEnum):
+    """The types of Nitro."""
+
+    #: No premium.
+    NONE = 0
+
+    #: Premium including basic perks like animated emojis and avatars.
+    NITRO_CLASSIC = 1
+
+    #: Premium including all perks (e.g. 2 server boosts).
+    NITRO = 2
+
+
 @marshaller.marshallable()
 @attr.s(slots=True)
 class User(snowflakes.UniqueEntity, entities.Deserializable):
@@ -59,6 +120,16 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`bool`
     is_system: bool = marshaller.attrib(raw_name="system", deserializer=bool, if_undefined=False)
+
+    #: The public flags for this user.
+    #:
+    #: Note
+    #: ----
+    #: This will be :obj:`None` if it's a webhook user.
+    #:
+    #:
+    #: :type: :obj:`UserFlag`, optional
+    public_flags: typing.Optional[UserFlag] = marshaller.attrib(deserializer=UserFlag, if_undefined=None)
 
     @property
     def avatar_url(self) -> str:
@@ -102,40 +173,6 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
     def default_avatar(self) -> int:
         """Integer representation of this user's default avatar."""
         return int(self.discriminator) % 5
-
-
-@enum.unique
-class UserFlag(enum.IntFlag):
-    """The known user flags that represent account badges."""
-
-    NONE = 0
-    DISCORD_EMPLOYEE = 1 << 0
-    DISCORD_PARTNER = 1 << 1
-    HYPESQUAD_EVENTS = 1 << 2
-    BUG_HUNTER_LEVEL_1 = 1 << 3
-    HOUSE_BRAVERY = 1 << 6
-    HOUSE_BRILLIANCE = 1 << 7
-    HOUSE_BALANCE = 1 << 8
-    EARLY_SUPPORTER = 1 << 9
-    TEAM_USER = 1 << 10
-    SYSTEM = 1 << 12
-    BUG_HUNTER_LEVEL_2 = 1 << 14
-    VERIFIED_BOT = 1 << 16
-    VERIFIED_BOT_DEVELOPER = 1 << 17
-
-
-@enum.unique
-class PremiumType(enum.IntEnum):
-    """The types of Nitro."""
-
-    #: No premium.
-    NONE = 0
-
-    #: Premium including basic perks like animated emojis and avatars.
-    NITRO_CLASSIC = 1
-
-    #: Premium including all perks (e.g. 2 server boosts).
-    NITRO = 2
 
 
 @marshaller.marshallable()

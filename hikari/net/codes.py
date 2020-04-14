@@ -28,33 +28,76 @@ import enum
 class HTTPStatusCode(enum.IntEnum):
     """HTTP response codes expected from RESTful components."""
 
+    #: Continue
     CONTINUE = 100
 
+    #: OK
     OK = 200
+
+    #: Created
     CREATED = 201
+
+    #: Accepted
     ACCEPTED = 202
+
+    #: No content
     NO_CONTENT = 204
 
+    #: Moved permanently
     MOVED_PERMANENTLY = 301
 
+    #: Bad request
     BAD_REQUEST = 400
+
+    #: Unauthorized
     UNAUTHORIZED = 401
+
+    #: Forbidden
     FORBIDDEN = 403
+
+    #: Not found
     NOT_FOUND = 404
+
+    #: Method not allowed
     METHOD_NOT_ALLOWED = 405
+
+    #: Not acceptable
     NOT_ACCEPTABLE = 406
+
+    #: Proxy authentication required
     PROXY_AUTHENTICATION_REQUIRED = 407
+
+    #: Request entitiy too large
     REQUEST_ENTITY_TOO_LARGE = 413
+
+    #: Request URI too long
     REQUEST_URI_TOO_LONG = 414
+
+    #: Unsupported media type
     UNSUPPORTED_MEDIA_TYPE = 415
+
+    #: Im a teapot
     IM_A_TEAPOT = 418
+
+    #: Too many requests
     TOO_MANY_REQUESTS = 429
 
+    #: Internal server error
     INTERNAL_SERVER_ERROR = 500
+
+    #: Not implemented
     NOT_IMPLEMENTED = 501
+
+    #: Bad gateway
     BAD_GATEWAY = 502
+
+    #: Service unavailable
     SERVICE_UNAVAILABLE = 503
+
+    #: Gateway timeout
     GATEWAY_TIMEOUT = 504
+
+    #: HTTP Version not supported
     HTTP_VERSION_NOT_SUPPORTED = 505
 
     def __str__(self) -> str:
@@ -66,10 +109,10 @@ class HTTPStatusCode(enum.IntEnum):
 class GatewayCloseCode(enum.IntEnum):
     """Reasons for closing a gateway connection.
 
-    Notes
-    -----
-    Any codes greater than or equal to `4000` are server-side codes. Any codes
-    between `1000` and `1999` inclusive are generally client-side codes.
+    Note
+    ----
+    Any codes greater than or equal to ``4000`` are server-side codes. Any codes
+    between ``1000`` and ``1999`` inclusive are generally client-side codes.
     """
 
     #: The application running closed.
