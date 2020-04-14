@@ -33,6 +33,7 @@ def test_user_payload():
         "discriminator": "6127",
         "bot": True,
         "system": True,
+        "public_flags": int(users.UserFlag.VERIFIED_BOT_DEVELOPER),
     }
 
 
@@ -61,6 +62,7 @@ class TestUser:
         assert user_obj.discriminator == "6127"
         assert user_obj.is_bot is True
         assert user_obj.is_system is True
+        assert user_obj.public_flags == users.UserFlag.VERIFIED_BOT_DEVELOPER
 
     @pytest.fixture()
     def user_obj(self, test_user_payload):
@@ -71,6 +73,7 @@ class TestUser:
             discriminator="6127",
             is_bot=None,
             is_system=None,
+            public_flags=None,
         )
 
     def test_avatar_url(self, user_obj):
