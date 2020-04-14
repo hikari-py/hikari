@@ -17,14 +17,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import os
-import runpy
-import sys
 
-CI_PATH = "ci"
-
-sys.path.append(os.getcwd())
+from ci import config
+from ci import nox
 
 
-for f in os.listdir(CI_PATH):
-    if f.endswith(".nox.py"):
-        runpy.run_path(os.path.join(CI_PATH, f))
+@nox.session(default=True, reuse_venv=True)
+def pydocstyle(session: nox.Session) -> None:
+    """Check documentation is formatted correctly."""
+    session.install("pydocstyle")
+    session.chdir(config.MAIN_PACKAGE)
+    ini = os.path.join(os.path.pardir, config.PYDOCSTYLE_INI)
+    session.run("pydocstyle", "--config", ini)

@@ -16,15 +16,25 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import os
-import runpy
-import sys
+"""Additional utilities for Nox."""
+import shutil
 
-CI_PATH = "ci"
-
-sys.path.append(os.getcwd())
+from ci import nox
 
 
-for f in os.listdir(CI_PATH):
-    if f.endswith(".nox.py"):
-        runpy.run_path(os.path.join(CI_PATH, f))
+TRASH = [
+    ".nox",
+    "build",
+    "dist",
+    "hikari.egg-info",
+    "public",
+    ".coverage",
+]
+
+
+@nox.session(reuse_venv=False)
+def purge(_: nox.Session) -> None:
+    """Delete any nox-generated files."""
+    for trash in TRASH:
+        print("Removing", trash)
+        shutil.rmtree(trash, ignore_errors=True)

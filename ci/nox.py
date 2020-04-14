@@ -16,15 +16,22 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import os
-import runpy
-import sys
+"""Wrapper around nox to give default job kwargs."""
+from typing import Callable
 
-CI_PATH = "ci"
+from nox.sessions import Session
+from nox import session as _session
+from nox import options as _options
 
-sys.path.append(os.getcwd())
+
+_options.sessions = []
 
 
-for f in os.listdir(CI_PATH):
-    if f.endswith(".nox.py"):
-        runpy.run_path(os.path.join(CI_PATH, f))
+def session(*, only_if=lambda: True, default: bool = False, reuse_venv: bool = False, **kwargs):
+    def decorator(func: Callable[[Session], None]):
+        func.__name__ = func.__name__.replace("_", "-")
+        if default:
+            _options.sessions.append(func.__name__)
+
+        return _session(reuse_venv=reuse_venv, **kwargs)(func) if only_if() else func
+    return decorator

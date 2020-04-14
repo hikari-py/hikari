@@ -1,0 +1,79 @@
+# Copyright © Nekoka.tt 2019-2020
+#
+# This file is part of Hikari.
+#
+# Hikari is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Hikari is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+
+###
+### Base for running Pytest jobs with Nox, exporting coverage to be coalesced
+### by the "coverage" job later.
+###
+.nox-test:
+  artifacts:
+    paths:
+      - public/coverage
+      - public/*.coverage
+    reports:
+      junit: public/tests.xml
+  extends: .reactive-job
+  interruptible: true
+  script:
+    - |+
+      set -e
+      set -x
+      apt-get install -qy git gcc g++ make
+      pip install nox
+      nox -s pytest
+      mv .coverage "public/${CI_JOB_NAME}.coverage"
+  stage: test
+
+###
+### Run CPython 3.8.0 unit tests and collect test coverage stats.
+###
+### Coverage is exported as an artifact with a name matching the job name.
+###
+"test 3.8.0":
+  extends:
+    - .cpython380
+    - .nox-test
+
+###
+### Run CPython 3.8.1 unit tests and collect test coverage stats.
+###
+### Coverage is exported as an artifact with a name matching the job name.
+###
+"test 3.8.1":
+  extends:
+    - .cpython381
+    - .nox-test
+
+###
+### Run CPython 3.8.2 unit tests and collect test coverage stats.
+###
+### Coverage is exported as an artifact with a name matching the job name.
+###
+"test 3.8.2":
+  extends:
+    - .cpython382
+    - .nox-test
+
+###
+### Run CPython 3.9.0 unit tests and collect test coverage stats.
+###
+### Coverage is exported as an artifact with a name matching the job name.
+###
+"test 3.9.0":
+  extends:
+    - .cpython390
+    - .nox-test

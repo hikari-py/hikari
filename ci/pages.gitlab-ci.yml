@@ -1,0 +1,99 @@
+# Copyright © Nekoka.tt 2019-2020
+#
+# This file is part of Hikari.
+#
+# Hikari is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Hikari is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+
+
+###
+### Base for generating documentation ready to be published.
+###
+.generate-pages:
+  except:
+    - merge_requests
+    - tags
+  extends: .pages
+  only:
+    - master
+    - staging
+  retry:
+    max: 2
+  script: |+
+    set -x
+    apt-get update
+    apt-get install -qy graphviz
+    pip install nox
+    git clone ${CI_REPOSITORY_URL} -b ${TARGET_BRANCH} hikari_docs_${TARGET_BRANCH} --depth=1
+    cd "hikari_docs_${TARGET_BRANCH}"
+    nox -s sphinx
+    rm ../public -rf && mkdir ../public
+    mv public "../public/${TARGET_BRANCH}"
+
+###
+### Base for generating documentation.
+###
+.pages:
+  artifacts:
+    paths:
+      - public/
+  before_script:
+    - |+
+      set -e
+      set -x
+      git log -n 1 "${CI_COMMIT_SHA}" --format="%B" \
+          | grep -iqE "\[\s*(skip|no|don'?t|do\s+not)\s+pages?\s*\]" \
+        && echo "SKIPPING ${CI_JOB_STAGE} STAGE JOB" \
+        && exit 0
+      mkdir public || true
+  extends: .cpython-stable
+  stage: report
+
+###
+### Generate pages for master branch and export them.
+###
+"master pages":
+  extends: .generate-pages
+  variables:
+    TARGET_BRANCH: master
+
+###
+### Generate pages for staging branch and export them.
+###
+"staging pages":
+  extends: .generate-pages
+  variables:
+    TARGET_BRANCH: staging
+
+###
+### Generate pages for the current branch as a test.
+###
+"dry-run pages":
+  extends:
+    - .pages
+    - .reactive-job
+  script:
+    - |+
+      set -e
+      set -x
+      apt-get update
+      apt-get install -qy graphviz
+      pip install nox
+      nox -s sphinx
+  except:
+    - master
+    - staging
+  only:
+    - merge_requests
+    - branches
+

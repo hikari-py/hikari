@@ -1,0 +1,68 @@
+# Copyright © Nekoka.tt 2019-2020
+#
+# This file is part of Hikari.
+#
+# Hikari is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Hikari is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+
+###
+### Mark a job as having reactive defaults, such as firing on merge requests,
+### new tags, new branches, schedules, new commits; all by default.
+###
+.reactive-job:
+  only:
+    - branches
+    - merge_requests
+    - tags
+    - schedules
+
+###
+### Busybox 1.3.1 with musl libc
+###
+### Base to provide a tiny busybox install with nothing in it.
+### Used by some stages to move files produced by other stages into
+### the correct directory structure.
+###
+.busybox-musl:
+  image: busybox:1.31.1-musl
+
+###
+### CPython 3.8.0 configuration.
+###
+.cpython380:
+  image: python:3.8.0
+
+###
+### CPython 3.8.1 configuration.
+###
+.cpython381:
+  image: python:3.8.1
+
+###
+### CPython 3.8.2 configuration.
+###
+.cpython382:
+  image: python:3.8.2
+
+###
+### CPython 3.9.0 configuration.
+###
+.cpython390:
+  image: python:3.9-rc
+
+###
+### Most recent stable CPython release.
+###
+.cpython-stable:
+  extends: .cpython382
+
