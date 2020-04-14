@@ -44,6 +44,7 @@
 ### Base for generating documentation.
 ###
 .pages:
+  allow_failure: true       # FIXME: remove once in master.
   artifacts:
     paths:
       - public/
@@ -63,8 +64,8 @@
 ### Generate pages for master branch and export them.
 ###
 "master pages":
-  extends: .generate-pages
   allow_failure: true       # FIXME: remove once in master.
+  extends: .generate-pages
   variables:
     TARGET_BRANCH: master
 
