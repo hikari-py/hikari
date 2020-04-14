@@ -889,6 +889,12 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserial
         deserializer=messages.MessageFlag, if_undefined=entities.Unset
     )
 
+    #: The message nonce. This is a string used for validating
+    #: a message was sent.
+    #:
+    #: :type: :obj:`typing.Union` [ :obj:`hikari.messages.MessageFlag`, :obj:`hikari.entities.UNSET` ]
+    nonce: typing.Union[str, entities.Unset] = marshaller.attrib(deserializer=str, if_undefined=entities.Unset)
+
 
 @marshaller.marshallable()
 @attr.s(slots=True)
