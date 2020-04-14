@@ -265,14 +265,32 @@ class JSONErrorCode(enum.IntEnum):
     #: Maximum number of guild roles reached (250)
     MAX_GUILD_ROLES_REACHED = 30_005
 
+    #: Maximum number of webhooks reached (10)
+    MAX_WEBHOOKS_REACHED = 30_007
+
     #: Maximum number of reactions reached (20)
     MAX_REACTIONS_REACHED = 30_010
 
     #: Maximum number of guild channels reached (500)
     MAX_GUILD_CHANNELS_REACHED = 30_013
 
+    #: Maximun number of attachments in a message reached (10)
+    MAX_MESSAGE_ATTACHMENTS_REACHED = 30_015
+
+    #: Maximun number of invites reached (10000)
+    MAX_INVITES_REACHED = 30_016
+
     #: Unauthorized
     UNAUTHORIZED = 40_001
+
+    #: Request entity too large. Try sending something smaller in size
+    TOO_LARGE = 40_005
+
+    #: This feature has been temporarily disabled server-side
+    DISABLED_TEMPORARILY = 40_006
+
+    #: The user is banned from this guild
+    USER_BANNED = 40_007
 
     #: Missing access
     MISSING_ACCESS = 50_001
