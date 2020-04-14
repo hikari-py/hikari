@@ -51,46 +51,64 @@ class MessageType(enum.IntEnum):
 
     #: A normal message.
     DEFAULT = 0
+
     #: A message to denote a new recipient in a group.
     RECIPIENT_ADD = 1
+
     #: A message to denote that a recipient left the group.
     RECIPIENT_REMOVE = 2
+
     #: A message to denote a VoIP call.
     CALL = 3
+
     #: A message to denote that the name of a channel changed.
     CHANNEL_NAME_CHANGE = 4
+
     #: A message to denote that the icon of a channel changed.
     CHANNEL_ICON_CHANGE = 5
+
     #: A message to denote that a message was pinned.
     CHANNEL_PINNED_MESSAGE = 6
+
     #: A message to denote that a member joined the guild.
     GUILD_MEMBER_JOIN = 7
+
     #: A message to denote a Nitro subscription.
     USER_PREMIUM_GUILD_SUBSCRIPTION = 8
+
     #: A message to denote a tier 1 Nitro subscription.
     USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_1 = 9
+
     #: A message to denote a tier 2 Nitro subscription.
     USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2 = 10
+
     #: A message to denote a tier 3 Nitro subscription.
     USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3 = 11
+
     #: Channel follow add
     CHANNEL_FOLLOW_ADD = 12
 
 
+@enum.unique
 class MessageFlag(enum.IntFlag):
     """Additional flags for message options."""
 
-    NONE = 0x0
+    NONE = 0
+
     #: This message has been published to subscribed channels via channel following.
-    CROSSPOSTED = 0x1
+    CROSSPOSTED = 1 << 0
+
     #: This message originated from a message in another channel via channel following.
-    IS_CROSSPOST = 0x2
+    IS_CROSSPOST = 1 << 1
+
     #: Any embeds on this message should be omitted when serializing the message.
-    SUPPRESS_EMBEDS = 0x4
+    SUPPRESS_EMBEDS = 1 << 2
+
     #: The message this crosspost originated from was deleted via channel following.
-    SOURCE_MESSAGE_DELETED = 0x8
+    SOURCE_MESSAGE_DELETED = 1 << 3
+
     #: This message came from the urgent message system.
-    URGENT = 0x10
+    URGENT = 1 << 4
 
 
 @enum.unique
@@ -98,12 +116,16 @@ class MessageActivityType(enum.IntEnum):
     """The type of a rich presence message activity."""
 
     NONE = 0
+
     #: Join an activity.
     JOIN = 1
+
     #: Spectating something.
     SPECTATE = 2
+
     #: Listening to something.
     LISTEN = 3
+
     #: Request to join an activity.
     JOIN_REQUEST = 5
 
