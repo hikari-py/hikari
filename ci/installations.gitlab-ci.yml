@@ -26,7 +26,7 @@
       set -x
       apt install git -y
       pip install nox
-      nox --sessions pip pip_sdist pip_bdist_wheel pip_git
+      nox --sessions pip pip-sdist pip-bdist-wheel pip-git
   stage: install
 ###
 ### Setup script tests for CPython 3.8.0

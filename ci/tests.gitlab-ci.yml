@@ -34,7 +34,7 @@
       set -x
       apt-get install -qy git gcc g++ make
       pip install nox
-      nox -stest
+      nox -s pytest
       mv .coverage "public/${CI_JOB_NAME}.coverage"
   stage: test
 
@@ -77,18 +77,3 @@
   extends:
     - .cpython390
     - .nox-test
-
-###
-### Run the tests for the version updating scripts.
-###
-"test versioning":
-  extends:
-    - .cpython-stable
-    - .reactive-job
-  stage: test
-  script:
-    - |+
-      set -e
-      set -x
-      pip install requests
-      bash tasks/test_make_version_string.sh
