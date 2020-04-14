@@ -85,7 +85,7 @@ class MessageType(enum.IntEnum):
     #: A message to denote a tier 3 Nitro subscription.
     USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3 = 11
 
-    #: Channel follow add
+    #: Channel follow add.
     CHANNEL_FOLLOW_ADD = 12
 
 
@@ -93,6 +93,7 @@ class MessageType(enum.IntEnum):
 class MessageFlag(enum.IntFlag):
     """Additional flags for message options."""
 
+    #: None
     NONE = 0
 
     #: This message has been published to subscribed channels via channel following.
