@@ -57,17 +57,23 @@ class ShardState(enum.IntEnum):
 
     #: The shard is not running.
     NOT_RUNNING = 0
+
     #: The shard is undergoing the initial connection handshake.
     CONNECTING = enum.auto()
+
     #: The initialization handshake has completed. We are waiting for the shard
     #: to receive the ``READY`` event.
     WAITING_FOR_READY = enum.auto()
+
     #: The shard is ``READY``.
     READY = enum.auto()
+
     #: The shard has sent a request to ``RESUME`` and is waiting for a response.
     RESUMING = enum.auto()
+
     #: The shard is currently shutting down permanently.
     STOPPING = enum.auto()
+
     #: The shard has shut down and is no longer connected.
     STOPPED = enum.auto()
 

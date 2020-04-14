@@ -39,6 +39,7 @@ class ConnectionVisibility(enum.IntEnum):
 
     #: Only you can see the connection.
     NONE = 0
+
     #: Everyone can see the connection.
     EVERYONE = 1
 

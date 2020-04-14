@@ -22,6 +22,7 @@ __all__ = ["Permission"]
 import enum
 
 
+@enum.unique
 class Permission(enum.IntFlag):
     """Represents the permissions available in a given channel or guild.
 
@@ -86,66 +87,96 @@ class Permission(enum.IntFlag):
     """
 
     #: Empty permission.
-    NONE = 0x0
+    NONE = 0
+
     #: Allows creation of instant invites.
-    CREATE_INSTANT_INVITE = 0x1
+    CREATE_INSTANT_INVITE = 1 << 0
+
     #: Allows kicking members
-    KICK_MEMBERS = 0x2
+    KICK_MEMBERS = 1 << 1
+
     #: Allows banning members.
-    BAN_MEMBERS = 0x4
+    BAN_MEMBERS = 1 << 2
+
     #: Allows all permissions and bypasses channel permission overwrites.
-    ADMINISTRATOR = 0x8
+    ADMINISTRATOR = 1 << 3
+
     #: Allows management and editing of channels.
-    MANAGE_CHANNELS = 0x10
+    MANAGE_CHANNELS = 1 << 4
+
     #: Allows management and editing of the guild.
-    MANAGE_GUILD = 0x20
+    MANAGE_GUILD = 1 << 5
+
     #: Allows for the addition of reactions to messages.
-    ADD_REACTIONS = 0x40
+    ADD_REACTIONS = 1 << 6
+
     #: Allows for viewing of audit logs.
-    VIEW_AUDIT_LOG = 0x80
+    VIEW_AUDIT_LOG = 1 << 7
+
     #: Allows for using priority speaker in a voice channel.
-    PRIORITY_SPEAKER = 0x1_00
+    PRIORITY_SPEAKER = 1 << 8
+
     #: Allows the user to go live.
-    STREAM = 0x2_00
+    STREAM = 1 << 9
+
     #: Allows guild members to view a channel, which includes reading messages in text channels.
-    VIEW_CHANNEL = 0x4_00
+    VIEW_CHANNEL = 1 << 10
+
     #: Allows for sending messages in a channel.
-    SEND_MESSAGES = 0x8_00
+    SEND_MESSAGES = 1 << 11
+
     #: Allows for sending of ``/tts`` messages.
-    SEND_TTS_MESSAGES = 0x10_00
+    SEND_TTS_MESSAGES = 1 << 12
+
     #: Allows for deletion of other users messages.
-    MANAGE_MESSAGES = 0x20_00
+    MANAGE_MESSAGES = 1 << 13
+
     #: Links sent by users with this permission will be auto-embedded.
-    EMBED_LINKS = 0x40_00
+    EMBED_LINKS = 1 << 14
+
     #: Allows for uploading images and files
-    ATTACH_FILES = 0x80_00
+    ATTACH_FILES = 1 << 15
+
     #: Allows for reading of message history.
-    READ_MESSAGE_HISTORY = 0x1_00_00
+    READ_MESSAGE_HISTORY = 1 << 16
+
     #: Allows for using the ``@everyone`` tag to notify all users in a channel, and the
     #: ``@here`` tag to notify all online users in a channel, and the ``@role`` tag (even
     #: if the role is not mentionable) to notify all users with that role in a channel.
-    MENTION_EVERYONE = 0x2_00_00
+    MENTION_EVERYONE = 1 << 17
+
     #: Allows the usage of custom emojis from other servers.
-    USE_EXTERNAL_EMOJIS = 0x4_00_00
+    USE_EXTERNAL_EMOJIS = 1 << 18
+
     #: Allows for joining of a voice channel.
-    CONNECT = 0x10_00_00
+    CONNECT = 1 << 20
+
     #: Allows for speaking in a voice channel.
-    SPEAK = 0x20_00_00
+    SPEAK = 1 << 21
+
     #: Allows for muting members in a voice channel.
-    MUTE_MEMBERS = 0x40_00_00
+    MUTE_MEMBERS = 1 << 22
+
     #: Allows for deafening of members in a voice channel.
-    DEAFEN_MEMBERS = 0x80_00_00
+    DEAFEN_MEMBERS = 1 << 23
+
     #: Allows for moving of members between voice channels.
-    MOVE_MEMBERS = 0x1_00_00_00
+    MOVE_MEMBERS = 1 << 24
+
     #: Allows for using voice-activity-detection in a voice channel.
-    USE_VAD = 0x2_00_00_00
+    USE_VAD = 1 << 25
+
     #: Allows for modification of own nickname.
-    CHANGE_NICKNAME = 0x4_00_00_00
+    CHANGE_NICKNAME = 1 << 26
+
     #: Allows for modification of other users nicknames.
-    MANAGE_NICKNAMES = 0x8_00_00_00
+    MANAGE_NICKNAMES = 1 << 27
+
     #: Allows management and editing of roles.
-    MANAGE_ROLES = 0x10_00_00_00
+    MANAGE_ROLES = 1 << 28
+
     #: Allows management and editing of webhooks.
-    MANAGE_WEBHOOKS = 0x20_00_00_00
+    MANAGE_WEBHOOKS = 1 << 29
+
     #: Allows management and editing of emojis.
-    MANAGE_EMOJIS = 0x40_00_00_00
+    MANAGE_EMOJIS = 1 << 30
