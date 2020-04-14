@@ -36,6 +36,7 @@ class WebhookType(enum.IntEnum):
 
     #: Incoming webhook.
     INCOMING = 1
+
     #: Channel Follower webhook.
     CHANNEL_FOLLOWER = 2
 
