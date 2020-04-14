@@ -81,32 +81,46 @@ class GuildFeature(str, enum.Enum):
 
     #: Guild has access to set an animated guild icon.
     ANIMATED_ICON = "ANIMATED_ICON"
+
     #: Guild has access to set a guild banner image.
     BANNER = "BANNER"
+
     #: Guild has access to use commerce features (i.e. create store channels).
     COMMERCE = "COMMERCE"
+
     #: Guild is able to be discovered in the directory.
     DISCOVERABLE = "DISCOVERABLE"
+
     #: Guild is able to be featured in the directory.
     FEATURABLE = "FEATURABLE"
+
     #: Guild has access to set an invite splash background.
     INVITE_SPLASH = "INVITE_SPLASH"
+
     #: More emojis can be hosted in this guild than normal.
     MORE_EMOJI = "MORE_EMOJI"
+
     #: Guild has access to create news channels.
     NEWS = "NEWS"
+
     #: People can view channels in this guild without joining.
     LURKABLE = "LURKABLE"
+
     #: Guild is partnered.
     PARTNERED = "PARTNERED"
+
     #: Guild is public, go figure.
     PUBLIC = "PUBLIC"
+
     #: Guild cannot be public. Who would have guessed?
     PUBLIC_DISABLED = "PUBLIC_DISABLED"
+
     #: Guild has access to set a vanity URL.
     VANITY_URL = "VANITY_URL"
+
     #: Guild is verified.
     VERIFIED = "VERIFIED"
+
     #: Guild has access to set 384kbps bitrate in voice (previously
     #: VIP voice servers).
     VIP_REGIONS = "VIP_REGIONS"
@@ -151,13 +165,15 @@ class GuildPremiumTier(enum.IntEnum):
     TIER_3 = 3
 
 
+@enum.unique
 class GuildSystemChannelFlag(enum.IntFlag):
     """Defines which features are suppressed in the system channel."""
 
     #: Display a message about new users joining.
-    SUPPRESS_USER_JOIN = 1
+    SUPPRESS_USER_JOIN = 1 << 0
+
     #: Display a message when the guild is Nitro boosted.
-    SUPPRESS_PREMIUM_SUBSCRIPTION = 2
+    SUPPRESS_PREMIUM_SUBSCRIPTION = 1 << 1
 
 
 @enum.unique
@@ -307,6 +323,7 @@ class ActivityType(enum.IntEnum):
 
     #: Shows up as ``Playing <name>``
     PLAYING = 0
+
     #: Shows up as ``Streaming <name>``.
     #:
     #: Warning
@@ -314,11 +331,14 @@ class ActivityType(enum.IntEnum):
     #: Corresponding presences must be associated with VALID Twitch or YouTube
     #: stream URLS!
     STREAMING = 1
+
     #: Shows up as ``Listening to <name>``.
     LISTENING = 2
+
     #: Shows up as ``Watching <name>``. Note that this is not officially
     #: documented, so will be likely removed in the near future.
     WATCHING = 3
+
     #: A custom status.
     #:
     #: To set an emoji with the status, place a unicode emoji or Discord emoji
@@ -422,6 +442,7 @@ class ActivitySecret(entities.HikariEntity, entities.Deserializable):
     match: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
 
 
+@enum.unique
 class ActivityFlag(enum.IntFlag):
     """Flags that describe what an activity includes.
 
@@ -528,12 +549,16 @@ class PresenceStatus(str, enum.Enum):
 
     #: Online/green.
     ONLINE = "online"
+
     #: Idle/yellow.
     IDLE = "idle"
+
     #: Do not disturb/red.
     DND = "dnd"
+
     #: An alias for :attr:`DND`
     DO_NOT_DISTURB = DND
+
     #: Offline or invisible/grey.
     OFFLINE = "offline"
 
@@ -667,6 +692,7 @@ class IntegrationExpireBehaviour(enum.IntEnum):
 
     #: Remove the role.
     REMOVE_ROLE = 0
+
     #: Kick the subscriber.
     KICK = 1
 

@@ -130,8 +130,10 @@ class PremiumType(enum.IntEnum):
 
     #: No premium.
     NONE = 0
+
     #: Premium including basic perks like animated emojis and avatars.
     NITRO_CLASSIC = 1
+
     #: Premium including all perks (e.g. 2 server boosts).
     NITRO = 2
 

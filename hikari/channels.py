@@ -61,20 +61,26 @@ from hikari.internal import more_collections
 
 @enum.unique
 class ChannelType(enum.IntEnum):
-    """The known channel types that are exposed to us by the api."""
+    """The known channel types that are exposed to us by the API."""
 
     #: A text channel in a guild.
     GUILD_TEXT = 0
+
     #: A direct channel between two users.
     DM = 1
+
     #: A voice channel in a guild.
     GUILD_VOICE = 2
+
     #: A direct channel between multiple users.
     GROUP_DM = 3
+
     #: An category used for organizing channels in a guild.
     GUILD_CATEGORY = 4
+
     #: A channel that can be followed and can crosspost.
     GUILD_NEWS = 5
+
     #: A channel that show's a game's store page.
     GUILD_STORE = 6
 
@@ -86,6 +92,7 @@ class PermissionOverwriteType(str, enum.Enum):
     #: A permission overwrite that targets all the members with a specific
     #: guild role.
     ROLE = "role"
+
     #: A permission overwrite that targets a specific guild member.
     MEMBER = "member"
 
