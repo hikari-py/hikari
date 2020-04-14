@@ -90,7 +90,7 @@
       apt-get update
       apt-get install -qy graphviz
       pip install nox
-      nox -s sphinx
+      nox -s sphinx || nox -s pages  # FIXME: remove once in master.
   except:
     - master
     - staging
