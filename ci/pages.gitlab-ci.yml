@@ -32,7 +32,7 @@
   script: |+
     set -x
     apt-get update
-    apt-get install -qy graphviz
+    apt-get install -qy graphviz git
     pip install nox
     git clone ${CI_REPOSITORY_URL} -b ${TARGET_BRANCH} hikari_docs_${TARGET_BRANCH} --depth=1
     cd "hikari_docs_${TARGET_BRANCH}"
@@ -52,6 +52,7 @@
     - |+
       set -e
       set -x
+      apt-get install git -qy
       git log -n 1 "${CI_COMMIT_SHA}" --format="%B" \
           | grep -iqE "\[\s*(skip|no|don'?t|do\s+not)\s+pages?\s*\]" \
         && echo "SKIPPING ${CI_JOB_STAGE} STAGE JOB" \
