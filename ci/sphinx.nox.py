@@ -55,3 +55,5 @@ def sphinx(session: nox.Session) -> None:
                 path = os.path.join(config.DOCUMENTATION_DIRECTORY, f)
                 print("rm", path)
                 os.unlink(path)
+
+

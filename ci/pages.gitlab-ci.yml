@@ -64,6 +64,7 @@
 ###
 "master pages":
   extends: .generate-pages
+  allow_failure: true       # FIXME: remove once in master.
   variables:
     TARGET_BRANCH: master
 
