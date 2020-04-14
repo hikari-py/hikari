@@ -183,7 +183,7 @@ def send_notification(version: str, title: str, description: str, color: str) ->
                     "description": description,
                     "author": {"name": config.AUTHOR},
                     "footer": {"text": f"v{version}"},
-                    "url": f"{config.PYPI}/project/{config.API_NAME}/{version}",
+                    "url": f"{config.PYPI}project/{config.API_NAME}/{version}",
                     "color": int(color, 16)
                 }
             ]
