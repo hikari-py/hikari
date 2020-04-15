@@ -79,9 +79,10 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
         self.config = config
         self.event_manager = event_manager
         self.gateway = NotImplemented
-        self.rest = rest_clients.RESTClient(self.config)
+        self.rest = NotImplemented
 
     async def start(self):
+        self.rest = rest_clients.RESTClient(self.config)
         gateway_bot = await self.rest.fetch_gateway_bot()
 
         self.logger.info(
@@ -100,7 +101,7 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
             raw_event_consumer_impl=self.event_manager,
             shard_ids=shard_ids,
             shard_count=shard_count,
-            dispatcher=self.event_manager.event_dispatcher.dispatch_event,
+            dispatcher=self.event_manager.event_dispatcher,
         )
 
         await self.gateway.start()

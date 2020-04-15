@@ -58,6 +58,10 @@ class EventDispatcher(abc.ABC):
     __slots__ = ()
 
     @abc.abstractmethod
+    def close(self) -> None:
+        """Cancel anything that is waiting for an event to be dispatched."""
+
+    @abc.abstractmethod
     def add_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT) -> EventCallbackT:
         """Register a new event callback to a given event name.
 

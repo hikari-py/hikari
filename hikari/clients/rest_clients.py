@@ -86,7 +86,7 @@ class RESTClient:
             ssl_context=config.ssl_context,
             verify_ssl=config.verify_ssl,
             timeout=config.request_timeout,
-            token=config.token,
+            token=f"{config.token_type} {config.token}" if config.token_type is not None else config.token,
             version=config.rest_version,
         )
 
