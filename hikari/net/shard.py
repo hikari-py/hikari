@@ -47,6 +47,7 @@ import zlib
 import aiohttp.typedefs
 
 from hikari import errors
+from hikari.internal import more_asyncio
 from hikari.internal import more_logging
 from hikari.net import codes
 from hikari.net import ratelimits
@@ -601,7 +602,7 @@ class ShardConnection:
             self.dispatch(self, "CONNECTED", {})
             self.logger.debug("received HELLO (interval:%ss)", self.heartbeat_interval)
 
-            completed, pending_tasks = await asyncio.wait(
+            completed, pending_tasks = await more_asyncio.wait(
                 [self._heartbeat_keep_alive(self.heartbeat_interval), self._run()], return_when=asyncio.FIRST_COMPLETED,
             )
 
