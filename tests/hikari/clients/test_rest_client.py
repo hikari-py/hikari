@@ -81,12 +81,9 @@ class TestRESTClient:
         return mock.MagicMock(rest.LowLevelRestfulClient)
 
     @pytest.fixture()
-    def rest_clients_impl(self, low_level_rest_impl) -> rest_clients.RESTClient:
-        class RESTClient(rest_clients.RESTClient):
-            def __init__(self):
-                self._session: rest.LowLevelRestfulClient = low_level_rest_impl
-
-        return RESTClient()
+    def rest_clients_impl(self, low_level_rest_impl, mock_config) -> rest_clients.RESTClient:
+        with mock.patch.object(rest, "LowLevelRestfulClient", return_value=low_level_rest_impl):
+            return rest_clients.RESTClient(mock_config)
 
     @pytest.mark.asyncio
     async def test_close_awaits_session_close(self, rest_clients_impl):
@@ -1044,7 +1041,7 @@ class TestRESTClient:
         rest_clients_impl.update_message = mock.AsyncMock(return_value=mock_message_obj)
         result = await rest_clients_impl.safe_update_message(message=message, channel=channel,)
         assert result is mock_message_obj
-        rest_clients_impl.update_message.safe_update_message(
+        rest_clients_impl.update_message.assert_called_once_with(
             message=message,
             channel=channel,
             content=...,
