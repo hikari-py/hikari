@@ -92,7 +92,7 @@ class PremiumType(enum.IntEnum):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class User(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents a user."""
 
@@ -114,12 +114,12 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
     #: Whether this user is a bot account.
     #:
     #: :type: :obj:`bool`
-    is_bot: bool = marshaller.attrib(raw_name="bot", deserializer=bool, if_undefined=False)
+    is_bot: bool = marshaller.attrib(raw_name="bot", deserializer=bool, if_undefined=False, default=False)
 
     #: Whether this user is a system account.
     #:
     #: :type: :obj:`bool`
-    is_system: bool = marshaller.attrib(raw_name="system", deserializer=bool, if_undefined=False)
+    is_system: bool = marshaller.attrib(raw_name="system", deserializer=bool, if_undefined=False, default=False)
 
     #: The public flags for this user.
     #:
@@ -130,7 +130,7 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`UserFlag`, optional
     flags: typing.Optional[UserFlag] = marshaller.attrib(
-        raw_name="public_flags", deserializer=UserFlag, if_undefined=None,
+        raw_name="public_flags", deserializer=UserFlag, if_undefined=None, default=None
     )
 
     @property
@@ -178,7 +178,7 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class MyUser(User):
     """Represents a user with extended oauth2 information."""
 
@@ -190,21 +190,23 @@ class MyUser(User):
     #: The user's set language. This is not provided by the ``READY`` event.
     #:
     #: :type: :obj:`str`, optional
-    locale: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, if_undefined=None)
+    locale: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, if_undefined=None, default=None)
 
     #: Whether the email for this user's account has been verified.
     #: Will be :obj:`None` if retrieved through the oauth2 flow without the
     #: ``email`` scope.
     #:
     #: :type: :obj:`bool`, optional
-    is_verified: typing.Optional[bool] = marshaller.attrib(raw_name="verified", deserializer=bool, if_undefined=None)
+    is_verified: typing.Optional[bool] = marshaller.attrib(
+        raw_name="verified", deserializer=bool, if_undefined=None, default=None
+    )
 
     #: The user's set email.
     #: Will be :obj:`None` if retrieved through the oauth2 flow without the
     #: ``email`` scope and for bot users.
     #:
     #: :type: :obj:`str`, optional
-    email: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None)
+    email: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None, default=None)
 
     #: This user account's flags.
     #:
@@ -215,4 +217,6 @@ class MyUser(User):
     #: This will always be :obj:`None` for bots.
     #:
     #: :type: :obj:`PremiumType`, optional
-    premium_type: typing.Optional[PremiumType] = marshaller.attrib(deserializer=PremiumType, if_undefined=None)
+    premium_type: typing.Optional[PremiumType] = marshaller.attrib(
+        deserializer=PremiumType, if_undefined=None, default=None
+    )

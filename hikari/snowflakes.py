@@ -113,7 +113,7 @@ class Snowflake(entities.HikariEntity, typing.SupportsInt):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class UniqueEntity(entities.HikariEntity, typing.SupportsInt):
     """An entity that has an integer ID of some sort."""
 

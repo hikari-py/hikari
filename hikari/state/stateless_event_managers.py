@@ -210,12 +210,16 @@ class StatelessEventManagerImpl(event_managers.EventManager[event_dispatchers.Ev
     @event_managers.raw_event_mapper("MESSAGE_REACTION_REMOVE")
     def on_message_reaction_remove(self, _, payload):
         """Handle MESSAGE_REACTION_REMOVE events."""
+        payload["emoji"].setdefault("animated", None)
+
         event = events.MessageReactionRemoveEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("MESSAGE_REACTION_REMOVE_EMOJI")
     def on_message_reaction_remove_emoji(self, _, payload):
         """Handle MESSAGE_REACTION_REMOVE_EMOJI events."""
+        payload["emoji"].setdefault("animated", None)
+
         event = events.MessageReactionRemoveEmojiEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 

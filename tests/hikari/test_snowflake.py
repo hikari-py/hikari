@@ -92,7 +92,7 @@ class TestUniqueEntity:
     @pytest.fixture()
     def stud_marshal_entity(self):
         @marshaller.marshallable()
-        @attr.s(slots=True)
+        @attr.s(slots=True, kw_only=True)
         class StudEntity(snowflakes.UniqueEntity, entities.Deserializable, entities.Serializable):
             ...
 

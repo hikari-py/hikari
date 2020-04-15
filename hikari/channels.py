@@ -101,7 +101,7 @@ class PermissionOverwriteType(str, enum.Enum):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class PermissionOverwrite(snowflakes.UniqueEntity, entities.Deserializable, entities.Serializable):
     """Represents permission overwrites for a channel or role in a channel."""
 
@@ -156,7 +156,7 @@ def register_channel_type(type_: ChannelType) -> typing.Callable[[typing.Type["C
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class Channel(snowflakes.UniqueEntity, entities.Deserializable):
     """Base class for all channels."""
 
@@ -167,7 +167,7 @@ class Channel(snowflakes.UniqueEntity, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class PartialChannel(Channel):
     """Represents a channel where we've only received it's basic information.
 
@@ -182,7 +182,7 @@ class PartialChannel(Channel):
 
 @register_channel_type(ChannelType.DM)
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class DMChannel(Channel):
     """Represents a DM channel."""
 
@@ -208,7 +208,7 @@ class DMChannel(Channel):
 
 @register_channel_type(ChannelType.GROUP_DM)
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GroupDMChannel(DMChannel):
     """Represents a DM group channel."""
 
@@ -232,12 +232,12 @@ class GroupDMChannel(DMChannel):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildChannel(Channel):
     """The base for anything that is a guild channel."""
 
@@ -276,14 +276,14 @@ class GuildChannel(Channel):
 
 @register_channel_type(ChannelType.GUILD_CATEGORY)
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildCategory(GuildChannel):
     """Represents a guild category."""
 
 
 @register_channel_type(ChannelType.GUILD_TEXT)
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildTextChannel(GuildChannel):
     """Represents a guild text channel."""
 
@@ -320,7 +320,7 @@ class GuildTextChannel(GuildChannel):
 
 @register_channel_type(ChannelType.GUILD_NEWS)
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildNewsChannel(GuildChannel):
     """Represents an news channel."""
 
@@ -344,14 +344,14 @@ class GuildNewsChannel(GuildChannel):
 
 @register_channel_type(ChannelType.GUILD_STORE)
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildStoreChannel(GuildChannel):
     """Represents a store channel."""
 
 
 @register_channel_type(ChannelType.GUILD_VOICE)
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildVoiceChannel(GuildChannel):
     """Represents an voice channel."""
 
