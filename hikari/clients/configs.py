@@ -37,6 +37,7 @@ import typing
 import aiohttp
 import attr
 
+from hikari.internal import conversions
 from hikari import entities
 from hikari import gateway_entities
 from hikari import guilds
@@ -253,7 +254,7 @@ class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     #:
     #: :type: :obj:`hikari.net.codes.GatewayIntent`, optional
     intents: typing.Optional[codes.GatewayIntent] = marshaller.attrib(
-        deserializer=lambda value: marshaller.dereference_int_flag(codes.GatewayIntent, value),
+        deserializer=lambda value: conversions.dereference_int_flag(codes.GatewayIntent, value),
         if_undefined=None,
         default=None,
     )
