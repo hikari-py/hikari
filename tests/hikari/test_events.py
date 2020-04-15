@@ -731,6 +731,7 @@ class TestMessageUpdateEvent:
         assert message_update_payload.application is mock_application
         assert message_update_payload.message_reference is mock_reference
         assert message_update_payload.flags == messages.MessageFlag.CROSSPOSTED | messages.MessageFlag.IS_CROSSPOST
+        assert message_update_payload.nonce == "6454345345345345"
 
     def test_partial_message_update(self):
         message_update_obj = events.MessageUpdateEvent.deserialize({"id": "393939", "channel_id": "434949"})
