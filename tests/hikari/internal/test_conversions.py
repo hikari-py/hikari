@@ -21,7 +21,7 @@ import datetime
 import inspect
 import io
 import typing
-from unittest import mock
+import mock
 
 import pytest
 

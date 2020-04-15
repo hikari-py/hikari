@@ -23,7 +23,7 @@ mechanism if they are postponed and evaluated as string literals.
 """
 from __future__ import annotations
 
-from unittest import mock
+import mock
 
 import attr
 import pytest
