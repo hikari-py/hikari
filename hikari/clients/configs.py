@@ -336,10 +336,7 @@ class RESTConfig(AIOHTTPConfig, TokenConfig):
     #:
     #: :type: :obj:`str`
     token_type: typing.Optional[str] = marshaller.attrib(
-        deserializer=str,
-        if_undefined=lambda: "Bot",
-        if_none=None,
-        default="Bot"
+        deserializer=str, if_undefined=lambda: "Bot", if_none=None, default="Bot"
     )
 
     #: The HTTP API version to use.
