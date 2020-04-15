@@ -45,7 +45,7 @@ class UserAgent(metaclass=meta.SingletonMeta):
     #: -------
     #: ``"hikari 1.0.1"``
     #:
-    #: :type: :obj:`typing.Final` [ :obj:`str` ]
+    #: :type: :obj:`~typing.Final` [ :obj:`~str` ]
     library_version: typing.Final[str]
 
     #: The platform version.
@@ -54,7 +54,7 @@ class UserAgent(metaclass=meta.SingletonMeta):
     #: -------
     #: ``"CPython 3.8.2 GCC 9.2.0"``
     #:
-    #: :type: :obj:`typing.Final` [ :obj:`str` ]
+    #: :type: :obj:`~typing.Final` [ :obj:`~str` ]
     platform_version: typing.Final[str]
 
     #: The operating system type.
@@ -63,7 +63,7 @@ class UserAgent(metaclass=meta.SingletonMeta):
     #: -------
     #: ``"Linux-5.4.15-2-MANJARO-x86_64-with-glibc2.2.5"``
     #:
-    #: :type: :obj:`typing.Final` [ :obj:`str` ]
+    #: :type: :obj:`~typing.Final` [ :obj:`~str` ]
     system_type: typing.Final[str]
 
     #: The Hikari-specific user-agent to use in HTTP connections to Discord.
@@ -72,7 +72,7 @@ class UserAgent(metaclass=meta.SingletonMeta):
     #: -------
     #: ``"DiscordBot (https://gitlab.com/nekokatt/hikari; 1.0.1; Nekokatt) CPython 3.8.2 GCC 9.2.0 Linux"``
     #:
-    #: :type: :obj:`typing.Final` [ :obj:`str` ]
+    #: :type: :obj:`~typing.Final` [ :obj:`~str` ]
     user_agent: typing.Final[str]
 
     def __init__(self):
@@ -103,7 +103,7 @@ class UserAgent(metaclass=meta.SingletonMeta):
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`str` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~str` ]
             The object to send to Discord representing device info when
             IDENTIFYing with the gateway.
         """

@@ -42,7 +42,7 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
 
     Parameters
     ----------
-    config : :obj:`hikari.clients.configs.BotConfig`
+    config : :obj:`~hikari.clients.configs.BotConfig`
         The config object to use.
     event_manager : ``hikari.state.event_managers.EventManager``
         The event manager to use.
@@ -50,27 +50,27 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
 
     #: The config for this bot.
     #:
-    #: :type: :obj:`hikari.clients.configs.BotConfig`
+    #: :type: :obj:`~hikari.clients.configs.BotConfig`
     config: configs.BotConfig
 
     #: The event manager for this bot.
     #:
-    #: :type: a subclass of :obj:`hikari.state.event_managers.EventManager`
+    #: :type: a subclass of :obj:`~hikari.state.event_managers.EventManager`
     event_manager: event_managers.EventManager
 
     #: The gateway for this bot.
     #:
-    #: :type: :obj:`hikari.clients.gateway_managers.GatewayManager` [ :obj:`hikari.clients.shard_clients.ShardClient` ]
+    #: :type: :obj:`~hikari.clients.gateway_managers.GatewayManager` [ :obj:`~hikari.clients.shard_clients.ShardClient` ]
     gateway: gateway_managers.GatewayManager[shard_clients.ShardClient]
 
     #: The logger to use for this bot.
     #:
-    #: :type: :obj:`logging.Logger`
+    #: :type: :obj:`~logging.Logger`
     logger: logging.Logger
 
     #: The REST HTTP client to use for this bot.
     #:
-    #: :type: :obj:`hikari.clients.rest_clients.RESTClient`
+    #: :type: :obj:`~hikari.clients.rest_clients.RESTClient`
     rest: rest_clients.RESTClient
 
     @abc.abstractmethod
@@ -142,7 +142,7 @@ class StatelessBot(BotBase):
 
     Parameters
     ----------
-    config : :obj:`hikari.clients.configs.BotConfig`
+    config : :obj:`~hikari.clients.configs.BotConfig`
         The config object to use.
     """
 

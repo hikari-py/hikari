@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Defines a facade around :obj:`hikari.clients.shard_clients.ShardClient`.
+"""Defines a facade around :obj:`~hikari.clients.shard_clients.ShardClient`.
 
 This provides functionality such as keeping multiple shards alive
 """
@@ -77,14 +77,14 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
 
         This will return a mean of all the heartbeat intervals for all shards
         with a valid heartbeat latency that are in the
-        :obj:`hikari.clients.shard_clients.ShardState.READY` state.
+        :obj:`~hikari.clients.shard_clients.ShardState.READY` state.
 
         If no shards are in this state, this will return ``float('nan')``
         instead.
 
         Returns
         -------
-        :obj:`float`
+        :obj:`~float`
             The mean latency for all ``READY`` shards that have sent at least
             one acknowledged ``HEARTBEAT`` payload. If there is not at least
             one shard that meets this criteria, this will instead return
@@ -170,21 +170,21 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
         Notes
         -----
         If you wish to update a presence for a specific shard, you can do this
-        by using the ``shards`` :obj:`typing.Mapping` to find the shard you
+        by using the ``shards`` :obj:`~typing.Mapping` to find the shard you
         wish to update.
 
         Parameters
         ----------
-        status : :obj:`hikari.guilds.PresenceStatus`
+        status : :obj:`~hikari.guilds.PresenceStatus`
             If specified, the new status to set.
-        activity : :obj:`hikari.gateway_entities.GatewayActivity`, optional
+        activity : :obj:`~hikari.gateway_entities.GatewayActivity`, optional
             If specified, the new activity to set.
-        idle_since : :obj:`datetime.datetime`, optional
+        idle_since : :obj:`~datetime.datetime`, optional
             If specified, the time to show up as being idle since,
-            or :obj:`None` if not applicable.
-        is_afk : :obj:`bool`
-            If specified, :obj:`True` if the user should be marked as AFK,
-            or :obj:`False` otherwise.
+            or :obj:`~None` if not applicable.
+        is_afk : :obj:`~bool`
+            If specified, :obj:`~True` if the user should be marked as AFK,
+            or :obj:`~False` otherwise.
         """
         await asyncio.gather(
             *(

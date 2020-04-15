@@ -49,10 +49,10 @@ class RawEventConsumer(abc.ABC):
 
         Parameters
         ----------
-        shard_client_obj : :obj:`hikari.clients.shard_clients.ShardClient`
+        shard_client_obj : :obj:`~hikari.clients.shard_clients.ShardClient`
             The client for the shard that received the event.
-        name : :obj:`str`
+        name : :obj:`~str`
             The raw event name.
-        payload : :obj:`typing.Any`
+        payload : :obj:`~typing.Any`
             The raw event payload. Will be a JSON-compatible type.
         """

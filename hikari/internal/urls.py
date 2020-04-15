@@ -32,13 +32,13 @@ from hikari.internal import assertions
 
 #: The URL for the CDN.
 #:
-#: :type: :obj:`str`
+#: :type: :obj:`~str`
 BASE_CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
 
 #: The URL for the REST API. This contains a version number parameter that
 #: should be interpolated.
 #:
-#: :type: :obj:`str`
+#: :type: :obj:`~str`
 REST_API_URL: typing.Final[str] = "https://discordapp.com/api/v{0.version}"
 
 
@@ -47,25 +47,25 @@ def generate_cdn_url(*route_parts: str, fmt: str, size: typing.Optional[int]) ->
 
     Parameters
     ----------
-    route_parts : :obj:`str`
+    route_parts : :obj:`~str`
         The string route parts that will be used to form the link.
-    fmt : :obj:`str`
+    fmt : :obj:`~str`
         The format to use for the wanted cdn entity, will usually be one of
         ``webp``, ``png``, ``jpeg``, ``jpg`` or ``gif`` (which will be invalid
         if the target entity doesn't have an animated version available).
-    size : :obj:`int`, optional
+    size : :obj:`~int`, optional
         The size to specify for the image in the query string if applicable,
-        should be passed through as :obj:`None` to avoid the param being set.
+        should be passed through as :obj:`~None` to avoid the param being set.
         Must be any power of two between 16 and 4096.
 
     Returns
     -------
-    :obj:`str`
+    :obj:`~str`
         The URL to the resource on the Discord CDN.
 
     Raises
     ------
-    :obj:`ValueError`
+    :obj:`~ValueError`
         If ``size`` is not a power of two or not between 16 and 4096.
     """
     if size:

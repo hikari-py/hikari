@@ -39,14 +39,14 @@ from hikari import entities
 class Snowflake(entities.HikariEntity, typing.SupportsInt):
     """A concrete representation of a unique identifier for an object on Discord.
 
-    This object can be treated as a regular :obj:`int` for most purposes.
+    This object can be treated as a regular :obj:`~int` for most purposes.
     """
 
     __slots__ = ("_value",)
 
     #: The integer value of this ID.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     _value: int
 
     # noinspection PyMissingConstructor
@@ -98,7 +98,7 @@ class Snowflake(entities.HikariEntity, typing.SupportsInt):
 
     @classmethod
     def deserialize(cls, value: str) -> "Snowflake":
-        """Take a :obj:`str` ID and convert it into a Snowflake object."""
+        """Take a :obj:`~str` ID and convert it into a Snowflake object."""
         return cls(value)
 
     @classmethod
@@ -119,7 +119,7 @@ class UniqueEntity(entities.HikariEntity, typing.SupportsInt):
 
     #: The ID of this entity.
     #:
-    #: :type: :obj:`Snowflake`
+    #: :type: :obj:`~Snowflake`
     id: Snowflake = marshaller.attrib(hash=True, eq=True, repr=True, deserializer=Snowflake, serializer=str)
 
     def __int__(self):
