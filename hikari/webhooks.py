@@ -42,7 +42,7 @@ class WebhookType(enum.IntEnum):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents a webhook object on Discord.
 
@@ -60,7 +60,7 @@ class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The channel ID this webhook is for.
@@ -77,7 +77,9 @@ class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #:
     #: :type: :obj:`hikari.users.User`, optional
-    user: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User.deserialize, if_undefined=None)
+    user: typing.Optional[users.User] = marshaller.attrib(
+        deserializer=users.User.deserialize, if_undefined=None, default=None
+    )
 
     #: The default name of the webhook.
     #:
@@ -97,4 +99,4 @@ class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #:
     #: :type: :obj:`str`, optional
-    token: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+    token: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)

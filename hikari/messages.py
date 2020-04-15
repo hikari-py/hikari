@@ -132,7 +132,7 @@ class MessageActivityType(enum.IntEnum):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class Attachment(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents a file attached to a message."""
 
@@ -159,16 +159,16 @@ class Attachment(snowflakes.UniqueEntity, entities.Deserializable):
     #: The height of the image (if the file is an image).
     #:
     #: :type: :obj:`int`, optional
-    height: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
+    height: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
 
     #: The width of the image (if the file is an image).
     #:
     #: :type: :obj:`int`, optional
-    width: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
+    width: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class Reaction(entities.HikariEntity, entities.Deserializable):
     """Represents a reaction in a message."""
 
@@ -191,7 +191,7 @@ class Reaction(entities.HikariEntity, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class MessageActivity(entities.HikariEntity, entities.Deserializable):
     """Represents the activity of a rich presence-enabled message."""
 
@@ -203,11 +203,11 @@ class MessageActivity(entities.HikariEntity, entities.Deserializable):
     #: The party ID of the message activity.
     #:
     #: :type: :obj:`str`, optional
-    party_id: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+    party_id: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class MessageCrosspost(entities.HikariEntity, entities.Deserializable):
     """Represents information about a cross-posted message and the origin of the original message."""
 
@@ -222,7 +222,7 @@ class MessageCrosspost(entities.HikariEntity, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     message_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the channel that the message originated from.
@@ -240,12 +240,12 @@ class MessageCrosspost(entities.HikariEntity, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class Message(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents a message."""
 
@@ -258,7 +258,7 @@ class Message(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The author of this message.
@@ -270,7 +270,7 @@ class Message(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.guilds.GuildMember`, optional
     member: typing.Optional[guilds.GuildMember] = marshaller.attrib(
-        deserializer=guilds.GuildMember.deserialize, if_undefined=None
+        deserializer=guilds.GuildMember.deserialize, if_undefined=None, default=None
     )
 
     #: The content of the message.
@@ -324,6 +324,7 @@ class Message(snowflakes.UniqueEntity, entities.Deserializable):
         raw_name="mention_channels",
         deserializer=lambda channel_mentions: {snowflakes.Snowflake.deserialize(c["id"]) for c in channel_mentions},
         if_undefined=dict,
+        factory=dict,
     )
 
     #: The message attachments.
@@ -344,7 +345,7 @@ class Message(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`typing.Sequence` [ :obj:`Reaction` ]
     reactions: typing.Sequence[Reaction] = marshaller.attrib(
-        deserializer=lambda reactions: [Reaction.deserialize(r) for r in reactions], if_undefined=dict
+        deserializer=lambda reactions: [Reaction.deserialize(r) for r in reactions], if_undefined=dict, factory=dict
     )
 
     #: Whether the message is pinned.
@@ -356,7 +357,7 @@ class Message(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     webhook_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The message type.
@@ -368,30 +369,30 @@ class Message(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`MessageActivity`, optional
     activity: typing.Optional[MessageActivity] = marshaller.attrib(
-        deserializer=MessageActivity.deserialize, if_undefined=None
+        deserializer=MessageActivity.deserialize, if_undefined=None, default=None
     )
 
     #: The message application.
     #:
     #: :type: :obj:`hikari.oauth2.Application`, optional
     application: typing.Optional[oauth2.Application] = marshaller.attrib(
-        deserializer=oauth2.Application.deserialize, if_undefined=None
+        deserializer=oauth2.Application.deserialize, if_undefined=None, default=None
     )
 
     #: The message crossposted reference data.
     #:
     #: :type: :obj:`MessageCrosspost`, optional
     message_reference: typing.Optional[MessageCrosspost] = marshaller.attrib(
-        deserializer=MessageCrosspost.deserialize, if_undefined=None
+        deserializer=MessageCrosspost.deserialize, if_undefined=None, default=None
     )
 
     #: The message flags.
     #:
     #: :type: :obj:`MessageFlag`, optional
-    flags: typing.Optional[MessageFlag] = marshaller.attrib(deserializer=MessageFlag, if_undefined=None)
+    flags: typing.Optional[MessageFlag] = marshaller.attrib(deserializer=MessageFlag, if_undefined=None, default=None)
 
     #: The message nonce. This is a string used for validating
     #: a message was sent.
     #:
     #: :type: :obj:`str`, optional
-    nonce: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+    nonce: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
