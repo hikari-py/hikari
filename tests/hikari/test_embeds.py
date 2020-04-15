@@ -258,7 +258,7 @@ class TestEmbed:
         assert embed_obj.author == embeds.EmbedAuthor.deserialize(test_author_payload)
         assert embed_obj.fields == [embeds.EmbedField.deserialize(test_field_payload)]
 
-    def test_serialize(self):
+    def test_serialize_full_embed(self):
         embed_obj = embeds.Embed(
             title="Nyaa me pls >////<",
             description="Nyan >////<",
@@ -284,3 +284,6 @@ class TestEmbed:
             "author": {"name": "a name", "url": "https://a-man"},
             "fields": [{"name": "aField", "value": "agent69", "inline": True}],
         }
+
+    def test_serialize_empty_embed(self):
+        assert embeds.Embed().serialize() == {"fields": []}
