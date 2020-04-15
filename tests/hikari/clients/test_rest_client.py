@@ -19,7 +19,7 @@
 import contextlib
 import datetime
 import io
-from unittest import mock
+import mock
 
 import pytest
 
