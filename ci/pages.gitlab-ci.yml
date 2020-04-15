@@ -38,7 +38,11 @@
     cd "hikari_docs_${TARGET_BRANCH}"
     nox -s sphinx || nox -s documentation  # FIXME: remove once in master.
     rm ../public -rf && mkdir ../public
-    mv public "../public/${TARGET_BRANCH}"
+    if [[ "$TARGET_BRANCH" = master ]]; then
+        mv public ../publi
+    else
+        mv public "../public/${TARGET_BRANCH}"
+    fi
 
 ###
 ### Base for generating documentation.
