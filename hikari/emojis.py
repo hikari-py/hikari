@@ -30,13 +30,13 @@ __all__ = ["Emoji", "UnicodeEmoji", "UnknownEmoji", "GuildEmoji"]
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class Emoji(entities.HikariEntity, entities.Deserializable):
     """Base class for all emojis."""
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji."""
 
@@ -57,7 +57,7 @@ class UnicodeEmoji(Emoji):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class UnknownEmoji(Emoji, snowflakes.UniqueEntity):
     """Represents a unknown emoji."""
 
@@ -69,7 +69,9 @@ class UnknownEmoji(Emoji, snowflakes.UniqueEntity):
     #: Whether the emoji is animated.
     #:
     #: :type: :obj:`bool`
-    is_animated: bool = marshaller.attrib(raw_name="animated", deserializer=bool, if_undefined=False)
+    is_animated: bool = marshaller.attrib(
+        raw_name="animated", deserializer=bool, if_undefined=False, if_none=None, default=False
+    )
 
     @property
     def url_name(self) -> str:
@@ -78,7 +80,7 @@ class UnknownEmoji(Emoji, snowflakes.UniqueEntity):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildEmoji(UnknownEmoji):
     """Represents a guild emoji."""
 
@@ -89,6 +91,7 @@ class GuildEmoji(UnknownEmoji):
         raw_name="roles",
         deserializer=lambda roles: {snowflakes.Snowflake.deserialize(r) for r in roles},
         if_undefined=dict,
+        factory=dict,
     )
 
     #: The user that created the emoji.
@@ -101,20 +104,22 @@ class GuildEmoji(UnknownEmoji):
     #:
     #: :type: :obj:`hikari.users.User`, optional
     user: typing.Optional[users.User] = marshaller.attrib(
-        deserializer=users.User.deserialize, if_none=None, if_undefined=None
+        deserializer=users.User.deserialize, if_none=None, if_undefined=None, default=None
     )
 
     #: Whether this emoji must be wrapped in colons.
     #:
     #: :type: :obj:`bool`, optional
     is_colons_required: typing.Optional[bool] = marshaller.attrib(
-        raw_name="require_colons", deserializer=bool, if_undefined=None
+        raw_name="require_colons", deserializer=bool, if_undefined=None, default=None
     )
 
     #: Whether the emoji is managed by an integration.
     #:
     #: :type: :obj:`bool`, optional
-    is_managed: typing.Optional[bool] = marshaller.attrib(raw_name="managed", deserializer=bool, if_undefined=None)
+    is_managed: typing.Optional[bool] = marshaller.attrib(
+        raw_name="managed", deserializer=bool, if_undefined=None, default=None
+    )
 
     @property
     def mention(self) -> str:

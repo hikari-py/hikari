@@ -333,16 +333,18 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_message_reaction_remove(self, event_manager_impl, mock_payload):
+        mock_payload["emoji"] = {}
         mock_event = mock.MagicMock(events.MessageReactionRemoveEvent)
 
         with mock.patch("hikari.events.MessageReactionRemoveEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_message_reaction_remove(None, mock_payload)
 
             assert event_manager_impl.on_message_reaction_remove.___event_name___ == {"MESSAGE_REACTION_REMOVE"}
-            event.assert_called_once_with(mock_payload)
+            event.assert_called_once_with({"emoji": {"animated": None}})
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_message_reaction_remove_emoji(self, event_manager_impl, mock_payload):
+        mock_payload["emoji"] = {}
         mock_event = mock.MagicMock(events.MessageReactionRemoveEmojiEvent)
 
         with mock.patch("hikari.events.MessageReactionRemoveEmojiEvent.deserialize", return_value=mock_event) as event:
@@ -351,7 +353,7 @@ class TestStatelessEventManagerImpl:
             assert event_manager_impl.on_message_reaction_remove_emoji.___event_name___ == {
                 "MESSAGE_REACTION_REMOVE_EMOJI"
             }
-            event.assert_called_once_with(mock_payload)
+            event.assert_called_once_with({"emoji": {"animated": None}})
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_presence_update(self, event_manager_impl, mock_payload):

@@ -40,7 +40,7 @@ from hikari.internal import marshaller
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class EmbedFooter(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents an embed footer."""
 
@@ -71,7 +71,7 @@ class EmbedFooter(entities.HikariEntity, entities.Deserializable, entities.Seria
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class EmbedImage(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents an embed image."""
 
@@ -117,7 +117,7 @@ class EmbedImage(entities.HikariEntity, entities.Deserializable, entities.Serial
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class EmbedThumbnail(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents an embed thumbnail."""
 
@@ -163,7 +163,7 @@ class EmbedThumbnail(entities.HikariEntity, entities.Deserializable, entities.Se
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class EmbedVideo(entities.HikariEntity, entities.Deserializable):
     """Represents an embed video.
 
@@ -176,21 +176,21 @@ class EmbedVideo(entities.HikariEntity, entities.Deserializable):
     #: The URL of the video.
     #:
     #: :type: :obj:`str`, optional
-    url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+    url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
 
     #: The height of the video.
     #:
     #: :type: :obj:`int`, optional
-    height: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
+    height: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
 
     #: The width of the video.
     #:
     #: :type: :obj:`int`, optional
-    width: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
+    width: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class EmbedProvider(entities.HikariEntity, entities.Deserializable):
     """Represents an embed provider.
 
@@ -203,16 +203,16 @@ class EmbedProvider(entities.HikariEntity, entities.Deserializable):
     #: The name of the provider.
     #:
     #: :type: :obj:`str`, optional
-    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
 
     #: The URL of the provider.
     #:
     #: :type: :obj:`str`, optional
-    url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None)
+    url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None, default=None)
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class EmbedAuthor(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents an embed author."""
 
@@ -248,7 +248,7 @@ class EmbedAuthor(entities.HikariEntity, entities.Deserializable, entities.Seria
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class EmbedField(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents a field in a embed."""
 
@@ -266,12 +266,12 @@ class EmbedField(entities.HikariEntity, entities.Deserializable, entities.Serial
     #:
     #: :type: :obj:`bool`
     is_inline: bool = marshaller.attrib(
-        raw_name="inline", deserializer=bool, serializer=bool, if_undefined=False, default=True
+        raw_name="inline", deserializer=bool, serializer=bool, if_undefined=False, default=False
     )
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class Embed(entities.HikariEntity, entities.Deserializable, entities.Serializable):
     """Represents an embed."""
 

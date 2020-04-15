@@ -45,7 +45,7 @@ class ConnectionVisibility(enum.IntEnum):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class OwnConnection(entities.HikariEntity, entities.Deserializable):
     """Represents a user's connection with a third party account.
 
@@ -75,7 +75,7 @@ class OwnConnection(entities.HikariEntity, entities.Deserializable):
     #: Whether the connection has been revoked.
     #:
     #: :type: :obj:`bool`
-    is_revoked: bool = marshaller.attrib(raw_name="revoked", deserializer=bool, if_undefined=False)
+    is_revoked: bool = marshaller.attrib(raw_name="revoked", deserializer=bool, if_undefined=False, default=False)
 
     #: A sequence of the partial guild integration objects this connection has.
     #:
@@ -85,6 +85,7 @@ class OwnConnection(entities.HikariEntity, entities.Deserializable):
             guilds.PartialGuildIntegration.deserialize(integration) for integration in payload
         ],
         if_undefined=list,
+        factory=list,
     )
 
     #: Whether the connection has been verified.
@@ -110,7 +111,7 @@ class OwnConnection(entities.HikariEntity, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class OwnGuild(guilds.PartialGuild):
     """Represents a user bound partial guild object."""
 
@@ -139,7 +140,7 @@ class TeamMembershipState(enum.IntEnum):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class TeamMember(entities.HikariEntity, entities.Deserializable):
     """Represents a member of a Team."""
 
@@ -166,7 +167,7 @@ class TeamMember(entities.HikariEntity, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class Team(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents a development team, along with all its members."""
 
@@ -220,7 +221,7 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class ApplicationOwner(users.User):
     """Represents the user who owns an application, may be a team user."""
 
@@ -236,7 +237,7 @@ class ApplicationOwner(users.User):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class Application(snowflakes.UniqueEntity, entities.Deserializable):
     """Represents the information of an Oauth2 Application."""
 
@@ -255,7 +256,7 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`bool`, optional
     is_bot_public: typing.Optional[bool] = marshaller.attrib(
-        raw_name="bot_public", deserializer=bool, if_undefined=None
+        raw_name="bot_public", deserializer=bool, if_undefined=None, default=None
     )
 
     #: Whether the bot associated with this application is requiring code grant
@@ -263,7 +264,7 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`bool`, optional
     is_bot_code_grant_required: typing.Optional[bool] = marshaller.attrib(
-        raw_name="bot_require_code_grant", deserializer=bool, if_undefined=None
+        raw_name="bot_require_code_grant", deserializer=bool, if_undefined=None, default=None
     )
 
     #: The object of this application's owner.
@@ -272,13 +273,13 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`ApplicationOwner`, optional
     owner: typing.Optional[ApplicationOwner] = marshaller.attrib(
-        deserializer=ApplicationOwner.deserialize, if_undefined=None
+        deserializer=ApplicationOwner.deserialize, if_undefined=None, default=None
     )
 
     #: A collection of this application's rpc origin URLs, if rpc is enabled.
     #:
     #: :type: :obj:`typing.Set` [ :obj:`str` ], optional
-    rpc_origins: typing.Optional[typing.Set[str]] = marshaller.attrib(deserializer=set, if_undefined=None)
+    rpc_origins: typing.Optional[typing.Set[str]] = marshaller.attrib(deserializer=set, if_undefined=None, default=None)
 
     #: This summary for this application's primary SKU if it's sold on Discord.
     #: Will be an empty string if unset.
@@ -290,45 +291,49 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`bytes`, optional
     verify_key: typing.Optional[bytes] = marshaller.attrib(
-        deserializer=lambda key: bytes(key, "utf-8"), if_undefined=None
+        deserializer=lambda key: bytes(key, "utf-8"), if_undefined=None, default=None
     )
 
     #: The hash of this application's icon, if set.
     #:
     #: :type: :obj:`str`, optional
-    icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str, if_undefined=None)
+    icon_hash: typing.Optional[str] = marshaller.attrib(
+        raw_name="icon", deserializer=str, if_undefined=None, default=None
+    )
 
     #: This application's team if it belongs to one.
     #:
     #: :type: :obj:`Team`, optional
-    team: typing.Optional[Team] = marshaller.attrib(deserializer=Team.deserialize, if_undefined=None, if_none=None)
+    team: typing.Optional[Team] = marshaller.attrib(
+        deserializer=Team.deserialize, if_undefined=None, if_none=None, default=None
+    )
 
     #: The ID of the guild this application is linked to
     #: if it's sold on Discord.
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the primary "Game SKU" of a game that's sold on Discord.
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     primary_sku_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The URL slug that links to this application's store page
     #: if it's sold on Discord.
     #:
     #: :type: :obj:`str`, optional
-    slug: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+    slug: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
 
     #: The hash of this application's cover image on it's store, if set.
     #:
     #: :type: :obj:`str`, optional
     cover_image_hash: typing.Optional[str] = marshaller.attrib(
-        raw_name="cover_image", deserializer=str, if_undefined=None
+        raw_name="cover_image", deserializer=str, if_undefined=None, default=None
     )
 
     @property

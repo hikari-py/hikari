@@ -30,7 +30,7 @@ from hikari.internal import marshaller
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class VoiceState(entities.HikariEntity, entities.Deserializable):
     """Represents a user's voice connection status."""
 
@@ -38,7 +38,7 @@ class VoiceState(entities.HikariEntity, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the channel this user is connected to, will be :obj:`None` if
@@ -59,7 +59,7 @@ class VoiceState(entities.HikariEntity, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.guilds.GuildMember`, optional
     member: typing.Optional[guilds.GuildMember] = marshaller.attrib(
-        deserializer=guilds.GuildMember.deserialize, if_undefined=None
+        deserializer=guilds.GuildMember.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of this voice state's session.
@@ -90,7 +90,7 @@ class VoiceState(entities.HikariEntity, entities.Deserializable):
     #: Whether this user is streaming using "Go Live".
     #:
     #: :type: :obj:`bool`
-    is_streaming: bool = marshaller.attrib(raw_name="self_stream", deserializer=bool, if_undefined=False)
+    is_streaming: bool = marshaller.attrib(raw_name="self_stream", deserializer=bool, if_undefined=False, default=False)
 
     #: Whether this user is muted by the current user.
     #:
@@ -99,7 +99,7 @@ class VoiceState(entities.HikariEntity, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class VoiceRegion(entities.HikariEntity, entities.Deserializable):
     """Represent's a voice region server."""
 

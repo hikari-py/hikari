@@ -43,7 +43,7 @@ class TargetUserType(enum.IntEnum):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class VanityUrl(entities.HikariEntity, entities.Deserializable):
     """A special case invite object, that represents a guild's vanity url."""
 
@@ -59,7 +59,7 @@ class VanityUrl(entities.HikariEntity, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class InviteGuild(guilds.PartialGuild):
     """Represents the partial data of a guild that'll be attached to invites."""
 
@@ -164,7 +164,7 @@ class InviteGuild(guilds.PartialGuild):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class Invite(entities.HikariEntity, entities.Deserializable):
     """Represents an invite that's used to add users to a guild or group dm."""
 
@@ -177,7 +177,9 @@ class Invite(entities.HikariEntity, entities.Deserializable):
     #: Will be :obj:`None` for group dm invites.
     #:
     #: :type: :obj:`InviteGuild`, optional
-    guild: typing.Optional[InviteGuild] = marshaller.attrib(deserializer=InviteGuild.deserialize, if_undefined=None)
+    guild: typing.Optional[InviteGuild] = marshaller.attrib(
+        deserializer=InviteGuild.deserialize, if_undefined=None, default=None
+    )
     #: The partial object of the channel this invite targets.
     #:
     #: :type: :obj:`hikari.channels.PartialChannel`
@@ -186,35 +188,43 @@ class Invite(entities.HikariEntity, entities.Deserializable):
     #: The object of the user who created this invite.
     #:
     #: :type: :obj:`hikari.users.User`, optional
-    inviter: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User.deserialize, if_undefined=None)
+    inviter: typing.Optional[users.User] = marshaller.attrib(
+        deserializer=users.User.deserialize, if_undefined=None, default=None
+    )
 
     #: The object of the user who this invite targets, if set.
     #:
     #: :type: :obj:`hikari.users.User`, optional
-    target_user: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User.deserialize, if_undefined=None)
+    target_user: typing.Optional[users.User] = marshaller.attrib(
+        deserializer=users.User.deserialize, if_undefined=None, default=None
+    )
 
     #: The type of user target this invite is, if applicable.
     #:
     #: :type: :obj:`TargetUserType`, optional
     target_user_type: typing.Optional[TargetUserType] = marshaller.attrib(
-        deserializer=TargetUserType, if_undefined=None
+        deserializer=TargetUserType, if_undefined=None, default=None
     )
 
     #: The approximate amount of presences in this invite's guild, only present
     #: when ``with_counts`` is passed as :obj:`True` to the GET Invites endpoint.
     #:
     #: :type: :obj:`int`, optional
-    approximate_presence_count: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
+    approximate_presence_count: typing.Optional[int] = marshaller.attrib(
+        deserializer=int, if_undefined=None, default=None
+    )
 
     #: The approximate amount of members in this invite's guild, only present
     #: when ``with_counts`` is passed as :obj:`True` to the GET Invites endpoint.
     #:
     #: :type: :obj:`int`, optional
-    approximate_member_count: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
+    approximate_member_count: typing.Optional[int] = marshaller.attrib(
+        deserializer=int, if_undefined=None, default=None
+    )
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class InviteWithMetadata(Invite):
     """Extends the base :obj:`Invite` object with metadata.
 

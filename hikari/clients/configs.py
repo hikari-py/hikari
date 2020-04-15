@@ -262,7 +262,7 @@ class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     #: The large threshold to use.
     #:
     #: :type: :obj:`int`
-    large_threshold: int = marshaller.attrib(deserializer=int, if_undefined=lambda: 250, default=True)
+    large_threshold: int = marshaller.attrib(deserializer=int, if_undefined=lambda: 250, default=250)
 
 
 def _parse_shard_info(payload):
