@@ -39,7 +39,7 @@ BaseTypeInstanceT = typing.TypeVar("BaseTypeInstanceT")
 
 
 def assert_that(condition: bool, message: str = None, error_type: type = ValueError) -> None:
-    """If the given condition is falsified, raise a :obj:`ValueError`.
+    """If the given condition is falsified, raise a :obj:`~ValueError`.
 
     Will be raised with the optional description if provided.
     """
@@ -48,7 +48,7 @@ def assert_that(condition: bool, message: str = None, error_type: type = ValueEr
 
 
 def assert_not_none(value: ValueT, message: typing.Optional[str] = None) -> ValueT:
-    """If the given value is :obj:`None`, raise a :obj:`ValueError`.
+    """If the given value is :obj:`~None`, raise a :obj:`~ValueError`.
 
     Will be raised with the optional description if provided.
     """
@@ -58,13 +58,13 @@ def assert_not_none(value: ValueT, message: typing.Optional[str] = None) -> Valu
 
 
 def assert_in_range(value, min_inclusive, max_inclusive, name: str = None):
-    """If a value is not in the range [min, max], raise a :obj:`ValueError`."""
+    """If a value is not in the range [min, max], raise a :obj:`~ValueError`."""
     if not (min_inclusive <= value <= max_inclusive):
         name = name or "The value"
         raise ValueError(f"{name} must be in the inclusive range of {min_inclusive} and {max_inclusive}")
 
 
 def assert_is_int_power(value: int, power: int) -> bool:
-    """If a value is not a power the given int, raise :obj:`ValueError`."""
+    """If a value is not a power the given int, raise :obj:`~ValueError`."""
     logarithm = math.log(value, power)
     assert_that(logarithm.is_integer(), f"value must be an integer power of {power}")

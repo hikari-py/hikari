@@ -49,7 +49,7 @@ EMPTY_GENERATOR_EXPRESSION: typing.Final[typing.Iterator[T]] = (_ for _ in EMPTY
 class WeakKeyDictionary(weakref.WeakKeyDictionary, typing.MutableMapping[K, V]):
     """A dictionary that has weak references to the keys.
 
-    This is a type-safe version of :obj:`weakref.WeakKeyDictionary`.
+    This is a type-safe version of :obj:`~weakref.WeakKeyDictionary`.
     """
 
     __slots__ = ()

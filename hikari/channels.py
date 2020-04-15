@@ -107,19 +107,19 @@ class PermissionOverwrite(snowflakes.UniqueEntity, entities.Deserializable, enti
 
     #: The type of entity this overwrite targets.
     #:
-    #: :type: :obj:`PermissionOverwriteType`
+    #: :type: :obj:`~PermissionOverwriteType`
     type: PermissionOverwriteType = marshaller.attrib(deserializer=PermissionOverwriteType, serializer=str)
 
     #: The permissions this overwrite allows.
     #:
-    #: :type: :obj:`hikari.permissions.Permission`
+    #: :type: :obj:`~hikari.permissions.Permission`
     allow: permissions.Permission = marshaller.attrib(
         deserializer=permissions.Permission, serializer=int, default=permissions.Permission(0)
     )
 
     #: The permissions this overwrite denies.
     #:
-    #: :type: :obj:`hikari.permissions.Permission`
+    #: :type: :obj:`~hikari.permissions.Permission`
     deny: permissions.Permission = marshaller.attrib(
         deserializer=permissions.Permission, serializer=int, default=permissions.Permission(0)
     )
@@ -137,7 +137,7 @@ def register_channel_type(type_: ChannelType) -> typing.Callable[[typing.Type["C
 
     Parameters
     ----------
-    type_ : :obj:`ChannelType`
+    type_ : :obj:`~ChannelType`
         The channel type to associate with.
 
     Returns
@@ -162,7 +162,7 @@ class Channel(snowflakes.UniqueEntity, entities.Deserializable):
 
     #: The channel's type.
     #:
-    #: :type: :obj:`ChannelType`
+    #: :type: :obj:`~ChannelType`
     type: ChannelType = marshaller.attrib(deserializer=ChannelType)
 
 
@@ -176,7 +176,7 @@ class PartialChannel(Channel):
 
     #: The channel's name.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     name: str = marshaller.attrib(deserializer=str)
 
 
@@ -193,14 +193,14 @@ class DMChannel(Channel):
     #: This might point to an invalid or deleted message.
     #:
     #:
-    #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
+    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
     last_message_id: snowflakes.Snowflake = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_none=None
     )
 
     #: The recipients of the DM.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`hikari.users.User` ]
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.users.User` ]
     recipients: typing.Mapping[snowflakes.Snowflake, users.User] = marshaller.attrib(
         deserializer=lambda recipients: {user.id: user for user in map(users.User.deserialize, recipients)}
     )
@@ -214,23 +214,23 @@ class GroupDMChannel(DMChannel):
 
     #: The group's name.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     name: str = marshaller.attrib(deserializer=str)
 
     #: The ID of the owner of the group.
     #:
-    #: :type: :obj:`hikari.snowflakes.Snowflake`
+    #: :type: :obj:`~hikari.snowflakes.Snowflake`
     owner_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: The hash of the icon of the group.
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str, if_none=None)
 
     #: The ID of the application that created the group DM, if it's a
     #: bot based group DM.
     #:
-    #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
+    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
     application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
@@ -243,34 +243,34 @@ class GuildChannel(Channel):
 
     #: The ID of the guild the channel belongs to.
     #:
-    #: :type: :obj:`hikari.snowflakes.Snowflake`
+    #: :type: :obj:`~hikari.snowflakes.Snowflake`
     guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: The sorting position of the channel.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     position: int = marshaller.attrib(deserializer=int)
 
     #: The permission overwrites for the channel.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`PermissionOverwrite` ]
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~PermissionOverwrite` ]
     permission_overwrites: PermissionOverwrite = marshaller.attrib(
         deserializer=lambda overwrites: {o.id: o for o in map(PermissionOverwrite.deserialize, overwrites)}
     )
 
     #: The name of the channel.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     name: str = marshaller.attrib(deserializer=str)
 
     #: Wheter the channel is marked as NSFW.
     #:
-    #: :type: :obj:`bool`
+    #: :type: :obj:`~bool`
     is_nsfw: bool = marshaller.attrib(raw_name="nsfw", deserializer=bool)
 
     #: The ID of the parent category the channel belongs to.
     #:
-    #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
+    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
     parent_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize, if_none=None)
 
 
@@ -289,7 +289,7 @@ class GuildTextChannel(GuildChannel):
 
     #: The topic of the channel.
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     topic: str = marshaller.attrib(deserializer=str, if_none=None)
 
     #: The ID of the last message sent in this channel.
@@ -299,7 +299,7 @@ class GuildTextChannel(GuildChannel):
     #: This might point to an invalid or deleted message.
     #:
     #:
-    #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
+    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
     last_message_id: snowflakes.Snowflake = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_none=None
     )
@@ -312,7 +312,7 @@ class GuildTextChannel(GuildChannel):
     #: Bots, as well as users with ``MANAGE_MESSAGES`` or
     #: ``MANAGE_CHANNEL``, are not afected by this.
     #:
-    #: :type: :obj:`datetime.timedelta`
+    #: :type: :obj:`~datetime.timedelta`
     rate_limit_per_user: datetime.timedelta = marshaller.attrib(
         deserializer=lambda payload: datetime.timedelta(seconds=payload)
     )
@@ -326,7 +326,7 @@ class GuildNewsChannel(GuildChannel):
 
     #: The topic of the channel.
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     topic: str = marshaller.attrib(deserializer=str, if_none=None)
 
     #: The ID of the last message sent in this channel.
@@ -336,7 +336,7 @@ class GuildNewsChannel(GuildChannel):
     #: This might point to an invalid or deleted message.
     #:
     #:
-    #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
+    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
     last_message_id: snowflakes.Snowflake = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_none=None
     )
@@ -357,12 +357,12 @@ class GuildVoiceChannel(GuildChannel):
 
     #: The bitrate for the voice channel (in bits).
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     bitrate: int = marshaller.attrib(deserializer=int)
 
     #: The user limit for the voice channel.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     user_limit: int = marshaller.attrib(deserializer=int)
 
 
@@ -373,7 +373,7 @@ class GuildChannelBuilder(entities.Serializable):
     ----------
     channel_name : str
         The name to set for the channel.
-    channel_type : :obj:`ChannelType`
+    channel_type : :obj:`~ChannelType`
         The type of channel this should build.
 
     Example
@@ -417,7 +417,7 @@ class GuildChannelBuilder(entities.Serializable):
 
         Parameters
         ----------
-        overwrites : :obj:`typing.Sequence` [ :obj:`PermissionOverwrite` ]
+        overwrites : :obj:`~typing.Sequence` [ :obj:`~PermissionOverwrite` ]
             A sequence of overwrite objects to add, where the first overwrite
             object
         """
@@ -429,7 +429,7 @@ class GuildChannelBuilder(entities.Serializable):
 
         Parameters
         ----------
-        topic : :obj:`str`
+        topic : :obj:`~str`
             The string topic to set.
         """
         self._payload["topic"] = topic
@@ -440,7 +440,7 @@ class GuildChannelBuilder(entities.Serializable):
 
         Parameters
         ----------
-        bitrate : :obj:`int`
+        bitrate : :obj:`~int`
             The bitrate to set in bits.
         """
         self._payload["bitrate"] = int(bitrate)
@@ -451,7 +451,7 @@ class GuildChannelBuilder(entities.Serializable):
 
         Parameters
         ----------
-        user_limit : :obj:`int`
+        user_limit : :obj:`~int`
             The user limit to set.
         """
         self._payload["user_limit"] = int(user_limit)
@@ -464,7 +464,7 @@ class GuildChannelBuilder(entities.Serializable):
 
         Parameters
         ----------
-        rate_limit_per_user : :obj:`typing.Union` [ :obj:`datetime.timedelta`, :obj:`int` ]
+        rate_limit_per_user : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             The amount of seconds users will have to wait before sending another
             message in the channel to set.
         """
@@ -480,7 +480,7 @@ class GuildChannelBuilder(entities.Serializable):
 
         Parameters
         ----------
-        category : :obj:`typing.Union` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        category : :obj:`~typing.Union` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The placeholder ID of the category channel that should be this
             channel's parent.
         """
@@ -497,7 +497,7 @@ class GuildChannelBuilder(entities.Serializable):
 
         Parameters
         ----------
-        channel_id : :obj:`typing.Union` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel_id : :obj:`~typing.Union` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The placeholder ID to use.
         """
         self._payload["id"] = str(int(channel_id))

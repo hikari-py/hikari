@@ -75,7 +75,7 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
     """Abstract definition of the components for an event system for a bot.
 
     The class itself inherits from
-    :obj:`hikari.state.raw_event_consumers.RawEventConsumer` (which allows
+    :obj:`~hikari.state.raw_event_consumers.RawEventConsumer` (which allows
     it to provide the ability to transform a raw payload into an event object).
 
     This is designed as a basis to enable transformation of raw incoming events
@@ -85,21 +85,21 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
 
     Parameters
     ----------
-    event_dispatcher_impl: :obj:`hikari.state.event_dispatchers.EventDispatcher`, optional
+    event_dispatcher_impl: :obj:`~hikari.state.event_dispatchers.EventDispatcher`, optional
         An implementation of event dispatcher that will store individual events
         and manage dispatching them after this object creates them. If
-        :obj:`None`, then a default implementation is chosen.
+        :obj:`~None`, then a default implementation is chosen.
 
     Notes
     -----
     This object will detect internal event mapper functions by looking for
-    coroutine functions wrapped with :obj:`raw_event_mapper`.
+    coroutine functions wrapped with :obj:`~raw_event_mapper`.
 
     These methods are expected to have the following parameters:
 
-    shard_obj: :obj:`hikari.clients.shard_clients.ShardClient`
+    shard_obj: :obj:`~hikari.clients.shard_clients.ShardClient`
         The shard client that emitted the event.
-    payload: :obj:`typing.Any`
+    payload: :obj:`~typing.Any`
         The received payload. This is expected to be a JSON-compatible type.
 
     For example, if you want to provide an implementation that can consume
@@ -159,11 +159,11 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
 
         Parameters
         ----------
-        shard_client_obj: :obj:`hikari.clients.shard_clients.ShardClient`
+        shard_client_obj: :obj:`~hikari.clients.shard_clients.ShardClient`
             The shard that triggered this event.
-        name : :obj:`str`
+        name : :obj:`~str`
             The raw event name.
-        payload : :obj:`dict`
+        payload : :obj:`~dict`
             The payload that was sent.
         """
         try:

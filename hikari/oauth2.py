@@ -59,27 +59,27 @@ class OwnConnection(entities.HikariEntity, entities.Deserializable):
     #: Seeing as this is a third party ID, it will not be a snowflake.
     #:
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     id: str = marshaller.attrib(deserializer=str)
 
     #: The username of the connected account.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     name: str = marshaller.attrib(deserializer=str)
 
     #: The type of service this connection is for.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     type: str = marshaller.attrib(deserializer=str)
 
     #: Whether the connection has been revoked.
     #:
-    #: :type: :obj:`bool`
+    #: :type: :obj:`~bool`
     is_revoked: bool = marshaller.attrib(raw_name="revoked", deserializer=bool, if_undefined=False, default=False)
 
     #: A sequence of the partial guild integration objects this connection has.
     #:
-    #: :type: :obj:`typing.Sequence` [ :obj:`hikari.guilds.PartialGuildIntegration` ]
+    #: :type: :obj:`~typing.Sequence` [ :obj:`~hikari.guilds.PartialGuildIntegration` ]
     integrations: typing.Sequence[guilds.PartialGuildIntegration] = marshaller.attrib(
         deserializer=lambda payload: [
             guilds.PartialGuildIntegration.deserialize(integration) for integration in payload
@@ -90,23 +90,23 @@ class OwnConnection(entities.HikariEntity, entities.Deserializable):
 
     #: Whether the connection has been verified.
     #:
-    #: :type: :obj:`bool`
+    #: :type: :obj:`~bool`
     is_verified: bool = marshaller.attrib(raw_name="verified", deserializer=bool)
 
     #: Whether friends should be added based on this connection.
     #:
-    #: :type: :obj:`bool`
+    #: :type: :obj:`~bool`
     is_friend_syncing: bool = marshaller.attrib(raw_name="friend_sync", deserializer=bool)
 
     #: Whether activities related to this connection will be shown in the
     #: user's presence updates.
     #:
-    #: :type: :obj:`bool`
+    #: :type: :obj:`~bool`
     is_showing_activity: bool = marshaller.attrib(raw_name="show_activity", deserializer=bool)
 
     #: The visibility of the connection.
     #:
-    #: :type: :obj:`ConnectionVisibility`
+    #: :type: :obj:`~ConnectionVisibility`
     visibility: ConnectionVisibility = marshaller.attrib(deserializer=ConnectionVisibility)
 
 
@@ -117,12 +117,12 @@ class OwnGuild(guilds.PartialGuild):
 
     #: Whether the current user owns this guild.
     #:
-    #: :type: :obj:`bool`
+    #: :type: :obj:`~bool`
     is_owner: bool = marshaller.attrib(raw_name="owner", deserializer=bool)
 
     #: The guild level permissions that apply to the current user or bot.
     #:
-    #: :type: :obj:`hikari.permissions.Permission`
+    #: :type: :obj:`~hikari.permissions.Permission`
     my_permissions: permissions.Permission = marshaller.attrib(
         raw_name="permissions", deserializer=permissions.Permission
     )
@@ -146,23 +146,23 @@ class TeamMember(entities.HikariEntity, entities.Deserializable):
 
     #: The state of this user's membership.
     #:
-    #: :type: :obj:`TeamMembershipState`
+    #: :type: :obj:`~TeamMembershipState`
     membership_state: TeamMembershipState = marshaller.attrib(deserializer=TeamMembershipState)
 
     #: This member's permissions within a team.
     #: Will always be ``["*"]`` until Discord starts using this.
     #:
-    #: :type: :obj:`typing.Set` [ :obj:`str` ]
+    #: :type: :obj:`~typing.Set` [ :obj:`~str` ]
     permissions: typing.Set[str] = marshaller.attrib(deserializer=set)
 
     #: The ID of the team this member belongs to.
     #:
-    #: :type: :obj:`hikari.snowflakes.Snowflake`
+    #: :type: :obj:`~hikari.snowflakes.Snowflake`
     team_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: The user object of this team member.
     #:
-    #: :type: :obj:`hikari.users.User`
+    #: :type: :obj:`~hikari.users.User`
     user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
 
 
@@ -173,19 +173,19 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
 
     #: The hash of this team's icon, if set.
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str)
 
     #: The member's that belong to this team.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`TeamMember` ]
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~TeamMember` ]
     members: typing.Mapping[snowflakes.Snowflake, TeamMember] = marshaller.attrib(
         deserializer=lambda members: {m.user.id: m for m in map(TeamMember.deserialize, members)}
     )
 
     #: The ID of this team's owner.
     #:
-    #: :type: :obj:`hikari.snowflakes.Snowflake`
+    #: :type: :obj:`~hikari.snowflakes.Snowflake`
     owner_user_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     @property
@@ -198,21 +198,21 @@ class Team(snowflakes.UniqueEntity, entities.Deserializable):
 
         Parameters
         ----------
-        fmt : :obj:`str`
+        fmt : :obj:`~str`
             The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
-        size : :obj:`int`
+        size : :obj:`~int`
             The size to set for the URL, defaults to ``4096``. Can be any power
             of two between 16 and 4096 inclusive.
 
         Returns
         -------
-        :obj:`str`, optional
+        :obj:`~str`, optional
             The string URL.
 
         Raises
         ------
-        :obj:`ValueError`
+        :obj:`~ValueError`
             If ``size`` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash:
@@ -227,7 +227,7 @@ class ApplicationOwner(users.User):
 
     #: This user's flags.
     #:
-    #: :type: :obj:`hikari.users.UserFlag`
+    #: :type: :obj:`~hikari.users.UserFlag`
     flags: int = marshaller.attrib(deserializer=users.UserFlag)
 
     @property
@@ -243,67 +243,67 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
 
     #: The name of this application.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     name: str = marshaller.attrib(deserializer=str)
 
     #: The description of this application, will be an empty string if unset.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     description: str = marshaller.attrib(deserializer=str)
 
     #: Whether the bot associated with this application is public.
-    #: Will be :obj:`None` if this application doesn't have an associated bot.
+    #: Will be :obj:`~None` if this application doesn't have an associated bot.
     #:
-    #: :type: :obj:`bool`, optional
+    #: :type: :obj:`~bool`, optional
     is_bot_public: typing.Optional[bool] = marshaller.attrib(
         raw_name="bot_public", deserializer=bool, if_undefined=None, default=None
     )
 
     #: Whether the bot associated with this application is requiring code grant
-    #: for invites. Will be :obj:`None` if this application doesn't have a bot.
+    #: for invites. Will be :obj:`~None` if this application doesn't have a bot.
     #:
-    #: :type: :obj:`bool`, optional
+    #: :type: :obj:`~bool`, optional
     is_bot_code_grant_required: typing.Optional[bool] = marshaller.attrib(
         raw_name="bot_require_code_grant", deserializer=bool, if_undefined=None, default=None
     )
 
     #: The object of this application's owner.
-    #: This should always be :obj:`None` in application objects retrieved
+    #: This should always be :obj:`~None` in application objects retrieved
     #: outside Discord's oauth2 flow.
     #:
-    #: :type: :obj:`ApplicationOwner`, optional
+    #: :type: :obj:`~ApplicationOwner`, optional
     owner: typing.Optional[ApplicationOwner] = marshaller.attrib(
         deserializer=ApplicationOwner.deserialize, if_undefined=None, default=None
     )
 
     #: A collection of this application's rpc origin URLs, if rpc is enabled.
     #:
-    #: :type: :obj:`typing.Set` [ :obj:`str` ], optional
+    #: :type: :obj:`~typing.Set` [ :obj:`~str` ], optional
     rpc_origins: typing.Optional[typing.Set[str]] = marshaller.attrib(deserializer=set, if_undefined=None, default=None)
 
     #: This summary for this application's primary SKU if it's sold on Discord.
     #: Will be an empty string if unset.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     summary: str = marshaller.attrib(deserializer=str)
 
     #: The base64 encoded key used for the GameSDK's ``GetTicket``.
     #:
-    #: :type: :obj:`bytes`, optional
+    #: :type: :obj:`~bytes`, optional
     verify_key: typing.Optional[bytes] = marshaller.attrib(
         deserializer=lambda key: bytes(key, "utf-8"), if_undefined=None, default=None
     )
 
     #: The hash of this application's icon, if set.
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     icon_hash: typing.Optional[str] = marshaller.attrib(
         raw_name="icon", deserializer=str, if_undefined=None, default=None
     )
 
     #: This application's team if it belongs to one.
     #:
-    #: :type: :obj:`Team`, optional
+    #: :type: :obj:`~Team`, optional
     team: typing.Optional[Team] = marshaller.attrib(
         deserializer=Team.deserialize, if_undefined=None, if_none=None, default=None
     )
@@ -311,14 +311,14 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
     #: The ID of the guild this application is linked to
     #: if it's sold on Discord.
     #:
-    #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
+    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the primary "Game SKU" of a game that's sold on Discord.
     #:
-    #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
+    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
     primary_sku_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
@@ -326,12 +326,12 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
     #: The URL slug that links to this application's store page
     #: if it's sold on Discord.
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     slug: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
 
     #: The hash of this application's cover image on it's store, if set.
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     cover_image_hash: typing.Optional[str] = marshaller.attrib(
         raw_name="cover_image", deserializer=str, if_undefined=None, default=None
     )
@@ -346,21 +346,21 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
 
         Parameters
         ----------
-        fmt : :obj:`str`
+        fmt : :obj:`~str`
             The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ```webp``.
-        size : :obj:`int`
+        size : :obj:`~int`
             The size to set for the URL, defaults to ``4096``.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
-        :obj:`str`, optional
+        :obj:`~str`, optional
             The string URL.
 
         Raises
         ------
-        :obj:`ValueError`
+        :obj:`~ValueError`
             If ``size`` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash:
@@ -377,21 +377,21 @@ class Application(snowflakes.UniqueEntity, entities.Deserializable):
 
         Parameters
         ----------
-        fmt : :obj:`str`
+        fmt : :obj:`~str`
             The format to use for this URL, defaults to ``png``.
             Supports ``png``, ``jpeg``, ``jpg`` and ``webp``.
-        size : :obj:`int`
+        size : :obj:`~int`
             The size to set for the URL, defaults to ``4096``.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
-        :obj:`str`, optional
+        :obj:`~str`, optional
             The string URL.
 
         Raises
         ------
-        :obj:`ValueError`
+        :obj:`~ValueError`
             If ``size`` is not a power of two or not between 16 and 4096.
         """
         if self.cover_image_hash:

@@ -25,18 +25,18 @@ correctly.
 What is the theory behind this implementation?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In this module, we refer to a :obj:`hikari.net.routes.CompiledRoute` as a
+In this module, we refer to a :obj:`~hikari.net.routes.CompiledRoute` as a
 definition of a route with specific major parameter values included (e.g.
-``POST /channels/123/messages``), and a :obj:`hikari.net.routes.RouteTemplate`
+``POST /channels/123/messages``), and a :obj:`~hikari.net.routes.RouteTemplate`
 as a definition of a route without specific parameter values included (e.g.
 ``POST /channels/{channel_id}/messages``). We can compile a
-:obj:`hikari.net.routes.CompiledRoute` from a
-:obj:`hikari.net.routes.RouteTemplate` by providing the corresponding
+:obj:`~hikari.net.routes.CompiledRoute` from a
+:obj:`~hikari.net.routes.RouteTemplate` by providing the corresponding
 parameters as kwargs, as you may already know.
 
 In this module, a "bucket" is an internal data structure that tracks and
 enforces the  rate limit state for a specific
-:obj:`hikari.net.routes.CompiledRoute`,  and can manage delaying tasks in the
+:obj:`~hikari.net.routes.CompiledRoute`,  and can manage delaying tasks in the
 event that we begin to get rate limited. It also supports providing in-order
 execution of queued tasks.
 
@@ -56,13 +56,13 @@ time, so hard coding this logic is not a useful thing to be doing.
 Rate limits, on the other hand, apply to a bucket and are specific to the major
 parameters of the compiled route. This means that ``POST /channels/123/messages``
 and ``POST /channels/456/messages`` do not share the same real bucket, despite
-Discord providing the same bucket hash. A real bucket hash is the :obj:`str`
+Discord providing the same bucket hash. A real bucket hash is the :obj:`~str`
 hash of the bucket that Discord sends us in a response concatenated to the
 corresponding major parameters. This is used for quick bucket indexing
 internally in this module.
 
 One issue that occurs from this is that we cannot effectively hash a
-:obj:`hikari.net.routes.CompiledRoute` that has not yet been hit, meaning that
+:obj:`~hikari.net.routes.CompiledRoute` that has not yet been hit, meaning that
 until we receive a response from this endpoint, we have no idea what our rate
 limits could be, nor the bucket that they sit in. This is usually not
 problematic, as the first request to an endpoint should never be rate limited
@@ -76,18 +76,18 @@ Initially acquiring time on a bucket
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Each time you ``BaseRateLimiter.acquire()`` a request
-timeslice for a given :obj:`hikari.net.routes.CompiledRoute`, several
+timeslice for a given :obj:`~hikari.net.routes.CompiledRoute`, several
 things happen. The first is that we attempt to find the existing bucket for
 that route, if there is one, or get an unknown bucket otherwise. This is done
 by creating a real bucket hash` from the compiled route. The initial hash
-is calculated using a lookup table that maps :obj:`hikari.net.routes.CompiledRoute`
+is calculated using a lookup table that maps :obj:`~hikari.net.routes.CompiledRoute`
 objects to their corresponding initial hash codes, or to the unknown bucket
 hash code if not yet known. This initial hash is processed by the
-:obj:`hikari.net.routes.CompiledRoute` to provide the real bucket hash we
+:obj:`~hikari.net.routes.CompiledRoute` to provide the real bucket hash we
 need to get the route's bucket object internally.
 
 The ``acquire`` method will take the bucket and acquire a new timeslice on
-it. This takes the form of a :obj:`asyncio.Future` which should be awaited by
+it. This takes the form of a :obj:`~asyncio.Future` which should be awaited by
 the caller and will complete once the caller is allowed to make a request. Most
 of the time, this is done instantly, but if the bucket has an active rate limit
 preventing requests being sent, then the future will be paused until the rate
@@ -102,7 +102,7 @@ tidies itself up and disposes of itself. This task will complete once the queue
 becomes empty.
 
 The result of ``RateLimiter.acquire()`` is a tuple of a
-:obj:`asyncio.Future` to await on which completes when you are allowed to
+:obj:`~asyncio.Future` to await on which completes when you are allowed to
 proceed with making a request, and a real bucket hash which should be
 stored temporarily. This will be explained in the next section.
 
@@ -120,20 +120,20 @@ These headers are:
 
 * ``Date``:
     the response date on the server. This should be parsed to a
-    :obj:`datetime.datetime` using :func:`email.utils.parsedate_to_datetime`.
+    :obj:`~datetime.datetime` using :func:`email.utils.parsedate_to_datetime`.
 * ``X-RateLimit-Limit``:
-    an :obj:`int` describing the max requests in the bucket
+    an :obj:`~int` describing the max requests in the bucket
     from empty to being rate limited.
 * ``X-RateLimit-Remaining``:
-    an :obj:`int` describing the remaining number of
+    an :obj:`~int` describing the remaining number of
     requests before rate limiting occurs in the current window.
 * ``X-RateLimit-Bucket``:
-    a :obj:`str` containing the initial bucket hash.
+    a :obj:`~str` containing the initial bucket hash.
 * ``X-RateLimit-Reset``:
-    a :obj:`float` containing the number of seconds since
+    a :obj:`~float` containing the number of seconds since
     1st January 1970 at 0:00:00 UTC at which the current ratelimit window
-    resets. This should be parsed to a :obj:`datetime.datetime` using
-    :meth:`datetime.datetime.fromtimestamp`, passing :obj:`datetime.timezone.utc`
+    resets. This should be parsed to a :obj:`~datetime.datetime` using
+    :meth:`datetime.datetime.fromtimestamp`, passing :obj:`~datetime.timezone.utc`
     as ``tz``.
 
 Each of the above values should be passed to the
@@ -147,16 +147,16 @@ information in each bucket you use.
 Tidying up
 ~~~~~~~~~~
 
-To prevent unused buckets cluttering up memory, each :obj:`BaseRateLimiter`
-instance spins up a :obj:`asyncio.Task` that periodically locks the bucket
+To prevent unused buckets cluttering up memory, each :obj:`~BaseRateLimiter`
+instance spins up a :obj:`~asyncio.Task` that periodically locks the bucket
 list (not threadsafe, only using the concept of asyncio not yielding in regular
 functions) and disposes of any clearly stale buckets that are no longer needed.
 These will be recreated again in the future if they are needed.
 
 When shutting down an application, one must remember to ``close()`` the
-:obj:`BaseRateLimiter` that has been used. This will ensure the garbage collection
+:obj:`~BaseRateLimiter` that has been used. This will ensure the garbage collection
 task is stopped, and will also ensure any remaining futures in any bucket queues
-have an :obj:`asyncio.CancelledError` set on them to prevent deadlocking
+have an :obj:`~asyncio.CancelledError` set on them to prevent deadlocking
 ratelimited calls that may be waiting to be unlocked.
 """
 __all__ = [
@@ -185,7 +185,7 @@ from hikari.net import routes
 
 #: The hash used for an unknown bucket that has not yet been resolved.
 #:
-#: :type: :obj:`str`
+#: :type: :obj:`~str`
 UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 
 
@@ -207,7 +207,7 @@ class BaseRateLimiter(abc.ABC):
 
         Returns
         -------
-        :obj:`asyncio.Future`
+        :obj:`~asyncio.Future`
             A future that should be awaited. Once the future is complete, you
             can proceed to execute your rate-limited task.
         """
@@ -234,22 +234,22 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
     #: The name of the rate limiter.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     name: typing.Final[str]
 
-    #: The throttling task, or :obj:`None` if it isn't running.
+    #: The throttling task, or :obj:`~None` if it isn't running.
     #:
-    #: :type: :obj:`asyncio.Task`, optional
+    #: :type: :obj:`~asyncio.Task`, optional
     throttle_task: typing.Optional[more_asyncio.Task[None]]
 
     #: The queue of any futures under a rate limit.
     #:
-    #: :type: :obj:`asyncio.Queue` [`asyncio.Future`]
+    #: :type: :obj:`~asyncio.Queue` [`asyncio.Future`]
     queue: typing.Final[typing.List[more_asyncio.Future[None]]]
 
     #: The logger used by this rate limiter.
     #:
-    #: :type: :obj:`logging.Logger`
+    #: :type: :obj:`~logging.Logger`
     logger: typing.Final[logging.Logger]
 
     def __init__(self, name: str) -> None:
@@ -266,7 +266,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
         Returns
         -------
-        :obj:`asyncio.Future`
+        :obj:`~asyncio.Future`
             A future that should be immediately awaited. Once the await
             completes, you are able to proceed with the operation that is
             under this rate limit.
@@ -294,7 +294,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
     @property
     def is_empty(self) -> bool:
-        """Return :obj:`True` if no futures are on the queue being rate limited."""
+        """Return :obj:`~True` if no futures are on the queue being rate limited."""
         return len(self.queue) == 0
 
 
@@ -328,7 +328,7 @@ class ManualRateLimiter(BurstRateLimiter):
 
         Returns
         -------
-        :obj:`asyncio.Future`
+        :obj:`~asyncio.Future`
             A future that should be immediately awaited. Once the await
             completes, you are able to proceed with the operation that is
             under this rate limit.
@@ -347,7 +347,7 @@ class ManualRateLimiter(BurstRateLimiter):
         Iterates repeatedly while the queue is not empty, adhering to any
         rate limits that occur in the mean time.
 
-        retry_after : :obj:`float`
+        retry_after : :obj:`~float`
             How long to sleep for before unlocking and releasing any futures
             in the queue.
 
@@ -357,9 +357,9 @@ class ManualRateLimiter(BurstRateLimiter):
         (it will not await it to finish)
 
         When the :meth:`unlock_later` coroutine function completes, it should be
-        expected to set the `throttle_task`` to :obj:`None`. This means you can
+        expected to set the `throttle_task`` to :obj:`~None`. This means you can
         check if throttling is occurring by checking if ``throttle_task``
-        is not :obj:`None`.
+        is not :obj:`~None`.
 
         If this is invoked while another throttle is in progress, that one is
         cancelled and a new one is started. This enables new rate limits to
@@ -376,7 +376,7 @@ class ManualRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        retry_after : :obj:`float`
+        retry_after : :obj:`~float`
             How long to sleep for before unlocking and releasing any futures
             in the queue.
 
@@ -386,9 +386,9 @@ class ManualRateLimiter(BurstRateLimiter):
         instead.
 
         When the :meth:`unlock_later` coroutine function completes, it should be
-        expected to set the ``throttle_task`` to :obj:`None`. This means you can
+        expected to set the ``throttle_task`` to :obj:`~None`. This means you can
         check if throttling is occurring by checking if ``throttle_task``
-        is not :obj:`None`.
+        is not :obj:`~None`.
         """
         self.logger.warning("you are being globally rate limited for %ss", retry_after)
         await asyncio.sleep(retry_after)
@@ -431,23 +431,23 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
     #: The :func:`time.perf_counter` that the limit window ends at.
     #:
-    #: :type: :obj:`float`
+    #: :type: :obj:`~float`
     reset_at: float
 
     #: The number of :meth:`acquire`'s left in this window before you will get
     #: rate limited.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     remaining: int
 
     #: How long the window lasts for from the start in seconds.
     #:
-    #: :type: :obj:`float`
+    #: :type: :obj:`~float`
     period: float
 
     #: The maximum number of :meth:`acquire`'s allowed in this time window.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     limit: int
 
     def __init__(self, name: str, period: float, limit: int) -> None:
@@ -462,7 +462,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
         Returns
         -------
-        :obj:`asyncio.Future`
+        :obj:`~asyncio.Future`
             A future that should be immediately awaited. Once the await
             completes, you are able to proceed with the operation that is
             under this rate limit.
@@ -489,12 +489,12 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        now : :obj:`float`
+        now : :obj:`~float`
             The monotonic :func:`time.perf_counter` timestamp.
 
         Returns
         -------
-        :obj:`float`
+        :obj:`~float`
             The time left to sleep before the rate limit is reset. If no rate limit
             is in effect, then this will return ``0.0`` instead.
 
@@ -515,13 +515,13 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        now : :obj:`float`
+        now : :obj:`~float`
             The monotonic :func:`time.perf_counter` timestamp.
 
         Returns
         -------
-        :obj:`bool`
-            :obj:`True` if we are being rate limited. :obj:`False` if we are not.
+        :obj:`~bool`
+            :obj:`~True` if we are being rate limited. :obj:`~False` if we are not.
 
         Warning
         -------
@@ -555,8 +555,8 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         task immediately in ``throttle_task``.
 
         When this coroutine function completes, it will set the
-        ``throttle_task`` to :obj:`None`. This means you can check if throttling
-        is occurring by checking if ``throttle_task`` is not :obj:`None`.
+        ``throttle_task`` to :obj:`~None`. This means you can check if throttling
+        is occurring by checking if ``throttle_task`` is not :obj:`~None`.
         """
         self.logger.debug(
             "you are being rate limited on bucket %s, backing off for %ss",
@@ -581,7 +581,7 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
     Component to represent an active rate limit bucket on a specific HTTP route
     with a specific major parameter combo.
 
-    This is somewhat similar to the :obj:`WindowedBurstRateLimiter` in how it
+    This is somewhat similar to the :obj:`~WindowedBurstRateLimiter` in how it
     works.
 
     This algorithm will use fixed-period time windows that have a given limit
@@ -601,7 +601,7 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
 
     #: The compiled route that this rate limit is covering.
     #:
-    #: :type: :obj:`hikari.net.routes.CompiledRoute`
+    #: :type: :obj:`~hikari.net.routes.CompiledRoute`
     compiled_route: typing.Final[routes.CompiledRoute]
 
     def __init__(self, name: str, compiled_route: routes.CompiledRoute) -> None:
@@ -612,7 +612,7 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
 
     @property
     def is_unknown(self) -> bool:
-        """Return :obj:`True` if the bucket represents an ``UNKNOWN`` bucket."""
+        """Return :obj:`~True` if the bucket represents an ``UNKNOWN`` bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
     def acquire(self) -> more_asyncio.Future[None]:
@@ -620,7 +620,7 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
 
         Returns
         -------
-        :obj:`asyncio.Future`
+        :obj:`~asyncio.Future`
             A future that should be awaited immediately. Once the future completes,
             you are allowed to proceed with your operation.
 
@@ -636,11 +636,11 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
 
         Parameters
         ----------
-        remaining : :obj:`int`
+        remaining : :obj:`~int`
             The calls remaining in this time window.
-        limit : :obj:`int`
+        limit : :obj:`~int`
             The total calls allowed in this time window.
-        reset_at : :obj:`float`
+        reset_at : :obj:`~float`
             The epoch at which to reset the limit.
 
         Note
@@ -685,29 +685,29 @@ class HTTPBucketRateLimiterManager:
 
     #: Maps compiled routes to their ``X-RateLimit-Bucket`` header being used.
     #:
-    #: :type: :obj:`typing.MutableMapping` [ :obj:`hikari.net.routes.CompiledRoute`, :obj:`str` ]
+    #: :type: :obj:`~typing.MutableMapping` [ :obj:`~hikari.net.routes.CompiledRoute`, :obj:`~str` ]
     routes_to_hashes: typing.Final[typing.MutableMapping[routes.CompiledRoute, str]]
 
     #: Maps full bucket hashes (``X-RateLimit-Bucket`` appended with a hash of
     #: major parameters used in that compiled route) to their corresponding rate
     #: limiters.
     #:
-    #: :type: :obj:`typing.MutableMapping` [ :obj:`str`, :obj:`HTTPBucketRateLimiter` ]
+    #: :type: :obj:`~typing.MutableMapping` [ :obj:`~str`, :obj:`~HTTPBucketRateLimiter` ]
     real_hashes_to_buckets: typing.Final[typing.MutableMapping[str, HTTPBucketRateLimiter]]
 
     #: An internal event that is set when the object is shut down.
     #:
-    #: :type: :obj:`asyncio.Event`
+    #: :type: :obj:`~asyncio.Event`
     closed_event: typing.Final[asyncio.Event]
 
     #: The internal garbage collector task.
     #:
-    #: :type: :obj:`asyncio.Task`, optional
+    #: :type: :obj:`~asyncio.Task`, optional
     gc_task: typing.Optional[more_asyncio.Task[None]]
 
     #: The logger to use for this object.
     #:
-    #: :type: :obj:`logging.Logger`
+    #: :type: :obj:`~logging.Logger`
     logger: typing.Final[logging.Logger]
 
     def __init__(self) -> None:
@@ -735,7 +735,7 @@ class HTTPBucketRateLimiterManager:
 
         Parameters
         ----------
-        poll_period : :obj:`float`
+        poll_period : :obj:`~float`
             Period to poll the garbage collector at in seconds. Defaults
             to ``20`` seconds.
         """
@@ -766,7 +766,7 @@ class HTTPBucketRateLimiterManager:
 
         Parameters
         ----------
-        poll_period : :obj:`float`
+        poll_period : :obj:`~float`
             The period to poll at. This defaults to once every ``20`` seconds.
 
         Warnings
@@ -820,12 +820,12 @@ class HTTPBucketRateLimiterManager:
 
         Parameters
         ----------
-        compiled_route : :obj:`hikari.net.routes.CompiledRoute`
+        compiled_route : :obj:`~hikari.net.routes.CompiledRoute`
             The route to get the bucket for.
 
         Returns
         -------
-        :obj:`asyncio.Future`
+        :obj:`~asyncio.Future`
             A future to await that completes when you are allowed to run
             your request logic.
 
@@ -868,20 +868,20 @@ class HTTPBucketRateLimiterManager:
 
         Parameters
         ----------
-        compiled_route : :obj:`hikari.net.routes.CompiledRoute`
+        compiled_route : :obj:`~hikari.net.routes.CompiledRoute`
             The compiled route to get the bucket for.
-        bucket_header : :obj:`str`, optional
+        bucket_header : :obj:`~str`, optional
             The ``X-RateLimit-Bucket`` header that was provided in the response,
-            or :obj:`None` if not present.
-        remaining_header : :obj:`int`
-            The ``X-RateLimit-Remaining`` header cast to an :obj:`int`.
-        limit_header : :obj:`int`
-            The ``X-RateLimit-Limit`` header cast to an :obj:`int`.
-        date_header : :obj:`datetime.datetime`
-            The ``Date`` header value as a :obj:`datetime.datetime`.
-        reset_at_header : :obj:`datetime.datetime`
+            or :obj:`~None` if not present.
+        remaining_header : :obj:`~int`
+            The ``X-RateLimit-Remaining`` header cast to an :obj:`~int`.
+        limit_header : :obj:`~int`
+            The ``X-RateLimit-Limit`` header cast to an :obj:`~int`.
+        date_header : :obj:`~datetime.datetime`
+            The ``Date`` header value as a :obj:`~datetime.datetime`.
+        reset_at_header : :obj:`~datetime.datetime`
             The ``X-RateLimit-Reset`` header value as a
-            :obj:`datetime.datetime`.
+            :obj:`~datetime.datetime`.
         """
         self.routes_to_hashes[compiled_route] = bucket_header
 
@@ -912,13 +912,13 @@ class ExponentialBackOff:
 
     Parameters
     ----------
-    base : :obj:`float`
+    base : :obj:`~float`
         The base to use. Defaults to ``2``.
-    maximum : :obj:`float`, optional
-        If not :obj:`None`, then this is the max value the backoff can be in a
-        single iteration before an :obj:`asyncio.TimeoutError` is raised.
+    maximum : :obj:`~float`, optional
+        If not :obj:`~None`, then this is the max value the backoff can be in a
+        single iteration before an :obj:`~asyncio.TimeoutError` is raised.
         Defaults to ``64`` seconds.
-    jitter_multiplier : :obj:`float`
+    jitter_multiplier : :obj:`~float`
         The multiplier for the random jitter. Defaults to ``1``.
         Set to ``0`` to disable jitter.
     """
@@ -927,24 +927,24 @@ class ExponentialBackOff:
 
     #: The base to use. Defaults to 2.
     #:
-    #: :type: :obj:`float`
+    #: :type: :obj:`~float`
     base: typing.Final[float]
 
     #: The current increment.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     increment: int
 
-    #: If not :obj:`None`, then this is the max value the backoff can be in a
-    #: single iteration before an :obj:`asyncio.TimeoutError` is raised.
+    #: If not :obj:`~None`, then this is the max value the backoff can be in a
+    #: single iteration before an :obj:`~asyncio.TimeoutError` is raised.
     #:
-    #: :type: :obj:`float`, optional
+    #: :type: :obj:`~float`, optional
     maximum: typing.Optional[float]
 
     #: The multiplier for the random jitter. Defaults to ``1``.
     #: Set to ``0`` to disable jitter.
     #:
-    #: :type: :obj:`float`
+    #: :type: :obj:`~float`
     jitter_multiplier: typing.Final[float]
 
     def __init__(self, base: float = 2, maximum: typing.Optional[float] = 64, jitter_multiplier: float = 1) -> None:

@@ -60,7 +60,7 @@ class SingletonMeta(type):
 
 
 class Singleton(metaclass=SingletonMeta):
-    """Base type for anything implementing the :obj:`SingletonMeta` metaclass.
+    """Base type for anything implementing the :obj:`~SingletonMeta` metaclass.
 
     Once an instance has been defined at runtime, it will exist until the
     interpreter that created it is terminated.

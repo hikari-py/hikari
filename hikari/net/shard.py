@@ -65,7 +65,7 @@ class ShardConnection:
     application of events that occur, and to allow you to change your presence,
     amongst other real-time applications.
 
-    Each :obj:`ShardConnection` represents a single shard.
+    Each :obj:`~ShardConnection` represents a single shard.
 
     Expected events that may be passed to the event dispatcher are documented in the
     `gateway event reference <https://discordapp.com/developers/docs/topics/gateway#commands-and-events>`_.
@@ -78,15 +78,15 @@ class ShardConnection:
 
     Parameters
     ----------
-    compression: :obj:`bool`
+    compression: :obj:`~bool`
         If True, then payload compression is enabled on the connection.
         If False, no payloads are compressed. You usually want to keep this
         enabled.
-    connector: :obj:`aiohttp.BaseConnector`, optional
-        The :obj:`aiohttp.BaseConnector` to use for the HTTP session that
+    connector: :obj:`~aiohttp.BaseConnector`, optional
+        The :obj:`~aiohttp.BaseConnector` to use for the HTTP session that
         gets upgraded to a websocket connection. You can use this to customise
         connection pooling, etc.
-    debug: :obj:`bool`
+    debug: :obj:`~bool`
         If True, the client is configured to provide extra contextual
         information to use when debugging this library or extending it. This
         includes logging every payload that is sent or received to the logger
@@ -94,14 +94,14 @@ class ShardConnection:
     dispatch: ``dispatch function``
         The function to invoke with any dispatched events. This must not be a
         coroutine function, and must take three arguments only. The first is
-        the reference to this :obj:`ShardConnection` The second is the
+        the reference to this :obj:`~ShardConnection` The second is the
         event name.
-    initial_presence: :obj:`typing.Dict`, optional
-        A raw JSON object as a :obj:`typing.Dict` that should be set as the
-        initial presence of the bot user once online. If :obj:`None`, then it
+    initial_presence: :obj:`~typing.Dict`, optional
+        A raw JSON object as a :obj:`~typing.Dict` that should be set as the
+        initial presence of the bot user once online. If :obj:`~None`, then it
         will be set to the default, which is showing up as online without a
         custom status message.
-    intents: :obj:`hikari.net.codes.GatewayIntent`, optional
+    intents: :obj:`~hikari.net.codes.GatewayIntent`, optional
         Bitfield of intents to use. If you use the V7 API, this is mandatory.
         This field will determine what events you will receive.
     json_deserialize: ``deserialization function``
@@ -110,47 +110,47 @@ class ShardConnection:
     json_serialize: ``serialization function``
         A custom JSON serializer function to use. Defaults to
         :func:`json.dumps`.
-    large_threshold: :obj:`int`
+    large_threshold: :obj:`~int`
         The number of members that have to be in a guild for it to be
         considered to be "large". Large guilds will not have member information
         sent automatically, and must manually request that member chunks be
         sent using :meth:`request_guild_members`.
-    proxy_auth: :obj:`aiohttp.BasicAuth`, optional
-        Optional :obj:`aiohttp.BasicAuth` object that can be provided to
-        allow authenticating with a proxy if you use one. Leave :obj:`None` to
+    proxy_auth: :obj:`~aiohttp.BasicAuth`, optional
+        Optional :obj:`~aiohttp.BasicAuth` object that can be provided to
+        allow authenticating with a proxy if you use one. Leave :obj:`~None` to
         ignore.
-    proxy_headers: :obj:`typing.Mapping` [ :obj:`str`, :obj:`str` ], optional
-        Optional :obj:`typing.Mapping` to provide as headers to allow the
-        connection through a proxy if you use one. Leave :obj:`None` to ignore.
-    proxy_url: :obj:`str`, optional
-        Optional :obj:`str` to use for a proxy server. If :obj:`None`, then it
+    proxy_headers: :obj:`~typing.Mapping` [ :obj:`~str`, :obj:`~str` ], optional
+        Optional :obj:`~typing.Mapping` to provide as headers to allow the
+        connection through a proxy if you use one. Leave :obj:`~None` to ignore.
+    proxy_url: :obj:`~str`, optional
+        Optional :obj:`~str` to use for a proxy server. If :obj:`~None`, then it
         is ignored.
-    session_id: :obj:`str`, optional
+    session_id: :obj:`~str`, optional
         The session ID to use. If specified along with ``seq``, then the
         gateway client will attempt to ``RESUME`` an existing session rather than
         re-``IDENTIFY``. Otherwise, it will be ignored.
-    seq: :obj:`int`, optional
+    seq: :obj:`~int`, optional
         The sequence number to use. If specified along with ``session_id``, then
         the gateway client will attempt to ``RESUME`` an existing session rather
         than re-``IDENTIFY``. Otherwise, it will be ignored.
-    shard_id: :obj:`int`
+    shard_id: :obj:`~int`
         The shard ID of this gateway client. Defaults to ``0``.
-    shard_count: :obj:`int`
+    shard_count: :obj:`~int`
         The number of shards on this gateway. Defaults to ``1``, which implies no
         sharding is taking place.
-    ssl_context: :obj:`ssl.SSLContext`, optional
-        An optional custom :obj:`ssl.SSLContext` to provide to customise how
+    ssl_context: :obj:`~ssl.SSLContext`, optional
+        An optional custom :obj:`~ssl.SSLContext` to provide to customise how
         SSL works.
-    token: :obj:`str`
+    token: :obj:`~str`
         The mandatory bot token for the bot account to use, minus the "Bot"
         authentication prefix used elsewhere.
-    url: :obj:`str`
+    url: :obj:`~str`
         The websocket URL to use.
-    verify_ssl: :obj:`bool`
-        If :obj:`True`, SSL verification is enabled, which is generally what you
+    verify_ssl: :obj:`~bool`
+        If :obj:`~True`, SSL verification is enabled, which is generally what you
         want. If you get SSL issues, you can try turning this off at your own
         risk.
-    version: :obj:`hikari.net.versions.GatewayVersion`
+    version: :obj:`~hikari.net.versions.GatewayVersion`
         The version of the gateway API to use. Defaults to the most recent
         stable documented version.
     """
@@ -199,13 +199,13 @@ class ShardConnection:
 
     #: An event that is set when the connection closes.
     #:
-    #: :type: :obj:`asyncio.Event`
+    #: :type: :obj:`~asyncio.Event`
     closed_event: typing.Final[asyncio.Event]
 
     #: The number of times we have disconnected from the gateway on this
     #: client instance.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     disconnect_count: int
 
     #: The dispatch method to call when dispatching a new event. This is
@@ -215,7 +215,7 @@ class ShardConnection:
     #: The heartbeat interval Discord instructed the client to beat at.
     #: This is ``nan`` until this information is received.
     #:
-    #: :type: :obj:`float`
+    #: :type: :obj:`~float`
     heartbeat_interval: float
 
     #: The most recent heartbeat latency measurement in seconds. This is
@@ -223,13 +223,13 @@ class ShardConnection:
     #: as the time between sending a ``HEARTBEAT`` payload and receiving a
     #: ``HEARTBEAT_ACK`` response.
     #:
-    #: :type: :obj:`float`
+    #: :type: :obj:`~float`
     heartbeat_latency: float
 
     #: An event that is set when Discord sends a ``HELLO`` payload. This
     #: indicates some sort of connection has successfully been made.
     #:
-    #: :type: :obj:`asyncio.Event`
+    #: :type: :obj:`~asyncio.Event`
     hello_event: typing.Final[asyncio.Event]
 
     #: An event that is set when the client has successfully ``IDENTIFY``ed
@@ -237,13 +237,13 @@ class ShardConnection:
     #: can now take place on the connection and events can be expected to
     #: be received.
     #:
-    #: :type: :obj:`asyncio.Event`
+    #: :type: :obj:`~asyncio.Event`
     handshake_event: typing.Final[asyncio.Event]
 
     #: The monotonic timestamp that the last ``HEARTBEAT`` was sent at, or
     #: ``nan`` if no ``HEARTBEAT`` has yet been sent.
     #:
-    #: :type: :obj:`float`
+    #: :type: :obj:`~float`
     last_heartbeat_sent: float
 
     #: The monotonic timestamp at which the last payload was received from
@@ -251,12 +251,12 @@ class ShardConnection:
     #: the current time, then the connection is assumed to be zombied and
     #: is shut down. If no messages have been received yet, this is ``nan``.
     #:
-    #: :type: :obj:`float`
+    #: :type: :obj:`~float`
     last_message_received: float
 
     #: The logger used for dumping information about what this client is doing.
     #:
-    #: :type: :obj:`logging.Logger`
+    #: :type: :obj:`~logging.Logger`
     logger: typing.Final[logging.Logger]
 
     #: An event that is triggered when a ``READY`` payload is received for the
@@ -271,44 +271,44 @@ class ShardConnection:
     #: you should wait for the event to be fired in the ``dispatch`` function
     #: you provide.
     #:
-    #: :type: :obj:`asyncio.Event`
+    #: :type: :obj:`~asyncio.Event`
     ready_event: typing.Final[asyncio.Event]
 
     #: An event that is triggered when a resume has succeeded on the gateway.
     #:
-    #: :type: :obj:`asyncio.Event`
+    #: :type: :obj:`~asyncio.Event`
     resumed_event: typing.Final[asyncio.Event]
 
     #: An event that is set when something requests that the connection
     #: should close somewhere.
     #:
-    #: :type: :obj:`asyncio.Event`
+    #: :type: :obj:`~asyncio.Event`
     requesting_close_event: typing.Final[asyncio.Event]
 
     #: The current session ID, if known.
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     session_id: typing.Optional[str]
 
     #: The current sequence number for state synchronization with the API,
     #: if known.
     #:
-    #: :type: :obj:`int`, optional.
+    #: :type: :obj:`~int`, optional.
     seq: typing.Optional[int]
 
     #: The shard ID.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     shard_id: typing.Final[int]
 
     #: The number of shards in use for the bot.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     shard_count: typing.Final[int]
 
     #: The API version to use on Discord.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     version: typing.Final[int]
 
     def __init__(
@@ -396,7 +396,7 @@ class ShardConnection:
 
         Returns
         -------
-        :obj:`datetime.timedelta`
+        :obj:`~datetime.timedelta`
             The amount of time the connection has been running for. If it isn't
             running, this will always return ``0`` seconds.
         """
@@ -409,7 +409,7 @@ class ShardConnection:
 
         Returns
         -------
-        :obj:`bool`
+        :obj:`~bool`
             True if this gateway client is actively connected to something, or
             False if it is not running.
         """
@@ -419,14 +419,14 @@ class ShardConnection:
     def intents(self) -> typing.Optional[codes.GatewayIntent]:
         """Intents being used.
 
-        If this is :obj:`None`, no intent usage was being
+        If this is :obj:`~None`, no intent usage was being
         used on this shard. On V6 this would be regular usage as prior to
         the intents change in January 2020. If on V7, you just won't be
         able to connect at all to the gateway.
 
         Returns
         -------
-        :obj:`hikari.net.codes.GatewayIntent`, optional
+        :obj:`~hikari.net.codes.GatewayIntent`, optional
             The intents being used.
         """
         return self._intents
@@ -440,7 +440,7 @@ class ShardConnection:
 
         Returns
         -------
-        :obj:`int`
+        :obj:`~int`
             The amount of times the gateway has reconnected since initialization.
         """
         # 0 disconnects + not is_connected => 0
@@ -458,7 +458,7 @@ class ShardConnection:
 
         Returns
         -------
-        :obj:`typing.Dict`
+        :obj:`~typing.Dict`
             The current presence for the gateway.
         """
         # Make a shallow copy to prevent mutation.
@@ -480,23 +480,23 @@ class ShardConnection:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The first guild to request members for.
-        *guild_ids : :obj:`str`
+        *guild_ids : :obj:`~str`
             Additional guilds to request members for.
         **kwargs
             Optional arguments.
 
         Keyword Args
         ------------
-        limit : :obj:`int`
+        limit : :obj:`~int`
             Limit for the number of members to respond with. Set to ``0`` to be
             unlimited.
-        query : :obj:`str`
+        query : :obj:`~str`
             An optional string to filter members with. If specified, only
             members who have a username starting with this string will be
             returned.
-        user_ids : :obj:`typing.Sequence` [ :obj:`str` ]
+        user_ids : :obj:`~typing.Sequence` [ :obj:`~str` ]
             An optional list of user IDs to return member info about.
 
         Note
@@ -529,7 +529,7 @@ class ShardConnection:
 
         Parameters
         ----------
-        presence : :obj:`typing.Dict`
+        presence : :obj:`~typing.Dict`
             The new presence payload to set.
         """
         presence.setdefault("since", None)
@@ -546,7 +546,7 @@ class ShardConnection:
 
         Parameters
         ----------
-        close_code : :obj:`int`
+        close_code : :obj:`~int`
             The close code to use. Defaults to ``1000`` (normal closure).
         """
         if not self.requesting_close_event.is_set():
@@ -565,7 +565,7 @@ class ShardConnection:
         ----------
         client_session_type
             The client session implementation to use. You generally do not want
-            to change this from the default, which is :obj:`aiohttp.ClientSession`.
+            to change this from the default, which is :obj:`~aiohttp.ClientSession`.
         """
         if self.is_connected:
             raise RuntimeError("Already connected")
