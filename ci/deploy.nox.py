@@ -211,7 +211,7 @@ def deploy(session: nox.Session) -> None:
             f"{config.API_NAME} v{next_version} has been released",
             "Pick up the latest development release from pypi by running:\n"
             "```bash\n"
-            f"pip install --pre -U {config.API_NAME}=={next_version}\n"
+            f"pip install -U {config.API_NAME}=={next_version}\n"
             "```",
             "2C2F33"
         )
