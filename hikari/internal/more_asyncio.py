@@ -134,3 +134,20 @@ def completed_future(result=None, /):
     future = asyncio.get_event_loop().create_future()
     future.set_result(result)
     return future
+
+
+def wait(
+    aws, *, timeout=None, return_when=asyncio.ALL_COMPLETED
+) -> typing.Coroutine[typing.Any, typing.Any, typing.Tuple[typing.Set[Future], typing.Set[Future]]]:
+    """Run awaitable objects in the aws set concurrently.
+
+    This blocks until the condition specified by `return_value`.
+
+    Returns
+    -------
+    :obj:`typing.Coroutine` [ :obj:`typing.Any`, :obj:`typing.Any`, :obj:`typing.Tuple` [ :obj:`typing.Set` [ :obj:`Future` ], :obj:`typing.Set` [ :obj:`Future` ] ] ]
+        The coroutine returned by :obj:`asyncio.wait` of two sets of
+        Tasks/Futures (done, pending).
+    """
+    # noinspection PyTypeChecker
+    return asyncio.wait([asyncio.ensure_future(f) for f in aws], timeout=timeout, return_when=return_when)
