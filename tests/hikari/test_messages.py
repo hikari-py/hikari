@@ -123,6 +123,7 @@ def test_message_payload(
         "application": test_application_payload,
         "message_reference": test_message_crosspost_payload,
         "flags": 2,
+        "nonce": "171000788183678976",
     }
 
 
@@ -258,3 +259,4 @@ class TestMessage:
         assert message_obj.application == mock_app
         assert message_obj.message_reference == messages.MessageCrosspost.deserialize(test_message_crosspost_payload)
         assert message_obj.flags == messages.MessageFlag.IS_CROSSPOST
+        assert message_obj.nonce == "171000788183678976"
