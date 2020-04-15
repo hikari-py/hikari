@@ -30,6 +30,8 @@ import click
 
 from hikari.clients import configs
 from hikari.clients import gateway_managers
+from hikari.internal import conversions
+from hikari.net import codes
 from hikari.state import stateless_event_managers
 
 
@@ -58,18 +60,23 @@ _REGULAR_FORMAT: typing.Final[str] = (
 @click.option("--compression", default=True, type=click.BOOL, help="Enable or disable gateway compression.")
 @click.option("--color", default=_supports_color(), type=click.BOOL, help="Whether to enable or disable color.")
 @click.option("--debug", default=False, type=click.BOOL, help="Enable or disable debug mode.")
+@click.option("--intents", default=None, type=click.STRING, help="Intent names to enable (comma separated)")
 @click.option("--logger", envvar="LOGGER", default="INFO", type=click.Choice(_LOGGER_LEVELS), help="Logger verbosity.")
 @click.option("--shards", default=1, type=click.IntRange(min=1), help="The number of shards to explicitly use.")
 @click.option("--token", required=True, envvar="TOKEN", help="The token to use to authenticate with Discord.")
 @click.option("--url", default="wss://gateway.discord.gg/", help="The websocket URL to connect to.")
 @click.option("--verify-ssl", default=True, type=click.BOOL, help="Enable or disable SSL verification.")
 @click.option("--version", default=6, type=click.IntRange(min=6), help="Version of the gateway to use.")
-def run_gateway(compression, color, debug, logger, shards, token, url, verify_ssl, version) -> None:
+def run_gateway(compression, color, debug, intents, logger, shards, token, url, verify_ssl, version) -> None:
     """:mod:`click` command line client for running a test gateway connection.
 
     This is provided for internal testing purposes for benchmarking API
     stability, etc.
     """
+    if intents is not None:
+        intents = intents.split(",")
+        intents = conversions.dereference_int_flag(codes.GatewayIntent, intents)
+
     logging.captureWarnings(True)
 
     logging.basicConfig(level=logger, format=_COLOR_FORMAT if color else _REGULAR_FORMAT, stream=sys.stdout)
@@ -84,6 +91,7 @@ def run_gateway(compression, color, debug, logger, shards, token, url, verify_ss
             gateway_version=version,
             debug=debug,
             gateway_use_compression=compression,
+            intents=intents,
             verify_ssl=verify_ssl,
         ),
         url=url,

@@ -34,10 +34,7 @@ __all__ = [
     "HikariEntityMarshaller",
 ]
 
-import enum
-import functools
 import importlib
-import operator
 import typing
 import weakref
 
@@ -54,8 +51,6 @@ _IF_NONE: typing.Final[str] = __name__ + "_IF_NONE"
 _PASSED_THROUGH_SINGLETONS: typing.Final[typing.Sequence[bool]] = [False, True, None]
 RAISE: typing.Final[typing.Any] = object()
 
-IntFlagT = typing.TypeVar("IntFlagT", bound=enum.IntFlag)
-RawIntFlagValueT = typing.Union[typing.AnyStr, typing.SupportsInt, int]
 EntityT = typing.TypeVar("EntityT", contravariant=True)
 
 
@@ -97,47 +92,6 @@ def dereference_handle(handle_string: str) -> typing.Any:
         obj = getattr(obj, attr_name)
 
     return weakref.proxy(obj)
-
-
-def dereference_int_flag(
-    int_flag_type: typing.Type[IntFlagT],
-    raw_value: typing.Union[RawIntFlagValueT, typing.Collection[RawIntFlagValueT]],
-) -> IntFlagT:
-    """Cast to the provided :obj:`enum.IntFlag` type.
-
-    This supports resolving bitfield integers as well as decoding a sequence
-    of case insensitive flag names into one combined value.
-
-    Parameters
-    ----------
-    int_flag_type : :obj:`typing.Type` [ :obj:`enum.IntFlag` ]
-        The type of the int flag to check.
-    raw_value : ``Castable Value``
-        The raw value to convert.
-
-    Returns
-    -------
-    :obj:`enum.IntFlag`
-        The cast value as a flag.
-
-    Notes
-    -----
-    Types that are a ``Castable Value`` include:
-    - :obj:`str`
-    - :obj:`int`
-    - :obj:`typing.SupportsInt`
-    - :obj:`typing.Collection` [ ``Castable Value`` ]
-
-    When a collection is passed, values will be combined using functional
-    reduction via the :obj:operator.or_` operator.
-    """
-    if isinstance(raw_value, str) and raw_value.isdigit():
-        raw_value = int(raw_value)
-
-    if not isinstance(raw_value, int):
-        raw_value = functools.reduce(operator.or_, (int_flag_type[name.upper()] for name in raw_value))
-
-    return int_flag_type(raw_value)
 
 
 def attrib(
