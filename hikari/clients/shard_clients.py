@@ -436,7 +436,7 @@ class ShardClient(runnable.RunnableClient):
         self.logger.info("received HELLO, interval is %ss", self.connection.heartbeat_interval)
 
         completed, _ = await asyncio.wait(
-            [connect_task, self._connection.identify_event.wait()], return_when=asyncio.FIRST_COMPLETED
+            [connect_task, self._connection.handshake_event.wait()], return_when=asyncio.FIRST_COMPLETED
         )
 
         if connect_task in completed:
