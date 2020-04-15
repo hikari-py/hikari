@@ -26,15 +26,15 @@ from hikari.state import event_dispatchers
 from tests.hikari import _helpers
 
 
-class TestEvent1(events.HikariEvent):
+class StudEvent1(events.HikariEvent):
     ...
 
 
-class TestEvent2(events.HikariEvent):
+class StudEvent2(events.HikariEvent):
     ...
 
 
-class TestEvent3(events.HikariEvent):
+class StudEvent3(events.HikariEvent):
     ...
 
 
@@ -85,11 +85,11 @@ class TestEventDispatcherImpl:
         ]
 
         dispatcher_inst._waiters = (
-            waiters := {TestEvent1: test_event_1_waiters, TestEvent2: test_event_2_waiters,}
+            waiters := {StudEvent1: test_event_1_waiters, StudEvent2: test_event_2_waiters,}
         )
 
         dispatcher_inst._listeners = (
-            listeners := {TestEvent1: test_event_1_listeners, TestEvent2: test_event_2_listeners,}
+            listeners := {StudEvent1: test_event_1_listeners, StudEvent2: test_event_2_listeners,}
         )
 
         dispatcher_inst.close()
@@ -161,10 +161,10 @@ class TestEventDispatcherImpl:
         mock_coro_fn2 = mock.MagicMock()
         mock_coro_fn3 = mock.MagicMock()
 
-        ctx = TestEvent1()
+        ctx = StudEvent1()
 
-        dispatcher_inst._listeners[TestEvent1] = [mock_coro_fn1, mock_coro_fn2]
-        dispatcher_inst._listeners[TestEvent2] = [mock_coro_fn3]
+        dispatcher_inst._listeners[StudEvent1] = [mock_coro_fn1, mock_coro_fn2]
+        dispatcher_inst._listeners[StudEvent2] = [mock_coro_fn3]
 
         with mock.patch("asyncio.gather") as gather:
             dispatcher_inst.dispatch_event(ctx)
@@ -176,7 +176,7 @@ class TestEventDispatcherImpl:
         # Should not throw.
         dispatcher_inst._waiters = {}
         dispatcher_inst._listeners = {}
-        dispatcher_inst.dispatch_event(TestEvent1())
+        dispatcher_inst.dispatch_event(StudEvent1())
         assert dispatcher_inst._waiters == {}
         assert dispatcher_inst._listeners == {}
 
@@ -197,7 +197,7 @@ class TestEventDispatcherImpl:
     @pytest.mark.asyncio
     @_helpers.timeout_after(1)
     async def test_dispatch_invokes_future_waker_if_registered_with_futures(self, dispatcher_inst, event_loop):
-        dispatcher_inst._waiters[TestEvent1] = {event_loop.create_future(): lambda _: False}
+        dispatcher_inst._waiters[StudEvent1] = {event_loop.create_future(): lambda _: False}
 
     @pytest.mark.asyncio
     @_helpers.timeout_after(1)
@@ -208,11 +208,11 @@ class TestEventDispatcherImpl:
         future1 = event_loop.create_future()
         future2 = event_loop.create_future()
 
-        ctx = TestEvent3()
+        ctx = StudEvent3()
 
-        dispatcher_inst._waiters[TestEvent3] = {}
-        dispatcher_inst._waiters[TestEvent3][future1] = predicate1
-        dispatcher_inst._waiters[TestEvent3][future2] = predicate2
+        dispatcher_inst._waiters[StudEvent3] = {}
+        dispatcher_inst._waiters[StudEvent3][future1] = predicate1
+        dispatcher_inst._waiters[StudEvent3][future2] = predicate2
 
         await dispatcher_inst.dispatch_event(ctx)
 
@@ -232,26 +232,26 @@ class TestEventDispatcherImpl:
     @pytest.mark.asyncio
     @_helpers.timeout_after(1)
     async def test_waiter_map_deleted_if_made_empty_during_this_dispatch(self, dispatcher_inst):
-        dispatcher_inst._waiters[TestEvent1] = {mock.MagicMock(): mock.MagicMock(return_value=True)}
-        dispatcher_inst.dispatch_event(TestEvent1())
+        dispatcher_inst._waiters[StudEvent1] = {mock.MagicMock(): mock.MagicMock(return_value=True)}
+        dispatcher_inst.dispatch_event(StudEvent1())
         await asyncio.sleep(0.1)
-        assert TestEvent1 not in dispatcher_inst._waiters
+        assert StudEvent1 not in dispatcher_inst._waiters
 
     @pytest.mark.asyncio
     @_helpers.timeout_after(1)
     async def test_waiter_map_not_deleted_if_not_empty(self, dispatcher_inst):
-        dispatcher_inst._waiters[TestEvent1] = {mock.MagicMock(): mock.MagicMock(return_value=False)}
-        dispatcher_inst.dispatch_event(TestEvent1())
+        dispatcher_inst._waiters[StudEvent1] = {mock.MagicMock(): mock.MagicMock(return_value=False)}
+        dispatcher_inst.dispatch_event(StudEvent1())
         await asyncio.sleep(0.1)
-        assert TestEvent1 in dispatcher_inst._waiters
+        assert StudEvent1 in dispatcher_inst._waiters
 
     @pytest.mark.asyncio
     @_helpers.timeout_after(2)
     async def test_wait_for_returns_event(self, dispatcher_inst):
         predicate = mock.MagicMock(return_value=True)
-        future = dispatcher_inst.wait_for(TestEvent1, timeout=5, predicate=predicate)
+        future = dispatcher_inst.wait_for(StudEvent1, timeout=5, predicate=predicate)
 
-        ctx = TestEvent1()
+        ctx = StudEvent1()
         await dispatcher_inst.dispatch_event(ctx)
 
         await asyncio.sleep(0.1)
@@ -265,8 +265,8 @@ class TestEventDispatcherImpl:
     @_helpers.timeout_after(2)
     async def test_wait_for_returns_matching_event_args_when_invoked_but_no_predicate_match(self, dispatcher_inst):
         predicate = mock.MagicMock(return_value=False)
-        ctx = TestEvent3()
-        future = dispatcher_inst.wait_for(TestEvent3, timeout=5, predicate=predicate)
+        ctx = StudEvent3()
+        future = dispatcher_inst.wait_for(StudEvent3, timeout=5, predicate=predicate)
         await dispatcher_inst.dispatch_event(ctx)
 
         await asyncio.sleep(0.1)
@@ -286,8 +286,8 @@ class TestEventDispatcherImpl:
     @_helpers.assert_raises(type_=RuntimeError)
     async def test_wait_for_raises_predicate_errors(self, dispatcher_inst):
         predicate = mock.MagicMock(side_effect=RuntimeError)
-        ctx = TestEvent1()
-        future = dispatcher_inst.wait_for(TestEvent1, timeout=1, predicate=predicate)
+        ctx = StudEvent1()
+        future = dispatcher_inst.wait_for(StudEvent1, timeout=1, predicate=predicate)
         await dispatcher_inst.dispatch_event(ctx)
         await future
 
@@ -309,7 +309,7 @@ class TestEventDispatcherImpl:
     @pytest.mark.asyncio
     async def test_catch_happy_path(self, dispatcher_inst):
         callback = mock.AsyncMock()
-        event = TestEvent1()
+        event = StudEvent1()
         dispatcher_inst.handle_exception = mock.MagicMock()
         await dispatcher_inst._catch(callback, event)
         callback.assert_awaited_once_with(event)
@@ -320,7 +320,7 @@ class TestEventDispatcherImpl:
         ex = RuntimeError()
         callback = mock.AsyncMock(side_effect=ex)
         dispatcher_inst.handle_exception = mock.MagicMock()
-        ctx = TestEvent3()
+        ctx = StudEvent3()
         await dispatcher_inst._catch(callback, ctx)
         dispatcher_inst.handle_exception.assert_called_once_with(ex, ctx, callback)
 
@@ -328,7 +328,7 @@ class TestEventDispatcherImpl:
         dispatcher_inst.dispatch_event = mock.MagicMock()
 
         ex = RuntimeError()
-        event = TestEvent1()
+        event = StudEvent1()
         callback = mock.AsyncMock()
 
         dispatcher_inst.handle_exception(ex, event, callback)
