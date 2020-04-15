@@ -33,12 +33,9 @@ import types
 
 import sphinx_bootstrap_theme
 
-
 sys.path.insert(0, os.path.abspath(".."))
 
-
 name = "hikari"
-
 
 with open(os.path.join("..", name, "_about.py")) as fp:
     code = fp.read()
@@ -55,7 +52,6 @@ for match in token_pattern.finditer(code):
 meta = types.SimpleNamespace(**groups)
 
 del groups, token_pattern, code, fp
-
 
 # -- Project information -----------------------------------------------------
 
@@ -86,7 +82,6 @@ exclude_patterns = []
 
 # -- Pygments style ----------------------------------------------------------
 pygments_style = "fruity"
-
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = "bootstrap"
@@ -228,5 +223,20 @@ else:
     )
 
 
+# -- Hacks and formatting ---------------------------------------------
+
+def pretty_signature(app, what, name, obj, options, signature, return_annotation):
+    if what not in ('function', 'method', 'class'):
+        return
+
+    if signature is None:
+        return
+
+    signature = re.sub(r"(?P<ident>\w+)=Ellipsis", r"\1=...", signature)
+    signature = signature.replace("/", "/ ")
+    return signature, return_annotation
+
+
 def setup(app):
+    app.connect('autodoc-process-signature', pretty_signature)
     app.add_css_file("style.css")
