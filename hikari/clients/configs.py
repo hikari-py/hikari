@@ -328,6 +328,20 @@ class ShardConfig(BaseConfig):
 class RESTConfig(AIOHTTPConfig, TokenConfig):
     """REST-specific configuration details."""
 
+    #: Token authentication scheme.
+    #:
+    #: Should be ``"Bot"`` or ``"Bearer"``, or ``None`` if not relevant.
+    #:
+    #: Defaults to ``"Bot"``
+    #:
+    #: :type: :obj:`str`
+    token_type: typing.Optional[str] = marshaller.attrib(
+        deserializer=str,
+        if_undefined=lambda: "Bot",
+        if_none=None,
+        default="Bot"
+    )
+
     #: The HTTP API version to use.
     #:
     #: If unspecified, then V7 is used.
