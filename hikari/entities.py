@@ -53,7 +53,7 @@ UNSET = Unset()
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class HikariEntity(metaclass=abc.ABCMeta):
     """The base for any entity used in this API."""
 

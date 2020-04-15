@@ -90,7 +90,7 @@ T_contra = typing.TypeVar("T_contra", contravariant=True)
 
 # Base event, is not deserialized
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class HikariEvent(entities.HikariEntity):
     """The base class that all events inherit from."""
 
@@ -171,7 +171,7 @@ class ResumedEvent(HikariEvent):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class ReadyEvent(HikariEvent, entities.Deserializable):
     """Represents the gateway Ready event.
 
@@ -206,7 +206,7 @@ class ReadyEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`typing.Tuple` [ :obj:`int`, :obj:`int` ], optional
     _shard_information: typing.Optional[typing.Tuple[int, int]] = marshaller.attrib(
-        raw_name="shard", deserializer=tuple, if_undefined=None
+        raw_name="shard", deserializer=tuple, if_undefined=None, default=None
     )
 
     @property
@@ -227,7 +227,7 @@ class ReadyEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializable):
     """A base object that Channel events will inherit from."""
 
@@ -262,41 +262,43 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializ
     #: The name of this channel, if applicable.
     #:
     #: :type: :obj:`str`, optional
-    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
 
     #: The topic of this channel, if applicable and set.
     #:
     #: :type: :obj:`str`, optional
-    topic: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None)
+    topic: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None, default=None)
 
     #: Whether this channel is nsfw, will be :obj:`None` if not applicable.
     #:
     #: :type: :obj:`bool`, optional
-    is_nsfw: typing.Optional[bool] = marshaller.attrib(raw_name="nsfw", deserializer=bool, if_undefined=None)
+    is_nsfw: typing.Optional[bool] = marshaller.attrib(
+        raw_name="nsfw", deserializer=bool, if_undefined=None, default=None
+    )
 
     #: The ID of the last message sent, if it's a text type channel.
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     last_message_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_none=None, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_none=None, if_undefined=None, default=None
     )
 
     #: The bitrate (in bits) of this channel, if it's a guild voice channel.
     #:
     #: :type: :obj:`bool`, optional
-    bitrate: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
+    bitrate: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
 
     #: The user limit for this channel if it's a guild voice channel.
     #:
     #: :type: :obj:`bool`, optional
-    user_limit: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None)
+    user_limit: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
 
     #: The rate limit a user has to wait before sending another message in this
     #: channel, if it's a guild text like channel.
     #:
     #: :type: :obj:`datetime.timedelta`, optional
     rate_limit_per_user: typing.Optional[datetime.timedelta] = marshaller.attrib(
-        deserializer=lambda delta: datetime.timedelta(seconds=delta), if_undefined=None,
+        deserializer=lambda delta: datetime.timedelta(seconds=delta), if_undefined=None, default=None
     )
 
     #: A mapping of this channel's recipient users, if it's a DM or group DM.
@@ -305,20 +307,21 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializ
     recipients: typing.Optional[typing.Mapping[snowflakes.Snowflake, users.User]] = marshaller.attrib(
         deserializer=lambda recipients: {user.id: user for user in map(users.User.deserialize, recipients)},
         if_undefined=None,
+        default=None,
     )
 
     #: The hash of this channel's icon, if it's a group DM channel and is set.
     #:
     #: :type: :obj:`str`, optional
     icon_hash: typing.Optional[str] = marshaller.attrib(
-        raw_name="icon", deserializer=str, if_undefined=None, if_none=None
+        raw_name="icon", deserializer=str, if_undefined=None, if_none=None, default=None
     )
 
     #: The ID of this channel's creator, if it's a DM channel.
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     owner_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the application that created the group DM, if it's a
@@ -326,14 +329,14 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializ
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of this channels's parent category within guild, if set.
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     parent_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, if_none=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, if_none=None, default=None
     )
 
     #: The datetime of when the last message was pinned in this channel,
@@ -341,12 +344,12 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializ
     #:
     #: :type: :obj:`datetime.datetime`, optional
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_undefined=None
+        deserializer=conversions.parse_iso_8601_ts, if_undefined=None, default=None
     )
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class ChannelCreateEvent(BaseChannelEvent):
     """Represents Channel Create gateway events.
 
@@ -356,19 +359,19 @@ class ChannelCreateEvent(BaseChannelEvent):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class ChannelUpdateEvent(BaseChannelEvent):
     """Represents Channel Update gateway events."""
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class ChannelDeleteEvent(BaseChannelEvent):
     """Represents Channel Delete gateway events."""
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class ChannelPinUpdateEvent(HikariEvent, entities.Deserializable):
     """Used to represent the Channel Pins Update gateway event.
 
@@ -381,7 +384,7 @@ class ChannelPinUpdateEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the channel where the message was pinned or unpinned.
@@ -394,12 +397,12 @@ class ChannelPinUpdateEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`datetime.datetime`, optional
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_undefined=None
+        deserializer=conversions.parse_iso_8601_ts, if_undefined=None, default=None
     )
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildCreateEvent(HikariEvent, entities.Deserializable):
     """Used to represent Guild Create gateway events.
 
@@ -409,13 +412,13 @@ class GuildCreateEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildUpdateEvent(HikariEvent, entities.Deserializable):
     """Used to represent Guild Update gateway events."""
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildLeaveEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializable):
     """Fired when the current user leaves the guild or is kicked/banned from it.
 
@@ -426,7 +429,7 @@ class GuildLeaveEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializa
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildUnavailableEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializable):
     """Fired when a guild becomes temporarily unavailable due to an outage.
 
@@ -437,7 +440,7 @@ class GuildUnavailableEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deser
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class BaseGuildBanEvent(HikariEvent, entities.Deserializable):
     """A base object that guild ban events will inherit from."""
 
@@ -453,19 +456,19 @@ class BaseGuildBanEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildBanAddEvent(BaseGuildBanEvent):
     """Used to represent a Guild Ban Add gateway event."""
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildBanRemoveEvent(BaseGuildBanEvent):
     """Used to represent a Guild Ban Remove gateway event."""
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildEmojisUpdateEvent(HikariEvent, entities.Deserializable):
     """Represents a Guild Emoji Update gateway event."""
 
@@ -483,7 +486,7 @@ class GuildEmojisUpdateEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildIntegrationsUpdateEvent(HikariEvent, entities.Deserializable):
     """Used to represent Guild Integration Update gateway events."""
 
@@ -494,7 +497,7 @@ class GuildIntegrationsUpdateEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildMemberAddEvent(HikariEvent, guilds.GuildMember):
     """Used to represent a Guild Member Add gateway event."""
 
@@ -505,7 +508,7 @@ class GuildMemberAddEvent(HikariEvent, guilds.GuildMember):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildMemberUpdateEvent(HikariEvent, entities.Deserializable):
     """Used to represent a Guild Member Update gateway event.
 
@@ -534,7 +537,7 @@ class GuildMemberUpdateEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`typing.Union` [ :obj:`str`, :obj:`hikari.entities.UNSET` ], optional
     nickname: typing.Union[None, str, entities.Unset] = marshaller.attrib(
-        raw_name="nick", deserializer=str, if_none=None, if_undefined=entities.Unset,
+        raw_name="nick", deserializer=str, if_none=None, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: The datetime of when this member started "boosting" this guild.
@@ -542,12 +545,12 @@ class GuildMemberUpdateEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`hikari.entities.UNSET` ], optional
     premium_since: typing.Union[None, datetime.datetime, entities.Unset] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=entities.Unset
+        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=entities.Unset, default=entities.UNSET
     )
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildMemberRemoveEvent(HikariEvent, entities.Deserializable):
     """Used to represent Guild Member Remove gateway events.
 
@@ -566,7 +569,7 @@ class GuildMemberRemoveEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildRoleCreateEvent(HikariEvent, entities.Deserializable):
     """Used to represent a Guild Role Create gateway event."""
 
@@ -582,7 +585,7 @@ class GuildRoleCreateEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildRoleUpdateEvent(HikariEvent, entities.Deserializable):
     """Used to represent a Guild Role Create gateway event."""
 
@@ -598,7 +601,7 @@ class GuildRoleUpdateEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class GuildRoleDeleteEvent(HikariEvent, entities.Deserializable):
     """Represents a gateway Guild Role Delete Event."""
 
@@ -614,7 +617,7 @@ class GuildRoleDeleteEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class InviteCreateEvent(HikariEvent, entities.Deserializable):
     """Represents a gateway Invite Create event."""
 
@@ -638,13 +641,15 @@ class InviteCreateEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The object of the user who created this invite, if applicable.
     #:
     #: :type: :obj:`hikari.users.User`, optional
-    inviter: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User.deserialize, if_undefined=None)
+    inviter: typing.Optional[users.User] = marshaller.attrib(
+        deserializer=users.User.deserialize, if_undefined=None, default=None
+    )
 
     #: The timedelta of how long this invite will be valid for.
     #: If set to :obj:`None` then this is unlimited.
@@ -663,13 +668,15 @@ class InviteCreateEvent(HikariEvent, entities.Deserializable):
     #: The object of the user who this invite targets, if set.
     #:
     #: :type: :obj:`hikari.users.User`, optional
-    target_user: typing.Optional[users.User] = marshaller.attrib(deserializer=users.User.deserialize, if_undefined=None)
+    target_user: typing.Optional[users.User] = marshaller.attrib(
+        deserializer=users.User.deserialize, if_undefined=None, default=None
+    )
 
     #: The type of user target this invite is, if applicable.
     #:
     #: :type: :obj:`hikari.invites.TargetUserType`, optional
     target_user_type: typing.Optional[invites.TargetUserType] = marshaller.attrib(
-        deserializer=invites.TargetUserType, if_undefined=None
+        deserializer=invites.TargetUserType, if_undefined=None, default=None
     )
 
     #: Whether this invite grants temporary membership.
@@ -684,7 +691,7 @@ class InviteCreateEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class InviteDeleteEvent(HikariEvent, entities.Deserializable):
     """Used to represent Invite Delete gateway events.
 
@@ -706,19 +713,19 @@ class InviteDeleteEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class MessageCreateEvent(HikariEvent, messages.Message):
     """Used to represent Message Create gateway events."""
 
 
 # This is an arbitrarily partial version of `messages.Message`
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializable):
     """Represents Message Update gateway events.
 
@@ -739,33 +746,35 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserial
     #:
     #: :type: :obj:`typing.Union` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`hikari.entities.UNSET` ]
     guild_id: typing.Union[snowflakes.Snowflake, entities.Unset] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=entities.Unset
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: The author of this message.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.entities.UNSET` ]
     author: typing.Union[users.User, entities.Unset] = marshaller.attrib(
-        deserializer=users.User.deserialize, if_undefined=entities.Unset
+        deserializer=users.User.deserialize, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: The member properties for the message's author.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`hikari.guilds.GuildMember`, :obj:`hikari.entities.UNSET` ]
     member: typing.Union[guilds.GuildMember, entities.Unset] = marshaller.attrib(
-        deserializer=guilds.GuildMember.deserialize, if_undefined=entities.Unset
+        deserializer=guilds.GuildMember.deserialize, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: The content of the message.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`str`, :obj:`hikari.entities.UNSET` ]
-    content: typing.Union[str, entities.Unset] = marshaller.attrib(deserializer=str, if_undefined=entities.Unset)
+    content: typing.Union[str, entities.Unset] = marshaller.attrib(
+        deserializer=str, if_undefined=entities.Unset, default=entities.UNSET
+    )
 
     #: The timestamp that the message was sent at.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`hikari.entities.UNSET` ]
     timestamp: typing.Union[datetime.datetime, entities.Unset] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_undefined=entities.Unset
+        deserializer=conversions.parse_iso_8601_ts, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: The timestamp that the message was last edited at, or :obj:`None` if
@@ -773,21 +782,21 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserial
     #:
     #: :type: :obj:`typing.Union` [  :obj:`datetime.datetime`, :obj:`hikari.entities.UNSET` ], optional
     edited_timestamp: typing.Union[datetime.datetime, entities.Unset, None] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=entities.Unset
+        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: Whether the message is a TTS message.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`bool`, :obj:`hikari.entities.UNSET` ]
     is_tts: typing.Union[bool, entities.Unset] = marshaller.attrib(
-        raw_name="tts", deserializer=bool, if_undefined=entities.Unset
+        raw_name="tts", deserializer=bool, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: Whether the message mentions ``@everyone`` or ``@here``.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`bool`, :obj:`hikari.entities.UNSET` ]
     is_mentioning_everyone: typing.Union[bool, entities.Unset] = marshaller.attrib(
-        raw_name="mention_everyone", deserializer=bool, if_undefined=entities.Unset
+        raw_name="mention_everyone", deserializer=bool, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: The users the message mentions.
@@ -797,6 +806,7 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserial
         raw_name="mentions",
         deserializer=lambda user_mentions: {snowflakes.Snowflake.deserialize(u["id"]) for u in user_mentions},
         if_undefined=entities.Unset,
+        default=entities.UNSET,
     )
 
     #: The roles the message mentions.
@@ -806,6 +816,7 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserial
         raw_name="mention_roles",
         deserializer=lambda role_mentions: {snowflakes.Snowflake.deserialize(r) for r in role_mentions},
         if_undefined=entities.Unset,
+        default=entities.UNSET,
     )
 
     #: The channels the message mentions.
@@ -815,6 +826,7 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserial
         raw_name="mention_channels",
         deserializer=lambda channel_mentions: {snowflakes.Snowflake.deserialize(c["id"]) for c in channel_mentions},
         if_undefined=entities.Unset,
+        default=entities.UNSET,
     )
 
     #: The message attachments.
@@ -823,13 +835,16 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserial
     attachments: typing.Union[typing.Sequence[messages.Attachment], entities.Unset] = marshaller.attrib(
         deserializer=lambda attachments: [messages.Attachment.deserialize(a) for a in attachments],
         if_undefined=entities.Unset,
+        default=entities.UNSET,
     )
 
     #: The message's embeds.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`typing.Sequence` [ :obj:`hikari.embeds.Embed` ], :obj:`hikari.entities.UNSET` ]
     embeds: typing.Union[typing.Sequence[_embeds.Embed], entities.Unset] = marshaller.attrib(
-        deserializer=lambda embed_objs: [_embeds.Embed.deserialize(e) for e in embed_objs], if_undefined=entities.Unset,
+        deserializer=lambda embed_objs: [_embeds.Embed.deserialize(e) for e in embed_objs],
+        if_undefined=entities.Unset,
+        default=entities.UNSET,
     )
 
     #: The message's reactions.
@@ -838,66 +853,69 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserial
     reactions: typing.Union[typing.Sequence[messages.Reaction], entities.Unset] = marshaller.attrib(
         deserializer=lambda reactions: [messages.Reaction.deserialize(r) for r in reactions],
         if_undefined=entities.Unset,
+        default=entities.UNSET,
     )
 
     #: Whether the message is pinned.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`bool`, :obj:`hikari.entities.UNSET` ]
     is_pinned: typing.Union[bool, entities.Unset] = marshaller.attrib(
-        raw_name="pinned", deserializer=bool, if_undefined=entities.Unset
+        raw_name="pinned", deserializer=bool, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: If the message was generated by a webhook, the webhook's id.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`hikari.entities.UNSET` ]
     webhook_id: typing.Union[snowflakes.Snowflake, entities.Unset] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=entities.Unset
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: The message's type.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`hikari.messages.MessageType`, :obj:`hikari.entities.UNSET` ]
     type: typing.Union[messages.MessageType, entities.Unset] = marshaller.attrib(
-        deserializer=messages.MessageType, if_undefined=entities.Unset
+        deserializer=messages.MessageType, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: The message's activity.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`hikari.messages.MessageActivity`, :obj:`hikari.entities.UNSET` ]
     activity: typing.Union[messages.MessageActivity, entities.Unset] = marshaller.attrib(
-        deserializer=messages.MessageActivity.deserialize, if_undefined=entities.Unset
+        deserializer=messages.MessageActivity.deserialize, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: The message's application.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`hikari.oauth2.Application`, :obj:`hikari.entities.UNSET` ]
     application: typing.Optional[oauth2.Application] = marshaller.attrib(
-        deserializer=oauth2.Application.deserialize, if_undefined=entities.Unset
+        deserializer=oauth2.Application.deserialize, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: The message's crossposted reference data.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`hikari.messages.MessageCrosspost`, :obj:`hikari.entities.UNSET` ]
     message_reference: typing.Union[messages.MessageCrosspost, entities.Unset] = marshaller.attrib(
-        deserializer=messages.MessageCrosspost.deserialize, if_undefined=entities.Unset
+        deserializer=messages.MessageCrosspost.deserialize, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: The message's flags.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`hikari.messages.MessageFlag`, :obj:`hikari.entities.UNSET` ]
     flags: typing.Union[messages.MessageFlag, entities.Unset] = marshaller.attrib(
-        deserializer=messages.MessageFlag, if_undefined=entities.Unset
+        deserializer=messages.MessageFlag, if_undefined=entities.Unset, default=entities.UNSET
     )
 
     #: The message nonce. This is a string used for validating
     #: a message was sent.
     #:
     #: :type: :obj:`typing.Union` [ :obj:`hikari.messages.MessageFlag`, :obj:`hikari.entities.UNSET` ]
-    nonce: typing.Union[str, entities.Unset] = marshaller.attrib(deserializer=str, if_undefined=entities.Unset)
+    nonce: typing.Union[str, entities.Unset] = marshaller.attrib(
+        deserializer=str, if_undefined=entities.Unset, default=entities.UNSET
+    )
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class MessageDeleteEvent(HikariEvent, entities.Deserializable):
     """Used to represent Message Delete gateway events.
 
@@ -914,7 +932,7 @@ class MessageDeleteEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
     #: The ID of the message that was deleted.
     #:
@@ -923,7 +941,7 @@ class MessageDeleteEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class MessageDeleteBulkEvent(HikariEvent, entities.Deserializable):
     """Used to represent Message Bulk Delete gateway events.
 
@@ -952,7 +970,7 @@ class MessageDeleteBulkEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class MessageReactionAddEvent(HikariEvent, entities.Deserializable):
     """Used to represent Message Reaction Add gateway events."""
 
@@ -976,7 +994,7 @@ class MessageReactionAddEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The member object of the user who's adding this reaction, if this is
@@ -984,7 +1002,7 @@ class MessageReactionAddEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.guilds.GuildMember`, optional
     member: typing.Optional[guilds.GuildMember] = marshaller.attrib(
-        deserializer=guilds.GuildMember.deserialize, if_undefined=None
+        deserializer=guilds.GuildMember.deserialize, if_undefined=None, default=None
     )
 
     #: The object of the emoji being added.
@@ -996,7 +1014,7 @@ class MessageReactionAddEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class MessageReactionRemoveEvent(HikariEvent, entities.Deserializable):
     """Used to represent Message Reaction Remove gateway events."""
 
@@ -1020,7 +1038,7 @@ class MessageReactionRemoveEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The object of the emoji being removed.
@@ -1032,7 +1050,7 @@ class MessageReactionRemoveEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class MessageReactionRemoveAllEvent(HikariEvent, entities.Deserializable):
     """Used to represent Message Reaction Remove All gateway events.
 
@@ -1053,12 +1071,12 @@ class MessageReactionRemoveAllEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class MessageReactionRemoveEmojiEvent(HikariEvent, entities.Deserializable):
     """Represents Message Reaction Remove Emoji events.
 
@@ -1074,7 +1092,7 @@ class MessageReactionRemoveEmojiEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the message the reactions are being removed from.
@@ -1091,7 +1109,7 @@ class MessageReactionRemoveEmojiEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class PresenceUpdateEvent(HikariEvent, guilds.GuildMemberPresence):
     """Used to represent Presence Update gateway events.
 
@@ -1100,7 +1118,7 @@ class PresenceUpdateEvent(HikariEvent, guilds.GuildMemberPresence):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class TypingStartEvent(HikariEvent, entities.Deserializable):
     """Used to represent typing start gateway events.
 
@@ -1117,7 +1135,7 @@ class TypingStartEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the user who triggered this typing event.
@@ -1137,12 +1155,12 @@ class TypingStartEvent(HikariEvent, entities.Deserializable):
     #:
     #: :type: :obj:`hikari.guilds.GuildMember`, optional
     member: typing.Optional[guilds.GuildMember] = marshaller.attrib(
-        deserializer=guilds.GuildMember.deserialize, if_undefined=None
+        deserializer=guilds.GuildMember.deserialize, if_undefined=None, default=None
     )
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class UserUpdateEvent(HikariEvent, users.MyUser):
     """Used to represent User Update gateway events.
 
@@ -1151,7 +1169,7 @@ class UserUpdateEvent(HikariEvent, users.MyUser):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class VoiceStateUpdateEvent(HikariEvent, voices.VoiceState):
     """Used to represent voice state update gateway events.
 
@@ -1160,7 +1178,7 @@ class VoiceStateUpdateEvent(HikariEvent, voices.VoiceState):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class VoiceServerUpdateEvent(HikariEvent, entities.Deserializable):
     """Used to represent voice server update gateway events.
 
@@ -1185,7 +1203,7 @@ class VoiceServerUpdateEvent(HikariEvent, entities.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class WebhookUpdateEvent(HikariEvent, entities.Deserializable):
     """Used to represent webhook update gateway events.
 
