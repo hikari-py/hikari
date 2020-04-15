@@ -225,8 +225,9 @@ else:
 
 # -- Hacks and formatting ---------------------------------------------
 
+
 def pretty_signature(app, what, name, obj, options, signature, return_annotation):
-    if what not in ('function', 'method', 'class'):
+    if what not in ("function", "method", "class"):
         return
 
     if signature is None:
@@ -238,5 +239,5 @@ def pretty_signature(app, what, name, obj, options, signature, return_annotation
 
 
 def setup(app):
-    app.connect('autodoc-process-signature', pretty_signature)
+    app.connect("autodoc-process-signature", pretty_signature)
     app.add_css_file("style.css")
